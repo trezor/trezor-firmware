@@ -47,9 +47,11 @@ struct HomescreenTextInfo {
     pub icon_area: Option<Rect>,
 }
 
+pub const HOMESCREEN_MAX_TEXTS: usize = 4;
+pub const HOMESCREEN_IMAGE_SIZE: i16 = 120;
+
 const HOMESCREEN_MAX_ICON_SIZE: i16 = 20;
 const HOMESCREEN_IMAGE_SCALE: i16 = 2;
-const HOMESCREEN_IMAGE_SIZE: i16 = WIDTH / HOMESCREEN_IMAGE_SCALE;
 const NOTIFICATION_HEIGHT: i16 = 32;
 const NOTIFICATION_BORDER: i16 = 8;
 const NOTIFICATION_ICON_SPACE: i16 = 8;
@@ -269,7 +271,7 @@ fn homescreen_line(
 }
 
 fn homescreen_next_text(
-    texts: &Vec<HomescreenText, 4>,
+    texts: &Vec<HomescreenText, HOMESCREEN_MAX_TEXTS>,
     text_buffer: &mut BufferText,
     icon_data: &mut [u8],
     text_info: HomescreenTextInfo,
@@ -327,8 +329,8 @@ fn update_accs_sub(
 
 // computes color averages for one line of image data
 fn compute_line_avgs(
-    data: &[u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
     avg_dest: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+    data: &[u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
 ) {
     let mut acc_r = 0;
     let mut acc_g = 0;
@@ -378,7 +380,7 @@ fn vertical_avg(
     }
 }
 
-pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
+pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, HOMESCREEN_MAX_TEXTS>) {
     let mut icon_data = [0_u8; (HOMESCREEN_MAX_ICON_SIZE * HOMESCREEN_MAX_ICON_SIZE / 2) as usize];
 
     let text_buffer = unsafe { get_text_buffer(0, true) };
@@ -396,7 +398,7 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
         let mut avgs = [[[0_u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS]; DECOMP_LINES];
         let mut avgs_totals = [[0_u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS];
 
-        let mut dest_idx = 0;
+        let mut add_idx = 0;
         let mut rem_idx = 0;
         let mut window = [0; UZLIB_WINDOW_SIZE];
         let mut ctx = UzlibContext::new(&data[12..], Some(&mut window));
@@ -404,21 +406,21 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
         ctx.uncompress(&mut dest).unwrap();
 
         // handling top edge case: preload the edge value N+1 times
-        compute_line_avgs(&dest, &mut avgs[dest_idx]);
+        compute_line_avgs(&mut avgs[add_idx], &dest);
         for _ in 0..=BLUR_RADIUS {
-            vertical_avg_add(&mut avgs_totals, &avgs[dest_idx]);
+            vertical_avg_add(&mut avgs_totals, &avgs[add_idx]);
         }
-        dest_idx += 1;
+        add_idx += 1;
 
         // load enough values to be able to compute first line averages
         for _ in 0..BLUR_RADIUS {
             ctx.uncompress(&mut dest).unwrap();
-            compute_line_avgs(&dest, &mut avgs[dest_idx]);
-            vertical_avg_add(&mut avgs_totals, &avgs[dest_idx]);
-            dest_idx += 1;
+            compute_line_avgs(&mut avgs[add_idx], &dest);
+            vertical_avg_add(&mut avgs_totals, &avgs[add_idx]);
+            add_idx += 1;
         }
 
-        for y in 0..HOMESCREEN_IMAGE_SIZE {
+        for y in 0..(HEIGHT / HOMESCREEN_IMAGE_SCALE) {
             let clear_bg = if size.x == HOMESCREEN_IMAGE_SIZE
                 && size.y == HOMESCREEN_IMAGE_SIZE
                 && format == ToifFormat::FullColorLE
@@ -459,22 +461,34 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
             }
 
             if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) as i16 {
-                compute_line_avgs(&dest, &mut avgs[dest_idx]);
+                compute_line_avgs(&mut avgs[add_idx], &dest);
             }
 
-            vertical_avg(&mut avgs_totals, &avgs, dest_idx, rem_idx);
+            vertical_avg(&mut avgs_totals, &avgs, add_idx, rem_idx);
 
             // handling bottom edge case: stop incrementing counter, adding the edge value
             // for the rest of image
-            if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) as i16 {
-                dest_idx += 1;
-                if dest_idx >= DECOMP_LINES {
-                    dest_idx = 0;
+            // the extra -1 is to indicate that this was the last decompressed line,
+            // in the next pass the docompression and compute_line_avgs won't happen
+            if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) - 1 {
+                add_idx += 1;
+                if add_idx >= DECOMP_LINES {
+                    add_idx = 0;
+                }
+            }
+
+            if y == HOMESCREEN_IMAGE_SIZE {
+                // reached end of image, clear avgs (display black)
+                for (i, total) in avgs_totals.iter_mut().enumerate() {
+                    for avg in avgs.iter_mut() {
+                        avg[i].fill(0);
+                    }
+                    total.fill(0);
                 }
             }
 
             // only start incrementing remove index when enough lines have been loaded
-            if y >= (BLUR_RADIUS) as i16 {
+            if y >= (BLUR_RADIUS) {
                 rem_idx += 1;
                 if rem_idx >= DECOMP_LINES {
                     rem_idx = 0;
@@ -487,7 +501,7 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
 
 pub fn homescreen(
     data: &[u8],
-    texts: Vec<HomescreenText, 4>,
+    texts: Vec<HomescreenText, HOMESCREEN_MAX_TEXTS>,
     notification: Option<HomescreenNotification>,
     notification_only: bool,
 ) {
