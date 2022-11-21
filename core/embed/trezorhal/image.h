@@ -45,12 +45,14 @@ typedef struct {
   uint32_t codelen;
   uint32_t version;
   uint32_t fix_version;
-  // uint8_t reserved[8];
+  uint32_t hw_model;
+  uint8_t hw_revision;
+  uint8_t monotonic;
+  uint8_t reserved_0[2];
   uint8_t hashes[512];
-  // uint8_t reserved[415];
+  uint8_t reserved_1[415];
   uint8_t sigmask;
   uint8_t sig[64];
-  uint8_t fingerprint[32];
 } image_header;
 
 #define MAX_VENDOR_PUBLIC_KEYS 8
@@ -76,19 +78,25 @@ typedef struct {
   const uint8_t *vimg;
   uint8_t sigmask;
   uint8_t sig[64];
+  const uint8_t *origin;  // pointer to the underlying data
 } vendor_header;
 
-secbool __wur load_image_header(const uint8_t *const data, const uint32_t magic,
-                                const uint32_t maxsize, uint8_t key_m,
-                                uint8_t key_n, const uint8_t *const *keys,
-                                image_header *const hdr);
+const image_header *read_image_header(const uint8_t *const data,
+                                      const uint32_t magic,
+                                      const uint32_t maxsize);
 
-secbool __wur load_vendor_header(const uint8_t *const data, uint8_t key_m,
-                                 uint8_t key_n, const uint8_t *const *keys,
-                                 vendor_header *const vhdr);
+secbool __wur check_image_model(const image_header *const hdr);
+
+secbool __wur check_image_header_sig(const image_header *const hdr,
+                                     uint8_t key_m, uint8_t key_n,
+                                     const uint8_t *const *keys);
 
 secbool __wur read_vendor_header(const uint8_t *const data,
                                  vendor_header *const vhdr);
+
+secbool __wur check_vendor_header_sig(const vendor_header *const vhdr,
+                                      uint8_t key_m, uint8_t key_n,
+                                      const uint8_t *const *keys);
 
 void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash);
 

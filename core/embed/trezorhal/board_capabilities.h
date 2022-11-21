@@ -38,7 +38,6 @@ Last tag must be terminator or all space used.
 #define BOARD_CAPABILITIES_ADDR 0x0800BF00
 #define BOARD_CAPABILITIES_SIZE 256
 #define CAPABILITIES_HEADER "TRZC"
-#define MODEL_NAME_MAX_LENGTH 16
 
 enum CapabilityTag {
   TERMINATOR = 0x00,
@@ -62,7 +61,7 @@ struct __attribute__((packed)) BoardCapabilities {
   uint8_t header[4];
   uint8_t model_tag;
   uint8_t model_length;
-  uint8_t model_name[MODEL_NAME_MAX_LENGTH];
+  uint32_t model_name;
   uint8_t version_tag;
   uint8_t version_length;
   struct BoardloaderVersion version;
@@ -76,7 +75,7 @@ struct __attribute__((packed)) BoardCapabilities {
  */
 void parse_boardloader_capabilities();
 
-const uint8_t* get_board_name();
+const uint32_t get_board_name();
 const struct BoardloaderVersion* get_boardloader_version();
 
 #endif
