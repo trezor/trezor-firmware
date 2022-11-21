@@ -77,6 +77,19 @@ class OrchardSigner:
             self.approver.add_orchard_input(txi)
 
     def check_orchard_inputs_count(self) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
+        # This check relates to the spend linkability dust attack
+        # described in §6 of Attacking Zcash For Fun And Profit
+        # https://eprint.iacr.org/2020/627
+        #
+        # The attack should be mitigated on the client side.
+        # If it is not and a transaction has a suspiciously high
+        # amount of inputs, then Trezor warns a user.
+        #
+        # Constant MAX_SILENT_ORCHARD_INPUTS is chosen heruistically.
+        # According to the article, shielded transaction with >10 inputs
+        # are quite unordinary and thus linkable.
+        # 
+        # Since this attack is not severe, we don't abort. 
         if self.params.inputs_count > MAX_SILENT_ORCHARD_INPUTS:
             yield ConfirmOrchardInputsCountOverThreshold(self.params.inputs_count)
 
