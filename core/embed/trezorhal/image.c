@@ -50,57 +50,84 @@ static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n,
   return sectrue * (0 == ed25519_cosi_combine_publickeys(res, keys, sig_m));
 }
 
-secbool load_image_header(const uint8_t *const data, const uint32_t magic,
-                          const uint32_t maxsize, uint8_t key_m, uint8_t key_n,
-                          const uint8_t *const *keys, image_header *const hdr) {
-  memcpy(&hdr->magic, data, 4);
-  if (hdr->magic != magic) return secfalse;
+const image_header *read_image_header(const uint8_t *const data,
+                                      const uint32_t magic,
+                                      const uint32_t maxsize) {
+  const image_header *hdr = (const image_header *)data;
 
-  memcpy(&hdr->hdrlen, data + 4, 4);
-  if (hdr->hdrlen != IMAGE_HEADER_SIZE) return secfalse;
+  if (hdr->magic != magic) {
+    return NULL;
+  }
+  if (hdr->hdrlen != IMAGE_HEADER_SIZE) {
+    return NULL;
+  }
 
-  memcpy(&hdr->expiry, data + 8, 4);
   // TODO: expiry mechanism needs to be ironed out before production or those
   // devices won't accept expiring bootloaders (due to boardloader write
   // protection).
-  if (hdr->expiry != 0) return secfalse;
+  // lowest bit is used for breaking compatibility between old TT bootloaders
+  // and non TT images
+  //  which is evaluated in check_image_model function
+  if ((hdr->expiry & 0xFFFFFFFE) != 0) return secfalse;
 
-  memcpy(&hdr->codelen, data + 12, 4);
   if (hdr->codelen > (maxsize - hdr->hdrlen)) return secfalse;
   if ((hdr->hdrlen + hdr->codelen) < 4 * 1024) return secfalse;
   if ((hdr->hdrlen + hdr->codelen) % 512 != 0) return secfalse;
 
-  memcpy(&hdr->version, data + 16, 4);
-  memcpy(&hdr->fix_version, data + 20, 4);
+  return hdr;
+}
 
-  memcpy(hdr->hashes, data + 32, 512);
+secbool check_image_model(const image_header *const hdr) {
+  // abusing expiry field to break compatibility of non-TT images with existing
+  // bootloaders/boardloaders
+#ifdef TREZOR_MODEL_T
+  if (hdr->expiry == 0 && hdr->hw_model == 0 && hdr->hw_revision == 0) {
+    // images for model TT older than this check
+    return sectrue;
+  }
+#else
+  if ((hdr->expiry & 0x01) == 0) {
+    // for models other than TT, expiry == 0 is unacceptable, as the image will
+    // run on bootloaders older that this check
+    return secfalse;
+  }
+#endif
 
-  memcpy(&hdr->sigmask, data + IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE, 1);
+  if (hdr->hw_model != HW_MODEL) {
+    return secfalse;
+  }
+  if (hdr->hw_revision != HW_REVISION) {
+    return secfalse;
+  }
 
-  memcpy(hdr->sig, data + IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE + 1,
-         IMAGE_SIG_SIZE - 1);
+  return sectrue;
+}
 
+secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
+                               uint8_t key_n, const uint8_t *const *keys) {
   // check header signature
-
   BLAKE2S_CTX ctx;
+  uint8_t fingerprint[32];
+
   blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-  blake2s_Update(&ctx, data, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
+  blake2s_Update(&ctx, hdr, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
   for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
     blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
   }
-  blake2s_Final(&ctx, hdr->fingerprint, BLAKE2S_DIGEST_LENGTH);
+
+  blake2s_Final(&ctx, fingerprint, BLAKE2S_DIGEST_LENGTH);
 
   ed25519_public_key pub;
   if (sectrue != compute_pubkey(key_m, key_n, keys, hdr->sigmask, pub))
     return secfalse;
 
   return sectrue *
-         (0 == ed25519_sign_open(hdr->fingerprint, BLAKE2S_DIGEST_LENGTH, pub,
+         (0 == ed25519_sign_open(fingerprint, BLAKE2S_DIGEST_LENGTH, pub,
                                  *(const ed25519_signature *)hdr->sig));
 }
 
-secbool read_vendor_header(const uint8_t *const data,
-                           vendor_header *const vhdr) {
+secbool __wur read_vendor_header(const uint8_t *const data,
+                                 vendor_header *const vhdr) {
   memcpy(&vhdr->magic, data, 4);
   if (vhdr->magic != 0x565A5254) return secfalse;  // TRZV
 
@@ -109,6 +136,8 @@ secbool read_vendor_header(const uint8_t *const data,
 
   memcpy(&vhdr->expiry, data + 8, 4);
   if (vhdr->expiry != 0) return secfalse;
+
+  vhdr->origin = data;
 
   memcpy(&vhdr->version, data + 12, 2);
 
@@ -143,10 +172,9 @@ secbool read_vendor_header(const uint8_t *const data,
   return sectrue;
 }
 
-secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
-                           uint8_t key_n, const uint8_t *const *keys,
-                           vendor_header *const vhdr) {
-  if (sectrue != read_vendor_header(data, vhdr)) {
+secbool check_vendor_header_sig(const vendor_header *const vhdr, uint8_t key_m,
+                                uint8_t key_n, const uint8_t *const *keys) {
+  if (vhdr == NULL) {
     return secfalse;
   }
 
@@ -155,7 +183,7 @@ secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
   BLAKE2S_CTX ctx;
   blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-  blake2s_Update(&ctx, data, vhdr->hdrlen - IMAGE_SIG_SIZE);
+  blake2s_Update(&ctx, vhdr->origin, vhdr->hdrlen - IMAGE_SIG_SIZE);
   for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
     blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
   }

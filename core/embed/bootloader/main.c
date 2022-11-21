@@ -159,7 +159,7 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
         break;
       case 7:  // FirmwareUpload
         r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
-        if (r < 0 && r != -4) {  // error, but not user abort (-4)
+        if (r < 0 && r != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
           ui_fadeout();
           ui_screen_fail();
           ui_fadein();
@@ -193,10 +193,9 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
   }
 }
 
-secbool load_vendor_header_keys(const uint8_t *const data,
-                                vendor_header *const vhdr) {
-  return load_vendor_header(data, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N,
-                            BOOTLOADER_KEYS, vhdr);
+secbool check_vendor_header_keys(const vendor_header *const vhdr) {
+  return check_vendor_header_sig(vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N,
+                                 BOOTLOADER_KEYS);
 }
 
 static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
@@ -303,23 +302,40 @@ int main(void) {
   }
 #endif
 
+  const image_header *hdr = NULL;
   vendor_header vhdr;
-  image_header hdr;
-  // detect whether the devices contains a valid firmware
+  // detect whether the device contains a valid firmware
+  secbool firmware_present = sectrue;
 
-  secbool firmware_present =
-      load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
+  if (sectrue != read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
+    firmware_present = secfalse;
+  }
+
+  if (sectrue == firmware_present) {
+    firmware_present = check_vendor_header_keys(&vhdr);
+  }
+
   if (sectrue == firmware_present) {
     firmware_present = check_vendor_header_lock(&vhdr);
   }
+
   if (sectrue == firmware_present) {
-    firmware_present = load_image_header(
-        (const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC,
-        FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr);
+    hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
+                            FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+    if (hdr != (const image_header *)(FIRMWARE_START + vhdr.hdrlen)) {
+      firmware_present = secfalse;
+    }
+  }
+  if (sectrue == firmware_present) {
+    firmware_present = check_image_model(hdr);
   }
   if (sectrue == firmware_present) {
     firmware_present =
-        check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
+        check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub);
+  }
+  if (sectrue == firmware_present) {
+    firmware_present =
+        check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
                              FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT);
   }
 
@@ -357,26 +373,35 @@ int main(void) {
   // ... or we have stay_in_bootloader flag to force it
   if (touched || stay_in_bootloader == sectrue) {
     // no ui_fadeout(); - we already start from black screen
-    ui_screen_firmware_info(&vhdr, &hdr);
+    ui_screen_firmware_info(&vhdr, hdr);
     ui_fadein();
 
     // and start the usb loop
-    if (bootloader_usb_loop(&vhdr, &hdr) != sectrue) {
+    if (bootloader_usb_loop(&vhdr, hdr) != sectrue) {
       return 1;
     }
   }
 
-  ensure(load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr),
+  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr),
          "invalid vendor header");
+
+  ensure(check_vendor_header_keys(&vhdr), "invalid vendor header signature");
 
   ensure(check_vendor_header_lock(&vhdr), "unauthorized vendor keys");
 
-  ensure(load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
-                           FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE,
-                           vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr),
+  hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
+                          FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+
+  ensure(hdr == (const image_header *)(FIRMWARE_START + vhdr.hdrlen) ? sectrue
+                                                                     : secfalse,
          "invalid firmware header");
 
-  ensure(check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
+  ensure(check_image_model(hdr), "wrong firmware model");
+
+  ensure(check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub),
+         "invalid firmware signature");
+
+  ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
                               FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT),
          "invalid firmware hash");
 
@@ -384,7 +409,7 @@ int main(void) {
 
   if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
     // ui_fadeout();  // no fadeout - we start from black screen
-    ui_screen_boot(&vhdr, &hdr);
+    ui_screen_boot(&vhdr, hdr);
     ui_fadein();
 
     int delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
