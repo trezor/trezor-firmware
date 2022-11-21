@@ -538,7 +538,7 @@ def check_tokens_fields_sizes(tokens: list[dict], interactive: bool) -> bool:
     invalid_address_size_found = False
     for idx, token in enumerate(tokens):
         check, action = check_bytes_size(
-            bytes.fromhex(token["address"][2:]),
+            len(bytes.fromhex(token["address"][2:])),
             20,
             f"token {token['name']} (chain_id={token['chain_id']}, address={token['address']})",
             interactive,
@@ -828,7 +828,69 @@ def _load_prepared_definitions(
     return timestamp, networks, tokens
 
 
-# ====== coindefs generators ======
+def load_raw_builtin_ethereum_networks() -> list[dict]:
+    """Load ethereum networks from `ethereum/networks.json`"""
+    return load_json("ethereum", "networks.json")
+
+
+def load_raw_builtin_erc20_tokens() -> list[dict]:
+    """Load ERC20 tokens from `ethereum/tokens.json`."""
+    tokens_data = load_json("ethereum", "tokens.json")
+    all_tokens: list[dict] = []
+
+    for chain_id_and_chain, tokens in tokens_data.items():
+        chain_id, chain = chain_id_and_chain.split(";", maxsplit=1)
+        for token in tokens:
+            token.update(
+                chain=chain,
+                chain_id=int(chain_id),
+            )
+            all_tokens.append(token)
+
+    return all_tokens
+
+
+def check_builtin_defs(networks: list[dict], tokens: list[dict]) -> bool:
+    check_ok = True
+
+    builtin_networks_hashes_to_dict = {
+        hash_dict_on_keys(
+            cast(dict, network), exclude_keys=["metadata", "coingecko_id"]
+        ): cast(dict, network)
+        for network in load_raw_builtin_ethereum_networks()
+    }
+    builtin_tokens_hashes_to_dict = {
+        hash_dict_on_keys(
+            cast(dict, token), exclude_keys=["metadata", "coingecko_id"]
+        ): cast(dict, token)
+        for token in load_raw_builtin_erc20_tokens()
+    }
+
+    networks_hashes = [
+        hash_dict_on_keys(network, exclude_keys=["metadata", "coingecko_id"])
+        for network in networks
+    ]
+    tokens_hashes = [
+        hash_dict_on_keys(token, exclude_keys=["metadata", "coingecko_id"])
+        for token in tokens
+    ]
+
+    for hash, definition in builtin_networks_hashes_to_dict.items():
+        if hash not in networks_hashes:
+            check_ok = False
+            print("== BUILT-IN NETWORK DEFINITION OUTDATED ==")
+            print(json.dumps(definition, sort_keys=True, indent=None))
+
+    for hash, definition in builtin_tokens_hashes_to_dict.items():
+        if hash not in tokens_hashes:
+            check_ok = False
+            print("== BUILT-IN TOKEN DEFINITION OUTDATED ==")
+            print(json.dumps(definition, sort_keys=True, indent=None))
+
+    return check_ok
+
+
+# ====== definitions tools ======
 
 
 def eth_info_from_dict(
@@ -1069,6 +1131,10 @@ def prepare_definitions(
         )
 
     if save_results:
+        # check built-in definitions against generated ones
+        if not check_builtin_defs(networks, tokens):
+            logging.warning("Built-in definitions differ from the generated ones.")
+
         # sort networks and tokens
         networks.sort(key=lambda x: x["chain_id"])
         tokens.sort(key=lambda x: (x["chain_id"], x["address"]))
