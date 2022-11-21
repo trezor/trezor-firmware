@@ -1,6 +1,6 @@
 use core::{
     alloc::Layout,
-    ops::{Deref, DerefMut},
+    ops::Deref,
     ptr::{self, NonNull},
 };
 
@@ -107,11 +107,5 @@ impl<T: ?Sized> Deref for Gc<T> {
 
     fn deref(&self) -> &Self::Target {
         unsafe { self.0.as_ref() }
-    }
-}
-
-impl<T: ?Sized> DerefMut for Gc<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { self.0.as_mut() }
     }
 }

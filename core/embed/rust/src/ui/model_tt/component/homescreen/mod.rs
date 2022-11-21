@@ -307,12 +307,13 @@ fn get_image() -> Result<Gc<[u8]>, ()> {
     if let Ok(len) = get_avatar_len() {
         let result = Gc::<[u8]>::new_slice(len);
         if let Ok(mut buffer) = result {
-            if get_avatar(buffer.as_mut()).is_ok() {
+            let buf = unsafe { Gc::<[u8]>::as_mut(&mut buffer) };
+            if get_avatar(buf).is_ok() {
                 let toif = toif_info(buffer.as_ref());
                 if let Some((size, format)) = toif {
                     if size.x == HOMESCREEN_IMAGE_SIZE
                         && size.y == HOMESCREEN_IMAGE_SIZE
-                        && format == ToifFormat::FullColorLE
+                        && format == ToifFormat::FullColorBE
                     {
                         return Ok(buffer);
                     }
