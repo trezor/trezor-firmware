@@ -85,7 +85,6 @@ static const uint8_t * const pubkey_v2[PUBKEYS] = {
 
 // These public keys are production keys
 // - used in production devices
-// - used in debug non-production builds for QA testing
 
 // the "SignMessage"-style public keys, third signing scheme
 static const uint8_t * const pubkey_v3[PUBKEYS] = {

@@ -106,8 +106,9 @@ void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
  */
 int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
                   bool use_verifymessage);
+
 /**
- * Check is either v2 or v3 signature of header is valid.
+ * Check if either v2 or v3 signature of header is valid.
  *
  * Stored fingerprint is the "of v2 scheme" which we still display as hash
  * and use as "firmware hash".
