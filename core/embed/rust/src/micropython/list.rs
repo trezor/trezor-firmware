@@ -42,14 +42,54 @@ impl List {
         Ok(gc_list)
     }
 
+    // Internal helper to get the `Obj` variant of this.
+    // SAFETY: For convenience, the function works on an immutable reference, but
+    // the returned `Obj` is inherently mutable.
+    // Caller is responsible for ensuring that self is borrowed mutably if any
+    // mutation is to occur.
+    unsafe fn as_mut_obj(&self) -> Obj {
+        unsafe {
+            let ptr = self as *const Self as *mut _;
+            Obj::from_ptr(ptr)
+        }
+    }
+
     pub fn append(&mut self, value: Obj) -> Result<(), Error> {
         unsafe {
-            let ptr = self as *mut Self;
-            let list = Obj::from_ptr(ptr.cast());
+            // SAFETY: self is borrowed mutably.
+            let list = self.as_mut_obj();
             // EXCEPTION: Will raise if allocation fails.
             catch_exception(|| {
                 ffi::mp_obj_list_append(list, value);
             })
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.as_slice().len()
+    }
+
+    pub fn as_slice(&self) -> &[Obj] {
+        unsafe {
+            // SAFETY: mp_obj_list_get() does not mutate the list.
+            let list = self.as_mut_obj();
+            let mut len: usize = 0;
+            let mut items_ptr: *mut Obj = ptr::null_mut();
+            ffi::mp_obj_list_get(list, &mut len, &mut items_ptr);
+            assert!(!items_ptr.is_null());
+            core::slice::from_raw_parts(items_ptr, len)
+        }
+    }
+
+    pub fn as_mut_slice(&mut self) -> &mut [Obj] {
+        unsafe {
+            // SAFETY: self is borrowed mutably.
+            let list = self.as_mut_obj();
+            let mut len: usize = 0;
+            let mut items_ptr: *mut Obj = ptr::null_mut();
+            ffi::mp_obj_list_get(list, &mut len, &mut items_ptr);
+            assert!(!items_ptr.is_null());
+            core::slice::from_raw_parts_mut(items_ptr, len)
         }
     }
 }
@@ -104,5 +144,55 @@ mod tests {
             .collect::<Result<Vec<u8, 10>, Error>>()
             .unwrap();
         assert_eq!(vec, retrieved_vec);
+    }
+
+    #[test]
+    fn list_len() {
+        unsafe { mpy_init() };
+
+        let vec: Vec<u16, 17> = (0..17).collect();
+        let list = List::from_iter(vec.iter().copied()).unwrap();
+        assert_eq!(list.len(), vec.len());
+    }
+
+    #[test]
+    fn list_as_slice() {
+        unsafe { mpy_init() };
+
+        let vec: Vec<u16, 17> = (13..13 + 17).collect();
+        let list = List::from_iter(vec.iter().copied()).unwrap();
+
+        let slice = list.as_slice();
+        assert_eq!(slice.len(), vec.len());
+        for i in 0..slice.len() {
+            assert_eq!(vec[i], slice[i].try_into().unwrap());
+        }
+    }
+
+    #[test]
+    fn list_as_mut_slice() {
+        unsafe { mpy_init() };
+
+        let vec: Vec<u16, 5> = (0..5).collect();
+        let mut list = List::from_iter(vec.iter().copied()).unwrap();
+
+        let slice = unsafe { Gc::<List>::as_mut(&mut list) }.as_mut_slice();
+        assert_eq!(slice.len(), vec.len());
+        assert_eq!(vec[0], slice[0].try_into().unwrap());
+
+        for i in 0..slice.len() {
+            slice[i] = ((i + 10) as u16).into();
+        }
+
+        let mut buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(list.into(), &mut buf).unwrap();
+        let retrieved_vec: Vec<u16, 5> = iter
+            .map(TryInto::try_into)
+            .collect::<Result<Vec<u16, 5>, Error>>()
+            .unwrap();
+
+        for i in 0..retrieved_vec.len() {
+            assert_eq!(retrieved_vec[i], vec[i] + 10);
+        }
     }
 }
