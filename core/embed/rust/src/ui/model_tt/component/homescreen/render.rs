@@ -15,7 +15,6 @@ use crate::{
         geometry::{Offset, Point, Rect},
     },
 };
-use heapless::Vec;
 
 use crate::ui::{
     component::text::TextStyle,
@@ -47,7 +46,6 @@ struct HomescreenTextInfo {
     pub icon_area: Option<Rect>,
 }
 
-pub const HOMESCREEN_MAX_TEXTS: usize = 4;
 pub const HOMESCREEN_IMAGE_SIZE: i16 = 120;
 
 const HOMESCREEN_MAX_ICON_SIZE: i16 = 20;
@@ -271,7 +269,7 @@ fn homescreen_line(
 }
 
 fn homescreen_next_text(
-    texts: &Vec<HomescreenText, HOMESCREEN_MAX_TEXTS>,
+    texts: &[HomescreenText],
     text_buffer: &mut BufferText,
     icon_data: &mut [u8],
     text_info: HomescreenTextInfo,
@@ -380,7 +378,7 @@ fn vertical_avg(
     }
 }
 
-pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, HOMESCREEN_MAX_TEXTS>) {
+pub fn homescreen_blurred(data: &[u8], texts: &[HomescreenText]) {
     let mut icon_data = [0_u8; (HOMESCREEN_MAX_ICON_SIZE * HOMESCREEN_MAX_ICON_SIZE / 2) as usize];
 
     let text_buffer = unsafe { get_text_buffer(0, true) };
@@ -501,7 +499,7 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, HOMESCREEN_MAX
 
 pub fn homescreen(
     data: &[u8],
-    texts: Vec<HomescreenText, HOMESCREEN_MAX_TEXTS>,
+    texts: &[HomescreenText],
     notification: Option<HomescreenNotification>,
     notification_only: bool,
 ) {

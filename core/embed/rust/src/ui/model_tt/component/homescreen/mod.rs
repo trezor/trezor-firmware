@@ -16,11 +16,9 @@ use crate::{
 
 use render::{
     homescreen, homescreen_blurred, HomescreenNotification, HomescreenText, HOMESCREEN_IMAGE_SIZE,
-    HOMESCREEN_MAX_TEXTS,
 };
 
 use crate::{trezorhal::display::ToifFormat, ui::display::toif_info};
-use heapless::Vec;
 
 use super::{theme, Loader, LoaderMsg};
 
@@ -188,13 +186,12 @@ where
             let mut label_style = theme::TEXT_BOLD;
             label_style.text_color = theme::FG;
 
-            let texts: Vec<HomescreenText, HOMESCREEN_MAX_TEXTS> =
-                unwrap!(Vec::from_slice(&[HomescreenText {
-                    text: self.label.as_ref(),
-                    style: label_style,
-                    offset: Offset::new(10, LABEL_Y),
-                    icon: None
-                }],));
+            let text = HomescreenText {
+                text: self.label.as_ref(),
+                style: label_style,
+                offset: Offset::new(10, LABEL_Y),
+                icon: None,
+            };
 
             let notification = self.get_notification();
 
@@ -202,14 +199,14 @@ where
             if let Ok(data) = res {
                 homescreen(
                     data.as_ref(),
-                    texts,
+                    &[text],
                     notification,
                     self.paint_notification_only,
                 );
             } else {
                 homescreen(
                     IMAGE_HOMESCREEN,
-                    texts,
+                    &[text],
                     notification,
                     self.paint_notification_only,
                 );
@@ -273,32 +270,32 @@ where
         let mut label_style = theme::TEXT_BOLD;
         label_style.text_color = theme::GREY_MEDIUM;
 
-        let texts: Vec<HomescreenText, HOMESCREEN_MAX_TEXTS> = unwrap!(Vec::from_slice(&[
+        let texts: [HomescreenText; 3] = [
             HomescreenText {
                 text: locked,
                 style: theme::TEXT_BOLD,
                 offset: Offset::new(10, LOCKED_Y),
-                icon: Some(theme::ICON_LOCK)
+                icon: Some(theme::ICON_LOCK),
             },
             HomescreenText {
                 text: tap,
                 style: tap_style,
                 offset: Offset::new(10, TAP_Y),
-                icon: None
+                icon: None,
             },
             HomescreenText {
                 text: self.label.as_ref(),
                 style: label_style,
                 offset: Offset::new(10, LABEL_Y),
-                icon: None
+                icon: None,
             },
-        ],));
+        ];
 
         let res = get_image();
         if let Ok(data) = res {
-            homescreen_blurred(data.as_ref(), texts);
+            homescreen_blurred(data.as_ref(), &texts);
         } else {
-            homescreen_blurred(IMAGE_HOMESCREEN, texts);
+            homescreen_blurred(IMAGE_HOMESCREEN, &texts);
         }
     }
 }
