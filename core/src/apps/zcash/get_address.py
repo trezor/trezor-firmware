@@ -34,8 +34,10 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
         receivers[Typecode.ORCHARD] = await get_raw_orchard_address(ctx, coin, msg)
 
         if msg.t_address_n:
+            # this check only makes sense if paths match the respective patterns
+            # (i.e. t_address_n follows BIP-44 and z_address_n follows ZIP-32)
             if msg.t_address_n[2] != msg.z_address_n[2]:
-                raise wire.DataError("Receivers use different acount numbers.")
+                raise wire.DataError("Receivers use different account numbers.")
             receivers[Typecode.P2PKH] = await get_raw_transparent_address(
                 ctx, coin, msg
             )
