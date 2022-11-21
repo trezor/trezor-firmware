@@ -164,6 +164,9 @@ def test_testnet_segwit_big_amount(client: Client):
     )
     prev_hash, prev_tx = forge_prevtx([(address, 2**32 + 1)], network="testnet")
 
+    print(prev_hash)
+    print(prev_tx)
+
     inp1 = messages.TxInputType(
         address_n=address_n,
         amount=2**32 + 1,
