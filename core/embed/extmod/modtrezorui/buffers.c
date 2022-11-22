@@ -23,6 +23,11 @@
 #include "memzero.h"
 
 #if USE_DMA2D
+#if defined BOOTLOADER
+#define BUFFER_SECTION __attribute__((section(".buf")))
+#else
+#define BUFFER_SECTION
+#endif
 
 #define BUFFERS_16BPP 3
 #define BUFFERS_4BPP 3

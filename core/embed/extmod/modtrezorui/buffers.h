@@ -55,6 +55,10 @@
 #define NODMA_BUFFER_SECTION __attribute__((section(".no_dma_buffers")))
 #endif
 
+#define LINE_BUFFER_16BPP_SIZE (BUFFER_PIXELS * 2)
+#define LINE_BUFFER_4BPP_SIZE (BUFFER_PIXELS / 2)
+#define TEXT_BUFFER_SIZE ((BUFFER_PIXELS * TEXT_BUFFER_HEIGHT) / 2)
+
 typedef __attribute__((aligned(4))) struct {
   uint8_t buffer[LINE_BUFFER_16BPP_SIZE];
 } line_buffer_16bpp_t;
