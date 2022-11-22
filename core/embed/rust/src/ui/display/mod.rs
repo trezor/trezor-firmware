@@ -12,7 +12,7 @@ use super::{
 };
 #[cfg(feature = "dma2d")]
 use crate::trezorhal::{
-    buffers::{get_buffer_16bpp, get_buffer_4bpp, get_text_buffer},
+    buffers::{get_buffer_16bpp, get_buffer_4bpp},
     dma2d::{
         dma2d_setup_4bpp_over_16bpp, dma2d_setup_4bpp_over_4bpp, dma2d_start_blend,
         dma2d_wait_for_transfer,
@@ -22,6 +22,7 @@ use crate::{
     error::Error,
     time::Duration,
     trezorhal::{
+        buffers::get_text_buffer,
         display,
         display::ToifFormat,
         qr, time,
@@ -912,6 +913,36 @@ pub fn bar_with_text_and_fill<T: AsRef<str>>(
             pixeldata(final_color);
         }
     }
+    pixeldata_dirty();
+}
+
+pub fn marquee(area: Rect, text: &str, offset: i16, font: Font, fg: Color, bg: Color) {
+    let buffer = unsafe { get_text_buffer(0, true) };
+
+    let area = area.translate(get_offset());
+    let clamped = area.clamp(constant::screen());
+    set_window(clamped);
+
+    display::text_into_buffer(text, font.into(), buffer, offset);
+    let tbl = get_color_table(fg, bg);
+
+    for y in 0..clamped.height() {
+        for x in 0..clamped.width() {
+            let pixel = y * constant::WIDTH + x;
+            let byte_idx = pixel / 2;
+            if byte_idx < buffer.buffer.len() as _ {
+                let data = if pixel % 2 != 0 {
+                    buffer.buffer[byte_idx as usize] >> 4
+                } else {
+                    buffer.buffer[byte_idx as usize] & 0xF
+                };
+                pixeldata(tbl[data as usize]);
+            } else {
+                pixeldata(bg);
+            }
+        }
+    }
+
     pixeldata_dirty();
 }
 

@@ -22,8 +22,6 @@
 #include "fonts/fonts.h"
 #include "memzero.h"
 
-#if USE_DMA2D
-
 #if defined BOOTLOADER
 #define BUFFER_SECTION __attribute__((section(".buf")))
 #else
@@ -70,5 +68,3 @@ buffer_text_t* buffers_get_text_buffer(uint16_t idx, bool clear) {
   }
   return &text_buffers[idx];
 }
-
-#endif
