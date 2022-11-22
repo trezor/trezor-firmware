@@ -15,6 +15,7 @@ pub enum Error {
     OutOfRange,
     MissingKwargs,
     AllocationFailed,
+    IndexError,
     #[cfg(feature = "micropython")]
     CaughtException(Obj),
     #[cfg(feature = "micropython")]
@@ -42,6 +43,7 @@ impl Error {
                 Error::OutOfRange => ffi::mp_obj_new_exception(&ffi::mp_type_OverflowError),
                 Error::MissingKwargs => ffi::mp_obj_new_exception(&ffi::mp_type_TypeError),
                 Error::AllocationFailed => ffi::mp_obj_new_exception(&ffi::mp_type_MemoryError),
+                Error::IndexError => ffi::mp_obj_new_exception(&ffi::mp_type_IndexError),
                 Error::CaughtException(obj) => obj,
                 Error::KeyError(key) => {
                     ffi::mp_obj_new_exception_args(&ffi::mp_type_KeyError, 1, &key)
