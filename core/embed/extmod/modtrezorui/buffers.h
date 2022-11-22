@@ -33,9 +33,9 @@
 #error Text buffer height is too small, please adjust to match used fonts
 #endif
 
-#define LINE_BUFFER_16BPP_SIZE BUFFER_PIXELS * 2
-#define LINE_BUFFER_4BPP_SIZE BUFFER_PIXELS / 2
-#define TEXT_BUFFER_SIZE (BUFFER_PIXELS * TEXT_BUFFER_HEIGHT) / 2
+#define LINE_BUFFER_16BPP_SIZE (BUFFER_PIXELS * 2)
+#define LINE_BUFFER_4BPP_SIZE (BUFFER_PIXELS / 2)
+#define TEXT_BUFFER_SIZE ((BUFFER_PIXELS * TEXT_BUFFER_HEIGHT) / 2)
 #define JPEG_BUFFER_SIZE (BUFFER_PIXELS * 16)
 
 // 3100 is needed according to tjpgd docs,
