@@ -22,8 +22,6 @@
 #include "fonts/fonts.h"
 #include "memzero.h"
 
-#if USE_DMA2D
-
 #define BUFFERS_16BPP 3
 #define BUFFERS_4BPP 3
 #define BUFFERS_TEXT 1
@@ -103,5 +101,3 @@ buffer_blurring_t* buffers_get_blurring_buffer(uint16_t idx, bool clear) {
   }
   return &blurring_buffers[idx];
 }
-
-#endif
