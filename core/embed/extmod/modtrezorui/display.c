@@ -48,12 +48,14 @@ static struct { int x, y; } DISPLAY_OFFSET;
 
 // common display functions
 
+#define CLAMP(x, min, max) (MIN(MAX((x), (min)), (max)))
+
 static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0,
                                 int *x1, int *y1) {
-  *x0 = MAX(x, 0);
-  *y0 = MAX(y, 0);
-  *x1 = MIN(x + w - 1, DISPLAY_RESX - 1);
-  *y1 = MIN(y + h - 1, DISPLAY_RESY - 1);
+  *x0 = CLAMP(x, 0, DISPLAY_RESX);
+  *y0 = CLAMP(y, 0, DISPLAY_RESY);
+  *x1 = CLAMP(x + w - 1, -1, DISPLAY_RESX - 1);
+  *y1 = CLAMP(y + h - 1, -1, DISPLAY_RESY - 1);
 }
 
 void display_clear(void) {
@@ -416,6 +418,9 @@ void display_icon(int x, int y, int w, int h, const void *data,
   y1 -= y;
 
   int width = x1 - x0 + 1;
+  if (width <= 0) {
+    return;
+  }
 
   uint8_t b[DISPLAY_RESX / 2];
   line_buffer_4bpp_t *b1 = buffers_get_line_buffer_4bpp(0, false);
