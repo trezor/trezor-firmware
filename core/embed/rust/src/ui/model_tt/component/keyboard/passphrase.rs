@@ -296,18 +296,18 @@ impl Component for Input {
         // Accounting for the pending marker, which draws itself one pixel longer than
         // the last character
         let available_area_width = self.area.width() - 1;
-        let text_to_display = if style.font.text_width(text) <= available_area_width {
+        let text_to_display = if style.text_font.text_width(text) <= available_area_width {
             text // whole text can fit
         } else {
             // Text is longer, showing its right end with ellipsis at the beginning.
             let ellipsis = "...";
-            let ellipsis_width = style.font.text_width(ellipsis);
+            let ellipsis_width = style.text_font.text_width(ellipsis);
 
             // Drawing the ellipsis and moving the baseline for the rest of the text.
             display::text(
                 text_baseline,
                 ellipsis,
-                style.font,
+                style.text_font,
                 style.text_color,
                 style.background_color,
             );
@@ -316,7 +316,9 @@ impl Component for Input {
             // Finding out how many additional text characters will fit in,
             // starting from the right end.
             let remaining_available_width = available_area_width - ellipsis_width;
-            let chars_from_right = style.font.longest_suffix(remaining_available_width, text);
+            let chars_from_right = style
+                .text_font
+                .longest_suffix(remaining_available_width, text);
 
             &text[text.len() - chars_from_right..]
         };
@@ -324,14 +326,19 @@ impl Component for Input {
         display::text(
             text_baseline,
             text_to_display,
-            style.font,
+            style.text_font,
             style.text_color,
             style.background_color,
         );
 
         // Paint the pending marker.
         if self.multi_tap.pending_key().is_some() {
-            paint_pending_marker(text_baseline, text_to_display, style.font, style.text_color);
+            paint_pending_marker(
+                text_baseline,
+                text_to_display,
+                style.text_font,
+                style.text_color,
+            );
         }
     }
 

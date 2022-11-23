@@ -18,7 +18,7 @@ pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, TimerToke
 pub use border::Border;
 pub use empty::Empty;
 pub use image::Image;
-pub use label::{Label, LabelStyle};
+pub use label::Label;
 pub use map::Map;
 pub use maybe::Maybe;
 pub use pad::Pad;

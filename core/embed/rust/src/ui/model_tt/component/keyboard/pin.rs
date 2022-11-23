@@ -6,8 +6,8 @@ use crate::{
     trezorhal::random,
     ui::{
         component::{
-            base::ComponentExt, Child, Component, Event, EventCtx, Label, LabelStyle, Maybe, Never,
-            Pad, TimerToken,
+            base::ComponentExt, text::TextStyle, Child, Component, Event, EventCtx, Label, Maybe,
+            Never, Pad, TimerToken,
         },
         display::{self, Font},
         event::TouchEvent,
@@ -281,7 +281,7 @@ where
 struct PinDots {
     area: Rect,
     pad: Pad,
-    style: LabelStyle,
+    style: TextStyle,
     digits: String<MAX_LENGTH>,
     display_digits: bool,
 }
@@ -291,7 +291,7 @@ impl PinDots {
     const PADDING: i16 = 6;
     const TWITCH: i16 = 4;
 
-    fn new(style: LabelStyle) -> Self {
+    fn new(style: TextStyle) -> Self {
         Self {
             area: Rect::zero(),
             pad: Pad::with_background(style.background_color),
