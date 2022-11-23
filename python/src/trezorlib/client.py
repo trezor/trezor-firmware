@@ -51,11 +51,19 @@ def get_default_client(
 ) -> "TrezorClient":
     """Get a client for a connected Trezor device.
 
-    Returns a TrezorClient instance with minimum fuss.
+    Args:
+        path: Optional path to the device, e.g. "udp:21324"
+        ui: Optional UI instance
+        **kwargs: Additional arguments to pass to the TrezorClient constructor
+
+    Returns:
+        TrezorClient instance
+
+    Returns a `TrezorClient` instance with minimum fuss.
 
     If path is specified, does a prefix-search for the specified device. Otherwise, uses
-    the value of TREZOR_PATH env variable, or finds first connected Trezor.
-    If no UI is supplied, instantiates the default CLI UI.
+    the value of `TREZOR_PATH` env variable, or finds first connected Trezor.
+    If no UI is supplied, instantiates the default CLI UI - `ClickUI`.
     """
     from .transport import get_transport
     from .ui import ClickUI
@@ -88,6 +96,14 @@ class TrezorClient:
         _init_device: bool = True,
     ) -> None:
         """Create a TrezorClient instance.
+
+        Args:
+            transport: Transport instance
+            ui: UI instance
+            session_id: Optional session ID to use
+            derive_cardano: Whether to derive Cardano
+            model: Optional model of the device
+            _init_device: Whether to initialize the device (more below)
 
         You have to provide a `transport`, i.e., a raw connection to the device. You can
         use `trezorlib.transport.get_transport` to find one.
@@ -126,25 +142,30 @@ class TrezorClient:
             self.init_device(session_id=session_id, derive_cardano=derive_cardano)
 
     def open(self) -> None:
+        """Open a session with the device."""
         if self.session_counter == 0:
             self.transport.begin_session()
         self.session_counter += 1
 
     def close(self) -> None:
+        """Close the session with the device."""
         self.session_counter = max(self.session_counter - 1, 0)
         if self.session_counter == 0:
             # TODO call EndSession here?
             self.transport.end_session()
 
     def cancel(self) -> None:
+        """Send a Cancel message to the device. Aborting the current operation."""
         self._raw_write(messages.Cancel())
 
     def call_raw(self, msg: "MessageType") -> "MessageType":
+        """Send a protobuf message to the device and return the response."""
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         self._raw_write(msg)
         return self._raw_read()
 
     def _raw_write(self, msg: "MessageType") -> None:
+        """Log and send a protobuf message to the device."""
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         LOG.debug(
             f"sending message: {msg.__class__.__name__}",
@@ -158,6 +179,7 @@ class TrezorClient:
         self.transport.write(msg_type, msg_bytes)
 
     def _raw_read(self) -> "MessageType":
+        """Read, log  and return a response message from the device."""
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         msg_type, msg_bytes = self.transport.read()
         LOG.log(
@@ -172,6 +194,7 @@ class TrezorClient:
         return msg
 
     def _callback_pin(self, msg: messages.PinMatrixRequest) -> "MessageType":
+        """Obtain PIN from the user and send it to the device."""
         try:
             pin = self.ui.get_pin(msg.type)
         except exceptions.Cancelled:
@@ -195,6 +218,7 @@ class TrezorClient:
             return resp
 
     def _callback_passphrase(self, msg: messages.PassphraseRequest) -> "MessageType":
+        """Obtain passphrase from user and send it into the device."""
         available_on_device = Capability.PassphraseEntry in self.features.capabilities
 
         def send_passphrase(
@@ -235,6 +259,15 @@ class TrezorClient:
         return send_passphrase(passphrase, on_device=False)
 
     def _callback_button(self, msg: messages.ButtonRequest) -> "MessageType":
+        """Acknowledge to the device the ButtonRequest was received, send
+        it to the UI and wait for the device response.
+
+        Args:
+            msg: the ButtonRequest message received from the device.
+
+        Returns:
+            The response from the device.
+        """
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         # do this raw - send ButtonAck first, notify UI later
         self._raw_write(messages.ButtonAck())
@@ -243,6 +276,14 @@ class TrezorClient:
 
     @session
     def call(self, msg: "MessageType") -> "MessageType":
+        """Send a protobuf message to the device and return the response.
+
+        Args:
+            msg: protobuf message to send
+
+        Returns:
+            Protobuf message received from the device
+        """
         self.check_firmware_version()
         resp = self.call_raw(msg)
         while True:
@@ -260,7 +301,11 @@ class TrezorClient:
                 return resp
 
     def _refresh_features(self, features: messages.Features) -> None:
-        """Update internal fields based on passed-in Features message."""
+        """Update internal fields based on passed-in Features message.
+
+        Args:
+            features: Features message coming from the device.
+        """
 
         if not self.model:
             # Trezor Model One bootloader 1.8.0 or older does not send model name
@@ -288,6 +333,9 @@ class TrezorClient:
 
         Should be called after changing settings or performing operations that affect
         device state.
+
+        Returns:
+            Features message from the device.
         """
         resp = self.call_raw(messages.GetFeatures())
         if not isinstance(resp, messages.Features):
@@ -304,6 +352,14 @@ class TrezorClient:
         derive_cardano: Optional[bool] = None,
     ) -> Optional[bytes]:
         """Initialize the device and return a session ID.
+
+        Args:
+            session_id: Session ID to use. If not provided, the current session ID will be reused.
+            new_session: If True, a new session ID will be generated and returned.
+            derive_cardano: If True, the Cardano app will be initialized.
+
+        Returns:
+            Session ID, if we manage to get it, otherwise None.
 
         You can optionally specify a session ID. If the session still exists on the
         device, the same session ID will be returned and the session is resumed.
@@ -327,9 +383,11 @@ class TrezorClient:
         A valid session_id can be obtained from the `session_id` attribute, but only
         after a passphrase-protected call is performed. You can use the following code:
 
-        >>> client.init_device()
-        >>> client.ensure_unlocked()
-        >>> valid_session_id = client.session_id
+        ```python
+        client.init_device()
+        client.ensure_unlocked()
+        valid_session_id = client.session_id
+        ```
         """
         if new_session:
             self.session_id = None
@@ -365,6 +423,11 @@ class TrezorClient:
         return reported_session_id
 
     def is_outdated(self) -> bool:
+        """Check if the device firmware is outdated.
+
+        Returns:
+            True if the device firmware is outdated, False otherwise.
+        """
         if self.features.bootloader_mode:
             return False
 
@@ -372,6 +435,14 @@ class TrezorClient:
         return self.version < self.model.minimum_version
 
     def check_firmware_version(self, warn_only: bool = False) -> None:
+        """Check if the firmware version is still actively supported.
+
+        Args:
+            warn_only: If True, only log a warning. Otherwise, raise an exception.
+
+        Raises:
+            OutdatedFirmwareError: If the firmware version is too old.
+        """
         if self.is_outdated():
             if warn_only:
                 warnings.warn("Firmware is out of date", stacklevel=2)
@@ -384,6 +455,15 @@ class TrezorClient:
         msg: str,
         button_protection: bool = False,
     ) -> "MessageType":
+        """Ping the device.
+
+        Args:
+            msg: Message to display on the device.
+            button_protection: Require button press to confirm.
+
+        Returns:
+            The success message/string returned by the device.
+        """
         # We would like ping to work on any valid TrezorClient instance, but
         # due to the protection modes, we need to go through self.call, and that will
         # raise an exception if the firmware is too old.
@@ -405,7 +485,13 @@ class TrezorClient:
             messages.Ping(message=msg, button_protection=button_protection)
         )
 
-    def get_device_id(self) -> Optional[str]:
+    def get_device_id(self) -> str:
+        """Get device ID.
+
+        Returns:
+            Device ID in hexadecimal string.
+        """
+        assert self.features.device_id is not None
         return self.features.device_id
 
     @session

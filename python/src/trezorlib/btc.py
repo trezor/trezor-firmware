@@ -74,6 +74,15 @@ if TYPE_CHECKING:
 
 
 def from_json(json_dict: "Transaction") -> messages.TransactionType:
+    """Translate transaction from JSON to protobuf message.
+
+    Args:
+        json_dict: Transaction in JSON format.
+
+    Returns:
+        TransactionType
+    """
+
     def make_input(vin: "Vin") -> messages.TxInputType:
         if "coinbase" in vin:
             return messages.TxInputType(
@@ -117,6 +126,22 @@ def get_public_node(
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
 ) -> "MessageType":
+    """Ask device for public key corresponding to given path.
+
+    Args:
+        client: TrezorClient instance
+        n: BIP-32 path to derive the key from master node
+        ecdsa_curve_name: ECDSA curve name to use
+        show_display: optionally show on the display before sending the result
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        script_type: script type to use (non-segwit, segwit, etc.)
+        ignore_xpub_magic: ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+        unlock_path: BIP-32 path to unlock the device
+        unlock_path_mac: MAC returned by UnlockedPathRequest
+
+    Returns:
+        PublicKey
+    """
     if unlock_path:
         res = client.call(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac)
@@ -137,7 +162,14 @@ def get_public_node(
 
 
 @expect(messages.Address, field="address", ret_type=str)
-def get_address(*args: Any, **kwargs: Any):
+def get_address(*args: Any, **kwargs: Any) -> "MessageType":
+    """Ask device for address corresponding to given path.
+
+    Calls `get_authenticated_address` with all the given arguments.
+
+    Returns:
+        str: address
+    """
     return get_authenticated_address(*args, **kwargs)
 
 
@@ -153,6 +185,22 @@ def get_authenticated_address(
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
 ) -> "MessageType":
+    """Get address for given path.
+
+    Args:
+        client: TrezorClient instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        n: BIP-32 path to derive the key from master node
+        show_display: optionally show on the display before sending the result
+        multisig: multisig configuration
+        script_type: script type to use (non-segwit, segwit, etc.)
+        ignore_xpub_magic: ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+        unlock_path: BIP-32 path to unlock the device
+        unlock_path_mac: MAC returned by UnlockedPathRequest
+
+    Returns:
+        Address
+    """
     if unlock_path:
         res = client.call(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac)
@@ -180,6 +228,18 @@ def get_ownership_id(
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> "MessageType":
+    """Ask device for ownership identifier corresponding to scriptPubKey for given path.
+
+    Args:
+        client: TrezorClient instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        n: BIP-32 path to derive the key from master node
+        multisig: multisig configuration
+        script_type: script type to use (non-segwit, segwit, etc.)
+
+    Returns:
+        bytes: ownership identifier
+    """
     return client.call(
         messages.GetOwnershipId(
             address_n=n,
@@ -201,6 +261,23 @@ def get_ownership_proof(
     commitment_data: Optional[bytes] = None,
     preauthorized: bool = False,
 ) -> Tuple[bytes, bytes]:
+    """Ask device for a proof of ownership corresponding to given path.
+
+    Args:
+        client: TrezorClient instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        n: BIP-32 path to derive the key from master node
+        multisig: multisig configuration
+        script_type: script type to use (non-segwit, segwit, etc.)
+        user_confirmation: show a confirmation dialog and set the "user confirmation" bit in the proof
+        ownership_ids: list of ownership identifiers in case of multisig
+        commitment_data: additional data to which the proof should commit
+        preauthorized: whether to preauthorize the proof
+
+    Returns:
+        ownership_proof
+        signature
+    """
     if preauthorized:
         res = client.call(messages.DoPreauthorized())
         if not isinstance(res, messages.PreauthorizedRequest):
@@ -233,6 +310,19 @@ def sign_message(
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     no_script_type: bool = False,
 ) -> "MessageType":
+    """Ask device to sign message.
+
+    Args:
+        client: TrezorClient instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        n: BIP-32 path to derive the key from master node
+        message: message to sign
+        script_type: script type to use (non-segwit, segwit, etc.)
+        no_script_type: don't include script type information in the recovery byte of the signature, same as in Bitcoin Core
+
+    Returns:
+        MessageSignature
+    """
     return client.call(
         messages.SignMessage(
             coin_name=coin_name,
@@ -251,6 +341,18 @@ def verify_message(
     signature: bytes,
     message: AnyStr,
 ) -> bool:
+    """Ask device to verify message.
+
+    Args:
+        client: TrezorClient instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        address: address to verify the signature against
+        signature: signature to verify
+        message: message to verify
+
+    Returns:
+        bool: True if the signature is valid, False otherwise
+    """
     try:
         resp = client.call(
             messages.VerifyMessage(
@@ -280,6 +382,22 @@ def sign_tx(
     **kwargs: Any,
 ) -> Tuple[Sequence[Optional[bytes]], bytes]:
     """Sign a Bitcoin-like transaction.
+
+    Args:
+        client: TrezorClient instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        inputs: list of transaction inputs
+        outputs: list of transaction outputs
+        details: additional transaction details
+        prev_txes: dictionary of previous transactions
+        payment_reqs: list of payment requests
+        preauthorized: whether to preauthorize the transaction
+        unlock_path: path to unlock the device
+        unlock_path_mac: MAC of the unlock path
+
+    Returns:
+        list of signatures
+        serialized transaction
 
     Returns a list of signatures (one for each provided input) and the
     network-serialized transaction.
@@ -437,6 +555,21 @@ def authorize_coinjoin(
     coin_name: str,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> "MessageType":
+    """Ask device to prompt the user to authorize a CoinJoin transaction.
+
+    Args:
+        client: TrezorClient instance
+        coordinator: coordinator identifier to approve as a prefix in commitment data (max. 36 ASCII characters)
+        max_rounds: maximum number of rounds that Trezor is authorized to take part in
+        max_coordinator_fee_rate: maximum coordination fee rate in units of 10^-6 percent
+        max_fee_per_kvbyte: maximum mining fee rate in units of satoshis per 1000 vbytes
+        n: prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
+        coin_name: name of the coin, e.g. "Bitcoin", "Testnet"
+        script_type: script type of the account (default: SPENDADDRESS)
+
+    Returns:
+        str: Success message
+    """
     return client.call(
         messages.AuthorizeCoinJoin(
             coordinator=coordinator,

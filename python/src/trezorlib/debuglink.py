@@ -74,6 +74,9 @@ class LayoutContent:
     def get_title(self) -> str:
         """Get title of the layout.
 
+        Returns:
+            Title of the layout or empty string if no title is present.
+
         Title is located between "title" and "content" identifiers.
         Example: "< Frame title :  RECOVERY SHARE #1 content :  < SwipePage"
           -> "RECOVERY SHARE #1"
@@ -84,7 +87,15 @@ class LayoutContent:
         return match.group(1).strip()
 
     def get_content(self, tag_name: str = "Paragraphs", raw: bool = False) -> str:
-        """Get text of the main screen content of the layout."""
+        """Get text of the main screen content of the layout.
+
+        Args:
+            tag_name: Name of the tag that contains the content.
+            raw: If True, return the raw content without any processing.
+
+        Returns:
+            Content of the layout as a single string.
+        """
         content = "".join(self._get_content_lines(tag_name, raw))
         if not raw and content.endswith(" "):
             # Stripping possible space at the end
@@ -94,6 +105,9 @@ class LayoutContent:
     def get_button_texts(self) -> List[str]:
         """Get text of all buttons in the layout.
 
+        Returns:
+            List of button texts.
+
         Example button: "< Button text :  LADYBUG >"
           -> ["LADYBUG"]
         """
@@ -101,6 +115,9 @@ class LayoutContent:
 
     def get_seed_words(self) -> List[str]:
         """Get all the seed words on the screen in order.
+
+        Returns:
+            List of seed words.
 
         Example content: "1. ladybug 2. acid 3. academic 4. afraid"
           -> ["ladybug", "acid", "academic", "afraid"]
@@ -167,7 +184,14 @@ def _clean_line(line: str) -> str:
 
 
 def multipage_content(layouts: List[LayoutContent]) -> str:
-    """Get overall content from multiple-page layout."""
+    """Get overall content from multiple-page layout.
+
+    Args:
+        layouts: List of layouts to get the content from.
+
+    Returns:
+        Combined content of all the layouts as a single string.
+    """
     final_text = ""
     for layout in layouts:
         final_text += layout.get_content()
@@ -184,6 +208,11 @@ def multipage_content(layouts: List[LayoutContent]) -> str:
 
 
 class DebugLink:
+    """DebugLink client.
+
+    Only works with Trezors that were built with debuglink support.
+    """
+
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
         self.transport = transport
         self.allow_interactions = auto_interact
@@ -198,12 +227,23 @@ class DebugLink:
         self.t1_screenshot_counter = 0
 
     def open(self) -> None:
+        """Begin a debug session."""
         self.transport.begin_session()
 
     def close(self) -> None:
+        """End a debug session."""
         self.transport.end_session()
 
     def _call(self, msg: protobuf.MessageType, nowait: bool = False) -> Any:
+        """Send a protobuf message to the device.
+
+        Args:
+            msg: Message to send
+            nowait: Do not wait for a response
+
+        Returns:
+            Response message or `None` if `nowait` is True
+        """
         LOG.debug(
             f"sending message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
@@ -230,12 +270,29 @@ class DebugLink:
         return msg
 
     def state(self) -> messages.DebugLinkState:
+        """Get a debuglink state.
+
+        Returns:
+            DebugLinkState message
+
+        It includes information about the current screen content, PIN etc.
+        """
         return self._call(messages.DebugLinkGetState())
 
     def read_layout(self) -> LayoutContent:
+        """Get the current content of the Trezor screen.
+
+        Returns:
+            LayoutContent
+        """
         return LayoutContent(self.state().layout_lines)
 
     def wait_layout(self) -> LayoutContent:
+        """Get the content of the Trezor screen as soon as it changes.
+
+        Returns:
+            LayoutContent
+        """
         obj = self._call(messages.DebugLinkGetState(wait_layout=True))
         if isinstance(obj, messages.Failure):
             raise TrezorFailure(obj)
@@ -251,7 +308,15 @@ class DebugLink:
         self._call(messages.DebugLinkWatchLayout(watch=watch))
 
     def encode_pin(self, pin: str, matrix: Optional[str] = None) -> str:
-        """Transform correct PIN according to the displayed matrix."""
+        """Transform correct PIN according to the displayed matrix.
+
+        Args:
+            pin: PIN
+            matrix: Optional matrix
+
+        Returns:
+            Encoded PIN
+        """
         if matrix is None:
             matrix = self.state().matrix
             if matrix is None:
@@ -261,14 +326,30 @@ class DebugLink:
         return "".join([str(matrix.index(p) + 1) for p in pin])
 
     def read_recovery_word(self) -> Tuple[Optional[str], Optional[int]]:
+        """Read the current recovery word.
+
+        Returns:
+                (fake) word on display during RecoveryDevice workflow
+                index of mnemonic word the device is expecting during RecoveryDevice workflow
+        """
         state = self.state()
         return (state.recovery_fake_word, state.recovery_word_pos)
 
     def read_reset_word(self) -> str:
+        """Read the mnemonic word(s) on the screen.
+
+        Returns:
+            word on device display during ResetDevice workflow
+        """
         state = self._call(messages.DebugLinkGetState(wait_word_list=True))
         return state.reset_word
 
     def read_reset_word_pos(self) -> int:
+        """Read the position of the requested word.
+
+        Returns:
+            index of mnemonic word the device is expecting during ResetDevice workflow
+        """
         state = self._call(messages.DebugLinkGetState(wait_word_pos=True))
         return state.reset_word_pos
 
@@ -282,6 +363,22 @@ class DebugLink:
         wait: Optional[bool] = None,
         hold_ms: Optional[int] = None,
     ) -> Optional[LayoutContent]:
+        """Somehow interact with the device.
+
+        Can be pressing a button, swiping the screen, or entering a word.
+
+        Args:
+            word: mnemonic word to enter
+            button: button to press
+            swipe: direction to swipe
+            x: x coordinate of the touch/click
+            y: y coordinate of the touch/click
+            wait: wait for the layout to change
+            hold_ms: hold the button for this many milliseconds
+
+        Returns:
+            LayoutContent if `wait` is True, `None` otherwise.
+        """
         if not self.allow_interactions:
             return None
 
@@ -312,38 +409,66 @@ class DebugLink:
     def click(
         self, click: Tuple[int, int], wait: bool = False
     ) -> Optional[LayoutContent]:
+        """Click on a specific point on the screen.
+
+        Args:
+            click: (x, y) coordinates of the click
+            wait: wait for the screen to change
+
+        Returns:
+            LayoutContent if `wait` is True, `None` otherwise.
+        """
         x, y = click
         return self.input(x=x, y=y, wait=wait)
 
     def press_yes(self) -> None:
+        """Press the "Yes" button."""
         self.input(button=messages.DebugButton.YES)
 
     def press_no(self) -> None:
+        """Press the "No" button."""
         self.input(button=messages.DebugButton.NO)
 
     def press_info(self) -> None:
+        """Press the "Info" button."""
         self.input(button=messages.DebugButton.INFO)
 
     def swipe_up(self, wait: bool = False) -> None:
+        """Swipe the screen up."""
         self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
 
     def swipe_down(self) -> None:
+        """Swipe the screen down."""
         self.input(swipe=messages.DebugSwipeDirection.DOWN)
 
     def swipe_right(self) -> None:
+        """Swipe the screen right."""
         self.input(swipe=messages.DebugSwipeDirection.RIGHT)
 
     def swipe_left(self) -> None:
+        """Swipe the screen left."""
         self.input(swipe=messages.DebugSwipeDirection.LEFT)
 
     def stop(self) -> None:
+        """Kill the debuglink connection."""
         self._call(messages.DebugLinkStop(), nowait=True)
 
     def reseed(self, value: int) -> protobuf.MessageType:
+        """Re-seed RNG with given value.
+
+        Args:
+            value: seed value
+        """
         return self._call(messages.DebugLinkReseedRandom(value=value))
 
     def start_recording(self, directory: str) -> None:
-        # Different recording logic between TT and T1
+        """Start recording screen changes into a specified directory.
+
+        Different recording logic between TT and T1.
+
+        Args:
+            directory: directory to store the recordings
+        """
         if self.model == "T":
             self._call(messages.DebugLinkRecordScreen(target_directory=directory))
         else:
@@ -352,7 +477,10 @@ class DebugLink:
             self.t1_take_screenshots = True
 
     def stop_recording(self) -> None:
-        # Different recording logic between TT and T1
+        """Stop the screen recording.
+
+        Different logic between TT and T1.
+        """
         if self.model == "T":
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
         else:
@@ -360,19 +488,41 @@ class DebugLink:
 
     @expect(messages.DebugLinkMemory, field="memory", ret_type=bytes)
     def memory_read(self, address: int, length: int) -> protobuf.MessageType:
+        """Read memory from the device."""
         return self._call(messages.DebugLinkMemoryRead(address=address, length=length))
 
     def memory_write(self, address: int, memory: bytes, flash: bool = False) -> None:
+        """Write memory to device.
+
+        WARNING: Writing to the wrong location can irreparably break the device.
+
+        Args:
+            address: Address to write to
+            memory: Data to write
+            flash: Write to flash
+        """
         self._call(
             messages.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
             nowait=True,
         )
 
     def flash_erase(self, sector: int) -> None:
+        """Erase block of flash on device.
+
+        WARNING: Writing to the wrong location can irreparably break the device.
+
+        Args:
+            sector: Sector to erase
+        """
         self._call(messages.DebugLinkFlashErase(sector=sector), nowait=True)
 
     @expect(messages.Success)
     def erase_sd_card(self, format: bool = True) -> messages.Success:
+        """Erase the SD card.
+
+        Args:
+            format: Format the SD card after erasing
+        """
         return self._call(messages.DebugLinkEraseSdCard(format=format))
 
     def take_t1_screenshot_if_relevant(self) -> None:
@@ -384,6 +534,10 @@ class DebugLink:
             self.save_screenshot_for_t1()
 
     def save_screenshot_for_t1(self) -> None:
+        """Save screenshot for T1.
+
+        Reconstructs pixel data and saves it as a PNG file.
+        """
         from PIL import Image
 
         layout = self.state().layout
@@ -409,6 +563,12 @@ class DebugLink:
 
 
 class NullDebugLink(DebugLink):
+    """No-op debuglink.
+
+    Used as a default Debuglink implementation in case the Trezor device
+    does not support debuglink.
+    """
+
     def __init__(self) -> None:
         # Ignoring type error as self.transport will not be touched while using NullDebugLink
         super().__init__(None)  # type: ignore [Argument of type "None" cannot be assigned to parameter "transport"]
@@ -432,6 +592,8 @@ class NullDebugLink(DebugLink):
 
 
 class DebugUI:
+    """UI to be used together with DebugLink."""
+
     INPUT_FLOW_DONE = object()
 
     def __init__(self, debuglink: DebugLink) -> None:
@@ -439,6 +601,7 @@ class DebugUI:
         self.clear()
 
     def clear(self) -> None:
+        """Put all internal variables to empty state."""
         self.pins: Optional[Iterator[str]] = None
         self.passphrase = ""
         self.input_flow: Union[
@@ -446,6 +609,7 @@ class DebugUI:
         ] = None
 
     def button_request(self, br: messages.ButtonRequest) -> None:
+        """Handle button request."""
         self.debuglink.take_t1_screenshot_if_relevant()
 
         if self.input_flow is None:
@@ -466,6 +630,7 @@ class DebugUI:
                 self.input_flow = self.INPUT_FLOW_DONE
 
     def get_pin(self, code: Optional["PinMatrixRequestType"] = None) -> str:
+        """Handle the PIN request."""
         self.debuglink.take_t1_screenshot_if_relevant()
 
         if self.pins is None:
@@ -477,6 +642,7 @@ class DebugUI:
             raise AssertionError("PIN sequence ended prematurely")
 
     def get_passphrase(self, available_on_device: bool) -> str:
+        """Handle the passphrase request."""
         self.debuglink.take_t1_screenshot_if_relevant()
         return self.passphrase
 
@@ -574,15 +740,16 @@ message_filters = MessageFilterGenerator()
 
 
 class TrezorClientDebugLink(TrezorClient):
-    # This class implements automatic responses
-    # and other functionality for unit tests
-    # for various callbacks, created in order
-    # to automatically pass unit tests.
-    #
-    # This mixing should be used only for purposes
-    # of unit testing, because it will fail to work
-    # without special DebugLink interface provided
-    # by the device.
+    """Implements automatic responses
+    and other functionality for unit tests
+    for various callbacks, created in order
+    to automatically pass unit tests.
+
+    This mixing should be used only for purposes
+    of unit testing, because it will fail to work
+    without special DebugLink interface provided
+    by the device.
+    """
 
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
         try:
@@ -664,23 +831,24 @@ class TrezorClientDebugLink(TrezorClient):
         input flow function waits for a ButtonRequest from the device, and returns
         its code.
 
-        Example usage:
+        # Examples:
+        ```python
+        def input_flow():
+            # wait for first button prompt
+            code = yield
+            assert code == ButtonRequestType.Other
+            # press No
+            client.debug.press_no()
 
-        >>> def input_flow():
-        >>>     # wait for first button prompt
-        >>>     code = yield
-        >>>     assert code == ButtonRequestType.Other
-        >>>     # press No
-        >>>     client.debug.press_no()
-        >>>
-        >>>     # wait for second button prompt
-        >>>     yield
-        >>>     # press Yes
-        >>>     client.debug.press_yes()
-        >>>
-        >>> with client:
-        >>>     client.set_input_flow(input_flow)
-        >>>     some_call(client)
+            # wait for second button prompt
+            yield
+            # press Yes
+            client.debug.press_yes()
+
+        with client:
+            client.set_input_flow(input_flow)
+            some_call(client)
+        ```
         """
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
@@ -741,14 +909,17 @@ class TrezorClientDebugLink(TrezorClient):
 
         Each expected response can also be a tuple (bool, message). In that case, the
         expected response is only evaluated if the first field is True.
-        This is useful for differentiating sequences between Trezor models:
+        This is useful for differentiating sequences between Trezor models.
 
-        >>> trezor_one = client.features.model == "1"
-        >>> client.set_expected_responses([
-        >>>     messages.ButtonRequest(code=ConfirmOutput),
-        >>>     (trezor_one, messages.ButtonRequest(code=ConfirmOutput)),
-        >>>     messages.Success(),
-        >>> ])
+        # Examples:
+        ```python
+        trezor_one = client.features.model == "1"
+        client.set_expected_responses([
+            messages.ButtonRequest(code=ConfirmOutput),
+            (trezor_one, messages.ButtonRequest(code=ConfirmOutput)),
+            messages.Success(),
+        ])
+        ```
         """
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
@@ -869,6 +1040,22 @@ def load_device(
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> protobuf.MessageType:
+    """Load device with the given parameters.
+
+    Args:
+        client: TrezorClient instance
+        mnemonic: mnemonic words to load
+        pin: PIN to set
+        passphrase_protection: enable passphrase protection
+        label: device label
+        language: device language
+        skip_checksum: do not test mnemonic for valid BIP-39 checksum
+        needs_backup: set "needs backup" flag
+        no_backup: indicate that no backup is going to be made
+
+    Returns:
+        str: Success message
+    """
     if isinstance(mnemonic, str):
         mnemonic = [mnemonic]
 
@@ -901,6 +1088,14 @@ load_device_by_mnemonic = load_device
 
 @expect(messages.Success, field="message", ret_type=str)
 def self_test(client: "TrezorClient") -> protobuf.MessageType:
+    """Perform self-test on the device.
+
+    Args:
+        client: TrezorClient instance
+
+    Returns:
+        str: Success message
+    """
     if client.features.bootloader_mode is not True:
         raise RuntimeError("Device must be in bootloader mode")
 
@@ -917,6 +1112,11 @@ def record_screen(
     report_func: Union[Callable[[str], None], None] = None,
 ) -> None:
     """Record screen changes into a specified directory.
+
+    Args:
+        debug_client: DebugLink client.
+        directory: Directory to store the screenshots in. `None` if we should stop recording.
+        report_func: Optional function to report the progress to.
 
     Passing `None` as `directory` stops the recording.
 
@@ -955,5 +1155,12 @@ def record_screen(
 
 
 def _is_emulator(debug_client: "TrezorClientDebugLink") -> bool:
-    """Check if we are connected to emulator, in contrast to hardware device."""
+    """Check if we are connected to emulator, in contrast to hardware device.
+
+    Args:
+        debug_client: DebugLink client.
+
+    Returns:
+        True if the connected device/client is emulator, False otherwise.
+    """
     return debug_client.features.fw_vendor == "EMULATOR"
