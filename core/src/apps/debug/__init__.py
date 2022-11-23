@@ -65,8 +65,8 @@ if __debug__:
 
     async def _dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
         from trezor.enums import DebugButton, DebugSwipeDirection
-        from trezor.ui import Result
-        from trezor.ui.components.common import (
+        from trezor.ui import (
+            Result,
             SWIPE_UP,
             SWIPE_DOWN,
             SWIPE_LEFT,
