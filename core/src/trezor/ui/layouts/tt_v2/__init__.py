@@ -7,7 +7,6 @@ from trezor.wire import ActionCancelled
 
 import trezorui2
 
-from ...components.common.confirm import CANCELLED, CONFIRMED, INFO
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
@@ -20,6 +19,10 @@ if TYPE_CHECKING:
 
 
 BR_TYPE_OTHER = ButtonRequestType.Other  # global_import_cache
+
+CONFIRMED = trezorui2.CONFIRMED
+CANCELLED = trezorui2.CANCELLED
+INFO = trezorui2.INFO
 
 
 class _RustLayout(ui.Layout):
@@ -66,7 +69,7 @@ class _RustLayout(ui.Layout):
 
         async def handle_swipe(self):
             from apps.debug import notify_layout_change, swipe_signal
-            from trezor.ui.components.common import (
+            from trezor.ui import (
                 SWIPE_UP,
                 SWIPE_DOWN,
                 SWIPE_LEFT,
