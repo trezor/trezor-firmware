@@ -163,7 +163,8 @@ where
             .inset(borders_no_top)
             .split_top(theme::borders().top + HEADER_HEIGHT + HEADER_PADDING_BOTTOM);
         let prompt = header.inset(HEADER_PADDING);
-        let major_area = prompt.translate(Self::MAJOR_OFF);
+        // the inset -3 is a workaround for long text in "re-enter wipe code"
+        let major_area = prompt.translate(Self::MAJOR_OFF).inset(Insets::right(-3));
         let minor_area = prompt.translate(Self::MINOR_OFF);
 
         // Control buttons.
