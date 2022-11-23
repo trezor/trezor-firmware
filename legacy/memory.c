@@ -30,6 +30,9 @@
 
 void memory_protect(void) {
 #if PRODUCTION
+#if BOOTLOADER_QA
+#error BOOTLOADER_QA must be built with PRODUCTION=0
+#endif
   // Reference STM32F205 Flash programming manual revision 5
   // http://www.st.com/resource/en/programming_manual/cd00233952.pdf Section 2.6
   // Option bytes
@@ -73,11 +76,16 @@ void memory_protect(void) {
 // example in STM32F427, where the protection bits are read correctly
 // from OPTION_BYTES and not form FLASH_OPCTR register.
 //
-// Read protection is unaffected and always stays locked to the desired value.
+// Read protection is set to level 2.
 void memory_write_unlock(void) {
+#if PRODUCTION
+#if BOOTLOADER_QA
+#error BOOTLOADER_QA must be built with PRODUCTION=0
+#endif
   flash_unlock_option_bytes();
   flash_program_option_bytes(0x0FFFCCEC);
   flash_lock_option_bytes();
+#endif
 }
 
 int memory_bootloader_hash(uint8_t *hash) {

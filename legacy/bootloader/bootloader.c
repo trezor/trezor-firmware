@@ -64,6 +64,7 @@ void show_unplug(const char *line1, const char *line2) {
                "You may now", "unplug your Trezor.", NULL);
 }
 
+#if !BOOTLOADER_QA
 static void show_unofficial_warning(const uint8_t *hash) {
 // On production bootloader, show warning and wait for user
 // to accept or reject it
@@ -93,6 +94,7 @@ static void show_unofficial_warning(const uint8_t *hash) {
   delay(100000000);
 #endif
 }
+#endif
 
 static void __attribute__((noreturn)) load_app(int signed_firmware) {
   // zero out SRAM
@@ -159,12 +161,16 @@ int main(void) {
     uint8_t fingerprint[32] = {0};
     int signed_firmware = signatures_match(hdr, fingerprint);
     if (SIG_OK != signed_firmware) {
+#if BOOTLOADER_QA
+      show_halt("Unsigned firmware", "Won't run on QA device");
+#else
       show_unofficial_warning(fingerprint);
+#endif
     }
-#if !PRODUCTION
+#if !PRODUCTION && !BOOTLOADER_QA && !DEBUG_T1_SIGNATURES
     // try to avoid bricking board SWD debug by accident
     else {
-      show_halt("Official firmware", "Won't flash on debug device");
+      show_halt("Official firmware", "Won't run on debug device");
     }
 #endif
 

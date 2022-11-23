@@ -5,9 +5,14 @@ import os
 import tools
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
+PRODUCTION = ARGUMENTS.get('PRODUCTION', '0')
+BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D = TREZOR_MODEL in ('T', )
+
+if PRODUCTION != '1' and BOOTLOADER_QA:
+    raise ValueError('Firmware variant for bootloader upgrade testing must be done with PRODUCTION=1')
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -431,7 +436,7 @@ tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0'), PYOPT, BITCOIN_ONLY))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), PRODUCTION, PYOPT, BITCOIN_ONLY))
 
 tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
@@ -769,12 +774,18 @@ obj_program.extend(
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
 
+
+BOOTLOADER_SUFFIX =  TREZOR_MODEL + ('_QA' if BOOTLOADER_QA else '')
+
 obj_program.extend(
     env.Command(
-        target='embed/firmware/bootloader.o',
-        source='embed/firmware/bootloader.bin',
+        target='embed/firmware/bootloaders/bootloader.o',
+        source=f'embed/firmware/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.bootloader'
+        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_start=_binary_embed_firmware_bootloader_bin_start'
+        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_end=_binary_embed_firmware_bootloader_bin_end'
+        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_size=_binary_embed_firmware_bootloader_bin_size'
         ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)
