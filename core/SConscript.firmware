@@ -586,9 +586,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/recovery.py'))
         if EVERYTHING:
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/fido.py'))
-    elif TREZOR_MODEL in ('1',):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/t1.py'))
-    elif TREZOR_MODEL in ('R',):
+    elif TREZOR_MODEL in ('1', 'R'):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/__init__.py'))
     else:
         raise ValueError('Unknown Trezor model')
