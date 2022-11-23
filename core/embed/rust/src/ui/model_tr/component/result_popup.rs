@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, Paragraphs},
-            Child, Component, ComponentExt, Event, EventCtx, Label, LabelStyle, Pad,
+            Child, Component, ComponentExt, Event, EventCtx, Label, Pad,
         },
         constant::screen,
         display::Font,
@@ -55,12 +55,6 @@ impl ResultPopup {
             ))
         });
 
-        let headline_style = LabelStyle {
-            background_color: theme::BG,
-            text_color: theme::FG,
-            font: Font::BOLD,
-        };
-
         let mut pad = Pad::with_background(theme::BG);
         pad.clear();
 
@@ -68,7 +62,7 @@ impl ResultPopup {
             area: Rect::zero(),
             pad,
             result_anim: Child::new(ResultAnim::new(icon)),
-            headline: headline.map(|a| Label::new(a, Alignment::Center, headline_style)),
+            headline: headline.map(|a| Label::new(a, Alignment::Center, theme::TEXT_BOLD)),
             headline_baseline: Point::zero(),
             text: Child::new(p1),
             button,
@@ -105,7 +99,7 @@ impl Component for ResultPopup {
         let mut button_height = 0;
 
         if let Some(h) = self.headline.as_mut() {
-            headline_height = h.size().y;
+            headline_height = h.max_size().y;
             anim_adjust += ANIM_POS_ADJ_HEADLINE;
         }
         if self.button.is_some() {

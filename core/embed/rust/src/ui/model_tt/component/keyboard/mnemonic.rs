@@ -95,7 +95,7 @@ where
         let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
 
         let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
-        let prompt_size = self.prompt.inner().inner().size();
+        let prompt_size = self.prompt.inner().inner().max_size();
         let prompt_top_left = prompt_size.snap(prompt_center, Alignment::Center, Alignment::Center);
         let prompt_area = Rect::from_top_left_and_size(prompt_top_left, prompt_size);
 

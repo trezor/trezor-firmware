@@ -1,6 +1,5 @@
 use crate::ui::{
     component::{
-        label::LabelStyle,
         text::{formatted::FormattedFonts, TextStyle},
         FixedHeightBar,
     },
@@ -72,76 +71,40 @@ pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
 pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");
 pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
 
-pub fn label_default() -> LabelStyle {
-    LabelStyle {
-        font: Font::NORMAL,
-        text_color: FG,
-        background_color: BG,
-    }
+pub const fn label_default() -> TextStyle {
+    TEXT_NORMAL
 }
 
-pub fn label_keyboard() -> LabelStyle {
-    LabelStyle {
-        font: Font::DEMIBOLD,
-        text_color: OFF_WHITE,
-        background_color: BG,
-    }
+pub const fn label_keyboard() -> TextStyle {
+    TextStyle::new(Font::DEMIBOLD, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
-pub fn label_keyboard_warning() -> LabelStyle {
-    LabelStyle {
-        font: Font::DEMIBOLD,
-        text_color: RED,
-        background_color: BG,
-    }
+pub const fn label_keyboard_warning() -> TextStyle {
+    TextStyle::new(Font::DEMIBOLD, RED, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
-pub fn label_keyboard_minor() -> LabelStyle {
-    LabelStyle {
-        font: Font::NORMAL,
-        text_color: OFF_WHITE,
-        background_color: BG,
-    }
+pub const fn label_keyboard_minor() -> TextStyle {
+    TEXT_NORMAL_OFF_WHITE
 }
 
-pub fn label_page_hint() -> LabelStyle {
-    LabelStyle {
-        font: Font::BOLD,
-        text_color: GREY_LIGHT,
-        background_color: BG,
-    }
+pub const fn label_page_hint() -> TextStyle {
+    TextStyle::new(Font::BOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
-pub fn label_warning() -> LabelStyle {
-    LabelStyle {
-        font: Font::DEMIBOLD,
-        text_color: FG,
-        background_color: BG,
-    }
+pub const fn label_warning() -> TextStyle {
+    TEXT_DEMIBOLD
 }
 
-pub fn label_warning_value() -> LabelStyle {
-    LabelStyle {
-        font: Font::NORMAL,
-        text_color: OFF_WHITE,
-        background_color: BG,
-    }
+pub const fn label_warning_value() -> TextStyle {
+    TEXT_NORMAL_OFF_WHITE
 }
 
-pub fn label_recovery_title() -> LabelStyle {
-    LabelStyle {
-        font: Font::BOLD,
-        text_color: FG,
-        background_color: BG,
-    }
+pub const fn label_recovery_title() -> TextStyle {
+    TEXT_BOLD
 }
 
-pub fn label_recovery_description() -> LabelStyle {
-    LabelStyle {
-        font: Font::NORMAL,
-        text_color: OFF_WHITE,
-        background_color: BG,
-    }
+pub const fn label_recovery_description() -> TextStyle {
+    TEXT_NORMAL_OFF_WHITE
 }
 
 pub fn button_default() -> ButtonStyleSheet {

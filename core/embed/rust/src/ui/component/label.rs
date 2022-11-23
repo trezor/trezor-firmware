@@ -2,45 +2,37 @@ use core::ops::Deref;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display::{self, Color, Font},
+    display::Font,
     geometry::{Alignment, Offset, Rect},
 };
 
-pub struct LabelStyle {
-    pub font: Font,
-    pub text_color: Color,
-    pub background_color: Color,
-}
+use super::{text::TextStyle, TextLayout};
 
 pub struct Label<T> {
-    area: Rect,
-    align: Alignment,
-    style: LabelStyle,
     text: T,
+    layout: TextLayout,
 }
 
 impl<T> Label<T>
 where
     T: Deref<Target = str>,
 {
-    pub fn new(text: T, align: Alignment, style: LabelStyle) -> Self {
+    pub fn new(text: T, align: Alignment, style: TextStyle) -> Self {
         Self {
-            area: Rect::zero(),
-            align,
-            style,
             text,
+            layout: TextLayout::new(style).with_align(align),
         }
     }
 
-    pub fn left_aligned(text: T, style: LabelStyle) -> Self {
+    pub fn left_aligned(text: T, style: TextStyle) -> Self {
         Self::new(text, Alignment::Start, style)
     }
 
-    pub fn right_aligned(text: T, style: LabelStyle) -> Self {
+    pub fn right_aligned(text: T, style: TextStyle) -> Self {
         Self::new(text, Alignment::End, style)
     }
 
-    pub fn centered(text: T, style: LabelStyle) -> Self {
+    pub fn centered(text: T, style: TextStyle) -> Self {
         Self::new(text, Alignment::Center, style)
     }
 
@@ -48,11 +40,21 @@ where
         &self.text
     }
 
-    pub fn size(&self) -> Offset {
-        Offset::new(
-            self.style.font.text_width(&self.text),
-            self.style.font.text_height(),
-        )
+    pub fn set_text(&mut self, text: T) {
+        self.text = text;
+    }
+
+    pub fn font(&self) -> Font {
+        self.layout.style.text_font
+    }
+
+    pub fn area(&self) -> Rect {
+        self.layout.bounds
+    }
+
+    pub fn max_size(&self) -> Offset {
+        let font = self.font();
+        Offset::new(font.text_width(&self.text), font.text_max_height())
     }
 }
 
@@ -63,15 +65,9 @@ where
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let origin = match self.align {
-            Alignment::Start => bounds.top_left(),
-            Alignment::Center => bounds.top_left().center(bounds.top_right()),
-            Alignment::End => bounds.top_right(),
-        };
-        let size = self.size();
-        let top_left = size.snap(origin, self.align, Alignment::Start);
-        self.area = Rect::from_top_left_and_size(top_left, size);
-        self.area
+        let line_bounds = bounds.with_height(self.font().text_max_height());
+        self.layout = self.layout.with_bounds(line_bounds);
+        line_bounds
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -79,17 +75,11 @@ where
     }
 
     fn paint(&mut self) {
-        display::text(
-            self.area.bottom_left(),
-            &self.text,
-            self.style.font,
-            self.style.text_color,
-            self.style.background_color,
-        );
+        self.layout.render_text(&self.text);
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area)
+        sink(self.layout.bounds)
     }
 }
 
