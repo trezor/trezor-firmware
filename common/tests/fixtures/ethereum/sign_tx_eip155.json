@@ -231,6 +231,25 @@
                 "sig_r": "7bf581e8c7ff7d0e94d25eaa476de928d444b180fe50a91374b8883ff5dee3a8",
                 "sig_s": "3a3efa7a3f97043a999b3183d958a03126ec2652608c376c4626850b9b6a33fa"
             }
+        },
+        {
+            "name": "Ledger Live legacy path",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0",
+                "nonce": "0x0",
+                "gas_price": "0x4a817c800",
+                "gas_limit": "0x5208",
+                "value": "0x2540be400",
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "08a16c651ffdf9e59c1bd8398d788bc98c86d6c0d7f6bc07977d557b0851c01b",
+                "sig_s": "1e2adc9ef0b7f17a6385230783349706c0cc0bfef40c45ea5b23c09543b17c28"
+            }
         }
     ]
 }

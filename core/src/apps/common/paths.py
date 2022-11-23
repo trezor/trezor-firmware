@@ -337,6 +337,9 @@ PATTERN_BIP44_PUBKEY = "m/44'/coin_type'/account'/*"
 # SEP-0005 for non-UTXO-based currencies, defined by Stellar:
 # https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
 PATTERN_SEP5 = "m/44'/coin_type'/account'"
+# SEP-0005 Ledger Live legacy path
+# https://github.com/trezor/trezor-firmware/issues/1749
+PATTERN_SEP5_LEDGER_LIVE_LEGACY = "m/44'/coin_type'/0'/account"
 
 
 async def validate_path(
