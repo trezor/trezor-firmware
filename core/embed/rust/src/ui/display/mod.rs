@@ -1022,15 +1022,23 @@ impl From<Font> for i32 {
 
 impl Font {
     pub fn text_width(self, text: &str) -> i16 {
-        display::text_width(text, self.into()) as i16
+        display::text_width(text, self.into())
     }
 
     pub fn char_width(self, ch: char) -> i16 {
-        display::char_width(ch, self.into()) as i16
+        display::char_width(ch, self.into())
     }
 
     pub fn text_height(self) -> i16 {
-        display::text_height(self.into()) as i16
+        display::text_height(self.into())
+    }
+
+    pub fn text_max_height(self) -> i16 {
+        display::text_max_height(self.into())
+    }
+
+    pub fn text_baseline(self) -> i16 {
+        display::text_baseline(self.into())
     }
 
     pub fn line_height(self) -> i16 {
