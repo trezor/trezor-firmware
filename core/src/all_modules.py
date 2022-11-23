@@ -145,10 +145,6 @@ trezor.strings
 import trezor.strings
 trezor.ui
 import trezor.ui
-trezor.ui.components
-import trezor.ui.components
-trezor.ui.components.common
-import trezor.ui.components.common
 trezor.ui.components.common.confirm
 import trezor.ui.components.common.confirm
 trezor.ui.layouts
@@ -161,8 +157,6 @@ trezor.ui.layouts.recovery
 import trezor.ui.layouts.recovery
 trezor.ui.layouts.reset
 import trezor.ui.layouts.reset
-trezor.ui.layouts.t1
-import trezor.ui.layouts.t1
 trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
 trezor.ui.layouts.tt_v2
