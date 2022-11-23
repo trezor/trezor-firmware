@@ -62,6 +62,15 @@
             "result": {
                 "address": "0xe432a7533D689ceed00B7EE91d9368b8A1693bD2"
             }
+        },
+        {
+            "name": "Ledger Live legacy path",
+            "parameters": {
+                "path": "m/44'/60'/0'/0"
+            },
+            "result": {
+                "address": "0x1ec5C1854e3E9F1674c34D6C2Be1bf13DFc0Fd8F"
+            }
         }
     ]
 }

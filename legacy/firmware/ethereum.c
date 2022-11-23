@@ -1077,6 +1077,15 @@ bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
     return valid;
   }
 
+  if (address_n_count == 4) {
+    // Also to support "Ledger Live" legacy paths
+    // https://github.com/trezor/trezor-firmware/issues/1749
+    // m/44'/coin_type'/0'/account
+    valid = valid && (address_n[2] == (PATH_HARDENED | 0));
+    valid = valid && (address_n[3] <= PATH_MAX_ACCOUNT);
+    return valid;
+  }
+
   // We believe Ethereum should use the SEP-0005 scheme for everything, because
   // it is account-based, rather than UTXO-based. Unfortunately, a lot of
   // Ethereum tools (MEW, Metamask) do not use such scheme and set account = 0

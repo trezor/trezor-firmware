@@ -26,6 +26,8 @@ class TestEthereumKeychain(unittest.TestCase):
         valid_addresses = (
             [44 | HARDENED, slip44_id | HARDENED, 0 | HARDENED],
             [44 | HARDENED, slip44_id | HARDENED, 19 | HARDENED],
+            [44 | HARDENED, slip44_id | HARDENED, 0 | HARDENED, 0],
+            [44 | HARDENED, slip44_id | HARDENED, 0 | HARDENED, 99],
             [44 | HARDENED, slip44_id | HARDENED, 0 | HARDENED, 0, 0],
             [44 | HARDENED, slip44_id | HARDENED, 0 | HARDENED, 0, 999],
         )
@@ -38,7 +40,8 @@ class TestEthereumKeychain(unittest.TestCase):
             [44 | HARDENED, 0 | HARDENED, 0 | HARDENED],
             [42 | HARDENED, slip44_id | HARDENED, 0 | HARDENED],
             [0 | HARDENED, slip44_id | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, slip44_id | HARDENED, 0 | HARDENED, 0],
+            [44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0],
+            [44 | HARDENED, slip44_id | HARDENED, 1 | HARDENED, 0],
             [44 | HARDENED, slip44_id | HARDENED, 0 | HARDENED, 0 | HARDENED, 0],
             [44 | HARDENED, slip44_id | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],
         )
@@ -59,6 +62,11 @@ class TestEthereumKeychain(unittest.TestCase):
     def test_from_address_n(self):
         # valid keychain m/44'/60'/0'
         keychain = self.from_address_n([44 | HARDENED, 60 | HARDENED, 0 | HARDENED])
+        self._check_keychain(keychain, 60)
+
+    def test_from_address_n_ledger_live_legacy(self):
+        # valid keychain m/44'/60'/0'/0
+        keychain = self.from_address_n([44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0])
         self._check_keychain(keychain, 60)
 
     def test_from_address_n_unknown(self):
@@ -84,6 +92,16 @@ class TestEthereumKeychain(unittest.TestCase):
                 ),
             )
         )
+
+        await_result(  # Ethereum from Ledger Live legacy path
+            handler(
+                wire.DUMMY_CONTEXT,
+                EthereumGetAddress(
+                    address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0]
+                ),
+            )
+        )
+
         await_result(
             handler(
                 wire.DUMMY_CONTEXT,
@@ -117,6 +135,18 @@ class TestEthereumKeychain(unittest.TestCase):
                 wire.DUMMY_CONTEXT,
                 EthereumSignTx(
                     address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
+                    chain_id=1,
+                    gas_price=b"",
+                    gas_limit=b"",
+                ),
+            )
+        )
+
+        await_result(  # Ethereum from Ledger Live legacy path
+            handler_chain_id(
+                wire.DUMMY_CONTEXT,
+                EthereumSignTx(
+                    address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0],
                     chain_id=1,
                     gas_price=b"",
                     gas_limit=b"",

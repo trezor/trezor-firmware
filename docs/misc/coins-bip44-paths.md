@@ -19,6 +19,7 @@ algorithm, extended to work on other curves.
 | -------- | --------- | ------------------ | ----------- | -------------- |
 | Bitcoin  | secp256k1 | `44'/c'/a'/y/i`    | yes         | [1](#Bitcoin)  |
 | Ethereum | secp256k1 | `44'/c'/0'/0/a`    | yes         | [2](#Ethereum) |
+| Ethereum | secp256k1 | `44'/c'/0'/a`      | yes         | [2](#Ethereum) |
 | Ripple   | secp256k1 | `44'/144'/a'/0/0`  |             | [3](#Ripple)   |
 | EOS      | secp256k1 | `44'/194'/a'/0/0`  |             | [3](#Ripple)   |
 | Binance  | secp256k1 | `44'/714'/a'/0/0`  |             | [3](#Ripple)   |
@@ -68,7 +69,8 @@ sends `44'/60'/0'/0` for getPublicKey.
 2. <a name="Ethereum"></a> We believe this should be `44'/c'/a'`, because Ethereum is
    account-based, rather than UTXO-based. Unfortunately, lot of Ethereum tools (MEW,
    Metamask) do not use such scheme and set `a = 0` and then iterate the address index
-   `i`. Therefore for compatibility reasons we use the same scheme.
+   `i`. Therefore for compatibility reasons we use the same scheme. Also to support
+   "Ledger Live" legacy paths we allow `44'/60'/0'/a` paths.
 
 3. <a name="Ripple"></a> Similar to Ethereum this should be `44'/c'/a'`. But for
    compatibility with other HW vendors we use `44'/c'/a'/0/0`.

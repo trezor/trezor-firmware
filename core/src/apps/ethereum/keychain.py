@@ -38,8 +38,13 @@ if TYPE_CHECKING:
 # account-based, rather than UTXO-based. Unfortunately, lot of Ethereum
 # tools (MEW, Metamask) do not use such scheme and set a = 0 and then
 # iterate the address index i. For compatibility, we allow this scheme as well.
+# Also to support "Ledger Live" legacy paths we allow 44'/60'/0'/a paths.
 
-PATTERNS_ADDRESS = (paths.PATTERN_BIP44, paths.PATTERN_SEP5)
+PATTERNS_ADDRESS = (
+    paths.PATTERN_BIP44,
+    paths.PATTERN_SEP5,
+    paths.PATTERN_SEP5_LEDGER_LIVE_LEGACY,
+)
 
 
 def _schemas_from_address_n(
