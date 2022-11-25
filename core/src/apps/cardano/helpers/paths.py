@@ -1,6 +1,6 @@
 from micropython import const
 
-from apps.common.paths import HARDENED, PathSchema
+from apps.common.paths import HARDENED, PathSchema, unharden  # noqa: F401
 
 _SLIP44_ID = const(1815)
 
@@ -28,7 +28,3 @@ CHANGE_OUTPUT_STAKING_PATH_NAME = "Change output staking path"
 CERTIFICATE_PATH_NAME = "Certificate path"
 POOL_OWNER_STAKING_PATH_NAME = "Pool owner staking path"
 WITNESS_PATH_NAME = "Witness path"
-
-
-def unharden(item: int) -> int:
-    return item ^ (item & HARDENED)

@@ -341,6 +341,8 @@ apps.misc
 import apps.misc
 apps.misc.cipher_key_value
 import apps.misc.cipher_key_value
+apps.misc.cosi_commit
+import apps.misc.cosi_commit
 apps.misc.get_ecdh_session_key
 import apps.misc.get_ecdh_session_key
 apps.misc.get_entropy
