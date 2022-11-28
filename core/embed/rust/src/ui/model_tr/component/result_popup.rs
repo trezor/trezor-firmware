@@ -6,7 +6,6 @@ use crate::{
             Child, Component, ComponentExt, Event, EventCtx, Label, Pad,
         },
         constant::screen,
-        display::Font,
         geometry::{Alignment, Insets, LinearPlacement, Point, Rect},
         model_tr::{
             component::{Button, ButtonMsg, ButtonPos, ResultAnim, ResultAnimMsg},

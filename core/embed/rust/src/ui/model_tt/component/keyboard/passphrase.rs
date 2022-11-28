@@ -4,7 +4,10 @@ use crate::ui::{
     geometry::{Grid, Insets, Offset, Rect},
     model_tt::component::{
         button::{Button, ButtonContent, ButtonMsg::Clicked},
-        keyboard::common::{paint_pending_marker, MultiTapKeyboard, TextBox, HEADER_PADDING_SIDE},
+        keyboard::common::{
+            paint_pending_marker, MultiTapKeyboard, TextBox, HEADER_HEIGHT, HEADER_PADDING_BOTTOM,
+            HEADER_PADDING_SIDE,
+        },
         swipe::{Swipe, SwipeDirection},
         theme, ScrollBar,
     },
@@ -46,10 +49,14 @@ impl PassphraseKeyboard {
             confirm: Button::with_icon(theme::ICON_CONFIRM)
                 .styled(theme::button_confirm())
                 .into_child(),
-            back: Button::with_icon(theme::ICON_BACK)
-                .styled(theme::button_reset())
-                .initially_enabled(false)
-                .into_child(),
+            back: Button::with_icon_blend(
+                theme::IMAGE_BG_BACK_BTN,
+                theme::ICON_BACK,
+                Offset::new(30, 12),
+            )
+            .styled(theme::button_reset())
+            .initially_enabled(false)
+            .into_child(),
             keys: KEYBOARD.map(|page| {
                 page.map(|text| {
                     if text == " " {
@@ -70,6 +77,7 @@ impl PassphraseKeyboard {
             ButtonContent::Text(text) => text,
             ButtonContent::Icon(_) => " ",
             ButtonContent::Empty => "",
+            ButtonContent::IconBlend(_, _, _) => "",
         }
     }
 
@@ -135,17 +143,16 @@ impl Component for PassphraseKeyboard {
     fn place(&mut self, bounds: Rect) -> Rect {
         let bounds = bounds.inset(theme::borders());
 
-        let input_area = Grid::new(bounds, 5, 1)
-            .with_spacing(theme::KEYBOARD_SPACING)
-            .row_col(0, 0);
+        let (input_area, key_grid_area) = bounds.split_top(HEADER_HEIGHT + HEADER_PADDING_BOTTOM);
 
-        let (input_area, scroll_area) = input_area.split_bottom(ScrollBar::DOT_SIZE);
-        let input_area =
-            input_area.inset(Insets::new(0, HEADER_PADDING_SIDE, 2, HEADER_PADDING_SIDE));
+        let (input_area, scroll_area) =
+            input_area.split_bottom(ScrollBar::DOT_SIZE + theme::KEYBOARD_SPACING);
+        let (scroll_area, _) = scroll_area.split_top(ScrollBar::DOT_SIZE);
+        let input_area = input_area.inset(Insets::sides(HEADER_PADDING_SIDE));
 
-        let key_grid = Grid::new(bounds, 5, 3).with_spacing(theme::KEYBOARD_SPACING);
-        let confirm_btn_area = key_grid.cell(14);
-        let back_btn_area = key_grid.cell(12);
+        let key_grid = Grid::new(key_grid_area, 4, 3).with_spacing(theme::KEYBOARD_SPACING);
+        let confirm_btn_area = key_grid.cell(11);
+        let back_btn_area = key_grid.cell(9);
 
         self.page_swipe.place(bounds);
         self.input.place(input_area);
@@ -162,10 +169,10 @@ impl Component for PassphraseKeyboard {
                 // from the second row.
                 let area = key_grid.cell(if key < 9 {
                     // The grid has 3 columns, and we skip the first row.
-                    key + 3
+                    key
                 } else {
                     // For the last key (the "0" position) we skip one cell.
-                    key + 1 + 3
+                    key + 1
                 });
                 btn.place(area);
             }
@@ -280,10 +287,11 @@ impl Component for Input {
     }
 
     fn paint(&mut self) {
-        const TEXT_OFFSET: Offset = Offset::y(8);
-
         let style = theme::label_default();
-        let mut text_baseline = self.area.bottom_left() - TEXT_OFFSET;
+
+        let mut text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
+            - Offset::y(style.text_font.text_baseline());
+
         let text = self.textbox.content();
 
         // Preparing the new text to be displayed.

@@ -2,7 +2,7 @@ use core::ops::Deref;
 
 use crate::ui::{
     component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
-    geometry::{Alignment, Grid, Rect},
+    geometry::{Alignment, Grid, Offset, Rect},
     model_tt::{
         component::{Button, ButtonMsg},
         theme,
@@ -39,7 +39,12 @@ where
             )),
             back: Child::new(Maybe::hidden(
                 theme::BG,
-                Button::with_icon(theme::ICON_BACK).styled(theme::button_clear()),
+                Button::with_icon_blend(
+                    theme::IMAGE_BG_BACK_BTN_TALL,
+                    theme::ICON_BACK,
+                    Offset::new(30, 17),
+                )
+                .styled(theme::button_clear()),
             )),
             input: Child::new(Maybe::hidden(theme::BG, input)),
             keys: T::keys().map(Button::with_text).map(Child::new),

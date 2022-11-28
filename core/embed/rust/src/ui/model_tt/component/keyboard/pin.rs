@@ -70,10 +70,14 @@ where
         allow_cancel: bool,
     ) -> Self {
         // Control buttons.
-        let erase_btn = Button::with_icon(theme::ICON_BACK)
-            .styled(theme::button_reset())
-            .with_long_press(ERASE_HOLD_DURATION)
-            .initially_enabled(false);
+        let erase_btn = Button::with_icon_blend(
+            theme::IMAGE_BG_BACK_BTN,
+            theme::ICON_BACK,
+            Offset::new(30, 12),
+        )
+        .styled(theme::button_reset())
+        .with_long_press(ERASE_HOLD_DURATION)
+        .initially_enabled(false);
         let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 
         let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());

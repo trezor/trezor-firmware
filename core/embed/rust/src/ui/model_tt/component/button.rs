@@ -52,6 +52,10 @@ impl<T> Button<T> {
         Self::new(ButtonContent::Icon(image))
     }
 
+    pub fn with_icon_blend(bg: &'static [u8], fg: &'static [u8], fg_offset: Offset) -> Self {
+        Self::new(ButtonContent::IconBlend(bg, fg, fg_offset))
+    }
+
     pub fn empty() -> Self {
         Self::new(ButtonContent::Empty)
     }
@@ -141,29 +145,34 @@ impl<T> Button<T> {
     }
 
     pub fn paint_background(&self, style: &ButtonStyle) {
-        if style.border_width > 0 {
-            // Paint the border and a smaller background on top of it.
-            display::rect_fill_rounded(
-                self.area,
-                style.border_color,
-                style.background_color,
-                style.border_radius,
-            );
-            display::rect_fill_rounded(
-                self.area.inset(Insets::uniform(style.border_width)),
-                style.button_color,
-                style.border_color,
-                style.border_radius,
-            );
-        } else {
-            // We do not need to draw an explicit border in this case, just a
-            // bigger background.
-            display::rect_fill_rounded(
-                self.area,
-                style.button_color,
-                style.background_color,
-                style.border_radius,
-            );
+        match &self.content {
+            ButtonContent::IconBlend(_, _, _) => {}
+            _ => {
+                if style.border_width > 0 {
+                    // Paint the border and a smaller background on top of it.
+                    display::rect_fill_rounded(
+                        self.area,
+                        style.border_color,
+                        style.background_color,
+                        style.border_radius,
+                    );
+                    display::rect_fill_rounded(
+                        self.area.inset(Insets::uniform(style.border_width)),
+                        style.button_color,
+                        style.border_color,
+                        style.border_radius,
+                    );
+                } else {
+                    // We do not need to draw an explicit border in this case, just a
+                    // bigger background.
+                    display::rect_fill_rounded(
+                        self.area,
+                        style.button_color,
+                        style.background_color,
+                        style.border_radius,
+                    );
+                }
+            }
         }
     }
 
@@ -196,6 +205,12 @@ impl<T> Button<T> {
                     style.button_color,
                 );
             }
+            ButtonContent::IconBlend(bg, fg, offset) => display::icon_over_icon(
+                Some(self.area),
+                (bg, Offset::zero(), style.button_color),
+                (fg, *offset, style.text_color),
+                style.background_color,
+            ),
         }
     }
 }
@@ -300,6 +315,7 @@ where
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => t.field("text", text),
             ButtonContent::Icon(_) => t.symbol("icon"),
+            ButtonContent::IconBlend(_, _, _) => t.symbol("icon"),
         }
         t.close();
     }
@@ -318,6 +334,7 @@ pub enum ButtonContent<T> {
     Empty,
     Text(T),
     Icon(&'static [u8]),
+    IconBlend(&'static [u8], &'static [u8], Offset),
 }
 
 #[derive(PartialEq, Eq)]

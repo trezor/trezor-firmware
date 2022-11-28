@@ -748,6 +748,27 @@ pub fn icon_over_icon(
     dma2d_wait_for_transfer();
 }
 
+#[cfg(not(feature = "dma2d"))]
+pub fn icon_over_icon(
+    bg_area: Option<Rect>,
+    bg: (&[u8], Offset, Color),
+    fg: (&[u8], Offset, Color),
+    bg_color: Color,
+) {
+    let (data_bg, offset_bg, color_icon_bg) = bg;
+    let (data_fg, offset_fg, color_icon_fg) = fg;
+
+    let pos_bg = if let Some(area) = bg_area {
+        rect_fill(area, bg_color);
+        area.top_left() + offset_bg
+    } else {
+        Point::from(offset_bg)
+    };
+
+    icon_top_left(pos_bg, data_bg, color_icon_bg, bg_color);
+    icon_top_left(pos_bg + offset_fg, data_fg, color_icon_fg, color_icon_bg);
+}
+
 /// Gets a color of a pixel on `p` coordinates of rounded rectangle with corner
 /// radius 2
 fn rect_rounded2_get_pixel(
