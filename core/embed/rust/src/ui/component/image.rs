@@ -79,24 +79,12 @@ impl BlendedImage {
         }
     }
 
-    #[cfg(feature = "dma2d")]
     fn paint_image(&self) {
         display::icon_over_icon(
             None,
             (self.bg, self.bg_top_left.into(), self.bg_color),
             (self.fg, self.fg_offset, self.fg_color),
             self.area_color,
-        );
-    }
-
-    #[cfg(not(feature = "dma2d"))]
-    fn paint_image(&self) {
-        display::icon_top_left(self.bg_top_left, self.bg, self.bg_color, self.area_color);
-        display::icon_top_left(
-            self.bg_top_left + self.fg_offset,
-            self.fg,
-            self.fg_color,
-            self.bg_color,
         );
     }
 }
