@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor.messages import AuthorizeCoinJoin
+from trezor.messages import AuthorizeCoinJoin, SignMessage
 
 from apps.common.paths import PATTERN_BIP44, PathSchema
 
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
         GetAddress,
         GetOwnershipId,
         GetPublicKey,
-        SignMessage,
         VerifyMessage,
         GetOwnershipProof,
         SignTx,
@@ -84,6 +83,9 @@ PATTERN_UNCHAINED_UNHARDENED = (
     "m/45'/coin_type/account/[0-1000000]/change/address_index"
 )
 PATTERN_UNCHAINED_DEPRECATED = "m/45'/coin_type'/account'/[0-1000000]/address_index"
+
+# Model 1 firmware signing.
+PATTERN_SLIP26_T1_FW = "m/10026'/49'/2'/0'"
 
 # SLIP-44 coin type for Bitcoin
 _SLIP44_BITCOIN = const(0)
@@ -159,6 +161,9 @@ def validate_path_against_script_type(
         append(PATTERN_BIP86)
         append(PATTERN_SLIP25_TAPROOT)
 
+    elif SignMessage.is_type_of(msg):
+        append(PATTERN_SLIP26_T1_FW)
+
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
@@ -188,6 +193,7 @@ def _get_schemas_for_coin(
                 PATTERN_GREENADDRESS_B,
                 PATTERN_GREENADDRESS_SIGN_A,
                 PATTERN_GREENADDRESS_SIGN_B,
+                PATTERN_SLIP26_T1_FW,
             )
         )
 
