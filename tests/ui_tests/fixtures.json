@@ -863,6 +863,7 @@
 "TT_bitcoin-test_signmessage.py::test_signmessage[segwit-p2sh0]": "ee002ce0851daf9d71a43bbea055b33779ad38403c716417c1b3ca1a13ac5e18",
 "TT_bitcoin-test_signmessage.py::test_signmessage[segwit-p2sh1]": "ee002ce0851daf9d71a43bbea055b33779ad38403c716417c1b3ca1a13ac5e18",
 "TT_bitcoin-test_signmessage.py::test_signmessage[segwit-p2sh2]": "5c7758b049bb4a2870a5f0486e0a7bbf07e590ef7a18214076025ceb1da648c0",
+"TT_bitcoin-test_signmessage.py::test_signmessage[t1 firmware path]": "a3fc21f9ea0d80d0b9b098f9db9a9c4b3169827e8291b28f2eae734598395c9c",
 "TT_bitcoin-test_signmessage.py::test_signmessage_pagination[long_words]": "ffdada0b56c548001cd31f3c7dcdc0d1f095b648cb085fdc6341b9f9843ad4d1",
 "TT_bitcoin-test_signmessage.py::test_signmessage_pagination[newlines]": "791ff7121d6f0e92754706ffc51319f6980ff615acde6ede7f12aa891771475a",
 "TT_bitcoin-test_signmessage.py::test_signmessage_pagination[no_spaces]": "6b1c656ec45a7725247c5c875373af0eb889a50f21979e95f6d8b7dbebad72e9",
