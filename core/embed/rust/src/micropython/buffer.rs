@@ -16,9 +16,14 @@ use super::ffi;
 ///
 /// Given the above assumptions about MicroPython strings, working with
 /// StrBuffers in Rust is safe.
+///
+/// The `off` field represents offset from the `ptr` and allows us to do
+/// substring slices while keeping the head pointer as required by GC.
+#[repr(C)]
 pub struct StrBuffer {
     ptr: *const u8,
-    len: usize,
+    len: u16,
+    off: u16,
 }
 
 impl StrBuffer {
@@ -27,22 +32,41 @@ impl StrBuffer {
     }
 
     pub fn alloc(val: &str) -> Result<Self, Error> {
+        unsafe {
+            Self::alloc_with(val.len(), |buffer| {
+                // SAFETY: Memory should be freshly allocated and as such cannot overlap.
+                ptr::copy_nonoverlapping(val.as_ptr(), buffer.as_mut_ptr(), buffer.len())
+            })
+        }
+    }
+
+    pub fn alloc_with(len: usize, func: impl FnOnce(&mut [u8])) -> Result<Self, Error> {
         // SAFETY:
         // We assume that if `gc_alloc` returns successfully, the result is a valid
         // pointer to GC-controlled memory of at least `val.len() + 1` bytes.
         unsafe {
-            let raw = ffi::gc_alloc(val.len() + 1, 0) as *mut u8;
+            let raw = ffi::gc_alloc(len + 1, 0) as *mut u8;
             if raw.is_null() {
                 return Err(Error::AllocationFailed);
             }
-            // SAFETY: Memory should be freshly allocated and as such cannot overlap.
-            ptr::copy_nonoverlapping(val.as_ptr(), raw, val.len());
+
+            // SAFETY: GC returns valid pointers, slice is discarded after `func`.
+            let bytes = slice::from_raw_parts_mut(raw, len);
+            // GC returns uninitialized memory which we must make sure to overwrite,
+            // otherwise leftover references may keep alive otherwise dead
+            // objects. Zero the entire buffer so we don't have to rely on
+            // `func` doing it.
+            bytes.fill(0);
+            func(bytes);
+            str::from_utf8(bytes).map_err(|_| Error::OutOfRange)?;
+
             // Null-terminate the string for C ASCIIZ compatibility. This will not be
             // reflected in Rust-visible slice, the zero byte is after the end.
-            raw.add(val.len()).write(0);
+            raw.add(len).write(0);
             Ok(Self {
                 ptr: raw,
-                len: val.len(),
+                len: unwrap!(len.try_into()),
+                off: 0,
             })
         }
     }
@@ -51,7 +75,22 @@ impl StrBuffer {
         if self.ptr.is_null() {
             &[]
         } else {
-            unsafe { slice::from_raw_parts(self.ptr, self.len) }
+            unsafe { slice::from_raw_parts(self.ptr.add(self.off.into()), self.len.into()) }
+        }
+    }
+
+    pub fn offset(&self, skip_bytes: usize) -> Self {
+        let off: u16 = unwrap!(skip_bytes.try_into());
+        assert!(off <= self.len);
+        assert!(self.as_ref().is_char_boundary(skip_bytes));
+        Self {
+            ptr: self.ptr,
+            // Does not overflow because `off <= self.len`.
+            len: self.len - off,
+            // `self.off + off` could only overflow if `self.off + self.len` could overflow, and
+            // given that `off` only advances by as much as `len` decreases, that should not be
+            // possible either.
+            off: self.off + off,
         }
     }
 }
@@ -70,7 +109,8 @@ impl TryFrom<Obj> for StrBuffer {
             let bufinfo = get_buffer_info(obj, ffi::MP_BUFFER_READ)?;
             let new = Self {
                 ptr: bufinfo.buf as _,
-                len: bufinfo.len as _,
+                len: bufinfo.len.try_into()?,
+                off: 0,
             };
 
             // MicroPython _should_ ensure that values of type `str` are UTF-8.
@@ -103,6 +143,8 @@ impl AsRef<str> for StrBuffer {
         // - If constructed from a MicroPython string, we check validity of UTF-8 at
         //   construction time. Python semantics promise not to mutate the underlying
         //   data from under us.
+        // - If constructed by `offset()`, we expect the input to be UTF-8 and check
+        //   that we split the string at character boundary.
         unsafe { str::from_utf8_unchecked(self.as_bytes()) }
     }
 }
@@ -111,7 +153,8 @@ impl From<&'static str> for StrBuffer {
     fn from(val: &'static str) -> Self {
         Self {
             ptr: val.as_ptr(),
-            len: val.len(),
+            len: unwrap!(val.len().try_into()),
+            off: 0,
         }
     }
 }
@@ -183,31 +226,43 @@ pub unsafe fn get_buffer_mut<'a>(obj: Obj) -> Result<&'a mut [u8], Error> {
     }
 }
 
+fn hexlify(data: &[u8], buffer: &mut [u8]) {
+    const HEX_LOWER: [u8; 16] = *b"0123456789abcdef";
+    let mut i: usize = 0;
+    for b in data.iter().take(buffer.len() / 2) {
+        let hi: usize = ((b & 0xf0) >> 4).into();
+        let lo: usize = (b & 0x0f).into();
+        buffer[i] = HEX_LOWER[hi];
+        buffer[i + 1] = HEX_LOWER[lo];
+        i += 2;
+    }
+}
+
+pub fn hexlify_bytes(obj: Obj, offset: usize, max_len: usize) -> Result<StrBuffer, Error> {
+    if !obj.is_bytes() {
+        return Err(Error::TypeError);
+    }
+
+    // Convert offset to byte representation, handle case where it points in the
+    // middle of a byte.
+    let bin_off = offset / 2;
+    let hex_off = offset % 2;
+
+    // SAFETY:
+    // (a) only immutable references are taken
+    // (b) reference is discarded before returning to micropython
+    let bin_slice = unsafe { get_buffer(obj)? };
+    let bin_slice = &bin_slice[bin_off..];
+
+    let max_len = max_len & !1;
+    let hex_len = (bin_slice.len() * 2).min(max_len);
+    let result = StrBuffer::alloc_with(hex_len, move |buffer| hexlify(bin_slice, buffer))?;
+    Ok(result.offset(hex_off))
+}
+
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for StrBuffer {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.as_ref().trace(t)
     }
-}
-
-/// Version of `get_buffer` for strings that ties the string lifetime with
-/// another object that is expected to be placed on stack or in micropython heap
-/// and be the beginning of a chain of references that lead to the `obj`.
-///
-/// SAFETY:
-/// The caller must ensure that:
-/// (a) the `_owner` is an object visible to the micropython GC,
-/// (b) the `_owner` contains a reference that leads to `obj`, possibly through
-///     other objects,
-/// (c) that path is not broken as long as the returned reference lives.
-pub unsafe fn get_str_owner<T: ?Sized>(_owner: &T, obj: Obj) -> Result<&str, Error> {
-    if !obj.is_str() {
-        return Err(Error::TypeError);
-    }
-    // SAFETY:
-    // (a) only immutable references are taken.
-    // (b) micropython guarantees immutability and the buffer is not freed/moved as
-    //     long as _owner satisfies precondition.
-    let buffer = unsafe { get_buffer(obj)? };
-    str::from_utf8(buffer).map_err(|_| Error::TypeError)
 }

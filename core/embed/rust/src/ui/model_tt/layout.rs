@@ -21,8 +21,8 @@ use crate::{
             painter,
             text::{
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
+                    Checklist, Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecLong,
+                    ParagraphVecShort, Paragraphs, VecExt,
                 },
                 TextStyle,
             },
@@ -122,7 +122,7 @@ where
 
 impl<T, U> ComponentMsgObj for IconDialog<T, U>
 where
-    T: AsRef<str>,
+    T: ParagraphStrType,
     U: Component,
     <U as Component>::Msg: TryInto<Obj, Error = Error>,
 {
@@ -263,7 +263,7 @@ where
 
 impl<T, F> ComponentMsgObj for NumberInputDialog<T, F>
 where
-    T: AsRef<str>,
+    T: ParagraphStrType,
     F: Fn(u32) -> T,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
@@ -1061,8 +1061,9 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             "RECOVERY MODE"
         };
 
-        let paragraphs =
-            Paragraphs::new([Paragraph::new(&theme::TEXT_BOLD, "Number of words?").centered()]);
+        let paragraphs = Paragraphs::new(
+            Paragraph::new(&theme::TEXT_BOLD, StrBuffer::from("Number of words?")).centered(),
+        );
 
         let obj = LayoutObj::new(
             Frame::new(title, Dialog::new(paragraphs, SelectWordCount::new()))

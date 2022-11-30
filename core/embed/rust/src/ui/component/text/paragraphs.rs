@@ -24,21 +24,25 @@ pub const PARAGRAPH_BOTTOM_SPACE: i16 = 5;
 pub type ParagraphVecLong<T> = Vec<Paragraph<T>, 32>;
 pub type ParagraphVecShort<T> = Vec<Paragraph<T>, 8>;
 
-/// Maximum number of characters that can be displayed on screen at once. Used
-/// for on-the-fly conversion of binary data to hexadecimal representation.
-/// NOTE: can be fine-tuned for particular model screen to decrease memory
-/// consumption and conversion time.
-pub const SCRATCH_BUFFER_LEN: usize = 256;
+/// Trait for internal representation of strings, which need to support
+/// converting to short-lived &str reference as well as creating a new string by
+/// skipping some number of bytes. Exists so that we can support `StrBuffer` as
+/// well as `&'static str`.
+///
+/// NOTE: do not implement this trait for `&'static str` in firmware. We always
+/// use StrBuffer because using multiple internal representations results in
+/// multiple copies of the code in flash memory.
+pub trait ParagraphStrType: AsRef<str> {
+    fn skip_prefix(&self, bytes: usize) -> Self;
+}
 
 pub trait ParagraphSource {
+    /// Determines the output type produced.
+    type StrType: ParagraphStrType;
+
     /// Return text and associated style for given paragraph index and character
     /// offset within the paragraph.
-    ///
-    /// Implementations can use the provided buffer to perform some kind of
-    /// conversion (currently used for displaying binary data in
-    /// hexadecimal) and return a reference to this buffer. Caller needs to
-    /// make sure the buffer is large enough to fit screenfull of characters.
-    fn at<'a>(&'a self, index: usize, offset: usize, buffer: &'a mut [u8]) -> Paragraph<&'a str>;
+    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType>;
 
     /// Number of paragraphs.
     fn size(&self) -> usize;
@@ -48,46 +52,6 @@ pub trait ParagraphSource {
         Self: Sized,
     {
         Paragraphs::new(self)
-    }
-}
-
-impl<T, const N: usize> ParagraphSource for Vec<Paragraph<T>, N>
-where
-    T: AsRef<str>,
-{
-    fn at<'a>(&'a self, index: usize, offset: usize, _buffer: &'a mut [u8]) -> Paragraph<&'a str> {
-        self[index].offset_as_ref(offset)
-    }
-
-    fn size(&self) -> usize {
-        self.len()
-    }
-}
-
-impl<T, const N: usize> ParagraphSource for [Paragraph<T>; N]
-where
-    T: AsRef<str>,
-{
-    fn at<'a>(&'a self, index: usize, offset: usize, _buffer: &'a mut [u8]) -> Paragraph<&'a str> {
-        self[index].offset_as_ref(offset)
-    }
-
-    fn size(&self) -> usize {
-        self.len()
-    }
-}
-
-impl<T> ParagraphSource for Paragraph<T>
-where
-    T: AsRef<str>,
-{
-    fn at<'a>(&'a self, index: usize, offset: usize, _buffer: &'a mut [u8]) -> Paragraph<&'a str> {
-        assert_eq!(index, 0);
-        self.offset_as_ref(offset)
-    }
-
-    fn size(&self) -> usize {
-        1
     }
 }
 
@@ -140,10 +104,10 @@ where
 
     /// Helper for `change_offset` which should not get monomorphized as it
     /// doesn't refer to T or Self.
-    fn dyn_change_offset(
+    fn dyn_change_offset<S: ParagraphStrType>(
         mut area: Rect,
         mut offset: PageOffset,
-        source: &dyn ParagraphSource,
+        source: &dyn ParagraphSource<StrType = S>,
         visible: &mut Vec<TextLayout, MAX_LINES>,
     ) {
         visible.clear();
@@ -174,24 +138,23 @@ where
 
     /// Iterate over visible layouts (bounding box, style) together
     /// with corresponding string content. Should not get monomorphized.
-    fn foreach_visible<'a, 'b>(
-        source: &'a dyn ParagraphSource,
+    fn foreach_visible<'a, 'b, S: ParagraphStrType>(
+        source: &'a dyn ParagraphSource<StrType = S>,
         visible: &'a [TextLayout],
         offset: PageOffset,
         func: &'b mut dyn FnMut(&TextLayout, &str),
     ) {
-        let mut buffer = [0; SCRATCH_BUFFER_LEN];
         let mut vis_iter = visible.iter();
         let mut chr = offset.chr;
 
         for par in offset.par..source.size() {
-            let s = source.at(par, chr, &mut buffer).content;
-            if s.is_empty() {
+            let s = source.at(par, chr).content;
+            if s.as_ref().is_empty() {
                 chr = 0;
                 continue;
             }
             if let Some(layout) = vis_iter.next() {
-                func(layout, s);
+                func(layout, s.as_ref());
             } else {
                 break;
             }
@@ -328,21 +291,14 @@ impl<T> Paragraph<T> {
     }
 
     /// Copy style and replace content.
-    pub fn with_content<U>(&self, content: U) -> Paragraph<U> {
+    pub fn map<U>(&self, func: impl FnOnce(&T) -> U) -> Paragraph<U> {
         Paragraph {
-            content,
+            content: func(&self.content),
             style: self.style,
             align: self.align,
             break_after: self.break_after,
             no_break: self.no_break,
         }
-    }
-
-    pub fn offset_as_ref(&self, offset: usize) -> Paragraph<&str>
-    where
-        T: AsRef<str>,
-    {
-        self.with_content(&self.content.as_ref()[offset..])
     }
 
     fn layout(&self, area: Rect) -> TextLayout {
@@ -361,7 +317,7 @@ struct PageOffset {
     /// Index of paragraph.
     par: usize,
 
-    /// Index of character in the paragraph.
+    /// Index of (the first byte of) the character in the paragraph.
     chr: usize,
 }
 
@@ -376,17 +332,16 @@ impl PageOffset {
     ///
     /// If the returned remaining area is not None then it holds that
     /// `next_offset.par == self.par + 1`.
-    fn advance(
+    fn advance<S: ParagraphStrType>(
         mut self,
         area: Rect,
-        source: &dyn ParagraphSource,
+        source: &dyn ParagraphSource<StrType = S>,
         full_height: i16,
     ) -> (PageOffset, Option<Rect>, Option<TextLayout>) {
-        let mut buffer = [0; SCRATCH_BUFFER_LEN];
-        let paragraph = source.at(self.par, self.chr, &mut buffer);
+        let paragraph = source.at(self.par, self.chr);
 
         // Skip empty paragraphs.
-        if paragraph.content.is_empty() {
+        if paragraph.content.as_ref().is_empty() {
             self.par += 1;
             self.chr = 0;
             return (self, Some(area), None);
@@ -394,9 +349,8 @@ impl PageOffset {
 
         // Handle the `no_break` flag used to keep key-value pair on the same page.
         if paragraph.no_break && self.chr == 0 {
-            let mut next_buffer = [0; SCRATCH_BUFFER_LEN];
             if let Some(next_paragraph) =
-                (self.par + 1 < source.size()).then(|| source.at(self.par + 1, 0, &mut next_buffer))
+                (self.par + 1 < source.size()).then(|| source.at(self.par + 1, 0))
             {
                 if Self::should_place_pair_on_next_page(
                     &paragraph,
@@ -411,7 +365,7 @@ impl PageOffset {
 
         // Find out the dimensions of the paragraph at given char offset.
         let mut layout = paragraph.layout(area);
-        let fit = layout.fit_text(paragraph.content);
+        let fit = layout.fit_text(paragraph.content.as_ref());
         let (used, remaining_area) = area.split_top(fit.height());
         layout.bounds = used;
 
@@ -441,9 +395,9 @@ impl PageOffset {
         )
     }
 
-    fn should_place_pair_on_next_page(
-        this_paragraph: &Paragraph<&str>,
-        next_paragraph: &Paragraph<&str>,
+    fn should_place_pair_on_next_page<S: ParagraphStrType>(
+        this_paragraph: &Paragraph<S>,
+        next_paragraph: &Paragraph<S>,
         area: Rect,
         full_height: i16,
     ) -> bool {
@@ -456,11 +410,11 @@ impl PageOffset {
         let full_area = area.with_height(full_height);
         let key_height = this_paragraph
             .layout(full_area)
-            .fit_text(this_paragraph.content)
+            .fit_text(this_paragraph.content.as_ref())
             .height();
         let val_height = next_paragraph
             .layout(full_area)
-            .fit_text(next_paragraph.content)
+            .fit_text(next_paragraph.content.as_ref())
             .height();
         let screen_full_threshold = this_paragraph.style.text_font.line_height()
             + next_paragraph.style.text_font.line_height();
@@ -492,9 +446,9 @@ struct PageBreakIterator<'a, T> {
 }
 
 impl<T: ParagraphSource> PageBreakIterator<'_, T> {
-    fn dyn_next(
+    fn dyn_next<S: ParagraphStrType>(
         mut area: Rect,
-        paragraphs: &dyn ParagraphSource,
+        paragraphs: &dyn ParagraphSource<StrType = S>,
         mut offset: PageOffset,
     ) -> Option<PageOffset> {
         let full_height = area.height();

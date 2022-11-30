@@ -1,18 +1,17 @@
 use crate::{
     error::Error,
     micropython::{
-        buffer::{get_buffer, get_str_owner, StrBuffer},
+        buffer::{hexlify_bytes, StrBuffer},
         gc::Gc,
         iter::{Iter, IterBuf},
         list::List,
         obj::Obj,
     },
     ui::component::text::{
-        paragraphs::{Paragraph, ParagraphSource},
+        paragraphs::{Paragraph, ParagraphSource, ParagraphStrType},
         TextStyle,
     },
 };
-use core::str;
 use cstr_core::cstr;
 use heapless::Vec;
 
@@ -41,19 +40,11 @@ where
     vec.into_array().map_err(|_| err)
 }
 
-fn hexlify<'a>(data: &[u8], buffer: &'a mut [u8]) -> &'a str {
-    const HEX_LOWER: [u8; 16] = *b"0123456789abcdef";
-    let mut i: usize = 0;
-    for b in data.iter().take(buffer.len() / 2) {
-        let hi: usize = ((b & 0xf0) >> 4).into();
-        let lo: usize = (b & 0x0f).into();
-        buffer[i] = HEX_LOWER[hi];
-        buffer[i + 1] = HEX_LOWER[lo];
-        i += 2;
-    }
-    // SAFETY: only <0x7f bytes are used to construct the string
-    unsafe { str::from_utf8_unchecked(&buffer[0..i]) }
-}
+/// Maximum number of characters that can be displayed on screen at once. Used
+/// for on-the-fly conversion of binary data to hexadecimal representation.
+/// NOTE: can be fine-tuned for particular model screen to decrease memory
+/// consumption and conversion time.
+pub const MAX_HEX_CHARS_ON_SCREEN: usize = 256;
 
 pub enum StrOrBytes {
     Str(StrBuffer),
@@ -61,34 +52,12 @@ pub enum StrOrBytes {
 }
 
 impl StrOrBytes {
-    pub fn as_str_offset<'a>(&'a self, offset: usize, buffer: &'a mut [u8]) -> &'a str {
+    pub fn as_str_offset(&self, offset: usize) -> StrBuffer {
         match self {
-            StrOrBytes::Str(x) => &x.as_ref()[offset..],
-            StrOrBytes::Bytes(x) => Self::hexlify(*x, offset, buffer),
+            StrOrBytes::Str(x) => x.skip_prefix(offset),
+            StrOrBytes::Bytes(x) => hexlify_bytes(*x, offset, MAX_HEX_CHARS_ON_SCREEN)
+                .unwrap_or_else(|_| StrBuffer::from("ERROR")),
         }
-    }
-
-    fn hexlify(obj: Obj, offset: usize, buffer: &mut [u8]) -> &str {
-        if !obj.is_bytes() {
-            return "ERROR";
-        }
-
-        // Convert offset to byte representation, handle case where it points in the
-        // middle of a byte.
-        let bin_off = offset / 2;
-        let hex_off = offset % 2;
-
-        // SAFETY:
-        // (a) only immutable references are taken
-        // (b) reference is discarded before returning to micropython
-        let bin_slice = if let Ok(buf) = unsafe { get_buffer(obj) } {
-            &buf[bin_off..]
-        } else {
-            return "ERROR";
-        };
-        let hexadecimal = hexlify(bin_slice, buffer);
-
-        &hexadecimal[hex_off..]
     }
 }
 
@@ -116,11 +85,13 @@ pub struct ConfirmBlob {
 }
 
 impl ParagraphSource for ConfirmBlob {
-    fn at<'a>(&'a self, index: usize, offset: usize, buffer: &'a mut [u8]) -> Paragraph<&'a str> {
+    type StrType = StrBuffer;
+
+    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
         match index {
-            0 => Paragraph::new(self.description_font, &self.description.as_ref()[offset..]),
-            1 => Paragraph::new(self.extra_font, &self.extra.as_ref()[offset..]),
-            2 => Paragraph::new(self.data_font, self.data.as_str_offset(offset, buffer)),
+            0 => Paragraph::new(self.description_font, self.description.skip_prefix(offset)),
+            1 => Paragraph::new(self.extra_font, self.extra.skip_prefix(offset)),
+            2 => Paragraph::new(self.data_font, self.data.as_str_offset(offset)),
             _ => unreachable!(),
         }
     }
@@ -154,8 +125,10 @@ impl PropsList {
 }
 
 impl ParagraphSource for PropsList {
-    fn at<'a>(&'a self, index: usize, offset: usize, buffer: &'a mut [u8]) -> Paragraph<&'a str> {
-        let block = move |buffer| {
+    type StrType = StrBuffer;
+
+    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
+        let block = move || {
             let entry = self.items.get(index / 2)?;
             let [key, value, value_is_mono]: [Obj; 3] = iter_into_objs(entry)?;
             let value_is_mono: bool = bool::try_from(value_is_mono)?;
@@ -181,19 +154,15 @@ impl ParagraphSource for PropsList {
             };
 
             if obj == Obj::const_none() {
-                return Ok(Paragraph::new(style, ""));
+                return Ok(Paragraph::new(style, StrBuffer::empty()));
             }
 
             let para = if obj.is_str() {
-                // SAFETY:
-                // As long as self is visible to GC, the string will be also. The paragraph
-                // rendering does not keep the returned references for long so we can reasonably
-                // expect for the chain of references from self to the buffer not to be broken.
-                let s = unsafe { get_str_owner(self, obj)? };
-                Paragraph::new(style, &s[offset..])
+                let content: StrBuffer = obj.try_into()?;
+                Paragraph::new(style, content.skip_prefix(offset))
             } else if obj.is_bytes() {
-                let s = StrOrBytes::hexlify(obj, offset, buffer);
-                Paragraph::new(style, s)
+                let content = hexlify_bytes(obj, offset, MAX_HEX_CHARS_ON_SCREEN)?;
+                Paragraph::new(style, content)
             } else {
                 return Err(Error::TypeError);
             };
@@ -204,13 +173,58 @@ impl ParagraphSource for PropsList {
                 Ok(para)
             }
         };
-        match block(buffer) {
-            Ok(p) => p,
-            Err(_) => Paragraph::new(self.value_font, "ERROR"),
+        match block() {
+            Ok(para) => para,
+            Err(_) => Paragraph::new(self.value_font, StrBuffer::from("ERROR")),
         }
     }
 
     fn size(&self) -> usize {
         2 * self.items.len()
+    }
+}
+
+impl<T: ParagraphStrType, const N: usize> ParagraphSource for Vec<Paragraph<T>, N> {
+    type StrType = T;
+
+    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
+        let para = &self[index];
+        para.map(|content| content.skip_prefix(offset))
+    }
+
+    fn size(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<T: ParagraphStrType, const N: usize> ParagraphSource for [Paragraph<T>; N] {
+    type StrType = T;
+
+    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
+        let para = &self[index];
+        para.map(|content| content.skip_prefix(offset))
+    }
+
+    fn size(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<T: ParagraphStrType> ParagraphSource for Paragraph<T> {
+    type StrType = T;
+
+    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
+        assert_eq!(index, 0);
+        self.map(|content| content.skip_prefix(offset))
+    }
+
+    fn size(&self) -> usize {
+        1
+    }
+}
+
+impl ParagraphStrType for StrBuffer {
+    fn skip_prefix(&self, chars: usize) -> Self {
+        self.offset(chars)
     }
 }

@@ -385,7 +385,7 @@ mod tests {
         trace::Trace,
         ui::{
             component::{
-                text::paragraphs::{Paragraph, Paragraphs},
+                text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
                 Empty,
             },
             event::TouchEvent,
@@ -397,6 +397,12 @@ mod tests {
     use super::*;
 
     const SCREEN: Rect = constant::screen().inset(theme::borders());
+
+    impl ParagraphStrType for &'static str {
+        fn skip_prefix(&self, chars: usize) -> Self {
+            &self[chars..]
+        }
+    }
 
     fn trace(val: &impl Trace) -> String {
         let mut t = Vec::new();
