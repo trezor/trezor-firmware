@@ -2,7 +2,7 @@ use crate::{
     time::Instant,
     ui::{
         component::{
-            text::paragraphs::{Paragraph, Paragraphs},
+            text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
             Child, Component, ComponentExt, Event, EventCtx, Label, Pad,
         },
         constant::screen,
@@ -18,13 +18,13 @@ pub enum ResultPopupMsg {
     Confirmed,
 }
 
-pub struct ResultPopup {
+pub struct ResultPopup<S> {
     area: Rect,
     pad: Pad,
     result_anim: Child<ResultAnim>,
     headline_baseline: Point,
     headline: Option<Label<&'static str>>,
-    text: Child<Paragraphs<Paragraph<&'static str>>>,
+    text: Child<Paragraphs<Paragraph<S>>>,
     button: Option<Child<Button<&'static str>>>,
     autoclose: bool,
 }
@@ -36,10 +36,10 @@ const ANIM_POS: i16 = 32;
 const ANIM_POS_ADJ_HEADLINE: i16 = 10;
 const ANIM_POS_ADJ_BUTTON: i16 = 6;
 
-impl ResultPopup {
+impl<S: ParagraphStrType> ResultPopup<S> {
     pub fn new(
         icon: &'static [u8],
-        text: &'static str,
+        text: S,
         headline: Option<&'static str>,
         button_text: Option<&'static str>,
     ) -> Self {
@@ -86,7 +86,7 @@ impl ResultPopup {
     }
 }
 
-impl Component for ResultPopup {
+impl<S: ParagraphStrType> Component for ResultPopup<S> {
     type Msg = ResultPopupMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -155,7 +155,7 @@ impl Component for ResultPopup {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for ResultPopup {
+impl<S: ParagraphStrType> crate::trace::Trace for ResultPopup<S> {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("ResultPopup");
         self.text.trace(d);

@@ -1,7 +1,9 @@
 use crate::ui::{
     component::{
         image::BlendedImage,
-        text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
+        text::paragraphs::{
+            Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecShort, Paragraphs, VecExt,
+        },
         Child, Component, Event, EventCtx, Never,
     },
     geometry::{Insets, LinearPlacement, Rect},
@@ -93,18 +95,17 @@ pub struct IconDialog<T, U> {
 
 impl<T, U> IconDialog<T, U>
 where
-    T: AsRef<str>,
+    T: ParagraphStrType,
     U: Component,
 {
     pub fn new(icon: BlendedImage, title: T, controls: U) -> Self {
         Self {
             image: Child::new(icon),
-            paragraphs: ParagraphVecShort::from_iter([Paragraph::new(
+            paragraphs: Paragraphs::new(ParagraphVecShort::from_iter([Paragraph::new(
                 &theme::TEXT_DEMIBOLD,
                 title,
             )
-            .centered()])
-            .into_paragraphs()
+            .centered()]))
             .with_placement(
                 LinearPlacement::vertical()
                     .align_at_center()
@@ -152,7 +153,7 @@ where
 
 impl<T, U> Component for IconDialog<T, U>
 where
-    T: AsRef<str>,
+    T: ParagraphStrType,
     U: Component,
 {
     type Msg = DialogMsg<Never, U::Msg>;
@@ -193,7 +194,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for IconDialog<T, U>
 where
-    T: AsRef<str>,
+    T: ParagraphStrType,
     U: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
