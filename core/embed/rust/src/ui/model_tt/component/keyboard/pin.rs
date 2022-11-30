@@ -28,7 +28,6 @@ const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 14;
 const MAX_VISIBLE_DIGITS: usize = 16;
 const DIGIT_COUNT: usize = 10; // 0..10
-const ERASE_HOLD_DURATION: Duration = Duration::from_secs(2);
 
 const HEADER_HEIGHT: i16 = 25;
 const HEADER_PADDING_SIDE: i16 = 5;
@@ -76,7 +75,7 @@ where
             Offset::new(30, 12),
         )
         .styled(theme::button_reset())
-        .with_long_press(ERASE_HOLD_DURATION)
+        .with_long_press(theme::ERASE_HOLD_DURATION)
         .initially_enabled(false);
         let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 

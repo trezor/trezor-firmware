@@ -247,11 +247,6 @@ where
             }
             Event::Touch(TouchEvent::TouchMove(pos)) => {
                 match self.state {
-                    State::Released if self.area.contains(pos) => {
-                        // Touch entered our area, transform to `Pressed` state.
-                        self.set(ctx, State::Pressed);
-                        return Some(ButtonMsg::Pressed);
-                    }
                     State::Pressed if !self.area.contains(pos) => {
                         // Touch is leaving our area, transform to `Released` state.
                         self.set(ctx, State::Released);

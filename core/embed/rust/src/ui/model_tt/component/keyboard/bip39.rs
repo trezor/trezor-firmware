@@ -23,6 +23,7 @@ pub struct Bip39Input {
     button: Button<&'static str>,
     textbox: TextBox<MAX_LENGTH>,
     multi_tap: MultiTapKeyboard,
+    options_num: Option<usize>,
     suggested_word: Option<&'static str>,
 }
 
@@ -58,6 +59,14 @@ impl MnemonicInput for Bip39Input {
     fn on_backspace_click(&mut self, ctx: &mut EventCtx) {
         self.multi_tap.clear_pending_state(ctx);
         self.textbox.delete_last(ctx);
+        self.complete_word_from_dictionary(ctx);
+    }
+
+    /// Backspace button was long pressed, let's delete all characters of input
+    /// and clear the pending marker.
+    fn on_backspace_long_press(&mut self, ctx: &mut EventCtx) {
+        self.multi_tap.clear_pending_state(ctx);
+        self.textbox.clear(ctx);
         self.complete_word_from_dictionary(ctx);
     }
 
@@ -145,6 +154,7 @@ impl Bip39Input {
             button: Button::empty(),
             textbox: TextBox::empty(),
             multi_tap: MultiTapKeyboard::new(),
+            options_num: None,
             suggested_word: None,
         }
     }
@@ -164,17 +174,19 @@ impl Bip39Input {
     /// Input button was clicked.  If the content matches the suggested word,
     /// let's confirm it, otherwise just auto-complete.
     fn on_input_click(&mut self, ctx: &mut EventCtx) -> Option<MnemonicInputMsg> {
-        match self.suggested_word {
-            Some(word) if word == self.textbox.content() => {
+        if let (Some(word), Some(num)) = (self.suggested_word, self.options_num) {
+            return if num == 1 && word.starts_with(self.textbox.content()) {
+                // Confirm button.
                 self.textbox.clear(ctx);
                 Some(MnemonicInputMsg::Confirmed)
-            }
-            Some(word) => {
+            } else {
+                // Auto-complete button.
                 self.textbox.replace(ctx, word);
+                self.complete_word_from_dictionary(ctx);
                 Some(MnemonicInputMsg::Completed)
-            }
-            None => None,
+            };
         }
+        None
     }
 
     /// Timeout occurred.  If we can auto-complete current input, let's just
@@ -190,11 +202,12 @@ impl Bip39Input {
     }
 
     fn complete_word_from_dictionary(&mut self, ctx: &mut EventCtx) {
+        self.options_num = bip39::options_num(self.textbox.content());
         self.suggested_word = bip39::complete_word(self.textbox.content());
 
         // Change the style of the button depending on the completed word.
-        if let Some(word) = self.suggested_word {
-            if self.textbox.content() == word {
+        if let (Some(word), Some(num)) = (self.suggested_word, self.options_num) {
+            if num == 1 && word.starts_with(self.textbox.content()) {
                 // Confirm button.
                 self.button.enable(ctx);
                 self.button.set_stylesheet(ctx, theme::button_confirm());
