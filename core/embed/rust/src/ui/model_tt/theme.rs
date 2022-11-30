@@ -1,15 +1,20 @@
-use crate::ui::{
-    component::{
-        text::{formatted::FormattedFonts, LineBreaking, PageBreaking, TextStyle},
-        FixedHeightBar,
+use crate::{
+    time::Duration,
+    ui::{
+        component::{
+            text::{formatted::FormattedFonts, LineBreaking, PageBreaking, TextStyle},
+            FixedHeightBar,
+        },
+        display::{Color, Font},
+        geometry::Insets,
     },
-    display::{Color, Font},
-    geometry::Insets,
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
 
 use num_traits::FromPrimitive;
+
+pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
 
 // Typical backlight values.
 pub const BACKLIGHT_NORMAL: i32 = 150;

@@ -3,7 +3,7 @@ use crate::ui::{
     display,
     geometry::{Grid, Insets, Offset, Rect},
     model_tt::component::{
-        button::{Button, ButtonContent, ButtonMsg::Clicked},
+        button::{Button, ButtonContent, ButtonMsg},
         keyboard::common::{
             paint_pending_marker, MultiTapKeyboard, TextBox, HEADER_HEIGHT, HEADER_PADDING_BOTTOM,
             HEADER_PADDING_SIDE,
@@ -56,6 +56,7 @@ impl PassphraseKeyboard {
             )
             .styled(theme::button_reset())
             .initially_enabled(false)
+            .with_long_press(theme::ERASE_HOLD_DURATION)
             .into_child(),
             keys: KEYBOARD.map(|page| {
                 page.map(|text| {
@@ -192,23 +193,35 @@ impl Component for PassphraseKeyboard {
             self.on_page_swipe(ctx, swipe);
             return None;
         }
-        if let Some(Clicked) = self.confirm.event(ctx, event) {
+        if let Some(ButtonMsg::Clicked) = self.confirm.event(ctx, event) {
             // Confirm button was clicked, we're done.
             return Some(PassphraseKeyboardMsg::Confirmed);
         }
-        if let Some(Clicked) = self.back.event(ctx, event) {
-            // Backspace button was clicked. If we have any content in the textbox, let's
-            // delete the last character. Otherwise cancel.
-            return if self.input.inner().textbox.is_empty() {
-                Some(PassphraseKeyboardMsg::Cancelled)
-            } else {
+
+        match self.back.event(ctx, event) {
+            Some(ButtonMsg::Clicked) => {
+                // Backspace button was clicked. If we have any content in the textbox, let's
+                // delete the last character. Otherwise cancel.
+                return if self.input.inner().textbox.is_empty() {
+                    Some(PassphraseKeyboardMsg::Cancelled)
+                } else {
+                    self.input.mutate(ctx, |ctx, i| {
+                        i.multi_tap.clear_pending_state(ctx);
+                        i.textbox.delete_last(ctx);
+                    });
+                    self.after_edit(ctx);
+                    None
+                };
+            }
+            Some(ButtonMsg::LongPressed) => {
                 self.input.mutate(ctx, |ctx, i| {
                     i.multi_tap.clear_pending_state(ctx);
-                    i.textbox.delete_last(ctx);
+                    i.textbox.clear(ctx);
                 });
                 self.after_edit(ctx);
-                None
-            };
+                return None;
+            }
+            _ => {}
         }
 
         // Process key button events in case we did not reach maximum passphrase length.
@@ -216,7 +229,7 @@ impl Component for PassphraseKeyboard {
         // measure.)
         if !self.input.inner().textbox.is_full() {
             for (key, btn) in self.keys[self.scrollbar.active_page].iter_mut().enumerate() {
-                if let Some(Clicked) = btn.event(ctx, event) {
+                if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
                     // Key button was clicked. If this button is pending, let's cycle the pending
                     // character in textbox. If not, let's just append the first character.
                     let text = Self::key_text(btn.inner().content());
@@ -287,7 +300,7 @@ impl Component for Input {
     }
 
     fn paint(&mut self) {
-        let style = theme::label_default();
+        let style = theme::label_keyboard();
 
         let mut text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
             - Offset::y(style.text_font.text_baseline());

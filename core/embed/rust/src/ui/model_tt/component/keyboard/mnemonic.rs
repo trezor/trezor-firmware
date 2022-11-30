@@ -44,7 +44,8 @@ where
                     theme::ICON_BACK,
                     Offset::new(30, 17),
                 )
-                .styled(theme::button_clear()),
+                .styled(theme::button_clear())
+                .with_long_press(theme::ERASE_HOLD_DURATION),
             )),
             input: Child::new(Maybe::hidden(theme::BG, input)),
             keys: T::keys().map(Button::with_text).map(Child::new),
@@ -126,11 +127,21 @@ where
             }
             _ => {}
         }
-        if let Some(ButtonMsg::Clicked) = self.back.event(ctx, event) {
-            self.input
-                .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_click(ctx));
-            self.on_input_change(ctx);
-            return None;
+
+        match self.back.event(ctx, event) {
+            Some(ButtonMsg::Clicked) => {
+                self.input
+                    .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_click(ctx));
+                self.on_input_change(ctx);
+                return None;
+            }
+            Some(ButtonMsg::LongPressed) => {
+                self.input
+                    .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_long_press(ctx));
+                self.on_input_change(ctx);
+                return None;
+            }
+            _ => {}
         }
         for (key, btn) in self.keys.iter_mut().enumerate() {
             if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
@@ -165,6 +176,7 @@ pub trait MnemonicInput: Component<Msg = MnemonicInputMsg> {
     fn can_key_press_lead_to_a_valid_word(&self, key: usize) -> bool;
     fn on_key_click(&mut self, ctx: &mut EventCtx, key: usize);
     fn on_backspace_click(&mut self, ctx: &mut EventCtx);
+    fn on_backspace_long_press(&mut self, ctx: &mut EventCtx);
     fn is_empty(&self) -> bool;
     fn mnemonic(&self) -> Option<&'static str>;
 }

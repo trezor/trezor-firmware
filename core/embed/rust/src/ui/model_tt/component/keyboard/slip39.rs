@@ -78,6 +78,14 @@ impl MnemonicInput for Slip39Input {
         self.complete_word_from_dictionary(ctx);
     }
 
+    /// Backspace button was long pressed, let's delete all characters of input
+    /// and clear the pending marker.
+    fn on_backspace_long_press(&mut self, ctx: &mut EventCtx) {
+        self.multi_tap.clear_pending_state(ctx);
+        self.textbox.clear(ctx);
+        self.complete_word_from_dictionary(ctx);
+    }
+
     fn is_empty(&self) -> bool {
         self.textbox.is_empty()
     }
