@@ -1161,7 +1161,7 @@ def prepare_definitions(
     "--deffile",
     type=click.Path(resolve_path=True, dir_okay=False, path_type=pathlib.Path),
     default="./definitions-latest.json",
-    help="File where the prepared definitions are saved in json format.",
+    help="File where the prepared definitions are saved in json format. Defaults to \"./definitions-latest.json\".",
 )
 @click.option(
     "-o",
@@ -1170,7 +1170,7 @@ def prepare_definitions(
         resolve_path=True, dir_okay=False, writable=True, path_type=pathlib.Path
     ),
     default="./definitions-latest.zip",
-    help="File where the generated definitions will be saved in zip format. Any existing file will be overwritten!",
+    help="File where the generated definitions will be saved in zip format. Any existing file will be overwritten! Defaults to \"./definitions-latest.zip\".",
 )
 @click.option(
     "-k",
@@ -1181,7 +1181,7 @@ def prepare_definitions(
 @click.option(
     "-s",
     "--signedroot",
-    help="Signed Merkle tree root hash to be added.",
+    help="Signed Merkle tree root hash to be added (text, hex formated).",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Display more info.")
 @click.option(

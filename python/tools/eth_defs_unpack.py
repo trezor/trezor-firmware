@@ -30,7 +30,7 @@ from trezorlib import ethereum
     ),
     default=f"./{ethereum.DEFS_ZIP_FILENAME}",
     help="Zip file with stored definitions. Zip file could be obtained using command"
-    "`trezorctl ethereum download-definitions`.",
+    f"`trezorctl ethereum download-definitions`. Defaults to \"./{ethereum.DEFS_ZIP_FILENAME}\"."
 )
 @click.option(
     "-o",
@@ -41,7 +41,7 @@ from trezorlib import ethereum
     default="./",
     help="Directory path where the definitions will be unpacked. Zip file contains top level"
     f"dir \"{ethereum.DEFS_ZIP_TOPLEVEL_DIR}\" and this will be unpacked to desired \"outdir\""
-    "path. Any colliding directories will be overwritten!",
+    "path. Any colliding directories will be overwritten! Defaults to \"./\".",
 )
 def unpack_definitions(
     definitions_zip: pathlib.Path,
