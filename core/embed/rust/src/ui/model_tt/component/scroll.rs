@@ -9,26 +9,22 @@ use super::theme;
 pub struct ScrollBar {
     area: Rect,
     layout: LinearPlacement,
-    arrows: bool,
     pub page_count: usize,
     pub active_page: usize,
 }
 
 impl ScrollBar {
-    pub const DOT_SIZE: i16 = 6;
-    /// Edge to edge.
-    const DOT_INTERVAL: i16 = 6;
-    /// Edge of last dot to center of arrow icon.
-    const ARROW_SPACE: i16 = 26;
-
-    const ICON_UP: &'static [u8] = include_res!("model_tt/res/scroll-up.toif");
-    const ICON_DOWN: &'static [u8] = include_res!("model_tt/res/scroll-down.toif");
+    pub const DOT_SIZE: i16 = 8;
+    /// If there's more pages than this value then smaller dots are used at the
+    /// beginning/end of the scrollbar to denote the fact.
+    const MAX_DOTS: usize = 7;
+    /// Center to center.
+    const DOT_INTERVAL: i16 = 18;
 
     fn new(layout: LinearPlacement) -> Self {
         Self {
             area: Rect::zero(),
             layout: layout.align_at_center().with_spacing(Self::DOT_INTERVAL),
-            arrows: false,
             page_count: 0,
             active_page: 0,
         }
@@ -40,11 +36,6 @@ impl ScrollBar {
 
     pub fn horizontal() -> Self {
         Self::new(LinearPlacement::horizontal())
-    }
-
-    pub fn with_arrows(mut self) -> Self {
-        self.arrows = true;
-        self
     }
 
     pub fn set_count_and_active_page(&mut self, page_count: usize, active_page: usize) {
@@ -85,45 +76,42 @@ impl Component for ScrollBar {
     }
 
     fn paint(&mut self) {
-        let mut i = 0;
-        let mut top = None;
-        let mut display_icon = |top_left| {
+        fn dotsize(distance: usize, nhidden: usize) -> &'static [u8] {
+            match (nhidden.saturating_sub(distance)).min(2 - distance) {
+                0 => theme::DOT_INACTIVE,
+                1 => theme::DOT_INACTIVE_HALF,
+                _ => theme::DOT_INACTIVE_QUARTER,
+            }
+        }
+
+        // Number of visible dots.
+        let num_shown = self.page_count.min(Self::MAX_DOTS);
+        // Page indices corresponding to the first (and last) dot.
+        let first_shown = self
+            .active_page
+            .saturating_sub(Self::MAX_DOTS / 2)
+            .min(self.page_count.saturating_sub(Self::MAX_DOTS));
+        let last_shown = first_shown + num_shown - 1;
+
+        let mut cursor = self.area.center()
+            - Offset::on_axis(
+                self.layout.axis,
+                Self::DOT_INTERVAL * (num_shown.saturating_sub(1) as i16) / 2,
+            );
+        for i in first_shown..(last_shown + 1) {
             let icon = if i == self.active_page {
                 theme::DOT_ACTIVE
+            } else if i <= first_shown + 1 {
+                let before_first_shown = first_shown;
+                dotsize(i - first_shown, before_first_shown)
+            } else if i >= last_shown - 1 {
+                let after_last_shown = self.page_count - 1 - last_shown;
+                dotsize(last_shown - i, after_last_shown)
             } else {
                 theme::DOT_INACTIVE
             };
-            display::icon_top_left(top_left, icon, theme::FG, theme::BG);
-            i += 1;
-            top.get_or_insert(top_left.x);
-        };
-
-        self.layout.arrange_uniform(
-            self.area,
-            self.page_count,
-            Offset::new(Self::DOT_SIZE, Self::DOT_SIZE),
-            &mut display_icon,
-        );
-
-        if self.arrows {
-            let arrow_distance = self.area.center().x - top.unwrap_or(0) + Self::ARROW_SPACE;
-            let offset = Offset::on_axis(self.layout.axis, arrow_distance);
-            if self.has_previous_page() {
-                display::icon(
-                    self.area.center() - offset,
-                    Self::ICON_UP,
-                    theme::FG,
-                    theme::BG,
-                );
-            }
-            if self.has_next_page() {
-                display::icon(
-                    self.area.center() + offset,
-                    Self::ICON_DOWN,
-                    theme::FG,
-                    theme::BG,
-                );
-            }
+            display::icon(cursor, icon, theme::FG, theme::BG);
+            cursor = cursor + Offset::on_axis(self.layout.axis, Self::DOT_INTERVAL);
         }
     }
 

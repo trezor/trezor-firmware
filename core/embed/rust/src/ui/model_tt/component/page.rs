@@ -224,8 +224,8 @@ pub struct PageLayout {
 }
 
 impl PageLayout {
-    const SCROLLBAR_WIDTH: i16 = 10;
-    const SCROLLBAR_SPACE: i16 = 10;
+    const SCROLLBAR_WIDTH: i16 = 15;
+    const SCROLLBAR_SPACE: i16 = 5;
     const HINT_OFF: i16 = 19;
 
     pub fn new(area: Rect) -> Self {

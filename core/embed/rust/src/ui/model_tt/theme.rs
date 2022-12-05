@@ -73,6 +73,8 @@ pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/back_btn_ta
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
 pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");
+pub const DOT_INACTIVE_HALF: &[u8] = include_res!("model_tt/res/scroll-inactive-half.toif");
+pub const DOT_INACTIVE_QUARTER: &[u8] = include_res!("model_tt/res/scroll-inactive-quarter.toif");
 pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
 
 pub const fn label_default() -> TextStyle {
