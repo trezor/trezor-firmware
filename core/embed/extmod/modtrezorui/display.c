@@ -20,6 +20,7 @@
 #define _GNU_SOURCE
 
 #include "qr-code-generator/qrcodegen.h"
+#include "tjpgd/src/tjpgd.h"
 
 #include "uzlib.h"
 
@@ -45,6 +46,15 @@
 #include "display_interface.h"
 
 static struct { int x, y; } DISPLAY_OFFSET;
+static uint8_t display_jpeg_work[3100];
+
+typedef struct {
+  uint32_t data_read;
+  uint32_t data_len;
+  const uint8_t *data;
+  int x0;
+  int y0;
+} jpeg_info_t;
 
 // common display functions
 
@@ -227,6 +237,80 @@ void display_text_render_buffer(const char *text, int textlen, int font,
     }
     x += adv;
   }
+}
+
+static size_t display_jpeg_in(
+    JDEC *jdec,    /* Pointer to the decompression object */
+    uint8_t *buff, /* Pointer to buffer to store the read data */
+    size_t ndata   /* Number of bytes to read/remove */
+) {
+  jpeg_info_t *jpg = (jpeg_info_t *)jdec->device;
+
+  if (buff != NULL) {
+    if ((jpg->data_read + ndata) <= jpg->data_len) {
+      memcpy(buff, &jpg->data[jpg->data_read], ndata);
+    } else {
+      int rest = jpg->data_len - jpg->data_read;
+
+      if (rest > 0) {
+        memcpy(buff, &jpg->data[jpg->data_read], rest);
+      } else {
+        // error - no data
+        return 0;
+      }
+    }
+  }
+  jpg->data_read += ndata;
+  return ndata;
+}
+
+static int display_jpeg_out(
+    JDEC *jdec,   /* Pointer to the decompression object */
+    void *bitmap, /* Bitmap to be output */
+    JRECT *rect   /* Rectangle to output */
+) {
+  jpeg_info_t *jpg = (jpeg_info_t *)jdec->device;
+
+  int rect_w = rect->right - rect->left + 1;
+  int rect_h = rect->bottom - rect->top + 1;
+  int x = rect->left + jpg->x0;
+  int y = rect->top + jpg->y0;
+
+  int x0, y0, x1, y1;
+
+  clamp_coords(x, y, rect_w, rect_h, &x0, &y0, &x1, &y1);
+
+  int w = x1 - x0 + 1;
+  int h = y1 - y0 + 1;
+
+  display_set_window(x0, y0, x1, y1);
+
+  for (int i = 0; i < h; i++) {
+    for (int j = 0; j < w; j++) {
+      PIXELDATA(((uint16_t *)bitmap)[i * rect_w + j]);
+    }
+  }
+
+  return 1;
+}
+
+void display_jpeg(int x, int y, const uint8_t *data, uint32_t datalen) {
+  x += DISPLAY_OFFSET.x;
+  y += DISPLAY_OFFSET.y;
+
+  JDEC jd;
+  jpeg_info_t jpg;
+
+  jpg.data = data;
+  jpg.data_read = 0;
+  jpg.data_len = datalen;
+  jpg.x0 = x;
+  jpg.y0 = y;
+
+  jd_prepare(&jd, display_jpeg_in, display_jpeg_work, sizeof(display_jpeg_work),
+             &jpg);
+
+  jd_decomp(&jd, display_jpeg_out, 0);
 }
 
 #ifndef USE_DMA2D

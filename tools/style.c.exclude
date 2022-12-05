@@ -12,3 +12,4 @@
 ^\./crypto/sha3
 ^\./legacy/vendor
 ^\./core/embed/segger
+^\./core/embed/extmod/modtrezorui/tjpgd
