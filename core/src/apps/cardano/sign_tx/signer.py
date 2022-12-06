@@ -824,7 +824,7 @@ class Signer:
         data: messages.CardanoTxAuxiliaryData = await self.ctx.call(
             CardanoTxItemAck(), messages.CardanoTxAuxiliaryData
         )
-        auxiliary_data.validate(data)
+        auxiliary_data.validate(data, msg.protocol_magic, msg.network_id)
 
         (
             auxiliary_data_hash,

@@ -64,7 +64,6 @@ REQUIRED_FIELDS_TOKEN_GROUP = ("policy_id", "tokens")
 REQUIRED_FIELDS_GOVERNANCE_REGISTRATION = (
     "staking_path",
     "nonce",
-    "reward_address_parameters",
 )
 REQUIRED_FIELDS_GOVERNANCE_DELEGATION = ("voting_public_key", "weight")
 
@@ -596,10 +595,13 @@ def parse_auxiliary_data(
                 ),
                 staking_path=tools.parse_path(governance_registration["staking_path"]),
                 nonce=governance_registration["nonce"],
+                reward_address=governance_registration.get("reward_address"),
                 reward_address_parameters=_parse_address_parameters(
                     governance_registration["reward_address_parameters"],
                     str(AUXILIARY_DATA_MISSING_FIELDS_ERROR),
-                ),
+                )
+                if "reward_address_parameters" in governance_registration
+                else None,
                 format=serialization_format,
                 delegations=delegations,
                 voting_purpose=voting_purpose,

@@ -2,7 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.crypto import hashlib
-from trezor.enums import CardanoAddressType, CardanoGovernanceRegistrationFormat
+from trezor.enums import CardanoGovernanceRegistrationFormat
 
 from apps.common import cbor
 
@@ -38,7 +38,11 @@ def assert_cond(condition: bool) -> None:
         raise wire.ProcessError("Invalid auxiliary data")
 
 
-def validate(auxiliary_data: messages.CardanoTxAuxiliaryData) -> None:
+def validate(
+    auxiliary_data: messages.CardanoTxAuxiliaryData,
+    protocol_magic: int,
+    network_id: int,
+) -> None:
     fields_provided = 0
     if auxiliary_data.hash:
         fields_provided += 1
@@ -47,13 +51,17 @@ def validate(auxiliary_data: messages.CardanoTxAuxiliaryData) -> None:
     if auxiliary_data.governance_registration_parameters:
         fields_provided += 1
         _validate_governance_registration_parameters(
-            auxiliary_data.governance_registration_parameters
+            auxiliary_data.governance_registration_parameters,
+            protocol_magic,
+            network_id,
         )
     assert_cond(fields_provided == 1)
 
 
 def _validate_governance_registration_parameters(
     parameters: messages.CardanoGovernanceRegistrationParametersType,
+    protocol_magic: int,
+    network_id: int,
 ) -> None:
     voting_key_fields_provided = 0
     if parameters.voting_public_key is not None:
@@ -67,9 +75,18 @@ def _validate_governance_registration_parameters(
 
     assert_cond(SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.staking_path))
 
-    address_parameters = parameters.reward_address_parameters
-    assert_cond(address_parameters.address_type != CardanoAddressType.BYRON)
-    addresses.validate_address_parameters(address_parameters)
+    reward_address_fields_provided = 0
+    if parameters.reward_address is not None:
+        reward_address_fields_provided += 1
+        addresses.validate_governance_reward_address(
+            parameters.reward_address, protocol_magic, network_id
+        )
+    if parameters.reward_address_parameters:
+        reward_address_fields_provided += 1
+        addresses.validate_governance_reward_address_parameters(
+            parameters.reward_address_parameters
+        )
+    assert_cond(reward_address_fields_provided == 1)
 
     if parameters.voting_purpose is not None:
         assert_cond(parameters.format == CardanoGovernanceRegistrationFormat.CIP36)
@@ -144,12 +161,18 @@ async def _show_governance_registration(
             bech32.HRP_GOVERNANCE_PUBLIC_KEY, parameters.voting_public_key
         )
 
-    reward_address = addresses.derive_human_readable(
-        keychain,
-        parameters.reward_address_parameters,
-        protocol_magic,
-        network_id,
-    )
+    if parameters.reward_address:
+        reward_address = parameters.reward_address
+    else:
+        assert (
+            parameters.reward_address_parameters
+        )  # _validate_governance_registration_parameters
+        reward_address = addresses.derive_human_readable(
+            keychain,
+            parameters.reward_address_parameters,
+            protocol_magic,
+            network_id,
+        )
 
     voting_purpose: int | None = (
         _get_voting_purpose_to_serialize(parameters) if should_show_details else None
@@ -241,12 +264,17 @@ def _get_signed_governance_registration_payload(
 
     staking_key = derive_public_key(keychain, parameters.staking_path)
 
-    reward_address = addresses.derive_bytes(
-        keychain,
-        parameters.reward_address_parameters,
-        protocol_magic,
-        network_id,
-    )
+    if parameters.reward_address:
+        reward_address = addresses.get_bytes_unsafe(parameters.reward_address)
+    else:
+        address_parameters = parameters.reward_address_parameters
+        assert address_parameters  # _validate_governance_registration_parameters
+        reward_address = addresses.derive_bytes(
+            keychain,
+            address_parameters,
+            protocol_magic,
+            network_id,
+        )
 
     voting_purpose = _get_voting_purpose_to_serialize(parameters)
 
