@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.messages import EthereumNetworkInfo
+
 from apps.common import paths
 from apps.common.keychain import get_keychain
 
@@ -134,7 +135,7 @@ def with_keychain_and_defs_from_path(
     def decorator(
         func: HandlerWithKeychainAndDefsFromPath[MsgOut],
     ) -> Handler[EthereumSignTypedData, MsgOut]:
-        async def wrapper(ctx: wire.Context, msg: EthereumSignTypedData) -> MsgOut:
+        async def wrapper(ctx: Context, msg: EthereumSignTypedData) -> MsgOut:
             defs = definitions.get_definitions_from_msg(msg)
             schemas = _schemas_from_address_n(patterns, msg.address_n, defs.network)
             keychain = await get_keychain(ctx, CURVE, schemas)

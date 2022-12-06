@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 # TODO: change once we know the urls
-DEFS_BASE_URL = "https://data.trezor.io/eth_definitions/"
+DEFS_BASE_URL = "https://firmware.corp.sldev.cz/eth-definitions/"
 DEFS_URL_LOOKUP_TEMPLATE = DEFS_BASE_URL + "{lookup_type}/{id}/{name}"
 
 DEFS_ZIP_FILENAME = "definitions-latest.zip"

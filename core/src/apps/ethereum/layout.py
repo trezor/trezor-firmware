@@ -11,14 +11,13 @@ from trezor.ui.layouts import (
     should_show_more,
 )
 
-from .helpers import address_from_bytes, decode_typed_data, get_type_name
+from .helpers import decode_typed_data
 
 if TYPE_CHECKING:
     from typing import Awaitable, Iterable
 
     from trezor.messages import EthereumFieldType, EthereumStructMember
     from trezor.wire import Context
-    from . import tokens
 
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 
@@ -41,8 +40,6 @@ def require_confirm_tx(
         ctx,
         address=to_str,
         amount=format_ethereum_amount(value, token, network),
-        font_amount=ui.BOLD,
-        color_to=ui.GREY,
         br_code=ButtonRequestType.SignTx,
     )
 

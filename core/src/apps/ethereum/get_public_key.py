@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from apps.common import paths
-
 if TYPE_CHECKING:
     from trezor.messages import EthereumGetPublicKey, EthereumPublicKey
     from trezor.wire import Context

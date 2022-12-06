@@ -35,7 +35,6 @@
 #include "trezor.h"  // because of the "VERSTR" macro used in "fsm_sendFailureDebug" function
 #include "util.h"
 
-
 typedef struct {
   // prefix
   pb_size_t format_version_start;
@@ -245,7 +244,8 @@ bool _get_EthereumNetworkInfo(
   return true;
 }
 
-void _set_EthereumTokenInfo(const EthereumTokenInfo *ref_token, EthereumTokenInfo *token) {
+void _set_EthereumTokenInfo(const EthereumTokenInfo *ref_token,
+                            EthereumTokenInfo *token) {
   // reset
   memzero(token->symbol, sizeof(token->symbol));
   token->decimals = 0;
@@ -327,9 +327,9 @@ const EthereumDefinitionsDecoded *get_EthereumDefinitionsDecoded(
               sizeof(defs.network.shortcut)) != 0) {
     // we have found network definition, we can try to load token definition
     if (!_get_EthereumTokenInfo(encoded_token, ref_chain_id, ref_address,
-                           &defs.token)) {
-                            return NULL;
-                           }
+                                &defs.token)) {
+      return NULL;
+    }
   } else {
     // if we did not find any network definition, set token definition to
     // unknown token

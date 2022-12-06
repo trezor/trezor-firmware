@@ -17,7 +17,6 @@
 from typing import Iterator
 
 from trezor.messages import EthereumTokenInfo
-
 <%
 from collections import defaultdict
 
@@ -37,7 +36,7 @@ UNKNOWN_TOKEN = EthereumTokenInfo(
 )
 
 
-def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo:
+def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo | None:
     for addr, symbol, decimal, name in _token_iterator(chain_id):
         if address == addr:
             return EthereumTokenInfo(
@@ -47,7 +46,7 @@ def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo:
                 chain_id=chain_id,
                 name=name,
             )
-    return UNKNOWN_TOKEN
+    return None
 
 
 def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:

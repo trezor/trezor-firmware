@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from trezor.wire import Context
     from trezor.utils import HashWriter
+    from .definitions import Definitions
 
     from trezor.messages import (
         EthereumSignTypedData,

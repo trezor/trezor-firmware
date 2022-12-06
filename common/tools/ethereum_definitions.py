@@ -1161,7 +1161,7 @@ def prepare_definitions(
     "--deffile",
     type=click.Path(resolve_path=True, dir_okay=False, path_type=pathlib.Path),
     default="./definitions-latest.json",
-    help="File where the prepared definitions are saved in json format. Defaults to \"./definitions-latest.json\".",
+    help='File where the prepared definitions are saved in json format. Defaults to "./definitions-latest.json".',
 )
 @click.option(
     "-o",
@@ -1170,7 +1170,7 @@ def prepare_definitions(
         resolve_path=True, dir_okay=False, writable=True, path_type=pathlib.Path
     ),
     default="./definitions-latest.zip",
-    help="File where the generated definitions will be saved in zip format. Any existing file will be overwritten! Defaults to \"./definitions-latest.zip\".",
+    help='File where the generated definitions will be saved in zip format. Any existing file will be overwritten! Defaults to "./definitions-latest.zip".',
 )
 @click.option(
     "-k",
@@ -1382,7 +1382,7 @@ def update_timestamp(
         logging.info(
             f"Setting the timestamp to '{timestamp}' ('{datetime.datetime.fromtimestamp(timestamp)}')."
         )
-        f.write(str(timestamp))
+        f.write(str(timestamp) + "\n")
 
 
 if __name__ == "__main__":

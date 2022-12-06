@@ -4595,8 +4595,8 @@ class EthereumTokenInfo(protobuf.MessageType):
 class EthereumDefinitions(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("encoded_network", "bytes", repeated=False, required=False),
-        2: protobuf.Field("encoded_token", "bytes", repeated=False, required=False),
+        1: protobuf.Field("encoded_network", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("encoded_token", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4615,7 +4615,7 @@ class EthereumSignTypedData(protobuf.MessageType):
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("primary_type", "string", repeated=False, required=True),
         3: protobuf.Field("metamask_v4_compat", "bool", repeated=False, required=False, default=True),
-        4: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False),
+        4: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4767,7 +4767,7 @@ class EthereumGetAddress(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
-        3: protobuf.Field("encoded_network", "bytes", repeated=False, required=False),
+        3: protobuf.Field("encoded_network", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4812,7 +4812,7 @@ class EthereumSignTx(protobuf.MessageType):
         8: protobuf.Field("data_length", "uint32", repeated=False, required=False, default=0),
         9: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         10: protobuf.Field("tx_type", "uint32", repeated=False, required=False, default=None),
-        12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False),
+        12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4857,7 +4857,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         9: protobuf.Field("data_length", "uint32", repeated=False, required=True),
         10: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         11: protobuf.Field("access_list", "EthereumAccessList", repeated=True, required=False, default=None),
-        12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False),
+        12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4932,7 +4932,7 @@ class EthereumSignMessage(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("message", "bytes", repeated=False, required=True),
-        3: protobuf.Field("encoded_network", "bytes", repeated=False, required=False),
+        3: protobuf.Field("encoded_network", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4990,7 +4990,7 @@ class EthereumSignTypedHash(protobuf.MessageType):
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("domain_separator_hash", "bytes", repeated=False, required=True),
         3: protobuf.Field("message_hash", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("encoded_network", "bytes", repeated=False, required=False),
+        4: protobuf.Field("encoded_network", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(

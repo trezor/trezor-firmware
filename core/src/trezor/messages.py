@@ -3381,7 +3381,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumNetworkInfo"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumNetworkInfo"]:
             return isinstance(msg, cls)
 
     class EthereumTokenInfo(protobuf.MessageType):
@@ -3403,7 +3403,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTokenInfo"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumTokenInfo"]:
             return isinstance(msg, cls)
 
     class EthereumDefinitions(protobuf.MessageType):
@@ -3419,7 +3419,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumDefinitions"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDefinitions"]:
             return isinstance(msg, cls)
 
     class EthereumSignTypedData(protobuf.MessageType):

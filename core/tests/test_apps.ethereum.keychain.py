@@ -121,6 +121,15 @@ class TestEthereumKeychain(unittest.TestCase):
             )
         )
 
+        await_result(  # Ethereum from Ledger Live legacy path
+            handler(
+                wire.DUMMY_CONTEXT,
+                EthereumGetAddress(
+                    address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0]
+                ),
+            )
+        )
+
         with self.assertRaises(wire.DataError):
             await_result(
                 handler(
@@ -144,15 +153,6 @@ class TestEthereumKeychain(unittest.TestCase):
                     primary_type="",
                     address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
                     encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(slip44=60)),
-                ),
-            )
-        )
-
-        await_result(  # Ethereum from Ledger Live legacy path
-            handler(
-                wire.DUMMY_CONTEXT,
-                EthereumGetAddress(
-                    address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0]
                 ),
             )
         )

@@ -5,7 +5,7 @@
 from ubinascii import unhexlify
 
 DEFINITIONS_PUBLIC_KEY = b""
-MIN_DATA_VERSION = 1666698326
+MIN_DATA_VERSION = 1669892465
 FORMAT_VERSION = b"trzd1"
 
 if __debug__:

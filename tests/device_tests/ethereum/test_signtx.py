@@ -122,8 +122,6 @@ def test_signtx(client: Client, parameters, result):
     assert sig_v == result["sig_v"]
 
 
-# TODO: remove xfail when definitions becomes available online
-@pytest.mark.xfail(reason="Temporary until definitions becomes available online.")
 @parametrize_using_common_fixtures(
     "ethereum/sign_tx.json",
     "ethereum/sign_tx_eip155.json",

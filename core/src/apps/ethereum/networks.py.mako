@@ -7,8 +7,9 @@
 
 from typing import TYPE_CHECKING
 
-from apps.common.paths import HARDENED
 from trezor.messages import EthereumNetworkInfo
+
+from apps.common.paths import HARDENED
 
 if TYPE_CHECKING:
     from typing import Iterator

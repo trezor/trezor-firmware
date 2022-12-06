@@ -3,7 +3,11 @@ from typing import TYPE_CHECKING
 from .keychain import PATTERNS_ADDRESS, with_keychain_and_network_from_path
 
 if TYPE_CHECKING:
-    from trezor.messages import EthereumSignMessage, EthereumMessageSignature, EthereumNetworkInfo
+    from trezor.messages import (
+        EthereumSignMessage,
+        EthereumMessageSignature,
+        EthereumNetworkInfo,
+    )
     from trezor.wire import Context
 
     from apps.common.keychain import Keychain

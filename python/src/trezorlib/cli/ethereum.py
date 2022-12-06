@@ -20,12 +20,12 @@ import re
 import sys
 from decimal import Decimal
 from typing import (
-    NoReturn,
     TYPE_CHECKING,
     Any,
     BinaryIO,
     Dict,
     List,
+    NoReturn,
     Optional,
     Sequence,
     TextIO,
