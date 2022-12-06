@@ -2658,31 +2658,34 @@ class CardanoGovernanceRegistrationParametersType(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("voting_public_key", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("staking_path", "uint32", repeated=True, required=False, default=None),
-        3: protobuf.Field("reward_address_parameters", "CardanoAddressParametersType", repeated=False, required=True),
+        3: protobuf.Field("reward_address_parameters", "CardanoAddressParametersType", repeated=False, required=False, default=None),
         4: protobuf.Field("nonce", "uint64", repeated=False, required=True),
         5: protobuf.Field("format", "CardanoGovernanceRegistrationFormat", repeated=False, required=False, default=CardanoGovernanceRegistrationFormat.CIP15),
         6: protobuf.Field("delegations", "CardanoGovernanceRegistrationDelegation", repeated=True, required=False, default=None),
         7: protobuf.Field("voting_purpose", "uint64", repeated=False, required=False, default=None),
+        8: protobuf.Field("reward_address", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        reward_address_parameters: "CardanoAddressParametersType",
         nonce: "int",
         staking_path: Optional[Sequence["int"]] = None,
         delegations: Optional[Sequence["CardanoGovernanceRegistrationDelegation"]] = None,
         voting_public_key: Optional["bytes"] = None,
+        reward_address_parameters: Optional["CardanoAddressParametersType"] = None,
         format: Optional["CardanoGovernanceRegistrationFormat"] = CardanoGovernanceRegistrationFormat.CIP15,
         voting_purpose: Optional["int"] = None,
+        reward_address: Optional["str"] = None,
     ) -> None:
         self.staking_path: Sequence["int"] = staking_path if staking_path is not None else []
         self.delegations: Sequence["CardanoGovernanceRegistrationDelegation"] = delegations if delegations is not None else []
-        self.reward_address_parameters = reward_address_parameters
         self.nonce = nonce
         self.voting_public_key = voting_public_key
+        self.reward_address_parameters = reward_address_parameters
         self.format = format
         self.voting_purpose = voting_purpose
+        self.reward_address = reward_address
 
 
 class CardanoTxAuxiliaryData(protobuf.MessageType):

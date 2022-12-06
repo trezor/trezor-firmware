@@ -231,6 +231,16 @@ def validate_output_address_parameters(
     assert_params_cond(parameters.address_type in ADDRESS_TYPES_PAYMENT_KEY)
 
 
+def validate_governance_reward_address_parameters(
+    parameters: messages.CardanoAddressParametersType,
+) -> None:
+    validate_address_parameters(parameters)
+
+    # Despite the name, the address doesn't have to be a REWARD address.
+    # see also validate_governance_reward_address
+    assert_params_cond(parameters.address_type in ADDRESS_TYPES_SHELLEY)
+
+
 def assert_cond(condition: bool) -> None:
     if not condition:
         raise ProcessError("Invalid address")
@@ -285,6 +295,13 @@ def validate_reward_address(address: str, protocol_magic: int, network_id: int) 
     assert_cond(
         address_type in (CardanoAddressType.REWARD, CardanoAddressType.REWARD_SCRIPT)
     )
+
+
+def validate_governance_reward_address(
+    address: str, protocol_magic: int, network_id: int
+) -> None:
+    address_type = _validate_and_get_type(address, protocol_magic, network_id)
+    assert_cond(address_type in ADDRESS_TYPES_SHELLEY)
 
 
 def get_bytes_unsafe(address: str) -> bytes:
