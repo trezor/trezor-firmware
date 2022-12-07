@@ -336,7 +336,7 @@ async def confirm_path_warning(
     )
 
 
-def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
+def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
     content = RustLayout(
         trezorui2.confirm_blob(
             title=title,
@@ -349,11 +349,11 @@ def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
     return content
 
 
-async def show_xpub(ctx: GenericContext, xpub: str, title: str, cancel: str) -> None:
+async def show_xpub(ctx: GenericContext, xpub: str, title: str) -> None:
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _show_xpub(xpub, title, cancel),
+            _show_xpub(xpub, title, None),
             "show_xpub",
             ButtonRequestType.PublicKey,
         )
