@@ -20,7 +20,7 @@
 #define _GNU_SOURCE
 
 #include "qr-code-generator/qrcodegen.h"
-#include "tjpgd/src/tjpgd.h"
+#include "tjpgd/tjpgd.h"
 
 #include "uzlib.h"
 
