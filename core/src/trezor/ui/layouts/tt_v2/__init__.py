@@ -136,7 +136,7 @@ class RustLayout(ui.Layout):
 
     def _first_paint(self) -> None:
         # Clear the screen of any leftovers.
-        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.backlight_fade(ui.style.BACKLIGHT_NONE)
         ui.display.clear()
         self._paint()
 

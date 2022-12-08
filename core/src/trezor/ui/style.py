@@ -6,7 +6,7 @@ from trezor.ui import rgb
 BACKLIGHT_NORMAL = const(150)
 BACKLIGHT_LOW = const(45)
 BACKLIGHT_DIM = const(5)
-BACKLIGHT_NONE = const(2)
+BACKLIGHT_NONE = const(0)
 BACKLIGHT_MAX = const(255)
 
 # color palette
