@@ -34,7 +34,6 @@ const char *get_ethereum_suffix(uint64_t chain_id) {
   }
 }
 
-// TODO: do we need this functions?
 bool is_ethereum_slip44(uint32_t slip44) {
   switch (slip44) {
 % for slip44 in sorted(set(n.slip44 for n in networks)):
@@ -46,7 +45,7 @@ bool is_ethereum_slip44(uint32_t slip44) {
   }
 }
 
-int32_t ethereum_slip44_by_chain_id(uint64_t chain_id) {
+uint32_t ethereum_slip44_by_chain_id(uint64_t chain_id) {
   switch (chain_id) {
 % for n in networks:
     case ${align_chain_id(n)}: return ${align_slip44(n)};  /* ${n.name} */

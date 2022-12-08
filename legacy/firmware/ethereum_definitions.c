@@ -35,142 +35,131 @@
 #include "trezor.h"  // because of the "VERSTR" macro used in "fsm_sendFailureDebug" function
 #include "util.h"
 
-typedef struct {
+typedef pb_byte_t proof_entry[SHA256_DIGEST_LENGTH];
+typedef struct _ParsedEncodedEthereumDefinitions {
   // prefix
-  pb_size_t format_version_start;
+  pb_byte_t format_version[FORMAT_VERSION_LENGTH];
   uint8_t definition_type;
   uint32_t data_version;
-  uint16_t payload_length_in_bytes;
+  uint16_t payload_length;
 
   // payload
-  pb_size_t payload_start;
+  const pb_byte_t *payload;
 
   // suffix
   uint8_t proof_length;
-  pb_size_t proof_start;
+  const proof_entry* proof;
 
-  ed25519_signature signed_root_hash;
+  const ed25519_signature* signed_root_hash;
 } ParsedEncodedEthereumDefinitions;
 
-const ParsedEncodedEthereumDefinitions *_parse_encoded_EthereumDefinitions(
-    const pb_size_t size, const pb_byte_t *bytes) {
-  static ParsedEncodedEthereumDefinitions parsed;
-
+bool _parse_encoded_EthereumDefinitions(
+    ParsedEncodedEthereumDefinitions* const result, const pb_size_t size, const pb_byte_t *bytes) {
   // format version + definition type + data version + payload length + payload
   // (at least 1B) + proof length + signed Merkle tree root hash
   if (size < (FORMAT_VERSION_LENGTH + 1 + 4 + 2 + 1 + 1 +
               MERKLE_TREE_SIGNED_ROOT_SIZE)) {
-    return (const ParsedEncodedEthereumDefinitions *const)NULL;
+    return false;
   }
 
-  pb_size_t current_position = 0;
-  parsed.format_version_start = current_position;
-  current_position += FORMAT_VERSION_LENGTH;
+  const pb_byte_t *cursor = bytes;
+  memcpy(result->format_version, cursor, FORMAT_VERSION_LENGTH);
+  cursor += FORMAT_VERSION_LENGTH;
 
-  parsed.definition_type = bytes[current_position];
-  current_position += 1;
+  result->definition_type = *cursor;
+  cursor += 1;
 
-  parsed.data_version = read_be(&bytes[current_position]);
-  current_position += 4;
+  result->data_version = read_be(cursor);
+  cursor += 4;
 
-  parsed.payload_length_in_bytes = (((uint16_t)bytes[current_position]) << 8) |
-                                   (((uint16_t)bytes[current_position + 1]));
-  current_position += 2;
+  result->payload_length = (((uint16_t)*cursor << 8) |
+                          ((uint16_t)*(cursor + 1)));
+  cursor += 2;
 
-  if (size < current_position - 1) {
-    return (const ParsedEncodedEthereumDefinitions *const)NULL;
+  result->payload = cursor;
+  cursor += result->payload_length;
+
+  if (size < cursor - bytes) {
+    return false;
   }
-  parsed.payload_start = current_position;
-  current_position += parsed.payload_length_in_bytes;
+  result->proof_length = *cursor;
+  cursor += 1;
 
-  if (size < current_position - 1) {
-    return (const ParsedEncodedEthereumDefinitions *const)NULL;
+  // check the whole size of incoming bytes array
+  if (size != (cursor - bytes) + result->proof_length * sizeof(proof_entry) + MERKLE_TREE_SIGNED_ROOT_SIZE) {
+    return false;
   }
-  parsed.proof_length = bytes[current_position];
-  current_position += 1;
+  result->proof = (proof_entry*) cursor;
+  cursor += result->proof_length * sizeof(proof_entry);
 
-  if (size < current_position - 1) {
-    return (const ParsedEncodedEthereumDefinitions *const)NULL;
-  }
-  parsed.proof_start = current_position;
-  current_position += parsed.proof_length * SHA256_DIGEST_LENGTH;
+  result->signed_root_hash = (ed25519_signature*) cursor;
 
-  if (size < current_position + MERKLE_TREE_SIGNED_ROOT_SIZE - 1) {
-    return (const ParsedEncodedEthereumDefinitions *const)NULL;
-  }
-  memcpy(&parsed.signed_root_hash, &bytes[current_position],
-         MERKLE_TREE_SIGNED_ROOT_SIZE);
-
-  return (const ParsedEncodedEthereumDefinitions *const)&parsed;
+  return true;
 }
 
 bool _decode_definition(const pb_size_t size, const pb_byte_t *bytes,
                         const EthereumDefinitionType expected_type,
                         void *definition) {
   // parse received definition
-  const ParsedEncodedEthereumDefinitions *parsed_def =
-      _parse_encoded_EthereumDefinitions(size, bytes);
-  if (!parsed_def) {
+  static ParsedEncodedEthereumDefinitions parsed_def;
+  if (!_parse_encoded_EthereumDefinitions(&parsed_def, size, bytes)) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Invalid Ethereum definition"));
     return false;
   }
 
   // check definition fields
-  if (memcmp(FORMAT_VERSION, &bytes[parsed_def->format_version_start],
+  if (memcmp(FORMAT_VERSION, parsed_def.format_version,
              FORMAT_VERSION_LENGTH)) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Invalid definition format"));
     return false;
   }
 
-  if (expected_type != parsed_def->definition_type) {
+  if (expected_type != parsed_def.definition_type) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Definition type mismatch"));
     return false;
   }
 
-  if (MIN_DATA_VERSION > parsed_def->data_version) {
+  if (MIN_DATA_VERSION > parsed_def.data_version) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Definition is outdated"));
     return false;
   }
 
   // compute Merkle tree root hash from proof
   uint8_t hash[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t hash_data[HASH_DATA_BUFFER_SIZE];
-  memzero(hash_data, HASH_DATA_BUFFER_SIZE);
+  uint8_t hash_prefix = '\x00';
+  SHA256_CTX context = {0};
+  sha256_Init(&context);
   // leaf hash = sha256('\x00' + leaf data)
-  memcpy(&hash_data[1], bytes,
-         parsed_def->payload_start + parsed_def->payload_length_in_bytes);
-  sha256_Raw(
-      hash_data,
-      1 + parsed_def->payload_start + parsed_def->payload_length_in_bytes,
-      hash);
+  sha256_Update(&context, &hash_prefix, 1);
+  sha256_Update(&context, bytes, (parsed_def.payload - bytes) + parsed_def.payload_length);
+  sha256_Final(&context, hash);
 
-  pb_size_t index = parsed_def->proof_start;
   int cmp = 0;
   const void *min, *max;
-  for (uint8_t i = 0; i < parsed_def->proof_length; i++) {
-    memzero(hash_data, HASH_DATA_BUFFER_SIZE);
+  hash_prefix = '\x01';
+  for (uint8_t i = 0; i < parsed_def.proof_length; i++) {
+    sha256_Init(&context);
     // node hash = sha256('\x01' + min(hash, next_proof) + max(hash,
     // next_proof))
-    hash_data[0] = '\x01';
-    cmp = memcmp(hash, &bytes[index], SHA256_DIGEST_LENGTH);
-    min = cmp < 1 ? hash : &bytes[index];
-    max = cmp > 0 ? hash : &bytes[index];
-    memcpy(&hash_data[1], min, SHA256_DIGEST_LENGTH);
-    memcpy(&hash_data[1 + SHA256_DIGEST_LENGTH], max, SHA256_DIGEST_LENGTH);
-    sha256_Raw(hash_data, 1 + SHA256_DIGEST_LENGTH * 2, hash);
-    index += SHA256_DIGEST_LENGTH;
+    sha256_Update(&context, &hash_prefix, 1);
+    cmp = memcmp(hash, parsed_def.proof + i, SHA256_DIGEST_LENGTH);
+    min = cmp < 1 ? hash : (void*) (parsed_def.proof + i);
+    max = cmp > 0 ? hash : (void*) (parsed_def.proof + i);
+    sha256_Update(&context, min, SHA256_DIGEST_LENGTH);
+    sha256_Update(&context, max, SHA256_DIGEST_LENGTH);
+    sha256_Final(&context, hash);
   }
 
   // and verify its signature
   if (ed25519_sign_open(hash, SHA256_DIGEST_LENGTH, DEFINITIONS_PUBLIC_KEY,
-                        parsed_def->signed_root_hash) != 0
+                        *(parsed_def.signed_root_hash)) != 0
 #if DEBUG_LINK
       &&
       ed25519_sign_open(hash, SHA256_DIGEST_LENGTH, DEFINITIONS_DEV_PUBLIC_KEY,
-                        parsed_def->signed_root_hash) != 0
+                        *(parsed_def.signed_root_hash)) != 0
 #endif
   ) {
     // invalid signature
@@ -183,9 +172,8 @@ bool _decode_definition(const pb_size_t size, const pb_byte_t *bytes,
   const pb_msgdesc_t *fields = (expected_type == EthereumDefinitionType_NETWORK
                                     ? EthereumNetworkInfo_fields
                                     : EthereumTokenInfo_fields);
-  memzero(definition, sizeof(definition));
   pb_istream_t stream = pb_istream_from_buffer(
-      &bytes[parsed_def->payload_start], parsed_def->payload_length_in_bytes);
+      parsed_def.payload, parsed_def.payload_length);
   bool status = pb_decode(&stream, fields, definition);
   if (!status) {
     // invalid message
@@ -196,10 +184,15 @@ bool _decode_definition(const pb_size_t size, const pb_byte_t *bytes,
   return true;
 }
 
-void _set_EthereumNetworkInfo_to_builtin(const uint64_t ref_chain_id,
+void _set_EthereumNetworkInfo_to_builtin(const uint64_t ref_chain_id, const uint32_t ref_slip44,
                                          EthereumNetworkInfo *network) {
+  if (ref_chain_id == CHAIN_ID_UNKNOWN) {
+    // we don't know chain id so we can use only slip44
+    network->slip44 = is_ethereum_slip44(ref_slip44) ? ref_slip44 : SLIP44_UNKNOWN;
+  } else {
+    network->slip44 = ethereum_slip44_by_chain_id(ref_chain_id);
+  }
   network->chain_id = ref_chain_id;
-  network->slip44 = ethereum_slip44_by_chain_id(ref_chain_id);
   memzero(network->shortcut, sizeof(network->shortcut));
   const char *sc = get_ethereum_suffix(ref_chain_id);
   strncpy(network->shortcut, sc, sizeof(network->shortcut) - 1);
@@ -207,64 +200,45 @@ void _set_EthereumNetworkInfo_to_builtin(const uint64_t ref_chain_id,
 }
 
 bool _get_EthereumNetworkInfo(
-    const EthereumDefinitions_encoded_network_t *encoded_network,
-    const uint64_t ref_chain_id, EthereumNetworkInfo *network) {
+    const EncodedNetwork *encoded_network,
+    const uint64_t ref_chain_id, const uint32_t ref_slip44, EthereumNetworkInfo *network) {
   // try to get built-in definition
-  _set_EthereumNetworkInfo_to_builtin(ref_chain_id, network);
+  _set_EthereumNetworkInfo_to_builtin(ref_chain_id, ref_slip44, network);
 
   // if we still do not have any network definition try to decode the received
   // one
-  if (strncmp(network->shortcut, UNKNOWN_NETWORK_SHORTCUT,
-              sizeof(network->shortcut)) == 0 &&
-      encoded_network != NULL) {
+  if (network->slip44 == SLIP44_UNKNOWN && encoded_network != NULL) {
     if (_decode_definition(encoded_network->size, encoded_network->bytes,
-                           EthereumDefinitionType_NETWORK, (void *)network)) {
+                           EthereumDefinitionType_NETWORK, network)) {
       if (ref_chain_id != CHAIN_ID_UNKNOWN &&
           network->chain_id != ref_chain_id) {
         // chain_id mismatch - error and reset definition
         fsm_sendFailure(FailureType_Failure_DataError,
                         _("Network definition mismatch"));
-        _set_EthereumNetworkInfo_to_builtin(CHAIN_ID_UNKNOWN, network);
         return false;
+      } else if (ref_slip44 != SLIP44_UNKNOWN && network->slip44 != ref_slip44) {
+        // slip44 mismatch - reset network definition
+        _set_EthereumNetworkInfo_to_builtin(CHAIN_ID_UNKNOWN, SLIP44_UNKNOWN, network);
       } else {
         // chain_id does match the reference one (if provided) so prepend one
         // space character to symbol, terminate it (encoded definitions does not
         // have space prefix) and return the decoded data
-        memmove(&network->shortcut[1], &network->shortcut,
+        memmove(network->shortcut + 1, network->shortcut,
                 sizeof(network->shortcut) - 2);
         network->shortcut[0] = ' ';
         network->shortcut[sizeof(network->shortcut) - 1] = 0;
       }
     } else {
       // decoding failed - reset network definition
-      _set_EthereumNetworkInfo_to_builtin(CHAIN_ID_UNKNOWN, network);
+      _set_EthereumNetworkInfo_to_builtin(CHAIN_ID_UNKNOWN, SLIP44_UNKNOWN, network);
     }
   }
 
   return true;
 }
 
-void _set_EthereumTokenInfo(const EthereumTokenInfo *ref_token,
-                            EthereumTokenInfo *token) {
-  // reset
-  memzero(token->symbol, sizeof(token->symbol));
-  token->decimals = 0;
-  memzero(token->address.bytes, sizeof(token->address.bytes));
-  token->address.size = 0;
-  token->chain_id = CHAIN_ID_UNKNOWN;
-  memzero(token->name, sizeof(token->name));
-
-  // copy data to token definition
-  strncpy(token->symbol, ref_token->symbol, sizeof(token->symbol) - 1);
-  token->decimals = ref_token->decimals;
-  memcpy(token->address.bytes, ref_token->address.bytes,
-         sizeof(token->address.bytes));
-  token->address.size = sizeof(token->address.bytes);
-  token->chain_id = ref_token->chain_id;
-}
-
 bool _get_EthereumTokenInfo(
-    const EthereumDefinitions_encoded_token_t *encoded_token,
+    const EncodedToken *encoded_token,
     const uint64_t ref_chain_id, const char *ref_address,
     EthereumTokenInfo *token) {
   EthereumTokenInfo_address_t ref_address_bytes;
@@ -282,7 +256,7 @@ bool _get_EthereumTokenInfo(
   // if we do not have any token definition try to decode the received one
   if (builtin == UnknownToken && encoded_token != NULL) {
     if (_decode_definition(encoded_token->size, encoded_token->bytes,
-                           EthereumDefinitionType_TOKEN, (void *)token)) {
+                           EthereumDefinitionType_TOKEN, token)) {
       if ((ref_chain_id == CHAIN_ID_UNKNOWN ||
            token->chain_id == ref_chain_id) &&
           (!address_parsed ||
@@ -291,7 +265,7 @@ bool _get_EthereumTokenInfo(
         // chain_id and/or address does match the reference ones (if provided)
         // so prepend one space character to symbol, terminate it (encoded
         // definitions does not have space prefix) and return the decoded data
-        memmove(&token->symbol[1], &token->symbol, sizeof(token->symbol) - 2);
+        memmove(token->symbol + 1, token->symbol, sizeof(token->symbol) - 2);
         token->symbol[0] = ' ';
         token->symbol[sizeof(token->symbol) - 1] = 0;
         return true;
@@ -303,37 +277,36 @@ bool _get_EthereumTokenInfo(
 
     // decoding failed or token definition has different
     // chain_id and/or address
-    _set_EthereumTokenInfo(UnknownToken, token);
     return false;
   }
 
   // copy result
-  _set_EthereumTokenInfo(builtin, token);
+  *token = *builtin;
   return true;
 }
 
 const EthereumDefinitionsDecoded *get_EthereumDefinitionsDecoded(
-    const EthereumDefinitions_encoded_network_t *encoded_network,
-    const EthereumDefinitions_encoded_token_t *encoded_token,
-    const uint64_t ref_chain_id, const char *ref_address) {
+    const EncodedNetwork *encoded_network,
+    const EncodedToken *encoded_token,
+    const uint64_t ref_chain_id, const uint32_t ref_slip44, const char *ref_address) {
   static EthereumDefinitionsDecoded defs;
+  memzero(&defs, sizeof(defs));
 
-  if (!_get_EthereumNetworkInfo(encoded_network, ref_chain_id, &defs.network)) {
+  if (!_get_EthereumNetworkInfo(encoded_network, ref_chain_id, ref_slip44, &defs.network)) {
     // error while decoding - chain IDs mismatch
     return NULL;
   }
 
-  if (strncmp(defs.network.shortcut, UNKNOWN_NETWORK_SHORTCUT,
-              sizeof(defs.network.shortcut)) != 0) {
+  if (defs.network.slip44 != SLIP44_UNKNOWN && defs.network.chain_id != CHAIN_ID_UNKNOWN) {
     // we have found network definition, we can try to load token definition
-    if (!_get_EthereumTokenInfo(encoded_token, ref_chain_id, ref_address,
+    if (!_get_EthereumTokenInfo(encoded_token, defs.network.chain_id, ref_address,
                                 &defs.token)) {
       return NULL;
     }
   } else {
     // if we did not find any network definition, set token definition to
     // unknown token
-    _set_EthereumTokenInfo(UnknownToken, &defs.token);
+    defs.token = *UnknownToken;
   }
   return &defs;
 }

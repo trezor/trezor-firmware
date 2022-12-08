@@ -28,6 +28,6 @@
 
 const char *get_ethereum_suffix(uint64_t chain_id);
 bool is_ethereum_slip44(uint32_t slip44);
-int32_t ethereum_slip44_by_chain_id(uint64_t chain_id);
+uint32_t ethereum_slip44_by_chain_id(uint64_t chain_id);
 
 #endif

@@ -21,9 +21,6 @@ static const uint8_t DEFINITIONS_DEV_PUBLIC_KEY[] =
 #define MIN_DATA_VERSION ${ethereum_defs_timestamp}
 #define FORMAT_VERSION_LENGTH 5
 #define FORMAT_VERSION (const pb_byte_t *)"trzd1"
-#define MERKLE_TREE_SIGNED_ROOT_SIZE 64
-
-#define HASH_DATA_BUFFER_SIZE \
-  (1 + MAX(EthereumDefinitions_size / 2, 2 * SHA256_DIGEST_LENGTH))
+#define MERKLE_TREE_SIGNED_ROOT_SIZE sizeof(ed25519_signature)
 
 #endif
