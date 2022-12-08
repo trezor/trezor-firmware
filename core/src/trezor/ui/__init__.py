@@ -99,6 +99,7 @@ def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
     for i in range(current, val, step):
         display.backlight(i)
         utime.sleep_us(delay)
+    display.backlight(val)
 
 
 def header(
