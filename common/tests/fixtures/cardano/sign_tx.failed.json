@@ -1344,7 +1344,7 @@
         "include_network_id": false
       },
       "result": {
-        "error_message": "Invalid auxiliary data"
+        "error_message": "Invalid address parameters"
       }
     },
     {
