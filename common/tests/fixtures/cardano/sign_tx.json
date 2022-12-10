@@ -1208,6 +1208,204 @@
       }
     },
     {
+      "description": "transaction with CIP36 governance registration and external reward address",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": {
+          "governance_registration_parameters": {
+            "staking_path": "m/1852'/1815'/0'/2/0",
+            "nonce": 22634813,
+            "format": 1,
+            "delegations": [
+              {
+                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "weight": 1
+              }
+            ],
+            "reward_address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r"
+          }
+        },
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "a5c5506777fb62aa98e6c45f1c85ab9ddf706a1f199e777c43f2288a6b4fdcab",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "98e68184bc090fe95c461bd8d26b462861d382dbfce051bc9cb04a7d51c2ba293960e19ac9099c6d10912c89a3102fcd958c31e87eb9e142136b6411ab55f107",
+            "chain_code": null
+          }
+        ],
+        "auxiliary_data_supplement": {
+          "type": 1,
+          "auxiliary_data_hash": "3830a90f2c5dc23ddd478cefcb8642f0b36afa77769239146d9cba83ed196e41",
+          "governance_signature": "ba05ac525e5dcc74e5a6cdbb7fb111d8e21163d79fe76777a5b730fe93512f09415f6f7b4904b12c6f12fe33b6c553d9889beb024299fa1256a0d3e98c8ff203"
+        }
+      }
+    },
+    {
+      "description": "transaction with CIP36 governance registration and non-payment reward address parameters",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": {
+          "governance_registration_parameters": {
+            "staking_path": "m/1852'/1815'/0'/2/0",
+            "reward_address_parameters": {
+              "addressType": 14,
+              "stakingPath": "m/1852'/1815'/0'/2/0"
+            },
+            "nonce": 22634813,
+            "format": 1,
+            "delegations": [
+              {
+                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "weight": 1
+              }
+            ]
+          }
+        },
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "c5b5f451fb5992e97ab50364467348c1899a2c8972d2d79ae5893bbac37eb51f",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "54c89502160b98975364ef842d024ddca41d6d94b439be399cd48231ca27daccfcf5ba7c653240f8998327d16fb8844f4bed562a33c2a287d082e6787260e809",
+            "chain_code": null
+          }
+        ],
+        "auxiliary_data_supplement": {
+          "type": 1,
+          "auxiliary_data_hash": "eb63742c2908aedcc6db3df903377f07302828c0e0eb4a01d38c9049845780c5",
+          "governance_signature": "97e7fd23473f984454ea6d17f8f3f4c7019fa63b87596356db89f7906bb1ce6e51c7d0efe68772d6a6cd83011b1777912cae2cc94661148af51d8f1ba791fe0d"
+        }
+      }
+    },
+    {
+      "description": "transaction with CIP36 governance registration and non-payment external reward address",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": {
+          "governance_registration_parameters": {
+            "staking_path": "m/1852'/1815'/0'/2/0",
+            "nonce": 22634813,
+            "format": 1,
+            "delegations": [
+              {
+                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "weight": 1
+              }
+            ],
+            "reward_address": "stake1uyfz49rtntfa9h0s98f6s28sg69weemgjhc4e8hm66d5yacalmqha"
+          }
+        },
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "c5b5f451fb5992e97ab50364467348c1899a2c8972d2d79ae5893bbac37eb51f",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "54c89502160b98975364ef842d024ddca41d6d94b439be399cd48231ca27daccfcf5ba7c653240f8998327d16fb8844f4bed562a33c2a287d082e6787260e809",
+            "chain_code": null
+          }
+        ],
+        "auxiliary_data_supplement": {
+          "type": 1,
+          "auxiliary_data_hash": "eb63742c2908aedcc6db3df903377f07302828c0e0eb4a01d38c9049845780c5",
+          "governance_signature": "97e7fd23473f984454ea6d17f8f3f4c7019fa63b87596356db89f7906bb1ce6e51c7d0efe68772d6a6cd83011b1777912cae2cc94661148af51d8f1ba791fe0d"
+        }
+      }
+    },
+    {
       "description": "Testnet transaction",
       "parameters": {
         "protocol_magic": 42,
