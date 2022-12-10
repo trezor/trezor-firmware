@@ -68,6 +68,10 @@ CERTIFICATE_TYPE_NAMES = {
 
 BRT_Other = ButtonRequestType.Other  # global_import_cache
 
+GOVERNANCE_REWARD_ELIGIBILITY_WARNING = (
+    "Warning: The address is not a payment address, it is not eligible for rewards."
+)
+
 
 def format_coin_amount(amount: int, network_id: int) -> str:
     from .helpers import network_ids
@@ -327,8 +331,8 @@ async def show_credentials(
     stake_credential: Credential,
 ) -> None:
     intro_text = "Address"
-    await _show_credential(ctx, payment_credential, intro_text, is_output=False)
-    await _show_credential(ctx, stake_credential, intro_text, is_output=False)
+    await _show_credential(ctx, payment_credential, intro_text, purpose="address")
+    await _show_credential(ctx, stake_credential, intro_text, purpose="address")
 
 
 async def show_change_output_credentials(
@@ -337,8 +341,8 @@ async def show_change_output_credentials(
     stake_credential: Credential,
 ) -> None:
     intro_text = "The following address is a change address. Its"
-    await _show_credential(ctx, payment_credential, intro_text, is_output=True)
-    await _show_credential(ctx, stake_credential, intro_text, is_output=True)
+    await _show_credential(ctx, payment_credential, intro_text, purpose="output")
+    await _show_credential(ctx, stake_credential, intro_text, purpose="output")
 
 
 async def show_device_owned_output_credentials(
@@ -348,22 +352,47 @@ async def show_device_owned_output_credentials(
     show_both_credentials: bool,
 ) -> None:
     intro_text = "The following address is owned by this device. Its"
-    await _show_credential(ctx, payment_credential, intro_text, is_output=True)
+    await _show_credential(ctx, payment_credential, intro_text, purpose="output")
     if show_both_credentials:
-        await _show_credential(ctx, stake_credential, intro_text, is_output=True)
+        await _show_credential(ctx, stake_credential, intro_text, purpose="output")
+
+
+async def show_governance_registration_reward_credentials(
+    ctx: Context,
+    payment_credential: Credential,
+    stake_credential: Credential,
+    show_both_credentials: bool,
+    show_payment_warning: bool,
+) -> None:
+    intro_text = "The governance registration reward address is owned by this device. Its"
+    await _show_credential(
+        ctx, payment_credential, intro_text, purpose="gov_reg_reward_address"
+    )
+    if show_both_credentials or show_payment_warning:
+        extra_text = (
+            GOVERNANCE_REWARD_ELIGIBILITY_WARNING if show_payment_warning else None
+        )
+        await _show_credential(
+            ctx,
+            stake_credential,
+            intro_text,
+            purpose="gov_reg_reward_address",
+            extra_text=extra_text,
+        )
 
 
 async def _show_credential(
     ctx: Context,
     credential: Credential,
     intro_text: str,
-    is_output: bool,
+    purpose: Literal["address", "output", "gov_reg_reward_address"],
+    extra_text: str | None = None,
 ) -> None:
-    title = (
-        "Confirm transaction"
-        if is_output
-        else f"{ADDRESS_TYPE_NAMES[credential.address_type]} address"
-    )
+    title = {
+        "address": f"{ADDRESS_TYPE_NAMES[credential.address_type]} address",
+        "output": "Confirm transaction",
+        "gov_reg_reward_address": "Confirm transaction",
+    }[purpose]
 
     props: list[PropertyType] = []
     append = props.append  # local_cache_attribute
@@ -385,7 +414,8 @@ async def _show_credential(
         append((None, "Path is unusual."))
     if credential.is_mismatch:
         append((None, "Credential doesn't match payment credential."))
-    if credential.is_reward:
+    if credential.is_reward and purpose != "gov_reg_reward_address":
+        # for governance registrations, this is handled by extra_text at the end
         append(("Address is a reward address.", None))
     if credential.is_no_staking:
         append(
@@ -395,13 +425,17 @@ async def _show_credential(
             )
         )
 
-    await confirm_properties(
-        ctx,
-        "confirm_credential",
-        title,
-        props,
-        br_code=BRT_Other,
-    )
+    if extra_text:
+        append((extra_text, None))
+
+    if len(props) > 0:
+        await confirm_properties(
+            ctx,
+            "confirm_credential",
+            title,
+            props,
+            br_code=BRT_Other,
+        )
 
 
 async def warn_path(ctx: Context, path: list[int], title: str) -> None:
@@ -762,11 +796,30 @@ async def confirm_governance_registration_delegation(
     )
 
 
+async def confirm_governance_registration_reward_address(
+    ctx: Context,
+    reward_address: str,
+    should_show_payment_warning: bool,
+) -> None:
+    props = [
+        ("Governance voting key registration", None),
+        ("Rewards go to:", reward_address),
+    ]
+    if should_show_payment_warning:
+        props.append((GOVERNANCE_REWARD_ELIGIBILITY_WARNING, None))
+    await confirm_properties(
+        ctx,
+        "confirm_governance_registration_reward_address",
+        title="Confirm transaction",
+        props=props,
+        br_code=ButtonRequestType.Other,
+    )
+
+
 async def confirm_governance_registration(
     ctx: Context,
     public_key: str | None,
     staking_path: list[int],
-    reward_address: str,
     nonce: int,
     voting_purpose: int | None,
 ) -> None:
@@ -779,7 +832,6 @@ async def confirm_governance_registration(
                 f"Staking key for account {format_account_number(staking_path)}:",
                 address_n_to_str(staking_path),
             ),
-            ("Rewards go to:", reward_address),
             ("Nonce:", str(nonce)),
         ]
     )

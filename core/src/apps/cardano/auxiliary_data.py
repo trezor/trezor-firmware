@@ -2,7 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.crypto import hashlib
-from trezor.enums import CardanoGovernanceRegistrationFormat
+from trezor.enums import CardanoAddressType, CardanoGovernanceRegistrationFormat
 
 from apps.common import cbor
 
@@ -137,6 +137,14 @@ async def show(
         await layout.show_auxiliary_data_hash(ctx, auxiliary_data_hash)
 
 
+def _should_show_payment_warning(address_type: CardanoAddressType) -> bool:
+    # For non-payment governance reward addresses, we show a warning that the address is not
+    # actually eligible for rewards. https://github.com/cardano-foundation/CIPs/pull/373
+    # However, the registration is otherwise valid, so we allow such addresses since we don't
+    # want to prevent the user from voting just because they use an outdated SW wallet.
+    return address_type not in addresses.ADDRESS_TYPES_PAYMENT
+
+
 async def _show_governance_registration(
     ctx: Context,
     keychain: seed.Keychain,
@@ -146,6 +154,7 @@ async def _show_governance_registration(
     should_show_details: bool,
 ) -> None:
     from .helpers import bech32
+    from .helpers.credential import Credential, should_show_credentials
 
     for delegation in parameters.delegations:
         encoded_public_key = bech32.encode(
@@ -155,23 +164,32 @@ async def _show_governance_registration(
             ctx, encoded_public_key, delegation.weight
         )
 
+    if parameters.reward_address:
+        show_payment_warning = _should_show_payment_warning(
+            addresses.get_type(addresses.get_bytes_unsafe(parameters.reward_address))
+        )
+        await layout.confirm_governance_registration_reward_address(
+            ctx, parameters.reward_address, show_payment_warning
+        )
+    else:
+        address_parameters = parameters.reward_address_parameters
+        assert address_parameters  # _validate_governance_registration_parameters
+        show_both_credentials = should_show_credentials(address_parameters)
+        show_payment_warning = _should_show_payment_warning(
+            address_parameters.address_type
+        )
+        await layout.show_governance_registration_reward_credentials(
+            ctx,
+            Credential.payment_credential(address_parameters),
+            Credential.stake_credential(address_parameters),
+            show_both_credentials,
+            show_payment_warning,
+        )
+
     encoded_public_key: str | None = None
     if parameters.voting_public_key:
         encoded_public_key = bech32.encode(
             bech32.HRP_GOVERNANCE_PUBLIC_KEY, parameters.voting_public_key
-        )
-
-    if parameters.reward_address:
-        reward_address = parameters.reward_address
-    else:
-        assert (
-            parameters.reward_address_parameters
-        )  # _validate_governance_registration_parameters
-        reward_address = addresses.derive_human_readable(
-            keychain,
-            parameters.reward_address_parameters,
-            protocol_magic,
-            network_id,
         )
 
     voting_purpose: int | None = (
@@ -182,7 +200,6 @@ async def _show_governance_registration(
         ctx,
         encoded_public_key,
         parameters.staking_path,
-        reward_address,
         parameters.nonce,
         voting_purpose,
     )
