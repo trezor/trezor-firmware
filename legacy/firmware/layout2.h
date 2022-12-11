@@ -116,9 +116,6 @@ void layoutNEMTransferPayload(const uint8_t *payload, size_t length,
 void layoutNEMMosaicDescription(const char *description);
 void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network);
 
-void layoutCosiSign(const uint32_t *address_n, size_t address_n_count,
-                    const uint8_t *data, uint32_t len);
-
 void layoutConfirmAutoLockDelay(uint32_t delay_ms);
 void layoutConfirmSafetyChecks(SafetyCheckLevel safety_checks_level);
 
