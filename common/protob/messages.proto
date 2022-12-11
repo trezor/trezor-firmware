@@ -161,10 +161,13 @@ enum MessageType {
     MessageType_SignedIdentity = 54 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_GetECDHSessionKey = 61 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_ECDHSessionKey = 62 [(bitcoin_only) = true, (wire_out) = true];
+    reserved 71 to 74;
+    /*
     MessageType_CosiCommit = 71 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_CosiCommitment = 72 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_CosiSign = 73 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_CosiSignature = 74 [(bitcoin_only) = true, (wire_out) = true];
+    */
 
     // Debug
     MessageType_DebugLinkDecision = 100 [(bitcoin_only) = true, (wire_debug_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];

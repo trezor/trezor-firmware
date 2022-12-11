@@ -26,6 +26,7 @@ from trezorlib.tools import parse_path
 DIGEST = sha256(b"this is not a pipe").digest()
 
 
+@pytest.mark.skip_t1
 def test_cosi_pubkey(client: Client):
     c0 = cosi.commit(client, parse_path("m/10018h/0h"))
     c1 = cosi.commit(client, parse_path("m/10018h/1h"))
@@ -36,6 +37,7 @@ def test_cosi_pubkey(client: Client):
     assert c1.pubkey != c2.pubkey
 
 
+@pytest.mark.skip_t1
 def test_cosi_nonce(client: Client):
     # The nonce/commitment must change after each signing.
     c0 = cosi.commit(client, parse_path("m/10018h/0h"))
@@ -44,6 +46,7 @@ def test_cosi_nonce(client: Client):
     assert c0.commitment != c1.commitment
 
 
+@pytest.mark.skip_t1
 def test_cosi_sign1(client: Client):
     # Single party signature.
     commit = cosi.commit(client, parse_path("m/10018h/0h"))
@@ -54,6 +57,7 @@ def test_cosi_sign1(client: Client):
     cosi.verify_combined(signature, DIGEST, commit.pubkey)
 
 
+@pytest.mark.skip_t1
 def test_cosi_sign2(client: Client):
     # Two party signature.
     remote_commit = cosi.commit(client, parse_path("m/10018h/1h"))
@@ -76,6 +80,7 @@ def test_cosi_sign2(client: Client):
     cosi.verify_combined(signature, DIGEST, global_pk)
 
 
+@pytest.mark.skip_t1
 def test_cosi_sign3(client: Client):
     # Three party signature.
     remote_commit = cosi.commit(client, parse_path("m/10018h/2h"))

@@ -4,6 +4,7 @@ endif
 
 SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
 	DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
+	CosiCommit CosiCommitment CosiSign CosiSignature \
 	GetOwnershipProof OwnershipProof GetOwnershipId OwnershipId AuthorizeCoinJoin DoPreauthorized \
 	CancelAuthorization DebugLinkLayout GetNonce SetBusy UnlockPath \
 	TxAckInput TxAckOutput TxAckPrev TxAckPaymentRequest \
