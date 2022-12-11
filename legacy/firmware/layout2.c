@@ -1339,39 +1339,6 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 
 #endif
 
-static inline bool is_slip18(const uint32_t *address_n,
-                             size_t address_n_count) {
-  // m / 10018' / [0-9]'
-  return address_n_count == 2 && address_n[0] == (PATH_HARDENED + 10018) &&
-         (address_n[1] & PATH_HARDENED) &&
-         (address_n[1] & PATH_UNHARDEN_MASK) <= 9;
-}
-
-void layoutCosiSign(const uint32_t *address_n, size_t address_n_count,
-                    const uint8_t *data, uint32_t len) {
-  char *desc = _("CoSi sign message?");
-  char desc_buf[32] = {0};
-  if (is_slip18(address_n, address_n_count)) {
-    strlcpy(desc_buf, _("CoSi sign index #?"), sizeof(desc_buf));
-    desc_buf[16] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
-    desc = desc_buf;
-  }
-  char str[4][17] = {0};
-  if (len == 32) {
-    data2hex(data, 8, str[0]);
-    data2hex(data + 8, 8, str[1]);
-    data2hex(data + 16, 8, str[2]);
-    data2hex(data + 24, 8, str[3]);
-  } else {
-    strlcpy(str[0], "Data", sizeof(str[0]));
-    strlcpy(str[1], "of", sizeof(str[1]));
-    strlcpy(str[2], "unsupported", sizeof(str[2]));
-    strlcpy(str[3], "length", sizeof(str[3]));
-  }
-  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), desc, str[0],
-                    str[1], str[2], str[3], NULL, NULL);
-}
-
 void layoutConfirmAutoLockDelay(uint32_t delay_ms) {
   char line[sizeof("after 4294967296 minutes?")] = {0};
 
