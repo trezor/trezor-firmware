@@ -271,6 +271,7 @@ def failed(
             p("Click a button to mark the test result as:")
             with div(id="buttons"):
                 t.button("OK", id="mark-ok", onclick="markState('ok')")
+                t.button("OK & UPDATE", id="mark-update", onclick="markState('update')")
                 t.button("BAD", id="mark-bad", onclick="markState('bad')")
 
         if download_failed:
