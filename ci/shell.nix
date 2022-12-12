@@ -8,10 +8,10 @@ let
     url = "https://github.com/oxalica/rust-overlay/archive/b38c1683594aeefa5c3c4dde115401f059146be6.tar.gz";
     sha256 = "0rk4i42cys2v7k2ir57x5qa8dc37nrs432cdpbr4cddskgvyi8ky";
   });
-  # the last successful build of nixpkgs-unstable as of 2022-06-20
+  # the last successful build of nixpkgs-unstable as of 2022-12-12
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/e0a42267f73ea52adc061a64650fddc59906fc99.tar.gz";
-    sha256 = "0r1dsj51x2rm016xwvdnkm94v517jb1rpn4rk63k6krc4d0n3kh9";
+    url = "https://github.com/NixOS/nixpkgs/archive/3705e7a9950e53bc5d27dcca71d3d805580c3e18.tar.gz";
+    sha256 = "1rr010lhpcwd27cch22hv6idqbmf1wqgm5m8hf1px45g5zzgkhx2";
   }) { overlays = [ rustOverlay ]; };
   # commit before python36 was removed
   python36nixpkgs = import (builtins.fetchTarball {
