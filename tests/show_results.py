@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import http.server
+import json
 import multiprocessing
 import os
 import posixpath
@@ -13,6 +14,7 @@ import click
 
 ROOT = Path(__file__).resolve().parent.parent
 TEST_RESULT_PATH = ROOT / "tests" / "ui_tests" / "reporting" / "reports" / "test"
+FIXTURES_PATH = ROOT / "tests" / "ui_tests" / "fixtures.json"
 
 
 class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -51,6 +53,28 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
         if trailing_slash:
             path += "/"
         return path
+
+    def do_POST(self) -> None:
+        if self.path == "/fixtures.json" and FIXTURES_PATH.exists():
+
+            length = int(self.headers.get("content-length"))
+            field_data = self.rfile.read(length)
+            data = json.loads(field_data)
+
+            test_name = data.get("test")
+            test_hash = data.get("hash")
+
+            if test_name is not None and test_hash is not None:
+                with open(FIXTURES_PATH, "r") as jsonFile:
+                    fixtures = json.load(jsonFile)
+                fixtures[test_name] = test_hash
+                with open(FIXTURES_PATH, "w") as jsonFile:
+                    json.dump(fixtures, jsonFile, indent=0)
+                    jsonFile.write("\n")
+
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
 
 
 def launch_http_server(port: int) -> None:

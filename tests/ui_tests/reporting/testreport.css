@@ -14,7 +14,7 @@ tr.bad a, tr.bad a:visited {
     position: fixed;
     top: 50px;
     right: 5px;
-    width: 300px;
+    width: 500px;
     padding: 1em;
 }
 
@@ -36,6 +36,15 @@ tr.bad a, tr.bad a:visited {
 }
 
 #markbox #mark-ok:hover {
+    border-color: lightgreen;
+}
+
+#markbox #mark-update {
+    color: green;
+    border-color: darkgreen;
+}
+
+#markbox #mark-update:hover {
     border-color: lightgreen;
 }
 
