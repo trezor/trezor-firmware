@@ -57,7 +57,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     debug.click(buttons.OK)
 
     layout = debug.wait_layout()
-    assert layout.text == "Homescreen"
+    assert layout.text.startswith("< Homescreen")
     assert device_handler.result() == "Settings applied"
 
 
