@@ -175,7 +175,9 @@ impl Bip39Input {
     /// let's confirm it, otherwise just auto-complete.
     fn on_input_click(&mut self, ctx: &mut EventCtx) -> Option<MnemonicInputMsg> {
         if let (Some(word), Some(num)) = (self.suggested_word, self.options_num) {
-            return if num == 1 && word.starts_with(self.textbox.content()) {
+            return if num == 1 && word.starts_with(self.textbox.content())
+                || num > 1 && word.eq(self.textbox.content())
+            {
                 // Confirm button.
                 self.textbox.clear(ctx);
                 Some(MnemonicInputMsg::Confirmed)
@@ -207,7 +209,9 @@ impl Bip39Input {
 
         // Change the style of the button depending on the completed word.
         if let (Some(word), Some(num)) = (self.suggested_word, self.options_num) {
-            if num == 1 && word.starts_with(self.textbox.content()) {
+            if num == 1 && word.starts_with(self.textbox.content())
+                || num > 1 && word.eq(self.textbox.content())
+            {
                 // Confirm button.
                 self.button.enable(ctx);
                 self.button.set_stylesheet(ctx, theme::button_confirm());
