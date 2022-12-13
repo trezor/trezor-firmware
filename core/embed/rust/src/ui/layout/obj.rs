@@ -18,6 +18,7 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Never, TimerToken},
         constant,
+        display::sync,
         geometry::Rect,
     },
 };
@@ -199,6 +200,8 @@ impl LayoutObj {
             // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
             unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
         }
+
+        sync();
 
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
         unsafe { Gc::as_mut(&mut inner.root) }.obj_paint()

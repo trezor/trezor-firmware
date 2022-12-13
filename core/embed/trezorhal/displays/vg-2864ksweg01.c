@@ -247,6 +247,8 @@ static void rotate_oled_buffer(void) {
   }
 }
 
+void display_sync(void) {}
+
 void display_refresh(void) {
   static const uint8_t s[3] = {OLED_SETLOWCOLUMN | 0x00,
                                OLED_SETHIGHCOLUMN | 0x00,

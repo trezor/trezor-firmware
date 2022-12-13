@@ -169,3 +169,9 @@ pub fn get_offset() -> (i16, i16) {
         (x as i16, y as i16)
     }
 }
+
+pub fn sync() {
+    unsafe {
+        ffi::display_sync();
+    }
+}

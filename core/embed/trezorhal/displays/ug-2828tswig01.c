@@ -347,6 +347,8 @@ void display_init(void) {
   display_init_seq();
 }
 
+void display_sync(void) {}
+
 void display_refresh(void) {
   for (int y = 0; y < (DISPLAY_RESY / 8); y++) {
     display_set_page_and_col(y, 0);
