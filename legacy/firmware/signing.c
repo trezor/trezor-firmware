@@ -38,6 +38,7 @@
 static uint32_t change_count;
 static const CoinInfo *coin;
 static AmountUnit amount_unit;
+static bool serialize;
 static CONFIDENTIAL HDNode root;
 static CONFIDENTIAL HDNode node;
 static bool signing = false;
@@ -705,12 +706,60 @@ void phase1_request_orig_input(void) {
   }
 }
 
-void phase2_request_next_input(void) {
-  if (idx1 == info.next_legacy_input) {
-    idx2 = 0;
-    send_req_4_input();
+void phase2_request_next_output(bool first) {
+  if (first) {
+    if (serialize) {
+      idx1 = 0;
+      send_req_5_output();
+      return;
+    }
+  } else if (idx1 < info.outputs_count - 1) {
+    idx1++;
+    send_req_5_output();
+    return;
+  }
+
+  // Output serialization is finished. Generate witnesses.
+  if (to.is_segwit) {
+    idx1 = 0;
+    send_req_segwit_witness();
   } else {
-    send_req_nonlegacy_input();
+    send_req_finished();
+    signing_abort();
+  }
+}
+
+void phase2_request_next_input(bool first) {
+  if (first) {
+    idx1 = 0;
+  } else if (idx1 < info.inputs_count - 1) {
+    idx1++;
+  } else {
+    // Input processing is finished. Serialize outputs.
+    phase2_request_next_output(true);
+    return;
+  }
+
+  if (serialize || coin->force_bip143 || coin->overwintered) {
+    // We are processing all inputs.
+    if (idx1 == info.next_legacy_input) {
+      idx2 = 0;
+      send_req_4_input();
+    } else {
+      send_req_nonlegacy_input();
+    }
+  } else {
+    // We are only signing legacy inputs.
+    if (info.next_legacy_input == 0xffffffff || idx1 > info.next_legacy_input) {
+      // There are no legacy inputs or no more legacy inputs, so serialize
+      // outputs.
+      phase2_request_next_output(true);
+    } else {
+      // Sign next legacy input.
+      idx1 = info.next_legacy_input;
+      idx2 = 0;
+      send_req_4_input();
+    }
   }
 }
 
@@ -739,8 +788,7 @@ void phase2_request_orig_input(void) {
       return;
     }
 
-    idx1 = 0;
-    phase2_request_next_input();
+    phase2_request_next_input(true);
   }
 }
 
@@ -1035,6 +1083,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
                   const HDNode *_root) {
   coin = _coin;
   amount_unit = msg->has_amount_unit ? msg->amount_unit : AmountUnit_BITCOIN;
+  serialize = msg->has_serialize ? msg->serialize : true;
   memcpy(&root, _root, sizeof(HDNode));
 
   if (msg->inputs_count > MAX_INPUTS_COUNT) {
@@ -1543,11 +1592,13 @@ static bool signing_add_input(TxInputType *txinput) {
 
 #if !BITCOIN_ONLY
   if (coin->decred) {
-    // serialize Decred prefix in Phase 1
-    resp.has_serialized = true;
-    resp.serialized.has_serialized_tx = true;
-    resp.serialized.serialized_tx.size =
-        tx_serialize_input(&to, txinput, resp.serialized.serialized_tx.bytes);
+    if (serialize) {
+      // serialize Decred prefix in Phase 1
+      resp.has_serialized = true;
+      resp.serialized.has_serialized_tx = true;
+      resp.serialized.serialized_tx.size =
+          tx_serialize_input(&to, txinput, resp.serialized.serialized_tx.bytes);
+    }
 
     // compute Decred hashPrefix
     tx_serialize_input_hash(&ti, txinput);
@@ -1592,7 +1643,7 @@ static bool signing_check_prevtx_hash(void) {
         phase2_request_orig_input();
       } else {
         // Proceed to transaction signing.
-        phase2_request_next_input();
+        phase2_request_next_input(true);
       }
     }
   }
@@ -1678,11 +1729,13 @@ static bool signing_add_output(TxOutputType *txoutput) {
   }
 #if !BITCOIN_ONLY
   if (coin->decred) {
-    // serialize Decred prefix in Phase 1
-    resp.has_serialized = true;
-    resp.serialized.has_serialized_tx = true;
-    resp.serialized.serialized_tx.size = tx_serialize_output(
-        &to, &bin_output, resp.serialized.serialized_tx.bytes);
+    if (serialize) {
+      // serialize Decred prefix in Phase 1
+      resp.has_serialized = true;
+      resp.serialized.has_serialized_tx = true;
+      resp.serialized.serialized_tx.size = tx_serialize_output(
+          &to, &bin_output, resp.serialized.serialized_tx.bytes);
+    }
 
     // compute Decred hashPrefix
     tx_serialize_output_hash(&ti, &bin_output);
@@ -2458,12 +2511,12 @@ static void phase1_finish(void) {
       phase2_request_orig_input();
     } else {
       // Proceed directly to transaction signing.
-      phase2_request_next_input();
+      phase2_request_next_input(true);
     }
 #if !BITCOIN_ONLY
   } else if (coin->overwintered && info.version == 5) {
     // ZIP-244 transactions are treated same as Taproot.
-    phase2_request_next_input();
+    phase2_request_next_input(true);
 #endif
   } else {
     // There are internal non-Taproot inputs. We need to verify all inputs,
@@ -2542,10 +2595,10 @@ static void signing_hash_decred(const TxInputType *txinput,
 
 static bool signing_sign_ecdsa(TxInputType *txinput, const uint8_t *private_key,
                                const uint8_t *public_key, const uint8_t *hash) {
+  resp.has_serialized = true;
   resp.serialized.has_signature_index = true;
   resp.serialized.signature_index = idx1;
   resp.serialized.has_signature = true;
-  resp.serialized.has_serialized_tx = true;
 
   int ret = 0;
 #ifdef USE_SECP256K1_ZKP_ECDSA
@@ -2604,7 +2657,6 @@ static bool signing_sign_bip340(const uint8_t *private_key,
   resp.serialized.has_signature_index = true;
   resp.serialized.signature_index = idx1;
   resp.serialized.has_signature = true;
-  resp.serialized.has_serialized_tx = true;
   resp.serialized.signature.size = 64;
 
   uint8_t output_private_key[32] = {0};
@@ -2631,10 +2683,13 @@ static bool signing_sign_legacy_input(void) {
   // Compute the digest and generate signature.
   uint8_t hash[32] = {0};
   tx_hash_final(&ti, hash, false);
-  resp.has_serialized = true;
   if (!signing_sign_ecdsa(&input, privkey, pubkey, hash)) return false;
-  resp.serialized.serialized_tx.size =
-      tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
+  if (serialize) {
+    resp.has_serialized = true;
+    resp.serialized.has_serialized_tx = true;
+    resp.serialized.serialized_tx.size =
+        tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
+  }
   return true;
 }
 
@@ -2658,13 +2713,17 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
       return false;
     }
 
-    uint32_t r = 0;
-    // write witness (number of stack items followed by signature)
-    r += ser_length(1, resp.serialized.serialized_tx.bytes + r);
-    r += tx_serialize_script(resp.serialized.signature.size,
-                             resp.serialized.signature.bytes,
-                             resp.serialized.serialized_tx.bytes + r);
-    resp.serialized.serialized_tx.size = r;
+    if (serialize) {
+      resp.has_serialized = true;
+      resp.serialized.has_serialized_tx = true;
+      uint32_t r = 0;
+      // write witness (number of stack items followed by signature)
+      r += ser_length(1, resp.serialized.serialized_tx.bytes + r);
+      r += tx_serialize_script(resp.serialized.signature.size,
+                               resp.serialized.signature.bytes,
+                               resp.serialized.serialized_tx.bytes + r);
+      resp.serialized.serialized_tx.size = r;
+    }
   } else if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
              txinput->script_type == InputScriptType_SPENDWITNESS) {
     if (!txinput->has_amount) {
@@ -2688,66 +2747,72 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 
     signing_hash_bip143(&info, txinput, hash);
 
-    resp.has_serialized = true;
     if (!signing_sign_ecdsa(txinput, node.private_key, node.public_key, hash))
       return false;
 
-    uint8_t sighash = signing_hash_type(txinput) & 0xff;
-    if (txinput->has_multisig) {
-      uint32_t r = 1;  // skip number of items (filled in later)
-      resp.serialized.serialized_tx.bytes[r] = 0;
-      r++;
-      int nwitnesses = 2;
-      for (uint32_t i = 0; i < txinput->multisig.signatures_count; i++) {
-        if (txinput->multisig.signatures[i].size == 0) {
-          continue;
-        }
-        nwitnesses++;
-        txinput->multisig.signatures[i]
-            .bytes[txinput->multisig.signatures[i].size] = sighash;
-        r += tx_serialize_script(txinput->multisig.signatures[i].size + 1,
-                                 txinput->multisig.signatures[i].bytes,
-                                 resp.serialized.serialized_tx.bytes + r);
-      }
-      uint32_t script_len =
-          compile_script_multisig(coin, &txinput->multisig, 0);
-      r += ser_length(script_len, resp.serialized.serialized_tx.bytes + r);
-      r += compile_script_multisig(coin, &txinput->multisig,
+    if (serialize) {
+      resp.has_serialized = true;
+      resp.serialized.has_serialized_tx = true;
+      uint8_t sighash = signing_hash_type(txinput) & 0xff;
+      if (txinput->has_multisig) {
+        uint32_t r = 1;  // skip number of items (filled in later)
+        resp.serialized.serialized_tx.bytes[r] = 0;
+        r++;
+        int nwitnesses = 2;
+        for (uint32_t i = 0; i < txinput->multisig.signatures_count; i++) {
+          if (txinput->multisig.signatures[i].size == 0) {
+            continue;
+          }
+          nwitnesses++;
+          txinput->multisig.signatures[i]
+              .bytes[txinput->multisig.signatures[i].size] = sighash;
+          r += tx_serialize_script(txinput->multisig.signatures[i].size + 1,
+                                   txinput->multisig.signatures[i].bytes,
                                    resp.serialized.serialized_tx.bytes + r);
-      resp.serialized.serialized_tx.bytes[0] = nwitnesses;
-      resp.serialized.serialized_tx.size = r;
-    } else {  // single signature
-      uint32_t r = 0;
-      r += ser_length(2, resp.serialized.serialized_tx.bytes + r);
-      resp.serialized.signature.bytes[resp.serialized.signature.size] = sighash;
-      r += tx_serialize_script(resp.serialized.signature.size + 1,
-                               resp.serialized.signature.bytes,
-                               resp.serialized.serialized_tx.bytes + r);
-      r += tx_serialize_script(33, node.public_key,
-                               resp.serialized.serialized_tx.bytes + r);
-      resp.serialized.serialized_tx.size = r;
+        }
+        uint32_t script_len =
+            compile_script_multisig(coin, &txinput->multisig, 0);
+        r += ser_length(script_len, resp.serialized.serialized_tx.bytes + r);
+        r += compile_script_multisig(coin, &txinput->multisig,
+                                     resp.serialized.serialized_tx.bytes + r);
+        resp.serialized.serialized_tx.bytes[0] = nwitnesses;
+        resp.serialized.serialized_tx.size = r;
+      } else {  // single signature
+        uint32_t r = 0;
+        r += ser_length(2, resp.serialized.serialized_tx.bytes + r);
+        resp.serialized.signature.bytes[resp.serialized.signature.size] =
+            sighash;
+        r += tx_serialize_script(resp.serialized.signature.size + 1,
+                                 resp.serialized.signature.bytes,
+                                 resp.serialized.serialized_tx.bytes + r);
+        r += tx_serialize_script(33, node.public_key,
+                                 resp.serialized.serialized_tx.bytes + r);
+        resp.serialized.serialized_tx.size = r;
+      }
     }
   } else {
-    // no signature to be generated
-    resp.has_serialized = true;
-    resp.serialized.has_signature_index = false;
-    resp.serialized.has_signature = false;
-    resp.serialized.has_serialized_tx = true;
-    if (txinput->script_type == InputScriptType_EXTERNAL &&
-        txinput->has_witness) {
-      // fill in the provided witness
-      memcpy(resp.serialized.serialized_tx.bytes, txinput->witness.bytes,
-             txinput->witness.size);
-      resp.serialized.serialized_tx.size = txinput->witness.size;
-    } else {
-      // empty witness
-      resp.serialized.serialized_tx.bytes[0] = 0;
-      resp.serialized.serialized_tx.size = 1;
+    if (serialize) {
+      // no signature to be generated
+      resp.has_serialized = true;
+      resp.serialized.has_signature_index = false;
+      resp.serialized.has_signature = false;
+      resp.serialized.has_serialized_tx = true;
+      if (txinput->script_type == InputScriptType_EXTERNAL &&
+          txinput->has_witness) {
+        // fill in the provided witness
+        memcpy(resp.serialized.serialized_tx.bytes, txinput->witness.bytes,
+               txinput->witness.size);
+        resp.serialized.serialized_tx.size = txinput->witness.size;
+      } else {
+        // empty witness
+        resp.serialized.serialized_tx.bytes[0] = 0;
+        resp.serialized.serialized_tx.size = 1;
+      }
     }
   }
 
   //  if last witness add tx footer
-  if (idx1 == info.inputs_count - 1) {
+  if (serialize && idx1 == info.inputs_count - 1) {
     uint32_t r = resp.serialized.serialized_tx.size;
     r += tx_serialize_footer(&to, resp.serialized.serialized_tx.bytes + r);
     resp.serialized.serialized_tx.size = r;
@@ -2761,11 +2826,14 @@ static bool signing_sign_decred_input(TxInputType *txinput) {
   uint8_t hash[32] = {}, hash_witness[32] = {};
   tx_hash_final(&ti, hash_witness, false);
   signing_hash_decred(txinput, hash_witness, hash);
-  resp.has_serialized = true;
   if (!signing_sign_ecdsa(txinput, node.private_key, node.public_key, hash))
     return false;
-  resp.serialized.serialized_tx.size = tx_serialize_decred_witness(
-      &to, txinput, resp.serialized.serialized_tx.bytes);
+  if (serialize) {
+    resp.has_serialized = true;
+    resp.serialized.has_serialized_tx = true;
+    resp.serialized.serialized_tx.size = tx_serialize_decred_witness(
+        &to, txinput, resp.serialized.serialized_tx.bytes);
+  }
   return true;
 }
 
@@ -3361,13 +3429,7 @@ void signing_txack(TransactionType *tx) {
         progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
         layoutProgress(_("Signing transaction"), progress);
         update_ctr = 0;
-        if (idx1 < info.inputs_count - 1) {
-          idx1++;
-          phase2_request_next_input();
-        } else {
-          idx1 = 0;
-          send_req_5_output();
-        }
+        phase2_request_next_input(false);
       }
       return;
 
@@ -3387,7 +3449,6 @@ void signing_txack(TransactionType *tx) {
       resp.has_serialized = true;
       resp.serialized.has_signature_index = false;
       resp.serialized.has_signature = false;
-      resp.serialized.has_serialized_tx = true;
       if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG ||
           tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
         if (!(coin->force_bip143 || coin->overwintered) || taproot_only) {
@@ -3481,15 +3542,13 @@ void signing_txack(TransactionType *tx) {
         // direct witness scripts require zero scriptSig
         tx->inputs[0].script_sig.size = 0;
       }
-      resp.serialized.serialized_tx.size = tx_serialize_input(
-          &to, &tx->inputs[0], resp.serialized.serialized_tx.bytes);
-      if (idx1 < info.inputs_count - 1) {
-        idx1++;
-        phase2_request_next_input();
-      } else {
-        idx1 = 0;
-        send_req_5_output();
+      if (serialize) {
+        resp.has_serialized = true;
+        resp.serialized.has_serialized_tx = true;
+        resp.serialized.serialized_tx.size = tx_serialize_input(
+            &to, &tx->inputs[0], resp.serialized.serialized_tx.bytes);
       }
+      phase2_request_next_input(false);
       return;
 
     case STAGE_REQUEST_5_OUTPUT:
@@ -3507,16 +3566,7 @@ void signing_txack(TransactionType *tx) {
       resp.serialized.has_serialized_tx = true;
       resp.serialized.serialized_tx.size = tx_serialize_output(
           &to, &bin_output, resp.serialized.serialized_tx.bytes);
-      if (idx1 < info.outputs_count - 1) {
-        idx1++;
-        send_req_5_output();
-      } else if (to.is_segwit) {
-        idx1 = 0;
-        send_req_segwit_witness();
-      } else {
-        send_req_finished();
-        signing_abort();
-      }
+      phase2_request_next_output(false);
       return;
 
     case STAGE_REQUEST_SEGWIT_WITNESS:
