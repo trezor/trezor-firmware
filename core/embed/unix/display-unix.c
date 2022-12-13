@@ -234,6 +234,8 @@ void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   PIXELWINDOW.pos.y = y0;
 }
 
+void display_sync(void) {}
+
 void display_refresh(void) {
   if (!RENDERER) {
     display_init();

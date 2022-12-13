@@ -151,11 +151,20 @@ int display_orientation(int degrees) {
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
       DISPLAY_ORIENTATION = degrees;
 
+      display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
+      for (uint32_t i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY; i++) {
+        // 2 bytes per pixel because we're using RGB 5-6-5 format
+        PIXELDATA(0x0000);
+      }
+
+      uint16_t shift = 0;
       char BX = 0, BY = 0;
       uint32_t id = display_identify();
       if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
           (id == DISPLAY_ID_ST7789V)) {
 #define RGB (1 << 3)
+#define ML (1 << 4)  // vertical refresh order
+#define MH (1 << 2)  // horizontal refresh order
 #define MV (1 << 5)
 #define MX (1 << 6)
 #define MY (1 << 7)
@@ -170,12 +179,14 @@ int display_orientation(int degrees) {
             BY = (id == DISPLAY_ID_GC9307);
             break;
           case 90:
-            display_command_parameter = MV | MX;
-            BX = (id == DISPLAY_ID_GC9307);
+            display_command_parameter = MV | MX | MH | ML;
+            BX = (id != DISPLAY_ID_GC9307);
+            shift = 1;
             break;
           case 180:
-            display_command_parameter = MX | MY;
-            BY = (id != DISPLAY_ID_GC9307);
+            display_command_parameter = MX | MY | MH | ML;
+            BY = (id == DISPLAY_ID_GC9307);
+            shift = 1;
             break;
           case 270:
             display_command_parameter = MV | MY;
@@ -187,6 +198,23 @@ int display_orientation(int degrees) {
         }
         CMD(0x36);
         DATA(display_command_parameter);
+
+        if (shift) {
+          // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is
+          // gate 80.; gate scan direction 319 -> 0
+          CMD(0xE4);
+          DATA(0x1D);
+          DATA(0x00);
+          DATA(0x11);
+        } else {
+          // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is
+          // gate 80.; gate scan direction 319 -> 0
+          CMD(0xE4);
+          DATA(0x1D);
+          DATA(0x0A);
+          DATA(0x11);
+        }
+
         // reset the column and page extents
         display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
       }
@@ -634,17 +662,19 @@ void display_reinit(void) {
   display_backlight(DISPLAY_BACKLIGHT);
 }
 
-void display_refresh(void) {
+void display_sync(void) {
   uint32_t id = display_identify();
   if (id && (id != DISPLAY_ID_GC9307)) {
     // synchronize with the panel synchronization signal
     // in order to avoid visual tearing effects
-    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
-    }
     while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
+    }
+    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
     }
   }
 }
+
+void display_refresh(void) {}
 
 void display_set_slow_pwm(void) {
   // enable PWM timer

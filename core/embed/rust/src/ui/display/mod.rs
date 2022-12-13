@@ -826,6 +826,10 @@ pub fn set_window(window: Rect) {
     );
 }
 
+pub fn sync() {
+    display::sync();
+}
+
 pub fn get_color_table(fg_color: Color, bg_color: Color) -> [Color; 16] {
     let mut table: [Color; 16] = [Color::from_u16(0); 16];
 
