@@ -396,11 +396,10 @@ impl ButtonStyleSheet {
             force_width,
             offset,
         )
-        // Self::new(theme::BG, theme::FG, with_outline, with_arms)
     }
 }
 
-/// Describing the button in the choice item.
+/// Describing the button on the screen - only visuals.
 #[derive(Clone, Copy)]
 pub struct ButtonDetails<T> {
     pub text: Option<T>,

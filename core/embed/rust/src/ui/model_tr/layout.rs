@@ -202,6 +202,8 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
 }
 
 extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    // TODO: should be deleted and replaced by new_confirm_action with some default parameters
+
     let block = |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let data: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
@@ -390,6 +392,7 @@ extern "C" fn show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+// TODO: not supplying tuple of data, supply data itself without unpacking
 /// General pattern of most tutorial screens.
 /// (title, text, btn_layout, btn_actions)
 fn tutorial_screen(

@@ -12,10 +12,12 @@ use crate::{
 
 use heapless::Vec;
 
-// TODO: consider moving into T: AsRef<str> instead if StrBuffer?
+// TODO: consider moving into T: AsRef<str> instead of StrBuffer?
+// TODO: document this
 #[derive(Clone)]
 pub struct ToDisplay {
     pub text: StrBuffer,
+    // TODO: rename to "length_from_end"
     pub length: usize,
 }
 
@@ -28,6 +30,15 @@ impl ToDisplay {
     }
 }
 
+#[derive(Clone)]
+pub struct QrCodeInfo {
+    pub text: StrBuffer,
+    pub max_size: i16,
+    pub case_sensitive: bool,
+    pub center: Point,
+}
+
+// TODO: add QrCode(QrCodeInfo)
 /// Operations that can be done on the screen.
 #[derive(Clone)]
 pub enum Op {
@@ -167,6 +178,8 @@ impl TextLayout {
 
     /// Baseline `Point` where we are starting to draw the text.
     pub fn initial_cursor(&self) -> Point {
+        // TODO: do NOT add the text_font height here, as it can be changed - each page
+        // can have its own font and the Y offset would be wrong.
         self.bounds.top_left() + Offset::y(self.style.text_font.text_height() + self.padding_top)
     }
 
@@ -191,6 +204,10 @@ impl TextLayout {
     ) -> LayoutFit {
         let init_cursor = *cursor;
         let mut total_processed_chars = 0;
+
+        // TODO: get cursor at the very top of the page and only then subtract
+        // the font height according to the CURRENT font - which can be different
+        // from the original font.
 
         let mut skipped = 0;
         for op in ops {
@@ -258,15 +275,22 @@ impl TextLayout {
                         };
                     }
                     // Drawing text or icon
+                    // TODO: add QRCode support - always returning OOB
+                    // to force going to the next page
                     Op::Text(_) | Op::Icon(_) => {
                         // Text and Icon behave similarly - we try to fit them
                         // on the current page and if they do not fit,
                         // return the appropriate OutOfBounds message
                         let fit = if let Op::Text(to_display) = op {
+                            // TODO: document this a little bit
                             let text = to_display.text.as_ref();
                             let text_len = to_display.length;
                             let start = text.len() - text_len;
                             let to_really_display = &text[start..];
+                            // TODO: pass in whether we are in the middle of a string
+                            // (start > 0),
+                            // in which case we could/should start the text with
+                            // an arrow icon (opposite to ellipsis)
                             self.layout_text(to_really_display, cursor, sink)
                         } else if let Op::Icon(icon) = op {
                             self.layout_icon(icon, cursor, sink)
@@ -323,6 +347,12 @@ impl TextLayout {
             };
         }
 
+        // TODO: draw the arrow icon if we are in the middle of a string
+
+        // TODO: have the variable `is_last` and in that case tell it to 
+        // `fit_horizontally`, which will then account for the ellipsis icon
+        // instead of the hyphen (have it `ellipsis_length`)
+
         while !remaining_text.is_empty() {
             let span = Span::fit_horizontally(
                 remaining_text,
@@ -335,9 +365,11 @@ impl TextLayout {
             // Not doing it when the span length is 0, as that
             // means we encountered a newline/line-break, which we do not draw.
             // Line-breaks are reported later.
+            let text_to_display = &remaining_text[..span.length];
             if span.length > 0 {
-                sink.text(*cursor, self, &remaining_text[..span.length]);
+                sink.text(*cursor, self, text_to_display);
             }
+            let last_displayed_char = text_to_display.chars().last().unwrap_or('\n');
 
             // Continue with the rest of the remaining_text.
             remaining_text = &remaining_text[span.length + span.skip_next_chars..];
@@ -360,7 +392,8 @@ impl TextLayout {
                         // character is a dot (signalling end of one sentence).
                         let should_append_ellipsis =
                             matches!(self.style.page_breaking, PageBreaking::CutAndInsertEllipsis)
-                                && !span.insert_hyphen_before_line_break;
+                                && !span.insert_hyphen_before_line_break
+                                && last_displayed_char != '.';
                         if should_append_ellipsis {
                             sink.ellipsis(*cursor, self);
                         }
@@ -432,6 +465,7 @@ impl TextLayout {
 
         cursor.x += icon.width() as i16;
         LayoutFit::Fitting {
+            // TODO: unify the 1 being returned - make it a CONST probably
             processed_chars: 1,
             height: 0, // it should just draw on one line
         }
@@ -471,8 +505,10 @@ impl LayoutFit {
 pub trait LayoutSink {
     /// Text should be processed.
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
-    /// Text should be processed.
+    /// Icon should be displayed.
     fn icon(&mut self, _cursor: Point, _layout: &TextLayout, _icon: Icon) {}
+    /// QR code should be displayed.
+    fn qrcode(&mut self, _cursor: Point, _layout: &TextLayout, _qr_code: QrCodeInfo) {}
     /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     /// Ellipsis at the end of the page.
@@ -545,6 +581,7 @@ impl LayoutSink for TextRenderer {
     fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
         if let Some(icon) = layout.style.ellipsis_icon {
             // Icon should end little below the cursor's baseline
+            // TODO: add some offset to the right
             let bottom_left = cursor + Offset::y(2);
             display::icon_bottom_left(
                 bottom_left,
@@ -617,6 +654,7 @@ impl GlyphMetrics for Font {
     }
 }
 
+// TODO: rename to `LineSpan`?
 /// Carries info about the content that was processed
 /// on the current line.
 #[derive(Debug, PartialEq, Eq)]
