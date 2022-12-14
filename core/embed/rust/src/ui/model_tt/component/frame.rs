@@ -1,15 +1,14 @@
 use super::theme;
 use crate::ui::{
-    component::{text::TextStyle, Child, Component, Event, EventCtx},
+    component::{label::Label, text::TextStyle, Child, Component, Event, EventCtx},
     display::{self, Color, Font},
-    geometry::{Insets, Offset, Rect},
+    geometry::{Alignment, Insets, Offset, Rect},
     util::icon_text_center,
 };
 
 pub struct Frame<T, U> {
-    area: Rect,
     border: Insets,
-    title: U,
+    title: Child<Label<U>>,
     content: Child<T>,
 }
 
@@ -18,13 +17,24 @@ where
     T: Component,
     U: AsRef<str>,
 {
-    pub fn new(title: U, content: T) -> Self {
+    pub fn new(style: TextStyle, alignment: Alignment, title: U, content: T) -> Self {
         Self {
-            title,
-            area: Rect::zero(),
+            title: Child::new(Label::new(title, alignment, style)),
             border: theme::borders_scroll(),
             content: Child::new(content),
         }
+    }
+
+    pub fn left_aligned(style: TextStyle, title: U, content: T) -> Self {
+        Self::new(style, Alignment::Start, title, content)
+    }
+
+    pub fn right_aligned(style: TextStyle, title: U, content: T) -> Self {
+        Self::new(style, Alignment::End, title, content)
+    }
+
+    pub fn centered(style: TextStyle, title: U, content: T) -> Self {
+        Self::new(style, Alignment::Center, title, content)
     }
 
     pub fn with_border(mut self, border: Insets) -> Self {
@@ -50,31 +60,26 @@ where
         let (title_area, content_area) = bounds
             .inset(self.border)
             .split_top(Font::BOLD.text_height());
-        let title_area = title_area.inset(Insets::left(theme::CONTENT_BORDER));
+        let title_area = title_area.inset(Insets::sides(theme::CONTENT_BORDER));
         let content_area = content_area.inset(Insets::top(TITLE_SPACE));
 
-        self.area = title_area;
+        self.title.place(title_area);
         self.content.place(content_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.title.event(ctx, event);
         self.content.event(ctx, event)
     }
 
     fn paint(&mut self) {
-        display::text(
-            self.area.bottom_left(),
-            self.title.as_ref(),
-            Font::BOLD,
-            theme::GREY_LIGHT,
-            theme::BG,
-        );
+        self.title.paint();
         self.content.paint();
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area);
+        self.title.bounds(sink);
         self.content.bounds(sink);
     }
 }
