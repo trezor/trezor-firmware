@@ -125,6 +125,10 @@ pub const fn label_progress() -> TextStyle {
     TEXT_BOLD
 }
 
+pub const fn label_title() -> TextStyle {
+    TextStyle::new(Font::BOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+}
+
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {

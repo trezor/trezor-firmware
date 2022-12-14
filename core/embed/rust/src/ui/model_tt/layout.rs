@@ -354,10 +354,11 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             } else {
                 SwipeHoldPage::new(paragraphs, theme::BG)
             };
-            LayoutObj::new(Frame::new(title, page))?
+            LayoutObj::new(Frame::left_aligned(theme::label_title(), title, page))?
         } else {
             let buttons = Button::cancel_confirm_text(verb_cancel, verb);
-            LayoutObj::new(Frame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 title,
                 SwipePage::new(paragraphs, buttons, theme::BG),
             ))?
@@ -387,10 +388,15 @@ fn confirm_blob(
     .into_paragraphs();
 
     let obj = if hold {
-        LayoutObj::new(Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)))?
+        LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
+            title,
+            SwipeHoldPage::new(paragraphs, theme::BG),
+        ))?
     } else if let Some(verb) = verb {
         let buttons = Button::cancel_confirm_text(verb_cancel, verb);
-        LayoutObj::new(Frame::new(
+        LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?
@@ -441,13 +447,15 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             &theme::TEXT_MONO,
         )?;
         let obj = if hold {
-            LayoutObj::new(Frame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 title,
                 SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG),
             ))?
         } else {
             let buttons = Button::cancel_confirm_text(None, "CONFIRM");
-            LayoutObj::new(Frame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 title,
                 SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
             ))?
@@ -471,7 +479,8 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         ]);
 
         let buttons = Button::cancel_confirm_text(None, "CONTINUE");
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?;
@@ -494,7 +503,8 @@ extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         );
 
         let obj = LayoutObj::new(
-            Frame::new(
+            Frame::left_aligned(
+                theme::label_title(),
                 title,
                 Dialog::new(
                     painter::qrcode_painter(address, theme::QR_SIDE_MAX, case_sensitive),
@@ -538,7 +548,8 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
             Paragraph::new(&theme::TEXT_MONO, total_amount),
         ]);
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "JOINT TRANSACTION",
             SwipeHoldPage::new(paragraphs, theme::BG),
         ))?;
@@ -575,7 +586,8 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             2,
         );
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "MODIFY AMOUNT",
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?;
@@ -609,7 +621,8 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             2,
         );
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "MODIFY FEE",
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?;
@@ -712,14 +725,16 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
         };
 
         let controls = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel()),
+            Button::with_icon(theme::ICON_CANCEL),
             Button::with_text("CONFIRM").styled(theme::button_confirm()),
             2,
         );
 
         let fido_page = FidoConfirm::new(app_name, get_page, page_count, icon, controls);
 
-        let obj = LayoutObj::new(Frame::new(title, fido_page).with_border(theme::borders()))?;
+        let obj = LayoutObj::new(
+            Frame::centered(theme::label_title(), title, fido_page).with_border(theme::borders()),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -775,7 +790,8 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
         let obj = if let Some(t) = title {
-            LayoutObj::new(Frame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 t,
                 Dialog::new(
                     Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
@@ -827,8 +843,12 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         let buttons = Button::cancel_info_confirm(button, info_button);
 
         let obj = LayoutObj::new(
-            Frame::new(title, Dialog::new(paragraphs.into_paragraphs(), buttons))
-                .with_border(theme::borders()),
+            Frame::left_aligned(
+                theme::label_title(),
+                title,
+                Dialog::new(paragraphs.into_paragraphs(), buttons),
+            )
+            .with_border(theme::borders()),
         )?;
         Ok(obj.into())
     };
@@ -857,7 +877,8 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
                 (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
             }));
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipePage::new(paragraphs.into_paragraphs(), button, theme::BG).with_back_button(),
         ))?;
@@ -878,7 +899,8 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             Paragraph::new(&theme::TEXT_BOLD, max_feerate),
         ]);
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "AUTHORIZE COINJOIN",
             SwipeHoldPage::new(paragraphs, theme::BG),
         ))?;
@@ -937,7 +959,8 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
         let buttons = Button::select_word(words);
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?;
@@ -959,7 +982,8 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, text).break_after());
         }
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipeHoldPage::without_cancel(paragraphs.into_paragraphs(), theme::BG),
         ))?;
@@ -986,7 +1010,8 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
         };
 
         let obj = LayoutObj::new(
-            Frame::new(
+            Frame::left_aligned(
+                theme::label_title(),
                 title,
                 NumberInputDialog::new(min_count, max_count, count, callback),
             )
@@ -1018,7 +1043,8 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         }
 
         let obj = LayoutObj::new(
-            Frame::new(
+            Frame::left_aligned(
+                theme::label_title(),
                 title,
                 Dialog::new(
                     Checklist::from_paragraphs(
@@ -1109,8 +1135,12 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
         );
 
         let obj = LayoutObj::new(
-            Frame::new(title, Dialog::new(paragraphs, SelectWordCount::new()))
-                .with_border(theme::borders()),
+            Frame::left_aligned(
+                theme::label_title(),
+                title,
+                Dialog::new(paragraphs, SelectWordCount::new()),
+            )
+            .with_border(theme::borders()),
         )?;
         Ok(obj.into())
     };
@@ -1151,7 +1181,8 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
                 .add(Paragraph::new(&theme::TEXT_NORMAL, description).break_after());
         }
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "REMAINING SHARES",
             SwipePage::new(
                 paragraphs.into_paragraphs(),
@@ -1227,7 +1258,8 @@ extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let time_ms: u32 = kwargs.get(Qstr::MP_QSTR_time_ms)?.try_into()?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             Dialog::new(
                 Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, description).centered()),
