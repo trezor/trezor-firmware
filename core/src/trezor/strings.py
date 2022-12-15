@@ -21,7 +21,7 @@ def format_amount(amount: int, decimals: int) -> str:
     return s
 
 
-if False:
+if False:  # noqa
 
     def format_ordinal(number: int) -> str:
         return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(

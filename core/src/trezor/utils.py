@@ -159,7 +159,7 @@ if TYPE_CHECKING:
             ...
 
 
-if False:
+if False:  # noqa
 
     class DebugHashContextWrapper:
         """

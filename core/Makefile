@@ -315,5 +315,8 @@ upload: ## upload firmware using trezorctl
 upload_prodtest: ## upload prodtest using trezorctl
 	trezorctl firmware_update -f $(PRODTEST_BUILD_DIR)/prodtest.bin
 
-coverage:  # generate coverage report
+coverage:  ## generate coverage report
 	./tools/coverage-report
+
+unused:  ## find unused micropython code
+	vulture src src/_vulture_ignore.txt --exclude "messages.py,*/enums/*"
