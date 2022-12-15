@@ -234,12 +234,12 @@ impl Rect {
     }
 
     pub const fn from_center_and_size(p: Point, size: Offset) -> Self {
-        Self {
-            x0: p.x - size.x / 2,
-            y0: p.y - size.y / 2,
-            x1: p.x + size.x / 2,
-            y1: p.y + size.y / 2,
-        }
+        let x0 = p.x - size.x / 2;
+        let y0 = p.y - size.y / 2;
+        let x1 = x0 + size.x;
+        let y1 = y0 + size.y;
+
+        Self { x0, y0, x1, y1 }
     }
 
     pub const fn with_top_left(self, p0: Point) -> Self {
