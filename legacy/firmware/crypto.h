@@ -82,4 +82,13 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
                      uint32_t address_n_count, const uint32_t *address_n,
                      bool has_multisig, bool full_check);
 
+bool is_multisig_input_script_type(InputScriptType script_type);
+bool is_multisig_output_script_type(OutputScriptType script_type);
+bool is_internal_input_script_type(InputScriptType script_type);
+bool is_change_output_script_type(OutputScriptType script_type);
+bool is_segwit_input_script_type(InputScriptType script_type);
+bool is_segwit_output_script_type(OutputScriptType script_type);
+bool change_output_to_input_script_type(OutputScriptType output_script_type,
+                                        InputScriptType *input_script_type);
+
 #endif

@@ -735,3 +735,86 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
   // unknown path
   return false;
 }
+
+bool is_multisig_input_script_type(InputScriptType script_type) {
+  // we do not support Multisig with Taproot yet
+  if (script_type == InputScriptType_SPENDMULTISIG ||
+      script_type == InputScriptType_SPENDP2SHWITNESS ||
+      script_type == InputScriptType_SPENDWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+bool is_multisig_output_script_type(OutputScriptType script_type) {
+  // we do not support Multisig with Taproot yet
+  if (script_type == OutputScriptType_PAYTOMULTISIG ||
+      script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      script_type == OutputScriptType_PAYTOWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+bool is_internal_input_script_type(InputScriptType script_type) {
+  if (script_type == InputScriptType_SPENDADDRESS ||
+      script_type == InputScriptType_SPENDMULTISIG ||
+      script_type == InputScriptType_SPENDP2SHWITNESS ||
+      script_type == InputScriptType_SPENDWITNESS ||
+      script_type == InputScriptType_SPENDTAPROOT) {
+    return true;
+  }
+  return false;
+}
+
+bool is_change_output_script_type(OutputScriptType script_type) {
+  if (script_type == OutputScriptType_PAYTOADDRESS ||
+      script_type == OutputScriptType_PAYTOMULTISIG ||
+      script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      script_type == OutputScriptType_PAYTOWITNESS ||
+      script_type == OutputScriptType_PAYTOTAPROOT) {
+    return true;
+  }
+  return false;
+}
+
+bool is_segwit_input_script_type(InputScriptType script_type) {
+  if (script_type == InputScriptType_SPENDP2SHWITNESS ||
+      script_type == InputScriptType_SPENDWITNESS ||
+      script_type == InputScriptType_SPENDTAPROOT) {
+    return true;
+  }
+  return false;
+}
+
+bool is_segwit_output_script_type(OutputScriptType script_type) {
+  if (script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      script_type == OutputScriptType_PAYTOWITNESS ||
+      script_type == OutputScriptType_PAYTOTAPROOT) {
+    return true;
+  }
+  return false;
+}
+bool change_output_to_input_script_type(OutputScriptType output_script_type,
+                                        InputScriptType *input_script_type) {
+  switch (output_script_type) {
+    case OutputScriptType_PAYTOADDRESS:
+      *input_script_type = InputScriptType_SPENDADDRESS;
+      return true;
+    case OutputScriptType_PAYTOMULTISIG:
+      *input_script_type = InputScriptType_SPENDMULTISIG;
+      return true;
+    case OutputScriptType_PAYTOWITNESS:
+      *input_script_type = InputScriptType_SPENDWITNESS;
+      return true;
+    case OutputScriptType_PAYTOP2SHWITNESS:
+      *input_script_type = InputScriptType_SPENDP2SHWITNESS;
+      return true;
+    case OutputScriptType_PAYTOTAPROOT:
+      *input_script_type = InputScriptType_SPENDTAPROOT;
+      return true;
+    default:
+      return false;
+  }
+}
+
