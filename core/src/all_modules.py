@@ -137,18 +137,12 @@ trezor.pin
 import trezor.pin
 trezor.protobuf
 import trezor.protobuf
-trezor.res
-import trezor.res
-trezor.res.resources
-import trezor.res.resources
 trezor.sdcard
 import trezor.sdcard
 trezor.strings
 import trezor.strings
 trezor.ui
 import trezor.ui
-trezor.ui.components.common.confirm
-import trezor.ui.components.common.confirm
 trezor.ui.layouts
 import trezor.ui.layouts
 trezor.ui.layouts.common
@@ -173,10 +167,6 @@ trezor.ui.layouts.tt_v2.recovery
 import trezor.ui.layouts.tt_v2.recovery
 trezor.ui.layouts.tt_v2.reset
 import trezor.ui.layouts.tt_v2.reset
-trezor.ui.loader
-import trezor.ui.loader
-trezor.ui.popup
-import trezor.ui.popup
 trezor.ui.style
 import trezor.ui.style
 trezor.utils
