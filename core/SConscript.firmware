@@ -572,7 +572,6 @@ if FROZEN:
     SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/res/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/common/*.py'))

@@ -562,9 +562,7 @@ async def confirm_payment_request(
     recipient_name: str,
     amount: str,
     memos: list[str],
-) -> Any:
-    from ...components.common import confirm
-
+) -> bool:
     result = await interact(
         ctx,
         RustLayout(
@@ -579,10 +577,13 @@ async def confirm_payment_request(
         "confirm_payment_request",
         ButtonRequestType.ConfirmOutput,
     )
+
+    # When user pressed INFO, returning False, which gets processed in higher function
+    # to differentiate it from CONFIRMED. Raising otherwise.
     if result is CONFIRMED:
-        return confirm.CONFIRMED
+        return True
     elif result is INFO:
-        return confirm.INFO
+        return False
     else:
         raise ActionCancelled
 
@@ -663,7 +664,7 @@ async def _confirm_ask_pagination(
             paginated.request_complete_repaint()
 
         result = await interact(ctx, paginated, br_type, br_code)
-        assert result in (trezorui2.CONFIRMED, trezorui2.CANCELLED)
+        assert result in (CONFIRMED, CANCELLED)
 
     assert False
 
@@ -1058,10 +1059,6 @@ async def show_popup(
             time_ms=timeout_ms,
         )
     )
-
-
-def draw_simple_text(title: str, description: str = "") -> None:
-    log.error(__name__, "draw_simple_text not implemented")
 
 
 def request_passphrase_on_host() -> None:
