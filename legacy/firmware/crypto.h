@@ -41,6 +41,10 @@
 
 #define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
 
+typedef struct {
+  uint8_t data[64];
+} Slip21Node;
+
 uint32_t ser_length(uint32_t len, uint8_t *out);
 
 uint32_t ser_length_hash(Hasher *hasher, uint32_t len);
@@ -90,5 +94,10 @@ bool is_segwit_input_script_type(InputScriptType script_type);
 bool is_segwit_output_script_type(OutputScriptType script_type);
 bool change_output_to_input_script_type(OutputScriptType output_script_type,
                                         InputScriptType *input_script_type);
+
+void slip21_from_seed(const uint8_t *seed, int seed_len, Slip21Node *out);
+void slip21_derive_path(Slip21Node *inout, const uint8_t *label,
+                        size_t label_len);
+const uint8_t *slip21_key(const Slip21Node *node);
 
 #endif

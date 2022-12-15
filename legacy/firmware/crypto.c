@@ -818,3 +818,17 @@ bool change_output_to_input_script_type(OutputScriptType output_script_type,
   }
 }
 
+void slip21_from_seed(const uint8_t *seed, int seed_len, Slip21Node *out) {
+  hmac_sha512((uint8_t *)"Symmetric key seed", 18, seed, seed_len, out->data);
+}
+
+void slip21_derive_path(Slip21Node *inout, const uint8_t *label,
+                        size_t label_len) {
+  HMAC_SHA512_CTX hctx = {0};
+  hmac_sha512_Init(&hctx, inout->data, 32);
+  hmac_sha512_Update(&hctx, (uint8_t *)"\0", 1);
+  hmac_sha512_Update(&hctx, label, label_len);
+  hmac_sha512_Final(&hctx, inout->data);
+}
+
+const uint8_t *slip21_key(const Slip21Node *node) { return &node->data[32]; }
