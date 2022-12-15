@@ -163,9 +163,6 @@ def cli(
     if replace_vendor_header:
         do_replace_vendorheader(fw, replace_vendor_header)
 
-    if rehash:
-        do_rehash(fw)
-
     if sign_dev_keys:
         if not isinstance(fw, firmware_headers.CosiSignedImage):
             raise click.ClickException("Can't use development keys on this image type.")
@@ -192,6 +189,9 @@ def cli(
         if not isinstance(fw, firmware_headers.CosiSignedImage):
             raise click.ClickException("Can't sign this image type.")
         fw.insert_signature(signature, sigmask)
+
+    if signature or rehash:
+        do_rehash(fw)
 
     click.echo(f"Detected image type: {fw.NAME}")
     click.echo(fw.format(verbose))
