@@ -125,14 +125,16 @@ class VendorHeader(Struct):
                 h.update(b"\x00" * 32)
         return h.digest()
 
-    def verify(self, pubkeys: t.Sequence[bytes] = consts.V2_BOOTLOADER_KEYS) -> None:
+    def verify(
+        self, public_keys: t.Sequence[bytes] = consts.V2_BOOTLOADER_KEYS
+    ) -> None:
         digest = self.digest()
         try:
             cosi.verify(
                 self.signature,
                 digest,
                 consts.V2_SIGS_REQUIRED,
-                pubkeys,
+                public_keys,
                 self.sigmask,
             )
         except Exception:

@@ -53,6 +53,15 @@ V2_BOOTLOADER_KEYS = [
     )
 ]
 
+V2_BOOTLOADER_DEV_KEYS = [
+    bytes.fromhex(key)
+    for key in (
+        "d759793bbc13a2819a827c76adb6fba8a49aee007f49f2d0992d99b825ad2c48",
+        "6355691c178a8ff91007a7478afb955ef7352c63e7b25703984cf78b26e21a56",
+        "ee93a4f66f8d16b819bb9beb9ffccdfcdc1412e87fee6a324c2a99a1e0e67148",
+    )
+]
+
 V2_SIGS_REQUIRED = 2
 
 ONEV2_CHUNK_SIZE = 1024 * 64

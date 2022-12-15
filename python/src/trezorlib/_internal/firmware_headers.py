@@ -53,12 +53,18 @@ def all_zero(data: bytes) -> bool:
     return all(b == 0 for b in data)
 
 
-def _check_signature_any(fw: "SignableImageProto", is_devel: bool) -> Status:
+def _check_signature_any(fw: "SignableImageProto", is_devel: bool = False) -> Status:
     if not fw.signature_present():
         return Status.MISSING
     try:
         fw.verify()
         return Status.VALID if not is_devel else Status.DEVEL
+    except Exception:
+        pass
+
+    try:
+        fw.verify(public_keys=fw.public_keys(dev_keys=True))
+        return Status.DEVEL
     except Exception:
         return Status.INVALID
 
@@ -189,7 +195,7 @@ class SignableImageProto(Protocol):
     def digest(self) -> bytes:
         ...
 
-    def verify(self) -> None:
+    def verify(self, public_keys: t.Sequence[bytes] = ...) -> None:
         ...
 
     def build(self) -> bytes:
@@ -201,7 +207,7 @@ class SignableImageProto(Protocol):
     def signature_present(self) -> bool:
         ...
 
-    def public_keys(self) -> t.Sequence[bytes]:
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
         ...
 
 
@@ -267,7 +273,7 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
         if not terse:
             output.append(f"Fingerprint: {click.style(self.digest().hex(), bold=True)}")
 
-        sig_status = _check_signature_any(self, is_devel=False)
+        sig_status = _check_signature_any(self)
         sym = SYM_OK if sig_status.is_ok() else SYM_FAIL
         output.append(f"{sym} Signature is {sig_status.value}")
 
@@ -276,8 +282,11 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
     def format(self, verbose: bool = False) -> str:
         return self._format(terse=False)
 
-    def public_keys(self) -> t.Sequence[bytes]:
-        return firmware.V2_BOOTLOADER_KEYS
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        if not dev_keys:
+            return firmware.V2_BOOTLOADER_KEYS
+        else:
+            return firmware.V2_BOOTLOADER_DEV_KEYS
 
 
 class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
@@ -305,7 +314,7 @@ class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
             )
         )
 
-    def public_keys(self) -> t.Sequence[bytes]:
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
         return self.vendor_header.pubkeys
 
 
@@ -321,24 +330,29 @@ class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
             self.header,
             self.code_hashes(),
             self.digest(),
-            _check_signature_any(self, False),
+            _check_signature_any(self),
         )
 
-    def verify(self) -> None:
+    def verify(self, public_keys: t.Sequence[bytes] = ()) -> None:
         self.validate_code_hashes()
+        if not public_keys:
+            public_keys = self.public_keys()
         try:
             cosi.verify(
                 self.header.signature,
                 self.digest(),
                 firmware.V2_SIGS_REQUIRED,
-                firmware.V2_BOARDLOADER_KEYS,
+                public_keys,
                 self.header.sigmask,
             )
         except Exception:
             raise firmware.InvalidSignatureError("Invalid bootloader signature")
 
-    def public_keys(self) -> t.Sequence[bytes]:
-        return firmware.V2_BOARDLOADER_KEYS
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        if not dev_keys:
+            return firmware.V2_BOARDLOADER_KEYS
+        else:
+            return firmware.V2_BOARDLOADER_DEV_KEYS
 
 
 class LegacyFirmware(firmware.LegacyFirmware):
@@ -371,7 +385,7 @@ class LegacyFirmware(firmware.LegacyFirmware):
 
         return _format_container(contents) + embedded_content
 
-    def public_keys(self) -> t.Sequence[bytes]:
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
         return firmware.V1_BOOTLOADER_KEYS
 
     def slots(self) -> t.Iterable[int]:
@@ -404,10 +418,10 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
             self.header,
             self.code_hashes(),
             self.digest(),
-            _check_signature_any(self, False),
+            _check_signature_any(self),
         )
 
-    def public_keys(self) -> t.Sequence[bytes]:
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
         return firmware.V1_BOOTLOADER_KEYS
 
     def slots(self) -> t.Iterable[int]:
