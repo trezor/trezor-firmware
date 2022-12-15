@@ -1165,66 +1165,6 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-static bool is_multisig_input_script_type(const TxInputType *txinput) {
-  // we do not support Multisig with Taproot yet
-  if (txinput->script_type == InputScriptType_SPENDMULTISIG ||
-      txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
-      txinput->script_type == InputScriptType_SPENDWITNESS) {
-    return true;
-  }
-  return false;
-}
-
-static bool is_multisig_output_script_type(const TxOutputType *txoutput) {
-  // we do not support Multisig with Taproot yet
-  if (txoutput->script_type == OutputScriptType_PAYTOMULTISIG ||
-      txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
-      txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
-    return true;
-  }
-  return false;
-}
-
-static bool is_internal_input_script_type(const TxInputType *txinput) {
-  if (txinput->script_type == InputScriptType_SPENDADDRESS ||
-      txinput->script_type == InputScriptType_SPENDMULTISIG ||
-      txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
-      txinput->script_type == InputScriptType_SPENDWITNESS ||
-      txinput->script_type == InputScriptType_SPENDTAPROOT) {
-    return true;
-  }
-  return false;
-}
-
-static bool is_change_output_script_type(const TxOutputType *txoutput) {
-  if (txoutput->script_type == OutputScriptType_PAYTOADDRESS ||
-      txoutput->script_type == OutputScriptType_PAYTOMULTISIG ||
-      txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
-      txoutput->script_type == OutputScriptType_PAYTOWITNESS ||
-      txoutput->script_type == OutputScriptType_PAYTOTAPROOT) {
-    return true;
-  }
-  return false;
-}
-
-static bool is_segwit_input_script_type(const TxInputType *txinput) {
-  if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
-      txinput->script_type == InputScriptType_SPENDWITNESS ||
-      txinput->script_type == InputScriptType_SPENDTAPROOT) {
-    return true;
-  }
-  return false;
-}
-
-static bool is_segwit_output_script_type(const TxOutputType *txoutput) {
-  if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
-      txoutput->script_type == OutputScriptType_PAYTOWITNESS ||
-      txoutput->script_type == OutputScriptType_PAYTOTAPROOT) {
-    return true;
-  }
-  return false;
-}
-
 static bool signing_validate_input(const TxInputType *txinput) {
   if (txinput->prev_hash.size != 32) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -1233,14 +1173,15 @@ static bool signing_validate_input(const TxInputType *txinput) {
     return false;
   }
 
-  if (txinput->has_multisig && !is_multisig_input_script_type(txinput)) {
+  if (txinput->has_multisig &&
+      !is_multisig_input_script_type(txinput->script_type)) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Multisig field provided but not expected."));
     signing_abort();
     return false;
   }
 
-  if (is_internal_input_script_type(txinput)) {
+  if (is_internal_input_script_type(txinput->script_type)) {
     if (txinput->has_script_pubkey) {
       // scriptPubKey should only be provided for external inputs
       fsm_sendFailure(FailureType_Failure_DataError,
@@ -1270,7 +1211,7 @@ static bool signing_validate_input(const TxInputType *txinput) {
     return false;
   }
 
-  if (is_segwit_input_script_type(txinput)) {
+  if (is_segwit_input_script_type(txinput->script_type)) {
     if (!coin->has_segwit) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Segwit not enabled on this coin"));
@@ -1307,7 +1248,8 @@ static bool signing_validate_input(const TxInputType *txinput) {
 }
 
 static bool signing_validate_output(TxOutputType *txoutput) {
-  if (txoutput->has_multisig && !is_multisig_output_script_type(txoutput)) {
+  if (txoutput->has_multisig &&
+      !is_multisig_output_script_type(txoutput->script_type)) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Multisig field provided but not expected."));
     signing_abort();
@@ -1315,7 +1257,7 @@ static bool signing_validate_output(TxOutputType *txoutput) {
   }
 
   if (txoutput->address_n_count > 0 &&
-      !is_change_output_script_type(txoutput)) {
+      !is_change_output_script_type(txoutput->script_type)) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Output's address_n provided but not expected."));
     signing_abort();
@@ -1356,7 +1298,7 @@ static bool signing_validate_output(TxOutputType *txoutput) {
     }
   }
 
-  if (is_segwit_output_script_type(txoutput)) {
+  if (is_segwit_output_script_type(txoutput->script_type)) {
     if (!coin->has_segwit) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Segwit not enabled on this coin"));
@@ -1653,7 +1595,7 @@ static bool signing_check_prevtx_hash(void) {
 
 static bool is_change_output(const TxInfo *tx_info,
                              const TxOutputType *txoutput) {
-  if (!is_change_output_script_type(txoutput)) {
+  if (!is_change_output_script_type(txoutput->script_type)) {
     return false;
   }
 
@@ -2907,7 +2849,7 @@ void signing_txack(TransactionType *tx) {
             info.next_legacy_input = idx1;
           }
         }
-      } else if (is_segwit_input_script_type(&tx->inputs[0])) {
+      } else if (is_segwit_input_script_type(tx->inputs[0].script_type)) {
         if (!to.is_segwit) {
           tx_weight += TXSIZE_SEGWIT_OVERHEAD + to.inputs_len;
         }
