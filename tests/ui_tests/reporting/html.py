@@ -8,11 +8,7 @@ from dominate import document
 from dominate.tags import a, i, img, table, td, th, tr
 
 
-def report_links(
-    tests: List[Path], reports_path: Path, actual_hashes: Dict[str, str] = None
-) -> None:
-    if actual_hashes is None:
-        actual_hashes = {}
+def report_links(tests: List[Path], reports_path: Path) -> None:
 
     if not tests:
         i("None!")
@@ -21,8 +17,13 @@ def report_links(
         with tr():
             th("Link to report")
         for test in sorted(tests):
-            with tr(data_actual_hash=actual_hashes.get(test.stem, "")):
-                path = test.relative_to(reports_path)
+            actual_hash = ""
+            path = test.relative_to(reports_path)
+            if path.is_relative_to("failed"):
+                with open(test, "r") as report:
+                    data = report.read()
+                    actual_hash = data.split("<p>Actual: ")[1].split("</p>")[0].strip()
+            with tr(data_actual_hash=actual_hash):
                 td(a(test.name, href=path))
 
 

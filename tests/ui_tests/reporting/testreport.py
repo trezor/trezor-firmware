@@ -29,8 +29,6 @@ SCREENSHOTS_WIDTH_PX_TO_DISPLAY = {
 ALL_SCREENS = "all_screens.html"
 ALL_UNIQUE_SCREENS = "all_unique_screens.html"
 
-ACTUAL_HASHES: Dict[str, str] = {}
-
 
 def _image_width(test_name: str) -> int:
     """Return the width of the image to display for the given test name.
@@ -120,7 +118,7 @@ def index() -> Path:
                     t.span("marked BAD", style="color: darkred")
                     t.button("clear", onclick="resetState('bad')")
 
-        html.report_links(failed_tests, REPORTS_PATH, ACTUAL_HASHES)
+        html.report_links(failed_tests, REPORTS_PATH)
 
         h2("Passed", style="color: green;")
         html.report_links(passed_tests, REPORTS_PATH)
@@ -246,7 +244,6 @@ def failed(
 
     Compares the actual screenshots to the expected ones.
     """
-    ACTUAL_HASHES[test_name] = actual_hash
 
     doc = document(title=test_name, actual_hash=actual_hash)
     recorded_path = fixture_test_path / "recorded"
