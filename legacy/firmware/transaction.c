@@ -79,6 +79,8 @@
 
 static const uint8_t segwit_header[2] = {0, 1};
 
+static const uint8_t SLIP19_VERSION_MAGIC[] = {0x53, 0x4c, 0x00, 0x19};
+
 static inline uint32_t op_push_size(uint32_t i) {
   if (i < 0x4C) {
     return 1;
@@ -413,6 +415,20 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
   return out->script_pubkey.size;
 }
 
+int get_script_pubkey(const CoinInfo *coin, HDNode *node, bool has_multisig,
+                      const MultisigRedeemScriptType *multisig,
+                      InputScriptType script_type, uint8_t *script_pubkey,
+                      pb_size_t *script_pubkey_size) {
+  char address[MAX_ADDR_SIZE] = {0};
+  bool res = true;
+  res = res && (hdnode_fill_public_key(node) == 0);
+  res = res && compute_address(coin, script_type, node, has_multisig, multisig,
+                               address);
+  res = res && address_to_script_pubkey(coin, address, script_pubkey,
+                                        script_pubkey_size);
+  return res;
+}
+
 int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
                              TxInputType *in) {
   if (in->script_type == InputScriptType_EXTERNAL) {
@@ -422,16 +438,13 @@ int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
 
   static CONFIDENTIAL HDNode node;
   memcpy(&node, root, sizeof(HDNode));
-  char address[MAX_ADDR_SIZE] = {0};
-  bool res = true;
+  int res = true;
   res = res && hdnode_private_ckd_cached(&node, in->address_n,
                                          in->address_n_count, NULL);
-  res = res && (hdnode_fill_public_key(&node) == 0);
-  res = res && compute_address(coin, in->script_type, &node, in->has_multisig,
-                               &in->multisig, address);
+  res = res && get_script_pubkey(coin, &node, in->has_multisig, &in->multisig,
+                                 in->script_type, in->script_pubkey.bytes,
+                                 &in->script_pubkey.size);
   memzero(&node, sizeof(node));
-  res = res && address_to_script_pubkey(coin, address, in->script_pubkey.bytes,
-                                        &in->script_pubkey.size);
   in->has_script_pubkey = res;
   return res;
 }
@@ -1222,3 +1235,78 @@ uint32_t tx_decred_witness_weight(const TxInputType *txinput) {
   return 4 * size;
 }
 #endif
+
+bool get_ownership_proof(const CoinInfo *coin, InputScriptType script_type,
+                         const HDNode *node, uint8_t flags,
+                         const uint8_t ownership_id[OWNERSHIP_ID_SIZE],
+                         const uint8_t *script_pubkey,
+                         size_t script_pubkey_size,
+                         const uint8_t *commitment_data,
+                         size_t commitment_data_size, OwnershipProof *out) {
+  size_t r = 0;
+
+  // Write versionMagic (4 bytes).
+  memcpy(out->ownership_proof.bytes + r, SLIP19_VERSION_MAGIC,
+         sizeof(SLIP19_VERSION_MAGIC));
+  r += sizeof(SLIP19_VERSION_MAGIC);
+
+  // Write flags (1 byte).
+  out->ownership_proof.bytes[r] = flags;
+  r += 1;
+
+  // Write number of ownership IDs (1 byte).
+  r += ser_length(1, out->ownership_proof.bytes + r);
+
+  // Write ownership ID (32 bytes).
+  memcpy(out->ownership_proof.bytes + r, ownership_id, OWNERSHIP_ID_SIZE);
+  r += OWNERSHIP_ID_SIZE;
+
+  // Compute sighash = SHA-256(proofBody || proofFooter).
+  Hasher hasher = {0};
+  uint8_t sighash[SHA256_DIGEST_LENGTH] = {0};
+  hasher_InitParam(&hasher, HASHER_SHA2, NULL, 0);
+  hasher_Update(&hasher, out->ownership_proof.bytes, r);
+  tx_script_hash(&hasher, script_pubkey_size, script_pubkey);
+  tx_script_hash(&hasher, commitment_data_size, commitment_data);
+  hasher_Final(&hasher, sighash);
+
+  // Write proofSignature.
+  if (script_type == InputScriptType_SPENDWITNESS) {
+    if (!tx_sign_ecdsa(coin->curve->params, node->private_key, sighash,
+                       out->signature.bytes, &out->signature.size)) {
+      return false;
+    }
+    // Write length-prefixed empty scriptSig (1 byte).
+    r += ser_length(0, out->ownership_proof.bytes + r);
+
+    // Write
+    // 1. number of stack items (1 byte)
+    // 2. signature + sighash type length (1 byte)
+    // 3. DER-encoded signature (max. 71 bytes)
+    // 4. sighash type (1 byte)
+    // 5. public key length (1 byte)
+    // 6. public key (33 bytes)
+    r += serialize_p2wpkh_witness(out->signature.bytes, out->signature.size,
+                                  node->public_key, 33, SIGHASH_ALL,
+                                  out->ownership_proof.bytes + r);
+  } else if (script_type == InputScriptType_SPENDTAPROOT) {
+    if (!tx_sign_bip340(node->private_key, sighash, out->signature.bytes,
+                        &out->signature.size)) {
+      return false;
+    }
+    // Write length-prefixed empty scriptSig (1 byte).
+    r += ser_length(0, out->ownership_proof.bytes + r);
+
+    // Write
+    // 1. number of stack items (1 byte)
+    // 2. signature length (1 byte)
+    // 3. signature (64 bytes)
+    r += serialize_p2tr_witness(out->signature.bytes, out->signature.size, 0,
+                                out->ownership_proof.bytes + r);
+  } else {
+    return false;
+  }
+
+  out->ownership_proof.size = r;
+  return true;
+}

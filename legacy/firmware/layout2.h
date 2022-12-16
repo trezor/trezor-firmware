@@ -115,6 +115,8 @@ void layoutConfirmSafetyChecks(SafetyCheckLevel safety_checks_level);
 void layoutConfirmHash(const BITMAP *icon, const char *description,
                        const uint8_t *hash, uint32_t len);
 
+void layoutConfirmOwnershipProof(void);
+
 const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen);
 const char **split_message_hex(const uint8_t *msg, uint32_t len);
 

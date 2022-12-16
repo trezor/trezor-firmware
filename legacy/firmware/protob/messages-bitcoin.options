@@ -34,8 +34,8 @@ TxInputType.address_n                                       max_count:8
 TxInputType.prev_hash                                       max_size:32
 TxInputType.script_sig                                      max_size:1650
 TxInputType.witness                                         max_size:109
-TxInputType.ownership_proof                                 max_size:171
-TxInputType.commitment_data                                 max_size:32
+TxInputType.ownership_proof                                 max_size:147
+TxInputType.commitment_data                                 max_size:70
 TxInputType.orig_hash                                       max_size:32
 TxInputType.script_pubkey                                   max_size:520
 
@@ -62,8 +62,8 @@ TxInput.address_n                                           max_count:8
 TxInput.prev_hash                                           max_size:32
 TxInput.script_sig                                          max_size:1650
 TxInput.witness                                             max_size:109
-TxInput.ownership_proof                                     max_size:171
-TxInput.commitment_data                                     max_size:32
+TxInput.ownership_proof                                     max_size:147
+TxInput.commitment_data                                     max_size:70
 TxInput.orig_hash                                           max_size:32
 TxInput.script_pubkey                                       max_size:520
 
@@ -79,12 +79,21 @@ PrevOutput.script_pubkey                                    max_size:520
 
 TxAckPrevExtraDataWrapper.extra_data_chunk                  type:FT_IGNORE
 
+GetOwnershipId.address_n                                    max_count:8
+GetOwnershipId.coin_name                                    max_size:21
+
+OwnershipId.ownership_id                                    max_size:32
+
+GetOwnershipProof.address_n                                 max_count:8
+GetOwnershipProof.coin_name                                 max_size:21
+GetOwnershipProof.ownership_ids                             max_count:15 max_size:32
+GetOwnershipProof.commitment_data                           max_size:70
+
+OwnershipProof.ownership_proof                              max_size:147
+OwnershipProof.signature                                    max_size:71
+
 # Unused messages.
 AuthorizeCoinJoin                                           skip_message:true
-GetOwnershipId                                              skip_message:true
-OwnershipId                                                 skip_message:true
-GetOwnershipProof                                           skip_message:true
-OwnershipProof                                              skip_message:true
 TxAckPaymentRequest                                         skip_message:true
 PaymentRequestMemo                                          skip_message:true
 CoinJoinRequest                                             skip_message:true

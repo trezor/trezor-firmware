@@ -30,6 +30,8 @@
 
 #define TX_OVERWINTERED 0x80000000
 
+#define OWNERSHIP_ID_SIZE 32
+
 enum {
   // Signature hash type with the same semantics as SIGHASH_ALL, but instead of
   // having to include the byte in the signature, it is implied.
@@ -102,6 +104,10 @@ bool tx_sign_bip340(const uint8_t *private_key, const uint8_t *hash,
 int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
                    const HDNode *root, TxOutputType *in, TxOutputBinType *out,
                    bool needs_confirm);
+int get_script_pubkey(const CoinInfo *coin, HDNode *node, bool has_multisig,
+                      const MultisigRedeemScriptType *multisig,
+                      InputScriptType script_type, uint8_t *script_pubkey,
+                      pb_size_t *script_pubkey_size);
 int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
                              TxInputType *in);
 
@@ -139,5 +145,12 @@ void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse);
 uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput);
 uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput);
 uint32_t tx_decred_witness_weight(const TxInputType *txinput);
+bool get_ownership_proof(const CoinInfo *coin, InputScriptType script_type,
+                         const HDNode *node, uint8_t flags,
+                         const uint8_t ownership_id[OWNERSHIP_ID_SIZE],
+                         const uint8_t *script_pubkey,
+                         size_t script_pubkey_size,
+                         const uint8_t *commitment_data,
+                         size_t commitment_data_size, OwnershipProof *out);
 
 #endif
