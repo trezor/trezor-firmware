@@ -22,6 +22,7 @@ from .tools import expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
+    from .protobuf import MessageType
 
 
 LOG = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ def get_viewing_key(
     z_address_n: List[int],
     coin_name: str = "Zcash",
     full: bool = True
-) -> str:
+) -> "MessageType":
     """Returns Zcash Unified Full Viewing Key."""
     return client.call(
         messages.ZcashGetViewingKey(
@@ -52,7 +53,7 @@ def get_address(
     diversifier_index: int = 0,
     show_display: bool = False,
     coin_name: str = "Zcash",
-) -> str:
+) -> "MessageType":
     """
     Returns a Zcash address.
     """
