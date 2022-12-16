@@ -80,6 +80,8 @@ void fsm_msgTxAck(
 void fsm_msgGetAddress(const GetAddress *msg);
 void fsm_msgSignMessage(const SignMessage *msg);
 void fsm_msgVerifyMessage(const VerifyMessage *msg);
+void fsm_msgGetOwnershipId(const GetOwnershipId *msg);
+void fsm_msgGetOwnershipProof(const GetOwnershipProof *msg);
 
 // crypto
 void fsm_msgCipherKeyValue(const CipherKeyValue *msg);

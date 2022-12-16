@@ -1315,3 +1315,9 @@ void layoutConfirmHash(const BITMAP *icon, const char *description,
   layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
   oledRefresh();
 }
+
+void layoutConfirmOwnershipProof(void) {
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Do you want to"), _("create a proof of"),
+                    _("ownership?"), NULL, NULL, NULL);
+}

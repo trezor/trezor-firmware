@@ -371,6 +371,14 @@ bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len) {
   }
 }
 
+bool fsm_layoutCommitmentData(const uint8_t *msg, uint32_t len) {
+  if (is_valid_ascii(msg, len)) {
+    return fsm_layoutPaginated(_("Commitment data"), msg, len, true);
+  } else {
+    return fsm_layoutPaginated(_("Binary commitment data"), msg, len, false);
+  }
+}
+
 void fsm_msgRebootToBootloader(void) {
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to"), _("restart device in"),
