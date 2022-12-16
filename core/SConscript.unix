@@ -110,6 +110,10 @@ if EVERYTHING:
         'vendor/trezor-crypto/monero/serialize.c',
         'vendor/trezor-crypto/monero/xmr.c',
     ]
+if FEATURE_FLAGS["ZCASH_SHIELDED"]:
+    CPPDEFINES_MOD += [
+        "ZCASH_SHIELDED",
+    ]
 
 # libsecp256k1-zkp
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
