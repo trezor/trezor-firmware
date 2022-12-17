@@ -45,9 +45,9 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
         title = address_n_to_str(msg.z_address_n)
         address = encode_address(receivers, coin)
     elif (  # transparent + shielded, unified path
-        PathSchema.parse(PATTERN_BIP44, coin.slip44).match(msg.t_address_n) and
-        PathSchema.parse(PATTERN_ZIP32, coin.slip44).match(msg.z_address_n) and
-        msg.t_address_n[2] == msg.z_address_n[2]
+        msg.t_address_n[2] == msg.z_address_n[2]  # spending from same account
+        and PathSchema.parse(PATTERN_BIP44, coin.slip44).match(msg.t_address_n)
+        and PathSchema.parse(PATTERN_ZIP32, coin.slip44).match(msg.z_address_n)
     ):
         title = "u/{coin_type}/{account}/{receivers}".format(
             coin_type=msg.z_address_n[1] ^ HARDENED,
@@ -57,17 +57,25 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
         address = encode_address(receivers, coin)
     else:  # transparent + shielded, incompatible paths
         title = "Unified address"
-        address_extra = "\n".join((
-            "Receivers:",
-            "- transparent",
-            address_n_to_str(msg.t_address_n),
-            "- Orchard",
-            address_n_to_str(msg.z_address_n),
-        ))
+        address_extra = "\n".join(
+            (
+                "Receivers:",
+                "- transparent",
+                address_n_to_str(msg.t_address_n),
+                "- Orchard",
+                address_n_to_str(msg.z_address_n),
+            )
+        )
         address = encode_address(receivers, coin)
 
     if msg.show_display:
-        await show_address(ctx, address=address, address_qr=address, title=title, address_extra=address_extra)
+        await show_address(
+            ctx,
+            address=address,
+            address_qr=address,
+            title=title,
+            address_extra=address_extra,
+        )
 
     return ZcashAddress(address=address)
 

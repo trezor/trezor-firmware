@@ -122,7 +122,7 @@ def sign_tx(
     o_outputs = [x for x in outputs if isinstance(x, messages.ZcashOrchardOutput)]
 
     if o_inputs and t_inputs:
-        raise ValueError("Spending transparent and Orchard funds simultaniously is not supported.")
+        raise ValueError("Spending transparent and Orchard funds simultaneously is not supported.")
     if o_inputs or o_outputs:
         if z_address_n is None:
             raise ValueError("z_address_n argument is missing")

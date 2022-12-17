@@ -88,8 +88,8 @@ class OrchardSigner:
         # Constant MAX_SILENT_ORCHARD_INPUTS is chosen heruistically.
         # According to the article, shielded transaction with >10 inputs
         # are quite unordinary and thus linkable.
-        # 
-        # Since this attack is not severe, we don't abort. 
+        #
+        # Since this attack is not severe, we don't abort.
         if self.params.inputs_count > MAX_SILENT_ORCHARD_INPUTS:
             yield ConfirmOrchardInputsCountOverThreshold(self.params.inputs_count)
 
