@@ -25,6 +25,7 @@ from .random import BundleShieldingRng
 if TYPE_CHECKING:
     from typing import Awaitable
     from apps.common.coininfo import CoinInfo
+    from apps.common.paths import Bip32Path
     from apps.bitcoin.sign_tx.tx_info import TxInfo
     from .crypto.keys import FullViewingKey
     from ..approver import ZcashApprover
