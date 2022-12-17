@@ -9,7 +9,13 @@ from trezor.ui.layouts import show_address
 from apps.bitcoin import keychain as t_keychain
 from apps.common import address_type
 from apps.common.coininfo import CoinInfo, by_name
-from apps.common.paths import HARDENED, PATTERN_BIP44, PathSchema, address_n_to_str
+from apps.common.paths import (
+    HARDENED,
+    PATTERN_BIP44,
+    PathSchema,
+    address_n_to_str,
+    validate_path,
+)
 
 from .orchard.keychain import PATTERN_ZIP32, OrchardKeychain
 from .unified import Typecode, encode_address
@@ -87,6 +93,8 @@ async def get_raw_transparent_address(
 ) -> bytes:
     """Returns Zcash raw P2PKH transparent address."""
     keychain = await t_keychain.get_keychain_for_coin(ctx, coin)
+    if msg.show_display:
+        await validate_path(ctx, keychain, msg.t_address_n)
     node = keychain.derive(msg.t_address_n)
     return sha256_ripemd160(node.public_key()).digest()
 
@@ -96,5 +104,7 @@ async def get_raw_orchard_address(
 ) -> bytes:
     """Returns raw Zcash Orchard address."""
     keychain = await OrchardKeychain.for_coin(ctx, coin)
+    if msg.show_display:
+        await validate_path(ctx, keychain, msg.z_address_n)
     fvk = keychain.derive(msg.z_address_n).full_viewing_key()
     return fvk.address(msg.diversifier_index).to_bytes()
