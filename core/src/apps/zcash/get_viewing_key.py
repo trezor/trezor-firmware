@@ -5,7 +5,7 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import ZcashGetViewingKey, ZcashViewingKey
 from trezor.ui.layouts import confirm_action
 
-from apps.common import coininfo
+from apps.common import coininfo, paths
 
 from .orchard.keychain import with_keychain
 from .unified import Typecode, encode_fvk, encode_ivk
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 async def get_viewing_key(
     ctx: Context, msg: ZcashGetViewingKey, keychain: OrchardKeychain
 ) -> ZcashViewingKey:
+    await paths.validate_path(ctx, keychain, msg.z_address_n)
     await require_confirm_export_viewing_key(ctx, msg)
     coin = coininfo.by_name(msg.coin_name)
     fvk = keychain.derive(msg.z_address_n).full_viewing_key()
