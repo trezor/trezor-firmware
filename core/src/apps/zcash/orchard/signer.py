@@ -9,16 +9,17 @@ from trezor.messages import TxRequest, ZcashAck, ZcashOrchardInput, ZcashOrchard
 from trezor.wire import DataError
 
 from apps.bitcoin.sign_tx import helpers
+from core.src.apps.common.paths import PathSchema
 
 from .. import unified
 from ..hasher import ZcashHasher
-from ..layout import ConfirmOrchardInputsCountOverThreshold
+from ..layout import ConfirmOrchardInputsCountOverThreshold, UiConfirmForeignPath
 from .accumulator import MessageAccumulator
 from .crypto import builder, redpallas
 from .crypto.address import Address
 from .crypto.note import Note
 from .debug import watch_gc_async
-from .keychain import OrchardKeychain
+from .keychain import PATTERN_ZIP32, OrchardKeychain
 from .random import BundleShieldingRng
 
 if TYPE_CHECKING:
@@ -71,6 +72,10 @@ class OrchardSigner:
 
     async def process_inputs(self) -> None:
         await self.check_orchard_inputs_count()
+        if not PathSchema.parse(PATTERN_ZIP32, self.coin.slip44).match(
+            self.params.address_n
+        ):
+            await confirm_foreign_path(self.params.address_n)
         for i in range(self.params.inputs_count):
             txi = await self.get_input(i)
             self.msg_acc.xor_message(txi, i)  # add message to the accumulator
@@ -270,3 +275,7 @@ def pad(items: list[int | None], target_length: int) -> None:
 
 def output_is_internal(txo: ZcashOrchardOutput) -> bool:
     return txo.address is None
+
+
+def confirm_foreign_path(path: Bip32Path) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
+    yield UiConfirmForeignPath(path)

@@ -11,6 +11,7 @@ from trezor.ui.layouts.tt import Confirm, interact, raise_if_cancelled
 from trezor.utils import chunks, chunks_intersperse, ensure
 
 from apps.bitcoin.sign_tx.helpers import UiConfirm
+from apps.common import paths
 
 if TYPE_CHECKING:
     from typing import Awaitable, Any
@@ -19,6 +20,14 @@ if TYPE_CHECKING:
     from trezor.messages import ZcashOrchardOutput, TxOutput
     from trezor.ui import Component
     from trezor.ui.layouts.common import LayoutType
+
+
+class UiConfirmForeignPath(UiConfirm):
+    def __init__(self, path: paths.Bip32Path):
+        self.path = path
+
+    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+        return paths.show_path_warning(ctx, self.path)
 
 
 class ConfirmOrchardInputsCountOverThreshold(UiConfirm):
