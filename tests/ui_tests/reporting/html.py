@@ -2,7 +2,7 @@ import base64
 import filecmp
 from itertools import zip_longest
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from dominate import document
 from dominate.tags import a, i, img, table, td, th, tr
