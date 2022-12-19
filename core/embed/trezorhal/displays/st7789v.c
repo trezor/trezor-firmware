@@ -489,6 +489,44 @@ void display_init_seq(void) {
   display_unsleep();
 }
 
+void display_setup_fmc(void) {
+  // Reference UM1725 "Description of STM32F4 HAL and LL drivers",
+  // section 64.2.1 "How to use this driver"
+  SRAM_HandleTypeDef external_display_data_sram;
+  external_display_data_sram.Instance = FMC_NORSRAM_DEVICE;
+  external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
+  external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
+  external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
+  external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
+  external_display_data_sram.Init.BurstAccessMode =
+      FMC_BURST_ACCESS_MODE_DISABLE;
+  external_display_data_sram.Init.WaitSignalPolarity =
+      FMC_WAIT_SIGNAL_POLARITY_LOW;
+  external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
+  external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
+  external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
+  external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
+  external_display_data_sram.Init.ExtendedMode = FMC_EXTENDED_MODE_DISABLE;
+  external_display_data_sram.Init.AsynchronousWait =
+      FMC_ASYNCHRONOUS_WAIT_DISABLE;
+  external_display_data_sram.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
+  external_display_data_sram.Init.ContinuousClock =
+      FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
+  external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
+
+  // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
+  FMC_NORSRAM_TimingTypeDef normal_mode_timing;
+  normal_mode_timing.AddressSetupTime = 5;
+  normal_mode_timing.AddressHoldTime = 1;  // don't care
+  normal_mode_timing.DataSetupTime = 6;
+  normal_mode_timing.BusTurnAroundDuration = 0;  // don't care
+  normal_mode_timing.CLKDivision = 2;            // don't care
+  normal_mode_timing.DataLatency = 2;            // don't care
+  normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
+
+  HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
+}
+
 void display_init(void) {
   // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -565,41 +603,7 @@ void display_init(void) {
   GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
 
-  // Reference UM1725 "Description of STM32F4 HAL and LL drivers",
-  // section 64.2.1 "How to use this driver"
-  SRAM_HandleTypeDef external_display_data_sram;
-  external_display_data_sram.Instance = FMC_NORSRAM_DEVICE;
-  external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
-  external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
-  external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
-  external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
-  external_display_data_sram.Init.BurstAccessMode =
-      FMC_BURST_ACCESS_MODE_DISABLE;
-  external_display_data_sram.Init.WaitSignalPolarity =
-      FMC_WAIT_SIGNAL_POLARITY_LOW;
-  external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
-  external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
-  external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
-  external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
-  external_display_data_sram.Init.ExtendedMode = FMC_EXTENDED_MODE_DISABLE;
-  external_display_data_sram.Init.AsynchronousWait =
-      FMC_ASYNCHRONOUS_WAIT_DISABLE;
-  external_display_data_sram.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
-  external_display_data_sram.Init.ContinuousClock =
-      FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
-  external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
-
-  // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
-  FMC_NORSRAM_TimingTypeDef normal_mode_timing;
-  normal_mode_timing.AddressSetupTime = 4;
-  normal_mode_timing.AddressHoldTime = 1;
-  normal_mode_timing.DataSetupTime = 4;
-  normal_mode_timing.BusTurnAroundDuration = 0;
-  normal_mode_timing.CLKDivision = 2;
-  normal_mode_timing.DataLatency = 2;
-  normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
-
-  HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
+  display_setup_fmc();
 
   display_init_seq();
 
@@ -607,6 +611,10 @@ void display_init(void) {
 }
 
 void display_reinit(void) {
+  // reinitialize FMC to set correct timing, have to do this in reinit because
+  // boardloader is fixed.
+  display_setup_fmc();
+
   // important for model T as this is not set in boardloader
   display_set_little_endian();
 
