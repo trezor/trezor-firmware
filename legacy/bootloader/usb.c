@@ -186,7 +186,7 @@ static int should_keep_storage(int old_was_signed,
 
   const image_header *new_hdr = (const image_header *)FW_HEADER;
   // new header must be signed by v3 signmessage/verifymessage scheme
-  if (SIG_OK != signatures_ok(new_hdr, NULL, true)) return SIG_FAIL;
+  if (SIG_OK != signatures_ok(new_hdr, NULL, sectrue)) return SIG_FAIL;
   // if the new header hashes don't match flash contents, erase storage
   if (SIG_OK != check_firmware_hashes(new_hdr)) return SIG_FAIL;
 
@@ -401,7 +401,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       flash_state = STATE_CHECK;
       const image_header *hdr = (const image_header *)FW_HEADER;
       // allow only v3 signmessage/verifymessage signature for new FW
-      if (SIG_OK != signatures_ok(hdr, NULL, true)) {
+      if (SIG_OK != signatures_ok(hdr, NULL, sectrue)) {
         send_msg_buttonrequest_firmwarecheck(dev);
         return;
       }
@@ -417,7 +417,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
     bool hash_check_ok;
     // show fingerprint of unsigned firmware
     // allow only v3 signmessage/verifymessage signatures
-    if (SIG_OK != signatures_ok(hdr, NULL, true)) {
+    if (SIG_OK != signatures_ok(hdr, NULL, sectrue)) {
       if (msg_id != 0x001B) {  // ButtonAck message (id 27)
         return;
       }

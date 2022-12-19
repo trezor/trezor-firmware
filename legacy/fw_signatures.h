@@ -22,6 +22,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "secbool.h"
 
 extern const uint32_t FIRMWARE_MAGIC_NEW;  // TRZF
 
@@ -105,7 +106,7 @@ void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
  * @return SIG_OK or SIG_FAIL
  */
 int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
-                  bool use_verifymessage);
+                  secbool use_verifymessage);
 
 /**
  * Check if either v2 or v3 signature of header is valid.
