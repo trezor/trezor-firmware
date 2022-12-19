@@ -382,7 +382,9 @@ class EnumAdapter(construct.Adapter):
         super().__init__(subcon)
 
     def _encode(self, obj: Any, ctx: Any, path: Any):
-        return obj.value
+        if isinstance(obj, self.enum):
+            return obj.value
+        return obj
 
     def _decode(self, obj: Any, ctx: Any, path: Any):
         try:

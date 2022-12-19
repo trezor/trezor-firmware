@@ -25,6 +25,7 @@ from construct_classes import Struct, subcon
 from .. import cosi
 from ..tools import EnumAdapter, TupleAdapter
 from . import consts, util
+from .models import Model
 from .vendor import VendorHeader
 
 __all__ = [
@@ -47,6 +48,9 @@ class FirmwareHeader(Struct):
     code_length: int
     version: t.Tuple[int, int, int, int]
     fix_version: t.Tuple[int, int, int, int]
+    hw_model: Model
+    hw_revision: int
+    monotonic: int
     hashes: t.Sequence[bytes]
 
     v1_signatures: t.Sequence[bytes]
@@ -69,7 +73,10 @@ class FirmwareHeader(Struct):
         ),
         "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
         "fix_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
-        "_reserved" / c.Padding(8),
+        "hw_model" / EnumAdapter(c.Bytes(4), Model),
+        "hw_revision" / c.Int8ul,
+        "monotonic" / c.Int8ul,
+        "_reserved" / c.Padding(2),
         "hashes" / c.Bytes(32)[16],
 
         "v1_signatures" / c.Bytes(64)[consts.V1_SIGNATURE_SLOTS],
