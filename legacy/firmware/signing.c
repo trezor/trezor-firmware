@@ -180,20 +180,6 @@ static uint8_t orig_hash[32];  // TXID of the original transaction.
 #define MAX_BIP125_RBF_SEQUENCE 0xFFFFFFFD
 
 enum {
-  // Signature hash type with the same semantics as SIGHASH_ALL, but instead of
-  // having to include the byte in the signature, it is implied.
-  SIGHASH_ALL_TAPROOT = 0,
-
-  // Default signature hash type in Bitcoin which signs all inputs and all
-  // outputs of the transaction.
-  SIGHASH_ALL = 1,
-
-  // Signature hash flag used in some Bitcoin-like altcoins for replay
-  // protection.
-  SIGHASH_FORKID = 0x40,
-};
-
-enum {
   DECRED_SERIALIZE_FULL = 0,
   DECRED_SERIALIZE_NO_WITNESS = 1,
   DECRED_SERIALIZE_WITNESS_SIGNING = 3,
@@ -2542,25 +2528,13 @@ static bool signing_sign_ecdsa(TxInputType *txinput, const uint8_t *private_key,
   resp.serialized.signature_index = idx1;
   resp.serialized.has_signature = true;
 
-  int ret = 0;
-#ifdef USE_SECP256K1_ZKP_ECDSA
-  if (coin->curve->params == &secp256k1) {
-    ret = zkp_ecdsa_sign_digest(coin->curve->params, private_key, hash, sig,
-                                NULL, NULL);
-  } else
-#endif
-  {
-    ret = ecdsa_sign_digest(coin->curve->params, private_key, hash, sig, NULL,
-                            NULL);
-  }
-  if (ret != 0) {
+  if (!tx_sign_ecdsa(coin->curve->params, private_key, hash,
+                     resp.serialized.signature.bytes,
+                     &resp.serialized.signature.size)) {
     fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
     signing_abort();
     return false;
   }
-
-  resp.serialized.signature.size =
-      ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 
   uint8_t sighash = signing_hash_type(txinput) & 0xff;
   if (txinput->has_multisig) {
@@ -2599,22 +2573,15 @@ static bool signing_sign_bip340(const uint8_t *private_key,
   resp.serialized.has_signature_index = true;
   resp.serialized.signature_index = idx1;
   resp.serialized.has_signature = true;
-  resp.serialized.signature.size = 64;
 
-  uint8_t output_private_key[32] = {0};
-  bool ret = (zkp_bip340_tweak_private_key(private_key, NULL,
-                                           output_private_key) == 0);
-  ret = ret &&
-        (zkp_bip340_sign_digest(output_private_key, hash,
-                                resp.serialized.signature.bytes, NULL) == 0);
-  memzero(output_private_key, sizeof(output_private_key));
-
-  if (!ret) {
+  if (!tx_sign_bip340(private_key, hash, resp.serialized.signature.bytes,
+                      &resp.serialized.signature.size)) {
     fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
     signing_abort();
+    return false;
   }
 
-  return ret;
+  return true;
 }
 
 static bool signing_sign_legacy_input(void) {
@@ -2658,13 +2625,9 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
     if (serialize) {
       resp.has_serialized = true;
       resp.serialized.has_serialized_tx = true;
-      uint32_t r = 0;
-      // write witness (number of stack items followed by signature)
-      r += ser_length(1, resp.serialized.serialized_tx.bytes + r);
-      r += tx_serialize_script(resp.serialized.signature.size,
-                               resp.serialized.signature.bytes,
-                               resp.serialized.serialized_tx.bytes + r);
-      resp.serialized.serialized_tx.size = r;
+      resp.serialized.serialized_tx.size = serialize_p2tr_witness(
+          resp.serialized.signature.bytes, resp.serialized.signature.size, 0,
+          resp.serialized.serialized_tx.bytes);
     }
   } else if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
              txinput->script_type == InputScriptType_SPENDWITNESS) {
@@ -2720,16 +2683,9 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
         resp.serialized.serialized_tx.bytes[0] = nwitnesses;
         resp.serialized.serialized_tx.size = r;
       } else {  // single signature
-        uint32_t r = 0;
-        r += ser_length(2, resp.serialized.serialized_tx.bytes + r);
-        resp.serialized.signature.bytes[resp.serialized.signature.size] =
-            sighash;
-        r += tx_serialize_script(resp.serialized.signature.size + 1,
-                                 resp.serialized.signature.bytes,
-                                 resp.serialized.serialized_tx.bytes + r);
-        r += tx_serialize_script(33, node.public_key,
-                                 resp.serialized.serialized_tx.bytes + r);
-        resp.serialized.serialized_tx.size = r;
+        resp.serialized.serialized_tx.size = serialize_p2wpkh_witness(
+            resp.serialized.signature.bytes, resp.serialized.signature.size,
+            node.public_key, 33, sighash, resp.serialized.serialized_tx.bytes);
       }
     }
   } else {

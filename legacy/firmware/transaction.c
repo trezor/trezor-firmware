@@ -30,9 +30,13 @@
 #include "messages.pb.h"
 #include "protect.h"
 #include "ripemd160.h"
+#include "secp256k1.h"
 #include "segwit_addr.h"
 #include "util.h"
 #include "zkp_bip340.h"
+#ifdef USE_SECP256K1_ZKP_ECDSA
+#include "zkp_ecdsa.h"
+#endif
 
 #if !BITCOIN_ONLY
 #include "cash_addr.h"
@@ -553,6 +557,82 @@ uint32_t serialize_script_multisig(const CoinInfo *coin,
   r += op_push(script_len, out + r);
   r += compile_script_multisig(coin, multisig, out + r);
   return r;
+}
+
+uint32_t serialize_p2wpkh_witness(const uint8_t *signature,
+                                  uint32_t signature_len,
+                                  const uint8_t *public_key,
+                                  uint32_t public_key_len, uint8_t sighash,
+                                  uint8_t *out) {
+  uint32_t r = 0;
+
+  // 2 stack items
+  r += ser_length(2, out + r);
+
+  // length-prefixed signature with sighash type
+  r += ser_length(signature_len + 1, out + r);
+  memcpy(out + r, signature, signature_len);
+  r += signature_len;
+  out[r] = sighash;
+  r += 1;
+
+  // length-prefixed public key
+  r += tx_serialize_script(public_key_len, public_key, out + r);
+  return r;
+}
+
+uint32_t serialize_p2tr_witness(const uint8_t *signature,
+                                uint32_t signature_len, uint8_t sighash,
+                                uint8_t *out) {
+  uint32_t r = 0;
+
+  // 1 stack item
+  r += ser_length(1, out + r);
+
+  // length-prefixed signature with optional sighash type
+  uint32_t sighash_len = sighash ? 1 : 0;
+  r += ser_length(signature_len + sighash_len, out + r);
+  memcpy(out + r, signature, signature_len);
+  r += signature_len;
+  if (sighash) {
+    out[r] = sighash;
+    r += 1;
+  }
+
+  return r;
+}
+
+bool tx_sign_ecdsa(const ecdsa_curve *curve, const uint8_t *private_key,
+                   const uint8_t *hash, uint8_t *out, pb_size_t *size) {
+  int ret = 0;
+  uint8_t signature[64] = {0};
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  if (curve == &secp256k1) {
+    ret =
+        zkp_ecdsa_sign_digest(curve, private_key, hash, signature, NULL, NULL);
+  } else
+#endif
+  {
+    ret = ecdsa_sign_digest(curve, private_key, hash, signature, NULL, NULL);
+  }
+  if (ret != 0) {
+    return false;
+  }
+
+  *size = ecdsa_sig_to_der(signature, out);
+  return true;
+}
+
+bool tx_sign_bip340(const uint8_t *private_key, const uint8_t *hash,
+                    uint8_t *out, pb_size_t *size) {
+  static CONFIDENTIAL uint8_t output_private_key[32] = {0};
+  bool ret = (zkp_bip340_tweak_private_key(private_key, NULL,
+                                           output_private_key) == 0);
+  ret =
+      ret && (zkp_bip340_sign_digest(output_private_key, hash, out, NULL) == 0);
+  *size = ret ? 64 : 0;
+  memzero(output_private_key, sizeof(output_private_key));
+  return ret;
 }
 
 // tx methods
