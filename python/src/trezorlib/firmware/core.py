@@ -185,9 +185,11 @@ class VendorFirmware(Struct):
     def digest(self) -> bytes:
         return self.firmware.digest()
 
-    def verify(self, _public_keys: t.Sequence[bytes] = ()) -> None:
-        if _public_keys:
-            raise ValueError("Cannot supply custom keys for vendor firmware.")
+    def verify(self, dev_keys: bool = False) -> None:
+        if dev_keys:
+            raise ValueError(
+                "Cannot select dev keys for a vendor firmware; use development vendor header instead."
+            )
 
         self.firmware.validate_code_hashes()
 

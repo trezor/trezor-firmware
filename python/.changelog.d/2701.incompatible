@@ -1,0 +1,1 @@
+Instead of accepting a list of public keys, `FirmwareType.verify()` accepts a parameter configuring whether to use production or development keys.

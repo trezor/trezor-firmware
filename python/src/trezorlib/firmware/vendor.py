@@ -24,7 +24,8 @@ from construct_classes import Struct, subcon
 from .. import cosi
 from ..toif import ToifStruct
 from ..tools import TupleAdapter
-from . import consts, util
+from . import util
+from .models import TREZOR_T, TREZOR_T_DEV
 
 __all__ = [
     "VendorTrust",
@@ -125,14 +126,19 @@ class VendorHeader(Struct):
                 h.update(b"\x00" * 32)
         return h.digest()
 
-    def verify(self, pubkeys: t.Sequence[bytes] = consts.V2_BOOTLOADER_KEYS) -> None:
+    def verify(self, dev_keys: bool = False) -> None:
         digest = self.digest()
+        if not dev_keys:
+            public_keys = TREZOR_T.bootloader_keys
+        else:
+            public_keys = TREZOR_T_DEV.bootloader_keys
+        # TODO: add model awareness
         try:
             cosi.verify(
                 self.signature,
                 digest,
-                consts.V2_SIGS_REQUIRED,
-                pubkeys,
+                TREZOR_T.bootloader_sigs_needed,
+                public_keys,
                 self.sigmask,
             )
         except Exception:
