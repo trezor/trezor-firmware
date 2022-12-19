@@ -25,6 +25,7 @@ from construct_classes import Struct
 from typing_extensions import Protocol, Self, runtime_checkable
 
 from .. import cosi, firmware
+from ..firmware import models as fw_models
 
 SYM_OK = click.style("\u2714", fg="green")
 SYM_FAIL = click.style("\u274c", fg="red")
@@ -59,6 +60,12 @@ def _check_signature_any(fw: "SignableImageProto", is_devel: bool) -> Status:
     try:
         fw.verify()
         return Status.VALID if not is_devel else Status.DEVEL
+    except Exception:
+        pass
+
+    try:
+        fw.verify(dev_keys=True)
+        return Status.DEVEL
     except Exception:
         return Status.INVALID
 
@@ -184,24 +191,42 @@ class SignableImageProto(Protocol):
 
     @classmethod
     def parse(cls, data: bytes) -> Self:
+        """Parse binary data into an image of this type."""
         ...
 
     def digest(self) -> bytes:
+        """Calculate digest that will be signed / verified."""
         ...
 
-    def verify(self) -> None:
+    def verify(self, dev_keys: bool = False) -> None:
+        """Verify signature of the image.
+
+        If dev_keys is True, verify using development keys. If selected, a production
+        image will fail verification.
+        """
         ...
 
     def build(self) -> bytes:
+        """Reconstruct binary representation of the image."""
         ...
 
     def format(self, verbose: bool = False) -> str:
+        """Generate printable information about the image."""
         ...
 
     def signature_present(self) -> bool:
+        """Check if the image has a signature."""
         ...
 
-    def public_keys(self) -> t.Sequence[bytes]:
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        """Return public keys that should be used to sign the image.
+
+        This does _not_ return the keys with which the image is actually signed.
+        In particular, `image.public_keys()` will return the production
+        keys even if the image is signed with development keys.
+
+        If dev_keys is True, return development keys.
+        """
         ...
 
 
@@ -219,6 +244,22 @@ class LegacySignedImage(SignableImageProto, Protocol):
         ...
 
     def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None:
+        ...
+
+    def public_keys(
+        self, dev_keys: bool = False, signature_version: int = 3
+    ) -> t.Sequence[bytes]:
+        """Return public keys that should be used to sign the image.
+
+        This does _not_ return the keys with which the image is actually signed.
+        In particular, `image.public_keys()` will return the production
+        keys even if the image is signed with development keys.
+
+        If dev_keys is True, return development keys.
+
+        Specifying signature_version allows to return keys for a different signature
+        scheme version. The default is the newest version 3.
+        """
         ...
 
 
@@ -241,7 +282,7 @@ class CosiSignedMixin:
 
 
 class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
-    NAME = "vendorheader"
+    NAME: t.ClassVar[str] = "vendorheader"
     DEV_KEYS = _make_dev_keys(b"\x44", b"\x45")
 
     SUBCON = c.Struct(*firmware.VendorHeader.SUBCON.subcons, c.Terminated)
@@ -276,12 +317,15 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
     def format(self, verbose: bool = False) -> str:
         return self._format(terse=False)
 
-    def public_keys(self) -> t.Sequence[bytes]:
-        return firmware.V2_BOOTLOADER_KEYS
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        if not dev_keys:
+            return fw_models.TREZOR_T.bootloader_keys
+        else:
+            return fw_models.TREZOR_T_DEV.bootloader_keys
 
 
 class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
-    NAME = "firmware"
+    NAME: t.ClassVar[str] = "firmware"
     DEV_KEYS = _make_dev_keys(b"\x47", b"\x48")
 
     def get_header(self) -> CosiSignatureHeaderProto:
@@ -305,13 +349,31 @@ class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
             )
         )
 
-    def public_keys(self) -> t.Sequence[bytes]:
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        """Return public keys that should be used to sign the image.
+
+        In vendor firmware, the public keys are stored in the vendor header.
+        There is no choice of development keys. If that is required, you need to create
+        an image with a development vendor header.
+        """
         return self.vendor_header.pubkeys
 
 
 class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
-    NAME = "bootloader"
+    NAME: t.ClassVar[str] = "bootloader"
     DEV_KEYS = _make_dev_keys(b"\x41", b"\x42")
+
+    def get_model(self) -> fw_models.Model:
+        if isinstance(self.header.hw_model, fw_models.Model):
+            return self.header.hw_model
+        return fw_models.Model.T
+
+    def get_model_keys(self, dev_keys: bool) -> fw_models.ModelKeys:
+        model = self.get_model()
+        if dev_keys:
+            return fw_models.MODEL_MAP_DEV[model]
+        else:
+            return fw_models.MODEL_MAP[model]
 
     def get_header(self) -> CosiSignatureHeaderProto:
         return self.header
@@ -324,26 +386,26 @@ class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
             _check_signature_any(self, False),
         )
 
-    def verify(self) -> None:
+    def verify(self, dev_keys: bool = False) -> None:
         self.validate_code_hashes()
+        public_keys = self.public_keys(dev_keys)
         try:
             cosi.verify(
                 self.header.signature,
                 self.digest(),
-                firmware.V2_SIGS_REQUIRED,
-                firmware.V2_BOARDLOADER_KEYS,
+                self.get_model_keys(dev_keys).boardloader_sigs_needed,
+                public_keys,
                 self.header.sigmask,
             )
         except Exception:
             raise firmware.InvalidSignatureError("Invalid bootloader signature")
 
-    def public_keys(self) -> t.Sequence[bytes]:
-        return firmware.V2_BOARDLOADER_KEYS
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        return self.get_model_keys(dev_keys).boardloader_keys
 
 
 class LegacyFirmware(firmware.LegacyFirmware):
-    NAME = "legacy_firmware_v1"
-    BIP32_INDEX = None
+    NAME: t.ClassVar[str] = "legacy_firmware_v1"
 
     def signature_present(self) -> bool:
         return any(i != 0 for i in self.key_indexes) or any(
@@ -353,7 +415,7 @@ class LegacyFirmware(firmware.LegacyFirmware):
     def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None:
         if not 0 <= slot < firmware.V1_SIGNATURE_SLOTS:
             raise ValueError("Invalid slot number")
-        if not 0 < key_index <= len(firmware.V1_BOOTLOADER_KEYS):
+        if not 0 < key_index <= len(fw_models.TREZOR_ONE_V1V2.firmware_keys):
             raise ValueError("Invalid key index")
         self.key_indexes[slot] = key_index
         self.signatures[slot] = signature
@@ -371,16 +433,20 @@ class LegacyFirmware(firmware.LegacyFirmware):
 
         return _format_container(contents) + embedded_content
 
-    def public_keys(self) -> t.Sequence[bytes]:
-        return firmware.V1_BOOTLOADER_KEYS
+    def public_keys(
+        self, dev_keys: bool = False, signature_version: int = 2
+    ) -> t.Sequence[bytes]:
+        if dev_keys:
+            return fw_models.TREZOR_ONE_V1V2_DEV.firmware_keys
+        else:
+            return fw_models.TREZOR_ONE_V1V2.firmware_keys
 
     def slots(self) -> t.Iterable[int]:
         return self.key_indexes
 
 
 class LegacyV2Firmware(firmware.LegacyV2Firmware):
-    NAME = "legacy_firmware_v2"
-    BIP32_INDEX = 5
+    NAME: t.ClassVar[str] = "legacy_firmware_v2"
 
     def signature_present(self) -> bool:
         return any(i != 0 for i in self.header.v1_key_indexes) or any(
@@ -407,8 +473,18 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
             _check_signature_any(self, False),
         )
 
-    def public_keys(self) -> t.Sequence[bytes]:
-        return firmware.V1_BOOTLOADER_KEYS
+    def public_keys(
+        self, dev_keys: bool = False, signature_version: int = 3
+    ) -> t.Sequence[bytes]:
+        keymap: t.Dict[t.Tuple[int, bool], fw_models.ModelKeys] = {
+            (3, False): fw_models.TREZOR_ONE_V3,
+            (3, True): fw_models.TREZOR_ONE_V3_DEV,
+            (2, False): fw_models.TREZOR_ONE_V1V2,
+            (2, True): fw_models.TREZOR_ONE_V1V2_DEV,
+        }
+        if not (signature_version, dev_keys) in keymap:
+            raise ValueError("Unsupported signature version")
+        return keymap[signature_version, dev_keys].firmware_keys
 
     def slots(self) -> t.Iterable[int]:
         return self.header.v1_key_indexes
