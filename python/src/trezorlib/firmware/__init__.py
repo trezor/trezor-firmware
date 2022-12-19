@@ -47,7 +47,7 @@ if t.TYPE_CHECKING:
         def parse(cls: t.Type[T], data: bytes) -> T:
             ...
 
-        def verify(self, public_keys: t.Sequence[bytes] = ()) -> None:
+        def verify(self, dev_keys: bool = False) -> None:
             ...
 
         def digest(self) -> bytes:

@@ -22,7 +22,7 @@ import construct as c
 import ecdsa
 from construct_classes import Struct, subcon
 
-from . import consts, util
+from . import consts, models, util
 from .core import FirmwareImage
 
 __all__ = [
@@ -32,23 +32,32 @@ __all__ = [
 ]
 
 
+ZERO_SIG = b"\x00" * 64
+
+
 def check_sig_v1(
     digest: bytes,
     key_indexes: t.Sequence[int],
     signatures: t.Sequence[bytes],
+    sigs_required: int,
     public_keys: t.Sequence[bytes],
 ) -> None:
     """Validate signatures of `digest` using the Trezor One V1 method."""
-    distinct_indexes = set(i for i in key_indexes if i != 0)
+    distinct_indexes = set(i for i in key_indexes[:sigs_required] if i != 0)
     if not distinct_indexes:
         raise util.Unsigned
 
-    if len(distinct_indexes) < len(key_indexes):
+    if len(distinct_indexes) != sigs_required:
         raise util.InvalidSignatureError(
-            f"Not enough distinct signatures (found {len(distinct_indexes)}, need {len(key_indexes)})"
+            f"Not enough distinct signatures (found {len(distinct_indexes)}, need {sigs_required})"
         )
 
-    for i in range(len(key_indexes)):
+    if any(k != 0 for k in key_indexes[sigs_required:]) or any(
+        sig != ZERO_SIG for sig in signatures[sigs_required:]
+    ):
+        raise util.InvalidSignatureError("Too many signatures")
+
+    for i in range(sigs_required):
         key_idx = key_indexes[i] - 1
         signature = signatures[i]
 
@@ -56,12 +65,34 @@ def check_sig_v1(
             # unknown pubkey
             raise util.InvalidSignatureError(f"Unknown key in slot {i}")
 
-        pubkey = public_keys[key_idx][1:]
-        verify = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
+        verify = ecdsa.VerifyingKey.from_string(
+            public_keys[key_idx],
+            curve=ecdsa.curves.SECP256k1,
+            hashfunc=hashlib.sha256,
+        )
         try:
             verify.verify_digest(signature, digest)
         except ecdsa.BadSignatureError as e:
             raise util.InvalidSignatureError(f"Invalid signature in slot {i}") from e
+
+
+def check_sig_signmessage(
+    digest: bytes,
+    key_indexes: t.Sequence[int],
+    signatures: t.Sequence[bytes],
+    sigs_required: int,
+    public_keys: t.Sequence[bytes],
+) -> None:
+    """Validate signatures of `digest` using the Trezor One SignMessage method."""
+    btc_digest = hashlib.sha256(b"\x18Bitcoin Signed Message:\n\x20" + digest).digest()
+    final_digest = hashlib.sha256(btc_digest).digest()
+    check_sig_v1(
+        final_digest,
+        key_indexes,
+        signatures,
+        sigs_required,
+        public_keys,
+    )
 
 
 class LegacyV2Firmware(FirmwareImage):
@@ -73,16 +104,48 @@ class LegacyV2Firmware(FirmwareImage):
         padding_byte=b"\xff",
     )
 
-    def verify(
-        self, public_keys: t.Sequence[bytes] = consts.V1_BOOTLOADER_KEYS
-    ) -> None:
+    V3_FIRST_VERSION = (1, 12, 0)
+
+    def verify_v2(self, dev_keys: bool) -> None:
+        if not dev_keys:
+            public_keys = models.TREZOR_ONE_V1V2.firmware_keys
+        else:
+            public_keys = models.TREZOR_ONE_V1V2_DEV.firmware_keys
+
         self.validate_code_hashes()
         check_sig_v1(
             self.digest(),
             self.header.v1_key_indexes,
             self.header.v1_signatures,
+            models.TREZOR_ONE_V1V2.firmware_sigs_needed,
             public_keys,
         )
+
+    def verify_v3(self, dev_keys: bool) -> None:
+        if not dev_keys:
+            model_keys = models.TREZOR_ONE_V3
+        else:
+            model_keys = models.TREZOR_ONE_V3_DEV
+
+        self.validate_code_hashes()
+        check_sig_signmessage(
+            self.digest(),
+            self.header.v1_key_indexes,
+            self.header.v1_signatures,
+            model_keys.firmware_sigs_needed,
+            model_keys.firmware_keys,
+        )
+
+    def verify(self, dev_keys: bool = False) -> None:
+        if self.header.version >= self.V3_FIRST_VERSION:
+            try:
+                self.verify_v3(dev_keys)
+            except util.InvalidSignatureError:
+                pass
+            else:
+                return
+
+        self.verify_v2(dev_keys)
 
     def verify_unsigned(self) -> None:
         self.validate_code_hashes()
@@ -126,15 +189,18 @@ class LegacyFirmware(Struct):
     def digest(self) -> bytes:
         return hashlib.sha256(self.code).digest()
 
-    def verify(
-        self, public_keys: t.Sequence[bytes] = consts.V1_BOOTLOADER_KEYS
-    ) -> None:
+    def verify(self, dev_keys: bool = False) -> None:
+        if not dev_keys:
+            model_keys = models.TREZOR_ONE_V1V2
+        else:
+            model_keys = models.TREZOR_ONE_V1V2_DEV
         check_sig_v1(
             self.digest(),
             self.key_indexes,
             self.signatures,
-            public_keys,
+            model_keys.firmware_sigs_needed,
+            model_keys.firmware_keys,
         )
 
         if self.embedded_v2:
-            self.embedded_v2.verify(consts.V1_BOOTLOADER_KEYS)
+            self.embedded_v2.verify()
