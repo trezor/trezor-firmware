@@ -9,7 +9,7 @@ from trezor.messages import TxRequest, ZcashAck, ZcashOrchardInput, ZcashOrchard
 from trezor.wire import DataError
 
 from apps.bitcoin.sign_tx import helpers
-from core.src.apps.common.paths import PathSchema
+from apps.common.paths import PathSchema
 
 from .. import unified
 from ..hasher import ZcashHasher
