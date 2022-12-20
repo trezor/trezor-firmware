@@ -73,14 +73,14 @@ EMPTY_ANCHOR = bytes.fromhex("ae2935f1dfd8a24aed7c70df7de3a668eb7a49b1319880dde2
 
 def sign_tx(
     client: "TrezorClient",
-    inputs: List[messages.TxInput | messages.ZcashOrchardInput],
-    outputs: List[messages.TxOutput | messages.ZcashOrchardOutput],
+    inputs: List[messages.TxInputType | messages.ZcashOrchardInput],
+    outputs: List[messages.TxOutputType | messages.ZcashOrchardOutput],
     coin_name: str = "Zcash",
     version_group_id: int = 0x26A7270A,  # protocol spec §7.1.2
     branch_id: int = 0xC2D6D0B4,  # https://zips.z.cash/zip-0252
     expiry: int = 0,
     z_address_n: List[int] | None = None,
-    anchor: bytes = None,
+    anchor: bytes | None = None,
 ) -> Any:  # TODO: add the return type
     """
     Sign a Zcash transaction.
