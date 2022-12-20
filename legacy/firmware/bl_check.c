@@ -92,8 +92,8 @@ static int known_bootloader(int r, const uint8_t *hash) {
   // BEGIN AUTO-GENERATED QA BOOTLOADER ENTRIES (bl_check_qa.txt)
   if (0 ==
       memcmp(hash,
-             "\x29\x34\xf3\xd3\xaa\x59\x2b\x34\x49\x6a\x23\xb8\x14\x74\xe2\xc2"
-             "\xf3\xee\x1e\x36\x66\x0b\xf0\x1e\x19\x8a\x65\x15\xc2\x32\xc1\x85",
+             "\x21\xb9\x49\xf4\xf5\xfd\x9f\x3a\x7d\x63\x43\xd1\x07\x6f\x96\x0f"
+             "\xb4\x54\x18\x19\x65\x31\xb9\xf2\x97\x4a\x68\xed\xe8\xdb\x2e\xa1",
              32))
     return 1;  // 1.12.0 shipped with fw 1.12.0
   // END AUTO-GENERATED QA BOOTLOADER ENTRIES (bl_check_qa.txt)
@@ -214,6 +214,12 @@ static int known_bootloader(int r, const uint8_t *hash) {
              32))
     return 1;  // 1.11.0 shipped with fw 1.11.1
   // BEGIN AUTO-GENERATED BOOTLOADER ENTRIES (bl_check.txt)
+  if (0 ==
+      memcmp(hash,
+             "\xe9\xec\x8f\xa2\xfe\xfa\xd2\xb3\xb6\xb7\xc4\xab\x76\x69\x1a\x33"
+             "\x61\xb3\xee\xfb\x8a\x0d\xda\xa3\x4d\x7e\x45\xb6\x3b\x3d\x56\x64",
+             32))
+    return 1;  // 1.12.0 shipped with fw 1.12.0
   // END AUTO-GENERATED BOOTLOADER ENTRIES (bl_check.txt)
   return 0;
 }
