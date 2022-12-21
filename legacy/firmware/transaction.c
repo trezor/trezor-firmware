@@ -1310,3 +1310,147 @@ bool get_ownership_proof(const CoinInfo *coin, InputScriptType script_type,
   out->ownership_proof.size = r;
   return true;
 }
+
+bool tx_input_verify_nonownership(
+    const CoinInfo *coin, const TxInputType *txinput,
+    const uint8_t ownership_id[OWNERSHIP_ID_SIZE]) {
+  size_t r = 0;
+  // Check versionMagic.
+  if (txinput->ownership_proof.size < r + sizeof(SLIP19_VERSION_MAGIC) ||
+      memcmp(txinput->ownership_proof.bytes + r, SLIP19_VERSION_MAGIC,
+             sizeof(SLIP19_VERSION_MAGIC)) != 0) {
+    return false;
+  }
+  r += sizeof(SLIP19_VERSION_MAGIC);
+
+  // Skip flags.
+  r += 1;
+
+  // Ensure that there is only one ownership ID.
+  if (txinput->ownership_proof.size < r + 1 ||
+      txinput->ownership_proof.bytes[r] != 1) {
+    return false;
+  }
+  r += 1;
+
+  // Ensure that the ownership ID is not ours.
+  if (txinput->ownership_proof.size < r + OWNERSHIP_ID_SIZE ||
+      memcmp(txinput->ownership_proof.bytes + r, ownership_id,
+             OWNERSHIP_ID_SIZE) == 0) {
+    return false;
+  }
+  r += OWNERSHIP_ID_SIZE;
+
+  // Compute the ownership proof digest.
+  Hasher hasher = {0};
+  hasher_InitParam(&hasher, HASHER_SHA2, NULL, 0);
+  hasher_Update(&hasher, txinput->ownership_proof.bytes, r);
+  tx_script_hash(&hasher, txinput->script_pubkey.size,
+                 txinput->script_pubkey.bytes);
+  tx_script_hash(&hasher, txinput->commitment_data.size,
+                 txinput->commitment_data.bytes);
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  hasher_Final(&hasher, digest);
+
+  // Ensure that there is no scriptSig, since we only support native SegWit
+  // ownership proofs.
+  if (txinput->ownership_proof.size < r + 1 ||
+      txinput->ownership_proof.bytes[r] != 0) {
+    return false;
+  }
+  r += 1;
+
+  if (txinput->script_pubkey.size == 22 &&
+      memcmp(txinput->script_pubkey.bytes, "\x00\x14", 2) == 0) {
+    // SegWit v0 (probably P2WPKH)
+    const uint8_t *pubkey_hash = txinput->script_pubkey.bytes + 2;
+
+    // Ensure that there are two stack items.
+    if (txinput->ownership_proof.size < r + 1 ||
+        txinput->ownership_proof.bytes[r] != 2) {
+      return false;
+    }
+    r += 1;
+
+    // Read the signature.
+    if (txinput->ownership_proof.size < r + 1) {
+      return false;
+    }
+    size_t signature_size = txinput->ownership_proof.bytes[r];
+    r += 1;
+
+    uint8_t signature[64] = {0};
+    if (txinput->ownership_proof.size < r + signature_size ||
+        ecdsa_sig_from_der(txinput->ownership_proof.bytes + r,
+                           signature_size - 1, signature) != 0) {
+      return false;
+    }
+    r += signature_size;
+
+    // Read the public key.
+    if (txinput->ownership_proof.size < r + 34 ||
+        txinput->ownership_proof.bytes[r] != 33) {
+      return false;
+    }
+    const uint8_t *public_key = txinput->ownership_proof.bytes + r + 1;
+    r += 34;
+
+    // Check the public key matches the scriptPubKey.
+    uint8_t expected_pubkey_hash[20] = {0};
+    ecdsa_get_pubkeyhash(public_key, coin->curve->hasher_pubkey,
+                         expected_pubkey_hash);
+    if (memcmp(pubkey_hash, expected_pubkey_hash,
+               sizeof(expected_pubkey_hash)) != 0) {
+      return false;
+    }
+
+    // Ensure that we have read the entire ownership proof.
+    if (r != txinput->ownership_proof.size) {
+      return false;
+    }
+
+#ifdef USE_SECP256K1_ZKP_ECDSA
+    if (coin->curve->params == &secp256k1) {
+      if (zkp_ecdsa_verify_digest(coin->curve->params, public_key, signature,
+                                  digest) != 0) {
+        return false;
+      }
+    } else
+#endif
+    {
+      if (ecdsa_verify_digest(coin->curve->params, public_key, signature,
+                              digest) != 0) {
+        return false;
+      }
+    }
+  } else if (txinput->script_pubkey.size == 34 &&
+             memcmp(txinput->script_pubkey.bytes, "\x51\x20", 2) == 0) {
+    // SegWit v1 (P2TR)
+    const uint8_t *output_public_key = txinput->script_pubkey.bytes + 2;
+
+    // Ensure that there is one stack item consisting of 64 bytes.
+    if (txinput->ownership_proof.size < r + 2 ||
+        memcmp(txinput->ownership_proof.bytes + r, "\x01\x40", 2) != 0) {
+      return false;
+    }
+    r += 2;
+
+    // Read the signature.
+    const uint8_t *signature = txinput->ownership_proof.bytes + r;
+    r += 64;
+
+    // Ensure that we have read the entire ownership proof.
+    if (r != txinput->ownership_proof.size) {
+      return false;
+    }
+
+    if (zkp_bip340_verify_digest(output_public_key, signature, digest) != 0) {
+      return false;
+    }
+  } else {
+    // Unsupported script type.
+    return false;
+  }
+
+  return true;
+}

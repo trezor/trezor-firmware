@@ -72,8 +72,9 @@ enum {
 } signing_stage;
 static bool foreign_address_confirmed;  // indicates that user approved warning
 static bool taproot_only;  // indicates whether all internal inputs are Taproot
-static uint32_t idx1;      // The index of the input or output in the current tx
-                           // which is being processed, signed or serialized.
+static bool has_unverified_external_input;
+static uint32_t idx1;  // The index of the input or output in the current tx
+                       // which is being processed, signed or serialized.
 static uint32_t idx2;  // The index of the input or output in the original tx
                        // (Phase 1), in the previous tx (Phase 2) or in the
                        // current tx when computing the legacy digest (Phase 2).
@@ -98,8 +99,9 @@ static uint8_t sig[64];     // Used in Phase 1 to store signature of original tx
 #if !BITCOIN_ONLY
 static uint8_t decred_hash_prefix[32];
 #endif
-static uint64_t total_in, total_out, change_out;
-static uint64_t orig_total_in, orig_total_out, orig_change_out;
+static uint64_t total_in, external_in, total_out, change_out;
+static uint64_t orig_total_in, orig_external_in, orig_total_out,
+    orig_change_out;
 static uint32_t progress, progress_step, progress_meta_step;
 static uint32_t tx_weight;
 
@@ -360,14 +362,6 @@ static void set_external_input(uint32_t i) {
 
 static bool is_external_input(uint32_t i) {
   return external_inputs[i / 32] & (1 << (i % 32));
-}
-
-static bool has_external_input(void) {
-  uint32_t sum = 0;
-  for (size_t i = 0; i < sizeof(external_inputs) / sizeof(uint32_t); ++i) {
-    sum |= external_inputs[i];
-  }
-  return sum != 0;
 }
 
 void send_req_1_input(void) {
@@ -1100,13 +1094,16 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 
   foreign_address_confirmed = false;
   taproot_only = true;
+  has_unverified_external_input = false;
   signatures = 0;
   idx1 = 0;
   total_in = 0;
+  external_in = 0;
   total_out = 0;
   change_out = 0;
   change_count = 0;
   orig_total_in = 0;
+  orig_external_in = 0;
   orig_total_out = 0;
   orig_change_out = 0;
   memzero(external_inputs, sizeof(external_inputs));
@@ -1175,6 +1172,13 @@ static bool signing_validate_input(const TxInputType *txinput) {
       signing_abort();
       return false;
     }
+
+    if (txinput->has_ownership_proof) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Ownership proof provided but not expected."));
+      signing_abort();
+      return false;
+    }
   } else if (txinput->script_type == InputScriptType_EXTERNAL) {
     if (txinput->address_n_count != 0) {
       fsm_sendFailure(FailureType_Failure_DataError,
@@ -1210,6 +1214,13 @@ static bool signing_validate_input(const TxInputType *txinput) {
       !coin->has_taproot) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Taproot not enabled on this coin."));
+    signing_abort();
+    return false;
+  }
+
+  if (txinput->has_commitment_data && !txinput->has_ownership_proof) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("commitment_data field provided but not expected."));
     signing_abort();
     return false;
   }
@@ -1892,7 +1903,7 @@ static bool signing_add_orig_output(TxOutputType *orig_output) {
 }
 
 static bool signing_confirm_tx(void) {
-  if (has_external_input()) {
+  if (has_unverified_external_input) {
     layoutConfirmUnverifiedExternalInputs();
     if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
@@ -1952,12 +1963,23 @@ static bool signing_confirm_tx(void) {
     }
     uint64_t orig_fee = orig_total_in - orig_total_out;
 
+    // Reject adding external inputs to the original transaction, so that we
+    // don't have to deal with the UI implications. This could be used for
+    // BIP-78 Payjoins when we support presigned external inputs.
+    if (external_in != orig_external_in) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Adding external inputs is not supported."));
+      signing_abort();
+      return false;
+    }
+
     // Sanity check. Replacement transactions are only allowed to make
     // amendments which do not increase the amount that we are spending on
     // external outputs. Additional funds can only go towards the fee, which is
     // confirmed by the user. The check may fail if the replacement transaction
     // starts mixing accounts and breaks change-output identification.
-    if (total_out - change_out > orig_total_out - orig_change_out) {
+    if (total_out - change_out - external_in >
+        orig_total_out - orig_change_out - orig_external_in) {
       fsm_sendFailure(FailureType_Failure_ProcessError,
                       _("Invalid replacement transaction."));
       signing_abort();
@@ -2000,8 +2022,8 @@ static bool signing_confirm_tx(void) {
     }
 
     // last confirmation
-    layoutConfirmTx(coin, amount_unit, total_in, total_out, change_out,
-                    tx_weight);
+    layoutConfirmTx(coin, amount_unit, total_in, external_in, total_out,
+                    change_out, tx_weight);
     if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       signing_abort();
@@ -2824,11 +2846,39 @@ void signing_txack(TransactionType *tx) {
         to.is_segwit = true;
 #endif
       } else if (tx->inputs[0].script_type == InputScriptType_EXTERNAL) {
-        if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
-          fsm_sendFailure(FailureType_Failure_ProcessError,
-                          _("External inputs not allowed."));
-          signing_abort();
-          return;
+        if (tx->inputs[0].has_ownership_proof) {
+          uint8_t ownership_id[OWNERSHIP_ID_SIZE] = {0};
+          if (!fsm_getOwnershipId(tx->inputs[0].script_pubkey.bytes,
+                                  tx->inputs[0].script_pubkey.size,
+                                  ownership_id)) {
+            signing_abort();
+            return;
+          }
+
+          if (!tx_input_verify_nonownership(coin, tx->inputs, ownership_id)) {
+            fsm_sendFailure(FailureType_Failure_DataError,
+                            _("Invalid external input."));
+            signing_abort();
+            return;
+          }
+
+          if (!add_amount(&external_in, tx->inputs[0].amount)) {
+            return;
+          }
+
+          if (tx->inputs[0].has_orig_hash) {
+            if (!add_amount(&orig_external_in, tx->inputs[0].amount)) {
+              return;
+            }
+          }
+        } else {
+          has_unverified_external_input = true;
+          if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+            fsm_sendFailure(FailureType_Failure_ProcessError,
+                            _("Unverifiable external input."));
+            signing_abort();
+            return;
+          }
         }
         set_external_input(idx1);
       } else {

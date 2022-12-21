@@ -152,5 +152,8 @@ bool get_ownership_proof(const CoinInfo *coin, InputScriptType script_type,
                          size_t script_pubkey_size,
                          const uint8_t *commitment_data,
                          size_t commitment_data_size, OwnershipProof *out);
+bool tx_input_verify_nonownership(
+    const CoinInfo *coin, const TxInputType *txinput,
+    const uint8_t ownership_id[OWNERSHIP_ID_SIZE]);
 
 #endif

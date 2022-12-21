@@ -150,6 +150,9 @@ bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
                        uint32_t address_n_count, const uint32_t *address_n,
                        bool has_multisig, bool show_warning);
 
+bool fsm_getOwnershipId(uint8_t *script_pubkey, size_t script_pubkey_size,
+                        uint8_t ownership_id[32]);
+
 void fsm_abortWorkflows(void);
 
 #endif
