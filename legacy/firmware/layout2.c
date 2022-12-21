@@ -528,27 +528,37 @@ static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
 }
 
 void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
-                     uint64_t total_in, uint64_t total_out, uint64_t change_out,
+                     uint64_t total_in, uint64_t external_in,
+                     uint64_t total_out, uint64_t change_out,
                      uint64_t tx_weight) {
   char str_out[32] = {0};
   formatAmountDifference(coin, amount_unit, total_in, change_out, str_out,
                          sizeof(str_out));
 
-  char str_fee[32] = {0};
-  formatAmountDifference(coin, amount_unit, total_in, total_out, str_fee,
-                         sizeof(str_fee));
+  if (external_in == 0) {
+    char str_fee[32] = {0};
+    formatAmountDifference(coin, amount_unit, total_in, total_out, str_fee,
+                           sizeof(str_fee));
 
-  char str_fee_rate[32] = {0};
-  bool show_fee_rate = total_in >= total_out;
+    char str_fee_rate[32] = {0};
+    bool show_fee_rate = total_in >= total_out;
 
-  if (show_fee_rate) {
-    formatFeeRate(total_in - total_out, tx_weight, str_fee_rate,
-                  sizeof(str_fee_rate), coin->has_segwit);
+    if (show_fee_rate) {
+      formatFeeRate(total_in - total_out, tx_weight, str_fee_rate,
+                    sizeof(str_fee_rate), coin->has_segwit);
+    }
+
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Confirm sending:"), str_out, _("including fee:"),
+                      str_fee, show_fee_rate ? str_fee_rate : NULL, NULL);
+  } else {
+    char str_spend[32] = {0};
+    formatAmountDifference(coin, amount_unit, total_in - external_in,
+                           change_out, str_spend, sizeof(str_spend));
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("You are contributing:"), str_spend,
+                      _("to the total amount:"), str_out, NULL, NULL);
   }
-
-  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    _("Confirm sending:"), str_out, _("including fee:"),
-                    str_fee, show_fee_rate ? str_fee_rate : NULL, NULL);
 }
 
 void layoutConfirmReplacement(const char *description, uint8_t txid[32]) {

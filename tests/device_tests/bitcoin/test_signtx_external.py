@@ -577,7 +577,6 @@ def test_p2wpkh_in_p2sh_with_proof(client: Client):
     pass
 
 
-@pytest.mark.skip_t1
 def test_p2wpkh_with_proof(client: Client):
     inp1 = messages.TxInputType(
         # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
@@ -611,16 +610,18 @@ def test_p2wpkh_with_proof(client: Client):
     )
 
     with client:
+        t1 = client.features.model == "1"
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_e5b7e2),
@@ -636,6 +637,7 @@ def test_p2wpkh_with_proof(client: Client):
                 request_input(1),
                 request_output(0),
                 request_output(1),
+                (t1, request_input(0)),
                 request_input(1),
                 request_finished(),
             ]
@@ -656,7 +658,7 @@ def test_p2wpkh_with_proof(client: Client):
 
     # Test corrupted ownership proof.
     inp1.ownership_proof[10] ^= 1
-    with pytest.raises(TrezorFailure, match="Invalid signature"):
+    with pytest.raises(TrezorFailure, match="Invalid signature|Invalid external input"):
         btc.sign_tx(
             client,
             "Testnet",
@@ -666,7 +668,6 @@ def test_p2wpkh_with_proof(client: Client):
         )
 
 
-@pytest.mark.skip_t1
 @pytest.mark.setup_client(
     mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 )
@@ -703,17 +704,20 @@ def test_p2tr_with_proof(client: Client):
     )
 
     with client:
+        t1 = client.features.model == "1"
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_input(1),
                 request_output(0),
+                (t1, request_input(0)),
                 request_input(1),
                 request_finished(),
             ]
@@ -732,11 +736,10 @@ def test_p2tr_with_proof(client: Client):
 
     # Test corrupted ownership proof.
     inp1.ownership_proof[10] ^= 1
-    with pytest.raises(TrezorFailure, match="Invalid signature"):
+    with pytest.raises(TrezorFailure, match="Invalid signature|Invalid external input"):
         btc.sign_tx(client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET)
 
 
-@pytest.mark.skip_t1
 def test_p2wpkh_with_false_proof(client: Client):
     inp1 = messages.TxInputType(
         # tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9
