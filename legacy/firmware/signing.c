@@ -686,6 +686,38 @@ void phase1_request_orig_input(void) {
   }
 }
 
+void phase2_request_next_witness(bool first) {
+  if (first) {
+    idx1 = 0;
+    if (!to.is_segwit) {
+      send_req_finished();
+      signing_abort();
+      return;
+    }
+  } else if (idx1 < info.inputs_count - 1) {
+    idx1++;
+  } else {
+    send_req_finished();
+    signing_abort();
+    return;
+  }
+
+  if (!serialize) {
+    // Skip external inputs when serialization is disabled.
+    while (is_external_input(idx1)) {
+      if (idx1 >= info.inputs_count - 1) {
+        send_req_finished();
+        signing_abort();
+        return;
+      }
+      idx1++;
+    }
+  }
+
+  send_req_segwit_witness();
+  return;
+}
+
 void phase2_request_next_output(bool first) {
   if (first) {
     if (serialize) {
@@ -700,13 +732,7 @@ void phase2_request_next_output(bool first) {
   }
 
   // Output serialization is finished. Generate witnesses.
-  if (to.is_segwit) {
-    idx1 = 0;
-    send_req_segwit_witness();
-  } else {
-    send_req_finished();
-    signing_abort();
-  }
+  phase2_request_next_witness(true);
 }
 
 void phase2_request_next_input(bool first) {
@@ -3528,13 +3554,7 @@ void signing_txack(TransactionType *tx) {
       progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
       layoutProgress(_("Signing transaction"), progress);
       update_ctr = 0;
-      if (idx1 < info.inputs_count - 1) {
-        idx1++;
-        send_req_segwit_witness();
-      } else {
-        send_req_finished();
-        signing_abort();
-      }
+      phase2_request_next_witness(false);
       return;
 
 #if !BITCOIN_ONLY
