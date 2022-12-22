@@ -29,6 +29,9 @@
 #include "messages-nem.pb.h"
 #include "messages-stellar.pb.h"
 
+// CoinJoin fee rate multiplier.
+#define FEE_RATE_DECIMALS (1000000)
+
 // message functions
 
 void fsm_sendSuccess(const char *text);
@@ -82,6 +85,8 @@ void fsm_msgSignMessage(const SignMessage *msg);
 void fsm_msgVerifyMessage(const VerifyMessage *msg);
 void fsm_msgGetOwnershipId(const GetOwnershipId *msg);
 void fsm_msgGetOwnershipProof(const GetOwnershipProof *msg);
+void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg);
+void fsm_msgCancelAuthorization(const CancelAuthorization *msg);
 
 // crypto
 void fsm_msgCipherKeyValue(const CipherKeyValue *msg);

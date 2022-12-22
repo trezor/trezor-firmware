@@ -69,10 +69,13 @@ void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
                             uint64_t tx_weight);
 void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
                             uint64_t fee);
+void layoutFeeRateOverThreshold(const CoinInfo *coin, uint32_t fee_per_kvbyte);
 void layoutChangeCountOverThreshold(uint32_t change_count);
 void layoutConfirmUnverifiedExternalInputs(void);
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled);
+void layoutAuthorizeCoinJoin(const CoinInfo *coin, uint64_t max_rounds,
+                             uint32_t max_fee_per_kvbyte);
 void layoutVerifyAddress(const CoinInfo *coin, const char *address);
 void layoutCipherKeyValue(bool encrypt, const char *key);
 void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing);

@@ -557,3 +557,147 @@ void fsm_msgGetOwnershipProof(const GetOwnershipProof *msg) {
   msg_write(MessageType_MessageType_OwnershipProof, resp);
   layoutHome();
 }
+
+void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg) {
+  CHECK_INITIALIZED
+
+  CHECK_PIN
+
+  const size_t MAX_COORDINATOR_LEN = 36;
+  const uint64_t MAX_ROUNDS = 500;
+  const uint64_t MAX_COORDINATOR_FEE_RATE = 5 * FEE_RATE_DECIMALS;  // 5 %
+
+  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  if (!coin) {
+    return;
+  }
+
+  if (strnlen(msg->coordinator, sizeof(msg->coordinator)) >
+      MAX_COORDINATOR_LEN) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Invalid coordinator name."));
+    layoutHome();
+    return;
+  }
+
+  for (size_t i = 0; msg->coordinator[i] != '\0'; ++i) {
+    if (msg->coordinator[i] < 32 || msg->coordinator[i] > 126) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Invalid coordinator name."));
+      layoutHome();
+      return;
+    }
+  }
+
+  if (msg->max_rounds < 1) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Invalid number of rounds."));
+    layoutHome();
+    return;
+  }
+
+  bool safety_checks_is_strict =
+      (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict);
+
+  if (msg->max_rounds > MAX_ROUNDS && safety_checks_is_strict) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("The number of rounds is unexpectedly large."));
+    layoutHome();
+    return;
+  }
+
+  if (msg->max_coordinator_fee_rate > MAX_COORDINATOR_FEE_RATE &&
+      safety_checks_is_strict) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("The coordination fee rate is unexpectedly large."));
+    layoutHome();
+    return;
+  }
+
+  if (msg->max_fee_per_kvbyte > 10 * coin->maxfee_kb &&
+      safety_checks_is_strict) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("The fee per vbyte is unexpectedly large."));
+    layoutHome();
+    return;
+  }
+
+  if (msg->address_n_count == 0) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Empty path not allowed."));
+    layoutHome();
+    return;
+  }
+
+  if (msg->address_n[0] != PATH_SLIP25_PURPOSE && safety_checks_is_strict) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path."));
+    layoutHome();
+    return;
+  }
+
+  layoutAuthorizeCoinJoin(coin, msg->max_rounds, msg->max_fee_per_kvbyte);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  bool path_warning_shown = false;
+  if (msg->address_n[0] != PATH_SLIP25_PURPOSE) {
+    if (!fsm_layoutPathWarning()) {
+      layoutHome();
+      return;
+    }
+    path_warning_shown = true;
+  }
+
+  // AuthorizeCoinJoin contains only the path prefix without change and index.
+  if ((size_t)(msg->address_n_count + 2) >
+      sizeof(msg->address_n) / sizeof(msg->address_n[0])) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path."));
+    layoutHome();
+    return;
+  }
+
+  if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count + 2,
+                         msg->address_n, false, !path_warning_shown)) {
+    layoutHome();
+    return;
+  }
+
+  if (msg->max_fee_per_kvbyte > coin->maxfee_kb) {
+    layoutFeeRateOverThreshold(coin, msg->max_fee_per_kvbyte);
+    if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold,
+                       false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return;
+    }
+  }
+
+  // Cache the seed.
+  if (config_getSeed() == NULL) {
+    layoutHome();
+    return;
+  }
+
+  if (!config_setCoinJoinAuthorization(msg)) {
+    layoutHome();
+    return;
+  }
+
+  fsm_sendSuccess(_("Coinjoin authorized"));
+  layoutHome();
+}
+
+void fsm_msgCancelAuthorization(const CancelAuthorization *msg) {
+  (void)msg;
+
+  if (!config_setCoinJoinAuthorization(NULL)) {
+    layoutHome();
+    return;
+  }
+
+  fsm_sendSuccess(_("Authorization cancelled"));
+  layoutHome();
+}
