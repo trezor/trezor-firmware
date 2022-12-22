@@ -510,9 +510,10 @@ static uint64_t div_round(uint64_t numer, uint64_t denom) {
   return numer / denom + (2 * (numer % denom) >= denom);
 }
 
-static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
-                          size_t output_length, bool segwit) {
-  // Convert transaction weight to virtual transaction size, which is is defined
+static bool formatComputedFeeRate(uint64_t fee, uint64_t tx_weight,
+                                  char *output, size_t output_length,
+                                  bool segwit, bool parentheses) {
+  // Convert transaction weight to virtual transaction size, which is defined
   // as tx_weight / 4 rounded up to the next integer.
   // https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
   uint64_t tx_size = (tx_weight + 3) / 4;
@@ -522,9 +523,27 @@ static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
   // two decimal digits.
   uint64_t fee_rate_multiplied = div_round(100 * fee, tx_size);
 
-  return bn_format_amount(fee_rate_multiplied, "(",
-                          segwit ? " sat/vB)" : " sat/B)", 2, output,
-                          output_length) != 0;
+  size_t length =
+      bn_format_amount(fee_rate_multiplied, parentheses ? "(" : NULL,
+                       segwit ? " sat/vB" : " sat/B", 2, output, output_length);
+  if (length == 0) {
+    return false;
+  }
+
+  if (parentheses) {
+    if (length + 2 > output_length) {
+      return false;
+    }
+    output[length] = ')';
+    output[length + 1] = '\0';
+  }
+  return true;
+}
+
+static bool formatFeeRate(uint64_t fee_per_kvbyte, char *output,
+                          size_t output_length, bool segwit) {
+  return formatComputedFeeRate(fee_per_kvbyte, 4000, output, output_length,
+                               segwit, false);
 }
 
 void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
@@ -544,8 +563,8 @@ void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
     bool show_fee_rate = total_in >= total_out;
 
     if (show_fee_rate) {
-      formatFeeRate(total_in - total_out, tx_weight, str_fee_rate,
-                    sizeof(str_fee_rate), coin->has_segwit);
+      formatComputedFeeRate(total_in - total_out, tx_weight, str_fee_rate,
+                            sizeof(str_fee_rate), coin->has_segwit, true);
     }
 
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
@@ -621,8 +640,8 @@ void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
 
   char str_fee_rate[32] = {0};
 
-  formatFeeRate(fee_new, tx_weight, str_fee_rate, sizeof(str_fee_rate),
-                coin->has_segwit);
+  formatComputedFeeRate(fee_new, tx_weight, str_fee_rate, sizeof(str_fee_rate),
+                        coin->has_segwit, true);
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     question, str_fee_change, _("Transaction fee:"),
@@ -636,6 +655,15 @@ void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Fee"), str_fee, _("is unexpectedly high."), NULL,
                     _("Send anyway?"), NULL);
+}
+
+void layoutFeeRateOverThreshold(const CoinInfo *coin, uint32_t fee_per_kvbyte) {
+  char str_fee_rate[32] = {0};
+  formatFeeRate(fee_per_kvbyte, str_fee_rate, sizeof(str_fee_rate),
+                coin->has_segwit);
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Fee rate"), str_fee_rate, _("is unexpectedly high."),
+                    NULL, _("Proceed anyway?"), NULL);
 }
 
 void layoutChangeCountOverThreshold(uint32_t change_count) {
@@ -677,6 +705,20 @@ void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                       _("Locktime for this"), _("transaction is set to"),
                       str_type, str_locktime, _("Continue?"), NULL);
   }
+}
+
+void layoutAuthorizeCoinJoin(const CoinInfo *coin, uint64_t max_rounds,
+                             uint32_t max_fee_per_kvbyte) {
+  char str_max_rounds[32] = {0};
+  char str_fee_rate[32] = {0};
+  bn_format_amount(max_rounds, NULL, NULL, 0, str_max_rounds,
+                   sizeof(str_max_rounds));
+  formatFeeRate(max_fee_per_kvbyte, str_fee_rate, sizeof(str_fee_rate),
+                coin->has_segwit);
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
+                    _("Authorize coinjoin"), _("Maximum rounds:"),
+                    str_max_rounds, _("Maximum mining fee:"), str_fee_rate,
+                    NULL, NULL);
 }
 
 void layoutVerifyAddress(const CoinInfo *coin, const char *address) {

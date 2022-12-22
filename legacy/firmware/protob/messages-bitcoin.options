@@ -92,8 +92,12 @@ GetOwnershipProof.commitment_data                           max_size:70
 OwnershipProof.ownership_proof                              max_size:147
 OwnershipProof.signature                                    max_size:71
 
+AuthorizeCoinJoin.coordinator                               max_size:37
+AuthorizeCoinJoin.address_n                                 max_count:8
+AuthorizeCoinJoin.coin_name                                 max_size:21
+
+
 # Unused messages.
-AuthorizeCoinJoin                                           skip_message:true
 TxAckPaymentRequest                                         skip_message:true
 PaymentRequestMemo                                          skip_message:true
 CoinJoinRequest                                             skip_message:true
