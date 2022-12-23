@@ -159,8 +159,6 @@ static Hasher coinjoin_request_hasher;
 /* A marker for in_address_n_count to indicate a mismatch in bip32 paths in
    input */
 #define BIP32_NOCHANGEALLOWED 1
-/* The number of bip32 levels used in a wallet (chain and address) */
-#define BIP32_WALLET_DEPTH 2
 /* The chain id used for change */
 #define BIP32_CHANGE_CHAIN 1
 /* The maximum allowed change address.  This should be large enough for normal
