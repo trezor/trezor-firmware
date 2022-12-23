@@ -48,6 +48,7 @@
 #include "secp256k1.h"
 #include "signing.h"
 #include "supervise.h"
+#include "timer.h"
 #include "transaction.h"
 #include "trezor.h"
 #include "usb.h"

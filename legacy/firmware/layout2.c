@@ -253,7 +253,7 @@ const char **split_message_hex(const uint8_t *msg, uint32_t len) {
   return split_message((const uint8_t *)hex, size * 2, 16);
 }
 
-void *layoutLast = layoutHome;
+void *layoutLast = NULL;
 
 void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
                        const char *btnYes, const char *desc, const char *line1,
@@ -285,18 +285,36 @@ void layoutProgressSwipe(const char *desc, int permil) {
 }
 
 void layoutScreensaver(void) {
-  layoutLast = layoutScreensaver;
-  oledClear();
-  oledRefresh();
+  if (system_millis_busy_deadline > timer_ms()) {
+    // Busy screen overrides the screensaver.
+    layoutBusyscreen();
+  } else {
+    layoutLast = layoutScreensaver;
+    oledClear();
+    oledRefresh();
+  }
 }
 
 void layoutHome(void) {
-  if (layoutLast == layoutHome || layoutLast == layoutScreensaver) {
+  if (layoutLast != layoutHomescreen && layoutLast != layoutBusyscreen) {
+    // Reset lock screen timeout
+    system_millis_lock_start = timer_ms();
+  }
+
+  if (system_millis_busy_deadline > timer_ms()) {
+    layoutBusyscreen();
+  } else {
+    layoutHomescreen();
+  }
+}
+
+void layoutHomescreen(void) {
+  if (layoutLast == layoutHomescreen || layoutLast == layoutScreensaver) {
     oledClear();
   } else {
     layoutSwipe();
   }
-  layoutLast = layoutHome;
+  layoutLast = layoutHomescreen;
 
   char label[MAX_LABEL_LEN + 1] = _("Go to trezor.io/start");
   if (config_isInitialized()) {
@@ -338,9 +356,19 @@ void layoutHome(void) {
     oledDrawStringCenter(OLED_WIDTH / 2, 0, "NEEDS BACKUP!", FONT_STANDARD);
   }
   oledRefresh();
+}
 
-  // Reset lock screen timeout
-  system_millis_lock_start = timer_ms();
+void layoutBusyscreen(void) {
+  if (layoutLast == layoutBusyscreen || layoutLast == layoutScreensaver) {
+    oledClear();
+  } else {
+    layoutSwipe();
+  }
+  layoutLast = layoutBusyscreen;
+
+  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, _("Please wait"), NULL,
+               _("Coinjoin in progress."), NULL, _("Do not disconnect"),
+               _("your Trezor."));
 }
 
 static void render_address_dialog(const CoinInfo *coin, const char *address,
