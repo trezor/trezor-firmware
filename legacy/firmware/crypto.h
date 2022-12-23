@@ -39,6 +39,9 @@
 #define PATH_MAX_ADDRESS_INDEX 1000000
 #define PATH_SLIP25_PURPOSE (PATH_HARDENED | 10025)
 
+// The number of bip32 levels used in a wallet (chain and address)
+#define BIP32_WALLET_DEPTH 2
+
 #define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
 
 typedef enum {
