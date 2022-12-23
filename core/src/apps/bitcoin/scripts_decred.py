@@ -1,8 +1,10 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import utils
 from trezor.crypto import base58
 from trezor.crypto.base58 import blake256d_32
+from trezor.enums import DecredStakingSpendType
 from trezor.wire import DataError
 
 from . import scripts
@@ -12,6 +14,14 @@ from .scripts import (  # noqa: F401
     write_output_script_p2pkh,
 )
 from .writers import write_compact_size
+
+# These are decred specific opcodes related to staking.
+_OP_SSTX = const(0xBA)
+_OP_SSGEN = const(0xBB)
+_OP_SSRTX = const(0xBC)
+_OP_SSTXCHANGE = const(0xBD)
+
+_STAKE_TREE = const(1)
 
 if TYPE_CHECKING:
     from trezor.enums import InputScriptType
@@ -98,7 +108,7 @@ def output_script_sstxsubmissionpkh(addr: str) -> bytearray:
         raise DataError("Invalid address")
 
     w = utils.empty_bytearray(26)
-    w.append(0xBA)  # OP_SSTX
+    w.append(_OP_SSTX)
     scripts.write_output_script_p2pkh(w, raw_address[2:])
     return w
 
@@ -111,7 +121,7 @@ def output_script_sstxchange(addr: str) -> bytearray:
         raise DataError("Invalid address")
 
     w = utils.empty_bytearray(26)
-    w.append(0xBD)  # OP_SSTXCHANGE
+    w.append(_OP_SSTXCHANGE)
     scripts.write_output_script_p2pkh(w, raw_address[2:])
     return w
 
@@ -120,7 +130,7 @@ def output_script_sstxchange(addr: str) -> bytearray:
 def write_output_script_ssrtx_prefixed(w: Writer, pkh: bytes) -> None:
     utils.ensure(len(pkh) == 20)
     write_compact_size(w, 26)
-    w.append(0xBC)  # OP_SSRTX
+    w.append(_OP_SSRTX)
     scripts.write_output_script_p2pkh(w, pkh)
 
 
@@ -128,7 +138,7 @@ def write_output_script_ssrtx_prefixed(w: Writer, pkh: bytes) -> None:
 def write_output_script_ssgen_prefixed(w: Writer, pkh: bytes) -> None:
     utils.ensure(len(pkh) == 20)
     write_compact_size(w, 26)
-    w.append(0xBB)  # OP_SSGEN
+    w.append(_OP_SSGEN)
     scripts.write_output_script_p2pkh(w, pkh)
 
 
@@ -141,3 +151,64 @@ def sstxcommitment_pkh(pkh: bytes, amount: int) -> bytes:
     write_uint64_le(w, amount)
     write_bytes_fixed(w, b"\x00\x58", 2)  # standard fee limits
     return w
+
+
+def output_script_p2pkh(pubkeyhash: bytes) -> bytearray:
+    s = utils.empty_bytearray(25)
+    scripts.write_output_script_p2pkh(s, pubkeyhash)
+    return s
+
+
+def output_script_p2sh(scripthash: bytes) -> bytearray:
+    # A9 14 <scripthash> 87
+    utils.ensure(len(scripthash) == 20)
+    s = bytearray(23)
+    s[0] = 0xA9  # OP_HASH_160
+    s[1] = 0x14  # pushing 20 bytes
+    s[2:22] = scripthash
+    s[22] = 0x87  # OP_EQUAL
+    return s
+
+
+def output_derive_script(
+    tree: int | None, stakeType: int | None, addr: str, coin: CoinInfo
+) -> bytes:
+    from trezor.crypto import base58
+
+    from apps.common import address_type
+
+    try:
+        raw_address = base58.decode_check(addr, blake256d_32)
+    except ValueError:
+        raise DataError("Invalid address")
+
+    isStakeOutput = False
+    if tree is not None:
+        if stakeType is not None:
+            if tree == _STAKE_TREE:
+                isStakeOutput = True
+
+    if isStakeOutput:
+        assert stakeType is not None
+        if stakeType == DecredStakingSpendType.SSGen:
+            script = utils.empty_bytearray(26)
+            script.append(_OP_SSGEN)
+            scripts.write_output_script_p2pkh(script, raw_address[2:])
+            return script
+        elif stakeType == DecredStakingSpendType.SSRTX:
+            script = utils.empty_bytearray(26)
+            script.append(_OP_SSRTX)
+            scripts.write_output_script_p2pkh(script, raw_address[2:])
+            return script
+
+    elif address_type.check(coin.address_type, raw_address):
+        # p2pkh
+        pubkeyhash = address_type.strip(coin.address_type, raw_address)
+        script = output_script_p2pkh(pubkeyhash)
+        return script
+    elif address_type.check(coin.address_type_p2sh, raw_address):
+        scripthash = address_type.strip(coin.address_type_p2sh, raw_address)
+        script = output_script_p2sh(scripthash)
+        return script
+
+    raise DataError("Invalid address type")
