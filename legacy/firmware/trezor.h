@@ -37,4 +37,7 @@
 /* Screen timeout */
 extern uint32_t system_millis_lock_start;
 
+/* Busyscreen timeout */
+extern uint32_t system_millis_busy_deadline;
+
 #endif
