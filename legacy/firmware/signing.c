@@ -34,6 +34,10 @@
 #ifdef USE_SECP256K1_ZKP_ECDSA
 #include "zkp_ecdsa.h"
 #endif
+#if DEBUG_LINK
+#include <inttypes.h>
+#include <stdio.h>
+#endif
 
 static uint32_t change_count;
 static const CoinInfo *coin;
@@ -102,13 +106,16 @@ static uint8_t decred_hash_prefix[32];
 static uint64_t total_in, external_in, total_out, change_out;
 static uint64_t orig_total_in, orig_external_in, orig_total_out,
     orig_change_out;
-static uint32_t progress, progress_step, progress_meta_step;
+static uint32_t progress_step, progress_steps, progress_substep,
+    progress_substeps, progress_midpoint, progress_update;
+static const char *progress_label;
 static uint32_t tx_weight, tx_base_weight, our_weight, our_inputs_len;
 PathSchema unlocked_schema;
 
 typedef struct {
   uint32_t inputs_count;
   uint32_t outputs_count;
+  uint32_t segwit_count;
   uint32_t next_legacy_input;
   uint32_t min_sequence;
   bool multisig_fp_set;
@@ -370,6 +377,135 @@ static bool is_external_input(uint32_t i) {
   return external_inputs[i / 32] & (1 << (i % 32));
 }
 
+static void report_progress(bool force) {
+  static uint32_t update_ctr = 0;
+  if (!force && update_ctr < progress_update) {
+    update_ctr++;
+    return;
+  }
+
+  uint32_t progress = 0;
+  if (progress_midpoint != 0) {
+    if (progress_step < progress_midpoint) {
+      // Checking previous transactions.
+      progress =
+          (500 * progress_step + 500 * progress_substep / progress_substeps) /
+          progress_midpoint;
+    } else {
+      // Signing transaction after checking. No substeps.
+      progress = 500 + 500 * (progress_step - progress_midpoint) /
+                           (progress_steps - progress_midpoint);
+    }
+  } else {
+    // Loading transaction or signing transaction without checking. No substeps.
+    progress = 1000 * progress_step / progress_steps;
+  }
+
+  layoutProgress(progress_label, progress);
+  update_ctr = 0;
+}
+
+#if DEBUG_LINK
+static bool assert_progress_finished(void) {
+  char line[54] = {0};
+  if (progress_step != progress_steps) {
+    snprintf(line, sizeof(line), "%s finished at %" PRIu32 "/%" PRIu32,
+             progress_label, progress_step, progress_steps);
+  } else if (progress_substep != 0) {
+    snprintf(line, sizeof(line), "%s finished at substep %" PRIu32,
+             progress_label, progress_substep);
+  } else {
+    return true;
+  }
+  fsm_sendFailure(FailureType_Failure_FirmwareError, line);
+  signing_abort();
+  return false;
+}
+#endif
+
+static void init_loading_progress(void) {
+  progress_label = _("Loading transaction");
+  progress_step = 0;
+  progress_substep = 0;
+  progress_substeps = 1;  // no substeps in tx loading
+  progress_midpoint = 0;  // no midpoint in tx loading
+  progress_update = 10;   // update screen every 10 steps
+
+  // Stage 1 and 2 - load inputs and outputs
+  progress_steps = info.inputs_count + info.outputs_count;
+
+  report_progress(true);
+}
+
+static void init_signing_progress(void) {
+  progress_label = _("Signing transaction");
+  progress_step = 0;
+  progress_steps = 0;
+  progress_update = 20;  // update screen every 20 steps
+
+  // Verify previous transactions (STAGE_REQUEST_3_PREV_*).
+  // We don't know how long it will take to fetch the previous transactions. If
+  // they need to be checked, then we will reserve 50 % of the progress for
+  // this. Once we fetch a prev_tx's metadata, we subdivide the reserved space
+  // into substeps which represent the progress of fetching one prev_tx input or
+  // output.
+  if (!taproot_only && !(coin->overwintered && info.version == 5)) {
+    progress_steps += info.inputs_count;
+    progress_midpoint = progress_steps;
+  }
+
+  uint32_t external_count = 0;
+  for (size_t i = 0; i < info.inputs_count; ++i) {
+    external_count += is_external_input(i);
+  }
+
+  // Process inputs.
+  if (!(coin->force_bip143 || coin->overwintered || coin->decred)) {
+    // Sign and optionally serialize legacy inputs (STAGE_REQUEST_4_*).
+    progress_steps += (info.inputs_count - info.segwit_count - external_count) *
+                      (info.inputs_count + info.outputs_count);
+
+    if (serialize) {
+      // Serialize non-legacy inputs (STAGE_REQUEST_NONLEGACY_INPUT).
+      progress_steps += info.segwit_count + external_count;
+    }
+
+    if (is_replacement) {
+      // Verify original input signatures (STAGE_REQUEST_3_ORIG_*).
+      progress_steps +=
+          (orig_info.inputs_count - orig_info.segwit_count - external_count) *
+          (orig_info.inputs_count + orig_info.outputs_count);
+      progress_steps += orig_info.segwit_count;
+    }
+  } else {
+    // Sign and optionally serialize each input (STAGE_REQUEST_NONLEGACY_INPUT,
+    // or in case of Decred STAGE_REQUEST_DECRED_WITNESS).
+    progress_steps += info.inputs_count;
+    if (is_replacement) {
+      // Verify each original input (STAGE_REQUEST_3_ORIG_NONLEGACY_INPUT).
+      progress_steps += orig_info.inputs_count;
+    }
+  }
+
+  if (to.is_segwit) {
+    if (serialize) {
+      // Serialize witnesses for all inputs (STAGE_REQUEST_SEGWIT_WITNESS).
+      progress_steps += info.inputs_count;
+    } else {
+      // Process witnesses for all internal inputs
+      // (STAGE_REQUEST_SEGWIT_WITNESS).
+      progress_steps += info.inputs_count - external_count;
+    }
+  }
+
+  // Serialize outputs (STAGE_REQUEST_5_OUTPUT).
+  if (serialize && !coin->decred) {
+    progress_steps += info.outputs_count;
+  }
+
+  report_progress(true);
+}
+
 void send_req_1_input(void) {
   signing_stage = STAGE_REQUEST_1_INPUT;
   resp.has_request_type = true;
@@ -616,6 +752,11 @@ void send_req_5_output(void) {
 }
 
 void send_req_finished(void) {
+#if DEBUG_LINK
+  if (!assert_progress_finished()) {
+    return;
+  }
+#endif
   resp.has_request_type = true;
   resp.request_type = RequestType_TXFINISHED;
   msg_write(MessageType_MessageType_TxRequest, &resp);
@@ -1056,6 +1197,7 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
 
   tx_info->inputs_count = inputs_count;
   tx_info->outputs_count = outputs_count;
+  tx_info->segwit_count = 0;
   tx_info->next_legacy_input = 0xffffffff;
   tx_info->min_sequence = SEQUENCE_FINAL;
   tx_info->multisig_fp_set = false;
@@ -1256,11 +1398,6 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
   is_replacement = false;
   unlocked_schema = unlock;
   signing = true;
-  progress = 0;
-  // we step by 500/inputs_count per input in phase1 and phase2
-  // this means 50 % per phase.
-  progress_step = (500 << PROGRESS_PRECISION) / info.inputs_count;
-
   is_coinjoin = (authorization != NULL) ? sectrue : secfalse;
   if (is_coinjoin == sectrue) {
     if (!init_coinjoin(msg, authorization)) {
@@ -1292,7 +1429,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
 
   hasher_Init(&hasher_check, HASHER_SHA2);
 
-  layoutProgressSwipe(_("Signing transaction"), 0);
+  init_loading_progress();
 
   send_req_1_input();
 }
@@ -1511,6 +1648,10 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
     extract_input_bip32_path(tx_info, txinput);
   }
 
+  if (is_segwit_input_script_type(txinput->script_type)) {
+    tx_info->segwit_count++;
+  }
+
   // Remember the minimum nSequence value.
   if (txinput->sequence < tx_info->min_sequence) {
     tx_info->min_sequence = txinput->sequence;
@@ -1689,6 +1830,9 @@ static bool coinjoin_add_input(TxInputType *txi) {
       return false;
     }
   }
+
+  // Since this took a longer time, update progress.
+  report_progress(true);
   return true;
 }
 
@@ -1748,6 +1892,10 @@ static bool signing_check_prevtx_hash(void) {
     return false;
   }
 
+  // prevtx is checked
+  progress_step++;
+  progress_substep = 0;
+
   if (idx1 < info.inputs_count - 1) {
     idx1++;
     send_req_3_input();
@@ -1756,10 +1904,6 @@ static bool signing_check_prevtx_hash(void) {
       return false;
     }
 
-    // Everything was checked, now phase 2 begins and the transaction is signed.
-    progress_meta_step =
-        progress_step / (info.inputs_count + info.outputs_count);
-    layoutProgress(_("Signing transaction"), progress);
     idx1 = 0;
 #if !BITCOIN_ONLY
     if (coin->decred) {
@@ -1851,7 +1995,7 @@ static bool signing_add_output(TxOutputType *txoutput) {
   int co = compile_output(coin, amount_unit, &root, txoutput, &bin_output,
                           !skip_confirm);
   if (!skip_confirm) {
-    layoutProgress(_("Signing transaction"), progress);
+    report_progress(true);
   }
   if (co < 0) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
@@ -2773,6 +2917,14 @@ static void phase1_finish(void) {
     return;
   }
 
+#if DEBUG_LINK
+  if (!assert_progress_finished()) {
+    return;
+  }
+#endif
+  // Now phase 2 begins and the transaction is signed.
+  init_signing_progress();
+
   if (taproot_only) {
     // All internal inputs are Taproot. We do not need to verify that their
     // parameters match previous transactions. We can trust the amounts and
@@ -3092,16 +3244,13 @@ void signing_txack(TransactionType *tx) {
     return;
   }
 
-  static int update_ctr = 0;
-  if (update_ctr++ == 20) {
-    layoutProgress(_("Signing transaction"), progress);
-    update_ctr = 0;
-  }
+  report_progress(false);
 
   memzero(&resp, sizeof(TxRequest));
 
   switch (signing_stage) {
     case STAGE_REQUEST_1_INPUT:
+      progress_step++;
       if (!signing_validate_input(&tx->inputs[0]) ||
           !signing_add_input(&tx->inputs[0])) {
         return;
@@ -3271,6 +3420,7 @@ void signing_txack(TransactionType *tx) {
       phase1_request_next_input();
       return;
     case STAGE_REQUEST_2_OUTPUT:
+      progress_step++;
       if (!signing_validate_output(&tx->outputs[0]) ||
           !signing_add_output(&tx->outputs[0])) {
         return;
@@ -3431,7 +3581,7 @@ void signing_txack(TransactionType *tx) {
         tp.is_decred = true;
       }
 #endif
-      progress_meta_step = progress_step / (tp.inputs_len + tp.outputs_len);
+      progress_substeps = tp.inputs_len + tp.outputs_len;
       idx2 = 0;
       if (tp.inputs_len > 0) {
         send_req_3_prev_input();
@@ -3444,8 +3594,7 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_input(&tx->inputs[0])) {
         return;
       }
-      progress = (idx1 * progress_step + idx2 * progress_meta_step) >>
-                 PROGRESS_PRECISION;
+      progress_substep++;
       if (!tx_serialize_input_hash(&tp, tx->inputs)) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
                         _("Failed to serialize input"));
@@ -3464,9 +3613,7 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_bin_output(&tx->bin_outputs[0])) {
         return;
       }
-      progress = (idx1 * progress_step +
-                  (tp.inputs_len + idx2) * progress_meta_step) >>
-                 PROGRESS_PRECISION;
+      progress_substep++;
       if (!tx_serialize_output_hash(&tp, tx->bin_outputs)) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
                         _("Failed to serialize output"));
@@ -3500,7 +3647,7 @@ void signing_txack(TransactionType *tx) {
 #endif
       }
       if (idx2 < tp.outputs_len - 1) {
-        /* Check prevtx of next input */
+        /* Check next output of prevtx */
         idx2++;
         send_req_3_prev_output();
 #if !BITCOIN_ONLY
@@ -3541,6 +3688,7 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_input(tx->inputs)) {
         return;
       }
+      progress_step++;
 
       // Add input to the outer transaction check.
       if (!tx_input_check_hash(&hasher_check, tx->inputs)) {
@@ -3563,6 +3711,7 @@ void signing_txack(TransactionType *tx) {
           !signing_hash_orig_input(tx->inputs)) {
         return;
       }
+      progress_step++;
 
       idx2++;
       if (idx2 < orig_info.inputs_count) {
@@ -3587,6 +3736,7 @@ void signing_txack(TransactionType *tx) {
           !signing_hash_orig_output(tx->outputs)) {
         return;
       }
+      progress_step++;
 
       idx2++;
       if (idx2 < orig_info.outputs_count) {
@@ -3613,9 +3763,8 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_input(&tx->inputs[0])) {
         return;
       }
-      progress =
-          500 + ((signatures * progress_step + idx2 * progress_meta_step) >>
-                 PROGRESS_PRECISION);
+      progress_step++;
+
       if (idx2 == 0) {
         tx_init(&ti, info.inputs_count, info.outputs_count, info.version,
                 info.lock_time, info.expiry, tx->branch_id, 0,
@@ -3670,9 +3819,8 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_output(&tx->outputs[0])) {
         return;
       }
-      progress = 500 + ((signatures * progress_step +
-                         (info.inputs_count + idx2) * progress_meta_step) >>
-                        PROGRESS_PRECISION);
+      progress_step++;
+
       if (compile_output(coin, amount_unit, &root, tx->outputs, &bin_output,
                          false) <= 0) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -3696,11 +3844,9 @@ void signing_txack(TransactionType *tx) {
             !signing_sign_legacy_input()) {
           return;
         }
-        // since this took a longer time, update progress
         signatures++;
-        progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
-        layoutProgress(_("Signing transaction"), progress);
-        update_ctr = 0;
+        // since this took a longer time, update progress
+        report_progress(true);
         phase2_request_next_input(false);
       }
       return;
@@ -3709,6 +3855,7 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_input(&tx->inputs[0])) {
         return;
       }
+      progress_step++;
 
       if (is_external_input(idx1) !=
           (tx->inputs[0].script_type == InputScriptType_EXTERNAL)) {
@@ -3766,11 +3913,9 @@ void signing_txack(TransactionType *tx) {
         if (!signing_sign_ecdsa(&tx->inputs[0], node.private_key,
                                 node.public_key, hash))
           return;
-        // since this took a longer time, update progress
         signatures++;
-        progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
-        layoutProgress(_("Signing transaction"), progress);
-        update_ctr = 0;
+        // since this took a longer time, update progress
+        report_progress(true);
       } else if (tx->inputs[0].script_type ==
                      InputScriptType_SPENDP2SHWITNESS &&
                  !tx->inputs[0].has_multisig) {
@@ -3824,6 +3969,8 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_output(&tx->outputs[0])) {
         return;
       }
+      progress_step++;
+
       if (compile_output(coin, amount_unit, &root, tx->outputs, &bin_output,
                          false) <= 0) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -3846,9 +3993,8 @@ void signing_txack(TransactionType *tx) {
         return;
       }
       signatures++;
-      progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
-      layoutProgress(_("Signing transaction"), progress);
-      update_ctr = 0;
+      progress_step++;
+      report_progress(true);
       phase2_request_next_witness(false);
       return;
 
@@ -3858,9 +4004,6 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_input(&tx->inputs[0])) {
         return;
       }
-      progress =
-          500 + ((signatures * progress_step + idx2 * progress_meta_step) >>
-                 PROGRESS_PRECISION);
       if (idx1 == 0) {
         // witness
         tx_init(&to, info.inputs_count, info.outputs_count, info.version,
@@ -3902,11 +4045,10 @@ void signing_txack(TransactionType *tx) {
       if (!signing_sign_decred_input(&tx->inputs[0])) {
         return;
       }
-      // since this took a longer time, update progress
       signatures++;
-      progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
-      layoutProgress(_("Signing transaction"), progress);
-      update_ctr = 0;
+      progress_step++;
+      // since this took a longer time, update progress
+      report_progress(true);
       if (idx1 < info.inputs_count - 1) {
         idx1++;
         send_req_decred_witness();
