@@ -35,12 +35,14 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     curve = msg->ecdsa_curve_name;
   }
 
-  // Do not allow access to SLIP25 paths.
-  if (msg->address_n_count > 0 && msg->address_n[0] == PATH_SLIP25_PURPOSE &&
-      config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
-    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
-    layoutHome();
-    return;
+  // UnlockPath is required to access SLIP25 paths.
+  if (msg->address_n_count > 0 && msg->address_n[0] == PATH_SLIP25_PURPOSE) {
+    // Verify that the desired path lies in the unlocked subtree.
+    if (msg->address_n[0] != unlock_path) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+      layoutHome();
+      return;
+    }
   }
 
   // derive m/0' to obtain root_fingerprint
@@ -718,5 +720,67 @@ void fsm_msgDoPreauthorized(const DoPreauthorized *msg) {
   }
 
   msg_write(MessageType_MessageType_PreauthorizedRequest, resp);
+  layoutHome();
+}
+
+void fsm_msgUnlockPath(const UnlockPath *msg) {
+  (void)msg;
+
+  RESP_INIT(UnlockedPathRequest);
+
+  CHECK_INITIALIZED
+
+  CHECK_PIN
+
+  const char *KEYCHAIN_MAC_KEY_PATH[] = {"TREZOR", "Keychain MAC key"};
+
+  // UnlockPath is relevant only for SLIP-25 paths.
+  // Note: Currently we only allow unlocking the entire SLIP-25 purpose subtree
+  // instead of per-coin or per-account unlocking in order to avoid UI
+  // complexity.
+  if (msg->address_n_count != 1 || msg->address_n[0] != PATH_SLIP25_PURPOSE) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Invalid path"));
+    layoutHome();
+    return;
+  }
+
+  uint8_t keychain_mac_key[32] = {0};
+  if (!fsm_getSlip21Key(KEYCHAIN_MAC_KEY_PATH, 2, keychain_mac_key)) {
+    return;
+  }
+
+  HMAC_SHA256_CTX hctx;
+  hmac_sha256_Init(&hctx, keychain_mac_key, sizeof(keychain_mac_key));
+  for (size_t i = 0; i < msg->address_n_count; ++i) {
+    hmac_sha256_Update(&hctx, (const uint8_t *)&msg->address_n[i],
+                       sizeof(uint32_t));
+  }
+  hmac_sha256_Final(&hctx, resp->mac.bytes);
+
+  // Require confirmation to access SLIP25 paths unless already authorized.
+  if (msg->has_mac) {
+    uint8_t diff = 0;
+    for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+      diff |= (msg->mac.bytes[i] - resp->mac.bytes[i]);
+    }
+
+    if (msg->mac.size != SHA256_DIGEST_LENGTH || diff != 0) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Invalid MAC"));
+      layoutHome();
+      return;
+    }
+  } else {
+    layoutConfirmCoinjoinAccess();
+    if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return;
+    }
+  }
+
+  unlock_path = msg->address_n[0];
+  resp->mac.size = SHA256_DIGEST_LENGTH;
+  resp->has_mac = true;
+  msg_write(MessageType_MessageType_UnlockedPathRequest, resp);
   layoutHome();
 }

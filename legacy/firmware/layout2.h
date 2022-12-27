@@ -76,6 +76,7 @@ void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled);
 void layoutAuthorizeCoinJoin(const CoinInfo *coin, uint64_t max_rounds,
                              uint32_t max_fee_per_kvbyte);
+void layoutConfirmCoinjoinAccess(void);
 void layoutVerifyAddress(const CoinInfo *coin, const char *address);
 void layoutCipherKeyValue(bool encrypt, const char *key);
 void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing);

@@ -43,9 +43,8 @@ PIN = "1234"
 ROUND_ID_LEN = 32
 SLIP25_PATH = parse_path("m/10025h")
 
-pytestmark = pytest.mark.skip_t1
 
-
+@pytest.mark.skip_t1
 @pytest.mark.setup_client(pin=PIN)
 def test_sign_tx(client: Client):
     # NOTE: FAKE input tx
@@ -252,6 +251,7 @@ def test_sign_tx(client: Client):
         )
 
 
+@pytest.mark.skip_t1
 def test_sign_tx_large(client: Client):
     # NOTE: FAKE input tx
 
@@ -399,6 +399,7 @@ def test_sign_tx_large(client: Client):
     assert delay <= max_expected_delay
 
 
+@pytest.mark.skip_t1
 def test_sign_tx_spend(client: Client):
     # NOTE: FAKE input tx
 
@@ -473,6 +474,7 @@ def test_sign_tx_spend(client: Client):
     )
 
 
+@pytest.mark.skip_t1
 def test_wrong_coordinator(client: Client):
     # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
 
@@ -499,6 +501,7 @@ def test_wrong_coordinator(client: Client):
         )
 
 
+@pytest.mark.skip_t1
 def test_wrong_account_type(client: Client):
     params = {
         "client": client,
@@ -525,6 +528,7 @@ def test_wrong_account_type(client: Client):
     )
 
 
+@pytest.mark.skip_t1
 def test_cancel_authorization(client: Client):
     # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
 
@@ -608,6 +612,7 @@ def test_get_public_key(client: Client):
         assert resp.xpub == EXPECTED_XPUB
 
 
+@pytest.mark.skip_t1
 def test_get_address(client: Client):
     # Ensure that the SLIP-0025 external chain is inaccessible without user confirmation.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
@@ -689,6 +694,7 @@ def test_get_address(client: Client):
         )
 
 
+@pytest.mark.skip_t1
 def test_multisession_authorization(client: Client):
     # Authorize CoinJoin with www.example1.com in session 1.
     btc.authorize_coinjoin(
