@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, List, Any
+from typing import TYPE_CHECKING, List, Any, Union
 import logging
 from . import exceptions, messages
 from .messages import ZcashSignatureType as SigType
@@ -48,8 +48,8 @@ def get_viewing_key(
 @expect(messages.ZcashAddress, field="address", ret_type=str)
 def get_address(
     client: "TrezorClient",
-    t_address_n: List[int] | None = None,
-    z_address_n: List[int] | None = None,
+    t_address_n: Union[List[int], None] = None,
+    z_address_n: Union[List[int], None] = None,
     diversifier_index: int = 0,
     show_display: bool = False,
     coin_name: str = "Zcash",
@@ -73,14 +73,14 @@ EMPTY_ANCHOR = bytes.fromhex("ae2935f1dfd8a24aed7c70df7de3a668eb7a49b1319880dde2
 
 def sign_tx(
     client: "TrezorClient",
-    inputs: List[messages.TxInputType | messages.ZcashOrchardInput],
-    outputs: List[messages.TxOutputType | messages.ZcashOrchardOutput],
+    inputs: List[Union[messages.TxInputType, messages.ZcashOrchardInput]],
+    outputs: List[Union[messages.TxOutputType, messages.ZcashOrchardOutput]],
     coin_name: str = "Zcash",
     version_group_id: int = 0x26A7270A,  # protocol spec §7.1.2
     branch_id: int = 0xC2D6D0B4,  # https://zips.z.cash/zip-0252
     expiry: int = 0,
-    z_address_n: List[int] | None = None,
-    anchor: bytes | None = None,
+    z_address_n: Union[List[int], None] = None,
+    anchor: Union[bytes, None] = None,
 ) -> Any:  # TODO: add the return type
     """
     Sign a Zcash transaction.
