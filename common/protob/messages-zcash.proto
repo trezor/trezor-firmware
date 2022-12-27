@@ -1,0 +1,100 @@
+syntax = "proto2";
+package hw.trezor.messages.zcash;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageZcash";
+
+import "messages.proto";
+
+enum ZcashSignatureType {
+    reserved 1, 2, 4;
+    TRANSPARENT = 0;
+    // SAPLING_SPEND_AUTH = 1;
+    // SAPLING_BINDING = 2;
+    ORCHARD_SPEND_AUTH = 3;
+    // ORCHARD_BINDING = 4;
+}
+
+/**
+ * Request: Ask device for Orchard Viewing Key.
+ * If field `full` is true, then Full Viewing Key will be returned.
+ * Otherwise Incoming Viewing Key will be returned.
+ *
+ * @start
+ * @next Failure
+ * @next ZcashViewingKey
+ */
+message ZcashGetViewingKey {
+    optional string coin_name = 1 [default = "Zcash"];
+    repeated uint32 z_address_n = 2; // z-address ZIP 32 path
+    optional bool full = 3 [default = true];  // true -> Full Viewing Key requested
+                                              // false -> Incoming Viewing Key requested
+}
+
+/**
+ * Response: Contains unified Full/Incoming Viewing Key.
+ * @end
+ */
+message ZcashViewingKey {
+    required string key = 1;
+}
+
+/**
+ * Request: Ask device for a Unified Address.
+ * @start
+ * @next Failure
+ * @next ZcashAddress
+ */
+message ZcashGetAddress {
+    optional string coin_name = 1 [default = "Zcash"];
+    repeated uint32 t_address_n = 2;                      // t-address BIP 32 path (P2PKH)
+    repeated uint32 z_address_n = 3;                      // z-address ZIP 32 path (Orchard)
+    optional uint64 diversifier_index = 4 [default = 0];  // z-address diversifier index
+    optional bool   show_display = 5 [default = false];   // Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Zcash diversified payment address derived from device private seed
+ * @end
+ */
+message ZcashAddress {
+    optional string address = 1;
+}
+
+/**
+ * Orchard signing params
+ * @embed
+ */
+message ZcashOrchardParams {
+    required uint32 inputs_count = 1;
+    required uint32 outputs_count = 2;
+    required bytes anchor = 3;
+    repeated uint32 address_n = 4;
+}
+
+/**
+ * Request: Specify transaction Orchard input.
+ * @next TxRequest
+ */
+message ZcashOrchardInput {
+    required bytes recipient = 1;
+    required uint64 value = 2;
+    required bytes rho = 3;
+    required bytes rseed = 4;
+}
+
+/**
+ * Request: Specify transaction Orchard output.
+ * Let the `address` and `memo` fields empty for change outputs.
+ * @next TxRequest
+ */
+message ZcashOrchardOutput {
+    optional string address = 1;  // for outgoing transfers
+    required uint64 amount = 2;
+    optional string memo = 3;     // an optional message for a recepient
+}
+
+message ZcashAck {
+    option (wire_type) = 22;
+}

@@ -48,6 +48,7 @@ from . import (
     settings,
     stellar,
     tezos,
+    zcash,
     with_client,
 )
 
@@ -389,6 +390,7 @@ cli.add_command(ripple.cli)
 cli.add_command(settings.cli)
 cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
+cli.add_command(zcash.cli)
 
 cli.add_command(firmware.cli)
 cli.add_command(debug.cli)

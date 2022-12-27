@@ -461,6 +461,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
     import trezor.enums.TezosContractType
+    trezor.enums.ZcashSignatureType
+    import trezor.enums.ZcashSignatureType
     trezor.ui.components.common.webauthn
     import trezor.ui.components.common.webauthn
     trezor.ui.components.tt.webauthn
@@ -777,14 +779,54 @@ if not utils.BITCOIN_ONLY:
     import apps.webauthn.resident_credentials
     apps.zcash
     import apps.zcash
+    apps.zcash.approver
+    import apps.zcash.approver
     apps.zcash.f4jumble
     import apps.zcash.f4jumble
+    apps.zcash.get_address
+    import apps.zcash.get_address
+    apps.zcash.get_viewing_key
+    import apps.zcash.get_viewing_key
     apps.zcash.hasher
     import apps.zcash.hasher
+    apps.zcash.layout
+    import apps.zcash.layout
+    apps.zcash.orchard
+    import apps.zcash.orchard
+    apps.zcash.orchard.accumulator
+    import apps.zcash.orchard.accumulator
+    apps.zcash.orchard.crypto
+    import apps.zcash.orchard.crypto
+    apps.zcash.orchard.crypto.address
+    import apps.zcash.orchard.crypto.address
+    apps.zcash.orchard.crypto.builder
+    import apps.zcash.orchard.crypto.builder
+    apps.zcash.orchard.crypto.ff1
+    import apps.zcash.orchard.crypto.ff1
+    apps.zcash.orchard.crypto.keys
+    import apps.zcash.orchard.crypto.keys
+    apps.zcash.orchard.crypto.note
+    import apps.zcash.orchard.crypto.note
+    apps.zcash.orchard.crypto.note_encryption
+    import apps.zcash.orchard.crypto.note_encryption
+    apps.zcash.orchard.crypto.redpallas
+    import apps.zcash.orchard.crypto.redpallas
+    apps.zcash.orchard.crypto.sinsemilla
+    import apps.zcash.orchard.crypto.sinsemilla
+    apps.zcash.orchard.crypto.utils
+    import apps.zcash.orchard.crypto.utils
+    apps.zcash.orchard.debug
+    import apps.zcash.orchard.debug
+    apps.zcash.orchard.keychain
+    import apps.zcash.orchard.keychain
+    apps.zcash.orchard.random
+    import apps.zcash.orchard.random
+    apps.zcash.orchard.signer
+    import apps.zcash.orchard.signer
     apps.zcash.signer
     import apps.zcash.signer
-    apps.zcash.unified_addresses
-    import apps.zcash.unified_addresses
+    apps.zcash.unified
+    import apps.zcash.unified
 
 # generate full alphabet
 a

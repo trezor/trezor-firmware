@@ -11,4 +11,7 @@ if utils.ZCASH_SHIELDED:
         scalar_from_i64,
         to_base,
         to_scalar,
+        Generators,
     )
+
+    generators = Generators()  # init generators

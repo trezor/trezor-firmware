@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
+    from trezor.enums import ZcashSignatureType  # noqa: F401
 
     class BinanceGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -386,6 +387,138 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["HDNodeType"]:
             return isinstance(msg, cls)
 
+    class ZcashGetViewingKey(protobuf.MessageType):
+        coin_name: "str"
+        z_address_n: "list[int]"
+        full: "bool"
+
+        def __init__(
+            self,
+            *,
+            z_address_n: "list[int] | None" = None,
+            coin_name: "str | None" = None,
+            full: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashGetViewingKey"]:
+            return isinstance(msg, cls)
+
+    class ZcashViewingKey(protobuf.MessageType):
+        key: "str"
+
+        def __init__(
+            self,
+            *,
+            key: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashViewingKey"]:
+            return isinstance(msg, cls)
+
+    class ZcashGetAddress(protobuf.MessageType):
+        coin_name: "str"
+        t_address_n: "list[int]"
+        z_address_n: "list[int]"
+        diversifier_index: "int"
+        show_display: "bool"
+
+        def __init__(
+            self,
+            *,
+            t_address_n: "list[int] | None" = None,
+            z_address_n: "list[int] | None" = None,
+            coin_name: "str | None" = None,
+            diversifier_index: "int | None" = None,
+            show_display: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashGetAddress"]:
+            return isinstance(msg, cls)
+
+    class ZcashAddress(protobuf.MessageType):
+        address: "str | None"
+
+        def __init__(
+            self,
+            *,
+            address: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashAddress"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardParams(protobuf.MessageType):
+        inputs_count: "int"
+        outputs_count: "int"
+        anchor: "bytes"
+        address_n: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            inputs_count: "int",
+            outputs_count: "int",
+            anchor: "bytes",
+            address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashOrchardParams"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardInput(protobuf.MessageType):
+        recipient: "bytes"
+        value: "int"
+        rho: "bytes"
+        rseed: "bytes"
+
+        def __init__(
+            self,
+            *,
+            recipient: "bytes",
+            value: "int",
+            rho: "bytes",
+            rseed: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashOrchardInput"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardOutput(protobuf.MessageType):
+        address: "str | None"
+        amount: "int"
+        memo: "str | None"
+
+        def __init__(
+            self,
+            *,
+            amount: "int",
+            address: "str | None" = None,
+            memo: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashOrchardOutput"]:
+            return isinstance(msg, cls)
+
+    class ZcashAck(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashAck"]:
+            return isinstance(msg, cls)
+
     class MultisigRedeemScriptType(protobuf.MessageType):
         pubkeys: "list[HDNodePathType]"
         signatures: "list[bytes]"
@@ -594,6 +727,7 @@ if TYPE_CHECKING:
         branch_id: "int | None"
         amount_unit: "AmountUnit"
         decred_staking_ticket: "bool"
+        orchard_params: "ZcashOrchardParams | None"
 
         def __init__(
             self,
@@ -609,6 +743,7 @@ if TYPE_CHECKING:
             branch_id: "int | None" = None,
             amount_unit: "AmountUnit | None" = None,
             decred_staking_ticket: "bool | None" = None,
+            orchard_params: "ZcashOrchardParams | None" = None,
         ) -> None:
             pass
 
@@ -994,6 +1129,9 @@ if TYPE_CHECKING:
         signature_index: "int | None"
         signature: "bytes | None"
         serialized_tx: "bytes | None"
+        signature_type: "ZcashSignatureType | None"
+        zcash_shielding_seed: "bytes | None"
+        tx_sighash: "bytes | None"
 
         def __init__(
             self,
@@ -1001,6 +1139,9 @@ if TYPE_CHECKING:
             signature_index: "int | None" = None,
             signature: "bytes | None" = None,
             serialized_tx: "bytes | None" = None,
+            signature_type: "ZcashSignatureType | None" = None,
+            zcash_shielding_seed: "bytes | None" = None,
+            tx_sighash: "bytes | None" = None,
         ) -> None:
             pass
 
