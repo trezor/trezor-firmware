@@ -102,6 +102,8 @@ class OrchardSigner:
     async def approve_outputs(self) -> None:
         for i in range(self.params.outputs_count):
             txo = await self.get_output(i)
+            if txo.memo is not None and len(txo.memo.encode()) > 512:
+                raise DataError("Memo is too long.")
             self.msg_acc.xor_message(txo, i)  # add message to the accumulator
             if output_is_internal(txo):
                 self.approver.add_orchard_change_output(txo)
