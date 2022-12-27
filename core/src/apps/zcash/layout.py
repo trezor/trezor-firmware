@@ -41,7 +41,7 @@ class ConfirmOrchardInputsCountOverThreshold(UiConfirm):
             "Warning",
             "There are {}\nshielded inputs.",
             str(self.orchard_inputs_count),
-            ButtonRequestType.SignTx,
+            ButtonRequestType.Warning,
         )
 
 
