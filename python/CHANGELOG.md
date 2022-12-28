@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.5] (2022-12-28)
+[0.13.5]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.4...python/v0.13.5
+
+### Added
+- Add support for model field in firmware image.  [#2701]
+- Add support for v3-style Trezor One signatures.  [#2701]
+
+### Changed
+- More structured information about signing keys for different models.  [#2701]
+
+### Incompatible changes
+- Instead of accepting a list of public keys, `FirmwareType.verify()` accepts a parameter configuring whether to use production or development keys.  [#2701]
+
+
 ## [0.13.4] (2022-11-04)
 [0.13.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.3...python/v0.13.4
 
@@ -702,3 +716,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2547]: https://github.com/trezor/trezor-firmware/pull/2547
 [#2561]: https://github.com/trezor/trezor-firmware/pull/2561
 [#2576]: https://github.com/trezor/trezor-firmware/pull/2576
+[#2701]: https://github.com/trezor/trezor-firmware/pull/2701
