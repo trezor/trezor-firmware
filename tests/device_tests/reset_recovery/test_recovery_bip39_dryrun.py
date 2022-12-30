@@ -224,8 +224,7 @@ def test_invalid_seed_core(client: Client):
         client.debug.press_right()
 
         yield
-        layout = client.debug.wait_layout()
-        assert "WORD ENTERING" in layout.text
+        assert "WORD ENTERING" in layout().text
         client.debug.press_yes()
 
         yield
