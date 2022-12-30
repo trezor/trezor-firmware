@@ -1,7 +1,9 @@
 {
 "T1": {
 "device_tests": {
+"T1_bitcoin-test_authorize_coinjoin.py::test_get_address": "402c3f89f6ad5fd3bc78f804b376c36c918fc685cc2c77b38c6ae030af738d22",
 "T1_bitcoin-test_authorize_coinjoin.py::test_get_public_key": "9b3c916759b79048a4ab3e3fe8ce0ea0cf8d4ae6cfb66a5d712f21edfdb01782",
+"T1_bitcoin-test_authorize_coinjoin.py::test_sign_tx_spend": "edeb75022cc6bff15d1274ba9bac4cf41dd8ea5771436010ae07fd441dc73b69",
 "T1_bitcoin-test_bcash.py::test_attack_change_input": "6111e313995d38c3970c92e48047fe4088c83666c64c6c859f69a232ad62829b",
 "T1_bitcoin-test_bcash.py::test_send_bch_change": "6111e313995d38c3970c92e48047fe4088c83666c64c6c859f69a232ad62829b",
 "T1_bitcoin-test_bcash.py::test_send_bch_multisig_change": "0962a2e630e06b6d20282cc241be40f41bc1648d0a26247c7c008f32a197d0cb",

@@ -41,6 +41,12 @@
 
 #define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
 
+typedef enum {
+  SCHEMA_NONE,
+  SCHEMA_SLIP25_TAPROOT,
+  SCHEMA_SLIP25_TAPROOT_EXTERNAL
+} PathSchema;
+
 typedef struct {
   uint8_t data[64];
 } Slip21Node;
@@ -84,7 +90,7 @@ int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash);
 
 bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
                      uint32_t address_n_count, const uint32_t *address_n,
-                     bool has_multisig, bool full_check);
+                     bool has_multisig, PathSchema unlock, bool full_check);
 
 bool is_multisig_input_script_type(InputScriptType script_type);
 bool is_multisig_output_script_type(OutputScriptType script_type);
