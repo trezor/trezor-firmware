@@ -1039,7 +1039,6 @@ async def show_popup(
     subtitle: str | None = None,
     description_param: str = "",
     timeout_ms: int = 3000,
-    icon: str = ui.ICON_WRONG,
 ) -> None:
     if subtitle:
         title += f"\n{subtitle}"
@@ -1051,12 +1050,6 @@ async def show_popup(
             time_ms=timeout_ms,
         )
     )
-
-
-def draw_simple_text(
-    title: str, description: str = "", icon: str = ui.ICON_CONFIG
-) -> None:
-    log.error(__name__, "draw_simple_text not implemented")
 
 
 def request_passphrase_on_host() -> None:

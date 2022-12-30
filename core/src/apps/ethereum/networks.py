@@ -1046,7 +1046,7 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         1246,  # chain_id
         60,  # slip44
         "OM",  # shortcut
-        "OM Platform",  # name
+        "OM Chain",  # name
         False,  # rskip60
     )
     yield (
@@ -1817,13 +1817,6 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         60,  # slip44
         "OPC",  # shortcut
         "OpenChain",  # name
-        False,  # rskip60
-    )
-    yield (
-        846000,  # chain_id
-        60,  # slip44
-        "APTA",  # shortcut
-        "4GoodNetwork",  # name
         False,  # rskip60
     )
     yield (
