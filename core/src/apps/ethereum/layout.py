@@ -11,7 +11,6 @@ from trezor.ui.layouts import (
     should_show_more,
 )
 
-from ..management import text_r
 from . import networks
 from .helpers import decode_typed_data
 
