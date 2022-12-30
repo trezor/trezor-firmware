@@ -128,6 +128,36 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   layoutHome();
 }
 
+static PathSchema fsm_getUnlockedSchema(MessageType message_type) {
+  if (message_type == MessageType_MessageType_AuthorizeCoinJoin) {
+    // Grant full access to SLIP-25 account.
+    return SCHEMA_SLIP25_TAPROOT;
+  }
+
+  if (authorization_type == MessageType_MessageType_AuthorizeCoinJoin) {
+    const AuthorizeCoinJoin *authorization = config_getCoinJoinAuthorization();
+    if (authorization == NULL ||
+        authorization->address_n[0] != PATH_SLIP25_PURPOSE) {
+      return SCHEMA_NONE;
+    }
+    // SLIP-25 access unlocked.
+  } else if (unlock_path == PATH_SLIP25_PURPOSE) {
+    // SLIP-25 access unlocked.
+  } else {
+    return SCHEMA_NONE;
+  }
+
+  switch (message_type) {
+    case MessageType_MessageType_GetOwnershipProof:
+    case MessageType_MessageType_SignTx:
+      // Grant full access to SLIP-25 account.
+      return SCHEMA_SLIP25_TAPROOT;
+    default:
+      // Grant access to SLIP-25 account's external chain.
+      return SCHEMA_SLIP25_TAPROOT_EXTERNAL;
+  }
+}
+
 void fsm_msgSignTx(const SignTx *msg) {
   CHECK_INITIALIZED
 
@@ -139,6 +169,8 @@ void fsm_msgSignTx(const SignTx *msg) {
               _("Value overflow"));
 
   CHECK_PIN
+
+  PathSchema unlock = fsm_getUnlockedSchema(MessageType_MessageType_SignTx);
 
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
@@ -152,7 +184,7 @@ void fsm_msgSignTx(const SignTx *msg) {
   const HDNode *node = fsm_getDerivedNode(coin->curve_name, NULL, 0, NULL);
   if (!node) return;
 
-  signing_init(msg, coin, node);
+  signing_init(msg, coin, node, unlock);
 }
 
 void fsm_msgTxAck(TxAck *msg) {
@@ -165,15 +197,18 @@ void fsm_msgTxAck(TxAck *msg) {
 
 bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
                        uint32_t address_n_count, const uint32_t *address_n,
-                       bool has_multisig, bool show_warning) {
+                       bool has_multisig, MessageType message_type,
+                       bool show_warning) {
+  PathSchema unlock = fsm_getUnlockedSchema(message_type);
+
   if (coin_path_check(coin, script_type, address_n_count, address_n,
-                      has_multisig, true)) {
+                      has_multisig, unlock, true)) {
     return true;
   }
 
   if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
       !coin_path_check(coin, script_type, address_n_count, address_n,
-                       has_multisig, false)) {
+                       has_multisig, unlock, false)) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
     return false;
   }
@@ -218,6 +253,7 @@ void fsm_msgGetAddress(const GetAddress *msg) {
 
   if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
                          msg->address_n, msg->has_multisig,
+                         MessageType_MessageType_GetAddress,
                          msg->show_display)) {
     layoutHome();
     return;
@@ -304,7 +340,8 @@ void fsm_msgSignMessage(const SignMessage *msg) {
   if (!coin) return;
 
   if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
-                         msg->address_n, false, true)) {
+                         msg->address_n, false,
+                         MessageType_MessageType_SignMessage, true)) {
     layoutHome();
     return;
   }
@@ -424,7 +461,8 @@ void fsm_msgGetOwnershipId(const GetOwnershipId *msg) {
   if (!coin) return;
 
   if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
-                         msg->address_n, msg->has_multisig, false)) {
+                         msg->address_n, msg->has_multisig,
+                         MessageType_MessageType_GetOwnershipId, false)) {
     layoutHome();
     return;
   }
@@ -662,7 +700,9 @@ void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg) {
   }
 
   if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count + 2,
-                         msg->address_n, false, !path_warning_shown)) {
+                         msg->address_n, false,
+                         MessageType_MessageType_AuthorizeCoinJoin,
+                         !path_warning_shown)) {
     layoutHome();
     return;
   }

@@ -155,7 +155,8 @@ bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len);
 bool fsm_layoutPathWarning(void);
 bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
                        uint32_t address_n_count, const uint32_t *address_n,
-                       bool has_multisig, bool show_warning);
+                       bool has_multisig, MessageType message_type,
+                       bool show_warning);
 
 bool fsm_getOwnershipId(uint8_t *script_pubkey, size_t script_pubkey_size,
                         uint8_t ownership_id[32]);

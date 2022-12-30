@@ -104,6 +104,7 @@ static uint64_t orig_total_in, orig_external_in, orig_total_out,
     orig_change_out;
 static uint32_t progress, progress_step, progress_meta_step;
 static uint32_t tx_weight;
+PathSchema unlocked_schema;
 
 typedef struct {
   uint32_t inputs_count;
@@ -922,7 +923,8 @@ static bool fill_input_script_pubkey(TxInputType *in) {
 
 static bool derive_node(TxInputType *tinput) {
   if (!coin_path_check(coin, tinput->script_type, tinput->address_n_count,
-                       tinput->address_n, tinput->has_multisig, false) &&
+                       tinput->address_n, tinput->has_multisig, unlocked_schema,
+                       false) &&
       config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
     signing_abort();
@@ -935,7 +937,8 @@ static bool derive_node(TxInputType *tinput) {
   // through a warning screen before we sign the input.
   if (!foreign_address_confirmed &&
       !coin_path_check(coin, tinput->script_type, tinput->address_n_count,
-                       tinput->address_n, tinput->has_multisig, true)) {
+                       tinput->address_n, tinput->has_multisig, unlocked_schema,
+                       true)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Transaction has changed during signing"));
     signing_abort();
@@ -1098,8 +1101,8 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
   return true;
 }
 
-void signing_init(const SignTx *msg, const CoinInfo *_coin,
-                  const HDNode *_root) {
+void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
+                  PathSchema unlock) {
   coin = _coin;
   amount_unit = msg->has_amount_unit ? msg->amount_unit : AmountUnit_BITCOIN;
   serialize = msg->has_serialize ? msg->serialize : true;
@@ -1150,6 +1153,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   memzero(&output, sizeof(TxOutputType));
   memzero(&resp, sizeof(TxRequest));
   is_replacement = false;
+  unlocked_schema = unlock;
   signing = true;
   progress = 0;
   // we step by 500/inputs_count per input in phase1 and phase2

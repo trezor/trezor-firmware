@@ -487,7 +487,7 @@ static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
 
 bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
                      uint32_t address_n_count, const uint32_t *address_n,
-                     bool has_multisig, bool full_check) {
+                     bool has_multisig, PathSchema unlock, bool full_check) {
   // This function checks that the path is a recognized path for the given coin.
   // Used by GetAddress to prevent ransom attacks where a user could be coerced
   // to use an address with an unenumerable path and used by SignTx to ensure
@@ -728,6 +728,29 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     if (full_check) {
       valid = valid && (script_type == InputScriptType_SPENDP2SHWITNESS);
+    }
+    return valid;
+  }
+
+  // m/10025' : SLIP25 CoinJoin
+  // m / purpose' / coin_type' / account' / script_type' / change /
+  // address_index
+  if (address_n[0] == PATH_SLIP25_PURPOSE) {
+    valid = valid && coin->has_taproot;
+    valid = valid && (coin->bech32_prefix != NULL);
+    valid = valid && (address_n_count == 6);
+    valid = valid && check_cointype(coin, address_n[1], full_check);
+    valid = valid && (address_n[2] == (PATH_HARDENED | 0));  // Only first acc.
+    valid = valid && (address_n[3] == (PATH_HARDENED | 1));  // Only SegWit v1.
+    valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
+    valid = valid &&
+            ((unlock == SCHEMA_SLIP25_TAPROOT) ||
+             (unlock == SCHEMA_SLIP25_TAPROOT_EXTERNAL && address_n[4] == 0));
+    valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
+      // we do not support Multisig for CoinJoin
+      valid = valid && !has_multisig;
+      valid = valid && (script_type == InputScriptType_SPENDTAPROOT);
     }
     return valid;
   }
