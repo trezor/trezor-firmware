@@ -6,7 +6,7 @@ use crate::ui::{
     util::char_to_string,
 };
 
-use super::{
+use super::super::{
     ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
     ChoicePageMsg,
 };
@@ -298,7 +298,7 @@ impl Component for PassphraseEntry {
 }
 
 #[cfg(feature = "ui_debug")]
-use super::{ButtonAction, ButtonPos};
+use super::super::{ButtonAction, ButtonPos};
 #[cfg(feature = "ui_debug")]
 use crate::ui::util;
 

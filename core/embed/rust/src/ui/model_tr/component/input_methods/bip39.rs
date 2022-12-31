@@ -9,7 +9,9 @@ use crate::{
     },
 };
 
-use super::{ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};
+use super::super::{
+    ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg,
+};
 use heapless::{String, Vec};
 
 pub enum Bip39EntryMsg {
@@ -247,7 +249,7 @@ impl Component for Bip39Entry {
 }
 
 #[cfg(feature = "ui_debug")]
-use super::{ButtonAction, ButtonPos};
+use super::super::{ButtonAction, ButtonPos};
 #[cfg(feature = "ui_debug")]
 use crate::ui::util;
 
