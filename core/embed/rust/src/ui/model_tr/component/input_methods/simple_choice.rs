@@ -3,11 +3,11 @@ use crate::ui::{
     geometry::Rect,
 };
 
-use super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};
+use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};
 use heapless::{String, Vec};
 
 #[cfg(feature = "ui_debug")]
-use super::{ButtonAction, ButtonPos};
+use super::super::{ButtonAction, ButtonPos};
 
 pub enum SimpleChoiceMsg {
     Result(String<50>),
