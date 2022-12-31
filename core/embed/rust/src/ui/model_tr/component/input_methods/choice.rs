@@ -3,10 +3,9 @@ use crate::trace::Trace;
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
     geometry::Rect,
-    model_tr::component::ButtonLayout,
 };
 
-use super::{theme, ButtonController, ButtonControllerMsg, ButtonPos};
+use super::super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
 
 pub enum ChoicePageMsg {
     Choice(u8),

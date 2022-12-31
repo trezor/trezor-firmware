@@ -1,13 +1,13 @@
 use crate::ui::{
     display::{rect_fill, rect_fill_corners, rect_outline_rounded, Font, Icon},
     geometry::{Offset, Rect},
-    model_tr::{component::choice::Choice, theme},
+    model_tr::theme,
 };
 use heapless::String;
 
-use super::{
+use super::super::{
     common::{display, display_inverse, display_right},
-    ButtonDetails, ButtonLayout,
+    ButtonDetails, ButtonLayout, Choice,
 };
 
 /// Simple string component used as a choice item.
