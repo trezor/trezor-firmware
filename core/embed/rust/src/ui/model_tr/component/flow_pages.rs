@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::Paginate,
         display::{Font, Icon, IconAndName},
-        geometry::{Offset, Rect},
+        geometry::{Alignment, Offset, Rect},
         model_tr::theme,
         util::ResultExt,
     },
@@ -13,8 +13,7 @@ use heapless::Vec;
 
 use super::{
     flow_pages_poc_helpers::{
-        LayoutFit, LayoutSink, LineAlignment, Op, TextLayout, TextNoOp, TextRenderer, TextStyle,
-        ToDisplay,
+        LayoutFit, LayoutSink, Op, TextLayout, TextNoOp, TextRenderer, TextStyle, ToDisplay,
     },
     ButtonActions, ButtonDetails, ButtonLayout,
 };
@@ -188,8 +187,8 @@ impl<const M: usize> Page<M> {
         self.with_new_item(Op::CursorOffset(offset))
     }
 
-    pub fn alignment(self, alignment: LineAlignment) -> Self {
-        self.with_new_item(Op::LineAlignment(alignment))
+    pub fn alignment(self, alignment: Alignment) -> Self {
+        self.with_new_item(Op::Alignment(alignment))
     }
 }
 

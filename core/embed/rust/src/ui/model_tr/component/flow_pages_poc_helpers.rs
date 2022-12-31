@@ -6,7 +6,7 @@ use crate::{
     micropython::buffer::StrBuffer,
     ui::{
         display::{self, Color, Font, Icon},
-        geometry::{Offset, Point, Rect},
+        geometry::{Alignment, Offset, Point, Rect},
     },
 };
 
@@ -51,7 +51,7 @@ pub enum Op {
     /// Set currently used font.
     Font(Font),
     /// Set currently used line alignment.
-    LineAlignment(LineAlignment),
+    Alignment(Alignment),
     /// Move the current cursor by specified Offset.
     CursorOffset(Offset),
     /// Force continuing on the next page.
@@ -75,13 +75,6 @@ pub enum PageBreaking {
     /// Before stopping at the bottom-right edge, insert ellipsis to signify
     /// more content is available, but only if no hyphen has been inserted yet.
     CutAndInsertEllipsis,
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum LineAlignment {
-    Left,
-    Center,
-    Right,
 }
 
 /// Visual instructions for laying out a formatted block of text.
@@ -126,7 +119,7 @@ pub struct TextStyle {
     pub page_breaking: PageBreaking,
 
     /// Specifies how to align text on the line.
-    pub line_alignment: LineAlignment,
+    pub line_alignment: Alignment,
 }
 
 impl TextStyle {
@@ -145,7 +138,7 @@ impl TextStyle {
             ellipsis_color,
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
-            line_alignment: LineAlignment::Left,
+            line_alignment: Alignment::Start,
             ellipsis_icon: None,
             prev_page_icon: None,
         }
@@ -255,7 +248,7 @@ impl TextLayout {
                         self.style.text_font = font;
                     }
                     // Changing line/text alignment
-                    Op::LineAlignment(line_alignment) => {
+                    Op::Alignment(line_alignment) => {
                         self.style.line_alignment = line_alignment;
                     }
                     // Moving the cursor
@@ -536,7 +529,7 @@ impl LayoutSink for TextRenderer {
         // to the right side of the screen.
 
         match layout.style.line_alignment {
-            LineAlignment::Left => {
+            Alignment::Start => {
                 display::text_left(
                     cursor,
                     text,
@@ -545,7 +538,7 @@ impl LayoutSink for TextRenderer {
                     layout.style.background_color,
                 );
             }
-            LineAlignment::Center => {
+            Alignment::Center => {
                 let center = Point::new(cursor.x + (layout.bounds.x1 - cursor.x) / 2, cursor.y);
                 display::text_center(
                     center,
@@ -555,7 +548,7 @@ impl LayoutSink for TextRenderer {
                     layout.style.background_color,
                 );
             }
-            LineAlignment::Right => {
+            Alignment::End => {
                 let right = Point::new(layout.bounds.x1, cursor.y);
                 display::text_right(
                     right,
