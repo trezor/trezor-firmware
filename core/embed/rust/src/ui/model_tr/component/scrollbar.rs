@@ -51,7 +51,11 @@ impl ScrollBar {
 
     /// The width the scrollbar will really occupy.
     pub fn overall_width(&self) -> i16 {
-        Self::DOTS_INTERVAL * self.page_count as i16 - Self::DOTS_DISTANCE
+        if self.page_count <= MAX_DOTS {
+            Self::DOTS_INTERVAL * self.page_count as i16 - Self::DOTS_DISTANCE
+        } else {
+            Self::MAX_WIDTH
+        }
     }
 
     pub fn set_page_count(&mut self, page_count: usize) {
