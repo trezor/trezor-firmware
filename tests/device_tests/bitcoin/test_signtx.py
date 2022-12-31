@@ -23,7 +23,6 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
-from ...common import get_text_from_paginated_screen
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,

@@ -266,37 +266,6 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    // TODO: should be deleted and replaced by confirm_action with some default
-    // parameters
-
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let data: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
-        let description: Option<StrBuffer> =
-            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-
-        // TODO: could be replaced by Flow with one element after it supports pagination
-
-        let content = ButtonPage::new_str(
-            Paragraphs::new([
-                Paragraph::new(&theme::TEXT_MONO, description.unwrap_or_default()),
-                Paragraph::new(&theme::TEXT_BOLD, data),
-            ]),
-            theme::BG,
-        );
-
-        let obj = if title.as_ref().is_empty() {
-            LayoutObj::new(content)?
-        } else {
-            LayoutObj::new(Frame::new(title, content))?
-        };
-
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -854,15 +823,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> str | object:
     ///     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
-
-    /// def confirm_text(
-    ///     *,
-    ///     title: str,
-    ///     data: str,
-    ///     description: str | None,
-    /// ) -> object:
-    ///     """Confirm text."""
-    Qstr::MP_QSTR_confirm_text => obj_fn_kw!(0, new_confirm_text).as_obj(),
 
     /// def show_share_words(
     ///     *,

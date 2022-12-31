@@ -95,16 +95,6 @@ def request_pin(
 
 
 # rust/src/ui/model_tr/layout.rs
-def confirm_text(
-    *,
-    title: str,
-    data: str,
-    description: str | None,
-) -> object:
-    """Confirm text."""
-
-
-# rust/src/ui/model_tr/layout.rs
 def show_share_words(
     *,
     share_words: Iterable[str],
