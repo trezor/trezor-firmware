@@ -1636,11 +1636,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 mod tests {
     use crate::{
         trace::Trace,
-        ui::{
-            component::{Component, FormattedText},
-            geometry::Rect,
-            model_tt::constant,
-        },
+        ui::{geometry::Rect, model_tt::constant},
     };
 
     use super::*;
@@ -1651,25 +1647,5 @@ mod tests {
         let mut t = std::vec::Vec::new();
         val.trace(&mut t);
         String::from_utf8(t).unwrap()
-    }
-
-    #[test]
-    fn trace_example_layout() {
-        let buttons =
-            Button::cancel_confirm(Button::with_text("Left"), Button::with_text("Right"), 1);
-        let mut layout = Dialog::new(
-            FormattedText::new(
-                theme::TEXT_NORMAL,
-                theme::FORMATTED,
-                "Testing text layout, with some text, and some more text. And {param}",
-            )
-            .with("param", "parameters!"),
-            buttons,
-        );
-        layout.place(SCREEN);
-        assert_eq!(
-            trace(&layout),
-            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > controls:<FixedHeightBar inner:<Tuple 0:<GridPlaced inner:<Button text:Left > > 1:<GridPlaced inner:<Button text:Right > > > > >",
-        )
     }
 }

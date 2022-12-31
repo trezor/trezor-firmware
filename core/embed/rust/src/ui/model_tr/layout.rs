@@ -20,9 +20,10 @@ use crate::{
             paginated::{PageMsg, Paginate},
             painter,
             text::paragraphs::{
-                Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecLong, Paragraphs, VecExt,
+                Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecLong, ParagraphVecShort,
+                Paragraphs, VecExt,
             },
-            ComponentExt, Empty, FormattedText, Timeout, TimeoutMsg,
+            ComponentExt, Empty, Timeout, TimeoutMsg,
         },
         display::Font,
         layout::{
@@ -209,14 +210,20 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
         // TODO: centered_title: bool, show_scrollbar: bool, show_arrows: bool
 
-        // TODO: could be replaced by Flow with one element after it supports pagination
-
-        let format = match (&action, &description, reverse) {
-            (Some(_), Some(_), false) => "{bold}{action}\n\r{mono}{description}",
-            (Some(_), Some(_), true) => "{mono}{description}\n\r{bold}{action}",
-            (Some(_), None, _) => "{bold}{action}",
-            (None, Some(_), _) => "{mono}{description}",
-            _ => "",
+        let paragraphs = {
+            let action = action.unwrap_or_default();
+            let description = description.unwrap_or_default();
+            let mut paragraphs = ParagraphVecShort::new();
+            if !reverse {
+                paragraphs
+                    .add(Paragraph::new(&theme::TEXT_BOLD, action))
+                    .add(Paragraph::new(&theme::TEXT_MONO, description));
+            } else {
+                paragraphs
+                    .add(Paragraph::new(&theme::TEXT_MONO, description))
+                    .add(Paragraph::new(&theme::TEXT_BOLD, action));
+            }
+            paragraphs.into_paragraphs()
         };
 
         // Left button - icon, text or nothing.
@@ -244,14 +251,9 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
         }
 
-        let content = ButtonPage::new_str_buf(
-            FormattedText::new(theme::TEXT_MONO, theme::FORMATTED, format)
-                .with("action", action.unwrap_or_default())
-                .with("description", description.unwrap_or_default()),
-            theme::BG,
-        )
-        .with_cancel_btn(cancel_btn)
-        .with_confirm_btn(confirm_btn);
+        let content = ButtonPage::new_str_buf(paragraphs, theme::BG)
+            .with_cancel_btn(cancel_btn)
+            .with_confirm_btn(confirm_btn);
 
         let obj = if title.as_ref().is_empty() {
             LayoutObj::new(content)?

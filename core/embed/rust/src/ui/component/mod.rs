@@ -25,8 +25,5 @@ pub use pad::Pad;
 pub use paginated::{PageMsg, Paginate};
 pub use painter::{qrcode_painter, Painter};
 pub use placed::{FixedHeightBar, GridPlaced};
-pub use text::{
-    formatted::FormattedText,
-    layout::{LineBreaking, PageBreaking, TextLayout},
-};
+pub use text::layout::{LineBreaking, PageBreaking, TextLayout};
 pub use timeout::{Timeout, TimeoutMsg};
