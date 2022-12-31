@@ -56,7 +56,7 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        const TITLE_SPACE: i16 = 4;
+        const TITLE_SPACE: i16 = 2;
 
         let (title_and_scrollbar_area, content_area) =
             bounds.split_top(theme::FONT_HEADER.line_height());

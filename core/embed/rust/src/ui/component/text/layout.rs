@@ -47,9 +47,9 @@ pub struct TextLayout {
 
 #[derive(Copy, Clone)]
 pub struct TextStyle {
-    /// Text font ID. Can be overridden by `Op::Font`.
+    /// Text font ID.
     pub text_font: Font,
-    /// Text color. Can be overridden by `Op::Color`.
+    /// Text color.
     pub text_color: Color,
     /// Background color.
     pub background_color: Color,
@@ -155,55 +155,6 @@ impl TextLayout {
     /// Y coordinate of the bottom of the available space/bounds
     pub fn bottom_y(&self) -> i16 {
         (self.bounds.y1 - self.padding_bottom).max(self.bounds.y0)
-    }
-
-    /// Perform some operations defined on `Op` for a list of those `Op`s
-    /// - e.g. changing the color, changing the font or rendering the text.
-    pub fn layout_ops<'o>(
-        mut self,
-        ops: &mut dyn Iterator<Item = Op<'o>>,
-        cursor: &mut Point,
-        sink: &mut dyn LayoutSink,
-    ) -> LayoutFit {
-        let init_cursor = *cursor;
-        let mut total_processed_chars = 0;
-
-        for op in ops {
-            match op {
-                // Changing color
-                Op::Color(color) => {
-                    self.style.text_color = color;
-                }
-                // Changing font
-                Op::Font(font) => {
-                    self.style.text_font = font;
-                }
-                // Text - try to fit it on the current page and if it doesn't
-                // fit, return the appropriate OutOfBounds message
-                Op::Text(text) => match self.layout_text(text, cursor, sink) {
-                    LayoutFit::Fitting {
-                        processed_chars, ..
-                    } => {
-                        total_processed_chars += processed_chars;
-                    }
-                    LayoutFit::OutOfBounds {
-                        processed_chars, ..
-                    } => {
-                        total_processed_chars += processed_chars;
-
-                        return LayoutFit::OutOfBounds {
-                            processed_chars: total_processed_chars,
-                            height: self.layout_height(init_cursor, *cursor),
-                        };
-                    }
-                },
-            }
-        }
-
-        LayoutFit::Fitting {
-            processed_chars: total_processed_chars,
-            height: self.layout_height(init_cursor, *cursor),
-        }
     }
 
     /// Loop through the `text` and try to fit it on the current screen,
@@ -444,43 +395,6 @@ pub mod trace {
         fn line_break(&mut self, _cursor: Point) {
             self.0.string("\n");
         }
-    }
-}
-
-/// Operations that can be done on FormattedText.
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Op<'a> {
-    /// Render text with current color and font.
-    Text(&'a str),
-    /// Set current text color.
-    Color(Color),
-    /// Set currently used font.
-    Font(Font),
-}
-
-impl<'a> Op<'a> {
-    /// Filtering the list of `Op`s to throw away all the content
-    /// (text, font change or other operations) before a specific byte/character
-    /// threshold. Used when showing the second, third... paginated page
-    /// to skip the first one, two... pages.
-    pub fn skip_n_text_bytes(
-        ops: impl Iterator<Item = Op<'a>>,
-        skip_bytes: usize,
-    ) -> impl Iterator<Item = Op<'a>> {
-        let mut skipped = 0;
-
-        ops.filter_map(move |op| match op {
-            Op::Text(text) if skipped < skip_bytes => {
-                skipped = skipped.saturating_add(text.len());
-                if skipped > skip_bytes {
-                    let leave_bytes = skipped - skip_bytes;
-                    Some(Op::Text(&text[text.len() - leave_bytes..]))
-                } else {
-                    None
-                }
-            }
-            op_to_pass_through => Some(op_to_pass_through),
-        })
     }
 }
 

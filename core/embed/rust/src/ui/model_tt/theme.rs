@@ -2,7 +2,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            text::{formatted::FormattedFonts, LineBreaking, PageBreaking, TextStyle},
+            text::{LineBreaking, PageBreaking, TextStyle},
             FixedHeightBar,
         },
         display::{Color, Font},
@@ -405,13 +405,6 @@ pub const TEXT_CHECKLIST_SELECTED: TextStyle =
     TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_CHECKLIST_DONE: TextStyle =
     TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
-
-pub const FORMATTED: FormattedFonts = FormattedFonts {
-    normal: Font::NORMAL,
-    demibold: Font::DEMIBOLD,
-    bold: Font::BOLD,
-    mono: Font::MONO,
-};
 
 pub const CONTENT_BORDER: i16 = 5;
 pub const KEYBOARD_SPACING: i16 = 8;
