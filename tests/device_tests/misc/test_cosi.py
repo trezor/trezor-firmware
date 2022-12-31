@@ -20,7 +20,6 @@ import pytest
 
 from trezorlib import cosi
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr]
@@ -111,10 +110,13 @@ def test_cosi_sign3(client: Client):
     cosi.verify_combined(signature, DIGEST, global_pk)
 
 
-@pytest.mark.skip_t1
-def test_cosi_different_key(client: Client):
-    with pytest.raises(TrezorFailure):
-        commit = cosi.commit(client, parse_path("m/10018h/0h"))
-        cosi.sign(
-            client, parse_path("m/10018h/1h"), DIGEST, commit.commitment, commit.pubkey
-        )
+# NOTE: test below commented out because of
+# `RuntimeError: Don't skip tests for all trezor models!`
+
+# @pytest.mark.skip_t1
+# def test_cosi_different_key(client: Client):
+#     with pytest.raises(TrezorFailure):
+#         commit = cosi.commit(client, parse_path("m/10018h/0h"))
+#         cosi.sign(
+#             client, parse_path("m/10018h/1h"), DIGEST, commit.commitment, commit.pubkey
+#         )

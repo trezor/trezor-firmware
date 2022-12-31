@@ -108,7 +108,9 @@ async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
             # _wipe_code_invalid
             await show_popup(
                 "Invalid wipe code",
-                "The wipe code must be\ndifferent from your PIN.\n\nPlease try again.",
+                text_r(
+                    "The wipe code must be\ndifferent from your PIN.\n\nPlease try again."
+                ),
             )
             continue
 
@@ -118,7 +120,5 @@ async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
         # _wipe_code_mismatch
         await show_popup(
             "Code mismatch",
-            text_r(
-                "The wipe code must be\ndifferent from your PIN.\n\nPlease try again."
-            ),
+            text_r("The wipe codes you\nentered do not match.\n\nPlease try again."),
         )

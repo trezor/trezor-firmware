@@ -167,6 +167,8 @@ trezor.ui.layouts.tr.altcoin
 import trezor.ui.layouts.tr.altcoin
 trezor.ui.layouts.tr.fido
 import trezor.ui.layouts.tr.fido
+trezor.ui.layouts.tr.homescreen
+import trezor.ui.layouts.tr.homescreen
 trezor.ui.layouts.tr.recovery
 import trezor.ui.layouts.tr.recovery
 trezor.ui.layouts.tr.reset
