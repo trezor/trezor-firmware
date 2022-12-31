@@ -34,7 +34,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_output_r;
   MP_QSTR_confirm_payment_request;
   MP_QSTR_confirm_reset_device;
-  MP_QSTR_confirm_text;
   MP_QSTR_confirm_total;
   MP_QSTR_confirm_total_r;
   MP_QSTR_confirm_value;
