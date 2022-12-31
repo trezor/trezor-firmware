@@ -24,7 +24,7 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 
-if TREZOR_MODEL in ('1', 'R'):
+if TREZOR_MODEL in ('R'):
     FONT_NORMAL='Font_Unifont_Regular_16'
     FONT_DEMIBOLD='Font_Unifont_Bold_16'
     FONT_BOLD='Font_PixelOperator_Bold_8'
@@ -589,8 +589,6 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/tt.py'))
     elif TREZOR_MODEL in ('R',):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/tr.py'))
-    elif TREZOR_MODEL in ('1',):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/t1.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
