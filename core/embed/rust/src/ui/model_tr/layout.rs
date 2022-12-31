@@ -26,12 +26,12 @@ use crate::{
             ComponentExt, Empty, Timeout, TimeoutMsg,
         },
         display::Font,
+        geometry::Alignment,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
             util::{iter_into_objs, iter_into_vec, upy_disable_animation},
         },
-        model_tr::component::LineAlignment,
     },
 };
 
@@ -549,7 +549,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                         .text_mono("Tutorial finished.".into())
                         .newline()
                         .newline()
-                        .alignment(LineAlignment::Center)
+                        .alignment(Alignment::Center)
                         .text_bold("You're ready to\nuse Trezor.".into())
                 },
                 6 => {

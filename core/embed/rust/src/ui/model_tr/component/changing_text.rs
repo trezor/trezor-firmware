@@ -1,10 +1,10 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     display::Font,
-    geometry::{Point, Rect},
+    geometry::{Alignment, Point, Rect},
 };
 
-use super::{common, flow_pages_poc_helpers::LineAlignment, theme};
+use super::{common, theme};
 
 /// Component that allows for "allocating" a standalone line of text anywhere
 /// on the screen and updating it arbitrarily - without affecting the rest
@@ -16,14 +16,14 @@ pub struct ChangingTextLine<T> {
     font: Font,
     /// Whether to show the text. Can be disabled.
     show_content: bool,
-    line_alignment: LineAlignment,
+    line_alignment: Alignment,
 }
 
 impl<T> ChangingTextLine<T>
 where
     T: AsRef<str>,
 {
-    pub fn new(text: T, font: Font, line_alignment: LineAlignment) -> Self {
+    pub fn new(text: T, font: Font, line_alignment: Alignment) -> Self {
         Self {
             area: Rect::zero(),
             pad: Pad::with_background(theme::BG),
@@ -35,11 +35,11 @@ where
     }
 
     pub fn center_mono(text: T) -> Self {
-        Self::new(text, Font::MONO, LineAlignment::Center)
+        Self::new(text, Font::MONO, Alignment::Center)
     }
 
     pub fn center_bold(text: T) -> Self {
-        Self::new(text, Font::BOLD, LineAlignment::Center)
+        Self::new(text, Font::BOLD, Alignment::Center)
     }
 
     // Update the text to be displayed in the line.
@@ -106,9 +106,9 @@ where
         self.pad.paint();
         if self.show_content {
             match self.line_alignment {
-                LineAlignment::Left => self.paint_left(),
-                LineAlignment::Center => self.paint_center(),
-                LineAlignment::Right => self.paint_right(),
+                Alignment::Start => self.paint_left(),
+                Alignment::Center => self.paint_center(),
+                Alignment::End => self.paint_right(),
             }
         }
     }
