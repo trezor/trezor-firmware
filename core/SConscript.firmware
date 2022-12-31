@@ -23,7 +23,7 @@ SOURCE_MOD = []
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = True
 
-if TREZOR_MODEL in ('1', 'R'):
+if TREZOR_MODEL in ('R'):
     FONT_NORMAL='Font_Unifont_Regular_16'
     FONT_DEMIBOLD='Font_Unifont_Bold_16'
     FONT_BOLD='Font_PixelOperator_Bold_8'
@@ -385,11 +385,6 @@ elif TREZOR_MODEL in ('R',):
         'embed/trezorhal/button.c',
         'embed/trezorhal/rgb_led.c',
     ]
-elif TREZOR_MODEL in ('1',):
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/button.c',
-    ]
-
 
 if DMA2D:
     CPPDEFINES_MOD += [
@@ -458,12 +453,6 @@ if TREZOR_MODEL in ('T', 'R'):
     CPU_MODEL   = 'STM32F427xx'
     LD_VARIANT  = ''
     RUST_TARGET = 'thumbv7em-none-eabihf'
-elif TREZOR_MODEL in ('1',):
-    CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
-    CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
-    CPU_MODEL   = 'STM32F405xx'
-    LD_VARIANT  = '' if EVERYTHING else '_min'
-    RUST_TARGET = 'thumbv7m-none-eabi'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -635,8 +624,6 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/tt.py'))
     elif TREZOR_MODEL in ('R',):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/tr.py'))
-    elif TREZOR_MODEL in ('1',):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/t1.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
@@ -815,11 +802,6 @@ if TREZOR_MODEL in ('T', 'R'):
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
         '$HEADERTOOL -h $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
-    ]
-elif TREZOR_MODEL in ('1',):
-    action_bin=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
-        '../legacy/bootloader/firmware_sign.py -f $TARGET',
     ]
 else:
     raise ValueError('Unknown Trezor model')
