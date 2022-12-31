@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::text::{formatted::FormattedFonts, TextStyle},
+    component::text::TextStyle,
     display::{Color, Font, IconAndName},
 };
 
@@ -23,13 +23,6 @@ pub const TEXT_MONO: TextStyle =
     TextStyle::new(Font::MONO, FG, BG, FG, FG).with_ellipsis_icon(ICON_NEXT_PAGE.0);
 // Header does not have the ellipsis
 pub const TEXT_HEADER: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG);
-
-pub const FORMATTED: FormattedFonts = FormattedFonts {
-    normal: Font::NORMAL,
-    demibold: Font::DEMIBOLD,
-    bold: Font::BOLD,
-    mono: Font::MONO,
-};
 
 // Icons with their names for debugging purposes
 pub const ICON_ARM_LEFT: IconAndName =
