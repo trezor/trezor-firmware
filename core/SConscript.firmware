@@ -715,7 +715,9 @@ def cargo_build():
     else:
         profile = ''
 
-    features = ['micropython', 'protobuf', f'model_t{TREZOR_MODEL.lower()}']
+    # T1 does not have its own Rust feature, it shares it with TR
+    model_feature = 'model_tr' if TREZOR_MODEL == '1' else f'model_t{TREZOR_MODEL.lower()}'
+    features = ['micropython', 'protobuf', model_feature]
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
     features.append('ui')

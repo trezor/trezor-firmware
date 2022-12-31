@@ -9,7 +9,6 @@ build = "build.rs"
 default = ["model_tt"]
 bitcoin_only = []
 model_tt = ["touch", "jpeg"]
-model_t1 = ["buttons"]
 model_tr = ["buttons"]
 micropython = []
 protobuf = ["micropython"]
