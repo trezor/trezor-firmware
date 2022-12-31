@@ -1514,9 +1514,9 @@ def test_lock_time_blockheight(client: Client):
         client.debug.press_yes()
 
         yield  # confirm locktime
-        layout_text = get_text_from_paginated_screen(client, 2)
-        assert "blockheight" in layout_text
-        assert "499999999" in layout_text
+        layout = client.debug.wait_layout()
+        assert "blockheight" in layout.text
+        assert "499999999" in layout.text
         client.debug.press_yes()
 
         yield  # confirm transaction
@@ -1587,10 +1587,8 @@ def test_lock_time_datetime(client: Client, lock_time_str: str):
         client.debug.press_yes()
 
         yield  # confirm locktime
-        layout_text = get_text_from_paginated_screen(client, 2)
-        # It is not there as one string due to small screen, but in parts
-        for part in lock_time_str.split(" "):
-            assert part in layout_text
+        layout = client.debug.wait_layout()
+        assert lock_time_str in layout.text
         client.debug.press_yes()
 
         yield  # confirm transaction
