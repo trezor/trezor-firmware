@@ -771,7 +771,7 @@ def confirm_value(
     value: str,
     description: str,
     br_type: str,
-    br_code: ButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
     *,
     verb: str | None = None,
     hold: bool = False,
@@ -996,7 +996,7 @@ async def confirm_coinjoin(
                 )
             ),
             "coinjoin_final",
-            ButtonRequestType.Other,
+            BR_TYPE_OTHER,
         )
     )
 
@@ -1011,7 +1011,7 @@ async def confirm_sign_identity(
         data=identity,
         description=challenge_visual + "\n" if challenge_visual else "",
         br_type="sign_identity",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
 
@@ -1031,7 +1031,7 @@ async def confirm_signverify(
         title,
         address,
         "Confirm address:",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
     await confirm_blob(
@@ -1040,7 +1040,7 @@ async def confirm_signverify(
         title,
         message,
         "Confirm message:",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
 
@@ -1128,7 +1128,7 @@ async def confirm_pin_action(
     title: str,
     action: str | None,
     description: str | None = "Do you really want to",
-    br_code: ButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     return await confirm_action(
         ctx,
@@ -1144,7 +1144,7 @@ async def confirm_pin_action(
 async def confirm_reenter_pin(
     ctx: GenericContext,
     br_type: str = "set_pin",
-    br_code: ButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     return await confirm_action(
         ctx,
@@ -1159,7 +1159,7 @@ async def confirm_reenter_pin(
 async def pin_mismatch(
     ctx: GenericContext,
     br_type: str = "set_pin",
-    br_code: ButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     return await confirm_action(
         ctx,
@@ -1179,7 +1179,7 @@ async def confirm_set_new_pin(
     action: str,
     information: list[str],
     description: str = "Do you want to",
-    br_code: ButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     await confirm_action(
         ctx,

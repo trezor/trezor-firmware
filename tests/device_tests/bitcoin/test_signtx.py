@@ -658,17 +658,22 @@ def test_fee_high_hardfail(client: Client):
         client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
     with client:
+        tt = client.features.model == "T"
         finished = False
 
         def input_flow():
             nonlocal finished
             for expected in (
                 B.ConfirmOutput,
-                B.ConfirmOutput,
+                (tt, B.ConfirmOutput),
                 B.FeeOverThreshold,
                 B.SignTx,
-                B.SignTx,
+                (tt, B.SignTx),
             ):
+                if isinstance(expected, tuple):
+                    is_valid, expected = expected
+                    if not is_valid:
+                        continue
                 br = yield
                 assert br.code == expected
                 client.debug.press_yes()

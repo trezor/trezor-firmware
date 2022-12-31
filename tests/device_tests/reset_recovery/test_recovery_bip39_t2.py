@@ -83,7 +83,7 @@ def test_tt_pin_passphrase(client: Client):
         client.debug.input("654")
 
         yield
-        assert "Select the number of words" in layout().text
+        assert "Select number of words" in layout().text
         client.debug.press_yes()
 
         yield
@@ -170,7 +170,7 @@ def test_tt_nopin_nopassphrase(client: Client):
         client.debug.press_yes()
 
         yield
-        assert "Select the number of words" in layout().text
+        assert "Select number of words" in layout().text
         client.debug.press_yes()
 
         yield

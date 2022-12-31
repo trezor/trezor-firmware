@@ -1,22 +1,21 @@
 from typing import TYPE_CHECKING, Sequence
 
-from trezor import io, log, loop, ui, wire, workflow
+from trezor import io, log, loop, ui, workflow
 from trezor.enums import ButtonRequestType
 from trezor.utils import DISABLE_ANIMATION
+from trezor.wire import ActionCancelled
 
 import trezorui2
 
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
-    from typing import Any, NoReturn, Type, Awaitable, Iterable, TypeVar
+    from typing import Any, NoReturn, Awaitable, Iterable, TypeVar
 
     from trezor.wire import GenericContext, Context
-    from ..common import PropertyType
+    from ..common import PropertyType, ExceptionType, ProgressLayout
 
     T = TypeVar("T")
-
-    ExceptionType = BaseException | Type[BaseException]
 
 
 BR_TYPE_OTHER = ButtonRequestType.Other  # global_import_cache
@@ -56,11 +55,11 @@ class RustLayoutContent:
 
     def active_page(self) -> int:
         """Current index of the active page. Should always be there."""
-        return self.kw_pair_int_compulsory("active_page")
+        return self.kw_pair_int("active_page") or 0
 
     def page_count(self) -> int:
         """Overall number of pages in this screen. Should always be there."""
-        return self.kw_pair_int_compulsory("page_count")
+        return self.kw_pair_int("page_count") or 1
 
     def in_flow(self) -> bool:
         """Whether we are in flow."""
@@ -136,21 +135,19 @@ class RustLayoutContent:
 
     def buttons_content(self) -> tuple[str, str, str]:
         """Getting visual details for all three buttons. They should always be there."""
+        if self.BTN_TAG not in self.str_content:
+            return ("None", "None", "None")
         btns = self._get_strings_inside_tag(self.str_content, self.BTN_TAG)
         assert len(btns) == 3
         return btns[0], btns[1], btns[2]
 
     def button_actions(self) -> tuple[str, str, str]:
         """Getting actions for all three buttons. They should always be there."""
+        if "_action" not in self.str_content:
+            return ("None", "None", "None")
         action_ids = ("left_action", "middle_action", "right_action")
         assert len(action_ids) == 3
         return tuple(self.kw_pair_compulsory(action) for action in action_ids)
-
-    def kw_pair_int_compulsory(self, key: str) -> int:
-        """Getting integer that cannot be missing."""
-        val = self.kw_pair_int(key)
-        assert val is not None
-        return val
 
     def kw_pair_int(self, key: str) -> int | None:
         """Getting the value of a key-value pair as an integer. None if missing."""
@@ -195,6 +192,35 @@ class RustLayout(ui.Layout):
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
+
+    def request_complete_repaint(self) -> None:
+        msg = self.layout.request_complete_repaint()
+        assert msg is None
+
+    def _paint(self) -> None:
+        import storage.cache as storage_cache
+
+        painted = self.layout.paint()
+        if storage_cache.homescreen_shown is not None and painted:
+            storage_cache.homescreen_shown = None
+
+    def _first_paint(self) -> None:
+        # Clear the screen of any leftovers.
+        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.display.clear()
+        self._paint()
+
+        if __debug__ and self.should_notify_layout_change:
+            from apps.debug import notify_layout_change
+
+            # notify about change and do not notify again until next await.
+            # (handle_rendering might be called multiple times in a single await,
+            # because of the endless loop in __iter__)
+            self.should_notify_layout_change = False
+            notify_layout_change(self)
+
+        # Turn the brightness on again.
+        ui.backlight_fade(self.BACKLIGHT_LEVEL)
 
     if __debug__:
         from trezor.enums import DebugPhysicalButton
@@ -397,6 +423,19 @@ class RustLayout(ui.Layout):
             ui.refresh()
 
 
+def draw_simple(layout: Any) -> None:
+    # Simple drawing not supported for layouts that set timers.
+    def dummy_set_timer(token: int, deadline: int) -> None:
+        raise RuntimeError
+
+    layout.attach_timer_fn(dummy_set_timer)
+    ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+    ui.display.clear()
+    layout.paint()
+    ui.refresh()
+    ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
+
+
 # Temporary function, so we know where it is used
 # Should be gradually replaced by custom designs/layouts
 async def _placeholder_confirm(
@@ -451,7 +490,7 @@ async def get_bool(
     return result is trezorui2.CONFIRMED
 
 
-async def raise_if_cancelled(a: Awaitable[T], exc: Any = wire.ActionCancelled) -> T:
+async def raise_if_cancelled(a: Awaitable[T], exc: Any = ActionCancelled) -> T:
     result = await a
     if result is trezorui2.CANCELLED:
         raise exc
@@ -472,8 +511,9 @@ async def confirm_action(
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
+    hold_danger: bool = False,
     reverse: bool = False,
-    exc: ExceptionType = wire.ActionCancelled,
+    exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     if verb_cancel is not None:
@@ -587,7 +627,7 @@ async def confirm_path_warning(
     )
 
 
-def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
+def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
     content = RustLayout(
         trezorui2.confirm_text(
             title=title.upper(),
@@ -599,11 +639,11 @@ def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
     return content
 
 
-async def show_xpub(ctx: GenericContext, xpub: str, title: str, cancel: str) -> None:
+async def show_xpub(ctx: GenericContext, xpub: str, title: str) -> None:
     await raise_if_cancelled(
         interact(
             ctx,
-            _show_xpub(xpub, title, cancel),
+            _show_xpub(xpub, title, None),
             "show_xpub",
             ButtonRequestType.PublicKey,
         )
@@ -702,7 +742,7 @@ async def _show_modal(
     content: str,
     button_confirm: str | None,
     button_cancel: str | None,
-    exc: ExceptionType = wire.ActionCancelled,
+    exc: ExceptionType = ActionCancelled,
 ) -> None:
     await confirm_action(
         ctx=ctx,
@@ -725,7 +765,7 @@ async def show_error_and_raise(
     subheader: str | None = None,
     button: str = "Close",
     red: bool = False,
-    exc: ExceptionType = wire.ActionCancelled,
+    exc: ExceptionType = ActionCancelled,
 ) -> NoReturn:
     await _show_modal(
         ctx=ctx,
@@ -952,7 +992,13 @@ async def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    items = [(prop[0], prop[1], isinstance(prop[1], bytes)) for prop in props]
+    from ubinascii import hexlify
+
+    def handle_bytes(prop: PropertyType):
+        if isinstance(prop[1], bytes):
+            return (prop[0], hexlify(prop[1]).decode(), True)
+        else:
+            return (prop[0], prop[1], False)
 
     await raise_if_cancelled(
         interact(
@@ -960,13 +1006,39 @@ async def confirm_properties(
             RustLayout(
                 trezorui2.confirm_properties(
                     title=title.upper(),
-                    items=items,
+                    items=map(handle_bytes, props),  # type: ignore [cannot be assigned to parameter "items"]
                     hold=hold,
                 )
             ),
             br_type,
             br_code,
         )
+    )
+
+
+def confirm_value(
+    ctx: GenericContext,
+    title: str,
+    value: str,
+    description: str,
+    br_type: str,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+    *,
+    verb: str | None = None,
+    hold: bool = False,
+) -> Awaitable[None]:
+    """General confirmation dialog, used by many other confirm_* functions."""
+
+    if not verb and not hold:
+        raise ValueError("Either verb or hold=True must be set")
+
+    return _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=title.upper(),
+        data=value,
+        description=description,
+        br_code=br_code,
     )
 
 
@@ -978,7 +1050,6 @@ async def confirm_total(
     title: str = "Send transaction?",
     total_label: str = "Total amount:",
     fee_label: str = "Including fee:",
-    icon_color: int = ui.GREEN,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
@@ -1021,19 +1092,14 @@ async def confirm_metadata(
     content: str,
     param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
-    hide_continue: bool = False,
     hold: bool = False,
-    param_font: int = ui.BOLD,
 ) -> None:
-    text = content.format(param)
-    if not hide_continue:
-        text += "\n\nContinue?"
-
+    # TODO: implement `hold`
     await _placeholder_confirm(
         ctx=ctx,
         br_type=br_type,
         title=title.upper(),
-        data=text,
+        data=content.format(param),
         description="",
         br_code=br_code,
     )
@@ -1176,7 +1242,23 @@ async def show_popup(
     description_param: str = "",
     timeout_ms: int = 3000,
 ) -> None:
-    raise NotImplementedError
+    if subtitle:
+        title += f"\n{subtitle}"
+    await RustLayout(
+        trezorui2.show_info(
+            title=title,
+            description=description.format(description_param),
+            time_ms=timeout_ms,
+        )
+    )
+
+
+def request_passphrase_on_host() -> None:
+    draw_simple(
+        trezorui2.show_info(
+            title="Please type your passphrase on the connected host.",
+        )
+    )
 
 
 async def request_passphrase_on_device(ctx: GenericContext, max_len: int) -> str:
@@ -1193,7 +1275,7 @@ async def request_passphrase_on_device(ctx: GenericContext, max_len: int) -> str
         )
     )
     if result is trezorui2.CANCELLED:
-        raise wire.ActionCancelled("Passphrase entry cancelled")
+        raise ActionCancelled("Passphrase entry cancelled")
 
     assert isinstance(result, str)
     return result
@@ -1205,6 +1287,8 @@ async def request_pin_on_device(
     attempts_remaining: int | None,
     allow_cancel: bool,
 ) -> str:
+    from trezor import wire
+
     if attempts_remaining is None:
         subprompt = ""
     elif attempts_remaining == 1:
@@ -1314,3 +1398,55 @@ async def confirm_set_new_pin(
         hold=True,
         br_code=br_code,
     )
+
+
+class RustProgress:
+    def __init__(
+        self,
+        title: str,
+        description: str | None = None,
+        indeterminate: bool = False,
+    ):
+        self.layout: Any = trezorui2.show_progress(
+            title=title.upper(),
+            indeterminate=indeterminate,
+            description=description or "",
+        )
+        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.display.clear()
+        self.layout.attach_timer_fn(self.set_timer)
+        self.layout.paint()
+        ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
+
+    def set_timer(self, token: int, deadline: int) -> None:
+        raise RuntimeError  # progress layouts should not set timers
+
+    def report(self, value: int, description: str | None = None):
+        msg = self.layout.progress_event(value, description or "")
+        assert msg is None
+        self.layout.paint()
+        ui.refresh()
+
+
+def progress(message: str = "PLEASE WAIT") -> ProgressLayout:
+    return RustProgress(message.upper())
+
+
+def bitcoin_progress(message: str) -> ProgressLayout:
+    return RustProgress(message.upper())
+
+
+def pin_progress(message: str, description: str) -> ProgressLayout:
+    return RustProgress(message.upper(), description=description)
+
+
+def monero_keyimage_sync_progress() -> ProgressLayout:
+    return RustProgress("SYNCING")
+
+
+def monero_live_refresh_progress() -> ProgressLayout:
+    return RustProgress("REFRESHING", description="", indeterminate=True)
+
+
+def monero_transaction_progress_inner() -> ProgressLayout:
+    return RustProgress("SIGNING TRANSACTION", description="")

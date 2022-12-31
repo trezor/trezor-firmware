@@ -102,6 +102,16 @@ def show_qr(
 
 
 # rust/src/ui/model_tr/layout.rs
+def show_info(
+    *,
+    title: str,
+    description: str = "",
+    time_ms: int = 0,
+) -> object:
+    """Info modal."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def tutorial() -> object:
     """Show user how to interact with the device."""
 
@@ -166,6 +176,40 @@ def request_passphrase(
     max_len: int,
 ) -> str:
     """Get passphrase."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_progress(
+    *,
+    title: str,
+    indeterminate: bool = False,
+    description: str | None = None,
+) -> object:
+   """Show progress loader. Please note that the number of lines reserved on screen for
+   description is determined at construction time. If you want multiline descriptions
+   make sure the initial description has at least that amount of lines."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_homescreen(
+    *,
+    label: str,
+    hold: bool,
+    notification: str | None,
+    notification_level: int = 0,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Idle homescreen."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_lockscreen(
+    *,
+    label: str,
+    bootscreen: bool,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Homescreen for locked device."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object
@@ -524,7 +568,7 @@ def show_progress(
 ) -> object:
    """Show progress loader. Please note that the number of lines reserved on screen for
    description is determined at construction time. If you want multiline descriptions
-   make sure the initial desciption has at least that amount of lines."""
+   make sure the initial description has at least that amount of lines."""
 
 
 # rust/src/ui/model_tt/layout.rs
