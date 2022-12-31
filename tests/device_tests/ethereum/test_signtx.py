@@ -131,10 +131,9 @@ def test_data_streaming(client: Client):
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                (tt, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
+                messages.ButtonRequest(code=messages.ButtonRequestType.Other),
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                (tt, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
-                (tt, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
-                (tt, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
                 message_filters.EthereumTxRequest(
                     data_length=1_024,
                     signature_r=None,
@@ -349,6 +348,9 @@ def input_flow_skip(client: Client, cancel: bool = False):
 
 
 def input_flow_scroll_down(client: Client, cancel: bool = False):
+    if client.features.model == "R":
+        pytest.skip("Freezes")
+
     yield  # confirm address
     client.debug.wait_layout()
     client.debug.press_yes()

@@ -349,7 +349,7 @@ impl TextLayout {
 
         // TODO: draw the arrow icon if we are in the middle of a string
 
-        // TODO: have the variable `is_last` and in that case tell it to 
+        // TODO: have the variable `is_last` and in that case tell it to
         // `fit_horizontally`, which will then account for the ellipsis icon
         // instead of the hyphen (have it `ellipsis_length`)
 

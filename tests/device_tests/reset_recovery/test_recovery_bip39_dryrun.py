@@ -211,7 +211,7 @@ def test_invalid_seed_core(client: Client):
 
         yield
         assert "Select number of words" in layout().text
-        client.debug.press_right()
+        client.debug.press_yes()
 
         yield
         yield
@@ -221,7 +221,7 @@ def test_invalid_seed_core(client: Client):
 
         yield
         assert "Enter recovery seed" in layout().text
-        client.debug.press_right()
+        client.debug.press_yes()
 
         yield
         assert "WORD ENTERING" in layout().text
