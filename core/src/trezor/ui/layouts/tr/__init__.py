@@ -440,18 +440,23 @@ async def _placeholder_confirm(
     br_type: str,
     title: str,
     data: str,
+    verb: str = "CONFIRM",
+    verb_cancel: str | bytes | None = "",
+    hold: bool = False,
     description: str | None = None,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Any:
-    return await raise_if_cancelled(
-        confirm_text(
-            ctx=ctx,
-            br_type=br_type,
-            title=title.upper(),
-            data=data,
-            description=description,
-            br_code=br_code,
-        )
+    return await confirm_action(
+        ctx=ctx,
+        br_type=br_type,
+        br_code=br_code,
+        title=title.upper(),
+        action=data,
+        description=description,
+        verb=verb,
+        verb_cancel=verb_cancel,
+        hold=hold,
+        reverse=True,
     )
 
 
@@ -494,9 +499,6 @@ async def raise_if_cancelled(a: Awaitable[T], exc: Any = ActionCancelled) -> T:
     return result
 
 
-# TODO: probably make special version of some `action` and
-# `description` strings for model R, as those for model T
-# have newlines at random places (suitable for T).
 async def confirm_action(
     ctx: GenericContext,
     br_type: str,
@@ -504,7 +506,6 @@ async def confirm_action(
     action: str | None = None,
     description: str | None = None,
     description_param: str | None = None,
-    description_param_font: int = ui.BOLD,
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
@@ -522,8 +523,6 @@ async def confirm_action(
         return await pin_confirm_action(ctx, br_type, action)
 
     if description is not None and description_param is not None:
-        if description_param_font != ui.BOLD:
-            log.error(__name__, "confirm_action description_param_font not implemented")
         description = description.format(description_param)
 
     # Making the button text UPPERCASE, so it is better readable
@@ -626,11 +625,14 @@ async def confirm_path_warning(
 
 def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
     content = RustLayout(
-        trezorui2.confirm_text(
+        trezorui2.confirm_action(
             title=title.upper(),
-            data=xpub,
-            description="",
-            # verb_cancel=cancel,
+            action="",
+            description=xpub,
+            verb="CONFIRM",
+            verb_cancel=cancel,
+            hold=False,
+            reverse=False,
         )
     )
     return content
@@ -949,17 +951,13 @@ async def confirm_text(
     description: str | None = None,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Any:
-    return await interact(
-        ctx,
-        RustLayout(
-            trezorui2.confirm_text(
-                title=title.upper(),
-                data=data,
-                description=description,
-            )
-        ),
-        br_type,
-        br_code,
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=title,
+        data=data,
+        description=description,
+        br_code=br_code,
     )
 
 
@@ -1091,13 +1089,12 @@ async def confirm_metadata(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hold: bool = False,
 ) -> None:
-    # TODO: implement `hold`
     await _placeholder_confirm(
         ctx=ctx,
         br_type=br_type,
         title=title.upper(),
         data=content.format(param),
-        description="",
+        hold=hold,
         br_code=br_code,
     )
 
@@ -1108,7 +1105,6 @@ async def confirm_replacement(ctx: GenericContext, description: str, txid: str) 
         br_type="confirm_replacement",
         title=description.upper(),
         data=f"Confirm transaction ID:\n{txid}",
-        description="",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1132,7 +1128,6 @@ async def confirm_modify_output(
         br_type="modify_output",
         title="MODIFY AMOUNT",
         data=text,
-        description="",
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
@@ -1162,7 +1157,6 @@ async def confirm_modify_fee(
         br_type="modify_fee",
         title="MODIFY FEE",
         data=text,
-        description="",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1175,7 +1169,6 @@ async def confirm_coinjoin(
         br_type="coinjoin_final",
         title="AUTHORIZE COINJOIN",
         data=f"Maximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte}",
-        description="",
         br_code=BR_TYPE_OTHER,
     )
 
@@ -1198,7 +1191,6 @@ async def confirm_sign_identity(
         br_type="confirm_sign_identity",
         title=f"Sign {proto}".upper(),
         data=text,
-        description="",
         br_code=BR_TYPE_OTHER,
     )
 
@@ -1218,7 +1210,6 @@ async def confirm_signverify(
         br_type=br_type,
         title=header.upper(),
         data=f"Confirm address:\n{address}",
-        description="",
         br_code=BR_TYPE_OTHER,
     )
 
@@ -1227,7 +1218,6 @@ async def confirm_signverify(
         br_type=br_type,
         title=header.upper(),
         data=f"Confirm message:\n{message}",
-        description="",
         br_code=BR_TYPE_OTHER,
     )
 

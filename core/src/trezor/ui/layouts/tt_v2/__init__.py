@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import io, log, loop, ui
+from trezor import io, loop, ui
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
@@ -210,21 +210,16 @@ async def confirm_action(
     action: str | None = None,
     description: str | None = None,
     description_param: str | None = None,
-    description_param_font: int = ui.BOLD,
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
-    hold_danger: bool = False,
     reverse: bool = False,
     exc: ExceptionType = ActionCancelled,
-    br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     if verb_cancel is not None:
         verb_cancel = verb_cancel.upper()
 
     if description is not None and description_param is not None:
-        if description_param_font != ui.BOLD:
-            log.error(__name__, "confirm_action description_param_font not implemented")
         description = description.format(description_param)
 
     await raise_if_not_confirmed(
