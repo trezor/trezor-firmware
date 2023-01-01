@@ -26,70 +26,19 @@ const OFFER_WORDS_THRESHOLD: usize = 10;
 
 const PROMPT: &str = "_";
 
-struct ChoiceFactoryBIP39 {
-    // TODO: replace these Vecs by iterators somehow?
-    letter_choices: Option<Vec<char, MAX_CHOICE_LENGTH>>,
-    word_choices: Option<Vec<&'static str, OFFER_WORDS_THRESHOLD>>,
+/// We are offering either letters or words.
+enum ChoiceFactoryBIP39 {
+    Letters(Vec<char, MAX_CHOICE_LENGTH>),
+    Words(Vec<&'static str, OFFER_WORDS_THRESHOLD>),
 }
-impl ChoiceFactoryBIP39 {
-    fn new(
-        letter_choices: Option<Vec<char, MAX_CHOICE_LENGTH>>,
-        word_choices: Option<Vec<&'static str, OFFER_WORDS_THRESHOLD>>,
-    ) -> Self {
-        Self {
-            letter_choices,
-            word_choices,
-        }
-    }
 
+impl ChoiceFactoryBIP39 {
     fn letters(letter_choices: Vec<char, MAX_CHOICE_LENGTH>) -> Self {
-        Self::new(Some(letter_choices), None)
+        Self::Letters(letter_choices)
     }
 
     fn words(word_choices: Vec<&'static str, OFFER_WORDS_THRESHOLD>) -> Self {
-        Self::new(None, Some(word_choices))
-    }
-
-    /// Word choice items with DELETE last option.
-    /// NOT using carousel.
-    fn get_word_item(&self, choice_index: u8) -> ChoiceItem {
-        if let Some(word_choices) = &self.word_choices {
-            if choice_index >= word_choices.len() as u8 {
-                let mut item =
-                    ChoiceItem::new("DELETE", ButtonLayout::three_icons_middle_text("CONFIRM"))
-                        .with_icon(Icon::new(theme::ICON_DELETE));
-                item.set_right_btn(None);
-                item
-            } else {
-                let word = word_choices[choice_index as usize];
-                let mut item = ChoiceItem::new(word, ButtonLayout::default_three_icons());
-                if choice_index == 0 {
-                    item.set_left_btn(None);
-                }
-                item
-            }
-        } else {
-            unreachable!()
-        }
-    }
-
-    /// Letter choice items with BIN leftmost button.
-    /// Accounting for carousel.
-    fn get_letter_item(&self, choice_index: u8) -> ChoiceItem {
-        if let Some(letter_choices) = &self.letter_choices {
-            if choice_index >= letter_choices.len() as u8 {
-                ChoiceItem::new("DELETE", ButtonLayout::three_icons_middle_text("CONFIRM"))
-                    .with_icon(Icon::new(theme::ICON_DELETE))
-            } else {
-                let letter = letter_choices[choice_index as usize];
-                ChoiceItem::new(
-                    char_to_string::<1>(letter),
-                    ButtonLayout::default_three_icons(),
-                )
-            }
-        } else {
-            unreachable!()
-        }
+        Self::Words(word_choices)
     }
 }
 
@@ -98,22 +47,43 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
 
     fn count(&self) -> u8 {
         // Accounting for the DELETE option
-        if let Some(letter_choices) = &self.letter_choices {
-            letter_choices.len() as u8 + 1
-        } else if let Some(word_choices) = &self.word_choices {
-            word_choices.len() as u8 + 1
-        } else {
-            unreachable!()
+        match self {
+            Self::Letters(letter_choices) => letter_choices.len() as u8 + 1,
+            Self::Words(word_choices) => word_choices.len() as u8 + 1,
         }
     }
 
     fn get(&self, choice_index: u8) -> ChoiceItem {
-        if self.letter_choices.is_some() {
-            self.get_letter_item(choice_index)
-        } else if self.word_choices.is_some() {
-            self.get_word_item(choice_index)
-        } else {
-            unreachable!()
+        // Letters have a carousel, words do not
+        match self {
+            Self::Letters(letter_choices) => {
+                if choice_index >= letter_choices.len() as u8 {
+                    ChoiceItem::new("DELETE", ButtonLayout::three_icons_middle_text("CONFIRM"))
+                        .with_icon(Icon::new(theme::ICON_DELETE))
+                } else {
+                    let letter = letter_choices[choice_index as usize];
+                    ChoiceItem::new(
+                        char_to_string::<1>(letter),
+                        ButtonLayout::default_three_icons(),
+                    )
+                }
+            }
+            Self::Words(word_choices) => {
+                if choice_index >= word_choices.len() as u8 {
+                    let mut item =
+                        ChoiceItem::new("DELETE", ButtonLayout::three_icons_middle_text("CONFIRM"))
+                            .with_icon(Icon::new(theme::ICON_DELETE));
+                    item.set_right_btn(None);
+                    item
+                } else {
+                    let word = word_choices[choice_index as usize];
+                    let mut item = ChoiceItem::new(word, ButtonLayout::default_three_icons());
+                    if choice_index == 0 {
+                        item.set_left_btn(None);
+                    }
+                    item
+                }
+            }
         }
     }
 }

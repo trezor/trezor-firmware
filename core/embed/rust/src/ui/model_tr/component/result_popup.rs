@@ -8,13 +8,13 @@ use crate::{
         constant::screen,
         geometry::{Alignment, Insets, LinearPlacement, Point, Rect},
         model_tr::{
-            component::{Button, ButtonMsg, ButtonPos, ResultAnim, ResultAnimMsg},
+            component::{ButtonPos, ResultAnim, ResultAnimMsg},
             theme,
         },
     },
 };
 
-use super::ButtonStyleSheet;
+use super::{ButtonController, ButtonControllerMsg, ButtonLayout};
 
 pub enum ResultPopupMsg {
     Confirmed,
@@ -27,12 +27,11 @@ pub struct ResultPopup<S> {
     headline_baseline: Point,
     headline: Option<Label<&'static str>>,
     text: Child<Paragraphs<Paragraph<S>>>,
-    button: Option<Child<Button<&'static str>>>,
+    buttons: Option<Child<ButtonController<&'static str>>>,
     autoclose: bool,
 }
 
 const ANIM_SIZE: i16 = 18;
-const BUTTON_HEIGHT: i16 = 13;
 const ANIM_SPACE: i16 = 11;
 const ANIM_POS: i16 = 32;
 const ANIM_POS_ADJ_HEADLINE: i16 = 10;
@@ -48,13 +47,9 @@ impl<S: ParagraphStrType> ResultPopup<S> {
         let p1 = Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text))
             .with_placement(LinearPlacement::vertical().align_at_center());
 
-        let button = button_text.map(|t| {
-            // TODO: use `ButtonController` for this
-            Child::new(Button::with_text(
-                ButtonPos::Right,
-                t,
-                ButtonStyleSheet::default(true, false, None, None),
-            ))
+        let buttons = button_text.map(|text| {
+            let btn_layout = ButtonLayout::only_right_text(text);
+            Child::new(ButtonController::new(btn_layout))
         });
 
         let mut pad = Pad::with_background(theme::BG);
@@ -67,7 +62,7 @@ impl<S: ParagraphStrType> ResultPopup<S> {
             headline: headline.map(|a| Label::new(a, Alignment::Center, theme::TEXT_BOLD)),
             headline_baseline: Point::zero(),
             text: Child::new(p1),
-            button,
+            buttons,
             autoclose: false,
         }
     }
@@ -80,7 +75,7 @@ impl<S: ParagraphStrType> ResultPopup<S> {
     pub fn start(&mut self, ctx: &mut EventCtx) {
         self.text.request_complete_repaint(ctx);
         self.headline.request_complete_repaint(ctx);
-        self.button.request_complete_repaint(ctx);
+        self.buttons.request_complete_repaint(ctx);
         self.result_anim.mutate(ctx, |ctx, c| {
             let now = Instant::now();
             c.start_growing(ctx, now);
@@ -104,8 +99,8 @@ impl<S: ParagraphStrType> Component for ResultPopup<S> {
             headline_height = h.max_size().y;
             anim_adjust += ANIM_POS_ADJ_HEADLINE;
         }
-        if self.button.is_some() {
-            button_height = BUTTON_HEIGHT;
+        if self.buttons.is_some() {
+            button_height = theme::BUTTON_HEIGHT;
             anim_adjust += ANIM_POS_ADJ_BUTTON;
         }
 
@@ -116,7 +111,7 @@ impl<S: ParagraphStrType> Component for ResultPopup<S> {
         let (text, buttons) = rest.split_bottom(button_height);
 
         self.pad.place(bounds);
-        self.button.place(buttons);
+        self.buttons.place(buttons);
         self.headline.place(headline);
         self.text.place(text);
         self.result_anim
@@ -131,12 +126,14 @@ impl<S: ParagraphStrType> Component for ResultPopup<S> {
         self.text.event(ctx, event);
         self.headline.event(ctx, event);
 
-        if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
+        if let Some(ButtonControllerMsg::Triggered(ButtonPos::Right)) =
+            self.buttons.event(ctx, event)
+        {
             button_confirmed = true;
         }
 
         if let Some(ResultAnimMsg::FullyGrown) = self.result_anim.event(ctx, event) {
-            if self.button.is_none() || self.autoclose {
+            if self.buttons.is_none() || self.autoclose {
                 return Some(ResultPopupMsg::Confirmed);
             }
         }
@@ -151,7 +148,7 @@ impl<S: ParagraphStrType> Component for ResultPopup<S> {
     fn paint(&mut self) {
         self.pad.paint();
         self.text.paint();
-        self.button.paint();
+        self.buttons.paint();
         self.headline.paint();
         self.result_anim.paint();
     }
@@ -162,7 +159,7 @@ impl<S: ParagraphStrType> crate::trace::Trace for ResultPopup<S> {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("ResultPopup");
         self.text.trace(d);
-        self.button.trace(d);
+        self.buttons.trace(d);
         self.headline.trace(d);
         self.result_anim.trace(d);
         d.close();

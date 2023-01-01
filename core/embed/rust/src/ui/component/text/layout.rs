@@ -298,9 +298,6 @@ impl LayoutFit {
     }
 }
 
-// TODO: LayoutSink could support even things like drawing icons
-// or making custom x or y offsets from any position
-
 /// Visitor for text segment operations.
 /// Defines responses for certain kind of events encountered
 /// when processing the content.

@@ -4,7 +4,6 @@ use crate::{
         component::{Component, Event, EventCtx},
         constant,
         display::{self, Color, Font, Icon},
-        event::{ButtonEvent, PhysicalButton},
         geometry::{Offset, Point, Rect},
     },
 };
@@ -26,17 +25,6 @@ pub enum ButtonPos {
     Left,
     Middle,
     Right,
-}
-
-impl ButtonPos {
-    pub fn hit(&self, b: &PhysicalButton) -> bool {
-        matches!(
-            (self, b),
-            (Self::Left, PhysicalButton::Left)
-                | (Self::Middle, PhysicalButton::Both)
-                | (Self::Right, PhysicalButton::Right)
-        )
-    }
 }
 
 pub struct Button<T> {
@@ -190,21 +178,8 @@ where
         self.get_current_area()
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Everything should be handled by `ButtonController`
-        // TODO: could be completely deleted, but `ResultPopup` is using Button.event()
-        match event {
-            Event::Button(ButtonEvent::ButtonPressed(which)) if self.pos.hit(&which) => {
-                self.set(ctx, State::Pressed);
-            }
-            Event::Button(ButtonEvent::ButtonReleased(which)) if self.pos.hit(&which) => {
-                if matches!(self.state, State::Pressed) {
-                    self.set(ctx, State::Released);
-                    return Some(ButtonMsg::Clicked);
-                }
-            }
-            _ => {}
-        };
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        // Events are handled by `ButtonController`
         None
     }
 
@@ -214,17 +189,17 @@ where
         let background_color = text_color.negate();
         let area = self.get_current_area();
 
-        // TODO: support another combinations of text and icons
-        // - text with OK icon on left
-
         // Optionally display "arms" at both sides of content, or create
         // a nice rounded outline around it.
         // By default just fill the content background.
         if style.with_arms {
+            const ARM_WIDTH: i16 = 15;
+
             // Prepare space for both the arms and content with BG color.
             // Arms are icons 10*6 pixels.
-            let area_to_fill = area.extend_left(15).extend_right(15);
+            let area_to_fill = area.extend_left(ARM_WIDTH).extend_right(ARM_WIDTH);
             display::rect_fill(area_to_fill, background_color);
+            display::rect_fill_corners(area_to_fill, theme::BG);
 
             // Paint both arms.
             // Baselines are adjusted to give space between text and icon.
@@ -239,7 +214,6 @@ where
                 text_color,
                 background_color,
             );
-            display::rect_fill_corners(area_to_fill, theme::BG);
         } else if style.with_outline {
             if background_color == theme::BG {
                 display::rect_outline_rounded(area, text_color, background_color, 2);
@@ -331,10 +305,6 @@ pub struct ButtonStyle {
     pub offset: Option<Offset>,
 }
 
-// TODO: currently `button_default` and `button_cancel`
-// are the same - decide whether to differentiate them.
-// In Figma, they are not differentiated.
-
 impl ButtonStyleSheet {
     pub fn new(
         normal_color: Color,
@@ -380,23 +350,6 @@ impl ButtonStyleSheet {
             offset,
         )
     }
-
-    // Black text in normal mode.
-    pub fn cancel(
-        with_outline: bool,
-        with_arms: bool,
-        force_width: Option<i16>,
-        offset: Option<Offset>,
-    ) -> Self {
-        Self::new(
-            theme::FG,
-            theme::BG,
-            with_outline,
-            with_arms,
-            force_width,
-            offset,
-        )
-    }
 }
 
 /// Describing the button on the screen - only visuals.
@@ -405,7 +358,6 @@ pub struct ButtonDetails<T> {
     pub text: Option<T>,
     pub icon: Option<Icon>,
     pub duration: Option<Duration>,
-    pub is_cancel: bool,
     pub with_outline: bool,
     pub with_arms: bool,
     pub force_width: Option<i16>,
@@ -419,7 +371,6 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
             text: Some(text),
             icon: None,
             duration: None,
-            is_cancel: false,
             with_outline: true,
             with_arms: false,
             force_width: None,
@@ -433,7 +384,6 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
             text: None,
             icon: Some(icon),
             duration: None,
-            is_cancel: false,
             with_outline: true,
             with_arms: false,
             force_width: None,
@@ -486,12 +436,6 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         Self::icon(Icon::new(theme::ICON_BIN)).with_no_outline()
     }
 
-    /// Cancel style button.
-    pub fn with_cancel(mut self) -> Self {
-        self.is_cancel = true;
-        self
-    }
-
     /// No outline around the button.
     pub fn with_no_outline(mut self) -> Self {
         self.with_outline = false;
@@ -534,21 +478,12 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
 
     /// Button style that should be applied.
     pub fn style(&self) -> ButtonStyleSheet {
-        if self.is_cancel {
-            ButtonStyleSheet::cancel(
-                self.with_outline,
-                self.with_arms,
-                self.force_width,
-                self.offset,
-            )
-        } else {
-            ButtonStyleSheet::default(
-                self.with_outline,
-                self.with_arms,
-                self.force_width,
-                self.offset,
-            )
-        }
+        ButtonStyleSheet::default(
+            self.with_outline,
+            self.with_arms,
+            self.force_width,
+            self.offset,
+        )
     }
 }
 
@@ -602,6 +537,11 @@ impl ButtonLayout<&'static str> {
             None,
             Some(ButtonDetails::text(text_right)),
         )
+    }
+
+    /// Only right text.
+    pub fn only_right_text(text_right: &'static str) -> Self {
+        Self::new(None, None, Some(ButtonDetails::text(text_right)))
     }
 
     /// Left and right arrow icons for navigation.
@@ -687,6 +627,30 @@ impl ButtonLayout<&'static str> {
     }
 }
 
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for ButtonDetails<T>
+where
+    T: AsRef<str>,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("ButtonDetails");
+        let mut btn_text: String<30> = String::new();
+        if let Some(text) = &self.text {
+            btn_text.push_str(text.as_ref()).unwrap();
+        } else if let Some(icon) = &self.icon {
+            btn_text.push_str("Icon:").unwrap();
+            btn_text.push_str(icon.text.as_ref()).unwrap();
+        }
+        if let Some(duration) = &self.duration {
+            btn_text.push_str(" (HTC:").unwrap();
+            btn_text.push_str(inttostr!(duration.to_millis())).unwrap();
+            btn_text.push_str(")").unwrap();
+        }
+        t.button(btn_text.as_ref());
+        t.close();
+    }
+}
+
 /// What happens when a button is triggered.
 /// Theoretically any action can be connected
 /// with any button.
@@ -743,9 +707,6 @@ impl ButtonAction {
         "None".into()
     }
 }
-
-// TODO: might consider defining ButtonAction::Empty
-// and only storing ButtonAction instead of Option<ButtonAction>...
 
 /// Storing actions for all three possible buttons.
 #[derive(Clone)]
@@ -852,29 +813,5 @@ impl ButtonActions {
             ButtonPos::Middle => self.middle.clone(),
             ButtonPos::Right => self.right.clone(),
         }
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for ButtonDetails<T>
-where
-    T: AsRef<str>,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("ButtonDetails");
-        let mut btn_text: String<30> = String::new();
-        if let Some(text) = &self.text {
-            btn_text.push_str(text.as_ref()).unwrap();
-        } else if let Some(icon) = &self.icon {
-            btn_text.push_str("Icon:").unwrap();
-            btn_text.push_str(icon.text.as_ref()).unwrap();
-        }
-        if let Some(duration) = &self.duration {
-            btn_text.push_str(" (HTC:").unwrap();
-            btn_text.push_str(inttostr!(duration.to_millis())).unwrap();
-            btn_text.push_str(")").unwrap();
-        }
-        t.button(btn_text.as_ref());
-        t.close();
     }
 }
