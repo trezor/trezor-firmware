@@ -57,7 +57,7 @@ where
 #[derive(Clone)]
 pub struct Page<const M: usize> {
     ops: Vec<Op, M>,
-    layout: TextLayout,
+    text_layout: TextLayout,
     btn_layout: ButtonLayout<&'static str>,
     btn_actions: ButtonActions,
     current_page: usize,
@@ -82,7 +82,7 @@ impl<const M: usize> Page<M> {
         .with_ellipsis_icon(theme::ICON_NEXT_PAGE.0);
         Self {
             ops: Vec::new(),
-            layout: TextLayout::new(style),
+            text_layout: TextLayout::new(style),
             btn_layout,
             btn_actions,
             current_page: 0,
@@ -124,7 +124,7 @@ impl<const M: usize> Page<M> {
     }
 
     pub fn place(&mut self, bounds: Rect) -> Rect {
-        self.layout.bounds = bounds;
+        self.text_layout.bounds = bounds;
         self.page_count = self.page_count();
         bounds
     }
@@ -225,8 +225,8 @@ impl<const M: usize> Page<M> {
     }
 
     pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        let mut cursor = self.layout.initial_cursor();
-        self.layout
+        let mut cursor = self.text_layout.initial_cursor();
+        self.text_layout
             .layout_ops(self.ops.clone(), &mut cursor, self.char_offset, sink)
     }
 }

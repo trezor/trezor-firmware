@@ -9,7 +9,6 @@ use heapless::Vec;
 
 /// Scrollbar to be painted horizontally at the top right of the screen.
 pub struct ScrollBar {
-    area: Rect,
     pad: Pad,
     pub page_count: usize,
     pub active_page: usize,
@@ -37,7 +36,6 @@ impl ScrollBar {
 
     pub fn new(page_count: usize) -> Self {
         Self {
-            area: Rect::zero(),
             pad: Pad::with_background(theme::BG),
             page_count,
             active_page: 0,
@@ -133,7 +131,7 @@ impl ScrollBar {
         let mut dots = Vec::new();
 
         match self.page_count {
-            small_num if small_num < 4 => {
+            0..=3 => {
                 for i in 0..self.page_count {
                     if i == self.active_page {
                         unwrap!(dots.push(DotType::BigFull));
@@ -166,8 +164,8 @@ impl ScrollBar {
                 let full_dot_index = match self.active_page {
                     0 => 0,
                     1 => 1,
-                    last if last == self.page_count - 1 => 4,
                     last_but_one if last_but_one == self.page_count - 2 => 3,
+                    last if last == self.page_count - 1 => 4,
                     _ => 2,
                 };
                 match full_dot_index {
@@ -204,7 +202,7 @@ impl ScrollBar {
 
     /// Drawing the dots horizontally and aligning to the right.
     fn paint_horizontal(&mut self) {
-        let mut top_right = self.area.top_right();
+        let mut top_right = self.pad.area.top_right();
         for dot in self.get_drawable_dots().iter().rev() {
             self.paint_dot(dot, top_right);
             top_right.x -= Self::DOTS_INTERVAL;
@@ -216,7 +214,6 @@ impl Component for ScrollBar {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.area = bounds;
         self.pad.place(bounds);
         bounds
     }

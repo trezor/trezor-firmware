@@ -131,12 +131,12 @@ impl Choice for ChoiceItem {
     fn paint_center(&self, area: Rect, inverse: bool) {
         self.paint_rounded_highlight(area, inverse);
 
-        let mut baseline = area.bottom_center() + Offset::new(-self.width_center() / 2, 0);
+        let mut baseline = area.bottom_center() + Offset::x(-self.width_center() / 2);
         if let Some(icon) = self.icon {
             let fg_color = if inverse { theme::BG } else { theme::FG };
             let bg_color = if inverse { theme::FG } else { theme::BG };
             icon.draw_bottom_left(baseline, fg_color, bg_color);
-            baseline = baseline + Offset::new(icon.width() + 2, 0);
+            baseline = baseline + Offset::x(icon.width() + 2);
         }
         if inverse {
             display_inverse(baseline, &self.text, self.font);
@@ -173,6 +173,7 @@ impl Choice for ChoiceItem {
 
         Some(self.width_side())
     }
+
     /// Painting item on the side if it fits, otherwise paint incomplete if
     /// allowed
     fn paint_right(&self, area: Rect, show_incomplete: bool) -> Option<i16> {

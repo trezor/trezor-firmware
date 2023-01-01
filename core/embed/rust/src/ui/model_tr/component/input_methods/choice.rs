@@ -152,11 +152,6 @@ where
     ///
     /// Used for example in passphrase, where there are multiple categories of
     /// characters.
-    ///
-    /// NOTE: from the client point of view, it would also be an option to
-    /// always create a new instance with fresh setup, but I could not manage to
-    /// properly clean up the previous instance - it would still be shown on
-    /// screen and colliding with the new one.
     pub fn reset(
         &mut self,
         ctx: &mut EventCtx,
@@ -209,11 +204,11 @@ where
     /// Setting current buttons, and clearing.
     fn update(&mut self, ctx: &mut EventCtx) {
         self.set_buttons(ctx);
-        self.clear(ctx);
+        self.clear_and_repaint(ctx);
     }
 
     /// Clearing the whole area and requesting repaint.
-    fn clear(&mut self, ctx: &mut EventCtx) {
+    fn clear_and_repaint(&mut self, ctx: &mut EventCtx) {
         self.pad.clear();
         ctx.request_paint();
     }
@@ -339,9 +334,6 @@ where
     /// All three buttons are handled based upon the current choice.
     /// If defined in the current choice, setting their text,
     /// whether they are long-pressed, and painting them.
-    ///
-    /// NOTE: ButtonController is handling the painting, and
-    /// it will not repaint the buttons unless some of them changed.
     fn set_buttons(&mut self, ctx: &mut EventCtx) {
         // TODO: offer the possibility to change the buttons from the client
         // (button details could be changed in the same index)
@@ -387,7 +379,7 @@ where
                         self.update(ctx);
                     } else {
                         // Triggered LEFTmost button. Send event
-                        self.clear(ctx);
+                        self.clear_and_repaint(ctx);
                         return Some(ChoicePageMsg::LeftMost);
                     }
                 }
@@ -402,13 +394,13 @@ where
                         self.update(ctx);
                     } else {
                         // Triggered RIGHTmost button. Send event
-                        self.clear(ctx);
+                        self.clear_and_repaint(ctx);
                         return Some(ChoicePageMsg::RightMost);
                     }
                 }
                 ButtonPos::Middle => {
                     // Clicked SELECT. Send current choice index
-                    self.clear(ctx);
+                    self.clear_and_repaint(ctx);
                     return Some(ChoicePageMsg::Choice(self.page_counter));
                 }
             }
@@ -417,7 +409,7 @@ where
         // inversion.
         if let Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)) = button_event {
             self.inverse_selected_item = true;
-            self.clear(ctx);
+            self.clear_and_repaint(ctx);
         };
         None
     }

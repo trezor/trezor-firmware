@@ -17,9 +17,6 @@ pub enum FlowMsg {
     Cancelled,
 }
 
-// TODO: consider each FlowPage having the ability
-// to handle custom actions triggered by some btn.
-
 pub struct Flow<F, const M: usize> {
     pages: FlowPages<F, M>,
     current_page: Page<M>,
@@ -66,11 +63,11 @@ where
         }
         self.current_page.place(self.content_area);
         self.set_buttons(ctx);
-        self.clear(ctx);
+        self.clear_and_repaint(ctx);
     }
 
     /// Clearing the whole area and requesting repaint.
-    fn clear(&mut self, ctx: &mut EventCtx) {
+    fn clear_and_repaint(&mut self, ctx: &mut EventCtx) {
         self.pad.clear();
         ctx.request_paint();
     }
@@ -108,9 +105,6 @@ where
     /// All three buttons are handled based upon the current choice.
     /// If defined in the current choice, setting their text,
     /// whether they are long-pressed, and painting them.
-    ///
-    /// NOTE: ButtonController is handling the painting, and
-    /// it will not repaint the buttons unless some of them changed.
     fn set_buttons(&mut self, ctx: &mut EventCtx) {
         let btn_layout = self.current_page.btn_layout();
         self.buttons.mutate(ctx, |_ctx, buttons| {

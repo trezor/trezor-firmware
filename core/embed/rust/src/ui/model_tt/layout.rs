@@ -1075,23 +1075,11 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title).unwrap().try_into().unwrap();
-        let description: StrBuffer = kwargs
-            .get(Qstr::MP_QSTR_description)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let button: StrBuffer = kwargs
-            .get(Qstr::MP_QSTR_button)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let dry_run: bool = kwargs
-            .get(Qstr::MP_QSTR_dry_run)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false).unwrap();
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
+        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_BOLD, title).centered(),
@@ -1125,11 +1113,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let dry_run: bool = kwargs
-            .get(Qstr::MP_QSTR_dry_run)
-            .unwrap()
-            .try_into()
-            .unwrap();
+        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
         let title = if dry_run {
             "SEED CHECK"
         } else {
