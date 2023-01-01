@@ -46,18 +46,14 @@ pub enum ButtonControllerMsg {
 }
 
 /// Defines what kind of button should be currently used.
-pub enum ButtonType<T> {
-    Button(Button<T>),
-    HoldToConfirm(HoldToConfirm<T>),
+pub enum ButtonType {
+    Button(Button),
+    HoldToConfirm(HoldToConfirm),
     Nothing,
 }
 
-impl<T> ButtonType<T>
-where
-    T: AsRef<str>,
-    T: Clone,
-{
-    pub fn from_button_details(pos: ButtonPos, btn_details: Option<ButtonDetails<T>>) -> Self {
+impl ButtonType {
+    pub fn from_button_details(pos: ButtonPos, btn_details: Option<ButtonDetails>) -> Self {
         if let Some(btn_details) = btn_details {
             if btn_details.duration.is_some() {
                 Self::HoldToConfirm(Self::get_hold_to_confirm(pos, btn_details))
@@ -70,7 +66,7 @@ where
     }
 
     /// Create `Button` component from `btn_details`.
-    fn get_button(pos: ButtonPos, btn_details: ButtonDetails<T>) -> Button<T> {
+    fn get_button(pos: ButtonPos, btn_details: ButtonDetails) -> Button {
         // Deciding between text and icon
         if let Some(text) = btn_details.clone().text {
             Button::with_text(pos, text, btn_details.style())
@@ -82,7 +78,7 @@ where
     }
 
     /// Create `HoldToConfirm` component from `btn_details`.
-    fn get_hold_to_confirm(pos: ButtonPos, btn_details: ButtonDetails<T>) -> HoldToConfirm<T> {
+    fn get_hold_to_confirm(pos: ButtonPos, btn_details: ButtonDetails) -> HoldToConfirm {
         let duration = btn_details
             .duration
             .unwrap_or_else(|| Duration::from_millis(1000));
@@ -123,15 +119,15 @@ where
 ///
 /// Users have a choice of a normal button or Hold-to-confirm button.
 /// `button_type` specified what from those two is used, if anything.
-pub struct ButtonContainer<T> {
+pub struct ButtonContainer {
     pos: ButtonPos,
-    button_type: ButtonType<T>,
+    button_type: ButtonType,
 }
 
-impl<T: Clone + AsRef<str>> ButtonContainer<T> {
+impl ButtonContainer {
     /// Supplying `None` as `btn_details`  marks the button inactive
     /// (it can be later activated in `set()`).
-    pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails<T>>) -> Self {
+    pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails>) -> Self {
         Self {
             pos,
             button_type: ButtonType::from_button_details(pos, btn_details),
@@ -141,7 +137,7 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
     /// Changing the state of the button.
     ///
     /// Passing `None` as `btn_details` will mark the button as inactive.
-    pub fn set(&mut self, btn_details: Option<ButtonDetails<T>>, button_area: Rect) {
+    pub fn set(&mut self, btn_details: Option<ButtonDetails>, button_area: Rect) {
         self.button_type = ButtonType::from_button_details(self.pos, btn_details);
         self.button_type.place(button_area);
     }
@@ -205,11 +201,11 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
 ///
 /// Only "final" button events are returned in `ButtonControllerMsg::Triggered`,
 /// based upon the buttons being long-press or not.
-pub struct ButtonController<T> {
+pub struct ButtonController {
     pad: Pad,
-    left_btn: ButtonContainer<T>,
-    middle_btn: ButtonContainer<T>,
-    right_btn: ButtonContainer<T>,
+    left_btn: ButtonContainer,
+    middle_btn: ButtonContainer,
+    right_btn: ButtonContainer,
     state: ButtonState,
     // Button area is needed so the buttons
     // can be "re-placed" after their text is changed
@@ -217,8 +213,8 @@ pub struct ButtonController<T> {
     button_area: Rect,
 }
 
-impl<T: Clone + AsRef<str>> ButtonController<T> {
-    pub fn new(btn_layout: ButtonLayout<T>) -> Self {
+impl ButtonController {
+    pub fn new(btn_layout: ButtonLayout) -> Self {
         Self {
             pad: Pad::with_background(theme::BG).with_clear(),
             left_btn: ButtonContainer::new(ButtonPos::Left, btn_layout.btn_left),
@@ -230,7 +226,7 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
     }
 
     /// Updating all the three buttons to the wanted states.
-    pub fn set(&mut self, btn_layout: ButtonLayout<T>) {
+    pub fn set(&mut self, btn_layout: ButtonLayout) {
         self.pad.clear();
         self.left_btn.set(btn_layout.btn_left, self.button_area);
         self.middle_btn.set(btn_layout.btn_middle, self.button_area);
@@ -279,7 +275,7 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
     }
 }
 
-impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
+impl Component for ButtonController {
     type Msg = ButtonControllerMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -443,10 +439,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
 use super::ButtonContent;
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for ButtonContainer<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for ButtonContainer {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonContainer");
 
@@ -477,10 +470,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for ButtonController<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for ButtonController {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonController");
         t.field("left_btn", &self.left_btn);

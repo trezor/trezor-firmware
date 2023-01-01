@@ -111,10 +111,14 @@ impl ChoiceFactoryPassphrase {
         // Including accept button on the left and cancel on the very right.
         // TODO: could have some icons instead of the shortcut text
         if choice_index == 0 {
-            menu_item.set_left_btn(Some(ButtonDetails::text("ACC").with_default_duration()));
+            menu_item.set_left_btn(Some(
+                ButtonDetails::text("ACC".into()).with_default_duration(),
+            ));
         }
         if choice_index == MENU.len() as u8 - 1 {
-            menu_item.set_right_btn(Some(ButtonDetails::text("CAN").with_default_duration()));
+            menu_item.set_right_btn(Some(
+                ButtonDetails::text("CAN".into()).with_default_duration(),
+            ));
         }
 
         // Including icons for some items.
@@ -131,7 +135,10 @@ impl ChoiceFactoryPassphrase {
     /// return back
     fn get_character_item(&self, choice_index: u8) -> ChoiceItem {
         if is_menu_choice(&self.current_category, choice_index) {
-            ChoiceItem::new("MENU", ButtonLayout::three_icons_middle_text("RETURN"))
+            ChoiceItem::new(
+                "MENU",
+                ButtonLayout::three_icons_middle_text("RETURN".into()),
+            )
         } else {
             let ch = get_char(&self.current_category, choice_index);
             ChoiceItem::new(char_to_string::<1>(ch), ButtonLayout::default_three_icons())

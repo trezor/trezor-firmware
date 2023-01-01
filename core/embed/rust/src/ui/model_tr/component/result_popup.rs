@@ -1,8 +1,9 @@
 use crate::{
+    micropython::buffer::StrBuffer,
     time::Instant,
     ui::{
         component::{
-            text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
+            text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, ComponentExt, Event, EventCtx, Label, Pad,
         },
         constant::screen,
@@ -20,14 +21,14 @@ pub enum ResultPopupMsg {
     Confirmed,
 }
 
-pub struct ResultPopup<S> {
+pub struct ResultPopup {
     area: Rect,
     pad: Pad,
     result_anim: Child<ResultAnim>,
     headline_baseline: Point,
     headline: Option<Label<&'static str>>,
-    text: Child<Paragraphs<Paragraph<S>>>,
-    buttons: Option<Child<ButtonController<&'static str>>>,
+    text: Child<Paragraphs<Paragraph<StrBuffer>>>,
+    buttons: Option<Child<ButtonController>>,
     autoclose: bool,
 }
 
@@ -37,10 +38,10 @@ const ANIM_POS: i16 = 32;
 const ANIM_POS_ADJ_HEADLINE: i16 = 10;
 const ANIM_POS_ADJ_BUTTON: i16 = 6;
 
-impl<S: ParagraphStrType> ResultPopup<S> {
+impl ResultPopup {
     pub fn new(
         icon: &'static [u8],
-        text: S,
+        text: StrBuffer,
         headline: Option<&'static str>,
         button_text: Option<&'static str>,
     ) -> Self {
@@ -48,7 +49,7 @@ impl<S: ParagraphStrType> ResultPopup<S> {
             .with_placement(LinearPlacement::vertical().align_at_center());
 
         let buttons = button_text.map(|text| {
-            let btn_layout = ButtonLayout::only_right_text(text);
+            let btn_layout = ButtonLayout::only_right_text(text.into());
             Child::new(ButtonController::new(btn_layout))
         });
 
@@ -84,7 +85,7 @@ impl<S: ParagraphStrType> ResultPopup<S> {
     }
 }
 
-impl<S: ParagraphStrType> Component for ResultPopup<S> {
+impl Component for ResultPopup {
     type Msg = ResultPopupMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -155,7 +156,7 @@ impl<S: ParagraphStrType> Component for ResultPopup<S> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<S: ParagraphStrType> crate::trace::Trace for ResultPopup<S> {
+impl crate::trace::Trace for ResultPopup {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("ResultPopup");
         self.text.trace(d);

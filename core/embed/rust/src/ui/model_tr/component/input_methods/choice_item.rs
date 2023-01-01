@@ -15,12 +15,12 @@ use super::super::{
 pub struct ChoiceItem {
     text: String<50>,
     icon: Option<Icon>,
-    btn_layout: ButtonLayout<&'static str>,
+    btn_layout: ButtonLayout,
     font: Font,
 }
 
 impl ChoiceItem {
-    pub fn new<T>(text: T, btn_layout: ButtonLayout<&'static str>) -> Self
+    pub fn new<T>(text: T, btn_layout: ButtonLayout) -> Self
     where
         T: AsRef<str>,
     {
@@ -105,17 +105,17 @@ impl ChoiceItem {
     }
 
     /// Setting left button.
-    pub fn set_left_btn(&mut self, btn_left: Option<ButtonDetails<&'static str>>) {
+    pub fn set_left_btn(&mut self, btn_left: Option<ButtonDetails>) {
         self.btn_layout.btn_left = btn_left;
     }
 
     /// Setting middle button.
-    pub fn set_middle_btn(&mut self, btn_middle: Option<ButtonDetails<&'static str>>) {
+    pub fn set_middle_btn(&mut self, btn_middle: Option<ButtonDetails>) {
         self.btn_layout.btn_middle = btn_middle;
     }
 
     /// Setting right button.
-    pub fn set_right_btn(&mut self, btn_right: Option<ButtonDetails<&'static str>>) {
+    pub fn set_right_btn(&mut self, btn_right: Option<ButtonDetails>) {
         self.btn_layout.btn_right = btn_right;
     }
 
@@ -193,7 +193,7 @@ impl Choice for ChoiceItem {
     }
 
     /// Getting current button layout.
-    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+    fn btn_layout(&self) -> ButtonLayout {
         self.btn_layout.clone()
     }
 }

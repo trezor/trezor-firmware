@@ -1,9 +1,12 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Pad},
-    display::Font,
-    event::{ButtonEvent, USBEvent},
-    geometry::{Offset, Point, Rect},
-    model_tr::constant,
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        component::{Component, Event, EventCtx, Pad},
+        display::Font,
+        event::{ButtonEvent, USBEvent},
+        geometry::{Offset, Point, Rect},
+        model_tr::constant,
+    },
 };
 
 use super::{common::display_center, theme};
@@ -14,9 +17,9 @@ const LABEL_Y: i16 = 62;
 const LOCKED_Y: i16 = 32;
 const TAP_Y: i16 = 47;
 
-pub struct Homescreen<T> {
-    label: T,
-    notification: Option<(T, u8)>,
+pub struct Homescreen {
+    label: StrBuffer,
+    notification: Option<(StrBuffer, u8)>,
     usb_connected: bool,
     pad: Pad,
 }
@@ -25,11 +28,8 @@ pub enum HomescreenMsg {
     Dismissed,
 }
 
-impl<T> Homescreen<T>
-where
-    T: AsRef<str>,
-{
-    pub fn new(label: T, notification: Option<(T, u8)>) -> Self {
+impl Homescreen {
+    pub fn new(label: StrBuffer, notification: Option<(StrBuffer, u8)>) -> Self {
         Self {
             label,
             notification,
@@ -57,10 +57,7 @@ where
     }
 }
 
-impl<T> Component for Homescreen<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Homescreen {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -89,7 +86,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T: AsRef<str>> crate::trace::Trace for Homescreen<T> {
+impl crate::trace::Trace for Homescreen {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("Homescreen");
         d.kw_pair("active_page", "0");
@@ -99,21 +96,18 @@ impl<T: AsRef<str>> crate::trace::Trace for Homescreen<T> {
     }
 }
 
-pub struct Lockscreen<T> {
-    label: T,
+pub struct Lockscreen {
+    label: StrBuffer,
     bootscreen: bool,
 }
 
-impl<T> Lockscreen<T> {
-    pub fn new(label: T, bootscreen: bool) -> Self {
+impl Lockscreen {
+    pub fn new(label: StrBuffer, bootscreen: bool) -> Self {
         Lockscreen { label, bootscreen }
     }
 }
 
-impl<T> Component for Lockscreen<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Lockscreen {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -144,10 +138,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Lockscreen<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for Lockscreen {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("Lockscreen");
         d.field("label", &self.label.as_ref());

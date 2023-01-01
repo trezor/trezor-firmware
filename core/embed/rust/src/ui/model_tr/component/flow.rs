@@ -24,7 +24,7 @@ pub struct Flow<F, const M: usize> {
     content_area: Rect,
     title_area: Rect,
     pad: Pad,
-    buttons: Child<ButtonController<&'static str>>,
+    buttons: Child<ButtonController>,
     page_counter: u8,
 }
 
