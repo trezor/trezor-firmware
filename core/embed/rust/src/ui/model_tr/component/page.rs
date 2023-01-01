@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
     display::Color,
-    geometry::{Insets, Offset, Rect},
+    geometry::{Insets, Rect},
 };
 
 use super::{
@@ -159,21 +159,8 @@ where
         // Put it into its dedicated area when parent component already chose it,
         // otherwise place it into the right top of the content.
         if self.show_scrollbar {
-            let max_scrollbar_area = if let Some(scrollbar_area) = self.parent_scrollbar_area {
-                scrollbar_area
-            } else {
-                content_area
-            };
-            // Occupying as little space as possible (according to the number of pages),
-            // aligning to the right.
-            let min_scrollbar_area = Rect::from_top_right_and_size(
-                max_scrollbar_area.top_right(),
-                Offset::new(
-                    self.scrollbar.inner().overall_width(),
-                    ScrollBar::MAX_DOT_SIZE,
-                ),
-            );
-            self.scrollbar.place(min_scrollbar_area);
+            let scrollbar_area = self.parent_scrollbar_area.unwrap_or(content_area);
+            self.scrollbar.place(scrollbar_area);
         }
 
         self.buttons.place(button_area);

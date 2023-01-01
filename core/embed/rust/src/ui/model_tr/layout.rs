@@ -285,51 +285,44 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
-        let truncated_address: StrBuffer =
-            kwargs.get(Qstr::MP_QSTR_truncated_address)?.try_into()?;
         let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
-        let title: StrBuffer = "SEND".into();
+        let address_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_title)?.try_into()?;
+        let amount_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
 
         let get_page = move |page_index| {
             // Showing two screens - the recipient address and summary confirmation
             match page_index {
                 0 => {
-                    // `icon + label + address`
+                    // RECIPIENT + address
                     let btn_layout = ButtonLayout::new(
                         Some(ButtonDetails::cancel_icon()),
                         None,
-                        Some(ButtonDetails::text("CONTINUE".into())),
+                        Some(ButtonDetails::text("CONFIRM".into())),
                     );
                     let btn_actions = ButtonActions::cancel_next();
-                    Page::<20>::new(btn_layout, btn_actions, Font::MONO).icon_label_text(
-                        theme::ICON_USER,
-                        "Recipient".into(),
-                        address.clone(),
-                    )
+                    Page::<10>::new(btn_layout, btn_actions, Font::MONO)
+                        .with_title(address_title)
+                        .text_mono(address)
                 }
                 1 => {
-                    // 2 pairs `icon + label + text`
+                    // AMOUNT + amount
                     let btn_layout = ButtonLayout::new(
-                        Some(ButtonDetails::cancel_icon()),
+                        Some(ButtonDetails::up_arrow_icon()),
                         None,
-                        Some(ButtonDetails::text("HOLD TO CONFIRM".into()).with_default_duration()),
+                        Some(ButtonDetails::text("CONFIRM".into())),
                     );
                     let btn_actions = ButtonActions::cancel_confirm();
-                    Page::<20>::new(btn_layout, btn_actions, Font::MONO)
-                        .icon_label_text(
-                            theme::ICON_USER,
-                            "Recipient".into(),
-                            truncated_address.clone(),
-                        )
+                    Page::<10>::new(btn_layout, btn_actions, Font::MONO)
+                        .with_title(amount_title)
                         .newline()
-                        .icon_label_text(theme::ICON_AMOUNT, "Amount".into(), amount.clone())
+                        .text_mono(amount)
                 }
                 _ => unreachable!(),
             }
         };
         let pages = FlowPages::new(get_page, 2);
 
-        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(address_title))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -337,7 +330,6 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
         let fee_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_amount)?.try_into()?;
         let fee_rate_amount: Option<StrBuffer> = kwargs
@@ -347,33 +339,35 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let fee_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
 
         let get_page = move |page_index| {
-            // One page with 2 or 3 pairs `icon + label + text`
+            // Total amount + fee
             assert!(page_index == 0);
 
             let btn_layout = ButtonLayout::new(
                 Some(ButtonDetails::cancel_icon()),
                 None,
-                Some(ButtonDetails::text("HOLD TO SEND".into()).with_default_duration()),
+                Some(ButtonDetails::text("HOLD TO CONFIRM".into()).with_default_duration()),
             );
             let btn_actions = ButtonActions::cancel_confirm();
 
-            let mut flow_page = Page::<25>::new(btn_layout, btn_actions, Font::MONO)
-                .icon_label_text(theme::ICON_PARAM, total_label.clone(), total_amount.clone())
+            let mut flow_page = Page::<15>::new(btn_layout, btn_actions, Font::MONO)
+                .text_bold(total_label)
                 .newline()
-                .icon_label_text(theme::ICON_PARAM, fee_label.clone(), fee_amount.clone());
+                .text_mono(total_amount)
+                .newline()
+                .text_bold(fee_label)
+                .newline()
+                .text_mono(fee_amount);
 
-            if let Some(fee_rate_amount) = &fee_rate_amount {
-                flow_page = flow_page.newline().icon_label_text(
-                    theme::ICON_PARAM,
-                    "Fee rate".into(),
-                    fee_rate_amount.clone(),
-                )
+            // Fee rate amount might not be there
+            if let Some(fee_rate_amount) = fee_rate_amount {
+                flow_page = flow_page.newline().text_mono(fee_rate_amount)
             }
+
             flow_page
         };
         let pages = FlowPages::new(get_page, 1);
 
-        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
+        let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -747,15 +741,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_output_r(
     ///     *,
     ///     address: str,
-    ///     truncated_address: str,
     ///     amount: str,
+    ///     address_title: str,
+    ///     amount_title: str,
     /// ) -> object:
     ///     """Confirm output. Specific for model R."""
     Qstr::MP_QSTR_confirm_output_r => obj_fn_kw!(0, new_confirm_output).as_obj(),
 
     /// def confirm_total_r(
     ///     *,
-    ///     title: str,
     ///     total_amount: str,
     ///     fee_amount: str,
     ///     fee_rate_amount: str | None = None,

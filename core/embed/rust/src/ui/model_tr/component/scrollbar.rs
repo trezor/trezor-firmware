@@ -17,10 +17,10 @@ pub struct ScrollBar {
 /// Carrying the appearance of the scrollbar dot.
 #[derive(Debug)]
 enum DotType {
-    BigFull,
-    Big,
-    Middle,
-    Small,
+    BigFull, // *
+    Big,     // O
+    Middle,  // o
+    Small,   // .
 }
 
 /// How many dots at most will there be
@@ -132,6 +132,9 @@ impl ScrollBar {
 
         match self.page_count {
             0..=3 => {
+                // *OO
+                // O*O
+                // OO*
                 for i in 0..self.page_count {
                     if i == self.active_page {
                         unwrap!(dots.push(DotType::BigFull));
@@ -141,6 +144,10 @@ impl ScrollBar {
                 }
             }
             4 => {
+                // *OOo
+                // O*Oo
+                // oO*O
+                // oOO*
                 match self.active_page {
                     0 => unwrap!(dots.push(DotType::BigFull)),
                     1 => unwrap!(dots.push(DotType::Big)),
@@ -161,6 +168,13 @@ impl ScrollBar {
                 };
             }
             _ => {
+                // *OOo.
+                // O*Oo.
+                // oO*Oo
+                // ...
+                // oO*Oo
+                // .oO*O
+                // .oOO*
                 let full_dot_index = match self.active_page {
                     0 => 0,
                     1 => 1,
@@ -214,8 +228,14 @@ impl Component for ScrollBar {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.pad.place(bounds);
-        bounds
+        // Occupying as little space as possible (according to the number of pages),
+        // aligning to the right.
+        let scrollbar_area = Rect::from_top_right_and_size(
+            bounds.top_right(),
+            Offset::new(self.overall_width(), Self::MAX_DOT_SIZE),
+        );
+        self.pad.place(scrollbar_area);
+        scrollbar_area
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {

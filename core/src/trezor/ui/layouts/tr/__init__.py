@@ -819,30 +819,20 @@ async def confirm_output(
     ctx: GenericContext,
     address: str,
     amount: str,
-    subtitle: str = "",
     title: str = "Confirm sending",
+    index: int | None = None,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    # Creating the truncated address here, not having to do it in Rust
-    chars_to_take = 4
-    ellipsis = " ... "
-    truncated_address = address[:chars_to_take] + ellipsis + address[-chars_to_take:]
-
-    # Also splitting the address into chunks delimited by whitespace
-    chunk_length = 4
-    delimiter = " "
-    address_chunks: list[str] = []
-    for i in range(0, len(address), chunk_length):
-        address_chunks.append(address[i : i + chunk_length])
-    address_str = delimiter.join(address_chunks)
-
+    address_title = "RECIPIENT" if index is None else f"RECIPIENT #{index + 1}"
+    amount_title = "AMOUNT" if index is None else f"AMOUNT #{index + 1}"
     await raise_if_cancelled(
         interact(
             ctx,
             RustLayout(
                 trezorui2.confirm_output_r(
-                    address=address_str,
-                    truncated_address=truncated_address,
+                    address=address,
+                    address_title=address_title,
+                    amount_title=amount_title,
                     amount=amount,
                 )
             ),
@@ -1037,9 +1027,8 @@ async def confirm_total(
     total_amount: str,
     fee_amount: str,
     fee_rate_amount: str | None = None,
-    title: str = "Send transaction?",
-    total_label: str = "Total amount:",
-    fee_label: str = "Including fee:",
+    total_label: str = "Total amount",
+    fee_label: str = "Including fee",
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
@@ -1048,12 +1037,11 @@ async def confirm_total(
             ctx,
             RustLayout(
                 trezorui2.confirm_total_r(
-                    title=title.upper(),
                     total_amount=total_amount,
                     fee_amount=fee_amount,
                     fee_rate_amount=fee_rate_amount,
-                    total_label=total_label,
-                    fee_label=fee_label,
+                    total_label=total_label.upper(),
+                    fee_label=fee_label.upper(),
                 )
             ),
             br_type,

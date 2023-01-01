@@ -100,7 +100,7 @@ impl<const N: usize> ShareWords<N> {
         for i in 0..WORDS_PER_PAGE {
             y_offset += NUMBER_FONT.line_height() + EXTRA_LINE_HEIGHT;
             let index = self.word_index() + i;
-            let word = self.share_words[index].clone();
+            let word = self.share_words[index];
             let baseline = self.area.top_left() + Offset::new(NUMBER_X_OFFSET, y_offset);
             display(baseline, &inttostr!(index as u8 + 1), NUMBER_FONT);
             display(baseline + Offset::x(NUMBER_WORD_OFFSET), &word, WORD_FONT);
@@ -154,7 +154,7 @@ impl<const N: usize> crate::trace::Trace for ShareWords<N> {
         } else {
             for i in 0..WORDS_PER_PAGE {
                 let index = self.word_index() + i;
-                let word = self.share_words[index].clone();
+                let word = self.share_words[index];
                 let content = build_string!(20, inttostr!(index as u8 + 1), " ", &word, "\n");
                 t.string(&content);
             }

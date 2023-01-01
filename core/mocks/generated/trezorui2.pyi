@@ -39,8 +39,9 @@ def confirm_properties(
 def confirm_output_r(
     *,
     address: str,
-    truncated_address: str,
     amount: str,
+    address_title: str,
+    amount_title: str,
 ) -> object:
     """Confirm output. Specific for model R."""
 
@@ -48,7 +49,6 @@ def confirm_output_r(
 # rust/src/ui/model_tr/layout.rs
 def confirm_total_r(
     *,
-    title: str,
     total_amount: str,
     fee_amount: str,
     fee_rate_amount: str | None = None,

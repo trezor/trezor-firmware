@@ -44,7 +44,11 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
 
 
 async def confirm_output(
-    ctx: Context, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
+    ctx: Context,
+    output: TxOutput,
+    coin: CoinInfo,
+    amount_unit: AmountUnit,
+    index: int | None,
 ) -> None:
     from . import omni
     from trezor.enums import OutputScriptType
@@ -83,6 +87,7 @@ async def confirm_output(
             address_short,
             format_coin_amount(output.amount, coin, amount_unit),
             title=title,
+            index=index,
         )
 
     await layout
