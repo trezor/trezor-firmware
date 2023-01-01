@@ -208,7 +208,6 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             kwargs.get(Qstr::MP_QSTR_verb_cancel)?.try_into_option()?;
         let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
         let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
-        // TODO: centered_title: bool, show_scrollbar: bool, show_arrows: bool
 
         let paragraphs = {
             let action = action.unwrap_or_default();
@@ -457,18 +456,14 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-// TODO: not supplying tuple of data, supply data itself without unpacking
 /// General pattern of most tutorial screens.
 /// (title, text, btn_layout, btn_actions)
 fn tutorial_screen(
-    data: (
-        StrBuffer,
-        StrBuffer,
-        ButtonLayout<&'static str>,
-        ButtonActions,
-    ),
+    title: StrBuffer,
+    text: StrBuffer,
+    btn_layout: ButtonLayout<&'static str>,
+    btn_actions: ButtonActions,
 ) -> Page<10> {
-    let (title, text, btn_layout, btn_actions) = data;
     let mut page = Page::<10>::new(
         btn_layout,
         btn_actions,
@@ -499,44 +494,44 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             match page_index {
                 // title, text, btn_layout, btn_actions
                 0 => {
-                    tutorial_screen((
+                    tutorial_screen(
                         "HELLO".into(),
                         "Welcome to Trezor.\nPress right to continue.".into(),
                         ButtonLayout::cancel_and_arrow(),
                         ButtonActions::last_next(),
-                    ))
+                    )
                 },
                 1 => {
-                    tutorial_screen((
+                    tutorial_screen(
                         "".into(),
                         "Use Trezor by clicking left and right.\n\nContinue right.".into(),
                         ButtonLayout::left_right_arrows(),
                         ButtonActions::prev_next(),
-                    ))
+                    )
                 },
                 2 => {
-                    tutorial_screen((
+                    tutorial_screen(
                         "HOLD TO CONFIRM".into(),
                         "Press and hold right to approve important operations.".into(),
                         ButtonLayout::back_and_htc_text("HOLD TO CONFIRM", Duration::from_millis(1000)),
                         ButtonActions::prev_next(),
-                    ))
+                    )
                 },
                 3 => {
-                    tutorial_screen((
+                    tutorial_screen(
                         "SCREEN SCROLL".into(),
                         "Press right to scroll down to read all content when text\ndoesn't fit on one screen. Press left to scroll up.".into(),
                         ButtonLayout::back_and_text("GOT IT"),
                         ButtonActions::prev_next(),
-                    ))
+                    )
                 },
                 4 => {
-                    tutorial_screen((
+                    tutorial_screen(
                         "CONFIRM".into(),
                         "Press both left and right at the same time to confirm.".into(),
                         ButtonLayout::middle_armed_text("CONFIRM"),
                         ButtonActions::prev_next_with_middle(),
-                    ))
+                    )
                 },
                 // This page is special
                 5 => {
@@ -553,12 +548,12 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                         .text_bold("You're ready to\nuse Trezor.".into())
                 },
                 6 => {
-                    tutorial_screen((
+                    tutorial_screen(
                         "SKIP TUTORIAL".into(),
                         "Are you sure you want to skip the tutorial?".into(),
                         ButtonLayout::cancel_and_text("SKIP"),
                         ButtonActions::beginning_cancel(),
-                    ))
+                    )
                 },
                 _ => unreachable!(),
             }
@@ -902,102 +897,3 @@ pub static mp_module_trezorui2: Module = obj_module! {
     // ///     """Homescreen used for indicating coinjoin in progress."""
     // Qstr::MP_QSTR_show_busyscreen => obj_fn_kw!(0, new_show_busyscreen).as_obj(),
 };
-
-#[cfg(test)]
-mod tests {
-    //     use crate::{
-    //         trace::Trace,
-    //         ui::{
-    //             component::Component,
-    //             model_tr::{
-    //                 component::{Dialog, DialogMsg},
-    //                 constant,
-    //             },
-    //         },
-    //     };
-
-    //     use super::*;
-
-    //     fn trace(val: &impl Trace) -> String {
-    //         let mut t = Vec::new();
-    //         val.trace(&mut t);
-    //         String::from_utf8(t).unwrap()
-    //     }
-
-    //     impl<T, U> ComponentMsgObj for Dialog<T, U>
-    //     where
-    //         T: ComponentMsgObj,
-    //         U: AsRef<str>,
-    //     {
-    //         fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>
-    // {             match msg {
-    //                 DialogMsg::Content(c) =>
-    // self.inner().msg_try_into_obj(c),
-    // DialogMsg::LeftClicked => Ok(CANCELLED.as_obj()),
-    // DialogMsg::RightClicked => Ok(CONFIRMED.as_obj()),             }
-    //         }
-    //     }
-
-    //     #[test]
-    //     fn trace_example_layout() {
-    //         let mut layout = Dialog::new(
-    //             FormattedText::new(
-    //                 theme::TEXT_NORMAL,
-    //                 theme::FORMATTED,
-    //                 "Testing text layout, with some text, and some more text.
-    // And {param}",             )
-    //             .with("param", "parameters!"),
-    //             Some(Button::with_text(
-    //                 ButtonPos::Left,
-    //                 "Left",
-    //                 theme::button_cancel(),
-    //             )),
-    //             Some(Button::with_text(
-    //                 ButtonPos::Right,
-    //                 "Right",
-    //                 theme::button_default(),
-    //             )),
-    //         );
-    //         layout.place(constant::screen());
-    //         assert_eq!(
-    //             trace(&layout),
-    //             r#"<Dialog content:<Text content:Testing text layout,
-    // with some text, and
-    // some more text. And p-
-    // arameters! > left:<Button text:Left > right:<Button text:Right > >"#
-    //         )
-    //     }
-
-    //     #[test]
-    //     fn trace_layout_title() {
-    //         let mut layout = Frame::new(
-    //             "Please confirm",
-    //             Dialog::new(
-    //                 FormattedText::new(
-    //                     theme::TEXT_NORMAL,
-    //                     theme::FORMATTED,
-    //                     "Testing text layout, with some text, and some more
-    // text. And {param}",                 )
-    //                 .with("param", "parameters!"),
-    //                 Some(Button::with_text(
-    //                     ButtonPos::Left,
-    //                     "Left",
-    //                     theme::button_cancel(),
-    //                 )),
-    //                 Some(Button::with_text(
-    //                     ButtonPos::Right,
-    //                     "Right",
-    //                     theme::button_default(),
-    //                 )),
-    //             ),
-    //         );
-    //         layout.place(constant::screen());
-    //         assert_eq!(
-    //             trace(&layout),
-    //             r#"<Frame title:Please confirm content:<Dialog content:<Text
-    // content:Testing text layout, with some text, and
-    // some more text. And p-
-    // arameters! > left:<Button text:Left > right:<Button text:Right > > >"#
-    //         )
-    //     }
-}

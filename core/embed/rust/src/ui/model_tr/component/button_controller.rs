@@ -13,12 +13,30 @@ use crate::{
 
 use heapless::String;
 
+/// All possible states buttons (left and right) can be at.
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum ButtonState {
+    /// Both buttons are in untouched state.
+    /// _ _
+    /// NEXT: OneDown
     Nothing,
+    /// One Button is down when previously nothing was.
+    /// _ _  ... ↓ _ | _ ↓
+    /// NEXT: Nothing, BothDown
     OneDown(PhysicalButton),
+    /// Both buttons are down ("middle-click").
+    /// ↓ _ | _ ↓ ... ↓ ↓
+    /// NEXT: OneReleased
     BothDown,
+    /// One button is down when previously both were.
+    /// Happens when "middle-click" is performed.
+    /// ↓ ↓ ... ↓ _ | _ ↓
+    /// NEXT: Nothing, BothDown
     OneReleased(PhysicalButton),
+    /// One button is down after it triggered a HoldToConfirm event.
+    /// Needed so that we can cleanly reset the state.
+    /// ↓ _ | _ ↓ ... ↓ _ | _ ↓
+    /// NEXT: Nothing
     HTCNeedsRelease(PhysicalButton),
 }
 
@@ -70,10 +88,8 @@ where
             .unwrap_or_else(|| Duration::from_millis(1000));
         if let Some(text) = btn_details.text {
             HoldToConfirm::text(pos, text, LoaderStyleSheet::default(), duration)
-        } else if let Some(icon) = btn_details.icon {
-            HoldToConfirm::icon(pos, icon, LoaderStyleSheet::default(), duration)
         } else {
-            panic!("ButtonContainer: no text or icon provided");
+            panic!("ButtonContainer: only text supported for HTC");
         }
     }
 
@@ -251,7 +267,6 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
             self.set_pressed(ctx, false, false, false);
             return Some(ButtonControllerMsg::Triggered(ButtonPos::Left));
         } else if self.middle_btn.htc_got_triggered(ctx, event) {
-            // TODO: how to handle it here? Do we even need to?
             self.state = ButtonState::Nothing;
             self.set_pressed(ctx, false, false, false);
             return Some(ButtonControllerMsg::Triggered(ButtonPos::Middle));
@@ -272,28 +287,36 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
         // We are matching event with `Event::Button` for a button action
         // and `Event::Timer` for getting the expiration of HTC.
         match event {
-            Event::Button(button) => {
+            Event::Button(button_event) => {
                 let (new_state, event) = match self.state {
-                    ButtonState::Nothing => match button {
-                        ButtonEvent::ButtonPressed(which) => {
-                            let event = match which {
+                    // _ _
+                    ButtonState::Nothing => match button_event {
+                        // ▼ * | * ▼
+                        ButtonEvent::ButtonPressed(which) => (
+                            // ↓ _ | _ ↓
+                            ButtonState::OneDown(which),
+                            match which {
+                                // ▼ *
                                 PhysicalButton::Left => {
                                     self.left_btn.hold_started(ctx);
                                     Some(ButtonControllerMsg::Pressed(ButtonPos::Left))
                                 }
+                                // * ▼
                                 PhysicalButton::Right => {
                                     self.right_btn.hold_started(ctx);
                                     Some(ButtonControllerMsg::Pressed(ButtonPos::Right))
                                 }
-                                _ => None,
-                            };
-                            (ButtonState::OneDown(which), event)
-                        }
+                            },
+                        ),
                         _ => (self.state, None),
                     },
-                    ButtonState::OneDown(which_down) => match button {
+                    // ↓ _ | _ ↓
+                    ButtonState::OneDown(which_down) => match button_event {
+                        // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(b) if b == which_down => match which_down {
+                            // ▲ *
                             PhysicalButton::Left => (
+                                // _ _
                                 ButtonState::Nothing,
                                 if self.left_btn.reacts_to_single_click() {
                                     Some(ButtonControllerMsg::Triggered(ButtonPos::Left))
@@ -302,7 +325,9 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                                     None
                                 },
                             ),
+                            // * ▲
                             PhysicalButton::Right => (
+                                // _ _
                                 ButtonState::Nothing,
                                 if self.right_btn.reacts_to_single_click() {
                                     Some(ButtonControllerMsg::Triggered(ButtonPos::Right))
@@ -311,31 +336,39 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                                     None
                                 },
                             ),
-                            _ => (ButtonState::Nothing, None),
                         },
-
+                        // * ▼ | ▼ *
                         ButtonEvent::ButtonPressed(b) if b != which_down => {
                             self.middle_hold_started(ctx);
                             (
+                                // ↓ ↓
                                 ButtonState::BothDown,
                                 Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)),
                             )
                         }
                         _ => (self.state, None),
                     },
-                    ButtonState::BothDown => match button {
+                    // ↓ ↓
+                    ButtonState::BothDown => match button_event {
+                        // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(b) => {
                             self.middle_btn.hold_ended(ctx);
+                            // _ ↓ | ↓ _
                             (ButtonState::OneReleased(b), None)
                         }
                         _ => (self.state, None),
                     },
-                    ButtonState::OneReleased(which_up) => match button {
+                    // ↓ _ | _ ↓
+                    ButtonState::OneReleased(which_up) => match button_event {
+                        // * ▼ | ▼ *
                         ButtonEvent::ButtonPressed(b) if b == which_up => {
                             self.middle_hold_started(ctx);
+                            // ↓ ↓
                             (ButtonState::BothDown, None)
                         }
+                        // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(b) if b != which_up => (
+                            // _ _
                             ButtonState::Nothing,
                             if self.middle_btn.reacts_to_single_click() {
                                 Some(ButtonControllerMsg::Triggered(ButtonPos::Middle))
@@ -345,9 +378,12 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         ),
                         _ => (self.state, None),
                     },
-                    ButtonState::HTCNeedsRelease(needs_release) => match button {
+                    // ↓ _ | _ ↓
+                    ButtonState::HTCNeedsRelease(needs_release) => match button_event {
                         // Only going out of this state if correct button was released
+                        // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(released) if needs_release == released => {
+                            // _ _
                             (ButtonState::Nothing, None)
                         }
                         _ => (self.state, None),
@@ -367,7 +403,6 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         PhysicalButton::Right => {
                             self.set_pressed(ctx, false, false, true);
                         }
-                        _ => {}
                     },
                     ButtonState::BothDown | ButtonState::OneReleased(_) => {
                         self.set_pressed(ctx, false, true, false);
@@ -377,6 +412,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                 self.state = new_state;
                 event
             }
+            // HoldToConfirm expiration
             Event::Timer(_) => self.handle_htc_expiration(ctx, event),
             _ => None,
         }

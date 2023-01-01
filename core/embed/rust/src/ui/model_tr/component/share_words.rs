@@ -63,7 +63,7 @@ impl<const N: usize> ShareWords<N> {
         // It would need creating a String out of it, which is not ideal.
         let free_area = text_multiline(
             self.area,
-            "Write all 12\nwords in order on\nrecovery seed card.",
+            "Write all 12\nwords in order on\nrecovery seed card",
             Font::BOLD,
             theme::FG,
             theme::BG,

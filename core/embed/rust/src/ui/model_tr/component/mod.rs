@@ -2,11 +2,11 @@ mod button;
 mod button_controller;
 mod changing_text;
 mod common;
-mod confirm;
 mod flow;
 mod flow_pages;
 mod flow_pages_poc_helpers;
 mod frame;
+mod hold_to_confirm;
 mod homescreen;
 mod input_methods;
 mod loader;
@@ -25,7 +25,7 @@ pub use button::{
     Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonMsg,
     ButtonPos, ButtonStyle, ButtonStyleSheet,
 };
-pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
+pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 
 pub use button_controller::{ButtonController, ButtonControllerMsg};
 pub use changing_text::ChangingTextLine;

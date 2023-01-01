@@ -12,20 +12,18 @@ use crate::{
 
 use heapless::Vec;
 
-// TODO: consider moving into T: AsRef<str> instead of StrBuffer?
 // TODO: document this
 #[derive(Clone)]
 pub struct ToDisplay {
     pub text: StrBuffer,
-    // TODO: rename to "length_from_end"
-    pub length: usize,
+    pub length_from_end: usize,
 }
 
 impl ToDisplay {
     pub fn new(text: StrBuffer) -> Self {
         Self {
             text: text.clone(),
-            length: text.len(),
+            length_from_end: text.len(),
         }
     }
 }
@@ -207,12 +205,12 @@ impl TextLayout {
             let real_op = {
                 match op {
                     Op::Text(to_display) if skipped < skip_bytes => {
-                        skipped = skipped.saturating_add(to_display.length);
+                        skipped = skipped.saturating_add(to_display.length_from_end);
                         if skipped > skip_bytes {
                             let leave_bytes = skipped - skip_bytes;
                             let new_display = ToDisplay {
                                 text: to_display.text,
-                                length: leave_bytes,
+                                length_from_end: leave_bytes,
                             };
                             Some(Op::Text(new_display))
                         } else {
@@ -277,7 +275,7 @@ impl TextLayout {
                         let fit = if let Op::Text(to_display) = op {
                             // TODO: document this a little bit
                             let text = to_display.text.as_ref();
-                            let text_len = to_display.length;
+                            let text_len = to_display.length_from_end;
                             let start = text.len() - text_len;
                             let to_really_display = &text[start..];
                             // TODO: pass in whether we are in the middle of a string
@@ -451,10 +449,6 @@ impl TextLayout {
         }
 
         sink.icon(*cursor, self, icon);
-
-        // TODO: currently we are using just small icons - that fit nicely to one line -
-        // but in case we would do bigger ones, we would need some anti-collision
-        // mechanism.
 
         cursor.x += icon.width() as i16;
         LayoutFit::Fitting {
