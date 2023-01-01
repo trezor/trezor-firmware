@@ -1,25 +1,27 @@
 use super::{common, theme, ScrollBar};
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx},
-    geometry::{Insets, Rect},
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        component::{Child, Component, Event, EventCtx},
+        geometry::{Insets, Rect},
+    },
 };
 
 /// Component for holding another component and displaying a title.
 /// Also is allocating space for a scrollbar.
-pub struct Frame<T, U> {
+pub struct Frame<T> {
     area: Rect,
-    title: U,
+    title: StrBuffer,
     title_centered: bool,
     account_for_scrollbar: bool,
     content: Child<T>,
 }
 
-impl<T, U> Frame<T, U>
+impl<T> Frame<T>
 where
     T: Component,
-    U: AsRef<str>,
 {
-    pub fn new(title: U, content: T) -> Self {
+    pub fn new(title: StrBuffer, content: T) -> Self {
         Self {
             title,
             area: Rect::zero(),
@@ -51,10 +53,9 @@ where
     }
 }
 
-impl<T, U> Component for Frame<T, U>
+impl<T> Component for Frame<T>
 where
     T: Component,
-    U: AsRef<str>,
 {
     type Msg = T::Msg;
 
@@ -96,10 +97,9 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for Frame<T, U>
+impl<T> crate::trace::Trace for Frame<T>
 where
     T: crate::trace::Trace,
-    U: crate::trace::Trace + AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Frame");

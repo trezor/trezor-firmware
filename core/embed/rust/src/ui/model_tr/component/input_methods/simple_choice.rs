@@ -1,6 +1,9 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::Rect,
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        component::{Component, Event, EventCtx},
+        geometry::Rect,
+    },
 };
 
 use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};
@@ -13,24 +16,18 @@ pub enum SimpleChoiceMsg {
     Result(String<50>),
 }
 
-struct ChoiceFactorySimple<T, const N: usize> {
-    choices: Vec<T, N>,
+struct ChoiceFactorySimple<const N: usize> {
+    choices: Vec<StrBuffer, N>,
     carousel: bool,
 }
 
-impl<T, const N: usize> ChoiceFactorySimple<T, N>
-where
-    T: AsRef<str>,
-{
-    fn new(choices: Vec<T, N>, carousel: bool) -> Self {
+impl<const N: usize> ChoiceFactorySimple<N> {
+    fn new(choices: Vec<StrBuffer, N>, carousel: bool) -> Self {
         Self { choices, carousel }
     }
 }
 
-impl<T, const N: usize> ChoiceFactory for ChoiceFactorySimple<T, N>
-where
-    T: AsRef<str>,
-{
+impl<const N: usize> ChoiceFactory for ChoiceFactorySimple<N> {
     type Item = ChoiceItem;
 
     fn count(&self) -> u8 {
@@ -58,21 +55,13 @@ where
 
 /// Simple wrapper around `ChoicePage` that allows for
 /// inputting a list of values and receiving the chosen one.
-pub struct SimpleChoice<T, const N: usize>
-where
-    T: AsRef<str>,
-    T: Clone,
-{
-    choices: Vec<T, N>,
-    choice_page: ChoicePage<ChoiceFactorySimple<T, N>>,
+pub struct SimpleChoice<const N: usize> {
+    choices: Vec<StrBuffer, N>,
+    choice_page: ChoicePage<ChoiceFactorySimple<N>>,
 }
 
-impl<T, const N: usize> SimpleChoice<T, N>
-where
-    T: AsRef<str>,
-    T: Clone,
-{
-    pub fn new(str_choices: Vec<T, N>, carousel: bool, show_incomplete: bool) -> Self {
+impl<const N: usize> SimpleChoice<N> {
+    pub fn new(str_choices: Vec<StrBuffer, N>, carousel: bool, show_incomplete: bool) -> Self {
         let choices = ChoiceFactorySimple::new(str_choices.clone(), carousel);
         Self {
             choices: str_choices,
@@ -83,11 +72,7 @@ where
     }
 }
 
-impl<T, const N: usize> Component for SimpleChoice<T, N>
-where
-    T: AsRef<str>,
-    T: Clone,
-{
+impl<const N: usize> Component for SimpleChoice<N> {
     type Msg = SimpleChoiceMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -111,11 +96,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, const N: usize> crate::trace::Trace for SimpleChoice<T, N>
-where
-    T: AsRef<str>,
-    T: Clone,
-{
+impl<const N: usize> crate::trace::Trace for SimpleChoice<N> {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {
             ButtonPos::Left => match self.choice_page.has_previous_choice() {

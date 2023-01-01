@@ -58,7 +58,7 @@ where
 pub struct Page<const M: usize> {
     ops: Vec<Op, M>,
     text_layout: TextLayout,
-    btn_layout: ButtonLayout<&'static str>,
+    btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
     current_page: usize,
     page_count: usize,
@@ -68,7 +68,7 @@ pub struct Page<const M: usize> {
 // For `layout.rs`
 impl<const M: usize> Page<M> {
     pub fn new(
-        btn_layout: ButtonLayout<&'static str>,
+        btn_layout: ButtonLayout,
         btn_actions: ButtonActions,
         initial_text_font: Font,
     ) -> Self {
@@ -99,7 +99,7 @@ impl<const M: usize> Page<M> {
         self.layout_content(&mut TextRenderer);
     }
 
-    pub fn btn_layout(&self) -> ButtonLayout<&'static str> {
+    pub fn btn_layout(&self) -> ButtonLayout {
         // When we are in pagination inside this flow,
         // show the up and down arrows on appropriate sides.
         let current = self.btn_layout.clone();

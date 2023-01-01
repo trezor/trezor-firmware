@@ -1,4 +1,5 @@
 use crate::{
+    micropython::buffer::StrBuffer,
     time::{Duration, Instant},
     ui::{
         animation::Animation,
@@ -21,19 +22,19 @@ enum State {
     Grown,
 }
 
-pub struct Loader<T> {
+pub struct Loader {
     area: Rect,
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
-    text_overlay: display::TextOverlay<T>,
+    text_overlay: display::TextOverlay<StrBuffer>,
     styles: LoaderStyleSheet,
 }
 
-impl<T: AsRef<str>> Loader<T> {
+impl Loader {
     pub const SIZE: Offset = Offset::new(120, 120);
 
-    pub fn new(text_overlay: display::TextOverlay<T>, styles: LoaderStyleSheet) -> Self {
+    pub fn new(text_overlay: display::TextOverlay<StrBuffer>, styles: LoaderStyleSheet) -> Self {
         Self {
             area: Rect::zero(),
             state: State::Initial,
@@ -44,7 +45,7 @@ impl<T: AsRef<str>> Loader<T> {
         }
     }
 
-    pub fn text(text: T, styles: LoaderStyleSheet) -> Self {
+    pub fn text(text: StrBuffer, styles: LoaderStyleSheet) -> Self {
         let text_overlay = display::TextOverlay::new(text, styles.normal.font);
 
         Self::new(text_overlay, styles)
@@ -64,17 +65,17 @@ impl<T: AsRef<str>> Loader<T> {
         self.growing_duration
     }
 
-    pub fn get_text(&self) -> &T {
+    pub fn get_text(&self) -> &StrBuffer {
         self.text_overlay.get_text()
     }
 
     /// Change the text of the loader.
-    pub fn set_text(&mut self, text: T) {
+    pub fn set_text(&mut self, text: StrBuffer) {
         self.text_overlay.set_text(text);
     }
 
     /// Return width of given text according to current style.
-    pub fn get_text_width(&self, text: &T) -> i16 {
+    pub fn get_text_width(&self, text: StrBuffer) -> i16 {
         self.styles.normal.font.text_width(text.as_ref())
     }
 
@@ -161,7 +162,7 @@ impl<T: AsRef<str>> Loader<T> {
     }
 }
 
-impl<T: AsRef<str>> Component for Loader<T> {
+impl Component for Loader {
     type Msg = LoaderMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -241,7 +242,7 @@ impl LoaderStyleSheet {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T: AsRef<str>> crate::trace::Trace for Loader<T> {
+impl crate::trace::Trace for Loader {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("Loader");
         d.close();

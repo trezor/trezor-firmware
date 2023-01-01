@@ -27,7 +27,7 @@ pub trait Choice {
     fn paint_right(&self, _area: Rect, _show_incomplete: bool) -> Option<i16> {
         None
     }
-    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+    fn btn_layout(&self) -> ButtonLayout {
         ButtonLayout::default_three_icons()
     }
 }
@@ -69,7 +69,7 @@ where
 {
     choices: F,
     pad: Pad,
-    buttons: Child<ButtonController<&'static str>>,
+    buttons: Child<ButtonController>,
     page_counter: u8,
     /// How many pixels from top should we render the items.
     y_baseline: i16,

@@ -1,7 +1,10 @@
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx},
-    display::{self, Font},
-    geometry::Rect,
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        component::{Child, Component, Event, EventCtx},
+        display::{self, Font},
+        geometry::Rect,
+    },
 };
 
 use super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
@@ -11,18 +14,15 @@ pub enum QRCodePageMessage {
     Cancelled,
 }
 
-pub struct QRCodePage<F, T> {
-    title: T,
+pub struct QRCodePage<T> {
+    title: StrBuffer,
     title_area: Rect,
-    qr_code: F,
-    buttons: Child<ButtonController<T>>,
+    qr_code: T,
+    buttons: Child<ButtonController>,
 }
 
-impl<F, T> QRCodePage<F, T>
-where
-    T: AsRef<str> + Clone,
-{
-    pub fn new(title: T, qr_code: F, btn_layout: ButtonLayout<T>) -> Self {
+impl<T> QRCodePage<T> {
+    pub fn new(title: StrBuffer, qr_code: T, btn_layout: ButtonLayout) -> Self {
         Self {
             title,
             title_area: Rect::zero(),
@@ -32,10 +32,9 @@ where
     }
 }
 
-impl<F, T> Component for QRCodePage<F, T>
+impl<T> Component for QRCodePage<T>
 where
-    T: AsRef<str> + Clone,
-    F: Component,
+    T: Component,
 {
     type Msg = QRCodePageMessage;
 
@@ -86,10 +85,7 @@ use super::ButtonAction;
 use heapless::String;
 
 #[cfg(feature = "ui_debug")]
-impl<F, T> crate::trace::Trace for QRCodePage<F, T>
-where
-    T: AsRef<str> + Clone,
-{
+impl<T> crate::trace::Trace for QRCodePage<T> {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {
             ButtonPos::Left => ButtonAction::Cancel.string(),

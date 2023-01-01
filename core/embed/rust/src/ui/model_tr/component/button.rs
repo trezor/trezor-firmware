@@ -1,4 +1,5 @@
 use crate::{
+    micropython::buffer::StrBuffer,
     time::Duration,
     ui::{
         component::{Component, Event, EventCtx},
@@ -27,16 +28,16 @@ pub enum ButtonPos {
     Right,
 }
 
-pub struct Button<T> {
+pub struct Button {
     bounds: Rect,
     pos: ButtonPos,
-    content: ButtonContent<T>,
+    content: ButtonContent,
     styles: ButtonStyleSheet,
     state: State,
 }
 
-impl<T: AsRef<str>> Button<T> {
-    pub fn new(pos: ButtonPos, content: ButtonContent<T>, styles: ButtonStyleSheet) -> Self {
+impl Button {
+    pub fn new(pos: ButtonPos, content: ButtonContent, styles: ButtonStyleSheet) -> Self {
         Self {
             pos,
             content,
@@ -46,7 +47,7 @@ impl<T: AsRef<str>> Button<T> {
         }
     }
 
-    pub fn with_text(pos: ButtonPos, text: T, styles: ButtonStyleSheet) -> Self {
+    pub fn with_text(pos: ButtonPos, text: StrBuffer, styles: ButtonStyleSheet) -> Self {
         Self::new(pos, ButtonContent::Text(text), styles)
     }
 
@@ -54,7 +55,7 @@ impl<T: AsRef<str>> Button<T> {
         Self::new(pos, ButtonContent::Icon(image), styles)
     }
 
-    pub fn content(&self) -> &ButtonContent<T> {
+    pub fn content(&self) -> &ButtonContent {
         &self.content
     }
 
@@ -71,7 +72,7 @@ impl<T: AsRef<str>> Button<T> {
     }
 
     /// Changing the text content of the button.
-    pub fn set_text(&mut self, text: T) {
+    pub fn set_text(&mut self, text: StrBuffer) {
         self.content = ButtonContent::Text(text);
     }
 
@@ -167,10 +168,7 @@ impl<T: AsRef<str>> Button<T> {
     }
 }
 
-impl<T> Component for Button<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Button {
     type Msg = ButtonMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -265,10 +263,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Button<T>
-where
-    T: AsRef<str> + crate::trace::Trace,
-{
+impl crate::trace::Trace for Button {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Button");
         match &self.content {
@@ -285,8 +280,8 @@ enum State {
     Pressed,
 }
 
-pub enum ButtonContent<T> {
-    Text(T),
+pub enum ButtonContent {
+    Text(StrBuffer),
     Icon(Icon),
 }
 
@@ -353,9 +348,9 @@ impl ButtonStyleSheet {
 }
 
 /// Describing the button on the screen - only visuals.
-#[derive(Clone, Copy)]
-pub struct ButtonDetails<T> {
-    pub text: Option<T>,
+#[derive(Clone)]
+pub struct ButtonDetails {
+    pub text: Option<StrBuffer>,
     pub icon: Option<Icon>,
     pub duration: Option<Duration>,
     pub with_outline: bool,
@@ -364,9 +359,9 @@ pub struct ButtonDetails<T> {
     pub offset: Option<Offset>,
 }
 
-impl<T: Clone + AsRef<str>> ButtonDetails<T> {
+impl ButtonDetails {
     /// Text button.
-    pub fn text(text: T) -> Self {
+    pub fn text(text: StrBuffer) -> Self {
         Self {
             text: Some(text),
             icon: None,
@@ -392,7 +387,7 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     }
 
     /// Text with arms signalling double press.
-    pub fn armed_text(text: T) -> Self {
+    pub fn armed_text(text: StrBuffer) -> Self {
         Self::text(text).with_arms()
     }
 
@@ -489,17 +484,17 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
 
 /// Holding the button details for all three possible buttons.
 #[derive(Clone)]
-pub struct ButtonLayout<T> {
-    pub btn_left: Option<ButtonDetails<T>>,
-    pub btn_middle: Option<ButtonDetails<T>>,
-    pub btn_right: Option<ButtonDetails<T>>,
+pub struct ButtonLayout {
+    pub btn_left: Option<ButtonDetails>,
+    pub btn_middle: Option<ButtonDetails>,
+    pub btn_right: Option<ButtonDetails>,
 }
 
-impl<T: AsRef<str>> ButtonLayout<T> {
+impl ButtonLayout {
     pub fn new(
-        btn_left: Option<ButtonDetails<T>>,
-        btn_middle: Option<ButtonDetails<T>>,
-        btn_right: Option<ButtonDetails<T>>,
+        btn_left: Option<ButtonDetails>,
+        btn_middle: Option<ButtonDetails>,
+        btn_right: Option<ButtonDetails>,
     ) -> Self {
         Self {
             btn_left,
@@ -513,16 +508,14 @@ impl<T: AsRef<str>> ButtonLayout<T> {
     pub fn empty() -> Self {
         Self::new(None, None, None)
     }
-}
 
-impl ButtonLayout<&'static str> {
     /// Default button layout for all three buttons - icons.
     pub fn default_three_icons() -> Self {
-        Self::three_icons_middle_text("SELECT")
+        Self::three_icons_middle_text("SELECT".into())
     }
 
     /// Special middle text for default icon layout.
-    pub fn three_icons_middle_text(middle_text: &'static str) -> Self {
+    pub fn three_icons_middle_text(middle_text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             Some(ButtonDetails::armed_text(middle_text)),
@@ -531,7 +524,7 @@ impl ButtonLayout<&'static str> {
     }
 
     /// Left and right texts.
-    pub fn left_right_text(text_left: &'static str, text_right: &'static str) -> Self {
+    pub fn left_right_text(text_left: StrBuffer, text_right: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::text(text_left)),
             None,
@@ -540,7 +533,7 @@ impl ButtonLayout<&'static str> {
     }
 
     /// Only right text.
-    pub fn only_right_text(text_right: &'static str) -> Self {
+    pub fn only_right_text(text_right: StrBuffer) -> Self {
         Self::new(None, None, Some(ButtonDetails::text(text_right)))
     }
 
@@ -572,7 +565,7 @@ impl ButtonLayout<&'static str> {
     }
 
     /// Cancel cross on left and text on the right.
-    pub fn cancel_and_text(text: &'static str) -> Self {
+    pub fn cancel_and_text(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
@@ -581,7 +574,7 @@ impl ButtonLayout<&'static str> {
     }
 
     /// Cancel cross on left and hold-to-confirm text on the right.
-    pub fn cancel_and_htc_text(text: &'static str, duration: Duration) -> Self {
+    pub fn cancel_and_htc_text(text: StrBuffer, duration: Duration) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
@@ -590,7 +583,7 @@ impl ButtonLayout<&'static str> {
     }
 
     /// Arrow back on left and hold-to-confirm text on the right.
-    pub fn back_and_htc_text(text: &'static str, duration: Duration) -> Self {
+    pub fn back_and_htc_text(text: StrBuffer, duration: Duration) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
@@ -599,7 +592,7 @@ impl ButtonLayout<&'static str> {
     }
 
     /// Arrow back on left and text on the right.
-    pub fn back_and_text(text: &'static str) -> Self {
+    pub fn back_and_text(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
@@ -608,12 +601,12 @@ impl ButtonLayout<&'static str> {
     }
 
     /// Only armed text in the middle.
-    pub fn middle_armed_text(text: &'static str) -> Self {
+    pub fn middle_armed_text(text: StrBuffer) -> Self {
         Self::new(None, Some(ButtonDetails::armed_text(text)), None)
     }
 
     /// Only hold-to-confirm with text on the right.
-    pub fn htc_only(text: &'static str, duration: Duration) -> Self {
+    pub fn htc_only(text: StrBuffer, duration: Duration) -> Self {
         Self::new(
             None,
             None,
@@ -628,10 +621,7 @@ impl ButtonLayout<&'static str> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for ButtonDetails<T>
-where
-    T: AsRef<str>,
-{
+impl crate::trace::Trace for ButtonDetails {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonDetails");
         let mut btn_text: String<30> = String::new();
