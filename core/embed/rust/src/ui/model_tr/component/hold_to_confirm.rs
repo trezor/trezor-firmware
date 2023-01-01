@@ -39,7 +39,7 @@ impl HoldToConfirm {
 
     /// Updating the text of the component and re-placing it.
     pub fn set_text(&mut self, text: StrBuffer, button_area: Rect) {
-        self.text_width = self.loader.get_text_width(text.clone()) as i16;
+        self.text_width = self.loader.get_text_width(text) as i16;
         self.loader.set_text(text);
         self.place(button_area);
     }

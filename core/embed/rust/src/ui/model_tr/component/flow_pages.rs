@@ -45,12 +45,32 @@ where
         }
     }
 
+    /// Returns a page on demand on a specified index.
     pub fn get(&self, page_index: u8) -> Page<M> {
         (self.get_page)(page_index)
     }
 
+    /// Total amount of pages.
     pub fn count(&self) -> u8 {
         self.page_count
+    }
+
+    /// How many scrollable pages are there in the flow
+    /// (each page can have arbitrary number of "sub-pages").
+    pub fn scrollbar_page_count(&self, bounds: Rect) -> usize {
+        self.scrollbar_page_index(bounds, self.page_count)
+    }
+
+    /// Active scrollbar position connected with the beginning of a specific
+    /// page index
+    pub fn scrollbar_page_index(&self, bounds: Rect, page_index: u8) -> usize {
+        let mut page_count = 0;
+        for i in 0..page_index {
+            let mut current_page = self.get(i);
+            current_page.place(bounds);
+            page_count += current_page.page_count;
+        }
+        page_count
     }
 }
 
@@ -63,6 +83,7 @@ pub struct Page<const M: usize> {
     current_page: usize,
     page_count: usize,
     char_offset: usize,
+    title: Option<StrBuffer>,
 }
 
 // For `layout.rs`
@@ -88,15 +109,28 @@ impl<const M: usize> Page<M> {
             current_page: 0,
             page_count: 1,
             char_offset: 0,
+            title: None,
         }
     }
 }
 
 // For `flow.rs`
 impl<const M: usize> Page<M> {
+    /// Adding title.
+    pub fn with_title(mut self, title: StrBuffer) -> Self {
+        self.title = Some(title);
+        self
+    }
+
     pub fn paint(&mut self) {
         self.change_page(self.current_page);
         self.layout_content(&mut TextRenderer);
+    }
+
+    pub fn place(&mut self, bounds: Rect) -> Rect {
+        self.text_layout.bounds = bounds;
+        self.page_count = self.page_count();
+        bounds
     }
 
     pub fn btn_layout(&self) -> ButtonLayout {
@@ -123,14 +157,12 @@ impl<const M: usize> Page<M> {
         ButtonLayout::new(btn_left, current.btn_middle, btn_right)
     }
 
-    pub fn place(&mut self, bounds: Rect) -> Rect {
-        self.text_layout.bounds = bounds;
-        self.page_count = self.page_count();
-        bounds
+    pub fn btn_actions(&self) -> ButtonActions {
+        self.btn_actions
     }
 
-    pub fn btn_actions(&self) -> ButtonActions {
-        self.btn_actions.clone()
+    pub fn title(&self) -> Option<StrBuffer> {
+        self.title
     }
 
     pub fn has_prev_page(&self) -> bool {
@@ -194,17 +226,6 @@ impl<const M: usize> Page<M> {
 
 // For `layout.rs` - aggregating operations
 impl<const M: usize> Page<M> {
-    pub fn icon_label_text(self, icon: IconAndName, label: StrBuffer, text: StrBuffer) -> Self {
-        self.icon_with_offset(icon, 3)
-            .text_mono(label)
-            .newline()
-            .text_bold(text)
-    }
-
-    pub fn icon_with_offset(self, icon: IconAndName, x_offset: i16) -> Self {
-        self.icon(icon).offset(Offset::x(x_offset))
-    }
-
     pub fn text_normal(self, text: StrBuffer) -> Self {
         self.font(Font::NORMAL).text(text)
     }

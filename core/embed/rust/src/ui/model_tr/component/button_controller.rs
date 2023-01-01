@@ -68,7 +68,7 @@ impl ButtonType {
     /// Create `Button` component from `btn_details`.
     fn get_button(pos: ButtonPos, btn_details: ButtonDetails) -> Button {
         // Deciding between text and icon
-        if let Some(text) = btn_details.clone().text {
+        if let Some(text) = btn_details.text {
             Button::with_text(pos, text, btn_details.style())
         } else if let Some(icon) = btn_details.icon {
             Button::with_icon(pos, icon, btn_details.style())

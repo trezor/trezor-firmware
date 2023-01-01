@@ -106,7 +106,7 @@ impl Font {
 #[cfg(feature = "model_tr")]
 impl ButtonDetails {
     pub fn print(&self) {
-        let text: String<20> = if let Some(text) = self.text.clone() {
+        let text: String<20> = if let Some(text) = self.text {
             text.as_ref().into()
         } else {
             "None".into()

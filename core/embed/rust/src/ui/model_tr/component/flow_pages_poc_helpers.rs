@@ -22,7 +22,7 @@ pub struct ToDisplay {
 impl ToDisplay {
     pub fn new(text: StrBuffer) -> Self {
         Self {
-            text: text.clone(),
+            text,
             length_from_end: text.len(),
         }
     }
