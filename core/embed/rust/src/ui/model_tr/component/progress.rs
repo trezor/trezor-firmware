@@ -2,11 +2,12 @@ use core::mem;
 
 use crate::{
     error::Error,
+    micropython::buffer::StrBuffer,
     ui::{
         component::{
             base::ComponentExt,
             paginated::Paginate,
-            text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
+            text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
         display::{self, Font},
@@ -18,27 +19,24 @@ use crate::{
 
 use super::theme;
 
-pub struct Progress<T> {
-    title: Child<Label<T>>,
+pub struct Progress {
+    title: Child<Label<StrBuffer>>,
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
-    description: Child<Paragraphs<Paragraph<T>>>,
+    description: Child<Paragraphs<Paragraph<StrBuffer>>>,
     description_pad: Pad,
-    update_description: fn(&str) -> Result<T, Error>,
+    update_description: fn(&str) -> Result<StrBuffer, Error>,
 }
 
-impl<T> Progress<T>
-where
-    T: ParagraphStrType,
-{
+impl Progress {
     const AREA: Rect = constant::screen();
 
     pub fn new(
-        title: T,
+        title: StrBuffer,
         indeterminate: bool,
-        description: T,
-        update_description: fn(&str) -> Result<T, Error>,
+        description: StrBuffer,
+        update_description: fn(&str) -> Result<StrBuffer, Error>,
     ) -> Self {
         Self {
             title: Label::centered(title, theme::TEXT_HEADER).into_child(),
@@ -55,10 +53,7 @@ where
     }
 }
 
-impl<T> Component for Progress<T>
-where
-    T: ParagraphStrType,
-{
+impl Component for Progress {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
@@ -126,10 +121,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Progress<T>
-where
-    T: ParagraphStrType,
-{
+impl crate::trace::Trace for Progress {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Progress");
         t.close();

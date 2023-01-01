@@ -1,70 +1,39 @@
-use crate::{
-    micropython::buffer::StrBuffer,
-    ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
-        display::Color,
-        geometry::{Insets, Offset, Rect},
-    },
+use crate::ui::{
+    component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
+    display::Color,
+    geometry::{Insets, Offset, Rect},
 };
 
 use super::{
     theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, ScrollBar,
 };
 
-pub struct ButtonPage<S, T> {
+pub struct ButtonPage<T> {
     content: Child<T>,
     scrollbar: Child<ScrollBar>,
     /// Optional available area for scrollbar defined by parent component.
     parent_scrollbar_area: Option<Rect>,
     pad: Pad,
     /// Left button of the first screen
-    cancel_btn_details: Option<ButtonDetails<S>>,
+    cancel_btn_details: Option<ButtonDetails>,
     /// Right button of the last screen
-    confirm_btn_details: Option<ButtonDetails<S>>,
+    confirm_btn_details: Option<ButtonDetails>,
     /// Left button of the last page
-    last_back_btn_details: Option<ButtonDetails<S>>,
+    last_back_btn_details: Option<ButtonDetails>,
     /// Left button of every screen in the middle
-    back_btn_details: Option<ButtonDetails<S>>,
+    back_btn_details: Option<ButtonDetails>,
     /// Right button of every screen apart the last one
-    next_btn_details: Option<ButtonDetails<S>>,
-    buttons: Child<ButtonController<S>>,
+    next_btn_details: Option<ButtonDetails>,
+    buttons: Child<ButtonController>,
     /// Scrollbar may or may not be shown (but will be counting pages anyway).
     show_scrollbar: bool,
 }
 
-impl<T> ButtonPage<&'static str, T>
+impl<T> ButtonPage<T>
 where
-    T: Paginate,
-    T: Component,
+    T: Component + Paginate,
 {
-    /// Constructor for `&'static str` button-text type.
-    pub fn new_str(content: T, background: Color) -> Self {
-        Self {
-            content: Child::new(content),
-            scrollbar: Child::new(ScrollBar::to_be_filled_later()),
-            parent_scrollbar_area: None,
-            pad: Pad::with_background(background).with_clear(),
-            cancel_btn_details: Some(ButtonDetails::cancel_icon()),
-            confirm_btn_details: Some(ButtonDetails::text("CONFIRM")),
-            back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
-            last_back_btn_details: Some(ButtonDetails::up_arrow_icon()),
-            next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
-            // Setting empty layout for now, we do not yet know the page count.
-            // Initial button layout will be set in `place()` after we can call
-            // `content.page_count()`.
-            buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
-            show_scrollbar: true,
-        }
-    }
-}
-
-impl<T> ButtonPage<StrBuffer, T>
-where
-    T: Paginate,
-    T: Component,
-{
-    /// Constructor for `StrBuffer` button-text type.
-    pub fn new_str_buf(content: T, background: Color) -> Self {
+    pub fn new(content: T, background: Color) -> Self {
         Self {
             content: Child::new(content),
             scrollbar: Child::new(ScrollBar::to_be_filled_later()),
@@ -82,31 +51,23 @@ where
             show_scrollbar: true,
         }
     }
-}
 
-impl<S, T> ButtonPage<S, T>
-where
-    T: Paginate,
-    T: Component,
-    S: AsRef<str>,
-    S: Clone,
-{
-    pub fn with_cancel_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
+    pub fn with_cancel_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.cancel_btn_details = btn_details;
         self
     }
 
-    pub fn with_confirm_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
+    pub fn with_confirm_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.confirm_btn_details = btn_details;
         self
     }
 
-    pub fn with_back_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
+    pub fn with_back_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.back_btn_details = btn_details;
         self
     }
 
-    pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
+    pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.next_btn_details = btn_details;
         self
     }
@@ -147,7 +108,7 @@ where
         });
     }
 
-    fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout<S> {
+    fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
         let btn_left = self.get_left_button_details(!has_prev, !has_next);
         let btn_right = self.get_right_button_details(has_next);
         ButtonLayout::new(btn_left, None, btn_right)
@@ -155,7 +116,7 @@ where
 
     /// Get the let button details, depending whether the page is first, last,
     /// or in the middle.
-    fn get_left_button_details(&self, is_first: bool, is_last: bool) -> Option<ButtonDetails<S>> {
+    fn get_left_button_details(&self, is_first: bool, is_last: bool) -> Option<ButtonDetails> {
         if is_first {
             self.cancel_btn_details.clone()
         } else if is_last {
@@ -167,7 +128,7 @@ where
 
     /// Get the right button details, depending on whether there is a next
     /// page.
-    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails<S>> {
+    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails> {
         if has_next_page {
             self.next_btn_details.clone()
         } else {
@@ -176,12 +137,9 @@ where
     }
 }
 
-impl<S, T> Component for ButtonPage<S, T>
+impl<T> Component for ButtonPage<T>
 where
-    S: Clone,
-    S: AsRef<str>,
-    T: Component,
-    T: Paginate,
+    T: Component + Paginate,
 {
     type Msg = PageMsg<T::Msg, bool>;
 
@@ -278,10 +236,9 @@ use super::ButtonAction;
 use heapless::String;
 
 #[cfg(feature = "ui_debug")]
-impl<S, T> crate::trace::Trace for ButtonPage<S, T>
+impl<T> crate::trace::Trace for ButtonPage<T>
 where
     T: crate::trace::Trace,
-    S: AsRef<str>,
 {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {

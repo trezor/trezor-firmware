@@ -58,8 +58,11 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
         match self {
             Self::Letters(letter_choices) => {
                 if choice_index >= letter_choices.len() as u8 {
-                    ChoiceItem::new("DELETE", ButtonLayout::three_icons_middle_text("CONFIRM"))
-                        .with_icon(Icon::new(theme::ICON_DELETE))
+                    ChoiceItem::new(
+                        "DELETE",
+                        ButtonLayout::three_icons_middle_text("CONFIRM".into()),
+                    )
+                    .with_icon(Icon::new(theme::ICON_DELETE))
                 } else {
                     let letter = letter_choices[choice_index as usize];
                     ChoiceItem::new(
@@ -70,9 +73,11 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
             }
             Self::Words(word_choices) => {
                 if choice_index >= word_choices.len() as u8 {
-                    let mut item =
-                        ChoiceItem::new("DELETE", ButtonLayout::three_icons_middle_text("CONFIRM"))
-                            .with_icon(Icon::new(theme::ICON_DELETE));
+                    let mut item = ChoiceItem::new(
+                        "DELETE",
+                        ButtonLayout::three_icons_middle_text("CONFIRM".into()),
+                    )
+                    .with_icon(Icon::new(theme::ICON_DELETE));
                     item.set_right_btn(None);
                     item
                 } else {

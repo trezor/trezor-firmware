@@ -1,4 +1,5 @@
 use crate::{
+    micropython::buffer::StrBuffer,
     time::{Duration, Instant},
     ui::{
         component::{Component, Event, EventCtx},
@@ -13,15 +14,20 @@ pub enum HoldToConfirmMsg {
     FailedToConfirm,
 }
 
-pub struct HoldToConfirm<T> {
+pub struct HoldToConfirm {
     area: Rect,
     pos: ButtonPos,
-    loader: Loader<T>,
+    loader: Loader,
     text_width: i16,
 }
 
-impl<T: AsRef<str>> HoldToConfirm<T> {
-    pub fn text(pos: ButtonPos, text: T, styles: LoaderStyleSheet, duration: Duration) -> Self {
+impl HoldToConfirm {
+    pub fn text(
+        pos: ButtonPos,
+        text: StrBuffer,
+        styles: LoaderStyleSheet,
+        duration: Duration,
+    ) -> Self {
         let text_width = styles.normal.font.text_width(text.as_ref());
         Self {
             area: Rect::zero(),
@@ -32,8 +38,8 @@ impl<T: AsRef<str>> HoldToConfirm<T> {
     }
 
     /// Updating the text of the component and re-placing it.
-    pub fn set_text(&mut self, text: T, button_area: Rect) {
-        self.text_width = self.loader.get_text_width(&text) as i16;
+    pub fn set_text(&mut self, text: StrBuffer, button_area: Rect) {
+        self.text_width = self.loader.get_text_width(text.clone()) as i16;
         self.loader.set_text(text);
         self.place(button_area);
     }
@@ -50,7 +56,7 @@ impl<T: AsRef<str>> HoldToConfirm<T> {
         self.loader.get_duration()
     }
 
-    pub fn get_text(&self) -> &T {
+    pub fn get_text(&self) -> &StrBuffer {
         self.loader.get_text()
     }
 
@@ -64,7 +70,7 @@ impl<T: AsRef<str>> HoldToConfirm<T> {
     }
 }
 
-impl<T: AsRef<str>> Component for HoldToConfirm<T> {
+impl Component for HoldToConfirm {
     type Msg = HoldToConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -103,7 +109,7 @@ impl<T: AsRef<str>> Component for HoldToConfirm<T> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T: AsRef<str>> crate::trace::Trace for HoldToConfirm<T> {
+impl crate::trace::Trace for HoldToConfirm {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("HoldToConfirm");
         self.loader.trace(d);

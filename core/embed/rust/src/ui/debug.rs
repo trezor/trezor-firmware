@@ -104,7 +104,7 @@ impl Font {
 }
 
 #[cfg(feature = "model_tr")]
-impl<T: Clone + AsRef<str>> ButtonDetails<T> {
+impl ButtonDetails {
     pub fn print(&self) {
         let text: String<20> = if let Some(text) = self.text.clone() {
             text.as_ref().into()

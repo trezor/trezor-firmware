@@ -1,4 +1,5 @@
 use crate::{
+    micropython::buffer::StrBuffer,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
@@ -48,7 +49,7 @@ impl ChoiceFactory for ChoiceFactoryPIN {
 
         // Action buttons have different middle button text
         if [DELETE_INDEX, SHOW_INDEX, ENTER_INDEX].contains(&(choice_index as usize)) {
-            let confirm_btn = ButtonDetails::armed_text("CONFIRM");
+            let confirm_btn = ButtonDetails::armed_text("CONFIRM".into());
             choice_item.set_middle_btn(Some(confirm_btn));
         }
 
@@ -70,20 +71,17 @@ impl ChoiceFactory for ChoiceFactoryPIN {
 }
 
 /// Component for entering a PIN.
-pub struct PinEntry<T> {
+pub struct PinEntry {
     choice_page: ChoicePage<ChoiceFactoryPIN>,
     pin_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
-    subprompt_line: Child<ChangingTextLine<T>>,
-    prompt: T,
+    subprompt_line: Child<ChangingTextLine<StrBuffer>>,
+    prompt: StrBuffer,
     show_real_pin: bool,
     textbox: TextBox<MAX_PIN_LENGTH>,
 }
 
-impl<T> PinEntry<T>
-where
-    T: AsRef<str> + Clone,
-{
-    pub fn new(prompt: T, subprompt: T) -> Self {
+impl PinEntry {
+    pub fn new(prompt: StrBuffer, subprompt: StrBuffer) -> Self {
         let choices = ChoiceFactoryPIN::new();
 
         Self {
@@ -158,10 +156,7 @@ where
     }
 }
 
-impl<T> Component for PinEntry<T>
-where
-    T: AsRef<str> + Clone,
-{
+impl Component for PinEntry {
     type Msg = PinEntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -224,10 +219,7 @@ where
 use super::super::{ButtonAction, ButtonPos};
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for PinEntry<T>
-where
-    T: AsRef<str> + Clone,
-{
+impl crate::trace::Trace for PinEntry {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {
             ButtonPos::Left => ButtonAction::PrevPage.string(),
