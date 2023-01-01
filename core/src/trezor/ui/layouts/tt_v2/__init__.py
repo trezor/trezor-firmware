@@ -528,11 +528,14 @@ async def confirm_output(
     address: str,
     amount: str,
     title: str = "SENDING",
+    index: int | None = None,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
     title = title.upper()
     if title.startswith("CONFIRM "):
         title = title[len("CONFIRM ") :]
+
+    # TODO: include index to be consistent with TR?
 
     await confirm_value(
         ctx,

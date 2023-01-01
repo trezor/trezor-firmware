@@ -1,14 +1,14 @@
 use crate::{
     micropython::buffer::StrBuffer,
     ui::{
-        component::{Child, Component, Event, EventCtx, Pad},
+        component::{Child, Component, ComponentExt, Event, EventCtx, Pad},
         geometry::Rect,
     },
 };
 
 use super::{
     common, theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
-    FlowPages, Page,
+    FlowPages, Page, ScrollBar,
 };
 
 /// To be returned directly from Flow.
@@ -18,9 +18,13 @@ pub enum FlowMsg {
 }
 
 pub struct Flow<F, const M: usize> {
+    /// Function to get pages from
     pages: FlowPages<F, M>,
+    /// Instance of the current Page
     current_page: Page<M>,
+    /// Title being shown at the top in bold
     common_title: Option<StrBuffer>,
+    scrollbar: Child<ScrollBar>,
     content_area: Rect,
     title_area: Rect,
     pad: Pad,
@@ -40,6 +44,7 @@ where
             common_title: None,
             content_area: Rect::zero(),
             title_area: Rect::zero(),
+            scrollbar: Child::new(ScrollBar::to_be_filled_later()),
             pad: Pad::with_background(theme::BG),
             // Setting empty layout for now, we do not yet know how many sub-pages the first page
             // has. Initial button layout will be set in `place()` after we can call
@@ -56,13 +61,30 @@ where
         self
     }
 
+    /// Getting new current page according to page counter.
+    /// Also updating the possible title and moving the scrollbar to correct
+    /// position.
+    fn change_current_page(&mut self) {
+        self.current_page = self.pages.get(self.page_counter);
+        if self.common_title.is_some() && let Some(title) = self.current_page.title() {
+            self.common_title = Some(title);
+        }
+        let scrollbar_active_index = self
+            .pages
+            .scrollbar_page_index(self.content_area, self.page_counter);
+        self.scrollbar
+            .inner_mut()
+            .set_active_page(scrollbar_active_index);
+    }
+
     /// Placing current page, setting current buttons and clearing.
     fn update(&mut self, ctx: &mut EventCtx, get_new_page: bool) {
         if get_new_page {
-            self.current_page = self.pages.get(self.page_counter);
+            self.change_current_page();
         }
         self.current_page.place(self.content_area);
         self.set_buttons(ctx);
+        self.scrollbar.request_complete_repaint(ctx);
         self.clear_and_repaint(ctx);
     }
 
@@ -117,10 +139,12 @@ where
     fn event_consumed_by_current_choice(&mut self, ctx: &mut EventCtx, pos: ButtonPos) -> bool {
         if matches!(pos, ButtonPos::Left) && self.current_page.has_prev_page() {
             self.current_page.go_to_prev_page();
+            self.scrollbar.inner_mut().go_to_previous_page();
             self.update(ctx, false);
             true
         } else if matches!(pos, ButtonPos::Right) && self.current_page.has_next_page() {
             self.current_page.go_to_next_page();
+            self.scrollbar.inner_mut().go_to_next_page();
             self.update(ctx, false);
             true
         } else {
@@ -145,6 +169,16 @@ where
         };
         self.title_area = title_area;
         self.content_area = content_area;
+
+        // Placing a scrollbar in case the title is there
+        if self.common_title.is_some() {
+            // Finding out the total amount of pages in this flow
+            let complete_page_count = self.pages.scrollbar_page_count(content_area);
+            self.scrollbar
+                .inner_mut()
+                .set_page_count(complete_page_count);
+            self.scrollbar.place(title_area);
+        }
 
         // We finally found how long is the first page, and can set its button layout.
         self.current_page.place(content_area);
@@ -198,10 +232,10 @@ where
     }
 
     fn paint(&mut self) {
-        // TODO: might put horizontal scrollbar at the top right
-        // (not compatible with longer/centered titles)
         self.pad.paint();
+        // Scrollbars are painted only with a title
         if let Some(title) = &self.common_title {
+            self.scrollbar.paint();
             common::paint_header_left(title, self.title_area);
         }
         self.current_page.paint();

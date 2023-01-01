@@ -232,7 +232,7 @@ async def confirm_sending(
         to,
         format_coin_amount(ada_amount, network_id),
         title,
-        ButtonRequestType.Other,
+        br_code=ButtonRequestType.Other,
     )
 
 

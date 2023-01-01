@@ -644,7 +644,7 @@ impl crate::trace::Trace for ButtonDetails {
 /// What happens when a button is triggered.
 /// Theoretically any action can be connected
 /// with any button.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Copy)]
 pub enum ButtonAction {
     /// Go to the next page of this flow
     NextPage,
@@ -699,7 +699,7 @@ impl ButtonAction {
 }
 
 /// Storing actions for all three possible buttons.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct ButtonActions {
     pub left: Option<ButtonAction>,
     pub middle: Option<ButtonAction>,
@@ -799,9 +799,9 @@ impl ButtonActions {
     /// Having access to appropriate action based on the `ButtonPos`
     pub fn get_action(&self, pos: ButtonPos) -> Option<ButtonAction> {
         match pos {
-            ButtonPos::Left => self.left.clone(),
-            ButtonPos::Middle => self.middle.clone(),
-            ButtonPos::Right => self.right.clone(),
+            ButtonPos::Left => self.left,
+            ButtonPos::Middle => self.middle,
+            ButtonPos::Right => self.right,
         }
     }
 }
