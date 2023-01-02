@@ -68,12 +68,13 @@ async def get_address(
         )
 
     if msg.show_display:
-        title = paths.address_n_to_str(msg.address_n)
+        derivation_path = paths.address_n_to_str(msg.address_n)
         await show_address(
             ctx,
             addr,
             address_qr="monero:" + addr,
-            title=title,
+            derivation_path=derivation_path,
+            account="Monero",
         )
 
     return MoneroAddress(address=addr.encode())

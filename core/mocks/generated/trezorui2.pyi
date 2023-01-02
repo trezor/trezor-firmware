@@ -59,14 +59,16 @@ def confirm_total_r(
 
 
 # rust/src/ui/model_tr/layout.rs
-def show_qr(
+def show_receive_address(
     *,
     title: str,
     address: str,
-    verb_cancel: str,
+    address_qr: str,
+    account: str,
+    derivation_path: str,
     case_sensitive: bool,
 ) -> object:
-    """Show QR code."""
+    """Show receive address together with QR code and details about it."""
 
 
 # rust/src/ui/model_tr/layout.rs

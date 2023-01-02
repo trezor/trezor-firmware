@@ -112,13 +112,38 @@ async def get_address(
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
             )
         else:
-            title = address_n_to_str(address_n)
+            derivation_path = address_n_to_str(address_n)
             await show_address(
                 ctx,
                 address_short,
                 address_qr=address,
                 case_sensitive=address_case_sensitive,
-                title=title,
+                derivation_path=derivation_path,
+                account=_path_to_account(derivation_path, coin.coin_shortcut),
             )
 
     return Address(address=address, mac=mac)
+
+
+def _path_to_account(path: str, coin_shortcut: str) -> str:
+    """Transforms a BIP-32 path to a human-readable account name.
+
+    Examples: (m/44'/0'/0/0/0', BTC) -> BTC Legacy #1
+              (m/84'/0'/3/0/0', BTC) -> BTC Segwit #4
+    """
+    path = path.lstrip("m/")
+    purpose = path.split("/")[0].rstrip("'hH")
+
+    try:
+        account_num = int(path.split("/")[2].rstrip("'hH"))
+    except (IndexError, ValueError):
+        account_num = 0
+
+    purpose_str = {
+        "44": "Legacy",
+        "49": "L.Segwit",
+        "84": "Segwit",
+        "86": "Taproot",
+    }.get(purpose, "Unknown")
+
+    return f"{coin_shortcut} {purpose_str} #{account_num + 1}"

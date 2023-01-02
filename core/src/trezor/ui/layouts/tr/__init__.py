@@ -650,69 +650,39 @@ async def show_address(
     *,
     case_sensitive: bool = True,
     address_qr: str | None = None,
-    title: str = "Confirm address",
+    title: str | None = None,
     network: str | None = None,
     multisig_index: int | None = None,
     xpubs: Sequence[str] = (),
     address_extra: str | None = None,
     title_qr: str | None = None,
+    derivation_path: str | None = None,
+    account: str | None = None,
 ) -> None:
-    is_multisig = len(xpubs) > 0
-    # TODO: replace with confirm_blob
-    data = address
-    if network:
-        data += f"\n\n{network}"
-    if address_extra:
-        data += f"\n\n{address_extra}"
-    while True:
-        result = await interact(
+    account = account or "Unknown"
+    derivation_path = derivation_path or "Unknown"
+    title = title or "Receive address"
+
+    await raise_if_cancelled(
+        interact(
             ctx,
             RustLayout(
-                trezorui2.confirm_action(
+                trezorui2.show_receive_address(
                     title=title.upper(),
-                    action=data,
-                    description=None,
-                    verb="CONFIRM",
-                    verb_cancel="QR",
-                    reverse=False,
-                    hold=False,
+                    address=address,
+                    address_qr=address if address_qr is None else address_qr,
+                    account=account,
+                    derivation_path=derivation_path,
+                    case_sensitive=case_sensitive,
                 )
             ),
             "show_address",
             ButtonRequestType.Address,
         )
-        if result is trezorui2.CONFIRMED:
-            break
+    )
 
-        result = await interact(
-            ctx,
-            RustLayout(
-                trezorui2.show_qr(
-                    address=address if address_qr is None else address_qr,
-                    case_sensitive=case_sensitive,
-                    title=title.upper() if title_qr is None else title_qr.upper(),
-                    verb_cancel="XPUBs" if is_multisig else "ADDRESS",
-                )
-            ),
-            "show_qr",
-            ButtonRequestType.Address,
-        )
-        if result is trezorui2.CONFIRMED:
-            break
-
-        if is_multisig:
-            for i, xpub in enumerate(xpubs):
-                cancel = "NEXT" if i < len(xpubs) - 1 else "ADDRESS"
-                title_xpub = f"XPUB #{i + 1}"
-                title_xpub += " (yours)" if i == multisig_index else " (cosigner)"
-                result = await interact(
-                    ctx,
-                    _show_xpub(xpub, title=title_xpub, cancel=cancel),
-                    "show_xpub",
-                    ButtonRequestType.PublicKey,
-                )
-                if result is trezorui2.CONFIRMED:
-                    return
+    # TODO: support showing multisig xpubs?
+    # TODO: send button requests in the flow above?
 
 
 def show_pubkey(

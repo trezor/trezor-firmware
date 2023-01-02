@@ -755,6 +755,16 @@ impl ButtonActions {
         )
     }
 
+    /// Going to last page with left, to the next page with right and confirm
+    /// with middle
+    pub fn last_confirm_next() -> Self {
+        Self::new(
+            Some(ButtonAction::GoToIndex(-1)),
+            Some(ButtonAction::Confirm),
+            Some(ButtonAction::NextPage),
+        )
+    }
+
     /// Cancelling with left, going to the next page with right
     pub fn cancel_next() -> Self {
         Self::new(
@@ -767,6 +777,11 @@ impl ButtonActions {
     /// Only going to the next page with right
     pub fn only_next() -> Self {
         Self::new(None, None, Some(ButtonAction::NextPage))
+    }
+
+    /// Only going to the prev page with left
+    pub fn only_prev() -> Self {
+        Self::new(Some(ButtonAction::PrevPage), None, None)
     }
 
     /// Cancelling with left, confirming with right
