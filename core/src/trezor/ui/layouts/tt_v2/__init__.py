@@ -381,20 +381,29 @@ async def show_address(
     *,
     address_qr: str | None = None,
     case_sensitive: bool = True,
-    title: str = "Confirm address",
+    title: str | None = None,
     network: str | None = None,
     multisig_index: int | None = None,
     xpubs: Sequence[str] = (),
     address_extra: str | None = None,
     title_qr: str | None = None,
+    derivation_path: str | None = None,
+    account: str | None = None,
 ) -> None:
+    # TODO: could show the derivation path and account, the same was as TR
     is_multisig = len(xpubs) > 0
+    if title:
+        title = title.upper()
+    elif derivation_path:
+        title = derivation_path.upper()
+    else:
+        title = "CONFIRM ADDRESS"
     while True:
         result = await interact(
             ctx,
             RustLayout(
                 trezorui2.confirm_blob(
-                    title=title.upper(),
+                    title=title,
                     data=address,
                     description=network or "",
                     extra=address_extra or "",

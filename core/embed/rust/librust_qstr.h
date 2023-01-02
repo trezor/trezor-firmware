@@ -63,6 +63,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_progress;
+  MP_QSTR_show_receive_address;
 
   MP_QSTR_progress_event;
   MP_QSTR_usb_event;
@@ -132,4 +133,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee_label;
   MP_QSTR_address_title;
   MP_QSTR_amount_title;
+  MP_QSTR_show_receive_address;
+  MP_QSTR_derivation_path;
+  MP_QSTR_address_qr;
 }

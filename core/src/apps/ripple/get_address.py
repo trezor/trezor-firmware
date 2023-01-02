@@ -25,7 +25,12 @@ async def get_address(
     address = address_from_public_key(pubkey)
 
     if msg.show_display:
-        title = paths.address_n_to_str(msg.address_n)
-        await show_address(ctx, address, title=title)
+        derivation_path = paths.address_n_to_str(msg.address_n)
+        await show_address(
+            ctx,
+            address,
+            derivation_path=derivation_path,
+            account="Ripple",
+        )
 
     return RippleAddress(address=address)

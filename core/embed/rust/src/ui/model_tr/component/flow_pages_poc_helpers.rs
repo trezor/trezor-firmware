@@ -12,7 +12,14 @@ use crate::{
 
 use heapless::Vec;
 
-// TODO: document this
+/// To account for operations that are not made of characters
+/// but need to be accounted for somehow.
+/// Number of processed characters will be increased by this
+/// to account for the operation.
+const PROCESSED_CHARS_ONE: usize = 1;
+
+/// Container for text allowing for its displaying by chunks
+/// without the need to allocate a new String each time.
 #[derive(Clone)]
 pub struct ToDisplay {
     pub text: StrBuffer,
@@ -28,15 +35,26 @@ impl ToDisplay {
     }
 }
 
+/// Holding information about a QR code to be displayed.
 #[derive(Clone)]
 pub struct QrCodeInfo {
-    pub text: StrBuffer,
+    pub data: StrBuffer,
     pub max_size: i16,
     pub case_sensitive: bool,
     pub center: Point,
 }
 
-// TODO: add QrCode(QrCodeInfo)
+impl QrCodeInfo {
+    pub fn new(data: StrBuffer, max_size: i16, case_sensitive: bool, center: Point) -> Self {
+        Self {
+            data,
+            max_size,
+            case_sensitive,
+            center,
+        }
+    }
+}
+
 /// Operations that can be done on the screen.
 #[derive(Clone)]
 pub enum Op {
@@ -44,6 +62,8 @@ pub enum Op {
     Text(ToDisplay),
     /// Render icon.
     Icon(Icon),
+    /// Render QR Code.
+    QrCode(QrCodeInfo),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.
@@ -218,13 +238,15 @@ impl TextLayout {
                         }
                     }
                     Op::Icon(_) if skipped < skip_bytes => {
-                        // Assume the icon accounts for one character
-                        skipped = skipped.saturating_add(1);
+                        skipped = skipped.saturating_add(PROCESSED_CHARS_ONE);
+                        None
+                    }
+                    Op::QrCode(_) if skipped < skip_bytes => {
+                        skipped = skipped.saturating_add(PROCESSED_CHARS_ONE);
                         None
                     }
                     Op::NextPage if skipped < skip_bytes => {
-                        // Skip the next page and consider it one character
-                        skipped = skipped.saturating_add(1);
+                        skipped = skipped.saturating_add(PROCESSED_CHARS_ONE);
                         None
                     }
                     Op::CursorOffset(_) if skipped < skip_bytes => {
@@ -258,16 +280,28 @@ impl TextLayout {
                     Op::NextPage => {
                         // Pretending that nothing more fits on current page to force
                         // continuing on the next one
-                        // Making that to account for one character for pagination purposes
-                        total_processed_chars += 1;
+                        total_processed_chars += PROCESSED_CHARS_ONE;
                         return LayoutFit::OutOfBounds {
                             processed_chars: total_processed_chars,
                             height: self.layout_height(init_cursor, *cursor),
                         };
                     }
+                    Op::QrCode(qr_details) => {
+                        self.layout_qr_code(qr_details, sink);
+                        // QR codes are always the last component that can be shown
+                        // on the given page (meaning a series of Op's).
+                        // Throwing Fitting to force the end of the whole page.
+                        // (It would be too complicated to account for it by modifying cursor, etc.,
+                        // and there is not a need for it currently. If we want QR code together
+                        // with some other things on the same screen, just first render the other
+                        // things and do the QR code last.)
+                        total_processed_chars += PROCESSED_CHARS_ONE;
+                        return LayoutFit::Fitting {
+                            processed_chars: total_processed_chars,
+                            height: self.layout_height(init_cursor, *cursor),
+                        };
+                    }
                     // Drawing text or icon
-                    // TODO: add QRCode support - always returning OOB
-                    // to force going to the next page
                     Op::Text(_) | Op::Icon(_) => {
                         // Text and Icon behave similarly - we try to fit them
                         // on the current page and if they do not fit,
@@ -452,10 +486,16 @@ impl TextLayout {
 
         cursor.x += icon.width() as i16;
         LayoutFit::Fitting {
-            // TODO: unify the 1 being returned - make it a CONST probably
-            processed_chars: 1,
+            processed_chars: PROCESSED_CHARS_ONE,
             height: 0, // it should just draw on one line
         }
+    }
+
+    /// Fitting the QR code on the current screen.
+    /// Not returning `LayoutFit`, QR codes are handled differently,
+    /// they automatically throw out of bounds.
+    pub fn layout_qr_code(&self, qr_code_info: QrCodeInfo, sink: &mut dyn LayoutSink) {
+        sink.qrcode(qr_code_info);
     }
 
     /// Overall height of the content, including paddings.
@@ -495,7 +535,7 @@ pub trait LayoutSink {
     /// Icon should be displayed.
     fn icon(&mut self, _cursor: Point, _layout: &TextLayout, _icon: Icon) {}
     /// QR code should be displayed.
-    fn qrcode(&mut self, _cursor: Point, _layout: &TextLayout, _qr_code: QrCodeInfo) {}
+    fn qrcode(&mut self, _qr_code: QrCodeInfo) {}
     /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     /// Ellipsis at the end of the page.
@@ -594,6 +634,16 @@ impl LayoutSink for TextRenderer {
             layout.style.background_color,
         );
     }
+
+    fn qrcode(&mut self, qr_code: QrCodeInfo) {
+        display::qrcode(
+            qr_code.center,
+            qr_code.data.as_ref(),
+            qr_code.max_size as _,
+            qr_code.case_sensitive,
+        )
+        .unwrap_or(())
+    }
 }
 
 /// `LayoutSink` for debugging purposes.
@@ -611,6 +661,11 @@ impl<'a> LayoutSink for TraceSink<'a> {
 
     fn icon(&mut self, _cursor: Point, _layout: &TextLayout, icon: Icon) {
         icon.trace(self.0);
+    }
+
+    fn qrcode(&mut self, qr_code: QrCodeInfo) {
+        self.0.string("QR code: ");
+        self.0.string(qr_code.data.as_ref());
     }
 
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {

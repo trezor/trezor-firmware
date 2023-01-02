@@ -924,7 +924,7 @@ async def show_cardano_address(
         network_name = protocol_magics.to_ui_string(protocol_magic)
 
     title = f"{ADDRESS_TYPE_NAMES[address_parameters.address_type]} address"
-    address_extra = None
+    derivation_path = None
     title_qr = title
     if address_parameters.address_type in (
         CAT.BYRON,
@@ -935,10 +935,10 @@ async def show_cardano_address(
         CAT.REWARD,
     ):
         if address_parameters.address_n:
-            address_extra = address_n_to_str(address_parameters.address_n)
+            derivation_path = address_n_to_str(address_parameters.address_n)
             title_qr = address_n_to_str(address_parameters.address_n)
         elif address_parameters.address_n_staking:
-            address_extra = address_n_to_str(address_parameters.address_n_staking)
+            derivation_path = address_n_to_str(address_parameters.address_n_staking)
             title_qr = address_n_to_str(address_parameters.address_n_staking)
 
     await layouts.show_address(
@@ -946,6 +946,8 @@ async def show_cardano_address(
         address,
         title=title,
         network=network_name,
-        address_extra=address_extra,
+        address_extra=derivation_path,
         title_qr=title_qr,
+        derivation_path=derivation_path,
+        account="Cardano",
     )

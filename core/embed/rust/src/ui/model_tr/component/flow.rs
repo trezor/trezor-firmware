@@ -234,12 +234,16 @@ where
     fn paint(&mut self) {
         self.pad.paint();
         // Scrollbars are painted only with a title
-        if let Some(title) = &self.common_title {
+        if let Some(title) = self.common_title {
             self.scrollbar.paint();
             common::paint_header_left(title, self.title_area);
         }
-        self.current_page.paint();
         self.buttons.paint();
+        // On purpose painting current page at the end, after buttons,
+        // because we sometimes (in the case of QR code) need to use the
+        // whole height of the display for showing the content
+        // (and painting buttons last would cover the lower part).
+        self.current_page.paint();
     }
 }
 
