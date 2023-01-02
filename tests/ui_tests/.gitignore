@@ -2,3 +2,4 @@
 *.html
 *.zip
 fixtures.suggestion.json
+fixtures.diff.json

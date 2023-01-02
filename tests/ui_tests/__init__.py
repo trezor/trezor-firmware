@@ -18,6 +18,7 @@ UI_TESTS_DIR = Path(__file__).resolve().parent
 SCREENS_DIR = UI_TESTS_DIR / "screens"
 HASH_FILE = UI_TESTS_DIR / "fixtures.json"
 SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"
+FIXTURES_DIFF = UI_TESTS_DIR / "fixtures.diff.json"
 FILE_HASHES: Dict[str, str] = {}
 ACTUAL_HASHES: Dict[str, str] = {}
 PROCESSED: Set[str] = set()
@@ -91,6 +92,14 @@ def _process_tested(fixture_test_path: Path, test_name: str) -> None:
         file_path = testreport.failed(
             fixture_test_path, test_name, actual_hash, expected_hash
         )
+
+        # Writing the diff to a file, so that we can process it later
+        with open(FIXTURES_DIFF, "a") as f:
+            diff = {
+                "test_name": test_name,
+                "actual_hash": actual_hash,
+            }
+            f.write(json.dumps(diff) + "\n")
 
         pytest.fail(
             f"Hash of {test_name} differs.\n"
@@ -184,6 +193,31 @@ def write_fixtures_suggestion(
     SUGGESTION_FILE.write_text(
         _get_fixtures_content(ACTUAL_HASHES, remove_missing, only_passed_tests)
     )
+
+
+def update_fixtures_with_diff() -> int:
+    """Update the fixtures.json file with the actual hashes from the diff file.
+
+    Use-case is that the UI test run will generate the differing hashes,
+    and with this function we can simply update the fixtures.json file
+    without having to call the UI tests again in recording mode.
+    """
+    if not FIXTURES_DIFF.exists():
+        raise ValueError(f"File {FIXTURES_DIFF} not found.")
+
+    read_fixtures()
+
+    changes_amount = 0
+    with open(FIXTURES_DIFF) as f:
+        for line in f:
+            changes_amount += 1
+            diff = json.loads(line)
+            FILE_HASHES[diff["test_name"]] = diff["actual_hash"]
+
+    write_fixtures(remove_missing=False)
+
+    # Returning the amount of updated hashes
+    return changes_amount
 
 
 def _get_fixtures_content(

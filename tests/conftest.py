@@ -251,6 +251,9 @@ def pytest_sessionstart(session: pytest.Session) -> None:
     ui_tests.read_fixtures()
     if session.config.getoption("ui") and _is_main_runner(session):
         testreport.clear_dir()
+        # Preparing a new file for UI diff
+        with open(ui_tests.FIXTURES_DIFF, "w") as _:
+            pass
 
 
 def _should_write_ui_report(exitstatus: pytest.ExitCode) -> bool:
@@ -316,6 +319,10 @@ def pytest_terminal_summary(
     if _should_write_ui_report(exitstatus):
         println("-------- UI tests summary: --------")
         println("Run ./tests/show_results.py to open test summary")
+        println("")
+
+        println("-------- Accepting all recent UI changes: --------")
+        println("Run ./tests/update_fixtures.py to apply all changes")
         println("")
 
 

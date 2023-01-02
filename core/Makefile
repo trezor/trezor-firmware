@@ -118,6 +118,9 @@ test_emu_ui_record: ## record and hash screens for ui integration tests
 test_emu_ui_record_multicore: ## record and hash screens for ui integration tests using multiple cores
 	$(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) --ui=record --ui-check-missing --control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
 
+test_emu_accept_fixtures:  # accept UI fixtures from the last run of UI tests
+	../tests/update_fixtures.py
+
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
