@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.12.0] [January 2023]
+
+### Added
+- T1 bootloader: verify firmware signatures based on SignMessage, add signature debugging  [#2568]
+
+### Fixed
+- Better way to debug T1 combinations of debug/production combinations of bootloader and firmware  [#2423]
+
+
 ## 1.11.0 [May 2022]
 
 ### Added
@@ -128,3 +137,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1642]: https://github.com/trezor/trezor-firmware/pull/1642
 [#1884]: https://github.com/trezor/trezor-firmware/pull/1884
 [#2231]: https://github.com/trezor/trezor-firmware/pull/2231
+[#2423]: https://github.com/trezor/trezor-firmware/pull/2423
+[#2568]: https://github.com/trezor/trezor-firmware/pull/2568
