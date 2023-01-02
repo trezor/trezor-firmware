@@ -87,6 +87,7 @@ void fsm_msgGetOwnershipId(const GetOwnershipId *msg);
 void fsm_msgGetOwnershipProof(const GetOwnershipProof *msg);
 void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg);
 void fsm_msgCancelAuthorization(const CancelAuthorization *msg);
+void fsm_msgDoPreauthorized(const DoPreauthorized *msg);
 
 // crypto
 void fsm_msgCipherKeyValue(const CipherKeyValue *msg);

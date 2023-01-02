@@ -701,3 +701,22 @@ void fsm_msgCancelAuthorization(const CancelAuthorization *msg) {
   fsm_sendSuccess(_("Authorization cancelled"));
   layoutHome();
 }
+
+void fsm_msgDoPreauthorized(const DoPreauthorized *msg) {
+  (void)msg;
+
+  RESP_INIT(PreauthorizedRequest);
+
+  CHECK_INITIALIZED
+
+  authorization_type = config_getAuthorizationType();
+  if (authorization_type == 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("No preauthorized operation"));
+    layoutHome();
+    return;
+  }
+
+  msg_write(MessageType_MessageType_PreauthorizedRequest, resp);
+  layoutHome();
+}
