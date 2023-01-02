@@ -68,6 +68,9 @@
 
 static uint8_t msg_resp[MSG_OUT_DECODED_SIZE] __attribute__((aligned));
 
+// Authorization message type triggered by DoPreauthorized.
+static MessageType authorization_type = 0;
+
 #define RESP_INIT(TYPE)                                                    \
   TYPE *resp = (TYPE *)(void *)msg_resp;                                   \
   _Static_assert(sizeof(msg_resp) >= sizeof(TYPE), #TYPE " is too large"); \
@@ -403,6 +406,7 @@ void fsm_msgRebootToBootloader(void) {
 void fsm_abortWorkflows(void) {
   recovery_abort();
   signing_abort();
+  authorization_type = 0;
 #if !BITCOIN_ONLY
   ethereum_signing_abort();
   stellar_signingAbort();
