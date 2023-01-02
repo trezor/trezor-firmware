@@ -114,8 +114,12 @@ test_emu_ui_multicore: ## run ui integration tests using multiple cores
 test_emu_ui_record: ## record and hash screens for ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=record --ui-check-missing $(TESTOPTS)
 
-test_emu_ui_record_multicore: ## record and hash screens for ui integration tests using multiple cores
-	$(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) --ui=record --ui-check-missing --control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
+test_emu_ui_record_multicore: ## quickly record all screens
+	make test_emu_ui_multicore || echo "All errors are recorded in fixtures.json"
+	make test_emu_accept_fixtures
+
+test_emu_accept_fixtures:  # accept UI fixtures from the last run of UI tests
+	../tests/update_fixtures.py
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
