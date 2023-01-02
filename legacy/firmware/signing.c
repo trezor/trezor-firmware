@@ -1969,10 +1969,17 @@ static bool compile_output(TxOutputType *in, TxOutputBinType *out,
     InputScriptType input_script_type = 0;
 
     if (!change_output_to_input_script_type(in->script_type,
-                                            &input_script_type) ||
-        hdnode_private_ckd_cached(&node, in->address_n, in->address_n_count,
-                                  NULL) == 0 ||
-        hdnode_fill_public_key(&node) != 0 ||
+                                            &input_script_type)) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Failed to compile output"));
+      signing_abort();
+      return false;
+    }
+    if (!derive_node(input_script_type, in->address_n_count, in->address_n,
+                     in->has_multisig)) {
+      return false;
+    }
+    if (hdnode_fill_public_key(&node) != 0 ||
         !compute_address(coin, input_script_type, &node, in->has_multisig,
                          &in->multisig, in->address)) {
       fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -2840,13 +2847,12 @@ static bool signing_verify_orig_legacy_input(void) {
   bool valid = false;
 #ifdef USE_SECP256K1_ZKP_ECDSA
   if (coin->curve->params == &secp256k1) {
-    valid = zkp_ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
-                                    hash) == 0;
+    valid =
+        zkp_ecdsa_verify_digest(coin->curve->params, pubkey, sig, hash) == 0;
   } else
 #endif
   {
-    valid = ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
-                                hash) == 0;
+    valid = ecdsa_verify_digest(coin->curve->params, pubkey, sig, hash) == 0;
   }
 
   if (!valid) {
@@ -2900,6 +2906,7 @@ static bool signing_hash_orig_input(TxInputType *orig_input) {
       return false;
     }
 
+    memcpy(pubkey, node.public_key, sizeof(pubkey));
     memcpy(&input, orig_input, sizeof(input));
   } else {
     if (orig_info.next_legacy_input == idx1 && idx2 > idx1 &&
