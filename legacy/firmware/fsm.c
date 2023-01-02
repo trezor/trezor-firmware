@@ -416,6 +416,16 @@ void fsm_abortWorkflows(void) {
 #endif
 }
 
+void fsm_postMsgCleanup(MessageType message_type) {
+  if (message_type != MessageType_MessageType_DoPreauthorized) {
+    authorization_type = 0;
+  }
+
+  if (message_type != MessageType_MessageType_UnlockPath) {
+    unlock_path = 0;
+  }
+}
+
 bool fsm_layoutPathWarning(void) {
   layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
                     _("Wrong address path"), _("for selected coin."), NULL,
