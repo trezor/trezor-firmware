@@ -161,5 +161,6 @@ bool fsm_getOwnershipId(uint8_t *script_pubkey, size_t script_pubkey_size,
                         uint8_t ownership_id[32]);
 
 void fsm_abortWorkflows(void);
+void fsm_postMsgCleanup(MessageType message_type);
 
 #endif

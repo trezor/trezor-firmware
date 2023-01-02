@@ -62,6 +62,7 @@ void MessageProcessFunc(char type, char dir, uint16_t msg_id, void *ptr) {
   while (m->type) {
     if (type == m->type && dir == m->dir && msg_id == m->msg_id) {
       m->process_func(ptr);
+      fsm_postMsgCleanup(msg_id);
       return;
     }
     m++;
