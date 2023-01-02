@@ -74,8 +74,6 @@
 /* size of a Decred witness (without script): 8 amount, 4 block height, 4 block
  * index */
 #define TXSIZE_DECRED_WITNESS 16
-/* support version of Decred script_version */
-#define DECRED_SCRIPT_VERSION 0
 
 static const uint8_t segwit_header[2] = {0, 1};
 
@@ -235,8 +233,8 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
   return 1;
 }
 
-static int address_to_script_pubkey(const CoinInfo *coin, const char *address,
-                                    uint8_t *script_pubkey, pb_size_t *size) {
+int address_to_script_pubkey(const CoinInfo *coin, const char *address,
+                             uint8_t *script_pubkey, pb_size_t *size) {
   uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
   size_t addr_raw_len = base58_decode_check(address, coin->curve->hasher_base58,
                                             addr_raw, MAX_ADDR_RAW_SIZE);
@@ -323,96 +321,16 @@ static int address_to_script_pubkey(const CoinInfo *coin, const char *address,
   return 0;
 }
 
-int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
-                   const HDNode *root, TxOutputType *in, TxOutputBinType *out,
-                   bool needs_confirm) {
-  memzero(out, sizeof(TxOutputBinType));
-  out->amount = in->amount;
-  out->decred_script_version = DECRED_SCRIPT_VERSION;
-
-  if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
-    // only 0 satoshi allowed for OP_RETURN
-    if (in->amount != 0 || in->has_address || (in->address_n_count > 0) ||
-        in->has_multisig) {
-      return 0;  // failed to compile output
-    }
-    if (needs_confirm) {
-      if (in->op_return_data.size >= 8 &&
-          memcmp(in->op_return_data.bytes, "omni", 4) ==
-              0) {  // OMNI transaction
-        layoutConfirmOmni(in->op_return_data.bytes, in->op_return_data.size);
-      } else {
-        layoutConfirmOpReturn(in->op_return_data.bytes,
-                              in->op_return_data.size);
-      }
-      if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput,
-                         false)) {
-        return -1;  // user aborted
-      }
-    }
-    uint32_t r = 0;
-    out->script_pubkey.bytes[0] = 0x6A;
-    r++;  // OP_RETURN
-    r += op_push(in->op_return_data.size, out->script_pubkey.bytes + r);
-    memcpy(out->script_pubkey.bytes + r, in->op_return_data.bytes,
-           in->op_return_data.size);
-    r += in->op_return_data.size;
-    out->script_pubkey.size = r;
-    return r;
-  }
-
-  if (in->address_n_count > 0) {
-    static CONFIDENTIAL HDNode node;
-    InputScriptType input_script_type = 0;
-
-    switch (in->script_type) {
-      case OutputScriptType_PAYTOADDRESS:
-        input_script_type = InputScriptType_SPENDADDRESS;
-        break;
-      case OutputScriptType_PAYTOMULTISIG:
-        input_script_type = InputScriptType_SPENDMULTISIG;
-        break;
-      case OutputScriptType_PAYTOWITNESS:
-        input_script_type = InputScriptType_SPENDWITNESS;
-        break;
-      case OutputScriptType_PAYTOP2SHWITNESS:
-        input_script_type = InputScriptType_SPENDP2SHWITNESS;
-        break;
-      case OutputScriptType_PAYTOTAPROOT:
-        input_script_type = InputScriptType_SPENDTAPROOT;
-        break;
-      default:
-        return 0;  // failed to compile output
-    }
-    memcpy(&node, root, sizeof(HDNode));
-    if (hdnode_private_ckd_cached(&node, in->address_n, in->address_n_count,
-                                  NULL) == 0) {
-      return 0;  // failed to compile output
-    }
-    if (hdnode_fill_public_key(&node) != 0) {
-      return 0;  // failed to compile output
-    }
-    if (!compute_address(coin, input_script_type, &node, in->has_multisig,
-                         &in->multisig, in->address)) {
-      return 0;  // failed to compile output
-    }
-  } else if (!in->has_address) {
-    return 0;  // failed to compile output
-  }
-
-  if (!address_to_script_pubkey(coin, in->address, out->script_pubkey.bytes,
-                                &out->script_pubkey.size)) {
-    return 0;
-  }
-
-  if (needs_confirm) {
-    layoutConfirmOutput(coin, amount_unit, in);
-    if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
-      return -1;  // user aborted
-    }
-  }
-
-  return out->script_pubkey.size;
+void op_return_to_script_pubkey(const uint8_t *op_return_data,
+                                size_t op_return_size, uint8_t *script_pubkey,
+                                pb_size_t *script_pubkey_size) {
+  uint32_t r = 0;
+  script_pubkey[0] = 0x6A;
+  r++;  // OP_RETURN
+  r += op_push(op_return_size, script_pubkey + r);
+  memcpy(script_pubkey + r, op_return_data, op_return_size);
+  r += op_return_size;
+  *script_pubkey_size = r;
 }
 
 bool get_script_pubkey(const CoinInfo *coin, HDNode *node, bool has_multisig,

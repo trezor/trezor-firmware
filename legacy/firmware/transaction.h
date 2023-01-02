@@ -75,6 +75,8 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
                      const HDNode *node, bool has_multisig,
                      const MultisigRedeemScriptType *multisig,
                      char address[MAX_ADDR_SIZE]);
+int address_to_script_pubkey(const CoinInfo *coin, const char *address,
+                             uint8_t *script_pubkey, pb_size_t *size);
 uint32_t compile_script_sig(uint32_t address_type, const uint8_t *pubkeyhash,
                             uint8_t *out);
 uint32_t compile_script_multisig(const CoinInfo *coin,
@@ -101,9 +103,9 @@ bool tx_sign_ecdsa(const ecdsa_curve *curve, const uint8_t *private_key,
                    const uint8_t *hash, uint8_t *out, pb_size_t *size);
 bool tx_sign_bip340(const uint8_t *private_key, const uint8_t *hash,
                     uint8_t *out, pb_size_t *size);
-int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
-                   const HDNode *root, TxOutputType *in, TxOutputBinType *out,
-                   bool needs_confirm);
+void op_return_to_script_pubkey(const uint8_t *op_return_data,
+                                size_t op_return_size, uint8_t *script_pubkey,
+                                pb_size_t *script_pubkey_size);
 bool get_script_pubkey(const CoinInfo *coin, HDNode *node, bool has_multisig,
                        const MultisigRedeemScriptType *multisig,
                        InputScriptType script_type, uint8_t *script_pubkey,

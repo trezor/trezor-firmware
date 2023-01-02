@@ -194,6 +194,9 @@ static Hasher coinjoin_request_hasher;
    transaction disables replace-by-fee opt-in. */
 #define MAX_BIP125_RBF_SEQUENCE 0xFFFFFFFD
 
+/* supported version of Decred script_version */
+#define DECRED_SCRIPT_VERSION 0
+
 enum {
   DECRED_SERIALIZE_FULL = 0,
   DECRED_SERIALIZE_NO_WITNESS = 1,
@@ -1925,6 +1928,85 @@ static bool signing_check_prevtx_hash(void) {
   return true;
 }
 
+static bool compile_output(TxOutputType *in, TxOutputBinType *out,
+                           bool needs_confirm) {
+  memzero(out, sizeof(TxOutputBinType));
+  out->amount = in->amount;
+  out->decred_script_version = DECRED_SCRIPT_VERSION;
+
+  if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
+    // only 0 satoshi allowed for OP_RETURN
+    if (in->amount != 0 || in->has_address || (in->address_n_count > 0) ||
+        in->has_multisig) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Failed to compile output"));
+      signing_abort();
+      return false;
+    }
+    if (needs_confirm) {
+      if (in->op_return_data.size >= 8 &&
+          memcmp(in->op_return_data.bytes, "omni", 4) ==
+              0) {  // OMNI transaction
+        layoutConfirmOmni(in->op_return_data.bytes, in->op_return_data.size);
+      } else {
+        layoutConfirmOpReturn(in->op_return_data.bytes,
+                              in->op_return_data.size);
+      }
+      if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput,
+                         false)) {
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        signing_abort();
+        return false;
+      }
+    }
+    op_return_to_script_pubkey(
+        in->op_return_data.bytes, in->op_return_data.size,
+        out->script_pubkey.bytes, &out->script_pubkey.size);
+    return true;
+  }
+
+  if (in->address_n_count > 0) {
+    InputScriptType input_script_type = 0;
+
+    if (!change_output_to_input_script_type(in->script_type,
+                                            &input_script_type) ||
+        hdnode_private_ckd_cached(&node, in->address_n, in->address_n_count,
+                                  NULL) == 0 ||
+        hdnode_fill_public_key(&node) != 0 ||
+        !compute_address(coin, input_script_type, &node, in->has_multisig,
+                         &in->multisig, in->address)) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Failed to compile output"));
+      signing_abort();
+      return false;
+    }
+  } else if (!in->has_address) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to compile output"));
+    signing_abort();
+    return false;
+  }
+
+  if (!address_to_script_pubkey(coin, in->address, out->script_pubkey.bytes,
+                                &out->script_pubkey.size)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to compile output"));
+    signing_abort();
+    return false;
+  }
+
+  if (needs_confirm) {
+    layoutConfirmOutput(coin, amount_unit, in);
+    if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      signing_abort();
+      return false;
+    }
+  }
+
+  return true;
+}
+
 static bool is_change_output(const TxInfo *tx_info,
                              const TxOutputType *txoutput) {
   if (!is_change_output_script_type(txoutput->script_type)) {
@@ -1992,20 +2074,11 @@ static bool signing_add_output(TxOutputType *txoutput) {
   // Skip confirmation of change-outputs and skip output confirmation altogether
   // in replacement transactions.
   bool skip_confirm = is_change || is_replacement || (is_coinjoin == sectrue);
-  int co = compile_output(coin, amount_unit, &root, txoutput, &bin_output,
-                          !skip_confirm);
+  if (!compile_output(txoutput, &bin_output, !skip_confirm)) {
+    return false;
+  }
   if (!skip_confirm) {
     report_progress(true);
-  }
-  if (co < 0) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-    signing_abort();
-    return false;
-  } else if (co == 0) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Failed to compile output"));
-    signing_abort();
-    return false;
   }
 #if !BITCOIN_ONLY
   if (coin->decred) {
@@ -2144,11 +2217,7 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
 static bool signing_add_orig_output(TxOutputType *orig_output) {
   // Compute scriptPubKey.
   TxOutputBinType orig_bin_output;
-  if (compile_output(coin, amount_unit, &root, orig_output, &orig_bin_output,
-                     false) <= 0) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Failed to compile output"));
-    signing_abort();
+  if (!compile_output(orig_output, &orig_bin_output, false)) {
     return false;
   }
 
@@ -2854,11 +2923,7 @@ static bool signing_hash_orig_input(TxInputType *orig_input) {
 }
 
 static bool signing_hash_orig_output(TxOutputType *orig_output) {
-  if (compile_output(coin, amount_unit, &root, orig_output, &bin_output,
-                     false) <= 0) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Failed to compile output"));
-    signing_abort();
+  if (!compile_output(orig_output, &bin_output, false)) {
     return false;
   }
 
@@ -3821,11 +3886,7 @@ void signing_txack(TransactionType *tx) {
       }
       progress_step++;
 
-      if (compile_output(coin, amount_unit, &root, tx->outputs, &bin_output,
-                         false) <= 0) {
-        fsm_sendFailure(FailureType_Failure_ProcessError,
-                        _("Failed to compile output"));
-        signing_abort();
+      if (!compile_output(tx->outputs, &bin_output, false)) {
         return;
       }
       //  check hashOutputs
@@ -3971,11 +4032,7 @@ void signing_txack(TransactionType *tx) {
       }
       progress_step++;
 
-      if (compile_output(coin, amount_unit, &root, tx->outputs, &bin_output,
-                         false) <= 0) {
-        fsm_sendFailure(FailureType_Failure_ProcessError,
-                        _("Failed to compile output"));
-        signing_abort();
+      if (!compile_output(tx->outputs, &bin_output, false)) {
         return;
       }
       resp.has_serialized = true;
