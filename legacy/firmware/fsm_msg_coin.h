@@ -168,7 +168,15 @@ void fsm_msgSignTx(const SignTx *msg) {
   CHECK_PARAM(msg->inputs_count + msg->outputs_count >= msg->inputs_count,
               _("Value overflow"));
 
-  CHECK_PIN
+  const AuthorizeCoinJoin *authorization = NULL;
+  if (authorization_type == MessageType_MessageType_AuthorizeCoinJoin) {
+    authorization = config_getCoinJoinAuthorization();
+    if (authorization == NULL) {
+      return;
+    }
+  } else {
+    CHECK_PIN
+  }
 
   PathSchema unlock = fsm_getUnlockedSchema(MessageType_MessageType_SignTx);
 
@@ -184,11 +192,13 @@ void fsm_msgSignTx(const SignTx *msg) {
   const HDNode *node = fsm_getDerivedNode(coin->curve_name, NULL, 0, NULL);
   if (!node) return;
 
-  signing_init(msg, coin, node, unlock);
+  signing_init(msg, coin, node, authorization, unlock);
 }
 
 void fsm_msgTxAck(TxAck *msg) {
-  CHECK_UNLOCKED
+  if (!signing_is_preauthorized()) {
+    CHECK_UNLOCKED
+  }
 
   CHECK_PARAM(msg->has_tx, _("No transaction provided"));
 

@@ -29,8 +29,9 @@
 #include "messages-bitcoin.pb.h"
 
 void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
-                  PathSchema unlock);
+                  const AuthorizeCoinJoin *authorization, PathSchema unlock);
 void signing_abort(void);
 void signing_txack(TransactionType *tx);
+bool signing_is_preauthorized(void);
 
 #endif
