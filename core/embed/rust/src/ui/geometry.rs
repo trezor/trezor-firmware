@@ -77,13 +77,13 @@ impl Offset {
 
     /// With `self` representing a rectangle size, returns top-left corner of
     /// the rectangle such that it is aligned relative to the `point`.
-    pub const fn snap(self, point: Point, x: Alignment, y: Alignment) -> Point {
-        let x_off = match x {
+    pub const fn snap(self, point: Point, alignment: Alignment2D) -> Point {
+        let x_off = match alignment.0 {
             Alignment::Start => 0,
             Alignment::Center => self.x / 2,
             Alignment::End => self.x,
         };
-        let y_off = match y {
+        let y_off = match alignment.1 {
             Alignment::Start => 0,
             Alignment::Center => self.y / 2,
             Alignment::End => self.y,
@@ -222,6 +222,12 @@ impl Rect {
 
     pub const fn zero() -> Self {
         Self::new(Point::zero(), Point::zero())
+    }
+
+    /// Returns a rectangle of `size` such that `point` is on position specified
+    /// by `alignment`.
+    pub const fn snap(point: Point, size: Offset, alignment: Alignment2D) -> Rect {
+        Self::from_top_left_and_size(size.snap(point, alignment), size)
     }
 
     pub const fn from_top_left_and_size(p0: Point, size: Offset) -> Self {
@@ -450,6 +456,14 @@ pub enum Alignment {
     Center,
     End,
 }
+
+pub type Alignment2D = (Alignment, Alignment);
+
+pub const TOP_LEFT: Alignment2D = (Alignment::Start, Alignment::Start);
+pub const TOP_RIGHT: Alignment2D = (Alignment::Start, Alignment::End);
+pub const CENTER: Alignment2D = (Alignment::Center, Alignment::Center);
+pub const BOTTOM_LEFT: Alignment2D = (Alignment::Start, Alignment::End);
+pub const BOTTOM_RIGHT: Alignment2D = (Alignment::End, Alignment::End);
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Axis {

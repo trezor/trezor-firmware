@@ -7,12 +7,11 @@ use crate::{
     trezorhal::{
         buffers::{get_blurring_buffer, get_jpeg_buffer, get_jpeg_work_buffer, BufferJpeg},
         display,
-        display::{bar_radius_buffer, ToifFormat},
-        uzlib::UzlibContext,
+        display::bar_radius_buffer,
     },
     ui::{
         constant::screen,
-        display::{position_buffer, set_window, toif_info_ensure, Color},
+        display::{position_buffer, set_window, Color},
         geometry::{Offset, Point, Rect},
     },
 };
@@ -20,7 +19,10 @@ use crate::{
 use crate::ui::{
     component::text::TextStyle,
     constant::{HEIGHT, WIDTH},
-    display::tjpgd::{BufferInput, BufferOutput, JDEC},
+    display::{
+        tjpgd::{BufferInput, BufferOutput, JDEC},
+        Icon,
+    },
     model_tt::theme,
     util::icon_text_center,
 };
@@ -30,13 +32,13 @@ pub struct HomescreenText<'a> {
     pub text: &'a str,
     pub style: TextStyle,
     pub offset: Offset,
-    pub icon: Option<&'static [u8]>,
+    pub icon: Option<Icon>,
 }
 
 #[derive(Clone, Copy)]
 pub struct HomescreenNotification<'a> {
     pub text: &'a str,
-    pub icon: &'static [u8],
+    pub icon: Icon,
     pub color: Color,
 }
 
@@ -129,12 +131,10 @@ fn homescreen_position_text(
     let text_width_clamped = text_width.clamp(0, screen().width());
 
     let icon_size = if let Some(icon) = text.icon {
-        let (icon_size, icon_data) = toif_info_ensure(icon, ToifFormat::GrayScaleEH);
-        assert!(icon_size.x <= HOMESCREEN_MAX_ICON_SIZE);
-        assert!(icon_size.y <= HOMESCREEN_MAX_ICON_SIZE);
-        let mut ctx = UzlibContext::new(icon_data, None);
-        unwrap!(ctx.uncompress(icon_buffer), "Decompression failed");
-        icon_size
+        assert!(icon.toif.width() <= HOMESCREEN_MAX_ICON_SIZE);
+        assert!(icon.toif.height() <= HOMESCREEN_MAX_ICON_SIZE);
+        icon.toif.uncompress(icon_buffer);
+        icon.toif.size
     } else {
         Offset::zero()
     };

@@ -5,7 +5,7 @@ use num_traits::FromPrimitive;
 
 use crate::trezorhal::buffers::BufferText;
 
-#[derive(PartialEq, Debug, Eq, FromPrimitive)]
+#[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
 pub enum ToifFormat {
     FullColorBE = ffi::toif_format_t_TOIF_FULL_COLOR_BE as _,
     GrayScaleOH = ffi::toif_format_t_TOIF_GRAYSCALE_OH as _,
@@ -100,21 +100,6 @@ pub fn bar_radius(x: i16, y: i16, w: i16, h: i16, fgcolor: u16, bgcolor: u16, ra
 pub fn bar_radius_buffer(x: i16, y: i16, w: i16, h: i16, radius: u8, buffer: &mut BufferText) {
     unsafe {
         ffi::display_bar_radius_buffer(x.into(), y.into(), w.into(), h.into(), radius, buffer as _)
-    }
-}
-
-pub fn icon(x: i16, y: i16, w: i16, h: i16, data: &[u8], fgcolor: u16, bgcolor: u16) {
-    unsafe {
-        ffi::display_icon(
-            x.into(),
-            y.into(),
-            w.into(),
-            h.into(),
-            data.as_ptr() as _,
-            data.len() as _,
-            fgcolor,
-            bgcolor,
-        )
     }
 }
 

@@ -7,7 +7,7 @@ use crate::{
     trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
-        display::{self, tjpgd::jpeg_info, Color, Font},
+        display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
         event::{TouchEvent, USBEvent},
         geometry::{Offset, Point, Rect},
         model_tt::{constant, theme::IMAGE_HOMESCREEN},
@@ -60,11 +60,11 @@ where
         }
     }
 
-    fn level_to_style(level: u8) -> (Color, &'static [u8]) {
+    fn level_to_style(level: u8) -> (Color, Icon) {
         match level {
-            2 => (theme::VIOLET, theme::ICON_MAGIC),
-            1 => (theme::YELLOW, theme::ICON_WARN),
-            _ => (theme::RED, theme::ICON_WARN),
+            2 => (theme::VIOLET, Icon::new(theme::ICON_MAGIC)),
+            1 => (theme::YELLOW, Icon::new(theme::ICON_WARN)),
+            _ => (theme::RED, Icon::new(theme::ICON_WARN)),
         }
     }
 
@@ -273,7 +273,7 @@ where
                 text: locked,
                 style: theme::TEXT_BOLD,
                 offset: Offset::new(10, LOCKED_Y),
-                icon: Some(theme::ICON_LOCK),
+                icon: Some(Icon::new(theme::ICON_LOCK)),
             },
             HomescreenText {
                 text: tap,

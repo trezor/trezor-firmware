@@ -7,7 +7,8 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx},
         display,
-        geometry::{Offset, Rect},
+        display::toif::Icon,
+        geometry::{Offset, Rect, CENTER},
         model_tt::{
             component::{
                 keyboard::{
@@ -173,7 +174,7 @@ impl Component for Slip39Input {
             // Icon is painted in the right-center point, of expected size 16x16 pixels, and
             // 16px from the right edge.
             let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
-            display::icon(icon_center, icon, style.text_color, style.button_color);
+            icon.draw(icon_center, CENTER, style.text_color, style.button_color);
         }
     }
 
@@ -225,7 +226,7 @@ impl Slip39Input {
             self.button.enable(ctx);
             self.button.set_stylesheet(ctx, theme::button_confirm());
             self.button
-                .set_content(ctx, ButtonContent::Icon(theme::ICON_CONFIRM));
+                .set_content(ctx, ButtonContent::Icon(Icon::new(theme::ICON_CONFIRM)));
         } else {
             // Disabled button.
             self.button.disable(ctx);

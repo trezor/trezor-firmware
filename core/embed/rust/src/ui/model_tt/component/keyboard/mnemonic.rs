@@ -1,6 +1,7 @@
 use crate::ui::{
     component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
-    geometry::{Alignment, Grid, Offset, Rect},
+    display::toif::Icon,
+    geometry::{Grid, Offset, Rect, CENTER},
     model_tt::{
         component::{Button, ButtonMsg},
         theme,
@@ -38,8 +39,8 @@ where
             back: Child::new(Maybe::hidden(
                 theme::BG,
                 Button::with_icon_blend(
-                    theme::IMAGE_BG_BACK_BTN_TALL,
-                    theme::ICON_BACK,
+                    Icon::new(theme::IMAGE_BG_BACK_BTN_TALL),
+                    Icon::new(theme::ICON_BACK),
                     Offset::new(30, 17),
                 )
                 .styled(theme::button_clear())
@@ -100,8 +101,7 @@ where
 
         let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
         let prompt_size = self.prompt.inner().inner().max_size();
-        let prompt_top_left = prompt_size.snap(prompt_center, Alignment::Center, Alignment::Center);
-        let prompt_area = Rect::from_top_left_and_size(prompt_top_left, prompt_size);
+        let prompt_area = Rect::snap(prompt_center, prompt_size, CENTER);
 
         self.prompt.place(prompt_area);
         self.back.place(back_area);

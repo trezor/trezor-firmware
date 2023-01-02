@@ -4,6 +4,7 @@ use crate::{
         animation::Animation,
         component::{Component, Event, EventCtx},
         display,
+        display::toif::Icon,
         geometry::Rect,
         model_tr::theme,
     },
@@ -23,11 +24,11 @@ pub struct ResultAnim {
     area: Rect,
     state: State,
     growing_duration: Duration,
-    icon: &'static [u8],
+    icon: Icon,
 }
 
 impl ResultAnim {
-    pub fn new(icon: &'static [u8]) -> Self {
+    pub fn new(icon: Icon) -> Self {
         Self {
             area: Rect::zero(),
             state: State::Initial,
