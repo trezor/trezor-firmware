@@ -103,10 +103,11 @@ static uint32_t unlock_path = 0;
     return;                 \
   }
 
-#define CHECK_UNLOCKED         \
-  if (!session_isUnlocked()) { \
-    layoutHome();              \
-    return;                    \
+#define CHECK_UNLOCKED                                              \
+  if (!session_isUnlocked()) {                                      \
+    fsm_sendFailure(FailureType_Failure_ProcessError, _("Locked")); \
+    layoutHome();                                                   \
+    return;                                                         \
   }
 
 #define CHECK_PARAM(cond, errormsg)                             \

@@ -11,7 +11,6 @@ Address.address                                             max_size:130
 Address.mac                                                 type:FT_IGNORE
 
 SignTx.coin_name                                            max_size:21
-SignTx.coinjoin_request                                     type:FT_IGNORE
 
 SignMessage.address_n                                       max_count:8
 SignMessage.message                                         max_size:1024
@@ -96,8 +95,9 @@ AuthorizeCoinJoin.coordinator                               max_size:37
 AuthorizeCoinJoin.address_n                                 max_count:8
 AuthorizeCoinJoin.coin_name                                 max_size:21
 
+CoinJoinRequest.mask_public_key                             max_size:33
+CoinJoinRequest.signature                                   max_size:64
 
 # Unused messages.
 TxAckPaymentRequest                                         skip_message:true
 PaymentRequestMemo                                          skip_message:true
-CoinJoinRequest                                             skip_message:true
