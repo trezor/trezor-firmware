@@ -921,10 +921,10 @@ static bool fill_input_script_pubkey(TxInputType *in) {
   return true;
 }
 
-static bool derive_node(TxInputType *tinput) {
-  if (!coin_path_check(coin, tinput->script_type, tinput->address_n_count,
-                       tinput->address_n, tinput->has_multisig, unlocked_schema,
-                       false) &&
+static bool derive_node(InputScriptType script_type, pb_size_t address_n_count,
+                        const uint32_t *address_n, bool has_multisig) {
+  if (!coin_path_check(coin, script_type, address_n_count, address_n,
+                       has_multisig, unlocked_schema, false) &&
       config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
     signing_abort();
@@ -936,9 +936,8 @@ static bool derive_node(TxInputType *tinput) {
   // schemes (ECDSA and Schnorr) and we want to be sure that the user went
   // through a warning screen before we sign the input.
   if (!foreign_address_confirmed &&
-      !coin_path_check(coin, tinput->script_type, tinput->address_n_count,
-                       tinput->address_n, tinput->has_multisig, unlocked_schema,
-                       true)) {
+      !coin_path_check(coin, script_type, address_n_count, address_n,
+                       has_multisig, unlocked_schema, true)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Transaction has changed during signing"));
     signing_abort();
@@ -946,8 +945,7 @@ static bool derive_node(TxInputType *tinput) {
   }
 
   memcpy(&node, &root, sizeof(HDNode));
-  if (hdnode_private_ckd_cached(&node, tinput->address_n,
-                                tinput->address_n_count, NULL) == 0) {
+  if (hdnode_private_ckd_cached(&node, address_n, address_n_count, NULL) == 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to derive private key."));
     signing_abort();
@@ -955,6 +953,11 @@ static bool derive_node(TxInputType *tinput) {
   }
 
   return true;
+}
+
+static bool input_derive_node(const TxInputType *txi) {
+  return derive_node(txi->script_type, txi->address_n_count, txi->address_n,
+                     txi->has_multisig);
 }
 
 static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
@@ -1786,7 +1789,8 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
 
   if (orig_input->script_type != InputScriptType_EXTERNAL) {
     // External inputs should have scriptPubKey set by the host.
-    if (!derive_node(orig_input) || !fill_input_script_pubkey(orig_input)) {
+    if (!input_derive_node(orig_input) ||
+        !fill_input_script_pubkey(orig_input)) {
       return false;
     }
   }
@@ -2292,7 +2296,7 @@ static bool signing_verify_orig_nonlegacy_input(TxInputType *orig_input) {
   // Derive node.public_key and fill script_sig with the legacy scriptPubKey
   // (aka BIP-143 script code), which is what our code expects here in order
   // to properly compute the BIP-143 transaction digest.
-  if (!derive_node(orig_input) || !fill_input_script_sig(orig_input)) {
+  if (!input_derive_node(orig_input) || !fill_input_script_sig(orig_input)) {
     return false;
   }
 
@@ -2404,7 +2408,7 @@ static bool signing_hash_orig_input(TxInputType *orig_input) {
     // Derive node.public_key and fill script_sig with the legacy
     // scriptPubKey which is what our code expects here in order to properly
     // compute the transaction digest.
-    if (!derive_node(orig_input) || !fill_input_script_sig(orig_input)) {
+    if (!input_derive_node(orig_input) || !fill_input_script_sig(orig_input)) {
       return false;
     }
 
@@ -2682,7 +2686,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
   if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
     signing_hash_bip341(&info, idx1, signing_hash_type(txinput), hash);
 
-    if (!tx_info_check_input(&info, txinput) || !derive_node(txinput) ||
+    if (!tx_info_check_input(&info, txinput) || !input_derive_node(txinput) ||
         !signing_sign_bip340(node.private_key, hash)) {
       return false;
     }
@@ -2710,7 +2714,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
       return false;
     }
 
-    if (!tx_info_check_input(&info, txinput) || !derive_node(txinput) ||
+    if (!tx_info_check_input(&info, txinput) || !input_derive_node(txinput) ||
         !fill_input_script_sig(txinput)) {
       return false;
     }
@@ -3069,7 +3073,7 @@ void signing_txack(TransactionType *tx) {
 
       if (input.script_type != InputScriptType_EXTERNAL) {
         // External inputs should have scriptPubKey set by the host.
-        if (!derive_node(&input) || !fill_input_script_pubkey(&input)) {
+        if (!input_derive_node(&input) || !fill_input_script_pubkey(&input)) {
           return;
         }
       }
@@ -3351,7 +3355,7 @@ void signing_txack(TransactionType *tx) {
       }
       if (idx2 == idx1) {
         if (!tx_info_check_input(&info, &tx->inputs[0]) ||
-            !derive_node(&tx->inputs[0]) ||
+            !input_derive_node(&tx->inputs[0]) ||
             !fill_input_script_sig(&tx->inputs[0])) {
           return;
         }
@@ -3449,7 +3453,7 @@ void signing_txack(TransactionType *tx) {
           return;
         }
         if (!tx_info_check_input(&info, &tx->inputs[0]) ||
-            !derive_node(&tx->inputs[0]) ||
+            !input_derive_node(&tx->inputs[0]) ||
             !fill_input_script_sig(&tx->inputs[0])) {
           return;
         }
@@ -3494,7 +3498,7 @@ void signing_txack(TransactionType *tx) {
                      InputScriptType_SPENDP2SHWITNESS &&
                  !tx->inputs[0].has_multisig) {
         if (!tx_info_check_input(&info, &tx->inputs[0]) ||
-            !derive_node(&tx->inputs[0]) ||
+            !input_derive_node(&tx->inputs[0]) ||
             !fill_input_script_sig(&tx->inputs[0])) {
           return;
         }
@@ -3597,7 +3601,7 @@ void signing_txack(TransactionType *tx) {
       ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
       ti.is_decred = true;
       if (!tx_info_check_input(&info, &tx->inputs[0]) ||
-          !derive_node(&tx->inputs[0]) ||
+          !input_derive_node(&tx->inputs[0]) ||
           !fill_input_script_sig(&tx->inputs[0])) {
         return;
       }
