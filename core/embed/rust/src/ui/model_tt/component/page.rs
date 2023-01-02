@@ -3,7 +3,7 @@ use crate::ui::{
         base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, FixedHeightBar, Label,
         Pad, Paginate,
     },
-    display::{self, Color},
+    display::{self, toif::Icon, Color},
     geometry::{Insets, Rect},
     model_tt::component::{Button, ButtonMsg},
 };
@@ -44,7 +44,7 @@ where
     }
 
     pub fn with_back_button(mut self) -> Self {
-        self.button_back = Some(Button::with_icon(theme::ICON_BACK));
+        self.button_back = Some(Button::with_icon(Icon::new(theme::ICON_BACK)));
         self
     }
 

@@ -2,6 +2,7 @@
 pub mod loader;
 #[cfg(feature = "jpeg")]
 pub mod tjpgd;
+pub mod toif;
 
 use super::{
     constant,
@@ -14,20 +15,21 @@ use crate::trezorhal::{
         dma2d_setup_4bpp_over_16bpp, dma2d_setup_4bpp_over_4bpp, dma2d_start_blend,
         dma2d_wait_for_transfer,
     },
+    uzlib::UZLIB_WINDOW_SIZE,
 };
+#[cfg(not(feature = "dma2d"))]
+use crate::ui::geometry::TOP_LEFT;
+
 use crate::{
     error::Error,
     time::Duration,
-    trezorhal::{
-        display,
-        display::ToifFormat,
-        qr, time,
-        uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
-    },
+    trezorhal::{display, qr, time, uzlib::UzlibContext},
     ui::lerp::Lerp,
 };
 use core::slice;
 
+use crate::ui::component::image::Image;
+pub use crate::ui::display::toif::Icon;
 #[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
 
@@ -79,106 +81,6 @@ pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) 
         bg_color.into(),
         radius,
     );
-}
-
-/// NOTE: Cannot start at odd x-coordinate. In this case icon is shifted 1px
-/// left.
-pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
-    display::icon(
-        top_left.x,
-        top_left.y,
-        toif_size.x,
-        toif_size.y,
-        toif_data,
-        fg_color.into(),
-        bg_color.into(),
-    );
-}
-
-pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
-    let r = Rect::from_center_and_size(center, toif_size);
-    display::icon(
-        r.x0,
-        r.y0,
-        r.width(),
-        r.height(),
-        toif_data,
-        fg_color.into(),
-        bg_color.into(),
-    );
-}
-
-pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
-    let r = Rect::from_center_and_size(center, toif_size);
-
-    let area = r.translate(get_offset());
-    let clamped = area.clamp(constant::screen());
-    let colortable = get_color_table(fg_color, bg_color);
-
-    set_window(clamped);
-
-    let mut dest = [0_u8; 1];
-
-    let mut window = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx = UzlibContext::new(toif_data, Some(&mut window));
-
-    for py in area.y0..area.y1 {
-        for px in area.x0..area.x1 {
-            let p = Point::new(px, py);
-            let x = p.x - area.x0;
-
-            if clamped.contains(p) {
-                if x % 2 == 0 {
-                    unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
-                    pixeldata(colortable[(dest[0] & 0xF) as usize]);
-                } else {
-                    pixeldata(colortable[(dest[0] >> 4) as usize]);
-                }
-            } else if x % 2 == 0 {
-                //continue unzipping but dont write to display
-                unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
-            }
-        }
-    }
-
-    pixeldata_dirty();
-}
-
-pub fn image(center: Point, data: &[u8]) {
-    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::FullColorLE);
-
-    let r = Rect::from_center_and_size(center, toif_size);
-    display::image(r.x0, r.y0, r.width(), r.height(), toif_data);
-}
-
-pub fn toif_info(data: &[u8]) -> Option<(Offset, ToifFormat)> {
-    if let Ok(info) = display::toif_info(data) {
-        Some((
-            Offset::new(
-                unwrap!(info.width.try_into()),
-                unwrap!(info.height.try_into()),
-            ),
-            info.format,
-        ))
-    } else {
-        None
-    }
-}
-
-/// Aborts if the TOIF file does not have the correct grayscale flag, do not use
-/// with user-supplied inputs.
-pub(crate) fn toif_info_ensure(data: &[u8], format: ToifFormat) -> (Offset, &[u8]) {
-    let info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert_eq!(info.format, format);
-    let size = Offset::new(
-        unwrap!(info.width.try_into()),
-        unwrap!(info.height.try_into()),
-    );
-    let payload = &data[12..]; // Skip TOIF header.
-    (size, payload)
 }
 
 // Used on T1 only.
@@ -306,7 +208,7 @@ pub fn rect_rounded2_partial(
     fg_color: Color,
     bg_color: Color,
     show_percent: i16,
-    icon: Option<(&[u8], Color)>,
+    icon: Option<(Icon, Color)>,
 ) {
     const MAX_ICON_SIZE: i16 = 64;
 
@@ -325,17 +227,13 @@ pub fn rect_rounded2_partial(
     let mut icon_data = [0_u8; ((MAX_ICON_SIZE * MAX_ICON_SIZE) / 2) as usize];
     let mut icon_width = 0;
 
-    if let Some((icon_bytes, icon_color)) = icon {
-        let (toif_size, toif_data) = toif_info_ensure(icon_bytes, ToifFormat::GrayScaleEH);
-
-        if toif_size.x <= MAX_ICON_SIZE && toif_size.y <= MAX_ICON_SIZE {
-            icon_area = Rect::from_center_and_size(center, toif_size);
+    if let Some((icon, icon_color)) = icon {
+        if icon.toif.width() <= MAX_ICON_SIZE && icon.toif.height() <= MAX_ICON_SIZE {
+            icon_area = Rect::from_center_and_size(center, icon.toif.size);
             icon_area_clamped = icon_area.clamp(constant::screen());
-
-            let mut ctx = UzlibContext::new(toif_data, None);
-            unwrap!(ctx.uncompress(&mut icon_data), "Decompression failed");
+            icon.toif.uncompress(&mut icon_data);
             icon_colortable = get_color_table(icon_color, bg_color);
-            icon_width = toif_size.x;
+            icon_width = icon.toif.width();
             use_icon = true;
         }
     }
@@ -533,7 +431,7 @@ fn process_buffer(
 #[cfg(feature = "dma2d")]
 pub fn text_over_image(
     bg_area: Option<(Rect, Color)>,
-    image_data: &[u8],
+    image: Image,
     text: &str,
     font: Font,
     offset_img: Offset,
@@ -547,8 +445,6 @@ pub fn text_over_image(
     let t1 = unsafe { get_buffer_4bpp(0, true) };
     let t2 = unsafe { get_buffer_4bpp(1, true) };
     let empty_t = unsafe { get_buffer_4bpp(2, true) };
-
-    let (toif_size, toif_data) = toif_info_ensure(image_data, ToifFormat::FullColorLE);
 
     let r_img;
     let area;
@@ -565,10 +461,10 @@ pub fn text_over_image(
         empty_img.buffer.copy_from_slice(&img1.buffer);
 
         area = a;
-        r_img = Rect::from_top_left_and_size(a.top_left() + offset_img, toif_size);
+        r_img = Rect::from_top_left_and_size(a.top_left() + offset_img, image.toif.size);
         offset_img_final = offset_img;
     } else {
-        area = Rect::from_top_left_and_size(offset_img.into(), toif_size);
+        area = Rect::from_top_left_and_size(offset_img.into(), image.toif.size);
         r_img = area;
         offset_img_final = Offset::zero();
     }
@@ -594,7 +490,7 @@ pub fn text_over_image(
     set_window(clamped);
 
     let mut window = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx = UzlibContext::new(toif_data, Some(&mut window));
+    let mut ctx = image.toif.decompression_context(Some(&mut window));
 
     dma2d_setup_4bpp_over_16bpp(text_color.into());
 
@@ -662,8 +558,8 @@ pub fn text_over_image(
 #[cfg(feature = "dma2d")]
 pub fn icon_over_icon(
     bg_area: Option<Rect>,
-    bg: (&[u8], Offset, Color),
-    fg: (&[u8], Offset, Color),
+    bg: (Icon, Offset, Color),
+    fg: (Icon, Offset, Color),
     bg_color: Color,
 ) {
     let bg1 = unsafe { get_buffer_16bpp(0, true) };
@@ -673,41 +569,40 @@ pub fn icon_over_icon(
     let fg2 = unsafe { get_buffer_4bpp(1, true) };
     let empty2 = unsafe { get_buffer_4bpp(2, true) };
 
-    let (data_bg, offset_bg, color_icon_bg) = bg;
-    let (data_fg, offset_fg, color_icon_fg) = fg;
+    let (icon_bg, offset_bg, color_icon_bg) = bg;
+    let (icon_fg, offset_fg, color_icon_fg) = fg;
 
-    let (toif_bg_size, toif_bg_data) = toif_info_ensure(data_bg, ToifFormat::GrayScaleEH);
-    assert!(toif_bg_size.x <= constant::WIDTH);
-    assert_eq!(toif_bg_size.x % 2, 0);
+    assert!(icon_bg.toif.width() <= constant::WIDTH);
+    assert_eq!(icon_bg.toif.width() % 2, 0);
 
-    let (toif_fg_size, toif_fg_data) = toif_info_ensure(data_fg, ToifFormat::GrayScaleEH);
-    assert!(toif_bg_size.x <= constant::WIDTH);
-    assert_eq!(toif_bg_size.x % 2, 0);
+    assert!(icon_fg.toif.width() <= constant::WIDTH);
+    assert_eq!(icon_fg.toif.width() % 2, 0);
 
     let area;
     let r_bg;
     let final_offset_bg;
     if let Some(a) = bg_area {
         area = a;
-        r_bg = Rect::from_top_left_and_size(a.top_left() + offset_bg, toif_bg_size);
+        r_bg = Rect::from_top_left_and_size(a.top_left() + offset_bg, icon_bg.toif.size);
         final_offset_bg = offset_bg;
     } else {
-        r_bg = Rect::from_top_left_and_size(Point::new(offset_bg.x, offset_bg.y), toif_bg_size);
+        r_bg =
+            Rect::from_top_left_and_size(Point::new(offset_bg.x, offset_bg.y), icon_bg.toif.size);
         area = r_bg;
         final_offset_bg = Offset::zero();
     }
 
-    let r_fg = Rect::from_top_left_and_size(area.top_left() + offset_fg, toif_fg_size);
+    let r_fg = Rect::from_top_left_and_size(area.top_left() + offset_fg, icon_fg.toif.size);
 
     let clamped = area.clamp(constant::screen()).ensure_even_width();
 
     set_window(clamped);
 
     let mut window_bg = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx_bg = UzlibContext::new(toif_bg_data, Some(&mut window_bg));
+    let mut ctx_bg = UzlibContext::new(icon_bg.toif.data, Some(&mut window_bg));
 
     let mut window_fg = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx_fg = UzlibContext::new(toif_fg_data, Some(&mut window_fg));
+    let mut ctx_fg = UzlibContext::new(icon_fg.toif.data, Some(&mut window_fg));
 
     dma2d_setup_4bpp_over_4bpp(color_icon_bg.into(), bg_color.into(), color_icon_fg.into());
 
@@ -766,12 +661,12 @@ pub fn icon_over_icon(
 #[cfg(not(feature = "dma2d"))]
 pub fn icon_over_icon(
     bg_area: Option<Rect>,
-    bg: (&[u8], Offset, Color),
-    fg: (&[u8], Offset, Color),
+    bg: (Icon, Offset, Color),
+    fg: (Icon, Offset, Color),
     bg_color: Color,
 ) {
-    let (data_bg, offset_bg, color_icon_bg) = bg;
-    let (data_fg, offset_fg, color_icon_fg) = fg;
+    let (icon_bg, offset_bg, color_icon_bg) = bg;
+    let (icon_fg, offset_fg, color_icon_fg) = fg;
 
     let pos_bg = if let Some(area) = bg_area {
         rect_fill(area, bg_color);
@@ -780,8 +675,8 @@ pub fn icon_over_icon(
         Point::from(offset_bg)
     };
 
-    icon_top_left(pos_bg, data_bg, color_icon_bg, bg_color);
-    icon_top_left(pos_bg + offset_fg, data_fg, color_icon_fg, color_icon_bg);
+    icon_bg.draw(pos_bg, TOP_LEFT, color_icon_bg, bg_color);
+    icon_fg.draw(pos_bg + offset_fg, TOP_LEFT, color_icon_fg, color_icon_bg);
 }
 
 /// Gets a color of a pixel on `p` coordinates of rounded rectangle with corner

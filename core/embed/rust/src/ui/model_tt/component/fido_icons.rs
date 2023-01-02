@@ -2,42 +2,45 @@
 //! (by running `make templates` in `core`)
 //! do not edit manually!
 
-const ICON_AWS: &[u8] = include_res!("model_tt/res/fido/icon_aws.toif");
-const ICON_BINANCE: &[u8] = include_res!("model_tt/res/fido/icon_binance.toif");
-const ICON_BITBUCKET: &[u8] = include_res!("model_tt/res/fido/icon_bitbucket.toif");
-const ICON_BITFINEX: &[u8] = include_res!("model_tt/res/fido/icon_bitfinex.toif");
-const ICON_BITWARDEN: &[u8] = include_res!("model_tt/res/fido/icon_bitwarden.toif");
-const ICON_CLOUDFLARE: &[u8] = include_res!("model_tt/res/fido/icon_cloudflare.toif");
-const ICON_COINBASE: &[u8] = include_res!("model_tt/res/fido/icon_coinbase.toif");
-const ICON_DASHLANE: &[u8] = include_res!("model_tt/res/fido/icon_dashlane.toif");
-const ICON_DROPBOX: &[u8] = include_res!("model_tt/res/fido/icon_dropbox.toif");
-const ICON_DUO: &[u8] = include_res!("model_tt/res/fido/icon_duo.toif");
-const ICON_FACEBOOK: &[u8] = include_res!("model_tt/res/fido/icon_facebook.toif");
-const ICON_FASTMAIL: &[u8] = include_res!("model_tt/res/fido/icon_fastmail.toif");
-const ICON_FEDORA: &[u8] = include_res!("model_tt/res/fido/icon_fedora.toif");
-const ICON_GANDI: &[u8] = include_res!("model_tt/res/fido/icon_gandi.toif");
-const ICON_GEMINI: &[u8] = include_res!("model_tt/res/fido/icon_gemini.toif");
-const ICON_GITHUB: &[u8] = include_res!("model_tt/res/fido/icon_github.toif");
-const ICON_GITLAB: &[u8] = include_res!("model_tt/res/fido/icon_gitlab.toif");
-const ICON_GOOGLE: &[u8] = include_res!("model_tt/res/fido/icon_google.toif");
-const ICON_INVITY: &[u8] = include_res!("model_tt/res/fido/icon_invity.toif");
-const ICON_KEEPER: &[u8] = include_res!("model_tt/res/fido/icon_keeper.toif");
-const ICON_KRAKEN: &[u8] = include_res!("model_tt/res/fido/icon_kraken.toif");
-const ICON_LOGIN_GOV: &[u8] = include_res!("model_tt/res/fido/icon_login.gov.toif");
-const ICON_MICROSOFT: &[u8] = include_res!("model_tt/res/fido/icon_microsoft.toif");
-const ICON_MOJEID: &[u8] = include_res!("model_tt/res/fido/icon_mojeid.toif");
-const ICON_NAMECHEAP: &[u8] = include_res!("model_tt/res/fido/icon_namecheap.toif");
-const ICON_PROTON: &[u8] = include_res!("model_tt/res/fido/icon_proton.toif");
-const ICON_SLUSHPOOL: &[u8] = include_res!("model_tt/res/fido/icon_slushpool.toif");
-const ICON_STRIPE: &[u8] = include_res!("model_tt/res/fido/icon_stripe.toif");
-const ICON_TUTANOTA: &[u8] = include_res!("model_tt/res/fido/icon_tutanota.toif");
+use crate::ui::display::toif::NamedToif;
+
+
+const ICON_AWS: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_aws.toif"), "AWS");
+const ICON_BINANCE: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_binance.toif"), "BINANCE");
+const ICON_BITBUCKET: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_bitbucket.toif"), "BITBUCKET");
+const ICON_BITFINEX: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_bitfinex.toif"), "BITFINEX");
+const ICON_BITWARDEN: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_bitwarden.toif"), "BITWARDEN");
+const ICON_CLOUDFLARE: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_cloudflare.toif"), "CLOUDFLARE");
+const ICON_COINBASE: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_coinbase.toif"), "COINBASE");
+const ICON_DASHLANE: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_dashlane.toif"), "DASHLANE");
+const ICON_DROPBOX: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_dropbox.toif"), "DROPBOX");
+const ICON_DUO: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_duo.toif"), "DUO");
+const ICON_FACEBOOK: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_facebook.toif"), "FACEBOOK");
+const ICON_FASTMAIL: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_fastmail.toif"), "FASTMAIL");
+const ICON_FEDORA: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_fedora.toif"), "FEDORA");
+const ICON_GANDI: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_gandi.toif"), "GANDI");
+const ICON_GEMINI: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_gemini.toif"), "GEMINI");
+const ICON_GITHUB: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_github.toif"), "GITHUB");
+const ICON_GITLAB: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_gitlab.toif"), "GITLAB");
+const ICON_GOOGLE: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_google.toif"), "GOOGLE");
+const ICON_INVITY: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_invity.toif"), "INVITY");
+const ICON_KEEPER: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_keeper.toif"), "KEEPER");
+const ICON_KRAKEN: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_kraken.toif"), "KRAKEN");
+const ICON_LOGIN_GOV: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_login.gov.toif"), "LOGIN_GOV");
+const ICON_MICROSOFT: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_microsoft.toif"), "MICROSOFT");
+const ICON_MOJEID: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_mojeid.toif"), "MOJEID");
+const ICON_NAMECHEAP: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_namecheap.toif"), "NAMECHEAP");
+const ICON_PROTON: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_proton.toif"), "PROTON");
+const ICON_SLUSHPOOL: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_slushpool.toif"), "SLUSHPOOL");
+const ICON_STRIPE: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_stripe.toif"), "STRIPE");
+const ICON_TUTANOTA: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_tutanota.toif"), "TUTANOTA");
 /// Default icon when app does not have its own
-const ICON_WEBAUTHN: &[u8] = include_res!("model_tt/res/fido/icon_webauthn.toif");
+const ICON_WEBAUTHN: NamedToif = NamedToif(include_res!("model_tt/res/fido/icon_webauthn.toif"), "WEBAUTHN");
 
 /// Translates icon name into its data.
 /// Returns default `ICON_WEBAUTHN` when the icon is not found or name not
 /// supplied.
-pub fn get_fido_icon_data<T: AsRef<str>>(icon_name: Option<T>) -> &'static [u8] {
+pub fn get_fido_icon_data<T: AsRef<str>>(icon_name: Option<T>) -> NamedToif {
     if let Some(icon_name) = icon_name {
         match icon_name.as_ref() {
             "aws" => ICON_AWS,

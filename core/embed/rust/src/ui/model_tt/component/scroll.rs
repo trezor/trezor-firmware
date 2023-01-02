@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display,
-    geometry::{LinearPlacement, Offset, Rect},
+    display::toif::Icon,
+    geometry::{LinearPlacement, Offset, Rect, CENTER},
 };
 
 use super::theme;
@@ -76,11 +76,11 @@ impl Component for ScrollBar {
     }
 
     fn paint(&mut self) {
-        fn dotsize(distance: usize, nhidden: usize) -> &'static [u8] {
+        fn dotsize(distance: usize, nhidden: usize) -> Icon {
             match (nhidden.saturating_sub(distance)).min(2 - distance) {
-                0 => theme::DOT_INACTIVE,
-                1 => theme::DOT_INACTIVE_HALF,
-                _ => theme::DOT_INACTIVE_QUARTER,
+                0 => Icon::new(theme::DOT_INACTIVE),
+                1 => Icon::new(theme::DOT_INACTIVE_HALF),
+                _ => Icon::new(theme::DOT_INACTIVE_QUARTER),
             }
         }
 
@@ -100,7 +100,7 @@ impl Component for ScrollBar {
             );
         for i in first_shown..(last_shown + 1) {
             let icon = if i == self.active_page {
-                theme::DOT_ACTIVE
+                Icon::new(theme::DOT_ACTIVE)
             } else if i <= first_shown + 1 {
                 let before_first_shown = first_shown;
                 dotsize(i - first_shown, before_first_shown)
@@ -108,9 +108,9 @@ impl Component for ScrollBar {
                 let after_last_shown = self.page_count - 1 - last_shown;
                 dotsize(last_shown - i, after_last_shown)
             } else {
-                theme::DOT_INACTIVE
+                Icon::new(theme::DOT_INACTIVE)
             };
-            display::icon(cursor, icon, theme::FG, theme::BG);
+            icon.draw(cursor, CENTER, theme::FG, theme::BG);
             cursor = cursor + Offset::on_axis(self.layout.axis, Self::DOT_INTERVAL);
         }
     }

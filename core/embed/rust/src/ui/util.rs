@@ -1,7 +1,8 @@
 use crate::ui::{
     component::text::TextStyle,
     display,
-    geometry::{Offset, Point},
+    display::toif::Icon,
+    geometry::{Offset, Point, CENTER},
 };
 
 pub trait ResultExt {
@@ -64,14 +65,13 @@ pub fn set_animation_disabled(_disabled: bool) {}
 /// Display an icon and a text centered relative to given `Point`.
 pub fn icon_text_center(
     baseline: Point,
-    icon: &'static [u8],
+    icon: Icon,
     space: i16,
     text: &str,
     style: TextStyle,
     text_offset: Offset,
 ) {
-    let toif_info = unwrap!(display::toif_info(icon), "Invalid TOIF data");
-    let icon_width = toif_info.0.y;
+    let icon_width = icon.toif.width();
     let text_width = style.text_font.text_width(text);
     let text_height = style.text_font.text_height();
     let text_center = baseline + Offset::new((icon_width + space) / 2, text_height / 2);
@@ -84,7 +84,12 @@ pub fn icon_text_center(
         style.text_color,
         style.background_color,
     );
-    display::icon(icon_center, icon, style.text_color, style.background_color);
+    icon.draw(
+        icon_center,
+        CENTER,
+        style.text_color,
+        style.background_color,
+    );
 }
 
 #[cfg(test)]

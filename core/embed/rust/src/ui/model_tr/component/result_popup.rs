@@ -6,6 +6,7 @@ use crate::{
             Child, Component, ComponentExt, Event, EventCtx, Label, Pad,
         },
         constant::screen,
+        display::toif::Icon,
         geometry::{Alignment, Insets, LinearPlacement, Point, Rect},
         model_tr::{
             component::{Button, ButtonMsg, ButtonPos, ResultAnim, ResultAnimMsg},
@@ -38,7 +39,7 @@ const ANIM_POS_ADJ_BUTTON: i16 = 6;
 
 impl<S: ParagraphStrType> ResultPopup<S> {
     pub fn new(
-        icon: &'static [u8],
+        icon: Icon,
         text: S,
         headline: Option<&'static str>,
         button_text: Option<&'static str>,

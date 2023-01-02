@@ -1,7 +1,7 @@
 use super::theme;
 use crate::ui::{
     component::{label::Label, text::TextStyle, Child, Component, Event, EventCtx},
-    display::{self, Color, Font},
+    display::{self, toif::Icon, Color, Font},
     geometry::{Alignment, Insets, Offset, Rect},
     util::icon_text_center,
 };
@@ -100,7 +100,7 @@ where
 
 pub struct NotificationFrame<T, U> {
     area: Rect,
-    icon: &'static [u8],
+    icon: Icon,
     title: U,
     content: Child<T>,
 }
@@ -116,7 +116,7 @@ where
     const ICON_SPACE: i16 = 8;
     const BORDER: i16 = 8;
 
-    pub fn new(icon: &'static [u8], title: U, content: T) -> Self {
+    pub fn new(icon: Icon, title: U, content: T) -> Self {
         Self {
             icon,
             title,
@@ -129,7 +129,7 @@ where
         self.content.inner()
     }
 
-    pub fn paint_notification(area: Rect, icon: &'static [u8], title: &str, color: Color) {
+    pub fn paint_notification(area: Rect, icon: Icon, title: &str, color: Color) {
         let (area, _) = area
             .inset(Insets::uniform(Self::BORDER))
             .split_top(Self::HEIGHT);

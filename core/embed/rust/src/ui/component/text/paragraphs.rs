@@ -2,8 +2,8 @@ use heapless::Vec;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Paginate},
-    display,
-    geometry::{Alignment, Insets, LinearPlacement, Offset, Point, Rect},
+    display::toif::Icon,
+    geometry::{Alignment, Insets, LinearPlacement, Offset, Point, Rect, TOP_LEFT},
 };
 
 use super::layout::{LayoutFit, TextLayout, TextStyle};
@@ -505,8 +505,8 @@ pub struct Checklist<T> {
     area: Rect,
     paragraphs: Paragraphs<T>,
     current: usize,
-    icon_current: &'static [u8],
-    icon_done: &'static [u8],
+    icon_current: Icon,
+    icon_done: Icon,
 }
 
 impl<T> Checklist<T> {
@@ -515,8 +515,8 @@ impl<T> Checklist<T> {
     const CURRENT_OFFSET: Offset = Offset::new(2, 3);
 
     pub fn from_paragraphs(
-        icon_current: &'static [u8],
-        icon_done: &'static [u8],
+        icon_current: Icon,
+        icon_done: Icon,
         current: usize,
         paragraphs: Paragraphs<T>,
     ) -> Self {
@@ -529,11 +529,11 @@ impl<T> Checklist<T> {
         }
     }
 
-    fn paint_icon(&self, layout: &TextLayout, icon: &'static [u8], offset: Offset) {
+    fn paint_icon(&self, layout: &TextLayout, icon: Icon, offset: Offset) {
         let top_left = Point::new(self.area.x0, layout.bounds.y0);
-        display::icon_top_left(
+        icon.draw(
             top_left + offset,
-            icon,
+            TOP_LEFT,
             layout.style.text_color,
             layout.style.background_color,
         );

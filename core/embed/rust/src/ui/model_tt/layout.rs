@@ -29,7 +29,7 @@ use crate::{
             },
             Border, Component, Empty, Timeout, TimeoutMsg,
         },
-        display::tjpgd::jpeg_info,
+        display::{tjpgd::jpeg_info, toif::Icon},
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -615,7 +615,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         ]);
 
         let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
+            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("NEXT").styled(theme::button_confirm()),
             2,
         );
@@ -650,7 +650,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         ]);
 
         let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
+            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("NEXT").styled(theme::button_confirm()),
             2,
         );
@@ -701,7 +701,7 @@ fn new_show_modal(
                 icon,
                 title,
                 Button::cancel_confirm(
-                    Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel()),
+                    Button::with_icon(Icon::new(theme::ICON_CANCEL)).styled(theme::button_cancel()),
                     Button::with_text(button).styled(button_style),
                     2,
                 ),
@@ -730,8 +730,8 @@ fn new_show_modal(
 extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_ERROR,
+            Icon::new(theme::IMAGE_BG_CIRCLE),
+            Icon::new(theme::IMAGE_FG_ERROR),
             theme::ERROR_COLOR,
             theme::FG,
             theme::BG,
@@ -759,7 +759,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
         };
 
         let controls = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
+            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("CONFIRM").styled(theme::button_confirm()),
             2,
         );
@@ -777,8 +777,8 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            theme::IMAGE_BG_TRIANGLE,
-            theme::IMAGE_FG_WARN,
+            Icon::new(theme::IMAGE_BG_TRIANGLE),
+            Icon::new(theme::IMAGE_FG_WARN),
             theme::WARN_COLOR,
             theme::FG,
             theme::BG,
@@ -791,8 +791,8 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_SUCCESS,
+            Icon::new(theme::IMAGE_BG_CIRCLE),
+            Icon::new(theme::IMAGE_FG_SUCCESS),
             theme::SUCCESS_COLOR,
             theme::FG,
             theme::BG,
@@ -805,8 +805,8 @@ extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_INFO,
+            Icon::new(theme::IMAGE_BG_CIRCLE),
+            Icon::new(theme::IMAGE_FG_INFO),
             theme::INFO_COLOR,
             theme::FG,
             theme::BG,
@@ -1088,8 +1088,8 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
                 title,
                 Dialog::new(
                     Checklist::from_paragraphs(
-                        theme::ICON_LIST_CURRENT,
-                        theme::ICON_LIST_CHECK,
+                        Icon::new(theme::ICON_LIST_CURRENT),
+                        Icon::new(theme::ICON_LIST_CHECK),
                         active,
                         paragraphs
                             .into_paragraphs()
@@ -1141,13 +1141,13 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
         let obj = if info_button {
             LayoutObj::new(NotificationFrame::new(
-                theme::ICON_WARN,
+                Icon::new(theme::ICON_WARN),
                 notification,
                 Dialog::new(paragraphs, Button::<&'static str>::abort_info_enter()),
             ))?
         } else {
             LayoutObj::new(NotificationFrame::new(
-                theme::ICON_WARN,
+                Icon::new(theme::ICON_WARN),
                 notification,
                 Dialog::new(paragraphs, Button::cancel_confirm_text(None, button)),
             ))?

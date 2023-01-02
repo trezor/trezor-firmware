@@ -1,10 +1,7 @@
-use crate::{
-    trezorhal::uzlib::UzlibContext,
-    ui::{
-        constant, display,
-        display::{Color, ToifFormat},
-        geometry::{Offset, Point, Rect},
-    },
+use crate::ui::{
+    constant, display,
+    display::Color,
+    geometry::{Offset, Point, Rect},
 };
 use core::slice::from_raw_parts;
 
@@ -16,7 +13,7 @@ use crate::trezorhal::{
 
 use crate::ui::{
     constant::{screen, LOADER_OUTER},
-    display::toif_info_ensure,
+    display::toif::{Icon, NamedToif},
 };
 
 pub const LOADER_MIN: u16 = 0;
@@ -41,17 +38,15 @@ pub fn loader_uncompress(
     bg_color: Color,
     progress: u16,
     indeterminate: bool,
-    icon: Option<(&[u8], Color)>,
+    icon: Option<(Icon, Color)>,
 ) {
     const ICON_MAX_SIZE: i16 = constant::LOADER_ICON_MAX_SIZE;
 
-    if let Some((data, color)) = icon {
-        let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
-        if toif_size.x <= ICON_MAX_SIZE && toif_size.y <= ICON_MAX_SIZE {
+    if let Some((icon, color)) = icon {
+        if icon.toif.width() <= ICON_MAX_SIZE && icon.toif.height() <= ICON_MAX_SIZE {
             let mut icon_data = [0_u8; ((ICON_MAX_SIZE * ICON_MAX_SIZE) / 2) as usize];
-            let mut ctx = UzlibContext::new(toif_data, None);
-            unwrap!(ctx.uncompress(&mut icon_data), "Decompression failed");
-            let i = Some((icon_data.as_ref(), color, toif_size));
+            icon.toif.uncompress(&mut icon_data);
+            let i = Some((icon, color, icon.toif.size));
             loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, i);
         } else {
             loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, None);
@@ -78,7 +73,7 @@ pub extern "C" fn loader_uncompress_r(
 
     let i = if icon_data != 0 {
         let data_slice = unsafe { from_raw_parts(icon_data as _, icon_data_size as _) };
-        Some((data_slice, ic_color))
+        Some((Icon::new(NamedToif(data_slice, "loader icon")), ic_color))
     } else {
         None
     };
@@ -193,7 +188,7 @@ pub fn loader_rust(
     bg_color: Color,
     progress: u16,
     indeterminate: bool,
-    icon: Option<(&[u8], Color, Offset)>,
+    icon: Option<(Icon, Color, Offset)>,
 ) {
     let center = screen().center() + Offset::new(0, y_offset);
     let r = Rect::from_center_and_size(center, Offset::uniform(LOADER_OUTER as i16 * 2));
@@ -209,14 +204,14 @@ pub fn loader_rust(
     let mut icon_area = Rect::zero();
     let mut icon_area_clamped = Rect::zero();
     let mut icon_width = 0;
-    let mut icon_data = [].as_ref();
+    let mut icon_data = None;
 
     if let Some((data, color, size)) = icon {
         if size.x <= ICON_MAX_SIZE && size.y <= ICON_MAX_SIZE {
             icon_width = size.x;
             icon_area = Rect::from_center_and_size(center, size);
             icon_area_clamped = icon_area.clamp(constant::screen());
-            icon_data = data;
+            icon_data = Some(data);
             use_icon = true;
             icon_colortable = display::get_color_table(color, bg_color);
         }
@@ -242,7 +237,8 @@ pub fn loader_rust(
                     let x_i = x_c - icon_area.x0;
                     let y_i = y_c - icon_area.y0;
 
-                    let data = icon_data[(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
+                    let data = unwrap!(icon_data).data()
+                        [(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
                     if (x_i & 0x01) == 0 {
                         underlying_color = icon_colortable[(data & 0xF) as usize];
                     } else {
@@ -273,7 +269,7 @@ pub fn loader_rust(
     bg_color: Color,
     progress: u16,
     indeterminate: bool,
-    icon: Option<(&[u8], Color, Offset)>,
+    icon: Option<(Icon, Color, Offset)>,
 ) {
     let center = screen().center() + Offset::new(0, y_offset);
     let r = Rect::from_center_and_size(center, Offset::uniform(LOADER_OUTER as i16 * 2));
@@ -288,16 +284,16 @@ pub fn loader_rust(
     let mut icon_width = 0;
     let mut icon_offset = 0;
     let mut icon_color = Color::from_u16(0);
-    let mut icon_data = [].as_ref();
+    let mut icon_data = None;
 
-    if let Some((data, color, size)) = icon {
+    if let Some((icon, color, size)) = icon {
         if size.x <= ICON_MAX_SIZE && size.y <= ICON_MAX_SIZE {
             icon_width = size.x;
             icon_area = Rect::from_center_and_size(center, size);
             icon_area_clamped = icon_area.clamp(constant::screen());
             icon_offset = (icon_area_clamped.x0 - r.x0) / 2;
             icon_color = color;
-            icon_data = data;
+            icon_data = Some(icon);
             use_icon = true;
         }
     }
@@ -341,7 +337,7 @@ pub fn loader_rust(
 
             icon_buffer_used.buffer[icon_offset as usize..(icon_offset + icon_width / 2) as usize]
                 .copy_from_slice(
-                    &icon_data[(y_i * (icon_width / 2)) as usize
+                    &unwrap!(icon_data).toif.data[(y_i * (icon_width / 2)) as usize
                         ..((y_i + 1) * (icon_width / 2)) as usize],
                 );
             icon_buffer = icon_buffer_used;
@@ -380,7 +376,7 @@ pub fn loader(
     y_offset: i16,
     fg_color: Color,
     bg_color: Color,
-    icon: Option<(&[u8], Color)>,
+    icon: Option<(Icon, Color)>,
 ) {
     loader_uncompress(y_offset, fg_color, bg_color, progress, false, icon);
 }
@@ -390,7 +386,7 @@ pub fn loader_indeterminate(
     y_offset: i16,
     fg_color: Color,
     bg_color: Color,
-    icon: Option<(&[u8], Color)>,
+    icon: Option<(Icon, Color)>,
 ) {
     loader_uncompress(y_offset, fg_color, bg_color, progress, true, icon);
 }

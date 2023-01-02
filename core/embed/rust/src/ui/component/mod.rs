@@ -17,7 +17,6 @@ pub mod timeout;
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, TimerToken};
 pub use border::Border;
 pub use empty::Empty;
-pub use image::Image;
 pub use label::Label;
 pub use map::Map;
 pub use maybe::Maybe;

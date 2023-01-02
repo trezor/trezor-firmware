@@ -6,6 +6,7 @@ use crate::ui::{
         },
         Child, Component, Event, EventCtx, Never,
     },
+    display::toif::Icon,
     geometry::{Insets, LinearPlacement, Rect},
 };
 
@@ -128,8 +129,8 @@ where
         let [l0, l1, l2, l3] = lines;
         Self {
             image: Child::new(BlendedImage::new(
-                theme::IMAGE_BG_CIRCLE,
-                theme::IMAGE_FG_SUCCESS,
+                Icon::new(theme::IMAGE_BG_CIRCLE),
+                Icon::new(theme::IMAGE_FG_SUCCESS),
                 theme::SUCCESS_COLOR,
                 theme::FG,
                 theme::BG,

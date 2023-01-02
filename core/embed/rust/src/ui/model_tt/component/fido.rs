@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Image, Label},
+    component::{image::Image, Child, Component, Event, EventCtx, Label},
     display,
     geometry::{Alignment, Insets, Rect},
     model_tt::component::{

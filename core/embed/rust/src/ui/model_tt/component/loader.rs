@@ -3,7 +3,7 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx},
-        display::{self, Color},
+        display::{self, toif::Icon, Color},
         geometry::{Offset, Rect},
         model_tt::constant,
         util::animation_disabled,
@@ -173,6 +173,7 @@ impl Component for Loader {
             } else {
                 self.styles.active
             };
+
             display::loader(
                 progress,
                 self.offset_y,
@@ -190,7 +191,7 @@ pub struct LoaderStyleSheet {
 }
 
 pub struct LoaderStyle {
-    pub icon: Option<(&'static [u8], Color)>,
+    pub icon: Option<(Icon, Color)>,
     pub loader_color: Color,
     pub background_color: Color,
 }

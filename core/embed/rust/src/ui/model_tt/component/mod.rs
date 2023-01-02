@@ -1,6 +1,7 @@
 mod button;
 mod dialog;
 mod fido;
+#[rustfmt::skip]
 mod fido_icons;
 mod frame;
 mod hold_to_confirm;

@@ -4,9 +4,9 @@ use crate::{
         component::{
             Component, ComponentExt, Event, EventCtx, FixedHeightBar, GridPlaced, Map, TimerToken,
         },
-        display::{self, Color, Font},
+        display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
-        geometry::{Insets, Offset, Rect},
+        geometry::{Insets, Offset, Rect, CENTER},
     },
 };
 
@@ -48,11 +48,11 @@ impl<T> Button<T> {
         Self::new(ButtonContent::Text(text))
     }
 
-    pub fn with_icon(image: &'static [u8]) -> Self {
-        Self::new(ButtonContent::Icon(image))
+    pub fn with_icon(icon: Icon) -> Self {
+        Self::new(ButtonContent::Icon(icon))
     }
 
-    pub fn with_icon_blend(bg: &'static [u8], fg: &'static [u8], fg_offset: Offset) -> Self {
+    pub fn with_icon_blend(bg: Icon, fg: Icon, fg_offset: Offset) -> Self {
         Self::new(ButtonContent::IconBlend(bg, fg, fg_offset))
     }
 
@@ -198,17 +198,17 @@ impl<T> Button<T> {
                 );
             }
             ButtonContent::Icon(icon) => {
-                display::icon(
+                icon.draw(
                     self.area.center(),
-                    icon,
+                    CENTER,
                     style.text_color,
                     style.button_color,
                 );
             }
             ButtonContent::IconBlend(bg, fg, offset) => display::icon_over_icon(
                 Some(self.area),
-                (bg, Offset::zero(), style.button_color),
-                (fg, *offset, style.text_color),
+                (*bg, Offset::zero(), style.button_color),
+                (*fg, *offset, style.text_color),
                 style.background_color,
             ),
         }
@@ -328,8 +328,8 @@ enum State {
 pub enum ButtonContent<T> {
     Empty,
     Text(T),
-    Icon(&'static [u8]),
-    IconBlend(&'static [u8], &'static [u8], Offset),
+    Icon(Icon),
+    IconBlend(Icon, Icon, Offset),
 }
 
 #[derive(PartialEq, Eq)]
@@ -396,7 +396,7 @@ impl<T> Button<T> {
         let (left, right_size_factor) = if let Some(verb) = left {
             (Button::with_text(verb), 1)
         } else {
-            (Button::with_icon(theme::ICON_CANCEL), 2)
+            (Button::with_icon(Icon::new(theme::ICON_CANCEL)), 2)
         };
         let right = Button::with_text(right).styled(theme::button_confirm());
 
@@ -417,7 +417,7 @@ impl<T> Button<T> {
     {
         let right = Button::with_text(confirm).styled(theme::button_confirm());
         let top = Button::with_text(info);
-        let left = Button::with_icon(theme::ICON_CANCEL);
+        let left = Button::with_icon(Icon::new(theme::ICON_CANCEL));
         theme::button_bar_rows(
             2,
             (
