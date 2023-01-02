@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::Paginate,
         display::{Font, Icon, IconAndName},
-        geometry::{Alignment, Offset, Rect},
+        geometry::{Alignment, Offset, Point, Rect},
         model_tr::theme,
         util::ResultExt,
     },
@@ -13,7 +13,8 @@ use heapless::Vec;
 
 use super::{
     flow_pages_poc_helpers::{
-        LayoutFit, LayoutSink, Op, TextLayout, TextNoOp, TextRenderer, TextStyle, ToDisplay,
+        LayoutFit, LayoutSink, Op, QrCodeInfo, TextLayout, TextNoOp, TextRenderer, TextStyle,
+        ToDisplay,
     },
     ButtonActions, ButtonDetails, ButtonLayout,
 };
@@ -148,13 +149,15 @@ impl<const M: usize> Page<M> {
             current.btn_left
         };
 
-        let btn_right = if self.has_next_page() {
-            Some(ButtonDetails::down_arrow_icon_wide())
+        // Middle button should be shown only on the last page, not to collide
+        // with the fat right button.
+        let (btn_middle, btn_right) = if self.has_next_page() {
+            (None, Some(ButtonDetails::down_arrow_icon_wide()))
         } else {
-            current.btn_right
+            (current.btn_middle, current.btn_right)
         };
 
-        ButtonLayout::new(btn_left, current.btn_middle, btn_right)
+        ButtonLayout::new(btn_left, btn_middle, btn_right)
     }
 
     pub fn btn_actions(&self) -> ButtonActions {
@@ -209,6 +212,21 @@ impl<const M: usize> Page<M> {
 
     pub fn icon(self, icon: IconAndName) -> Self {
         self.with_new_item(Op::Icon(Icon::new(icon)))
+    }
+
+    pub fn qr_code(
+        self,
+        text: StrBuffer,
+        max_size: i16,
+        case_sensitive: bool,
+        center: Point,
+    ) -> Self {
+        self.with_new_item(Op::QrCode(QrCodeInfo::new(
+            text,
+            max_size,
+            case_sensitive,
+            center,
+        )))
     }
 
     pub fn font(self, font: Font) -> Self {

@@ -18,7 +18,6 @@ use crate::{
         component::{
             base::Component,
             paginated::{PageMsg, Paginate},
-            painter,
             text::paragraphs::{
                 Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
             },
@@ -41,7 +40,7 @@ use super::{
         NoBtnDialogMsg, Page, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress,
         QRCodePage, QRCodePageMessage, ShareWords, SimpleChoice, SimpleChoiceMsg,
     },
-    theme,
+    constant, theme,
 };
 
 pub enum CancelConfirmMsg {
@@ -373,24 +372,81 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
-        let verb_cancel: StrBuffer = kwargs.get(Qstr::MP_QSTR_verb_cancel)?.try_into()?;
+        let address_qr: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_qr)?.try_into()?;
+        let account: StrBuffer = kwargs.get(Qstr::MP_QSTR_account)?.try_into()?;
+        let derivation_path: StrBuffer = kwargs.get(Qstr::MP_QSTR_derivation_path)?.try_into()?;
         let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
 
-        let verb: StrBuffer = "CONFIRM".into();
+        let get_page = move |page_index| {
+            // Showing two screens - the recipient address and summary confirmation
+            match page_index {
+                0 => {
+                    // RECEIVE ADDRESS
+                    let btn_layout = ButtonLayout::new(
+                        Some(ButtonDetails::cancel_icon()),
+                        Some(ButtonDetails::armed_text("CONFIRM".into())),
+                        Some(ButtonDetails::text("i".into())),
+                    );
+                    let btn_actions = ButtonActions::last_confirm_next();
+                    Page::<15>::new(btn_layout, btn_actions, Font::BOLD)
+                        .text_bold(title)
+                        .newline()
+                        .newline_half()
+                        .text_mono(address)
+                }
+                1 => {
+                    // QR CODE
+                    let btn_layout = ButtonLayout::new(
+                        Some(ButtonDetails::left_arrow_icon()),
+                        None,
+                        Some(ButtonDetails::right_arrow_icon()),
+                    );
+                    let btn_actions = ButtonActions::prev_next();
+                    Page::<15>::new(btn_layout, btn_actions, Font::MONO).qr_code(
+                        address_qr,
+                        theme::QR_SIDE_MAX,
+                        case_sensitive,
+                        constant::screen().center(),
+                    )
+                }
+                2 => {
+                    // ADDRESS INFO
+                    let btn_layout =
+                        ButtonLayout::new(Some(ButtonDetails::left_arrow_icon()), None, None);
+                    let btn_actions = ButtonActions::only_prev();
+                    Page::<15>::new(btn_layout, btn_actions, Font::MONO)
+                        .text_bold("Account:".into())
+                        .newline()
+                        .text_mono(account)
+                        .newline()
+                        .text_bold("Derivation path:".into())
+                        .newline()
+                        .text_mono(derivation_path)
+                }
+                3 => {
+                    // ADDRESS MISMATCH
+                    let btn_layout = ButtonLayout::new(
+                        Some(ButtonDetails::left_arrow_icon()),
+                        None,
+                        Some(ButtonDetails::text("QUIT".into())),
+                    );
+                    let btn_actions = ButtonActions::beginning_cancel();
+                    Page::<15>::new(btn_layout, btn_actions, Font::MONO)
+                        .text_bold("ADDRESS MISMATCH?".into())
+                        .newline()
+                        .newline_half()
+                        .text_mono("Please contact Trezor support on trezor.io/support".into())
+                }
+                _ => unreachable!(),
+            }
+        };
+        let pages = FlowPages::new(get_page, 4);
 
-        let qr_code = painter::qrcode_painter(address, theme::QR_SIDE_MAX as u32, case_sensitive);
-
-        let btn_layout = ButtonLayout::new(
-            Some(ButtonDetails::text(verb_cancel)),
-            None,
-            Some(ButtonDetails::text(verb)),
-        );
-
-        let obj = LayoutObj::new(QRCodePage::new(title, qr_code, btn_layout))?;
+        let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -760,15 +816,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm summary of a transaction. Specific for model R."""
     Qstr::MP_QSTR_confirm_total_r => obj_fn_kw!(0, new_confirm_total).as_obj(),
 
-    /// def show_qr(
+    /// def show_receive_address(
     ///     *,
     ///     title: str,
     ///     address: str,
-    ///     verb_cancel: str,
+    ///     address_qr: str,
+    ///     account: str,
+    ///     derivation_path: str,
     ///     case_sensitive: bool,
     /// ) -> object:
-    ///     """Show QR code."""
-    Qstr::MP_QSTR_show_qr => obj_fn_kw!(0, new_show_qr).as_obj(),
+    ///     """Show receive address together with QR code and details about it."""
+    Qstr::MP_QSTR_show_receive_address => obj_fn_kw!(0, new_show_receive_address).as_obj(),
 
     /// def show_info(
     ///     *,
