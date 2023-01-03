@@ -907,6 +907,19 @@ static bool fill_input_script_sig(TxInputType *tinput) {
   return true;
 }
 
+static bool fill_input_script_pubkey(TxInputType *in) {
+  if (!get_script_pubkey(coin, &node, in->has_multisig, &in->multisig,
+                         in->script_type, in->script_pubkey.bytes,
+                         &in->script_pubkey.size)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive scriptPubKey"));
+    signing_abort();
+    return false;
+  }
+  in->has_script_pubkey = true;
+  return true;
+}
+
 static bool derive_node(TxInputType *tinput) {
   if (!coin_path_check(coin, tinput->script_type, tinput->address_n_count,
                        tinput->address_n, tinput->has_multisig, false) &&
@@ -1543,11 +1556,11 @@ static bool signing_add_input(TxInputType *txinput) {
     }
   }
 
-  if (!fill_input_script_pubkey(coin, &root, txinput)) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Failed to derive scriptPubKey"));
-    signing_abort();
-    return false;
+  if (txinput->script_type != InputScriptType_EXTERNAL) {
+    // External inputs should have scriptPubKey set by the host.
+    if (!derive_node(txinput) || !fill_input_script_pubkey(txinput)) {
+      return false;
+    }
   }
 
   // Add input to BIP-143/BIP-341 computation.
@@ -1767,11 +1780,11 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
     return false;
   }
 
-  if (!fill_input_script_pubkey(coin, &root, orig_input)) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Failed to derive scriptPubKey"));
-    signing_abort();
-    return false;
+  if (orig_input->script_type != InputScriptType_EXTERNAL) {
+    // External inputs should have scriptPubKey set by the host.
+    if (!derive_node(orig_input) || !fill_input_script_pubkey(orig_input)) {
+      return false;
+    }
   }
 
   // Verify that the original input matches the current input.
@@ -3050,11 +3063,11 @@ void signing_txack(TransactionType *tx) {
 
       memcpy(&input, tx->inputs, sizeof(TxInputType));
 
-      if (!fill_input_script_pubkey(coin, &root, &input)) {
-        fsm_sendFailure(FailureType_Failure_ProcessError,
-                        _("Failed to derive scriptPubKey"));
-        signing_abort();
-        return;
+      if (input.script_type != InputScriptType_EXTERNAL) {
+        // External inputs should have scriptPubKey set by the host.
+        if (!derive_node(&input) || !fill_input_script_pubkey(&input)) {
+          return;
+        }
       }
 
       send_req_3_prev_meta();
@@ -3449,10 +3462,7 @@ void signing_txack(TransactionType *tx) {
           if (info.version == 4) {
             signing_hash_zip243(&info, &tx->inputs[0], hash);
           } else if (info.version == 5) {
-            if (!fill_input_script_pubkey(coin, &root, &tx->inputs[0])) {
-              fsm_sendFailure(FailureType_Failure_ProcessError,
-                              _("Failed to derive scriptPubKey"));
-              signing_abort();
+            if (!fill_input_script_pubkey(&tx->inputs[0])) {
               return;
             }
             signing_hash_zip244(&info, &tx->inputs[0], hash);
