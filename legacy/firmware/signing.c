@@ -921,25 +921,52 @@ static bool fill_input_script_pubkey(TxInputType *in) {
   return true;
 }
 
+static bool validate_path(InputScriptType script_type,
+                          pb_size_t address_n_count, const uint32_t *address_n,
+                          bool has_multisig) {
+  // Sanity check not critical for security. The main reason for this is that we
+  // are not comfortable with using the same private key in multiple signature
+  // schemes (ECDSA and Schnorr) and we want to be sure that the user went
+  // through a warning screen before we sign the input.
+  if (!coin_path_check(coin, script_type, address_n_count, address_n,
+                       has_multisig, unlocked_schema, true)) {
+    if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
+        !coin_path_check(coin, script_type, address_n_count, address_n,
+                         has_multisig, unlocked_schema, false)) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+      signing_abort();
+      return false;
+    }
+
+    if (!foreign_address_confirmed) {
+      if (signing_stage < STAGE_REQUEST_3_INPUT) {
+        if (!fsm_layoutPathWarning()) {
+          signing_abort();
+          return false;
+        }
+        foreign_address_confirmed = true;
+      } else {
+        fsm_sendFailure(FailureType_Failure_ProcessError,
+                        _("Transaction has changed during signing"));
+        signing_abort();
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+static bool input_validate_path(const TxInputType *txi) {
+  return validate_path(txi->script_type, txi->address_n_count, txi->address_n,
+                       txi->has_multisig);
+}
+
 static bool derive_node(InputScriptType script_type, pb_size_t address_n_count,
                         const uint32_t *address_n, bool has_multisig) {
   if (!coin_path_check(coin, script_type, address_n_count, address_n,
                        has_multisig, unlocked_schema, false) &&
       config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
-    signing_abort();
-    return false;
-  }
-
-  // Sanity check not critical for security. The main reason for this is that we
-  // are not comfortable with using the same private key in multiple signature
-  // schemes (ECDSA and Schnorr) and we want to be sure that the user went
-  // through a warning screen before we sign the input.
-  if (!foreign_address_confirmed &&
-      !coin_path_check(coin, script_type, address_n_count, address_n,
-                       has_multisig, unlocked_schema, true)) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Transaction has changed during signing"));
     signing_abort();
     return false;
   }
@@ -1543,29 +1570,10 @@ static bool signing_add_input(TxInputType *txinput) {
     return false;
   }
 
-  if (txinput->script_type != InputScriptType_EXTERNAL &&
-      !coin_path_check(coin, txinput->script_type, txinput->address_n_count,
-                       txinput->address_n, txinput->has_multisig, true)) {
-    if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
-        !coin_path_check(coin, txinput->script_type, txinput->address_n_count,
-                         txinput->address_n, txinput->has_multisig, false)) {
-      fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
-      signing_abort();
-      return false;
-    }
-
-    if (!foreign_address_confirmed) {
-      if (!fsm_layoutPathWarning()) {
-        signing_abort();
-        return false;
-      }
-      foreign_address_confirmed = true;
-    }
-  }
-
   if (txinput->script_type != InputScriptType_EXTERNAL) {
     // External inputs should have scriptPubKey set by the host.
-    if (!derive_node(txinput) || !fill_input_script_pubkey(txinput)) {
+    if (!input_validate_path(txinput) || !input_derive_node(txinput) ||
+        !fill_input_script_pubkey(txinput)) {
       return false;
     }
   }
@@ -2686,7 +2694,8 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
   if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
     signing_hash_bip341(&info, idx1, signing_hash_type(txinput), hash);
 
-    if (!tx_info_check_input(&info, txinput) || !input_derive_node(txinput) ||
+    if (!input_validate_path(txinput) || !tx_info_check_input(&info, txinput) ||
+        !input_derive_node(txinput) ||
         !signing_sign_bip340(node.private_key, hash)) {
       return false;
     }
@@ -2714,8 +2723,8 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
       return false;
     }
 
-    if (!tx_info_check_input(&info, txinput) || !input_derive_node(txinput) ||
-        !fill_input_script_sig(txinput)) {
+    if (!input_validate_path(txinput) || !tx_info_check_input(&info, txinput) ||
+        !input_derive_node(txinput) || !fill_input_script_sig(txinput)) {
       return false;
     }
 
