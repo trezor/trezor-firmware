@@ -1,3 +1,5 @@
+#[cfg(feature = "jpeg")]
+use crate::ui::geometry::Offset;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display,
@@ -62,5 +64,16 @@ where
 
 pub fn image_painter(image: &'static [u8]) -> Painter<impl FnMut(Rect)> {
     let f = move |area: Rect| display::image(area.center(), image);
+    Painter::new(f)
+}
+
+#[cfg(feature = "jpeg")]
+pub fn jpeg_painter<'a>(
+    image: impl Fn() -> &'a [u8],
+    size: Offset,
+    scale: u8,
+) -> Painter<impl FnMut(Rect)> {
+    let off = Offset::new(size.x / (2 << scale), size.y / (2 << scale));
+    let f = move |area: Rect| display::tjpgd::jpeg(image(), area.center() - off, scale);
     Painter::new(f)
 }

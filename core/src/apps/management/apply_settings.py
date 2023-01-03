@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action
+from trezor.ui.layouts import confirm_action, confirm_homescreen
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
@@ -73,7 +73,7 @@ async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
 
     if homescreen is not None:
         _validate_homescreen(homescreen)
-        await _require_confirm_change_homescreen(ctx)
+        await _require_confirm_change_homescreen(ctx, homescreen)
         try:
             storage_device.set_homescreen(homescreen)
         except ValueError:
@@ -122,14 +122,22 @@ async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
     return Success(message="Settings applied")
 
 
-async def _require_confirm_change_homescreen(ctx: GenericContext) -> None:
-    await confirm_action(
-        ctx,
-        "set_homescreen",
-        "Set homescreen",
-        description="Do you really want to change the homescreen image?",
-        br_code=BRT_PROTECT_CALL,
-    )
+async def _require_confirm_change_homescreen(
+    ctx: GenericContext, homescreen: bytes
+) -> None:
+    if homescreen == b"":
+        await confirm_action(
+            ctx,
+            "set_homescreen",
+            "Set homescreen",
+            description="Do you really want to set default homescreen image?",
+            br_code=BRT_PROTECT_CALL,
+        )
+    else:
+        await confirm_homescreen(
+            ctx,
+            homescreen,
+        )
 
 
 async def _require_confirm_change_label(ctx: GenericContext, label: str) -> None:

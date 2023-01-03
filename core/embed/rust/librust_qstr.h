@@ -20,6 +20,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_jpeg_info;
   MP_QSTR_jpeg_test;
   MP_QSTR_confirm_action;
+  MP_QSTR_confirm_homescreen;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_coinjoin;
@@ -99,6 +100,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_min_count;
   MP_QSTR_max_count;
   MP_QSTR_items;
+  MP_QSTR_image;
   MP_QSTR_active;
   MP_QSTR_info_button;
   MP_QSTR_time_ms;
