@@ -16,12 +16,8 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
     await button_request(ctx, "word_count", code=ButtonRequestType.MnemonicWordCount)
     count = await interact(
         ctx,
-        RustLayout(
-            trezorui2.request_word_count(
-                title="NUMBER OF WORDS",
-            )
-        ),
-        br_type="request_word_count",
+        RustLayout(trezorui2.select_word_count(dry_run=dry_run)),
+        br_type="word_count",
         br_code=ButtonRequestType.MnemonicWordCount,
     )
     # It can be returning a string
@@ -87,6 +83,5 @@ async def continue_recovery(
         description,
         verb="HOLD TO BEGIN",
         hold=True,
-        reverse=True,
         br_code=ButtonRequestType.RecoveryHomepage,
     )
