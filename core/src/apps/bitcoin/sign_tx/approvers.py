@@ -115,7 +115,7 @@ class Approver:
         self,
         txo: TxOutput,
         script_pubkey: bytes,
-        index: int | None,
+        index: int | None = None,
         orig_txo: TxOutput | None = None,
     ) -> None:
         self._add_output(txo, script_pubkey)
@@ -169,7 +169,7 @@ class BasicApprover(Approver):
         self,
         txo: TxOutput,
         script_pubkey: bytes,
-        index: int | None,
+        index: int | None = None,
         orig_txo: TxOutput | None = None,
     ) -> None:
         from trezor.enums import OutputScriptType

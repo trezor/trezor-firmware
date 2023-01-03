@@ -198,6 +198,8 @@ impl Choice for ChoiceItem {
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for ChoiceItem {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

@@ -55,6 +55,8 @@ where
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for NoBtnDialog<T, U>
 where

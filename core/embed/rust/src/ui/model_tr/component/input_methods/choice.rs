@@ -421,6 +421,8 @@ where
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 impl<F> crate::trace::Trace for ChoicePage<F>
 where

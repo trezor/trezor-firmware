@@ -9,8 +9,6 @@ use crate::{
     },
 };
 
-use heapless::String;
-
 use super::theme;
 
 const HALF_SCREEN_BUTTON_WIDTH: i16 = constant::WIDTH / 2 - 1;
@@ -262,18 +260,6 @@ impl Component for Button {
     }
 }
 
-#[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Button {
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Button");
-        match &self.content {
-            ButtonContent::Text(text) => t.field("text", text),
-            ButtonContent::Icon(icon) => t.field("icon", icon),
-        }
-        t.close();
-    }
-}
-
 #[derive(PartialEq, Eq)]
 enum State {
     Released,
@@ -453,7 +439,7 @@ impl ButtonDetails {
         self
     }
 
-    /// Default duration of the hold-to-confirm.
+    /// Default duration of the hold-to-confirm - 1 second.
     pub fn with_default_duration(mut self) -> Self {
         self.duration = Some(Duration::from_millis(1000));
         self
@@ -511,11 +497,11 @@ impl ButtonLayout {
 
     /// Default button layout for all three buttons - icons.
     pub fn default_three_icons() -> Self {
-        Self::three_icons_middle_text("SELECT".into())
+        Self::arrow_armed_icon("SELECT".into())
     }
 
     /// Special middle text for default icon layout.
-    pub fn three_icons_middle_text(middle_text: StrBuffer) -> Self {
+    pub fn arrow_armed_icon(middle_text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             Some(ButtonDetails::armed_text(middle_text)),
@@ -523,8 +509,35 @@ impl ButtonLayout {
         )
     }
 
+    /// Left cancel, armed text and next right arrow.
+    pub fn cancel_armed_arrow(middle_text: StrBuffer) -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon()),
+            Some(ButtonDetails::armed_text(middle_text)),
+            Some(ButtonDetails::right_arrow_icon()),
+        )
+    }
+
+    /// Left cancel, armed text and right text.
+    pub fn cancel_armed_text(middle_text: StrBuffer, right_text: StrBuffer) -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon()),
+            Some(ButtonDetails::armed_text(middle_text)),
+            Some(ButtonDetails::text(right_text)),
+        )
+    }
+
+    /// Left back arrow and middle armed text.
+    pub fn arrow_armed_none(middle_text: StrBuffer) -> Self {
+        Self::new(
+            Some(ButtonDetails::left_arrow_icon()),
+            Some(ButtonDetails::armed_text(middle_text)),
+            None,
+        )
+    }
+
     /// Left and right texts.
-    pub fn left_right_text(text_left: StrBuffer, text_right: StrBuffer) -> Self {
+    pub fn text_none_text(text_left: StrBuffer, text_right: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::text(text_left)),
             None,
@@ -533,12 +546,12 @@ impl ButtonLayout {
     }
 
     /// Only right text.
-    pub fn only_right_text(text_right: StrBuffer) -> Self {
+    pub fn none_none_text(text_right: StrBuffer) -> Self {
         Self::new(None, None, Some(ButtonDetails::text(text_right)))
     }
 
     /// Left and right arrow icons for navigation.
-    pub fn left_right_arrows() -> Self {
+    pub fn arrow_none_arrow() -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
@@ -546,8 +559,26 @@ impl ButtonLayout {
         )
     }
 
+    /// Left arrow and right text.
+    pub fn arrow_none_text(text_right: StrBuffer) -> Self {
+        Self::new(
+            Some(ButtonDetails::left_arrow_icon()),
+            None,
+            Some(ButtonDetails::text(text_right)),
+        )
+    }
+
+    /// Up arrow left and right text.
+    pub fn up_arrow_none_text(text_right: StrBuffer) -> Self {
+        Self::new(
+            Some(ButtonDetails::up_arrow_icon()),
+            None,
+            Some(ButtonDetails::text(text_right)),
+        )
+    }
+
     /// Cancel cross on left and right arrow.
-    pub fn cancel_and_arrow() -> Self {
+    pub fn cancel_none_arrow() -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
@@ -556,7 +587,7 @@ impl ButtonLayout {
     }
 
     /// Cancel cross on left and right arrow facing down.
-    pub fn cancel_and_arrow_down() -> Self {
+    pub fn cancel_none_arrow_wide() -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
@@ -565,7 +596,7 @@ impl ButtonLayout {
     }
 
     /// Cancel cross on left and text on the right.
-    pub fn cancel_and_text(text: StrBuffer) -> Self {
+    pub fn cancel_none_text(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
@@ -574,39 +605,30 @@ impl ButtonLayout {
     }
 
     /// Cancel cross on left and hold-to-confirm text on the right.
-    pub fn cancel_and_htc_text(text: StrBuffer, duration: Duration) -> Self {
+    pub fn cancel_none_htc(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
-            Some(ButtonDetails::text(text).with_duration(duration)),
+            Some(ButtonDetails::text(text).with_default_duration()),
         )
     }
 
     /// Arrow back on left and hold-to-confirm text on the right.
-    pub fn back_and_htc_text(text: StrBuffer, duration: Duration) -> Self {
+    pub fn arrow_none_htc(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
-            Some(ButtonDetails::text(text).with_duration(duration)),
-        )
-    }
-
-    /// Arrow back on left and text on the right.
-    pub fn back_and_text(text: StrBuffer) -> Self {
-        Self::new(
-            Some(ButtonDetails::left_arrow_icon()),
-            None,
-            Some(ButtonDetails::text(text)),
+            Some(ButtonDetails::text(text).with_default_duration()),
         )
     }
 
     /// Only armed text in the middle.
-    pub fn middle_armed_text(text: StrBuffer) -> Self {
+    pub fn none_armed_none(text: StrBuffer) -> Self {
         Self::new(None, Some(ButtonDetails::armed_text(text)), None)
     }
 
     /// Only hold-to-confirm with text on the right.
-    pub fn htc_only(text: StrBuffer, duration: Duration) -> Self {
+    pub fn none_none_htc(text: StrBuffer, duration: Duration) -> Self {
         Self::new(
             None,
             None,
@@ -614,30 +636,14 @@ impl ButtonLayout {
         )
     }
 
-    /// Only right arrow facing down.
-    pub fn only_arrow_down() -> Self {
-        Self::new(None, None, Some(ButtonDetails::down_arrow_icon_wide()))
+    /// Only left arrow.
+    pub fn arrow_none_none() -> Self {
+        Self::new(Some(ButtonDetails::left_arrow_icon()), None, None)
     }
-}
 
-#[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for ButtonDetails {
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("ButtonDetails");
-        let mut btn_text: String<30> = String::new();
-        if let Some(text) = &self.text {
-            btn_text.push_str(text.as_ref()).unwrap();
-        } else if let Some(icon) = &self.icon {
-            btn_text.push_str("Icon:").unwrap();
-            btn_text.push_str(icon.text.as_ref()).unwrap();
-        }
-        if let Some(duration) = &self.duration {
-            btn_text.push_str(" (HTC:").unwrap();
-            btn_text.push_str(inttostr!(duration.to_millis())).unwrap();
-            btn_text.push_str(")").unwrap();
-        }
-        t.button(btn_text.as_ref());
-        t.close();
+    /// Only right arrow facing down.
+    pub fn none_none_arrow_wide() -> Self {
+        Self::new(None, None, Some(ButtonDetails::down_arrow_icon_wide()))
     }
 }
 
@@ -665,6 +671,195 @@ pub enum ButtonAction {
     Select,
     /// Some custom specific action
     Action(&'static str),
+}
+
+/// Storing actions for all three possible buttons.
+#[derive(Clone, Copy)]
+pub struct ButtonActions {
+    pub left: Option<ButtonAction>,
+    pub middle: Option<ButtonAction>,
+    pub right: Option<ButtonAction>,
+}
+
+impl ButtonActions {
+    pub fn new(
+        left: Option<ButtonAction>,
+        middle: Option<ButtonAction>,
+        right: Option<ButtonAction>,
+    ) -> Self {
+        Self {
+            left,
+            middle,
+            right,
+        }
+    }
+
+    /// Going back with left, going further with right
+    pub fn prev_none_next() -> Self {
+        Self::new(
+            Some(ButtonAction::PrevPage),
+            None,
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Going back with left, going further with middle
+    pub fn prev_next_none() -> Self {
+        Self::new(
+            Some(ButtonAction::PrevPage),
+            Some(ButtonAction::NextPage),
+            None,
+        )
+    }
+
+    /// Previous with left, confirming with right
+    pub fn prev_none_confirm() -> Self {
+        Self::new(
+            Some(ButtonAction::PrevPage),
+            None,
+            Some(ButtonAction::Confirm),
+        )
+    }
+
+    /// Previous with left, confirming with middle
+    pub fn prev_confirm_none() -> Self {
+        Self::new(
+            Some(ButtonAction::PrevPage),
+            Some(ButtonAction::Confirm),
+            None,
+        )
+    }
+
+    /// Going to last page with left, to the next page with right
+    pub fn last_none_next() -> Self {
+        Self::new(
+            Some(ButtonAction::GoToIndex(-1)),
+            None,
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Going to last page with left, to the next page with right and confirm
+    /// with middle
+    pub fn last_confirm_next() -> Self {
+        Self::new(
+            Some(ButtonAction::GoToIndex(-1)),
+            Some(ButtonAction::Confirm),
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Going to previous page with left, to the next page with right and
+    /// confirm with middle
+    pub fn prev_confirm_next() -> Self {
+        Self::new(
+            Some(ButtonAction::PrevPage),
+            Some(ButtonAction::Confirm),
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Cancelling with left, going to the next page with right
+    pub fn cancel_none_next() -> Self {
+        Self::new(
+            Some(ButtonAction::Cancel),
+            None,
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Only going to the next page with right
+    pub fn none_none_next() -> Self {
+        Self::new(None, None, Some(ButtonAction::NextPage))
+    }
+
+    /// Only going to the prev page with left
+    pub fn prev_none_none() -> Self {
+        Self::new(Some(ButtonAction::PrevPage), None, None)
+    }
+
+    /// Cancelling with left, confirming with right
+    pub fn cancel_none_confirm() -> Self {
+        Self::new(
+            Some(ButtonAction::Cancel),
+            None,
+            Some(ButtonAction::Confirm),
+        )
+    }
+
+    /// Cancelling with left, confirming with middle and next with right
+    pub fn cancel_confirm_next() -> Self {
+        Self::new(
+            Some(ButtonAction::Cancel),
+            Some(ButtonAction::Confirm),
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Going to the beginning with left, confirming with right
+    pub fn beginning_none_confirm() -> Self {
+        Self::new(
+            Some(ButtonAction::GoToIndex(0)),
+            None,
+            Some(ButtonAction::Confirm),
+        )
+    }
+
+    /// Going to the beginning with left, cancelling with right
+    pub fn beginning_none_cancel() -> Self {
+        Self::new(
+            Some(ButtonAction::GoToIndex(0)),
+            None,
+            Some(ButtonAction::Cancel),
+        )
+    }
+
+    /// Having access to appropriate action based on the `ButtonPos`
+    pub fn get_action(&self, pos: ButtonPos) -> Option<ButtonAction> {
+        match pos {
+            ButtonPos::Left => self.left,
+            ButtonPos::Middle => self.middle,
+            ButtonPos::Right => self.right,
+        }
+    }
+}
+
+// DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Button {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("Button");
+        match &self.content {
+            ButtonContent::Text(text) => t.field("text", text),
+            ButtonContent::Icon(icon) => t.field("icon", icon),
+        }
+        t.close();
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+use heapless::String;
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ButtonDetails {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("ButtonDetails");
+        let mut btn_text: String<30> = String::new();
+        if let Some(text) = &self.text {
+            btn_text.push_str(text.as_ref()).unwrap();
+        } else if let Some(icon) = &self.icon {
+            btn_text.push_str("Icon:").unwrap();
+            btn_text.push_str(icon.text.as_ref()).unwrap();
+        }
+        if let Some(duration) = &self.duration {
+            btn_text.push_str(" (HTC:").unwrap();
+            btn_text.push_str(inttostr!(duration.to_millis())).unwrap();
+            btn_text.push_str(")").unwrap();
+        }
+        t.button(btn_text.as_ref());
+        t.close();
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -695,128 +890,5 @@ impl ButtonAction {
     /// When there is no action.
     pub fn empty() -> String<25> {
         "None".into()
-    }
-}
-
-/// Storing actions for all three possible buttons.
-#[derive(Clone, Copy)]
-pub struct ButtonActions {
-    pub left: Option<ButtonAction>,
-    pub middle: Option<ButtonAction>,
-    pub right: Option<ButtonAction>,
-}
-
-impl ButtonActions {
-    pub fn new(
-        left: Option<ButtonAction>,
-        middle: Option<ButtonAction>,
-        right: Option<ButtonAction>,
-    ) -> Self {
-        Self {
-            left,
-            middle,
-            right,
-        }
-    }
-
-    /// Going back with left, going further with right
-    pub fn prev_next() -> Self {
-        Self::new(
-            Some(ButtonAction::PrevPage),
-            None,
-            Some(ButtonAction::NextPage),
-        )
-    }
-
-    /// Going back with left, going further with middle
-    pub fn prev_next_with_middle() -> Self {
-        Self::new(
-            Some(ButtonAction::PrevPage),
-            Some(ButtonAction::NextPage),
-            None,
-        )
-    }
-
-    /// Previous with left, confirming with right
-    pub fn prev_confirm() -> Self {
-        Self::new(
-            Some(ButtonAction::PrevPage),
-            None,
-            Some(ButtonAction::Confirm),
-        )
-    }
-
-    /// Going to last page with left, to the next page with right
-    pub fn last_next() -> Self {
-        Self::new(
-            Some(ButtonAction::GoToIndex(-1)),
-            None,
-            Some(ButtonAction::NextPage),
-        )
-    }
-
-    /// Going to last page with left, to the next page with right and confirm
-    /// with middle
-    pub fn last_confirm_next() -> Self {
-        Self::new(
-            Some(ButtonAction::GoToIndex(-1)),
-            Some(ButtonAction::Confirm),
-            Some(ButtonAction::NextPage),
-        )
-    }
-
-    /// Cancelling with left, going to the next page with right
-    pub fn cancel_next() -> Self {
-        Self::new(
-            Some(ButtonAction::Cancel),
-            None,
-            Some(ButtonAction::NextPage),
-        )
-    }
-
-    /// Only going to the next page with right
-    pub fn only_next() -> Self {
-        Self::new(None, None, Some(ButtonAction::NextPage))
-    }
-
-    /// Only going to the prev page with left
-    pub fn only_prev() -> Self {
-        Self::new(Some(ButtonAction::PrevPage), None, None)
-    }
-
-    /// Cancelling with left, confirming with right
-    pub fn cancel_confirm() -> Self {
-        Self::new(
-            Some(ButtonAction::Cancel),
-            None,
-            Some(ButtonAction::Confirm),
-        )
-    }
-
-    /// Going to the beginning with left, confirming with right
-    pub fn beginning_confirm() -> Self {
-        Self::new(
-            Some(ButtonAction::GoToIndex(0)),
-            None,
-            Some(ButtonAction::Confirm),
-        )
-    }
-
-    /// Going to the beginning with left, cancelling with right
-    pub fn beginning_cancel() -> Self {
-        Self::new(
-            Some(ButtonAction::GoToIndex(0)),
-            None,
-            Some(ButtonAction::Cancel),
-        )
-    }
-
-    /// Having access to appropriate action based on the `ButtonPos`
-    pub fn get_action(&self, pos: ButtonPos) -> Option<ButtonAction> {
-        match pos {
-            ButtonPos::Left => self.left,
-            ButtonPos::Middle => self.middle,
-            ButtonPos::Right => self.right,
-        }
     }
 }

@@ -120,6 +120,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_time_ms;
   MP_QSTR_app_name;
   MP_QSTR_icon_name;
+  MP_QSTR_account;
   MP_QSTR_accounts;
   MP_QSTR_indeterminate;
   MP_QSTR_notification;

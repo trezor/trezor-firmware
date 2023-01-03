@@ -11,8 +11,6 @@ use crate::{
     },
 };
 
-use heapless::String;
-
 /// All possible states buttons (left and right) can be at.
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum ButtonState {
@@ -435,8 +433,12 @@ impl Component for ButtonController {
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 use super::ButtonContent;
+#[cfg(feature = "ui_debug")]
+use heapless::String;
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for ButtonContainer {

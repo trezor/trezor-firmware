@@ -1,5 +1,12 @@
 from typing import TYPE_CHECKING
 
+from trezor.enums import ButtonRequestType
+
+import trezorui2
+
+from ..common import interact
+from . import RustLayout
+
 if TYPE_CHECKING:
     from trezor.wire import GenericContext
 
@@ -14,8 +21,37 @@ async def confirm_fido(
     accounts: list[str | None],
 ) -> int:
     """Webauthn confirmation for one or more credentials."""
-    raise NotImplementedError
+    confirm = RustLayout(
+        trezorui2.confirm_fido(  # type: ignore [Arguments missing]
+            app_name=app_name,
+            accounts=accounts,
+        )
+    )
+
+    if ctx is None:
+        result = await confirm
+    else:
+        result = await interact(ctx, confirm, "confirm_fido", ButtonRequestType.Other)
+
+    # The Rust side returns either an int or `CANCELLED`. We detect the int situation
+    # and assume cancellation otherwise.
+    if isinstance(result, int):
+        return result
+
+    # Late import won't get executed on the happy path.
+    from trezor.wire import ActionCancelled
+
+    raise ActionCancelled
 
 
 async def confirm_fido_reset() -> bool:
-    raise NotImplementedError
+    confirm = RustLayout(
+        trezorui2.confirm_action(
+            title="FIDO2 RESET",
+            description="Do you really want to erase all credentials?",
+            action=None,
+            verb_cancel="",
+            verb="CONFIRM",
+        )
+    )
+    return (await confirm) is trezorui2.CONFIRMED

@@ -217,6 +217,8 @@ where
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 use super::ButtonAction;
 #[cfg(feature = "ui_debug")]
