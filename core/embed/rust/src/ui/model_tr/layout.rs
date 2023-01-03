@@ -197,7 +197,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
 
         // Left button - icon, text or nothing.
         let cancel_btn = if let Some(verb_cancel) = verb_cancel {
-            if verb_cancel.len() > 0 {
+            if !verb_cancel.is_empty() {
                 Some(ButtonDetails::text(verb_cancel))
             } else {
                 Some(ButtonDetails::cancel_icon())
@@ -207,13 +207,12 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         };
 
         // Right button - text or nothing.
-        let mut confirm_btn = if verb.len() > 0 {
+        // Optional HoldToConfirm
+        let mut confirm_btn = if !verb.is_empty() {
             Some(ButtonDetails::text(verb))
         } else {
             None
         };
-
-        // Optional HoldToConfirm
         if hold {
             // TODO: clients might want to set the duration
             confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
@@ -426,7 +425,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
         let content = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_MONO, title),
+            Paragraph::new(&theme::TEXT_BOLD, title),
             Paragraph::new(&theme::TEXT_MONO, description),
         ]);
         let obj = if time_ms == 0 {
@@ -670,9 +669,10 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_request_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let _dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
+        let title = "NUMBER OF WORDS".into();
 
         let choices: Vec<StrBuffer, 3> = ["12".into(), "18".into(), "24".into()]
             .into_iter()
@@ -759,32 +759,32 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-// extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs:
-// *mut Map) -> Obj {     let block = move |_args: &[Obj], kwargs: &Map| {
-//         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-//         let description: StrBuffer =
-// kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;         let time_ms: u32
-// = kwargs.get(Qstr::MP_QSTR_time_ms)?.try_into()?;         let
-// skip_first_paint: bool =
-// kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
+extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let time_ms: u32 = kwargs.get(Qstr::MP_QSTR_time_ms)?.try_into()?;
+        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
-//         let obj = LayoutObj::new(Frame::left_aligned(
-//             theme::label_title(),
-//             title,
-//             Dialog::new(
-//                 Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL,
-// description).centered()),                 Timeout::new(time_ms).map(|msg| {
-//                     (matches!(msg, TimeoutMsg::TimedOut)).then(||
-// CancelConfirmMsg::Cancelled)                 }),
-//             ),
-//         ))?;
-//         if skip_first_paint {
-//             obj.skip_first_paint();
-//         }
-//         Ok(obj.into())
-//     };
-//     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-// }
+        let content = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_BOLD, title),
+            Paragraph::new(&theme::TEXT_MONO, description),
+        ]);
+
+        let obj = LayoutObj::new(NoBtnDialog::new(
+            content,
+            Timeout::new(time_ms).map(|msg| {
+                (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Confirmed)
+            }),
+        ))?;
+
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
 
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
@@ -905,16 +905,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     words: Iterable[str],
-    /// ) -> str:
-    ///    """Select a word from a list. TODO: should return int, to be consistent with TT's select_word"""
+    /// ) -> str:  # TODO: should return int, to be consistent with TT's select_word
+    ///    """Select a word from a list."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
 
-    /// def request_word_count(
+    /// def select_word_count(
     ///     *,
-    ///     title: str,
+    ///     dry_run: bool,
     /// ) -> str:  # TODO: make it return int
     ///     """Get word count for recovery."""
-    Qstr::MP_QSTR_request_word_count => obj_fn_kw!(0, new_request_word_count).as_obj(),
+    Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
     /// def request_word_bip39(
     ///     *,
@@ -962,13 +962,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Homescreen for locked device."""
     Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
 
-    // /// def show_busyscreen(
-    // ///     *,
-    // ///     title: str,
-    // ///     description: str,
-    // ///     time_ms: int,
-    // ///     skip_first_paint: bool,
-    // /// ) -> CANCELLED:
-    // ///     """Homescreen used for indicating coinjoin in progress."""
-    // Qstr::MP_QSTR_show_busyscreen => obj_fn_kw!(0, new_show_busyscreen).as_obj(),
+    /// def show_busyscreen(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     time_ms: int,
+    ///     skip_first_paint: bool,
+    /// ) -> CANCELLED:
+    ///     """Homescreen used for indicating coinjoin in progress."""
+    Qstr::MP_QSTR_show_busyscreen => obj_fn_kw!(0, new_show_busyscreen).as_obj(),
 };

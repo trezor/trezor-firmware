@@ -121,14 +121,14 @@ def select_word(
     *,
     title: str,
     words: Iterable[str],
-) -> str:
-   """Select a word from a list. TODO: should return int, to be consistent with TT's select_word"""
+) -> str:  # TODO: should return int, to be consistent with TT's select_word
+   """Select a word from a list."""
 
 
 # rust/src/ui/model_tr/layout.rs
-def request_word_count(
+def select_word_count(
     *,
-    title: str,
+    dry_run: bool,
 ) -> str:  # TODO: make it return int
     """Get word count for recovery."""
 
@@ -182,6 +182,17 @@ def show_lockscreen(
     skip_first_paint: bool,
 ) -> CANCELLED:
     """Homescreen for locked device."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_busyscreen(
+    *,
+    title: str,
+    description: str,
+    time_ms: int,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Homescreen used for indicating coinjoin in progress."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object
