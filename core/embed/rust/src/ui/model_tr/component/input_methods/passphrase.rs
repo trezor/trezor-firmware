@@ -135,10 +135,7 @@ impl ChoiceFactoryPassphrase {
     /// return back
     fn get_character_item(&self, choice_index: u8) -> ChoiceItem {
         if is_menu_choice(&self.current_category, choice_index) {
-            ChoiceItem::new(
-                "MENU",
-                ButtonLayout::three_icons_middle_text("RETURN".into()),
-            )
+            ChoiceItem::new("MENU", ButtonLayout::arrow_armed_icon("RETURN".into()))
         } else {
             let ch = get_char(&self.current_category, choice_index);
             ChoiceItem::new(char_to_string::<1>(ch), ButtonLayout::default_three_icons())
@@ -303,6 +300,8 @@ impl Component for PassphraseEntry {
         self.choice_page.paint();
     }
 }
+
+// DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
 use super::super::{ButtonAction, ButtonPos};

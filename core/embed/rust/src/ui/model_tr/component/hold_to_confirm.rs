@@ -108,6 +108,8 @@ impl Component for HoldToConfirm {
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for HoldToConfirm {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {

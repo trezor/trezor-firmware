@@ -6,14 +6,15 @@ use crate::{
     error::Error,
     micropython::{
         buffer::StrBuffer,
+        gc::Gc,
         iter::{Iter, IterBuf},
+        list::List,
         map::Map,
         module::Module,
         obj::Obj,
         qstr::Qstr,
         util,
     },
-    time::Duration,
     ui::{
         component::{
             base::Component,
@@ -38,7 +39,7 @@ use super::{
         Bip39Entry, Bip39EntryMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
         FlowMsg, FlowPages, Frame, Homescreen, HomescreenMsg, Lockscreen, NoBtnDialog,
         NoBtnDialogMsg, Page, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress,
-        QRCodePage, QRCodePageMessage, ShareWords, SimpleChoice, SimpleChoiceMsg,
+        ShareWords, SimpleChoice, SimpleChoiceMsg,
     },
     constant, theme,
 };
@@ -94,18 +95,7 @@ where
         match msg {
             FlowMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             FlowMsg::Cancelled => Ok(CANCELLED.as_obj()),
-        }
-    }
-}
-
-impl<T> ComponentMsgObj for QRCodePage<T>
-where
-    T: Component,
-{
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            QRCodePageMessage::Confirmed => Ok(CONFIRMED.as_obj()),
-            QRCodePageMessage::Cancelled => Ok(CANCELLED.as_obj()),
+            FlowMsg::ConfirmedIndex(page) => Ok(page.into()),
         }
     }
 }
@@ -181,11 +171,13 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let action: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
         let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let verb: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into_option()?;
-        let verb_cancel: Option<StrBuffer> =
-            kwargs.get(Qstr::MP_QSTR_verb_cancel)?.try_into_option()?;
-        let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
-        let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
+        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, "CONFIRM".into())?;
+        let verb_cancel: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let reverse: bool = kwargs.get_or(Qstr::MP_QSTR_reverse, false)?;
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
         let paragraphs = {
             let action = action.unwrap_or_default();
@@ -215,7 +207,6 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         };
 
         // Right button - text or nothing.
-        let verb = verb.unwrap_or_default();
         let mut confirm_btn = if verb.len() > 0 {
             Some(ButtonDetails::text(verb))
         } else {
@@ -293,24 +284,16 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
             match page_index {
                 0 => {
                     // RECIPIENT + address
-                    let btn_layout = ButtonLayout::new(
-                        Some(ButtonDetails::cancel_icon()),
-                        None,
-                        Some(ButtonDetails::text("CONFIRM".into())),
-                    );
-                    let btn_actions = ButtonActions::cancel_next();
+                    let btn_layout = ButtonLayout::cancel_none_text("CONFIRM".into());
+                    let btn_actions = ButtonActions::cancel_none_next();
                     Page::<10>::new(btn_layout, btn_actions, Font::MONO)
                         .with_title(address_title)
                         .text_mono(address)
                 }
                 1 => {
                     // AMOUNT + amount
-                    let btn_layout = ButtonLayout::new(
-                        Some(ButtonDetails::up_arrow_icon()),
-                        None,
-                        Some(ButtonDetails::text("CONFIRM".into())),
-                    );
-                    let btn_actions = ButtonActions::cancel_confirm();
+                    let btn_layout = ButtonLayout::up_arrow_none_text("CONFIRM".into());
+                    let btn_actions = ButtonActions::prev_none_confirm();
                     Page::<10>::new(btn_layout, btn_actions, Font::MONO)
                         .with_title(amount_title)
                         .newline()
@@ -341,12 +324,8 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             // Total amount + fee
             assert!(page_index == 0);
 
-            let btn_layout = ButtonLayout::new(
-                Some(ButtonDetails::cancel_icon()),
-                None,
-                Some(ButtonDetails::text("HOLD TO CONFIRM".into()).with_default_duration()),
-            );
-            let btn_actions = ButtonActions::cancel_confirm();
+            let btn_layout = ButtonLayout::cancel_none_htc("HOLD TO CONFIRM".into());
+            let btn_actions = ButtonActions::cancel_none_confirm();
 
             let mut flow_page = Page::<15>::new(btn_layout, btn_actions, Font::MONO)
                 .text_bold(total_label)
@@ -386,11 +365,7 @@ extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: 
             match page_index {
                 0 => {
                     // RECEIVE ADDRESS
-                    let btn_layout = ButtonLayout::new(
-                        Some(ButtonDetails::cancel_icon()),
-                        Some(ButtonDetails::armed_text("CONFIRM".into())),
-                        Some(ButtonDetails::text("i".into())),
-                    );
+                    let btn_layout = ButtonLayout::cancel_armed_text("CONFIRM".into(), "i".into());
                     let btn_actions = ButtonActions::last_confirm_next();
                     Page::<15>::new(btn_layout, btn_actions, Font::BOLD)
                         .text_bold(title)
@@ -400,12 +375,8 @@ extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: 
                 }
                 1 => {
                     // QR CODE
-                    let btn_layout = ButtonLayout::new(
-                        Some(ButtonDetails::left_arrow_icon()),
-                        None,
-                        Some(ButtonDetails::right_arrow_icon()),
-                    );
-                    let btn_actions = ButtonActions::prev_next();
+                    let btn_layout = ButtonLayout::arrow_none_arrow();
+                    let btn_actions = ButtonActions::prev_none_next();
                     Page::<15>::new(btn_layout, btn_actions, Font::MONO).qr_code(
                         address_qr,
                         theme::QR_SIDE_MAX,
@@ -415,9 +386,8 @@ extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: 
                 }
                 2 => {
                     // ADDRESS INFO
-                    let btn_layout =
-                        ButtonLayout::new(Some(ButtonDetails::left_arrow_icon()), None, None);
-                    let btn_actions = ButtonActions::only_prev();
+                    let btn_layout = ButtonLayout::arrow_none_none();
+                    let btn_actions = ButtonActions::prev_none_none();
                     Page::<15>::new(btn_layout, btn_actions, Font::MONO)
                         .text_bold("Account:".into())
                         .newline()
@@ -429,12 +399,8 @@ extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: 
                 }
                 3 => {
                     // ADDRESS MISMATCH
-                    let btn_layout = ButtonLayout::new(
-                        Some(ButtonDetails::left_arrow_icon()),
-                        None,
-                        Some(ButtonDetails::text("QUIT".into())),
-                    );
-                    let btn_actions = ButtonActions::beginning_cancel();
+                    let btn_layout = ButtonLayout::arrow_none_text("QUIT".into());
+                    let btn_actions = ButtonActions::beginning_none_cancel();
                     Page::<15>::new(btn_layout, btn_actions, Font::MONO)
                         .text_bold("ADDRESS MISMATCH?".into())
                         .newline()
@@ -482,6 +448,73 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let app_name: StrBuffer = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
+        let accounts: Gc<List> = kwargs.get(Qstr::MP_QSTR_accounts)?.try_into()?;
+
+        // Cache the page count so that we can move `accounts` into the closure.
+        let page_count = accounts.len();
+
+        let title: StrBuffer = if page_count > 1 {
+            "IMPORT".into()
+        } else {
+            "IMPORT CREDENTIAL".into()
+        };
+
+        // Closure to lazy-load the information on given page index.
+        // Done like this to allow arbitrarily many pages without
+        // the need of any allocation here in Rust.
+        let get_page = move |page_index| {
+            let account_obj = unwrap!(accounts.get(page_index as usize));
+            let account = account_obj.try_into().unwrap_or_else(|_| "".into());
+
+            let (btn_layout, btn_actions) = if page_count == 1 {
+                // There is only one page
+                (
+                    ButtonLayout::cancel_none_text("CONFIRM".into()),
+                    ButtonActions::cancel_none_confirm(),
+                )
+            } else if page_index == 0 {
+                // First page
+                (
+                    ButtonLayout::cancel_armed_arrow("SELECT".into()),
+                    ButtonActions::cancel_confirm_next(),
+                )
+            } else if page_index as usize == page_count - 1 {
+                // Last page
+                (
+                    ButtonLayout::arrow_armed_none("SELECT".into()),
+                    ButtonActions::prev_confirm_none(),
+                )
+            } else {
+                // Page in the middle
+                (
+                    ButtonLayout::arrow_armed_icon("SELECT".into()),
+                    ButtonActions::prev_confirm_next(),
+                )
+            };
+
+            Page::<10>::new(btn_layout, btn_actions, Font::MONO)
+                .newline()
+                .text_mono(app_name)
+                .newline()
+                .text_bold(account)
+        };
+
+        let pages = FlowPages::new(get_page, page_count as u8);
+
+        // Returning the page index in case of confirmation.
+        let obj = LayoutObj::new(
+            Flow::new(pages)
+                .with_common_title(title)
+                .with_return_confirmed_index(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 /// General pattern of most tutorial screens.
 /// (title, text, btn_layout, btn_actions)
 fn tutorial_screen(
@@ -523,47 +556,47 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     tutorial_screen(
                         "HELLO".into(),
                         "Welcome to Trezor.\nPress right to continue.".into(),
-                        ButtonLayout::cancel_and_arrow(),
-                        ButtonActions::last_next(),
+                        ButtonLayout::cancel_none_arrow(),
+                        ButtonActions::last_none_next(),
                     )
                 },
                 1 => {
                     tutorial_screen(
                         "".into(),
                         "Use Trezor by clicking left and right.\n\nContinue right.".into(),
-                        ButtonLayout::left_right_arrows(),
-                        ButtonActions::prev_next(),
+                        ButtonLayout::arrow_none_arrow(),
+                        ButtonActions::prev_none_next(),
                     )
                 },
                 2 => {
                     tutorial_screen(
                         "HOLD TO CONFIRM".into(),
                         "Press and hold right to approve important operations.".into(),
-                        ButtonLayout::back_and_htc_text("HOLD TO CONFIRM".into(), Duration::from_millis(1000)),
-                        ButtonActions::prev_next(),
+                        ButtonLayout::arrow_none_htc("HOLD TO CONFIRM".into()),
+                        ButtonActions::prev_none_next(),
                     )
                 },
                 3 => {
                     tutorial_screen(
                         "SCREEN SCROLL".into(),
                         "Press right to scroll down to read all content when text\ndoesn't fit on one screen. Press left to scroll up.".into(),
-                        ButtonLayout::back_and_text("GOT IT".into()),
-                        ButtonActions::prev_next(),
+                        ButtonLayout::arrow_none_text("GOT IT".into()),
+                        ButtonActions::prev_none_next(),
                     )
                 },
                 4 => {
                     tutorial_screen(
                         "CONFIRM".into(),
                         "Press both left and right at the same time to confirm.".into(),
-                        ButtonLayout::middle_armed_text("CONFIRM".into()),
-                        ButtonActions::prev_next_with_middle(),
+                        ButtonLayout::none_armed_none("CONFIRM".into()),
+                        ButtonActions::prev_next_none(),
                     )
                 },
                 // This page is special
                 5 => {
                     Page::<10>::new(
-                        ButtonLayout::left_right_text("AGAIN".into(), "FINISH".into()),
-                        ButtonActions::beginning_confirm(),
+                        ButtonLayout::text_none_text("AGAIN".into(), "FINISH".into()),
+                        ButtonActions::beginning_none_confirm(),
                         Font::MONO,
                     )
                         .newline()
@@ -577,8 +610,8 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     tutorial_screen(
                         "SKIP TUTORIAL".into(),
                         "Are you sure you want to skip the tutorial?".into(),
-                        ButtonLayout::cancel_and_text("SKIP".into()),
-                        ButtonActions::beginning_cancel(),
+                        ButtonLayout::cancel_none_text("SKIP".into()),
+                        ButtonActions::beginning_none_cancel(),
                     )
                 },
                 _ => unreachable!(),
@@ -773,9 +806,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_action(
     ///     *,
     ///     title: str,
-    ///     action: str | None = None,
-    ///     description: str | None = None,
-    ///     verb: str | None = None,
+    ///     action: str | None,
+    ///     description: str | None,
+    ///     verb: str = "CONFIRM",
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     hold_danger: bool = False,  # unused on TR
@@ -836,6 +869,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Info modal."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
+
+    /// def confirm_fido(
+    ///     *,
+    ///     app_name: str,
+    ///     accounts: list[str | None],
+    /// ) -> int | object:
+    ///     """FIDO confirmation.
+    ///
+    ///     Returns page index in case of confirmation and CANCELLED otherwise.
+    ///     """
+    Qstr::MP_QSTR_confirm_fido => obj_fn_kw!(0, new_confirm_fido).as_obj(),
 
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""

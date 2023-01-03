@@ -120,6 +120,8 @@ impl Component for Progress {
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Progress {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

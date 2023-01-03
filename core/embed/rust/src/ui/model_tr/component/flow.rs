@@ -14,6 +14,7 @@ use super::{
 /// To be returned directly from Flow.
 pub enum FlowMsg {
     Confirmed,
+    ConfirmedIndex(u8),
     Cancelled,
 }
 
@@ -30,6 +31,7 @@ pub struct Flow<F, const M: usize> {
     pad: Pad,
     buttons: Child<ButtonController>,
     page_counter: u8,
+    return_confirmed_index: bool,
 }
 
 impl<F, const M: usize> Flow<F, M>
@@ -51,6 +53,7 @@ where
             // `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
             page_counter: 0,
+            return_confirmed_index: false,
         }
     }
 
@@ -58,6 +61,12 @@ where
     /// with the page content, as the content will be offset.
     pub fn with_common_title(mut self, title: StrBuffer) -> Self {
         self.common_title = Some(title);
+        self
+    }
+
+    /// Causing the Flow to return the index of the page that was confirmed.
+    pub fn with_return_confirmed_index(mut self) -> Self {
+        self.return_confirmed_index = true;
         self
     }
 
@@ -222,7 +231,13 @@ where
                         return None;
                     }
                     ButtonAction::Cancel => return Some(FlowMsg::Cancelled),
-                    ButtonAction::Confirm => return Some(FlowMsg::Confirmed),
+                    ButtonAction::Confirm => {
+                        if self.return_confirmed_index {
+                            return Some(FlowMsg::ConfirmedIndex(self.page_counter));
+                        } else {
+                            return Some(FlowMsg::Confirmed);
+                        }
+                    }
                     ButtonAction::Select => {}
                     ButtonAction::Action(_) => {}
                 }
@@ -246,6 +261,8 @@ where
         self.current_page.paint();
     }
 }
+
+// DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
 use heapless::String;

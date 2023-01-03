@@ -96,6 +96,8 @@ where
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Frame<T>
 where

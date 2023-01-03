@@ -49,7 +49,7 @@ impl ResultPopup {
             .with_placement(LinearPlacement::vertical().align_at_center());
 
         let buttons = button_text.map(|text| {
-            let btn_layout = ButtonLayout::only_right_text(text.into());
+            let btn_layout = ButtonLayout::none_none_text(text.into());
             Child::new(ButtonController::new(btn_layout))
         });
 
@@ -154,6 +154,8 @@ impl Component for ResultPopup {
         self.result_anim.paint();
     }
 }
+
+// DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for ResultPopup {

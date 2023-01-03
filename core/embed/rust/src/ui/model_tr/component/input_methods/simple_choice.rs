@@ -9,9 +9,6 @@ use crate::{
 use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};
 use heapless::{String, Vec};
 
-#[cfg(feature = "ui_debug")]
-use super::super::{ButtonAction, ButtonPos};
-
 pub enum SimpleChoiceMsg {
     Result(String<50>),
 }
@@ -94,6 +91,11 @@ impl<const N: usize> Component for SimpleChoice<N> {
         self.choice_page.paint();
     }
 }
+
+// DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+use super::super::{ButtonAction, ButtonPos};
 
 #[cfg(feature = "ui_debug")]
 impl<const N: usize> crate::trace::Trace for SimpleChoice<N> {

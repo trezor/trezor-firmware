@@ -13,9 +13,9 @@ def disable_animation(disable: bool) -> None:
 def confirm_action(
     *,
     title: str,
-    action: str | None = None,
-    description: str | None = None,
-    verb: str | None = None,
+    action: str | None,
+    description: str | None,
+    verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,  # unused on TR
@@ -80,6 +80,17 @@ def show_info(
     time_ms: int = 0,
 ) -> object:
     """Info modal."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_fido(
+    *,
+    app_name: str,
+    accounts: list[str | None],
+) -> int | object:
+    """FIDO confirmation.
+    Returns page index in case of confirmation and CANCELLED otherwise.
+    """
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -187,7 +198,7 @@ def confirm_action(
     title: str,
     action: str | None,
     description: str | None,
-    verb: str | None = None,
+    verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,

@@ -85,17 +85,6 @@ impl Component for Homescreen {
     }
 }
 
-#[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Homescreen {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Homescreen");
-        d.kw_pair("active_page", "0");
-        d.kw_pair("page_count", "1");
-        d.field("label", &self.label.as_ref());
-        d.close();
-    }
-}
-
 pub struct Lockscreen {
     label: StrBuffer,
     bootscreen: bool,
@@ -134,6 +123,19 @@ impl Component for Lockscreen {
             &self.label.as_ref(),
             Font::BOLD,
         );
+    }
+}
+
+// DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Homescreen {
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        d.open("Homescreen");
+        d.kw_pair("active_page", "0");
+        d.kw_pair("page_count", "1");
+        d.field("label", &self.label.as_ref());
+        d.close();
     }
 }
 

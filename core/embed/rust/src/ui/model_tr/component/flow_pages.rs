@@ -332,6 +332,8 @@ impl<const M: usize> Paginate for Page<M> {
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 pub mod trace {
     use crate::ui::model_tr::component::flow_pages_poc_helpers::TraceSink;

@@ -215,6 +215,8 @@ impl Component for PinEntry {
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 use super::super::{ButtonAction, ButtonPos};
 

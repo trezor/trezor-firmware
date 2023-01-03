@@ -92,13 +92,13 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
 
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
 
-            helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN, 1),
             True,
 
             helpers.UiConfirmTotal(123445789 + 11000, 11000, fee_rate, coin, AmountUnit.BITCOIN),
@@ -223,7 +223,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
 
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
@@ -371,7 +371,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
 
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),

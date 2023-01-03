@@ -142,6 +142,8 @@ impl<const N: usize> Paginate for ShareWords<N> {
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 impl<const N: usize> crate::trace::Trace for ShareWords<N> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

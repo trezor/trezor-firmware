@@ -466,7 +466,7 @@ async def get_bool(
     title: str,
     data: str | None = None,
     description: str | None = None,
-    verb: str | None = "CONFIRM",
+    verb: str = "CONFIRM",
     verb_cancel: str | None = "",
     hold: bool = False,
     reverse: bool = False,
@@ -720,7 +720,7 @@ async def _show_modal(
         title=header.upper(),
         action=subheader,
         description=content,
-        verb=button_confirm,
+        verb=button_confirm or "",
         verb_cancel=button_cancel,
         exc=exc,
     )
