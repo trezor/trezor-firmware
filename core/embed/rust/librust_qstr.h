@@ -67,7 +67,6 @@ static void _librust_qstrs(void) {
 
   MP_QSTR_progress_event;
   MP_QSTR_usb_event;
-  MP_QSTR_request_word_count;
   MP_QSTR_request_word_bip39;
   MP_QSTR_tutorial;
 

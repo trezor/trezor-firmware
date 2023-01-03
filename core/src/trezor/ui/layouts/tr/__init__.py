@@ -472,7 +472,6 @@ async def get_bool(
     verb: str = "CONFIRM",
     verb_cancel: str | None = "",
     hold: bool = False,
-    reverse: bool = False,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> bool:
     result = await interact(
@@ -485,7 +484,6 @@ async def get_bool(
                 verb=verb,
                 verb_cancel=verb_cancel,
                 hold=hold,
-                reverse=reverse,
             )
         ),
         br_type,
@@ -634,8 +632,6 @@ def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
             description=xpub,
             verb="CONFIRM",
             verb_cancel=cancel,
-            hold=False,
-            reverse=False,
         )
     )
     return content
@@ -1204,7 +1200,8 @@ async def show_popup(
 def request_passphrase_on_host() -> None:
     draw_simple(
         trezorui2.show_info(
-            title="Please type your passphrase on the connected host.",
+            title="",
+            description="Please type your passphrase on the connected host.",
         )
     )
 
