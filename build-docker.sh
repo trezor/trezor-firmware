@@ -32,6 +32,7 @@ if [ -z "$ALPINE_CHECKSUM" ]; then
  fi
 
 
+DOCKER=${DOCKER:-docker}
 CONTAINER_NAME=${CONTAINER_NAME:-trezor-firmware-env.nix}
 ALPINE_CDN=${ALPINE_CDN:-https://dl-cdn.alpinelinux.org/alpine}
 ALPINE_RELEASE=${ALPINE_RELEASE:-3.15}
@@ -83,7 +84,7 @@ echo
 echo ">>> DOCKER BUILD ALPINE_VERSION=$ALPINE_VERSION ALPINE_ARCH=$ALPINE_ARCH NIX_VERSION=$NIX_VERSION -t $CONTAINER_NAME"
 echo
 
-docker build \
+$DOCKER build \
   --network=host \
   --build-arg ALPINE_VERSION="$ALPINE_VERSION" \
   --build-arg ALPINE_ARCH="$ALPINE_ARCH" \
@@ -131,7 +132,7 @@ EOF
   echo ">>> DOCKER RUN core BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
   echo
 
-  docker run \
+  $DOCKER run \
     --network=host \
     -it \
     --rm \
@@ -180,7 +181,7 @@ EOF
   echo ">>> DOCKER RUN legacy BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
   echo
 
-  docker run \
+  $DOCKER run \
     --network=host \
     -it \
     --rm \
