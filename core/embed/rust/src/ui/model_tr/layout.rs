@@ -580,7 +580,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     tutorial_screen(
                         "SCREEN SCROLL".into(),
                         "Press right to scroll down to read all content when text\ndoesn't fit on one screen. Press left to scroll up.".into(),
-                        ButtonLayout::arrow_none_text("GOT IT".into()),
+                        ButtonLayout::arrow_none_text("CONTINUE".into()),
                         ButtonActions::prev_none_next(),
                     )
                 },

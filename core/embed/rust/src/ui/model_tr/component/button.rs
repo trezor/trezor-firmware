@@ -501,53 +501,53 @@ impl ButtonLayout {
     }
 
     /// Special middle text for default icon layout.
-    pub fn arrow_armed_icon(middle_text: StrBuffer) -> Self {
+    pub fn arrow_armed_icon(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
-            Some(ButtonDetails::armed_text(middle_text)),
+            Some(ButtonDetails::armed_text(text)),
             Some(ButtonDetails::right_arrow_icon()),
         )
     }
 
     /// Left cancel, armed text and next right arrow.
-    pub fn cancel_armed_arrow(middle_text: StrBuffer) -> Self {
+    pub fn cancel_armed_arrow(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
-            Some(ButtonDetails::armed_text(middle_text)),
+            Some(ButtonDetails::armed_text(text)),
             Some(ButtonDetails::right_arrow_icon()),
         )
     }
 
     /// Left cancel, armed text and right text.
-    pub fn cancel_armed_text(middle_text: StrBuffer, right_text: StrBuffer) -> Self {
+    pub fn cancel_armed_text(middle: StrBuffer, right: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
-            Some(ButtonDetails::armed_text(middle_text)),
-            Some(ButtonDetails::text(right_text)),
+            Some(ButtonDetails::armed_text(middle)),
+            Some(ButtonDetails::text(right)),
         )
     }
 
     /// Left back arrow and middle armed text.
-    pub fn arrow_armed_none(middle_text: StrBuffer) -> Self {
+    pub fn arrow_armed_none(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
-            Some(ButtonDetails::armed_text(middle_text)),
+            Some(ButtonDetails::armed_text(text)),
             None,
         )
     }
 
     /// Left and right texts.
-    pub fn text_none_text(text_left: StrBuffer, text_right: StrBuffer) -> Self {
+    pub fn text_none_text(left: StrBuffer, right: StrBuffer) -> Self {
         Self::new(
-            Some(ButtonDetails::text(text_left)),
+            Some(ButtonDetails::text(left)),
             None,
-            Some(ButtonDetails::text(text_right)),
+            Some(ButtonDetails::text(right)),
         )
     }
 
     /// Only right text.
-    pub fn none_none_text(text_right: StrBuffer) -> Self {
-        Self::new(None, None, Some(ButtonDetails::text(text_right)))
+    pub fn none_none_text(text: StrBuffer) -> Self {
+        Self::new(None, None, Some(ButtonDetails::text(text)))
     }
 
     /// Left and right arrow icons for navigation.
@@ -560,20 +560,20 @@ impl ButtonLayout {
     }
 
     /// Left arrow and right text.
-    pub fn arrow_none_text(text_right: StrBuffer) -> Self {
+    pub fn arrow_none_text(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
-            Some(ButtonDetails::text(text_right)),
+            Some(ButtonDetails::text(text)),
         )
     }
 
     /// Up arrow left and right text.
-    pub fn up_arrow_none_text(text_right: StrBuffer) -> Self {
+    pub fn up_arrow_none_text(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::up_arrow_icon()),
             None,
-            Some(ButtonDetails::text(text_right)),
+            Some(ButtonDetails::text(text)),
         )
     }
 
