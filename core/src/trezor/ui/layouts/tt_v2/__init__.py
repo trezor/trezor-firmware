@@ -210,7 +210,7 @@ async def confirm_action(
     action: str | None = None,
     description: str | None = None,
     description_param: str | None = None,
-    verb: str | bytes | None = "CONFIRM",
+    verb: str | bytes = "CONFIRM",
     verb_cancel: str | bytes | None = None,
     hold: bool = False,
     hold_danger: bool = False,
