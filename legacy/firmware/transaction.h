@@ -104,12 +104,10 @@ bool tx_sign_bip340(const uint8_t *private_key, const uint8_t *hash,
 int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
                    const HDNode *root, TxOutputType *in, TxOutputBinType *out,
                    bool needs_confirm);
-int get_script_pubkey(const CoinInfo *coin, HDNode *node, bool has_multisig,
-                      const MultisigRedeemScriptType *multisig,
-                      InputScriptType script_type, uint8_t *script_pubkey,
-                      pb_size_t *script_pubkey_size);
-int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
-                             TxInputType *in);
+bool get_script_pubkey(const CoinInfo *coin, HDNode *node, bool has_multisig,
+                       const MultisigRedeemScriptType *multisig,
+                       InputScriptType script_type, uint8_t *script_pubkey,
+                       pb_size_t *script_pubkey_size);
 
 bool tx_input_check_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input);
