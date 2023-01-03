@@ -1,9 +1,10 @@
 use core::{cmp::Ordering, convert::TryInto};
+use cstr_core::cstr;
 
 use crate::{
     error::Error,
     micropython::{
-        buffer::StrBuffer,
+        buffer::{get_buffer, StrBuffer},
         gc::Gc,
         iter::{Iter, IterBuf},
         list::List,
@@ -28,6 +29,7 @@ use crate::{
             },
             Border, Component, Empty, Timeout, TimeoutMsg,
         },
+        display::tjpgd::jpeg_info,
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -463,6 +465,37 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
         };
         Ok(obj.into())
     };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let data: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
+
+        // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
+        // in every paint pass.
+        // SAFETY: We expect no existing mutable reference. Resulting reference is
+        //         discarded before returning to micropython.
+        let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
+
+        let size = match jpeg_info(buffer_func()) {
+            Some(info) => info.0,
+            _ => return Err(Error::ValueError(cstr!("Invalid image."))),
+        };
+
+        let buttons = Button::cancel_confirm_text(None, "CONFIRM");
+        let obj = LayoutObj::new(
+            Frame::centered(
+                theme::label_title(),
+                title,
+                Dialog::new(painter::jpeg_painter(buffer_func, size, 1), buttons),
+            )
+            .with_border(theme::borders()),
+        )?;
+        Ok(obj.into())
+    };
+
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
@@ -1321,6 +1354,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+
+    /// def confirm_homescreen(
+    ///     *,
+    ///     title: str,
+    ///     image: bytes,
+    /// ) -> object:
+    ///     """Confirm homescreen."""
+    Qstr::MP_QSTR_confirm_homescreen => obj_fn_kw!(0, new_confirm_homescreen).as_obj(),
 
     /// def confirm_blob(
     ///     *,
