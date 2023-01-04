@@ -26,11 +26,11 @@ async def show_share_words(
             ctx,
             RustLayout(
                 trezorui2.show_share_words(  # type: ignore [Arguments missing for parameters "title", "pages"]
-                    share_words=share_words,  # type: ignore [No parameter named "share_words"]
+                    share_words=share_words  # type: ignore [No parameter named "share_words"]
                 )
             ),
-            br_type="backup_words",
-            br_code=ButtonRequestType.ResetDevice,
+            "backup_words",
+            ButtonRequestType.ResetDevice,
         )
 
         ready_to_check = await get_bool(
