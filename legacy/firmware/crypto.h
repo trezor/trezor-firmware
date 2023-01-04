@@ -36,6 +36,8 @@
 #define PATH_UNHARDEN_MASK 0x7fffffff
 #define PATH_MAX_ACCOUNT 100
 #define PATH_MAX_CHANGE 1
+// The maximum allowed change address.  This should be large enough for normal
+// use and still allow to quickly brute-force the correct bip32 path.
 #define PATH_MAX_ADDRESS_INDEX 1000000
 #define PATH_SLIP25_PURPOSE (PATH_HARDENED | 10025)
 

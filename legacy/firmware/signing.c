@@ -166,11 +166,6 @@ static Hasher coinjoin_request_hasher;
 /* A marker for in_address_n_count to indicate a mismatch in bip32 paths in
    input */
 #define BIP32_NOCHANGEALLOWED 1
-/* The chain id used for change */
-#define BIP32_CHANGE_CHAIN 1
-/* The maximum allowed change address.  This should be large enough for normal
-   use and still allow to quickly brute-force the correct bip32 path. */
-#define BIP32_MAX_LAST_ELEMENT 1000000
 
 /* transaction header size: 4 byte version */
 #define TXSIZE_HEADER 4
@@ -1031,8 +1026,8 @@ bool check_change_bip32_path(const TxInfo *tx_info,
   return (count >= BIP32_WALLET_DEPTH && count == tx_info->in_address_n_count &&
           0 == memcmp(tx_info->in_address_n, toutput->address_n,
                       (count - BIP32_WALLET_DEPTH) * sizeof(uint32_t)) &&
-          toutput->address_n[count - 2] <= BIP32_CHANGE_CHAIN &&
-          toutput->address_n[count - 1] <= BIP32_MAX_LAST_ELEMENT);
+          toutput->address_n[count - 2] <= PATH_MAX_CHANGE &&
+          toutput->address_n[count - 1] <= PATH_MAX_ADDRESS_INDEX);
 }
 
 static bool fill_input_script_sig(TxInputType *tinput) {
