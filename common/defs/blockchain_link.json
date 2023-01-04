@@ -267,7 +267,7 @@
   "misc:tADA": {
     "type": "blockfrost",
     "url": [
-      "wss://trezor-cardano-testnet.blockfrost.io"
+      "wss://trezor-cardano-preview.blockfrost.io"
     ]
   }
 }
