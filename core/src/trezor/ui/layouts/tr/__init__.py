@@ -439,11 +439,12 @@ async def _placeholder_confirm(
     ctx: GenericContext,
     br_type: str,
     title: str,
-    data: str,
+    data: str | None = None,
+    description: str | None = None,
+    *,
     verb: str = "CONFIRM",
     verb_cancel: str | bytes | None = "",
     hold: bool = False,
-    description: str | None = None,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Any:
     return await confirm_action(
@@ -570,11 +571,9 @@ async def confirm_reset_device(
         to_show += "\nUse you backup to recover your wallet."
 
     return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="recover_device" if recovery else "setup_device",
-        title="WALLET RECOVERY" if recovery else "WALLET BACKUP",
-        # data=f"{common_data}\n\n{special_data}",
-        data="",
+        ctx,
+        "recover_device" if recovery else "setup_device",
+        "WALLET RECOVERY" if recovery else "WALLET BACKUP",
         description=to_show,
         br_code=ButtonRequestType.ProtectCall
         if recovery
@@ -585,24 +584,24 @@ async def confirm_reset_device(
 # TODO cleanup @ redesign
 async def confirm_backup(ctx: GenericContext) -> bool:
     if await get_bool(
-        ctx=ctx,
-        title="SUCCESS",
-        data="New wallet created successfully!\nYou should back up your new wallet right now.",
+        ctx,
+        "backup_device",
+        "SUCCESS",
+        "New wallet created successfully!\nYou should back up your new wallet right now.",
         verb="BACK UP",
         verb_cancel="SKIP",
-        br_type="backup_device",
         br_code=ButtonRequestType.ResetDevice,
     ):
         return True
 
     confirmed = await get_bool(
-        ctx=ctx,
-        title="WARNING",
-        data="Are you sure you want to skip the backup?\n",
-        description="You can back up your Trezor once, at any time.",
+        ctx,
+        "backup_device",
+        "WARNING",
+        "Are you sure you want to skip the backup?\n",
+        "You can back up your Trezor once, at any time.",
         verb="BACK UP",
         verb_cancel="SKIP",
-        br_type="backup_device",
         br_code=ButtonRequestType.ResetDevice,
     )
     return confirmed
@@ -612,11 +611,10 @@ async def confirm_path_warning(
     ctx: GenericContext, path: str, path_type: str = "Path"
 ) -> None:
     return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="path_warning",
-        title="CONFIRM PATH",
-        data=f"{path_type}\n{path} is unknown.\nAre you sure?",
-        description="",
+        ctx,
+        "path_warning",
+        "CONFIRM PATH",
+        f"{path_type}\n{path} is unknown.\nAre you sure?",
         br_code=ButtonRequestType.UnknownDerivationPath,
     )
 
@@ -691,9 +689,9 @@ def show_pubkey(
 ) -> Awaitable[None]:
     return confirm_blob(
         ctx,
-        br_type="show_pubkey",
-        title=title.upper(),
-        data=pubkey,
+        "show_pubkey",
+        title.upper(),
+        pubkey,
         br_code=ButtonRequestType.PublicKey,
     )
 
@@ -701,24 +699,24 @@ def show_pubkey(
 async def _show_modal(
     ctx: GenericContext,
     br_type: str,
-    br_code: ButtonRequestType,
     header: str,
     subheader: str | None,
     content: str,
     button_confirm: str | None,
     button_cancel: str | None,
+    br_code: ButtonRequestType,
     exc: ExceptionType = ActionCancelled,
 ) -> None:
     await confirm_action(
-        ctx=ctx,
-        br_type=br_type,
-        br_code=br_code,
-        title=header.upper(),
-        action=subheader,
-        description=content,
+        ctx,
+        br_type,
+        header.upper(),
+        subheader,
+        content,
         verb=button_confirm or "",
         verb_cancel=button_cancel,
         exc=exc,
+        br_code=br_code,
     )
 
 
@@ -733,14 +731,14 @@ async def show_error_and_raise(
     exc: ExceptionType = ActionCancelled,
 ) -> NoReturn:
     await _show_modal(
-        ctx=ctx,
-        br_type=br_type,
-        br_code=BR_TYPE_OTHER,
-        header=header,
-        subheader=subheader,
-        content=content,
+        ctx,
+        br_type,
+        header,
+        subheader,
+        content,
         button_confirm=None,
         button_cancel=button,
+        br_code=BR_TYPE_OTHER,
         exc=exc,
     )
     raise exc
@@ -757,13 +755,13 @@ def show_warning(
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
-        br_type=br_type,
-        br_code=br_code,
-        header=header,
-        subheader=subheader,
-        content=content,
+        br_type,
+        header,
+        subheader,
+        content,
         button_confirm=button,
         button_cancel=None,
+        br_code=br_code,
     )
 
 
@@ -776,13 +774,13 @@ def show_success(
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
-        br_type=br_type,
-        br_code=ButtonRequestType.Success,
-        header="Success",
-        subheader=subheader,
-        content=content,
+        br_type,
+        "Success",
+        subheader,
+        content,
         button_confirm=button,
         button_cancel=None,
+        br_code=ButtonRequestType.Success,
     )
 
 
@@ -834,11 +832,10 @@ async def confirm_payment_request(
 ) -> Any:
     memos_str = "\n".join(memos)
     return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="confirm_payment_request",
-        title="CONFIRM SENDING",
-        data=f"{amount} to\n{recipient_name}\n{memos_str}",
-        description="",
+        ctx,
+        "confirm_payment_request",
+        "CONFIRM SENDING",
+        f"{amount} to\n{recipient_name}\n{memos_str}",
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
@@ -1025,11 +1022,10 @@ async def confirm_joint_total(
     ctx: GenericContext, spending_amount: str, total_amount: str
 ) -> None:
     await _placeholder_confirm(
-        ctx=ctx,
-        br_type="confirm_joint_total",
-        title="JOINT TRANSACTION",
-        data=f"You are contributing:\n{spending_amount}\nto the total amount:\n{total_amount}",
-        description="",
+        ctx,
+        "confirm_joint_total",
+        "JOINT TRANSACTION",
+        f"You are contributing:\n{spending_amount}\nto the total amount:\n{total_amount}",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1044,10 +1040,10 @@ async def confirm_metadata(
     hold: bool = False,
 ) -> None:
     await _placeholder_confirm(
-        ctx=ctx,
-        br_type=br_type,
-        title=title.upper(),
-        data=content.format(param),
+        ctx,
+        br_type,
+        title.upper(),
+        content.format(param),
         hold=hold,
         br_code=br_code,
     )
@@ -1055,10 +1051,10 @@ async def confirm_metadata(
 
 async def confirm_replacement(ctx: GenericContext, description: str, txid: str) -> None:
     await _placeholder_confirm(
-        ctx=ctx,
-        br_type="confirm_replacement",
-        title=description.upper(),
-        data=f"Confirm transaction ID:\n{txid}",
+        ctx,
+        "confirm_replacement",
+        description.upper(),
+        f"Confirm transaction ID:\n{txid}",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1078,10 +1074,10 @@ async def confirm_modify_output(
     text += f"New amount:\n{amount_new}"
 
     await _placeholder_confirm(
-        ctx=ctx,
-        br_type="modify_output",
-        title="MODIFY AMOUNT",
-        data=text,
+        ctx,
+        "modify_output",
+        "MODIFY AMOUNT",
+        text,
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
@@ -1107,10 +1103,10 @@ async def confirm_modify_fee(
         text += "\n" + fee_rate_amount
 
     await _placeholder_confirm(
-        ctx=ctx,
-        br_type="modify_fee",
-        title="MODIFY FEE",
-        data=text,
+        ctx,
+        "modify_fee",
+        "MODIFY FEE",
+        text,
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1119,10 +1115,10 @@ async def confirm_coinjoin(
     ctx: GenericContext, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
     await _placeholder_confirm(
-        ctx=ctx,
-        br_type="coinjoin_final",
-        title="AUTHORIZE COINJOIN",
-        data=f"Maximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte}",
+        ctx,
+        "coinjoin_final",
+        "AUTHORIZE COINJOIN",
+        f"Maximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte}",
         br_code=BR_TYPE_OTHER,
     )
 
@@ -1141,10 +1137,10 @@ async def confirm_sign_identity(
     text += identity
 
     await _placeholder_confirm(
-        ctx=ctx,
-        br_type="confirm_sign_identity",
-        title=f"Sign {proto}".upper(),
-        data=text,
+        ctx,
+        "confirm_sign_identity",
+        f"Sign {proto}".upper(),
+        text,
         br_code=BR_TYPE_OTHER,
     )
 
@@ -1168,10 +1164,10 @@ async def confirm_signverify(
     )
 
     await _placeholder_confirm(
-        ctx=ctx,
-        br_type=br_type,
-        title=header.upper(),
-        data=f"Confirm message:\n{message}",
+        ctx,
+        br_type,
+        header.upper(),
+        f"Confirm message:\n{message}",
         br_code=BR_TYPE_OTHER,
     )
 
@@ -1265,7 +1261,7 @@ async def confirm_reenter_pin(
         ctx,
         br_type,
         "CHECK PIN",
-        action="Please re-enter to confirm.",
+        "Please re-enter to confirm.",
         verb="BEGIN",
         br_code=br_code,
     )
@@ -1280,7 +1276,7 @@ async def pin_mismatch(
         ctx,
         br_type,
         "PIN MISMATCH",
-        action="The PINs you entered do not match.\nPlease try again.",
+        "The PINs you entered do not match.\nPlease try again.",
         verb="TRY AGAIN",
         verb_cancel=None,
         br_code=br_code,
@@ -1299,7 +1295,7 @@ async def confirm_pin_action(
         ctx,
         br_type,
         title,
-        action=f"{description} {action}",
+        f"{description} {action}",
         br_code=br_code,
     )
 
