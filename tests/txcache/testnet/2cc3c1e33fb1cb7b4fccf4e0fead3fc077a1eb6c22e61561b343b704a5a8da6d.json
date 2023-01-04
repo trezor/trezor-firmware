@@ -1,0 +1,20 @@
+{
+  "bin_outputs": [
+    {
+      "amount": 1393,
+      "script_pubkey": "001435b1e893609de6ffdf298bc04a0c8067d3849e20"
+    }
+  ],
+  "inputs": [
+    {
+      "coinjoin_flags": 0,
+      "prev_hash": "49b5aaaaa017a75876b0726cc35c2e353b9f38742682c18434a467d76fb9e3d0",
+      "prev_index": 0,
+      "script_sig": "",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967293
+    }
+  ],
+  "lock_time": 0,
+  "version": 1
+}

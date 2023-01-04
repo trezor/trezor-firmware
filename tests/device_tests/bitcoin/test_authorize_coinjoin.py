@@ -25,7 +25,13 @@ from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
 from .payment_req import make_coinjoin_request
-from .signtx import request_finished, request_input, request_output
+from .signtx import (
+    assert_tx_matches,
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+)
 
 B = messages.ButtonRequestType
 
@@ -37,6 +43,12 @@ FAKE_TXHASH_e5b7e2 = bytes.fromhex(
 )
 FAKE_TXHASH_f982c0 = bytes.fromhex(
     "f982c0a283bd65a59aa89eded9e48f2a3319cb80361dfab4cf6192a03badb60a"
+)
+TXHASH_2cc3c1 = bytes.fromhex(
+    "2cc3c1e33fb1cb7b4fccf4e0fead3fc077a1eb6c22e61561b343b704a5a8da6d"
+)
+TXHASH_7f3a34 = bytes.fromhex(
+    "7f3a348106f9f3688069f389c00842b18d26770ec9a96ea94bf21623433a0f72"
 )
 
 PIN = "1234"
@@ -469,6 +481,94 @@ def test_sign_tx_spend(client: Client):
     assert (
         serialized_tx.hex()
         == "010000000001010ab6ad3ba09261cfb4fa1d3680cb19332a8fe4d9de9ea89aa565bd83a2c082f90100000000ffffffff02c8736e0000000000225120c5c7c63798b59dc16e97d916011e99da5799d1b3dd81c2f2e93392477417e71e50c30000000000001976a914a579388225827d9f2fe9014add644487808c695d88ac014006bc29900d39570fca291c038551817430965ac6aa26f286483559e692a14a82cfaf8e57610eae12a5af05ee1e9600acb31de4757349c0e3066701aa78f65d2a00000000"
+    )
+
+
+def test_sign_tx_migration(client: Client):
+    inputs = [
+        messages.TxInputType(
+            address_n=parse_path("m/84h/1h/3h/0/12"),
+            amount=1_393,
+            prev_hash=TXHASH_2cc3c1,
+            prev_index=0,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            sequence=0xFFFFFFFD,
+        ),
+        messages.TxInputType(
+            address_n=parse_path("m/84h/1h/3h/0/13"),
+            amount=8_159,
+            prev_hash=TXHASH_7f3a34,
+            prev_index=1,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            sequence=0xFFFFFFFD,
+        ),
+    ]
+
+    outputs = [
+        # CoinJoin account.
+        messages.TxOutputType(
+            # tb1pl3y9gf7xk2ryvmav5ar66ra0d2hk7lhh9mmusx3qvn0n09kmaghqh32ru7
+            address_n=parse_path("m/10025h/1h/0h/1h/0/0"),
+            amount=1_393 + 8_159 - 190,
+            script_type=messages.OutputScriptType.PAYTOTAPROOT,
+        ),
+    ]
+
+    # Ensure that Trezor refuses to receive to CoinJoin path without the user first authorizing access to CoinJoin paths.
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TX_CACHE_TESTNET,
+        )
+
+    with client:
+        tt = client.features.model == "T"
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=B.Other),
+                messages.UnlockedPathRequest(),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
+                messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
+                request_input(0),
+                request_meta(TXHASH_2cc3c1),
+                request_input(0, TXHASH_2cc3c1),
+                request_output(0, TXHASH_2cc3c1),
+                request_input(1),
+                request_meta(TXHASH_7f3a34),
+                request_input(0, TXHASH_7f3a34),
+                request_input(1, TXHASH_7f3a34),
+                request_input(2, TXHASH_7f3a34),
+                request_output(0, TXHASH_7f3a34),
+                request_output(1, TXHASH_7f3a34),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_input(0),
+                request_input(1),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TX_CACHE_TESTNET,
+            unlock_path=SLIP25_PATH,
+        )
+
+    assert_tx_matches(
+        serialized_tx,
+        hash_link="https://tbtc1.trezor.io/api/tx/3452d339045f8a35f2a083992b8f73d907f8da9653e89ee175022ca8a649b822",
+        tx_hex="010000000001026ddaa8a504b743b36115e6226ceba177c03fadfee0f4cc4f7bcbb13fe3c1c32c0000000000fdffffff720f3a432316f24ba96ea9c90e77268db14208c089f3698068f3f90681343a7f0100000000fdffffff019224000000000000225120fc485427c6b286466faca747ad0faf6aaf6f7ef72ef7c81a2064df3796dbea2e0247304402202f325d6e3ac764bb9d38003bb11022c5317a59ad8a2513dcabe7af9b23ff7c9f022011ff8161d9ed8cf82667b2b44dbe2f4538d41d8b353d64a01338881bce8de3690121030968050bc0647e28c09616d642cc88ab075b01e40616b53e446e7f122218a9da02483045022100f462c32fd90bf92a1aa4ca9fdb2dd9b5ef9adad6990b9bc7f9ca583e8b72d72a02202a6d9c2a8749d65bdb62a0ec4de27bad5fb13e2ae40be86afb95a477b60a1609012103e4dbaaee8486b328dba46adeb9afc3a56237aa5ca43df24eb61b04e6ca00099300000000",
     )
 
 
