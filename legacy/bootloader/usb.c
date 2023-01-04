@@ -412,12 +412,20 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if (flash_state == STATE_CHECK) {
     // use the firmware header from RAM
-    const image_header *hdr = (const image_header *)FW_HEADER;
+    image_header *hdr = (image_header *)FW_HEADER;
 
     bool hash_check_ok;
     // show fingerprint of unsigned firmware
     // allow only v3 signmessage/verifymessage signatures
     if (SIG_OK != signatures_ok(hdr, NULL, sectrue)) {
+      // clear invalid signatures
+      hdr->sigindex1 = 0;
+      hdr->sigindex2 = 0;
+      hdr->sigindex3 = 0;
+      memset(hdr->sig1, 0, sizeof(hdr->sig1));
+      memset(hdr->sig2, 0, sizeof(hdr->sig2));
+      memset(hdr->sig3, 0, sizeof(hdr->sig3));
+
       if (msg_id != 0x001B) {  // ButtonAck message (id 27)
         return;
       }

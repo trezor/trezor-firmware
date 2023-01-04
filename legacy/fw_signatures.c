@@ -191,9 +191,10 @@ int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
     return SIG_FAIL;  // invalid index
   if (hdr->sigindex2 < 1 || hdr->sigindex2 > pubkeys)
     return SIG_FAIL;  // invalid index
-  if (use_verifymessage != sectrue &&
-      (hdr->sigindex3 < 1 || hdr->sigindex3 > pubkeys)) {
-    return SIG_FAIL;  // invalid index
+  if (use_verifymessage != sectrue) {
+    if (hdr->sigindex3 < 1 || hdr->sigindex3 > pubkeys) {
+      return SIG_FAIL;  // invalid index
+    }
   } else if (hdr->sigindex3 != 0) {
     return SIG_FAIL;
   }
@@ -210,10 +211,12 @@ int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
                                hdr->sig2, hash)) {  // failure
     return SIG_FAIL;
   }
-  if (use_verifymessage != sectrue &&
-      (0 != ecdsa_verify_digest(&secp256k1, pubkey_ptr[hdr->sigindex3 - 1],
-                                hdr->sig3, hash))) {  // failure
-    return SIG_FAIL;
+  if (use_verifymessage != sectrue) {
+    if (0 != ecdsa_verify_digest(&secp256k1, pubkey_ptr[hdr->sigindex3 - 1],
+                                 hdr->sig3, hash))  // failure
+    {
+      return SIG_FAIL;
+    }
   } else {
     for (unsigned int i = 0; i < sizeof(hdr->sig3); i++) {
       if (hdr->sig3[i] != 0) {
