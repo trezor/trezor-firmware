@@ -1,6 +1,7 @@
 use crate::ui::{
     component::text::TextStyle,
     display::{Color, Font, IconAndName},
+    geometry::Offset,
 };
 
 // Color palette.
@@ -33,6 +34,10 @@ pub const ICON_ARROW_LEFT: IconAndName =
     IconAndName::new(include_res!("model_tr/res/arrow_left.toif"), "arrow_left"); // 6*10
 pub const ICON_ARROW_RIGHT: IconAndName =
     IconAndName::new(include_res!("model_tr/res/arrow_right.toif"), "arrow_right"); // 6*10
+pub const ICON_ARROW_RIGHT_FAT: IconAndName = IconAndName::new(
+    include_res!("model_tr/res/arrow_right_fat.toif"),
+    "arrow_right_fat",
+); // 4*8
 pub const ICON_ARROW_UP: IconAndName =
     IconAndName::new(include_res!("model_tr/res/arrow_up.toif"), "arrow_up"); // 10*6
 pub const ICON_ARROW_DOWN: IconAndName =
@@ -54,8 +59,15 @@ pub const ICON_PREV_PAGE: IconAndName =
 pub const ICON_SUCCESS: IconAndName =
     IconAndName::new(include_res!("model_tr/res/success.toif"), "success");
 pub const ICON_TICK: IconAndName = IconAndName::new(include_res!("model_tr/res/tick.toif"), "tick"); // 10*10
+pub const ICON_TICK_FAT: IconAndName =
+    IconAndName::new(include_res!("model_tr/res/tick_fat.toif"), "tick_fat"); // 8*6
 pub const ICON_WARNING: IconAndName =
     IconAndName::new(include_res!("model_tr/res/warning.toif"), "warning"); // 12*12
+
+// checklist settings
+pub const CHECKLIST_SPACING: i16 = 5;
+pub const CHECKLIST_CHECK_WIDTH: i16 = 12;
+pub const CHECKLIST_CURRENT_OFFSET: Offset = Offset::x(3);
 
 // Button height is constant for both text and icon buttons.
 // It is a combination of content and (optional) outline/border.
