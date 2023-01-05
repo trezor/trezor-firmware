@@ -44,16 +44,19 @@ PATTERNS_ADDRESS = (
     paths.PATTERN_BIP44,
     paths.PATTERN_SEP5,
     paths.PATTERN_SEP5_LEDGER_LIVE_LEGACY,
+    paths.PATTERN_CASA,
 )
 
 
 def _schemas_from_address_n(
     patterns: Iterable[str], address_n: paths.Bip32Path
 ) -> Iterable[paths.PathSchema]:
-    if len(address_n) < 2:
-        return ()
+    # Casa paths (purpose of 45) do not have hardened coin types
+    if address_n[0] == 45 | paths.HARDENED and not address_n[1] & paths.HARDENED:
+        slip44_hardened = address_n[1] | paths.HARDENED
+    else:
+        slip44_hardened = address_n[1]
 
-    slip44_hardened = address_n[1]
     if slip44_hardened not in networks.all_slip44_ids_hardened():
         return ()
 
