@@ -1,4 +1,4 @@
-use core::convert::TryInto;
+use core::{cmp::Ordering, convert::TryInto};
 
 use heapless::Vec;
 
@@ -20,7 +20,8 @@ use crate::{
             base::Component,
             paginated::{PageMsg, Paginate},
             text::paragraphs::{
-                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
+                Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
+                Paragraphs, VecExt,
             },
             ComponentExt, Empty, Timeout, TimeoutMsg,
         },
@@ -38,8 +39,8 @@ use super::{
     component::{
         Bip39Entry, Bip39EntryMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
         FlowMsg, FlowPages, Frame, Homescreen, HomescreenMsg, Lockscreen, NoBtnDialog,
-        NoBtnDialogMsg, Page, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress,
-        ShareWords, SimpleChoice, SimpleChoiceMsg,
+        NoBtnDialogMsg, NumberInput, NumberInputMsg, Page, PassphraseEntry, PassphraseEntryMsg,
+        PinEntry, PinEntryMsg, Progress, ShareWords, SimpleChoice, SimpleChoiceMsg,
     },
     constant, theme,
 };
@@ -95,7 +96,7 @@ where
         match msg {
             FlowMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             FlowMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            FlowMsg::ConfirmedIndex(page) => Ok(page.into()),
+            FlowMsg::ConfirmedIndex(index) => Ok(index.into()),
         }
     }
 }
@@ -109,10 +110,19 @@ impl ComponentMsgObj for PinEntry {
     }
 }
 
+impl ComponentMsgObj for NumberInput {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            NumberInputMsg::Number(choice) => choice.try_into(),
+        }
+    }
+}
+
 impl<const N: usize> ComponentMsgObj for SimpleChoice<N> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             SimpleChoiceMsg::Result(choice) => choice.as_str().try_into(),
+            SimpleChoiceMsg::Index(index) => Ok(index.into()),
         }
     }
 }
@@ -638,16 +648,77 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let min_count: u32 = kwargs.get(Qstr::MP_QSTR_min_count)?.try_into()?;
+        let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
+        let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
+
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            NumberInput::new(min_count, max_count, count),
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let _title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let mut iter_buf = IterBuf::new();
+        let mut paragraphs = ParagraphVecLong::new();
+        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
+        for (i, item) in iter.enumerate() {
+            let style = match i.cmp(&active) {
+                Ordering::Less => &theme::TEXT_MONO,
+                Ordering::Equal => &theme::TEXT_BOLD,
+                Ordering::Greater => &theme::TEXT_MONO,
+            };
+            let text: StrBuffer = item.try_into()?;
+            paragraphs.add(Paragraph::new(style, text));
+        }
+
+        let confirm_btn = Some(ButtonDetails::text(button));
+
+        let obj = LayoutObj::new(
+            ButtonPage::new(
+                Checklist::from_paragraphs(
+                    theme::ICON_ARROW_RIGHT_FAT.0,
+                    theme::ICON_TICK_FAT.0,
+                    active,
+                    paragraphs
+                        .into_paragraphs()
+                        .with_spacing(theme::CHECKLIST_SPACING),
+                )
+                .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
+                .with_current_offset(theme::CHECKLIST_CURRENT_OFFSET),
+                theme::BG,
+            )
+            .with_confirm_btn(confirm_btn),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
-        let share_words: Vec<StrBuffer, 24> = iter_into_vec(share_words_obj)?;
+        let share_words: Vec<StrBuffer, 33> = iter_into_vec(share_words_obj)?;
 
         let confirm_btn =
             Some(ButtonDetails::text("HOLD TO CONFIRM".into()).with_default_duration());
 
         let obj = LayoutObj::new(
-            ButtonPage::new(ShareWords::new(share_words), theme::BG).with_confirm_btn(confirm_btn),
+            ButtonPage::new(ShareWords::new(title, share_words), theme::BG)
+                .with_confirm_btn(confirm_btn),
         )?;
         Ok(obj.into())
     };
@@ -660,9 +731,15 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let words: Vec<StrBuffer, 3> = iter_into_vec(words_iterable)?;
 
-        // TODO: should return int, to be consistent with TT's select_word
+        // Returning the index of the selected word, not the word itself
         let obj = LayoutObj::new(
-            Frame::new(title, SimpleChoice::new(words, true, true)).with_title_center(true),
+            Frame::new(
+                title,
+                SimpleChoice::new(words, false)
+                    .with_only_one_item()
+                    .with_return_index(),
+            )
+            .with_title_center(true),
         )?;
         Ok(obj.into())
     };
@@ -674,17 +751,18 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
         let _dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
         let title = "NUMBER OF WORDS".into();
 
-        let choices: Vec<StrBuffer, 3> = ["12".into(), "18".into(), "24".into()]
+        let choices: Vec<StrBuffer, 5> = ["12", "18", "20", "24", "33"]
+            .map(|num| num.into())
             .into_iter()
             .collect();
 
-        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(choices, false, false)))?;
+        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(choices, false)))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
@@ -894,8 +972,30 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
 
+    /// def request_number(
+    ///     *,
+    ///     title: str,
+    ///     count: int,
+    ///     min_count: int,
+    ///     max_count: int,
+    /// ) -> object:
+    ///    """Number input with + and - buttons, description, and info button."""
+    Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
+
+    /// def show_checklist(
+    ///     *,
+    ///     title: str,
+    ///     items: Iterable[str],
+    ///     active: int,
+    ///     button: str,
+    /// ) -> object:
+    ///    """Checklist of backup steps. Active index is highlighted, previous items have check
+    ///    mark next to them."""
+    Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
+
     /// def show_share_words(
     ///     *,
+    ///     title: str,
     ///     share_words: Iterable[str],
     /// ) -> None:
     ///     """Shows a backup seed."""
@@ -905,23 +1005,24 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     words: Iterable[str],
-    /// ) -> str:  # TODO: should return int, to be consistent with TT's select_word
-    ///    """Select a word from a list."""
+    /// ) -> int:
+    ///    """Select mnemonic word from three possibilities - seed check after backup. The
+    ///    iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
 
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,
     /// ) -> str:  # TODO: make it return int
-    ///     """Get word count for recovery."""
+    ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
-    /// def request_word_bip39(
+    /// def request_bip39(
     ///     *,
     ///     prompt: str,
     /// ) -> str:
     ///     """Get recovery word for BIP39."""
-    Qstr::MP_QSTR_request_word_bip39 => obj_fn_kw!(0, new_request_word_bip39).as_obj(),
+    Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
 
     /// def request_passphrase(
     ///     *,

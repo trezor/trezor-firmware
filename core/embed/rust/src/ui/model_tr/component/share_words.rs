@@ -22,25 +22,31 @@ const WORD_FONT: Font = Font::NORMAL;
 /// Showing the given share words.
 pub struct ShareWords<const N: usize> {
     area: Rect,
+    title: StrBuffer,
     share_words: Vec<StrBuffer, N>,
     page_index: usize,
 }
 
 impl<const N: usize> ShareWords<N> {
-    pub fn new(share_words: Vec<StrBuffer, N>) -> Self {
+    pub fn new(title: StrBuffer, share_words: Vec<StrBuffer, N>) -> Self {
         Self {
             area: Rect::zero(),
+            title,
             share_words,
             page_index: 0,
         }
     }
 
     fn word_index(&self) -> usize {
-        (self.page_index - 1) * WORDS_PER_PAGE
+        (self.page_index - 2) * WORDS_PER_PAGE
     }
 
     fn is_entry_page(&self) -> bool {
         self.page_index == 0
+    }
+
+    fn is_second_page(&self) -> bool {
+        self.page_index == 1
     }
 
     fn is_final_page(&self) -> bool {
@@ -53,31 +59,44 @@ impl<const N: usize> ShareWords<N> {
         } else {
             self.share_words.len() / WORDS_PER_PAGE + 1
         };
-        // One page before the words, one after it
-        1 + word_screens + 1
+        // Two pages before the words, one after it
+        2 + word_screens + 1
     }
 
     /// Display the first page with user information.
     fn render_entry_page(&self) {
-        // TODO: will it be always 12, or do we need to check the length?
-        // It would need creating a String out of it, which is not ideal.
-        let free_area = text_multiline(
-            self.area,
-            "Write all 12\nwords in order on\nrecovery seed card",
+        display(
+            self.area
+                .top_left()
+                .ofs(Offset::y(Font::BOLD.line_height())),
+            &self.title,
+            Font::BOLD,
+        );
+
+        text_multiline(
+            self.area.split_top(15).1,
+            &build_string!(
+                50,
+                "Write all ",
+                inttostr!(self.share_words.len() as u8),
+                "\nwords in order on\nrecovery seed card"
+            ),
             Font::BOLD,
             theme::FG,
             theme::BG,
         );
-        if let Some(free_area) = free_area {
-            // Creating a small vertical distance
-            text_multiline(
-                free_area.split_top(3).1,
-                "Do NOT make\ndigital copies!",
-                Font::MONO,
-                theme::FG,
-                theme::BG,
-            );
-        }
+    }
+
+    /// Display the second page with user information.
+    fn render_second_page(&self) {
+        // Creating a small vertical distance to make it centered
+        text_multiline(
+            self.area.split_top(15).1,
+            "Do NOT make\ndigital copies!",
+            Font::MONO,
+            theme::FG,
+            theme::BG,
+        );
     }
 
     /// Display the final page with user confirmation.
@@ -86,7 +105,12 @@ impl<const N: usize> ShareWords<N> {
         // and to look better.
         text_multiline(
             self.area.split_top(12).1,
-            "I wrote down all\n12 words in order.",
+            &build_string!(
+                50,
+                "I wrote down all\n",
+                inttostr!(self.share_words.len() as u8),
+                " words in order."
+            ),
             Font::MONO,
             theme::FG,
             theme::BG,
@@ -100,6 +124,9 @@ impl<const N: usize> ShareWords<N> {
         for i in 0..WORDS_PER_PAGE {
             y_offset += NUMBER_FONT.line_height() + EXTRA_LINE_HEIGHT;
             let index = self.word_index() + i;
+            if index >= self.share_words.len() {
+                break;
+            }
             let word = self.share_words[index];
             let baseline = self.area.top_left() + Offset::new(NUMBER_X_OFFSET, y_offset);
             display(baseline, &inttostr!(index as u8 + 1), NUMBER_FONT);
@@ -123,6 +150,8 @@ impl<const N: usize> Component for ShareWords<N> {
     fn paint(&mut self) {
         if self.is_entry_page() {
             self.render_entry_page();
+        } else if self.is_second_page() {
+            self.render_second_page();
         } else if self.is_final_page() {
             self.render_final_page();
         } else {
@@ -156,6 +185,9 @@ impl<const N: usize> crate::trace::Trace for ShareWords<N> {
         } else {
             for i in 0..WORDS_PER_PAGE {
                 let index = self.word_index() + i;
+                if index >= self.share_words.len() {
+                    break;
+                }
                 let word = self.share_words[index];
                 let content = build_string!(20, inttostr!(index as u8 + 1), " ", &word, "\n");
                 t.string(&content);
