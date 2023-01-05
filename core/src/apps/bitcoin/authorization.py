@@ -56,7 +56,11 @@ class CoinJoinAuthorization:
             return False
 
         params.max_rounds -= 1
-        authorization.set(params)
+        if params.max_rounds >= 1:
+            authorization.set(params)
+        else:
+            authorization.clear()
+
         return True
 
 
