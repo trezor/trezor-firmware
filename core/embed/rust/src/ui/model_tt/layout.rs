@@ -1054,7 +1054,10 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
                         paragraphs
                             .into_paragraphs()
                             .with_spacing(theme::CHECKLIST_SPACING),
-                    ),
+                    )
+                    .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
+                    .with_current_offset(theme::CHECKLIST_CURRENT_OFFSET)
+                    .with_done_offset(theme::CHECKLIST_DONE_OFFSET),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -1533,7 +1536,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     /// ) -> object:
     ///    """Checklist of backup steps. Active index is highlighted, previous items have check
-    ///    mark nex to them."""
+    ///    mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
     /// def confirm_recovery(

@@ -11,6 +11,7 @@ use heapless::{String, Vec};
 
 pub enum SimpleChoiceMsg {
     Result(String<50>),
+    Index(u8),
 }
 
 struct ChoiceFactorySimple<const N: usize> {
@@ -55,17 +56,28 @@ impl<const N: usize> ChoiceFactory for ChoiceFactorySimple<N> {
 pub struct SimpleChoice<const N: usize> {
     choices: Vec<StrBuffer, N>,
     choice_page: ChoicePage<ChoiceFactorySimple<N>>,
+    return_index: bool,
 }
 
 impl<const N: usize> SimpleChoice<N> {
-    pub fn new(str_choices: Vec<StrBuffer, N>, carousel: bool, show_incomplete: bool) -> Self {
+    pub fn new(str_choices: Vec<StrBuffer, N>, carousel: bool) -> Self {
         let choices = ChoiceFactorySimple::new(str_choices.clone(), carousel);
         Self {
             choices: str_choices,
-            choice_page: ChoicePage::new(choices)
-                .with_carousel(carousel)
-                .with_incomplete(show_incomplete),
+            choice_page: ChoicePage::new(choices).with_carousel(carousel),
+            return_index: false,
         }
+    }
+
+    /// Show only the currently selected item, nothing left/right.
+    pub fn with_only_one_item(mut self) -> Self {
+        self.choice_page = self.choice_page.with_only_one_item(true);
+        self
+    }
+
+    pub fn with_return_index(mut self) -> Self {
+        self.return_index = true;
+        self
     }
 }
 
@@ -80,8 +92,12 @@ impl<const N: usize> Component for SimpleChoice<N> {
         let msg = self.choice_page.event(ctx, event);
         match msg {
             Some(ChoicePageMsg::Choice(page_counter)) => {
-                let result = String::from(self.choices[page_counter as usize].as_ref());
-                Some(SimpleChoiceMsg::Result(result))
+                if self.return_index {
+                    Some(SimpleChoiceMsg::Index(page_counter))
+                } else {
+                    let result = String::from(self.choices[page_counter as usize].as_ref());
+                    Some(SimpleChoiceMsg::Result(result))
+                }
             }
             _ => None,
         }

@@ -108,6 +108,18 @@ def request_pin(
 
 
 # rust/src/ui/model_tr/layout.rs
+def show_checklist(
+    *,
+    title: str,
+    items: Iterable[str],
+    active: int,
+    button: str,
+) -> object:
+   """Checklist of backup steps. Active index is highlighted, previous items have check
+   mark next to them."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def show_share_words(
     *,
     share_words: Iterable[str],
@@ -129,11 +141,11 @@ def select_word_count(
     *,
     dry_run: bool,
 ) -> str:  # TODO: make it return int
-    """Get word count for recovery."""
+   """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
 
 # rust/src/ui/model_tr/layout.rs
-def request_word_bip39(
+def request_bip39(
     *,
     prompt: str,
 ) -> str:
@@ -483,7 +495,7 @@ def show_checklist(
     button: str,
 ) -> object:
    """Checklist of backup steps. Active index is highlighted, previous items have check
-   mark nex to them."""
+   mark next to them."""
 
 
 # rust/src/ui/model_tt/layout.rs

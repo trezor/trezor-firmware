@@ -36,6 +36,7 @@ pub use input_methods::{
     bip39::{Bip39Entry, Bip39EntryMsg},
     choice::{Choice, ChoiceFactory, ChoicePage, ChoicePageMsg},
     choice_item::ChoiceItem,
+    number_input::{NumberInput, NumberInputMsg},
     passphrase::{PassphraseEntry, PassphraseEntryMsg},
     pin::{PinEntry, PinEntryMsg},
     simple_choice::{SimpleChoice, SimpleChoiceMsg},

@@ -743,7 +743,6 @@ def show_warning(
     ctx: GenericContext,
     br_type: str,
     content: str,
-    header: str = "Warning",
     subheader: str | None = None,
     button: str = "Try again",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
@@ -751,8 +750,8 @@ def show_warning(
     return _show_modal(
         ctx,
         br_type,
-        header,
-        subheader,
+        "",
+        subheader or "Warning",
         content,
         button_confirm=button,
         button_cancel=None,

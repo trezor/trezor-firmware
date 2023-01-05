@@ -34,7 +34,7 @@ async def request_word(
     else:
         word = await interact(
             ctx,
-            RustLayout(trezorui2.request_word_bip39(prompt=prompt)),
+            RustLayout(trezorui2.request_bip39(prompt=prompt)),
             "request_word",
             ButtonRequestType.MnemonicInput,
         )
