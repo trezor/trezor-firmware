@@ -250,7 +250,7 @@ def test_sign_tx(client: Client):
     )
 
     # Test for a third time, number of rounds should be exceeded.
-    with pytest.raises(TrezorFailure, match="Exceeded number of coinjoin rounds"):
+    with pytest.raises(TrezorFailure, match="No preauthorized operation"):
         btc.sign_tx(
             client,
             "Testnet",
