@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from trezor.messages import AuthorizeCoinJoin, SignMessage
 
-from apps.common.paths import PATTERN_BIP44, PathSchema
+from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema
 
 from . import authorization
 from .common import BITCOIN_NAMES
@@ -74,7 +74,7 @@ PATTERN_GREENADDRESS_B = "m/3'/[1-100]'/[1,4]/address_index"
 PATTERN_GREENADDRESS_SIGN_A = "m/1195487518"
 PATTERN_GREENADDRESS_SIGN_B = "m/1195487518/6/address_index"
 
-PATTERN_CASA = "m/49/coin_type/account/change/address_index"
+PATTERN_CASA_UNHARDENED = "m/49/coin_type/account/change/address_index"
 
 PATTERN_UNCHAINED_HARDENED = (
     "m/45'/coin_type'/account'/[0-1000000]/change/address_index"
@@ -141,13 +141,14 @@ def validate_path_against_script_type(
 
     elif coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
         append(PATTERN_BIP49)
+        append(PATTERN_CASA)
         if multisig:
             append(PATTERN_BIP48_P2SHSEGWIT)
         if slip44 == _SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
-            append(PATTERN_CASA)
+            append(PATTERN_CASA_UNHARDENED)
 
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
         append(PATTERN_BIP84)
@@ -178,6 +179,7 @@ def _get_schemas_for_coin(
     patterns = [
         PATTERN_BIP44,
         PATTERN_BIP48_RAW,
+        PATTERN_CASA,
     ]
 
     # patterns without coin_type field must be treated as if coin_type == 0
@@ -201,7 +203,7 @@ def _get_schemas_for_coin(
     if coin.coin_name in BITCOIN_NAMES:
         patterns.extend(
             (
-                PATTERN_CASA,
+                PATTERN_CASA_UNHARDENED,
                 PATTERN_UNCHAINED_HARDENED,
                 PATTERN_UNCHAINED_UNHARDENED,
                 PATTERN_UNCHAINED_DEPRECATED,

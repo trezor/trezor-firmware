@@ -16,6 +16,16 @@
         },
         {
             "parameters": {
+                "msg": "This is an example of a signed message at a different path.",
+                "path": "m/45'/60/2/1/1"
+            },
+            "result": {
+                "address": "0x4C28fB5643a2F9B03736103188845C5B50300242",
+                "sig": "0x10cb53ab88112fa0a915ab3e477843ab534ba1a1caeb70747373a86cba69ca6c5f70367d8f9023e1d7cd9fe34279dd9266dd26d7390acbfdea777c4c436de4df1c"
+            }
+        },
+        {
+            "parameters": {
                 "msg": "VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!",
                 "path": "m/44'/60'/0'/0/0"
             },
