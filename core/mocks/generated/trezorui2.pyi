@@ -109,6 +109,17 @@ def request_pin(
 
 
 # rust/src/ui/model_tr/layout.rs
+def request_number(
+    *,
+    title: str,
+    count: int,
+    min_count: int,
+    max_count: int,
+) -> object:
+   """Number input with + and - buttons, description, and info button."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def show_checklist(
     *,
     title: str,
@@ -123,6 +134,7 @@ def show_checklist(
 # rust/src/ui/model_tr/layout.rs
 def show_share_words(
     *,
+    title: str,
     share_words: Iterable[str],
 ) -> None:
     """Shows a backup seed."""
@@ -133,8 +145,9 @@ def select_word(
     *,
     title: str,
     words: Iterable[str],
-) -> str:  # TODO: should return int, to be consistent with TT's select_word
-   """Select a word from a list."""
+) -> int:
+   """Select mnemonic word from three possibilities - seed check after backup. The
+   iterable must be of exact size. Returns index in range `0..3`."""
 
 
 # rust/src/ui/model_tr/layout.rs

@@ -180,6 +180,8 @@ impl<const N: usize> crate::trace::Trace for ShareWords<N> {
         t.content_flag();
         if self.is_entry_page() {
             t.string("entry page");
+        } else if self.is_second_page() {
+            t.string("second page");
         } else if self.is_final_page() {
             t.string("final page");
         } else {
