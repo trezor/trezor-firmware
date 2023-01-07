@@ -14,6 +14,7 @@ pub mod rgb_led;
 pub mod slip39;
 pub mod storage;
 pub mod uzlib;
+pub mod wordlist;
 
 pub mod buffers;
 #[cfg(not(feature = "micropython"))]

@@ -5,7 +5,7 @@ from trezor.enums import ButtonRequestType
 import trezorui2
 
 from ..common import button_request, interact
-from . import RustLayout, get_bool
+from . import RustLayout, confirm_action, get_bool
 
 if TYPE_CHECKING:
     from trezor import wire
@@ -20,7 +20,7 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
         "word_count",
         ButtonRequestType.MnemonicWordCount,
     )
-    # It can be returning a string
+    # It can be returning a string (for example for __debug__ in tests)
     return int(count)
 
 
@@ -30,15 +30,11 @@ async def request_word(
     prompt = f"WORD {word_index + 1} OF {word_count}"
 
     if is_slip39:
-        raise NotImplementedError
+        word_choice = RustLayout(trezorui2.request_slip39(prompt=prompt))
     else:
-        word = await interact(
-            ctx,
-            RustLayout(trezorui2.request_bip39(prompt=prompt)),
-            "request_word",
-            ButtonRequestType.MnemonicInput,
-        )
+        word_choice = RustLayout(trezorui2.request_bip39(prompt=prompt))
 
+    word: str = await ctx.wait(word_choice)
     return word
 
 
@@ -54,7 +50,14 @@ async def show_remaining_shares(
 async def show_group_share_success(
     ctx: wire.GenericContext, share_index: int, group_index: int
 ) -> None:
-    raise NotImplementedError
+    await confirm_action(
+        ctx,
+        "share_success",
+        "Success",
+        description=f"You have entered\nShare {share_index + 1} from\nGroup {group_index + 1}",
+        verb="CONTINUE",
+        verb_cancel=None,
+    )
 
 
 async def continue_recovery(
@@ -65,19 +68,25 @@ async def continue_recovery(
     info_func: Callable | None,
     dry_run: bool,
 ) -> bool:
-    # NOTE: no need to implement `info_func`, as it is used only in
-    # Shamir backup, which is not implemented for TR.
+    # TODO: implement info_func?
+    # There is very limited space on the screen
+    # (and having middle button would mean shortening the right button text)
 
     description = text
     if subtext:
         description += f"\n\n{subtext}"
+
+    if dry_run:
+        title = "SEED CHECK"
+    else:
+        title = "RECOVERY MODE"
+
     return await get_bool(
         ctx,
         "recovery",
-        "START RECOVERY",
+        title,
         None,
         description,
-        verb="HOLD TO BEGIN",
-        hold=True,
+        verb=button_label.upper(),
         br_code=ButtonRequestType.RecoveryHomepage,
     )

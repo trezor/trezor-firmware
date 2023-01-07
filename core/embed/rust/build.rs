@@ -312,6 +312,8 @@ fn generate_trezorhal_bindings() {
         // slip39
         .allowlist_function("slip39_word_completion_mask")
         .allowlist_function("button_sequence_to_word")
+        .allowlist_var("SLIP39_WORDLIST")
+        .allowlist_var("SLIP39_WORD_COUNT")
         // random
         .allowlist_function("random_uniform")
         // rgb led

@@ -1,5 +1,5 @@
 use crate::{
-    trezorhal::bip39,
+    trezorhal::wordlist::Wordlist,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::Icon,
@@ -14,26 +14,32 @@ use super::super::{
 };
 use heapless::{String, Vec};
 
-pub enum Bip39EntryMsg {
+pub enum WordlistEntryMsg {
     ResultWord(String<15>),
 }
 
 const MAX_WORD_LENGTH: usize = 10;
-const MAX_CHOICE_LENGTH: usize = 26;
+const MAX_LETTERS_LENGTH: usize = 26;
 
 /// Offer words when there will be fewer of them than this
 const OFFER_WORDS_THRESHOLD: usize = 10;
 
 const PROMPT: &str = "_";
 
+/// Type of the wordlist, deciding the list of words to be used
+pub enum WordlistType {
+    Bip39,
+    Slip39,
+}
+
 /// We are offering either letters or words.
-enum ChoiceFactoryBIP39 {
-    Letters(Vec<char, MAX_CHOICE_LENGTH>),
+enum ChoiceFactoryWordlist {
+    Letters(Vec<char, MAX_LETTERS_LENGTH>),
     Words(Vec<&'static str, OFFER_WORDS_THRESHOLD>),
 }
 
-impl ChoiceFactoryBIP39 {
-    fn letters(letter_choices: Vec<char, MAX_CHOICE_LENGTH>) -> Self {
+impl ChoiceFactoryWordlist {
+    fn letters(letter_choices: Vec<char, MAX_LETTERS_LENGTH>) -> Self {
         Self::Letters(letter_choices)
     }
 
@@ -42,7 +48,7 @@ impl ChoiceFactoryBIP39 {
     }
 }
 
-impl ChoiceFactory for ChoiceFactoryBIP39 {
+impl ChoiceFactory for ChoiceFactoryWordlist {
     type Item = ChoiceItem;
 
     fn count(&self) -> u8 {
@@ -88,21 +94,23 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
     }
 }
 
-/// Component for entering a BIP39 mnemonic.
-pub struct Bip39Entry {
-    choice_page: ChoicePage<ChoiceFactoryBIP39>,
+/// Component for entering a mnemonic from a wordlist - BIP39 or SLIP39.
+pub struct WordlistEntry {
+    choice_page: ChoicePage<ChoiceFactoryWordlist>,
     chosen_letters: Child<ChangingTextLine<String<{ MAX_WORD_LENGTH + 1 }>>>,
-    letter_choices: Vec<char, MAX_CHOICE_LENGTH>,
+    letter_choices: Vec<char, MAX_LETTERS_LENGTH>,
     textbox: TextBox<MAX_WORD_LENGTH>,
     offer_words: bool,
-    words_list: bip39::Wordlist,
+    words_list: Wordlist,
+    wordlist_type: WordlistType,
 }
 
-impl Bip39Entry {
-    pub fn new() -> Self {
-        let letter_choices: Vec<char, MAX_CHOICE_LENGTH> =
-            bip39::get_available_letters("").collect();
-        let choices = ChoiceFactoryBIP39::letters(letter_choices.clone());
+impl WordlistEntry {
+    pub fn new(wordlist_type: WordlistType) -> Self {
+        let words_list = Self::get_fresh_wordlist(&wordlist_type);
+        let letter_choices: Vec<char, MAX_LETTERS_LENGTH> =
+            words_list.get_available_letters("").collect();
+        let choices = ChoiceFactoryWordlist::letters(letter_choices.clone());
 
         Self {
             choice_page: ChoicePage::new(choices)
@@ -112,12 +120,21 @@ impl Bip39Entry {
             letter_choices,
             textbox: TextBox::empty(),
             offer_words: false,
-            words_list: bip39::Wordlist::all(),
+            words_list,
+            wordlist_type,
+        }
+    }
+
+    /// Get appropriate wordlist with all possible words
+    fn get_fresh_wordlist(wordlist_type: &WordlistType) -> Wordlist {
+        match wordlist_type {
+            WordlistType::Bip39 => Wordlist::bip39(),
+            WordlistType::Slip39 => Wordlist::slip39(),
         }
     }
 
     /// Gets up-to-date choices for letters or words.
-    fn get_current_choices(&mut self) -> ChoiceFactoryBIP39 {
+    fn get_current_choices(&mut self) -> ChoiceFactoryWordlist {
         // Narrowing the word list
         self.words_list = self.words_list.filter_prefix(self.textbox.content());
 
@@ -126,11 +143,14 @@ impl Bip39Entry {
         if self.words_list.len() < OFFER_WORDS_THRESHOLD {
             self.offer_words = true;
             let word_choices = self.words_list.iter().collect();
-            ChoiceFactoryBIP39::words(word_choices)
+            ChoiceFactoryWordlist::words(word_choices)
         } else {
             self.offer_words = false;
-            self.letter_choices = bip39::get_available_letters(self.textbox.content()).collect();
-            ChoiceFactoryBIP39::letters(self.letter_choices.clone())
+            self.letter_choices = self
+                .words_list
+                .get_available_letters(self.textbox.content())
+                .collect();
+            ChoiceFactoryWordlist::letters(self.letter_choices.clone())
         }
     }
 
@@ -161,7 +181,7 @@ impl Bip39Entry {
     }
 
     fn reset_wordlist(&mut self) {
-        self.words_list = bip39::Wordlist::all();
+        self.words_list = Self::get_fresh_wordlist(&self.wordlist_type);
     }
 
     /// Get the index of DELETE item, which is always at the end.
@@ -174,8 +194,8 @@ impl Bip39Entry {
     }
 }
 
-impl Component for Bip39Entry {
-    type Msg = Bip39EntryMsg;
+impl Component for WordlistEntry {
+    type Msg = WordlistEntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let letters_area_height = self.chosen_letters.inner().needed_height();
@@ -201,7 +221,7 @@ impl Component for Bip39Entry {
                     .words_list
                     .get(page_counter as usize)
                     .unwrap_or_default();
-                return Some(Bip39EntryMsg::ResultWord(String::from(word)));
+                return Some(WordlistEntryMsg::ResultWord(String::from(word)));
             } else {
                 let new_letter = self.letter_choices[page_counter as usize];
                 self.append_letter(ctx, new_letter);
@@ -226,7 +246,7 @@ use super::super::{ButtonAction, ButtonPos};
 use crate::ui::util;
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Bip39Entry {
+impl crate::trace::Trace for WordlistEntry {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {
             ButtonPos::Left => ButtonAction::PrevPage.string(),
