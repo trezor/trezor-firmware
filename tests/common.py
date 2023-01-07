@@ -179,6 +179,62 @@ def recovery_enter_shares(
         debug.press_yes()
 
 
+def recovery_enter_shares_tr(
+    debug: "DebugLink",
+    shares: List[str],
+    groups: bool = False,
+) -> Generator[None, "ButtonRequest", None]:
+    """Perform the recovery flow for a set of Shamir shares.
+
+    For use in an input flow function.
+    Example:
+
+    def input_flow():
+        yield  # start recovery
+        client.debug.press_yes()
+        yield from recovery_enter_shares(client.debug, SOME_SHARES)
+    """
+    word_count = len(shares[0].split(" "))
+
+    # Homescreen - proceed to word number selection
+    yield
+    debug.press_yes()
+    # Input word number
+    br = yield
+    assert br.code == ButtonRequestType.MnemonicWordCount
+    debug.input(str(word_count))
+    # Homescreen - proceed to share entry
+    yield
+    debug.press_yes()
+
+    # Enter shares
+    for share in shares:
+        br = yield
+        assert br.code == ButtonRequestType.RecoveryHomepage
+
+        # Word entering
+        yield
+        debug.press_yes()
+
+        # Enter mnemonic words
+        for word in share.split(" "):
+            debug.input(word)
+
+        if groups:
+            # Confirm share entered
+            yield
+            debug.press_yes()
+
+        # Homescreen - continue
+        # or Homescreen - confirm success
+        yield
+
+        # Finishing with current share
+        debug.press_yes()
+
+    yield
+
+
 def click_through(
     debug: "DebugLink", screens: int, code: ButtonRequestType = None
 ) -> Generator[None, "ButtonRequest", None]:
@@ -292,8 +348,8 @@ def read_and_confirm_mnemonic_tr(
         mnemonic.extend(words)
         debug.press_right()
 
-    yield
-    debug.press_right()  # Select correct words...
+    yield  # Select correct words...
+    debug.press_right()
 
     for _ in range(3):
         index = debug.read_reset_word_pos()

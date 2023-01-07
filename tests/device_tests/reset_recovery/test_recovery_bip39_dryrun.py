@@ -92,15 +92,13 @@ def do_recover_r(client: Client, mnemonic: List[str], **kwargs: Any):
     layout = client.debug.wait_layout
 
     def input_flow():
-        if client.features.model == "R":
-            pytest.skip("Freezes")
         yield
         assert "check the recovery seed" in layout().text
         client.debug.press_right()
 
         yield
         assert "Select number of words" in layout().text
-        client.debug.press_right()
+        client.debug.press_yes()
 
         yield
         yield
@@ -113,17 +111,19 @@ def do_recover_r(client: Client, mnemonic: List[str], **kwargs: Any):
 
         yield
         assert "Enter recovery seed" in layout().text
-        client.debug.press_right()
+        client.debug.press_yes()
 
         yield
+        client.debug.press_right()
         yield
         for word in mnemonic:
             assert "WORD" in layout().text
             client.debug.input(word)
-            yield
 
         client.debug.wait_layout()
         client.debug.press_right()
+        yield
+        client.debug.press_yes()
         yield
 
     with client:
@@ -229,7 +229,6 @@ def test_invalid_seed_core(client: Client):
 
         yield
         for _ in range(12):
-            yield
             assert "WORD" in layout().text
             client.debug.input("stick")
 

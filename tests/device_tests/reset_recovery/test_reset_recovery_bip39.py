@@ -35,8 +35,6 @@ from ...common import (
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Freezes")
     mnemonic = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 
@@ -49,7 +47,7 @@ def test_reset_recovery(client: Client):
 def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str:
     mnemonic = None
 
-    def input_flow():
+    def input_flow_tt():
         nonlocal mnemonic
 
         # 1. Confirm Reset
@@ -58,11 +56,29 @@ def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases
-        if client.debug.model == "R":
-            client.debug.watch_layout(True)
-            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
-        else:
-            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+
+        # confirm recovery seed check
+        br = yield
+        assert br.code == B.Success
+        client.debug.press_yes()
+
+        # confirm success
+        br = yield
+        assert br.code == B.Success
+        client.debug.press_yes()
+
+    def input_flow_tr():
+        nonlocal mnemonic
+
+        # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        yield from click_through(client.debug, screens=3, code=B.ResetDevice)
+
+        # mnemonic phrases
+        client.debug.watch_layout(True)
+        mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -91,7 +107,10 @@ def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str
                 messages.Features,
             ]
         )
-        client.set_input_flow(input_flow)
+        if client.debug.model == "R":
+            client.set_input_flow(input_flow_tr)
+        elif client.debug.model == "T":
+            client.set_input_flow(input_flow_tt)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -144,18 +163,19 @@ def recover(client: Client, mnemonic: str):
         debug.press_yes()
 
         yield  # Enter word count
-        yield  # Enter word count
         debug.input(str(len(words)))
 
         yield  # Homescreen
         debug.press_yes()
+        yield  # Homescreen
+        debug.press_yes()
         yield  # Enter words
         for word in words:
-            yield
             debug.input(word)
 
         yield  # confirm success
         debug.press_yes()
+        yield
 
     with client:
         if client.debug.model == "R":
