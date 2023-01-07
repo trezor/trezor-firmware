@@ -166,6 +166,14 @@ def request_bip39(
 
 
 # rust/src/ui/model_tr/layout.rs
+def request_slip39(
+    *,
+    prompt: str,
+) -> str:
+   """SLIP39 word input keyboard."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def request_passphrase(
     *,
     prompt: str,

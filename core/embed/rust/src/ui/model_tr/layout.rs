@@ -37,10 +37,10 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
-        FlowMsg, FlowPages, Frame, Homescreen, HomescreenMsg, Lockscreen, NoBtnDialog,
-        NoBtnDialogMsg, NumberInput, NumberInputMsg, Page, PassphraseEntry, PassphraseEntryMsg,
-        PinEntry, PinEntryMsg, Progress, ShareWords, SimpleChoice, SimpleChoiceMsg,
+        ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow, FlowMsg, FlowPages, Frame,
+        Homescreen, HomescreenMsg, Lockscreen, NoBtnDialog, NoBtnDialogMsg, NumberInput,
+        NumberInputMsg, Page, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress,
+        ShareWords, SimpleChoice, SimpleChoiceMsg, WordlistEntry, WordlistEntryMsg, WordlistType,
     },
     constant, theme,
 };
@@ -127,10 +127,10 @@ impl<const N: usize> ComponentMsgObj for SimpleChoice<N> {
     }
 }
 
-impl ComponentMsgObj for Bip39Entry {
+impl ComponentMsgObj for WordlistEntry {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            Bip39EntryMsg::ResultWord(word) => word.as_str().try_into(),
+            WordlistEntryMsg::ResultWord(word) => word.as_str().try_into(),
         }
     }
 }
@@ -766,7 +766,21 @@ extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Ma
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(prompt, Bip39Entry::new()).with_title_center(true))?;
+        let obj = LayoutObj::new(
+            Frame::new(prompt, WordlistEntry::new(WordlistType::Bip39)).with_title_center(true),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+
+        let obj = LayoutObj::new(
+            Frame::new(prompt, WordlistEntry::new(WordlistType::Slip39)).with_title_center(true),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1022,6 +1036,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> str:
     ///     """Get recovery word for BIP39."""
     Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
+
+    /// def request_slip39(
+    ///     *,
+    ///     prompt: str,
+    /// ) -> str:
+    ///    """SLIP39 word input keyboard."""
+    Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
 
     /// def request_passphrase(
     ///     *,
