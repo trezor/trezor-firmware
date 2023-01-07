@@ -103,25 +103,6 @@ _SECRET_INDEX = const(255)
 _DIGEST_INDEX = const(254)
 """The index of the share containing the digest of the shared secret."""
 
-
-# === Keyboard functions ===
-
-KEYBOARD_FULL_MASK = const(0x1FF)
-"""All buttons are allowed. 9-bit bitmap all set to 1."""
-
-
-def word_completion_mask(prefix: str) -> int:
-    if not prefix:
-        return KEYBOARD_FULL_MASK
-    return slip39.word_completion_mask(int(prefix))
-
-
-def button_sequence_to_word(prefix: str) -> str:
-    if not prefix:
-        return ""
-    return slip39.button_sequence_to_word(int(prefix))
-
-
 # === External API ===
 
 MAX_SHARE_COUNT = const(16)
