@@ -24,7 +24,13 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ...common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
+from ...common import (
+    click_through,
+    read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
+    recovery_enter_shares,
+    recovery_enter_shares_tr,
+)
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 MOCK_OS_URANDOM = mock.Mock(return_value=EXTERNAL_ENTROPY)
@@ -34,9 +40,6 @@ MOCK_OS_URANDOM = mock.Mock(return_value=EXTERNAL_ENTROPY)
 @pytest.mark.setup_client(uninitialized=True)
 @mock.patch("os.urandom", MOCK_OS_URANDOM)
 def test_reset_recovery(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 
@@ -50,13 +53,10 @@ def test_reset_recovery(client: Client):
         assert address_before == address_after
 
 
-def reset(client: Client, strength=128):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
+def reset(client: Client, strength: int = 128) -> list[str]:
+    all_mnemonics: list[str] = []
 
-    all_mnemonics = []
-
-    def input_flow():
+    def input_flow_tt():
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Confirm warning
@@ -80,6 +80,42 @@ def reset(client: Client, strength=128):
 
         # safety warning
         br = yield
+        assert br.code == B.Success
+        client.debug.press_yes()
+
+    def input_flow_tr():
+        yield  # Confirm Reset
+        client.debug.press_yes()
+        yield  # Backup your seed
+        client.debug.press_yes()
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Number of shares info
+        client.debug.press_yes()
+        yield  # Number of shares (5)
+        client.debug.input("5")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Threshold info
+        client.debug.press_yes()
+        yield  # Threshold (3)
+        client.debug.input("3")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Confirm show seeds
+        client.debug.press_yes()
+
+        # Mnemonic phrases
+        for _ in range(5):
+            # Phrase screen
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+            all_mnemonics.append(mnemonic)
+
+            br = yield  # Confirm continue to next
+            assert br.code == B.Success
+            client.debug.press_yes()
+
+        br = yield  # Confirm backup
         assert br.code == B.Success
         client.debug.press_yes()
 
@@ -108,7 +144,11 @@ def reset(client: Client, strength=128):
                 messages.Features,
             ]
         )
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.debug.watch_layout(True)
+            client.set_input_flow(input_flow_tr)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -132,20 +172,26 @@ def reset(client: Client, strength=128):
     return all_mnemonics
 
 
-def recover(client: Client, shares):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
+def recover(client: Client, shares: list[str]) -> None:
     debug = client.debug
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         # run recovery flow
         yield from recovery_enter_shares(debug, shares)
 
+    def input_flow_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        # run recovery flow
+        yield from recovery_enter_shares_tr(debug, shares)
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         ret = device.recover(
             client, pin_protection=False, label="label", show_tutorial=False
         )

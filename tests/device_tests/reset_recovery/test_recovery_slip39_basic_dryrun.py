@@ -20,7 +20,7 @@ from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
-from ...common import recovery_enter_shares
+from ...common import recovery_enter_shares, recovery_enter_shares_tr
 
 pytestmark = pytest.mark.skip_t1
 
@@ -38,19 +38,25 @@ INVALID_SHARES_20_2of3 = [
 
 @pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_dryrun(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     debug = client.debug
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Dryrun
         debug.press_yes()
         # run recovery flow
         yield from recovery_enter_shares(debug, SHARES_20_2of3[1:3])
 
+    def input_flow_tr():
+        yield  # Confirm Dryrun
+        debug.press_yes()
+        # run recovery flow
+        yield from recovery_enter_shares_tr(debug, SHARES_20_2of3[1:3])
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         ret = device.recover(
             client,
             passphrase_protection=False,
@@ -69,22 +75,28 @@ def test_2of3_dryrun(client: Client):
 
 @pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_invalid_seed_dryrun(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     debug = client.debug
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Dryrun
         debug.press_yes()
         # run recovery flow
         yield from recovery_enter_shares(debug, INVALID_SHARES_20_2of3)
 
+    def input_flow_tr():
+        yield  # Confirm Dryrun
+        debug.press_yes()
+        # run recovery flow
+        yield from recovery_enter_shares_tr(debug, INVALID_SHARES_20_2of3)
+
     # test fails because of different seed on device
     with client, pytest.raises(
         TrezorFailure, match=r"The seed does not match the one in the device"
     ):
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         device.recover(
             client,
             passphrase_protection=False,

@@ -27,7 +27,9 @@ from ...common import (
     EXTERNAL_ENTROPY,
     click_through,
     read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
     recovery_enter_shares,
+    recovery_enter_shares_tr,
 )
 
 
@@ -60,13 +62,10 @@ def test_reset_recovery(client: Client):
         assert address_before == address_after
 
 
-def reset(client: Client, strength=128):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
+def reset(client: Client, strength: int = 128) -> list[str]:
+    all_mnemonics: list[str] = []
 
-    all_mnemonics = []
-
-    def input_flow():
+    def input_flow_tt():
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Confirm warning
@@ -85,6 +84,50 @@ def reset(client: Client, strength=128):
             for _h in range(5):
                 # mnemonic phrases
                 mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+                all_mnemonics.append(mnemonic)
+
+                # Confirm continue to next share
+                br = yield
+                assert br.code == B.Success
+                client.debug.press_yes()
+
+        # safety warning
+        br = yield
+        assert br.code == B.Success
+        client.debug.press_yes()
+
+    def input_flow_tr():
+        yield  # Wallet backup
+        client.debug.press_yes()
+        yield  # Wallet creation
+        client.debug.press_yes()
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Set and confirm group count
+        client.debug.input("5")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Set and confirm group threshold
+        client.debug.input("3")
+        yield  # Checklist
+        client.debug.press_yes()
+        for _ in range(5):  # for each of 5 groups
+            yield  # Number of shares info
+            client.debug.press_yes()
+            yield  # Number of shares (5)
+            client.debug.input("5")
+            yield  # Threshold info
+            client.debug.press_yes()
+            yield  # Threshold (3)
+            client.debug.input("3")
+        yield  # Confirm show seeds
+        client.debug.press_yes()
+
+        # show & confirm shares for all groups
+        for _g in range(5):
+            for _h in range(5):
+                # mnemonic phrases
+                mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
                 all_mnemonics.append(mnemonic)
 
                 # Confirm continue to next share
@@ -133,7 +176,11 @@ def reset(client: Client, strength=128):
                 messages.Features,
             ]
         )
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.debug.watch_layout(True)
+            client.set_input_flow(input_flow_tr)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -157,20 +204,26 @@ def reset(client: Client, strength=128):
     return all_mnemonics
 
 
-def recover(client: Client, shares):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
+def recover(client: Client, shares: list[str]):
     debug = client.debug
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         # run recovery flow
         yield from recovery_enter_shares(debug, shares, groups=True)
 
+    def input_flow_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        # run recovery flow
+        yield from recovery_enter_shares_tr(debug, shares, groups=True)
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         ret = device.recover(
             client, pin_protection=False, label="label", show_tutorial=False
         )
