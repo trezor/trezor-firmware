@@ -156,8 +156,7 @@ async def _prompt_number(
         ButtonRequestType.ResetDevice,
     )
 
-    assert isinstance(result, int)
-    return result
+    return int(result)
 
 
 async def slip39_prompt_threshold(

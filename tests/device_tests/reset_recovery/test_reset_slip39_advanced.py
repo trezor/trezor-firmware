@@ -24,7 +24,12 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ...common import click_through, generate_entropy, read_and_confirm_mnemonic
+from ...common import (
+    click_through,
+    generate_entropy,
+    read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
+)
 
 pytestmark = [pytest.mark.skip_t1]
 
@@ -34,14 +39,11 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 # TODO: test with different options
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_slip39_advanced(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     strength = 128
     member_threshold = 3
     all_mnemonics = []
 
-    def input_flow():
+    def input_flow_tt():
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Confirm warning
@@ -60,6 +62,50 @@ def test_reset_device_slip39_advanced(client: Client):
             for _h in range(5):
                 # mnemonic phrases
                 mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+                all_mnemonics.append(mnemonic)
+
+                # Confirm continue to next share
+                br = yield
+                assert br.code == B.Success
+                client.debug.press_yes()
+
+        # safety warning
+        br = yield
+        assert br.code == B.Success
+        client.debug.press_yes()
+
+    def input_flow_tr():
+        yield  # Wallet backup
+        client.debug.press_yes()
+        yield  # Wallet creation
+        client.debug.press_yes()
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Set and confirm group count
+        client.debug.input("5")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Set and confirm group threshold
+        client.debug.input("3")
+        yield  # Checklist
+        client.debug.press_yes()
+        for _ in range(5):  # for each of 5 groups
+            yield  # Number of shares info
+            client.debug.press_yes()
+            yield  # Number of shares (5)
+            client.debug.input("5")
+            yield  # Threshold info
+            client.debug.press_yes()
+            yield  # Threshold (3)
+            client.debug.input("3")
+        yield  # Confirm show seeds
+        client.debug.press_yes()
+
+        # show & confirm shares for all groups
+        for _g in range(5):
+            for _h in range(5):
+                # mnemonic phrases
+                mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
                 all_mnemonics.append(mnemonic)
 
                 # Confirm continue to next share
@@ -108,7 +154,11 @@ def test_reset_device_slip39_advanced(client: Client):
                 messages.Features,
             ]
         )
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.debug.watch_layout(True)
+            client.set_input_flow(input_flow_tr)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -142,7 +192,9 @@ def test_reset_device_slip39_advanced(client: Client):
         device.backup(client)
 
 
-def validate_mnemonics(mnemonics, threshold, expected_ems):
+def validate_mnemonics(
+    mnemonics: list[list[str]], threshold: int, expected_ems: bytes
+) -> None:
     # 3of5 shares 3of5 groups
     # TODO: test all possible group+share combinations?
     test_combination = mnemonics[0:3] + mnemonics[5:8] + mnemonics[10:13]
