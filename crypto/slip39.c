@@ -31,11 +31,11 @@
  * Returns word at position `index`.
  */
 const char* get_word(uint16_t index) {
-  if (index >= WORDS_COUNT) {
+  if (index >= SLIP39_WORD_COUNT) {
     return NULL;
   }
 
-  return slip39_wordlist[index];
+  return SLIP39_WORDLIST[index];
 }
 
 /**
@@ -44,18 +44,18 @@ const char* get_word(uint16_t index) {
  */
 bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
   uint16_t lo = 0;
-  uint16_t hi = WORDS_COUNT;
+  uint16_t hi = SLIP39_WORD_COUNT;
   uint16_t mid = 0;
 
   while ((hi - lo) > 1) {
     mid = (hi + lo) / 2;
-    if (strncmp(slip39_wordlist[mid], word, word_length) > 0) {
+    if (strncmp(SLIP39_WORDLIST[mid], word, word_length) > 0) {
       hi = mid;
     } else {
       lo = mid;
     }
   }
-  if (strncmp(slip39_wordlist[lo], word, word_length) != 0) {
+  if (strncmp(SLIP39_WORDLIST[lo], word, word_length) != 0) {
     return false;
   }
   *index = lo;
@@ -64,7 +64,7 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
 
 /**
  * Returns the index of the first sequence in words_button_seq[] which is not
- * less than the given sequence. Returns WORDS_COUNT if there is no such
+ * less than the given sequence. Returns SLIP39_WORD_COUNT if there is no such
  * sequence.
  */
 static uint16_t find_sequence(uint16_t sequence) {
@@ -73,7 +73,7 @@ static uint16_t find_sequence(uint16_t sequence) {
   }
 
   uint16_t lo = 0;
-  uint16_t hi = WORDS_COUNT;
+  uint16_t hi = SLIP39_WORD_COUNT;
 
   while (hi - lo > 1) {
     uint16_t mid = (hi + lo) / 2;
@@ -93,7 +93,7 @@ static uint16_t find_sequence(uint16_t sequence) {
  */
 const char* button_sequence_to_word(uint16_t sequence) {
   if (sequence == 0) {
-    return slip39_wordlist[words_button_seq[0].index];
+    return SLIP39_WORDLIST[words_button_seq[0].index];
   }
 
   uint16_t multiplier = 1;
@@ -103,12 +103,12 @@ const char* button_sequence_to_word(uint16_t sequence) {
   }
 
   uint16_t i = find_sequence(sequence);
-  if (i >= WORDS_COUNT ||
+  if (i >= SLIP39_WORD_COUNT ||
       words_button_seq[i].sequence - sequence >= multiplier) {
     return NULL;
   }
 
-  return slip39_wordlist[words_button_seq[i].index];
+  return SLIP39_WORDLIST[words_button_seq[i].index];
 }
 
 /**

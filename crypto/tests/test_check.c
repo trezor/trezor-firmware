@@ -5727,8 +5727,8 @@ END_TEST
 START_TEST(test_slip39_word_completion) {
   const char t9[] = {1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5,
                      6, 6, 6, 6, 7, 7, 8, 8, 8, 9, 9, 9, 9};
-  for (size_t i = 0; i < WORDS_COUNT; ++i) {
-    const char *word = slip39_wordlist[i];
+  for (size_t i = 0; i < SLIP39_WORD_COUNT; ++i) {
+    const char *word = SLIP39_WORDLIST[i];
     uint16_t prefix = t9[word[0] - 'a'];
     for (size_t j = 1; j < 4; ++j) {
       uint16_t mask = slip39_word_completion_mask(prefix);
