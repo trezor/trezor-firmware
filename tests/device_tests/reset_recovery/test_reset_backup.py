@@ -78,12 +78,9 @@ def backup_flow_bip39(client: Client):
 
 
 def backup_flow_slip39_basic(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     mnemonics = []
 
-    def input_flow():
+    def input_flow_tt():
         # 1. Checklist
         # 2. Number of shares (5)
         # 3. Checklist
@@ -104,8 +101,44 @@ def backup_flow_slip39_basic(client: Client):
         yield
         client.debug.press_yes()
 
+    def input_flow_tr():
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Number of shares info
+        client.debug.press_yes()
+        yield  # Number of shares (5)
+        client.debug.input("5")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Threshold info
+        client.debug.press_yes()
+        yield  # Threshold (3)
+        client.debug.input("3")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Confirm show seeds
+        client.debug.press_yes()
+
+        # Mnemonic phrases
+        for _ in range(5):
+            # Phrase screen
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+            mnemonics.append(mnemonic)
+
+            br = yield  # Confirm continue to next
+            assert br.code == B.Success
+            client.debug.press_yes()
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        client.debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.debug.watch_layout(True)
+            client.set_input_flow(input_flow_tr)
         client.set_expected_responses(
             [messages.ButtonRequest(code=B.ResetDevice)] * 6  # intro screens
             + [
@@ -127,12 +160,9 @@ def backup_flow_slip39_basic(client: Client):
 
 
 def backup_flow_slip39_advanced(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     mnemonics = []
 
-    def input_flow():
+    def input_flow_tt():
         # 1. Confirm Reset
         # 2. shares info
         # 3. Set & Confirm number of groups
@@ -161,8 +191,52 @@ def backup_flow_slip39_advanced(client: Client):
         assert br.code == B.Success
         client.debug.press_yes()
 
+    def input_flow_tr():
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Set and confirm group count
+        client.debug.input("5")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Set and confirm group threshold
+        client.debug.input("3")
+        yield  # Checklist
+        client.debug.press_yes()
+        for _ in range(5):  # for each of 5 groups
+            yield  # Number of shares info
+            client.debug.press_yes()
+            yield  # Number of shares (5)
+            client.debug.input("5")
+            yield  # Threshold info
+            client.debug.press_yes()
+            yield  # Threshold (3)
+            client.debug.input("3")
+        yield  # Confirm show seeds
+        client.debug.press_yes()
+
+        # show & confirm shares for all groups
+        for _g in range(5):
+            for _h in range(5):
+                # mnemonic phrases
+                mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+                mnemonics.append(mnemonic)
+
+                # Confirm continue to next share
+                br = yield
+                assert br.code == B.Success
+                client.debug.press_yes()
+
+        # safety warning
+        br = yield
+        assert br.code == B.Success
+        client.debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.debug.watch_layout(True)
+            client.set_input_flow(input_flow_tr)
         client.set_expected_responses(
             [messages.ButtonRequest(code=B.ResetDevice)] * 6  # intro screens
             + [
@@ -200,8 +274,6 @@ VECTORS = [
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_msg(client: Client, backup_type, backup_flow):
-    if client.features.model == "R":
-        pytest.skip("Freezes")
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
         device.reset(
@@ -237,9 +309,6 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_manual(client: Client, backup_type, backup_flow):
-    if client.features.model == "R":
-        pytest.skip("Freezes")
-
     def reset_skip_input_flow():
         yield  # Confirm Recovery
         client.debug.press_yes()
