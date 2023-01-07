@@ -247,13 +247,13 @@ class ModelRLayout:
     def get_mnemonic_words(self) -> List[str]:
         """Extract mnemonic words from the layout lines.
 
-        Example input: [..., '3. abuse', '4. must', '5. during', '6. monitor', '7. noble ', ...]
-        Example output: ['abuse', 'must', 'during', 'monitor', 'noble']
+        Example input: [..., '4 must', '5 during', '6 monitor', ...]
+        Example output: ['must', 'during', 'monitor']
         """
         words: List[str] = []
         for line in self.layout.lines:
-            if "." in line:
-                number, word = line.split(".", 1)
+            if " " in line:
+                number, word = line.split(" ", 1)
                 if all(c.isdigit() for c in number):
                     words.append(word.strip())
 
@@ -292,27 +292,16 @@ def read_and_confirm_mnemonic_tr(
         mnemonic.extend(words)
         debug.press_right()
 
-    # check share
+    yield
+    debug.press_right()  # Select correct words...
+
     for _ in range(3):
-        yield
-        layout = debug.wait_layout()
-        index = ModelRLayout(layout).get_word_index()
+        index = debug.read_reset_word_pos()
         if choose_wrong:
             debug.input(mnemonic[(index + 1) % len(mnemonic)])
             return None
         else:
-            correct_word = mnemonic[index]
-            # Navigating to the correct word before confirming (for UI purposes)
-            for _ in range(3):
-                get_current_word = ModelRLayout(layout).get_current_word()
-                if correct_word == get_current_word:
-                    debug.input(correct_word)
-                    break
-                else:
-                    debug.press_right()
-                    layout = debug.wait_layout()
-            else:
-                raise RuntimeError("Correct word not found")
+            debug.input(mnemonic[index])
 
     return " ".join(mnemonic)
 

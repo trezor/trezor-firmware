@@ -48,17 +48,22 @@ VECTORS = (  # path, script_type, address
 def test_show(
     client: Client, path: str, script_type: messages.InputScriptType, address: str
 ):
-    if client.features.model == "R":
-        pytest.skip("QR codes are not supported on model R")
-
-    def input_flow():
+    def input_flow_tt():
         yield
         client.debug.press_no()
         yield
         client.debug.press_yes()
 
+    def input_flow_tr():
+        yield
+        client.debug.press_right()
+        client.debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         assert (
             btc.get_address(
                 client,
@@ -197,7 +202,7 @@ def test_show_multisig_xpubs(
     ignore_xpub_magic: bool,
 ):
     if client.features.model == "R":
-        pytest.skip("Input flow is not ready for model R")
+        pytest.skip("XPUBs not ready for model R")
 
     nodes = [
         btc.get_public_node(

@@ -30,19 +30,17 @@ from ...common import (
     click_through,
     generate_entropy,
     read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
 )
 
 pytestmark = [pytest.mark.skip_t1]
 
 
 def reset_device(client: Client, strength):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     member_threshold = 3
     all_mnemonics = []
 
-    def input_flow():
+    def input_flow_tt():
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Confirm warning
@@ -66,6 +64,42 @@ def reset_device(client: Client, strength):
 
         # safety warning
         br = yield
+        assert br.code == B.Success
+        client.debug.press_yes()
+
+    def input_flow_tr():
+        yield  # Confirm Reset
+        client.debug.press_yes()
+        yield  # Backup your seed
+        client.debug.press_yes()
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Number of shares info
+        client.debug.press_yes()
+        yield  # Number of shares (5)
+        client.debug.input("5")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Threshold info
+        client.debug.press_yes()
+        yield  # Threshold (3)
+        client.debug.input("3")
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Confirm show seeds
+        client.debug.press_yes()
+
+        # Mnemonic phrases
+        for _ in range(5):
+            # Phrase screen
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+            all_mnemonics.append(mnemonic)
+
+            br = yield  # Confirm continue to next
+            assert br.code == B.Success
+            client.debug.press_yes()
+
+        br = yield  # Confirm backup
         assert br.code == B.Success
         client.debug.press_yes()
 
@@ -95,7 +129,11 @@ def reset_device(client: Client, strength):
                 messages.Features,
             ]
         )
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.debug.watch_layout(True)
+            client.set_input_flow(input_flow_tr)
 
         # No PIN, no passphrase, don't display random
         device.reset(
