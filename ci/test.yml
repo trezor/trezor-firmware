@@ -85,7 +85,6 @@ core device R test:
   <<: *gitlab_caching
   needs:
     - core unix frozen R debug build
-  allow_failure: true
   variables:
     TREZOR_PROFILING: "1"
     TREZOR_MODEL: "R"
