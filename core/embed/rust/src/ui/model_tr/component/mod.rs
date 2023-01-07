@@ -33,13 +33,13 @@ pub use flow_pages::{FlowPages, Page};
 pub use frame::Frame;
 pub use homescreen::{Homescreen, HomescreenMsg, Lockscreen};
 pub use input_methods::{
-    bip39::{Bip39Entry, Bip39EntryMsg},
     choice::{Choice, ChoiceFactory, ChoicePage, ChoicePageMsg},
     choice_item::ChoiceItem,
     number_input::{NumberInput, NumberInputMsg},
     passphrase::{PassphraseEntry, PassphraseEntryMsg},
     pin::{PinEntry, PinEntryMsg},
     simple_choice::{SimpleChoice, SimpleChoiceMsg},
+    wordlist::{WordlistEntry, WordlistEntryMsg, WordlistType},
 };
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use no_btn_dialog::{NoBtnDialog, NoBtnDialogMsg};

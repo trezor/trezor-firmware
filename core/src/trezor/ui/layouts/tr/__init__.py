@@ -759,7 +759,7 @@ def show_warning(
         ctx,
         br_type,
         "",
-        subheader or "Warning",
+        subheader or "WARNING",
         content,
         button_confirm=button,
         button_cancel=None,

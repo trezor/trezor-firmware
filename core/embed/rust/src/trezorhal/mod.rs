@@ -15,6 +15,7 @@ pub mod slip39;
 pub mod storage;
 pub mod usb;
 pub mod uzlib;
+pub mod wordlist;
 
 pub mod buffers;
 #[cfg(not(feature = "micropython"))]
