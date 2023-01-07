@@ -23,6 +23,7 @@ from ...common import (
     MNEMONIC_SLIP39_BASIC_20_3of6,
     MNEMONIC_SLIP39_BASIC_20_3of6_SECRET,
     recovery_enter_shares,
+    recovery_enter_shares_tr,
 )
 
 pytestmark = pytest.mark.skip_t1
@@ -48,20 +49,26 @@ VECTORS = (
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("shares, secret", VECTORS)
-def test_secret(client: Client, shares, secret):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
+def test_secret(client: Client, shares: list[str], secret: str):
     debug = client.debug
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         # run recovery flow
         yield from recovery_enter_shares(debug, shares)
 
+    def input_flow_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        # run recovery flow
+        yield from recovery_enter_shares_tr(debug, shares)
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         ret = device.recover(
             client, pin_protection=False, label="label", show_tutorial=False
         )
@@ -78,12 +85,9 @@ def test_secret(client: Client, shares, secret):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_recover_with_pin_passphrase(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     debug = client.debug
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         yield  # Enter PIN
@@ -93,8 +97,23 @@ def test_recover_with_pin_passphrase(client: Client):
         # Proceed with recovery
         yield from recovery_enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
 
+    def input_flow_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Enter PIN
+        debug.input("654")
+        yield  # Please re-enter PIN to confirm
+        debug.press_yes()
+        yield  # Enter PIN again
+        debug.input("654")
+        # Proceed with recovery
+        yield from recovery_enter_shares_tr(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         ret = device.recover(
             client,
             pin_protection=True,
@@ -112,9 +131,6 @@ def test_recover_with_pin_passphrase(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     debug = client.debug
 
     def input_flow():
@@ -137,12 +153,9 @@ def test_abort(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_noabort(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     debug = client.debug
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         yield  # Homescreen - abort process
@@ -151,8 +164,20 @@ def test_noabort(client: Client):
         debug.press_no()
         yield from recovery_enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
 
+    def input_flow_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - abort process
+        debug.press_no()
+        yield  # Homescreen - go back to process
+        debug.press_no()
+        yield from recovery_enter_shares_tr(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         device.recover(client, pin_protection=False, label="label", show_tutorial=False)
         client.init_device()
         assert client.features.initialized is True
@@ -161,11 +186,11 @@ def test_noabort(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_ask_word_number(client: Client):
     if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
+        pytest.skip("Flow is not working correctly for TR")
 
     debug = client.debug
 
-    def input_flow_retry_first():
+    def input_flow_retry_first_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         yield  # Homescreen - start process
@@ -201,8 +226,59 @@ def test_ask_word_number(client: Client):
         yield  # Confirm abort
         debug.press_yes()
 
+    def input_flow_retry_first_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input("20")
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        debug.press_yes()
+        for _ in range(20):
+            debug.input("slush")
+
+        yield
+        # assert br.code == messages.ButtonRequestType.Warning
+        debug.press_yes()
+
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input("33")
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield
+        for _ in range(33):
+            debug.input("slush")
+
+        yield
+        debug.press_yes()
+
+        yield
+        debug.press_no()
+
+        yield
+        debug.press_right()
+
+        yield
+        debug.press_right()
+
+        yield
+        debug.press_right()
+
+        yield
+        debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow_retry_first)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_retry_first_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_retry_first_tr)
         with pytest.raises(exceptions.Cancelled):
             device.recover(
                 client, pin_protection=False, label="label", show_tutorial=False
@@ -210,7 +286,7 @@ def test_ask_word_number(client: Client):
         client.init_device()
         assert client.features.initialized is False
 
-    def input_flow_retry_second():
+    def input_flow_retry_second_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         yield  # Homescreen - start process
@@ -246,8 +322,49 @@ def test_ask_word_number(client: Client):
         yield  # Confirm abort
         debug.press_yes()
 
+    def input_flow_retry_second_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input("20")
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        debug.press_yes()
+        yield  # Enter first share
+        share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
+        for word in share:
+            debug.input(word)
+
+        yield  # More shares needed
+        debug.press_yes()
+
+        yield  # Enter another share
+        share = share[:3] + ["slush"] * 17
+        for word in share:
+            debug.input(word)
+
+        yield  # Invalid share
+        # assert br.code == messages.ButtonRequestType.Warning
+        debug.press_yes()
+
+        yield  # Proceed to next share
+        share = MNEMONIC_SLIP39_BASIC_20_3of6[1].split(" ")
+        for word in share:
+            debug.input(word)
+
+        yield  # More shares needed
+        debug.press_no()
+        yield  # Confirm abort
+        debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow_retry_second)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_retry_second_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_retry_second_tr)
         with pytest.raises(exceptions.Cancelled):
             device.recover(
                 client, pin_protection=False, label="label", show_tutorial=False
@@ -258,14 +375,11 @@ def test_ask_word_number(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("nth_word", range(3))
-def test_wrong_nth_word(client: Client, nth_word):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
+def test_wrong_nth_word(client: Client, nth_word: int):
     debug = client.debug
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         yield  # Homescreen - start process
@@ -293,8 +407,43 @@ def test_wrong_nth_word(client: Client, nth_word):
 
         client.cancel()
 
+    def input_flow_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input(str(len(share)))
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        debug.press_yes()
+        yield  # Enter first share
+        for word in share:
+            debug.input(word)
+
+        yield  # Continue to next share
+        debug.press_yes()
+        yield  # Enter next share
+        debug.press_yes()
+        yield  # Enter next share
+        for i, word in enumerate(share):
+            if i < nth_word:
+                debug.input(word)
+            else:
+                debug.input(share[-1])
+                break
+
+        yield
+        # assert br.code == messages.ButtonRequestType.Warning
+
+        client.cancel()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         with pytest.raises(exceptions.Cancelled):
             device.recover(
                 client, pin_protection=False, label="label", show_tutorial=False
@@ -303,15 +452,12 @@ def test_wrong_nth_word(client: Client, nth_word):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_same_share(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     debug = client.debug
     first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
     # second share is first 4 words of first
     second_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")[:4]
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         yield  # Homescreen - start process
@@ -333,10 +479,47 @@ def test_same_share(client: Client):
         br = yield
         assert br.code == messages.ButtonRequestType.Warning
 
+        # TODO: seems like the screenshots did not catch the WARNING
+
+        client.cancel()
+
+    def input_flow_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input(str(len(first_share)))
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        for word in first_share:
+            debug.input(word)
+
+        yield  # Continue to next share
+        debug.press_yes()
+        yield  # Continue to next share
+        debug.press_yes()
+        yield  # Enter next share
+        for word in second_share:
+            debug.input(word)
+
+        br = yield
+        br = yield
+        assert br.code == messages.ButtonRequestType.Warning
+        debug.press_right()
+        debug.press_yes()
+        yield
+
         client.cancel()
 
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         with pytest.raises(exceptions.Cancelled):
             device.recover(
                 client, pin_protection=False, label="label", show_tutorial=False
@@ -345,12 +528,9 @@ def test_same_share(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_1of1(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Shamir not yet supported for model R")
-
     debug = client.debug
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm Recovery
         debug.press_yes()
         # Proceed with recovery
@@ -358,8 +538,19 @@ def test_1of1(client: Client):
             debug, MNEMONIC_SLIP39_BASIC_20_1of1, groups=False
         )
 
+    def input_flow_tr():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        # Proceed with recovery
+        yield from recovery_enter_shares_tr(
+            debug, MNEMONIC_SLIP39_BASIC_20_1of1, groups=False
+        )
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         ret = device.recover(
             client,
             pin_protection=False,
@@ -368,7 +559,7 @@ def test_1of1(client: Client):
             show_tutorial=False,
         )
 
-    # Workflow succesfully ended
+    # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
     assert client.features.initialized is True
     assert client.features.pin_protection is False

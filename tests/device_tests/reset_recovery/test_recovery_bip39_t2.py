@@ -101,7 +101,6 @@ def test_tt_pin_passphrase(client: Client):
 
         yield
         for word in mnemonic:
-            yield
             assert "WORD" in layout().text
             client.debug.input(word)
 
@@ -188,7 +187,6 @@ def test_tt_nopin_nopassphrase(client: Client):
 
         yield
         for word in mnemonic:
-            yield
             assert "WORD" in layout().text
             client.debug.input(word)
 
