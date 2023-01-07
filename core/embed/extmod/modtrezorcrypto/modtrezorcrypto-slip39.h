@@ -24,47 +24,6 @@
 
 /// package: trezorcrypto.slip39
 
-/// def word_completion_mask(prefix: int) -> int:
-///     """
-///     Calculates which buttons still can be pressed after some already were.
-///     Returns a 9-bit bitmask, where each bit specifies which buttons
-///     can be further pressed (there are still words in this combination).
-///     LSB denotes first button.
-///
-///     Example: 110000110 - second, third, eighth and ninth button still can be
-///     pressed.
-///     """
-STATIC mp_obj_t mod_trezorcrypto_slip39_word_completion_mask(mp_obj_t _prefix) {
-  uint16_t prefix = mp_obj_get_int(_prefix);
-
-  if (prefix < 1 || prefix > 9999) {
-    mp_raise_ValueError(
-        "Invalid button prefix (range between 1 and 9999 is allowed)");
-  }
-  return mp_obj_new_int_from_uint(slip39_word_completion_mask(prefix));
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(
-    mod_trezorcrypto_slip39_word_completion_mask_obj,
-    mod_trezorcrypto_slip39_word_completion_mask);
-
-/// def button_sequence_to_word(prefix: int) -> str:
-///     """
-///     Finds the first word that fits the given button prefix.
-///     """
-STATIC mp_obj_t
-mod_trezorcrypto_slip39_button_sequence_to_word(mp_obj_t _prefix) {
-  uint16_t prefix = mp_obj_get_int(_prefix);
-
-  const char *word = button_sequence_to_word(prefix);
-  if (word == NULL) {
-    mp_raise_ValueError("Invalid button prefix");
-  }
-  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)word, strlen(word));
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(
-    mod_trezorcrypto_slip39_button_sequence_to_word_obj,
-    mod_trezorcrypto_slip39_button_sequence_to_word);
-
 /// def word_index(word: str) -> int:
 ///     """
 ///     Finds index of given word.
@@ -104,10 +63,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_slip39_get_word_obj,
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_slip39_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_slip39)},
-    {MP_ROM_QSTR(MP_QSTR_word_completion_mask),
-     MP_ROM_PTR(&mod_trezorcrypto_slip39_word_completion_mask_obj)},
-    {MP_ROM_QSTR(MP_QSTR_button_sequence_to_word),
-     MP_ROM_PTR(&mod_trezorcrypto_slip39_button_sequence_to_word_obj)},
     {MP_ROM_QSTR(MP_QSTR_word_index),
      MP_ROM_PTR(&mod_trezorcrypto_slip39_word_index_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_word),
