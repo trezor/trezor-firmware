@@ -58,7 +58,7 @@ def do_recover_core(client: Client, mnemonic: List[str], **kwargs: Any):
         client.debug.click(buttons.OK)
 
         yield
-        assert "Select number of words" in layout().get_content()
+        assert "select the number of words" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
@@ -70,7 +70,7 @@ def do_recover_core(client: Client, mnemonic: List[str], **kwargs: Any):
         client.debug.click(buttons.grid34(index % 3, index // 3))
 
         yield
-        assert "Enter recovery seed" in layout().get_content()
+        assert "enter your recovery seed" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
@@ -97,7 +97,7 @@ def do_recover_r(client: Client, mnemonic: List[str], **kwargs: Any):
         client.debug.press_right()
 
         yield
-        assert "Select number of words" in layout().text
+        assert "select the number of words" in layout().text
         client.debug.press_yes()
 
         yield
@@ -110,7 +110,7 @@ def do_recover_r(client: Client, mnemonic: List[str], **kwargs: Any):
         client.debug.input(str(len(mnemonic)))
 
         yield
-        assert "Enter recovery seed" in layout().text
+        assert "enter your recovery seed" in layout().text
         client.debug.press_yes()
 
         yield
@@ -173,7 +173,7 @@ def test_invalid_seed_core(client: Client):
         client.debug.click(buttons.OK)
 
         yield
-        assert "Select number of words" in layout().get_content()
+        assert "select the number of words" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
@@ -182,7 +182,7 @@ def test_invalid_seed_core(client: Client):
         client.debug.click(buttons.grid34(0, 2))
 
         yield
-        assert "Enter recovery seed" in layout().get_content()
+        assert "enter your recovery seed" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
@@ -197,7 +197,7 @@ def test_invalid_seed_core(client: Client):
 
         yield
         # retry screen
-        assert "Select number of words" in layout().get_content()
+        assert "select the number of words" in layout().get_content()
         client.debug.click(buttons.CANCEL)
 
         yield
@@ -210,7 +210,7 @@ def test_invalid_seed_core(client: Client):
         client.debug.press_right()
 
         yield
-        assert "Select number of words" in layout().text
+        assert "select the number of words" in layout().text
         client.debug.press_yes()
 
         yield
@@ -220,7 +220,7 @@ def test_invalid_seed_core(client: Client):
         client.debug.press_middle()
 
         yield
-        assert "Enter recovery seed" in layout().text
+        assert "enter your recovery seed" in layout().text
         client.debug.press_yes()
 
         yield
@@ -239,7 +239,7 @@ def test_invalid_seed_core(client: Client):
 
         yield
         # retry screen
-        assert "Select number of words" in layout().text
+        assert "select the number of words" in layout().text
         client.debug.press_left()
 
         yield

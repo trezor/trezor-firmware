@@ -414,7 +414,7 @@ extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: 
                         .text_bold("ADDRESS MISMATCH?".into())
                         .newline()
                         .newline_half()
-                        .text_mono("Please contact Trezor support on trezor.io/support".into())
+                        .text_mono("Please contact Trezor support at trezor.io/support".into())
                 }
                 _ => unreachable!(),
             }
@@ -565,7 +565,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     tutorial_screen(
                         "HELLO".into(),
                         "Welcome to Trezor.\nPress right to continue.".into(),
-                        ButtonLayout::cancel_none_arrow(),
+                        ButtonLayout::text_none_arrow("SKIP".into()),
                         ButtonActions::last_none_next(),
                     )
                 },
@@ -609,7 +609,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                         Font::MONO,
                     )
                         .newline()
-                        .text_mono("Tutorial finished.".into())
+                        .text_mono("Tutorial complete.".into())
                         .newline()
                         .newline()
                         .alignment(Alignment::Center)
@@ -655,10 +655,9 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
         let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
         let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            NumberInput::new(min_count, max_count, count),
-        ))?;
+        let obj = LayoutObj::new(
+            Frame::new(title, NumberInput::new(min_count, max_count, count)).with_title_centered(),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -736,10 +735,10 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
             Frame::new(
                 title,
                 SimpleChoice::new(words, false)
-                    .with_only_one_item()
+                    .with_show_incomplete()
                     .with_return_index(),
             )
-            .with_title_center(true),
+            .with_title_centered(),
         )?;
         Ok(obj.into())
     };
@@ -756,7 +755,9 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             .into_iter()
             .collect();
 
-        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(choices, false)))?;
+        let obj = LayoutObj::new(
+            Frame::new(title, SimpleChoice::new(choices, false)).with_title_centered(),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -767,7 +768,7 @@ extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
         let obj = LayoutObj::new(
-            Frame::new(prompt, WordlistEntry::new(WordlistType::Bip39)).with_title_center(true),
+            Frame::new(prompt, WordlistEntry::new(WordlistType::Bip39)).with_title_centered(),
         )?;
         Ok(obj.into())
     };
@@ -779,7 +780,7 @@ extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut M
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
         let obj = LayoutObj::new(
-            Frame::new(prompt, WordlistEntry::new(WordlistType::Slip39)).with_title_center(true),
+            Frame::new(prompt, WordlistEntry::new(WordlistType::Slip39)).with_title_centered(),
         )?;
         Ok(obj.into())
     };

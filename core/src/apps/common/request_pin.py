@@ -106,7 +106,7 @@ async def verify_user_pin(
 
     while retry:
         pin = await request_pin_on_device(  # type: ignore ["request_pin_on_device" is possibly unbound]
-            ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
+            ctx, "Wrong PIN", config.get_pin_rem(), allow_cancel
         )
         if config.unlock(pin, salt):
             _set_last_unlock_time()
@@ -121,7 +121,7 @@ async def error_pin_invalid(ctx: Context) -> NoReturn:
     await show_error_and_raise(
         ctx,
         "warning_wrong_pin",
-        "The PIN you entered is invalid.",
+        "PIN you have entered is not valid.",
         "Wrong PIN",  # header
         exc=wire.PinInvalid,
     )

@@ -79,7 +79,7 @@ async def continue_recovery(
     if dry_run:
         title = "SEED CHECK"
     else:
-        title = "RECOVERY MODE"
+        title = "WALLET RECOVERY"
 
     return await get_bool(
         ctx,

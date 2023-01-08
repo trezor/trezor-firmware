@@ -149,8 +149,6 @@ impl Loader {
         // NOTE: need to calculate this in `i32`, it would overflow using `i16`
         let invert_from = ((self.area.width() as i32 + 1) * done) / (display::LOADER_MAX as i32);
 
-        // TODO: the text should be moved one pixel to the top so it is centered in the
-        // loader
         display::bar_with_text_and_fill(
             self.area,
             Some(&self.text_overlay),
@@ -167,7 +165,8 @@ impl Component for Loader {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        let baseline = bounds.bottom_center() + Offset::new(1, -1);
+        // Centering the text in the loader rectangle.
+        let baseline = bounds.bottom_center() + Offset::new(1, -2);
         self.text_overlay.place(baseline);
         self.area
     }

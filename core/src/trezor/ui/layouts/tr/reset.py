@@ -47,18 +47,18 @@ async def show_share_words(
         )
 
         if share_index is None:
-            check_title = "CHECK SEED"
+            check_title = "CHECK BACKUP"
         elif group_index is None:
             check_title = f"CHECK SHARE #{share_index + 1}"
         else:
-            check_title = f"CHECK G{group_index + 1} - SHARE {share_index + 1}"
+            check_title = f"GROUP {group_index + 1} - SHARE {share_index + 1}"
 
         if await get_bool(
             ctx,
             "backup_words",
             check_title,
             None,
-            "Select correct words in correct positions.",
+            "Select correct word for each position.",
             verb_cancel="SEE AGAIN",
             verb="BEGIN",
             br_code=ButtonRequestType.ResetDevice,
@@ -84,7 +84,7 @@ async def select_word(
         RustLayout(
             trezorui2.select_word(  # type: ignore [Argument missing for parameter "description"]
                 title=f"SELECT {format_ordinal(checked_index + 1).upper()} WORD",
-                words=(words[0].upper(), words[1].upper(), words[2].upper()),
+                words=(words[0].lower(), words[1].lower(), words[2].lower()),
             )
         )
     )
@@ -165,10 +165,11 @@ async def slip39_prompt_threshold(
     await confirm_action(
         ctx,
         "slip39_prompt_threshold",
-        "Set threshold",
+        "Threshold",
         description="= number of shares needed for recovery",
         verb="BEGIN",
         verb_cancel=None,
+        uppercase_title=False,
     )
 
     count = num_of_shares // 2 + 1
@@ -199,9 +200,10 @@ async def slip39_prompt_number_of_shares(
         ctx,
         "slip39_shares",
         "Number of shares",
-        description="= total number of unique word lists used for wallet backup.",
+        description="= total number of unique word lists used for wallet backup",
         verb="BEGIN",
         verb_cancel=None,
+        uppercase_title=False,
     )
 
     count = 5
@@ -256,21 +258,26 @@ async def slip39_advanced_prompt_group_threshold(
 
 
 async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
-    if slip39:
-        description = (
-            "Never make a digital copy of your shares and never upload them online."
-        )
-    else:
-        description = (
-            "Never make a digital copy of your seed and never upload it online."
-        )
-
     await confirm_action(
         ctx,
         "backup_warning",
-        "Caution",
-        description=description,
-        verb="I understand",
-        verb_cancel=None,
+        "SHAMIR BACKUP" if slip39 else "WALLET BACKUP",
+        description="You can use your backup to recover your wallet at any time.",
+        verb="HOLD TO BEGIN",
+        hold=True,
         br_code=ButtonRequestType.ResetDevice,
+    )
+
+
+async def show_success_backup(ctx: GenericContext) -> None:
+    from . import confirm_action
+
+    await confirm_action(
+        ctx,
+        "success_backup",
+        "BACKUP IS DONE",
+        description="Keep it safe!",
+        verb="CONTINUE",
+        verb_cancel=None,
+        br_code=ButtonRequestType.Success,
     )

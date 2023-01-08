@@ -75,6 +75,13 @@ impl<const N: usize> SimpleChoice<N> {
         self
     }
 
+    /// Show choices even when they do not fit entirely.
+    pub fn with_show_incomplete(mut self) -> Self {
+        self.choice_page = self.choice_page.with_incomplete(true);
+        self
+    }
+
+    /// Returning chosen page index instead of the string result.
     pub fn with_return_index(mut self) -> Self {
         self.return_index = true;
         self
