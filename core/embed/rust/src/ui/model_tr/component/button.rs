@@ -545,6 +545,15 @@ impl ButtonLayout {
         )
     }
 
+    /// Left text and right arrow.
+    pub fn text_none_arrow(text: StrBuffer) -> Self {
+        Self::new(
+            Some(ButtonDetails::text(text)),
+            None,
+            Some(ButtonDetails::right_arrow_icon()),
+        )
+    }
+
     /// Only right text.
     pub fn none_none_text(text: StrBuffer) -> Self {
         Self::new(None, None, Some(ButtonDetails::text(text)))

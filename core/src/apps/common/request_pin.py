@@ -121,7 +121,7 @@ async def error_pin_invalid(ctx: Context) -> NoReturn:
     await show_error_and_raise(
         ctx,
         "warning_wrong_pin",
-        "The PIN you entered is invalid.",
+        "PIN you have entered is not valid.",
         "Wrong PIN",  # header
         exc=wire.PinInvalid,
     )

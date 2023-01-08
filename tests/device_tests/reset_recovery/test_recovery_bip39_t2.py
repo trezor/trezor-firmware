@@ -43,7 +43,7 @@ def test_tt_pin_passphrase(client: Client):
         client.debug.input("654")
 
         yield
-        assert "Select number of words" in layout().get_content()
+        assert "select the number of words" in layout().get_content()
         client.debug.press_yes()
 
         yield
@@ -51,7 +51,7 @@ def test_tt_pin_passphrase(client: Client):
         client.debug.input(str(len(mnemonic)))
 
         yield
-        assert "Enter recovery seed" in layout().get_content()
+        assert "enter your recovery seed" in layout().get_content()
         client.debug.press_yes()
 
         yield
@@ -75,7 +75,7 @@ def test_tt_pin_passphrase(client: Client):
         client.debug.input("654")
 
         yield
-        assert "re-enter to confirm" in layout().text
+        assert "re-enter PIN to confirm" in layout().text
         client.debug.press_right()
 
         yield
@@ -83,7 +83,7 @@ def test_tt_pin_passphrase(client: Client):
         client.debug.input("654")
 
         yield
-        assert "Select number of words" in layout().text
+        assert "select the number of words" in layout().text
         client.debug.press_yes()
 
         yield
@@ -92,7 +92,7 @@ def test_tt_pin_passphrase(client: Client):
         client.debug.input(str(len(mnemonic)))
 
         yield
-        assert "Enter recovery seed" in layout().text
+        assert "enter your recovery seed" in layout().text
         client.debug.press_yes()
 
         yield
@@ -105,7 +105,7 @@ def test_tt_pin_passphrase(client: Client):
             client.debug.input(word)
 
         yield
-        assert "You have successfully recovered your wallet." in layout().text
+        assert "You have finished recovering your wallet." in layout().text
         client.debug.press_yes()
 
     with client:
@@ -141,7 +141,7 @@ def test_tt_nopin_nopassphrase(client: Client):
         client.debug.press_yes()
 
         yield
-        assert "Select number of words" in layout().get_content()
+        assert "select the number of words" in layout().get_content()
         client.debug.press_yes()
 
         yield
@@ -149,7 +149,7 @@ def test_tt_nopin_nopassphrase(client: Client):
         client.debug.input(str(len(mnemonic)))
 
         yield
-        assert "Enter recovery seed" in layout().get_content()
+        assert "enter your recovery seed" in layout().get_content()
         client.debug.press_yes()
 
         yield
@@ -169,7 +169,7 @@ def test_tt_nopin_nopassphrase(client: Client):
         client.debug.press_yes()
 
         yield
-        assert "Select number of words" in layout().text
+        assert "select the number of words" in layout().text
         client.debug.press_yes()
 
         yield
@@ -178,7 +178,7 @@ def test_tt_nopin_nopassphrase(client: Client):
         client.debug.input(str(len(mnemonic)))
 
         yield
-        assert "Enter recovery seed" in layout().text
+        assert "enter your recovery seed" in layout().text
         client.debug.press_yes()
 
         yield
@@ -191,7 +191,7 @@ def test_tt_nopin_nopassphrase(client: Client):
             client.debug.input(word)
 
         yield
-        assert "You have successfully recovered your wallet." in layout().text
+        assert "You have finished recovering your wallet." in layout().text
         client.debug.press_yes()
 
     with client:

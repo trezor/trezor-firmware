@@ -48,7 +48,7 @@ pub const ICON_CANCEL: IconAndName = IconAndName::new(
     "cancel",
 ); // 8*8
 pub const ICON_DELETE: IconAndName =
-    IconAndName::new(include_res!("model_tr/res/delete.toif"), "delete"); // 12*8
+    IconAndName::new(include_res!("model_tr/res/delete.toif"), "delete"); // 10*7
 pub const ICON_EYE: IconAndName =
     IconAndName::new(include_res!("model_tr/res/eye_round.toif"), "eye"); // 12*7
 pub const ICON_LOCK: IconAndName = IconAndName::new(include_res!("model_tr/res/lock.toif"), "lock"); // 10*10
