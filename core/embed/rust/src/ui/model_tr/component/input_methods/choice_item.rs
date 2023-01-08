@@ -44,6 +44,17 @@ impl ChoiceItem {
         self
     }
 
+    /// Getting the offset of the icon to center it vertically.
+    /// Depending on its size and used font.
+    fn icon_vertical_offset(&self) -> Offset {
+        if let Some(icon) = self.icon {
+            let height_diff = self.font.text_height() - icon.height();
+            Offset::y(-height_diff / 2)
+        } else {
+            Offset::zero()
+        }
+    }
+
     /// Getting the text width in pixels.
     pub fn text_width(&self) -> i16 {
         self.font.text_width(&self.text)
@@ -88,7 +99,11 @@ impl ChoiceItem {
     /// Showing only the icon, if available, otherwise the text.
     pub fn render_left(&self, area: Rect) {
         if let Some(icon) = self.icon {
-            icon.draw_bottom_right(area.bottom_right(), theme::FG, theme::BG);
+            icon.draw_bottom_right(
+                area.bottom_right() + self.icon_vertical_offset(),
+                theme::FG,
+                theme::BG,
+            );
         } else {
             display_right(area.bottom_right(), &self.text, self.font);
         }
@@ -98,7 +113,11 @@ impl ChoiceItem {
     /// Showing only the icon, if available, otherwise the text.
     pub fn render_right(&self, area: Rect) {
         if let Some(icon) = self.icon {
-            icon.draw_bottom_left(area.bottom_left(), theme::FG, theme::BG);
+            icon.draw_bottom_left(
+                area.bottom_left() + self.icon_vertical_offset(),
+                theme::FG,
+                theme::BG,
+            );
         } else {
             display(area.bottom_left(), &self.text, self.font);
         }
@@ -135,7 +154,7 @@ impl Choice for ChoiceItem {
         if let Some(icon) = self.icon {
             let fg_color = if inverse { theme::BG } else { theme::FG };
             let bg_color = if inverse { theme::FG } else { theme::BG };
-            icon.draw_bottom_left(baseline, fg_color, bg_color);
+            icon.draw_bottom_left(baseline + self.icon_vertical_offset(), fg_color, bg_color);
             baseline = baseline + Offset::x(icon.width() + 2);
         }
         if inverse {

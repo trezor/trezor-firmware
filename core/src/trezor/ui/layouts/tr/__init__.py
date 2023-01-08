@@ -513,6 +513,7 @@ async def confirm_action(
     hold: bool = False,
     hold_danger: bool = False,
     reverse: bool = False,
+    uppercase_title: bool = True,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
@@ -538,7 +539,7 @@ async def confirm_action(
             ctx,
             RustLayout(
                 trezorui2.confirm_action(
-                    title=title.upper(),
+                    title=title.upper() if uppercase_title else title,
                     action=action,
                     description=description,
                     verb=verb,
@@ -569,15 +570,12 @@ async def confirm_reset_device(
     if show_tutorial:
         await tutorial(ctx)
 
-    to_show = "By continuing you agree to our terms and conditions.\nMore info at trezor.io/tos."
-    if not recovery:
-        to_show += "\nUse you backup to recover your wallet."
-
     return await _placeholder_confirm(
         ctx,
         "recover_device" if recovery else "setup_device",
-        "WALLET RECOVERY" if recovery else "WALLET BACKUP",
-        description=to_show,
+        "WALLET RECOVERY" if recovery else "WALLET CREATION",
+        description="By continuing you agree to Trezor Company terms and conditions.\n\rMore info at trezor.io/tos",
+        verb="RECOVER WALLET" if recovery else "CREATE WALLET",
         br_code=ButtonRequestType.ProtectCall
         if recovery
         else ButtonRequestType.ResetDevice,
@@ -590,14 +588,14 @@ async def confirm_backup(ctx: GenericContext) -> bool:
         ctx,
         "backup_device",
         "SUCCESS",
-        "New wallet created successfully!\nYou should back up your new wallet right now.",
+        description="New wallet has been created.\nIt should be backed up now!",
         verb="BACK UP",
         verb_cancel="SKIP",
         br_code=ButtonRequestType.ResetDevice,
     ):
         return True
 
-    confirmed = await get_bool(
+    return await get_bool(
         ctx,
         "backup_device",
         "WARNING",
@@ -607,7 +605,6 @@ async def confirm_backup(ctx: GenericContext) -> bool:
         verb_cancel="SKIP",
         br_code=ButtonRequestType.ResetDevice,
     )
-    return confirmed
 
 
 async def confirm_path_warning(
@@ -774,10 +771,25 @@ def show_success(
     subheader: str | None = None,
     button: str = "Continue",
 ) -> Awaitable[None]:
+    title = "Success"
+
+    # In case only subheader is supplied, showing it
+    # in regular font, not bold.
+    if not content and subheader:
+        content = subheader
+        subheader = None
+
+    # Special case for Shamir backup - to show everything just on one page
+    # in regular font.
+    if "Continue with" in content:
+        content = f"{subheader}\n{content}"
+        subheader = None
+        title = ""
+
     return _show_modal(
         ctx,
         br_type,
-        "Success",
+        title,
         subheader,
         content,
         button_confirm=button,
@@ -1195,7 +1207,7 @@ async def show_popup(
 def request_passphrase_on_host() -> None:
     draw_simple(
         trezorui2.show_info(
-            title="",
+            title="HIDDEN WALLET",
             description="Please type your passphrase on the connected host.",
         )
     )
@@ -1229,7 +1241,9 @@ async def request_pin_on_device(
 ) -> str:
     from trezor import wire
 
-    if attempts_remaining is None:
+    # Not showing the prompt in case user did not enter it badly yet
+    # (has full 16 attempts left)
+    if attempts_remaining is None or attempts_remaining == 16:
         subprompt = ""
     elif attempts_remaining == 1:
         subprompt = "Last attempt"
@@ -1263,7 +1277,7 @@ async def confirm_reenter_pin(
         ctx,
         br_type,
         "CHECK PIN",
-        "Please re-enter to confirm.",
+        description="Please re-enter PIN to confirm.",
         verb="BEGIN",
         br_code=br_code,
     )
@@ -1297,7 +1311,7 @@ async def confirm_pin_action(
         ctx,
         br_type,
         title,
-        f"{description} {action}",
+        description=f"{description} {action}",
         br_code=br_code,
     )
 
@@ -1320,21 +1334,22 @@ async def confirm_set_new_pin(
         br_code=br_code,
     )
 
-    # TODO: this is a hack to put the next info on new screen in case of wipe code
-    # TODO: there should be a possibility to give a list of strings and each of them
-    # would be rendered on a new screen
-    if len(information) == 1:
-        information.append("\n")
+    if "wipe_code" in br_type:
+        title = "WIPE CODE INFO"
+        verb = "HODL TO BEGIN"  # Easter egg from @Hannsek
+    else:
+        title = "PIN INFORMATION"
+        information.append(
+            "Position of individual numbers will change between entries for enhanced security."
+        )
+        verb = "HOLD TO BEGIN"
 
-    information.append(
-        "Position of individual numbers will change between entries for more security."
-    )
     return await confirm_action(
         ctx,
         br_type,
-        title="",
+        title=title,
         description="\n".join(information),
-        verb="HOLD TO BEGIN",
+        verb=verb,
         hold=True,
         br_code=br_code,
     )

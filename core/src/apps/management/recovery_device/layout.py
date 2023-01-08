@@ -52,7 +52,7 @@ async def request_mnemonic(
             ctx,
             "request_word",
             "WORD ENTERING",
-            description="You'll only have to select first 2-3 letters.",
+            description="You'll only have to select the first 2-3 letters.",
             verb="CONTINUE",
             verb_cancel=None,
             br_code=ButtonRequestType.MnemonicInput,
@@ -103,14 +103,7 @@ async def show_dry_run_result(
     from trezor.ui.layouts import show_success
 
     if result:
-        if is_slip39:
-            text = text_r(
-                "The entered recovery\nshares are valid and\nmatch what is currently\nin the device."
-            )
-        else:
-            text = text_r(
-                "The entered recovery\nseed is valid and\nmatches the one\nin the device."
-            )
+        text = "You have finished verifying your recovery seed"
         await show_success(ctx, "success_dry_recovery", text, button="Continue")
     else:
         if is_slip39:

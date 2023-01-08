@@ -36,13 +36,10 @@ where
     }
 
     /// Aligning the title to the center, instead of the left.
-    /// Also disabling scrollbar in the positive case, as they are not
-    /// compatible.
-    pub fn with_title_center(mut self, title_centered: bool) -> Self {
-        self.title_centered = title_centered;
-        if title_centered {
-            self.account_for_scrollbar = false;
-        }
+    /// Also disabling scrollbar, as they are not compatible.
+    pub fn with_title_centered(mut self) -> Self {
+        self.title_centered = true;
+        self.account_for_scrollbar = false;
         self
     }
 

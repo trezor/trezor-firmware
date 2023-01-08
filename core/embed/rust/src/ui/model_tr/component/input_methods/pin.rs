@@ -193,10 +193,12 @@ impl Component for PinEntry {
                 _ => {
                     if !self.is_full() {
                         self.append_new_digit(ctx, page_counter);
-                        // Choosing any random digit to be shown next
-                        let new_page_counter = random::uniform_between(
+                        // Choosing random digit to be shown next, but different
+                        // from the current choice.
+                        let new_page_counter = random::uniform_between_except(
                             NUMBER_START_INDEX as u32,
                             (CHOICE_LENGTH - 1) as u32,
+                            page_counter as u32,
                         );
                         self.choice_page
                             .set_page_counter(ctx, new_page_counter as u8);

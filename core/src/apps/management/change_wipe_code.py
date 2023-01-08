@@ -90,7 +90,7 @@ def _require_confirm_action(
             title,
             "enable wipe code?",
             [
-                "Wipe code will\nbe used to delete this device.",
+                "Wipe code can be used to erase all data from this device.",
             ],
         )
 

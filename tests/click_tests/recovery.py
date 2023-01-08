@@ -35,7 +35,7 @@ def select_number_of_words(
     layout = debug.read_layout()
 
     # select number of words
-    assert "Select number of words" in layout.get_content()
+    assert "select the number of words" in layout.get_content()
     layout = debug.click(buttons.OK, wait=True)
     if legacy_ui:
         assert layout.text == "WordSelector"
