@@ -1121,12 +1121,11 @@ async def request_pin_on_device(
             wrong_pin=wrong_pin,
         )
     )
-    while True:
-        result = await ctx.wait(dialog)
-        if result is CANCELLED:
-            raise PinCancelled
-        assert isinstance(result, str)
-        return result
+    result = await ctx.wait(dialog)
+    if result is CANCELLED:
+        raise PinCancelled
+    assert isinstance(result, str)
+    return result
 
 
 async def confirm_pin_action(

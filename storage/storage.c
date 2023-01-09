@@ -992,7 +992,8 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
 static void ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
   if (sectrue != is_not_wipe_code(pin, pin_len)) {
     storage_wipe();
-    // TODO: need to account for smaller model R - smaller font and different copy
+    // TODO: need to account for smaller model R - smaller font and different
+    // copy
     error_shutdown("You have entered the", "wipe code. All private",
                    "data has been erased.", NULL);
   }

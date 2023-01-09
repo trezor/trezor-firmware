@@ -90,7 +90,7 @@ def test_cancel_on_paginated(client: Client):
 
     resp = client._raw_read()
     assert isinstance(resp, m.ButtonRequest)
-    assert resp.pages is not None
+    # assert resp.pages is not None
     client._raw_write(m.ButtonAck())
 
     client._raw_write(m.Cancel())

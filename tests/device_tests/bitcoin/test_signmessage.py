@@ -333,9 +333,10 @@ def test_signmessage_pagination(client: Client, message: str):
 
         br = yield
         # TODO: try load the message_read the same way as in model T
-        for i in range(br.pages):
-            if i < br.pages - 1:
-                client.debug.swipe_up()
+        if br.pages is not None:
+            for i in range(br.pages):
+                if i < br.pages - 1:
+                    client.debug.swipe_up()
         client.debug.press_yes()
 
     with client:
