@@ -7,6 +7,7 @@ use crate::{
         display::{self, Color, Font},
         geometry::{Offset, Rect},
         model_tr::theme,
+        util::animation_disabled,
     },
 };
 
@@ -188,7 +189,9 @@ impl Component for Loader {
                     // There is further progress in the animation, request an animation frame event.
                     ctx.request_anim_frame();
                     // We have something to paint, so request to be painted in the next pass.
-                    ctx.request_paint();
+                    if !animation_disabled() {
+                        ctx.request_paint();
+                    }
                 }
             }
         }
