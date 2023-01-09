@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    common, theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
-    FlowPages, Page, ScrollBar,
+    theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, FlowPages,
+    Page, ScrollBar,
 };
 
 /// To be returned directly from Flow.
@@ -24,7 +24,7 @@ pub struct Flow<F, const M: usize> {
     /// Instance of the current Page
     current_page: Page<M>,
     /// Title being shown at the top in bold
-    common_title: Option<StrBuffer>,
+    title: Option<Title>,
     scrollbar: Child<ScrollBar>,
     content_area: Rect,
     title_area: Rect,
@@ -43,7 +43,7 @@ where
         Self {
             pages,
             current_page,
-            common_title: None,
+            title: None,
             content_area: Rect::zero(),
             title_area: Rect::zero(),
             scrollbar: Child::new(ScrollBar::to_be_filled_later()),
@@ -60,7 +60,7 @@ where
     /// Adding a common title to all pages. The title will not be colliding
     /// with the page content, as the content will be offset.
     pub fn with_common_title(mut self, title: StrBuffer) -> Self {
-        self.common_title = Some(title);
+        self.title = Some(Title::new(title));
         self
     }
 
@@ -75,8 +75,10 @@ where
     /// position.
     fn change_current_page(&mut self) {
         self.current_page = self.pages.get(self.page_counter);
-        if self.common_title.is_some() && let Some(title) = self.current_page.title() {
-            self.common_title = Some(title);
+        if self.title.is_some() {
+            if let Some(title) = self.current_page.title() {
+                self.title = Some(Title::new(title));
+            }
         }
         let scrollbar_active_index = self
             .pages
@@ -171,7 +173,7 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
         // Accounting for possible title
-        let (title_area, content_area) = if self.common_title.is_some() {
+        let (title_area, content_area) = if self.title.is_some() {
             title_content_area.split_top(theme::FONT_HEADER.line_height())
         } else {
             (Rect::zero(), title_content_area)
@@ -180,7 +182,7 @@ where
         self.content_area = content_area;
 
         // Placing a scrollbar in case the title is there
-        if self.common_title.is_some() {
+        if self.title.is_some() {
             // Finding out the total amount of pages in this flow
             let complete_page_count = self.pages.scrollbar_page_count(content_area);
             self.scrollbar
@@ -249,9 +251,9 @@ where
     fn paint(&mut self) {
         self.pad.paint();
         // Scrollbars are painted only with a title
-        if let Some(title) = self.common_title {
+        if self.title.is_some() {
             self.scrollbar.paint();
-            common::paint_header_left(title, self.title_area);
+            self.title.paint();
         }
         self.buttons.paint();
         // On purpose painting current page at the end, after buttons,
@@ -264,6 +266,7 @@ where
 
 // DEBUG-ONLY SECTION BELOW
 
+use crate::ui::model_tr::component::title::Title;
 #[cfg(feature = "ui_debug")]
 use heapless::String;
 
@@ -296,8 +299,8 @@ where
 
         self.report_btn_actions(t);
 
-        if let Some(title) = &self.common_title {
-            t.title(title.as_ref());
+        if self.title.is_some() {
+            t.field("title", &self.title);
         }
         t.field("content_area", &self.content_area);
         t.field("buttons", &self.buttons);

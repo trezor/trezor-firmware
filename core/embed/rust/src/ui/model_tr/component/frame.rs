@@ -1,9 +1,10 @@
-use super::{common, theme, ScrollBar};
+use super::{theme, ScrollBar};
 use crate::{
     micropython::buffer::StrBuffer,
     ui::{
         component::{Child, Component, Event, EventCtx},
         geometry::{Insets, Rect},
+        model_tr::component::title::Title,
     },
 };
 
@@ -11,8 +12,7 @@ use crate::{
 /// Also is allocating space for a scrollbar.
 pub struct Frame<T> {
     area: Rect,
-    title: StrBuffer,
-    title_centered: bool,
+    title: Title,
     account_for_scrollbar: bool,
     content: Child<T>,
 }
@@ -23,9 +23,8 @@ where
 {
     pub fn new(title: StrBuffer, content: T) -> Self {
         Self {
-            title,
             area: Rect::zero(),
-            title_centered: false,
+            title: Title::new(title),
             account_for_scrollbar: true,
             content: Child::new(content),
         }
@@ -38,7 +37,7 @@ where
     /// Aligning the title to the center, instead of the left.
     /// Also disabling scrollbar, as they are not compatible.
     pub fn with_title_centered(mut self) -> Self {
-        self.title_centered = true;
+        self.title = self.title.with_title_centered();
         self.account_for_scrollbar = false;
         self
     }
@@ -75,20 +74,18 @@ where
         };
 
         self.area = title_area;
+        self.title.place(title_area);
         self.content.place(content_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.title.event(ctx, event);
         self.content.event(ctx, event)
     }
 
     fn paint(&mut self) {
-        if self.title_centered {
-            common::paint_header_centered(&self.title, self.area);
-        } else {
-            common::paint_header_left(&self.title, self.area);
-        }
+        self.title.paint();
         self.content.paint();
     }
 }
@@ -102,7 +99,7 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Frame");
-        t.title(self.title.as_ref());
+        t.field("title", &self.title);
         t.field("content", &self.content);
         t.close();
     }

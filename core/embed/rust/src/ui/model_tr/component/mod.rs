@@ -17,6 +17,7 @@ mod result_anim;
 mod result_popup;
 mod scrollbar;
 mod share_words;
+mod title;
 
 use super::theme;
 
