@@ -31,7 +31,7 @@ pub use button_controller::{ButtonController, ButtonControllerMsg};
 pub use changing_text::ChangingTextLine;
 pub use flow::{Flow, FlowMsg};
 pub use flow_pages::{FlowPages, Page};
-pub use frame::Frame;
+pub use frame::{Frame, ScrollableContent, ScrollableFrame};
 pub use homescreen::{Homescreen, HomescreenMsg, Lockscreen};
 pub use input_methods::{
     choice::{Choice, ChoiceFactory, ChoicePage, ChoicePageMsg},

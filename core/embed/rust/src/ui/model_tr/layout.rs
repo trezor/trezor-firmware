@@ -32,6 +32,7 @@ use crate::{
             result::{CANCELLED, CONFIRMED, INFO},
             util::{iter_into_objs, iter_into_vec, upy_disable_animation},
         },
+        model_tr::component::{ScrollableContent, ScrollableFrame},
     },
 };
 
@@ -153,6 +154,15 @@ where
     }
 }
 
+impl<T> ComponentMsgObj for ScrollableFrame<T>
+where
+    T: ComponentMsgObj + ScrollableContent,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        self.inner().msg_try_into_obj(msg)
+    }
+}
+
 impl ComponentMsgObj for Progress {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
@@ -235,7 +245,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let obj = if title.as_ref().is_empty() {
             LayoutObj::new(content)?
         } else {
-            LayoutObj::new(Frame::new(title, content))?
+            LayoutObj::new(ScrollableFrame::new(title, content))?
         };
 
         Ok(obj.into())
@@ -275,7 +285,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             let confirm_btn = Some(ButtonDetails::text("CONFIRM".into()).with_default_duration());
             content = content.with_confirm_btn(confirm_btn);
         }
-        let obj = LayoutObj::new(Frame::new(title, content))?;
+        let obj = LayoutObj::new(ScrollableFrame::new(title, content))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

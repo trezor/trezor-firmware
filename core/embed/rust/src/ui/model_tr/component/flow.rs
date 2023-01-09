@@ -73,7 +73,7 @@ where
     /// Getting new current page according to page counter.
     /// Also updating the possible title and moving the scrollbar to correct
     /// position.
-    fn change_current_page(&mut self) {
+    fn change_current_page(&mut self, ctx: &mut EventCtx) {
         self.current_page = self.pages.get(self.page_counter);
         if self.title.is_some() {
             if let Some(title) = self.current_page.title() {
@@ -85,13 +85,13 @@ where
             .scrollbar_page_index(self.content_area, self.page_counter);
         self.scrollbar
             .inner_mut()
-            .set_active_page(scrollbar_active_index);
+            .set_active_page(scrollbar_active_index, ctx);
     }
 
     /// Placing current page, setting current buttons and clearing.
     fn update(&mut self, ctx: &mut EventCtx, get_new_page: bool) {
         if get_new_page {
-            self.change_current_page();
+            self.change_current_page(ctx);
         }
         self.current_page.place(self.content_area);
         self.set_buttons(ctx);
@@ -150,12 +150,16 @@ where
     fn event_consumed_by_current_choice(&mut self, ctx: &mut EventCtx, pos: ButtonPos) -> bool {
         if matches!(pos, ButtonPos::Left) && self.current_page.has_prev_page() {
             self.current_page.go_to_prev_page();
-            self.scrollbar.inner_mut().go_to_previous_page();
+            self.scrollbar
+                .inner_mut()
+                .set_active_page(self.page_counter as usize, ctx);
             self.update(ctx, false);
             true
         } else if matches!(pos, ButtonPos::Right) && self.current_page.has_next_page() {
             self.current_page.go_to_next_page();
-            self.scrollbar.inner_mut().go_to_next_page();
+            self.scrollbar
+                .inner_mut()
+                .set_active_page(self.page_counter as usize, ctx);
             self.update(ctx, false);
             true
         } else {
@@ -188,7 +192,12 @@ where
             self.scrollbar
                 .inner_mut()
                 .set_page_count(complete_page_count);
-            self.scrollbar.place(title_area);
+
+            let (title_area, scrollbar_area) =
+                title_area.split_right(self.scrollbar.inner().overall_width());
+
+            self.title.place(title_area);
+            self.scrollbar.place(scrollbar_area);
         }
 
         // We finally found how long is the first page, and can set its button layout.
