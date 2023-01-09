@@ -24,164 +24,165 @@ BR_TYPE_OTHER = ButtonRequestType.Other  # global_import_cache
 if __debug__:
     trezorui2.disable_animation(bool(DISABLE_ANIMATION))
 
+    class RustLayoutContent:
+        """Providing shortcuts to the data returned by layouts.
 
-class RustLayoutContent:
-    """Providing shortcuts to the data returned by layouts.
+        Used only in debug mode.
+        """
 
-    Used only in debug mode.
-    """
+        # How will some information be identified in the content
+        TITLE_TAG = " **TITLE** "
+        CONTENT_TAG = " **CONTENT** "
+        BTN_TAG = " **BTN** "
+        EMPTY_BTN = "---"
+        NEXT_BTN = "Next"
+        PREV_BTN = "Prev"
 
-    # How will some information be identified in the content
-    TITLE_TAG = " **TITLE** "
-    CONTENT_TAG = " **CONTENT** "
-    BTN_TAG = " **BTN** "
-    EMPTY_BTN = "---"
-    NEXT_BTN = "Next"
-    PREV_BTN = "Prev"
+        def __init__(self, raw_content: list[str]) -> None:
+            self.raw_content = raw_content
+            self.str_content = " ".join(raw_content).replace("  ", " ")
+            print("str_content", self.str_content)
+            print(60 * "-")
+            print("active_page:", self.active_page())
+            print("page_count:", self.page_count())
+            print("flow_page:", self.flow_page())
+            print("flow_page_count:", self.flow_page_count())
+            print("can_go_next:", self.can_go_next())
+            print("get_next_button:", self.get_next_button())
+            print(30 * "/")
+            print(self.visible_screen())
 
-    def __init__(self, raw_content: list[str]) -> None:
-        self.raw_content = raw_content
-        self.str_content = " ".join(raw_content).replace("  ", " ")
-        print("str_content", self.str_content)
-        print(60 * "-")
-        print("active_page:", self.active_page())
-        print("page_count:", self.page_count())
-        print("flow_page:", self.flow_page())
-        print("flow_page_count:", self.flow_page_count())
-        print("can_go_next:", self.can_go_next())
-        print("get_next_button:", self.get_next_button())
-        print(30 * "/")
-        print(self.visible_screen())
+        def active_page(self) -> int:
+            """Current index of the active page. Should always be there."""
+            return self.kw_pair_int("active_page") or 0
 
-    def active_page(self) -> int:
-        """Current index of the active page. Should always be there."""
-        return self.kw_pair_int("active_page") or 0
+        def page_count(self) -> int:
+            """Overall number of pages in this screen. Should always be there."""
+            return self.kw_pair_int("page_count") or 1
 
-    def page_count(self) -> int:
-        """Overall number of pages in this screen. Should always be there."""
-        return self.kw_pair_int("page_count") or 1
+        def in_flow(self) -> bool:
+            """Whether we are in flow."""
+            return self.flow_page() is not None
 
-    def in_flow(self) -> bool:
-        """Whether we are in flow."""
-        return self.flow_page() is not None
+        def flow_page(self) -> int | None:
+            """When in flow, on which page we are. Missing when not in flow."""
+            return self.kw_pair_int("flow_page")
 
-    def flow_page(self) -> int | None:
-        """When in flow, on which page we are. Missing when not in flow."""
-        return self.kw_pair_int("flow_page")
+        def flow_page_count(self) -> int | None:
+            """When in flow, how many unique pages it has. Missing when not in flow."""
+            return self.kw_pair_int("flow_page_count")
 
-    def flow_page_count(self) -> int | None:
-        """When in flow, how many unique pages it has. Missing when not in flow."""
-        return self.kw_pair_int("flow_page_count")
+        def can_go_next(self) -> bool:
+            """Checking if there is a next page."""
+            return self.get_next_button() is not None
 
-    def can_go_next(self) -> bool:
-        """Checking if there is a next page."""
-        return self.get_next_button() is not None
+        def get_next_button(self) -> str | None:
+            """Position of the next button, if any."""
+            return self._get_btn_by_action(self.NEXT_BTN)
 
-    def get_next_button(self) -> str | None:
-        """Position of the next button, if any."""
-        return self._get_btn_by_action(self.NEXT_BTN)
+        def get_prev_button(self) -> str | None:
+            """Position of the previous button, if any."""
+            return self._get_btn_by_action(self.PREV_BTN)
 
-    def get_prev_button(self) -> str | None:
-        """Position of the previous button, if any."""
-        return self._get_btn_by_action(self.PREV_BTN)
+        def _get_btn_by_action(self, btn_action: str) -> str | None:
+            """Position of button described by some action. None if not found."""
+            btn_names = ("left", "middle", "right")
+            for index, action in enumerate(self.button_actions()):
+                if action == btn_action:
+                    return btn_names[index]
 
-    def _get_btn_by_action(self, btn_action: str) -> str | None:
-        """Position of button described by some action. None if not found."""
-        btn_names = ("left", "middle", "right")
-        for index, action in enumerate(self.button_actions()):
-            if action == btn_action:
-                return btn_names[index]
-
-        return None
-
-    def visible_screen(self) -> str:
-        """Getting all the visible screen content - header, content, buttons."""
-        title_separator = f"\n{20*'-'}\n"
-        btn_separator = f"\n{20*'*'}\n"
-
-        visible = ""
-        if self.title():
-            visible += self.title()
-            visible += title_separator
-        visible += self.content()
-        visible += btn_separator
-        visible += ", ".join(self.buttons())
-
-        return visible
-
-    def title(self) -> str:
-        """Getting text that is displayed as a title."""
-        # there could be multiple of those - title and subtitle for example
-        title_strings = self._get_strings_inside_tag(self.str_content, self.TITLE_TAG)
-        return "\n".join(title_strings)
-
-    def content(self) -> str:
-        """Getting text that is displayed in the main part of the screen."""
-        content_strings = self._get_strings_inside_tag(
-            self.str_content, self.CONTENT_TAG
-        )
-        # there are some unwanted spaces
-        strings = [
-            s.replace(" \n ", "\n").replace("\n ", "\n").lstrip()
-            for s in content_strings
-        ]
-        return "\n".join(strings)
-
-    def buttons(self) -> tuple[str, str, str]:
-        """Getting content and actions for all three buttons."""
-        contents = self.buttons_content()
-        actions = self.button_actions()
-        return tuple(f"{contents[i]} [{actions[i]}]" for i in range(3))
-
-    def buttons_content(self) -> tuple[str, str, str]:
-        """Getting visual details for all three buttons. They should always be there."""
-        if self.BTN_TAG not in self.str_content:
-            return ("None", "None", "None")
-        btns = self._get_strings_inside_tag(self.str_content, self.BTN_TAG)
-        assert len(btns) == 3
-        return btns[0], btns[1], btns[2]
-
-    def button_actions(self) -> tuple[str, str, str]:
-        """Getting actions for all three buttons. They should always be there."""
-        if "_action" not in self.str_content:
-            return ("None", "None", "None")
-        action_ids = ("left_action", "middle_action", "right_action")
-        assert len(action_ids) == 3
-        return tuple(self.kw_pair_compulsory(action) for action in action_ids)
-
-    def kw_pair_int(self, key: str) -> int | None:
-        """Getting the value of a key-value pair as an integer. None if missing."""
-        val = self.kw_pair(key)
-        if val is None:
             return None
-        return int(val)
 
-    def kw_pair_compulsory(self, key: str) -> str:
-        """Getting value of a key that cannot be missing."""
-        val = self.kw_pair(key)
-        assert val is not None
-        return val
+        def visible_screen(self) -> str:
+            """Getting all the visible screen content - header, content, buttons."""
+            title_separator = f"\n{20*'-'}\n"
+            btn_separator = f"\n{20*'*'}\n"
 
-    def kw_pair(self, key: str) -> str | None:
-        """Getting the value of a key-value pair. None if missing."""
-        # Pairs are sent in this format in the list:
-        # [..., "key", "::", "value", ...]
-        for key_index, item in enumerate(self.raw_content):
-            if item == key:
-                if self.raw_content[key_index + 1] == "::":
-                    return self.raw_content[key_index + 2]
+            visible = ""
+            if self.title():
+                visible += self.title()
+                visible += title_separator
+            visible += self.content()
+            visible += btn_separator
+            visible += ", ".join(self.buttons())
 
-        return None
+            return visible
 
-    @staticmethod
-    def _get_strings_inside_tag(string: str, tag: str) -> list[str]:
-        """Getting all strings that are inside two same tags."""
-        parts = string.split(tag)
-        if len(parts) == 1:
-            return []
-        else:
-            # returning all odd indexes in the list
-            return parts[1::2]
+        def title(self) -> str:
+            """Getting text that is displayed as a title."""
+            # there could be multiple of those - title and subtitle for example
+            title_strings = self._get_strings_inside_tag(
+                self.str_content, self.TITLE_TAG
+            )
+            return "\n".join(title_strings)
+
+        def content(self) -> str:
+            """Getting text that is displayed in the main part of the screen."""
+            content_strings = self._get_strings_inside_tag(
+                self.str_content, self.CONTENT_TAG
+            )
+            # there are some unwanted spaces
+            strings = [
+                s.replace(" \n ", "\n").replace("\n ", "\n").lstrip()
+                for s in content_strings
+            ]
+            return "\n".join(strings)
+
+        def buttons(self) -> tuple[str, str, str]:
+            """Getting content and actions for all three buttons."""
+            contents = self.buttons_content()
+            actions = self.button_actions()
+            return tuple(f"{contents[i]} [{actions[i]}]" for i in range(3))
+
+        def buttons_content(self) -> tuple[str, str, str]:
+            """Getting visual details for all three buttons. They should always be there."""
+            if self.BTN_TAG not in self.str_content:
+                return ("None", "None", "None")
+            btns = self._get_strings_inside_tag(self.str_content, self.BTN_TAG)
+            assert len(btns) == 3
+            return btns[0], btns[1], btns[2]
+
+        def button_actions(self) -> tuple[str, str, str]:
+            """Getting actions for all three buttons. They should always be there."""
+            if "_action" not in self.str_content:
+                return ("None", "None", "None")
+            action_ids = ("left_action", "middle_action", "right_action")
+            assert len(action_ids) == 3
+            return tuple(self.kw_pair_compulsory(action) for action in action_ids)
+
+        def kw_pair_int(self, key: str) -> int | None:
+            """Getting the value of a key-value pair as an integer. None if missing."""
+            val = self.kw_pair(key)
+            if val is None:
+                return None
+            return int(val)
+
+        def kw_pair_compulsory(self, key: str) -> str:
+            """Getting value of a key that cannot be missing."""
+            val = self.kw_pair(key)
+            assert val is not None
+            return val
+
+        def kw_pair(self, key: str) -> str | None:
+            """Getting the value of a key-value pair. None if missing."""
+            # Pairs are sent in this format in the list:
+            # [..., "key", "::", "value", ...]
+            for key_index, item in enumerate(self.raw_content):
+                if item == key:
+                    if self.raw_content[key_index + 1] == "::":
+                        return self.raw_content[key_index + 2]
+
+            return None
+
+        @staticmethod
+        def _get_strings_inside_tag(string: str, tag: str) -> list[str]:
+            """Getting all strings that are inside two same tags."""
+            parts = string.split(tag)
+            if len(parts) == 1:
+                return []
+            else:
+                # returning all odd indexes in the list
+                return parts[1::2]
 
 
 class RustLayout(ui.Layout):
@@ -263,7 +264,7 @@ class RustLayout(ui.Layout):
             self.layout.trace(callback)
             return result
 
-        def _content_obj(self) -> RustLayoutContent:
+        def _content_obj(self) -> RustLayoutContent:  # type: ignore [is possibly unbound]
             """Gets object with user-friendly methods on Rust layout content."""
             return RustLayoutContent(self._read_content_raw())
 
@@ -448,16 +449,16 @@ async def _placeholder_confirm(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Any:
     return await confirm_action(
-        ctx=ctx,
-        br_type=br_type,
-        br_code=br_code,
-        title=title.upper(),
-        action=data,
-        description=description,
+        ctx,
+        br_type,
+        title.upper(),
+        data,
+        description,
         verb=verb,
         verb_cancel=verb_cancel,
         hold=hold,
         reverse=True,
+        br_code=br_code,
     )
 
 
@@ -861,10 +862,10 @@ async def should_show_more(
     confirm: str | bytes | None = None,
 ) -> bool:
     return await get_bool(
-        ctx=ctx,
-        title=title.upper(),
-        data=button_text,
-        br_type=br_type,
+        ctx,
+        br_type,
+        title.upper(),
+        button_text,
         br_code=br_code,
     )
 
@@ -879,12 +880,13 @@ async def confirm_blob(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     ask_pagination: bool = False,
 ) -> None:
-    await _placeholder_confirm(
-        ctx=ctx,
-        br_type=br_type,
-        title=title.upper(),
-        data=str(data),
-        description=description,
+    await confirm_action(
+        ctx,
+        br_type,
+        title.upper(),
+        description,
+        str(data),
+        hold=hold,
         br_code=br_code,
     )
 
@@ -898,11 +900,11 @@ async def confirm_address(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Awaitable[None]:
     return confirm_blob(
-        ctx=ctx,
-        br_type=br_type,
-        title=title.upper(),
-        data=address,
-        description=description,
+        ctx,
+        br_type,
+        title.upper(),
+        address,
+        description,
         br_code=br_code,
     )
 
@@ -916,11 +918,11 @@ async def confirm_text(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Any:
     return await _placeholder_confirm(
-        ctx=ctx,
-        br_type=br_type,
-        title=title,
-        data=data,
-        description=description,
+        ctx,
+        br_type,
+        title,
+        data,
+        description,
         br_code=br_code,
     )
 
@@ -933,12 +935,12 @@ def confirm_amount(
     br_type: str = "confirm_amount",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Awaitable[None]:
-    return _placeholder_confirm(
-        ctx=ctx,
-        br_type=br_type,
-        title=title.upper(),
-        data=amount,
-        description=description,
+    return confirm_blob(
+        ctx,
+        br_type,
+        title.upper(),
+        amount,
+        description,
         br_code=br_code,
     )
 
@@ -991,12 +993,14 @@ def confirm_value(
     if not verb and not hold:
         raise ValueError("Either verb or hold=True must be set")
 
-    return _placeholder_confirm(
-        ctx=ctx,
-        br_type=br_type,
-        title=title.upper(),
-        data=value,
-        description=description,
+    return confirm_action(
+        ctx,
+        br_type,
+        title.upper(),
+        description,
+        value,
+        verb=verb or "HOLD TO CONFIRM",
+        hold=hold,
         br_code=br_code,
     )
 
@@ -1032,11 +1036,14 @@ async def confirm_total(
 async def confirm_joint_total(
     ctx: GenericContext, spending_amount: str, total_amount: str
 ) -> None:
-    await _placeholder_confirm(
+    await confirm_properties(
         ctx,
         "confirm_joint_total",
         "JOINT TRANSACTION",
-        f"You are contributing:\n{spending_amount}\nto the total amount:\n{total_amount}",
+        (
+            ("You are contributing:", spending_amount),
+            ("To the total amount:", total_amount),
+        ),
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1054,19 +1061,21 @@ async def confirm_metadata(
         ctx,
         br_type,
         title.upper(),
-        content.format(param),
+        description=content.format(param),
         hold=hold,
         br_code=br_code,
     )
 
 
 async def confirm_replacement(ctx: GenericContext, description: str, txid: str) -> None:
-    await _placeholder_confirm(
+    await confirm_value(
         ctx,
-        "confirm_replacement",
         description.upper(),
-        f"Confirm transaction ID:\n{txid}",
-        br_code=ButtonRequestType.SignTx,
+        txid,
+        "Confirm transaction ID:",
+        "confirm_replacement",
+        ButtonRequestType.SignTx,
+        verb="CONFIRM",
     )
 
 
@@ -1100,24 +1109,26 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
-    text = ""
     if sign == 0:
-        text += "Your fee did not change.\n"
+        change_verb = "Your fee did not change."
     else:
         if sign < 0:
-            text += "Decrease your fee by:\n"
+            change_verb = "Decrease your fee by:"
         else:
-            text += "Increase your fee by:\n"
-        text += f"{user_fee_change}\n"
-    text += f"Transaction fee:\n{total_fee_new}"
-    if fee_rate_amount is not None:
-        text += "\n" + fee_rate_amount
+            change_verb = "Increase your fee by:"
 
-    await _placeholder_confirm(
+    properties: list[tuple[str, str]] = [
+        (change_verb, user_fee_change),
+        ("Transaction fee:", total_fee_new),
+    ]
+    if fee_rate_amount is not None:
+        properties.append(("Fee rate:", fee_rate_amount))
+
+    await confirm_properties(
         ctx,
         "modify_fee",
         "MODIFY FEE",
-        text,
+        properties,
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1125,11 +1136,14 @@ async def confirm_modify_fee(
 async def confirm_coinjoin(
     ctx: GenericContext, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
-    await _placeholder_confirm(
+    await confirm_properties(
         ctx,
         "coinjoin_final",
         "AUTHORIZE COINJOIN",
-        f"Maximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte}",
+        (
+            ("Maximum rounds:", str(max_rounds)),
+            ("Maximum mining fee:", max_fee_per_vbyte),
+        ),
         br_code=BR_TYPE_OTHER,
     )
 
@@ -1166,20 +1180,24 @@ async def confirm_signverify(
         header = f"Sign {coin} message"
         br_type = "sign_message"
 
-    await _placeholder_confirm(
-        ctx=ctx,
-        br_type=br_type,
-        title=header.upper(),
-        data=f"Confirm address:\n{address}",
-        br_code=BR_TYPE_OTHER,
+    await confirm_value(
+        ctx,
+        header.upper(),
+        address,
+        "Confirm address:",
+        br_type,
+        BR_TYPE_OTHER,
+        verb="CONFIRM",
     )
 
-    await _placeholder_confirm(
+    await confirm_value(
         ctx,
-        br_type,
         header.upper(),
-        f"Confirm message:\n{message}",
-        br_code=BR_TYPE_OTHER,
+        message,
+        "Confirm message:",
+        br_type,
+        BR_TYPE_OTHER,
+        verb="CONFIRM",
     )
 
 
@@ -1257,12 +1275,11 @@ async def request_pin_on_device(
         )
     )
 
-    while True:
-        result = await ctx.wait(dialog)
-        if result is trezorui2.CANCELLED:
-            raise wire.PinCancelled
-        assert isinstance(result, str)
-        return result
+    result = await ctx.wait(dialog)
+    if result is trezorui2.CANCELLED:
+        raise wire.PinCancelled
+    assert isinstance(result, str)
+    return result
 
 
 async def confirm_reenter_pin(
@@ -1331,6 +1348,8 @@ async def confirm_set_new_pin(
         br_code=br_code,
     )
 
+    # Additional information for the user to know about PIN/WIPE CODE
+
     if "wipe_code" in br_type:
         title = "WIPE CODE INFO"
         verb = "HODL TO BEGIN"  # Easter egg from @Hannsek
@@ -1344,7 +1363,7 @@ async def confirm_set_new_pin(
     return await confirm_action(
         ctx,
         br_type,
-        title=title,
+        title,
         description="\n".join(information),
         verb=verb,
         hold=True,
