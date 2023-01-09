@@ -1,6 +1,6 @@
 use crate::ui::{
     display::{self, Font},
-    geometry::{Offset, Point, Rect},
+    geometry::Point,
 };
 
 use super::theme;
@@ -25,34 +25,4 @@ pub fn display_center<T: AsRef<str>>(baseline: Point, text: &T, font: Font) {
 /// with right boundary at a baseline Point
 pub fn display_right<T: AsRef<str>>(baseline: Point, text: &T, font: Font) {
     display::text_right(baseline, text.as_ref(), font, theme::FG, theme::BG);
-}
-
-/// Display title/header at the top left of the given area.
-/// Returning the painted height of the whole header.
-pub fn paint_header_left<T: AsRef<str>>(title: T, area: Rect) -> i16 {
-    let text_heigth = theme::FONT_HEADER.text_height();
-    let title_baseline = area.top_left() + Offset::y(text_heigth);
-    display::text_left(
-        title_baseline,
-        title.as_ref(),
-        theme::FONT_HEADER,
-        theme::FG,
-        theme::BG,
-    );
-    text_heigth
-}
-
-/// Display title/header centered at the top of the given area.
-/// Returning the painted height of the whole header.
-pub fn paint_header_centered<T: AsRef<str>>(title: T, area: Rect) -> i16 {
-    let text_heigth = theme::FONT_HEADER.text_height();
-    let title_baseline = area.top_center() + Offset::y(text_heigth);
-    display::text_center(
-        title_baseline,
-        title.as_ref(),
-        theme::FONT_HEADER,
-        theme::FG,
-        theme::BG,
-    );
-    text_heigth
 }

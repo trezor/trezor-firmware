@@ -3,12 +3,13 @@ use crate::{
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad},
         geometry::Rect,
+        model_tr::component::{scrollbar::SCROLLBAR_SPACE, title::Title},
     },
 };
 
 use super::{
-    common, theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
-    FlowPages, Page, ScrollBar,
+    theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, FlowPages,
+    Page, ScrollBar,
 };
 
 /// To be returned directly from Flow.
@@ -24,7 +25,7 @@ pub struct Flow<F, const M: usize> {
     /// Instance of the current Page
     current_page: Page<M>,
     /// Title being shown at the top in bold
-    common_title: Option<StrBuffer>,
+    title: Option<Title>,
     scrollbar: Child<ScrollBar>,
     content_area: Rect,
     title_area: Rect,
@@ -43,7 +44,7 @@ where
         Self {
             pages,
             current_page,
-            common_title: None,
+            title: None,
             content_area: Rect::zero(),
             title_area: Rect::zero(),
             scrollbar: Child::new(ScrollBar::to_be_filled_later()),
@@ -60,7 +61,7 @@ where
     /// Adding a common title to all pages. The title will not be colliding
     /// with the page content, as the content will be offset.
     pub fn with_common_title(mut self, title: StrBuffer) -> Self {
-        self.common_title = Some(title);
+        self.title = Some(Title::new(title));
         self
     }
 
@@ -75,8 +76,11 @@ where
     /// position.
     fn change_current_page(&mut self) {
         self.current_page = self.pages.get(self.page_counter);
-        if self.common_title.is_some() && let Some(title) = self.current_page.title() {
-            self.common_title = Some(title);
+        if self.title.is_some() {
+            if let Some(title) = self.current_page.title() {
+                self.title = Some(Title::new(title));
+                self.title.place(self.title_area);
+            }
         }
         let scrollbar_active_index = self
             .pages
@@ -148,12 +152,20 @@ where
     fn event_consumed_by_current_choice(&mut self, ctx: &mut EventCtx, pos: ButtonPos) -> bool {
         if matches!(pos, ButtonPos::Left) && self.current_page.has_prev_page() {
             self.current_page.go_to_prev_page();
-            self.scrollbar.inner_mut().go_to_previous_page();
+            let inner_page = self.current_page.get_current_page();
+            self.scrollbar
+                .inner_mut()
+                .set_active_page(self.page_counter as usize + inner_page);
+            self.scrollbar.request_complete_repaint(ctx);
             self.update(ctx, false);
             true
         } else if matches!(pos, ButtonPos::Right) && self.current_page.has_next_page() {
             self.current_page.go_to_next_page();
-            self.scrollbar.inner_mut().go_to_next_page();
+            let inner_page = self.current_page.get_current_page();
+            self.scrollbar
+                .inner_mut()
+                .set_active_page(self.page_counter as usize + inner_page);
+            self.scrollbar.request_complete_repaint(ctx);
             self.update(ctx, false);
             true
         } else {
@@ -171,22 +183,27 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
         // Accounting for possible title
-        let (title_area, content_area) = if self.common_title.is_some() {
+        let (title_area, content_area) = if self.title.is_some() {
             title_content_area.split_top(theme::FONT_HEADER.line_height())
         } else {
             (Rect::zero(), title_content_area)
         };
-        self.title_area = title_area;
         self.content_area = content_area;
 
         // Placing a scrollbar in case the title is there
-        if self.common_title.is_some() {
+        if self.title.is_some() {
             // Finding out the total amount of pages in this flow
             let complete_page_count = self.pages.scrollbar_page_count(content_area);
             self.scrollbar
                 .inner_mut()
                 .set_page_count(complete_page_count);
-            self.scrollbar.place(title_area);
+
+            let (title_area, scrollbar_area) =
+                title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
+
+            self.title.place(title_area);
+            self.title_area = title_area;
+            self.scrollbar.place(scrollbar_area);
         }
 
         // We finally found how long is the first page, and can set its button layout.
@@ -199,6 +216,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.title.event(ctx, event);
         let button_event = self.buttons.event(ctx, event);
 
         // Do something when a button was triggered
@@ -249,9 +267,9 @@ where
     fn paint(&mut self) {
         self.pad.paint();
         // Scrollbars are painted only with a title
-        if let Some(title) = self.common_title {
+        if self.title.is_some() {
             self.scrollbar.paint();
-            common::paint_header_left(title, self.title_area);
+            self.title.paint();
         }
         self.buttons.paint();
         // On purpose painting current page at the end, after buttons,
@@ -296,8 +314,8 @@ where
 
         self.report_btn_actions(t);
 
-        if let Some(title) = &self.common_title {
-            t.title(title.as_ref());
+        if self.title.is_some() {
+            t.field("title", &self.title);
         }
         t.field("content_area", &self.content_area);
         t.field("buttons", &self.buttons);

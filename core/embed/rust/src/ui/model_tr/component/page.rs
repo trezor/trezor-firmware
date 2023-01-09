@@ -4,15 +4,12 @@ use crate::ui::{
     geometry::{Insets, Rect},
 };
 
-use super::{
-    theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, ScrollBar,
-};
+use super::{theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos};
 
 pub struct ButtonPage<T> {
+    page_count: usize,
+    active_page: usize,
     content: Child<T>,
-    scrollbar: Child<ScrollBar>,
-    /// Optional available area for scrollbar defined by parent component.
-    parent_scrollbar_area: Option<Rect>,
     pad: Pad,
     /// Left button of the first screen
     cancel_btn_details: Option<ButtonDetails>,
@@ -25,8 +22,6 @@ pub struct ButtonPage<T> {
     /// Right button of every screen apart the last one
     next_btn_details: Option<ButtonDetails>,
     buttons: Child<ButtonController>,
-    /// Scrollbar may or may not be shown (but will be counting pages anyway).
-    show_scrollbar: bool,
 }
 
 impl<T> ButtonPage<T>
@@ -35,9 +30,9 @@ where
 {
     pub fn new(content: T, background: Color) -> Self {
         Self {
+            page_count: 0, // will be set in place()
+            active_page: 0,
             content: Child::new(content),
-            scrollbar: Child::new(ScrollBar::to_be_filled_later()),
-            parent_scrollbar_area: None,
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
@@ -48,7 +43,6 @@ where
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
-            show_scrollbar: true,
         }
     }
 
@@ -72,9 +66,20 @@ where
         self
     }
 
-    pub fn with_scrollbar(mut self, show: bool) -> Self {
-        self.show_scrollbar = show;
-        self
+    pub fn has_next_page(&self) -> bool {
+        self.active_page < self.page_count - 1
+    }
+
+    pub fn has_previous_page(&self) -> bool {
+        self.active_page > 0
+    }
+
+    pub fn go_to_next_page(&mut self) {
+        self.active_page = self.active_page.saturating_add(1).min(self.page_count - 1);
+    }
+
+    pub fn go_to_previous_page(&mut self) {
+        self.active_page = self.active_page.saturating_sub(1);
     }
 
     /// Basically just determining whether the right button for
@@ -89,20 +94,15 @@ where
     /// Change the page in the content, clear the background under it and make
     /// sure it gets completely repainted. Also updating the buttons.
     fn change_page(&mut self, ctx: &mut EventCtx) {
-        let active_page = self.scrollbar.inner().active_page;
-        self.content.inner_mut().change_page(active_page);
+        self.content.inner_mut().change_page(self.active_page);
         self.content.request_complete_repaint(ctx);
-        self.scrollbar.request_complete_repaint(ctx);
         self.update_buttons(ctx);
         self.pad.clear();
     }
 
     /// Reflecting the current page in the buttons.
     fn update_buttons(&mut self, ctx: &mut EventCtx) {
-        let btn_layout = self.get_button_layout(
-            self.scrollbar.inner().has_previous_page(),
-            self.scrollbar.inner().has_next_page(),
-        );
+        let btn_layout = self.get_button_layout(self.has_previous_page(), self.has_next_page());
         self.buttons.mutate(ctx, |_ctx, buttons| {
             buttons.set(btn_layout);
         });
@@ -137,6 +137,15 @@ where
     }
 }
 
+impl<T> ScrollableContent for ButtonPage<T> {
+    fn page_count(&self) -> usize {
+        self.page_count
+    }
+    fn active_page(&self) -> usize {
+        self.active_page
+    }
+}
+
 impl<T> Component for ButtonPage<T>
 where
     T: Component + Paginate,
@@ -151,36 +160,23 @@ where
         self.content.place(content_area);
         // Need to be called here, only after content is placed
         // and we can calculate the page count.
-        let page_count = self.content.inner_mut().page_count();
-        self.scrollbar.inner_mut().set_page_count(page_count);
-        self.set_buttons_for_initial_page(page_count);
-
-        // Placing the scrollbar when requested.
-        // Put it into its dedicated area when parent component already chose it,
-        // otherwise place it into the right top of the content.
-        if self.show_scrollbar {
-            let scrollbar_area = self.parent_scrollbar_area.unwrap_or(content_area);
-            self.scrollbar.place(scrollbar_area);
-        }
+        self.page_count = self.content.inner_mut().page_count();
+        self.set_buttons_for_initial_page(self.page_count);
 
         self.buttons.place(button_area);
         bounds
     }
 
-    fn set_scrollbar_area(&mut self, area: Rect) {
-        self.parent_scrollbar_area = Some(area);
-    }
-
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.scrollbar.inner().page_count);
+        ctx.set_page_count(self.page_count);
         let button_event = self.buttons.event(ctx, event);
 
         if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
             match pos {
                 ButtonPos::Left => {
-                    if self.scrollbar.inner().has_previous_page() {
+                    if self.has_previous_page() {
                         // Clicked BACK. Scroll up.
-                        self.scrollbar.inner_mut().go_to_previous_page();
+                        self.go_to_previous_page();
                         self.change_page(ctx);
                     } else {
                         // Clicked CANCEL. Send result.
@@ -188,9 +184,9 @@ where
                     }
                 }
                 ButtonPos::Right => {
-                    if self.scrollbar.inner().has_next_page() {
+                    if self.has_next_page() {
                         // Clicked NEXT. Scroll down.
-                        self.scrollbar.inner_mut().go_to_next_page();
+                        self.go_to_next_page();
                         self.change_page(ctx);
                     } else {
                         // Clicked CONFIRM. Send result.
@@ -210,9 +206,6 @@ where
     fn paint(&mut self) {
         self.pad.paint();
         self.content.paint();
-        if self.show_scrollbar {
-            self.scrollbar.paint();
-        }
         self.buttons.paint();
     }
 }
@@ -221,18 +214,19 @@ where
 
 #[cfg(feature = "ui_debug")]
 use super::ButtonAction;
+use crate::ui::model_tr::component::frame::ScrollableContent;
 #[cfg(feature = "ui_debug")]
 use heapless::String;
 
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for ButtonPage<T>
 where
-    T: crate::trace::Trace,
+    T: crate::trace::Trace + Paginate + Component,
 {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {
             ButtonPos::Left => {
-                if self.scrollbar.inner().has_previous_page() {
+                if self.has_previous_page() {
                     ButtonAction::PrevPage.string()
                 } else if self.cancel_btn_details.is_some() {
                     ButtonAction::Cancel.string()
@@ -241,7 +235,7 @@ where
                 }
             }
             ButtonPos::Right => {
-                if self.scrollbar.inner().has_next_page() {
+                if self.has_next_page() {
                     ButtonAction::NextPage.string()
                 } else if self.confirm_btn_details.is_some() {
                     ButtonAction::Confirm.string()
@@ -255,14 +249,8 @@ where
 
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonPage");
-        t.kw_pair(
-            "active_page",
-            inttostr!(self.scrollbar.inner().active_page as u8),
-        );
-        t.kw_pair(
-            "page_count",
-            inttostr!(self.scrollbar.inner().page_count as u8),
-        );
+        t.kw_pair("active_page", inttostr!(self.active_page as u8));
+        t.kw_pair("page_count", inttostr!(self.page_count as u8));
         self.report_btn_actions(t);
         // TODO: it seems the button text is not updated when paginating (but actions
         // above are)

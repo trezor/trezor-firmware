@@ -23,6 +23,8 @@ enum DotType {
     Small,   // .
 }
 
+pub const SCROLLBAR_SPACE: i16 = 5;
+
 /// How many dots at most will there be
 const MAX_DOTS: usize = 5;
 
@@ -61,23 +63,9 @@ impl ScrollBar {
     }
 
     pub fn set_active_page(&mut self, active_page: usize) {
-        self.active_page = active_page;
-    }
-
-    pub fn has_next_page(&self) -> bool {
-        self.active_page < self.page_count - 1
-    }
-
-    pub fn has_previous_page(&self) -> bool {
-        self.active_page > 0
-    }
-
-    pub fn go_to_next_page(&mut self) {
-        self.active_page = self.active_page.saturating_add(1).min(self.page_count - 1);
-    }
-
-    pub fn go_to_previous_page(&mut self) {
-        self.active_page = self.active_page.saturating_sub(1);
+        if active_page != self.active_page {
+            self.active_page = active_page;
+        }
     }
 
     /// Create a (seemingly circular) dot given its top left point.
@@ -231,7 +219,7 @@ impl Component for ScrollBar {
         // Occupying as little space as possible (according to the number of pages),
         // aligning to the right.
         let scrollbar_area = Rect::from_top_right_and_size(
-            bounds.top_right(),
+            bounds.top_right() + Offset::y(1), // offset for centering vertically
             Offset::new(self.overall_width(), Self::MAX_DOT_SIZE),
         );
         self.pad.place(scrollbar_area);

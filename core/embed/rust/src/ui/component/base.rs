@@ -38,20 +38,6 @@ pub trait Component {
     /// No painting should be done in this phase.
     fn place(&mut self, bounds: Rect) -> Rect;
 
-    /// Define the available area for scrollbar, when it is outside of the
-    /// component itself (in the area of parent component).
-    ///
-    /// This area is the *MAXIMUM* area that scrollbar can occupy.
-    /// However, the scrollbar itself may be found smaller than this
-    /// (after the content is placed and we know the page count).
-    /// In this case, its area will/should be decreased and taken from the right
-    /// (to minimize the area that is affected - as scrollbar has a `Pad`
-    /// that is cleared periodically).
-    ///
-    /// Use-case is putting the scrollbar on the same line as the title in
-    /// `Frame` and operating this scrollbar from the Child component.
-    fn set_scrollbar_area(&mut self, _area: Rect) {}
-
     /// React to an outside event. See the `Event` type for possible cases.
     ///
     /// Component should modify its internal state as a response to the event,
@@ -143,10 +129,6 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.component.place(bounds)
-    }
-
-    fn set_scrollbar_area(&mut self, area: Rect) {
-        self.component.set_scrollbar_area(area);
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {

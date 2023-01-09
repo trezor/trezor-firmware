@@ -183,6 +183,10 @@ impl<const M: usize> Page<M> {
     pub fn go_to_next_page(&mut self) {
         self.current_page += 1;
     }
+
+    pub fn get_current_page(&self) -> usize {
+        self.current_page
+    }
 }
 
 // For `layout.rs` - single operations
