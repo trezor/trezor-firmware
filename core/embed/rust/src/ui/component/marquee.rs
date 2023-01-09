@@ -1,4 +1,5 @@
 use crate::{
+    micropython::buffer::StrBuffer,
     time::{Duration, Instant},
     ui::{
         animation::Animation,
@@ -23,7 +24,7 @@ pub struct Marquee {
     min_offset: i16,
     max_offset: i16,
     state: State,
-    text: &'static str,
+    text: StrBuffer,
     font: Font,
     fg: Color,
     bg: Color,
@@ -32,7 +33,7 @@ pub struct Marquee {
 }
 
 impl Marquee {
-    pub fn new(text: &'static str, font: Font, fg: Color, bg: Color) -> Self {
+    pub fn new(text: StrBuffer, font: Font, fg: Color, bg: Color) -> Self {
         Self {
             area: Rect::zero(),
             pause_token: None,
@@ -50,7 +51,7 @@ impl Marquee {
 
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {
         if let State::Initial = self.state {
-            let text_width = self.font.text_width(self.text);
+            let text_width = self.font.text_width(self.text.as_ref());
             let max_offset = self.area.width() - text_width;
 
             self.min_offset = 0;
@@ -106,7 +107,14 @@ impl Marquee {
     }
 
     pub fn paint_anim(&mut self, offset: i16) {
-        display::marquee(self.area, self.text, offset, self.font, self.fg, self.bg);
+        display::marquee(
+            self.area,
+            self.text.as_ref(),
+            offset,
+            self.font,
+            self.fg,
+            self.bg,
+        );
     }
 }
 
@@ -114,6 +122,22 @@ impl Component for Marquee {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        let base_width = self.font.text_width("M");
+        let text_width = self.font.text_width(self.text.as_ref());
+        let area_width = bounds.width();
+
+        let shift_width = if area_width > text_width {
+            area_width - text_width
+        } else {
+            text_width - area_width
+        };
+
+        let mut duration = (300 * shift_width as u32) / base_width as u32;
+        if duration < 300 {
+            duration = 300;
+        }
+
+        self.duration = Duration::from_millis(duration);
         self.area = bounds;
         self.area
     }
