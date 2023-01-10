@@ -140,6 +140,7 @@ env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('
 tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
 env.Replace(
+    CP='cp',
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
     CC='arm-none-eabi-gcc',
@@ -215,10 +216,17 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
 )
 
+BINARY_NAME = f"build/bootloader_ci/bootloader_ci-{tools.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME += "-" + tools.get_version('embed/bootloader_ci/version.h')
+BINARY_NAME += "-" + tools.get_git_revision_short_hash()
+BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
+BINARY_NAME += ".bin"
+
 program_bin = env.Command(
     target='bootloader.bin',
     source=program_elf,
     action=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
+        '$CP $TARGET ' + BINARY_NAME,
     ], )
