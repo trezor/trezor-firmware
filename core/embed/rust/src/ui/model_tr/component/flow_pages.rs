@@ -1,7 +1,10 @@
 use crate::{
     micropython::buffer::StrBuffer,
     ui::{
-        component::Paginate,
+        component::{
+            text::{layout::LayoutFit, TextStyle},
+            Paginate, TextLayout,
+        },
         display::{Font, Icon, IconAndName},
         geometry::{Alignment, Offset, Point, Rect},
         model_tr::theme,
@@ -12,10 +15,7 @@ use crate::{
 use heapless::Vec;
 
 use super::{
-    flow_pages_poc_helpers::{
-        LayoutFit, LayoutSink, Op, QrCodeInfo, TextLayout, TextNoOp, TextRenderer, TextStyle,
-        ToDisplay,
-    },
+    flow_pages_helpers::{LayoutSink, Op, QrCodeInfo, TextNoOp, TextRenderer, ToDisplay},
     ButtonActions, ButtonDetails, ButtonLayout,
 };
 
@@ -340,7 +340,7 @@ impl<const M: usize> Paginate for Page<M> {
 
 #[cfg(feature = "ui_debug")]
 pub mod trace {
-    use crate::ui::model_tr::component::flow_pages_poc_helpers::TraceSink;
+    use crate::ui::model_tr::component::flow_pages_helpers::TraceSink;
 
     use super::*;
 
