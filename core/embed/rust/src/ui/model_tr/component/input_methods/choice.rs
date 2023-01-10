@@ -156,12 +156,12 @@ where
         &mut self,
         ctx: &mut EventCtx,
         new_choices: F,
-        reset_page_counter: bool,
+        new_page_counter: Option<u8>,
         is_carousel: bool,
     ) {
         self.choices = new_choices;
-        if reset_page_counter {
-            self.page_counter = 0;
+        if let Some(new_counter) = new_page_counter {
+            self.page_counter = new_counter;
         }
         self.is_carousel = is_carousel;
         self.update(ctx);

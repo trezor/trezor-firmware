@@ -135,7 +135,7 @@ impl ChoiceFactoryPassphrase {
     /// return back
     fn get_character_item(&self, choice_index: u8) -> ChoiceItem {
         if is_menu_choice(&self.current_category, choice_index) {
-            ChoiceItem::new("MENU", ButtonLayout::arrow_armed_icon("RETURN".into()))
+            ChoiceItem::new("MENU", ButtonLayout::arrow_armed_arrow("RETURN".into()))
         } else {
             let ch = get_char(&self.current_category, choice_index);
             ChoiceItem::new(char_to_string::<1>(ch), ButtonLayout::default_three_icons())
@@ -211,7 +211,7 @@ impl PassphraseEntry {
     /// Displaying the MENU
     fn show_menu_page(&mut self, ctx: &mut EventCtx) {
         let menu_choices = ChoiceFactoryPassphrase::new(ChoiceCategory::Menu);
-        self.choice_page.reset(ctx, menu_choices, true, false);
+        self.choice_page.reset(ctx, menu_choices, Some(0), false);
         // Going back to the last MENU position before showing the MENU
         self.choice_page.set_page_counter(ctx, self.menu_position);
     }
@@ -219,7 +219,7 @@ impl PassphraseEntry {
     /// Displaying the character category
     fn show_category_page(&mut self, ctx: &mut EventCtx) {
         let category_choices = ChoiceFactoryPassphrase::new(self.current_category.clone());
-        self.choice_page.reset(ctx, category_choices, true, true);
+        self.choice_page.reset(ctx, category_choices, Some(0), true);
     }
 
     pub fn passphrase(&self) -> &str {

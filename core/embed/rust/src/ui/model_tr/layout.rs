@@ -509,7 +509,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
             } else {
                 // Page in the middle
                 (
-                    ButtonLayout::arrow_armed_icon("SELECT".into()),
+                    ButtonLayout::arrow_armed_arrow("SELECT".into()),
                     ButtonActions::prev_confirm_next(),
                 )
             };
