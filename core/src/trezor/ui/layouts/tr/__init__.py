@@ -1309,7 +1309,7 @@ async def pin_mismatch(
         ctx,
         br_type,
         "PIN MISMATCH",
-        "The PINs you entered do not match.\nPlease try again.",
+        description="The PINs you entered do not match.\nPlease try again.",
         verb="TRY AGAIN",
         verb_cancel=None,
         br_code=br_code,

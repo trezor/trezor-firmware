@@ -24,6 +24,12 @@ const MAX_LETTERS_LENGTH: usize = 26;
 /// Offer words when there will be fewer of them than this
 const OFFER_WORDS_THRESHOLD: usize = 10;
 
+/// Where will be the DELETE option - at the first position
+const DELETE_INDEX: u8 = 0;
+/// Which index will be used at the beginning.
+/// (Accounts for DELETE to be at index 0)
+const INITIAL_PAGE_COUNTER: u8 = DELETE_INDEX + 1;
+
 const PROMPT: &str = "_";
 
 /// Type of the wordlist, deciding the list of words to be used
@@ -61,13 +67,15 @@ impl ChoiceFactory for ChoiceFactoryWordlist {
 
     fn get(&self, choice_index: u8) -> ChoiceItem {
         // Letters have a carousel, words do not
+        // Putting DELETE as the first option in both cases
+        // (is a requirement for WORDS, doing it for LETTERS as well to unite it)
         match self {
             Self::Letters(letter_choices) => {
-                if choice_index >= letter_choices.len() as u8 {
-                    ChoiceItem::new("DELETE", ButtonLayout::arrow_armed_icon("CONFIRM".into()))
+                if choice_index == DELETE_INDEX {
+                    ChoiceItem::new("DELETE", ButtonLayout::arrow_armed_arrow("CONFIRM".into()))
                         .with_icon(Icon::new(theme::ICON_DELETE))
                 } else {
-                    let letter = letter_choices[choice_index as usize];
+                    let letter = letter_choices[choice_index as usize - 1];
                     ChoiceItem::new(
                         char_to_string::<1>(letter),
                         ButtonLayout::default_three_icons(),
@@ -75,17 +83,14 @@ impl ChoiceFactory for ChoiceFactoryWordlist {
                 }
             }
             Self::Words(word_choices) => {
-                if choice_index >= word_choices.len() as u8 {
-                    let mut item =
-                        ChoiceItem::new("DELETE", ButtonLayout::arrow_armed_icon("CONFIRM".into()))
-                            .with_icon(Icon::new(theme::ICON_DELETE));
-                    item.set_right_btn(None);
-                    item
+                if choice_index == DELETE_INDEX {
+                    ChoiceItem::new("DELETE", ButtonLayout::none_armed_arrow("CONFIRM".into()))
+                        .with_icon(Icon::new(theme::ICON_DELETE))
                 } else {
-                    let word = word_choices[choice_index as usize];
+                    let word = word_choices[choice_index as usize - 1];
                     let mut item = ChoiceItem::new(word, ButtonLayout::default_three_icons());
-                    if choice_index == 0 {
-                        item.set_left_btn(None);
+                    if choice_index == self.count() - 1 {
+                        item.set_right_btn(None);
                     }
                     item
                 }
@@ -113,9 +118,11 @@ impl WordlistEntry {
         let choices = ChoiceFactoryWordlist::letters(letter_choices.clone());
 
         Self {
+            // Starting at second page because of DELETE option
             choice_page: ChoicePage::new(choices)
                 .with_incomplete(true)
-                .with_carousel(true),
+                .with_carousel(true)
+                .with_initial_page_counter(INITIAL_PAGE_COUNTER),
             chosen_letters: Child::new(ChangingTextLine::center_mono(String::from(PROMPT))),
             letter_choices,
             textbox: TextBox::empty(),
@@ -160,8 +167,12 @@ impl WordlistEntry {
         let new_choices = self.get_current_choices();
         // Not using carousel in case of words, as that looks weird in case
         // there is only one word to choose from.
-        self.choice_page
-            .reset(ctx, new_choices, true, !self.offer_words);
+        self.choice_page.reset(
+            ctx,
+            new_choices,
+            Some(INITIAL_PAGE_COUNTER),
+            !self.offer_words,
+        );
         ctx.request_paint();
     }
 
@@ -211,21 +222,21 @@ impl Component for WordlistEntry {
             // Clicked SELECT.
             // When we already offer words, return the word at the given index.
             // Otherwise, resetting the choice page with up-to-date choices.
-            if page_counter as usize == self.delete_index() {
+            if page_counter == DELETE_INDEX {
                 // Clicked DELETE. Deleting last letter, updating wordlist and updating choices
                 self.delete_last_letter(ctx);
                 self.reset_wordlist();
                 self.update(ctx);
-            } else if self.offer_words {
-                let word = self
-                    .words_list
-                    .get(page_counter as usize)
-                    .unwrap_or_default();
-                return Some(WordlistEntryMsg::ResultWord(String::from(word)));
             } else {
-                let new_letter = self.letter_choices[page_counter as usize];
-                self.append_letter(ctx, new_letter);
-                self.update(ctx);
+                let index = page_counter as usize - 1;
+                if self.offer_words {
+                    let word = self.words_list.get(index).unwrap_or_default();
+                    return Some(WordlistEntryMsg::ResultWord(String::from(word)));
+                } else {
+                    let new_letter = self.letter_choices[index];
+                    self.append_letter(ctx, new_letter);
+                    self.update(ctx);
+                }
             }
         }
 
@@ -252,16 +263,16 @@ impl crate::trace::Trace for WordlistEntry {
             ButtonPos::Left => ButtonAction::PrevPage.string(),
             ButtonPos::Right => ButtonAction::NextPage.string(),
             ButtonPos::Middle => {
-                let current_index = self.choice_page.page_index() as usize;
-                let choice: String<10> = if current_index == self.delete_index() {
+                let current_index = self.choice_page.page_index();
+                let choice: String<10> = if current_index == DELETE_INDEX {
                     String::from("DELETE")
-                } else if self.offer_words {
-                    self.words_list
-                        .get(current_index)
-                        .unwrap_or_default()
-                        .into()
                 } else {
-                    util::char_to_string(self.letter_choices[current_index])
+                    let index = current_index as usize - 1;
+                    if self.offer_words {
+                        self.words_list.get(index).unwrap_or_default().into()
+                    } else {
+                        util::char_to_string(self.letter_choices[index])
+                    }
                 };
                 ButtonAction::select_item(choice)
             }

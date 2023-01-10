@@ -497,11 +497,11 @@ impl ButtonLayout {
 
     /// Default button layout for all three buttons - icons.
     pub fn default_three_icons() -> Self {
-        Self::arrow_armed_icon("SELECT".into())
+        Self::arrow_armed_arrow("SELECT".into())
     }
 
     /// Special middle text for default icon layout.
-    pub fn arrow_armed_icon(text: StrBuffer) -> Self {
+    pub fn arrow_armed_arrow(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             Some(ButtonDetails::armed_text(text)),
@@ -513,6 +513,15 @@ impl ButtonLayout {
     pub fn cancel_armed_arrow(text: StrBuffer) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
+            Some(ButtonDetails::armed_text(text)),
+            Some(ButtonDetails::right_arrow_icon()),
+        )
+    }
+
+    /// Middle armed text and next right arrow.
+    pub fn none_armed_arrow(text: StrBuffer) -> Self {
+        Self::new(
+            None,
             Some(ButtonDetails::armed_text(text)),
             Some(ButtonDetails::right_arrow_icon()),
         )
