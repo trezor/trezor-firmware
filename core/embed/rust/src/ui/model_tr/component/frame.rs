@@ -76,7 +76,7 @@ pub trait ScrollableContent {
 /// Also is allocating space for a scrollbar.
 pub struct ScrollableFrame<T> {
     area: Rect,
-    title: Title,
+    title: Option<Child<Title>>,
     scrollbar: ScrollBar,
     content: Child<T>,
 }
@@ -85,10 +85,10 @@ impl<T> ScrollableFrame<T>
 where
     T: Component + ScrollableContent,
 {
-    pub fn new(title: StrBuffer, content: T) -> Self {
+    pub fn new(content: T) -> Self {
         Self {
             area: Rect::zero(),
-            title: Title::new(title),
+            title: None,
             scrollbar: ScrollBar::to_be_filled_later(),
             content: Child::new(content),
         }
@@ -96,6 +96,11 @@ where
 
     pub fn inner(&self) -> &T {
         self.content.inner()
+    }
+
+    pub fn with_title(mut self, title: StrBuffer) -> Self {
+        self.title = Some(Child::new(Title::new(title)));
+        self
     }
 }
 

@@ -243,9 +243,9 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             .with_confirm_btn(confirm_btn);
 
         let obj = if title.as_ref().is_empty() {
-            LayoutObj::new(content)?
+            LayoutObj::new(ScrollableFrame::new(content))?
         } else {
-            LayoutObj::new(ScrollableFrame::new(title, content))?
+            LayoutObj::new(ScrollableFrame::new(content).with_title(title))?
         };
 
         Ok(obj.into())
@@ -285,7 +285,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             let confirm_btn = Some(ButtonDetails::text("CONFIRM".into()).with_default_duration());
             content = content.with_confirm_btn(confirm_btn);
         }
-        let obj = LayoutObj::new(ScrollableFrame::new(title, content))?;
+        let obj = LayoutObj::new(ScrollableFrame::new(content).with_title(title))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
