@@ -772,12 +772,18 @@ obj_program.extend(
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
 
+
+BOOTLOADER_SUFFIX =  tools.get_model_identifier(TREZOR_MODEL)
+
 obj_program.extend(
     env.Command(
-        target='embed/firmware/bootloader.o',
-        source='embed/firmware/bootloader.bin',
+        target='embed/firmware/bootloaders/bootloader.o',
+        source=f'embed/firmware/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.bootloader'
+        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_start=_binary_embed_firmware_bootloader_bin_start'
+        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_end=_binary_embed_firmware_bootloader_bin_end'
+        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_size=_binary_embed_firmware_bootloader_bin_size'
         ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)
