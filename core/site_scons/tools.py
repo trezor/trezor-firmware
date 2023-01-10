@@ -44,3 +44,14 @@ def configure_board(model, env, defines, sources):
     defines += [f'HW_REVISION={hw_revision}', ]
     sources += [f'embed/trezorhal/displays/{display}', ]
     env.get('ENV')['TREZOR_BOARD'] = board
+
+
+def get_model_identifier(model):
+    if model == '1':
+        return "T1B1"
+    elif model == 'T':
+        return "T2T1"
+    elif model == 'R':
+        return "T2B1"
+    else:
+        raise Exception("Unknown model")
