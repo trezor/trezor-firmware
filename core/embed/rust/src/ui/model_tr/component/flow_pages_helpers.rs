@@ -1,12 +1,27 @@
-//! Mostly copy-pasted stuff from ui/component/text,
-//! but with small modifications.
+//! Mostly extending TextLayout from ui/component/text/layout.rs
 //! (support for more Ops like icon drawing or arbitrary offsets)
+//! - unfortunately means there is quite a lot of duplication at the
+//! benefit of not polluting the original code things not used there
+//! (icons, QR codes)
+//!
+//! TODO: CONSIDERATION:
+//! A) maintain this little dirty state
+//!    - biggest duplications are in `layout_text`, which needed to be
+//!      completely copied and renamed to `layout_text_new` just to use the new
+//!      `Sink` here, which supports the icon and QR code
+//! B) move all the new code into ui/component/text/layout.rs
+//!    - would mean moving there QrCodeInfo, Sink::QrCode, Sink::Icon, etc.
+//! My preference is B, but we need to agree on that
 
 use crate::{
     micropython::buffer::StrBuffer,
     ui::{
+        component::{
+            text::layout::{LayoutFit, Span},
+            PageBreaking, TextLayout,
+        },
         display::{self, Color, Font, Icon},
-        geometry::{Alignment, Offset, Point, Rect},
+        geometry::{Alignment, Offset, Point},
     },
 };
 
@@ -76,134 +91,7 @@ pub enum Op {
     NextPage,
 }
 
-#[derive(Copy, Clone)]
-pub enum LineBreaking {
-    /// Break line only at whitespace, if possible. If we don't find any
-    /// whitespace, break words.
-    BreakAtWhitespace,
-    /// Break words, adding a hyphen before the line-break. Does not use any
-    /// smart algorithm, just char-by-char.
-    BreakWordsAndInsertHyphen,
-}
-
-#[derive(Copy, Clone)]
-pub enum PageBreaking {
-    /// Stop after hitting the bottom-right edge of the bounds.
-    Cut,
-    /// Before stopping at the bottom-right edge, insert ellipsis to signify
-    /// more content is available, but only if no hyphen has been inserted yet.
-    CutAndInsertEllipsis,
-}
-
-/// Visual instructions for laying out a formatted block of text.
-#[derive(Copy, Clone)]
-pub struct TextLayout {
-    /// Bounding box restricting the layout dimensions.
-    pub bounds: Rect,
-
-    /// Additional space before beginning of text, can be negative to shift text
-    /// upwards.
-    pub padding_top: i16,
-    /// Additional space between end of text and bottom of bounding box, can be
-    /// negative.
-    pub padding_bottom: i16,
-
-    /// Fonts, colors, line/page breaking behavior.
-    pub style: TextStyle,
-}
-
-#[derive(Copy, Clone)]
-pub struct TextStyle {
-    /// Text font ID. Can be overridden by `Op::Font`.
-    pub text_font: Font,
-    /// Text color. Can be overridden by `Op::Color`.
-    pub text_color: Color,
-    /// Background color.
-    pub background_color: Color,
-
-    /// Foreground color used for drawing the hyphen.
-    pub hyphen_color: Color,
-    /// Foreground color used for drawing the ellipsis.
-    pub ellipsis_color: Color,
-
-    /// Optional icon shown as ellipsis.
-    pub ellipsis_icon: Option<&'static [u8]>,
-    /// Optional icon to signal content continues from previous page.
-    pub prev_page_icon: Option<&'static [u8]>,
-
-    /// Specifies which line-breaking strategy to use.
-    pub line_breaking: LineBreaking,
-    /// Specifies what to do at the end of the page.
-    pub page_breaking: PageBreaking,
-
-    /// Specifies how to align text on the line.
-    pub line_alignment: Alignment,
-}
-
-impl TextStyle {
-    pub const fn new(
-        text_font: Font,
-        text_color: Color,
-        background_color: Color,
-        hyphen_color: Color,
-        ellipsis_color: Color,
-    ) -> Self {
-        TextStyle {
-            text_font,
-            text_color,
-            background_color,
-            hyphen_color,
-            ellipsis_color,
-            line_breaking: LineBreaking::BreakAtWhitespace,
-            page_breaking: PageBreaking::CutAndInsertEllipsis,
-            line_alignment: Alignment::Start,
-            ellipsis_icon: None,
-            prev_page_icon: None,
-        }
-    }
-
-    /// Adding optional icon shown instead of "..." ellipsis.
-    pub const fn with_ellipsis_icon(mut self, icon: &'static [u8]) -> Self {
-        self.ellipsis_icon = Some(icon);
-        self
-    }
-
-    /// Adding optional icon signalling content continues from previous page.
-    pub const fn with_prev_page_icon(mut self, icon: &'static [u8]) -> Self {
-        self.prev_page_icon = Some(icon);
-        self
-    }
-}
-
 impl TextLayout {
-    /// Create a new text layout, with empty size and default text parameters
-    /// filled from `T`.
-    pub fn new(style: TextStyle) -> Self {
-        Self {
-            bounds: Rect::zero(),
-            padding_top: 0,
-            padding_bottom: 0,
-            style,
-        }
-    }
-
-    /// Baseline `Point` where we are starting to draw the text.
-    pub fn initial_cursor(&self) -> Point {
-        // TODO: do NOT add the text_font height here, as it can be changed - each page
-        // can have its own font and the Y offset would be wrong.
-        self.bounds.top_left() + Offset::y(self.style.text_font.text_height() + self.padding_top)
-    }
-
-    /// Y coordinate of the bottom of the available space/bounds
-    pub fn bottom_y(&self) -> i16 {
-        (self.bounds.y1 - self.padding_bottom).max(self.bounds.y0)
-    }
-
-    /// X coordinate of the right of the available space/bounds
-    pub fn right_x(&self) -> i16 {
-        self.bounds.x1
-    }
-
     /// Perform some operations defined on `Op` for a list of those `Op`s
     /// - e.g. changing the color, changing the font or rendering the text.
     pub fn layout_ops<const M: usize>(
@@ -316,7 +204,7 @@ impl TextLayout {
                             // (start > 0),
                             // in which case we could/should start the text with
                             // an arrow icon (opposite to ellipsis)
-                            self.layout_text(to_really_display, cursor, sink)
+                            self.layout_text_new(to_really_display, cursor, sink)
                         } else if let Op::Icon(icon) = op {
                             self.layout_icon(icon, cursor, sink)
                         } else {
@@ -354,7 +242,7 @@ impl TextLayout {
     /// Loop through the `text` and try to fit it on the current screen,
     /// reporting events to `sink`, which may do something with them (e.g. draw
     /// on screen).
-    pub fn layout_text(
+    pub fn layout_text_new(
         &self,
         text: &str,
         cursor: &mut Point,
@@ -379,12 +267,19 @@ impl TextLayout {
         // instead of the hyphen (have it `ellipsis_length`)
 
         while !remaining_text.is_empty() {
+            let remaining_width = self.bounds.x1 - cursor.x;
             let span = Span::fit_horizontally(
                 remaining_text,
-                self.bounds.x1 - cursor.x,
+                remaining_width,
                 self.style.text_font,
                 self.style.line_breaking,
             );
+
+            cursor.x += match self.align {
+                Alignment::Start => 0,
+                Alignment::Center => (remaining_width - span.advance.x) / 2,
+                Alignment::End => remaining_width - span.advance.x,
+            };
 
             // Report the span at the cursor position.
             // Not doing it when the span length is 0, as that
@@ -411,6 +306,7 @@ impl TextLayout {
                 }
                 // Check the amount of vertical space we have left.
                 if cursor.y + span.advance.y > self.bottom_y() {
+                    // Not enough space on this page.
                     if !remaining_text.is_empty() {
                         // Append ellipsis to indicate more content is available, but only if we
                         // haven't already appended a hyphen. Also not doing it if the last
@@ -470,7 +366,7 @@ impl TextLayout {
 
         // Icon is too wide to fit on current line.
         // Trying to accommodate it on the next line, when it exists on this page.
-        if cursor.x + icon.width() > self.right_x() {
+        if cursor.x + icon.width() > self.bounds.x1 {
             cursor.x = self.bounds.x0;
             cursor.y += self.style.text_font.line_height();
             if cursor.y > self.bottom_y() {
@@ -496,33 +392,6 @@ impl TextLayout {
     /// they automatically throw out of bounds.
     pub fn layout_qr_code(&self, qr_code_info: QrCodeInfo, sink: &mut dyn LayoutSink) {
         sink.qrcode(qr_code_info);
-    }
-
-    /// Overall height of the content, including paddings.
-    fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i16 {
-        self.padding_top
-            + self.style.text_font.text_height()
-            + (end_cursor.y - init_cursor.y)
-            + self.padding_bottom
-    }
-}
-
-/// Whether we can fit content on the current screen.
-/// Knows how many characters got processed and how high the content is.
-pub enum LayoutFit {
-    /// Entire content fits. Vertical size is returned in `height`.
-    Fitting { processed_chars: usize, height: i16 },
-    /// Content fits partially or not at all.
-    OutOfBounds { processed_chars: usize, height: i16 },
-}
-
-impl LayoutFit {
-    /// How high is the processed/fitted content.
-    pub fn height(&self) -> i16 {
-        match self {
-            LayoutFit::Fitting { height, .. } => *height,
-            LayoutFit::OutOfBounds { height, .. } => *height,
-        }
     }
 }
 
@@ -678,125 +547,5 @@ impl<'a> LayoutSink for TraceSink<'a> {
 
     fn line_break(&mut self, _cursor: Point) {
         self.0.string("\n");
-    }
-}
-
-pub trait GlyphMetrics {
-    fn char_width(&self, ch: char) -> i16;
-    fn line_height(&self) -> i16;
-}
-
-impl GlyphMetrics for Font {
-    fn char_width(&self, ch: char) -> i16 {
-        Font::char_width(*self, ch)
-    }
-
-    fn line_height(&self) -> i16 {
-        Font::line_height(*self)
-    }
-}
-
-// TODO: rename to `LineSpan`?
-/// Carries info about the content that was processed
-/// on the current line.
-#[derive(Debug, PartialEq, Eq)]
-pub struct Span {
-    /// How many characters from the input text this span is laying out.
-    pub length: usize,
-    /// How many chars from the input text should we skip before fitting the
-    /// next span?
-    pub skip_next_chars: usize,
-    /// By how much to offset the cursor after this span. If the vertical offset
-    /// is bigger than zero, it means we are breaking the line.
-    pub advance: Offset,
-    /// If we are breaking the line, should we insert a hyphen right after this
-    /// span to indicate a word-break?
-    pub insert_hyphen_before_line_break: bool,
-}
-
-impl Span {
-    fn fit_horizontally(
-        text: &str,
-        max_width: i16,
-        text_font: impl GlyphMetrics,
-        breaking: LineBreaking,
-    ) -> Self {
-        const ASCII_LF: char = '\n';
-        const ASCII_CR: char = '\r';
-        const ASCII_SPACE: char = ' ';
-        const ASCII_HYPHEN: char = '-';
-
-        fn is_whitespace(ch: char) -> bool {
-            ch == ASCII_SPACE || ch == ASCII_LF || ch == ASCII_CR
-        }
-
-        let hyphen_width = text_font.char_width(ASCII_HYPHEN);
-
-        // The span we return in case the line has to break. We mutate it in the
-        // possible break points, and its initial value is returned in case no text
-        // at all is fitting the constraints: zero length, zero width, full line
-        // break.
-        let mut line = Self {
-            length: 0,
-            advance: Offset::y(text_font.line_height()),
-            insert_hyphen_before_line_break: false,
-            skip_next_chars: 0,
-        };
-
-        let mut span_width = 0;
-        let mut found_any_whitespace = false;
-
-        let mut char_indices_iter = text.char_indices().peekable();
-        // Iterating manually because we need a reference to the iterator inside the
-        // loop.
-        while let Some((i, ch)) = char_indices_iter.next() {
-            let char_width = text_font.char_width(ch);
-
-            // Consider if we could be breaking the line at this position.
-            if is_whitespace(ch) {
-                // Break before the whitespace, without hyphen.
-                line.length = i;
-                line.advance.x = span_width;
-                line.insert_hyphen_before_line_break = false;
-                line.skip_next_chars = 1;
-                if ch == ASCII_CR {
-                    // We'll be breaking the line, but advancing the cursor only by a half of the
-                    // regular line height.
-                    line.advance.y = text_font.line_height() / 2;
-                }
-                if ch == ASCII_LF || ch == ASCII_CR {
-                    // End of line, break immediately.
-                    return line;
-                }
-                found_any_whitespace = true;
-            } else if span_width + char_width > max_width {
-                // Cannot fit on this line. Return the last breakpoint.
-                return line;
-            } else {
-                let have_space_for_break = span_width + char_width + hyphen_width <= max_width;
-                let can_break_word = matches!(breaking, LineBreaking::BreakWordsAndInsertHyphen)
-                    || !found_any_whitespace;
-                if have_space_for_break && can_break_word {
-                    // Break after this character, append hyphen.
-                    line.length = match char_indices_iter.peek() {
-                        Some((idx, _)) => *idx,
-                        None => text.len(),
-                    };
-                    line.advance.x = span_width + char_width;
-                    line.insert_hyphen_before_line_break = true;
-                    line.skip_next_chars = 0;
-                }
-            }
-
-            span_width += char_width;
-        }
-
-        // The whole text is fitting on the current line.
-        Self {
-            length: text.len(),
-            advance: Offset::x(span_width),
-            insert_hyphen_before_line_break: false,
-            skip_next_chars: 0,
-        }
     }
 }

@@ -4,7 +4,7 @@ mod changing_text;
 mod common;
 mod flow;
 mod flow_pages;
-mod flow_pages_poc_helpers;
+mod flow_pages_helpers;
 mod frame;
 mod hold_to_confirm;
 mod homescreen;
