@@ -152,16 +152,18 @@ where
     fn event_consumed_by_current_choice(&mut self, ctx: &mut EventCtx, pos: ButtonPos) -> bool {
         if matches!(pos, ButtonPos::Left) && self.current_page.has_prev_page() {
             self.current_page.go_to_prev_page();
+            let inner_page = self.current_page.get_current_page();
             self.scrollbar
                 .inner_mut()
-                .set_active_page(self.page_counter as usize, ctx);
+                .set_active_page(self.page_counter as usize + inner_page, ctx);
             self.update(ctx, false);
             true
         } else if matches!(pos, ButtonPos::Right) && self.current_page.has_next_page() {
             self.current_page.go_to_next_page();
+            let inner_page = self.current_page.get_current_page();
             self.scrollbar
                 .inner_mut()
-                .set_active_page(self.page_counter as usize, ctx);
+                .set_active_page(self.page_counter as usize + inner_page, ctx);
             self.update(ctx, false);
             true
         } else {
