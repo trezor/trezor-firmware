@@ -22,7 +22,7 @@ impl Title {
         Self {
             title,
             marquee: Marquee::new(title, theme::FONT_HEADER, theme::FG, theme::BG),
-            needs_marquee: true,
+            needs_marquee: false,
             area: Rect::zero(),
             centered: false,
         }
@@ -70,6 +70,8 @@ impl Component for Title {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         self.marquee.place(bounds);
+        let width = theme::FONT_HEADER.text_width(self.title.as_ref());
+        self.needs_marquee = width > self.area.width();
         bounds
     }
 
@@ -84,8 +86,6 @@ impl Component for Title {
     }
 
     fn paint(&mut self) {
-        let width = theme::FONT_HEADER.text_width(self.title.as_ref());
-        self.needs_marquee = width > self.area.width();
         if self.needs_marquee {
             self.marquee.paint();
         } else if self.centered {
