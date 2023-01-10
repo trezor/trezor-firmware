@@ -104,6 +104,7 @@ env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('
 tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
 env.Replace(
+    CP='cp',
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
     CC='arm-none-eabi-gcc',
@@ -170,8 +171,17 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
 )
 
+BINARY_NAME = f"build/boardloader/boardloader-{tools.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME += "-" + tools.get_version('embed/boardloader/version.h')
+BINARY_NAME += "-" + tools.get_git_revision_short_hash()
+BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
+BINARY_NAME += ".bin"
+
 program_bin = env.Command(
     target='boardloader.bin',
     source=program_elf,
-    action='$OBJCOPY -O binary $SOURCE $TARGET',
+    action=[
+        '$OBJCOPY -O binary $SOURCE $TARGET',
+        '$CP $TARGET ' + BINARY_NAME,
+    ],
 )

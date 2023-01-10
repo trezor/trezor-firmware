@@ -441,6 +441,7 @@ env.Tool('micropython')
 env.Replace(
     CAT='cat',
     DD='dd',
+    CP='cp',
     SED='sed',
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
@@ -797,6 +798,15 @@ program_elf = env.Command(
 
 env.Depends(program_elf, rust)
 
+BINARY_NAME = f"build/firmware/firmware-{tools.get_model_identifier(TREZOR_MODEL)}"
+if BITCOIN_ONLY != 0:
+    BINARY_NAME += "-btconly"
+BINARY_NAME += "-" + tools.get_version('embed/firmware/version.h')
+BINARY_NAME += "-" + tools.get_git_revision_short_hash()
+BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
+BINARY_NAME += ".bin"
+
+
 if TREZOR_MODEL in ('T', 'R'):
     action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
@@ -804,11 +814,13 @@ if TREZOR_MODEL in ('T', 'R'):
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
         '$HEADERTOOL -h $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
+        '$CP $TARGET ' + BINARY_NAME,
     ]
 elif TREZOR_MODEL in ('1',):
     action_bin=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',
+        '$CP $TARGET ' + BINARY_NAME,
     ]
 else:
     raise ValueError('Unknown Trezor model')
