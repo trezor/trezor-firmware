@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad},
         geometry::Rect,
+        model_tr::component::{scrollbar::SCROLLBAR_SPACE, title::Title},
     },
 };
 
@@ -78,6 +79,7 @@ where
         if self.title.is_some() {
             if let Some(title) = self.current_page.title() {
                 self.title = Some(Title::new(title));
+                self.title.place(self.title_area);
             }
         }
         let scrollbar_active_index = self
@@ -182,7 +184,6 @@ where
         } else {
             (Rect::zero(), title_content_area)
         };
-        self.title_area = title_area;
         self.content_area = content_area;
 
         // Placing a scrollbar in case the title is there
@@ -194,9 +195,10 @@ where
                 .set_page_count(complete_page_count);
 
             let (title_area, scrollbar_area) =
-                title_area.split_right(self.scrollbar.inner().overall_width());
+                title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
 
             self.title.place(title_area);
+            self.title_area = title_area;
             self.scrollbar.place(scrollbar_area);
         }
 
@@ -210,6 +212,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.title.event(ctx, event);
         let button_event = self.buttons.event(ctx, event);
 
         // Do something when a button was triggered
@@ -275,7 +278,6 @@ where
 
 // DEBUG-ONLY SECTION BELOW
 
-use crate::ui::model_tr::component::title::Title;
 #[cfg(feature = "ui_debug")]
 use heapless::String;
 
