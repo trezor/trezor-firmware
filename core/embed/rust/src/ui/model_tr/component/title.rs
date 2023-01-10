@@ -13,6 +13,7 @@ pub struct Title {
     area: Rect,
     title: StrBuffer,
     marquee: Marquee,
+    needs_marquee: bool,
     centered: bool,
 }
 
@@ -21,6 +22,7 @@ impl Title {
         Self {
             title,
             marquee: Marquee::new(title, theme::FONT_HEADER, theme::FG, theme::BG),
+            needs_marquee: true,
             area: Rect::zero(),
             centered: false,
         }
@@ -72,15 +74,19 @@ impl Component for Title {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if !self.marquee.is_animating() {
-            self.marquee.start(ctx, Instant::now());
+        if self.needs_marquee {
+            if !self.marquee.is_animating() {
+                self.marquee.start(ctx, Instant::now());
+            }
+            return self.marquee.event(ctx, event);
         }
-        self.marquee.event(ctx, event)
+        None
     }
 
     fn paint(&mut self) {
         let width = theme::FONT_HEADER.text_width(self.title.as_ref());
-        if width > self.area.width() {
+        self.needs_marquee = width > self.area.width();
+        if self.needs_marquee {
             self.marquee.paint();
         } else if self.centered {
             Self::paint_header_centered(self.title, self.area);
