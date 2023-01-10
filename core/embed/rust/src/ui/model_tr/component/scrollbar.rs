@@ -62,10 +62,9 @@ impl ScrollBar {
         self.page_count = page_count;
     }
 
-    pub fn set_active_page(&mut self, active_page: usize, ctx: &mut EventCtx) {
+    pub fn set_active_page(&mut self, active_page: usize) {
         if active_page != self.active_page {
             self.active_page = active_page;
-            ctx.request_paint();
         }
     }
 

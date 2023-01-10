@@ -8,6 +8,10 @@ use crate::{
     },
 };
 
+use crate::ui::{
+    component::Child,
+    model_tr::component::{scrollbar::SCROLLBAR_SPACE, title::Title, ScrollBar},
+};
 use heapless::{String, Vec};
 
 use super::common::display;
@@ -22,19 +26,24 @@ const WORD_FONT: Font = Font::NORMAL;
 /// Showing the given share words.
 pub struct ShareWords<const N: usize> {
     area: Rect,
-    title: StrBuffer,
+    title: Child<Title>,
+    scrollbar: Child<ScrollBar>,
     share_words: Vec<StrBuffer, N>,
     page_index: usize,
 }
 
 impl<const N: usize> ShareWords<N> {
     pub fn new(title: StrBuffer, share_words: Vec<StrBuffer, N>) -> Self {
-        Self {
+        let mut instance = Self {
             area: Rect::zero(),
-            title,
+            title: Child::new(Title::new(title)),
+            scrollbar: Child::new(ScrollBar::to_be_filled_later()),
             share_words,
             page_index: 0,
-        }
+        };
+        let page_count = instance.total_page_count();
+        instance.scrollbar.inner_mut().set_page_count(page_count);
+        instance
     }
 
     fn word_index(&self) -> usize {
@@ -64,15 +73,9 @@ impl<const N: usize> ShareWords<N> {
     }
 
     /// Display the first page with user information.
-    fn render_entry_page(&self) {
-        display(
-            self.area
-                .top_left()
-                .ofs(Offset::y(Font::BOLD.line_height())),
-            &self.title,
-            Font::BOLD,
-        );
-
+    fn render_entry_page(&mut self) {
+        self.title.paint();
+        self.scrollbar.paint();
         text_multiline(
             self.area.split_top(15).1,
             &build_string!(
@@ -88,7 +91,8 @@ impl<const N: usize> ShareWords<N> {
     }
 
     /// Display the second page with user information.
-    fn render_second_page(&self) {
+    fn render_second_page(&mut self) {
+        self.scrollbar.paint();
         // Creating a small vertical distance to make it centered
         text_multiline(
             self.area.split_top(15).1,
@@ -100,7 +104,8 @@ impl<const N: usize> ShareWords<N> {
     }
 
     /// Display the final page with user confirmation.
-    fn render_final_page(&self) {
+    fn render_final_page(&mut self) {
+        self.scrollbar.paint();
         // Moving vertically down to avoid collision with the scrollbar
         // and to look better.
         text_multiline(
@@ -118,7 +123,8 @@ impl<const N: usize> ShareWords<N> {
     }
 
     /// Display current set of recovery words.
-    fn render_words(&self) {
+    fn render_words(&mut self) {
+        self.scrollbar.paint();
         let mut y_offset = 0;
         // Showing the word index and the words itself
         for i in 0..WORDS_PER_PAGE {
@@ -139,11 +145,21 @@ impl<const N: usize> Component for ShareWords<N> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        let (title_area, _) = bounds.split_top(theme::FONT_HEADER.line_height());
+
+        let (title_area, scrollbar_area) =
+            title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
+
+        self.title.place(title_area);
+        self.scrollbar.place(scrollbar_area);
+
         self.area = bounds;
         self.area
     }
 
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.title.event(ctx, event);
+        self.scrollbar.event(ctx, event);
         None
     }
 
@@ -168,6 +184,7 @@ impl<const N: usize> Paginate for ShareWords<N> {
 
     fn change_page(&mut self, active_page: usize) {
         self.page_index = active_page;
+        self.scrollbar.inner_mut().set_active_page(active_page);
     }
 }
 

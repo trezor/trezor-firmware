@@ -2,7 +2,7 @@ use super::{theme, ScrollBar};
 use crate::{
     micropython::buffer::StrBuffer,
     ui::{
-        component::{Child, Component, Event, EventCtx},
+        component::{Child, Component, ComponentExt, Event, EventCtx},
         geometry::{Insets, Rect},
         model_tr::component::{scrollbar::SCROLLBAR_SPACE, title::Title},
     },
@@ -136,7 +136,8 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = self.content.event(ctx, event);
         self.scrollbar
-            .set_active_page(self.content.inner().active_page(), ctx);
+            .set_active_page(self.content.inner().active_page());
+        self.scrollbar.request_complete_repaint(ctx);
         self.title.event(ctx, event);
         self.scrollbar.event(ctx, event);
         msg

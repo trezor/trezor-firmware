@@ -74,7 +74,7 @@ where
     /// Getting new current page according to page counter.
     /// Also updating the possible title and moving the scrollbar to correct
     /// position.
-    fn change_current_page(&mut self, ctx: &mut EventCtx) {
+    fn change_current_page(&mut self) {
         self.current_page = self.pages.get(self.page_counter);
         if self.title.is_some() {
             if let Some(title) = self.current_page.title() {
@@ -87,13 +87,13 @@ where
             .scrollbar_page_index(self.content_area, self.page_counter);
         self.scrollbar
             .inner_mut()
-            .set_active_page(scrollbar_active_index, ctx);
+            .set_active_page(scrollbar_active_index);
     }
 
     /// Placing current page, setting current buttons and clearing.
     fn update(&mut self, ctx: &mut EventCtx, get_new_page: bool) {
         if get_new_page {
-            self.change_current_page(ctx);
+            self.change_current_page();
         }
         self.current_page.place(self.content_area);
         self.set_buttons(ctx);
@@ -155,7 +155,8 @@ where
             let inner_page = self.current_page.get_current_page();
             self.scrollbar
                 .inner_mut()
-                .set_active_page(self.page_counter as usize + inner_page, ctx);
+                .set_active_page(self.page_counter as usize + inner_page);
+            self.scrollbar.request_complete_repaint(ctx);
             self.update(ctx, false);
             true
         } else if matches!(pos, ButtonPos::Right) && self.current_page.has_next_page() {
@@ -163,7 +164,8 @@ where
             let inner_page = self.current_page.get_current_page();
             self.scrollbar
                 .inner_mut()
-                .set_active_page(self.page_counter as usize + inner_page, ctx);
+                .set_active_page(self.page_counter as usize + inner_page);
+            self.scrollbar.request_complete_repaint(ctx);
             self.update(ctx, false);
             true
         } else {
