@@ -14,12 +14,9 @@ pub const FONT_HEADER: Font = Font::BOLD;
 pub const FONT_CHOICE_ITEMS: Font = Font::NORMAL;
 
 // Text constants.
-pub const TEXT_NORMAL: TextStyle =
-    TextStyle::new(Font::NORMAL, FG, BG, FG, FG).with_ellipsis_icon(ICON_NEXT_PAGE.0);
-pub const TEXT_DEMIBOLD: TextStyle =
-    TextStyle::new(Font::DEMIBOLD, FG, BG, FG, FG).with_ellipsis_icon(ICON_NEXT_PAGE.0);
-pub const TEXT_BOLD: TextStyle =
-    TextStyle::new(Font::BOLD, FG, BG, FG, FG).with_ellipsis_icon(ICON_NEXT_PAGE.0);
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, FG, FG);
+pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, FG, FG);
+pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG);
 pub const TEXT_MONO: TextStyle =
     TextStyle::new(Font::MONO, FG, BG, FG, FG).with_ellipsis_icon(ICON_NEXT_PAGE.0);
 // Header does not have the ellipsis

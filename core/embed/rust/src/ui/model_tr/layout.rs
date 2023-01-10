@@ -23,7 +23,7 @@ use crate::{
                 Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
                 Paragraphs, VecExt,
             },
-            ComponentExt, Empty, Timeout, TimeoutMsg,
+            ComponentExt, Empty, LineBreaking, Timeout, TimeoutMsg,
         },
         display::Font,
         geometry::Alignment,
@@ -305,7 +305,9 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
                     // RECIPIENT + address
                     let btn_layout = ButtonLayout::cancel_none_text("CONFIRM".into());
                     let btn_actions = ButtonActions::cancel_none_next();
+                    // Not putting hyphens in the address
                     Page::<10>::new(btn_layout, btn_actions, Font::MONO)
+                        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
                         .with_title(address_title)
                         .text_mono(address)
                 }

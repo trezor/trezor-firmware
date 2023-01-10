@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{
             text::{layout::LayoutFit, TextStyle},
-            Paginate, TextLayout,
+            LineBreaking, Paginate, TextLayout,
         },
         display::{Font, Icon, IconAndName},
         geometry::{Alignment, Offset, Point, Rect},
@@ -112,6 +112,11 @@ impl<const M: usize> Page<M> {
             char_offset: 0,
             title: None,
         }
+    }
+
+    pub const fn with_line_breaking(mut self, line_breaking: LineBreaking) -> Self {
+        self.text_layout.style.line_breaking = line_breaking;
+        self
     }
 }
 
