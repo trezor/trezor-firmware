@@ -30,7 +30,7 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{iter_into_objs, iter_into_vec, upy_disable_animation},
+            util::{iter_into_objs, iter_into_vec, upy_disable_animation, ConfirmBlob},
         },
         model_tr::component::{ScrollableContent, ScrollableFrame},
     },
@@ -185,6 +185,51 @@ impl ComponentMsgObj for Lockscreen {
     }
 }
 
+/// Function to create and call a `ButtonPage` dialog based on `Paragraphs`
+/// Has optional title (supply empty `StrBuffer` for that) and hold-to-confirm
+/// functionality.
+fn paragraphs_in_button_page<T: ParagraphSource + 'static>(
+    title: StrBuffer,
+    paragraphs: Paragraphs<T>,
+    verb: StrBuffer,
+    verb_cancel: Option<StrBuffer>,
+    hold: bool,
+) -> Result<Obj, Error> {
+    // Left button - icon, text or nothing.
+    let cancel_btn = if let Some(verb_cancel) = verb_cancel {
+        if !verb_cancel.is_empty() {
+            Some(ButtonDetails::text(verb_cancel))
+        } else {
+            Some(ButtonDetails::cancel_icon())
+        }
+    } else {
+        None
+    };
+
+    // Right button - text or nothing.
+    // Optional HoldToConfirm
+    let mut confirm_btn = if !verb.is_empty() {
+        Some(ButtonDetails::text(verb))
+    } else {
+        None
+    };
+    if hold {
+        confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
+    }
+
+    let content = ButtonPage::new(paragraphs, theme::BG)
+        .with_cancel_btn(cancel_btn)
+        .with_confirm_btn(confirm_btn);
+
+    let mut frame = ScrollableFrame::new(content);
+    if !title.as_ref().is_empty() {
+        frame = frame.with_title(title);
+    }
+    let obj = LayoutObj::new(frame)?;
+
+    Ok(obj.into())
+}
+
 extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -215,40 +260,36 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             paragraphs.into_paragraphs()
         };
 
-        // Left button - icon, text or nothing.
-        let cancel_btn = if let Some(verb_cancel) = verb_cancel {
-            if !verb_cancel.is_empty() {
-                Some(ButtonDetails::text(verb_cancel))
-            } else {
-                Some(ButtonDetails::cancel_icon())
-            }
-        } else {
-            None
-        };
+        paragraphs_in_button_page(title, paragraphs, verb, verb_cancel, hold)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
 
-        // Right button - text or nothing.
-        // Optional HoldToConfirm
-        let mut confirm_btn = if !verb.is_empty() {
-            Some(ButtonDetails::text(verb))
-        } else {
-            None
-        };
-        if hold {
-            // TODO: clients might want to set the duration
-            confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
+extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let description: Option<StrBuffer> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+        let extra: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, "CONFIRM".into())?;
+        let verb_cancel: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+
+        let paragraphs = ConfirmBlob {
+            description: description.unwrap_or_else(StrBuffer::empty),
+            extra: extra.unwrap_or_else(StrBuffer::empty),
+            data: data.try_into()?,
+            description_font: &theme::TEXT_BOLD,
+            extra_font: &theme::TEXT_MONO,
+            data_font: &theme::TEXT_MONO_DATA,
         }
+        .into_paragraphs();
 
-        let content = ButtonPage::new(paragraphs, theme::BG)
-            .with_cancel_btn(cancel_btn)
-            .with_confirm_btn(confirm_btn);
-
-        let obj = if title.as_ref().is_empty() {
-            LayoutObj::new(ScrollableFrame::new(content))?
-        } else {
-            LayoutObj::new(ScrollableFrame::new(content).with_title(title))?
-        };
-
-        Ok(obj.into())
+        paragraphs_in_button_page(title, paragraphs, verb, verb_cancel, hold)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -264,9 +305,10 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
         let mut iter_buf = IterBuf::new();
         let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
         for para in iter {
-            let [key, value, _is_mono]: [Obj; 3] = iter_into_objs(para)?;
+            let [key, value, is_data]: [Obj; 3] = iter_into_objs(para)?;
             let key = key.try_into_option::<StrBuffer>()?;
             let value = value.try_into_option::<StrBuffer>()?;
+            let is_data: bool = is_data.try_into()?;
 
             if let Some(key) = key {
                 if value.is_some() {
@@ -276,17 +318,22 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
                 }
             }
             if let Some(value) = value {
-                paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+                let style = if is_data {
+                    &theme::TEXT_MONO_DATA
+                } else {
+                    &theme::TEXT_MONO
+                };
+                paragraphs.add(Paragraph::new(style, value));
             }
         }
 
-        let mut content = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG);
-        if hold {
-            let confirm_btn = Some(ButtonDetails::text("CONFIRM".into()).with_default_duration());
-            content = content.with_confirm_btn(confirm_btn);
-        }
-        let obj = LayoutObj::new(ScrollableFrame::new(content).with_title(title))?;
-        Ok(obj.into())
+        paragraphs_in_button_page(
+            title,
+            paragraphs.into_paragraphs(),
+            "CONFIRM".into(),
+            None,
+            hold,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -389,6 +436,7 @@ extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: 
                     let btn_layout = ButtonLayout::cancel_armed_text("CONFIRM".into(), "i".into());
                     let btn_actions = ButtonActions::last_confirm_next();
                     Page::<15>::new(btn_layout, btn_actions, Font::BOLD)
+                        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
                         .text_bold(title)
                         .newline()
                         .newline_half()
@@ -446,10 +494,10 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
-        let content = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, title),
-            Paragraph::new(&theme::TEXT_MONO, description),
-        ]);
+        let content = Frame::new(
+            title,
+            Paragraphs::new([Paragraph::new(&theme::TEXT_MONO, description)]),
+        );
         let obj = if time_ms == 0 {
             // No timer, used when we only want to draw the dialog once and
             // then throw away the layout object.
@@ -921,6 +969,18 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+    /// def confirm_blob(
+    ///     *,
+    ///     title: str,
+    ///     data: str | bytes,
+    ///     description: str | None,
+    ///     extra: str | None,
+    ///     verb_cancel: str | None = None,
+    ///     hold: bool = False,
+    /// ) -> object:
+    ///     """Confirm byte sequence data."""
+    Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
 
     /// def confirm_properties(
     ///     *,

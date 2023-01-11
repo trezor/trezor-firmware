@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::text::TextStyle,
+    component::{text::TextStyle, LineBreaking},
     display::{Color, Font, IconAndName},
     geometry::Offset,
 };
@@ -17,9 +17,12 @@ pub const FONT_CHOICE_ITEMS: Font = Font::NORMAL;
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, FG, FG);
 pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, FG, FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG);
+/// Mono text has the icon ellipsis
 pub const TEXT_MONO: TextStyle =
     TextStyle::new(Font::MONO, FG, BG, FG, FG).with_ellipsis_icon(ICON_NEXT_PAGE.0);
-// Header does not have the ellipsis
+/// Mono data text does not have hyphens
+pub const TEXT_MONO_DATA: TextStyle =
+    TEXT_MONO.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 pub const TEXT_HEADER: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG);
 
 // Icons with their names for debugging purposes
