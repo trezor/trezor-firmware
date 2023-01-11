@@ -189,13 +189,15 @@ async def confirm_output(
     amount: str,
     title: str = "Confirm sending",
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    address_label: str | None = None,
 ) -> None:
+    label = f" ({address_label})" if address_label else ""
     result = await interact(
         ctx,
         RustLayout(
             trezorui2.confirm_text(
                 title=title,
-                data=f"Send {amount} to {address}?",
+                data=f"Send {amount} to {address}{label}?",
                 description="Confirm Output",
             )
         ),
