@@ -237,12 +237,18 @@ async def handle_EndSession(msg: EndSession) -> Success:
     return Success()
 
 
-async def handle_Ping(msg: Ping) -> Success:
-    if msg.button_protection:
-        from trezor.enums import ButtonRequestType as B
-        from trezor.ui.layouts import confirm_action
+def rgb(r: int, g: int, b: int) -> int:
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
 
-        await confirm_action("ping", TR.words__confirm, "ping", br_code=B.ProtectCall)
+
+async def handle_Ping(msg: Ping) -> Success:
+    from trezor.ui.layouts import confirm_action
+
+    c = msg.message
+    color = rgb(int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16))
+    print(f"color: {color}")
+
+    await confirm_action("ping", "Confirm", "ping", color=color)
     return Success(message=msg.message)
 
 

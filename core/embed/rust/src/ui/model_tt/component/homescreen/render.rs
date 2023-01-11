@@ -354,7 +354,7 @@ fn homescreen_line(
     for x in 0..HOMESCREEN_IMAGE_WIDTH {
         let d = image_data[x as usize];
 
-        let c = if homescreen_dim_area(x, y) {
+        let c = if false {
             let coef = (65536_f32 * HOMESCREEN_DIM) as u32;
 
             let r = (d & 0xF800) >> 8;

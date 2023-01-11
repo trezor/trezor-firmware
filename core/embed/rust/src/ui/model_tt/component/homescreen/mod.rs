@@ -202,7 +202,7 @@ impl Component for Homescreen {
             label_style.text_color = theme::FG;
 
             let text = HomescreenText {
-                text: self.label,
+                text: "".into(),
                 style: label_style,
                 offset: Offset::y(LABEL_Y),
                 icon: None,
@@ -221,7 +221,7 @@ impl Component for Homescreen {
                     homescreen(
                         &mut hs_img,
                         &[text],
-                        notification,
+                        None,
                         self.paint_notification_only,
                     );
                     show_default = false;
@@ -233,7 +233,7 @@ impl Component for Homescreen {
                     homescreen(
                         &mut hs_img,
                         &[text],
-                        notification,
+                        None,
                         self.paint_notification_only,
                     );
                     show_default = false;
@@ -244,12 +244,7 @@ impl Component for Homescreen {
                 let mut input = BufferInput(IMAGE_HOMESCREEN);
                 let mut pool = BufferJpegWork::get_cleared();
                 let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
-                homescreen(
-                    &mut hs_img,
-                    &[text],
-                    notification,
-                    self.paint_notification_only,
-                );
+                homescreen(&mut hs_img, &[text], None, self.paint_notification_only);
             }
         }
     }

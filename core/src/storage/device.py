@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 
-HOMESCREEN_MAXSIZE = const(16384)
+HOMESCREEN_MAXSIZE = const(163840)
 LABEL_MAXLENGTH = const(32)
 
 if __debug__:
