@@ -25,6 +25,19 @@ def confirm_action(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_blob(
+    *,
+    title: str,
+    data: str | bytes,
+    description: str | None,
+    extra: str | None,
+    verb_cancel: str | None = None,
+    hold: bool = False,
+) -> object:
+    """Confirm byte sequence data."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_properties(
     *,
     title: str,
