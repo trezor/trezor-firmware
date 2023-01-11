@@ -336,8 +336,8 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
-    # Minimum registrable output amount accepted by the CoinJoin coordinator.
-    # The CoinJoin request may specify an even lower amount.
+    # Minimum registrable output amount accepted by the coinjoin coordinator.
+    # The coinjoin request may specify an even lower amount.
     MIN_REGISTRABLE_OUTPUT_AMOUNT = const(5000)
 
     # Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
@@ -363,14 +363,14 @@ class CoinJoinApprover(Approver):
         super().__init__(tx, coin)
 
         if not tx.coinjoin_request:
-            raise DataError("Missing CoinJoin request.")
+            raise DataError("Missing coinjoin request.")
 
         self.request = tx.coinjoin_request
         self.authorization = authorization
         self.coordination_fee_base = 0
 
-        # Begin hashing the CoinJoin request.
-        self.h_request = HashWriter(sha256(b"CJR1"))  # "CJR1" = CoinJoin Request v1.
+        # Begin hashing the coinjoin request.
+        self.h_request = HashWriter(sha256(b"CJR1"))  # "CJR1" = Coinjoin Request v1.
         writers.write_bytes_prefixed(
             self.h_request, authorization.params.coordinator.encode()
         )
@@ -428,9 +428,9 @@ class CoinJoinApprover(Approver):
     def add_external_input(self, txi: TxInput) -> None:
         super().add_external_input(txi)
 
-        # External inputs should always be verifiable in CoinJoin. This check
+        # External inputs should always be verifiable in coinjoin. This check
         # is not critical for security, we are just being cautious, because
-        # CoinJoin is automated and this is not a very legitimate use-case.
+        # coinjoin is automated and this is not a very legitimate use-case.
         if input_is_external_unverified(txi):
             raise ProcessError("Unverifiable external input.")
 
@@ -447,7 +447,7 @@ class CoinJoinApprover(Approver):
         if not isinstance(tx_info.sig_hasher, BitcoinSigHasher):
             raise ProcessError("Unexpected signature hasher.")
 
-        # Finish hashing the CoinJoin request.
+        # Finish hashing the coinjoin request.
         writers.write_bytes_fixed(
             self.h_request, tx_info.sig_hasher.h_prevouts.get_digest(), 32
         )
@@ -455,7 +455,7 @@ class CoinJoinApprover(Approver):
             self.h_request, tx_info.sig_hasher.h_outputs.get_digest(), 32
         )
 
-        # Verify the CoinJoin request signature.
+        # Verify the coinjoin request signature.
         if __debug__ or self.coin.slip44 == SLIP44_TESTNET:
             if secp256k1.verify(
                 self.COINJOIN_REQ_PUBKEY_TEST,
@@ -476,7 +476,7 @@ class CoinJoinApprover(Approver):
         await super().approve_tx(tx_info, orig_txs)
 
         if not self._verify_coinjoin_request(tx_info):
-            raise DataError("Invalid signature in CoinJoin request.")
+            raise DataError("Invalid signature in coinjoin request.")
 
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
@@ -508,7 +508,7 @@ class CoinJoinApprover(Approver):
             self.weight.get_weight() - self.weight.get_base_weight()
         )
 
-        # Calculate the minimum registrable output amount in a CoinJoin plus the mining fee that it
+        # Calculate the minimum registrable output amount in a coinjoin plus the mining fee that it
         # would cost to register. Amounts below this value are left to the coordinator or miners
         # and effectively constitute an extra fee for the user.
         min_allowed_output_amount_plus_fee = (
@@ -524,7 +524,7 @@ class CoinJoinApprover(Approver):
             raise ProcessError("Total fee over threshold.")
 
         if not self.authorization.approve_sign_tx(tx_info.tx):
-            raise ProcessError("Exceeded number of CoinJoin rounds.")
+            raise ProcessError("Exceeded number of coinjoin rounds.")
 
     def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super()._add_output(txo, script_pubkey)

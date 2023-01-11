@@ -998,16 +998,6 @@ async def confirm_coinjoin(
     )
 
 
-def show_coinjoin() -> None:
-    draw_simple(
-        trezorui2.show_info(
-            title="CoinJoin in progress.",
-            description="Do not disconnect your Trezor.",
-            button="",
-        )
-    )
-
-
 # TODO cleanup @ redesign
 async def confirm_sign_identity(
     ctx: GenericContext, proto: str, identity: str, challenge_visual: str | None
