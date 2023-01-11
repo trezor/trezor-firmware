@@ -1,9 +1,10 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+from trezor.enums import InputScriptType
 from trezor.messages import AuthorizeCoinJoin, SignMessage
 
-from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema
+from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema, unharden
 
 from . import authorization
 from .common import BITCOIN_NAMES
@@ -15,7 +16,6 @@ if TYPE_CHECKING:
     from trezor.protobuf import MessageType
     from trezor.wire import Context
 
-    from trezor.enums import InputScriptType
     from trezor.messages import (
         GetAddress,
         GetOwnershipId,
@@ -333,3 +333,109 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
                 return await func(ctx, msg, keychain, coin)
 
     return wrapper
+
+
+class AccountType:
+    def __init__(
+        self,
+        account_name: str,
+        pattern: str,
+        script_type: InputScriptType,
+        require_segwit: bool,
+        require_bech32: bool,
+        require_taproot: bool,
+    ):
+        self.account_name = account_name
+        self.pattern = pattern
+        self.script_type = script_type
+        self.require_segwit = require_segwit
+        self.require_bech32 = require_bech32
+        self.require_taproot = require_taproot
+
+    def get_name(
+        self,
+        coin: coininfo.CoinInfo,
+        address_n: Bip32Path,
+        script_type: InputScriptType | None,
+    ) -> str | None:
+        if (
+            (script_type is not None and script_type != self.script_type)
+            or not PathSchema.parse(self.pattern, coin.slip44).match(address_n)
+            or (not coin.segwit and self.require_segwit)
+            or (not coin.bech32_prefix and self.require_bech32)
+            or (not coin.taproot and self.require_taproot)
+        ):
+            return None
+
+        name = self.account_name
+        account_pos = self.pattern.find("/account'")
+        if account_pos >= 0:
+            i = self.pattern.count("/", 0, account_pos)
+            account_number = unharden(address_n[i]) + 1
+            name += f" #{account_number}"
+
+        return name
+
+
+def address_n_to_name(
+    coin: coininfo.CoinInfo,
+    address_n: Bip32Path,
+    script_type: InputScriptType | None = None,
+) -> str | None:
+    ACCOUNT_TYPES = (
+        AccountType(
+            "Legacy account",
+            PATTERN_BIP44,
+            InputScriptType.SPENDADDRESS,
+            require_segwit=True,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        AccountType(
+            "Account",
+            PATTERN_BIP44,
+            InputScriptType.SPENDADDRESS,
+            require_segwit=False,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        AccountType(
+            "Legacy SegWit account",
+            PATTERN_BIP49,
+            InputScriptType.SPENDP2SHWITNESS,
+            require_segwit=True,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        AccountType(
+            "SegWit account",
+            PATTERN_BIP84,
+            InputScriptType.SPENDWITNESS,
+            require_segwit=True,
+            require_bech32=True,
+            require_taproot=False,
+        ),
+        AccountType(
+            "Taproot account",
+            PATTERN_BIP86,
+            InputScriptType.SPENDTAPROOT,
+            require_segwit=False,
+            require_bech32=True,
+            require_taproot=True,
+        ),
+        AccountType(
+            "Coinjoin account",
+            PATTERN_SLIP25_TAPROOT,
+            InputScriptType.SPENDTAPROOT,
+            require_segwit=False,
+            require_bech32=True,
+            require_taproot=True,
+        ),
+    )
+
+    for account in ACCOUNT_TYPES:
+        name = account.get_name(coin, address_n, script_type)
+        if name:
+            return name
+
+    return None
