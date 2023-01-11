@@ -219,19 +219,16 @@ impl PassphraseEntry {
     }
 
     fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
-        // TODO: when the passphrase is longer than fits the screen, we might show
-        // ellipsis
-        // TODO: unite this with PIN, which has the same issue
-        if self.show_plain_passphrase {
-            let passphrase = String::from(self.passphrase());
-            self.passphrase_dots.inner_mut().update_text(passphrase);
+        let text = if self.show_plain_passphrase {
+            String::from(self.passphrase())
         } else {
             let mut dots: String<MAX_PASSPHRASE_LENGTH> = String::new();
             for _ in 0..self.textbox.len() {
                 unwrap!(dots.push_str("*"));
             }
-            self.passphrase_dots.inner_mut().update_text(dots);
-        }
+            dots
+        };
+        self.passphrase_dots.inner_mut().update_text(text);
         self.passphrase_dots.request_complete_repaint(ctx);
     }
 
