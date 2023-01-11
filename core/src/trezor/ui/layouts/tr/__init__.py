@@ -1202,14 +1202,13 @@ async def confirm_signverify(
         header = f"Sign {coin} message"
         br_type = "sign_message"
 
-    await confirm_value(
+    await confirm_blob(
         ctx,
+        br_type,
         header.upper(),
         address,
         "Confirm address:",
-        br_type,
-        BR_TYPE_OTHER,
-        verb="CONFIRM",
+        br_code=BR_TYPE_OTHER,
     )
 
     await confirm_value(
