@@ -13,11 +13,10 @@ async def confirm_total_ethereum(
     ctx: wire.GenericContext, total_amount: str, gas_price: str, fee_max: str
 ) -> Awaitable[None]:
     return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="confirm_total",
-        title="Confirm transaction",
-        data=f"{total_amount}\nGas price:\n{gas_price}\nMaximum fee:\n{fee_max}",
-        description="",
+        ctx,
+        "confirm_total",
+        "Confirm transaction",
+        f"{total_amount}\nGas price:\n{gas_price}\nMaximum fee:\n{fee_max}",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -28,11 +27,10 @@ async def confirm_total_ripple(
     amount: str,
 ) -> Awaitable[None]:
     return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="confirm_output",
-        title="Confirm sending",
-        data=f"{amount} XRP\nto\n{address}",
-        description="",
+        ctx,
+        "confirm_output",
+        "Confirm sending",
+        f"{amount} XRP\nto\n{address}",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -44,11 +42,10 @@ async def confirm_transfer_binance(
     for title, amount, address in inputs_outputs:
         text += f"{title}\n{amount}\nto\n{address}\n\n"
     return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="confirm_transfer",
-        title="Confirm Binance",
-        data=text,
-        description="",
+        ctx,
+        "confirm_transfer",
+        "Confirm Binance",
+        text,
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
@@ -59,10 +56,9 @@ async def confirm_decred_sstx_submission(
     amount: str,
 ) -> Awaitable[None]:
     return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="confirm_decred_sstx_submission",
-        title="Purchase ticket",
-        data=f"{amount}\nwith voting rights to\n{address}",
-        description="",
+        ctx,
+        "confirm_decred_sstx_submission",
+        "Purchase ticket",
+        f"{amount}\nwith voting rights to\n{address}",
         br_code=ButtonRequestType.ConfirmOutput,
     )

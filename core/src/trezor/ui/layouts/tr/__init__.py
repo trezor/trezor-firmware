@@ -855,7 +855,7 @@ async def confirm_payment_request(
         ctx,
         "confirm_payment_request",
         "CONFIRM SENDING",
-        f"{amount} to\n{recipient_name}\n{memos_str}",
+        description=f"{amount} to\n{recipient_name}\n{memos_str}",
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
