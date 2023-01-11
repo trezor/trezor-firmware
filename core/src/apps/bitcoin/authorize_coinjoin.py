@@ -86,4 +86,4 @@ async def authorize_coinjoin(
 
     authorization.set(msg)
 
-    return Success(message="CoinJoin authorized")
+    return Success(message="Coinjoin authorized")

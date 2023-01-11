@@ -63,7 +63,7 @@ PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
 PATTERN_BIP84 = "m/84'/coin_type'/account'/change/address_index"
 # BIP-86 for taproot: https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki
 PATTERN_BIP86 = "m/86'/coin_type'/account'/change/address_index"
-# SLIP-25 for CoinJoin: https://github.com/satoshilabs/slips/blob/master/slip-0025.md
+# SLIP-25 for coinjoin: https://github.com/satoshilabs/slips/blob/master/slip-0025.md
 # Only account=0 and script_type=1 are supported for now.
 PATTERN_SLIP25_TAPROOT = "m/10025'/coin_type'/0'/1'/change/address_index"
 PATTERN_SLIP25_TAPROOT_EXTERNAL = "m/10025'/coin_type'/0'/1'/0/address_index"
@@ -298,7 +298,7 @@ def _get_unlock_schemas(
         patterns = []
         if SignTx.is_type_of(msg) or GetOwnershipProof.is_type_of(msg):
             # SignTx and GetOwnershipProof need access to all SLIP-25 addresses
-            # to create CoinJoin outputs.
+            # to create coinjoin outputs.
             patterns.append(PATTERN_SLIP25_TAPROOT)
         else:
             # In case of other messages like GetAddress or SignMessage there is

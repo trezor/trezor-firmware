@@ -116,7 +116,7 @@ class Busyscreen(HomescreenBase):
         super().__init__(
             layout=trezorui2.show_busyscreen(
                 title="PLEASE WAIT",
-                description="CoinJoin in progress.\n\nDo not disconnect your\nTrezor.",
+                description="Coinjoin in progress.\n\nDo not disconnect your\nTrezor.",
                 time_ms=delay_ms,
                 skip_first_paint=skip,
             )
