@@ -2,6 +2,7 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     display::Font,
     geometry::{Alignment, Point, Rect},
+    util::long_line_content_with_ellipsis,
 };
 
 use super::{common, theme};
@@ -64,19 +65,36 @@ where
         self.pad.area.y0 + self.font.line_height()
     }
 
+    /// Whether the whole text can be painted in the available space
+    fn text_fits_completely(&self) -> bool {
+        self.font.text_width(self.text.as_ref()) <= self.pad.area.width()
+    }
+
     fn paint_left(&self) {
         let baseline = Point::new(self.pad.area.x0, self.y_baseline());
-        common::display(baseline, &self.text, self.font)
+        common::display(baseline, &self.text, self.font);
     }
 
     fn paint_center(&self) {
         let baseline = Point::new(self.pad.area.bottom_center().x, self.y_baseline());
-        common::display_center(baseline, &self.text, self.font)
+        common::display_center(baseline, &self.text, self.font);
     }
 
     fn paint_right(&self) {
         let baseline = Point::new(self.pad.area.x1, self.y_baseline());
-        common::display_right(baseline, &self.text, self.font)
+        common::display_right(baseline, &self.text, self.font);
+    }
+
+    fn paint_long_content_with_ellipsis(&self) {
+        let text_to_display = long_line_content_with_ellipsis(
+            self.text.as_ref(),
+            "...",
+            self.font,
+            self.pad.area.width(),
+        );
+
+        let baseline = Point::new(self.pad.area.x0, self.y_baseline());
+        common::display(baseline, &text_to_display, self.font);
     }
 }
 
@@ -102,10 +120,15 @@ where
         self.pad.clear();
         self.pad.paint();
         if self.show_content {
-            match self.alignment {
-                Alignment::Start => self.paint_left(),
-                Alignment::Center => self.paint_center(),
-                Alignment::End => self.paint_right(),
+            // In the case text cannot fit, show ellipsis and its right part
+            if !self.text_fits_completely() {
+                self.paint_long_content_with_ellipsis();
+            } else {
+                match self.alignment {
+                    Alignment::Start => self.paint_left(),
+                    Alignment::Center => self.paint_center(),
+                    Alignment::End => self.paint_right(),
+                }
             }
         }
     }
