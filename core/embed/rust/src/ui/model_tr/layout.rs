@@ -852,7 +852,7 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let _max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()))?;
+        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
