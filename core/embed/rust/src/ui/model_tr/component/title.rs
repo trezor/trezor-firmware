@@ -28,7 +28,7 @@ impl Title {
         }
     }
 
-    pub fn with_title_centered(mut self) -> Self {
+    pub fn with_centered(mut self) -> Self {
         self.centered = true;
         self
     }
@@ -36,8 +36,8 @@ impl Title {
     /// Display title/header at the top left of the given area.
     /// Returning the painted height of the whole header.
     pub fn paint_header_left(title: StrBuffer, area: Rect) -> i16 {
-        let text_heigth = theme::FONT_HEADER.text_height();
-        let title_baseline = area.top_left() + Offset::y(text_heigth - 1);
+        let text_height = theme::FONT_HEADER.text_height();
+        let title_baseline = area.top_left() + Offset::y(text_height - 1);
         display::text_left(
             title_baseline,
             title.as_ref(),
@@ -45,14 +45,14 @@ impl Title {
             theme::FG,
             theme::BG,
         );
-        text_heigth
+        text_height
     }
 
     /// Display title/header centered at the top of the given area.
     /// Returning the painted height of the whole header.
     pub fn paint_header_centered(title: StrBuffer, area: Rect) -> i16 {
-        let text_heigth = theme::FONT_HEADER.text_height();
-        let title_baseline = area.top_center() + Offset::y(text_heigth - 1);
+        let text_height = theme::FONT_HEADER.text_height();
+        let title_baseline = area.top_center() + Offset::y(text_height - 1);
         display::text_center(
             title_baseline,
             title.as_ref(),
@@ -60,7 +60,7 @@ impl Title {
             theme::FG,
             theme::BG,
         );
-        text_heigth
+        text_height
     }
 }
 
@@ -72,6 +72,7 @@ impl Component for Title {
         self.marquee.place(bounds);
         let width = theme::FONT_HEADER.text_width(self.title.as_ref());
         self.needs_marquee = width > self.area.width();
+        // TODO: reflect disable animation
         bounds
     }
 

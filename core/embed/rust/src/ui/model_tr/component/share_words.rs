@@ -73,9 +73,7 @@ impl<const N: usize> ShareWords<N> {
     }
 
     /// Display the first page with user information.
-    fn render_entry_page(&mut self) {
-        self.title.paint();
-        self.scrollbar.paint();
+    fn paint_entry_page(&mut self) {
         text_multiline(
             self.area.split_top(15).1,
             &build_string!(
@@ -91,9 +89,7 @@ impl<const N: usize> ShareWords<N> {
     }
 
     /// Display the second page with user information.
-    fn render_second_page(&mut self) {
-        self.scrollbar.paint();
-        // Creating a small vertical distance to make it centered
+    fn paint_second_page(&mut self) {
         text_multiline(
             self.area.split_top(15).1,
             "Do NOT make\ndigital copies!",
@@ -104,10 +100,7 @@ impl<const N: usize> ShareWords<N> {
     }
 
     /// Display the final page with user confirmation.
-    fn render_final_page(&mut self) {
-        self.scrollbar.paint();
-        // Moving vertically down to avoid collision with the scrollbar
-        // and to look better.
+    fn paint_final_page(&mut self) {
         text_multiline(
             self.area.split_top(12).1,
             &build_string!(
@@ -123,8 +116,7 @@ impl<const N: usize> ShareWords<N> {
     }
 
     /// Display current set of recovery words.
-    fn render_words(&mut self) {
-        self.scrollbar.paint();
+    fn paint_words(&mut self) {
         let mut y_offset = 0;
         // Showing the word index and the words itself
         for i in 0..WORDS_PER_PAGE {
@@ -164,14 +156,18 @@ impl<const N: usize> Component for ShareWords<N> {
     }
 
     fn paint(&mut self) {
+        // Showing scrollbar in all cases
+        // Individual pages are responsible for not colliding with it
+        self.scrollbar.paint();
         if self.is_entry_page() {
-            self.render_entry_page();
+            self.title.paint();
+            self.paint_entry_page();
         } else if self.is_second_page() {
-            self.render_second_page();
+            self.paint_second_page();
         } else if self.is_final_page() {
-            self.render_final_page();
+            self.paint_final_page();
         } else {
-            self.render_words();
+            self.paint_words();
         }
     }
 }
