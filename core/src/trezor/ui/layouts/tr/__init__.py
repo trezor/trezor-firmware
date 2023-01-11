@@ -609,28 +609,33 @@ async def confirm_backup(ctx: GenericContext) -> bool:
 
 
 async def confirm_path_warning(
-    ctx: GenericContext, path: str, path_type: str = "Path"
+    ctx: GenericContext,
+    path: str,
+    path_type: str | None = None,
 ) -> None:
+    if path_type:
+        title = f"Unknown {path_type}"
+    else:
+        title = "Unknown path"
     return await _placeholder_confirm(
         ctx,
         "path_warning",
-        "CONFIRM PATH",
-        f"{path_type}\n{path} is unknown.\nAre you sure?",
+        title.upper(),
+        description=path,
         br_code=ButtonRequestType.UnknownDerivationPath,
     )
 
 
 def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
-    content = RustLayout(
-        trezorui2.confirm_action(
+    return RustLayout(
+        trezorui2.confirm_blob(
             title=title.upper(),
-            action="",
-            description=xpub,
-            verb="CONFIRM",
+            data=xpub,
             verb_cancel=cancel,
+            description=None,
+            extra=None,
         )
     )
-    return content
 
 
 async def show_xpub(ctx: GenericContext, xpub: str, title: str) -> None:
@@ -883,14 +888,25 @@ async def confirm_blob(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     ask_pagination: bool = False,
 ) -> None:
-    await confirm_action(
-        ctx,
-        br_type,
-        title.upper(),
-        description,
-        str(data),
-        hold=hold,
-        br_code=br_code,
+    title = title.upper()
+    description = description or ""
+    layout = RustLayout(
+        trezorui2.confirm_blob(
+            title=title,
+            description=description,
+            data=data,
+            extra=None,
+            hold=hold,
+        )
+    )
+
+    await raise_if_cancelled(
+        interact(
+            ctx,
+            layout,
+            br_type,
+            br_code,
+        )
     )
 
 
@@ -962,7 +978,10 @@ async def confirm_properties(
         if isinstance(prop[1], bytes):
             return (prop[0], hexlify(prop[1]).decode(), True)
         else:
-            return (prop[0], prop[1], False)
+            # When there is not space in the text, taking it as data
+            # to not include hyphens
+            is_data = prop[1] and " " not in prop[1]
+            return (prop[0], prop[1], is_data)
 
     await raise_if_cancelled(
         interact(
@@ -1211,12 +1230,13 @@ async def show_popup(
     description_param: str = "",
     timeout_ms: int = 3000,
 ) -> None:
+    description = description.format(description_param)
     if subtitle:
-        title += f"\n{subtitle}"
+        description = f"{subtitle}\n{description}"
     await RustLayout(
         trezorui2.show_info(
             title=title,
-            description=description.format(description_param),
+            description=description,
             time_ms=timeout_ms,
         )
     )

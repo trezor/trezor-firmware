@@ -352,7 +352,7 @@ async def confirm_homescreen(
 
 
 def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
-    content = RustLayout(
+    return RustLayout(
         trezorui2.confirm_blob(
             title=title,
             data=xpub,
@@ -361,7 +361,6 @@ def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
             description=None,
         )
     )
-    return content
 
 
 async def show_xpub(ctx: GenericContext, xpub: str, title: str) -> None:
