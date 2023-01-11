@@ -1255,7 +1255,7 @@ async def request_passphrase_on_device(ctx: GenericContext, max_len: int) -> str
     result = await ctx.wait(
         RustLayout(
             trezorui2.request_passphrase(
-                prompt="Enter passphrase",
+                prompt="ENTER PASSPHRASE",
                 max_len=max_len,
             )
         )

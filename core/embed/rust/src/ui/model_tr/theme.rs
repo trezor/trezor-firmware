@@ -42,6 +42,10 @@ pub const ICON_ARROW_UP: IconAndName =
     IconAndName::new(include_res!("model_tr/res/arrow_up.toif"), "arrow_up"); // 10*6
 pub const ICON_ARROW_DOWN: IconAndName =
     IconAndName::new(include_res!("model_tr/res/arrow_down.toif"), "arrow_down"); // 10*6
+pub const ICON_ARROW_BACK_UP: IconAndName = IconAndName::new(
+    include_res!("model_tr/res/arrow_back_up.toif"),
+    "arrow_back_up",
+); // 8*8
 pub const ICON_BIN: IconAndName = IconAndName::new(include_res!("model_tr/res/bin.toif"), "bin"); // 10*10
 pub const ICON_CANCEL: IconAndName = IconAndName::new(
     include_res!("model_tr/res/cancel_no_outline.toif"),
@@ -56,9 +60,11 @@ pub const ICON_NEXT_PAGE: IconAndName =
     IconAndName::new(include_res!("model_tr/res/next_page.toif"), "next_page"); // 10*8
 pub const ICON_PREV_PAGE: IconAndName =
     IconAndName::new(include_res!("model_tr/res/prev_page.toif"), "prev_page"); // 8*10
+pub const ICON_SPACE: IconAndName =
+    IconAndName::new(include_res!("model_tr/res/space.toif"), "space"); // 12*3
 pub const ICON_SUCCESS: IconAndName =
     IconAndName::new(include_res!("model_tr/res/success.toif"), "success");
-pub const ICON_TICK: IconAndName = IconAndName::new(include_res!("model_tr/res/tick.toif"), "tick"); // 10*10
+pub const ICON_TICK: IconAndName = IconAndName::new(include_res!("model_tr/res/tick.toif"), "tick"); // 8*6
 pub const ICON_TICK_FAT: IconAndName =
     IconAndName::new(include_res!("model_tr/res/tick_fat.toif"), "tick_fat"); // 8*6
 pub const ICON_WARNING: IconAndName =
