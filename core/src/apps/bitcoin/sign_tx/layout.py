@@ -9,7 +9,11 @@ from trezor.ui.layouts import confirm_metadata
 from apps.common.paths import address_n_to_str
 
 from .. import addresses
-from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES, format_fee_rate
+from ..common import (
+    BIP32_WALLET_DEPTH,
+    CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES,
+    format_fee_rate,
+)
 from ..keychain import address_n_to_name
 
 if TYPE_CHECKING:
@@ -21,6 +25,7 @@ if TYPE_CHECKING:
     from trezor.wire import Context
 
     from apps.common.coininfo import CoinInfo
+    from apps.common.paths import Bip32Path
 
 _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500_000_000)
 
@@ -222,12 +227,21 @@ async def confirm_total(
     fee_rate: float,
     coin: CoinInfo,
     amount_unit: AmountUnit,
+    address_n: Bip32Path | None,
 ) -> None:
+
+    account_label = (
+        "mixed accounts"
+        if address_n is None
+        else address_n_to_name(coin, list(address_n) + [0] * BIP32_WALLET_DEPTH)
+        or f"path {address_n_to_str(address_n)}"
+    )
     await layouts.confirm_total(
         ctx,
         format_coin_amount(spending, coin, amount_unit),
         format_coin_amount(fee, coin, amount_unit),
         fee_rate_amount=format_fee_rate(fee_rate, coin) if fee_rate >= 0 else None,
+        account_label=account_label,
     )
 
 

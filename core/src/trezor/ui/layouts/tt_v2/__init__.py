@@ -837,6 +837,7 @@ async def confirm_total(
     title: str = "SENDING",
     total_label: str = "Total amount:",
     fee_label: str = "Fee:",
+    account_label: str | None = None,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
@@ -856,7 +857,7 @@ async def confirm_total(
         ctx,
         title,
         total_amount,
-        total_label,
+        f"From {account_label}\r\n{total_label}" if account_label else total_label,
         br_type,
         br_code,
         hold=True,

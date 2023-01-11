@@ -24,6 +24,7 @@ if TYPE_CHECKING:
         TxAckPaymentRequest,
     )
     from apps.common.coininfo import CoinInfo
+    from apps.common.paths import Bip32Path
 
 # Machine instructions
 # ===
@@ -139,16 +140,24 @@ class UiConfirmTotal(UiConfirm):
         fee_rate: float,
         coin: CoinInfo,
         amount_unit: AmountUnit,
+        address_n: Bip32Path | None,
     ):
         self.spending = spending
         self.fee = fee
         self.fee_rate = fee_rate
         self.coin = coin
         self.amount_unit = amount_unit
+        self.address_n = address_n
 
     def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
         return layout.confirm_total(
-            ctx, self.spending, self.fee, self.fee_rate, self.coin, self.amount_unit
+            ctx,
+            self.spending,
+            self.fee,
+            self.fee_rate,
+            self.coin,
+            self.amount_unit,
+            self.address_n,
         )
 
 
@@ -241,8 +250,8 @@ def confirm_modify_fee(user_fee_change: int, total_fee_new: int, fee_rate: float
     )
 
 
-def confirm_total(spending: int, fee: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmTotal(spending, fee, fee_rate, coin, amount_unit))
+def confirm_total(spending: int, fee: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit, address_n: Bip32Path | None) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
+    return (yield UiConfirmTotal(spending, fee, fee_rate, coin, amount_unit, address_n))
 
 
 def confirm_joint_total(spending: int, total: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]

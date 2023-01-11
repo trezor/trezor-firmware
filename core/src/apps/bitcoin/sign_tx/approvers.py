@@ -342,7 +342,14 @@ class BasicApprover(Approver):
                 )
 
             if not self.external_in:
-                await helpers.confirm_total(total, fee, fee_rate, coin, amount_unit)
+                await helpers.confirm_total(
+                    total,
+                    fee,
+                    fee_rate,
+                    coin,
+                    amount_unit,
+                    tx_info.wallet_path.get_path(),
+                )
             else:
                 await helpers.confirm_joint_total(spending, total, coin, amount_unit)
 
