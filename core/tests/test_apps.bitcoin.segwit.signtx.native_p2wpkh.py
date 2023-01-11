@@ -104,7 +104,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN),
             True,
 
-            helpers.UiConfirmTotal(12300000, 11000, fee_rate, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(12300000, 11000, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]),
             True,
 
             # check prev tx
@@ -238,7 +238,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             helpers.UiConfirmForeignAddress(address_n=out2.address_n),
             True,
 
-            helpers.UiConfirmTotal(5000000 + 11000, 11000, fee_rate, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(5000000 + 11000, 11000, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]),
             True,
 
             # check prev tx

@@ -105,7 +105,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             helpers.UiConfirmNonDefaultLocktime(tx.lock_time, lock_time_disabled=False),
             True,
 
-            helpers.UiConfirmTotal(12300000, 11000, fee_rate, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(12300000, 11000, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]),
             True,
 
             # check prev tx
@@ -236,7 +236,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             helpers.UiConfirmNonDefaultLocktime(tx.lock_time, lock_time_disabled=False),
             True,
 
-            helpers.UiConfirmTotal(5000000 + 11000, 11000, fee_rate, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(5000000 + 11000, 11000, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]),
             True,
 
             # check prev tx

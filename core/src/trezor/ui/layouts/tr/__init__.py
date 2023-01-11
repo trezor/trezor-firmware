@@ -216,6 +216,7 @@ async def confirm_total(
     title: str = "Confirm transaction",
     total_label: str = "Total amount:\n",
     fee_label: str = "\nincluding fee:\n",
+    account_label: str | None = None,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:

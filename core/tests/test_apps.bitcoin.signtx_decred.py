@@ -112,7 +112,7 @@ class TestSignTxDecred(unittest.TestCase):
             helpers.UiConfirmOutput(out1, coin_decred, AmountUnit.BITCOIN),
             True,
             helpers.UiConfirmTotal(
-                200_000_000, 100_000, fee_rate, coin_decred, AmountUnit.BITCOIN
+                200_000_000, 100_000, fee_rate, coin_decred, AmountUnit.BITCOIN, inp1.address_n[:3]
             ),
             True,
             TxRequest(
@@ -294,7 +294,7 @@ class TestSignTxDecred(unittest.TestCase):
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out3)),
             helpers.UiConfirmTotal(
-                200_000_000, 100_000, fee_rate, coin_decred, AmountUnit.BITCOIN
+                200_000_000, 100_000, fee_rate, coin_decred, AmountUnit.BITCOIN, inp1.address_n[:3]
             ),
             True,
             TxRequest(
