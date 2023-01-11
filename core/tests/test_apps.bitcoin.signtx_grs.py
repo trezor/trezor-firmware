@@ -72,7 +72,7 @@ class TestSignTx_GRS(unittest.TestCase):
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
             helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN),
             True,
-            helpers.UiConfirmTotal(210016, 192, fee_rate, coin, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(210016, 192, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),

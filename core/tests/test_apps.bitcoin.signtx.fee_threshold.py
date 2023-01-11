@@ -148,7 +148,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
             helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN),
             True,
-            helpers.UiConfirmTotal(300000 + 90000, 90000, fee_rate, coin_bitcoin, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(300000 + 90000, 90000, fee_rate, coin_bitcoin, AmountUnit.BITCOIN, None),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),

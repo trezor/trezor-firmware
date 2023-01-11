@@ -5,6 +5,8 @@ if TYPE_CHECKING:
 
     from trezor.messages import TxInput, TxOutput
 
+    from apps.common.paths import Bip32Path
+
     T = TypeVar("T")
 else:
     # typechecker cheat: Generic[T] will be `object` which is a valid parent type
@@ -90,6 +92,11 @@ class WalletPathChecker(MatchChecker):
         if len(txio.address_n) < BIP32_WALLET_DEPTH:
             return None
         return txio.address_n[:-BIP32_WALLET_DEPTH]
+
+    def get_path(self) -> Bip32Path | None:
+        if isinstance(self.attribute, list):
+            return self.attribute
+        return None
 
 
 class MultisigFingerprintChecker(MatchChecker):
