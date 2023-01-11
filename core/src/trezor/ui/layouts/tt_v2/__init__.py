@@ -514,16 +514,18 @@ async def confirm_output(
     amount: str,
     title: str = "SENDING",
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    address_label: str | None = None,
 ) -> None:
     title = title.upper()
     if title.startswith("CONFIRM "):
         title = title[len("CONFIRM ") :]
 
+    description = f"To your {address_label}:" if address_label else "To:"
     await confirm_value(
         ctx,
         title,
         address,
-        "To:",
+        description,
         "confirm_output",
         br_code,
         verb="NEXT",

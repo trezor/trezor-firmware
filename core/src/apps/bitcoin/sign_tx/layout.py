@@ -6,8 +6,11 @@ from trezor.strings import format_amount
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata
 
+from apps.common.paths import address_n_to_str
+
 from .. import addresses
-from ..common import format_fee_rate
+from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES, format_fee_rate
+from ..keychain import address_n_to_name
 
 if TYPE_CHECKING:
     from typing import Any
@@ -76,11 +79,20 @@ async def confirm_output(
         else:
             title = "Confirm sending"
 
+        address_label = None
+        if output.address_n and not output.multisig:
+            script_type = CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[output.script_type]
+            address_label = (
+                address_n_to_name(coin, output.address_n, script_type)
+                or f"address path {address_n_to_str(output.address_n)}"
+            )
+
         layout = layouts.confirm_output(
             ctx,
             address_short,
             format_coin_amount(output.amount, coin, amount_unit),
             title=title,
+            address_label=address_label,
         )
 
     await layout
