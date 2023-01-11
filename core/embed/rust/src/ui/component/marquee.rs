@@ -7,6 +7,7 @@ use crate::{
         display,
         display::{Color, Font},
         geometry::Rect,
+        util::animation_disabled,
     },
 };
 
@@ -161,7 +162,9 @@ impl Component for Marquee {
                     _ => {}
                 }
                 // We have something to paint, so request to be painted in the next pass.
-                ctx.request_paint();
+                if !animation_disabled() {
+                    ctx.request_paint();
+                }
                 // There is further progress in the animation, request an animation frame event.
                 ctx.request_anim_frame();
             }
@@ -169,7 +172,9 @@ impl Component for Marquee {
             if token == EventCtx::ANIM_FRAME_TIMER {
                 if self.is_animating() {
                     // We have something to paint, so request to be painted in the next pass.
-                    ctx.request_paint();
+                    if !animation_disabled() {
+                        ctx.request_paint();
+                    }
                     // There is further progress in the animation, request an animation frame
                     // event.
                     ctx.request_anim_frame();

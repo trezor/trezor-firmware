@@ -72,7 +72,6 @@ impl Component for Title {
         self.marquee.place(bounds);
         let width = theme::FONT_HEADER.text_width(self.title.as_ref());
         self.needs_marquee = width > self.area.width();
-        // TODO: reflect disable animation
         bounds
     }
 
