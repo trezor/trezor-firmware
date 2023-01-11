@@ -41,7 +41,7 @@ async def get_address(
     from apps.common.paths import address_n_to_str, validate_path
 
     from . import addresses
-    from .keychain import validate_path_against_script_type
+    from .keychain import address_n_to_name, validate_path_against_script_type
     from .multisig import multisig_pubkey_index
 
     multisig = msg.multisig  # local_cache_attribute
@@ -113,12 +113,17 @@ async def get_address(
             )
         else:
             title = address_n_to_str(address_n)
+            account_name = address_n_to_name(coin, address_n, script_type)
+            network = (
+                f"{coin.coin_name} {account_name}" if account_name else "Unknown path"
+            )
             await show_address(
                 ctx,
                 address_short,
                 address_qr=address,
                 case_sensitive=address_case_sensitive,
                 title=title,
+                network=network,
             )
 
     return Address(address=address, mac=mac)
