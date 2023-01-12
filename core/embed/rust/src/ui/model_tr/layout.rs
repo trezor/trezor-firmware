@@ -128,7 +128,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
-    ///     hold: bool | None = None,
+    ///     hold: bool = False,
+    ///     hold_danger: bool = False,  # unused on TR
     ///     reverse: bool = False,
     /// ) -> object:
     ///     """Confirm action."""

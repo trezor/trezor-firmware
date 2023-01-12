@@ -47,7 +47,8 @@ def confirm_action(
     description: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    hold: bool | None = None,
+    hold: bool = False,
+    hold_danger: bool = False,  # unused on TR
     reverse: bool = False,
 ) -> object:
     """Confirm action."""
@@ -281,7 +282,7 @@ def request_pin(
     prompt: str,
     subprompt: str,
     allow_cancel: bool = True,
-    warning: str | None = None,
+    wrong_pin: bool = False,
 ) -> str | object:
     """Request pin on device."""
 
@@ -338,7 +339,7 @@ def request_number(
     count: int,
     min_count: int,
     max_count: int,
-    description: Callable[[int], str],
+    description: Callable[[int], str] | None = None,
 ) -> object:
    """Number input with + and - buttons, description, and info button."""
 

@@ -65,15 +65,15 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: str | bytes | None = "OK",
-    verb_cancel: str | bytes | None = "cancel",
+    verb: str = "CONFIRM",
+    verb_cancel: str | None = None,
     hold: bool = False,
     reverse: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
-    if isinstance(verb, bytes) or isinstance(verb_cancel, bytes):
-        raise NotImplementedError
+    if verb_cancel is not None:
+        verb_cancel = verb_cancel.upper()
 
     if description is not None and description_param is not None:
         if description_param_font != ui.BOLD:

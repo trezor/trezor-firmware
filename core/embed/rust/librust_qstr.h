@@ -108,4 +108,5 @@ static void _librust_qstrs(void) {
   MP_QSTR_notification_level;
   MP_QSTR_bootscreen;
   MP_QSTR_skip_first_paint;
+  MP_QSTR_wrong_pin;
 }
