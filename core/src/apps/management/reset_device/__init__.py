@@ -45,7 +45,7 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
     else:
         prompt = text_r("Do you want to create\na new wallet?")
     await confirm_reset_device(ctx, prompt, show_tutorial=bool(msg.show_tutorial))
-    await LoadingAnimation()
+    # await LoadingAnimation()
 
     # wipe storage to make sure the device is in a clear state
     storage.reset()
