@@ -211,19 +211,15 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: str | bytes | None = "CONFIRM",
-    verb_cancel: str | bytes | None = None,
+    verb: str = "CONFIRM",
+    verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,
     reverse: bool = False,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
-    if isinstance(verb, bytes) or isinstance(verb_cancel, bytes):
-        raise NotImplementedError
-    if isinstance(verb, str):
-        verb = verb.upper()
-    if isinstance(verb_cancel, str):
+    if verb_cancel is not None:
         verb_cancel = verb_cancel.upper()
 
     if description is not None and description_param is not None:
@@ -239,7 +235,7 @@ async def confirm_action(
                     title=title.upper(),
                     action=action,
                     description=description,
-                    verb=verb,
+                    verb=verb.upper(),
                     verb_cancel=verb_cancel,
                     hold=hold,
                     hold_danger=hold_danger,
@@ -1087,20 +1083,17 @@ async def request_pin_on_device(
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
+    wrong_pin: bool = False,
 ) -> str:
     from trezor.wire import PinCancelled
 
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
-    warning = "Wrong PIN" if "Wrong" in prompt else None
-
     if attempts_remaining is None:
         subprompt = ""
     elif attempts_remaining == 1:
-        prompt = "Enter PIN"
         subprompt = "Last attempt"
     else:
-        prompt = "Enter PIN"
         subprompt = f"{attempts_remaining} tries left"
 
     dialog = RustLayout(
@@ -1108,7 +1101,7 @@ async def request_pin_on_device(
             prompt=prompt,
             subprompt=subprompt,
             allow_cancel=allow_cancel,
-            warning=warning,
+            wrong_pin=wrong_pin,
         )
     )
     while True:
