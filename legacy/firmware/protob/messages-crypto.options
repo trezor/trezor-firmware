@@ -18,7 +18,7 @@ CosiSign.global_pubkey                  max_size:32
 
 CosiSignature.signature                 max_size:32
 
-SignIdentity.challenge_hidden           max_size:256
+SignIdentity.challenge_hidden           max_size:512
 SignIdentity.challenge_visual           max_size:256
 SignIdentity.ecdsa_curve_name           max_size:32
 
