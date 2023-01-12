@@ -487,103 +487,6 @@ extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer =
-            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
-        let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
-
-        let content = Frame::new(
-            title,
-            Paragraphs::new([Paragraph::new(&theme::TEXT_MONO, description)]),
-        );
-        let obj = if time_ms == 0 {
-            // No timer, used when we only want to draw the dialog once and
-            // then throw away the layout object.
-            LayoutObj::new(NoBtnDialog::new(content, Empty))?
-        } else {
-            // Timeout.
-            LayoutObj::new(NoBtnDialog::new(
-                content,
-                Timeout::new(time_ms).map(|msg| {
-                    (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Confirmed)
-                }),
-            ))?
-        };
-
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let app_name: StrBuffer = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
-        let accounts: Gc<List> = kwargs.get(Qstr::MP_QSTR_accounts)?.try_into()?;
-
-        // Cache the page count so that we can move `accounts` into the closure.
-        let page_count = accounts.len();
-
-        let title: StrBuffer = if page_count > 1 {
-            "IMPORT".into()
-        } else {
-            "IMPORT CREDENTIAL".into()
-        };
-
-        // Closure to lazy-load the information on given page index.
-        // Done like this to allow arbitrarily many pages without
-        // the need of any allocation here in Rust.
-        let get_page = move |page_index| {
-            let account_obj = unwrap!(accounts.get(page_index as usize));
-            let account = account_obj.try_into().unwrap_or_else(|_| "".into());
-
-            let (btn_layout, btn_actions) = if page_count == 1 {
-                // There is only one page
-                (
-                    ButtonLayout::cancel_none_text("CONFIRM".into()),
-                    ButtonActions::cancel_none_confirm(),
-                )
-            } else if page_index == 0 {
-                // First page
-                (
-                    ButtonLayout::cancel_armed_arrow("SELECT".into()),
-                    ButtonActions::cancel_confirm_next(),
-                )
-            } else if page_index as usize == page_count - 1 {
-                // Last page
-                (
-                    ButtonLayout::arrow_armed_none("SELECT".into()),
-                    ButtonActions::prev_confirm_none(),
-                )
-            } else {
-                // Page in the middle
-                (
-                    ButtonLayout::arrow_armed_arrow("SELECT".into()),
-                    ButtonActions::prev_confirm_next(),
-                )
-            };
-
-            Page::<10>::new(btn_layout, btn_actions, Font::MONO)
-                .newline()
-                .text_mono(app_name)
-                .newline()
-                .text_bold(account)
-        };
-
-        let pages = FlowPages::new(get_page, page_count as u8);
-
-        // Returning the page index in case of confirmation.
-        let obj = LayoutObj::new(
-            Flow::new(pages)
-                .with_common_title(title)
-                .with_return_confirmed_index(),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 /// General pattern of most tutorial screens.
 /// (title, text, btn_layout, btn_actions)
 fn tutorial_screen(
@@ -695,14 +598,184 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let app_name: StrBuffer = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
+        let accounts: Gc<List> = kwargs.get(Qstr::MP_QSTR_accounts)?.try_into()?;
+
+        // Cache the page count so that we can move `accounts` into the closure.
+        let page_count = accounts.len();
+
+        let title: StrBuffer = if page_count > 1 {
+            "IMPORT".into()
+        } else {
+            "IMPORT CREDENTIAL".into()
+        };
+
+        // Closure to lazy-load the information on given page index.
+        // Done like this to allow arbitrarily many pages without
+        // the need of any allocation here in Rust.
+        let get_page = move |page_index| {
+            let account_obj = unwrap!(accounts.get(page_index as usize));
+            let account = account_obj.try_into().unwrap_or_else(|_| "".into());
+
+            let (btn_layout, btn_actions) = if page_count == 1 {
+                // There is only one page
+                (
+                    ButtonLayout::cancel_none_text("CONFIRM".into()),
+                    ButtonActions::cancel_none_confirm(),
+                )
+            } else if page_index == 0 {
+                // First page
+                (
+                    ButtonLayout::cancel_armed_arrow("SELECT".into()),
+                    ButtonActions::cancel_confirm_next(),
+                )
+            } else if page_index as usize == page_count - 1 {
+                // Last page
+                (
+                    ButtonLayout::arrow_armed_none("SELECT".into()),
+                    ButtonActions::prev_confirm_none(),
+                )
+            } else {
+                // Page in the middle
+                (
+                    ButtonLayout::arrow_armed_arrow("SELECT".into()),
+                    ButtonActions::prev_confirm_next(),
+                )
+            };
+
+            Page::<10>::new(btn_layout, btn_actions, Font::MONO)
+                .newline()
+                .text_mono(app_name)
+                .newline()
+                .text_bold(account)
+        };
+
+        let pages = FlowPages::new(get_page, page_count as u8);
+
+        // Returning the page index in case of confirmation.
+        let obj = LayoutObj::new(
+            Flow::new(pages)
+                .with_common_title(title)
+                .with_return_confirmed_index(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer =
+            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
+        let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
+
+        let content = Frame::new(
+            title,
+            Paragraphs::new([Paragraph::new(&theme::TEXT_MONO, description)]),
+        );
+        let obj = if time_ms == 0 {
+            // No timer, used when we only want to draw the dialog once and
+            // then throw away the layout object.
+            LayoutObj::new(NoBtnDialog::new(content, Empty))?
+        } else {
+            // Timeout.
+            LayoutObj::new(NoBtnDialog::new(
+                content,
+                Timeout::new(time_ms).map(|msg| {
+                    (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Confirmed)
+                }),
+            ))?
+        };
+
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
-        let _allow_cancel: Option<bool> =
-            kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
+        let _allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
 
         let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let _max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+
+        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+
+        let obj = LayoutObj::new(
+            Frame::new(prompt, WordlistEntry::new(WordlistType::Bip39)).with_title_centered(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+
+        let obj = LayoutObj::new(
+            Frame::new(prompt, WordlistEntry::new(WordlistType::Slip39)).with_title_centered(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
+        let words: Vec<StrBuffer, 3> = iter_into_vec(words_iterable)?;
+
+        // Returning the index of the selected word, not the word itself
+        let obj = LayoutObj::new(
+            Frame::new(
+                title,
+                SimpleChoice::new(words, false)
+                    .with_show_incomplete()
+                    .with_return_index(),
+            )
+            .with_title_centered(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
+        let share_words: Vec<StrBuffer, 33> = iter_into_vec(share_words_obj)?;
+
+        let confirm_btn =
+            Some(ButtonDetails::text("HOLD TO CONFIRM".into()).with_default_duration());
+
+        let obj = LayoutObj::new(
+            ButtonPage::new(ShareWords::new(title, share_words), theme::BG)
+                .with_confirm_btn(confirm_btn),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -766,45 +839,6 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
-        let share_words: Vec<StrBuffer, 33> = iter_into_vec(share_words_obj)?;
-
-        let confirm_btn =
-            Some(ButtonDetails::text("HOLD TO CONFIRM".into()).with_default_duration());
-
-        let obj = LayoutObj::new(
-            ButtonPage::new(ShareWords::new(title, share_words), theme::BG)
-                .with_confirm_btn(confirm_btn),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
-        let words: Vec<StrBuffer, 3> = iter_into_vec(words_iterable)?;
-
-        // Returning the index of the selected word, not the word itself
-        let obj = LayoutObj::new(
-            Frame::new(
-                title,
-                SimpleChoice::new(words, false)
-                    .with_show_incomplete()
-                    .with_return_index(),
-            )
-            .with_title_centered(),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let _dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
@@ -818,41 +852,6 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
         let obj = LayoutObj::new(
             Frame::new(title, SimpleChoice::new(choices, false)).with_title_centered(),
         )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-
-        let obj = LayoutObj::new(
-            Frame::new(prompt, WordlistEntry::new(WordlistType::Bip39)).with_title_centered(),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-
-        let obj = LayoutObj::new(
-            Frame::new(prompt, WordlistEntry::new(WordlistType::Slip39)).with_title_centered(),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let _max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
-
-        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -985,7 +984,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_properties(
     ///     *,
     ///     title: str,
-    ///     items: Iterable[Tuple[str | None, str | None, bool]],
+    ///     items: list[tuple[str | None, str | bytes | None, bool]],
     ///     hold: bool = False,
     /// ) -> object:
     ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
@@ -1026,14 +1025,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Show receive address together with QR code and details about it."""
     Qstr::MP_QSTR_show_receive_address => obj_fn_kw!(0, new_show_receive_address).as_obj(),
 
-    /// def show_info(
-    ///     *,
-    ///     title: str,
-    ///     description: str = "",
-    ///     time_ms: int = 0,
-    /// ) -> object:
-    ///     """Info modal."""
-    Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
+    /// def tutorial() -> object:
+    ///     """Show user how to interact with the device."""
+    Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, tutorial).as_obj(),
 
     /// def confirm_fido(
     ///     *,
@@ -1046,18 +1040,62 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_confirm_fido => obj_fn_kw!(0, new_confirm_fido).as_obj(),
 
-    /// def tutorial() -> object:
-    ///     """Show user how to interact with the device."""
-    Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, tutorial).as_obj(),
+    /// def show_info(
+    ///     *,
+    ///     title: str,
+    ///     description: str = "",
+    ///     time_ms: int = 0,
+    /// ) -> object:
+    ///     """Info modal."""
+    Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
     /// def request_pin(
     ///     *,
     ///     prompt: str,
     ///     subprompt: str | None = None,
-    ///     allow_cancel: bool | None = None,
+    ///     allow_cancel: bool = True,
     /// ) -> str | object:
     ///     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
+
+    /// def request_passphrase(
+    ///     *,
+    ///     prompt: str,
+    ///     max_len: int,
+    /// ) -> str | object:
+    ///     """Get passphrase."""
+    Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
+
+    /// def request_bip39(
+    ///     *,
+    ///     prompt: str,
+    /// ) -> str:
+    ///     """Get recovery word for BIP39."""
+    Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
+
+    /// def request_slip39(
+    ///     *,
+    ///     prompt: str,
+    /// ) -> str:
+    ///    """SLIP39 word input keyboard."""
+    Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
+
+    /// def select_word(
+    ///     *,
+    ///     title: str,
+    ///     words: Iterable[str],
+    /// ) -> int:
+    ///    """Select mnemonic word from three possibilities - seed check after backup. The
+    ///    iterable must be of exact size. Returns index in range `0..3`."""
+    Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
+
+    /// def show_share_words(
+    ///     *,
+    ///     title: str,
+    ///     share_words: Iterable[str],
+    /// ) -> None:
+    ///     """Shows a backup seed."""
+    Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
     /// def request_number(
     ///     *,
@@ -1080,51 +1118,12 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
-    /// def show_share_words(
-    ///     *,
-    ///     title: str,
-    ///     share_words: Iterable[str],
-    /// ) -> None:
-    ///     """Shows a backup seed."""
-    Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
-
-    /// def select_word(
-    ///     *,
-    ///     title: str,
-    ///     words: Iterable[str],
-    /// ) -> int:
-    ///    """Select mnemonic word from three possibilities - seed check after backup. The
-    ///    iterable must be of exact size. Returns index in range `0..3`."""
-    Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
-
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,
     /// ) -> str:  # TODO: make it return int
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
-
-    /// def request_bip39(
-    ///     *,
-    ///     prompt: str,
-    /// ) -> str:
-    ///     """Get recovery word for BIP39."""
-    Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
-
-    /// def request_slip39(
-    ///     *,
-    ///     prompt: str,
-    /// ) -> str:
-    ///    """SLIP39 word input keyboard."""
-    Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
-
-    /// def request_passphrase(
-    ///     *,
-    ///     prompt: str,
-    ///     max_len: int,
-    /// ) -> str:
-    ///     """Get passphrase."""
-    Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
 
     /// def show_progress(
     ///     *,
