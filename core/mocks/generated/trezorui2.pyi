@@ -41,7 +41,7 @@ def confirm_blob(
 def confirm_properties(
     *,
     title: str,
-    items: Iterable[Tuple[str | None, str | None, bool]],
+    items: list[tuple[str | None, str | bytes | None, bool]],
     hold: bool = False,
 ) -> object:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
@@ -86,13 +86,8 @@ def show_receive_address(
 
 
 # rust/src/ui/model_tr/layout.rs
-def show_info(
-    *,
-    title: str,
-    description: str = "",
-    time_ms: int = 0,
-) -> object:
-    """Info modal."""
+def tutorial() -> object:
+    """Show user how to interact with the device."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -107,8 +102,13 @@ def confirm_fido(
 
 
 # rust/src/ui/model_tr/layout.rs
-def tutorial() -> object:
-    """Show user how to interact with the device."""
+def show_info(
+    *,
+    title: str,
+    description: str = "",
+    time_ms: int = 0,
+) -> object:
+    """Info modal."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -116,9 +116,53 @@ def request_pin(
     *,
     prompt: str,
     subprompt: str | None = None,
-    allow_cancel: bool | None = None,
+    allow_cancel: bool = True,
 ) -> str | object:
     """Request pin on device."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_passphrase(
+    *,
+    prompt: str,
+    max_len: int,
+) -> str | object:
+    """Get passphrase."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_bip39(
+    *,
+    prompt: str,
+) -> str:
+    """Get recovery word for BIP39."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_slip39(
+    *,
+    prompt: str,
+) -> str:
+   """SLIP39 word input keyboard."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def select_word(
+    *,
+    title: str,
+    words: Iterable[str],
+) -> int:
+   """Select mnemonic word from three possibilities - seed check after backup. The
+   iterable must be of exact size. Returns index in range `0..3`."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_share_words(
+    *,
+    title: str,
+    share_words: Iterable[str],
+) -> None:
+    """Shows a backup seed."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -145,55 +189,11 @@ def show_checklist(
 
 
 # rust/src/ui/model_tr/layout.rs
-def show_share_words(
-    *,
-    title: str,
-    share_words: Iterable[str],
-) -> None:
-    """Shows a backup seed."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def select_word(
-    *,
-    title: str,
-    words: Iterable[str],
-) -> int:
-   """Select mnemonic word from three possibilities - seed check after backup. The
-   iterable must be of exact size. Returns index in range `0..3`."""
-
-
-# rust/src/ui/model_tr/layout.rs
 def select_word_count(
     *,
     dry_run: bool,
 ) -> str:  # TODO: make it return int
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def request_bip39(
-    *,
-    prompt: str,
-) -> str:
-    """Get recovery word for BIP39."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def request_slip39(
-    *,
-    prompt: str,
-) -> str:
-   """SLIP39 word input keyboard."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def request_passphrase(
-    *,
-    prompt: str,
-    max_len: int,
-) -> str:
-    """Get passphrase."""
 
 
 # rust/src/ui/model_tr/layout.rs
