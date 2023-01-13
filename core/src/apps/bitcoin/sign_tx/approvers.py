@@ -212,14 +212,13 @@ class BasicApprover(Approver):
     async def add_payment_request(
         self, msg: TxAckPaymentRequest, keychain: Keychain
     ) -> None:
-        from trezor.ui.components.common.confirm import INFO
-
         await super().add_payment_request(msg, keychain)
         if msg.amount is None:
             raise DataError("Missing payment request amount.")
 
         result = await helpers.confirm_payment_request(msg, self.coin, self.amount_unit)
-        self.show_payment_req_details = result is INFO
+        # When user wants to see more info, the result will be False.
+        self.show_payment_req_details = result is False
 
     async def approve_orig_txids(
         self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]

@@ -31,7 +31,7 @@ class Credential:
     is_no_staking: bool = False
     is_mismatch: bool = False
     is_unusual_path: bool = False
-    is_other_warning: bool = False
+    is_other_warning: bool = False  # TODO: this seems to be unused
 
     def __init__(
         self,

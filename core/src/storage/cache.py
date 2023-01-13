@@ -220,10 +220,6 @@ def end_current_session() -> None:
     _active_session_idx = None
 
 
-def is_session_started() -> bool:
-    return _active_session_idx is not None
-
-
 def set(key: int, value: bytes) -> None:
     if key & _SESSIONLESS_FLAG:
         _SESSIONLESS_CACHE.set(key ^ _SESSIONLESS_FLAG, value)
