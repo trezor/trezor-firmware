@@ -35,12 +35,9 @@ async def get(ctx: Context) -> str:
 
 async def _request_on_host(ctx: Context) -> str:
     from trezor.messages import PassphraseAck, PassphraseRequest
-    from trezor.ui.layouts import draw_simple_text
+    from trezor.ui.layouts import request_passphrase_on_host
 
-    # _entry_dialog
-    draw_simple_text(
-        "Passphrase entry", "Please type your\npassphrase on the\nconnected host."
-    )
+    request_passphrase_on_host()
 
     request = PassphraseRequest()
     ack = await ctx.call(request, PassphraseAck)
@@ -78,9 +75,3 @@ async def _request_on_host(ctx: Context) -> str:
         )
 
     return passphrase
-
-
-def _entry_dialog() -> None:
-    from trezor.ui.layouts import request_passphrase_on_host
-
-    request_passphrase_on_host()
