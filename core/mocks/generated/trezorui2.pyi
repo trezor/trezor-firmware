@@ -103,7 +103,7 @@ def confirm_properties(
 def confirm_reset_device(
     *,
     title: str,
-    prompt: str,
+    button: str,
 ) -> object:
     """Confirm TOS before device setup."""
 

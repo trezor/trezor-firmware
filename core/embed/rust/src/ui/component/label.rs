@@ -63,9 +63,13 @@ where
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let line_bounds = bounds.with_height(self.font().text_max_height());
-        self.layout = self.layout.with_bounds(line_bounds);
-        line_bounds
+        let height = self
+            .layout
+            .with_bounds(bounds)
+            .fit_text(self.text.as_ref())
+            .height();
+        self.layout = self.layout.with_bounds(bounds.with_height(height));
+        self.layout.bounds
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {

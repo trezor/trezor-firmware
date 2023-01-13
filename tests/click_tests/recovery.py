@@ -25,7 +25,7 @@ def confirm_recovery(debug: "DebugLink", legacy_ui: bool = False) -> None:
     if legacy_ui:
         layout.text.startswith("Recovery mode")
     else:
-        assert layout.get_title() == "RECOVERY MODE"
+        assert layout.get_title().startswith("WALLET RECOVERY")
     debug.click(buttons.OK, wait=True)
 
 
