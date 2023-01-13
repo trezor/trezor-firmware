@@ -1,7 +1,7 @@
 use super::theme;
 use crate::ui::{
     component::{label::Label, text::TextStyle, Child, Component, Event, EventCtx},
-    display::{self, toif::Icon, Color, Font},
+    display::{self, toif::Icon, Color},
     geometry::{Alignment, Insets, Offset, Rect},
     util::icon_text_center,
 };
@@ -57,13 +57,10 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         const TITLE_SPACE: i16 = theme::BUTTON_SPACING;
 
-        let (title_area, content_area) = bounds
-            .inset(self.border)
-            .split_top(Font::BOLD.text_height());
-        let title_area = title_area.inset(Insets::sides(theme::CONTENT_BORDER));
-        let content_area = content_area.inset(Insets::top(TITLE_SPACE));
-
-        self.title.place(title_area);
+        let bounds = bounds.inset(self.border);
+        let title_area = bounds.inset(Insets::sides(theme::CONTENT_BORDER));
+        let title_area = self.title.place(title_area);
+        let content_area = bounds.inset(Insets::top(title_area.height() + TITLE_SPACE));
         self.content.place(content_area);
         bounds
     }

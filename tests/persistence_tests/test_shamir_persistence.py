@@ -50,7 +50,7 @@ def test_abort(emulator: Emulator):
 
     device_handler.run(device.recover, pin_protection=False)
     layout = debug.wait_layout()
-    assert layout.get_title() == "RECOVERY MODE"
+    assert layout.get_title() == "WALLET RECOVERY"
 
     layout = debug.click(buttons.OK, wait=True)
     assert "Select number of words" in layout.text
