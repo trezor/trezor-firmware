@@ -351,8 +351,8 @@ def validate_firmware(
         sys.exit(2)
 
     print_firmware_version(fw)
-    validate_signatures(fw)
     validate_fingerprint(fw, fingerprint)
+    validate_signatures(fw)
 
     if bootloader_onev2 is not None and trezor_major_version is not None:
         check_device_match(

@@ -1,0 +1,1 @@
+`trezorctl firmware verify` changed order of checks - fingerprint is validated before signatures.
