@@ -25,11 +25,14 @@ _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
 
 async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
     from trezor import config
-    from trezor.ui.loader import LoadingAnimation
     from apps.common.request_pin import request_pin_confirm
-    from trezor.ui.layouts import confirm_backup, confirm_reset_device
+    from trezor.ui.layouts import (
+        confirm_backup,
+        confirm_reset_device,
+    )
     from trezor.crypto import bip39, random
     from trezor.messages import Success, EntropyAck, EntropyRequest
+    from trezor.pin import render_empty_loader
 
     backup_type = msg.backup_type  # local_cache_attribute
 
@@ -44,7 +47,9 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
     else:
         prompt = "Do you want to create\na new wallet?"
     await confirm_reset_device(ctx, prompt)
-    await LoadingAnimation()
+
+    # Rendering empty loader so users do not feel a freezing screen
+    render_empty_loader("PROCESSING", "")
 
     # wipe storage to make sure the device is in a clear state
     storage.reset()
