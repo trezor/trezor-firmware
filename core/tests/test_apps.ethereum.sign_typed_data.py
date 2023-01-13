@@ -582,8 +582,8 @@ class TestEthereumSignTypedData(unittest.TestCase):
             ),
             (
                 EFT(data_type=EDT.STRING, size=None),
-                [b"\x7f", b"a" * 1024],
-                [b"\x80", b"a" * 1025],
+                [b"\x7f"],
+                [b"\x80"],
             ),
             (
                 EFT(data_type=EDT.ADDRESS, size=None),
