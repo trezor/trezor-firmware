@@ -136,16 +136,6 @@ def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
         yield items[i : i + size]
 
 
-def chunks_intersperse(items: str, size: int, sep: str = "\n") -> Iterator[str]:
-    first = True
-    for i in range(0, len(items), size):
-        if not first:
-            yield sep
-        else:
-            first = False
-        yield items[i : i + size]
-
-
 if TYPE_CHECKING:
 
     class HashContext(Protocol):
