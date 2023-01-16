@@ -15,8 +15,9 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import json
+import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, List, Optional
+from typing import TYPE_CHECKING, Generator, Optional
 
 import pytest
 
@@ -24,7 +25,7 @@ from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType
 
 if TYPE_CHECKING:
-    from trezorlib.debuglink import LayoutLines
+    from trezorlib.debuglink import LayoutContent
     from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
     from trezorlib.messages import ButtonRequest
     from _pytest.mark.structures import MarkDecorator
@@ -125,7 +126,23 @@ def generate_entropy(
 
 def recovery_enter_shares(
     debug: "DebugLink",
-    shares: List[str],
+    shares: list[str],
+    groups: bool = False,
+    click_info: bool = False,
+) -> Generator[None, "ButtonRequest", None]:
+    if debug.model == "T":
+        yield from recovery_enter_shares_tt(
+            debug, shares, groups=groups, click_info=click_info
+        )
+    elif debug.model == "R":
+        yield from recovery_enter_shares_tr(debug, shares, groups=groups)
+    else:
+        raise ValueError(f"Unknown model: {debug.model}")
+
+
+def recovery_enter_shares_tt(
+    debug: "DebugLink",
+    shares: list[str],
     groups: bool = False,
     click_info: bool = False,
 ) -> Generator[None, "ButtonRequest", None]:
@@ -181,7 +198,7 @@ def recovery_enter_shares(
 
 def recovery_enter_shares_tr(
     debug: "DebugLink",
-    shares: List[str],
+    shares: list[str],
     groups: bool = False,
 ) -> Generator[None, "ButtonRequest", None]:
     """Perform the recovery flow for a set of Shamir shares.
@@ -236,7 +253,7 @@ def recovery_enter_shares_tr(
 
 
 def click_through(
-    debug: "DebugLink", screens: int, code: ButtonRequestType = None
+    debug: "DebugLink", screens: int, code: Optional[ButtonRequestType] = None
 ) -> Generator[None, "ButtonRequest", None]:
     """Click through N dialog screens.
 
@@ -260,6 +277,19 @@ def click_through(
 def read_and_confirm_mnemonic(
     debug: "DebugLink", choose_wrong: bool = False
 ) -> Generator[None, "ButtonRequest", Optional[str]]:
+    if debug.model == "T":
+        mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
+    elif debug.model == "R":
+        mnemonic = yield from read_and_confirm_mnemonic_tr(debug, choose_wrong)
+    else:
+        raise ValueError(f"Unknown model: {debug.model}")
+
+    return mnemonic
+
+
+def read_and_confirm_mnemonic_tt(
+    debug: "DebugLink", choose_wrong: bool = False
+) -> Generator[None, "ButtonRequest", Optional[str]]:
     """Read a given number of mnemonic words from Trezor T screen and correctly
     answer confirmation questions. Return the full mnemonic.
 
@@ -271,7 +301,7 @@ def read_and_confirm_mnemonic(
 
         mnemonic = yield from read_and_confirm_mnemonic(client.debug)
     """
-    mnemonic: List[str] = []
+    mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
     for _ in range(br.pages - 1):
@@ -294,19 +324,46 @@ def read_and_confirm_mnemonic(
     return " ".join(mnemonic)
 
 
+def read_and_confirm_mnemonic_tr(
+    debug: "DebugLink", choose_wrong: bool = False
+) -> Generator[None, "ButtonRequest", Optional[str]]:
+    mnemonic: list[str] = []
+    br = yield
+    assert br.pages is not None
+    for _ in range(br.pages):
+        layout = debug.wait_layout()
+
+        words = ModelRLayout(layout).get_mnemonic_words()
+        mnemonic.extend(words)
+        debug.press_right()
+
+    yield  # Select correct words...
+    debug.press_right()
+
+    for _ in range(3):
+        index = debug.read_reset_word_pos()
+        if choose_wrong:
+            debug.input(mnemonic[(index + 1) % len(mnemonic)])
+            return None
+        else:
+            debug.input(mnemonic[index])
+
+    return " ".join(mnemonic)
+
+
 class ModelRLayout:
     """Layout shortcuts for Model R."""
 
-    def __init__(self, layout: "LayoutLines") -> None:
+    def __init__(self, layout: "LayoutContent") -> None:
         self.layout = layout
 
-    def get_mnemonic_words(self) -> List[str]:
+    def get_mnemonic_words(self) -> list[str]:
         """Extract mnemonic words from the layout lines.
 
         Example input: [..., '4 must', '5 during', '6 monitor', ...]
         Example output: ['must', 'during', 'monitor']
         """
-        words: List[str] = []
+        words: list[str] = []
         for line in self.layout.lines:
             if " " in line:
                 number, word = line.split(" ", 1)
@@ -335,31 +392,18 @@ class ModelRLayout:
         return buttons.split("[Select(")[1].split(")]")[0]
 
 
-def read_and_confirm_mnemonic_tr(
-    debug: "DebugLink", choose_wrong: bool = False
-) -> Generator[None, "ButtonRequest", Optional[str]]:
-    mnemonic: List[str] = []
-    br = yield
-    assert br.pages is not None
-    for _ in range(br.pages):
-        layout = debug.wait_layout()
+def click_info_button(debug: "DebugLink"):
+    """Click Shamir backup info button and return back."""
+    debug.press_info()
+    yield  # Info screen with text
+    debug.press_yes()
 
-        words = ModelRLayout(layout).get_mnemonic_words()
-        mnemonic.extend(words)
-        debug.press_right()
 
-    yield  # Select correct words...
-    debug.press_right()
-
-    for _ in range(3):
-        index = debug.read_reset_word_pos()
-        if choose_wrong:
-            debug.input(mnemonic[(index + 1) % len(mnemonic)])
-            return None
-        else:
-            debug.input(mnemonic[index])
-
-    return " ".join(mnemonic)
+def check_PIN_backoff_time(attempts: int, start: float) -> None:
+    """Helper to assert the exponentially growing delay after incorrect PIN attempts"""
+    expected = (2**attempts) - 1
+    got = round(time.time() - start, 2)
+    assert got >= expected
 
 
 def get_test_address(client: "Client") -> str:

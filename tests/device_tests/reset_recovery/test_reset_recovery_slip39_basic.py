@@ -24,12 +24,9 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ...common import (
-    click_through,
-    read_and_confirm_mnemonic,
-    read_and_confirm_mnemonic_tr,
-    recovery_enter_shares,
-    recovery_enter_shares_tr,
+from ...input_flows import (
+    InputFlowSlip39BasicRecovery,
+    InputFlowSlip39BasicResetRecovery,
 )
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
@@ -54,72 +51,9 @@ def test_reset_recovery(client: Client):
 
 
 def reset(client: Client, strength: int = 128) -> list[str]:
-    all_mnemonics: list[str] = []
-
-    def input_flow_tt():
-        # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of shares
-        # 6. threshold info
-        # 7. Set & confirm threshold value
-        # 8. Confirm show seeds
-        yield from click_through(client.debug, screens=8, code=B.ResetDevice)
-
-        # show & confirm shares
-        for _ in range(5):
-            # mnemonic phrases
-            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-            all_mnemonics.append(mnemonic)
-
-            # Confirm continue to next share
-            br = yield
-            assert br.code == B.Success
-            client.debug.press_yes()
-
-        # safety warning
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
-
-    def input_flow_tr():
-        yield  # Confirm Reset
-        client.debug.press_yes()
-        yield  # Backup your seed
-        client.debug.press_yes()
-        yield  # Checklist
-        client.debug.press_yes()
-        yield  # Number of shares info
-        client.debug.press_yes()
-        yield  # Number of shares (5)
-        client.debug.input("5")
-        yield  # Checklist
-        client.debug.press_yes()
-        yield  # Threshold info
-        client.debug.press_yes()
-        yield  # Threshold (3)
-        client.debug.input("3")
-        yield  # Checklist
-        client.debug.press_yes()
-        yield  # Confirm show seeds
-        client.debug.press_yes()
-
-        # Mnemonic phrases
-        for _ in range(5):
-            # Phrase screen
-            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
-            all_mnemonics.append(mnemonic)
-
-            br = yield  # Confirm continue to next
-            assert br.code == B.Success
-            client.debug.press_yes()
-
-        br = yield  # Confirm backup
-        assert br.code == B.Success
-        client.debug.press_yes()
-
     with client:
+        IF = InputFlowSlip39BasicResetRecovery(client)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
@@ -144,11 +78,6 @@ def reset(client: Client, strength: int = 128) -> list[str]:
                 messages.Features,
             ]
         )
-        if client.features.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.features.model == "R":
-            client.debug.watch_layout(True)
-            client.set_input_flow(input_flow_tr)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -169,29 +98,13 @@ def reset(client: Client, strength: int = 128) -> list[str]:
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
 
-    return all_mnemonics
+    return IF.mnemonics
 
 
-def recover(client: Client, shares: list[str]) -> None:
-    debug = client.debug
-
-    def input_flow_tt():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # run recovery flow
-        yield from recovery_enter_shares(debug, shares)
-
-    def input_flow_tr():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # run recovery flow
-        yield from recovery_enter_shares_tr(debug, shares)
-
+def recover(client: Client, shares: list[str]):
     with client:
-        if client.features.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.features.model == "R":
-            client.set_input_flow(input_flow_tr)
+        IF = InputFlowSlip39BasicRecovery(client, shares)
+        client.set_input_flow(IF.get())
         ret = device.recover(
             client, pin_protection=False, label="label", show_tutorial=False
         )

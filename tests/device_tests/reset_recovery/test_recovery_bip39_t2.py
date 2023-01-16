@@ -20,99 +20,16 @@ from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import MNEMONIC12
+from ...input_flows import InputFlowBip39RecoveryNoPIN, InputFlowBip39RecoveryPIN
 
 pytestmark = pytest.mark.skip_t1
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_tt_pin_passphrase(client: Client):
-    layout = client.debug.wait_layout
-    mnemonic = MNEMONIC12.split(" ")
-
-    def input_flow_tt():
-        yield
-        assert "Do you really want to recover a wallet?" in layout().get_content()
-        client.debug.press_yes()
-
-        yield
-        assert layout().text == "< PinKeyboard >"
-        client.debug.input("654")
-
-        yield
-        assert layout().text == "< PinKeyboard >"
-        client.debug.input("654")
-
-        yield
-        assert "select the number of words" in layout().get_content()
-        client.debug.press_yes()
-
-        yield
-        assert "SelectWordCount" in layout().text
-        client.debug.input(str(len(mnemonic)))
-
-        yield
-        assert "enter your recovery seed" in layout().get_content()
-        client.debug.press_yes()
-
-        yield
-        for word in mnemonic:
-            assert layout().text == "< MnemonicKeyboard >"
-            client.debug.input(word)
-
-        yield
-        assert "You have successfully recovered your wallet." in layout().get_content()
-        client.debug.press_yes()
-
-    def input_flow_tr():
-        yield
-        assert "By continuing you agree" in layout().text
-        client.debug.press_right()
-        assert "trezor.io/tos" in layout().text
-        client.debug.press_yes()
-
-        yield
-        assert "ENTER" in layout().text
-        client.debug.input("654")
-
-        yield
-        assert "re-enter PIN to confirm" in layout().text
-        client.debug.press_right()
-
-        yield
-        assert "ENTER" in layout().text
-        client.debug.input("654")
-
-        yield
-        assert "select the number of words" in layout().text
-        client.debug.press_yes()
-
-        yield
-        yield
-        assert "NUMBER OF WORDS" in layout().text
-        client.debug.input(str(len(mnemonic)))
-
-        yield
-        assert "enter your recovery seed" in layout().text
-        client.debug.press_yes()
-
-        yield
-        assert "WORD ENTERING" in layout().text
-        client.debug.press_right()
-
-        yield
-        for word in mnemonic:
-            assert "WORD" in layout().text
-            client.debug.input(word)
-
-        yield
-        assert "You have finished recovering your wallet." in layout().text
-        client.debug.press_yes()
-
     with client:
-        if client.features.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.features.model == "R":
-            client.set_input_flow(input_flow_tr)
+        IF = InputFlowBip39RecoveryPIN(client, MNEMONIC12.split(" "))
+        client.set_input_flow(IF.get())
         client.watch_layout()
         device.recover(
             client,
@@ -132,73 +49,9 @@ def test_tt_pin_passphrase(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_tt_nopin_nopassphrase(client: Client):
-    layout = client.debug.wait_layout
-    mnemonic = MNEMONIC12.split(" ")
-
-    def input_flow_tt():
-        yield
-        assert "Do you really want to recover a wallet?" in layout().get_content()
-        client.debug.press_yes()
-
-        yield
-        assert "select the number of words" in layout().get_content()
-        client.debug.press_yes()
-
-        yield
-        assert "SelectWordCount" in layout().text
-        client.debug.input(str(len(mnemonic)))
-
-        yield
-        assert "enter your recovery seed" in layout().get_content()
-        client.debug.press_yes()
-
-        yield
-        for word in mnemonic:
-            assert layout().text == "< MnemonicKeyboard >"
-            client.debug.input(word)
-
-        yield
-        assert "You have successfully recovered your wallet." in layout().get_content()
-        client.debug.press_yes()
-
-    def input_flow_tr():
-        yield
-        assert "By continuing you agree" in layout().text
-        client.debug.press_right()
-        assert "trezor.io/tos" in layout().text
-        client.debug.press_yes()
-
-        yield
-        assert "select the number of words" in layout().text
-        client.debug.press_yes()
-
-        yield
-        yield
-        assert "NUMBER OF WORDS" in layout().text
-        client.debug.input(str(len(mnemonic)))
-
-        yield
-        assert "enter your recovery seed" in layout().text
-        client.debug.press_yes()
-
-        yield
-        assert "WORD ENTERING" in layout().text
-        client.debug.press_right()
-
-        yield
-        for word in mnemonic:
-            assert "WORD" in layout().text
-            client.debug.input(word)
-
-        yield
-        assert "You have finished recovering your wallet." in layout().text
-        client.debug.press_yes()
-
     with client:
-        if client.features.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.features.model == "R":
-            client.set_input_flow(input_flow_tr)
+        IF = InputFlowBip39RecoveryNoPIN(client, MNEMONIC12.split(" "))
+        client.set_input_flow(IF.get())
         client.watch_layout()
         device.recover(
             client,

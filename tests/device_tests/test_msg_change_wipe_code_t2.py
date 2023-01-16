@@ -21,6 +21,8 @@ from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
+from ..input_flows import InputFlowNewCodeMismatch
+
 PIN4 = "1234"
 WIPE_CODE4 = "4321"
 WIPE_CODE6 = "456789"
@@ -95,24 +97,12 @@ def test_set_remove_wipe_code(client: Client):
 
 
 def test_set_wipe_code_mismatch(client: Client):
-    # Let's set a wipe code.
-    def input_flow():
-        yield  # do you want to set the wipe code?
-        client.debug.press_yes()
-        yield  # enter new wipe code
-        client.debug.input(WIPE_CODE4)
-        yield  # enter new wipe code again (but different)
-        client.debug.input(WIPE_CODE6)
-
-        # failed retry
-        yield  # enter new wipe code
-        client.cancel()
-
     with client, pytest.raises(Cancelled):
+        IF = InputFlowNewCodeMismatch(client, WIPE_CODE4, WIPE_CODE6)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [messages.ButtonRequest()] * 4 + [messages.Failure()]
         )
-        client.set_input_flow(input_flow)
 
         device.change_wipe_code(client)
 

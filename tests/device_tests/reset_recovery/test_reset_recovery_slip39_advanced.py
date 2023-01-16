@@ -23,13 +23,10 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ...common import (
-    EXTERNAL_ENTROPY,
-    click_through,
-    read_and_confirm_mnemonic,
-    read_and_confirm_mnemonic_tr,
-    recovery_enter_shares,
-    recovery_enter_shares_tr,
+from ...common import EXTERNAL_ENTROPY
+from ...input_flows import (
+    InputFlowSlip39AdvancedRecovery,
+    InputFlowSlip39AdvancedResetRecovery,
 )
 
 
@@ -63,85 +60,10 @@ def test_reset_recovery(client: Client):
 
 
 def reset(client: Client, strength: int = 128) -> list[str]:
-    all_mnemonics: list[str] = []
-
-    def input_flow_tt():
-        # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of groups
-        # 6. threshold info
-        # 7. Set & confirm group threshold value
-        # 8-17: for each of 5 groups:
-        #   1. Set & Confirm number of shares
-        #   2. Set & confirm share threshold value
-        # 18. Confirm show seeds
-        yield from click_through(client.debug, screens=18, code=B.ResetDevice)
-
-        # show & confirm shares for all groups
-        for _g in range(5):
-            for _h in range(5):
-                # mnemonic phrases
-                mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-                all_mnemonics.append(mnemonic)
-
-                # Confirm continue to next share
-                br = yield
-                assert br.code == B.Success
-                client.debug.press_yes()
-
-        # safety warning
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
-
-    def input_flow_tr():
-        yield  # Wallet backup
-        client.debug.press_yes()
-        yield  # Wallet creation
-        client.debug.press_yes()
-        yield  # Checklist
-        client.debug.press_yes()
-        yield  # Set and confirm group count
-        client.debug.input("5")
-        yield  # Checklist
-        client.debug.press_yes()
-        yield  # Set and confirm group threshold
-        client.debug.input("3")
-        yield  # Checklist
-        client.debug.press_yes()
-        for _ in range(5):  # for each of 5 groups
-            yield  # Number of shares info
-            client.debug.press_yes()
-            yield  # Number of shares (5)
-            client.debug.input("5")
-            yield  # Threshold info
-            client.debug.press_yes()
-            yield  # Threshold (3)
-            client.debug.input("3")
-        yield  # Confirm show seeds
-        client.debug.press_yes()
-
-        # show & confirm shares for all groups
-        for _g in range(5):
-            for _h in range(5):
-                # mnemonic phrases
-                mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
-                all_mnemonics.append(mnemonic)
-
-                # Confirm continue to next share
-                br = yield
-                assert br.code == B.Success
-                client.debug.press_yes()
-
-        # safety warning
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
-
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
+        IF = InputFlowSlip39AdvancedResetRecovery(client, False)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
@@ -176,11 +98,6 @@ def reset(client: Client, strength: int = 128) -> list[str]:
                 messages.Features,
             ]
         )
-        if client.features.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.features.model == "R":
-            client.debug.watch_layout(True)
-            client.set_input_flow(input_flow_tr)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -201,29 +118,13 @@ def reset(client: Client, strength: int = 128) -> list[str]:
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
 
-    return all_mnemonics
+    return IF.mnemonics
 
 
 def recover(client: Client, shares: list[str]):
-    debug = client.debug
-
-    def input_flow_tt():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # run recovery flow
-        yield from recovery_enter_shares(debug, shares, groups=True)
-
-    def input_flow_tr():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # run recovery flow
-        yield from recovery_enter_shares_tr(debug, shares, groups=True)
-
     with client:
-        if client.features.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.features.model == "R":
-            client.set_input_flow(input_flow_tr)
+        IF = InputFlowSlip39AdvancedRecovery(client, shares, False)
+        client.set_input_flow(IF.get())
         ret = device.recover(
             client, pin_protection=False, label="label", show_tutorial=False
         )
