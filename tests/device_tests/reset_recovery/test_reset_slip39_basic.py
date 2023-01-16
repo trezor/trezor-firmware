@@ -25,49 +25,19 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ...common import (
-    EXTERNAL_ENTROPY,
-    click_through,
-    generate_entropy,
-    read_and_confirm_mnemonic,
-)
+from ...common import EXTERNAL_ENTROPY, generate_entropy
+from ...input_flows import InputFlowSlip39BasicResetRecovery
 
 pytestmark = [pytest.mark.skip_t1]
 
 
-def reset_device(client: Client, strength):
+def reset_device(client: Client, strength: int):
     member_threshold = 3
-    all_mnemonics = []
-
-    def input_flow():
-        # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of shares
-        # 6. threshold info
-        # 7. Set & confirm threshold value
-        # 8. Confirm show seeds
-        yield from click_through(client.debug, screens=8, code=B.ResetDevice)
-
-        # show & confirm shares
-        for _ in range(5):
-            # mnemonic phrases
-            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-            all_mnemonics.append(mnemonic)
-
-            # Confirm continue to next share
-            br = yield
-            assert br.code == B.Success
-            client.debug.press_yes()
-
-        # safety warning
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
 
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
+        IF = InputFlowSlip39BasicResetRecovery(client)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
@@ -92,7 +62,6 @@ def reset_device(client: Client, strength):
                 messages.Features,
             ]
         )
-        client.set_input_flow(input_flow)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -111,7 +80,7 @@ def reset_device(client: Client, strength):
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret
-    validate_mnemonics(all_mnemonics, member_threshold, secret)
+    validate_mnemonics(IF.mnemonics, member_threshold, secret)
 
     # Check if device is properly initialized
     assert client.features.initialized is True

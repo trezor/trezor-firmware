@@ -21,6 +21,12 @@ from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
+from ..input_flows import (
+    InputFlowCodeChangeFail,
+    InputFlowNewCodeMismatch,
+    InputFlowWrongPIN,
+)
+
 PIN4 = "1234"
 PIN60 = "789456" * 10
 PIN_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
@@ -28,7 +34,7 @@ PIN_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 pytestmark = pytest.mark.skip_t1
 
 
-def _check_pin(client: Client, pin):
+def _check_pin(client: Client, pin: str):
     client.lock()
     assert client.features.pin_protection is True
     assert client.features.unlocked is False
@@ -116,22 +122,10 @@ def test_set_failed(client: Client):
     # Check that there's no PIN protection
     _check_no_pin(client)
 
-    # Let's set new PIN
-    def input_flow():
-        yield  # do you want to set pin?
-        client.debug.press_yes()
-        yield  # enter new pin
-        client.debug.input(PIN4)
-        yield  # enter new pin again (but different)
-        client.debug.input(PIN60)
-
-        # failed retry
-        yield  # enter new pin
-        client.cancel()
-
     with client, pytest.raises(Cancelled):
+        IF = InputFlowNewCodeMismatch(client, PIN4, PIN60)
+        client.set_input_flow(IF.get())
         client.set_expected_responses([messages.ButtonRequest] * 4 + [messages.Failure])
-        client.set_input_flow(input_flow)
 
         device.change_pin(client)
 
@@ -148,24 +142,10 @@ def test_change_failed(client: Client):
     # Check current PIN value
     _check_pin(client, PIN4)
 
-    # Let's set new PIN
-    def input_flow():
-        yield  # do you want to change pin?
-        client.debug.press_yes()
-        yield  # enter current pin
-        client.debug.input(PIN4)
-        yield  # enter new pin
-        client.debug.input("457891")
-        yield  # enter new pin again (but different)
-        client.debug.input("381847")
-
-        # failed retry
-        yield  # enter current pin again
-        client.cancel()
-
     with client, pytest.raises(Cancelled):
+        IF = InputFlowCodeChangeFail(client, PIN4, "457891", "381847")
+        client.set_input_flow(IF.get())
         client.set_expected_responses([messages.ButtonRequest] * 5 + [messages.Failure])
-        client.set_input_flow(input_flow)
 
         device.change_pin(client)
 
@@ -182,18 +162,10 @@ def test_change_invalid_current(client: Client):
     # Check current PIN value
     _check_pin(client, PIN4)
 
-    # Let's set new PIN
-    def input_flow():
-        yield  # do you want to change pin?
-        client.debug.press_yes()
-        yield  # enter wrong current pin
-        client.debug.input(PIN60)
-        yield
-        client.debug.press_no()
-
     with client, pytest.raises(TrezorFailure):
+        IF = InputFlowWrongPIN(client, PIN4)
+        client.set_input_flow(IF.get())
         client.set_expected_responses([messages.ButtonRequest] * 3 + [messages.Failure])
-        client.set_input_flow(input_flow)
 
         device.change_pin(client)
 

@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import json
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, List, Optional
 
@@ -214,7 +215,7 @@ def read_and_confirm_mnemonic(
 
         mnemonic = yield from read_and_confirm_mnemonic(client.debug)
     """
-    mnemonic = []
+    mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
     for _ in range(br.pages - 1):
@@ -235,6 +236,20 @@ def read_and_confirm_mnemonic(
             debug.input(mnemonic[index])
 
     return " ".join(mnemonic)
+
+
+def click_info_button(debug: "DebugLink"):
+    """Click Shamir backup info button and return back."""
+    debug.press_info()
+    yield  # Info screen with text
+    debug.press_yes()
+
+
+def check_PIN_backoff_time(attempts: int, start: float) -> None:
+    """Helper to assert the exponentially growing delay after incorrect PIN attempts"""
+    expected = (2**attempts) - 1
+    got = round(time.time() - start, 2)
+    assert got >= expected
 
 
 def get_test_address(client: "Client") -> str:

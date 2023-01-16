@@ -24,7 +24,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ...common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
+from ...common import EXTERNAL_ENTROPY
+from ...input_flows import InputFlowBip39RecoveryNoPIN, InputFlowBip39ResetBackup
 
 
 @pytest.mark.skip_t1
@@ -39,32 +40,11 @@ def test_reset_recovery(client: Client):
     assert address_before == address_after
 
 
-def reset(client: Client, strength=128, skip_backup=False):
-    mnemonic = None
-
-    def input_flow():
-        nonlocal mnemonic
-
-        # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        yield from click_through(client.debug, screens=3, code=B.ResetDevice)
-
-        # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-
-        # confirm recovery seed check
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
-
-        # confirm success
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
-
+def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str:
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
+        IF = InputFlowBip39ResetBackup(client)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
@@ -78,7 +58,6 @@ def reset(client: Client, strength=128, skip_backup=False):
                 messages.Features,
             ]
         )
-        client.set_input_flow(input_flow)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -98,33 +77,16 @@ def reset(client: Client, strength=128, skip_backup=False):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
 
-    return mnemonic
+    assert IF.mnemonic is not None
+    return IF.mnemonic
 
 
-def recover(client: Client, mnemonic):
-    debug = client.debug
+def recover(client: Client, mnemonic: str):
     words = mnemonic.split(" ")
-
-    def input_flow():
-        yield  # Confirm recovery
-        debug.press_yes()
-        yield  # Homescreen
-        debug.press_yes()
-
-        yield  # Enter word count
-        debug.input(str(len(words)))
-
-        yield  # Homescreen
-        debug.press_yes()
-        yield  # Enter words
-        for word in words:
-            debug.input(word)
-
-        yield  # confirm success
-        debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowBip39RecoveryNoPIN(client, words)
+        client.set_input_flow(IF.get())
+        client.watch_layout()
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ProtectCall),

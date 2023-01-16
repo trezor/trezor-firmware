@@ -22,10 +22,14 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
+from ...input_flows import (
+    InputFlowEthereumSignTxGoBack,
+    InputFlowEthereumSignTxScrollDown,
+    InputFlowEthereumSignTxSkip,
+)
 
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
-SHOW_ALL = (143, 167)
-GO_BACK = (16, 220)
+
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
@@ -330,90 +334,15 @@ def test_sanity_checks_eip1559(client: Client):
 
 
 def input_flow_skip(client: Client, cancel: bool = False):
-    yield  # confirm address
-    client.debug.press_yes()
-    yield  # confirm amount
-    client.debug.wait_layout()
-    client.debug.press_yes()
-    yield  # confirm data
-    if cancel:
-        client.debug.press_no()
-    else:
-        client.debug.press_yes()
-        yield  # gas price
-        client.debug.press_yes()
-        yield  # maximum fee
-        client.debug.press_yes()
-        yield  # hold to confirm
-        client.debug.press_yes()
+    return InputFlowEthereumSignTxSkip(client, cancel).get()
 
 
 def input_flow_scroll_down(client: Client, cancel: bool = False):
-    yield  # confirm address
-    client.debug.wait_layout()
-    client.debug.press_yes()
-    yield  # confirm amount
-    client.debug.wait_layout()
-    client.debug.press_yes()
-    yield  # confirm data
-    client.debug.wait_layout()
-    client.debug.click(SHOW_ALL)
-
-    br = yield  # paginated data
-    for i in range(br.pages):
-        client.debug.wait_layout()
-        if i < br.pages - 1:
-            client.debug.swipe_up()
-
-    client.debug.press_yes()
-    yield  # confirm data
-    if cancel:
-        client.debug.press_no()
-    else:
-        client.debug.press_yes()
-        yield  # gas price
-        client.debug.press_yes()
-        yield  # maximum fee
-        client.debug.press_yes()
-        yield  # hold to confirm
-        client.debug.press_yes()
+    return InputFlowEthereumSignTxScrollDown(client, cancel).get()
 
 
 def input_flow_go_back(client: Client, cancel: bool = False):
-    br = yield  # confirm address
-    client.debug.wait_layout()
-    client.debug.press_yes()
-    br = yield  # confirm amount
-    client.debug.wait_layout()
-    client.debug.press_yes()
-    br = yield  # confirm data
-    client.debug.wait_layout()
-    client.debug.click(SHOW_ALL)
-
-    br = yield  # paginated data
-    for i in range(br.pages):
-        client.debug.wait_layout()
-        if i == 2:
-            client.debug.click(GO_BACK)
-            yield  # confirm data
-            client.debug.wait_layout()
-            if cancel:
-                client.debug.press_no()
-            else:
-                client.debug.press_yes()
-                yield  # confirm address
-                client.debug.wait_layout()
-                client.debug.press_yes()
-                yield  # confirm amount
-                client.debug.wait_layout()
-                client.debug.press_yes()
-                yield  # hold to confirm
-                client.debug.wait_layout()
-                client.debug.press_yes()
-            return
-
-        elif i < br.pages - 1:
-            client.debug.swipe_up()
+    return InputFlowEthereumSignTxGoBack(client, cancel).get()
 
 
 HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd030000056789abcd040000006789abcd050000000789abcd060000000089abcd070000000009abcd080000000000abcd090000000001abcd0a0000000011abcd0b0000000111abcd0c0000001111abcd0d0000011111abcd0e0000111111abcd0f0000000002abcd100000000022abcd110000000222abcd120000002222abcd130000022222abcd140000222222abcd15"

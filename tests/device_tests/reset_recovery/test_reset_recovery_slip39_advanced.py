@@ -23,11 +23,10 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ...common import (
-    EXTERNAL_ENTROPY,
-    click_through,
-    read_and_confirm_mnemonic,
-    recovery_enter_shares,
+from ...common import EXTERNAL_ENTROPY
+from ...input_flows import (
+    InputFlowSlip39AdvancedRecovery,
+    InputFlowSlip39AdvancedResetRecovery,
 )
 
 
@@ -60,42 +59,11 @@ def test_reset_recovery(client: Client):
         assert address_before == address_after
 
 
-def reset(client: Client, strength=128):
-    all_mnemonics = []
-
-    def input_flow():
-        # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of groups
-        # 6. threshold info
-        # 7. Set & confirm group threshold value
-        # 8-17: for each of 5 groups:
-        #   1. Set & Confirm number of shares
-        #   2. Set & confirm share threshold value
-        # 18. Confirm show seeds
-        yield from click_through(client.debug, screens=18, code=B.ResetDevice)
-
-        # show & confirm shares for all groups
-        for _g in range(5):
-            for _h in range(5):
-                # mnemonic phrases
-                mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-                all_mnemonics.append(mnemonic)
-
-                # Confirm continue to next share
-                br = yield
-                assert br.code == B.Success
-                client.debug.press_yes()
-
-        # safety warning
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
-
+def reset(client: Client, strength: int = 128) -> list[str]:
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
+        IF = InputFlowSlip39AdvancedResetRecovery(client, False)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
@@ -130,7 +98,6 @@ def reset(client: Client, strength=128):
                 messages.Features,
             ]
         )
-        client.set_input_flow(input_flow)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -150,20 +117,13 @@ def reset(client: Client, strength=128):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
 
-    return all_mnemonics
+    return IF.mnemonics
 
 
-def recover(client: Client, shares):
-    debug = client.debug
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # run recovery flow
-        yield from recovery_enter_shares(debug, shares, groups=True)
-
+def recover(client: Client, shares: list[str]):
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39AdvancedRecovery(client, shares, False)
+        client.set_input_flow(IF.get())
         ret = device.recover(client, pin_protection=False, label="label")
 
     # Workflow successfully ended

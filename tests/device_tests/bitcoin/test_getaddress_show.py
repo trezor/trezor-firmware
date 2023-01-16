@@ -20,6 +20,8 @@ from trezorlib import btc, messages, tools
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
+from ...input_flows import InputFlowShowAddressQRCode, InputFlowShowMultisigXPUBs
+
 VECTORS = (  # path, script_type, address
     (
         "m/44h/0h/12h/0/0",
@@ -48,14 +50,9 @@ VECTORS = (  # path, script_type, address
 def test_show(
     client: Client, path: str, script_type: messages.InputScriptType, address: str
 ):
-    def input_flow():
-        yield
-        client.debug.press_no()
-        yield
-        client.debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowShowAddressQRCode(client)
+        client.set_input_flow(IF.get())
         assert (
             btc.get_address(
                 client,
@@ -209,41 +206,10 @@ def test_show_multisig_xpubs(
     )
 
     for i in range(3):
-
-        def input_flow():
-            yield  # show address
-            layout = client.debug.wait_layout()  # TODO: do not need to *wait* now?
-            assert layout.get_title() == "MULTISIG 2 OF 3"
-            assert layout.get_content().replace(" ", "") == address
-
-            client.debug.press_no()
-            yield  # show QR code
-            assert "Painter" in client.debug.wait_layout().text
-
-            # Three xpub pages with the same testing logic
-            for xpub_num in range(3):
-                expected_title = f"XPUB #{xpub_num + 1} " + (
-                    "(yours)" if i == xpub_num else "(cosigner)"
-                )
-
-                client.debug.press_no()
-                yield  # show XPUB#{xpub_num}
-                layout1 = client.debug.wait_layout()
-                assert layout1.get_title() == expected_title
-                client.debug.swipe_up()
-
-                layout2 = client.debug.wait_layout()
-                assert layout2.get_title() == expected_title
-                content = (layout1.get_content() + layout2.get_content()).replace(
-                    " ", ""
-                )
-                assert content == xpubs[xpub_num]
-
-            client.debug.press_yes()
-
         with client:
             client.watch_layout()
-            client.set_input_flow(input_flow)
+            IF = InputFlowShowMultisigXPUBs(client, address, xpubs, i)
+            client.set_input_flow(IF.get())
             btc.get_address(
                 client,
                 "Bitcoin",

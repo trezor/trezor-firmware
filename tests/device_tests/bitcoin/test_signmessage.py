@@ -18,13 +18,10 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import (
-    LayoutContent,
-    TrezorClientDebugLink as Client,
-    message_filters,
-    multipage_content,
-)
+from trezorlib.debuglink import TrezorClientDebugLink as Client, message_filters
 from trezorlib.tools import parse_path
+
+from ...input_flows import InputFlowSignMessagePagination
 
 S = messages.InputScriptType
 
@@ -301,33 +298,9 @@ MESSAGE_LENGTHS = (
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("message", MESSAGE_LENGTHS)
 def test_signmessage_pagination(client: Client, message: str):
-    message_read = ""
-
-    def input_flow():
-        # collect screen contents into `message_read`.
-        # Using a helper debuglink function to assemble the final text.
-        nonlocal message_read
-        layouts: list[LayoutContent] = []
-
-        # confirm address
-        br = yield
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        br = yield
-        for i in range(br.pages):
-            layout = client.debug.wait_layout()
-            layouts.append(layout)
-
-            if i < br.pages - 1:
-                client.debug.swipe_up()
-
-        message_read = multipage_content(layouts)
-
-        client.debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSignMessagePagination(client)
+        client.set_input_flow(IF.get())
         client.debug.watch_layout(True)
         btc.sign_message(
             client,
@@ -340,7 +313,7 @@ def test_signmessage_pagination(client: Client, message: str):
     expected_message = (
         ("Confirm message: " + message).replace("\n", "").replace(" ", "")
     )
-    message_read = message_read.replace(" ", "")
+    message_read = IF.message_read.replace(" ", "")
     assert expected_message == message_read
 
 

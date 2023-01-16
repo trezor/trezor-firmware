@@ -19,8 +19,11 @@ import pytest
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
-from ... import buttons
 from ...common import MNEMONIC12
+from ...input_flows import (
+    InputFlowBip39RecoveryDryRun,
+    InputFlowBip39RecoveryDryRunInvalid,
+)
 
 
 def do_recover_legacy(client: Client, mnemonic, **kwargs):
@@ -47,41 +50,10 @@ def do_recover_legacy(client: Client, mnemonic, **kwargs):
 
 
 def do_recover_core(client: Client, mnemonic, **kwargs):
-    layout = client.debug.wait_layout
-
-    def input_flow():
-        yield
-        assert "check the recovery seed" in layout().get_content()
-        client.debug.click(buttons.OK)
-
-        yield
-        assert "Select number of words" in layout().get_content()
-        client.debug.click(buttons.OK)
-
-        yield
-        assert "SelectWordCount" in layout().text
-        # click the number
-        word_option_offset = 6
-        word_options = (12, 18, 20, 24, 33)
-        index = word_option_offset + word_options.index(len(mnemonic))
-        client.debug.click(buttons.grid34(index % 3, index // 3))
-
-        yield
-        assert "Enter recovery seed" in layout().get_content()
-        client.debug.click(buttons.OK)
-
-        yield
-        for word in mnemonic:
-            client.debug.wait_layout()
-            client.debug.input(word)
-
-        yield
-        client.debug.wait_layout()
-        client.debug.click(buttons.OK)
-
     with client:
         client.watch_layout()
-        client.set_input_flow(input_flow)
+        IF = InputFlowBip39RecoveryDryRun(client, mnemonic)
+        client.set_input_flow(IF.get())
         return device.recover(client, dry_run=True, **kwargs)
 
 
@@ -114,48 +86,10 @@ def test_invalid_seed_t1(client: Client):
 
 @pytest.mark.skip_t1
 def test_invalid_seed_core(client: Client):
-    layout = client.debug.wait_layout
-
-    def input_flow():
-        yield
-        assert "check the recovery seed" in layout().get_content()
-        client.debug.click(buttons.OK)
-
-        yield
-        assert "Select number of words" in layout().get_content()
-        client.debug.click(buttons.OK)
-
-        yield
-        assert "SelectWordCount" in layout().text
-        # select 12 words
-        client.debug.click(buttons.grid34(0, 2))
-
-        yield
-        assert "Enter recovery seed" in layout().get_content()
-        client.debug.click(buttons.OK)
-
-        yield
-        for _ in range(12):
-            assert layout().text == "< MnemonicKeyboard >"
-            client.debug.input("stick")
-
-        br = yield
-        assert br.code == messages.ButtonRequestType.Warning
-        assert "invalid recovery seed" in layout().get_content()
-        client.debug.click(buttons.OK)
-
-        yield
-        # retry screen
-        assert "Select number of words" in layout().get_content()
-        client.debug.click(buttons.CANCEL)
-
-        yield
-        assert "ABORT SEED CHECK" == layout().get_title()
-        client.debug.click(buttons.OK)
-
     with client:
         client.watch_layout()
-        client.set_input_flow(input_flow)
+        IF = InputFlowBip39RecoveryDryRunInvalid(client)
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             return device.recover(client, dry_run=True)
 
