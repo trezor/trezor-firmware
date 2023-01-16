@@ -24,12 +24,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ...common import (
-    click_through,
-    generate_entropy,
-    read_and_confirm_mnemonic,
-    read_and_confirm_mnemonic_tr,
-)
+from ...common import generate_entropy
+from ...input_flows import InputFlowSlip39AdvancedResetRecovery
 
 pytestmark = [pytest.mark.skip_t1]
 
@@ -41,85 +37,11 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 def test_reset_device_slip39_advanced(client: Client):
     strength = 128
     member_threshold = 3
-    all_mnemonics = []
-
-    def input_flow_tt():
-        # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of groups
-        # 6. threshold info
-        # 7. Set & confirm group threshold value
-        # 8-17: for each of 5 groups:
-        #   1. Set & Confirm number of shares
-        #   2. Set & confirm share threshold value
-        # 18. Confirm show seeds
-        yield from click_through(client.debug, screens=18, code=B.ResetDevice)
-
-        # show & confirm shares for all groups
-        for _g in range(5):
-            for _h in range(5):
-                # mnemonic phrases
-                mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-                all_mnemonics.append(mnemonic)
-
-                # Confirm continue to next share
-                br = yield
-                assert br.code == B.Success
-                client.debug.press_yes()
-
-        # safety warning
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
-
-    def input_flow_tr():
-        yield  # Wallet backup
-        client.debug.press_yes()
-        yield  # Wallet creation
-        client.debug.press_yes()
-        yield  # Checklist
-        client.debug.press_yes()
-        yield  # Set and confirm group count
-        client.debug.input("5")
-        yield  # Checklist
-        client.debug.press_yes()
-        yield  # Set and confirm group threshold
-        client.debug.input("3")
-        yield  # Checklist
-        client.debug.press_yes()
-        for _ in range(5):  # for each of 5 groups
-            yield  # Number of shares info
-            client.debug.press_yes()
-            yield  # Number of shares (5)
-            client.debug.input("5")
-            yield  # Threshold info
-            client.debug.press_yes()
-            yield  # Threshold (3)
-            client.debug.input("3")
-        yield  # Confirm show seeds
-        client.debug.press_yes()
-
-        # show & confirm shares for all groups
-        for _g in range(5):
-            for _h in range(5):
-                # mnemonic phrases
-                mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
-                all_mnemonics.append(mnemonic)
-
-                # Confirm continue to next share
-                br = yield
-                assert br.code == B.Success
-                client.debug.press_yes()
-
-        # safety warning
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
 
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
+        IF = InputFlowSlip39AdvancedResetRecovery(client, False)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
@@ -154,11 +76,6 @@ def test_reset_device_slip39_advanced(client: Client):
                 messages.Features,
             ]
         )
-        if client.features.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.features.model == "R":
-            client.debug.watch_layout(True)
-            client.set_input_flow(input_flow_tr)
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -178,7 +95,7 @@ def test_reset_device_slip39_advanced(client: Client):
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret
-    validate_mnemonics(all_mnemonics, member_threshold, secret)
+    validate_mnemonics(IF.mnemonics, member_threshold, secret)
 
     # Check if device is properly initialized
     assert client.features.initialized is True

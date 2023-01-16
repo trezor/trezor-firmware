@@ -23,6 +23,11 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
+from ...input_flows import (
+    InputFlowLockTimeBlockHeight,
+    InputFlowLockTimeDatetime,
+    InputFlowSignTxHighFee,
+)
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -657,33 +662,13 @@ def test_fee_high_hardfail(client: Client):
         client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
     with client:
-        tt = client.features.model == "T"
-        finished = False
-
-        def input_flow():
-            nonlocal finished
-            for expected in (
-                B.ConfirmOutput,
-                (tt, B.ConfirmOutput),
-                B.FeeOverThreshold,
-                B.SignTx,
-                (tt, B.SignTx),
-            ):
-                if isinstance(expected, tuple):
-                    is_valid, expected = expected
-                    if not is_valid:
-                        continue
-                br = yield
-                assert br.code == expected
-                client.debug.press_yes()
-            finished = True
-
-        client.set_input_flow(input_flow)
+        IF = InputFlowSignTxHighFee(client)
+        client.set_input_flow(IF.get())
 
         _, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_CACHE_TESTNET
         )
-        assert finished
+        assert IF.finished
 
     # Transaction does not exist on the blockchain, not using assert_tx_matches()
     assert (
@@ -1486,47 +1471,9 @@ def test_lock_time_blockheight(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow_tt():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm locktime
-        layout = client.debug.wait_layout()
-        assert "blockheight" in layout.text
-        assert "499999999" in layout.text
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.press_yes()
-        yield  # confirm transaction
-        client.debug.press_yes()
-
-    def input_flow_tr():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.swipe_up()
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm locktime
-        layout = client.debug.wait_layout()
-        assert "blockheight" in layout.text
-        assert "499999999" in layout.text
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.press_yes()
-
     with client:
-        if client.debug.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.debug.model == "R":
-            client.set_input_flow(input_flow_tr)
-        client.watch_layout(True)
+        IF = InputFlowLockTimeBlockHeight(client, "499999999")
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             client,
@@ -1559,50 +1506,13 @@ def test_lock_time_datetime(client: Client, lock_time_str: str):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow_tt():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm locktime
-        layout = client.debug.wait_layout()
-        assert lock_time_str in layout.text
-
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.press_yes()
-        yield  # confirm transaction
-        client.debug.press_yes()
-
-    def input_flow_tr():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.swipe_up()
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm locktime
-        layout = client.debug.wait_layout()
-        assert lock_time_str in layout.text
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.press_yes()
-
     lock_time_naive = datetime.strptime(lock_time_str, "%Y-%m-%d %H:%M:%S")
     lock_time_utc = lock_time_naive.replace(tzinfo=timezone.utc)
     lock_time_timestamp = int(lock_time_utc.timestamp())
 
     with client:
-        if client.debug.model == "T":
-            client.set_input_flow(input_flow_tt)
-        elif client.debug.model == "R":
-            client.set_input_flow(input_flow_tr)
-        client.watch_layout(True)
+        IF = InputFlowLockTimeDatetime(client, lock_time_str)
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             client,
