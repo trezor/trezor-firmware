@@ -30,7 +30,9 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{iter_into_objs, iter_into_vec, upy_disable_animation, ConfirmBlob},
+            util::{
+                iter_into_array, iter_into_objs, iter_into_vec, upy_disable_animation, ConfirmBlob,
+            },
         },
         model_tr::component::{ScrollableContent, ScrollableFrame},
     },
@@ -338,6 +340,119 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let recovery: bool = kwargs.get(Qstr::MP_QSTR_recovery)?.try_into()?;
+        let description: StrBuffer =
+            "By continuing you agree to Trezor Company terms and conditions.".into();
+        let url: StrBuffer = "More info at trezor.io/tos".into();
+
+        let verb: StrBuffer = if recovery {
+            "RECOVER WALLET".into()
+        } else {
+            "CREATE WALLET".into()
+        };
+
+        let title: StrBuffer = if recovery {
+            "WALLET RECOVERY".into()
+        } else {
+            "WALLET CREATION".into()
+        };
+
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_MONO, description),
+            Paragraph::new(&theme::TEXT_BOLD, url),
+        ]);
+
+        paragraphs_in_button_page(title, paragraphs, verb, None, false)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let value: StrBuffer = kwargs.get(Qstr::MP_QSTR_value)?.try_into()?;
+
+        let verb: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_BOLD, description),
+            Paragraph::new(&theme::TEXT_MONO, value),
+        ]);
+
+        paragraphs_in_button_page(
+            title,
+            paragraphs,
+            verb.unwrap_or_else(|| "CONFIRM".into()),
+            None,
+            hold,
+        )
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let spending_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_spending_amount)?.try_into()?;
+        let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
+
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_BOLD, "You are contributing:".into()),
+            Paragraph::new(&theme::TEXT_MONO, spending_amount),
+            Paragraph::new(&theme::TEXT_BOLD, "To the total amount:".into()),
+            Paragraph::new(&theme::TEXT_MONO, total_amount),
+        ]);
+
+        paragraphs_in_button_page(
+            "JOINT TRANSACTION".into(),
+            paragraphs,
+            "HOLD TO CONFIRM".into(),
+            None,
+            true,
+        )
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
+        let amount_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_change)?.try_into()?;
+        let amount_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_new)?.try_into()?;
+
+        let description = if sign < 0 {
+            "Decrease amount by:"
+        } else {
+            "Increase amount by:"
+        };
+
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_BOLD, "Address:".into()),
+            Paragraph::new(&theme::TEXT_MONO, address).break_after(),
+            Paragraph::new(&theme::TEXT_MONO, description.into()),
+            Paragraph::new(&theme::TEXT_MONO, amount_change),
+            Paragraph::new(&theme::TEXT_BOLD, "New amount:".into()),
+            Paragraph::new(&theme::TEXT_MONO, amount_new),
+        ]);
+
+        paragraphs_in_button_page(
+            "MODIFY AMOUNT".into(),
+            paragraphs,
+            "CONFIRM".into(),
+            None,
+            false,
+        )
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
@@ -598,6 +713,45 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
+        let user_fee_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_user_fee_change)?.try_into()?;
+        let total_fee_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_fee_new)?.try_into()?;
+        let fee_rate_amount: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_fee_rate_amount)?
+            .try_into_option()?;
+
+        let (description, change) = match sign {
+            s if s < 0 => ("Decrease fee by:", user_fee_change),
+            s if s > 0 => ("Increase fee by:", user_fee_change),
+            _ => ("Your fee did not change.", StrBuffer::empty()),
+        };
+
+        let mut paragraphs_vec = ParagraphVecShort::new();
+        paragraphs_vec
+            .add(Paragraph::new(&theme::TEXT_BOLD, description.into()))
+            .add(Paragraph::new(&theme::TEXT_MONO, change))
+            .add(Paragraph::new(&theme::TEXT_BOLD, "Transaction fee:".into()).no_break())
+            .add(Paragraph::new(&theme::TEXT_MONO, total_fee_new));
+
+        if let Some(fee_rate_amount) = fee_rate_amount {
+            paragraphs_vec
+                .add(Paragraph::new(&theme::TEXT_BOLD, "Fee rate:".into()).no_break())
+                .add(Paragraph::new(&theme::TEXT_MONO, fee_rate_amount));
+        }
+
+        paragraphs_in_button_page(
+            "MODIFY FEE".into(),
+            paragraphs_vec.into_paragraphs(),
+            "CONFIRM".into(),
+            Some("".into()),
+            false,
+        )
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let app_name: StrBuffer = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
@@ -695,11 +849,33 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let max_rounds: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
+        let max_feerate: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
+
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_BOLD, "Maximum rounds:".into()),
+            Paragraph::new(&theme::TEXT_MONO, max_rounds),
+            Paragraph::new(&theme::TEXT_BOLD, "Maximum mining fee:".into()).no_break(),
+            Paragraph::new(&theme::TEXT_MONO, max_feerate),
+        ]);
+
+        paragraphs_in_button_page(
+            "AUTHORIZE COINJOIN".into(),
+            paragraphs,
+            "HOLD TO CONFIRM".into(),
+            None,
+            true,
+        )
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
-        let _allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
 
         let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
         Ok(obj.into())
@@ -840,6 +1016,25 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
+
+        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_MONO, description)]);
+
+        let title = if dry_run {
+            "SEED CHECK"
+        } else {
+            "WALLET RECOVERY"
+        };
+
+        paragraphs_in_button_page(title.into(), paragraphs, button, Some("".into()), false)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let _dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
@@ -854,6 +1049,29 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             Frame::new(title, SimpleChoice::new(choices, false)).with_title_centered(),
         )?;
         Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_group_share_success(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let lines_iterable: Obj = kwargs.get(Qstr::MP_QSTR_lines)?;
+        let lines: [StrBuffer; 4] = iter_into_array(lines_iterable)?;
+
+        let [l0, l1, l2, l3] = lines;
+
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_MONO, l0),
+            Paragraph::new(&theme::TEXT_BOLD, l1),
+            Paragraph::new(&theme::TEXT_MONO, l2),
+            Paragraph::new(&theme::TEXT_BOLD, l3),
+        ]);
+
+        paragraphs_in_button_page("".into(), paragraphs, "CONTINUE".into(), None, false)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -993,17 +1211,54 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     This only concerns the text style, you need to decode the value to UTF-8 in python."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
-    /// def confirm_output_r(
+    /// def confirm_reset_device(
+    ///     *,
+    ///     recovery: bool,
+    ///     prompt: str,  # unused on TR
+    /// ) -> object:
+    ///     """Confirm TOS before device setup."""
+    Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
+
+    /// def confirm_value(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     value: str,
+    ///     verb: str | None = None,
+    ///     hold: bool = False,
+    /// ) -> object:
+    ///     """Confirm value."""
+    Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
+
+    /// def confirm_joint_total(
+    ///     *,
+    ///     spending_amount: str,
+    ///     total_amount: str,
+    /// ) -> object:
+    ///     """Confirm total if there are external inputs."""
+    Qstr::MP_QSTR_confirm_joint_total => obj_fn_kw!(0, new_confirm_joint_total).as_obj(),
+
+    /// def confirm_modify_output(
+    ///     *,
+    ///     address: str,
+    ///     sign: int,
+    ///     amount_change: str,
+    ///     amount_new: str,
+    /// ) -> object:
+    ///     """Decrease or increase amount for given address."""
+    Qstr::MP_QSTR_confirm_modify_output => obj_fn_kw!(0, new_confirm_modify_output).as_obj(),
+
+    /// def confirm_output(
     ///     *,
     ///     address: str,
     ///     amount: str,
     ///     address_title: str,
     ///     amount_title: str,
     /// ) -> object:
-    ///     """Confirm output. Specific for model R."""
-    Qstr::MP_QSTR_confirm_output_r => obj_fn_kw!(0, new_confirm_output).as_obj(),
+    ///     """Confirm output."""
+    Qstr::MP_QSTR_confirm_output => obj_fn_kw!(0, new_confirm_output).as_obj(),
 
-    /// def confirm_total_r(
+    /// def confirm_total(
     ///     *,
     ///     total_amount: str,
     ///     fee_amount: str,
@@ -1011,8 +1266,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     total_label: str,
     ///     fee_label: str,
     /// ) -> object:
-    ///     """Confirm summary of a transaction. Specific for model R."""
-    Qstr::MP_QSTR_confirm_total_r => obj_fn_kw!(0, new_confirm_total).as_obj(),
+    ///     """Confirm summary of a transaction."""
+    Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
 
     /// def show_receive_address(
     ///     *,
@@ -1029,6 +1284,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, tutorial).as_obj(),
+
+    /// def confirm_modify_fee(
+    ///     *,
+    ///     sign: int,
+    ///     user_fee_change: str,
+    ///     total_fee_new: str,
+    ///     fee_rate_amount: str | None,
+    /// ) -> object:
+    ///     """Decrease or increase transaction fee."""
+    Qstr::MP_QSTR_confirm_modify_fee => obj_fn_kw!(0, new_confirm_modify_fee).as_obj(),
 
     /// def confirm_fido(
     ///     *,
@@ -1052,11 +1317,19 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Info modal."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
+    /// def confirm_coinjoin(
+    ///     *,
+    ///     max_rounds: str,
+    ///     max_feerate: str,
+    /// ) -> object:
+    ///     """Confirm coinjoin authorization."""
+    Qstr::MP_QSTR_confirm_coinjoin => obj_fn_kw!(0, new_confirm_coinjoin).as_obj(),
+
     /// def request_pin(
     ///     *,
     ///     prompt: str,
-    ///     subprompt: str | None = None,
-    ///     allow_cancel: bool = True,
+    ///     subprompt: str,
+    ///     allow_cancel: bool = True,  # unused on TR
     ///     wrong_pin: bool = False,  # unused on TR
     /// ) -> str | object:
     ///     """Request pin on device."""
@@ -1124,12 +1397,30 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
+    /// def confirm_recovery(
+    ///     *,
+    ///     title: str,  # unused on TR
+    ///     description: str,
+    ///     button: str,
+    ///     dry_run: bool,
+    ///     info_button: bool,  # unused on TR
+    /// ) -> object:
+    ///    """Device recovery homescreen."""
+    Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
+
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,
-    /// ) -> str:  # TODO: make it return int
+    /// ) -> int | str:  # TR returns str
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
+
+    /// def show_group_share_success(
+    ///     *,
+    ///     lines: Iterable[str]
+    /// ) -> int:
+    ///    """Shown after successfully finishing a group."""
+    Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
 
     /// def show_progress(
     ///     *,

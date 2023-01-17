@@ -252,17 +252,12 @@ async def confirm_reset_device(
     recovery: bool = False,
     show_tutorial: bool = True,
 ) -> None:
-    if recovery:
-        title = "RECOVERY MODE"
-    else:
-        title = "CREATE NEW WALLET"
-
     await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
                 trezorui2.confirm_reset_device(
-                    title=title.upper(),
+                    recovery=recovery,
                     prompt=prompt.replace("\n", " "),
                 )
             ),
@@ -953,7 +948,6 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
-    # TODO: include fee_rate_amount
     await raise_if_not_confirmed(
         interact(
             ctx,
@@ -962,6 +956,7 @@ async def confirm_modify_fee(
                     sign=sign,
                     user_fee_change=user_fee_change,
                     total_fee_new=total_fee_new,
+                    fee_rate_amount=fee_rate_amount,
                 )
             ),
             "modify_fee",
@@ -984,16 +979,6 @@ async def confirm_coinjoin(
             ),
             "coinjoin_final",
             BR_TYPE_OTHER,
-        )
-    )
-
-
-def show_coinjoin() -> None:
-    draw_simple(
-        trezorui2.show_info(
-            title="CoinJoin in progress.",
-            description="Do not disconnect your Trezor.",
-            button="",
         )
     )
 

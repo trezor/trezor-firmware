@@ -108,8 +108,14 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         // Depending whether there is a title or not
         let (content_area, scrollbar_area, title_area) = if self.title.is_none() {
-            let (scrollbar_area, content_area) = bounds.split_top(ScrollBar::MAX_DOT_SIZE);
-            (content_area, scrollbar_area, Rect::zero())
+            // When the content fits on one page, no need for allocating place for scrollbar
+            self.content.place(bounds);
+            if self.content.inner().page_count() == 1 {
+                (bounds, Rect::zero(), Rect::zero())
+            } else {
+                let (scrollbar_area, content_area) = bounds.split_top(ScrollBar::MAX_DOT_SIZE);
+                (content_area, scrollbar_area, Rect::zero())
+            }
         } else {
             const TITLE_SPACE: i16 = 2;
 

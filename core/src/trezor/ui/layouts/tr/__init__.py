@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Sequence
 
-from trezor import io, log, loop, ui, workflow
+from trezor import io, loop, ui, workflow
 from trezor.enums import ButtonRequestType
 from trezor.utils import DISABLE_ANIMATION
 from trezor.wire import ActionCancelled
@@ -492,9 +492,9 @@ async def get_bool(
     return result is trezorui2.CONFIRMED
 
 
-async def raise_if_cancelled(a: Awaitable[T], exc: Any = ActionCancelled) -> T:
+async def raise_if_not_confirmed(a: Awaitable[T], exc: Any = ActionCancelled) -> T:
     result = await a
-    if result is trezorui2.CANCELLED:
+    if result is not trezorui2.CONFIRMED:
         raise exc
     return result
 
@@ -520,7 +520,7 @@ async def confirm_action(
     if description is not None and description_param is not None:
         description = description.format(description_param)
 
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
@@ -556,15 +556,20 @@ async def confirm_reset_device(
     if show_tutorial:
         await tutorial(ctx)
 
-    return await _placeholder_confirm(
-        ctx,
-        "recover_device" if recovery else "setup_device",
-        "WALLET RECOVERY" if recovery else "WALLET CREATION",
-        description="By continuing you agree to Trezor Company terms and conditions.\n\rMore info at trezor.io/tos",
-        verb="RECOVER WALLET" if recovery else "CREATE WALLET",
-        br_code=ButtonRequestType.ProtectCall
-        if recovery
-        else ButtonRequestType.ResetDevice,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_reset_device(
+                    recovery=recovery,
+                    prompt=prompt.replace("\n", " "),
+                )
+            ),
+            "recover_device" if recovery else "setup_device",
+            ButtonRequestType.ProtectCall
+            if recovery
+            else ButtonRequestType.ResetDevice,
+        )
     )
 
 
@@ -624,7 +629,7 @@ def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
 
 
 async def show_xpub(ctx: GenericContext, xpub: str, title: str) -> None:
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         interact(
             ctx,
             _show_xpub(xpub, title, None),
@@ -653,7 +658,7 @@ async def show_address(
     derivation_path = derivation_path or "Unknown"
     title = title or "Receive address"
 
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
@@ -799,11 +804,11 @@ async def confirm_output(
 ) -> None:
     address_title = "RECIPIENT" if index is None else f"RECIPIENT #{index + 1}"
     amount_title = "AMOUNT" if index is None else f"AMOUNT #{index + 1}"
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
-                trezorui2.confirm_output_r(
+                trezorui2.confirm_output(
                     address=address,
                     address_title=address_title,
                     amount_title=amount_title,
@@ -885,7 +890,7 @@ async def confirm_blob(
         )
     )
 
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         interact(
             ctx,
             layout,
@@ -968,7 +973,7 @@ async def confirm_properties(
             is_data = prop[1] and " " not in prop[1]
             return (prop[0], prop[1], is_data)
 
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
@@ -1000,15 +1005,21 @@ def confirm_value(
     if not verb and not hold:
         raise ValueError("Either verb or hold=True must be set")
 
-    return confirm_action(
-        ctx,
-        br_type,
-        title.upper(),
-        description,
-        value,
-        verb=verb or "HOLD TO CONFIRM",
-        hold=hold,
-        br_code=br_code,
+    return raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_value(
+                    title=title.upper(),
+                    description=description,
+                    value=value,
+                    verb=verb or "HOLD TO CONFIRM",
+                    hold=hold,
+                )
+            ),
+            br_type,
+            br_code,
+        )
     )
 
 
@@ -1022,11 +1033,11 @@ async def confirm_total(
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
-                trezorui2.confirm_total_r(
+                trezorui2.confirm_total(
                     total_amount=total_amount,
                     fee_amount=fee_amount,
                     fee_rate_amount=fee_rate_amount,
@@ -1043,15 +1054,19 @@ async def confirm_total(
 async def confirm_joint_total(
     ctx: GenericContext, spending_amount: str, total_amount: str
 ) -> None:
-    await confirm_properties(
-        ctx,
-        "confirm_joint_total",
-        "JOINT TRANSACTION",
-        (
-            ("You are contributing:", spending_amount),
-            ("To the total amount:", total_amount),
-        ),
-        br_code=ButtonRequestType.SignTx,
+
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_joint_total(
+                    spending_amount=spending_amount,
+                    total_amount=total_amount,
+                )
+            ),
+            "confirm_joint_total",
+            ButtonRequestType.SignTx,
+        )
     )
 
 
@@ -1093,19 +1108,20 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    text = f"Address:\n{address}\n\n"
-    if sign < 0:
-        text += f"Decrease amount by:\n{amount_change}\n\n"
-    else:
-        text += f"Increase amount by:\n{amount_change}\n\n"
-    text += f"New amount:\n{amount_new}"
-
-    await _placeholder_confirm(
-        ctx,
-        "modify_output",
-        "MODIFY AMOUNT",
-        text,
-        br_code=ButtonRequestType.ConfirmOutput,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_modify_output(
+                    address=address,
+                    sign=sign,
+                    amount_change=amount_change,
+                    amount_new=amount_new,
+                )
+            ),
+            "modify_output",
+            ButtonRequestType.ConfirmOutput,
+        )
     )
 
 
@@ -1116,47 +1132,39 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
-    if sign == 0:
-        change_verb = "Your fee did not change."
-    else:
-        if sign < 0:
-            change_verb = "Decrease your fee by:"
-        else:
-            change_verb = "Increase your fee by:"
-
-    properties: list[tuple[str, str]] = [
-        (change_verb, user_fee_change),
-        ("Transaction fee:", total_fee_new),
-    ]
-    if fee_rate_amount is not None:
-        properties.append(("Fee rate:", fee_rate_amount))
-
-    await confirm_properties(
-        ctx,
-        "modify_fee",
-        "MODIFY FEE",
-        properties,
-        br_code=ButtonRequestType.SignTx,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_modify_fee(
+                    sign=sign,
+                    user_fee_change=user_fee_change,
+                    total_fee_new=total_fee_new,
+                    fee_rate_amount=fee_rate_amount,
+                )
+            ),
+            "modify_fee",
+            ButtonRequestType.SignTx,
+        )
     )
 
 
 async def confirm_coinjoin(
     ctx: GenericContext, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
-    await confirm_properties(
-        ctx,
-        "coinjoin_final",
-        "AUTHORIZE COINJOIN",
-        (
-            ("Maximum rounds:", str(max_rounds)),
-            ("Maximum mining fee:", max_fee_per_vbyte),
-        ),
-        br_code=BR_TYPE_OTHER,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_coinjoin(
+                    max_rounds=str(max_rounds),
+                    max_feerate=max_fee_per_vbyte,
+                )
+            ),
+            "coinjoin_final",
+            BR_TYPE_OTHER,
+        )
     )
-
-
-def show_coinjoin() -> None:
-    log.error(__name__, "show_coinjoin not implemented")
 
 
 # TODO cleanup @ redesign

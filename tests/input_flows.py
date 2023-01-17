@@ -1484,6 +1484,7 @@ class InputFlowSlip39BasicRecoveryRetryFirst(InputFlowBase):
 
     def input_flow_tr(self) -> GeneratorType:
         yield  # Confirm Recovery
+        self.debug.press_right()
         self.debug.press_yes()
         yield  # Homescreen - start process
         self.debug.press_yes()
@@ -1568,6 +1569,7 @@ class InputFlowSlip39BasicRecoveryRetrySecond(InputFlowBase):
 
     def input_flow_tr(self) -> GeneratorType:
         yield  # Confirm Recovery
+        self.debug.press_right()
         self.debug.press_yes()
         yield  # Homescreen - start process
         self.debug.press_yes()
@@ -1635,6 +1637,7 @@ class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
 
     def input_flow_tr(self) -> GeneratorType:
         yield  # Confirm Recovery
+        self.debug.press_right()
         self.debug.press_yes()
         yield  # Homescreen - start process
         self.debug.press_yes()
@@ -1694,6 +1697,7 @@ class InputFlowSlip39BasicRecoverySameShare(InputFlowBase):
 
     def input_flow_tr(self) -> GeneratorType:
         yield  # Confirm Recovery
+        self.debug.press_right()
         self.debug.press_yes()
         yield  # Homescreen - start process
         self.debug.press_yes()
@@ -1729,10 +1733,20 @@ class InputFlowResetSkipBackup(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def input_flow_common(self) -> GeneratorType:
+    def input_flow_tt(self) -> GeneratorType:
         yield  # Confirm Recovery
         self.debug.press_yes()
         yield  # Skip Backup
         self.debug.press_no()
         yield  # Confirm skip backup
+        self.debug.press_no()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Skip Backup
+        self.debug.press_no()
+        yield  # Confirm skip backup
+        self.debug.press_right()
         self.debug.press_no()
