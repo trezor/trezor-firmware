@@ -374,30 +374,9 @@ class RustLayout(ui.Layout):
         def create_tasks(self) -> tuple[loop.Task, ...]:
             return self.handle_timers(), self.handle_input_and_rendering()
 
-    def _before_render(self) -> None:
-        # Clear the screen of any leftovers.
-        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
-        ui.display.clear()
-
-        if __debug__ and self.should_notify_layout_change:
-            from apps.debug import notify_layout_change
-
-            # notify about change and do not notify again until next await.
-            # (handle_rendering might be called multiple times in a single await,
-            # because of the endless loop in __iter__)
-            self.should_notify_layout_change = False
-            notify_layout_change(self)
-
-        # Turn the brightness on again.
-        ui.backlight_fade(self.BACKLIGHT_LEVEL)
-
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         button = loop.wait(io.BUTTON)
-        self._before_render()
-        ui.display.clear()
-        self.layout.attach_timer_fn(self.set_timer)
-        self.layout.paint()
-        ui.refresh()
+        self._first_paint()
         while True:
             if __debug__:
                 # Printing debugging info, just temporary
@@ -410,8 +389,7 @@ class RustLayout(ui.Layout):
                 msg = self.layout.button_event(event, button_num)
             if msg is not None:
                 raise ui.Result(msg)
-            self.layout.paint()
-            ui.refresh()
+            self._paint()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
@@ -420,8 +398,7 @@ class RustLayout(ui.Layout):
             msg = self.layout.timer(token)
             if msg is not None:
                 raise ui.Result(msg)
-            self.layout.paint()
-            ui.refresh()
+            self._paint()
 
 
 def draw_simple(layout: Any) -> None:
