@@ -26,7 +26,6 @@ _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
 
 async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
     from trezor import config
-    from trezor.ui.loader import LoadingAnimation
     from apps.common.request_pin import request_pin_confirm
     from trezor.ui.layouts import confirm_backup, confirm_reset_device
     from trezor.crypto import bip39, random

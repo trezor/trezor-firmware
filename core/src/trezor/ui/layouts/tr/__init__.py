@@ -447,7 +447,7 @@ async def _placeholder_confirm(
     description: str | None = None,
     *,
     verb: str = "CONFIRM",
-    verb_cancel: str | bytes | None = "",
+    verb_cancel: str | None = "",
     hold: bool = False,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Any:
@@ -510,40 +510,28 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     verb: str = "CONFIRM",
-    verb_cancel: str | None = None,
+    verb_cancel: str | None = "",
     hold: bool = False,
     hold_danger: bool = False,
     reverse: bool = False,
-    uppercase_title: bool = True,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     if verb_cancel is not None:
         verb_cancel = verb_cancel.upper()
 
-    # TEMPORARY: when the action targets PIN, it gets handled differently
-    if br_type == "set_pin":
-        assert action is not None
-        return await pin_confirm_action(ctx, br_type, action)
-
     if description is not None and description_param is not None:
         description = description.format(description_param)
-
-    # Making the button text UPPERCASE, so it is better readable
-    if isinstance(verb, str):
-        verb = verb.upper()
-    if isinstance(verb_cancel, str):
-        verb_cancel = verb_cancel.upper()
 
     await raise_if_cancelled(
         interact(
             ctx,
             RustLayout(
                 trezorui2.confirm_action(
-                    title=title.upper() if uppercase_title else title,
+                    title=title.upper(),
                     action=action,
                     description=description,
-                    verb=verb,
+                    verb=verb.upper(),
                     verb_cancel=verb_cancel,
                     hold=hold,
                     reverse=reverse,
@@ -1275,6 +1263,7 @@ async def request_pin_on_device(
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
+    wrong_pin: bool = False,
 ) -> str:
     from trezor import wire
 
@@ -1294,6 +1283,7 @@ async def request_pin_on_device(
             prompt=prompt,
             subprompt=subprompt,
             allow_cancel=allow_cancel,
+            wrong_pin=wrong_pin,
         )
     )
 

@@ -215,8 +215,10 @@ async def confirm_action(
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
+    hold_danger: bool = False,
     reverse: bool = False,
     exc: ExceptionType = ActionCancelled,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     if verb_cancel is not None:
         verb_cancel = verb_cancel.upper()

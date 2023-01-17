@@ -93,7 +93,9 @@ def tutorial() -> object:
 # rust/src/ui/model_tr/layout.rs
 def confirm_fido(
     *,
+    title: str,
     app_name: str,
+    icon_name: str | None,  # unused on TR
     accounts: list[str | None],
 ) -> int | object:
     """FIDO confirmation.
@@ -117,6 +119,7 @@ def request_pin(
     prompt: str,
     subprompt: str | None = None,
     allow_cancel: bool = True,
+    wrong_pin: bool = False,  # unused on TR
 ) -> str | object:
     """Request pin on device."""
 
@@ -150,6 +153,7 @@ def request_slip39(
 def select_word(
     *,
     title: str,
+    description: str,
     words: Iterable[str],
 ) -> int:
    """Select mnemonic word from three possibilities - seed check after backup. The
@@ -172,6 +176,7 @@ def request_number(
     count: int,
     min_count: int,
     max_count: int,
+    description: Callable[[int], str] | None = None,  # unused on TR
 ) -> object:
    """Number input with + and - buttons, description, and info button."""
 
