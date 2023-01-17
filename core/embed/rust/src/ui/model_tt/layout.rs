@@ -339,10 +339,10 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             if !reverse {
                 paragraphs
                     .add(Paragraph::new(&theme::TEXT_BOLD, action))
-                    .add(Paragraph::new(&theme::TEXT_NORMAL, description));
+                    .add(Paragraph::new(&theme::TEXT_NORMAL, description).blockaligned());
             } else {
                 paragraphs
-                    .add(Paragraph::new(&theme::TEXT_NORMAL, description))
+                    .add(Paragraph::new(&theme::TEXT_NORMAL, description).blockaligned())
                     .add(Paragraph::new(&theme::TEXT_BOLD, action));
             }
             paragraphs.into_paragraphs()
@@ -473,9 +473,9 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let url: StrBuffer = "https://trezor.io/tos".into();
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, prompt),
-            Paragraph::new(&theme::TEXT_NORMAL, description),
-            Paragraph::new(&theme::TEXT_BOLD, url),
+            Paragraph::new(&theme::TEXT_BOLD, prompt).blockaligned(),
+            Paragraph::new(&theme::TEXT_NORMAL, description).blockaligned(),
+            Paragraph::new(&theme::TEXT_BOLD, url).blockaligned(),
         ]);
 
         let buttons = Button::cancel_confirm_text(None, "CONTINUE");
@@ -609,9 +609,9 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         };
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, description.into()),
+            Paragraph::new(&theme::TEXT_NORMAL, description.into()).blockaligned(),
             Paragraph::new(&theme::TEXT_MONO, change),
-            Paragraph::new(&theme::TEXT_NORMAL, "\nTransaction fee:".into()),
+            Paragraph::new(&theme::TEXT_NORMAL, "\nTransaction fee:".into()).blockaligned(),
             Paragraph::new(&theme::TEXT_MONO, total_fee_new),
         ]);
 
@@ -794,7 +794,7 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
                 theme::label_title(),
                 t,
                 Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
+                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description).blockaligned()]),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -805,7 +805,7 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
             LayoutObj::new(Border::new(
                 theme::borders(),
                 Dialog::new(
-                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
+                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description).blockaligned()]),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -961,7 +961,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let words: [StrBuffer; 3] = iter_into_array(words_iterable)?;
 
-        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
+        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description).blockaligned()]);
         let buttons = Button::select_word(words);
 
         let obj = LayoutObj::new(Frame::left_aligned(
@@ -1184,7 +1184,7 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
             let [title, description]: [StrBuffer; 2] = iter_into_array(page)?;
             paragraphs
                 .add(Paragraph::new(&theme::TEXT_BOLD, title))
-                .add(Paragraph::new(&theme::TEXT_NORMAL, description).break_after());
+                .add(Paragraph::new(&theme::TEXT_NORMAL, description).blockaligned().break_after());
         }
 
         let obj = LayoutObj::new(Frame::left_aligned(

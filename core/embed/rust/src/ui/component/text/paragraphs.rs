@@ -3,10 +3,10 @@ use heapless::Vec;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Paginate},
     display,
-    geometry::{Alignment, Insets, LinearPlacement, Offset, Point, Rect},
+    geometry::{Insets, LinearPlacement, Offset, Point, Rect},
 };
 
-use super::layout::{LayoutFit, TextLayout, TextStyle};
+use super::layout::{LayoutFit, TextLayout, TextStyle, TextAlign};
 
 /// Used as an upper bound of number of different styles we may render on single
 /// page.
@@ -252,7 +252,7 @@ pub struct Paragraph<T> {
     /// Paragraph style.
     style: &'static TextStyle,
     /// Paragraph alignment.
-    align: Alignment,
+    align: TextAlign,
     /// Place next paragraph on new page.
     break_after: bool,
     /// Try to keep this and the next paragraph on the same page. NOTE: doesn't
@@ -265,14 +265,19 @@ impl<T> Paragraph<T> {
         Self {
             content,
             style,
-            align: Alignment::Start,
+            align: TextAlign::Left,
             break_after: false,
             no_break: false,
         }
     }
 
     pub const fn centered(mut self) -> Self {
-        self.align = Alignment::Center;
+        self.align = TextAlign::Center;
+        self
+    }
+
+    pub const fn blockaligned(mut self) -> Self {
+        self.align = TextAlign::Block;
         self
     }
 

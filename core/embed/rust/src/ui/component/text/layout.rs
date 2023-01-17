@@ -2,7 +2,7 @@ use super::iter::GlyphMetrics;
 use crate::ui::{
     display,
     display::{Color, Font},
-    geometry::{Alignment, Dimensions, Offset, Point, Rect},
+    geometry::{Dimensions, Offset, Point, Rect},
 };
 
 #[derive(Copy, Clone)]
@@ -26,6 +26,14 @@ pub enum PageBreaking {
     CutAndInsertEllipsis,
 }
 
+#[derive(Copy, Clone)]
+pub enum TextAlign {
+    Left,
+    Center,
+    Right,
+    Block,
+}
+
 /// Visual instructions for laying out a formatted block of text.
 #[derive(Copy, Clone)]
 pub struct TextLayout {
@@ -42,7 +50,7 @@ pub struct TextLayout {
     /// Fonts, colors, line/page breaking behavior.
     pub style: TextStyle,
     /// Horizontal alignment.
-    pub align: Alignment,
+    pub align: TextAlign,
 }
 
 #[derive(Copy, Clone)]
@@ -63,6 +71,8 @@ pub struct TextStyle {
     pub line_breaking: LineBreaking,
     /// Specifies what to do at the end of the page.
     pub page_breaking: PageBreaking,
+    /// Increase or decrease space size, in pixels.
+    pub space_adjust: i16,
 }
 
 impl TextStyle {
@@ -81,6 +91,7 @@ impl TextStyle {
             ellipsis_color,
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
+            space_adjust: 0,
         }
     }
 
@@ -91,6 +102,11 @@ impl TextStyle {
 
     pub const fn with_page_breaking(mut self, page_breaking: PageBreaking) -> Self {
         self.page_breaking = page_breaking;
+        self
+    }
+
+    pub const fn with_space_adjust(mut self, space_adjust: i16) -> Self {
+        self.space_adjust = space_adjust;
         self
     }
 }
@@ -104,7 +120,7 @@ impl TextLayout {
             padding_top: 0,
             padding_bottom: 0,
             style,
-            align: Alignment::Start,
+            align: TextAlign::Left,
         }
     }
 
@@ -113,7 +129,7 @@ impl TextLayout {
         self
     }
 
-    pub fn with_align(mut self, align: Alignment) -> Self {
+    pub fn with_align(mut self, align: TextAlign) -> Self {
         self.align = align;
         self
     }
@@ -197,18 +213,29 @@ impl TextLayout {
             let span = Span::fit_horizontally(
                 remaining_text,
                 remaining_width,
-                self.style.text_font,
+                AdjustSpace::new(self.style.text_font, self.style.space_adjust),
                 self.style.line_breaking,
             );
 
             cursor.x += match self.align {
-                Alignment::Start => 0,
-                Alignment::Center => (remaining_width - span.advance.x) / 2,
-                Alignment::End => remaining_width - span.advance.x,
+                TextAlign::Left | TextAlign::Block => 0,
+                TextAlign::Center => (remaining_width - span.advance.x) / 2,
+                TextAlign::Right => remaining_width - span.advance.x,
+            };
+            let space_adjust = match self.align {
+                TextAlign::Block if self.style.space_adjust == 0 => {
+                    let spaces: i16 = unwrap!(remaining_text[..span.length].chars().filter(|c| *c == ' ').count().try_into());
+                    if spaces > 0 {
+                        ((remaining_width - span.advance.x) / spaces).min(self.style.text_font.char_width(' ') * 8 / 7)
+                    } else {
+                        0
+                    }
+                }
+                _ => self.style.space_adjust,
             };
 
             // Report the span at the cursor position.
-            sink.text(*cursor, self, &remaining_text[..span.length]);
+            sink.text(*cursor, self, &remaining_text[..span.length], space_adjust);
 
             // Continue with the rest of the remaining_text.
             remaining_text = &remaining_text[span.length + span.skip_next_chars..];
@@ -300,7 +327,7 @@ impl LayoutFit {
 
 /// Visitor for text segment operations.
 pub trait LayoutSink {
-    fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
+    fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str, _space_adjust: i16) {}
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {}
     fn line_break(&mut self, _cursor: Point) {}
@@ -314,10 +341,23 @@ impl LayoutSink for TextNoOp {}
 pub struct TextRenderer;
 
 impl LayoutSink for TextRenderer {
-    fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
+    fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str, space_adjust: i16) {
+        let mut c = cursor;
+        let mut t = text;
+        while let Some(i) = t.find(' ') {
+            display::text(
+                c,
+                &t[..i+1],
+                layout.style.text_font,
+                layout.style.text_color,
+                layout.style.background_color,
+            );
+            c.x += layout.style.text_font.text_width(&t[..i+1]) + space_adjust;
+            t = &t[i+1..];
+        }
         display::text(
-            cursor,
-            text,
+            c,
+            t,
             layout.style.text_font,
             layout.style.text_color,
             layout.style.background_color,
@@ -345,6 +385,29 @@ impl LayoutSink for TextRenderer {
     }
 }
 
+struct AdjustSpace<T>(T, i16);
+
+impl<T> AdjustSpace<T> {
+    fn new(metrics: T, adjust: i16) -> Self {
+        Self(metrics, adjust)
+    }
+}
+
+impl<T: GlyphMetrics> GlyphMetrics for AdjustSpace<T> {
+    fn char_width(&self, ch: char) -> i16 {
+        let width = self.0.char_width(ch);
+        if ch == ' ' {
+            width + self.1
+        } else {
+            width
+        }
+    }
+
+    fn line_height(&self) -> i16 {
+        self.0.line_height()
+    }
+}
+
 #[cfg(feature = "ui_debug")]
 pub mod trace {
     use crate::ui::geometry::Point;
@@ -354,7 +417,7 @@ pub mod trace {
     pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
 
     impl<'a> LayoutSink for TraceSink<'a> {
-        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
+        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str, _space_adjust: i16) {
             self.0.string(text);
         }
 

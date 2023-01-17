@@ -110,6 +110,7 @@ async def get_address(
                 title=title,
                 multisig_index=multisig_index,
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
+                group_by=4,
             )
         else:
             title = address_n_to_str(address_n)
@@ -119,6 +120,7 @@ async def get_address(
                 address_qr=address,
                 case_sensitive=address_case_sensitive,
                 title=title,
+                group_by=4,
             )
 
     return Address(address=address, mac=mac)

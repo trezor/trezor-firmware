@@ -1,10 +1,10 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::Font,
-    geometry::{Alignment, Offset, Rect},
+    geometry::{Offset, Rect},
 };
 
-use super::{text::TextStyle, TextLayout};
+use super::{text::{TextAlign, TextStyle}, TextLayout};
 
 pub struct Label<T> {
     text: T,
@@ -15,7 +15,7 @@ impl<T> Label<T>
 where
     T: AsRef<str>,
 {
-    pub fn new(text: T, align: Alignment, style: TextStyle) -> Self {
+    pub fn new(text: T, align: TextAlign, style: TextStyle) -> Self {
         Self {
             text,
             layout: TextLayout::new(style).with_align(align),
@@ -23,15 +23,15 @@ where
     }
 
     pub fn left_aligned(text: T, style: TextStyle) -> Self {
-        Self::new(text, Alignment::Start, style)
+        Self::new(text, TextAlign::Left, style)
     }
 
     pub fn right_aligned(text: T, style: TextStyle) -> Self {
-        Self::new(text, Alignment::End, style)
+        Self::new(text, TextAlign::Right, style)
     }
 
     pub fn centered(text: T, style: TextStyle) -> Self {
-        Self::new(text, Alignment::Center, style)
+        Self::new(text, TextAlign::Center, style)
     }
 
     pub fn text(&self) -> &T {

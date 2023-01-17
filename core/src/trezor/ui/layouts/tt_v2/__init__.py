@@ -356,6 +356,11 @@ async def show_xpub(ctx: GenericContext, xpub: str, title: str) -> None:
     )
 
 
+def _address_group_by(address, group_by):
+    if group_by < 2:
+        return address
+    return " ".join(address[i*group_by:i*group_by+group_by] for i in range(1 + len(address) // group_by))
+
 async def show_address(
     ctx: GenericContext,
     address: str,
@@ -368,7 +373,9 @@ async def show_address(
     xpubs: Sequence[str] = (),
     address_extra: str | None = None,
     title_qr: str | None = None,
+    group_by: int = 0,
 ) -> None:
+    #address = _address_group_by(address, group_by)
     is_multisig = len(xpubs) > 0
     while True:
         result = await interact(

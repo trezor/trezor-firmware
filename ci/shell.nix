@@ -75,6 +75,7 @@ stdenvNoCC.mkDerivation ({
     curl  # for connect tests
     editorconfig-checker
     gcc-arm-embedded
+    gdb
     git
     gitAndTools.git-subrepo
     gnumake

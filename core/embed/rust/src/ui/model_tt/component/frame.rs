@@ -1,8 +1,8 @@
 use super::theme;
 use crate::ui::{
-    component::{label::Label, text::TextStyle, Child, Component, Event, EventCtx},
+    component::{label::Label, text::{TextAlign, TextStyle}, Child, Component, Event, EventCtx},
     display::{self, Color, Font},
-    geometry::{Alignment, Insets, Offset, Rect},
+    geometry::{Insets, Offset, Rect},
     util::icon_text_center,
 };
 
@@ -17,7 +17,7 @@ where
     T: Component,
     U: AsRef<str>,
 {
-    pub fn new(style: TextStyle, alignment: Alignment, title: U, content: T) -> Self {
+    pub fn new(style: TextStyle, alignment: TextAlign, title: U, content: T) -> Self {
         Self {
             title: Child::new(Label::new(title, alignment, style)),
             border: theme::borders_scroll(),
@@ -26,15 +26,15 @@ where
     }
 
     pub fn left_aligned(style: TextStyle, title: U, content: T) -> Self {
-        Self::new(style, Alignment::Start, title, content)
+        Self::new(style, TextAlign::Left, title, content)
     }
 
     pub fn right_aligned(style: TextStyle, title: U, content: T) -> Self {
-        Self::new(style, Alignment::End, title, content)
+        Self::new(style, TextAlign::Right, title, content)
     }
 
     pub fn centered(style: TextStyle, title: U, content: T) -> Self {
-        Self::new(style, Alignment::Center, title, content)
+        Self::new(style, TextAlign::Center, title, content)
     }
 
     pub fn with_border(mut self, border: Insets) -> Self {

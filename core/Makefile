@@ -107,7 +107,7 @@ test_emu_click: ## run click tests
 
 test_emu_ui: ## run ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing --not-generate-report-after-each-test
+		--ui=test --ui-check-missing
 
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	$(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) \
