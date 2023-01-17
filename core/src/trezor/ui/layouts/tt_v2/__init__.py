@@ -157,7 +157,6 @@ class RustLayout(ui.Layout):
 
         touch = loop.wait(io.TOUCH)
         self._first_paint()
-        # self.layout.bounds()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             event, x, y = yield touch
@@ -168,7 +167,6 @@ class RustLayout(ui.Layout):
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
-            # self.layout.bounds()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
