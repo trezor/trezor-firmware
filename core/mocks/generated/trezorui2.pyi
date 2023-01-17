@@ -50,18 +50,59 @@ def confirm_properties(
 
 
 # rust/src/ui/model_tr/layout.rs
-def confirm_output_r(
+def confirm_reset_device(
+    *,
+    recovery: bool,
+    prompt: str,  # unused on TR
+) -> object:
+    """Confirm TOS before device setup."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_value(
+    *,
+    title: str,
+    description: str,
+    value: str,
+    verb: str | None = None,
+    hold: bool = False,
+) -> object:
+    """Confirm value."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_joint_total(
+    *,
+    spending_amount: str,
+    total_amount: str,
+) -> object:
+    """Confirm total if there are external inputs."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_modify_output(
+    *,
+    address: str,
+    sign: int,
+    amount_change: str,
+    amount_new: str,
+) -> object:
+    """Decrease or increase amount for given address."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_output(
     *,
     address: str,
     amount: str,
     address_title: str,
     amount_title: str,
 ) -> object:
-    """Confirm output. Specific for model R."""
+    """Confirm output."""
 
 
 # rust/src/ui/model_tr/layout.rs
-def confirm_total_r(
+def confirm_total(
     *,
     total_amount: str,
     fee_amount: str,
@@ -69,7 +110,7 @@ def confirm_total_r(
     total_label: str,
     fee_label: str,
 ) -> object:
-    """Confirm summary of a transaction. Specific for model R."""
+    """Confirm summary of a transaction."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -88,6 +129,17 @@ def show_receive_address(
 # rust/src/ui/model_tr/layout.rs
 def tutorial() -> object:
     """Show user how to interact with the device."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_modify_fee(
+    *,
+    sign: int,
+    user_fee_change: str,
+    total_fee_new: str,
+    fee_rate_amount: str | None,
+) -> object:
+    """Decrease or increase transaction fee."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -114,11 +166,20 @@ def show_info(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_coinjoin(
+    *,
+    max_rounds: str,
+    max_feerate: str,
+) -> object:
+    """Confirm coinjoin authorization."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def request_pin(
     *,
     prompt: str,
-    subprompt: str | None = None,
-    allow_cancel: bool = True,
+    subprompt: str,
+    allow_cancel: bool = True,  # unused on TR
     wrong_pin: bool = False,  # unused on TR
 ) -> str | object:
     """Request pin on device."""
@@ -194,11 +255,31 @@ def show_checklist(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_recovery(
+    *,
+    title: str,  # unused on TR
+    description: str,
+    button: str,
+    dry_run: bool,
+    info_button: bool,  # unused on TR
+) -> object:
+   """Device recovery homescreen."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def select_word_count(
     *,
     dry_run: bool,
-) -> str:  # TODO: make it return int
+) -> int | str:  # TR returns str
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_group_share_success(
+    *,
+    lines: Iterable[str]
+) -> int:
+   """Shown after successfully finishing a group."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -315,7 +396,7 @@ def confirm_properties(
 # rust/src/ui/model_tt/layout.rs
 def confirm_reset_device(
     *,
-    title: str,
+    recovery: bool,
     prompt: str,
 ) -> object:
     """Confirm TOS before device setup."""
@@ -370,6 +451,7 @@ def confirm_modify_fee(
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
+    fee_rate_amount: str | None,
 ) -> object:
     """Decrease or increase transaction fee."""
 
@@ -573,7 +655,7 @@ def confirm_recovery(
 def select_word_count(
     *,
     dry_run: bool,
-) -> int | CANCELLED:
+) -> int | str:  # TT returns int
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
 

@@ -5,7 +5,7 @@ from trezor.enums import ButtonRequestType
 import trezorui2
 
 from ..common import button_request, interact
-from . import RustLayout, confirm_action, get_bool
+from . import RustLayout, raise_if_not_confirmed
 
 if TYPE_CHECKING:
     from trezor import wire
@@ -50,13 +50,22 @@ async def show_remaining_shares(
 async def show_group_share_success(
     ctx: wire.GenericContext, share_index: int, group_index: int
 ) -> None:
-    await confirm_action(
-        ctx,
-        "share_success",
-        "Success",
-        description=f"You have entered\nShare {share_index + 1} from\nGroup {group_index + 1}",
-        verb="CONTINUE",
-        verb_cancel=None,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.show_group_share_success(
+                    lines=[
+                        "You have entered",
+                        f"Share {share_index + 1}",
+                        "from",
+                        f"Group {group_index + 1}",
+                    ],
+                )
+            ),
+            "share_success",
+            ButtonRequestType.Other,
+        )
     )
 
 
@@ -76,17 +85,19 @@ async def continue_recovery(
     if subtext:
         description += f"\n\n{subtext}"
 
-    if dry_run:
-        title = "SEED CHECK"
-    else:
-        title = "WALLET RECOVERY"
-
-    return await get_bool(
-        ctx,
-        "recovery",
-        title,
-        None,
-        description,
-        verb=button_label.upper(),
-        br_code=ButtonRequestType.RecoveryHomepage,
+    homepage = RustLayout(
+        trezorui2.confirm_recovery(
+            title="",
+            description=description,
+            button=button_label.upper(),
+            info_button=False,
+            dry_run=dry_run,
+        )
     )
+    result = await interact(
+        ctx,
+        homepage,
+        "recovery",
+        ButtonRequestType.RecoveryHomepage,
+    )
+    return result is trezorui2.CONFIRMED

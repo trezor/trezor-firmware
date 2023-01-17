@@ -215,7 +215,9 @@ def test_failed_pin(client: Client):
     # external_entropy = b'zlutoucky kun upel divoke ody' * 2
     strength = 128
     ret = client.call_raw(
-        messages.ResetDevice(strength=strength, pin_protection=True, label="test")
+        messages.ResetDevice(
+            strength=strength, pin_protection=True, label="test", show_tutorial=False
+        )
     )
 
     # Confirm Reset
@@ -226,6 +228,11 @@ def test_failed_pin(client: Client):
     # Enter PIN for first time
     assert isinstance(ret, messages.ButtonRequest)
     client.debug.input("654")
+    ret = client.call_raw(messages.ButtonAck())
+
+    # Re-enter PIN
+    assert isinstance(ret, messages.ButtonRequest)
+    client.debug.press_yes()
     ret = client.call_raw(messages.ButtonAck())
 
     # Enter PIN for second time
