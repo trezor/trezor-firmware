@@ -190,6 +190,7 @@ class RustLayout(ui.Layout):
     def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
+        self.layout.attach_timer_fn(self.set_timer)
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
