@@ -50,9 +50,19 @@ VECTORS = (  # path, script_type, address
 def test_show(
     client: Client, path: str, script_type: messages.InputScriptType, address: str
 ):
+    def input_flow_t1():
+        yield
+        client.debug.press_no()
+        yield
+        client.debug.press_yes()
+
     with client:
-        IF = InputFlowShowAddressQRCode(client)
-        client.set_input_flow(IF.get())
+        # This is the only place where even T1 is using input flow
+        if client.features.model == "1":
+            client.set_input_flow(input_flow_t1)
+        else:
+            IF = InputFlowShowAddressQRCode(client)
+            client.set_input_flow(IF.get())
         assert (
             btc.get_address(
                 client,

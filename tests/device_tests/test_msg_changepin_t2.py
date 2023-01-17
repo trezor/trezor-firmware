@@ -163,7 +163,7 @@ def test_change_invalid_current(client: Client):
     _check_pin(client, PIN4)
 
     with client, pytest.raises(TrezorFailure):
-        IF = InputFlowWrongPIN(client, PIN4)
+        IF = InputFlowWrongPIN(client, PIN60)
         client.set_input_flow(IF.get())
         client.set_expected_responses([messages.ButtonRequest] * 3 + [messages.Failure])
 
