@@ -82,8 +82,9 @@ async def select_word(
     assert len(words) == 3
     result = await ctx.wait(
         RustLayout(
-            trezorui2.select_word(  # type: ignore [Argument missing for parameter "description"]
-                title=f"SELECT {format_ordinal(checked_index + 1).upper()} WORD",
+            trezorui2.select_word(
+                title="",
+                description=f"SELECT {format_ordinal(checked_index + 1).upper()} WORD",
                 words=(words[0].lower(), words[1].lower(), words[2].lower()),
             )
         )
@@ -141,7 +142,7 @@ async def _prompt_number(
     br_name: str,
 ) -> int:
     num_input = RustLayout(
-        trezorui2.request_number(  # type: ignore [Argument missing for parameter "description"]
+        trezorui2.request_number(
             title=title.upper(),
             count=count,
             min_count=min_count,
@@ -169,7 +170,6 @@ async def slip39_prompt_threshold(
         description="= number of shares needed for recovery",
         verb="BEGIN",
         verb_cancel=None,
-        uppercase_title=False,
     )
 
     count = num_of_shares // 2 + 1
@@ -203,7 +203,6 @@ async def slip39_prompt_number_of_shares(
         description="= total number of unique word lists used for wallet backup",
         verb="BEGIN",
         verb_cancel=None,
-        uppercase_title=False,
     )
 
     count = 5
