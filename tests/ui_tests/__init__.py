@@ -127,6 +127,7 @@ def screen_recording(
     client: Client, request: pytest.FixtureRequest
 ) -> Generator[None, None, None]:
     test_ui = request.config.getoption("ui")
+    record_text_layout = request.config.getoption("record_text_layout")
     test_name = get_test_name(request.node.nodeid)
 
     # Differentiating test names between T1 and TT
@@ -138,10 +139,17 @@ def screen_recording(
 
     screens_test_path = SCREENS_DIR / test_name
 
+    # In which directory to save the screenshots
     if test_ui == "record":
         screen_path = screens_test_path / "recorded"
     else:
         screen_path = screens_test_path / "actual"
+
+    # Whether and where to save the text layout
+    if record_text_layout:
+        screen_text_file = screens_test_path / "screens.txt"
+    else:
+        screen_text_file = None
 
     if not screens_test_path.exists():
         screens_test_path.mkdir()
@@ -151,6 +159,7 @@ def screen_recording(
 
     try:
         client.debug.start_recording(str(screen_path))
+        client.debug.set_screen_text_file(screen_text_file)
         yield
     finally:
         # Wait for response to Initialize, which gives the emulator time to catch up
@@ -158,6 +167,7 @@ def screen_recording(
         # and stopping recording.
         client.init_device()
         client.debug.stop_recording()
+        client.debug.set_screen_text_file(None)
 
     if test_ui:
         PROCESSED.add(test_name)

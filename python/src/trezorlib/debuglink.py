@@ -197,6 +197,15 @@ class DebugLink:
         self.t1_screenshot_directory: Optional[Path] = None
         self.t1_screenshot_counter = 0
 
+        # Optional file for saving text representation of the screen
+        self.screen_text_file: Optional[Path] = None
+        self.last_screen_content = ""
+
+    def set_screen_text_file(self, file_path: Optional[Path]) -> None:
+        if file_path is not None:
+            Path(file_path).write_bytes(b"")
+        self.screen_text_file = file_path
+
     def open(self) -> None:
         self.transport.begin_session()
 
@@ -302,11 +311,34 @@ class DebugLink:
             wait=wait,
             hold_ms=hold_ms,
         )
+
+        # Optionally saving the textual screen output
+        if self.screen_text_file is not None:
+            layout = self.read_layout()
+            self.save_debug_screen(layout.lines)
+
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
             return LayoutContent(ret.lines)
 
         return None
+
+    def save_debug_screen(self, lines: List[str]) -> None:
+        if self.screen_text_file is not None:
+            if not self.screen_text_file.exists():
+                self.screen_text_file.write_bytes(b"")
+
+            content = "\n".join(lines)
+
+            # Not writing the same screen twice
+            if content == self.last_screen_content:
+                return
+
+            self.last_screen_content = content
+
+            with open(self.screen_text_file, "a") as f:
+                f.write(content)
+                f.write("\n" + 80 * "/" + "\n")
 
     # Type overloads make sure that when we supply `wait=True` into `click()`,
     # it will always return `LayoutContent` and we do not need to assert `is not None`.
