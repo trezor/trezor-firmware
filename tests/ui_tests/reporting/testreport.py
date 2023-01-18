@@ -214,7 +214,7 @@ def screen_text_report(test_case_dirs: List[Path]) -> None:
                     f2.write(f"\t{line}")
 
 
-def generate_reports() -> None:
+def generate_reports(do_screen_text: bool = False) -> None:
     """Generate HTML reports for the test."""
     index()
 
@@ -223,7 +223,8 @@ def generate_reports() -> None:
     current_testcases = _get_testcases_dirs()
     all_screens(current_testcases)
     all_unique_screens(current_testcases)
-    screen_text_report(current_testcases)
+    if do_screen_text:
+        screen_text_report(current_testcases)
 
 
 def _img_hash(img: Path) -> str:

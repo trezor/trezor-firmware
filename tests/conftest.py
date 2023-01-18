@@ -268,18 +268,19 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
 
     missing = session.config.getoption("ui_check_missing")
     test_ui = session.config.getoption("ui")
+    record_text_layout = bool(session.config.getoption("record_text_layout"))
 
     if test_ui == "test":
         if missing and ui_tests.list_missing():
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
         ui_tests.write_fixtures_suggestion(missing)
-        testreport.generate_reports()
+        testreport.generate_reports(record_text_layout)
     elif test_ui == "record":
         if exitstatus == pytest.ExitCode.OK:
             ui_tests.write_fixtures(missing)
         else:
             ui_tests.write_fixtures_suggestion(missing, only_passed_tests=True)
-        testreport.generate_reports()
+        testreport.generate_reports(record_text_layout)
 
 
 def pytest_terminal_summary(
@@ -359,6 +360,14 @@ def pytest_addoption(parser: "Parser") -> None:
         default=False,
         help="Not generating HTML reports after each test case. "
         "Useful for CI tests to speed them up.",
+    )
+    parser.addoption(
+        "--record-text-layout",
+        action="store_true",
+        default=False,
+        help="Saving debugging traces for each screen change. "
+        "Will generate a report with text from all test-cases. "
+        "WARNING: does not work well with multicore (causes freezing).",
     )
 
 

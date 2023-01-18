@@ -197,13 +197,14 @@ class DebugLink:
         self.t1_screenshot_directory: Optional[Path] = None
         self.t1_screenshot_counter = 0
 
-        # Optional debug screen saver
-        self.debug_screen_file: Optional[Path] = None
+        # Optional file for saving text representation of the screen
+        self.screen_text_file: Optional[Path] = None
         self.last_screen_content = ""
 
-    def set_debug_screen_file(self, file_path: Path) -> None:
-        Path(file_path).write_bytes(b"")
-        self.debug_screen_file = file_path
+    def set_screen_text_file(self, file_path: Optional[Path]) -> None:
+        if file_path is not None:
+            Path(file_path).write_bytes(b"")
+        self.screen_text_file = file_path
 
     def open(self) -> None:
         self.transport.begin_session()
@@ -310,22 +311,22 @@ class DebugLink:
             wait=wait,
             hold_ms=hold_ms,
         )
-        ret = self._call(decision, nowait=not wait)
-        if ret is not None:
-            if self.debug_screen_file is not None:
-                self.save_debug_screen(ret.lines)
-            return LayoutContent(ret.lines)
 
-        if self.debug_screen_file is not None:
+        # Optionally saving the textual screen output
+        if self.screen_text_file is not None:
             layout = self.read_layout()
             self.save_debug_screen(layout.lines)
+
+        ret = self._call(decision, nowait=not wait)
+        if ret is not None:
+            return LayoutContent(ret.lines)
 
         return None
 
     def save_debug_screen(self, lines: List[str]) -> None:
-        if self.debug_screen_file is not None:
-            if not self.debug_screen_file.exists():
-                self.debug_screen_file.write_bytes(b"")
+        if self.screen_text_file is not None:
+            if not self.screen_text_file.exists():
+                self.screen_text_file.write_bytes(b"")
 
             content = "\n".join(lines)
 
@@ -335,7 +336,7 @@ class DebugLink:
 
             self.last_screen_content = content
 
-            with open(self.debug_screen_file, "a") as f:
+            with open(self.screen_text_file, "a") as f:
                 f.write(content)
                 f.write("\n" + 80 * "/" + "\n")
 
