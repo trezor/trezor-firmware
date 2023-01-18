@@ -1,3 +1,4 @@
+import filecmp
 import hashlib
 import shutil
 from collections import defaultdict
@@ -8,7 +9,7 @@ from typing import Dict, List, Set
 
 import dominate
 import dominate.tags as t
-from dominate.tags import a, div, h1, h2, hr, p, span, strong, table, th, tr
+from dominate.tags import a, div, h1, h2, hr, i, p, span, strong, table, td, th, tr
 from dominate.util import text
 
 from . import download, html
@@ -214,6 +215,62 @@ def screen_text_report(test_case_dirs: List[Path]) -> None:
                     f2.write(f"\t{line}")
 
 
+def differing_screens(test_case_dirs: List[Path]) -> None:
+    """Creating an HTML page showing all the unique screens that got changed."""
+    unique_diffs: set[tuple[str, str]] = set()
+
+    def combine_hashes(left: Path, right: Path) -> tuple[str, str]:
+        return (_img_hash(left), _img_hash(right))
+
+    def already_included(left: Path, right: Path) -> bool:
+        return combine_hashes(left, right) in unique_diffs
+
+    def include(left: Path, right: Path) -> None:
+        unique_diffs.add(combine_hashes(left, right))
+
+    doc = dominate.document(title="Differing screens")
+    with doc:
+        with table(border=1, width=600):
+            with tr():
+                th("Expected")
+                th("Actual")
+                th("Testcase (link)")
+            for test_case_dir in test_case_dirs:
+                recorded_path = test_case_dir / "recorded"
+                actual_path = test_case_dir / "actual"
+
+                recorded_screens = sorted(recorded_path.iterdir())
+                actual_screens = sorted(actual_path.iterdir())
+
+                # Not comparing when the amount of screens differ
+                if len(recorded_screens) != len(actual_screens):
+                    with tr(bgcolor="red"):
+                        with td():
+                            i("Number of screens")
+                        with td():
+                            i("differs")
+                        with td():
+                            with a(href=f"failed/{test_case_dir.name}.html"):
+                                i(test_case_dir.name)
+                    continue
+
+                image_width = _image_width(test_case_dir.name)
+
+                for left, right in zip(recorded_screens, actual_screens):
+                    if not filecmp.cmp(right, left) and not already_included(
+                        left, right
+                    ):
+                        include(left, right)
+                        with tr(bgcolor="red"):
+                            html.image_column(left, image_width)
+                            html.image_column(right, image_width)
+                            with td():
+                                with a(href=f"failed/{test_case_dir.name}.html"):
+                                    i(test_case_dir.name)
+
+    html.write(REPORTS_PATH, doc, "differing_screens.html")
+
+
 def generate_reports(do_screen_text: bool = False) -> None:
     """Generate HTML reports for the test."""
     index()
@@ -225,6 +282,7 @@ def generate_reports(do_screen_text: bool = False) -> None:
     all_unique_screens(current_testcases)
     if do_screen_text:
         screen_text_report(current_testcases)
+    differing_screens(current_testcases)
 
 
 def _img_hash(img: Path) -> str:
