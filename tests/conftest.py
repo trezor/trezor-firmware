@@ -366,8 +366,7 @@ def pytest_addoption(parser: "Parser") -> None:
         action="store_true",
         default=False,
         help="Saving debugging traces for each screen change. "
-        "Will generate a report with text from all test-cases. "
-        "WARNING: does not work well with multicore (causes freezing).",
+        "Will generate a report with text from all test-cases. ",
     )
 
 

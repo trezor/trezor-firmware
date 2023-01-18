@@ -204,6 +204,7 @@ def all_unique_screens(test_case_dirs: List[Path]) -> Path:
 
 
 def screen_text_report(test_case_dirs: List[Path]) -> None:
+    """Generate a report with text representation of all screens."""
     with open(SCREEN_TEXT_FILE, "w") as f2:
         for test_case_dir in test_case_dirs:
             screen_file = test_case_dir / "screens.txt"
@@ -213,6 +214,22 @@ def screen_text_report(test_case_dirs: List[Path]) -> None:
             with open(screen_file, "r") as f:
                 for line in f.readlines():
                     f2.write(f"\t{line}")
+
+    # TODO: decide which is better - .txt or .html (maybe both?)
+
+    doc = dominate.document(title="Screen text report")
+    with doc:
+        for test_case_dir in test_case_dirs:
+            screen_file = test_case_dir / "screens.txt"
+            if not screen_file.exists():
+                continue
+            with a(href=f"{ALL_SCREENS}#{test_case_dir.name}"):
+                h2(test_case_dir.name)
+            with open(screen_file, "r") as f:
+                for line in f.readlines():
+                    p(line)
+
+    html.write(REPORTS_PATH, doc, "screen_text.html")
 
 
 def differing_screens(test_case_dirs: List[Path]) -> None:

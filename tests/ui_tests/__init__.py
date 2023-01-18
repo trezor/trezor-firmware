@@ -158,6 +158,10 @@ def screen_recording(
     screen_path.mkdir()
 
     try:
+        if record_text_layout:
+            screen_text_file = screens_test_path / "screens.txt"
+            client.debug.watch_layout(True)
+            client.debug.set_screen_text_file(screen_text_file)
         client.debug.start_recording(str(screen_path))
         client.debug.set_screen_text_file(screen_text_file)
         yield
@@ -165,6 +169,9 @@ def screen_recording(
         # Wait for response to Initialize, which gives the emulator time to catch up
         # and redraw the homescreen. Otherwise there's a race condition between that
         # and stopping recording.
+        if record_text_layout:
+            client.debug.set_screen_text_file(None)
+            client.debug.watch_layout(False)
         client.init_device()
         client.debug.stop_recording()
         client.debug.set_screen_text_file(None)

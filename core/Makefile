@@ -115,7 +115,7 @@ test_emu_ui: ## run ui integration tests
 
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	PYTEST_TIMEOUT=200 $(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing --not-generate-report-after-each-test \
+		--ui=test --ui-check-missing --not-generate-report-after-each-test --record-text-layout \
 		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
