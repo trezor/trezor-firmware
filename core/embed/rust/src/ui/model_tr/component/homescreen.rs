@@ -132,8 +132,6 @@ impl Component for Lockscreen {
 impl crate::trace::Trace for Homescreen {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("Homescreen");
-        d.kw_pair("active_page", "0");
-        d.kw_pair("page_count", "1");
         d.field("label", &self.label.as_ref());
         d.close();
     }
