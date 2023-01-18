@@ -111,11 +111,11 @@ test_emu_click_ui: ## run click tests with UI testing
 
 test_emu_ui: ## run ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing
+		--ui=test --ui-check-missing --record-text-layout
 
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	$(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing \
+		--ui=test --ui-check-missing --record-text-layout \
 		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests

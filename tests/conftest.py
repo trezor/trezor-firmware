@@ -253,6 +253,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
             exitstatus,
             test_ui,  # type: ignore
             bool(session.config.getoption("ui_check_missing")),
+            bool(session.config.getoption("record_text_layout")),
         )
 
 
@@ -299,6 +300,13 @@ def pytest_addoption(parser: "Parser") -> None:
         choices=["core", "legacy"],
         help="Which emulator to use: 'core' or 'legacy'. "
         "Only valid in connection with `--control-emulators`",
+    )
+    parser.addoption(
+        "--record-text-layout",
+        action="store_true",
+        default=False,
+        help="Saving debugging traces for each screen change. "
+        "Will generate a report with text from all test-cases. ",
     )
 
 

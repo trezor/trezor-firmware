@@ -17,6 +17,7 @@ HERE = Path(__file__).resolve().parent
 REPORTS_PATH = UI_TESTS_DIR / "reports"
 TESTREPORT_PATH = REPORTS_PATH / "test"
 IMAGES_PATH = TESTREPORT_PATH / "images"
+SCREEN_TEXT_FILE = TESTREPORT_PATH / "screen_text.txt"
 
 STYLE = (HERE / "testreport.css").read_text()
 SCRIPT = (HERE / "testreport.js").read_text()
@@ -213,12 +214,43 @@ def all_unique_screens() -> Path:
     return html.write(TESTREPORT_PATH, doc, ALL_UNIQUE_SCREENS)
 
 
-def generate_reports() -> None:
+def screen_text_report() -> None:
+    """Generate a report with text representation of all screens."""
+    recent_results = list(TestResult.recent_results())
+
+    # Creating both a text file (suitable for offline usage)
+    # and an HTML file (suitable for online usage).
+
+    with open(SCREEN_TEXT_FILE, "w") as f2:
+        for result in recent_results:
+            if not result.test.screen_text_file.exists():
+                continue
+            f2.write(f"\n{result.test.id}\n")
+            with open(result.test.screen_text_file, "r") as f:
+                for line in f.readlines():
+                    f2.write(f"\t{line}")
+
+    doc = dominate.document(title="Screen text report")
+    with doc:
+        for result in recent_results:
+            if not result.test.screen_text_file.exists():
+                continue
+            with a(href=f"{ALL_SCREENS}#{result.test.id}"):
+                h2(result.test.id)
+            with open(result.test.screen_text_file, "r") as f:
+                for line in f.readlines():
+                    p(line)
+    html.write(TESTREPORT_PATH, doc, "screen_text.html")
+
+
+def generate_reports(do_screen_text: bool = False) -> None:
     """Generate HTML reports for the test."""
     html.set_image_dir(IMAGES_PATH)
     index()
     all_screens()
     all_unique_screens()
+    if do_screen_text:
+        screen_text_report()
 
 
 def _copy_deduplicated(test: TestCase) -> None:
