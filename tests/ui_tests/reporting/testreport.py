@@ -16,6 +16,7 @@ from . import download, html
 HERE = Path(__file__).resolve().parent
 REPORTS_PATH = HERE / "reports" / "test"
 RECORDED_SCREENS_PATH = Path(__file__).resolve().parent.parent / "screens"
+SCREEN_TEXT_FILE = REPORTS_PATH / "screen_text.txt"
 
 STYLE = (HERE / "testreport.css").read_text()
 SCRIPT = (HERE / "testreport.js").read_text()
@@ -201,6 +202,18 @@ def all_unique_screens(test_case_dirs: List[Path]) -> Path:
     return html.write(REPORTS_PATH, doc, ALL_UNIQUE_SCREENS)
 
 
+def screen_text_report(test_case_dirs: List[Path]) -> None:
+    with open(SCREEN_TEXT_FILE, "w") as f2:
+        for test_case_dir in test_case_dirs:
+            screen_file = test_case_dir / "screens.txt"
+            if not screen_file.exists():
+                continue
+            f2.write(f"\n{test_case_dir.name}\n")
+            with open(screen_file, "r") as f:
+                for line in f.readlines():
+                    f2.write(f"\t{line}")
+
+
 def generate_reports() -> None:
     """Generate HTML reports for the test."""
     index()
@@ -210,6 +223,7 @@ def generate_reports() -> None:
     current_testcases = _get_testcases_dirs()
     all_screens(current_testcases)
     all_unique_screens(current_testcases)
+    screen_text_report(current_testcases)
 
 
 def _img_hash(img: Path) -> str:

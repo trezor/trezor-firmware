@@ -149,6 +149,10 @@ def screen_recording(
     shutil.rmtree(screen_path, ignore_errors=True)
     screen_path.mkdir()
 
+    # Start saving debugging trace into a file
+    debug_screen_file = screens_test_path / "screens.txt"
+    client.debug.set_debug_screen_file(debug_screen_file)
+
     try:
         client.debug.start_recording(str(screen_path))
         yield

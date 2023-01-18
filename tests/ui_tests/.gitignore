@@ -1,5 +1,6 @@
 *.png
 *.html
 *.zip
+*.txt
 fixtures.suggestion.json
 fixtures.json.diff
