@@ -169,6 +169,42 @@ if TYPE_CHECKING:
             ...
 
 
+if False:
+
+    class DebugHashContextWrapper:
+        """
+        Use this wrapper to debug hashing operations. When digest() is called,
+        it will log all of the data that was provided to update().
+
+        Example usage:
+        self.h_prevouts = HashWriter(DebugHashContextWrapper(sha256()))
+        """
+
+        def __init__(self, ctx: HashContext) -> None:
+            self.ctx = ctx
+            self.data = ""
+
+        def update(self, data: bytes) -> None:
+            from ubinascii import hexlify
+
+            self.ctx.update(data)
+            self.data += hexlify(data).decode() + " "
+
+        def digest(self) -> bytes:
+            from trezor import log
+            from ubinascii import hexlify
+
+            digest = self.ctx.digest()
+            log.debug(
+                __name__,
+                "%s hash: %s, data: %s",
+                self.ctx.__class__.__name__,
+                hexlify(digest).decode(),
+                self.data,
+            )
+            return digest
+
+
 class HashWriter:
     def __init__(self, ctx: HashContext) -> None:
         self.ctx = ctx
