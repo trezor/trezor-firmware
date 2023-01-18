@@ -10,7 +10,7 @@ from apps.common import safety_checks
 
 from .. import writers
 from ..common import input_is_external_unverified
-from ..keychain import validate_path_against_script_type
+from ..keychain import SLIP44_TESTNET, validate_path_against_script_type
 from . import helpers, tx_weight
 from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo
@@ -347,10 +347,12 @@ class CoinJoinApprover(Approver):
     COINJOIN_FLAGS_SIGNABLE = const(0x01)
     COINJOIN_FLAGS_NO_FEE = const(0x02)
 
+    # The public key used for verifying coinjoin requests in production on mainnet.
     COINJOIN_REQ_PUBKEY = b"\x02W\x03\xbb\xe1[\xb0\x8e\x98!\xfed\xaf\xf6\xb2\xef\x1a1`\xe3y\x9d\xd8\xf0\xce\xbf,y\xe8g\xdd\x12]"
-    if __debug__:
-        # secp256k1 public key of m/0h for "all all ... all" seed.
-        COINJOIN_REQ_PUBKEY_DEBUG = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
+
+    # The public key used for verifying coinjoin requests on testnet and in debug mode.
+    # secp256k1 public key of m/0h for "all all ... all" seed.
+    COINJOIN_REQ_PUBKEY_TEST = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
 
     def __init__(
         self,
@@ -454,9 +456,9 @@ class CoinJoinApprover(Approver):
         )
 
         # Verify the CoinJoin request signature.
-        if __debug__:
+        if __debug__ or self.coin.slip44 == SLIP44_TESTNET:
             if secp256k1.verify(
-                self.COINJOIN_REQ_PUBKEY_DEBUG,
+                self.COINJOIN_REQ_PUBKEY_TEST,
                 self.request.signature,
                 self.h_request.get_digest(),
             ):
