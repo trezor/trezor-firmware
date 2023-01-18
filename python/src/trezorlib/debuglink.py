@@ -312,16 +312,23 @@ class DebugLink:
             hold_ms=hold_ms,
         )
 
-        # Optionally saving the textual screen output
-        if self.screen_text_file is not None:
-            layout = self.read_layout()
-            self.save_debug_screen(layout.lines)
-
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
             return LayoutContent(ret.lines)
 
+        # Getting the current screen after the (nowait) decision
+        self.save_current_screen_if_relevant(wait=False)
+
         return None
+
+    def save_current_screen_if_relevant(self, wait: bool = True) -> None:
+        """Optionally saving the textual screen output."""
+        if self.screen_text_file is not None:
+            if wait:
+                layout = self.wait_layout()
+            else:
+                layout = self.read_layout()
+            self.save_debug_screen(layout.lines)
 
     def save_debug_screen(self, lines: List[str]) -> None:
         if self.screen_text_file is not None:
@@ -503,6 +510,12 @@ class DebugUI:
         self.debuglink.take_t1_screenshot_if_relevant()
 
         if self.input_flow is None:
+            # Only calling screen-saver when not in input-flow
+            # as it collides with wait-layout of input flows.
+            # All input flows call debuglink.input(), so
+            # recording their screens that way (as well as
+            # possible swipes below).
+            self.debuglink.save_current_screen_if_relevant(wait=True)
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
             else:
@@ -774,7 +787,6 @@ class TrezorClientDebugLink(TrezorClient):
     def __exit__(self, exc_type: Any, value: Any, traceback: Any) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
-        self.watch_layout(False)
         # copy expected/actual responses before clearing them
         expected_responses = self.expected_responses
         actual_responses = self.actual_responses
