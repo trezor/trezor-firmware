@@ -226,6 +226,12 @@ def update_fixtures_with_diff() -> int:
             diff = json.loads(line)
             FILE_HASHES[diff["test_name"]] = diff["actual_hash"]
 
+            # Copying the recorded screens to "recorded" dir
+            actual = SCREENS_DIR / diff["test_name"] / "actual"
+            recorded = SCREENS_DIR / diff["test_name"] / "recorded"
+            shutil.rmtree(recorded, ignore_errors=True)
+            shutil.copytree(actual, recorded)
+
     write_fixtures(remove_missing=False)
 
     # Returning the amount of updated hashes
