@@ -88,10 +88,10 @@ PATTERN_UNCHAINED_DEPRECATED = "m/45'/coin_type'/account'/[0-1000000]/address_in
 PATTERN_SLIP26_T1_FW = "m/10026'/49'/2'/0'"
 
 # SLIP-44 coin type for Bitcoin
-_SLIP44_BITCOIN = const(0)
+SLIP44_BITCOIN = const(0)
 
 # SLIP-44 coin type for all Testnet coins
-_SLIP44_TESTNET = const(1)
+SLIP44_TESTNET = const(1)
 
 
 def validate_path_against_script_type(
@@ -118,7 +118,7 @@ def validate_path_against_script_type(
 
     if script_type == InputScriptType.SPENDADDRESS and not multisig:
         append(PATTERN_BIP44)
-        if slip44 == _SLIP44_BITCOIN:
+        if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
 
@@ -127,11 +127,11 @@ def validate_path_against_script_type(
         and multisig
     ):
         append(PATTERN_BIP48_RAW)
-        if slip44 == _SLIP44_BITCOIN or (
-            coin.fork_id is not None and slip44 != _SLIP44_TESTNET
+        if slip44 == SLIP44_BITCOIN or (
+            coin.fork_id is not None and slip44 != SLIP44_TESTNET
         ):
             append(PATTERN_BIP45)
-        if slip44 == _SLIP44_BITCOIN:
+        if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
@@ -144,7 +144,7 @@ def validate_path_against_script_type(
         append(PATTERN_CASA)
         if multisig:
             append(PATTERN_BIP48_P2SHSEGWIT)
-        if slip44 == _SLIP44_BITCOIN:
+        if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
@@ -154,7 +154,7 @@ def validate_path_against_script_type(
         append(PATTERN_BIP84)
         if multisig:
             append(PATTERN_BIP48_SEGWIT)
-        if slip44 == _SLIP44_BITCOIN:
+        if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
 
@@ -183,12 +183,12 @@ def _get_schemas_for_coin(
     ]
 
     # patterns without coin_type field must be treated as if coin_type == 0
-    if coin.slip44 == _SLIP44_BITCOIN or (
-        coin.fork_id is not None and coin.slip44 != _SLIP44_TESTNET
+    if coin.slip44 == SLIP44_BITCOIN or (
+        coin.fork_id is not None and coin.slip44 != SLIP44_TESTNET
     ):
         patterns.append(PATTERN_BIP45)
 
-    if coin.slip44 == _SLIP44_BITCOIN:
+    if coin.slip44 == SLIP44_BITCOIN:
         patterns.extend(
             (
                 PATTERN_GREENADDRESS_A,
@@ -243,9 +243,9 @@ def get_schemas_from_patterns(
     # cannot allow spending any testnet coins from Bitcoin paths, because
     # otherwise an attacker could trick the user into spending BCH on a Bitcoin
     # path by signing a seemingly harmless BCH Testnet transaction.
-    if coin.fork_id is not None and coin.slip44 != _SLIP44_TESTNET:
+    if coin.fork_id is not None and coin.slip44 != SLIP44_TESTNET:
         schemas.extend(
-            PathSchema.parse(pattern, _SLIP44_BITCOIN) for pattern in patterns
+            PathSchema.parse(pattern, SLIP44_BITCOIN) for pattern in patterns
         )
 
     return schemas
