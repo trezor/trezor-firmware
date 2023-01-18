@@ -37,7 +37,7 @@ B = messages.ButtonRequestType
 class InputFlowBase:
     def __init__(self, client: Client):
         self.client = client
-        self.debug = client.debug
+        self.debug: DebugLink = client.debug
         self.layout = client.debug.wait_layout
 
     def model(self) -> Optional[str]:

@@ -244,6 +244,7 @@ impl crate::trace::Trace for PinEntry {
         t.open("PinEntry");
         // NOTE: `show_real_pin` was not able to be transferred,
         // as it is true only for a very small amount of time
+        t.title(self.prompt.as_ref());
         t.kw_pair("textbox", self.textbox.content());
         self.report_btn_actions(t);
         t.field("choice_page", &self.choice_page);

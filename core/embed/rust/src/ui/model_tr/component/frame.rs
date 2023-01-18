@@ -169,8 +169,6 @@ where
     }
 }
 
-// DEBUG-ONLY SECTION BELOW
-
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for ScrollableFrame<T>
 where
@@ -179,7 +177,7 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ScrollableFrame");
         t.field("title", &self.title);
-        t.field("scrollbar", &self.title);
+        t.field("scrollbar", &self.scrollbar);
         t.field("content", &self.content);
         t.close();
     }

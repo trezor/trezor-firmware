@@ -242,3 +242,13 @@ impl Component for ScrollBar {
         self.paint_horizontal();
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ScrollBar {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("ScrollBar");
+        t.field("page_count", &self.page_count);
+        t.field("active_page", &self.active_page);
+        t.close();
+    }
+}
