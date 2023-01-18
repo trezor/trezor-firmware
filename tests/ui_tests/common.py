@@ -270,6 +270,9 @@ class TestResult:
             json.dumps(metadata, indent=2, sort_keys=True) + "\n"
         )
 
+    def succeeded_in_ui_comparison(self) -> bool:
+        return self.actual_hash == self.expected_hash
+
     @classmethod
     def load(cls, testdir: Path) -> Self:
         metadata = json.loads((testdir / "metadata.json").read_text())
@@ -293,6 +296,13 @@ class TestResult:
             if not meta.exists():
                 continue
             yield cls.load(testdir)
+
+    @classmethod
+    def recent_ui_failures(cls) -> t.Iterator[Self]:
+        """Returning just the results that resulted in UI failure."""
+        for result in cls.recent_results():
+            if not result.succeeded_in_ui_comparison():
+                yield result
 
     def store_recorded(self) -> None:
         self.expected_hash = self.actual_hash

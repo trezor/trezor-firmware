@@ -7,7 +7,7 @@ from pathlib import Path
 
 import dominate
 import dominate.tags as t
-from dominate.tags import a, div, h1, h2, hr, p, span, strong, table, th, tr
+from dominate.tags import a, div, h1, h2, hr, i, p, span, strong, table, td, th, tr
 from dominate.util import text
 
 from ..common import UI_TESTS_DIR, TestCase, TestResult
@@ -243,6 +243,43 @@ def screen_text_report() -> None:
     html.write(TESTREPORT_PATH, doc, "screen_text.html")
 
 
+def differing_screens() -> None:
+    """Creating an HTML page showing all the unique screens that got changed."""
+    unique_diffs: set[tuple[str | None, str | None]] = set()
+
+    def already_included(left: str | None, right: str | None) -> bool:
+        return (left, right) in unique_diffs
+
+    def include(left: str | None, right: str | None) -> None:
+        unique_diffs.add((left, right))
+
+    # Only going through tests failed in UI comparison,
+    # there are no differing screens in UI-passed tests.
+    recent_ui_failures = list(TestResult.recent_ui_failures())
+
+    model = recent_ui_failures[0].test.model if recent_ui_failures else None
+    doc = document(title="Differing screens", model=model)
+    with doc:
+        with table(border=1, width=600):
+            with tr():
+                th("Expected")
+                th("Actual")
+                th("Testcase (link)")
+
+            for ui_failure in recent_ui_failures:
+                for recorded, actual in ui_failure.diff_lines():
+                    if recorded != actual and not already_included(recorded, actual):
+                        include(recorded, actual)
+                        with tr(bgcolor="red"):
+                            html.image_column(recorded, TESTREPORT_PATH)
+                            html.image_column(actual, TESTREPORT_PATH)
+                            with td():
+                                with a(href=f"failed/{ui_failure.test.id}.html"):
+                                    i(ui_failure.test.id)
+
+    html.write(TESTREPORT_PATH, doc, "differing_screens.html")
+
+
 def generate_reports(do_screen_text: bool = False) -> None:
     """Generate HTML reports for the test."""
     html.set_image_dir(IMAGES_PATH)
@@ -251,6 +288,7 @@ def generate_reports(do_screen_text: bool = False) -> None:
     all_unique_screens()
     if do_screen_text:
         screen_text_report()
+    differing_screens()
 
 
 def _copy_deduplicated(test: TestCase) -> None:
