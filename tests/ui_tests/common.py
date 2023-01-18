@@ -215,6 +215,10 @@ class TestCase:
         return SCREENS_DIR / self.id
 
     @property
+    def screen_text_file(self) -> Path:
+        return self.dir / "screens.txt"
+
+    @property
     def actual_dir(self) -> Path:
         return self.dir / "actual"
 
