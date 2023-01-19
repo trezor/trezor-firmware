@@ -993,7 +993,7 @@ def enter_recovery_seed_dry_run(debug: DebugLink, mnemonic: list[str]) -> Genera
     debug.click(buttons.OK)
 
     yield
-    assert "Select number of words" in debug.wait_layout().text_content()
+    assert "select the number of words" in debug.wait_layout().text_content()
     debug.click(buttons.OK)
 
     yield
@@ -1005,12 +1005,12 @@ def enter_recovery_seed_dry_run(debug: DebugLink, mnemonic: list[str]) -> Genera
     debug.click(buttons.grid34(index % 3, index // 3))
 
     yield
-    assert "Enter recovery seed" in debug.wait_layout().text_content()
+    assert "enter your recovery seed" in debug.wait_layout().text_content()
     debug.click(buttons.OK)
 
     yield
     for word in mnemonic:
-        assert debug.wait_layout().str_content == "< MnemonicKeyboard >"
+        assert "MnemonicKeyboard" in debug.wait_layout().str_content
         debug.input(word)
 
 
@@ -1076,7 +1076,7 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         self.debug.click(buttons.OK)
 
         yield  # retry screen
-        assert "Select number of words" in self.layout().text_content()
+        assert "select the number of words" in self.layout().text_content()
         self.debug.click(buttons.CANCEL)
 
         yield
@@ -1137,15 +1137,19 @@ def bip39_recovery_possible_pin(
     # PIN when requested
     if pin is not None:
         yield
-        assert debug.wait_layout().str_content == "< PinKeyboard >"
+        assert "PinKeyboard" in debug.wait_layout().str_content
         debug.input(pin)
 
         yield
-        assert debug.wait_layout().str_content == "< PinKeyboard >"
+        assert "re-enter to confirm" in debug.wait_layout().text_content()
+        debug.press_yes()
+
+        yield
+        assert "PinKeyboard" in debug.wait_layout().str_content
         debug.input(pin)
 
     yield
-    assert "Select number of words" in debug.wait_layout().text_content()
+    assert "select the number of words" in debug.wait_layout().text_content()
     debug.press_yes()
 
     yield
@@ -1153,17 +1157,17 @@ def bip39_recovery_possible_pin(
     debug.input(str(len(mnemonic)))
 
     yield
-    assert "Enter recovery seed" in debug.wait_layout().text_content()
+    assert "enter your recovery seed" in debug.wait_layout().text_content()
     debug.press_yes()
 
     yield
     for word in mnemonic:
-        assert debug.wait_layout().str_content == "< MnemonicKeyboard >"
+        assert "MnemonicKeyboard" in debug.wait_layout().str_content
         debug.input(word)
 
     yield
     assert (
-        "You have successfully recovered your wallet."
+        "You have finished recovering your wallet."
         in debug.wait_layout().text_content()
     )
     debug.press_yes()

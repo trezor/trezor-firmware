@@ -276,6 +276,7 @@ def click_through(
 def read_and_confirm_mnemonic(
     debug: "DebugLink", choose_wrong: bool = False
 ) -> Generator[None, "ButtonRequest", Optional[str]]:
+    # TODO: these are very similar, reuse some code
     if debug.model == "T":
         mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
     elif debug.model == "R":
@@ -303,16 +304,26 @@ def read_and_confirm_mnemonic_tt(
     mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
-    for _ in range(br.pages - 1):
-        mnemonic.extend(debug.read_reset_word().split())
+
+    # TODO: make the below better
+    for i in range(br.pages - 1):
+        if i == 0:
+            layout = debug.wait_layout()
+        else:
+            layout = debug.read_layout()
+        words = layout.seed_words()
+        mnemonic.extend(words)
         debug.swipe_up(wait=True)
 
-    # last page is confirmation
-    mnemonic.extend(debug.read_reset_word().split())
+    # Last confirmation page is special
+    layout = debug.read_layout()
+    words = layout.seed_words()
+    mnemonic.extend(words)
+
     debug.press_yes()
 
     # check share
-    for _ in range(3):
+    for i in range(3):
         index = debug.read_reset_word_pos()
         if choose_wrong:
             debug.input(mnemonic[(index + 1) % len(mnemonic)])

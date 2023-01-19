@@ -53,7 +53,7 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_enable_sd_protect():
         yield  # Enter PIN to unlock device
-        assert "< PinKeyboard >" == layout().str_content
+        assert "PinKeyboard" in layout().str_content
         client.debug.input("1234")
 
         yield  # do you really want to enable SD protection
@@ -61,7 +61,7 @@ def test_sd_protect_unlock(client: Client):
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert "< PinKeyboard >" == layout().str_content
+        assert "PinKeyboard" in layout().str_content
         client.debug.input("1234")
 
         yield  # you have successfully enabled SD protection
@@ -75,23 +75,27 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_change_pin():
         yield  # do you really want to change PIN?
-        assert "CHANGE PIN" == layout().title()
+        assert "PIN SETTINGS" == layout().title()
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert "< PinKeyboard >" == layout().str_content
+        assert "PinKeyboard" in layout().str_content
         client.debug.input("1234")
 
         yield  # enter new PIN
-        assert "< PinKeyboard >" == layout().str_content
+        assert "PinKeyboard" in layout().str_content
         client.debug.input("1234")
 
+        yield  # re-enter to confirm
+        assert "re-enter to confirm" in layout().text_content()
+        client.debug.press_yes()
+
         yield  # enter new PIN again
-        assert "< PinKeyboard >" == layout().str_content
+        assert "PinKeyboard" in layout().str_content
         client.debug.input("1234")
 
         yield  # Pin change successful
-        assert "You have successfully changed your PIN." in layout().text_content()
+        assert "PIN changed" in layout().text_content()
         client.debug.press_yes()
 
     with client:
@@ -103,11 +107,11 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_change_pin_format():
         yield  # do you really want to change PIN?
-        assert "CHANGE PIN" == layout().title()
+        assert "PIN SETTINGS" == layout().title()
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert "< PinKeyboard >" == layout().str_content
+        assert "PinKeyboard" in layout().str_content
         client.debug.input("1234")
 
         yield  # SD card problem

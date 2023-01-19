@@ -197,7 +197,8 @@ where
             .set_page_count(complete_page_count);
 
         // Placing a title and scrollbar in case the title is there
-        // (scrollbar will be active - counting pages - even when not placed and painted)
+        // (scrollbar will be active - counting pages - even when not placed and
+        // painted)
         if self.title.is_some() {
             let (title_area, scrollbar_area) =
                 title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
