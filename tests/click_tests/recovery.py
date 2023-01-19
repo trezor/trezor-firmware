@@ -62,7 +62,7 @@ def enter_share(
     if legacy_ui:
         assert layout.str_content == "Slip39Keyboard"
     else:
-        assert layout.str_content == "< MnemonicKeyboard >"
+        assert "MnemonicKeyboard" in layout.str_content
 
     for word in share.split(" "):
         layout = enter_word(debug, word, is_slip39=True)

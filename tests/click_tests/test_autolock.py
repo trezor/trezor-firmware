@@ -46,7 +46,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     device_handler.run(device.apply_settings, auto_lock_delay_ms=delay_ms)
 
     layout = debug.wait_layout()
-    assert layout.str_content == "< PinKeyboard >"
+    assert "PinKeyboard" in layout.str_content
     debug.input("1234")
 
     layout = debug.wait_layout()
@@ -131,7 +131,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     layout = debug.wait_layout()
     assert "Do you really want to check the recovery seed?" in layout.text_content()
     layout = debug.click(buttons.OK, wait=True)
-    assert layout.str_content == "< PinKeyboard >"
+    assert "PinKeyboard" in layout.str_content
     layout = debug.input(PIN4, wait=True)
     assert "select the number of words " in layout.text_content()
 
@@ -144,7 +144,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
 
     # unlock
     layout = debug.click(buttons.OK, wait=True)
-    assert layout.str_content == "< PinKeyboard >"
+    assert "PinKeyboard" in layout.str_content
     layout = debug.input(PIN4, wait=True)
 
     # we are back at homescreen
@@ -162,7 +162,7 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     layout = debug.wait_layout()
     assert "Do you really want to check the recovery seed?" in layout.text_content()
     layout = debug.click(buttons.OK, wait=True)
-    assert layout.str_content == "< PinKeyboard >"
+    assert "PinKeyboard" in layout.str_content
     layout = debug.input(PIN4, wait=True)
 
     # select 20 words
@@ -170,7 +170,7 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
 
     layout = debug.click(buttons.OK, wait=True)
     # make sure keyboard locks
-    assert layout.str_content == "< MnemonicKeyboard >"
+    assert "MnemonicKeyboard" in layout.str_content
     time.sleep(10.1)
     layout = debug.wait_layout()
     assert layout.str_content.startswith("< Lockscreen")
@@ -189,7 +189,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     layout = debug.wait_layout()
     assert "Do you really want to check the recovery seed?" in layout.text_content()
     layout = debug.click(buttons.OK, wait=True)
-    assert layout.str_content == "< PinKeyboard >"
+    assert "PinKeyboard" in layout.str_content
     layout = debug.input(PIN4, wait=True)
 
     # select 20 words
@@ -197,11 +197,11 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
 
     layout = debug.click(buttons.OK, wait=True)
     # type the word OCEAN slowly
-    assert layout.str_content == "< MnemonicKeyboard >"
+    assert "MnemonicKeyboard" in layout.str_content
     for coords in buttons.type_word("ocea", is_slip39=True):
         time.sleep(9)
         debug.click(coords)
     layout = debug.click(buttons.CONFIRM_WORD, wait=True)
     # should not have locked, even though we took 9 seconds to type each letter
-    assert layout.str_content == "< MnemonicKeyboard >"
+    assert "MnemonicKeyboard" in layout.str_content
     device_handler.kill_task()

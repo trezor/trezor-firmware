@@ -58,13 +58,13 @@ def read_words(debug: "DebugLink", is_advanced: bool = False) -> list[str]:
 
 def confirm_words(debug: "DebugLink", words: list[str]) -> None:
     layout = debug.wait_layout()
-    assert "Select word" in layout.str_content
+    assert "Select word" in layout.text_content()
     for _ in range(3):
         # "Select word 3 of 20"
         #              ^
         word_pos = int(layout.text_content().split()[2])
         # Unifying both the buttons and words to lowercase
-        btn_texts = [text.lower() for text in layout.buttons()]
+        btn_texts = [text.lower() for text in layout.buttons.select_word_button_texts()]
         wanted_word = words[word_pos - 1].lower()
         button_pos = btn_texts.index(wanted_word)
         layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)

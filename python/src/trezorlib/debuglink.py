@@ -174,6 +174,17 @@ class LayoutButtons(LayoutBase):
 
         return None
 
+    def select_word_button_texts(self) -> List[str]:
+        """Get text of all buttons in the layout.
+
+        Example button: "< Button text :  LADYBUG >"
+        -> ["LADYBUG"]
+
+        Only for TT.
+        """
+        print("self.str_content", self.str_content)
+        return re.findall(r"< Button +text : +(.*?) +>", self.str_content)
+
 
 class LayoutContent(LayoutBase):
     """Stores content of a layout as returned from Trezor.
@@ -223,10 +234,6 @@ class LayoutContent(LayoutBase):
     def text_content(self) -> str:
         """Getting text that is displayed in the main part of the screen."""
         raw = self.raw_content()
-        # print("self.str_content", self.str_content)
-        # print("raw", raw)
-        # replaved = raw.replace("\n", " ")
-        # print("replaved", replaved)
         return raw.replace("\n", " ")
 
     def raw_content(self) -> str:
