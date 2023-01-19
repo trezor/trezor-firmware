@@ -74,6 +74,8 @@ class InputFlowSetupDevicePINWIpeCode(InputFlowBase):
     def input_flow_common(self) -> GeneratorType:
         yield  # do you want to set/change the wipe_code?
         self.debug.press_yes()
+        yield  # wipe code info
+        self.debug.press_yes()
         yield  # enter current pin
         self.debug.input(self.pin)
         yield  # enter new wipe code

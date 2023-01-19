@@ -198,8 +198,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("SwipePage");
-        t.field("active_page", &self.scrollbar.active_page);
-        t.field("page_count", &self.scrollbar.page_count);
+        t.kw_pair("active_page", &self.scrollbar.active_page);
+        t.kw_pair("page_count", &self.scrollbar.page_count);
         t.field("content", &self.content);
         t.field("buttons", &self.buttons);
         t.close();

@@ -78,6 +78,7 @@ def test_reset_slip39_basic_1of1(device_handler: "BackgroundDeviceHandler"):
 
         # read words
         words = reset.read_words(debug)
+        print("words", words)
 
         # confirm words
         reset.confirm_words(debug, words)

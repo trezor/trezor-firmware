@@ -53,7 +53,7 @@ def test_abort(emulator: Emulator):
     assert layout.title() == "RECOVERY MODE"
 
     layout = debug.click(buttons.OK, wait=True)
-    assert "select the number of words" in layout.str_content
+    assert "select the number of words" in layout.text_content()
 
     device_handler.restart(emulator)
     debug = device_handler.debuglink()
@@ -63,7 +63,7 @@ def test_abort(emulator: Emulator):
 
     # no waiting for layout because layout doesn't change
     layout = debug.read_layout()
-    assert "select the number of words" in layout.str_content
+    assert "select the number of words" in layout.text_content()
     layout = debug.click(buttons.CANCEL, wait=True)
 
     assert layout.title() == "ABORT RECOVERY"
@@ -139,7 +139,7 @@ def test_recovery_on_old_wallet(emulator: Emulator):
     assert "Enter any share" in layout.str_content
     debug.press_yes()
     layout = debug.wait_layout()
-    assert layout.str_content == "< MnemonicKeyboard >"
+    assert "MnemonicKeyboard" in layout.str_content
 
     # enter first word
     debug.input(words[0])
@@ -151,7 +151,7 @@ def test_recovery_on_old_wallet(emulator: Emulator):
 
     # try entering remaining 19 words
     for word in words[1:]:
-        assert layout.str_content == "< MnemonicKeyboard >"
+        assert "MnemonicKeyboard" in layout.str_content
         debug.input(word)
         layout = debug.wait_layout()
 

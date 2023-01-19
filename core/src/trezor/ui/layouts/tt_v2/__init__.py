@@ -1148,10 +1148,15 @@ async def confirm_set_new_pin(
         br_code=br_code,
     )
 
+    if "wipe_code" in br_type:
+        title = "WIPE CODE INFO"
+    else:
+        title = "PIN INFORMATION"
+
     return await confirm_action(
         ctx,
         br_type,
-        title="PIN INFO",
+        title=title,
         description="\n\n".join(information),
         br_code=br_code,
     )
