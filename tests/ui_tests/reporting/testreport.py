@@ -9,7 +9,7 @@ from typing import Dict, List, Set
 
 import dominate
 import dominate.tags as t
-from dominate.tags import a, div, h1, h2, hr, p, span, strong, table, th, tr, td, i
+from dominate.tags import a, div, h1, h2, hr, i, p, span, strong, table, td, th, tr
 from dominate.util import text
 
 from . import download, html
@@ -234,7 +234,7 @@ def differing_screens(test_case_dirs: List[Path]) -> None:
             with tr():
                 th("Expected")
                 th("Actual")
-                th("testcase")
+                th("Testcase (link)")
             for test_case_dir in test_case_dirs:
                 recorded_path = test_case_dir / "recorded"
                 actual_path = test_case_dir / "actual"
@@ -250,7 +250,8 @@ def differing_screens(test_case_dirs: List[Path]) -> None:
                         with td():
                             i("differs")
                         with td():
-                            i(test_case_dir.name)
+                            with a(href=f"failed/{test_case_dir.name}.html"):
+                                i(test_case_dir.name)
                     continue
 
                 image_width = _image_width(test_case_dir.name)
@@ -264,7 +265,8 @@ def differing_screens(test_case_dirs: List[Path]) -> None:
                             html.image_column(left, image_width)
                             html.image_column(right, image_width)
                             with td():
-                                i(test_case_dir.name)
+                                with a(href=f"failed/{test_case_dir.name}.html"):
+                                    i(test_case_dir.name)
 
     html.write(REPORTS_PATH, doc, "differing_screens.html")
 
