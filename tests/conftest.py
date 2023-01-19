@@ -351,13 +351,6 @@ def pytest_addoption(parser: "Parser") -> None:
         help="Which emulator to use: 'core' or 'legacy'. "
         "Only valid in connection with `--control-emulators`",
     )
-    parser.addoption(
-        "--not-generate-report-after-each-test",
-        action="store_true",
-        default=False,
-        help="Not generating HTML reports after each test case. "
-        "Useful for CI tests to speed them up.",
-    )
 
 
 def pytest_configure(config: "Config") -> None:
@@ -396,21 +389,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
     if item.get_closest_marker("altcoin") and skip_altcoins:
         pytest.skip("Skipping altcoin test")
-
-
-def pytest_runtest_teardown(item: pytest.Item) -> None:
-    """Called after a test item finishes.
-
-    Dumps the current UI test report HTML.
-    """
-    # Not calling `testreport.generate_reports()` not to generate
-    # the `all_screens` report, as would take a lot of time.
-    # That will be generated in `pytest_sessionfinish`.
-
-    # Optionally generating `index.html` report unless turned off by `pytest` flag
-    if not item.session.config.getoption("not_generate_report_after_each_test"):
-        if item.session.config.getoption("ui"):
-            testreport.index()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

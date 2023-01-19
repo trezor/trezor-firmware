@@ -107,16 +107,16 @@ test_emu_click: ## run click tests
 
 test_emu_ui: ## run ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing --not-generate-report-after-each-test
+		--ui=test --ui-check-missing
 
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	$(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing --not-generate-report-after-each-test \
+		--ui=test --ui-check-missing \
 		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=record --ui-check-missing --not-generate-report-after-each-test
+		--ui=record --ui-check-missing
 
 test_emu_ui_record_multicore: ## quickly record all screens
 	make test_emu_ui_multicore || echo "All errors are recorded in fixtures.json"
