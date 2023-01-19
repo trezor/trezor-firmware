@@ -184,7 +184,7 @@ def test_recovery_multiple_resets(emulator: Emulator):
             expected_text = "You have entered"
             debug = _restart(device_handler, emulator)
 
-        assert "You have successfully recovered your wallet" in layout.text_content()
+        assert "You have finished recovering your wallet" in layout.text_content()
 
     device_handler = BackgroundDeviceHandler(emulator.client)
     debug = device_handler.debuglink()

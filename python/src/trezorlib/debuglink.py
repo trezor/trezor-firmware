@@ -199,6 +199,7 @@ class LayoutContent(LayoutBase):
             ********************
             Icon:cancel [Cancel], --- [None], CONFIRM [Confirm]
         """
+        print(self.str_content)
         title_separator = f"\n{20*'-'}\n"
         btn_separator = f"\n{20*'*'}\n"
 
@@ -222,6 +223,10 @@ class LayoutContent(LayoutBase):
     def text_content(self) -> str:
         """Getting text that is displayed in the main part of the screen."""
         raw = self.raw_content()
+        # print("self.str_content", self.str_content)
+        # print("raw", raw)
+        # replaved = raw.replace("\n", " ")
+        # print("replaved", replaved)
         return raw.replace("\n", " ")
 
     def raw_content(self) -> str:

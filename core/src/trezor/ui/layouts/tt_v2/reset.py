@@ -54,7 +54,6 @@ async def show_share_words(
                 title=title,
                 pages=pages,
             ),
-            is_backup=True,
         ),
         "backup_words",
         ButtonRequestType.ResetDevice,

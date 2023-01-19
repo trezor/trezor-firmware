@@ -80,7 +80,7 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
         remaining -= 1
         expected_text = f"{remaining} more share"
 
-    assert "You have successfully recovered your wallet" in layout.text_content()
+    assert "You have finished recovering your wallet" in layout.text_content()
 
 
 def finalize(debug: "DebugLink") -> None:
