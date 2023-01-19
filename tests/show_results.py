@@ -5,6 +5,7 @@ import json
 import multiprocessing
 import os
 import posixpath
+import sys
 import time
 import webbrowser
 from pathlib import Path
@@ -13,8 +14,12 @@ from urllib.parse import unquote
 import click
 
 ROOT = Path(__file__).resolve().parent.parent
-TEST_RESULT_PATH = ROOT / "tests" / "ui_tests" / "reporting" / "reports" / "test"
+UI_TESTS_PATH = ROOT / "tests" / "ui_tests"
+TEST_RESULT_PATH = UI_TESTS_PATH / "reporting" / "reports" / "test"
 FIXTURES_PATH = ROOT / "tests" / "ui_tests" / "fixtures.json"
+
+sys.path.append(str(UI_TESTS_PATH))
+from reporting import testreport  # noqa: E402
 
 
 class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -53,6 +58,12 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
         if trailing_slash:
             path += "/"
         return path
+    
+    def do_GET(self) -> None:
+        if self.path in ("/", "/index.html"):
+            testreport.index()
+        
+        return super().do_GET()
 
     def do_POST(self) -> None:
         if self.path == "/fixtures.json" and FIXTURES_PATH.exists():
