@@ -1041,8 +1041,9 @@ bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]) {
   return true;
 }
 
-bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
-                         bool pubkey_export, uint64_t chain) {
+static bool ethereum_path_check_bip44(uint32_t address_n_count,
+                                      const uint32_t *address_n,
+                                      bool pubkey_export, uint64_t chain) {
   bool valid = (address_n_count >= 3);
   valid = valid && (address_n[0] == (PATH_HARDENED | 44));
   valid = valid && (address_n[1] & PATH_HARDENED);
@@ -1097,4 +1098,48 @@ bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
   valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
 
   return valid;
+}
+
+static bool ethereum_path_check_casa45(uint32_t address_n_count,
+                                       const uint32_t *address_n,
+                                       uint64_t chain) {
+  bool valid = (address_n_count == 5);
+  valid = valid && (address_n[0] == (PATH_HARDENED | 45));
+  valid = valid && (address_n[1] < PATH_HARDENED);
+  valid = valid && (address_n[2] <= PATH_MAX_ACCOUNT);
+  valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+  valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+
+  uint32_t path_slip44 = address_n[1];
+  if (chain == CHAIN_ID_UNKNOWN) {
+    valid = valid && (is_ethereum_slip44(path_slip44));
+  } else {
+    uint32_t chain_slip44 = ethereum_slip44_by_chain_id(chain);
+    if (chain_slip44 == SLIP44_UNKNOWN) {
+      // Allow Ethereum or testnet paths for unknown networks.
+      valid = valid && (path_slip44 == 60 || path_slip44 == 1);
+    } else if (chain_slip44 != 60 && chain_slip44 != 1) {
+      // Allow cross-signing with Ethereum unless it's testnet.
+      valid = valid && (path_slip44 == chain_slip44 || path_slip44 == 60);
+    } else {
+      valid = valid && (path_slip44 == chain_slip44);
+    }
+  }
+
+  return valid;
+}
+
+bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
+                         bool pubkey_export, uint64_t chain) {
+  if (address_n_count == 0) {
+    return false;
+  }
+  if (address_n[0] == (PATH_HARDENED | 44)) {
+    return ethereum_path_check_bip44(address_n_count, address_n, pubkey_export,
+                                     chain);
+  }
+  if (address_n[0] == (PATH_HARDENED | 45)) {
+    return ethereum_path_check_casa45(address_n_count, address_n, chain);
+  }
+  return false;
 }
