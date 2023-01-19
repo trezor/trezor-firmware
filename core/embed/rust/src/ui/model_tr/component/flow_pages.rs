@@ -32,14 +32,14 @@ pub struct FlowPages<F, const M: usize> {
     /// Function/closure that will return appropriate page on demand.
     get_page: F,
     /// Number of pages in the flow.
-    page_count: u8,
+    page_count: usize,
 }
 
 impl<F, const M: usize> FlowPages<F, M>
 where
-    F: Fn(u8) -> Page<M>,
+    F: Fn(usize) -> Page<M>,
 {
-    pub fn new(get_page: F, page_count: u8) -> Self {
+    pub fn new(get_page: F, page_count: usize) -> Self {
         Self {
             get_page,
             page_count,
@@ -47,12 +47,12 @@ where
     }
 
     /// Returns a page on demand on a specified index.
-    pub fn get(&self, page_index: u8) -> Page<M> {
+    pub fn get(&self, page_index: usize) -> Page<M> {
         (self.get_page)(page_index)
     }
 
     /// Total amount of pages.
-    pub fn count(&self) -> u8 {
+    pub fn count(&self) -> usize {
         self.page_count
     }
 
@@ -63,8 +63,8 @@ where
     }
 
     /// Active scrollbar position connected with the beginning of a specific
-    /// page index
-    pub fn scrollbar_page_index(&self, bounds: Rect, page_index: u8) -> usize {
+    /// page index.
+    pub fn scrollbar_page_index(&self, bounds: Rect, page_index: usize) -> usize {
         let mut page_count = 0;
         for i in 0..page_index {
             let mut current_page = self.get(i);
@@ -364,8 +364,8 @@ pub mod trace {
 impl<const M: usize> crate::trace::Trace for Page<M> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Page");
-        t.kw_pair("active_page", inttostr!(self.current_page as u8));
-        t.kw_pair("page_count", inttostr!(self.page_count as u8));
+        t.kw_pair("active_page", &self.current_page);
+        t.kw_pair("page_count", &self.page_count);
         t.field("content", &trace::TraceText(self));
         t.close();
     }

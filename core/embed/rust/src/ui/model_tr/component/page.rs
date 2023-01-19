@@ -249,8 +249,8 @@ where
 
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonPage");
-        t.kw_pair("active_page", inttostr!(self.active_page as u8));
-        t.kw_pair("page_count", inttostr!(self.page_count as u8));
+        t.kw_pair("active_page", &self.active_page);
+        t.kw_pair("page_count", &self.page_count);
         self.report_btn_actions(t);
         // TODO: it seems the button text is not updated when paginating (but actions
         // above are)

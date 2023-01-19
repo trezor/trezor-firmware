@@ -11,7 +11,7 @@ use heapless::{String, Vec};
 
 pub enum SimpleChoiceMsg {
     Result(String<50>),
-    Index(u8),
+    Index(usize),
 }
 
 struct ChoiceFactorySimple<const N: usize> {
@@ -28,12 +28,12 @@ impl<const N: usize> ChoiceFactorySimple<N> {
 impl<const N: usize> ChoiceFactory for ChoiceFactorySimple<N> {
     type Item = ChoiceItem;
 
-    fn count(&self) -> u8 {
-        N as u8
+    fn count(&self) -> usize {
+        N
     }
 
-    fn get(&self, choice_index: u8) -> ChoiceItem {
-        let text = &self.choices[choice_index as usize];
+    fn get(&self, choice_index: usize) -> ChoiceItem {
+        let text = &self.choices[choice_index];
         let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
 
         // Disabling prev/next buttons for the first/last choice when not in carousel.
@@ -42,7 +42,7 @@ impl<const N: usize> ChoiceFactory for ChoiceFactorySimple<N> {
             if choice_index == 0 {
                 choice_item.set_left_btn(None);
             }
-            if choice_index as usize == N - 1 {
+            if choice_index == N - 1 {
                 choice_item.set_right_btn(None);
             }
         }
@@ -102,7 +102,7 @@ impl<const N: usize> Component for SimpleChoice<N> {
                 if self.return_index {
                     Some(SimpleChoiceMsg::Index(page_counter))
                 } else {
-                    let result = String::from(self.choices[page_counter as usize].as_ref());
+                    let result = String::from(self.choices[page_counter].as_ref());
                     Some(SimpleChoiceMsg::Result(result))
                 }
             }
@@ -133,7 +133,7 @@ impl<const N: usize> crate::trace::Trace for SimpleChoice<N> {
                 false => ButtonAction::empty(),
             },
             ButtonPos::Middle => {
-                let current_index = self.choice_page.page_index() as usize;
+                let current_index = self.choice_page.page_index();
                 ButtonAction::select_item(self.choices[current_index].as_ref())
             }
         }

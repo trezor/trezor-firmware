@@ -225,12 +225,12 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
     def input_flow_tt(self) -> GeneratorType:
         yield  # show address
         layout = self.debug.wait_layout()  # TODO: do not need to *wait* now?
-        assert layout.get_title() == "MULTISIG 2 OF 3"
-        assert layout.get_content().replace(" ", "") == self.address
+        assert layout.title() == "MULTISIG 2 OF 3"
+        assert layout.text_content().replace(" ", "") == self.address
 
         self.debug.press_no()
         yield  # show QR code
-        assert "Painter" in self.debug.wait_layout().text
+        assert "Painter" in self.debug.wait_layout().str_content
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
@@ -241,12 +241,12 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
             self.debug.press_no()
             yield  # show XPUB#{xpub_num}
             layout1 = self.debug.wait_layout()
-            assert layout1.get_title() == expected_title
+            assert layout1.title() == expected_title
             self.debug.swipe_up()
 
             layout2 = self.debug.wait_layout()
-            assert layout2.get_title() == expected_title
-            content = (layout1.get_content() + layout2.get_content()).replace(" ", "")
+            assert layout2.title() == expected_title
+            content = (layout1.text_content() + layout2.text_content()).replace(" ", "")
             assert content == self.xpubs[xpub_num]
 
         self.debug.press_yes()
@@ -263,14 +263,14 @@ class InputFlowPaymentRequestDetails(InputFlowBase):
         self.debug.press_info()
 
         yield  # confirm first output
-        assert self.outputs[0].address[:16] in self.layout().text
+        assert self.outputs[0].address[:16] in self.layout().text_content()
         self.debug.press_yes()
         yield  # confirm first output
         self.debug.wait_layout()
         self.debug.press_yes()
 
         yield  # confirm second output
-        assert self.outputs[1].address[:16] in self.layout().text
+        assert self.outputs[1].address[:16] in self.layout().text_content()
         self.debug.press_yes()
         yield  # confirm second output
         self.debug.wait_layout()
@@ -325,7 +325,7 @@ def lock_time_input_flow_tt(
     debug.press_yes()
 
     yield  # confirm locktime
-    layout_text = debug.wait_layout().text
+    layout_text = debug.wait_layout().text_content()
     layout_assert_func(layout_text)
     debug.press_yes()
 
@@ -345,7 +345,7 @@ def lock_time_input_flow_tr(
     debug.press_yes()
 
     yield  # confirm locktime
-    layout_text = debug.wait_layout().text
+    layout_text = debug.wait_layout().text_content()
     layout_assert_func(layout_text)
     debug.press_yes()
 
@@ -989,15 +989,15 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
 
 def enter_recovery_seed_dry_run(debug: DebugLink, mnemonic: list[str]) -> GeneratorType:
     yield
-    assert "check the recovery seed" in debug.wait_layout().get_content()
+    assert "check the recovery seed" in debug.wait_layout().text_content()
     debug.click(buttons.OK)
 
     yield
-    assert "Select number of words" in debug.wait_layout().get_content()
+    assert "Select number of words" in debug.wait_layout().text_content()
     debug.click(buttons.OK)
 
     yield
-    assert "SelectWordCount" in debug.wait_layout().text
+    assert "SelectWordCount" in debug.wait_layout().str_content
     # click the correct number
     word_option_offset = 6
     word_options = (12, 18, 20, 24, 33)
@@ -1005,12 +1005,12 @@ def enter_recovery_seed_dry_run(debug: DebugLink, mnemonic: list[str]) -> Genera
     debug.click(buttons.grid34(index % 3, index // 3))
 
     yield
-    assert "Enter recovery seed" in debug.wait_layout().get_content()
+    assert "Enter recovery seed" in debug.wait_layout().text_content()
     debug.click(buttons.OK)
 
     yield
     for word in mnemonic:
-        assert debug.wait_layout().text == "< MnemonicKeyboard >"
+        assert debug.wait_layout().str_content == "< MnemonicKeyboard >"
         debug.input(word)
 
 
@@ -1028,16 +1028,16 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
 
     def input_flow_tr(self) -> GeneratorType:
         yield
-        assert "check the recovery seed" in self.layout().text
+        assert "check the recovery seed" in self.layout().text_content()
         self.debug.press_right()
 
         yield
-        assert "select the number of words" in self.layout().text
+        assert "select the number of words" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
         yield
-        assert "NUMBER OF WORDS" in self.layout().text
+        assert "NUMBER OF WORDS" in self.layout().title()
         word_options = (12, 18, 20, 24, 33)
         index = word_options.index(len(self.mnemonic))
         for _ in range(index):
@@ -1045,14 +1045,14 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
         self.debug.input(str(len(self.mnemonic)))
 
         yield
-        assert "enter your recovery seed" in self.layout().text
+        assert "enter your recovery seed" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
         self.debug.press_right()
         yield
         for word in self.mnemonic:
-            assert "WORD" in self.layout().text
+            assert "WORD" in self.layout().title()
             self.debug.input(word)
 
         self.debug.wait_layout()
@@ -1072,56 +1072,56 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
 
         br = yield
         assert br.code == messages.ButtonRequestType.Warning
-        assert "invalid recovery seed" in self.layout().get_content()
+        assert "invalid recovery seed" in self.layout().text_content()
         self.debug.click(buttons.OK)
 
         yield  # retry screen
-        assert "Select number of words" in self.layout().get_content()
+        assert "Select number of words" in self.layout().text_content()
         self.debug.click(buttons.CANCEL)
 
         yield
-        assert "ABORT SEED CHECK" == self.layout().get_title()
+        assert "ABORT SEED CHECK" == self.layout().title()
         self.debug.click(buttons.OK)
 
     def input_flow_tr(self) -> GeneratorType:
         yield
-        assert "check the recovery seed" in self.layout().text
+        assert "check the recovery seed" in self.layout().text_content()
         self.debug.press_right()
 
         yield
-        assert "select the number of words" in self.layout().text
+        assert "select the number of words" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
         yield
-        assert "NUMBER OF WORDS" in self.layout().text
+        assert "NUMBER OF WORDS" in self.layout().title()
         # select 12 words
         self.debug.press_middle()
 
         yield
-        assert "enter your recovery seed" in self.layout().text
+        assert "enter your recovery seed" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
-        assert "WORD ENTERING" in self.layout().text
+        assert "WORD ENTERING" in self.layout().title()
         self.debug.press_yes()
 
         yield
         for _ in range(12):
-            assert "WORD" in self.layout().text
+            assert "WORD" in self.layout().title()
             self.debug.input("stick")
 
         br = yield
         assert br.code == messages.ButtonRequestType.Warning
-        assert "invalid recovery seed" in self.layout().text
+        assert "invalid recovery seed" in self.layout().text_content()
         self.debug.press_right()
 
         yield  # retry screen
-        assert "select the number of words" in self.layout().text
+        assert "select the number of words" in self.layout().text_content()
         self.debug.press_left()
 
         yield
-        assert "abort" in self.layout().text
+        assert "abort" in self.layout().text_content()
         self.debug.press_right()
 
 
@@ -1130,41 +1130,41 @@ def bip39_recovery_possible_pin(
 ) -> GeneratorType:
     yield
     assert (
-        "Do you really want to recover a wallet?" in debug.wait_layout().get_content()
+        "Do you really want to recover a wallet?" in debug.wait_layout().text_content()
     )
     debug.press_yes()
 
     # PIN when requested
     if pin is not None:
         yield
-        assert debug.wait_layout().text == "< PinKeyboard >"
+        assert debug.wait_layout().str_content == "< PinKeyboard >"
         debug.input(pin)
 
         yield
-        assert debug.wait_layout().text == "< PinKeyboard >"
+        assert debug.wait_layout().str_content == "< PinKeyboard >"
         debug.input(pin)
 
     yield
-    assert "Select number of words" in debug.wait_layout().get_content()
+    assert "Select number of words" in debug.wait_layout().text_content()
     debug.press_yes()
 
     yield
-    assert "SelectWordCount" in debug.wait_layout().text
+    assert "SelectWordCount" in debug.wait_layout().str_content
     debug.input(str(len(mnemonic)))
 
     yield
-    assert "Enter recovery seed" in debug.wait_layout().get_content()
+    assert "Enter recovery seed" in debug.wait_layout().text_content()
     debug.press_yes()
 
     yield
     for word in mnemonic:
-        assert debug.wait_layout().text == "< MnemonicKeyboard >"
+        assert debug.wait_layout().str_content == "< MnemonicKeyboard >"
         debug.input(word)
 
     yield
     assert (
         "You have successfully recovered your wallet."
-        in debug.wait_layout().get_content()
+        in debug.wait_layout().text_content()
     )
     debug.press_yes()
 
@@ -1179,47 +1179,49 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
 
     def input_flow_tr(self) -> GeneratorType:
         yield
-        assert "By continuing you agree" in self.layout().text
+        assert "By continuing you agree" in self.layout().text_content()
         self.debug.press_right()
-        assert "trezor.io/tos" in self.layout().text
+        assert "trezor.io/tos" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
-        assert "ENTER" in self.layout().text
+        assert "ENTER" in self.layout().text_content()
         self.debug.input("654")
 
         yield
-        assert "re-enter PIN to confirm" in self.layout().text
+        assert "re-enter PIN to confirm" in self.layout().text_content()
         self.debug.press_right()
 
         yield
-        assert "ENTER" in self.layout().text
+        assert "ENTER" in self.layout().text_content()
         self.debug.input("654")
 
         yield
-        assert "select the number of words" in self.layout().text
+        assert "select the number of words" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
         yield
-        assert "NUMBER OF WORDS" in self.layout().text
+        assert "NUMBER OF WORDS" in self.layout().title()
         self.debug.input(str(len(self.mnemonic)))
 
         yield
-        assert "enter your recovery seed" in self.layout().text
+        assert "enter your recovery seed" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
-        assert "WORD ENTERING" in self.layout().text
+        assert "WORD ENTERING" in self.layout().title()
         self.debug.press_right()
 
         yield
         for word in self.mnemonic:
-            assert "WORD" in self.layout().text
+            assert "WORD" in self.layout().title()
             self.debug.input(word)
 
         yield
-        assert "You have finished recovering your wallet." in self.layout().text
+        assert (
+            "You have finished recovering your wallet." in self.layout().text_content()
+        )
         self.debug.press_yes()
 
 

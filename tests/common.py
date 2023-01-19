@@ -25,7 +25,6 @@ from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType
 
 if TYPE_CHECKING:
-    from trezorlib.debuglink import LayoutContent
     from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
     from trezorlib.messages import ButtonRequest
     from _pytest.mark.structures import MarkDecorator
@@ -332,8 +331,7 @@ def read_and_confirm_mnemonic_tr(
     assert br.pages is not None
     for _ in range(br.pages):
         layout = debug.wait_layout()
-
-        words = ModelRLayout(layout).get_mnemonic_words()
+        words = layout.seed_words()
         mnemonic.extend(words)
         debug.press_right()
 
@@ -349,47 +347,6 @@ def read_and_confirm_mnemonic_tr(
             debug.input(mnemonic[index])
 
     return " ".join(mnemonic)
-
-
-class ModelRLayout:
-    """Layout shortcuts for Model R."""
-
-    def __init__(self, layout: "LayoutContent") -> None:
-        self.layout = layout
-
-    def get_mnemonic_words(self) -> list[str]:
-        """Extract mnemonic words from the layout lines.
-
-        Example input: [..., '4 must', '5 during', '6 monitor', ...]
-        Example output: ['must', 'during', 'monitor']
-        """
-        words: list[str] = []
-        for line in self.layout.lines:
-            if " " in line:
-                number, word = line.split(" ", 1)
-                if all(c.isdigit() for c in number):
-                    words.append(word.strip())
-
-        return words
-
-    def get_word_index(self) -> int:
-        """Extract currently asked mnemonic index.
-
-        Example input: "Select word 3/12"
-        Example output: 2
-        """
-        prompt = self.layout.lines[0]
-        human_index = prompt.split(" ")[-1].split("/")[0]
-        return int(human_index) - 1
-
-    def get_current_word(self) -> str:
-        """Extract currently selected word.
-
-        Example input: "SELECT [Select(monitor)]"
-        Example output: "monitor"
-        """
-        buttons = self.layout.lines[-1]
-        return buttons.split("[Select(")[1].split(")]")[0]
 
 
 def click_info_button(debug: "DebugLink"):
@@ -414,9 +371,9 @@ def get_test_address(client: "Client") -> str:
 
 def get_text_from_paginated_screen(client: "Client", screen_count: int) -> str:
     """Aggregating screen text from more pages into one string."""
-    text: str = client.debug.wait_layout().text
+    text: str = client.debug.wait_layout().str_content
     for _ in range(screen_count - 1):
         client.debug.swipe_up()
-        text += client.debug.wait_layout().text
+        text += client.debug.wait_layout().str_content
 
     return text

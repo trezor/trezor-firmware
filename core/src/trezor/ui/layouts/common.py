@@ -37,14 +37,7 @@ async def interact(
     br_type: str,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
-    if hasattr(layout, "in_unknown_flow") and layout.in_unknown_flow():  # type: ignore [Cannot access member "in_unknown_flow" for type "LayoutType"]
-        # We cannot recognize before-hand how many pages the layout will have -
-        # but we know for certain we want to paginate through them
-        # TODO: could do something less hacky than sending 0 as page count
-        # (create new ButtonRequest field)
-        await button_request(ctx, br_type, br_code, pages=0)
-        return await ctx.wait(layout)
-    elif hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+    if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
         # We know for certain how many pages the layout will have
         await button_request(ctx, br_type, br_code, pages=layout.page_count())  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
         return await ctx.wait(layout)

@@ -62,7 +62,7 @@ const MENU: [&str; MENU_LENGTH] = [
 ];
 
 /// Get a character at a specified index for a specified category.
-fn get_char(current_category: &ChoiceCategory, index: u8) -> char {
+fn get_char(current_category: &ChoiceCategory, index: usize) -> char {
     let index = index as usize;
     match current_category {
         ChoiceCategory::LowercaseLetter => LOWERCASE_LETTERS[index],
@@ -74,7 +74,7 @@ fn get_char(current_category: &ChoiceCategory, index: u8) -> char {
 }
 
 /// Return category from menu based on page index.
-fn get_category_from_menu(page_index: u8) -> ChoiceCategory {
+fn get_category_from_menu(page_index: usize) -> ChoiceCategory {
     match page_index as usize {
         LOWERCASE_INDEX => ChoiceCategory::LowercaseLetter,
         UPPERCASE_INDEX => ChoiceCategory::UppercaseLetter,
@@ -86,18 +86,18 @@ fn get_category_from_menu(page_index: u8) -> ChoiceCategory {
 
 /// How many choices are available for a specified category.
 /// (does not count the extra MENU choice for characters)
-fn get_category_length(current_category: &ChoiceCategory) -> u8 {
+fn get_category_length(current_category: &ChoiceCategory) -> usize {
     match current_category {
-        ChoiceCategory::LowercaseLetter => LOWERCASE_LETTERS.len() as u8,
-        ChoiceCategory::UppercaseLetter => UPPERCASE_LETTERS.len() as u8,
-        ChoiceCategory::Digit => DIGITS.len() as u8,
-        ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.len() as u8,
-        ChoiceCategory::Menu => MENU.len() as u8,
+        ChoiceCategory::LowercaseLetter => LOWERCASE_LETTERS.len(),
+        ChoiceCategory::UppercaseLetter => UPPERCASE_LETTERS.len(),
+        ChoiceCategory::Digit => DIGITS.len(),
+        ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.len(),
+        ChoiceCategory::Menu => MENU.len(),
     }
 }
 
 /// Whether this index is the MENU index - the last one in the list.
-fn is_menu_choice(current_category: &ChoiceCategory, page_index: u8) -> bool {
+fn is_menu_choice(current_category: &ChoiceCategory, page_index: usize) -> bool {
     if let ChoiceCategory::Menu = current_category {
         unreachable!()
     }
@@ -120,7 +120,7 @@ impl ChoiceFactoryPassphrase {
     }
 
     /// MENU choices with accept and cancel hold-to-confirm side buttons.
-    fn get_menu_item(&self, choice_index: u8) -> ChoiceItem {
+    fn get_menu_item(&self, choice_index: usize) -> ChoiceItem {
         let choice_index = choice_index as usize;
 
         // More options for CANCEL/DELETE button
@@ -165,7 +165,7 @@ impl ChoiceFactoryPassphrase {
 
     /// Character choices with a BACK to MENU choice at the end (visible from
     /// start) to return back
-    fn get_character_item(&self, choice_index: u8) -> ChoiceItem {
+    fn get_character_item(&self, choice_index: usize) -> ChoiceItem {
         if is_menu_choice(&self.current_category, choice_index) {
             ChoiceItem::new("BACK", ButtonLayout::arrow_armed_arrow("RETURN".into()))
                 .with_icon(Icon::new(theme::ICON_ARROW_BACK_UP))
@@ -178,7 +178,7 @@ impl ChoiceFactoryPassphrase {
 
 impl ChoiceFactory for ChoiceFactoryPassphrase {
     type Item = ChoiceItem;
-    fn count(&self) -> u8 {
+    fn count(&self) -> usize {
         let length = get_category_length(&self.current_category);
         // All non-MENU categories have an extra item for returning back to MENU
         match self.current_category {
@@ -186,7 +186,7 @@ impl ChoiceFactory for ChoiceFactoryPassphrase {
             _ => length + 1,
         }
     }
-    fn get(&self, choice_index: u8) -> ChoiceItem {
+    fn get(&self, choice_index: usize) -> ChoiceItem {
         match self.current_category {
             ChoiceCategory::Menu => self.get_menu_item(choice_index),
             _ => self.get_character_item(choice_index),
@@ -201,7 +201,7 @@ pub struct PassphraseEntry {
     show_plain_passphrase: bool,
     textbox: TextBox<MAX_PASSPHRASE_LENGTH>,
     current_category: ChoiceCategory,
-    menu_position: u8, // position in the menu so we can return back
+    menu_position: usize, // position in the menu so we can return back
 }
 
 impl PassphraseEntry {
@@ -209,7 +209,7 @@ impl PassphraseEntry {
         Self {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
                 .with_carousel(true)
-                .with_initial_page_counter(LOWERCASE_INDEX as u8),
+                .with_initial_page_counter(LOWERCASE_INDEX),
             passphrase_dots: Child::new(ChangingTextLine::center_mono(String::new())),
             show_plain_passphrase: false,
             textbox: TextBox::empty(),
@@ -298,7 +298,7 @@ impl Component for PassphraseEntry {
                             self.update_passphrase_dots(ctx);
                             if self.is_empty() {
                                 // Allowing for DELETE/CANCEL change
-                                self.menu_position = CANCEL_DELETE_INDEX as u8;
+                                self.menu_position = CANCEL_DELETE_INDEX;
                                 self.show_menu_page(ctx);
                             }
                             ctx.request_paint();
@@ -410,7 +410,7 @@ impl crate::trace::Trace for PassphraseEntry {
         t.open("PassphraseEntry");
         // NOTE: `show_plain_passphrase` was not able to be transferred,
         // as it is true only for a very small amount of time
-        t.kw_pair("textbox", self.textbox.content());
+        t.kw_pair("textbox", &self.textbox.content());
         self.report_btn_actions(t);
         t.field("choice_page", &self.choice_page);
         t.close();

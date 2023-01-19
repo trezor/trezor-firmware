@@ -22,7 +22,6 @@ if __debug__:
     SWIPE_DOWN = const(0x02)
     SWIPE_LEFT = const(0x04)
     SWIPE_RIGHT = const(0x08)
-    SWIPE_ALL_THE_WAY_UP = const(0x10)
 
 
 # channel used to cancel layouts, see `Cancelled` exception

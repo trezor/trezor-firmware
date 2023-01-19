@@ -115,6 +115,7 @@ class RustLayout(ui.Layout):
                 notify_layout_change(self)
 
         def notify_backup(self):
+            # TODO: delete this in favor of debuglink::LayoutContent::seed_words
             from apps.debug import reset_current_words
 
             content = "\n".join(self.read_content())

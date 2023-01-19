@@ -24,11 +24,11 @@ impl ChoiceFactoryNumberInput {
 impl ChoiceFactory for ChoiceFactoryNumberInput {
     type Item = ChoiceItem;
 
-    fn count(&self) -> u8 {
-        (self.max - self.min + 1) as u8
+    fn count(&self) -> usize {
+        (self.max - self.min + 1) as usize
     }
 
-    fn get(&self, choice_index: u8) -> ChoiceItem {
+    fn get(&self, choice_index: usize) -> ChoiceItem {
         let num = self.min + choice_index as u32;
         let text: String<10> = String::from(num);
         let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
@@ -59,7 +59,7 @@ impl NumberInput {
         let initial_page = init_value - min;
         Self {
             min,
-            choice_page: ChoicePage::new(choices).with_initial_page_counter(initial_page as u8),
+            choice_page: ChoicePage::new(choices).with_initial_page_counter(initial_page as usize),
         }
     }
 }
