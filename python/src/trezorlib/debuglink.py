@@ -618,6 +618,11 @@ class TrezorClientDebugLink(TrezorClient):
             Callable[[protobuf.MessageType], protobuf.MessageType],
         ] = {}
 
+    def ensure_open(self) -> None:
+        """Only open session if there isn't already an open one."""
+        if self.session_counter == 0:
+            self.open()
+
     def open(self) -> None:
         super().open()
         if self.session_counter == 1:
