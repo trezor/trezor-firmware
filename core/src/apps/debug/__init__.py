@@ -73,7 +73,6 @@ if __debug__:
             SWIPE_DOWN,
             SWIPE_LEFT,
             SWIPE_RIGHT,
-            SWIPE_ALL_THE_WAY_UP,
         )
 
         button = msg.button  # local_cache_attribute
@@ -99,8 +98,6 @@ if __debug__:
                 await swipe_chan.put(SWIPE_LEFT)
             elif swipe == DebugSwipeDirection.RIGHT:
                 await swipe_chan.put(SWIPE_RIGHT)
-            elif swipe == DebugSwipeDirection.ALL_THE_WAY_UP:
-                await swipe_chan.put(SWIPE_ALL_THE_WAY_UP)
         if msg.input is not None:
             await input_chan.put(Result(msg.input))
 

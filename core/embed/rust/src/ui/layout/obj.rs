@@ -271,10 +271,10 @@ impl LayoutObj {
                 self.string(crate::trace::CONTENT_TAG);
             }
 
-            fn kw_pair(&mut self, key: &str, value: &str) {
+            fn kw_pair(&mut self, key: &str, value: &dyn Trace) {
                 self.string(key);
                 self.string("::");
-                self.string(value);
+                value.trace(self);
                 self.string(","); // mostly for human readability
             }
 

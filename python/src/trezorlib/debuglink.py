@@ -61,84 +61,204 @@ EXPECTED_RESPONSES_CONTEXT_LINES = 3
 LOG = logging.getLogger(__name__)
 
 
-class LayoutContent:
+def _get_strings_inside_tag(string: str, tag: str) -> List[str]:
+    """Getting all strings that are inside two same tags.
+    Example:
+        _get_strings_inside_tag("abc **TAG** def **TAG** ghi")
+        -> ["def"]
+    """
+    parts = string.split(tag)
+    if len(parts) == 1:
+        return []
+    else:
+        # returning all odd indexes in the list
+        return parts[1::2]
+
+
+class LayoutBase:
+    """Common base for layouts, containing common methods."""
+
+    def __init__(self, lines: Sequence[str]) -> None:
+        self.lines = list(lines)
+        self.str_content = "\n".join(self.lines)
+        self.tokens = self.str_content.split()
+
+    def kw_pair_int(self, key: str) -> Optional[int]:
+        """Getting the value of a key-value pair as an integer. None if missing."""
+        val = self.kw_pair(key)
+        if val is None:
+            return None
+        return int(val)
+
+    def kw_pair_compulsory(self, key: str) -> str:
+        """Getting value of a key that cannot be missing."""
+        val = self.kw_pair(key)
+        assert val is not None
+        return val
+
+    def kw_pair(self, key: str) -> Optional[str]:
+        """Getting the value of a key-value pair. None if missing."""
+        # Pairs are sent in this format in the list:
+        # [..., "key", "::", "value", ...]
+        for key_index, item in enumerate(self.tokens):
+            if item == key:
+                if self.tokens[key_index + 1] == "::":
+                    return self.tokens[key_index + 2]
+
+        return None
+
+
+class LayoutButtons(LayoutBase):
+    """Extension for the LayoutContent class to handle buttons."""
+
+    BTN_TAG = " **BTN** "
+    EMPTY_BTN = "---"
+    NEXT_BTN = "Next"
+    PREV_BTN = "Prev"
+    BTN_NAMES = ("left", "middle", "right")
+
+    def __init__(self, lines: Sequence[str]) -> None:
+        super().__init__(lines)
+
+    def is_applicable(self) -> bool:
+        """Check if the layout has buttons."""
+        return self.BTN_TAG in self.str_content
+
+    def visible(self) -> str:
+        """Getting content and actions for all three buttons."""
+        return ", ".join(self.all_buttons())
+
+    def all_buttons(self) -> Tuple[str, str, str]:
+        """Getting content and actions for all three buttons."""
+        contents = self.content()
+        actions = self.actions()
+        return tuple(f"{contents[i]} [{actions[i]}]" for i in range(3))
+
+    def content(self) -> Tuple[str, str, str]:
+        """Getting visual details for all three buttons. They should always be there."""
+        if self.BTN_TAG not in self.str_content:
+            return ("None", "None", "None")
+        btns = _get_strings_inside_tag(self.str_content, self.BTN_TAG)
+        assert len(btns) == 3
+        return btns[0].strip(), btns[1].strip(), btns[2].strip()
+
+    def actions(self) -> Tuple[str, str, str]:
+        """Getting actions for all three buttons. They should always be there."""
+        if "_action" not in self.str_content:
+            return ("None", "None", "None")
+        action_ids = ("left_action", "middle_action", "right_action")
+        assert len(action_ids) == 3
+        return tuple(self.kw_pair_compulsory(action) for action in action_ids)
+
+    def can_go_next(self) -> bool:
+        """Checking if there is a next page."""
+        return self.get_next_button() is not None
+
+    def can_go_back(self) -> bool:
+        """Checking if there is a previous page."""
+        return self.get_prev_button() is not None
+
+    def get_next_button(self) -> Optional[str]:
+        """Position of the next button, if any."""
+        return self._get_btn_by_action(self.NEXT_BTN)
+
+    def get_prev_button(self) -> Optional[str]:
+        """Position of the previous button, if any."""
+        return self._get_btn_by_action(self.PREV_BTN)
+
+    def _get_btn_by_action(self, btn_action: str) -> Optional[str]:
+        """Position of button described by some action. None if not found."""
+        for index, action in enumerate(self.actions()):
+            if action == btn_action:
+                return self.BTN_NAMES[index]
+
+        return None
+
+
+class LayoutContent(LayoutBase):
     """Stores content of a layout as returned from Trezor.
 
     Contains helper functions to extract specific parts of the layout.
     """
 
+    # How will some information be identified in the content
+    TITLE_TAG = " **TITLE** "
+    CONTENT_TAG = " **CONTENT** "
+
     def __init__(self, lines: Sequence[str]) -> None:
-        self.lines = list(lines)
-        self.text = " ".join(self.lines)
+        super().__init__(lines)
+        self.buttons = LayoutButtons(lines)
 
-    def get_title(self) -> str:
-        """Get title of the layout.
-
-        Title is located between "title" and "content" identifiers.
-        Example: "< Frame title :  RECOVERY SHARE #1 content :  < SwipePage"
-          -> "RECOVERY SHARE #1"
+    def visible_screen(self) -> str:
+        """String representation of a current screen content.
+        Example:
+            SIGN TRANSACTION
+            --------------------
+            You are about to
+            sign 3 actions.
+            ********************
+            Icon:cancel [Cancel], --- [None], CONFIRM [Confirm]
         """
-        match = re.search(r"title : (.*?) content :", self.text)
-        if not match:
-            return ""
-        return match.group(1).strip()
+        title_separator = f"\n{20*'-'}\n"
+        btn_separator = f"\n{20*'*'}\n"
 
-    def get_content(self, tag_name: str = "Paragraphs", raw: bool = False) -> str:
-        """Get text of the main screen content of the layout."""
-        content = "".join(self._get_content_lines(tag_name, raw))
-        if not raw and content.endswith(" "):
-            # Stripping possible space at the end
-            content = content[:-1]
-        return content
+        visible = ""
+        if self.title():
+            visible += self.title()
+            visible += title_separator
+        visible += self.raw_content()
+        if self.buttons.is_applicable():
+            visible += btn_separator
+            visible += self.buttons.visible()
 
-    def get_button_texts(self) -> List[str]:
-        """Get text of all buttons in the layout.
+        return visible
 
-        Example button: "< Button text :  LADYBUG >"
-          -> ["LADYBUG"]
-        """
-        return re.findall(r"< Button text : +(.*?) >", self.text)
+    def title(self) -> str:
+        """Getting text that is displayed as a title."""
+        # there could be multiple of those - title and subtitle for example
+        title_strings = _get_strings_inside_tag(self.str_content, self.TITLE_TAG)
+        return "\n".join(title_strings).strip()
 
-    def get_seed_words(self) -> List[str]:
+    def text_content(self) -> str:
+        """Getting text that is displayed in the main part of the screen."""
+        raw = self.raw_content()
+        return raw.replace("\n", " ")
+
+    def raw_content(self) -> str:
+        """Getting raw text that is displayed in the main part of the screen,
+        with corresponding line breaks."""
+        content_strings = _get_strings_inside_tag(self.str_content, self.CONTENT_TAG)
+        # there are some unwanted spaces
+        strings = [
+            s.replace(" \n ", "\n").replace("\n ", "\n").lstrip()
+            for s in content_strings
+        ]
+        return "\n".join(strings).strip()
+
+    def seed_words(self) -> List[str]:
         """Get all the seed words on the screen in order.
 
         Example content: "1. ladybug 2. acid 3. academic 4. afraid"
           -> ["ladybug", "acid", "academic", "afraid"]
         """
-        return re.findall(r"\d+\. (\w+)\b", self.get_content())
+        # Dot after index is optional (present on TT, not on TR)
+        return re.findall(r"\d+\.? (\w+)\b", self.raw_content())
 
-    def get_page_count(self) -> int:
+    def page_count(self) -> int:
         """Get number of pages for the layout."""
-        return self._get_number("page_count")
+        return (
+            self.kw_pair_int("scrollbar_page_count")
+            or self.kw_pair_int("page_count")
+            or 1
+        )
 
-    def get_active_page(self) -> int:
+    def active_page(self) -> int:
         """Get current page index of the layout."""
-        return self._get_number("active_page")
-
-    def _get_number(self, key: str) -> int:
-        """Get number connected with a specific key."""
-        match = re.search(rf"{key} : +(\d+)", self.text)
-        if not match:
-            return 0
-        return int(match.group(1))
-
-    def _get_content_lines(
-        self, tag_name: str = "Paragraphs", raw: bool = False
-    ) -> List[str]:
-        """Get lines of the main screen content of the layout."""
-
-        # First line should have content after the tag, last line does not store content
-        tag = f"< {tag_name}"
-        if tag in self.lines[0]:
-            first_line = self.lines[0].split(tag)[1]
-            all_lines = [first_line] + self.lines[1:-1]
-        else:
-            all_lines = self.lines[1:-1]
-
-        if raw:
-            return all_lines
-        else:
-            return [_clean_line(line) for line in all_lines]
+        return (
+            self.kw_pair_int("scrollbar_active_page")
+            or self.kw_pair_int("active_page")
+            or 0
+        )
 
 
 def _clean_line(line: str) -> str:
@@ -170,10 +290,10 @@ def multipage_content(layouts: List[LayoutContent]) -> str:
     """Get overall content from multiple-page layout."""
     final_text = ""
     for layout in layouts:
-        final_text += layout.get_content()
+        final_text += layout.text_content()
         # When the raw content of the page ends with ellipsis,
         # we need to add a space to separate it with the next page
-        if layout.get_content(raw=True).endswith("... "):
+        if layout.raw_content().endswith("... "):
             final_text += " "
 
     # Stripping possible space at the end of last page
@@ -328,23 +448,21 @@ class DebugLink:
                 layout = self.wait_layout()
             else:
                 layout = self.read_layout()
-            self.save_debug_screen(layout.lines)
+            self.save_debug_screen(layout.visible_screen())
 
-    def save_debug_screen(self, lines: List[str]) -> None:
+    def save_debug_screen(self, screen_content: str) -> None:
         if self.screen_text_file is not None:
             if not self.screen_text_file.exists():
                 self.screen_text_file.write_bytes(b"")
 
-            content = "\n".join(lines)
-
             # Not writing the same screen twice
-            if content == self.last_screen_content:
+            if screen_content == self.last_screen_content:
                 return
 
-            self.last_screen_content = content
+            self.last_screen_content = screen_content
 
             with open(self.screen_text_file, "a") as f:
-                f.write(content)
+                f.write(screen_content)
                 f.write("\n" + 80 * "/" + "\n")
 
     # Type overloads make sure that when we supply `wait=True` into `click()`,
@@ -372,9 +490,6 @@ class DebugLink:
 
     def press_info(self) -> None:
         self.input(button=messages.DebugButton.INFO)
-
-    def swipe_all_the_way_up(self) -> None:
-        self.input(swipe=messages.DebugSwipeDirection.ALL_THE_WAY_UP, wait=True)
 
     def swipe_up(self, wait: bool = False) -> None:
         self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
@@ -521,12 +636,8 @@ class DebugUI:
             else:
                 # Paginating (going as further as possible) and pressing Yes
                 if br.pages is not None:
-                    if br.pages == 0:
-                        # When we do not know how many, but want to paginate
-                        self.debuglink.swipe_all_the_way_up()
-                    else:
-                        for _ in range(br.pages - 1):
-                            self.debuglink.swipe_up(wait=True)
+                    for _ in range(br.pages - 1):
+                        self.debuglink.swipe_up(wait=True)
                 self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")

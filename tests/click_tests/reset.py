@@ -12,26 +12,26 @@ if TYPE_CHECKING:
 
 def confirm_wait(debug: "DebugLink", title: str) -> None:
     layout = debug.wait_layout()
-    assert title.upper() in layout.get_title()
+    assert title.upper() in layout.title()
     debug.click(buttons.OK, wait=True)
 
 
 def confirm_read(debug: "DebugLink", title: str) -> None:
     layout = debug.read_layout()
     if title == "Caution":
-        assert "OK, I UNDERSTAND" in layout.text
+        assert "OK, I UNDERSTAND" in layout.str_content
     elif title == "Success":
         assert any(
-            text in layout.get_content() for text in ("success", "finished", "done")
+            text in layout.text_content() for text in ("success", "finished", "done")
         )
     else:
-        assert title.upper() in layout.get_title()
+        assert title.upper() in layout.title()
     debug.click(buttons.OK, wait=True)
 
 
 def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> None:
     layout = debug.read_layout()
-    assert "NumberInputDialog" in layout.text
+    assert "NumberInputDialog" in layout.str_content
     for _ in range(diff):
         debug.click(button, wait=False)
     debug.click(buttons.OK, wait=True)
@@ -41,15 +41,15 @@ def read_words(debug: "DebugLink", is_advanced: bool = False) -> list[str]:
     words: list[str] = []
     layout = debug.read_layout()
     if is_advanced:
-        assert layout.get_title().startswith("GROUP")
+        assert layout.title().startswith("GROUP")
     else:
-        assert layout.get_title().startswith("RECOVERY SHARE #")
+        assert layout.title().startswith("RECOVERY SHARE #")
 
     # Swiping through all the page and loading the words
-    for _ in range(layout.get_page_count() - 1):
-        words.extend(layout.get_seed_words())
+    for _ in range(layout.page_count() - 1):
+        words.extend(layout.seed_words())
         layout = debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True)
-    words.extend(layout.get_seed_words())
+    words.extend(layout.seed_words())
 
     debug.press_yes()
 
@@ -58,13 +58,13 @@ def read_words(debug: "DebugLink", is_advanced: bool = False) -> list[str]:
 
 def confirm_words(debug: "DebugLink", words: list[str]) -> None:
     layout = debug.wait_layout()
-    assert "Select word" in layout.text
+    assert "Select word" in layout.str_content
     for _ in range(3):
         # "Select word 3 of 20"
         #              ^
-        word_pos = int(layout.get_content().split()[2])
+        word_pos = int(layout.text_content().split()[2])
         # Unifying both the buttons and words to lowercase
-        btn_texts = [text.lower() for text in layout.get_button_texts()]
+        btn_texts = [text.lower() for text in layout.buttons()]
         wanted_word = words[word_pos - 1].lower()
         button_pos = btn_texts.index(wanted_word)
         layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)

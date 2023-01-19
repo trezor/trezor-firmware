@@ -247,8 +247,8 @@ impl Component for ScrollBar {
 impl crate::trace::Trace for ScrollBar {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ScrollBar");
-        t.field("page_count", &self.page_count);
-        t.field("active_page", &self.active_page);
+        t.kw_pair("scrollbar_page_count", &self.page_count);
+        t.kw_pair("scrollbar_active_page", &self.active_page);
         t.close();
     }
 }

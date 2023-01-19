@@ -8,7 +8,7 @@ use crate::ui::{
 use super::super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
 
 pub enum ChoicePageMsg {
-    Choice(u8),
+    Choice(usize),
     LeftMost,
     RightMost,
 }
@@ -46,8 +46,8 @@ pub trait ChoiceFactory {
     type Item: Choice + Trace;
     #[cfg(not(feature = "ui_debug"))]
     type Item: Choice;
-    fn count(&self) -> u8;
-    fn get(&self, index: u8) -> Self::Item;
+    fn count(&self) -> usize;
+    fn get(&self, index: usize) -> Self::Item;
 }
 
 /// General component displaying a set of items on the screen
@@ -70,7 +70,7 @@ where
     choices: F,
     pad: Pad,
     buttons: Child<ButtonController>,
-    page_counter: u8,
+    page_counter: usize,
     /// How many pixels from top should we render the items.
     y_baseline: i16,
     /// How many pixels are between the items.
@@ -110,7 +110,7 @@ where
 
     /// Set the page counter at the very beginning.
     /// Need to update the initial button layout.
-    pub fn with_initial_page_counter(mut self, page_counter: u8) -> Self {
+    pub fn with_initial_page_counter(mut self, page_counter: usize) -> Self {
         self.page_counter = page_counter;
         let initial_btn_layout = self.choices.get(page_counter).btn_layout();
         self.buttons = Child::new(ButtonController::new(initial_btn_layout));
@@ -156,7 +156,7 @@ where
         &mut self,
         ctx: &mut EventCtx,
         new_choices: F,
-        new_page_counter: Option<u8>,
+        new_page_counter: Option<usize>,
         is_carousel: bool,
     ) {
         self.choices = new_choices;
@@ -168,7 +168,7 @@ where
     }
 
     /// Navigating to the chosen page index.
-    pub fn set_page_counter(&mut self, ctx: &mut EventCtx, page_counter: u8) {
+    pub fn set_page_counter(&mut self, ctx: &mut EventCtx, page_counter: usize) {
         self.page_counter = page_counter;
         self.update(ctx);
     }
@@ -188,7 +188,7 @@ where
 
         // Getting the remaining left and right areas.
         let (left_area, _center_area, right_area) =
-            available_area.split_center(self.choices.get(self.page_counter as u8).width_center());
+            available_area.split_center(self.choices.get(self.page_counter).width_center());
 
         // Possibly drawing on the left side.
         if self.has_previous_choice() || self.is_carousel {
@@ -214,8 +214,8 @@ where
     }
 
     /// Index of the last page.
-    fn last_page_index(&self) -> u8 {
-        self.choices.count() as u8 - 1
+    fn last_page_index(&self) -> usize {
+        self.choices.count() - 1
     }
 
     /// Whether there is a previous choice (on the left).
@@ -243,6 +243,7 @@ where
     /// Display all the choices fitting on the left side.
     /// Going as far as possible.
     fn show_left_choices(&self, area: Rect) {
+        // page index can get negative here, so having it as i16 instead of usize
         let mut page_index = self.page_counter as i16 - 1;
         let mut x_offset = 0;
         loop {
@@ -261,7 +262,7 @@ where
 
             if let Some(width) = self
                 .choices
-                .get(page_index as u8)
+                .get(page_index as usize)
                 .paint_left(current_area, self.show_incomplete)
             {
                 // Updating loop variables.
@@ -293,7 +294,7 @@ where
 
             if let Some(width) = self
                 .choices
-                .get(page_index as u8)
+                .get(page_index as usize)
                 .paint_right(current_area, self.show_incomplete)
             {
                 // Updating loop variables.
@@ -326,7 +327,7 @@ where
     }
 
     /// Get current page counter.
-    pub fn page_index(&self) -> u8 {
+    pub fn page_index(&self) -> usize {
         self.page_counter
     }
 
@@ -430,9 +431,9 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ChoicePage");
-        t.kw_pair("active_page", inttostr!(self.page_counter));
-        t.kw_pair("page_count", inttostr!(self.choices.count() as u8));
-        t.kw_pair("is_carousel", booltostr!(self.is_carousel));
+        t.kw_pair("active_page", &self.page_counter);
+        t.kw_pair("page_count", &self.choices.count());
+        t.kw_pair("is_carousel", &booltostr!(self.is_carousel));
 
         if self.has_previous_choice() {
             t.field("prev_choice", &self.choices.get(self.page_counter - 1));

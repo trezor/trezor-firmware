@@ -23,9 +23,9 @@ def enter_word(
 def confirm_recovery(debug: "DebugLink", legacy_ui: bool = False) -> None:
     layout = debug.wait_layout()
     if legacy_ui:
-        layout.text.startswith("Recovery mode")
+        layout.str_content.startswith("Recovery mode")
     else:
-        assert layout.get_title() == "RECOVERY MODE"
+        assert layout.title() == "RECOVERY MODE"
     debug.click(buttons.OK, wait=True)
 
 
@@ -35,13 +35,13 @@ def select_number_of_words(
     layout = debug.read_layout()
 
     # select number of words
-    assert "select the number of words" in layout.get_content()
+    assert "select the number of words" in layout.text_content()
     layout = debug.click(buttons.OK, wait=True)
     if legacy_ui:
-        assert layout.text == "WordSelector"
+        assert layout.str_content == "WordSelector"
     else:
         # Two title options
-        assert layout.get_title() in ("SEED CHECK", "RECOVERY MODE")
+        assert layout.title() in ("SEED CHECK", "RECOVERY MODE")
 
     # click the number
     word_option_offset = 6
@@ -51,7 +51,7 @@ def select_number_of_words(
     )  # raises if num of words is invalid
     coords = buttons.grid34(index % 3, index // 3)
     layout = debug.click(coords, wait=True)
-    assert "Enter any share" in layout.get_content()
+    assert "Enter any share" in layout.text_content()
 
 
 def enter_share(
@@ -60,9 +60,9 @@ def enter_share(
     layout = debug.click(buttons.OK, wait=True)
 
     if legacy_ui:
-        assert layout.text == "Slip39Keyboard"
+        assert layout.str_content == "Slip39Keyboard"
     else:
-        assert layout.text == "< MnemonicKeyboard >"
+        assert layout.str_content == "< MnemonicKeyboard >"
 
     for word in share.split(" "):
         layout = enter_word(debug, word, is_slip39=True)
@@ -75,15 +75,15 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
     expected_text = "Enter any share"
     remaining = len(shares)
     for share in shares:
-        assert expected_text in layout.get_content()
+        assert expected_text in layout.text_content()
         layout = enter_share(debug, share)
         remaining -= 1
         expected_text = f"{remaining} more share"
 
-    assert "You have successfully recovered your wallet" in layout.get_content()
+    assert "You have successfully recovered your wallet" in layout.text_content()
 
 
 def finalize(debug: "DebugLink") -> None:
     layout = debug.click(buttons.OK, wait=True)
     # TODO: should we also run Click/Persistence tests for model R?
-    assert layout.text.startswith("< Homescreen ")
+    assert layout.str_content.startswith("< Homescreen ")

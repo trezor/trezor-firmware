@@ -42,31 +42,31 @@ impl ChoiceFactoryPIN {
 impl ChoiceFactory for ChoiceFactoryPIN {
     type Item = ChoiceItem;
 
-    fn get(&self, choice_index: u8) -> ChoiceItem {
-        let choice_str = CHOICES[choice_index as usize];
+    fn get(&self, choice_index: usize) -> ChoiceItem {
+        let choice_str = CHOICES[choice_index];
 
         let mut choice_item = ChoiceItem::new(choice_str, ButtonLayout::default_three_icons());
 
         // Action buttons have different middle button text
-        if [DELETE_INDEX, SHOW_INDEX, ENTER_INDEX].contains(&(choice_index as usize)) {
+        if [DELETE_INDEX, SHOW_INDEX, ENTER_INDEX].contains(&(choice_index)) {
             let confirm_btn = ButtonDetails::armed_text("CONFIRM".into());
             choice_item.set_middle_btn(Some(confirm_btn));
         }
 
         // Adding icons for appropriate items
-        if choice_index == DELETE_INDEX as u8 {
+        if choice_index == DELETE_INDEX {
             choice_item = choice_item.with_icon(Icon::new(theme::ICON_DELETE));
-        } else if choice_index == SHOW_INDEX as u8 {
+        } else if choice_index == SHOW_INDEX {
             choice_item = choice_item.with_icon(Icon::new(theme::ICON_EYE));
-        } else if choice_index == ENTER_INDEX as u8 {
+        } else if choice_index == ENTER_INDEX {
             choice_item = choice_item.with_icon(Icon::new(theme::ICON_TICK));
         }
 
         choice_item
     }
 
-    fn count(&self) -> u8 {
-        CHOICE_LENGTH as u8
+    fn count(&self) -> usize {
+        CHOICE_LENGTH
     }
 }
 
@@ -87,7 +87,7 @@ impl PinEntry {
         Self {
             // Starting at the digit 0
             choice_page: ChoicePage::new(choices)
-                .with_initial_page_counter(NUMBER_START_INDEX as u8)
+                .with_initial_page_counter(NUMBER_START_INDEX)
                 .with_carousel(true),
             pin_line: Child::new(ChangingTextLine::center_bold(String::from(
                 prompt.clone().as_ref(),
@@ -99,8 +99,8 @@ impl PinEntry {
         }
     }
 
-    fn append_new_digit(&mut self, ctx: &mut EventCtx, page_counter: u8) {
-        let digit = CHOICES[page_counter as usize];
+    fn append_new_digit(&mut self, ctx: &mut EventCtx, page_counter: usize) {
+        let digit = CHOICES[page_counter];
         self.textbox.append_slice(ctx, digit);
     }
 
@@ -180,7 +180,7 @@ impl Component for PinEntry {
         let msg = self.choice_page.event(ctx, event);
         if let Some(ChoicePageMsg::Choice(page_counter)) = msg {
             // Performing action under specific index or appending new digit
-            match page_counter as usize {
+            match page_counter {
                 DELETE_INDEX => {
                     self.delete_last_digit(ctx);
                     self.update(ctx);
@@ -201,7 +201,7 @@ impl Component for PinEntry {
                             page_counter as u32,
                         );
                         self.choice_page
-                            .set_page_counter(ctx, new_page_counter as u8);
+                            .set_page_counter(ctx, new_page_counter as usize);
                         self.update(ctx);
                     }
                 }
@@ -229,7 +229,7 @@ impl crate::trace::Trace for PinEntry {
             ButtonPos::Left => ButtonAction::PrevPage.string(),
             ButtonPos::Right => ButtonAction::NextPage.string(),
             ButtonPos::Middle => {
-                let current_index = self.choice_page.page_index() as usize;
+                let current_index = self.choice_page.page_index();
                 match current_index {
                     DELETE_INDEX => ButtonAction::Action("Delete last digit").string(),
                     SHOW_INDEX => ButtonAction::Action("Show PIN").string(),
@@ -245,7 +245,7 @@ impl crate::trace::Trace for PinEntry {
         // NOTE: `show_real_pin` was not able to be transferred,
         // as it is true only for a very small amount of time
         t.title(self.prompt.as_ref());
-        t.kw_pair("textbox", self.textbox.content());
+        t.kw_pair("textbox", &self.textbox.content());
         self.report_btn_actions(t);
         t.field("choice_page", &self.choice_page);
         t.close();

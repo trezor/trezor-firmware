@@ -93,13 +93,13 @@ where
 
 impl<F, const M: usize> ComponentMsgObj for Flow<F, M>
 where
-    F: Fn(u8) -> Page<M>,
+    F: Fn(usize) -> Page<M>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             FlowMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             FlowMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            FlowMsg::ConfirmedIndex(index) => Ok(index.into()),
+            FlowMsg::ConfirmedIndex(index) => index.try_into(),
         }
     }
 }
@@ -125,7 +125,7 @@ impl<const N: usize> ComponentMsgObj for SimpleChoice<N> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             SimpleChoiceMsg::Result(choice) => choice.as_str().try_into(),
-            SimpleChoiceMsg::Index(index) => Ok(index.into()),
+            SimpleChoiceMsg::Index(index) => index.try_into(),
         }
     }
 }
@@ -629,7 +629,7 @@ fn tutorial_screen(
 
 extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
-        const PAGE_COUNT: u8 = 7;
+        const PAGE_COUNT: usize = 7;
 
         let get_page = |page_index| {
             // Lazy-loaded list of screens to show, with custom content,
@@ -806,8 +806,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
                 .text_bold(account)
         };
 
-        let pages = FlowPages::new(get_page, page_count as u8);
-
+        let pages = FlowPages::new(get_page, page_count);
         // Returning the page index in case of confirmation.
         let obj = LayoutObj::new(
             Flow::new(pages)

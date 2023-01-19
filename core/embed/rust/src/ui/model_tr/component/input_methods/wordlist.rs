@@ -25,10 +25,10 @@ const MAX_LETTERS_LENGTH: usize = 26;
 const OFFER_WORDS_THRESHOLD: usize = 10;
 
 /// Where will be the DELETE option - at the first position
-const DELETE_INDEX: u8 = 0;
+const DELETE_INDEX: usize = 0;
 /// Which index will be used at the beginning.
 /// (Accounts for DELETE to be at index 0)
-const INITIAL_PAGE_COUNTER: u8 = DELETE_INDEX + 1;
+const INITIAL_PAGE_COUNTER: usize = DELETE_INDEX + 1;
 
 const PROMPT: &str = "_";
 
@@ -57,15 +57,15 @@ impl ChoiceFactoryWordlist {
 impl ChoiceFactory for ChoiceFactoryWordlist {
     type Item = ChoiceItem;
 
-    fn count(&self) -> u8 {
+    fn count(&self) -> usize {
         // Accounting for the DELETE option
         match self {
-            Self::Letters(letter_choices) => letter_choices.len() as u8 + 1,
-            Self::Words(word_choices) => word_choices.len() as u8 + 1,
+            Self::Letters(letter_choices) => letter_choices.len() + 1,
+            Self::Words(word_choices) => word_choices.len() + 1,
         }
     }
 
-    fn get(&self, choice_index: u8) -> ChoiceItem {
+    fn get(&self, choice_index: usize) -> ChoiceItem {
         // Letters have a carousel, words do not
         // Putting DELETE as the first option in both cases
         // (is a requirement for WORDS, doing it for LETTERS as well to unite it)
@@ -281,7 +281,7 @@ impl crate::trace::Trace for WordlistEntry {
 
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Bip39Entry");
-        t.kw_pair("textbox", self.textbox.content());
+        t.kw_pair("textbox", &self.textbox.content());
 
         self.report_btn_actions(t);
 

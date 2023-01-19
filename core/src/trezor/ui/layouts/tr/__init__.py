@@ -30,125 +30,23 @@ if __debug__:
         Used only in debug mode.
         """
 
-        # How will some information be identified in the content
-        TITLE_TAG = " **TITLE** "
-        CONTENT_TAG = " **CONTENT** "
-        BTN_TAG = " **BTN** "
-        EMPTY_BTN = "---"
-        NEXT_BTN = "Next"
-        PREV_BTN = "Prev"
+        # TODO: used only because of `page_count`
+        # We could do it some other way
+        # TT does this:
+        # def page_count(self) -> int:
+        #     return self.layout.page_count()
 
         def __init__(self, raw_content: list[str]) -> None:
             self.raw_content = raw_content
             self.str_content = " ".join(raw_content).replace("  ", " ")
-            print("str_content", self.str_content)
-            print(60 * "-")
-            print("active_page:", self.active_page())
-            print("page_count:", self.page_count())
-            print("flow_page:", self.flow_page())
-            print("flow_page_count:", self.flow_page_count())
-            print("can_go_next:", self.can_go_next())
-            print("get_next_button:", self.get_next_button())
-            print(30 * "/")
-            print(self.visible_screen())
-
-        def active_page(self) -> int:
-            """Current index of the active page. Should always be there."""
-            return self.kw_pair_int("active_page") or 0
 
         def page_count(self) -> int:
             """Overall number of pages in this screen. Should always be there."""
-            return self.kw_pair_int("page_count") or 1
-
-        def in_flow(self) -> bool:
-            """Whether we are in flow."""
-            return self.flow_page() is not None
-
-        def flow_page(self) -> int | None:
-            """When in flow, on which page we are. Missing when not in flow."""
-            return self.kw_pair_int("flow_page")
-
-        def flow_page_count(self) -> int | None:
-            """When in flow, how many unique pages it has. Missing when not in flow."""
-            return self.kw_pair_int("flow_page_count")
-
-        def can_go_next(self) -> bool:
-            """Checking if there is a next page."""
-            return self.get_next_button() is not None
-
-        def get_next_button(self) -> str | None:
-            """Position of the next button, if any."""
-            return self._get_btn_by_action(self.NEXT_BTN)
-
-        def get_prev_button(self) -> str | None:
-            """Position of the previous button, if any."""
-            return self._get_btn_by_action(self.PREV_BTN)
-
-        def _get_btn_by_action(self, btn_action: str) -> str | None:
-            """Position of button described by some action. None if not found."""
-            btn_names = ("left", "middle", "right")
-            for index, action in enumerate(self.button_actions()):
-                if action == btn_action:
-                    return btn_names[index]
-
-            return None
-
-        def visible_screen(self) -> str:
-            """Getting all the visible screen content - header, content, buttons."""
-            title_separator = f"\n{20*'-'}\n"
-            btn_separator = f"\n{20*'*'}\n"
-
-            visible = ""
-            if self.title():
-                visible += self.title()
-                visible += title_separator
-            visible += self.content()
-            visible += btn_separator
-            visible += ", ".join(self.buttons())
-
-            return visible
-
-        def title(self) -> str:
-            """Getting text that is displayed as a title."""
-            # there could be multiple of those - title and subtitle for example
-            title_strings = self._get_strings_inside_tag(
-                self.str_content, self.TITLE_TAG
+            return (
+                self.kw_pair_int("scrollbar_page_count")
+                or self.kw_pair_int("page_count")
+                or 1
             )
-            return "\n".join(title_strings)
-
-        def content(self) -> str:
-            """Getting text that is displayed in the main part of the screen."""
-            content_strings = self._get_strings_inside_tag(
-                self.str_content, self.CONTENT_TAG
-            )
-            # there are some unwanted spaces
-            strings = [
-                s.replace(" \n ", "\n").replace("\n ", "\n").lstrip()
-                for s in content_strings
-            ]
-            return "\n".join(strings)
-
-        def buttons(self) -> tuple[str, str, str]:
-            """Getting content and actions for all three buttons."""
-            contents = self.buttons_content()
-            actions = self.button_actions()
-            return tuple(f"{contents[i]} [{actions[i]}]" for i in range(3))
-
-        def buttons_content(self) -> tuple[str, str, str]:
-            """Getting visual details for all three buttons. They should always be there."""
-            if self.BTN_TAG not in self.str_content:
-                return ("None", "None", "None")
-            btns = self._get_strings_inside_tag(self.str_content, self.BTN_TAG)
-            assert len(btns) == 3
-            return btns[0], btns[1], btns[2]
-
-        def button_actions(self) -> tuple[str, str, str]:
-            """Getting actions for all three buttons. They should always be there."""
-            if "_action" not in self.str_content:
-                return ("None", "None", "None")
-            action_ids = ("left_action", "middle_action", "right_action")
-            assert len(action_ids) == 3
-            return tuple(self.kw_pair_compulsory(action) for action in action_ids)
 
         def kw_pair_int(self, key: str) -> int | None:
             """Getting the value of a key-value pair as an integer. None if missing."""
@@ -156,12 +54,6 @@ if __debug__:
             if val is None:
                 return None
             return int(val)
-
-        def kw_pair_compulsory(self, key: str) -> str:
-            """Getting value of a key that cannot be missing."""
-            val = self.kw_pair(key)
-            assert val is not None
-            return val
 
         def kw_pair(self, key: str) -> str | None:
             """Getting the value of a key-value pair. None if missing."""
@@ -173,16 +65,6 @@ if __debug__:
                         return self.raw_content[key_index + 2]
 
             return None
-
-        @staticmethod
-        def _get_strings_inside_tag(string: str, tag: str) -> list[str]:
-            """Getting all strings that are inside two same tags."""
-            parts = string.split(tag)
-            if len(parts) == 1:
-                return []
-            else:
-                # returning all odd indexes in the list
-                return parts[1::2]
 
 
 class RustLayout(ui.Layout):
@@ -227,12 +109,6 @@ class RustLayout(ui.Layout):
     if __debug__:
         from trezor.enums import DebugPhysicalButton
 
-        BTN_MAP = {
-            "left": DebugPhysicalButton.LEFT_BTN,
-            "middle": DebugPhysicalButton.MIDDLE_BTN,
-            "right": DebugPhysicalButton.RIGHT_BTN,
-        }
-
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:  # type: ignore [obscured-by-same-name]
             from apps.debug import confirm_signal, input_signal
 
@@ -248,7 +124,8 @@ class RustLayout(ui.Layout):
         def read_content(self) -> list[str]:
             """Gets the visible content of the screen."""
             self._place_layout()
-            return self._content_obj().visible_screen().split("\n")
+            raw = self._read_content_raw()
+            return " ".join(raw).split("\n")
 
         def _place_layout(self) -> None:
             """It is necessary to place the layout to get data about its screen content."""
@@ -315,18 +192,16 @@ class RustLayout(ui.Layout):
                 SWIPE_UP,
                 SWIPE_DOWN,
             )
-
-            content_obj = self._content_obj()
+            from trezor.enums import DebugPhysicalButton
 
             if direction == SWIPE_UP:
-                btn_to_press = content_obj.get_next_button()
+                btn_to_press = DebugPhysicalButton.RIGHT_BTN
             elif direction == SWIPE_DOWN:
-                btn_to_press = content_obj.get_prev_button()
+                btn_to_press = DebugPhysicalButton.LEFT_BTN
             else:
                 raise Exception(f"Unsupported direction: {direction}")
 
-            assert btn_to_press is not None
-            self._press_button(self.BTN_MAP[btn_to_press])
+            self._press_button(btn_to_press)
 
         async def handle_swipe(self) -> None:
             """Enables pagination through the current page/flow page.
@@ -334,17 +209,10 @@ class RustLayout(ui.Layout):
             Waits for `swipe_signal` and carries it out.
             """
             from apps.debug import swipe_signal
-            from trezor.ui import SWIPE_ALL_THE_WAY_UP, SWIPE_UP
 
             while True:
                 direction = await swipe_signal()
-
-                if direction == SWIPE_ALL_THE_WAY_UP:
-                    # Going as far as possible
-                    while self._content_obj().can_go_next():
-                        self._swipe(SWIPE_UP)
-                else:
-                    self._swipe(direction)
+                self._swipe(direction)
 
         async def handle_button_click(self) -> None:
             """Enables clicking arbitrary of the three buttons.
@@ -359,16 +227,8 @@ class RustLayout(ui.Layout):
 
         def page_count(self) -> int:
             """How many paginated pages current screen has."""
-            # TODO: leave it debug-only or use always?
             self._place_layout()
             return self._content_obj().page_count()
-
-        def in_unknown_flow(self) -> bool:
-            """Whether we are in a longer flow where we cannot (easily)
-            beforehand say how much pages it will have.
-            """
-            self._place_layout()
-            return self._content_obj().in_flow()
 
     else:
 

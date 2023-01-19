@@ -14,7 +14,7 @@ pub trait Tracer {
     fn title(&mut self, title: &str);
     fn button(&mut self, button: &str);
     fn content_flag(&mut self);
-    fn kw_pair(&mut self, key: &str, value: &str);
+    fn kw_pair(&mut self, key: &str, value: &dyn Trace);
     fn close(&mut self);
 }
 
@@ -143,10 +143,10 @@ mod tests {
         }
 
         /// Key-value pair for easy parsing
-        fn kw_pair(&mut self, key: &str, value: &str) {
+        fn kw_pair(&mut self, key: &str, value: &dyn Trace) {
             self.string(key);
             self.string("::");
-            self.string(value);
+            value.trace(self);
             self.string(","); // mostly for human readability
         }
 

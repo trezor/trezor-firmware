@@ -15,7 +15,7 @@ use super::{
 /// To be returned directly from Flow.
 pub enum FlowMsg {
     Confirmed,
-    ConfirmedIndex(u8),
+    ConfirmedIndex(usize),
     Cancelled,
 }
 
@@ -31,13 +31,13 @@ pub struct Flow<F, const M: usize> {
     title_area: Rect,
     pad: Pad,
     buttons: Child<ButtonController>,
-    page_counter: u8,
+    page_counter: usize,
     return_confirmed_index: bool,
 }
 
 impl<F, const M: usize> Flow<F, M>
 where
-    F: Fn(u8) -> Page<M>,
+    F: Fn(usize) -> Page<M>,
 {
     pub fn new(pages: FlowPages<F, M>) -> Self {
         let current_page = pages.get(0);
@@ -123,16 +123,16 @@ where
     /// Negative index means counting from the end.
     fn go_to_page_absolute(&mut self, index: i16, ctx: &mut EventCtx) {
         if index < 0 {
-            self.page_counter = (self.pages.count() as i16 + index) as u8;
+            self.page_counter = (self.pages.count() as i16 + index) as usize;
         } else {
-            self.page_counter = index as u8;
+            self.page_counter = index as usize;
         }
         self.update(ctx, true);
     }
 
     /// Jumping to another page relative to the current one.
     fn go_to_page_relative(&mut self, jump: i16, ctx: &mut EventCtx) {
-        self.page_counter = (self.page_counter as i16 + jump) as u8;
+        self.page_counter = (self.page_counter as i16 + jump) as usize;
         self.update(ctx, true);
     }
 
@@ -176,7 +176,7 @@ where
 
 impl<F, const M: usize> Component for Flow<F, M>
 where
-    F: Fn(u8) -> Page<M>,
+    F: Fn(usize) -> Page<M>,
 {
     type Msg = FlowMsg;
 
@@ -190,14 +190,15 @@ where
         };
         self.content_area = content_area;
 
-        // Placing a scrollbar in case the title is there
-        if self.title.is_some() {
-            // Finding out the total amount of pages in this flow
-            let complete_page_count = self.pages.scrollbar_page_count(content_area);
-            self.scrollbar
-                .inner_mut()
-                .set_page_count(complete_page_count);
+        // Finding out the total amount of pages in this flow
+        let complete_page_count = self.pages.scrollbar_page_count(content_area);
+        self.scrollbar
+            .inner_mut()
+            .set_page_count(complete_page_count);
 
+        // Placing a title and scrollbar in case the title is there
+        // (scrollbar will be active - counting pages - even when not placed and painted)
+        if self.title.is_some() {
             let (title_area, scrollbar_area) =
                 title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
 
@@ -288,7 +289,7 @@ use heapless::String;
 #[cfg(feature = "ui_debug")]
 impl<F, const M: usize> crate::trace::Trace for Flow<F, M>
 where
-    F: Fn(u8) -> Page<M>,
+    F: Fn(usize) -> Page<M>,
 {
     /// Accounting for the possibility that button is connected with the
     /// currently paginated flow_page (only Prev or Next in that case).
@@ -309,15 +310,15 @@ where
 
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Flow");
-        t.kw_pair("flow_page", inttostr!(self.page_counter));
-        t.kw_pair("flow_page_count", inttostr!(self.pages.count()));
+        t.kw_pair("flow_page", &self.page_counter);
+        t.kw_pair("flow_page_count", &self.pages.count());
 
         self.report_btn_actions(t);
 
         if self.title.is_some() {
             t.field("title", &self.title);
         }
-        t.field("content_area", &self.content_area);
+        t.field("scrollbar", &self.scrollbar);
         t.field("buttons", &self.buttons);
         t.field("flow_page", &self.current_page);
         t.close()
