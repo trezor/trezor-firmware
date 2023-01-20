@@ -41,11 +41,11 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
 
     # make sure user knows they're setting up a new wallet
     if backup_type == BAK_T_SLIP39_BASIC:
-        prompt = "Create a new wallet\nwith Shamir Backup?"
+        prompt = "Create a new wallet with Shamir Backup?"
     elif backup_type == BAK_T_SLIP39_ADVANCED:
-        prompt = "Create a new wallet\nwith Super Shamir?"
+        prompt = "Create a new wallet with Super Shamir?"
     else:
-        prompt = "Do you want to create\na new wallet?"
+        prompt = "Do you want to create a new wallet?"
     await confirm_reset_device(ctx, prompt)
 
     # Rendering empty loader so users do not feel a freezing screen
