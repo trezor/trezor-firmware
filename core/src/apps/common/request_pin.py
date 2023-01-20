@@ -43,7 +43,7 @@ async def _pin_mismatch() -> None:
 
     await show_popup(
         "PIN mismatch",
-        "The PINs you entered\ndo not match.\n\nPlease try again.",
+        "The PINs you entered do not match.\n\nPlease try again.",
     )
 
 
@@ -138,7 +138,7 @@ async def error_pin_matches_wipe_code(ctx: Context) -> NoReturn:
     await show_error_and_raise(
         ctx,
         "warning_invalid_new_pin",
-        "The new PIN must be different from your\nwipe code.",
+        "The new PIN must be different from your wipe code.",
         "Invalid PIN",  # header
         exc=wire.PinInvalid,
     )

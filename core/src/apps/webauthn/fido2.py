@@ -667,14 +667,14 @@ class U2fConfirmRegister(U2fState):
             if self.cid == _last_good_auth_check_cid:
                 await show_popup(
                     "U2F",
-                    "This device is already\nregistered with this\napplication.",
+                    "This device is already registered with this application.",
                     "Already registered.",
                     timeout_ms=_POPUP_TIMEOUT_MS,
                 )
             else:
                 await show_popup(
                     "U2F",
-                    "This device is not\nregistered with this\napplication.",
+                    "This device is not registered with this application.",
                     "Not registered.",
                     timeout_ms=_POPUP_TIMEOUT_MS,
                 )
@@ -837,7 +837,7 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
 
         await show_popup(
             "FIDO2 Register",
-            "This device is already\nregistered with {}.",
+            "This device is already registered with {}.",
             "Already registered.",
             self._cred.rp_id,  # description_param
             _POPUP_TIMEOUT_MS,
@@ -916,7 +916,7 @@ class Fido2ConfirmNoPin(State):
 
         await show_popup(
             "FIDO2 Verify User",
-            "Please enable PIN\nprotection.",
+            "Please enable PIN protection.",
             "Unable to verify user.",
             timeout_ms=_POPUP_TIMEOUT_MS,
         )
@@ -938,7 +938,7 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
 
         await show_popup(
             "FIDO2 Authenticate",
-            "This device is not\nregistered with\n{}.",
+            "This device is not registered with\n{}.",
             "Not registered.",
             self._creds[0].app_name(),  # description_param
             _POPUP_TIMEOUT_MS,

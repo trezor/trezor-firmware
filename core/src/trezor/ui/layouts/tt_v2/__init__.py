@@ -265,7 +265,7 @@ async def confirm_reset_device(
             RustLayout(
                 trezorui2.confirm_reset_device(
                     title=title.upper(),
-                    prompt=prompt.replace("\n", " "),
+                    prompt=prompt,
                 )
             ),
             "recover_device" if recovery else "setup_device",
@@ -464,7 +464,7 @@ async def show_error_and_raise(
         ctx,
         RustLayout(
             trezorui2.show_error(
-                title=content.replace("\n", " "),
+                title=content,
                 description=subheader or "",
                 button=button.upper(),
                 allow_cancel=False,
@@ -489,7 +489,7 @@ async def show_warning(
             ctx,
             RustLayout(
                 trezorui2.show_warning(
-                    title=content.replace("\n", " "),
+                    title=content,
                     description=subheader or "",
                     button=button.upper(),
                     allow_cancel=False,
@@ -513,7 +513,7 @@ async def show_success(
             ctx,
             RustLayout(
                 trezorui2.show_success(
-                    title=content.replace("\n", " "),
+                    title=content,
                     description=subheader or "",
                     button=button.upper(),
                     allow_cancel=False,

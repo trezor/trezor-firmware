@@ -261,15 +261,15 @@ async def confirm_nondefault_locktime(
 
     if lock_time_disabled:
         title = "Warning"
-        text = "Locktime is set but will\nhave no effect.\n"
+        text = "Locktime is set but will have no effect."
         param: str | None = None
     elif lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
         title = "Confirm locktime"
-        text = "Locktime for this\ntransaction is set to\nblockheight:\n{}"
+        text = "Locktime for this transaction is set to blockheight:\n{}"
         param = str(lock_time)
     else:
         title = "Confirm locktime"
-        text = "Locktime for this\ntransaction is set to:\n{}"
+        text = "Locktime for this transaction is set to:\n{}"
         param = format_timestamp(lock_time)
 
     await confirm_metadata(

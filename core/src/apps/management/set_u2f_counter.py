@@ -21,7 +21,7 @@ async def set_u2f_counter(ctx: Context, msg: SetU2FCounter) -> Success:
         ctx,
         "set_u2f_counter",
         "Set U2F counter",
-        description="Do you really want to\nset the U2F counter\nto {}?",
+        description="Do you really want to set the U2F counter to {}?",
         description_param=str(msg.u2f_counter),
         br_code=ButtonRequestType.ProtectCall,
     )

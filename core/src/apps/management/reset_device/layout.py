@@ -127,23 +127,23 @@ async def _show_confirmation_success(
     group_index: int | None = None,
 ) -> None:
     if share_index is None or num_of_shares is None:  # it is a BIP39 backup
-        subheader = "You have finished\nverifying your\nrecovery seed."
+        subheader = "You have finished verifying your recovery seed."
         text = ""
 
     elif share_index == num_of_shares - 1:
         if group_index is None:
-            subheader = "You have finished\nverifying your\nrecovery shares."
+            subheader = "You have finished verifying your recovery shares."
         else:
-            subheader = f"You have finished\nverifying your\nrecovery shares\nfor group {group_index + 1}."
+            subheader = f"You have finished verifying your recovery shares for group {group_index + 1}."
         text = ""
 
     else:
         if group_index is None:
-            subheader = f"Recovery share #{share_index + 1}\nchecked successfully."
+            subheader = f"Recovery share #{share_index + 1} checked successfully."
             text = f"Continue with share #{share_index + 2}."
         else:
-            subheader = f"Group {group_index + 1} - Share {share_index + 1}\nchecked successfully."
-            text = "Continue with the next\nshare."
+            subheader = f"Group {group_index + 1} - Share {share_index + 1} checked successfully."
+            text = "Continue with the next share."
 
     return await show_success(ctx, "success_recovery", text, subheader)
 
@@ -168,7 +168,7 @@ async def show_backup_warning(ctx: GenericContext, slip39: bool = False) -> None
 
 
 async def show_backup_success(ctx: GenericContext) -> None:
-    text = "Use your backup\nwhen you need to\nrecover your wallet."
+    text = "Use your backup when you need to recover your wallet."
     await show_success(ctx, "success_backup", text, "Your backup is done.")
 
 

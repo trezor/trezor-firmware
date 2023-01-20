@@ -58,7 +58,7 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
     # _continue_dialog
     if not dry_run:
         await confirm_reset_device(
-            ctx, "Do you really want to\nrecover a wallet?", recovery=True
+            ctx, "Do you really want to recover a wallet?", recovery=True
         )
     else:
         await confirm_action(
