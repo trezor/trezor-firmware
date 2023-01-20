@@ -2455,18 +2455,19 @@ static bool coinjoin_confirm_tx(void) {
   // Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
   const uint64_t MAX_OUTPUT_WEIGHT = 4 * (8 + 1 + 1 + 1 + 32);
 
-  // Public keys for CoinJoin request signatures.
+  // The public key used for verifying coinjoin requests in production on
+  // mainnet.
   const uint8_t COINJOIN_REQ_PUBKEY[] = {
       0x02, 0x57, 0x03, 0xbb, 0xe1, 0x5b, 0xb0, 0x8e, 0x98, 0x21, 0xfe,
       0x64, 0xaf, 0xf6, 0xb2, 0xef, 0x1a, 0x31, 0x60, 0xe3, 0x79, 0x9d,
       0xd8, 0xf0, 0xce, 0xbf, 0x2c, 0x79, 0xe8, 0x67, 0xdd, 0x12, 0x5d};
-#if DEBUG_LINK
-  // secp256k1 public key of m/0h for "all all ... all" seed.
-  const uint8_t COINJOIN_REQ_PUBKEY_DEBUG[] = {
+
+  // The public key used for verifying coinjoin requests on testnet and in debug
+  // mode. secp256k1 public key of m/0h for "all all ... all" seed.
+  const uint8_t COINJOIN_REQ_PUBKEY_TEST[] = {
       0x03, 0x0f, 0xdf, 0x5e, 0x28, 0x9b, 0x5a, 0xef, 0x53, 0x62, 0x90,
       0x95, 0x3a, 0xe8, 0x1c, 0xe6, 0x0e, 0x84, 0x1f, 0xf9, 0x56, 0xf3,
       0x66, 0xac, 0x12, 0x3f, 0xa6, 0x9d, 0xb3, 0xc7, 0x9f, 0x21, 0xb0};
-#endif
 
   // Finish hashing the CoinJoin request.
   hasher_Update(&coinjoin_request_hasher, info.hash_prevouts,
@@ -2477,16 +2478,14 @@ static bool coinjoin_confirm_tx(void) {
   // Verify the CoinJoin request signature.
   uint8_t coinjoin_request_digest[SHA256_DIGEST_LENGTH] = {0};
   hasher_Final(&coinjoin_request_hasher, coinjoin_request_digest);
-#if DEBUG_LINK
-  if (ecdsa_verify_digest(&secp256k1, COINJOIN_REQ_PUBKEY_DEBUG,
+  if ((DEBUG_LINK || coin->coin_type == SLIP44_TESTNET) &&
+      ecdsa_verify_digest(&secp256k1, COINJOIN_REQ_PUBKEY_TEST,
                           coinjoin_request.signature.bytes,
                           coinjoin_request_digest) == 0) {
     // success
-  } else
-#endif
-      if (ecdsa_verify_digest(&secp256k1, COINJOIN_REQ_PUBKEY,
-                              coinjoin_request.signature.bytes,
-                              coinjoin_request_digest) == 0) {
+  } else if (ecdsa_verify_digest(&secp256k1, COINJOIN_REQ_PUBKEY,
+                                 coinjoin_request.signature.bytes,
+                                 coinjoin_request_digest) == 0) {
     // success
   } else {
     fsm_sendFailure(FailureType_Failure_DataError,
