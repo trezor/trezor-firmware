@@ -92,7 +92,7 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Frame");
-        t.title(&self.title.inner().text().as_ref());
+        t.title(self.title.inner().text().as_ref());
         t.field("content", &self.content);
         t.close();
     }
@@ -186,7 +186,7 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("NotificationFrame");
-        t.title(&self.title.as_ref());
+        t.title(self.title.as_ref());
         t.field("content", &self.content);
         t.close();
     }

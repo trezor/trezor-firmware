@@ -85,6 +85,7 @@ def _process_tested(fixture_test_path: Path, test_name: str) -> None:
 
     expected_hash = FILE_HASHES.get(test_name)
     if expected_hash is None:
+        _write_diff_to_file(test_name, actual_hash)
         pytest.fail(f"Hash of {test_name} not found in fixtures.json")
 
     if actual_hash != expected_hash:
@@ -93,15 +94,7 @@ def _process_tested(fixture_test_path: Path, test_name: str) -> None:
             fixture_test_path, test_name, actual_hash, expected_hash
         )
 
-        # Writing the diff to a file, so that we can process it later
-        # Appending a new JSON object, not having to regenerate the
-        # whole file (which could cause issues with multiple processes/threads)
-        with open(FIXTURES_DIFF, "a") as f:
-            diff = {
-                "test_name": test_name,
-                "actual_hash": actual_hash,
-            }
-            f.write(json.dumps(diff) + "\n")
+        _write_diff_to_file(test_name, actual_hash)
 
         pytest.fail(
             f"Hash of {test_name} differs.\n"
@@ -111,6 +104,18 @@ def _process_tested(fixture_test_path: Path, test_name: str) -> None:
         )
     else:
         testreport.passed(fixture_test_path, test_name, actual_hash)
+
+
+def _write_diff_to_file(test_name: str, actual_hash: str) -> None:
+    """Writing the diff to a file, so that we can process it later"""
+    # Appending a new JSON object, not having to regenerate the
+    # whole file (which could cause issues with multiple processes/threads)
+    with open(FIXTURES_DIFF, "a") as f:
+        diff = {
+            "test_name": test_name,
+            "actual_hash": actual_hash,
+        }
+        f.write(json.dumps(diff) + "\n")
 
 
 def get_last_call_test_result(request: pytest.FixtureRequest) -> Optional[bool]:

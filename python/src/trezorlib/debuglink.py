@@ -182,7 +182,6 @@ class LayoutButtons(LayoutBase):
 
         Only for TT.
         """
-        print("self.str_content", self.str_content)
         return re.findall(r"< Button +text : +(.*?) +>", self.str_content)
 
 
@@ -210,7 +209,6 @@ class LayoutContent(LayoutBase):
             ********************
             Icon:cancel [Cancel], --- [None], CONFIRM [Confirm]
         """
-        print(self.str_content)
         title_separator = f"\n{20*'-'}\n"
         btn_separator = f"\n{20*'*'}\n"
 
