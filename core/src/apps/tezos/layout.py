@@ -90,6 +90,7 @@ async def require_confirm_register_delegate(
             ("Fee:", format_tezos_amount(fee)),
             ("Address:", address),
         ),
+        hold=True,
         br_code=BR_SIGN_TX,
     )
 
@@ -111,6 +112,7 @@ async def require_confirm_ballot(ctx: Context, proposal: str, ballot: str) -> No
             ("Ballot:", ballot),
             ("Proposal:", proposal),
         ),
+        hold=True,
         br_code=BR_SIGN_TX,
     )
 
@@ -121,6 +123,7 @@ async def require_confirm_proposals(ctx: Context, proposals: list[str]) -> None:
         "confirm_proposals",
         "Submit proposals" if len(proposals) > 1 else "Submit proposal",
         [("Proposal " + str(i), proposal) for i, proposal in enumerate(proposals, 1)],
+        hold=True,
         br_code=BR_SIGN_TX,
     )
 

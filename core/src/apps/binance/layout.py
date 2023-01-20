@@ -35,20 +35,23 @@ async def require_confirm_transfer(ctx: Context, msg: BinanceTransferMsg) -> Non
     for txoutput in msg.outputs:
         make_input_output_pages(txoutput, "Confirm output")
 
-    await confirm_transfer(ctx, items)
+    await _confirm_transfer(ctx, items)
 
 
-async def confirm_transfer(
+async def _confirm_transfer(
     ctx: Context, inputs_outputs: Sequence[tuple[str, str, str]]
 ) -> None:
     from trezor.ui.layouts import confirm_output
 
-    for title, amount, address in inputs_outputs:
+    for index, (title, amount, address) in enumerate(inputs_outputs):
+        # Having hold=True on the last item
+        hold = index == len(inputs_outputs) - 1
         await confirm_output(
             ctx,
             address,
             amount,
             title,
+            hold=hold,
         )
 
 
