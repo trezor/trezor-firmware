@@ -530,6 +530,7 @@ async def confirm_output(
     address: str,
     amount: str,
     title: str = "SENDING",
+    hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
     title = title.upper()
@@ -546,6 +547,7 @@ async def confirm_output(
         verb="NEXT",
     )
 
+    # Second screen could be HoldToConfirm if requested
     await confirm_value(
         ctx,
         title,
@@ -553,7 +555,8 @@ async def confirm_output(
         "Amount:",
         "confirm_output",
         br_code,
-        verb="NEXT",
+        verb=None if hold else "NEXT",
+        hold=hold,
     )
 
 

@@ -35,4 +35,4 @@ async def require_confirm_destination_tag(ctx: Context, tag: int) -> None:
 async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
     from trezor.ui.layouts import confirm_output
 
-    await confirm_output(ctx, to, format_amount(value, DECIMALS) + " XRP")
+    await confirm_output(ctx, to, format_amount(value, DECIMALS) + " XRP", hold=True)
