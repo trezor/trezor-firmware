@@ -35,8 +35,13 @@ def select_number_of_words(
     layout = debug.read_layout()
 
     # select number of words
-    assert "select the number of words" in layout.text_content()
+    if legacy_ui:
+        assert "Select number of words" in layout.str_content
+    else:
+        assert "select the number of words" in layout.text_content()
+
     layout = debug.click(buttons.OK, wait=True)
+
     if legacy_ui:
         assert layout.str_content == "WordSelector"
     else:
@@ -51,7 +56,11 @@ def select_number_of_words(
     )  # raises if num of words is invalid
     coords = buttons.grid34(index % 3, index // 3)
     layout = debug.click(coords, wait=True)
-    assert "Enter any share" in layout.text_content()
+
+    if legacy_ui:
+        assert "Enter any share" in layout.str_content
+    else:
+        assert "Enter any share" in layout.text_content()
 
 
 def enter_share(
