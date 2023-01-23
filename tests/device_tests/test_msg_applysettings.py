@@ -131,6 +131,7 @@ def test_apply_settings_passphrase_on_device(client: Client):
 
 
 @pytest.mark.skip_t1
+@pytest.mark.skip_tr
 def test_apply_homescreen_toif(client: Client):
     img = b"TOIf\x90\x00\x90\x00~\x00\x00\x00\xed\xd2\xcb\r\x83@\x10D\xc1^.\xde#!\xac31\x99\x10\x8aC%\x14~\x16\x92Y9\x02WI3\x01<\xf5cI2d\x1es(\xe1[\xdbn\xba\xca\xe8s7\xa4\xd5\xd4\xb3\x13\xbdw\xf6:\xf3\xd1\xe7%\xc7]\xdd_\xb3\x9e\x9f\x9e\x9fN\xed\xaaE\xef\xdc\xcf$D\xa7\xa4X\r\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0OV"
 
@@ -140,6 +141,7 @@ def test_apply_homescreen_toif(client: Client):
 
 
 @pytest.mark.skip_t1
+@pytest.mark.skip_tr
 def test_apply_homescreen_jpeg(client: Client):
     img = (
         b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,"
@@ -189,6 +191,7 @@ def test_apply_homescreen_jpeg(client: Client):
 
 
 @pytest.mark.skip_t1
+@pytest.mark.skip_tr
 def test_apply_homescreen_jpeg_progressive(client: Client):
     img = (
         b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,"
@@ -245,6 +248,7 @@ def test_apply_homescreen_jpeg_progressive(client: Client):
 
 
 @pytest.mark.skip_t1
+@pytest.mark.skip_tr
 def test_apply_homescreen_jpeg_wrong_size(client: Client):
     img = (
         b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,"

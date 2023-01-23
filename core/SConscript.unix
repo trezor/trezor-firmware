@@ -583,7 +583,6 @@ if FROZEN:
         exclude=[
             SOURCE_PY_DIR + 'apps/homescreen/tt.py',
             SOURCE_PY_DIR + 'apps/homescreen/tr.py',
-            SOURCE_PY_DIR + 'apps/homescreen/t1.py',
         ]
     ))
     if TREZOR_MODEL in ('T',):

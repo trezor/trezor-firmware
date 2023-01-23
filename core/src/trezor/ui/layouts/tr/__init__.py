@@ -457,6 +457,20 @@ async def confirm_path_warning(
     )
 
 
+async def confirm_homescreen(
+    ctx: GenericContext,
+    image: bytes,
+) -> None:
+    # TODO: show homescreen preview?
+    await confirm_action(
+        ctx,
+        "set_homescreen",
+        "Set homescreen",
+        description="Do you really want to set new homescreen image?",
+        br_code=ButtonRequestType.ProtectCall,
+    )
+
+
 def _show_xpub(xpub: str, title: str, cancel: str | None) -> ui.Layout:
     return RustLayout(
         trezorui2.confirm_blob(
