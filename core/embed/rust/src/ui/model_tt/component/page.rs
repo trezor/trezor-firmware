@@ -474,7 +474,7 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected = "<SwipePage active_page::0,page_count::1,content:<Paragraphs  **CONTENT** This is the first paragraph\nand it should fit on the\nscreen entirely.\nSecond, bold, paragraph should\nalso fit on the screen whole I\nthink.\n **CONTENT** > buttons:<Empty > >";
+        let expected = "<SwipePage active_page::0,page_count::1,content:<Paragraphs  **CONTENT** This is the first paragraph\nand it should fit on the\nscreen entirely.\nSecond, bold, paragraph\nshould also fit on the\nscreen whole I think.\n **CONTENT** > buttons:<Empty > >";
 
         assert_eq!(trace(&page), expected);
         swipe_up(&mut page);
@@ -497,7 +497,7 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page::0,page_count::2,content:<Paragraphs  **CONTENT** This is somewhat long\nparagraph that goes on\nand on and on and on\nand on and will definitely\nnot fit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n **CONTENT** > buttons:<FixedHeightBar inner:<Button text:NO > > >";
+        let expected1 = "<SwipePage active_page::0,page_count::2,content:<Paragraphs  **CONTENT** This is somewhat long\nparagraph that goes on\nand on and on and on\nand on and will definitely\nnot fit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess.\n **CONTENT** > buttons:<FixedHeightBar inner:<Button text:NO > > >";
         let expected2 = "<SwipePage active_page::1,page_count::2,content:<Paragraphs  **CONTENT** There's just so much\nletters in it.\n **CONTENT** > buttons:<FixedHeightBar inner:<Button text:NO > > >";
 
         assert_eq!(trace(&page), expected1);
