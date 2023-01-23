@@ -629,85 +629,49 @@ fn tutorial_screen(
 
 extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
-        const PAGE_COUNT: usize = 7;
+        const PAGE_COUNT: usize = 4;
 
-        let get_page = |page_index| {
-            // Lazy-loaded list of screens to show, with custom content,
-            // buttons and actions triggered by these buttons.
-            // Cancelling the first screen will point to the last one,
-            // which asks for confirmation whether user wants to
-            // really cancel the tutorial.
-            match page_index {
-                // title, text, btn_layout, btn_actions
-                0 => {
-                    tutorial_screen(
-                        "HELLO".into(),
-                        "Welcome to Trezor.\nPress right to continue.".into(),
-                        ButtonLayout::text_none_arrow("SKIP".into()),
-                        ButtonActions::last_none_next(),
-                    )
-                },
-                1 => {
-                    tutorial_screen(
-                        "".into(),
-                        "Use Trezor by clicking left and right.\n\nContinue right.".into(),
-                        ButtonLayout::arrow_none_arrow(),
-                        ButtonActions::prev_none_next(),
-                    )
-                },
-                2 => {
-                    tutorial_screen(
-                        "HOLD TO CONFIRM".into(),
-                        "Press and hold right to approve important operations.".into(),
-                        ButtonLayout::arrow_none_htc("HOLD TO CONFIRM".into()),
-                        ButtonActions::prev_none_next(),
-                    )
-                },
-                3 => {
-                    tutorial_screen(
-                        "SCREEN SCROLL".into(),
-                        "Press right to scroll down to read all content when text\ndoesn't fit on one screen. Press left to scroll up.".into(),
-                        ButtonLayout::arrow_none_text("CONTINUE".into()),
-                        ButtonActions::prev_none_next(),
-                    )
-                },
-                4 => {
-                    tutorial_screen(
-                        "CONFIRM".into(),
-                        "Press both left and right at the same time to confirm.".into(),
-                        ButtonLayout::none_armed_none("CONFIRM".into()),
-                        ButtonActions::prev_next_none(),
-                    )
-                },
-                // This page is special
-                5 => {
-                    Page::<10>::new(
-                        ButtonLayout::text_none_text("AGAIN".into(), "FINISH".into()),
-                        ButtonActions::beginning_none_confirm(),
-                        Font::MONO,
-                    )
-                        .newline()
-                        .text_mono("Tutorial complete.".into())
-                        .newline()
-                        .newline()
-                        .alignment(Alignment::Center)
-                        .text_bold("You're ready to\nuse Trezor.".into())
-                },
-                6 => {
-                    tutorial_screen(
-                        "SKIP TUTORIAL".into(),
-                        "Are you sure you want to skip the tutorial?".into(),
-                        ButtonLayout::cancel_none_text("SKIP".into()),
-                        ButtonActions::beginning_none_cancel(),
-                    )
-                },
-                _ => unreachable!(),
-            }
+        let alphabet = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+
+        let get_page = |page_index| match page_index {
+            0 => Page::<10>::new(
+                ButtonLayout::text_none_text("CANCEL".into(), "NEXT".into()),
+                ButtonActions::cancel_none_next(),
+                Font::NORMAL,
+            )
+            .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+            .with_title("NORMAL FONT".into())
+            .text_normal(alphabet.into()),
+            1 => Page::<10>::new(
+                ButtonLayout::text_none_text("PREV".into(), "NEXT".into()),
+                ButtonActions::prev_none_next(),
+                Font::MONO,
+            )
+            .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+            .with_title("MONO FONT".into())
+            .text_mono(alphabet.into()),
+            2 => Page::<10>::new(
+                ButtonLayout::text_none_text("PREV".into(), "NEXT".into()),
+                ButtonActions::prev_none_next(),
+                Font::BOLD,
+            )
+            .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+            .with_title("BOLD FONT".into())
+            .text_bold(alphabet.into()),
+            3 => Page::<10>::new(
+                ButtonLayout::text_none_text("PREV".into(), "CONFIRM".into()),
+                ButtonActions::prev_none_confirm(),
+                Font::DEMIBOLD,
+            )
+            .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+            .with_title("DEMIBOLD FONT".into())
+            .text_demibold(alphabet.into()),
+            _ => unreachable!(),
         };
 
         let pages = FlowPages::new(get_page, PAGE_COUNT);
 
-        let obj = LayoutObj::new(Flow::new(pages))?;
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title("NORMAL FONT".into()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

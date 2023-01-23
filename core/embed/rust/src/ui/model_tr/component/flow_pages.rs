@@ -261,6 +261,10 @@ impl<const M: usize> Page<M> {
         self.font(Font::MONO).text(text)
     }
 
+    pub fn text_demibold(self, text: StrBuffer) -> Self {
+        self.font(Font::DEMIBOLD).text(text)
+    }
+
     pub fn text_bold(self, text: StrBuffer) -> Self {
         self.font(Font::BOLD).text(text)
     }
