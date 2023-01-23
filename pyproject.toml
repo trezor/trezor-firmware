@@ -71,6 +71,7 @@ cryptography = "*"
 hypothesis = "*"
 inotify = "*"
 yamllint = "^1.25.0"
+freetype-py = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"

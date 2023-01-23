@@ -29,11 +29,13 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_DEMIBOLD='Font_PixelOperator_Regular_8'
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
+    FONT_MONOGROUP=None
 if TREZOR_MODEL in ('T', ):
     FONT_NORMAL='Font_TTHoves_Regular_18'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_18'
     FONT_BOLD='Font_TTHoves_Bold_16'
     FONT_MONO='Font_RobotoMono_Regular_20'
+    FONT_MONOGROUP='Font_RobotoMono_Regular_20'
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -367,6 +369,7 @@ tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MONOGROUP', FONT_MONOGROUP, CPPDEFINES_MOD, SOURCE_MOD)
 
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX

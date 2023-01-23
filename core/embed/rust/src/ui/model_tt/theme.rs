@@ -382,7 +382,7 @@ pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, GREY_LIGHT, 
 pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::Cut);
-pub const TEXT_MONO_GROUPS: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
+pub const TEXT_MONOGROUP: TextStyle = TextStyle::new(Font::MONOGROUP, FG, BG, GREY_LIGHT, GREY_LIGHT)
     .with_line_breaking(LineBreaking::BreakAtWhitespace)
     .with_page_breaking(PageBreaking::Cut)
     .with_space_adjust(-5);
@@ -394,6 +394,7 @@ pub fn textstyle_number(num: i32) -> &'static TextStyle {
         Some(Font::DEMIBOLD) => &TEXT_DEMIBOLD,
         Some(Font::BOLD) => &TEXT_BOLD,
         Some(Font::MONO) => &TEXT_MONO,
+        Some(Font::MONOGROUP) => &TEXT_MONOGROUP,
         _ => &TEXT_NORMAL,
     }
 }

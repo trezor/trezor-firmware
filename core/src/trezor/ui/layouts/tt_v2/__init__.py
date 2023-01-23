@@ -375,7 +375,7 @@ async def show_address(
     title_qr: str | None = None,
     group_by: int = 0,
 ) -> None:
-    #address = _address_group_by(address, group_by)
+    address = _address_group_by(address, group_by)
     is_multisig = len(xpubs) > 0
     while True:
         result = await interact(

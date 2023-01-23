@@ -1032,6 +1032,7 @@ pub enum Font {
     NORMAL = 1,
     BOLD = 2,
     MONO = 3,
+    MONOGROUP = 4,
     DEMIBOLD = 5,
 }
 

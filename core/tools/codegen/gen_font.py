@@ -52,7 +52,7 @@ def process_bitmap_buffer(buf, bpp):
     return res
 
 
-def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
+def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf", alt_space=None):
     print("Processing ... %s %s %s" % (name, style, size))
     face = freetype.Face("fonts/%s-%s.%s" % (name, style, ext))
     face.set_pixel_sizes(0, size)
@@ -139,6 +139,12 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
                 )
                 nonprintable += " };\n"
 
+            elif i == ord(" ") and alt_space:
+                alt_space = (
+                    "\nconst uint8_t Font_%s_%s_%d_glyph_%d_alt[] = { %d, %d, %d, %d, %d };\n"
+                    % (name, style, size, i, width, rows, advance + alt_space, bearingX, bearingY)
+                )
+
 
             yMin = bearingY - rows
             yMax = yMin + rows
@@ -155,6 +161,18 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
             f.write("    Font_%s_%s_%d_glyph_%d,\n" % (name, style, size, i))
         f.write("};\n")
 
+
+        if alt_space:
+            f.write(alt_space)
+            f.write(
+                "\nconst uint8_t * const Font_%s_%s_%d_alt[%d + 1 - %d] = {\n"
+                % (name, style, size, MAX_GLYPH, MIN_GLYPH)
+            )
+            f.write("    Font_%s_%s_%d_glyph_%d_alt,\n" % (name, style, size, 0x20))
+            for i in range(MIN_GLYPH + 1, MAX_GLYPH + 1):
+                f.write("    Font_%s_%s_%d_glyph_%d,\n" % (name, style, size, i))
+            f.write("};\n")
+
     with open("font_%s.h" % fontname, "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
@@ -168,6 +186,11 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
             "extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n"
             % (name, style, size, MAX_GLYPH, MIN_GLYPH)
         )
+        if alt_space != 0:
+            f.write(
+                "extern const uint8_t* const Font_%s_%s_%d_alt[%d + 1 - %d];\n"
+                % (name, style, size, MAX_GLYPH, MIN_GLYPH)
+            )
         f.write(
             "extern const uint8_t Font_%s_%s_%d_glyph_nonprintable[];\n"
             % (name, style, size)
@@ -180,7 +203,7 @@ process_face("Roboto", "Bold", 20)
 process_face("TTHoves", "Regular", 18, ext="otf")
 process_face("TTHoves", "DemiBold", 18, ext="otf")
 process_face("TTHoves", "Bold", 16, ext="otf")
-process_face("RobotoMono", "Regular", 20)
+process_face("RobotoMono", "Regular", 20, alt_space=-5)
 
 process_face("PixelOperator", "Regular", 8, bpp=1, shave_bearingX=1)
 process_face("PixelOperator", "Bold", 8, bpp=1, shave_bearingX=1)

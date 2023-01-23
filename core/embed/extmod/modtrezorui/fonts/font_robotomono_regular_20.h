@@ -7,4 +7,5 @@
 #define Font_RobotoMono_Regular_20_MAX_HEIGHT 22
 #define Font_RobotoMono_Regular_20_BASELINE 5
 extern const uint8_t* const Font_RobotoMono_Regular_20[126 + 1 - 32];
+extern const uint8_t* const Font_RobotoMono_Regular_20_alt[126 + 1 - 32];
 extern const uint8_t Font_RobotoMono_Regular_20_glyph_nonprintable[];

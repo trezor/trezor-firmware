@@ -383,7 +383,7 @@ fn confirm_blob(
         data: data.try_into()?,
         description_font: &theme::TEXT_NORMAL,
         extra_font: &theme::TEXT_BOLD,
-        data_font: &theme::TEXT_MONO,
+        data_font: &theme::TEXT_MONOGROUP,
     }
     .into_paragraphs();
 
