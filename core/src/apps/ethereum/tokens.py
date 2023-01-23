@@ -46,6 +46,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             18,
         )
         yield (  # address, symbol, decimals
+            b"\x88\x1b\xa0\x5d\xe1\xe7\x8f\x54\x9c\xc6\x3a\x8f\x6c\xab\xb1\xd4\xad\x32\x25\x0d",
+            "00",
+            18,
+        )
+        yield (  # address, symbol, decimals
             b"\xb6\xed\x76\x44\xc6\x94\x16\xd6\x7b\x52\x2e\x20\xbc\x29\x4a\x9a\x9b\x40\x5b\x31",
             "0xBTC",
             8,
@@ -4756,6 +4761,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             18,
         )
         yield (  # address, symbol, decimals
+            b"\x9c\x35\x45\x03\xc3\x84\x81\xa7\xa7\xa5\x16\x29\x14\x29\x63\xf9\x8e\xcc\x12\xd0",
+            "OGV",
+            18,
+        )
+        yield (  # address, symbol, decimals
             b"\x21\xe1\x3c\xb3\xf3\xf2\x6f\x92\xa6\x2a\xc7\xad\xab\x40\x93\xe8\x99\x7d\x1f\xb1",
             "OIKOS",
             2,
@@ -8316,6 +8326,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             3,
         )
         yield (  # address, symbol, decimals
+            b"\x0c\x45\x76\xca\x1c\x36\x58\x68\xe1\x62\x55\x4a\xf8\xe3\x85\xdc\x3e\x7c\x66\xd9",
+            "veOGV",
+            18,
+        )
+        yield (  # address, symbol, decimals
             b"\x8f\x34\x70\xa7\x38\x8c\x05\xee\x4e\x7a\xf3\xd0\x1d\x8c\x72\x2b\x0f\xf5\x23\x74",
             "VERI",
             18,
@@ -8589,6 +8604,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             b"\xf9\xd9\x70\x2d\x03\x14\x07\xf4\x25\xa4\x41\x26\x82\xfd\xc5\x6b\x07\xd0\x52\x62",
             "WOC",
             0,
+        )
+        yield (  # address, symbol, decimals
+            b"\xd2\xaf\x83\x0e\x8c\xbd\xfe\xd6\xcc\x11\xba\xb6\x97\xbb\x25\x49\x6e\xd6\xfa\x62",
+            "WOUSD",
+            18,
         )
         yield (  # address, symbol, decimals
             b"\x62\x08\x72\x45\x08\x71\x25\xd3\xdb\x5b\x9a\x3d\x71\x3d\x78\xe7\xbb\xc3\x1e\x54",
