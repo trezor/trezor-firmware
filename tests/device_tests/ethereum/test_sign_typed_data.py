@@ -110,9 +110,6 @@ def test_ethereum_sign_typed_data_show_more_button(client: Client):
 
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_cancel(client: Client):
-    if client.features.model == "R":
-        pytest.skip("Cancelling is not supported on model R")
-
     with client, pytest.raises(exceptions.Cancelled):
         client.watch_layout()
         IF = InputFlowEIP712Cancel(client)

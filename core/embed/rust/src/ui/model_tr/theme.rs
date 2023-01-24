@@ -4,6 +4,8 @@ use crate::ui::{
     geometry::Offset,
 };
 
+use num_traits::FromPrimitive;
+
 // Color palette.
 pub const FG: Color = Color::white(); // Default foreground (text & icon) color.
 pub const BG: Color = Color::black(); // Default background color.
@@ -17,13 +19,25 @@ pub const FONT_CHOICE_ITEMS: Font = Font::NORMAL;
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, FG, FG);
 pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, FG, FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG);
+/// Mono without ellipsis icon
+pub const TEXT_MONO_RAW: TextStyle = TextStyle::new(Font::MONO, FG, BG, FG, FG);
 /// Mono text has the icon ellipsis
-pub const TEXT_MONO: TextStyle =
-    TextStyle::new(Font::MONO, FG, BG, FG, FG).with_ellipsis_icon(ICON_NEXT_PAGE.0);
+pub const TEXT_MONO: TextStyle = TEXT_MONO_RAW.with_ellipsis_icon(ICON_NEXT_PAGE.0);
 /// Mono data text does not have hyphens
 pub const TEXT_MONO_DATA: TextStyle =
     TEXT_MONO.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 pub const TEXT_HEADER: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG);
+
+/// Convert Python-side numeric id to a `TextStyle`.
+/// Using only BOLD or MONO fonts.
+pub fn textstyle_number_bold_or_mono(num: i32) -> &'static TextStyle {
+    let font = Font::from_i32(-num);
+    match font {
+        Some(Font::BOLD) => &TEXT_BOLD,
+        Some(Font::DEMIBOLD) => &TEXT_BOLD,
+        _ => &TEXT_MONO,
+    }
+}
 
 // Icons with their names for debugging purposes
 pub const ICON_ARM_LEFT: IconAndName =

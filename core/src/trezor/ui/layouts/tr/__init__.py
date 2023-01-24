@@ -18,6 +18,10 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
 
+CONFIRMED = trezorui2.CONFIRMED
+CANCELLED = trezorui2.CANCELLED
+INFO = trezorui2.INFO
+
 BR_TYPE_OTHER = ButtonRequestType.Other  # global_import_cache
 
 
@@ -330,12 +334,12 @@ async def get_bool(
         br_code,
     )
 
-    return result is trezorui2.CONFIRMED
+    return result is CONFIRMED
 
 
 async def raise_if_not_confirmed(a: Awaitable[T], exc: Any = ActionCancelled) -> T:
     result = await a
-    if result is not trezorui2.CONFIRMED:
+    if result is not CONFIRMED:
         raise exc
     return result
 
@@ -714,13 +718,35 @@ async def should_show_more(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     confirm: str | bytes | None = None,
 ) -> bool:
-    return await get_bool(
+    """Return True if the user wants to show more (they click a special button)
+    and False when the user wants to continue without showing details.
+
+    Raises ActionCancelled if the user cancels.
+    """
+    if confirm is None or not isinstance(confirm, str):
+        confirm = "CONFIRM"
+
+    result = await interact(
         ctx,
+        RustLayout(
+            trezorui2.confirm_with_info(
+                title=title.upper(),
+                items=para,
+                button=confirm.upper(),
+                info_button=button_text.upper(),
+            )
+        ),
         br_type,
-        title.upper(),
-        button_text,
-        br_code=br_code,
+        br_code,
     )
+
+    if result is CONFIRMED:
+        return False
+    elif result is INFO:
+        return True
+    else:
+        assert result is CANCELLED
+        raise ActionCancelled
 
 
 async def confirm_blob(
@@ -1111,7 +1137,7 @@ async def request_passphrase_on_device(ctx: GenericContext, max_len: int) -> str
             )
         )
     )
-    if result is trezorui2.CANCELLED:
+    if result is CANCELLED:
         raise ActionCancelled("Passphrase entry cancelled")
 
     assert isinstance(result, str)
@@ -1148,7 +1174,7 @@ async def request_pin_on_device(
     )
 
     result = await ctx.wait(dialog)
-    if result is trezorui2.CANCELLED:
+    if result is CANCELLED:
         raise wire.PinCancelled
     assert isinstance(result, str)
     return result

@@ -17,6 +17,7 @@ mod result_anim;
 mod result_popup;
 mod scrollbar;
 mod share_words;
+mod show_more;
 mod title;
 
 use super::theme;
@@ -50,3 +51,4 @@ pub use result_anim::{ResultAnim, ResultAnimMsg};
 pub use result_popup::{ResultPopup, ResultPopupMsg};
 pub use scrollbar::ScrollBar;
 pub use share_words::ShareWords;
+pub use show_more::{CancelInfoConfirmMsg, ShowMore};

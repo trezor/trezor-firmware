@@ -34,6 +34,13 @@ GeneratorType = Generator[None, messages.ButtonRequest, None]
 B = messages.ButtonRequestType
 
 
+def swipe_if_necessary(debug: DebugLink) -> GeneratorType:
+    br = yield
+    if br.pages is not None:
+        for _ in range(br.pages - 1):
+            debug.swipe_up()
+
+
 class InputFlowBase:
     def __init__(self, client: Client):
         self.client = client
@@ -398,7 +405,7 @@ class InputFlowEIP712ShowMore(InputFlowBase):
         if self.model() == "T":
             self.debug.click(self.SHOW_MORE)
         elif self.model() == "R":
-            self.debug.press_yes()
+            self.debug.press_right()
 
     def input_flow_common(self) -> GeneratorType:
         """Triggers show more wherever possible"""
@@ -421,7 +428,7 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
         # confirm message.from properties
         for _ in range(2):
-            yield
+            yield from swipe_if_necessary(self.debug)
             self.debug.press_yes()
 
         yield  # confirm message.to
@@ -430,7 +437,7 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
         # confirm message.to properties
         for _ in range(2):
-            yield
+            yield from swipe_if_necessary(self.debug)
             self.debug.press_yes()
 
         yield  # confirm message.contents

@@ -166,6 +166,18 @@ def show_info(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_with_info(
+    *,
+    title: str,
+    button: str,  # unused on TR
+    info_button: str,  # unused on TR
+    items: Iterable[Tuple[int, str]],
+) -> object:
+    """Confirm given items but with third button. Always single page
+    without scrolling."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_coinjoin(
     *,
     max_rounds: str,

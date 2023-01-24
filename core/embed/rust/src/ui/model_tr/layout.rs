@@ -19,9 +19,12 @@ use crate::{
         component::{
             base::Component,
             paginated::{PageMsg, Paginate},
-            text::paragraphs::{
-                Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                Paragraphs, VecExt,
+            text::{
+                paragraphs::{
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
+                    Paragraphs, VecExt,
+                },
+                TextStyle,
             },
             ComponentExt, Empty, LineBreaking, Timeout, TimeoutMsg,
         },
@@ -40,10 +43,11 @@ use crate::{
 
 use super::{
     component::{
-        ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow, FlowMsg, FlowPages, Frame,
-        Homescreen, HomescreenMsg, Lockscreen, NoBtnDialog, NoBtnDialogMsg, NumberInput,
-        NumberInputMsg, Page, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress,
-        ShareWords, SimpleChoice, SimpleChoiceMsg, WordlistEntry, WordlistEntryMsg, WordlistType,
+        ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelInfoConfirmMsg, Flow,
+        FlowMsg, FlowPages, Frame, Homescreen, HomescreenMsg, Lockscreen, NoBtnDialog,
+        NoBtnDialogMsg, NumberInput, NumberInputMsg, Page, PassphraseEntry, PassphraseEntryMsg,
+        PinEntry, PinEntryMsg, Progress, ShareWords, ShowMore, SimpleChoice, SimpleChoiceMsg,
+        WordlistEntry, WordlistEntryMsg, WordlistType,
     },
     constant, theme,
 };
@@ -60,6 +64,19 @@ impl TryFrom<CancelConfirmMsg> for Obj {
         match value {
             CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
             CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for ShowMore<T>
+where
+    T: Component,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            CancelInfoConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            CancelInfoConfirmMsg::Info => Ok(INFO.as_obj()),
+            CancelInfoConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
         }
     }
 }
@@ -848,6 +865,34 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let mut paragraphs = ParagraphVecShort::new();
+
+        let mut iter_buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
+        for para in iter {
+            let [font, text]: [Obj; 2] = iter_into_objs(para)?;
+            let style: &TextStyle = theme::textstyle_number_bold_or_mono(font.try_into()?);
+            let text: StrBuffer = text.try_into()?;
+            paragraphs.add(Paragraph::new(style, text));
+            if paragraphs.is_full() {
+                break;
+            }
+        }
+
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            ShowMore::new(paragraphs.into_paragraphs()),
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let max_rounds: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
@@ -1315,6 +1360,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Info modal."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
+
+    /// def confirm_with_info(
+    ///     *,
+    ///     title: str,
+    ///     button: str,  # unused on TR
+    ///     info_button: str,  # unused on TR
+    ///     items: Iterable[Tuple[int, str]],
+    /// ) -> object:
+    ///     """Confirm given items but with third button. Always single page
+    ///     without scrolling."""
+    Qstr::MP_QSTR_confirm_with_info => obj_fn_kw!(0, new_confirm_with_info).as_obj(),
 
     /// def confirm_coinjoin(
     ///     *,
