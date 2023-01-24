@@ -668,17 +668,6 @@ python-versions = ">=3.6"
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
-name = "pyro4"
-version = "4.82"
-description = "distributed object middleware for Python (RPC)"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-serpent = {version = ">=1.27", markers = "python_version >= \"3.2\""}
-
-[[package]]
 name = "pyserial"
 version = "3.5"
 description = "Python Serial Port Extension"
@@ -823,14 +812,6 @@ description = "Open Source next-generation build tool."
 category = "main"
 optional = false
 python-versions = ">=3.5"
-
-[[package]]
-name = "serpent"
-version = "1.40"
-description = "Serialization based on ast.literal_eval"
-category = "main"
-optional = false
-python-versions = ">=3.2"
 
 [[package]]
 name = "shamir-mnemonic"
@@ -1590,10 +1571,6 @@ pyparsing = [
     {file = "pyparsing-3.0.7-py3-none-any.whl", hash = "sha256:a6c06a88f252e6c322f65faf8f418b16213b51bdfaece0524c1c1bc30c63c484"},
     {file = "pyparsing-3.0.7.tar.gz", hash = "sha256:18ee9022775d270c55187733956460083db60b37d0d0fb357445f3094eed3eea"},
 ]
-pyro4 = [
-    {file = "Pyro4-4.82-py2.py3-none-any.whl", hash = "sha256:bbf5d7413e616d3e1978a05d7caca62eec59692d2dab75dd22a4426ef9b8a691"},
-    {file = "Pyro4-4.82.tar.gz", hash = "sha256:511f5b0804e92dd77dc33adf9c947787e3f9e9c5a96b12162f0557a7c4ce21fb"},
-]
 pyserial = [
     {file = "pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0"},
     {file = "pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb"},
@@ -1680,10 +1657,6 @@ scan-build = [
 scons = [
     {file = "SCons-4.3.0-py3-none-any.whl", hash = "sha256:8c13911a2aa40552553488f7d625af4c0768fc8cdedab4a858d8ce42c8c3664d"},
     {file = "SCons-4.3.0.tar.gz", hash = "sha256:d47081587e3675cc168f1f54f0d74a69b328a2fc90ec4feb85f728677419b879"},
-]
-serpent = [
-    {file = "serpent-1.40-py3-none-any.whl", hash = "sha256:14d531cedeed593e793bae4e14eb1463445e8b161cb24ddf795800a50973d3d3"},
-    {file = "serpent-1.40.tar.gz", hash = "sha256:10b34e7f8e3207ee6fb70dcdc9bce473851ee3daf0b47c58aec1b48032ac11ce"},
 ]
 shamir-mnemonic = [
     {file = "shamir-mnemonic-0.2.2.tar.gz", hash = "sha256:7fb9b592e5c518192c0b0caa2c2d82e342fddd186693bc64be9647eace1b9182"},
