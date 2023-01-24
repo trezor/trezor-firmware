@@ -9,7 +9,6 @@ use super::{
 };
 #[cfg(feature = "dma2d")]
 use crate::trezorhal::{
-    buffers::{get_buffer_16bpp, get_buffer_4bpp},
     dma2d::{
         dma2d_setup_4bpp_over_16bpp, dma2d_setup_4bpp_over_4bpp, dma2d_start_blend,
         dma2d_wait_for_transfer,
@@ -21,7 +20,7 @@ use crate::ui::geometry::TOP_LEFT;
 
 use crate::{
     time::Duration,
-    trezorhal::{buffers::get_text_buffer, display, time, uzlib::UzlibContext},
+    trezorhal::{buffers, display, time, uzlib::UzlibContext},
     ui::lerp::Lerp,
 };
 use core::slice;
@@ -448,13 +447,13 @@ pub fn text_over_image(
     offset_text: Offset,
     text_color: Color,
 ) {
-    let text_buffer = unsafe { get_text_buffer(0, true) };
-    let img1 = unsafe { get_buffer_16bpp(0, true) };
-    let img2 = unsafe { get_buffer_16bpp(1, true) };
-    let empty_img = unsafe { get_buffer_16bpp(2, true) };
-    let t1 = unsafe { get_buffer_4bpp(0, true) };
-    let t2 = unsafe { get_buffer_4bpp(1, true) };
-    let empty_t = unsafe { get_buffer_4bpp(2, true) };
+    let mut text_buffer = buffers::BufferText::get();
+    let mut img1 = buffers::BufferLine16bpp::get_cleared();
+    let mut img2 = buffers::BufferLine16bpp::get_cleared();
+    let mut empty_img = buffers::BufferLine16bpp::get_cleared();
+    let mut t1 = buffers::BufferLine4bpp::get_cleared();
+    let mut t2 = buffers::BufferLine4bpp::get_cleared();
+    let mut empty_t = buffers::BufferLine4bpp::get_cleared();
 
     let r_img;
     let area;
@@ -495,7 +494,7 @@ pub fn text_over_image(
         Point::new(text_right, text_bottom),
     );
 
-    display::text_into_buffer(text, font.into(), text_buffer, 0);
+    display::text_into_buffer(text, font.into(), &mut text_buffer, 0);
 
     set_window(clamped);
 
@@ -548,7 +547,7 @@ pub fn text_over_image(
         }
 
         dma2d_wait_for_transfer();
-        dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, clamped.width());
+        unsafe { dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, clamped.width()) };
     }
 
     dma2d_wait_for_transfer();
@@ -572,12 +571,12 @@ pub fn icon_over_icon(
     fg: (Icon, Offset, Color),
     bg_color: Color,
 ) {
-    let bg1 = unsafe { get_buffer_16bpp(0, true) };
-    let bg2 = unsafe { get_buffer_16bpp(1, true) };
-    let empty1 = unsafe { get_buffer_16bpp(2, true) };
-    let fg1 = unsafe { get_buffer_4bpp(0, true) };
-    let fg2 = unsafe { get_buffer_4bpp(1, true) };
-    let empty2 = unsafe { get_buffer_4bpp(2, true) };
+    let mut bg1 = buffers::BufferLine16bpp::get_cleared();
+    let mut bg2 = buffers::BufferLine16bpp::get_cleared();
+    let mut empty1 = buffers::BufferLine16bpp::get_cleared();
+    let mut fg1 = buffers::BufferLine4bpp::get_cleared();
+    let mut fg2 = buffers::BufferLine4bpp::get_cleared();
+    let mut empty2 = buffers::BufferLine4bpp::get_cleared();
 
     let (icon_bg, offset_bg, color_icon_bg) = bg;
     let (icon_fg, offset_fg, color_icon_fg) = fg;
@@ -662,7 +661,7 @@ pub fn icon_over_icon(
         }
 
         dma2d_wait_for_transfer();
-        dma2d_start_blend(&fg_buffer.buffer, &bg_buffer.buffer, clamped.width());
+        unsafe { dma2d_start_blend(&fg_buffer.buffer, &bg_buffer.buffer, clamped.width()) };
     }
 
     dma2d_wait_for_transfer();
@@ -768,13 +767,13 @@ pub fn bar_with_text_and_fill(
 }
 
 pub fn marquee(area: Rect, text: &str, offset: i16, font: Font, fg: Color, bg: Color) {
-    let buffer = unsafe { get_text_buffer(0, true) };
+    let mut buffer = buffers::BufferText::get_cleared();
 
     let area = area.translate(get_offset());
     let clamped = area.clamp(constant::screen());
     set_window(clamped);
 
-    display::text_into_buffer(text, font.into(), buffer, offset);
+    display::text_into_buffer(text, font.into(), &mut buffer, offset);
     let tbl = get_color_table(fg, bg);
 
     for y in 0..clamped.height() {

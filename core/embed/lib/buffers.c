@@ -22,82 +22,61 @@
 #include "fonts/fonts.h"
 #include "memzero.h"
 
-#define BUFFERS_16BPP 3
-#define BUFFERS_4BPP 3
-#define BUFFERS_TEXT 1
-#define BUFFERS_JPEG 1
-#define BUFFERS_JPEG_WORK 1
-#define BUFFERS_BLURRING 1
-
 const int32_t text_buffer_height = FONT_MAX_HEIGHT;
 const int32_t buffer_width = DISPLAY_RESX;
 
-BUFFER_SECTION line_buffer_16bpp_t line_buffers_16bpp[BUFFERS_16BPP];
-BUFFER_SECTION line_buffer_4bpp_t line_buffers_4bpp[BUFFERS_4BPP];
-BUFFER_SECTION buffer_text_t text_buffers[BUFFERS_TEXT];
-NODMA_BUFFER_SECTION buffer_jpeg_t jpeg_buffers[BUFFERS_JPEG];
-NODMA_BUFFER_SECTION buffer_jpeg_work_t jpeg_work_buffers[BUFFERS_JPEG_WORK];
-NODMA_BUFFER_SECTION buffer_blurring_t blurring_buffers[BUFFERS_BLURRING];
+#define CONCAT_(a, b) a##b
+#define CONCAT(a, b) CONCAT_(a, b)
 
-line_buffer_16bpp_t* buffers_get_line_buffer_16bpp(uint16_t idx, bool clear) {
-  if (idx >= BUFFERS_16BPP) {
-    return NULL;
-  }
-  if (clear) {
-    memzero(&line_buffers_16bpp[idx], sizeof(line_buffers_16bpp[idx]));
-  }
-  return &line_buffers_16bpp[idx];
-}
+#define CONCAT3_(a, b, c) a##b##c
+#define CONCAT3(a, b, c) CONCAT3_(a, b, c)
 
-line_buffer_4bpp_t* buffers_get_line_buffer_4bpp(uint16_t idx, bool clear) {
-  if (idx >= BUFFERS_4BPP) {
-    return NULL;
-  }
-  if (clear) {
-    memzero(&line_buffers_4bpp[idx], sizeof(line_buffers_4bpp[idx]));
-  }
-  return &line_buffers_4bpp[idx];
-}
+#define STRUCT(name) CONCAT3(buffers_, name, _t)
+#define TYPE(name) CONCAT3(buffer_, name, _t)
+#define FUNCTION(name) CONCAT(buffers_get_, name)
+#define FUNCTION_FREE(name) CONCAT(buffers_free_, name)
+#define VARNAME(name) CONCAT(buffers_, name)
 
-buffer_text_t* buffers_get_text_buffer(uint16_t idx, bool clear) {
-  if (idx >= BUFFERS_TEXT) {
-    return NULL;
-  }
-  if (clear) {
-    memzero(&text_buffers[idx], sizeof(text_buffers[idx]));
-  }
-  return &text_buffers[idx];
-}
-
-buffer_jpeg_t* buffers_get_jpeg_buffer(uint16_t idx, bool clear) {
-  if (idx >= BUFFERS_JPEG) {
-    return NULL;
-  }
-
-  if (clear) {
-    memzero(&jpeg_buffers[idx], sizeof(jpeg_buffers[idx]));
-  }
-  return &jpeg_buffers[idx];
-}
-
-buffer_jpeg_work_t* buffers_get_jpeg_work_buffer(uint16_t idx, bool clear) {
-  if (idx >= BUFFERS_JPEG_WORK) {
-    return NULL;
+#define BUFFER(section, name, count)               \
+  typedef struct {                                 \
+    TYPE(name) buffers[count];                     \
+    uint8_t allocated[count];                      \
+  } STRUCT(name);                                  \
+  section STRUCT(name) VARNAME(name);              \
+                                                   \
+  TYPE(name) * FUNCTION(name)(bool clear) {        \
+    int idx = -1;                                  \
+    for (int i = 0; i < (count); i++) {            \
+      if (VARNAME(name).allocated[i] == 0) {       \
+        idx = i;                                   \
+        break;                                     \
+      }                                            \
+    }                                              \
+    if (idx < 0) {                                 \
+      return NULL;                                 \
+    }                                              \
+    if (clear) {                                   \
+      memzero(&VARNAME(name).buffers[idx],         \
+              sizeof(VARNAME(name).buffers[idx])); \
+    }                                              \
+    VARNAME(name).allocated[idx] = 1;              \
+    return &VARNAME(name).buffers[idx];            \
+  }                                                \
+  void FUNCTION_FREE(name)(TYPE(name) * buffer) {  \
+    if (buffer == NULL) {                          \
+      return;                                      \
+    }                                              \
+    for (uint16_t i = 0; i < (count); i++) {       \
+      if (buffer == &VARNAME(name).buffers[i]) {   \
+        VARNAME(name).allocated[i] = 0;            \
+        return;                                    \
+      }                                            \
+    }                                              \
   }
 
-  if (clear) {
-    memzero(&jpeg_work_buffers[idx], sizeof(jpeg_work_buffers[idx]));
-  }
-  return &jpeg_work_buffers[idx];
-}
-
-buffer_blurring_t* buffers_get_blurring_buffer(uint16_t idx, bool clear) {
-  if (idx >= BUFFERS_BLURRING) {
-    return NULL;
-  }
-
-  if (clear) {
-    memzero(&blurring_buffers[idx], sizeof(blurring_buffers[idx]));
-  }
-  return &blurring_buffers[idx];
-}
+BUFFER(BUFFER_SECTION, line_16bpp, 3);
+BUFFER(BUFFER_SECTION, line_4bpp, 3);
+BUFFER(BUFFER_SECTION, text, 1);
+BUFFER(NODMA_BUFFER_SECTION, jpeg, 1);
+BUFFER(NODMA_BUFFER_SECTION, jpeg_work, 1);
+BUFFER(NODMA_BUFFER_SECTION, blurring, 1);

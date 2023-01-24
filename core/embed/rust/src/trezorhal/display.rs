@@ -1,5 +1,5 @@
 use super::ffi;
-use core::ptr;
+use core::{ops::DerefMut, ptr};
 use cty::c_int;
 
 use crate::trezorhal::buffers::BufferText;
@@ -36,7 +36,7 @@ pub fn text_into_buffer(text: &str, font: i32, buffer: &mut BufferText, x_offset
             text.as_ptr() as _,
             text.len() as _,
             font,
-            buffer as _,
+            buffer.deref_mut(),
             x_offset.into(),
         )
     }
@@ -92,7 +92,14 @@ pub fn bar_radius(x: i16, y: i16, w: i16, h: i16, fgcolor: u16, bgcolor: u16, ra
 
 pub fn bar_radius_buffer(x: i16, y: i16, w: i16, h: i16, radius: u8, buffer: &mut BufferText) {
     unsafe {
-        ffi::display_bar_radius_buffer(x.into(), y.into(), w.into(), h.into(), radius, buffer as _)
+        ffi::display_bar_radius_buffer(
+            x.into(),
+            y.into(),
+            w.into(),
+            h.into(),
+            radius,
+            buffer.deref_mut(),
+        )
     }
 }
 

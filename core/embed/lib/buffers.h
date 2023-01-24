@@ -59,11 +59,11 @@
 
 typedef __attribute__((aligned(4))) struct {
   uint8_t buffer[LINE_BUFFER_16BPP_SIZE];
-} line_buffer_16bpp_t;
+} buffer_line_16bpp_t;
 
 typedef __attribute__((aligned(4))) struct {
   uint8_t buffer[LINE_BUFFER_4BPP_SIZE];
-} line_buffer_4bpp_t;
+} buffer_line_4bpp_t;
 
 typedef __attribute__((aligned(4))) struct {
   uint8_t buffer[TEXT_BUFFER_SIZE];
@@ -84,11 +84,22 @@ typedef __attribute__((aligned(4))) struct {
 extern const int32_t text_buffer_height;
 extern const int32_t buffer_width;
 
-line_buffer_16bpp_t* buffers_get_line_buffer_16bpp(uint16_t idx, bool clear);
-line_buffer_4bpp_t* buffers_get_line_buffer_4bpp(uint16_t idx, bool clear);
-buffer_text_t* buffers_get_text_buffer(uint16_t idx, bool clear);
-buffer_jpeg_t* buffers_get_jpeg_buffer(uint16_t idx, bool clear);
-buffer_jpeg_work_t* buffers_get_jpeg_work_buffer(uint16_t idx, bool clear);
-buffer_blurring_t* buffers_get_blurring_buffer(uint16_t idx, bool clear);
+buffer_line_16bpp_t* buffers_get_line_16bpp(bool clear);
+void buffers_free_line_16bpp(buffer_line_16bpp_t* buffer);
+
+buffer_line_4bpp_t* buffers_get_line_4bpp(bool clear);
+void buffers_free_line_4bpp(buffer_line_4bpp_t* buffer);
+
+buffer_text_t* buffers_get_text(bool clear);
+void buffers_free_text(buffer_text_t* buffer);
+
+buffer_jpeg_t* buffers_get_jpeg(bool clear);
+void buffers_free_jpeg(buffer_jpeg_t* buffer);
+
+buffer_jpeg_work_t* buffers_get_jpeg_work(bool clear);
+void buffers_free_jpeg_work(buffer_jpeg_work_t* buffer);
+
+buffer_blurring_t* buffers_get_blurring(bool clear);
+void buffers_free_blurring(buffer_blurring_t* buffer);
 
 #endif  // _BUFFERS_H

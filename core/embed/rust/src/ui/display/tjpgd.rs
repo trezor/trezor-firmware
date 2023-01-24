@@ -35,7 +35,7 @@ Trezor modifications:
 
 use crate::{
     trezorhal::{
-        buffers::{get_jpeg_work_buffer, BufferJpeg},
+        buffers::{BufferJpeg, BufferJpegWork},
         display::pixeldata,
     },
     ui::{
@@ -1399,7 +1399,8 @@ impl<'i, 'p> JDEC<'i, 'p> {
 }
 
 pub fn jpeg(data: &[u8], pos: Point, scale: u8) {
-    let pool = unsafe { get_jpeg_work_buffer(0, true).buffer.as_mut_slice() };
+    let mut buffer = BufferJpegWork::get_cleared();
+    let pool = buffer.buffer.as_mut_slice();
     let mut out = PixelDataOutput(pos);
     let mut inp = BufferInput(data);
     if let Ok(mut jd) = JDEC::new(&mut inp, pool) {
@@ -1409,9 +1410,10 @@ pub fn jpeg(data: &[u8], pos: Point, scale: u8) {
 }
 
 pub fn jpeg_info(data: &[u8]) -> Option<(Offset, i16)> {
-    let pool = unsafe { get_jpeg_work_buffer(0, true).buffer.as_mut_slice() };
+    let mut buffer = BufferJpegWork::get_cleared();
+    let pool = buffer.buffer.as_mut_slice();
     let mut inp = BufferInput(data);
-    if let Ok(jd) = JDEC::new(&mut inp, pool) {
+    let result = if let Ok(jd) = JDEC::new(&mut inp, pool) {
         let mcu_height = jd.mcu_height();
         if mcu_height > 16 {
             return None;
@@ -1419,13 +1421,15 @@ pub fn jpeg_info(data: &[u8]) -> Option<(Offset, i16)> {
         Some((Offset::new(jd.width(), jd.height()), mcu_height))
     } else {
         None
-    }
+    };
+    result
 }
 
 pub fn jpeg_test(data: &[u8]) -> bool {
-    let pool = unsafe { get_jpeg_work_buffer(0, true).buffer.as_mut_slice() };
+    let mut buffer = BufferJpegWork::get_cleared();
+    let pool = buffer.buffer.as_mut_slice();
     let mut inp = BufferInput(data);
-    if let Ok(mut jd) = JDEC::new(&mut inp, pool) {
+    let result = if let Ok(mut jd) = JDEC::new(&mut inp, pool) {
         if jd.mcu_height() > 16 {
             return false;
         }
@@ -1438,7 +1442,8 @@ pub fn jpeg_test(data: &[u8]) -> bool {
         res.is_ok()
     } else {
         false
-    }
+    };
+    result
 }
 
 pub trait JpegInput {
@@ -1464,18 +1469,18 @@ pub trait JpegOutput {
     fn write(&mut self, jd: &JDEC, rect: Rect, pixels: &[u16]) -> bool;
 }
 
-pub struct BufferOutput<'o> {
-    buffer: &'o mut BufferJpeg,
+pub struct BufferOutput {
+    buffer: BufferJpeg,
     buffer_width: i16,
     buffer_height: i16,
     current_line: i16,
     current_line_pix: i16,
 }
 
-impl<'o> BufferOutput<'o> {
-    pub fn new(buffer: &'o mut BufferJpeg, buffer_width: i16, buffer_height: i16) -> Self {
+impl BufferOutput {
+    pub fn new(buffer_width: i16, buffer_height: i16) -> Self {
         Self {
-            buffer,
+            buffer: BufferJpeg::get_cleared(),
             buffer_width,
             buffer_height,
             current_line: 0,
@@ -1484,11 +1489,11 @@ impl<'o> BufferOutput<'o> {
     }
 
     pub fn buffer(&mut self) -> &mut BufferJpeg {
-        self.buffer
+        &mut self.buffer
     }
 }
 
-impl<'o> JpegOutput for BufferOutput<'o> {
+impl JpegOutput for BufferOutput {
     fn write(&mut self, jd: &JDEC, rect: Rect, bitmap: &[u16]) -> bool {
         let w = rect.width();
         let h = rect.height();

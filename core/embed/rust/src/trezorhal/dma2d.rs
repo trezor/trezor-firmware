@@ -12,7 +12,16 @@ pub fn dma2d_setup_4bpp_over_16bpp(overlay_color: u16) {
     unsafe { ffi::dma2d_setup_4bpp_over_16bpp(overlay_color) }
 }
 
-pub fn dma2d_start(buffer: &[u8], pixels: i16) {
+/// Starts dma2d transfer
+///
+/// # Safety
+///
+/// This function is unsafe because the caller has to guarantee that he:
+/// 1) doesn't mutate the buffers until the transfer is finished, which is
+/// guaranteed by calling `dma2d_wait_for_transfer`
+/// 2) the buffer doesn't get dropped until the transfer is finished
+/// 3) doesn't call this function while another transfer is running
+pub unsafe fn dma2d_start(buffer: &[u8], pixels: i16) {
     unsafe {
         ffi::dma2d_start(
             buffer.as_ptr() as _,
@@ -22,7 +31,16 @@ pub fn dma2d_start(buffer: &[u8], pixels: i16) {
     }
 }
 
-pub fn dma2d_start_blend(overlay_buffer: &[u8], bg_buffer: &[u8], pixels: i16) {
+/// Starts blending
+///
+/// # Safety
+///
+/// This function is unsafe because the caller has to guarantee that he:
+/// 1) doesn't mutate the buffers until the transfer is finished, which is
+/// guaranteed by calling `dma2d_wait_for_transfer`
+/// 2) the buffer doesn't get dropped until the transfer is finished
+/// 3) doesn't call this function while another transfer is running
+pub unsafe fn dma2d_start_blend(overlay_buffer: &[u8], bg_buffer: &[u8], pixels: i16) {
     unsafe {
         ffi::dma2d_start_blend(
             overlay_buffer.as_ptr() as _,

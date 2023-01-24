@@ -312,8 +312,13 @@ void display_image(int x, int y, int w, int h, const void *data,
   struct uzlib_uncomp decomp = {0};
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
 
-  line_buffer_16bpp_t *b1 = buffers_get_line_buffer_16bpp(0, false);
-  line_buffer_16bpp_t *b2 = buffers_get_line_buffer_16bpp(1, false);
+  buffer_line_16bpp_t *b1 = buffers_get_line_16bpp(false);
+  if (b1 == NULL) return;
+  buffer_line_16bpp_t *b2 = buffers_get_line_16bpp(false);
+  if (b2 == NULL) {
+    buffers_free_line_16bpp(b1);
+    return;
+  };
 
   uzlib_prepare(&decomp, decomp_window, data, datalen, b1, w * 2);
 
@@ -321,7 +326,7 @@ void display_image(int x, int y, int w, int h, const void *data,
 
   for (int32_t pos = 0; pos < h; pos++) {
     int32_t pixels = w;
-    line_buffer_16bpp_t *next_buf = (pos % 2 == 1) ? b1 : b2;
+    buffer_line_16bpp_t *next_buf = (pos % 2 == 1) ? b1 : b2;
     decomp.dest = next_buf->buffer;
     decomp.dest_limit = next_buf->buffer + w * 2;
     int st = uzlib_uncompress(&decomp);
@@ -330,6 +335,8 @@ void display_image(int x, int y, int w, int h, const void *data,
     dma2d_start(next_buf->buffer, (uint8_t *)DISPLAY_DATA_ADDRESS, pixels);
   }
   dma2d_wait_for_transfer();
+  buffers_free_line_16bpp(b1);
+  buffers_free_line_16bpp(b2);
 }
 #endif
 
@@ -391,8 +398,13 @@ void display_icon(int x, int y, int w, int h, const void *data,
   }
 
   uint8_t b[DISPLAY_RESX / 2];
-  line_buffer_4bpp_t *b1 = buffers_get_line_buffer_4bpp(0, false);
-  line_buffer_4bpp_t *b2 = buffers_get_line_buffer_4bpp(1, false);
+  buffer_line_4bpp_t *b1 = buffers_get_line_4bpp(false);
+  if (b1 == NULL) return;
+  buffer_line_4bpp_t *b2 = buffers_get_line_4bpp(false);
+  if (b2 == NULL) {
+    buffers_free_line_4bpp(b1);
+    return;
+  }
 
   struct uzlib_uncomp decomp = {0};
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
@@ -404,7 +416,7 @@ void display_icon(int x, int y, int w, int h, const void *data,
   int off_x = x < 0 ? -x : 0;
 
   for (uint32_t pos = 0; pos < h; pos++) {
-    line_buffer_4bpp_t *next_buf = (pos % 2 == 0) ? b1 : b2;
+    buffer_line_4bpp_t *next_buf = (pos % 2 == 0) ? b1 : b2;
     decomp.dest = b;
     decomp.dest_limit = b + w / 2;
     int st = uzlib_uncompress(&decomp);
@@ -416,6 +428,8 @@ void display_icon(int x, int y, int w, int h, const void *data,
     }
   }
   dma2d_wait_for_transfer();
+  buffers_free_line_4bpp(b1);
+  buffers_free_line_4bpp(b2);
 }
 #endif
 
