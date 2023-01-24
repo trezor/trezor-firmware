@@ -94,8 +94,7 @@ STATIC mp_obj_t mod_trezorio_HID_make_new(const mp_obj_type_t *type,
   CHECK_PARAM_RANGE(polling_interval, 1, 255)
   CHECK_PARAM_RANGE(max_packet_len, 64, 64)
 
-  mp_obj_HID_t *o = m_new_obj(mp_obj_HID_t);
-  o->base.type = type;
+  mp_obj_HID_t *o = mp_obj_malloc(mp_obj_HID_t, type);
 
   o->info.rx_buffer = m_new(uint8_t, max_packet_len);
   o->info.report_desc = report_desc.buf;

@@ -85,8 +85,7 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type,
   const size_t vcp_buffer_len = 1024;
   const size_t vcp_packet_len = 64;
 
-  mp_obj_VCP_t *o = m_new_obj(mp_obj_VCP_t);
-  o->base.type = type;
+  mp_obj_VCP_t *o = mp_obj_malloc(mp_obj_VCP_t, type);
 
   o->info.tx_packet = m_new(uint8_t, vcp_packet_len);
   o->info.tx_buffer = m_new(uint8_t, vcp_buffer_len);

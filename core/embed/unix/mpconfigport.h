@@ -60,9 +60,12 @@
 
 // optimisations
 #define MICROPY_OPT_COMPUTED_GOTO   (1)
-#define MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE (0)
 #define MICROPY_OPT_MPZ_BITWISE     (1)
 #define MICROPY_OPT_MATH_FACTORIAL  (0)
+#define MICROPY_OPT_LOAD_ATTR_FAST_PATH (1)
+#define MICROPY_OPT_MAP_LOOKUP_CACHE (1)
+
+#define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_CORE_FEATURES)
 
 // Python internal features
 #define MICROPY_READER_VFS          (0)
@@ -137,6 +140,13 @@
 #define MICROPY_PY_UCTYPES          (1)
 #define MICROPY_PY_UZLIB            (0)
 #define MICROPY_PY_UJSON            (0)
+#define MICROPY_PY_UOS              (1)
+#define MICROPY_PY_UOS_INCLUDEFILE  "ports/unix/moduos.c"
+#define MICROPY_PY_UOS_ERRNO        (1)
+#define MICROPY_PY_UOS_GETENV_PUTENV_UNSETENV (1)
+#define MICROPY_PY_UOS_SEP          (1)
+#define MICROPY_PY_UOS_SYSTEM       (1)
+#define MICROPY_PY_UOS_URANDOM      (1)
 #define MICROPY_PY_URE              (0)
 #define MICROPY_PY_URE_SUB          (0)
 #define MICROPY_PY_UHEAPQ           (0)
@@ -207,13 +217,6 @@ extern const struct _mp_print_t mp_stderr_print;
 #define MP_STATE_PORT MP_STATE_VM
 
 // ============= this ends common config section ===================
-
-// extra built in modules to add to the list of known ones
-extern const struct _mp_obj_module_t mp_module_os;
-
-#define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) },
-
 
 // For size_t and ssize_t
 #include <unistd.h>

@@ -41,3 +41,7 @@ void mp_hal_stdout_tx_strn(const char *str, size_t len) {
 }
 
 void mp_hal_set_vcp_iface(int iface_num) { vcp_iface_num = iface_num; }
+
+// Dummy implementation required by ports/stm32/gccollect.c.
+// The normal version requires MICROPY_ENABLE_SCHEDULER which we don't use.
+void soft_timer_gc_mark_all(void) {}

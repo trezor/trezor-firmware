@@ -287,7 +287,6 @@ const mp_obj_module_t mp_module_trezorutils = {
     .globals = (mp_obj_dict_t *)&mp_module_trezorutils_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_trezorutils, mp_module_trezorutils,
-                   MICROPY_PY_TREZORUTILS);
+MP_REGISTER_MODULE(MP_QSTR_trezorutils, mp_module_trezorutils);
 
 #endif  // MICROPY_PY_TREZORUTILS

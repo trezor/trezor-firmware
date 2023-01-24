@@ -55,9 +55,12 @@
 
 // optimisations
 #define MICROPY_OPT_COMPUTED_GOTO   (1)
-#define MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE (0)
 #define MICROPY_OPT_MPZ_BITWISE     (1)
 #define MICROPY_OPT_MATH_FACTORIAL  (0)
+#define MICROPY_OPT_LOAD_ATTR_FAST_PATH (1)
+#define MICROPY_OPT_MAP_LOOKUP_CACHE (1)
+
+#define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_CORE_FEATURES)
 
 // Python internal features
 #define MICROPY_READER_VFS          (0)
@@ -129,6 +132,7 @@
 #define MICROPY_PY_UCTYPES          (1)
 #define MICROPY_PY_UZLIB            (0)
 #define MICROPY_PY_UJSON            (0)
+#define MICROPY_PY_UOS              (0)
 #define MICROPY_PY_URE              (0)
 #define MICROPY_PY_URE_SUB          (0)
 #define MICROPY_PY_UHEAPQ           (0)

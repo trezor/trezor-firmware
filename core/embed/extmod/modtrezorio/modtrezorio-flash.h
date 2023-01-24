@@ -37,8 +37,7 @@ STATIC mp_obj_t mod_trezorio_FlashOTP_make_new(const mp_obj_type_t *type,
                                                size_t n_args, size_t n_kw,
                                                const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 0, false);
-  mp_obj_FlashOTP_t *o = m_new_obj(mp_obj_FlashOTP_t);
-  o->base.type = type;
+  mp_obj_FlashOTP_t *o = mp_obj_malloc(mp_obj_FlashOTP_t, type);
   return MP_OBJ_FROM_PTR(o);
 }
 
