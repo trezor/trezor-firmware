@@ -4,7 +4,8 @@ import SCons.Builder
 def generate(env):
 
     env.SetDefault(
-        QSTRCOL='site_scons/site_tools/micropython/qstrdefs.py', )
+        QSTRCOL='site_scons/site_tools/micropython/qstrdefs.py',
+        MODULECOL='site_scons/site_tools/micropython/moduledefs.py', )
 
     env['BUILDERS']['CollectQstr'] = SCons.Builder.Builder(
         action='$CC -E $CCFLAGS_QSTR $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES'
@@ -18,6 +19,10 @@ def generate(env):
 
     env['BUILDERS']['GenerateQstrDefs'] = SCons.Builder.Builder(
         action='$MAKEQSTRDATA $SOURCE > $TARGET', )
+
+    env['BUILDERS']['CollectModules'] = SCons.Builder.Builder(
+        action='$CC -E $CCFLAGS_QSTR $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES'
+        ' | $PYTHON $MODULECOL > $TARGET')
 
     def generate_frozen_module(source, target, env, for_signature):
         target = str(target[0])

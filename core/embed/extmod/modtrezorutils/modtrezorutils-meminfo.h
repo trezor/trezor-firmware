@@ -253,17 +253,13 @@ void dump_dict_inner(FILE *out, const mp_obj_dict_t *dict) {
 
 void dump_function(FILE *out, const mp_obj_fun_bc_t *func) {
   print_type(out, "function", NULL, func, false);
-  fprintf(out, ",\n\"globals\": \"%p\"", func->globals);
+  fprintf(out, ",\n\"globals\": \"%p\"", func->context->module.globals);
   fprintf(out, ",\n\"code_alloc\": %ld", find_allocated_size(func->bytecode));
   fprintf(out, ",\n\"code_ptr\": \"%p\"", func->bytecode);
-  fprintf(out, ",\n\"const_table_alloc\": %ld",
-          find_allocated_size(func->const_table));
-  fprintf(out, ",\n\"const_table_ptr\": \"%p\"", func->const_table);
   mark(func->bytecode);
-  mark(func->const_table);
   fprintf(out, "},\n");
 
-  dump_value(out, func->globals);
+  dump_value(out, func->context->module.globals);
 }
 
 typedef struct _mp_obj_bound_meth_t {
@@ -672,10 +668,11 @@ void dump_value(FILE *out, mp_const_obj_t value) {
   dump_value_opt(out, value, false);
 }
 
-void dump_qstr_pool(FILE *out, qstr_pool_t *pool) {
+void dump_qstr_pool(FILE *out, const qstr_pool_t *pool) {
   print_type(out, "qstrpool", NULL, pool, false);
   fprintf(out, ", \"qstrs\": [\n");
-  for (const byte **q = pool->qstrs, **q_top = pool->qstrs + pool->len;
+  for (const char *const *q = pool->qstrs, *const *q_top =
+                                               pool->qstrs + pool->len;
        q < q_top; q++) {
     if (q < (q_top - 1))
       fprintf(out, "\"%s\",\n", Q_GET_DATA(*q));
@@ -683,7 +680,8 @@ void dump_qstr_pool(FILE *out, qstr_pool_t *pool) {
       fprintf(out, "\"%s\"]\n", Q_GET_DATA(*q));
   }
   fprintf(out, "},\n");
-  for (const byte **q = pool->qstrs, **q_top = pool->qstrs + pool->len;
+  for (const char *const *q = pool->qstrs, *const *q_top =
+                                               pool->qstrs + pool->len;
        q < q_top; q++) {
     print_type(out, "qstrdata", NULL, *q, false);
     fprintf(out, ", \"pool\": \"%p\"},\n", pool);
@@ -691,9 +689,10 @@ void dump_qstr_pool(FILE *out, qstr_pool_t *pool) {
 }
 
 void dump_qstrdata(FILE *out) {
-  qstr_pool_t *pool = MP_STATE_VM(last_pool);
+  const qstr_pool_t *pool = MP_STATE_VM(last_pool);
   while (pool != NULL) {
-    for (const byte **q = pool->qstrs, **q_top = pool->qstrs + pool->len;
+    for (const char *const *q = pool->qstrs, *const *q_top =
+                                                 pool->qstrs + pool->len;
          q < q_top; q++) {
       if ((void *)*q > (void *)mp_state_ctx.mem.gc_pool_start) {
         print_type(out, "qstrdata", NULL, q, false);
@@ -757,7 +756,7 @@ STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
   dump_value(out, MP_STATE_VM(trezorconfig_ui_wait_callback));
 
   fprintf(out, "\"qstr_pools\",\n");
-  qstr_pool_t *pool = MP_STATE_VM(last_pool);
+  const qstr_pool_t *pool = MP_STATE_VM(last_pool);
   while (VERIFY_PTR((void *)pool)) {
     dump_qstr_pool(out, pool);
     pool = pool->prev;

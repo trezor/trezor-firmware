@@ -132,9 +132,9 @@ WIRETYPE_ENTRY = c.Sequence(
     "msg_offset" / c.Int16ul,
 )
 
-# QDEF(MP_QSTR_copysign, (const byte*)"\x33\x14\x08" "copysign")
+# QDEF(MP_QSTR_copysign, 5171, 8, "copysign")
 QDEF_RE = re.compile(
-    r'^QDEF\(MP_QSTR(\S+), \(const byte\*\)"(\\x..\\x..\\x..)" "(.*)"\)$'
+    r'^QDEF\(MP_QSTR(\S+), ([0-9]+), ([0-9])+, "(.*)"\)$'
 )
 
 
@@ -549,7 +549,7 @@ class RustBlobRenderer:
                 if not match:
                     continue
                 line = match.group(0)
-                string = match.group(3)
+                string = match.group(4)
                 self.qstr_map[string] = qstr_counter
                 qstr_counter += 1
         logging.debug(f"Found {qstr_counter} Qstr defs")

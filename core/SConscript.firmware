@@ -221,7 +221,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/shared/timeutils/timeutils.c',
     'vendor/micropython/ports/stm32/gccollect.c',
     'vendor/micropython/ports/stm32/pendsv.c',
-    'vendor/micropython/ports/stm32/softtimer.c',
     'vendor/micropython/py/argcheck.c',
     'vendor/micropython/py/asmarm.c',
     'vendor/micropython/py/asmbase.c',
@@ -544,18 +543,29 @@ qstr_generated = env.GenerateQstrDefs(
 env.Ignore(qstr_collected, qstr_generated)
 
 #
-# Micropython version and modules
+# Micropython module declarations
+#
+
+moduledefs_collected = env.CollectModules(
+    target='genhdr/moduledefs.collected.h', source=SOURCE_QSTR)
+
+hdr_moduledefs = env.Command(
+    target='genhdr/moduledefs.h',
+    source=moduledefs_collected,
+    action='$MAKEMODULEDEFS $SOURCE > $TARGET', )
+
+env.Ignore(moduledefs_collected, moduledefs_collected)
+env.Ignore(moduledefs_collected, qstr_generated)
+env.Ignore(moduledefs_collected, hdr_moduledefs)
+
+#
+# Micropython version
 #
 
 hdr_version = env.Command(
     target='genhdr/mpversion.h',
     source='',
     action='$MAKEVERSIONHDR $TARGET', )
-
-hdr_moduledefs = env.Command(
-    target='genhdr/moduledefs.h',
-    source=SOURCE_QSTR,
-    action='$MAKEMODULEDEFS --vpath="." $SOURCES > $TARGET', )
 
 env.Ignore(hdr_moduledefs, hdr_moduledefs)
 env.Ignore(hdr_moduledefs, qstr_collected)

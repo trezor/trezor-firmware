@@ -501,7 +501,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
 #ifdef MICROPY_PY_SYS_PATH_DEFAULT
     path = MICROPY_PY_SYS_PATH_DEFAULT;
 #else
-    path = "~/.micropython/lib:/usr/lib/micropython";
+    path = ".frozen:~/.micropython/lib:/usr/lib/micropython";
 #endif
   }
   size_t path_num = 1;  // [0] is for current dir (or base dir of the script)
@@ -724,3 +724,5 @@ void nlr_jump_fail(void *val) {
   printf("FATAL: uncaught NLR %p\n", val);
   exit(1);
 }
+
+MP_REGISTER_MODULE(MP_QSTR_uos, mp_module_uos);
