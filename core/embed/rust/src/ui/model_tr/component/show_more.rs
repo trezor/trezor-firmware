@@ -21,7 +21,7 @@ where
     T: Component,
 {
     pub fn new(content: T) -> Self {
-        let btn_layout = ButtonLayout::cancel_armed_text("CONFIRM".into(), "ALL".into());
+        let btn_layout = ButtonLayout::cancel_armed_text("CONFIRM".into(), "i".into());
         Self {
             content: Child::new(content),
             buttons: Child::new(ButtonController::new(btn_layout)),
