@@ -127,6 +127,10 @@ def screen_recording(
     client: Client, request: pytest.FixtureRequest
 ) -> Generator[None, None, None]:
     test_ui = request.config.getoption("ui")
+    if not test_ui:
+        yield
+        return
+
     test_name = get_test_name(request.node.nodeid)
 
     # Differentiating test names between T1 and TT
@@ -160,15 +164,14 @@ def screen_recording(
         client.init_device()
         client.debug.stop_recording()
 
-    if test_ui:
-        PROCESSED.add(test_name)
-        if get_last_call_test_result(request) is False:
-            FAILED_TESTS.add(test_name)
+    PROCESSED.add(test_name)
+    if get_last_call_test_result(request) is False:
+        FAILED_TESTS.add(test_name)
 
-        if test_ui == "record":
-            _process_recorded(screen_path, test_name)
-        else:
-            _process_tested(screens_test_path, test_name)
+    if test_ui == "record":
+        _process_recorded(screen_path, test_name)
+    else:
+        _process_tested(screens_test_path, test_name)
 
 
 def list_missing() -> Set[str]:

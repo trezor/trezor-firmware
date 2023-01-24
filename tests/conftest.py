@@ -226,10 +226,7 @@ def client(
 
         _raw_client.clear_session()
 
-    if test_ui:
-        with ui_tests.screen_recording(_raw_client, request):
-            yield _raw_client
-    else:
+    with ui_tests.screen_recording(_raw_client, request):
         yield _raw_client
 
     _raw_client.close()
