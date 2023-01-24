@@ -386,8 +386,8 @@ STATIC mp_obj_t mod_trezorio_fatfs_open(mp_obj_t path, mp_obj_t flags) {
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
   }
-  mp_obj_FatFSFile_t *f = m_new_obj(mp_obj_FatFSFile_t);
-  f->base.type = &mod_trezorio_FatFSFile_type;
+  mp_obj_FatFSFile_t *f =
+      mp_obj_malloc(mp_obj_FatFSFile_t, &mod_trezorio_FatFSFile_type);
   f->fp = fp;
   return f;
 }
@@ -407,8 +407,8 @@ STATIC mp_obj_t mod_trezorio_fatfs_listdir(mp_obj_t path) {
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
   }
-  mp_obj_FatFSDir_t *d = m_new_obj(mp_obj_FatFSDir_t);
-  d->base.type = &mod_trezorio_FatFSDir_type;
+  mp_obj_FatFSDir_t *d =
+      mp_obj_malloc(mp_obj_FatFSDir_t, &mod_trezorio_FatFSDir_type);
   d->dp = dp;
   return d;
 }

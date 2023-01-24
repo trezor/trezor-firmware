@@ -80,7 +80,6 @@ const mp_obj_module_t mp_module_trezorproto = {
     .globals = (mp_obj_dict_t *)&mp_module_trezorproto_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_trezorproto, mp_module_trezorproto,
-                   MICROPY_PY_TREZORPROTO);
+MP_REGISTER_MODULE(MP_QSTR_trezorproto, mp_module_trezorproto);
 
 #endif  // MICROPY_PY_TREZORPROTO

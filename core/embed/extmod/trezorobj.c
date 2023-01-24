@@ -54,7 +54,7 @@ bool trezor_obj_get_ll_checked(mp_obj_t obj, long long *value) {
     *value = MP_OBJ_SMALL_INT_VALUE(obj);
     return true;
 
-  } else if (mp_obj_is_type(obj, &mp_type_int)) {
+  } else if (mp_obj_is_int(obj)) {
     // Value is not fitting into small int range, but is an integer.
     mp_obj_int_t *self = MP_OBJ_TO_PTR(obj);
     // Try to get the long long value out of the MPZ struct.
