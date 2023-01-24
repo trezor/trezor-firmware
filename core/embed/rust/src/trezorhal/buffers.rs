@@ -1,88 +1,93 @@
+use core::{
+    ops::{Deref, DerefMut},
+    ptr,
+};
+
 use super::ffi;
 
-pub use ffi::{
-    buffer_blurring_t as BlurringBuffer, buffer_text_t as BufferText,
-    line_buffer_16bpp_t as LineBuffer16Bpp, line_buffer_4bpp_t as LineBuffer4Bpp,
-};
+macro_rules! buffer_wrapper {
+    ($rust_name: ident, $type: ident, $get: ident, $free: ident) => {
+        pub struct $rust_name(ptr::NonNull<ffi::$type>);
+
+        impl $rust_name {
+            pub fn get() -> Self {
+                unsafe {
+                    let ptr = ffi::$get(false);
+                    Self(unwrap!(ptr::NonNull::new(ptr)))
+                }
+            }
+
+            pub fn get_cleared() -> Self {
+                unsafe {
+                    let ptr = ffi::$get(true);
+                    Self(unwrap!(ptr::NonNull::new(ptr)))
+                }
+            }
+        }
+
+        impl Deref for $rust_name {
+            type Target = ffi::$type;
+
+            fn deref(&self) -> &Self::Target {
+                // SAFETY: The lifetime of the pointer is 'static and the C API
+                // promises that we are the sole owner.
+                unsafe { self.0.as_ref() }
+            }
+        }
+
+        impl DerefMut for $rust_name {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                // SAFETY: The lifetime of the pointer is 'static and the C API
+                // promises that we are the sole owner, and we have borrowed mutably.
+                unsafe { self.0.as_mut() }
+            }
+        }
+
+        impl Drop for $rust_name {
+            fn drop(&mut self) {
+                unsafe {
+                    ffi::$free(self.0.as_mut());
+                }
+            }
+        }
+    };
+}
+
+buffer_wrapper!(
+    BufferLine16bpp,
+    buffer_line_16bpp_t,
+    buffers_get_line_16bpp,
+    buffers_free_line_16bpp
+);
+buffer_wrapper!(
+    BufferLine4bpp,
+    buffer_line_4bpp_t,
+    buffers_get_line_4bpp,
+    buffers_free_line_4bpp
+);
+buffer_wrapper!(
+    BufferText,
+    buffer_text_t,
+    buffers_get_text,
+    buffers_free_text
+);
+buffer_wrapper!(
+    BufferBlurring,
+    buffer_blurring_t,
+    buffers_get_blurring,
+    buffers_free_blurring
+);
 #[cfg(feature = "jpeg")]
-pub use ffi::{buffer_jpeg_t as BufferJpeg, buffer_jpeg_work_t as BufferJpegWork};
-
-/// Returns a buffer for one line of 16bpp data
-///
-/// # Safety
-///
-/// This function is unsafe because the caller has to guarantee
-/// that he doesn't use buffer on same index multiple times
-pub unsafe fn get_buffer_16bpp(idx: u16, clear: bool) -> &'static mut LineBuffer16Bpp {
-    unsafe {
-        let ptr = ffi::buffers_get_line_buffer_16bpp(idx, clear);
-        unwrap!(ptr.as_mut())
-    }
-}
-
-/// Returns a buffer for one line of 4bpp data
-///
-/// # Safety
-///
-/// This function is unsafe because the caller has to guarantee
-/// that he doesn't use buffer on same index multiple times
-pub unsafe fn get_buffer_4bpp(idx: u16, clear: bool) -> &'static mut LineBuffer4Bpp {
-    unsafe {
-        let ptr = ffi::buffers_get_line_buffer_4bpp(idx, clear);
-        unwrap!(ptr.as_mut())
-    }
-}
-
-/// Returns a buffer for one line of text
-///
-/// # Safety
-///
-/// This function is unsafe because the caller has to guarantee
-/// that he doesn't use buffer on same index multiple times
-pub unsafe fn get_text_buffer(idx: u16, clear: bool) -> &'static mut BufferText {
-    unsafe {
-        let ptr = ffi::buffers_get_text_buffer(idx, clear);
-        unwrap!(ptr.as_mut())
-    }
-}
-
-/// Returns a buffer for jpeg data
-///
-/// # Safety
-///
-/// This function is unsafe because the caller has to guarantee
-/// that he doesn't use buffer on same index multiple times
+buffer_wrapper!(
+    BufferJpeg,
+    buffer_jpeg_t,
+    buffers_get_jpeg,
+    buffers_free_jpeg
+);
 #[cfg(feature = "jpeg")]
-pub unsafe fn get_jpeg_buffer(idx: u16, clear: bool) -> &'static mut BufferJpeg {
-    unsafe {
-        let ptr = ffi::buffers_get_jpeg_buffer(idx, clear);
-        unwrap!(ptr.as_mut())
-    }
-}
-
-/// Returns a jpeg work buffer
-///
-/// # Safety
-///
-/// This function is unsafe because the caller has to guarantee
-/// that he doesn't use buffer on same index multiple times
-#[cfg(feature = "jpeg")]
-pub unsafe fn get_jpeg_work_buffer(idx: u16, clear: bool) -> &'static mut BufferJpegWork {
-    unsafe {
-        let ptr = ffi::buffers_get_jpeg_work_buffer(idx, clear);
-        unwrap!(ptr.as_mut())
-    }
-}
-
-/// Returns a buffer for blurring data
-///
-/// # Safety
-///
-/// This function is unsafe because the caller has to guarantee
-/// that he doesn't use buffer on same index multiple times
-pub unsafe fn get_blurring_buffer(idx: u16, clear: bool) -> &'static mut BlurringBuffer {
-    unsafe {
-        let ptr = ffi::buffers_get_blurring_buffer(idx, clear);
-        unwrap!(ptr.as_mut())
-    }
-}
+buffer_wrapper!(
+    BufferJpegWork,
+    buffer_jpeg_work_t,
+    buffers_get_jpeg_work,
+    buffers_free_jpeg_work
+);

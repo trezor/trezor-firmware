@@ -1,31 +1,23 @@
-#[cfg(feature = "dma2d")]
-use crate::trezorhal::{
-    buffers::{get_buffer_16bpp, get_buffer_4bpp, get_text_buffer, BufferText, LineBuffer4Bpp},
-    dma2d::{dma2d_setup_4bpp_over_16bpp, dma2d_start_blend, dma2d_wait_for_transfer},
-};
 use crate::{
     trezorhal::{
-        buffers::{get_blurring_buffer, get_jpeg_buffer, get_jpeg_work_buffer, BufferJpeg},
+        buffers::{BufferBlurring, BufferJpeg, BufferLine16bpp, BufferLine4bpp, BufferText},
         display,
         display::bar_radius_buffer,
+        dma2d::{dma2d_setup_4bpp_over_16bpp, dma2d_start_blend, dma2d_wait_for_transfer},
         uzlib::UzlibContext,
     },
     ui::{
-        constant::screen,
-        display::{position_buffer, set_window, Color},
+        component::text::TextStyle,
+        constant::{screen, HEIGHT, WIDTH},
+        display::{
+            position_buffer, set_window,
+            tjpgd::{BufferInput, BufferOutput, JDEC},
+            Color, Icon,
+        },
         geometry::{Offset, Point, Rect},
+        model_tt::theme,
+        util::icon_text_center,
     },
-};
-
-use crate::ui::{
-    component::text::TextStyle,
-    constant::{HEIGHT, WIDTH},
-    display::{
-        tjpgd::{BufferInput, BufferOutput, JDEC},
-        Icon,
-    },
-    model_tt::theme,
-    util::icon_text_center,
 };
 
 #[derive(Clone, Copy)]
@@ -91,18 +83,15 @@ pub trait HomescreenDecompressor {
 }
 
 pub struct HomescreenJpeg<'i> {
-    pub output: BufferOutput<'i>,
+    pub output: BufferOutput,
     pub jdec: Option<JDEC<'i, 'i>>,
 }
 
 impl<'i> HomescreenJpeg<'i> {
-    pub fn new(input: &'i mut BufferInput<'i>) -> Self {
+    pub fn new(input: &'i mut BufferInput<'i>, pool: &'i mut [u8]) -> Self {
         Self {
-            output: BufferOutput::new(unsafe { get_jpeg_buffer(0, true) }, WIDTH, 16),
-            jdec: JDEC::new(input, unsafe {
-                get_jpeg_work_buffer(0, true).buffer.as_mut_slice()
-            })
-            .ok(),
+            output: BufferOutput::new(WIDTH, 16),
+            jdec: JDEC::new(input, pool).ok(),
         }
     }
 }
@@ -125,7 +114,7 @@ impl<'i> HomescreenDecompressor for HomescreenJpeg<'i> {
 }
 
 pub struct HomescreenToif<'i> {
-    pub output: BufferOutput<'i>,
+    pub output: BufferOutput,
     pub decomp_context: UzlibContext<'i>,
     line: i16,
 }
@@ -133,7 +122,7 @@ pub struct HomescreenToif<'i> {
 impl<'i> HomescreenToif<'i> {
     pub fn new(context: UzlibContext<'i>) -> Self {
         Self {
-            output: BufferOutput::new(unsafe { get_jpeg_buffer(0, true) }, WIDTH, 16),
+            output: BufferOutput::new(WIDTH, 16),
             decomp_context: context,
             line: 0,
         }
@@ -184,7 +173,7 @@ fn homescreen_get_fg_text(
     y_tmp: i16,
     text_info: HomescreenTextInfo,
     text_buffer: &BufferText,
-    fg_buffer: &mut LineBuffer4Bpp,
+    fg_buffer: &mut BufferLine4bpp,
 ) -> bool {
     if y_tmp >= text_info.text_area.y0 && y_tmp < text_info.text_area.y1 {
         let y_pos = y_tmp - text_info.text_area.y0;
@@ -204,7 +193,7 @@ fn homescreen_get_fg_icon(
     y_tmp: i16,
     text_info: HomescreenTextInfo,
     icon_data: &[u8],
-    fg_buffer: &mut LineBuffer4Bpp,
+    fg_buffer: &mut BufferLine4bpp,
 ) {
     if let Some(icon_area) = text_info.icon_area {
         let icon_size = icon_area.size();
@@ -291,13 +280,13 @@ fn homescreen_dim_area(x: i16, y: i16) -> bool {
 fn homescreen_line_blurred(
     icon_data: &[u8],
     text_buffer: &mut BufferText,
+    fg_buffer: &mut BufferLine4bpp,
+    img_buffer: &mut BufferLine16bpp,
     text_info: HomescreenTextInfo,
     blurring: &BlurringContext,
     y: i16,
 ) -> bool {
-    let t_buffer = unsafe { get_buffer_4bpp((y & 0x1) as u16, true) };
-    let mut img_buffer = unsafe { get_buffer_16bpp((y & 0x1) as u16, false) };
-
+    fg_buffer.buffer.fill(0);
     for x in 0..HOMESCREEN_IMAGE_WIDTH {
         let c = if LOCKSCREEN_DIM_ALL {
             let x = x as usize;
@@ -327,28 +316,31 @@ fn homescreen_line_blurred(
         img_buffer.buffer[j] = (c & 0xFF) as u8;
     }
 
-    let done = homescreen_get_fg_text(y, text_info, text_buffer, t_buffer);
-    homescreen_get_fg_icon(y, text_info, icon_data, t_buffer);
+    let done = homescreen_get_fg_text(y, text_info, text_buffer, fg_buffer);
+    homescreen_get_fg_icon(y, text_info, icon_data, fg_buffer);
 
     dma2d_wait_for_transfer();
     dma2d_setup_4bpp_over_16bpp(text_info.text_color.into());
-    dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, WIDTH);
+    unsafe {
+        dma2d_start_blend(&fg_buffer.buffer, &img_buffer.buffer, WIDTH);
+    }
 
     done
 }
 
+#[allow(clippy::too_many_arguments)]
 fn homescreen_line(
     icon_data: &[u8],
     text_buffer: &mut BufferText,
     text_info: HomescreenTextInfo,
     data_buffer: &mut BufferJpeg,
+    fg_buffer: &mut BufferLine4bpp,
+    img_buffer: &mut BufferLine16bpp,
     mcu_height: i16,
     y: i16,
 ) -> bool {
-    let t_buffer = unsafe { get_buffer_4bpp((y & 0x1) as u16, true) };
-    let mut img_buffer = unsafe { get_buffer_16bpp((y & 0x1) as u16, false) };
-
     let image_data = get_data(data_buffer, y, mcu_height);
+    fg_buffer.buffer.fill(0);
 
     for x in 0..HOMESCREEN_IMAGE_WIDTH {
         let d = image_data[x as usize];
@@ -373,12 +365,14 @@ fn homescreen_line(
         img_buffer.buffer[j] = (c & 0xFF) as u8;
     }
 
-    let done = homescreen_get_fg_text(y, text_info, text_buffer, t_buffer);
-    homescreen_get_fg_icon(y, text_info, icon_data, t_buffer);
+    let done = homescreen_get_fg_text(y, text_info, text_buffer, fg_buffer);
+    homescreen_get_fg_icon(y, text_info, icon_data, fg_buffer);
 
     dma2d_wait_for_transfer();
     dma2d_setup_4bpp_over_16bpp(text_info.text_color.into());
-    dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, WIDTH);
+    unsafe {
+        dma2d_start_blend(&fg_buffer.buffer, &img_buffer.buffer, WIDTH);
+    }
 
     done
 }
@@ -427,7 +421,7 @@ fn update_accs_sub(data: &[u16], idx: usize, acc_r: &mut u16, acc_g: &mut u16, a
 }
 
 struct BlurringContext {
-    pub lines: &'static mut [[[u16; 240usize]; 3usize]],
+    mem: BufferBlurring,
     pub totals: [[u16; HOMESCREEN_IMAGE_WIDTH as usize]; COLORS],
     line_num: i16,
     add_idx: usize,
@@ -436,9 +430,8 @@ struct BlurringContext {
 
 impl BlurringContext {
     pub fn new() -> Self {
-        let mem = unsafe { get_blurring_buffer(0, true) };
         Self {
-            lines: &mut mem.buffer[0..DECOMP_LINES],
+            mem: BufferBlurring::get_cleared(),
             totals: [[0; HOMESCREEN_IMAGE_WIDTH as usize]; COLORS],
             line_num: 0,
             add_idx: 0,
@@ -447,8 +440,9 @@ impl BlurringContext {
     }
 
     fn clear(&mut self) {
+        let lines = &mut self.mem.buffer[0..DECOMP_LINES];
         for (i, total) in self.totals.iter_mut().enumerate() {
-            for line in self.lines.iter_mut() {
+            for line in lines.iter_mut() {
                 line[i].fill(0);
             }
             total.fill(0);
@@ -457,6 +451,7 @@ impl BlurringContext {
 
     // computes color averages for one line of image data
     fn compute_line_avgs(&mut self, buffer: &mut BufferJpeg, mcu_height: i16) {
+        let lines = &mut self.mem.buffer[0..DECOMP_LINES];
         let mut acc_r = 0;
         let mut acc_g = 0;
         let mut acc_b = 0;
@@ -468,9 +463,9 @@ impl BlurringContext {
         }
 
         for i in 0..HOMESCREEN_IMAGE_WIDTH {
-            self.lines[self.add_idx][RED_IDX][i as usize] = acc_r;
-            self.lines[self.add_idx][GREEN_IDX][i as usize] = acc_g;
-            self.lines[self.add_idx][BLUE_IDX][i as usize] = acc_b;
+            lines[self.add_idx][RED_IDX][i as usize] = acc_r;
+            lines[self.add_idx][GREEN_IDX][i as usize] = acc_g;
+            lines[self.add_idx][BLUE_IDX][i as usize] = acc_b;
 
             // clamping handles left and right edges
             let ic = (i - BLUR_RADIUS).clamp(0, HOMESCREEN_IMAGE_WIDTH - 1) as usize;
@@ -484,22 +479,24 @@ impl BlurringContext {
 
     // adds one line of averages to sliding total averages
     fn vertical_avg_add(&mut self) {
+        let lines = &mut self.mem.buffer[0..DECOMP_LINES];
         for i in 0..HOMESCREEN_IMAGE_WIDTH as usize {
-            self.totals[RED_IDX][i] += self.lines[self.add_idx][RED_IDX][i];
-            self.totals[GREEN_IDX][i] += self.lines[self.add_idx][GREEN_IDX][i];
-            self.totals[BLUE_IDX][i] += self.lines[self.add_idx][BLUE_IDX][i];
+            self.totals[RED_IDX][i] += lines[self.add_idx][RED_IDX][i];
+            self.totals[GREEN_IDX][i] += lines[self.add_idx][GREEN_IDX][i];
+            self.totals[BLUE_IDX][i] += lines[self.add_idx][BLUE_IDX][i];
         }
     }
 
     // adds one line and removes one line of averages to/from sliding total averages
     fn vertical_avg(&mut self) {
+        let lines = &mut self.mem.buffer[0..DECOMP_LINES];
         for i in 0..HOMESCREEN_IMAGE_WIDTH as usize {
             self.totals[RED_IDX][i] +=
-                self.lines[self.add_idx][RED_IDX][i] - self.lines[self.rem_idx][RED_IDX][i];
+                lines[self.add_idx][RED_IDX][i] - lines[self.rem_idx][RED_IDX][i];
             self.totals[GREEN_IDX][i] +=
-                self.lines[self.add_idx][GREEN_IDX][i] - self.lines[self.rem_idx][GREEN_IDX][i];
+                lines[self.add_idx][GREEN_IDX][i] - lines[self.rem_idx][GREEN_IDX][i];
             self.totals[BLUE_IDX][i] +=
-                self.lines[self.add_idx][BLUE_IDX][i] - self.lines[self.rem_idx][BLUE_IDX][i];
+                lines[self.add_idx][BLUE_IDX][i] - lines[self.rem_idx][BLUE_IDX][i];
         }
     }
 
@@ -532,11 +529,15 @@ fn get_data(buffer: &mut BufferJpeg, line_num: i16, mcu_height: i16) -> &mut [u1
 pub fn homescreen_blurred(data: &mut dyn HomescreenDecompressor, texts: &[HomescreenText]) {
     let mut icon_data = [0_u8; (HOMESCREEN_MAX_ICON_SIZE * HOMESCREEN_MAX_ICON_SIZE / 2) as usize];
 
-    let text_buffer = unsafe { get_text_buffer(0, true) };
+    let mut text_buffer = BufferText::get_cleared();
+    let mut fg_buffer_0 = BufferLine4bpp::get_cleared();
+    let mut img_buffer_0 = BufferLine16bpp::get_cleared();
+    let mut fg_buffer_1 = BufferLine4bpp::get_cleared();
+    let mut img_buffer_1 = BufferLine16bpp::get_cleared();
 
     let mut next_text_idx = 1;
     let mut text_info =
-        homescreen_position_text(unwrap!(texts.get(0)), text_buffer, &mut icon_data);
+        homescreen_position_text(unwrap!(texts.get(0)), &mut text_buffer, &mut icon_data);
 
     let mcu_height = data.get_height();
     data.decompress();
@@ -571,11 +572,36 @@ pub fn homescreen_blurred(data: &mut dyn HomescreenDecompressor, texts: &[Homesc
             blurring.compute_line_avgs(data.get_data(), mcu_height);
         }
 
-        let done = homescreen_line_blurred(&icon_data, text_buffer, text_info, &blurring, y);
+        let done = if y % 2 == 0 {
+            homescreen_line_blurred(
+                &icon_data,
+                &mut text_buffer,
+                &mut fg_buffer_0,
+                &mut img_buffer_0,
+                text_info,
+                &blurring,
+                y,
+            )
+        } else {
+            homescreen_line_blurred(
+                &icon_data,
+                &mut text_buffer,
+                &mut fg_buffer_1,
+                &mut img_buffer_1,
+                text_info,
+                &blurring,
+                y,
+            )
+        };
 
         if done {
-            (text_info, next_text_idx) =
-                homescreen_next_text(texts, text_buffer, &mut icon_data, text_info, next_text_idx);
+            (text_info, next_text_idx) = homescreen_next_text(
+                texts,
+                &mut text_buffer,
+                &mut icon_data,
+                text_info,
+                next_text_idx,
+            );
         }
 
         blurring.vertical_avg();
@@ -613,7 +639,11 @@ pub fn homescreen(
 ) {
     let mut icon_data = [0_u8; (HOMESCREEN_MAX_ICON_SIZE * HOMESCREEN_MAX_ICON_SIZE / 2) as usize];
 
-    let text_buffer = unsafe { get_text_buffer(0, true) };
+    let mut text_buffer = BufferText::get_cleared();
+    let mut fg_buffer_0 = BufferLine4bpp::get_cleared();
+    let mut img_buffer_0 = BufferLine16bpp::get_cleared();
+    let mut fg_buffer_1 = BufferLine4bpp::get_cleared();
+    let mut img_buffer_1 = BufferLine16bpp::get_cleared();
 
     let mut next_text_idx = 0;
     let mut text_info = if let Some(notification) = notification {
@@ -623,7 +653,7 @@ pub fn homescreen(
             WIDTH - NOTIFICATION_BORDER * 2,
             NOTIFICATION_HEIGHT,
             2,
-            text_buffer,
+            &mut text_buffer,
         );
         let area = Rect::new(
             Point::new(0, NOTIFICATION_BORDER),
@@ -637,7 +667,7 @@ pub fn homescreen(
         }
     } else {
         next_text_idx += 1;
-        homescreen_position_text(unwrap!(texts.get(0)), text_buffer, &mut icon_data)
+        homescreen_position_text(unwrap!(texts.get(0)), &mut text_buffer, &mut icon_data)
     };
 
     set_window(screen());
@@ -649,14 +679,29 @@ pub fn homescreen(
             data.decompress();
         }
 
-        let done = homescreen_line(
-            &icon_data,
-            text_buffer,
-            text_info,
-            data.get_data(),
-            mcu_height,
-            y,
-        );
+        let done = if y % 2 == 0 {
+            homescreen_line(
+                &icon_data,
+                &mut text_buffer,
+                text_info,
+                data.get_data(),
+                &mut fg_buffer_0,
+                &mut img_buffer_0,
+                mcu_height,
+                y,
+            )
+        } else {
+            homescreen_line(
+                &icon_data,
+                &mut text_buffer,
+                text_info,
+                data.get_data(),
+                &mut fg_buffer_1,
+                &mut img_buffer_1,
+                mcu_height,
+                y,
+            )
+        };
 
         if done {
             if notification.is_some() && next_text_idx == 0 {
@@ -670,6 +715,9 @@ pub fn homescreen(
 
                 dma2d_wait_for_transfer();
 
+                drop(fg_buffer_0);
+                drop(fg_buffer_1);
+
                 icon_text_center(
                     text_info.text_area.center(),
                     notification.icon,
@@ -678,6 +726,10 @@ pub fn homescreen(
                     style,
                     Offset::new(1, -2),
                 );
+
+                fg_buffer_0 = BufferLine4bpp::get_cleared();
+                fg_buffer_1 = BufferLine4bpp::get_cleared();
+
                 set_window(
                     screen()
                         .split_top(NOTIFICATION_HEIGHT + NOTIFICATION_BORDER)
@@ -690,8 +742,13 @@ pub fn homescreen(
                 return;
             }
 
-            (text_info, next_text_idx) =
-                homescreen_next_text(texts, text_buffer, &mut icon_data, text_info, next_text_idx);
+            (text_info, next_text_idx) = homescreen_next_text(
+                texts,
+                &mut text_buffer,
+                &mut icon_data,
+                text_info,
+                next_text_idx,
+            );
         }
     }
     dma2d_wait_for_transfer();

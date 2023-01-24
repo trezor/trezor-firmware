@@ -15,7 +15,7 @@ use crate::{
 };
 
 use crate::{
-    trezorhal::{display::ToifFormat, uzlib::UZLIB_WINDOW_SIZE},
+    trezorhal::{buffers::BufferJpegWork, display::ToifFormat, uzlib::UZLIB_WINDOW_SIZE},
     ui::{
         constant::HEIGHT,
         display::{tjpgd::BufferInput, toif::Toif},
@@ -211,7 +211,8 @@ where
             if let Ok(data) = res {
                 if is_image_jpeg(data.as_ref()) {
                     let mut input = BufferInput(data.as_ref());
-                    let mut hs_img = HomescreenJpeg::new(&mut input);
+                    let mut pool = BufferJpegWork::get_cleared();
+                    let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
                     homescreen(
                         &mut hs_img,
                         &[text],
@@ -236,7 +237,8 @@ where
 
             if show_default {
                 let mut input = BufferInput(IMAGE_HOMESCREEN);
-                let mut hs_img = HomescreenJpeg::new(&mut input);
+                let mut pool = BufferJpegWork::get_cleared();
+                let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
                 homescreen(
                     &mut hs_img,
                     &[text],
@@ -328,7 +330,8 @@ where
         if let Ok(data) = res {
             if is_image_jpeg(data.as_ref()) {
                 let mut input = BufferInput(data.as_ref());
-                let mut hs_img = HomescreenJpeg::new(&mut input);
+                let mut pool = BufferJpegWork::get_cleared();
+                let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
                 homescreen_blurred(&mut hs_img, &texts);
                 show_default = false;
             } else if is_image_toif(data.as_ref()) {
@@ -343,7 +346,8 @@ where
 
         if show_default {
             let mut input = BufferInput(IMAGE_HOMESCREEN);
-            let mut hs_img = HomescreenJpeg::new(&mut input);
+            let mut pool = BufferJpegWork::get_cleared();
+            let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
             homescreen_blurred(&mut hs_img, &texts);
         }
     }
