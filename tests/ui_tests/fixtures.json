@@ -626,6 +626,20 @@
 }
 },
 "TT": {
+"click_tests": {
+"TT_test_autolock.py::test_autolock_interrupts_passphrase": "ecfc5031f2842460510451aa5345b3dd946f8041ebf24afe89c3cdb96f0bfcdd",
+"TT_test_autolock.py::test_autolock_interrupts_signing": "59666e372f5c10ef2ed10427829a128d5bf4fbf4e7a4792f51327e34e4328d74",
+"TT_test_autolock.py::test_autolock_passphrase_keyboard": "ce176c566cc895b2532e36752fe1c3d817073ca6f62587333bf13dc1834e0beb",
+"TT_test_autolock.py::test_dryrun_enter_word_slowly": "cf9761167b8b155c60db2da5a4a6a689dd9f598e9551e06b21551851d6873e2d",
+"TT_test_autolock.py::test_dryrun_locks_at_number_of_words": "aa479397af496496db214b5debb4ab4d30c0e8e7b347ec3169bb76aaf5ce735b",
+"TT_test_autolock.py::test_dryrun_locks_at_word_entry": "145c53e02422062fd3d6b2c48b624ef85f2c54d153fc583acfdd7fb3a62b2a6b",
+"TT_test_lock.py::test_hold_to_lock": "11a333c2bf616cefbdd8448b6fc54dd67610fd218c5007bcf3b796521885d017",
+"TT_test_recovery.py::test_recovery": "5386ca0d72aca0a4dac80ff78551cf69adc23faa9e56a7c002906a9bba7d5533",
+"TT_test_reset_slip39_advanced.py::test_reset_slip39_advanced_16of16groups_16of16shares": "e9224614d59b6343b919eeea5aa71c634efb8d9ae2e237723b999d78765329ff",
+"TT_test_reset_slip39_advanced.py::test_reset_slip39_advanced_2of2groups_2of2shares": "9b5f8c87adce9704508ce8017da0f12154173f32ac11061e886186ac63eb5aa2",
+"TT_test_reset_slip39_basic.py::test_reset_slip39_basic_16of16": "9bc7d4858fdebfe8b2074d964491e7b4dfc01ff79e8062fbcbd4b8151242e92d",
+"TT_test_reset_slip39_basic.py::test_reset_slip39_basic_1of1": "f3af9ec41f672935db29323795001a31c73c3aa7cacac323f83a12875a56a198"
+},
 "device_tests": {
 "TT_binance-test_get_address.py::test_binance_get_address[m-44h-714h-0h-0-0-bnb1hgm0p7khfk85zpz-68e2cb5a": "1cb2b0665827b1c8521f2ec85615e3335d53ba227ae117b651bf4695953a7ee5",
 "TT_binance-test_get_address.py::test_binance_get_address[m-44h-714h-0h-0-1-bnb1egswqkszzfc2uq7-1adfb691": "e5975dd56994e4f1159207b0640de306619949e5cba2d9a5ef97dca369d47cdb",
@@ -1597,10 +1611,10 @@
 "TT_test_debuglink.py::test_softlock_instability": "8dea6f68d26cd9b1fcb1319f3dbb6e5c6b75e792c6612f619c03eb281a863ecd",
 "TT_test_firmware_hash.py::test_firmware_hash_emu": "9ccf20a5175bc51c8771bd51ad40876acb317869bc4703c0b24c64b663670998",
 "TT_test_firmware_hash.py::test_firmware_hash_hw": "bd83a31d0fc4c23953dfd0d138e4441984e34698ace96aad5308a4ae51b712ae",
-"TT_test_msg_applysettings.py::test_apply_homescreen_toif": "9cf5090190cd84a1825a34531351cfa0fd8c95036d6302c5b3816b8e89607161",
 "TT_test_msg_applysettings.py::test_apply_homescreen_jpeg": "bf50e675a77b4f16108af55338c6abdf0af2cf3dcdfb7837300c8b318787053b",
-"TT_test_msg_applysettings.py::test_apply_homescreen_jpeg_wrong_size": "9cf5090190cd84a1825a34531351cfa0fd8c95036d6302c5b3816b8e89607161",
 "TT_test_msg_applysettings.py::test_apply_homescreen_jpeg_progressive": "9cf5090190cd84a1825a34531351cfa0fd8c95036d6302c5b3816b8e89607161",
+"TT_test_msg_applysettings.py::test_apply_homescreen_jpeg_wrong_size": "9cf5090190cd84a1825a34531351cfa0fd8c95036d6302c5b3816b8e89607161",
+"TT_test_msg_applysettings.py::test_apply_homescreen_toif": "9cf5090190cd84a1825a34531351cfa0fd8c95036d6302c5b3816b8e89607161",
 "TT_test_msg_applysettings.py::test_apply_settings": "d48eb22c89c6faa9419ca4e77766a39f744f76ace4cb5f1df833646a783faf32",
 "TT_test_msg_applysettings.py::test_apply_settings_passphrase": "9f1cdd0afa835c0284011ef4e7d9149132dd64f4e37a9655de82f5efcad7db3a",
 "TT_test_msg_applysettings.py::test_apply_settings_passphrase_on_device": "44025f9b6ca5c41f63d2b5ced29ce332433952d4722b463159f1c7ba52b520cf",
