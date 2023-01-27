@@ -13,13 +13,12 @@ from urllib.parse import unquote
 
 import click
 
-ROOT = Path(__file__).resolve().parent.parent
-UI_TESTS_PATH = ROOT / "tests" / "ui_tests"
-TEST_RESULT_PATH = UI_TESTS_PATH / "reporting" / "reports" / "test"
-FIXTURES_PATH = ROOT / "tests" / "ui_tests" / "fixtures.json"
+from ui_tests.common import SCREENS_DIR, TestResult, write_fixtures
+from ui_tests.reporting import testreport  # noqa: E402
 
-sys.path.append(str(UI_TESTS_PATH))
-from reporting import testreport  # noqa: E402
+ROOT = Path(__file__).resolve().parent.parent
+
+sys.path.append(str(ROOT / "tests"))
 
 
 class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -49,7 +48,7 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = posixpath.normpath(path)
         words = path.split("/")
         words = filter(None, words)
-        path = str(TEST_RESULT_PATH)  # XXX this is the only modified line
+        path = str(testreport.TESTREPORT_PATH)  # XXX this is the only modified line
         for word in words:
             if os.path.dirname(word) or word in (os.curdir, os.pardir):
                 # Ignore components that are not a simple file/directory name
@@ -58,15 +57,15 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
         if trailing_slash:
             path += "/"
         return path
-    
+
     def do_GET(self) -> None:
         if self.path in ("/", "/index.html"):
             testreport.index()
-        
+
         return super().do_GET()
 
     def do_POST(self) -> None:
-        if self.path == "/fixtures.json" and FIXTURES_PATH.exists():
+        if self.path == "/fixtures.json":
 
             length = int(self.headers.get("content-length"))
             field_data = self.rfile.read(length)
@@ -76,12 +75,10 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
             test_hash = data.get("hash")
 
             if test_name is not None and test_hash is not None:
-                with open(FIXTURES_PATH, "r") as jsonFile:
-                    fixtures = json.load(jsonFile)
-                fixtures[test_name] = test_hash
-                with open(FIXTURES_PATH, "w") as jsonFile:
-                    json.dump(fixtures, jsonFile, indent=0)
-                    jsonFile.write("\n")
+                test_path = SCREENS_DIR / test_name
+                result = TestResult.load(test_path)
+                assert result.actual_hash == test_hash
+                write_fixtures([result])
 
             self.send_response(200)
             self.send_header("Content-Type", "text/plain")

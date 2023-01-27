@@ -1,9 +1,10 @@
-import json
+from __future__ import annotations
+
 import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
-from typing import Dict
+from typing import Any
 
 import requests
 
@@ -17,6 +18,7 @@ def fetch_recorded(hash: str, path: Path) -> None:
     zip_dest = path / "recorded.zip"
 
     try:
+        print("downloading", zip_src)
         urllib.request.urlretrieve(zip_src, zip_dest)
     except urllib.error.HTTPError:
         raise RuntimeError(f"No such recorded collection was found on '{zip_src}'.")
@@ -27,12 +29,7 @@ def fetch_recorded(hash: str, path: Path) -> None:
     zip_dest.unlink()
 
 
-def fetch_fixtures_master() -> Dict[str, str]:
+def fetch_fixtures_master() -> dict[str, Any]:
     r = requests.get(FIXTURES_MASTER)
     r.raise_for_status()
     return r.json()
-
-
-def fetch_fixtures_current() -> Dict[str, str]:
-    with open(FIXTURES_CURRENT) as f:
-        return json.loads(f.read())
