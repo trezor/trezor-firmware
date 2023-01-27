@@ -1,4 +1,6 @@
 {
+"T1": {
+"device_tests": {
 "T1_bitcoin-test_bcash.py::test_attack_change_input": "6111e313995d38c3970c92e48047fe4088c83666c64c6c859f69a232ad62829b",
 "T1_bitcoin-test_bcash.py::test_send_bch_change": "6111e313995d38c3970c92e48047fe4088c83666c64c6c859f69a232ad62829b",
 "T1_bitcoin-test_bcash.py::test_send_bch_multisig_change": "0962a2e630e06b6d20282cc241be40f41bc1648d0a26247c7c008f32a197d0cb",
@@ -620,7 +622,11 @@
 "T1_zcash-test_sign_tx.py::test_spend_multisig": "65533f5073ebf67927f3e14810708650236236cc50aa4078494fc02c5f91ac53",
 "T1_zcash-test_sign_tx.py::test_spend_v4_input": "436b7a43b7fc7fe0615340c6aa73d46a18e5a0d804469702941cea9c8fd9e390",
 "T1_zcash-test_sign_tx.py::test_spend_v5_input": "6d29a8023d4b8b9fa4d170afbbaeb7cf1895906ab74f75c9fcb12a601154b9d5",
-"T1_zcash-test_sign_tx.py::test_version_group_id_missing": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"T1_zcash-test_sign_tx.py::test_version_group_id_missing": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
+},
+"TT": {
+"device_tests": {
 "TT_binance-test_get_address.py::test_binance_get_address[m-44h-714h-0h-0-0-bnb1hgm0p7khfk85zpz-68e2cb5a": "1cb2b0665827b1c8521f2ec85615e3335d53ba227ae117b651bf4695953a7ee5",
 "TT_binance-test_get_address.py::test_binance_get_address[m-44h-714h-0h-0-1-bnb1egswqkszzfc2uq7-1adfb691": "e5975dd56994e4f1159207b0640de306619949e5cba2d9a5ef97dca369d47cdb",
 "TT_binance-test_get_public_key.py::test_binance_get_public_key": "9ef5e6a9bbf83a72367ee2020dc841985ce15967d5a7285c022ff7c245a01780",
@@ -1701,4 +1707,6 @@
 "TT_zcash-test_sign_tx.py::test_spend_v5_input": "c9282a79ff6d28ef737e63c3aef862627bc1f2f96a693430358e5f072ce84c5e",
 "TT_zcash-test_sign_tx.py::test_unified_address": "5ccbd857b247dc7e10693617680038f78240c559a7fa67c076e660ca3bdc42d3",
 "TT_zcash-test_sign_tx.py::test_version_group_id_missing": "bd83a31d0fc4c23953dfd0d138e4441984e34698ace96aad5308a4ae51b712ae"
+}
+}
 }
