@@ -27,6 +27,13 @@ from . import ChoiceType, with_client
 if TYPE_CHECKING:
     from ..client import TrezorClient
 
+PURPOSE_BIP44 = 44
+PURPOSE_BIP48 = 48
+PURPOSE_BIP49 = 49
+PURPOSE_BIP84 = 84
+PURPOSE_BIP86 = 86
+PURPOSE_SLIP25 = 10025
+
 INPUT_SCRIPTS = {
     "address": messages.InputScriptType.SPENDADDRESS,
     "segwit": messages.InputScriptType.SPENDWITNESS,
@@ -49,12 +56,27 @@ OUTPUT_SCRIPTS = {
     "tr": messages.OutputScriptType.PAYTOTAPROOT,
 }
 
-BIP_PURPOSE_TO_SCRIPT_TYPE = {
-    tools.H_(44): messages.InputScriptType.SPENDADDRESS,
-    tools.H_(49): messages.InputScriptType.SPENDP2SHWITNESS,
-    tools.H_(84): messages.InputScriptType.SPENDWITNESS,
-    tools.H_(86): messages.InputScriptType.SPENDTAPROOT,
-    tools.H_(10025): messages.InputScriptType.SPENDTAPROOT,
+BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE = {
+    PURPOSE_BIP44: messages.InputScriptType.SPENDADDRESS,
+    PURPOSE_BIP49: messages.InputScriptType.SPENDP2SHWITNESS,
+    PURPOSE_BIP84: messages.InputScriptType.SPENDWITNESS,
+    PURPOSE_BIP86: messages.InputScriptType.SPENDTAPROOT,
+    PURPOSE_SLIP25: messages.InputScriptType.SPENDTAPROOT,
+}
+
+SCRIPT_TYPE_TO_BIP_PURPOSES = {
+    messages.InputScriptType.SPENDADDRESS: (PURPOSE_BIP44,),
+    messages.InputScriptType.SPENDP2SHWITNESS: (PURPOSE_BIP49,),
+    messages.InputScriptType.SPENDWITNESS: (PURPOSE_BIP84,),
+    messages.InputScriptType.SPENDTAPROOT: (PURPOSE_BIP86, PURPOSE_SLIP25),
+}
+
+ACCOUNT_TYPE_TO_BIP_PURPOSE = {
+    "bip44": PURPOSE_BIP44,
+    "bip49": PURPOSE_BIP49,
+    "bip84": PURPOSE_BIP84,
+    "bip86": PURPOSE_BIP86,
+    "slip25": PURPOSE_SLIP25,
 }
 
 BIP48_SCRIPT_TYPES = {
@@ -100,14 +122,14 @@ def xpub_deserialize(xpubstr: str) -> Tuple[str, messages.HDNodeType]:
 
 
 def guess_script_type_from_path(address_n: List[int]) -> messages.InputScriptType:
-    if len(address_n) < 1:
+    if len(address_n) < 1 or not tools.is_hardened(address_n[0]):
         return messages.InputScriptType.SPENDADDRESS
 
-    purpose = address_n[0]
-    if purpose in BIP_PURPOSE_TO_SCRIPT_TYPE:
-        return BIP_PURPOSE_TO_SCRIPT_TYPE[purpose]
+    purpose = tools.unharden(address_n[0])
+    if purpose in BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE:
+        return BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE[purpose]
 
-    if purpose == tools.H_(48) and len(address_n) >= 4:
+    if purpose == PURPOSE_BIP48 and len(address_n) >= 4:
         script_type_field = address_n[3]
         if script_type_field in BIP48_SCRIPT_TYPES:
             return BIP48_SCRIPT_TYPES[script_type_field]
@@ -254,34 +276,47 @@ def _append_descriptor_checksum(desc: str) -> str:
 def _get_descriptor(
     client: "TrezorClient",
     coin: Optional[str],
-    account: str,
-    script_type: messages.InputScriptType,
+    account: int,
+    purpose: Optional[int],
+    script_type: Optional[messages.InputScriptType],
     show_display: bool,
 ) -> str:
-    coin = coin or DEFAULT_COIN
+    if purpose is None:
+        if script_type is None:
+            script_type = messages.InputScriptType.SPENDADDRESS
+        purpose = SCRIPT_TYPE_TO_BIP_PURPOSES[script_type][0]
+    elif script_type is None:
+        script_type = BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE[purpose]
+    else:
+        if purpose not in SCRIPT_TYPE_TO_BIP_PURPOSES[script_type]:
+            raise ValueError("Invalid script type for account type")
+
     if script_type == messages.InputScriptType.SPENDADDRESS:
-        acc_type = 44
         fmt = "pkh({})"
     elif script_type == messages.InputScriptType.SPENDP2SHWITNESS:
-        acc_type = 49
         fmt = "sh(wpkh({}))"
     elif script_type == messages.InputScriptType.SPENDWITNESS:
-        acc_type = 84
         fmt = "wpkh({})"
     elif script_type == messages.InputScriptType.SPENDTAPROOT:
-        acc_type = 86
         fmt = "tr({})"
     else:
-        raise ValueError("Unsupported account type")
+        raise ValueError("Unsupported script type")
 
-    if coin is None or coin == "Bitcoin":
+    coin = coin or DEFAULT_COIN
+    if coin == "Bitcoin":
         coin_type = 0
     elif coin == "Testnet" or coin == "Regtest":
         coin_type = 1
     else:
         raise ValueError("Unsupported coin")
 
-    path = f"m/{acc_type}'/{coin_type}'/{account}'"
+    path = f"m/{purpose}'/{coin_type}'/{account}'"
+    if purpose == PURPOSE_SLIP25:
+        if script_type == messages.InputScriptType.SPENDTAPROOT:
+            path += "/1'"
+        else:
+            raise ValueError("Unsupported SLIP25 script type")
+
     n = tools.parse_path(path)
     pub = btc.get_public_node(
         client,
@@ -290,6 +325,7 @@ def _get_descriptor(
         coin_name=coin,
         script_type=script_type,
         ignore_xpub_magic=True,
+        unlock_path=get_unlock_path(n),
     )
 
     fingerprint = pub.root_fingerprint if pub.root_fingerprint is not None else 0
@@ -302,19 +338,23 @@ def _get_descriptor(
 @click.option(
     "-n", "--account", required=True, type=int, help="account index (0 = first account)"
 )
-@click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS), default="address")
+@click.option("-a", "--account-type", type=ChoiceType(ACCOUNT_TYPE_TO_BIP_PURPOSE))
+@click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS))
 @click.option("-d", "--show-display", is_flag=True)
 @with_client
 def get_descriptor(
     client: "TrezorClient",
     coin: Optional[str],
-    account: str,
-    script_type: messages.InputScriptType,
+    account: int,
+    account_type: Optional[int],
+    script_type: Optional[messages.InputScriptType],
     show_display: bool,
 ) -> str:
     """Get descriptor of given account."""
     try:
-        return _get_descriptor(client, coin, account, script_type, show_display)
+        return _get_descriptor(
+            client, coin, account, account_type, script_type, show_display
+        )
     except ValueError as e:
         raise click.ClickException(str(e))
 
