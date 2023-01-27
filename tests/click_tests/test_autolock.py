@@ -97,7 +97,6 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         device_handler.result()
 
 
-@pytest.mark.xfail(reason="depends on #922")
 @pytest.mark.setup_client(pin=PIN4, passphrase=True)
 def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
@@ -108,14 +107,42 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
 
     # enter passphrase - slowly
     layout = debug.wait_layout()
-    assert layout.text == "PassphraseKeyboard"
+    assert layout.text == "< PassphraseKeyboard >"
 
     CENTER_BUTTON = buttons.grid35(1, 2)
+    # total sleep time: 11 * 1.1 = 12.1 seconds
     for _ in range(11):
         debug.click(CENTER_BUTTON)
         time.sleep(1.1)
 
-    assert device_handler.result() == "TODO when #922 fixed"
+    debug.click(buttons.OK, wait=True)
+    assert device_handler.result() == "mzAZ4BgqmFHYxhPgdFH2pR2h1X7jJrNFSs"
+
+
+@pytest.mark.setup_client(pin=PIN4, passphrase=True)
+def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler"):
+    set_autolock_delay(device_handler, 10_000)
+    debug = device_handler.debuglink()
+
+    # get address
+    device_handler.run(common.get_test_address)
+
+    # enter passphrase - slowly
+    layout = debug.wait_layout()
+    assert layout.text == "< PassphraseKeyboard >"
+
+    CENTER_BUTTON = buttons.grid35(1, 2)
+    # total sleep time: 5 * 1.1 = 5.5 seconds
+    for _ in range(5):
+        debug.click(CENTER_BUTTON)
+        time.sleep(1.1)
+
+    # wait for autolock to kick in
+    time.sleep(10.1)
+    layout = debug.wait_layout()
+    assert layout.text.startswith("< Lockscreen")
+    with pytest.raises(exceptions.Cancelled):
+        device_handler.result()
 
 
 @pytest.mark.setup_client(pin=PIN4)
