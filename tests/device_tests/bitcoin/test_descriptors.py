@@ -133,6 +133,20 @@ VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
         messages.InputScriptType.SPENDTAPROOT,
         "tr([5c9e228d/86'/1'/1']tpubDC88gkaZi5HvKcrFLNkZwcXx1YyShkmPTkSNoP5MHQnSP9vTrKEYKtoeEkX4oEJmNYSm6Y3fFcNV4xbkDE1uZZBmJe1ircegxgVnBW8j4SL/<0;1>/*)#fwrmvr53",
     ),
+    (
+        "Bitcoin",
+        0,
+        10025,
+        messages.InputScriptType.SPENDTAPROOT,
+        "tr([5c9e228d/10025'/0'/0'/1']xpub6F9fdWTs2pmUS7phuTZbAM6XttUQoEgue5gvZToVLFcxA3jitxsbK1ZrHrGnPRJkjv9XrHW7Lqi3DnjLuv4XWXaxFdVnh6MyX4hXrkuzQgf/<0;1>/*)#llpu5z9x",
+    ),
+    (
+        "Testnet",
+        0,
+        10025,
+        messages.InputScriptType.SPENDTAPROOT,
+        "tr([5c9e228d/10025'/1'/0'/1']tpubDEMKm4M3S2Grx5DHTfbX9et5HQb9KhdjDCkUYdH9gvVofvPTE6yb2MH52P9uc4mx6eFohUmfN1f4hhHNK28GaZnWRXr3b8KkfFcySo1SmXU/<0;1>/*)#4lsrfvjs",
+    ),
 )
 
 
