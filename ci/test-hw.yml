@@ -42,7 +42,7 @@ hardware core regular device test:
     - source hardware.cfg
     - set +a
     - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin | ts -s"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
     - nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 6h
   artifacts:
@@ -72,7 +72,7 @@ hardware core btconly device test:
     - source hardware.cfg
     - set +a
     - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin | ts -s"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
     - nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 4h
   artifacts:
@@ -99,7 +99,7 @@ hardware core monero test:
     - source hardware.cfg
     - set +a
     - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin | ts -s"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
     - nix-shell --arg fullDeps true --run "cd ../../core/tests && ./run_tests_device_emu_monero.sh $TESTOPTS | ts -s"
   timeout: 1h
   artifacts:
