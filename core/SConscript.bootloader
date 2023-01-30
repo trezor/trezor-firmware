@@ -4,6 +4,7 @@ import os
 import tools
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 DMA2D = False
 
 if TREZOR_MODEL in ('1', ):
@@ -164,7 +165,9 @@ env.Replace(
     LINK='arm-none-eabi-gcc',
     SIZE='arm-none-eabi-size',
     STRIP='arm-none-eabi-strip',
-    OBJCOPY='arm-none-eabi-objcopy', )
+    OBJCOPY='arm-none-eabi-objcopy',
+    PYTHON='python',
+    MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py', )
 
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
@@ -223,6 +226,17 @@ env.Replace(
     HEADERTOOL='tools/headertool.py',
 )
 
+env.Replace(
+    ALLSOURCES=SOURCE_MOD + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_STMHAL + SOURCE_TREZORHAL,
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
+
+cmake_gen = env.Command(
+    target='CMakeLists.txt',
+    source='',
+    action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
+)
+
+
 #
 # Program objects
 #
@@ -246,6 +260,9 @@ BINARY_NAME += "-" + tools.get_version('embed/bootloader/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
+
+if CMAKELISTS != 0:
+    env.Depends(program_elf, cmake_gen)
 
 program_bin = env.Command(
     target='bootloader.bin',
