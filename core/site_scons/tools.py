@@ -18,7 +18,6 @@ def get_hw_model_as_number(hw_model):
     return int.from_bytes(hw_model.encode(), 'little')
 
 
-
 def configure_board(model, env, defines, sources):
     model_r_version = 4
 
@@ -91,3 +90,13 @@ def get_git_revision_short_hash() -> str:
 
 def get_git_modified() -> bool:
     return subprocess.check_output(['git', 'diff', '--name-status']).decode('ascii').strip() != ''
+
+
+def get_defs_for_cmake(defs):
+    result = []
+    for d in defs:
+        if type(d) is tuple:
+            result.append(d[0] + "=" + d[1])
+        else:
+            result.append(d)
+    return result

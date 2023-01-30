@@ -8,3 +8,5 @@ tests/trezor_monero_tests*
 .coverage.*
 htmlcov/
 mypy_report
+/CMakeLists.txt
+/cmake-build-debug/
