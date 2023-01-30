@@ -60,11 +60,11 @@ core device test:
     TREZOR_PROFILING: 1
   script:
     - nix-shell --run "poetry run make -C core test_emu_ui | ts -s"
-    - mv core/src/.coverage core/.coverage.test_emu
   after_script:
-    - mv tests/ui_tests/reporting/reports/test/ test_ui_report
-    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py TT | ts -s"
-    - diff tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+    - mv core/src/.coverage core/.coverage.test_emu
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -266,11 +266,22 @@ core click test:
   <<: *gitlab_caching
   needs:
     - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: 1
   script:
-    - nix-shell --run "poetry run make -C core test_emu_click | ts -s"
+    - nix-shell --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
       - tests/trezor.log
       - tests/junit.xml
     reports:
@@ -433,9 +444,9 @@ legacy device test:
   script:
     - nix-shell --run "poetry run make -C legacy test_emu_ui | ts -s"
   after_script:
-    - mv tests/ui_tests/reporting/reports/test/ test_ui_report
-    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py T1 | ts -s"
-    - diff tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
