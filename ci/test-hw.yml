@@ -41,9 +41,9 @@ hardware core regular device test:
     - set -a
     - source hardware.cfg
     - set +a
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
-    - nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
+    - cached-nix-shell --run "cd ../.. && poetry install"
+    - cached-nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
+    - cached-nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 6h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -71,9 +71,9 @@ hardware core btconly device test:
     - set -a
     - source hardware.cfg
     - set +a
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
-    - nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
+    - cached-nix-shell --run "cd ../.. && poetry install"
+    - cached-nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
+    - cached-nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 4h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -98,9 +98,9 @@ hardware core monero test:
     - set -a
     - source hardware.cfg
     - set +a
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
-    - nix-shell --arg fullDeps true --run "cd ../../core/tests && ./run_tests_device_emu_monero.sh $TESTOPTS | ts -s"
+    - cached-nix-shell --run "cd ../.. && poetry install"
+    - cached-nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
+    - cached-nix-shell --arg fullDeps true --run "cd ../../core/tests && ./run_tests_device_emu_monero.sh $TESTOPTS | ts -s"
   timeout: 1h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -124,7 +124,7 @@ hardware legacy regular device test:
     - legacy fw regular debug build
   script:
     - cd ci/hardware_tests
-    - nix-shell --run "./t1_hw_test.sh | ts -s"
+    - cached-nix-shell --run "./t1_hw_test.sh | ts -s"
   timeout: 1h10m
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -150,7 +150,7 @@ hardware legacy btconly device test:
     - legacy fw btconly debug build
   script:
     - cd ci/hardware_tests
-    - nix-shell --run "./t1_hw_test.sh | ts -s"
+    - cached-nix-shell --run "./t1_hw_test.sh | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:

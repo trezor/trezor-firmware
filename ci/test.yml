@@ -18,7 +18,7 @@ core unit python test:
   needs:
     - core unix regular build
   script:
-    - nix-shell --run "poetry run make -C core test | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test | ts -s"
 
 # Rust unit tests.
 core unit rust test:
@@ -27,8 +27,8 @@ core unit rust test:
   needs:
     - core unix frozen debug build
   script:
-    - nix-shell --run "poetry run make -C core clippy | ts -s"
-    - nix-shell --run "poetry run make -C core test_rust | ts -s"
+    - cached-nix-shell --run "poetry run make -C core clippy | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_rust | ts -s"
 
 core unit asan test:
   stage: test
@@ -43,9 +43,9 @@ core unit asan test:
     ADDRESS_SANITIZER: "1"
     LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
   script:
-    - nix-shell --run "poetry run make -C core test | ts -s"
-    - nix-shell --run "poetry run make -C core clean build_unix | ts -s"
-    - nix-shell --run "poetry run make -C core test_rust | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test | ts -s"
+    - cached-nix-shell --run "poetry run make -C core clean build_unix | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_rust | ts -s"
 
 # Device tests for Core. Running device tests and also comparing screens
 # with the expected UI result.
@@ -59,11 +59,11 @@ core device test:
   variables:
     TREZOR_PROFILING: 1
   script:
-    - nix-shell --run "poetry run make -C core test_emu_ui | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu_ui | ts -s"
   after_script:
     - mv core/src/.coverage core/.coverage.test_emu
     - mv tests/ui_tests/reports/test/ test_ui_report
-    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - cached-nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
     - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -90,7 +90,7 @@ core device asan test:
   variables:
     PYTEST_TIMEOUT: "600"
   script:
-    - nix-shell --run "poetry run make -C core test_emu | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -108,7 +108,7 @@ core btconly device test:
     MICROPYTHON: "build/unix/trezor-emu-core-bitcoinonly"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
-    - nix-shell --run "poetry run make -C core test_emu | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -131,7 +131,7 @@ core btconly device asan test:
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
     PYTEST_TIMEOUT: "600"
   script:
-    - nix-shell --run "poetry run make -C core test_emu | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -148,7 +148,7 @@ core monero test:
   variables:
     TREZOR_PROFILING: 1
   script:
-    - nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero | ts -s"
+    - cached-nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero | ts -s"
     - mv core/src/.coverage core/.coverage.test_emu_monero
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -169,7 +169,7 @@ core monero asan test:
   variables:
     TREZOR_PROFILING: 1
   script:
-    - nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero | ts -s"
+    - cached-nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero | ts -s"
     - mv core/src/.coverage core/.coverage.test_emu_monero
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -189,8 +189,8 @@ core u2f test:
   variables:
     TREZOR_PROFILING: 1
   script:
-    - nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid | ts -s"
-    - nix-shell --run "poetry run make -C core test_emu_u2f | ts -s"
+    - cached-nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu_u2f | ts -s"
     - mv core/src/.coverage core/.coverage.test_emu_u2f
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -208,8 +208,8 @@ core u2f asan test:
   only:
     - schedules  # nightly build
   script:
-    - nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid | ts -s"
-    - nix-shell --run "poetry run make -C core test_emu_u2f | ts -s"
+    - cached-nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu_u2f | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -227,7 +227,7 @@ core fido2 test:
     TREZOR_PROFILING: 1
   script:
     - pgrep trezor-emu-core || true
-    - nix-shell --run "poetry run make -C core test_emu_fido2 | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu_fido2 | ts -s"
     - pgrep trezor-emu-core || true
     - mv core/src/.coverage core/.coverage.test_emu_fido2
   artifacts:
@@ -250,7 +250,7 @@ core fido2 asan test:
     - schedules  # nightly build
   script:
     - pgrep trezor-emu-core || true
-    - nix-shell --run "poetry run make -C core test_emu_fido2 | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu_fido2 | ts -s"
     - pgrep trezor-emu-core || true
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -269,11 +269,11 @@ core click test:
   variables:
     TREZOR_PROFILING: 1
   script:
-    - nix-shell --run "poetry run make -C core test_emu_click_ui | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu_click_ui | ts -s"
   after_script:
     - mv core/src/.coverage core/.coverage.test_click
     - mv tests/ui_tests/reports/test/ test_ui_report
-    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - cached-nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
     - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -297,7 +297,7 @@ core click asan test:
   only:
     - schedules  # nightly build
   script:
-    - nix-shell --run "poetry run make -C core test_emu_click | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu_click | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -318,8 +318,8 @@ core upgrade test:
   variables:
     TREZOR_UPGRADE_TEST: "core"
   script:
-    - nix-shell --run "tests/download_emulators.sh"
-    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
+    - cached-nix-shell --run "tests/download_emulators.sh"
+    - cached-nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -339,8 +339,8 @@ core upgrade asan test:
   variables:
     TREZOR_UPGRADE_TEST: "core"
   script:
-    - nix-shell --run "tests/download_emulators.sh"
-    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
+    - cached-nix-shell --run "tests/download_emulators.sh"
+    - cached-nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -357,7 +357,7 @@ core persistence test:
   needs:
     - core unix frozen debug build
   script:
-    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/persistence_tests | ts -s"
+    - cached-nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/persistence_tests | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -375,7 +375,7 @@ core persistence asan test:
   only:
     - schedules  # nightly build
   script:
-    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/persistence_tests | ts -s"
+    - cached-nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/persistence_tests | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -392,8 +392,8 @@ core hwi test:
     - core unix frozen debug build
   allow_failure: true
   script:
-    - nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
-    - nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
+    - cached-nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
+    - cached-nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -420,8 +420,8 @@ crypto test:
     - ./crypto/tests/aestst
     - ./crypto/tests/test_check
     - ./crypto/tests/test_openssl 1000
-    - nix-shell --run "cd crypto && ITERS=10 poetry run pytest --junitxml=tests/junit.xml tests | ts -s"
-    - nix-shell --run "CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./crypto/tests/test_check_noasan | ts -s"
+    - cached-nix-shell --run "cd crypto && ITERS=10 poetry run pytest --junitxml=tests/junit.xml tests | ts -s"
+    - cached-nix-shell --run "CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./crypto/tests/test_check_noasan | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -442,10 +442,10 @@ legacy device test:
   variables:
     EMULATOR: "1"
   script:
-    - nix-shell --run "poetry run make -C legacy test_emu_ui | ts -s"
+    - cached-nix-shell --run "poetry run make -C legacy test_emu_ui | ts -s"
   after_script:
     - mv tests/ui_tests/reports/test/ test_ui_report
-    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - cached-nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
     - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -471,7 +471,7 @@ legacy asan test:
   variables:
     EMULATOR: "1"
   script:
-    - nix-shell --run "poetry run make -C legacy test_emu | ts -s"
+    - cached-nix-shell --run "poetry run make -C legacy test_emu | ts -s"
 
 legacy btconly test:
   stage: test
@@ -483,7 +483,7 @@ legacy btconly test:
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
-    - nix-shell --run "poetry run make -C legacy test_emu | ts -s"
+    - cached-nix-shell --run "poetry run make -C legacy test_emu | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -505,7 +505,7 @@ legacy btconly asan test:
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
-    - nix-shell --run "poetry run make -C legacy test_emu | ts -s"
+    - cached-nix-shell --run "poetry run make -C legacy test_emu | ts -s"
 
 
 legacy upgrade test:
@@ -516,8 +516,8 @@ legacy upgrade test:
   variables:
     TREZOR_UPGRADE_TEST: "legacy"
   script:
-    - nix-shell --run "tests/download_emulators.sh"
-    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
+    - cached-nix-shell --run "tests/download_emulators.sh"
+    - cached-nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -537,8 +537,8 @@ legacy upgrade asan test:
   variables:
     TREZOR_UPGRADE_TEST: "legacy"
   script:
-    - nix-shell --run "tests/download_emulators.sh"
-    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
+    - cached-nix-shell --run "tests/download_emulators.sh"
+    - cached-nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -557,8 +557,8 @@ legacy hwi test:
     EMULATOR: "1"
   allow_failure: true
   script:
-    - nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
-    - nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
+    - cached-nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
+    - cached-nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -584,14 +584,14 @@ python test:
     # See also:
     # https://github.com/NixOS/nixpkgs/blob/b00c7c2d1d905eb63c81a0917f1a94b763a7843b/pkgs/development/interpreters/python/cpython/default.nix#L103
     # https://github.com/NixOS/nixpkgs/pull/98915
-    - nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd python && poetry run tox | ts -s"
+    - cached-nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd python && poetry run tox | ts -s"
 
 python support test:
   stage: test
   <<: *gitlab_caching
   needs: []
   script:
-    - nix-shell --run "poetry run make python_support_check | ts -s"
+    - cached-nix-shell --run "poetry run make python_support_check | ts -s"
 
 
 # Storage
@@ -607,8 +607,8 @@ storage test:
   needs: []
   script:
     - unset PYTEST_TIMEOUT
-    - nix-shell --run "poetry run make -C storage/tests build | ts -s"
-    - nix-shell --run "poetry run make -C storage/tests tests_all | ts -s"
+    - cached-nix-shell --run "poetry run make -C storage/tests build | ts -s"
+    - cached-nix-shell --run "poetry run make -C storage/tests tests_all | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -630,10 +630,10 @@ core unix memory profiler:
     TREZOR_MEMPERF: "1"
     PYTEST_TIMEOUT: "900"
   script:
-    - nix-shell --run "poetry run make -C core build_unix_frozen | ts -s"
-    - nix-shell --run "poetry run make -C core test_emu | ts -s"
-    - nix-shell --run "mkdir core/prof/memperf-html"
-    - nix-shell --run "poetry run core/tools/alloc.py --alloc-data=core/src/alloc_data.txt html core/prof/memperf-html"
+    - cached-nix-shell --run "poetry run make -C core build_unix_frozen | ts -s"
+    - cached-nix-shell --run "poetry run make -C core test_emu | ts -s"
+    - cached-nix-shell --run "mkdir core/prof/memperf-html"
+    - cached-nix-shell --run "poetry run core/tools/alloc.py --alloc-data=core/src/alloc_data.txt html core/prof/memperf-html"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -657,10 +657,10 @@ connect test core:
   before_script:
     - cp /builds/satoshilabs/trezor/trezor-firmware/core/build/unix/trezor-emu-core /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99
     - chmod +x /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99
-    - nix-shell --run "autoPatchelf /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99"
+    - cached-nix-shell --run "autoPatchelf /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99"
   script:
     - /trezor-user-env/run-nix.sh &
-    - nix-shell --run "tests/connect_tests/connect_tests.sh 2.99.99"
+    - cached-nix-shell --run "tests/connect_tests/connect_tests.sh 2.99.99"
   after_script:
     - cp /trezor-user-env/logs/debugging.log trezor-user-env-debugging.log
     - cp /trezor-user-env/logs/emulator_bridge.log tenv-emulator-bridge-debugging.log
