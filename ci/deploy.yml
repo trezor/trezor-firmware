@@ -188,8 +188,8 @@ release core unix debug deploy:
     - DEST="$DEPLOY_PATH/trezor-emu-core-v$VERSION"
     - DEST_ARM="$DEPLOY_PATH/arm/trezor-emu-core-v$VERSION-arm"
     - echo "Deploying to $DEST and $DEST_ARM"
-    - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 core/build/unix/trezor-emu-core"
-    - nix-shell -p patchelf --run "patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 core/build/unix/trezor-emu-core-arm"
+    - cached-nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 core/build/unix/trezor-emu-core"
+    - cached-nix-shell -p patchelf --run "patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 core/build/unix/trezor-emu-core-arm"
     - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
     - rsync --delete -va core/build/unix/trezor-emu-core-arm "$DEST_ARM"
   only:
@@ -213,8 +213,8 @@ release legacy unix debug deploy:
     - DEST="$DEPLOY_PATH/trezor-emu-legacy-v$VERSION"
     - DEST_ARM="$DEPLOY_PATH/arm/trezor-emu-legacy-v$VERSION-arm"
     - echo "Deploying to $DEST and $DEST_ARM"
-    - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 legacy/firmware/trezor.elf"
-    - nix-shell -p patchelf --run "patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 legacy/firmware/trezor-arm.elf"
+    - cached-nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 legacy/firmware/trezor.elf"
+    - cached-nix-shell -p patchelf --run "patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 legacy/firmware/trezor-arm.elf"
     - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
     - rsync --delete -va legacy/firmware/trezor-arm.elf "$DEST_ARM"
   only:

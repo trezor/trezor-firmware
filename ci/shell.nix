@@ -71,6 +71,7 @@ stdenvNoCC.mkDerivation ({
     SDL2
     SDL2_image
     bash
+    cached-nix-shell
     check
     curl  # for connect tests
     editorconfig-checker

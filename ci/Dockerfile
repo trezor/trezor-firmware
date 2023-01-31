@@ -50,5 +50,7 @@ ARG FULLDEPS_TESTING=0
 ENV FULLDEPS_TESTING=${FULLDEPS_TESTING}
 
 RUN nix-shell --arg fullDeps "$([ ${FULLDEPS_TESTING} = 1 ] && echo true || echo false)" --run "echo deps pre-installed"
+RUN nix-env -iA nixpkgs.cached-nix-shell
+RUN cached-nix-shell --arg fullDeps "$([ ${FULLDEPS_TESTING} = 1 ] && echo true || echo false)" --run "echo cached-nix-shell initialized"
 
-CMD [ "nix-shell" ]
+CMD [ "cached-nix-shell" ]
