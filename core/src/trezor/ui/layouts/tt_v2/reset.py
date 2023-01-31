@@ -5,35 +5,16 @@ from trezor.wire import ActionCancelled
 
 import trezorui2
 
-from ..common import interact
+from ..common import interact, split_share_into_pages
 from . import RustLayout
 
 if TYPE_CHECKING:
-    from typing import Callable, Sequence, List
+    from typing import Callable, Sequence
     from trezor.enums import BackupType
     from trezor.wire import GenericContext
 
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
-
-
-def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> List[str]:
-    pages = []
-    current = ""
-
-    for i, word in enumerate(share_words):
-        if i % per_page == 0:
-            if i != 0:
-                pages.append(current)
-            current = ""
-        else:
-            current += "\n"
-        current += f"{i + 1}. {word}"
-
-    if current:
-        pages.append(current)
-
-    return pages
 
 
 async def show_share_words(
@@ -64,7 +45,7 @@ async def show_share_words(
     # if result != CONFIRMED:
     #     raise ActionCancelled
 
-    pages = _split_share_into_pages(share_words)
+    pages = split_share_into_pages(share_words)
 
     result = await interact(
         ctx,
@@ -73,7 +54,6 @@ async def show_share_words(
                 title=title,
                 pages=pages,
             ),
-            is_backup=True,
         ),
         "backup_words",
         ButtonRequestType.ResetDevice,
@@ -356,3 +336,10 @@ async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
     )
     if result != CONFIRMED:
         raise ActionCancelled
+
+
+async def show_success_backup(ctx: GenericContext) -> None:
+    from . import show_success
+
+    text = "Use your backup when you need to recover your wallet."
+    await show_success(ctx, "success_backup", text, "Your backup is done.")

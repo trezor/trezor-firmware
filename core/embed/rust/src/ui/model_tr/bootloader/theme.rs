@@ -2,7 +2,7 @@ use crate::ui::{
     component::text::TextStyle,
     display::{Color, Font},
     model_tr::{
-        component::{ButtonStyle, ButtonStyleSheet},
+        component::{ButtonStyleSheet},
         theme::{BG, BLACK, FG, WHITE},
     },
 };
@@ -17,33 +17,25 @@ pub const RADIUS: u8 = 2;
 pub const ICON_SIZE: i32 = 16;
 
 pub fn bld_button_default() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: BG,
-            border_horiz: true,
-        },
-        active: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: FG,
-            border_horiz: true,
-        },
-    }
+    ButtonStyleSheet::new(
+        BG,
+        FG,
+        false,
+        false,
+        None,
+        None,
+    )
 }
 
 pub fn bld_button_cancel() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: FG,
-            border_horiz: false,
-        },
-        active: &ButtonStyle {
-            font: Font::NORMAL,
-            text_color: BG,
-            border_horiz: false,
-        },
-    }
+    ButtonStyleSheet::new(
+        FG,
+        BG,
+        false,
+        false,
+        None,
+        None,
+    )
 }
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);

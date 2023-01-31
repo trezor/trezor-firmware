@@ -208,6 +208,14 @@ impl LayoutObj {
         unsafe { Gc::as_mut(&mut inner.root) }.obj_paint()
     }
 
+    /// Place but do not paint.
+    /// Called before getting debug information about current screen.
+    fn obj_place(&self) {
+        let mut inner = self.inner.borrow_mut();
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
+    }
+
     /// Run a tracing pass over the component tree. Passed `callback` is called
     /// with each piece of tracing information. Panics in case the callback
     /// raises an exception.
@@ -231,30 +239,51 @@ impl LayoutObj {
             }
 
             fn symbol(&mut self, name: &str) {
-                self.0
-                    .call_with_n_args(&[
-                        "<".try_into().unwrap(),
-                        name.try_into().unwrap(),
-                        ">".try_into().unwrap(),
-                    ])
-                    .unwrap();
+                self.string("<");
+                self.string(name);
+                self.string(">");
             }
 
             fn open(&mut self, name: &str) {
-                self.0
-                    .call_with_n_args(&["<".try_into().unwrap(), name.try_into().unwrap()])
-                    .unwrap();
+                self.string("<");
+                self.string(name);
+                self.string(" ");
             }
 
             fn field(&mut self, name: &str, value: &dyn Trace) {
-                self.0
-                    .call_with_n_args(&[name.try_into().unwrap(), ": ".try_into().unwrap()])
-                    .unwrap();
+                self.string(name);
+                self.string(":");
                 value.trace(self);
+                self.string(" ");
+            }
+
+            /// Mark the string as a title/header.
+            fn title(&mut self, title: &str) {
+                self.string(crate::trace::TITLE_TAG);
+                self.string(title);
+                self.string(crate::trace::TITLE_TAG);
+            }
+
+            /// Mark the string as a button content.
+            fn button(&mut self, button: &str) {
+                self.string(crate::trace::BTN_TAG);
+                self.string(button);
+                self.string(crate::trace::BTN_TAG);
+            }
+
+            fn content_flag(&mut self) {
+                self.string(crate::trace::CONTENT_TAG);
+            }
+
+            fn kw_pair(&mut self, key: &str, value: &dyn Trace) {
+                self.string(key);
+                self.string("::");
+                value.trace(self);
+                self.string(","); // mostly for human readability
             }
 
             fn close(&mut self) {
-                self.0.call_with_n_args(&[">".try_into().unwrap()]).unwrap();
+                self.string(">")
             }
         }
 
@@ -297,6 +326,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
+                Qstr::MP_QSTR_place => obj_fn_1!(ui_layout_place).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
                 Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
@@ -477,6 +507,15 @@ extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
             panic!("cannot raise messages during RequestPaint");
         };
         Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_place(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_place();
+        Ok(Obj::const_true())
     };
     unsafe { util::try_or_raise(block) }
 }

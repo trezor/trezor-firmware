@@ -53,9 +53,7 @@ def busy_expiry_ms() -> int:
 
 def get_features() -> Features:
     import storage.recovery as storage_recovery
-    import storage.sd_salt as storage_sd_salt
 
-    from trezor import sdcard
     from trezor.enums import Capability
     from trezor.messages import Features
 
@@ -104,11 +102,18 @@ def get_features() -> Features:
             Capability.ShamirGroups,
         ]
 
-    # Other models are not capable of PassphraseEntry
-    if utils.MODEL in ("T",):
+    # Some models are not capable of PassphraseEntry
+    if utils.MODEL in ("T", "R"):
         f.capabilities.append(Capability.PassphraseEntry)
 
-    f.sd_card_present = sdcard.is_present()
+    # Only some models are capable of SD card
+    if utils.MODEL in ("T",):
+        from trezor import sdcard
+
+        f.sd_card_present = sdcard.is_present()
+    else:
+        f.sd_card_present = False
+
     f.initialized = storage_device.is_initialized()
 
     # private fields:
@@ -121,7 +126,15 @@ def get_features() -> Features:
         f.flags = storage_device.get_flags()
         f.recovery_mode = storage_recovery.is_in_progress()
         f.backup_type = mnemonic.get_type()
-        f.sd_protection = storage_sd_salt.is_enabled()
+
+        # Only some models are capable of SD card
+        if utils.MODEL in ("T",):
+            import storage.sd_salt as storage_sd_salt
+
+            f.sd_protection = storage_sd_salt.is_enabled()
+        else:
+            f.sd_protection = False
+
         f.wipe_code_protection = config.has_wipe_code()
         f.passphrase_always_on_device = storage_device.get_passphrase_always_on_device()
         f.safety_checks = safety_checks.read_setting()

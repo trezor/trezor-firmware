@@ -133,7 +133,10 @@ def recover(
         u2f_counter = int(time.time())
 
     msg = messages.RecoveryDevice(
-        word_count=word_count, enforce_wordlist=True, type=type, dry_run=dry_run
+        word_count=word_count,
+        enforce_wordlist=True,
+        type=type,
+        dry_run=dry_run,
     )
 
     if not dry_run:
@@ -239,6 +242,12 @@ def unlock_path(client: "TrezorClient", n: "Address") -> "MessageType":
 @expect(messages.Success, field="message", ret_type=str)
 def reboot_to_bootloader(client: "TrezorClient") -> "MessageType":
     return client.call(messages.RebootToBootloader())
+
+
+@session
+@expect(messages.Success, field="message", ret_type=str)
+def show_device_tutorial(client: "TrezorClient") -> "MessageType":
+    return client.call(messages.ShowDeviceTutorial())
 
 
 @expect(messages.Success, field="message", ret_type=str)

@@ -97,7 +97,7 @@ _progress_obj: ProgressLayout | None = None
 
 def _start_progress() -> None:
     from trezor import workflow
-    from trezor.ui.layouts import progress
+    from trezor.ui.layouts.progress import progress
 
     global _progress_obj
 

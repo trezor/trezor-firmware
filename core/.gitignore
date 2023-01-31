@@ -10,3 +10,4 @@ htmlcov/
 mypy_report
 /CMakeLists.txt
 /cmake-build-debug/
+tools/gdb_scripts/*.log

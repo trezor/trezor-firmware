@@ -193,6 +193,7 @@ pub enum MnemonicInputMsg {
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for MnemonicKeyboard<T, U> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        // TODO: could differentiate between BIP39 and SLIP39
         t.open("MnemonicKeyboard");
         t.close();
     }

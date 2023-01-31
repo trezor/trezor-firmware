@@ -240,7 +240,11 @@ def create_reports() -> None:
 
     for test_name, test_hash in removed_tests.items():
         with tmpdir() as temp_dir:
-            download.fetch_recorded(test_hash, temp_dir)
+            try:
+                download.fetch_recorded(test_hash, temp_dir)
+            except RuntimeError:
+                print("Could not download recorded files for", test_name)
+                continue
             removed(temp_dir, test_name)
 
     for test_name, test_hash in added_tests.items():

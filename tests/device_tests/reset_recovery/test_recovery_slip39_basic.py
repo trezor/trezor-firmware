@@ -22,7 +22,16 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from ...common import (
     MNEMONIC_SLIP39_BASIC_20_3of6,
     MNEMONIC_SLIP39_BASIC_20_3of6_SECRET,
-    recovery_enter_shares,
+)
+from ...input_flows import (
+    InputFlowSlip39BasicRecovery,
+    InputFlowSlip39BasicRecoveryAbort,
+    InputFlowSlip39BasicRecoveryNoAbort,
+    InputFlowSlip39BasicRecoveryPIN,
+    InputFlowSlip39BasicRecoveryRetryFirst,
+    InputFlowSlip39BasicRecoveryRetrySecond,
+    InputFlowSlip39BasicRecoverySameShare,
+    InputFlowSlip39BasicRecoveryWrongNthWord,
 )
 
 pytestmark = pytest.mark.skip_t1
@@ -48,17 +57,10 @@ VECTORS = (
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("shares, secret", VECTORS)
-def test_secret(client: Client, shares, secret):
-    debug = client.debug
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # run recovery flow
-        yield from recovery_enter_shares(debug, shares)
-
+def test_secret(client: Client, shares: list[str], secret: str):
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicRecovery(client, shares)
+        client.set_input_flow(IF.get())
         ret = device.recover(client, pin_protection=False, label="label")
 
     # Workflow succesfully ended
@@ -68,30 +70,24 @@ def test_secret(client: Client, shares, secret):
     assert client.features.backup_type is messages.BackupType.Slip39_Basic
 
     # Check mnemonic
-    assert debug.state().mnemonic_secret.hex() == secret
+    assert client.debug.state().mnemonic_secret.hex() == secret
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_recover_with_pin_passphrase(client: Client):
-    debug = client.debug
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        yield  # Enter PIN
-        debug.input("654")
-        yield  # Enter PIN again
-        debug.input("654")
-        # Proceed with recovery
-        yield from recovery_enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicRecoveryPIN(
+            client, MNEMONIC_SLIP39_BASIC_20_3of6, "654"
+        )
+        client.set_input_flow(IF.get())
         ret = device.recover(
-            client, pin_protection=True, passphrase_protection=True, label="label"
+            client,
+            pin_protection=True,
+            passphrase_protection=True,
+            label="label",
         )
 
-    # Workflow succesfully ended
+    # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is True
     assert client.features.passphrase_protection is True
@@ -100,18 +96,9 @@ def test_recover_with_pin_passphrase(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(client: Client):
-    debug = client.debug
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        yield  # Homescreen - abort process
-        debug.press_no()
-        yield  # Homescreen - confirm abort
-        debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicRecoveryAbort(client)
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")
         client.init_device()
@@ -120,19 +107,9 @@ def test_abort(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_noabort(client: Client):
-    debug = client.debug
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        yield  # Homescreen - abort process
-        debug.press_no()
-        yield  # Homescreen - go back to process
-        debug.press_no()
-        yield from recovery_enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicRecoveryNoAbort(client, MNEMONIC_SLIP39_BASIC_20_3of6)
+        client.set_input_flow(IF.get())
         device.recover(client, pin_protection=False, label="label")
         client.init_device()
         assert client.features.initialized is True
@@ -140,89 +117,21 @@ def test_noabort(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_ask_word_number(client: Client):
-    debug = client.debug
-
-    def input_flow_retry_first():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        yield  # Homescreen - start process
-        debug.press_yes()
-        yield  # Enter number of words
-        debug.input("20")
-        yield  # Homescreen - proceed to share entry
-        debug.press_yes()
-        yield  # Enter first share
-        for _ in range(20):
-            debug.input("slush")
-
-        br = yield  # Invalid share
-        assert br.code == messages.ButtonRequestType.Warning
-        debug.press_yes()
-
-        yield  # Homescreen - start process
-        debug.press_yes()
-        yield  # Enter number of words
-        debug.input("33")
-        yield  # Homescreen - proceed to share entry
-        debug.press_yes()
-        yield  # Enter first share
-        for _ in range(33):
-            debug.input("slush")
-
-        br = yield  # Invalid share
-        assert br.code == messages.ButtonRequestType.Warning
-        debug.press_yes()
-
-        yield  # Homescreen
-        debug.press_no()
-        yield  # Confirm abort
-        debug.press_yes()
-
+    if client.features.model == "R":
+        pytest.skip("Flow is not working correctly for TR")
     with client:
-        client.set_input_flow(input_flow_retry_first)
+        IF = InputFlowSlip39BasicRecoveryRetryFirst(client)
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")
         client.init_device()
         assert client.features.initialized is False
 
-    def input_flow_retry_second():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        yield  # Homescreen - start process
-        debug.press_yes()
-        yield  # Enter number of words
-        debug.input("20")
-        yield  # Homescreen - proceed to share entry
-        debug.press_yes()
-        yield  # Enter first share
-        share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
-        for word in share:
-            debug.input(word)
-
-        yield  # More shares needed
-        debug.press_yes()
-
-        yield  # Enter another share
-        share = share[:3] + ["slush"] * 17
-        for word in share:
-            debug.input(word)
-
-        br = yield  # Invalid share
-        assert br.code == messages.ButtonRequestType.Warning
-        debug.press_yes()
-
-        yield  # Proceed to next share
-        share = MNEMONIC_SLIP39_BASIC_20_3of6[1].split(" ")
-        for word in share:
-            debug.input(word)
-
-        yield  # More shares needed
-        debug.press_no()
-        yield  # Confirm abort
-        debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow_retry_second)
+        IF = InputFlowSlip39BasicRecoveryRetrySecond(
+            client, MNEMONIC_SLIP39_BASIC_20_3of6
+        )
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")
         client.init_device()
@@ -231,100 +140,40 @@ def test_ask_word_number(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("nth_word", range(3))
-def test_wrong_nth_word(client: Client, nth_word):
-    debug = client.debug
+def test_wrong_nth_word(client: Client, nth_word: int):
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        yield  # Homescreen - start process
-        debug.press_yes()
-        yield  # Enter number of words
-        debug.input(str(len(share)))
-        yield  # Homescreen - proceed to share entry
-        debug.press_yes()
-        yield  # Enter first share
-        for word in share:
-            debug.input(word)
-
-        yield  # Continue to next share
-        debug.press_yes()
-        yield  # Enter next share
-        for i, word in enumerate(share):
-            if i < nth_word:
-                debug.input(word)
-            else:
-                debug.input(share[-1])
-                break
-
-        br = yield
-        assert br.code == messages.ButtonRequestType.Warning
-
-        client.cancel()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicRecoveryWrongNthWord(client, share, nth_word)
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_same_share(client: Client):
-    debug = client.debug
     first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
     # second share is first 4 words of first
     second_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")[:4]
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        yield  # Homescreen - start process
-        debug.press_yes()
-        yield  # Enter number of words
-        debug.input(str(len(first_share)))
-        yield  # Homescreen - proceed to share entry
-        debug.press_yes()
-        yield  # Enter first share
-        for word in first_share:
-            debug.input(word)
-
-        yield  # Continue to next share
-        debug.press_yes()
-        yield  # Enter next share
-        for word in second_share:
-            debug.input(word)
-
-        br = yield
-        assert br.code == messages.ButtonRequestType.Warning
-
-        client.cancel()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicRecoverySameShare(client, first_share, second_share)
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_1of1(client: Client):
-    debug = client.debug
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # Proceed with recovery
-        yield from recovery_enter_shares(
-            debug, MNEMONIC_SLIP39_BASIC_20_1of1, groups=False
-        )
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicRecovery(client, MNEMONIC_SLIP39_BASIC_20_1of1)
+        client.set_input_flow(IF.get())
         ret = device.recover(
-            client, pin_protection=False, passphrase_protection=False, label="label"
+            client,
+            pin_protection=False,
+            passphrase_protection=False,
+            label="label",
         )
 
-    # Workflow succesfully ended
+    # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
     assert client.features.initialized is True
     assert client.features.pin_protection is False

@@ -1,8 +1,9 @@
 #[cfg(feature = "jpeg")]
+use crate::ui::display;
+#[cfg(feature = "jpeg")]
 use crate::ui::geometry::Offset;
 use crate::ui::{
     component::{image::Image, Component, Event, EventCtx, Never},
-    display,
     geometry::{Rect, CENTER},
 };
 

@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from unittest import mock
-
 import pytest
 
 from trezorlib import btc, device, messages, misc
@@ -23,7 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ..common import EXTERNAL_ENTROPY, MNEMONIC12, get_test_address
+from ..common import MNEMONIC12, WITH_MOCK_URANDOM, get_test_address
 from ..tx_cache import TxCache
 from .bitcoin.signtx import (
     request_finished,
@@ -113,6 +111,7 @@ def test_apply_settings(client: Client):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_change_pin_t1(client: Client):
     _assert_protection(client)
     with client:
@@ -141,6 +140,7 @@ def test_change_pin_t2(client: Client):
                 messages.ButtonRequest,
                 _pin_request(client),
                 _pin_request(client),
+                messages.ButtonRequest,
                 _pin_request(client),
                 messages.ButtonRequest,
                 messages.Success,
@@ -211,11 +211,11 @@ def test_wipe_device(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_reset_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
-    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-    with mock.patch("os.urandom", os_urandom), client:
+    with WITH_MOCK_URANDOM, client:
         client.set_expected_responses(
             [messages.ButtonRequest]
             + [messages.EntropyRequest]
@@ -241,6 +241,7 @@ def test_reset_device(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_recovery_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
@@ -253,7 +254,13 @@ def test_recovery_device(client: Client):
         )
 
         device.recover(
-            client, 12, False, False, "label", "en-US", client.mnemonic_callback
+            client,
+            12,
+            False,
+            False,
+            "label",
+            "en-US",
+            client.mnemonic_callback,
         )
 
     with pytest.raises(TrezorFailure):
@@ -289,6 +296,7 @@ def test_sign_message(client: Client):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_verify_message_t1(client: Client):
     _assert_protection(client)
     with client:

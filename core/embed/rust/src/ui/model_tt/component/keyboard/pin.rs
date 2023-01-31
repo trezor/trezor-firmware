@@ -469,6 +469,17 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("PinKeyboard");
+        // So that debuglink knows the locations of the buttons
+        let mut digits_order: String<10> = String::new();
+        for btn in self.digit_btns.iter() {
+            let btn_content = btn.inner().content();
+            if let ButtonContent::Text(text) = btn_content {
+                unwrap!(digits_order.push_str(text));
+            }
+        }
+        t.kw_pair("digits_order", &digits_order);
+        // TODO: textbox does not get updated when the pin is changed
+        t.kw_pair("textbox", &self.textbox.inner().pin());
         t.close();
     }
 }

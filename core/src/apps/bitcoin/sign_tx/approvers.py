@@ -115,6 +115,7 @@ class Approver:
         self,
         txo: TxOutput,
         script_pubkey: bytes,
+        index: int | None = None,
         orig_txo: TxOutput | None = None,
     ) -> None:
         await self._add_output(txo, script_pubkey)
@@ -181,11 +182,12 @@ class BasicApprover(Approver):
         self,
         txo: TxOutput,
         script_pubkey: bytes,
+        index: int | None = None,
         orig_txo: TxOutput | None = None,
     ) -> None:
         from trezor.enums import OutputScriptType
 
-        await super().add_external_output(txo, script_pubkey, orig_txo)
+        await super().add_external_output(txo, script_pubkey, index, orig_txo)
 
         if orig_txo:
             if txo.amount < orig_txo.amount:
@@ -220,7 +222,7 @@ class BasicApprover(Approver):
         elif txo.payment_req_index is None or self.show_payment_req_details:
             # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
-            await helpers.confirm_output(txo, self.coin, self.amount_unit)
+            await helpers.confirm_output(txo, self.coin, self.amount_unit, index)
 
     async def add_payment_request(
         self, msg: TxAckPaymentRequest, keychain: Keychain

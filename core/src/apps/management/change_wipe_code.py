@@ -44,13 +44,13 @@ async def change_wipe_code(ctx: Context, msg: ChangeWipeCode) -> Success:
 
     if wipe_code:
         if has_wipe_code:
-            msg_screen = "You have successfully changed the wipe code."
+            msg_screen = "Wipe code changed."
             msg_wire = "Wipe code changed"
         else:
-            msg_screen = "You have successfully set the wipe code."
+            msg_screen = "Wipe code enabled."
             msg_wire = "Wipe code set"
     else:
-        msg_screen = "You have successfully disabled the wipe code."
+        msg_screen = "Wipe code disabled."
         msg_wire = "Wipe code removed"
 
     await show_success(ctx, "success_wipe_code", msg_screen)
@@ -61,36 +61,37 @@ def _require_confirm_action(
     ctx: Context, msg: ChangeWipeCode, has_wipe_code: bool
 ) -> Awaitable[None]:
     from trezor.wire import ProcessError
-    from trezor.ui.layouts import confirm_action
+    from trezor.ui.layouts import confirm_action, confirm_set_new_pin
+
+    title = "Wipe code settings"
 
     if msg.remove and has_wipe_code:
         return confirm_action(
             ctx,
             "disable_wipe_code",
-            "Disable wipe code",
-            "disable wipe code protection?",
-            "Do you really want to",
-            reverse=True,
+            title,
+            description="Do you want to disable wipe code protection?",
+            verb="Disable",
         )
 
     if not msg.remove and has_wipe_code:
         return confirm_action(
             ctx,
             "change_wipe_code",
-            "Change wipe code",
-            "change the wipe code?",
-            "Do you really want to",
-            reverse=True,
+            title,
+            description="Do you want to change the wipe code?",
+            verb="Change",
         )
 
     if not msg.remove and not has_wipe_code:
-        return confirm_action(
+        return confirm_set_new_pin(
             ctx,
             "set_wipe_code",
-            "Set wipe code",
-            "set the wipe code?",
-            "Do you really want to",
-            reverse=True,
+            title,
+            "Do you want to enable wipe code?",
+            [
+                "Wipe code can be used to erase all data from this device.",
+            ],
         )
 
     # Removing non-existing wipe code.
@@ -111,7 +112,7 @@ async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
             )
             continue
 
-        code2 = await request_pin(ctx, "Re-enter new wipe code")
+        code2 = await request_pin(ctx, "Re-enter wipe code")
         if code1 == code2:
             return code1
         # _wipe_code_mismatch

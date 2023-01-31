@@ -733,6 +733,9 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
         let user_fee_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_user_fee_change)?.try_into()?;
         let total_fee_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_fee_new)?.try_into()?;
+        let fee_rate_amount: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_fee_rate_amount)?
+            .try_into_option()?;
 
         let (description, change) = match sign {
             s if s < 0 => ("Decrease your fee by:", user_fee_change),
@@ -740,12 +743,19 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             _ => ("Your fee did not change.", StrBuffer::empty()),
         };
 
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, description.into()),
-            Paragraph::new(&theme::TEXT_MONO, change),
-            Paragraph::new(&theme::TEXT_NORMAL, "\nTransaction fee:".into()),
-            Paragraph::new(&theme::TEXT_MONO, total_fee_new),
-        ]);
+        let mut paragraphs_vec = ParagraphVecShort::new();
+        paragraphs_vec
+            .add(Paragraph::new(&theme::TEXT_BOLD, description.into()))
+            .add(Paragraph::new(&theme::TEXT_MONO, change))
+            .add(Paragraph::new(&theme::TEXT_BOLD, "Transaction fee:".into()))
+            .add(Paragraph::new(&theme::TEXT_MONO, total_fee_new));
+
+        if let Some(fee_rate_amount) = fee_rate_amount {
+            paragraphs_vec
+                .add(Paragraph::new(&theme::TEXT_BOLD, "Fee rate:".into()))
+                .add(Paragraph::new(&theme::TEXT_MONO, fee_rate_amount));
+        }
+        let paragraphs = paragraphs_vec.into_paragraphs();
 
         let buttons = Button::cancel_confirm(
             Button::with_icon(Icon::new(theme::ICON_CANCEL)),
@@ -1227,7 +1237,10 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
                     paragraphs
                         .into_paragraphs()
                         .with_spacing(theme::CHECKLIST_SPACING),
-                ),
+                )
+                .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
+                .with_current_offset(theme::CHECKLIST_CURRENT_OFFSET)
+                .with_done_offset(theme::CHECKLIST_DONE_OFFSET),
                 theme::button_bar(Button::with_text(button).map(|msg| {
                     (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                 })),
@@ -1240,23 +1253,11 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title).unwrap().try_into().unwrap();
-        let description: StrBuffer = kwargs
-            .get(Qstr::MP_QSTR_description)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let button: StrBuffer = kwargs
-            .get(Qstr::MP_QSTR_button)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let dry_run: bool = kwargs
-            .get(Qstr::MP_QSTR_dry_run)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false).unwrap();
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
+        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_DEMIBOLD, title).centered(),
@@ -1291,11 +1292,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let dry_run: bool = kwargs
-            .get(Qstr::MP_QSTR_dry_run)
-            .unwrap()
-            .try_into()
-            .unwrap();
+        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
         let title = if dry_run {
             "SEED CHECK"
         } else {
@@ -1489,7 +1486,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     action: str | None,
     ///     description: str | None,
-    ///     verb: str | None = None,
+    ///     verb: str = str | None = None,
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     hold_danger: bool = False,
@@ -1604,6 +1601,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     sign: int,
     ///     user_fee_change: str,
     ///     total_fee_new: str,
+    ///     fee_rate_amount: str | None,
     /// ) -> object:
     ///     """Decrease or increase transaction fee."""
     Qstr::MP_QSTR_confirm_modify_fee => obj_fn_kw!(0, new_confirm_modify_fee).as_obj(),
@@ -1776,7 +1774,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     /// ) -> object:
     ///    """Checklist of backup steps. Active index is highlighted, previous items have check
-    ///    mark nex to them."""
+    ///    mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
     /// def confirm_recovery(
@@ -1793,7 +1791,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,
-    /// ) -> int | CANCELLED:
+    /// ) -> int | str:  # TT returns int
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
@@ -1819,7 +1817,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///    """Show progress loader. Please note that the number of lines reserved on screen for
     ///    description is determined at construction time. If you want multiline descriptions
-    ///    make sure the initial desciption has at least that amount of lines."""
+    ///    make sure the initial description has at least that amount of lines."""
     Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
 
     /// def show_homescreen(
@@ -1861,11 +1859,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 mod tests {
     use crate::{
         trace::Trace,
-        ui::{
-            component::{Component, FormattedText},
-            geometry::Rect,
-            model_tt::constant,
-        },
+        ui::{geometry::Rect, model_tt::constant},
     };
 
     use super::*;

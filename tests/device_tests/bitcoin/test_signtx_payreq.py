@@ -23,6 +23,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+from ...input_flows import InputFlowPaymentRequestDetails
 from .payment_req import CoinPurchaseMemo, RefundMemo, TextMemo, make_payment_request
 from .signtx import forge_prevtx
 
@@ -176,6 +177,9 @@ def test_payment_request(client: Client, payment_request_params):
 
 
 def test_payment_request_details(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Details not implemented on TR")
+
     # Test that payment request details are shown when requested.
     outputs[0].payment_req_index = 0
     outputs[1].payment_req_index = 0
@@ -191,35 +195,9 @@ def test_payment_request_details(client: Client):
         )
     ]
 
-    def input_flow():
-        yield  # request to see details
-        client.debug.wait_layout()
-        client.debug.press_info()
-
-        yield  # confirm first output
-        layout = client.debug.wait_layout()
-        assert outputs[0].address[:16] in layout.text
-        client.debug.press_yes()
-        yield  # confirm first output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm second output
-        layout = client.debug.wait_layout()
-        assert outputs[1].address[:16] in layout.text
-        client.debug.press_yes()
-        yield  # confirm second output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.press_yes()
-        yield  # confirm transaction
-        client.debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
-        client.watch_layout(True)
+        IF = InputFlowPaymentRequestDetails(client, outputs)
+        client.set_input_flow(IF.get())
 
         _, serialized_tx = btc.sign_tx(
             client,

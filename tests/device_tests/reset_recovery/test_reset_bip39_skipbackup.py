@@ -20,11 +20,10 @@ from mnemonic import Mnemonic
 from trezorlib import messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
-from ...common import generate_entropy
+from ...common import EXTERNAL_ENTROPY, generate_entropy
 
-pytestmark = pytest.mark.skip_t2
+pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr]
 
-EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 STRENGTH = 128
 
 

@@ -109,7 +109,7 @@ class Progress:
 
     def report_init(self) -> None:
         from trezor import workflow
-        from trezor.ui.layouts import bitcoin_progress
+        from trezor.ui.layouts.progress import bitcoin_progress
 
         workflow.close_others()
         if self.signing:

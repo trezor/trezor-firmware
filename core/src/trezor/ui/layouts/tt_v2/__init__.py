@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
     from trezor.wire import GenericContext, Context
-    from ..common import PropertyType, ExceptionType, ProgressLayout
+    from ..common import PropertyType, ExceptionType
 
     T = TypeVar("T")
 
@@ -32,14 +32,10 @@ if __debug__:
 
 class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
-    def __init__(self, layout: Any, is_backup: bool = False):
+    def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
-        self.is_backup = is_backup
-
-        if __debug__ and self.is_backup:
-            self.notify_backup()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -83,21 +79,16 @@ class RustLayout(ui.Layout):
 
         async def handle_swipe(self):
             from apps.debug import notify_layout_change, swipe_signal
-            from trezor.ui import (
-                SWIPE_UP,
-                SWIPE_DOWN,
-                SWIPE_LEFT,
-                SWIPE_RIGHT,
-            )
+            from trezor.enums import DebugSwipeDirection
 
             while True:
                 direction = await swipe_signal()
                 orig_x = orig_y = 120
                 off_x, off_y = {
-                    SWIPE_UP: (0, -30),
-                    SWIPE_DOWN: (0, 30),
-                    SWIPE_LEFT: (-30, 0),
-                    SWIPE_RIGHT: (30, 0),
+                    DebugSwipeDirection.UP: (0, -30),
+                    DebugSwipeDirection.DOWN: (0, 30),
+                    DebugSwipeDirection.LEFT: (-30, 0),
+                    DebugSwipeDirection.RIGHT: (30, 0),
                 }[direction]
 
                 for event, x, y in (
@@ -110,26 +101,7 @@ class RustLayout(ui.Layout):
                     if msg is not None:
                         raise ui.Result(msg)
 
-                if self.is_backup:
-                    self.notify_backup()
                 notify_layout_change(self)
-
-        def notify_backup(self):
-            from apps.debug import reset_current_words
-
-            content = "\n".join(self.read_content())
-            start = "< Paragraphs "
-            end = ">"
-            start_pos = content.index(start)
-            end_pos = content.index(end, start_pos)
-            words: list[str] = []
-            for line in content[start_pos + len(start) : end_pos].split("\n"):
-                line = line.strip()
-                if not line:
-                    continue
-                space_pos = line.index(" ")
-                words.append(line[space_pos + 1 :])
-            reset_current_words.publish(words)
 
     else:
 
@@ -159,7 +131,6 @@ class RustLayout(ui.Layout):
 
         touch = loop.wait(io.TOUCH)
         self._first_paint()
-        # self.layout.bounds()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             event, x, y = yield touch
@@ -170,7 +141,6 @@ class RustLayout(ui.Layout):
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
-            # self.layout.bounds()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
@@ -384,12 +354,12 @@ async def show_address(
     multisig_index: int | None = None,
     xpubs: Sequence[str] = (),
 ) -> None:
+    title = (
+        "RECEIVE ADDRESS\n(MULTISIG)"
+        if multisig_index is not None
+        else "RECEIVE ADDRESS"
+    )
     while True:
-        title = (
-            "RECEIVE ADDRESS\n(MULTISIG)"
-            if multisig_index is not None
-            else "RECEIVE ADDRESS"
-        )
         result = await interact(
             ctx,
             RustLayout(
@@ -411,7 +381,7 @@ async def show_address(
         # User pressed corner button or swiped left, go to address details.
         elif result is INFO:
 
-            def xpub_title(i: int):
+            def xpub_title(i: int) -> str:
                 result = f"MULTISIG XPUB #{i + 1}\n"
                 result += "(YOURS)" if i == multisig_index else "(COSIGNER)"
                 return result
@@ -536,6 +506,7 @@ async def confirm_output(
     amount: str,
     title: str = "SENDING",
     hold: bool = False,
+    index: int | None = None,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     address_label: str | None = None,
 ) -> None:
@@ -544,6 +515,9 @@ async def confirm_output(
         title = title[len("CONFIRM ") :]
 
     description = f"To your {address_label}:" if address_label else "To:"
+
+    # TODO: include index to be consistent with TR?
+
     await confirm_value(
         ctx,
         title,
@@ -780,7 +754,7 @@ def confirm_value(
     value: str,
     description: str,
     br_type: str,
-    br_code: ButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
     *,
     verb: str | None = None,
     hold: bool = False,
@@ -976,7 +950,6 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
-    # TODO: include fee_rate_amount
     await raise_if_not_confirmed(
         interact(
             ctx,
@@ -985,6 +958,7 @@ async def confirm_modify_fee(
                     sign=sign,
                     user_fee_change=user_fee_change,
                     total_fee_new=total_fee_new,
+                    fee_rate_amount=fee_rate_amount,
                 )
             ),
             "modify_fee",
@@ -1006,7 +980,7 @@ async def confirm_coinjoin(
                 )
             ),
             "coinjoin_final",
-            ButtonRequestType.Other,
+            BR_TYPE_OTHER,
         )
     )
 
@@ -1021,7 +995,7 @@ async def confirm_sign_identity(
         data=identity,
         description=challenge_visual + "\n" if challenge_visual else "",
         br_type="sign_identity",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
 
@@ -1041,7 +1015,7 @@ async def confirm_signverify(
         title,
         address,
         "Confirm address:",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
     await confirm_blob(
@@ -1050,7 +1024,7 @@ async def confirm_signverify(
         title,
         message,
         "Confirm message:",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
 
@@ -1124,61 +1098,70 @@ async def request_pin_on_device(
             wrong_pin=wrong_pin,
         )
     )
-    while True:
-        result = await ctx.wait(dialog)
-        if result is CANCELLED:
-            raise PinCancelled
-        assert isinstance(result, str)
-        return result
+    result = await ctx.wait(dialog)
+    if result is CANCELLED:
+        raise PinCancelled
+    assert isinstance(result, str)
+    return result
 
 
-class RustProgress:
-    def __init__(
-        self,
-        title: str,
-        description: str | None = None,
-        indeterminate: bool = False,
-    ):
-        self.layout: Any = trezorui2.show_progress(
-            title=title.upper(),
-            indeterminate=indeterminate,
-            description=description or "",
-        )
-        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
-        ui.display.clear()
-        self.layout.attach_timer_fn(self.set_timer)
-        self.layout.paint()
-        ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
-
-    def set_timer(self, token: int, deadline: int) -> None:
-        raise RuntimeError  # progress layouts should not set timers
-
-    def report(self, value: int, description: str | None = None):
-        msg = self.layout.progress_event(value, description or "")
-        assert msg is None
-        self.layout.paint()
-        ui.refresh()
+async def confirm_reenter_pin(
+    ctx: GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "CHECK PIN",
+        action="Please re-enter to confirm.",
+        verb="BEGIN",
+        br_code=br_code,
+    )
 
 
-def progress(message: str = "PLEASE WAIT") -> ProgressLayout:
-    return RustProgress(message.upper())
+async def pin_mismatch(
+    ctx: GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "PIN MISMATCH",
+        action="The PINs you entered do not match.\n\nPlease try again.",
+        verb="TRY AGAIN",
+        verb_cancel=None,
+        br_code=br_code,
+    )
 
 
-def bitcoin_progress(message: str) -> ProgressLayout:
-    return RustProgress(message.upper())
+async def confirm_set_new_pin(
+    ctx: GenericContext,
+    br_type: str,
+    title: str,
+    description: str,
+    information: list[str],
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    await confirm_action(
+        ctx,
+        br_type,
+        title,
+        description=description,
+        verb="ENABLE",
+        br_code=br_code,
+    )
 
+    if "wipe_code" in br_type:
+        title = "WIPE CODE INFO"
+    else:
+        title = "PIN INFORMATION"
 
-def pin_progress(message: str, description: str) -> ProgressLayout:
-    return RustProgress(message.upper(), description=description)
-
-
-def monero_keyimage_sync_progress() -> ProgressLayout:
-    return RustProgress("SYNCING")
-
-
-def monero_live_refresh_progress() -> ProgressLayout:
-    return RustProgress("REFRESHING", description="", indeterminate=True)
-
-
-def monero_transaction_progress_inner() -> ProgressLayout:
-    return RustProgress("SIGNING TRANSACTION", description="")
+    return await confirm_action(
+        ctx,
+        br_type,
+        title=title,
+        description="\n\n".join(information),
+        br_code=br_code,
+    )

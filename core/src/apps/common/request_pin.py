@@ -2,20 +2,46 @@ import utime
 from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
-from trezor import config, wire
-
-from .sdcard import request_sd_salt
+from trezor import config, utils, wire
 
 if TYPE_CHECKING:
     from typing import Any, NoReturn
     from trezor.wire import Context, GenericContext
 
 
-def can_lock_device() -> bool:
-    """Return True if the device has a PIN set or SD-protect enabled."""
-    import storage.sd_salt
+async def _request_sd_salt(
+    ctx: wire.GenericContext, raise_cancelled_on_unavailable: bool = False
+) -> bytearray | None:
+    """Helper to get SD salt in a general manner, working for all models.
 
-    return config.has_pin() or storage.sd_salt.is_enabled()
+    Is model-specific, because some models (like TR/T2B1) do not even
+    have SD card support (and we do not want to include SD-card connected code).
+    """
+    from trezor import utils
+
+    if utils.MODEL in ("R",):
+        return None
+    else:
+        from .sdcard import request_sd_salt, SdCardUnavailable
+
+        try:
+            return await request_sd_salt(ctx)
+        except SdCardUnavailable:
+            if raise_cancelled_on_unavailable:
+                raise wire.PinCancelled("SD salt is unavailable")
+            else:
+                raise
+
+
+def can_lock_device() -> bool:
+    """Return True if the device has a PIN set or SD-protect enabled (when supported)."""
+    # TR/T2B1 does not support SD card
+    if utils.MODEL in ("R",):
+        return config.has_pin()
+    else:
+        import storage.sd_salt
+
+        return config.has_pin() or storage.sd_salt.is_enabled()
 
 
 async def request_pin(
@@ -30,21 +56,15 @@ async def request_pin(
 
 
 async def request_pin_confirm(ctx: Context, *args: Any, **kwargs: Any) -> str:
+    from trezor.ui.layouts import confirm_reenter_pin, pin_mismatch
+
     while True:
         pin1 = await request_pin(ctx, "Enter new PIN", *args, **kwargs)
+        await confirm_reenter_pin(ctx)
         pin2 = await request_pin(ctx, "Re-enter new PIN", *args, **kwargs)
         if pin1 == pin2:
             return pin1
-        await _pin_mismatch()
-
-
-async def _pin_mismatch() -> None:
-    from trezor.ui.layouts import show_popup
-
-    await show_popup(
-        "PIN mismatch",
-        "The PINs you entered do not match.\n\nPlease try again.",
-    )
+        await pin_mismatch(ctx)
 
 
 async def request_pin_and_sd_salt(
@@ -56,7 +76,7 @@ async def request_pin_and_sd_salt(
     else:
         pin = ""
 
-    salt = await request_sd_salt(ctx)
+    salt = await _request_sd_salt(ctx)
 
     return pin, salt
 
@@ -73,8 +93,6 @@ async def verify_user_pin(
     retry: bool = True,
     cache_time_ms: int = 0,
 ) -> None:
-    from .sdcard import SdCardUnavailable
-
     # _get_last_unlock_time
     last_unlock = int.from_bytes(
         storage_cache.get(storage_cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, b""), "big"
@@ -98,10 +116,7 @@ async def verify_user_pin(
     else:
         pin = ""
 
-    try:
-        salt = await request_sd_salt(ctx)
-    except SdCardUnavailable:
-        raise wire.PinCancelled("SD salt is unavailable")
+    salt = await _request_sd_salt(ctx, raise_cancelled_on_unavailable=True)
     if config.unlock(pin, salt):
         _set_last_unlock_time()
         return
@@ -125,7 +140,7 @@ async def error_pin_invalid(ctx: Context) -> NoReturn:
     await show_error_and_raise(
         ctx,
         "warning_wrong_pin",
-        "The PIN you entered is invalid.",
+        "The PIN you have entered is not valid.",
         "Wrong PIN",  # header
         exc=wire.PinInvalid,
     )

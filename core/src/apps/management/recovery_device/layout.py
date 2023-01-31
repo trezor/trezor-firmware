@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import show_warning
+from trezor.ui.layouts import confirm_action, show_warning
 from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
     show_group_share_success,
@@ -45,8 +45,20 @@ async def request_mnemonic(
     from . import word_validity
     from trezor.ui.layouts.common import button_request
     from trezor.ui.layouts.recovery import request_word
+    from trezor import utils
 
-    await button_request(ctx, "mnemonic", ButtonRequestType.MnemonicInput)
+    if utils.MODEL in ("R",):
+        await confirm_action(
+            ctx,
+            "request_word",
+            "WORD ENTERING",
+            description="You'll only have to select the first 2-3 letters.",
+            verb="CONTINUE",
+            verb_cancel=None,
+            br_code=ButtonRequestType.MnemonicInput,
+        )
+
+    await button_request(ctx, "mnemonic", code=ButtonRequestType.MnemonicInput)
 
     words: list[str] = []
     for i in range(word_count):
@@ -91,12 +103,7 @@ async def show_dry_run_result(
     from trezor.ui.layouts import show_success
 
     if result:
-        if is_slip39:
-            text = "The entered recovery shares are valid and match what is currently in the device."
-        else:
-            text = (
-                "The entered recovery seed is valid and matches the one in the device."
-            )
+        text = "You have finished verifying your recovery seed"
         await show_success(ctx, "success_dry_recovery", text, button="Continue")
     else:
         if is_slip39:

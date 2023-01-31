@@ -25,7 +25,7 @@ from ...common import MNEMONIC12
 PIN4 = "1234"
 PIN6 = "789456"
 
-pytestmark = pytest.mark.skip_t2
+pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr]
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -205,7 +205,13 @@ def test_pin_fail(client: Client):
 def test_already_initialized(client: Client):
     with pytest.raises(RuntimeError):
         device.recover(
-            client, 12, False, False, "label", "en-US", client.mnemonic_callback
+            client,
+            12,
+            False,
+            False,
+            "label",
+            "en-US",
+            client.mnemonic_callback,
         )
 
     ret = client.call_raw(

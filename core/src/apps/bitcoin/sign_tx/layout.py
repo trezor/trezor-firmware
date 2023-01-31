@@ -50,7 +50,11 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
 
 
 async def confirm_output(
-    ctx: Context, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
+    ctx: Context,
+    output: TxOutput,
+    coin: CoinInfo,
+    amount_unit: AmountUnit,
+    index: int | None,
 ) -> None:
     from . import omni
     from trezor.enums import OutputScriptType
@@ -98,6 +102,7 @@ async def confirm_output(
             format_coin_amount(output.amount, coin, amount_unit),
             title=title,
             address_label=address_label,
+            index=index,
         )
 
     await layout
@@ -253,7 +258,7 @@ async def confirm_feeoverthreshold(
         ctx,
         "fee_over_threshold",
         "High fee",
-        "The fee of\n{}is unexpectedly high.",
+        "The fee of\n{}\nis unexpectedly high.",
         fee_amount,
         ButtonRequestType.FeeOverThreshold,
     )
@@ -284,6 +289,7 @@ async def confirm_nondefault_locktime(
     ctx: Context, lock_time: int, lock_time_disabled: bool
 ) -> None:
     from trezor.strings import format_timestamp
+    from trezor import utils
 
     if lock_time_disabled:
         title = "Warning"
@@ -297,6 +303,10 @@ async def confirm_nondefault_locktime(
         title = "Confirm locktime"
         text = "Locktime for this transaction is set to:\n{}"
         param = format_timestamp(lock_time)
+
+    # Getting rid of newlines for TR, to fit one smaller screen:
+    if utils.MODEL in ("R",):
+        text = text.replace("\n", " ")
 
     await confirm_metadata(
         ctx,

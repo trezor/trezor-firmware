@@ -1,8 +1,11 @@
 use super::iter::GlyphMetrics;
-use crate::ui::{
-    display,
-    display::{toif::Icon, Color, Font},
-    geometry::{Alignment, Dimensions, Offset, Point, Rect, BOTTOM_LEFT},
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        display,
+        display::{Color, Font, toif::Icon},
+        geometry::{Alignment, Dimensions, Offset, Point, Rect, BOTTOM_LEFT},
+    },
 };
 
 const ELLIPSIS: &str = "...";
@@ -31,6 +34,26 @@ pub enum PageBreaking {
     CutAndInsertEllipsisBoth,
 }
 
+/// Holding information about a QR code to be displayed.
+#[derive(Clone)]
+pub struct QrCodeInfo {
+    pub data: StrBuffer,
+    pub max_size: i16,
+    pub case_sensitive: bool,
+    pub center: Point,
+}
+
+impl QrCodeInfo {
+    pub fn new(data: StrBuffer, max_size: i16, case_sensitive: bool, center: Point) -> Self {
+        Self {
+            data,
+            max_size,
+            case_sensitive,
+            center,
+        }
+    }
+}
+
 /// Visual instructions for laying out a formatted block of text.
 #[derive(Copy, Clone)]
 pub struct TextLayout {
@@ -55,9 +78,9 @@ pub struct TextLayout {
 
 #[derive(Copy, Clone)]
 pub struct TextStyle {
-    /// Text font ID. Can be overridden by `Op::Font`.
+    /// Text font ID.
     pub text_font: Font,
-    /// Text color. Can be overridden by `Op::Color`.
+    /// Text color.
     pub text_color: Color,
     /// Background color.
     pub background_color: Color,
@@ -70,6 +93,10 @@ pub struct TextStyle {
     pub ellipsis_icon: Option<Icon>,
     /// Optional icon to signal content continues from previous page.
     pub prev_page_ellipsis_icon: Option<Icon>,
+    /// How many pixels to leave between the text and ellipsis icon.
+    pub ellipsis_icon_margin: i16,
+    /// How many pixels to leave between the prev_page icon and the text.
+    pub prev_page_icon_margin: i16,
 
     /// Specifies which line-breaking strategy to use.
     pub line_breaking: LineBreaking,
@@ -92,7 +119,9 @@ impl TextStyle {
             hyphen_color,
             ellipsis_color,
             ellipsis_icon: None,
+            ellipsis_icon_margin: 0,
             prev_page_ellipsis_icon: None,
+            prev_page_icon_margin: 0,
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
         }
@@ -109,20 +138,22 @@ impl TextStyle {
     }
 
     /// Adding optional icon shown instead of "..." ellipsis.
-    pub const fn with_ellipsis_icon(mut self, icon: Icon) -> Self {
+    pub const fn with_ellipsis_icon(mut self, icon: Icon, margin: i16) -> Self {
         self.ellipsis_icon = Some(icon);
+        self.ellipsis_icon_margin = margin;
         self
     }
 
     /// Adding optional icon signalling content continues from previous page.
-    pub const fn with_prev_page_icon(mut self, icon: Icon) -> Self {
+    pub const fn with_prev_page_icon(mut self, icon: Icon, margin: i16) -> Self {
         self.prev_page_ellipsis_icon = Some(icon);
+        self.prev_page_icon_margin = margin;
         self
     }
 
     fn ellipsis_width(&self) -> i16 {
         if let Some(icon) = self.ellipsis_icon {
-            icon.toif.width()
+            icon.toif.width() + self.ellipsis_icon_margin
         } else {
             self.text_font.text_width(ELLIPSIS)
         }
@@ -130,7 +161,7 @@ impl TextStyle {
 
     fn prev_page_ellipsis_width(&self) -> i16 {
         if let Some(icon) = self.prev_page_ellipsis_icon {
-            icon.toif.width()
+            icon.toif.width() + self.prev_page_icon_margin
         } else {
             self.text_font.text_width(ELLIPSIS)
         }
@@ -161,18 +192,30 @@ impl TextLayout {
         self
     }
 
+    /// Baseline `Point` where we are starting to draw the text.
     pub fn initial_cursor(&self) -> Point {
         let font = &self.style.text_font;
         self.bounds.top_left()
             + Offset::y(font.text_max_height() - font.text_baseline() + self.padding_top)
     }
 
+    /// Trying to fit the content on the current screen.
     pub fn fit_text(&self, text: &str) -> LayoutFit {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
     }
 
+    /// Draw as much text as possible on the current screen.
     pub fn render_text(&self, text: &str) {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
+        self.layout_text(
+            text,
+            &mut self.initial_cursor(),
+            &mut TextRenderer,
+        );
+    }
+
+    /// Y coordinate of the bottom of the available space/bounds
+    pub fn bottom_y(&self) -> i16 {
+        (self.bounds.y1 - self.padding_bottom).max(self.bounds.y0)
     }
 
     pub fn layout_ops<'o>(
@@ -218,6 +261,9 @@ impl TextLayout {
         }
     }
 
+    /// Loop through the `text` and try to fit it on the current screen,
+    /// reporting events to `sink`, which may do something with them (e.g. draw
+    /// on screen).
     pub fn layout_text(
         &self,
         text: &str,
@@ -225,11 +271,10 @@ impl TextLayout {
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
         let init_cursor = *cursor;
-        let bottom = (self.bounds.y1 - self.padding_bottom).max(self.bounds.y0);
         let mut remaining_text = text;
 
         // Check if bounding box is high enough for at least one line.
-        if cursor.y > bottom {
+        if cursor.y > self.bottom_y() {
             sink.out_of_bounds();
             return LayoutFit::OutOfBounds {
                 processed_chars: 0,
@@ -244,6 +289,7 @@ impl TextLayout {
         ) && self.continues_from_prev_page
         {
             sink.prev_page_ellipsis(*cursor, self);
+            // Move the cursor to the right, always the same distance
             cursor.x += self.style.prev_page_ellipsis_width();
         }
 
@@ -271,7 +317,13 @@ impl TextLayout {
             };
 
             // Report the span at the cursor position.
-            sink.text(*cursor, self, &remaining_text[..span.length]);
+            // Not doing it when the span length is 0, as that
+            // means we encountered a newline/line-break, which we do not draw.
+            // Line-breaks are reported later.
+            let text_to_display = &remaining_text[..span.length];
+            if span.length > 0 {
+                sink.text(*cursor, self, text_to_display);
+            }
 
             // Continue with the rest of the remaining_text.
             remaining_text = &remaining_text[span.length + span.skip_next_chars..];
@@ -287,7 +339,8 @@ impl TextLayout {
                     sink.hyphen(*cursor, self);
                 }
                 // Check the amount of vertical space we have left.
-                if cursor.y + span.advance.y > bottom {
+                if cursor.y + span.advance.y > self.bottom_y() {
+                    // Not enough space on this page.
                     if !remaining_text.is_empty() {
                         // Append ellipsis to indicate more content is available, but only if we
                         // haven't already appended a hyphen.
@@ -329,15 +382,12 @@ impl TextLayout {
         }
     }
 
-    fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i16 {
+    /// Overall height of the content, including paddings.
+    pub fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i16 {
         self.padding_top
             + self.style.text_font.text_height()
             + (end_cursor.y - init_cursor.y)
             + self.padding_bottom
-    }
-
-    fn bottom_y(&self) -> i16 {
-        (self.bounds.y1 - self.padding_bottom).max(self.bounds.y0)
     }
 }
 
@@ -351,6 +401,8 @@ impl Dimensions for TextLayout {
     }
 }
 
+/// Whether we can fit content on the current screen.
+/// Knows how many characters got processed and how high the content is.
 pub enum LayoutFit {
     /// Entire content fits. Vertical size is returned in `height`.
     Fitting { processed_chars: usize, height: i16 },
@@ -359,6 +411,7 @@ pub enum LayoutFit {
 }
 
 impl LayoutFit {
+    /// How high is the processed/fitted content.
     pub fn height(&self) -> i16 {
         match self {
             LayoutFit::Fitting { height, .. } => *height,
@@ -368,24 +421,38 @@ impl LayoutFit {
 }
 
 /// Visitor for text segment operations.
+/// Defines responses for certain kind of events encountered
+/// when processing the content.
 pub trait LayoutSink {
+    /// Text should be processed.
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
+    /// QR code should be displayed.
+    fn qrcode(&mut self, _qr_code: QrCodeInfo) {}
+    /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
+    /// Ellipsis at the end of the page.
     fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {}
+    /// Ellipsis at the beginning of the page.
     fn prev_page_ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {}
+    /// Line break - a newline.
     fn line_break(&mut self, _cursor: Point) {}
+    /// Content cannot fit on the screen.
     fn out_of_bounds(&mut self) {}
 }
 
+/// `LayoutSink` without any functionality.
+/// Used to consume events when counting pages
+/// or navigating to a certain page number.
 pub struct TextNoOp;
 
 impl LayoutSink for TextNoOp {}
 
+/// `LayoutSink` for rendering the content.
 pub struct TextRenderer;
 
 impl LayoutSink for TextRenderer {
     fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
-        display::text(
+        display::text_left(
             cursor,
             text,
             layout.style.text_font,
@@ -395,7 +462,7 @@ impl LayoutSink for TextRenderer {
     }
 
     fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
-        display::text(
+        display::text_left(
             cursor,
             "-",
             layout.style.text_font,
@@ -406,14 +473,15 @@ impl LayoutSink for TextRenderer {
 
     fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
         if let Some(icon) = layout.style.ellipsis_icon {
+            let bottom_left = cursor + Offset::new(layout.style.ellipsis_icon_margin, 1);
             icon.draw(
-                cursor,
+                bottom_left,
                 BOTTOM_LEFT,
                 layout.style.ellipsis_color,
                 layout.style.background_color,
             );
         } else {
-            display::text(
+            display::text_left(
                 cursor,
                 ELLIPSIS,
                 layout.style.text_font,
@@ -432,7 +500,7 @@ impl LayoutSink for TextRenderer {
                 layout.style.background_color,
             );
         } else {
-            display::text(
+            display::text_left(
                 cursor,
                 ELLIPSIS,
                 layout.style.text_font,
@@ -440,6 +508,22 @@ impl LayoutSink for TextRenderer {
                 layout.style.background_color,
             );
         }
+    }
+
+    fn qrcode(&mut self, qr_code: QrCodeInfo) {
+        // TODO: replace this by new QR code
+        // OR
+        // Get rid of this and use the same flow as TT
+        // OR
+        // Use it for TT as well
+        // display::text_left(qr_code.center, qr_code.data.as_ref(), layout.style.text_font, layout.style.text_color, layout.style.background_color)
+        // display::qrcode(
+        //     qr_code.center,
+        //     qr_code.data.as_ref(),
+        //     qr_code.max_size as _,
+        //     qr_code.case_sensitive,
+        // )
+        // .unwrap_or(())
     }
 }
 
@@ -449,6 +533,7 @@ pub mod trace {
 
     use super::*;
 
+    /// `LayoutSink` for debugging purposes.
     pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
 
     impl<'a> LayoutSink for TraceSink<'a> {
@@ -456,16 +541,21 @@ pub mod trace {
             self.0.string(text);
         }
 
+        fn qrcode(&mut self, qr_code: QrCodeInfo) {
+            self.0.string("QR code: ");
+            self.0.string(qr_code.data.as_ref());
+        }
+
         fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
             self.0.string("-");
         }
 
         fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("...");
+            self.0.string(ELLIPSIS);
         }
 
         fn prev_page_ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("...");
+            self.0.string(ELLIPSIS);
         }
 
         fn line_break(&mut self, _cursor: Point) {
@@ -506,23 +596,25 @@ impl<'a> Op<'a> {
     }
 }
 
+/// Carries info about the content that was processed
+/// on the current line.
 #[derive(Debug, PartialEq, Eq)]
-struct Span {
+pub struct Span {
     /// How many characters from the input text this span is laying out.
-    length: usize,
+    pub length: usize,
     /// How many chars from the input text should we skip before fitting the
     /// next span?
-    skip_next_chars: usize,
+    pub skip_next_chars: usize,
     /// By how much to offset the cursor after this span. If the vertical offset
     /// is bigger than zero, it means we are breaking the line.
-    advance: Offset,
+    pub advance: Offset,
     /// If we are breaking the line, should we insert a hyphen right after this
     /// span to indicate a word-break?
-    insert_hyphen_before_line_break: bool,
+    pub insert_hyphen_before_line_break: bool,
 }
 
 impl Span {
-    fn fit_horizontally(
+    pub fn fit_horizontally(
         text: &str,
         max_width: i16,
         text_font: impl GlyphMetrics,
@@ -602,7 +694,7 @@ impl Span {
                 }
                 found_any_whitespace = true;
             } else if span_width + char_width > max_width {
-                // Return the last breakpoint.
+                // Cannot fit on this line. Return the last breakpoint.
                 return line;
             } else {
                 let have_space_for_break =
@@ -624,7 +716,7 @@ impl Span {
             span_width += char_width;
         }
 
-        // The whole text is fitting.
+        // The whole text is fitting on the current line.
         Self {
             length: text.len(),
             advance: Offset::x(span_width),

@@ -593,13 +593,14 @@ def test_send_btg_external_presigned(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(FAKE_TXHASH_6f0398),

@@ -46,6 +46,7 @@ GetFirmwareHash = 88
 FirmwareHash = 89
 UnlockPath = 93
 UnlockedPathRequest = 94
+ShowDeviceTutorial = 95
 FirmwareErase = 6
 FirmwareUpload = 7
 FirmwareRequest = 8

@@ -10,8 +10,9 @@ if TYPE_CHECKING:
 
     T = TypeVar("T", bound=Callable)
 
-
-fatfs = io.fatfs  # global_import_cache
+# TODO: solve this for model R, which does not have a filesystem
+if hasattr(io, "fatfs"):
+    fatfs = io.fatfs  # global_import_cache
 
 SD_CARD_HOT_SWAPPABLE = False
 SD_SALT_LEN_BYTES = const(32)

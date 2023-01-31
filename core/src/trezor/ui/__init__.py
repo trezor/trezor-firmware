@@ -17,14 +17,6 @@ MONO: int = Display.FONT_MONO
 WIDTH: int = Display.WIDTH
 HEIGHT: int = Display.HEIGHT
 
-if __debug__:
-    # common symbols to transfer swipes between debuglink and the UI
-    SWIPE_UP = const(0x01)
-    SWIPE_DOWN = const(0x02)
-    SWIPE_LEFT = const(0x04)
-    SWIPE_RIGHT = const(0x08)
-
-
 # channel used to cancel layouts, see `Cancelled` exception
 layout_chan = loop.chan()
 

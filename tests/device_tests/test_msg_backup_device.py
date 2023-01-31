@@ -21,55 +21,30 @@ import shamir_mnemonic as shamir
 from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.messages import ButtonRequestType as B
 
 from ..common import (
     MNEMONIC12,
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_BASIC_20_3of6,
-    read_and_confirm_mnemonic,
 )
-
-
-def click_info_button(debug):
-    """Click Shamir backup info button and return back."""
-    debug.press_info()
-    yield  # Info screen with text
-    debug.press_yes()
+from ..input_flows import (
+    InputFlowBip39Backup,
+    InputFlowSlip39AdvancedBackup,
+    InputFlowSlip39BasicBackup,
+)
 
 
 @pytest.mark.skip_t1  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 def test_backup_bip39(client: Client):
     assert client.features.needs_backup is True
-    mnemonic = None
-
-    def input_flow():
-        nonlocal mnemonic
-        yield  # Confirm Backup
-        client.debug.press_yes()
-        # Mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-        yield  # Confirm success
-        client.debug.press_yes()
-        yield  # Backup is done
-        client.debug.press_yes()
 
     with client:
-        client.set_input_flow(input_flow)
-        client.set_expected_responses(
-            [
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Success),
-                messages.Success,
-                messages.Features,
-            ]
-        )
+        IF = InputFlowBip39Backup(client)
+        client.set_input_flow(IF.get())
         device.backup(client)
 
-    assert mnemonic == MNEMONIC12
+    assert IF.mnemonic == MNEMONIC12
     client.init_device()
     assert client.features.initialized is True
     assert client.features.needs_backup is False
@@ -84,54 +59,14 @@ def test_backup_bip39(client: Client):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_basic(client: Client, click_info: bool):
+    if click_info and client.features.model == "R":
+        pytest.skip("click_info not implemented on TR")
+
     assert client.features.needs_backup is True
-    mnemonics = []
-
-    def input_flow():
-        yield  # Checklist
-        client.debug.press_yes()
-        if click_info:
-            yield from click_info_button(client.debug)
-        yield  # Number of shares (5)
-        client.debug.press_yes()
-        yield  # Checklist
-        client.debug.press_yes()
-        if click_info:
-            yield from click_info_button(client.debug)
-        yield  # Threshold (3)
-        client.debug.press_yes()
-        yield  # Checklist
-        client.debug.press_yes()
-        yield  # Confirm show seeds
-        client.debug.press_yes()
-
-        # Mnemonic phrases
-        for _ in range(5):
-            # Phrase screen
-            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-            mnemonics.append(mnemonic)
-            yield  # Confirm continue to next
-            client.debug.press_yes()
-
-        yield  # Confirm backup
-        client.debug.press_yes()
 
     with client:
-        client.set_input_flow(input_flow)
-        client.set_expected_responses(
-            [messages.ButtonRequest(code=B.ResetDevice)]
-            * (8 if click_info else 6)  # intro screens (and optional info)
-            + [
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-            ]
-            * 5  # individual shares
-            + [
-                messages.ButtonRequest(code=B.Success),
-                messages.Success,
-                messages.Features,
-            ]
-        )
+        IF = InputFlowSlip39BasicBackup(client, click_info)
+        client.set_input_flow(IF.get())
         device.backup(client)
 
     client.init_device()
@@ -142,7 +77,7 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
     assert client.features.backup_type is messages.BackupType.Slip39_Basic
 
     expected_ms = shamir.combine_mnemonics(MNEMONIC_SLIP39_BASIC_20_3of6)
-    actual_ms = shamir.combine_mnemonics(mnemonics[:3])
+    actual_ms = shamir.combine_mnemonics(IF.mnemonics[:3])
     assert expected_ms == actual_ms
 
 
@@ -152,71 +87,14 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_advanced(client: Client, click_info: bool):
+    if click_info and client.features.model == "R":
+        pytest.skip("click_info not implemented on TR")
+
     assert client.features.needs_backup is True
-    mnemonics = []
-
-    def input_flow():
-        yield  # Checklist
-        client.debug.press_yes()
-        if click_info:
-            yield from click_info_button(client.debug)
-        yield  # Set and confirm group count
-        client.debug.press_yes()
-        yield  # Checklist
-        client.debug.press_yes()
-        if click_info:
-            yield from click_info_button(client.debug)
-        yield  # Set and confirm group threshold
-        client.debug.press_yes()
-        yield  # Checklist
-        client.debug.press_yes()
-        for _ in range(5):  # for each of 5 groups
-            if click_info:
-                yield from click_info_button(client.debug)
-            yield  # Set & Confirm number of shares
-            client.debug.press_yes()
-            if click_info:
-                yield from click_info_button(client.debug)
-            yield  # Set & confirm share threshold value
-            client.debug.press_yes()
-        yield  # Confirm show seeds
-        client.debug.press_yes()
-
-        # Mnemonic phrases
-        for _ in range(5):
-            for _ in range(5):
-                # Phrase screen
-                mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-                mnemonics.append(mnemonic)
-                yield  # Confirm continue to next
-                client.debug.press_yes()
-
-        yield  # Confirm backup
-        client.debug.press_yes()
 
     with client:
-        client.set_input_flow(input_flow)
-        client.set_expected_responses(
-            [messages.ButtonRequest(code=B.ResetDevice)]
-            * (8 if click_info else 6)  # intro screens (and optional info)
-            + [
-                (click_info, messages.ButtonRequest(code=B.ResetDevice)),
-                messages.ButtonRequest(code=B.ResetDevice),
-                (click_info, messages.ButtonRequest(code=B.ResetDevice)),
-                messages.ButtonRequest(code=B.ResetDevice),
-            ]
-            * 5  # group thresholds (and optional info)
-            + [
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-            ]
-            * 25  # individual shares
-            + [
-                messages.ButtonRequest(code=B.Success),
-                messages.Success,
-                messages.Features,
-            ]
-        )
+        IF = InputFlowSlip39AdvancedBackup(client, click_info)
+        client.set_input_flow(IF.get())
         device.backup(client)
 
     client.init_device()
@@ -228,7 +106,7 @@ def test_backup_slip39_advanced(client: Client, click_info: bool):
 
     expected_ms = shamir.combine_mnemonics(MNEMONIC_SLIP39_ADVANCED_20)
     actual_ms = shamir.combine_mnemonics(
-        mnemonics[:3] + mnemonics[5:8] + mnemonics[10:13]
+        IF.mnemonics[:3] + IF.mnemonics[5:8] + IF.mnemonics[10:13]
     )
     assert expected_ms == actual_ms
 

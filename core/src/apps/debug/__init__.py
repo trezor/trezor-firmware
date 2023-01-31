@@ -8,9 +8,9 @@ if __debug__:
 
     import trezorui2
 
-    from trezor import log, loop, wire
+    from trezor import log, loop, utils, wire
     from trezor.ui import display
-    from trezor.enums import MessageType
+    from trezor.enums import MessageType, DebugPhysicalButton
     from trezor.messages import (
         DebugLinkLayout,
         Success,
@@ -38,9 +38,11 @@ if __debug__:
     confirm_chan = loop.chan()
     swipe_chan = loop.chan()
     input_chan = loop.chan()
+    model_r_btn_chan = loop.chan()
     confirm_signal = confirm_chan.take
     swipe_signal = swipe_chan.take
     input_signal = input_chan.take
+    model_r_btn_signal = model_r_btn_chan.take
 
     debuglink_decision_chan = loop.chan()
 
@@ -64,34 +66,20 @@ if __debug__:
             layout_change_chan.publish(storage.current_content)
 
     async def _dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
-        from trezor.enums import DebugButton, DebugSwipeDirection
-        from trezor.ui import (
-            Result,
-            SWIPE_UP,
-            SWIPE_DOWN,
-            SWIPE_LEFT,
-            SWIPE_RIGHT,
-        )
+        from trezor.enums import DebugButton
+        from trezor.ui import Result
 
-        button = msg.button  # local_cache_attribute
-        swipe = msg.swipe  # local_cache_attribute
-
-        if button is not None:
-            if button == DebugButton.NO:
+        if msg.button is not None:
+            if msg.button == DebugButton.NO:
                 await confirm_chan.put(Result(trezorui2.CANCELLED))
-            elif button == DebugButton.YES:
+            elif msg.button == DebugButton.YES:
                 await confirm_chan.put(Result(trezorui2.CONFIRMED))
-            elif button == DebugButton.INFO:
+            elif msg.button == DebugButton.INFO:
                 await confirm_chan.put(Result(trezorui2.INFO))
-        if swipe is not None:
-            if swipe == DebugSwipeDirection.UP:
-                await swipe_chan.put(SWIPE_UP)
-            elif swipe == DebugSwipeDirection.DOWN:
-                await swipe_chan.put(SWIPE_DOWN)
-            elif swipe == DebugSwipeDirection.LEFT:
-                await swipe_chan.put(SWIPE_LEFT)
-            elif swipe == DebugSwipeDirection.RIGHT:
-                await swipe_chan.put(SWIPE_RIGHT)
+        if msg.physical_button is not None:
+            await model_r_btn_chan.put(msg.physical_button)
+        if msg.swipe is not None:
+            await swipe_chan.put(msg.swipe)
         if msg.input is not None:
             await input_chan.put(Result(msg.input))
 
@@ -117,6 +105,12 @@ if __debug__:
         await loop.sleep(duration_ms)
         loop.synthetic_events.append((io.TOUCH, (io.TOUCH_END, x, y)))
 
+    async def button_hold(btn: int, duration_ms: int) -> None:
+        from trezor import io
+
+        await loop.sleep(duration_ms)
+        loop.synthetic_events.append((io.BUTTON, (io.BUTTON_RELEASED, btn)))
+
     async def dispatch_DebugLinkWatchLayout(
         ctx: wire.Context, msg: DebugLinkWatchLayout
     ) -> Success:
@@ -136,10 +130,12 @@ if __debug__:
 
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
+
         x = msg.x  # local_cache_attribute
         y = msg.y  # local_cache_attribute
 
-        if x is not None and y is not None:
+        # TT click on specific coordinates, with possible hold
+        if x is not None and y is not None and utils.MODEL in ("T",):
             evt_down = io.TOUCH_START, x, y
             evt_up = io.TOUCH_END, x, y
             loop.synthetic_events.append((io.TOUCH, evt_down))
@@ -147,6 +143,21 @@ if __debug__:
                 loop.schedule(touch_hold(x, y, msg.hold_ms))
             else:
                 loop.synthetic_events.append((io.TOUCH, evt_up))
+        # TR hold of a specific button
+        elif (
+            msg.physical_button is not None
+            and msg.hold_ms is not None
+            and utils.MODEL in ("R",)
+        ):
+            if msg.physical_button == DebugPhysicalButton.LEFT_BTN:
+                btn = io.BUTTON_LEFT
+            elif msg.physical_button == DebugPhysicalButton.RIGHT_BTN:
+                btn = io.BUTTON_RIGHT
+            else:
+                raise wire.ProcessError("Unknown physical button")
+            loop.synthetic_events.append((io.BUTTON, (io.BUTTON_PRESSED, btn)))
+            loop.schedule(button_hold(btn, msg.hold_ms))
+        # Something more general
         else:
             debuglink_decision_chan.publish(msg)
 

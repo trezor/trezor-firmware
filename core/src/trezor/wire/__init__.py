@@ -467,7 +467,13 @@ def failure(exc: BaseException) -> Failure:
     elif isinstance(exc, InvalidSessionError):
         return Failure(code=FailureType.InvalidSession, message="Invalid session")
     else:
-        return Failure(code=FailureType.FirmwareError, message="Firmware error")
+        # NOTE: when receiving generic `FirmwareError` on non-debug build,
+        # change the `if __debug__` to `if True` to get the full error message.
+        if __debug__:
+            message = f"Firmware error - {exc}"
+        else:
+            message = "Firmware error"
+        return Failure(code=FailureType.FirmwareError, message=message)
 
 
 def unexpected_message() -> Failure:

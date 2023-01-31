@@ -25,6 +25,8 @@
 #ifndef __SLIP39_H__
 #define __SLIP39_H__
 
+#define SLIP39_WORD_COUNT 1024
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -35,5 +37,7 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length);
 uint16_t slip39_word_completion_mask(uint16_t prefix);
 
 const char* button_sequence_to_word(uint16_t prefix);
+
+extern const char* const SLIP39_WORDLIST[SLIP39_WORD_COUNT];
 
 #endif

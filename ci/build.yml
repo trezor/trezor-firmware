@@ -133,6 +133,37 @@ core fw btconly production build:
       - firmware-T2T1-btconly-production-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
+core fw R debug build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  variables:
+    TREZOR_MODEL: "R"
+    PYOPT: "0"
+  script:
+    - nix-shell --run "poetry run make -C core build_firmware"
+    - cp core/build/firmware/firmware.bin trezor-fw-debug-tr-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - trezor-fw-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
+
+core fw R build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  variables:
+    TREZOR_MODEL: "R"
+  script:
+    - nix-shell --run "poetry run make -C core build_firmware"
+    - cp core/build/firmware/firmware.bin trezor-fw-tr-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - trezor-fw-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
+
 # Non-frozen emulator build. This means you still need Python files
 # present which get interpreted.
 core unix regular build:
@@ -233,6 +264,54 @@ core unix frozen debug build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     untracked: true
+    expire_in: 1 week
+
+core unix frozen R debug build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  variables:
+    PYOPT: "0"
+    TREZOR_MODEL: "R"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 10 weeks
+
+core unix frozen R debug build arm:
+  image: nixos/nix
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  variables:
+    PYOPT: "0"
+    TREZOR_MODEL: "R"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-arm
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 10 weeks
+  tags:
+    - docker_darwin_arm
+
+# Debugger build for gdb/lldb.
+core unix R debugger build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  variables:
+    TREZOR_EMULATOR_FROZEN: "1"
+    TREZOR_MODEL: "R"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_debug"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - core/build/unix
     expire_in: 1 week
 
 core unix frozen debug asan build:

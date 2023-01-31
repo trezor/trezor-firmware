@@ -242,14 +242,10 @@ void display_init(void) {
 #include "background_T.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 #include "background_1.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
-#elif defined TREZOR_MODEL_R
-#include "background_R.h"
-  BACKGROUND = IMG_LoadTexture_RW(
-      RENDERER, SDL_RWFromMem(background_R_jpg, background_R_jpg_len), 0);
 #endif
 #endif
   if (BACKGROUND) {

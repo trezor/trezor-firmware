@@ -9,6 +9,7 @@ from trezor.enums import (
 )
 from trezor.strings import format_amount
 from trezor.ui import layouts
+from trezor.ui.layouts import confirm_metadata, confirm_properties
 
 from apps.common.paths import address_n_to_str
 
@@ -20,9 +21,6 @@ from .helpers.utils import (
     format_optional_int,
     format_stake_pool_id,
 )
-
-confirm_metadata = layouts.confirm_metadata  # global_import_cache
-confirm_properties = layouts.confirm_properties  # global_import_cache
 
 if TYPE_CHECKING:
     from typing import Literal

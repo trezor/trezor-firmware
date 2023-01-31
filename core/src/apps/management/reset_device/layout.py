@@ -168,8 +168,9 @@ async def show_backup_warning(ctx: GenericContext, slip39: bool = False) -> None
 
 
 async def show_backup_success(ctx: GenericContext) -> None:
-    text = "Use your backup when you need to recover your wallet."
-    await show_success(ctx, "success_backup", text, "Your backup is done.")
+    from trezor.ui.layouts.reset import show_success_backup
+
+    await show_success_backup(ctx)
 
 
 # BIP39

@@ -992,6 +992,8 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
 static void ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
   if (sectrue != is_not_wipe_code(pin, pin_len)) {
     storage_wipe();
+    // TODO: need to account for smaller model R - smaller font and different
+    // copy
     show_wipe_code_screen();
   }
 }

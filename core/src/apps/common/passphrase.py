@@ -7,6 +7,7 @@ from trezor.wire import DataError
 if TYPE_CHECKING:
     from trezor.wire import Context
 
+
 _MAX_PASSPHRASE_LEN = const(50)
 
 

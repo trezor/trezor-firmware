@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.transport import udp
@@ -42,7 +42,7 @@ class BackgroundDeviceHandler:
         self.client.ui = NullUI  # type: ignore [NullUI is OK UI]
         self.client.watch_layout(True)
 
-    def run(self, function, *args, **kwargs) -> None:
+    def run(self, function: Any, *args: Any, **kwargs: Any) -> None:
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
         self.task = self._pool.submit(function, self.client, *args, **kwargs)
