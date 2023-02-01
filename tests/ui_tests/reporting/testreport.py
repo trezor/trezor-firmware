@@ -27,7 +27,10 @@ ALL_UNIQUE_SCREENS = "all_unique_screens.html"
 
 
 def document(
-    title: str, actual_hash: str | None = None, index: bool = False
+    title: str,
+    actual_hash: str | None = None,
+    index: bool = False,
+    model: str | None = None,
 ) -> dominate.document:
     doc = dominate.document(title=title)
     style = t.style()
@@ -41,6 +44,9 @@ def document(
 
     if index:
         doc.body["data-index"] = True
+
+    if model:
+        doc.body["class"] = f"model-{model}"
 
     return doc
 
@@ -72,7 +78,7 @@ def setup(main_runner: bool) -> None:
     """Delete and create the reports dir to clear previous entries."""
     if main_runner:
         shutil.rmtree(TESTREPORT_PATH, ignore_errors=True)
-        TESTREPORT_PATH.mkdir()
+        TESTREPORT_PATH.mkdir(parents=True)
         (TESTREPORT_PATH / "failed").mkdir()
         (TESTREPORT_PATH / "passed").mkdir()
         (TESTREPORT_PATH / "new").mkdir()
@@ -137,16 +143,18 @@ def all_screens() -> Path:
 
     Shows all test-cases at one place.
     """
-    title = "All test cases"
-    doc = dominate.document(title=title)
+    recent_tests = list(TestResult.recent_tests())
+    model = recent_tests[0].test.model if recent_tests else None
 
+    title = "All test cases"
+    doc = document(title=title, model=model)
     with doc:
         h1("All test cases")
         hr()
 
         count = 0
         result_count = 0
-        for result in TestResult.recent_tests():
+        for result in recent_tests:
             result_count += 1
             h2(result.test.id, id=result.test.id)
             for image in result.images:
@@ -164,17 +172,18 @@ def all_unique_screens() -> Path:
     """Generate an HTML file with all the unique screens from the current test run."""
     results = TestResult.recent_tests()
     result_count = 0
+    model = None
     test_cases = defaultdict(list)
     for result in results:
         result_count += 1
+        model = result.test.model
         for image in result.images:
             test_cases[image].append(result.test.id)
 
     test_case_pairs = sorted(test_cases.items(), key=lambda x: len(x[1]), reverse=True)
 
     title = "All unique screens"
-    doc = dominate.document(title=title)
-
+    doc = document(title=title, model=model)
     with doc:
         h1("All unique screens")
         hr()
@@ -236,7 +245,9 @@ def failed(result: TestResult) -> Path:
 
     _copy_deduplicated(result.test)
 
-    doc = document(title=result.test.id, actual_hash=result.actual_hash)
+    doc = document(
+        title=result.test.id, actual_hash=result.actual_hash, model=result.test.model
+    )
     with doc:
         _header(result.test.id, result.expected_hash, result.actual_hash)
 
@@ -279,7 +290,7 @@ def recorded(result: TestResult, header: str = "Recorded") -> Path:
     """
     _copy_deduplicated(result.test)
 
-    doc = document(title=result.test.id)
+    doc = document(title=result.test.id, model=result.test.model)
 
     with doc:
         _header(result.test.id, result.actual_hash, result.actual_hash)

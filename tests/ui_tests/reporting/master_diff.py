@@ -6,7 +6,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-import dominate
 from dominate.tags import br, h1, h2, hr, i, p, table, td, th, tr
 
 from ..common import (
@@ -17,7 +16,7 @@ from ..common import (
     screens_diff,
 )
 from . import download, html
-from .testreport import REPORTS_PATH
+from .testreport import REPORTS_PATH, document
 
 MASTERDIFF_PATH = REPORTS_PATH / "master_diff"
 IMAGES_PATH = MASTERDIFF_PATH / "images"
@@ -51,8 +50,6 @@ def get_diff() -> tuple[dict[str, str], dict[str, str], dict[str, tuple[str, str
         for group in master_groups.keys() | current_groups.keys():
             master_tests = master_groups.get(group, {})
             current_tests = current_groups.get(group, {})
-
-            print(f"checking model {model}, group {group}...")
 
             def testname(test: str) -> str:
                 assert test.startswith(model + "_")
@@ -92,7 +89,7 @@ def get_diff() -> tuple[dict[str, str], dict[str, str], dict[str, tuple[str, str
 
 
 def removed(screens_path: Path, test_name: str) -> Path:
-    doc = dominate.document(title=test_name)
+    doc = document(title=test_name, model=test_name[:2])
     screens, hashes = screens_and_hashes(screens_path)
     html.store_images(screens, hashes)
 
@@ -116,7 +113,7 @@ def removed(screens_path: Path, test_name: str) -> Path:
 
 
 def added(screens_path: Path, test_name: str) -> Path:
-    doc = dominate.document(title=test_name)
+    doc = document(title=test_name, model=test_name[:2])
     screens, hashes = screens_and_hashes(screens_path)
     html.store_images(screens, hashes)
 
@@ -146,7 +143,7 @@ def diff(
     master_hash: str,
     current_hash: str,
 ) -> Path:
-    doc = dominate.document(title=test_name)
+    doc = document(title=test_name, model=test_name[:2])
     master_screens, master_hashes = screens_and_hashes(master_screens_path)
     current_screens, current_hashes = screens_and_hashes(current_screens_path)
     html.store_images(master_screens, master_hashes)
@@ -182,7 +179,7 @@ def index() -> Path:
     diff = list((MASTERDIFF_PATH / "diff").iterdir())
 
     title = "UI changes from master"
-    doc = dominate.document(title=title)
+    doc = document(title=title)
 
     with doc:
         h1("UI changes from master")
