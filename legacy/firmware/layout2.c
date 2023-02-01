@@ -156,20 +156,25 @@ static const char *address_n_str(const uint32_t *address_n,
       } else if (account_type == ACCOUNT_SLIP25) {
         strlcat(path, " Coinjoin", sizeof(path));
       }
+
       if (address_is_account) {
-        strlcat(path, " address #", sizeof(path));
+        strlcat(path, " address", sizeof(path));
       } else {
-        strlcat(path, " account #", sizeof(path));
+        strlcat(path, " account", sizeof(path));
       }
-      char acc[3] = {0};
-      memzero(acc, sizeof(acc));
-      if (accnum < 10) {
-        acc[0] = '0' + accnum;
-      } else {
-        acc[0] = '0' + (accnum / 10);
-        acc[1] = '0' + (accnum % 10);
+
+      if (!(account_type == ACCOUNT_SLIP25 && accnum == 1)) {
+        char acc[5] = {' ', '#'};
+        if (accnum < 10) {
+          acc[2] = '0' + accnum;
+          acc[3] = '\0';
+        } else {
+          acc[2] = '0' + (accnum / 10);
+          acc[3] = '0' + (accnum % 10);
+          acc[4] = '\0';
+        }
+        strlcat(path, acc, sizeof(path));
       }
-      strlcat(path, acc, sizeof(path));
       return path;
     }
   }
