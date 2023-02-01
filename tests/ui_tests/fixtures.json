@@ -2,12 +2,12 @@
 "T1": {
 "device_tests": {
 "T1_bitcoin-test_authorize_coinjoin.py::test_cancel_authorization": "84d5223f94a7a31dc23d278121c4829f446611582065a67673be3b7d6a5b1274",
-"T1_bitcoin-test_authorize_coinjoin.py::test_get_address": "de722e195777717f2e35233a5124765794a75ed46de5c35cae362f6c6218c04a",
+"T1_bitcoin-test_authorize_coinjoin.py::test_get_address": "08338bd37d8fb2d53055b5e749a8bb0bf85b95cf13c78d3d17a4dd75b120e81b",
 "T1_bitcoin-test_authorize_coinjoin.py::test_get_public_key": "1257ec89d4620ed9f34c986cd925717676c9b1e9e143e040c33f1a88d1f8c8a7",
 "T1_bitcoin-test_authorize_coinjoin.py::test_multisession_authorization": "5628b8419edd4c5211aab8af46f146542c605e8e24e6cd79ef0d3b378c98982a",
 "T1_bitcoin-test_authorize_coinjoin.py::test_sign_tx": "0ffc9ee5242b69975c12aa901d47dc80e44c2bbc42f98e12bf35d36adbca70b7",
 "T1_bitcoin-test_authorize_coinjoin.py::test_sign_tx_large": "39ce1d721b7516f90c027c8abf28ebad28dce18b82618764624c93a5e2bf1736",
-"T1_bitcoin-test_authorize_coinjoin.py::test_sign_tx_migration": "8ffec72e7a13934583ec68257e60dd707c6c33f6f62b8d8cdb81168795446ff3",
+"T1_bitcoin-test_authorize_coinjoin.py::test_sign_tx_migration": "3560ac3e7258a710c75827cf6eb0bdf2456d448c3c270b7971eaa0ea94670d3f",
 "T1_bitcoin-test_authorize_coinjoin.py::test_sign_tx_spend": "dd06d17f855486ae857c7d26e19f738e0743cabd2c88d6aad23e5aead1e51ba8",
 "T1_bitcoin-test_authorize_coinjoin.py::test_wrong_account_type": "84d5223f94a7a31dc23d278121c4829f446611582065a67673be3b7d6a5b1274",
 "T1_bitcoin-test_authorize_coinjoin.py::test_wrong_coordinator": "84d5223f94a7a31dc23d278121c4829f446611582065a67673be3b7d6a5b1274",
