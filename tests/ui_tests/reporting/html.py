@@ -6,7 +6,6 @@ from typing import Iterable
 
 from dominate import document
 from dominate.tags import a, i, img, table, td, th, tr
-from PIL import Image
 
 from ..common import UI_TESTS_DIR
 
@@ -74,14 +73,8 @@ def _relative_path(cur_dir: Path, path_to: Path) -> str:
 def image_link(hash: str, cur_dir: Path, title: str = "") -> None:
     """Put image into table as one cell."""
     path = _IMAGE_DIR / f"{hash}.png"
-    im = Image.open(path)
-    width = im.width
-    if width < 240:
-        width *= 2
-
     img(
         src=_relative_path(cur_dir, path),
-        style=f"width: {width}px; image-rendering: pixelated;",
         title=title,
         loading="lazy",
     )

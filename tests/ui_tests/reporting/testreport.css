@@ -60,3 +60,8 @@ tr.bad a, tr.bad a:visited {
 .script-hidden {
     display: none;
 }
+
+.model-T1 img, .model-TR img {
+    image-rendering: pixelated;
+    width: 256px;
+}
