@@ -5,6 +5,8 @@ MAKE = make -j $(JOBS)
 SCONS = scons -Q -j $(JOBS)
 
 BUILD_DIR             = build
+BLE_BOOTLOADER_BUILD_DIR = 	$(BUILD_DIR)/ble_bootloader
+BLE_FIRMWARE_BUILD_DIR = 	$(BUILD_DIR)/ble_firmware
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
 BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
 BOOTLOADER_CI_BUILD_DIR   = $(BUILD_DIR)/bootloader_ci
@@ -162,6 +164,13 @@ build: build_boardloader build_bootloader build_firmware build_prodtest build_un
 
 build_embed: build_boardloader build_bootloader build_firmware # build boardloader, bootloader, firmware
 
+
+build_ble_bootloader: ## build ble_bootloader
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" $(BLE_BOOTLOADER_BUILD_DIR)/ble_bootloader.bin
+
+build_ble_firmware: ## build ble_firmware
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" $(BLE_FIRMWARE_BUILD_DIR)/ble_firmware.bin
+
 build_boardloader: ## build boardloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
 
@@ -199,8 +208,15 @@ build_cross: ## build mpy-cross port
 
 ## clean commands:
 
-clean: clean_boardloader clean_bootloader clean_bootloader_ci clean_prodtest clean_reflash clean_firmware clean_unix clean_cross ## clean all
+clean: clean_ble_bootloader clean_ble_firmware clean_boardloader clean_bootloader clean_bootloader_ci clean_prodtest clean_reflash clean_firmware clean_unix clean_cross ## clean all
 	rm -f ".sconsign.dblite"
+
+
+clean_ble_bootloader: ## clean ble_bootloader build
+	rm -rf $(BLE_BOOTLOADER_BUILD_DIR)
+
+clean_ble_firmware: ## clean ble_bootloader build
+	rm -rf $(BLE_FIRMWARE_BUILD_DIR)
 
 clean_boardloader: ## clean boardloader build
 	rm -rf $(BOARDLOADER_BUILD_DIR)
@@ -230,6 +246,24 @@ clean_cross: ## clean mpy-cross build
 
 flash: flash_boardloader flash_bootloader flash_firmware ## flash everything using OpenOCD
 
+flash_ble: flash_ble_bootloader flash_softdevice flash_ble_firmware
+
+flash_ble_bootloader:
+	@echo Flashing: $(BLE_BOOTLOADER_BUILD_DIR)/ble_bootloader.hex
+	nrfjprog -f nrf52 --program $(BLE_BOOTLOADER_BUILD_DIR)/ble_bootloader.hex --sectorerase
+
+flash_ble_firmware:
+	@echo Flashing: $(BLE_FIRMWARE_BUILD_DIR)/ble_firmware_merged.hex
+	nrfjprog -f nrf52 --program $(BLE_FIRMWARE_BUILD_DIR)/ble_firmware_merged.hex --sectorerase
+
+flash_ble_bl_settings:
+	@echo Flashing: $(BLE_BOOTLOADER_BUILD_DIR)/settings.hex
+	nrfjprog -f nrf52 --program $(BLE_BOOTLOADER_BUILD_DIR)/settings.hex --sectorerase
+
+flash_softdevice:
+	@echo Flashing: s140_nrf52_7.2.0_softdevice.hex
+	nrfjprog -f nrf52 --program embed/sdk/nrf52/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --sectorerase
+
 flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
 
@@ -253,6 +287,9 @@ flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOC
 
 flash_erase: ## erase all sectors in flash bank 0
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 0 last; flash erase_check 0; exit"
+
+flash_erase_ble:
+	nrfjprog -f nrf52 --eraseall
 
 flash_read_storage: ## read storage sectors from flash
 	$(OPENOCD) -c "init; flash read_bank 0 storage1.data 0x10000 65536; flash read_bank 0 storage2.data 0x110000 65536; exit"
@@ -281,6 +318,10 @@ openocd: ## start openocd which connects to the device
 
 openocd_reset: ## cause a system reset using OpenOCD
 	$(OPENOCD) -c "init; reset; exit"
+
+# nrfjprog debug commands:
+nrfjprog_reset:
+	nrfjprog -f nrf52 --reset
 
 GDB = arm-none-eabi-gdb --nx -ex 'set remotetimeout unlimited' -ex 'set confirm off' -ex 'target remote 127.0.0.1:3333' -ex 'monitor reset halt'
 

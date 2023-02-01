@@ -10,3 +10,5 @@ htmlcov/
 mypy_report
 /CMakeLists.txt
 /cmake-build-debug/
+/embed/ble_bootloader/jlink.jdebug.user
+/embed/ble_firmware/jlink.jdebug.user
