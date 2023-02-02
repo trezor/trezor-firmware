@@ -888,7 +888,7 @@
 "TT_bitcoin-test_signmessage.py::test_signmessage[segwit-p2sh0]": "9bee69803e89897511cb72895e9398ce04bfe4647397b65b5e7d6eff6c53cf39",
 "TT_bitcoin-test_signmessage.py::test_signmessage[segwit-p2sh1]": "9bee69803e89897511cb72895e9398ce04bfe4647397b65b5e7d6eff6c53cf39",
 "TT_bitcoin-test_signmessage.py::test_signmessage[segwit-p2sh2]": "64b97badfb2881b7824558e4f869a7e49a52c78ea28b10fd07041f470be2aab8",
-"TT_bitcoin-test_signmessage.py::test_signmessage[t1 firmware path]": "0734022f1537d3a353c475ad73d57767a2e23017dccd479955121f27cccd018b",
+"TT_bitcoin-test_signmessage.py::test_signmessage[t1 firmware path]": "ac1c92ac1795a6b33a93a0e1ba82741a29b012912190e475c6be5d3189eebef2",
 "TT_bitcoin-test_signmessage.py::test_signmessage_pagination[long_words]": "d5eb536ac72b1e5d9ac571b144472bfec0d5c63ad2a8b690342e096a4055fde3",
 "TT_bitcoin-test_signmessage.py::test_signmessage_pagination[newlines]": "dabdac2b71c8306038d63003fd7e9c75e9926bc011841b8df07f857068a57d4f",
 "TT_bitcoin-test_signmessage.py::test_signmessage_pagination[no_spaces]": "d3f5ed15db8cfd218dbd51658533974c41e652197384e10e7186a58aff6d04d8",
