@@ -6,5 +6,6 @@
       "label": "google.com"
     }
   ],
-  "webauthn": ["google.com"]
+  "webauthn": ["google.com"],
+  "use_self_attestation": false
 }
