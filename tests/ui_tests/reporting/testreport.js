@@ -24,11 +24,11 @@ function itemKeyFromIndexEntry(entry) {
 }
 
 
-function markState(state) {
+async function markState(state) {
     if (state === 'update') {
         let lastIndex = decodeURIComponent(window.location.href).split("/").reverse()[0].lastIndexOf(".")
         let stem = decodeURIComponent(window.location.href).split("/").reverse()[0].slice(0, lastIndex)
-        fetch('http://localhost:8000/fixtures.json', {
+        await fetch('http://localhost:8000/fixtures.json', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -38,7 +38,7 @@ function markState(state) {
                 "test": stem,
                 "hash": document.body.dataset.actualHash
             })
-         }).then(() => {})
+         })
         window.localStorage.setItem(itemKeyFromOneTest(), 'ok')
     } else {
         window.localStorage.setItem(itemKeyFromOneTest(), state)
