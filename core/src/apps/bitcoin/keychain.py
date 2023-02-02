@@ -85,7 +85,8 @@ PATTERN_UNCHAINED_UNHARDENED = (
 PATTERN_UNCHAINED_DEPRECATED = "m/45'/coin_type'/account'/[0-1000000]/address_index"
 
 # Model 1 firmware signing.
-PATTERN_SLIP26_T1_FW = "m/10026'/49'/2'/0'"
+# 826421588 is ASCII string "T1B1" as a little-endian 32-bit integer.
+PATTERN_SLIP26_T1_FW = "m/10026'/826421588'/2'/0'"
 
 # SLIP-44 coin type for Bitcoin
 SLIP44_BITCOIN = const(0)
