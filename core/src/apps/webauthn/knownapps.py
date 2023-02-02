@@ -21,6 +21,14 @@ class FIDOApp:
 
 # fmt: off
 def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
+    if rp_id_hash == b"\x22\x65\xcb\xcc\x3e\xf2\x41\x06\xc9\xe0\xed\xdb\xd0\x4f\x3c\xca\x0d\x03\x22\x5d\xa3\xfc\xca\x8e\x2d\x86\xf7\xa3\x94\xaf\x92\x83":
+        # WebAuthn key for Apple
+        return FIDOApp(
+            "apple.com",  # label
+            "apple",  # icon_name
+            None,  # use_sign_count
+            False,  # use_self_attestation
+        )
     if rp_id_hash == b"\x96\x89\x78\xa2\x99\x53\xde\x52\xd3\xef\x0f\x0c\x71\xb7\xb7\xb6\xb1\xaf\x9f\x08\xe2\x57\x89\x6a\x8d\x81\x26\x91\x85\x30\x29\x3b":
         # U2F key for Amazon Web Services
         return FIDOApp(
