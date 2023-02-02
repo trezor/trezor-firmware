@@ -123,6 +123,8 @@ def validate_path_against_script_type(
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
 
+        if SignMessage.is_type_of(msg):
+            append(PATTERN_SLIP26_T1_FW)
     elif (
         script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
         and multisig
@@ -162,9 +164,6 @@ def validate_path_against_script_type(
     elif coin.taproot and script_type == InputScriptType.SPENDTAPROOT:
         append(PATTERN_BIP86)
         append(PATTERN_SLIP25_TAPROOT)
-
-    elif SignMessage.is_type_of(msg):
-        append(PATTERN_SLIP26_T1_FW)
 
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
