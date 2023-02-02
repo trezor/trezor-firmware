@@ -160,12 +160,12 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "t1 firmware path",
         "Bitcoin",
-        "m/10026'/49'/2'/0'",
+        "m/10026'/826421588'/2'/0'",
         S.SPENDADDRESS,
         False,
-        "1Cykx69qc6WPukP6V1BhBfRi4zt8PgzcP6",
+        "1FoHjQT6bAEu2FQGzTgqj4PBneoiCAk4ZN",
         b"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-        "1fd240d06000fb0854446ca08dfa8f6ca51b2d3c194c7a655d940aab8b7c727c6459276fe44d70c88e5c56d60ff2fa1b8682ca01d203f4fcad37b58f9ed98ad0d2",
+        "1f40ae58dd68480a2f39eecf4decfe79ceacde3f865502db67c083b8465b33535c0750d5377b7ac62e534f71c922cd029f659761f8ac99e859df36322c5b320eff",
         skip_t1=True,
     ),
     # ==== Testnet script types ====

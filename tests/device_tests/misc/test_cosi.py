@@ -21,7 +21,7 @@ import pytest
 from trezorlib import cosi
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.tools import parse_path
+from trezorlib.tools import H_, Address, parse_path
 
 DIGEST = sha256(b"this is not a pipe").digest()
 
@@ -116,3 +116,23 @@ def test_cosi_different_key(client: Client):
         cosi.sign(
             client, parse_path("m/10018h/1h"), DIGEST, commit.commitment, commit.pubkey
         )
+
+
+@pytest.mark.parametrize(
+    "model",
+    (
+        b"T1B1",
+        b"T2T1",
+        b"T2B1",
+        b"T3W1",
+        b"\xfe\xfe\xfe\xfe",
+        b"\x00",
+        b"dog",
+        b"42",
+    ),
+)
+@pytest.mark.skip_t1
+def test_slip26_paths(client: Client, model: bytes):
+    slip26_model = int.from_bytes(model, "little")
+    path = Address([H_(10026), H_(slip26_model), H_(0), H_(0)])
+    cosi.commit(client, path)

@@ -16,10 +16,12 @@ if TYPE_CHECKING:
 
 SCHEMA_SLIP18 = PathSchema.parse("m/10018'/address_index'/*'", slip44_id=())
 # SLIP-26: m/10026'/model'/type'/rotation_index'
-# - `model`: ASCII for 1, T, or R, or 0 for common things (keep the ASCII range open for future models).
+# - `model`: typically ASCII string T1B1 etc. parsed as little-endian number,
+#            but can also be 0 or other values. Maximum allowed value is 0x7F7F7F7F,
+#            the maximum 4-byte ASCII string.
 # - `type`: 0 = bootloader, 1 = vendorheader, 2 = firmware, 3 = definitions, 4 = reserved
 # - `rotation_index`: a fixed 0' for now
-SCHEMA_SLIP26 = PathSchema.parse("m/10026'/[0-127]'/[0-4]'/0'", slip44_id=())
+SCHEMA_SLIP26 = PathSchema.parse("m/10026'/[0-2139062143]'/[0-4]'/0'", slip44_id=())
 
 
 async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
