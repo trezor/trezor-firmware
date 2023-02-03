@@ -26,9 +26,15 @@ class AssertRaisesContext:
 
 
 class TestCase:
+    def __init__(self) -> None:
+        self.__equality_functions = {}
 
     def fail(self, msg=''):
         ensure(False, msg)
+
+    def addTypeEqualityFunc(self, typeobj, function):
+        ensure(callable(function))
+        self.__equality_functions[typeobj.__name__] = function
 
     def assertEqual(self, x, y, msg=''):
         if not msg:
@@ -36,6 +42,8 @@ class TestCase:
 
         if x.__class__ == y.__class__ and x.__class__.__name__ == "Msg":
             self.assertMessageEqual(x, y)
+        elif x.__class__.__name__ in self.__equality_functions:
+            self.__equality_functions[x.__class__.__name__](x, y, msg)
         else:
             ensure(x == y, msg)
 
@@ -156,21 +164,32 @@ class TestCase:
         self.assertIsInstance(a, b.__class__, msg)
         self.assertEqual(a.__dict__, b.__dict__, msg)
 
+    def assertDictEqual(self, x, y):
+        self.assertEqual(
+            len(x),
+            len(y),
+            f"Dict lengths not equal - {len(x)} vs {len(y)}"
+        )
+
+        for key in x:
+            self.assertIn(
+                key,
+                y,
+                f"Key {key} not found in second dict."
+            )
+            self.assertEqual(
+                x[key],
+                y[key],
+                f"At key {key} expected {x[key]}, found {y[key]}"
+            )
+
     def assertMessageEqual(self, x, y):
         self.assertEqual(
             x.MESSAGE_NAME,
             y.MESSAGE_NAME,
             f"Expected {x.MESSAGE_NAME}, found {y.MESSAGE_NAME}"
         )
-        xdict = x.__dict__
-        ydict = y.__dict__
-        for key in xdict:
-            self.assertTrue(key in ydict)
-            self.assertEqual(
-                xdict[key],
-                ydict[key],
-                f"At {x.MESSAGE_NAME}.{key} expected {xdict[key]}, found {ydict[key]}"
-            )
+        self.assertDictEqual(x.__dict__, y.__dict__)
 
 
 def skip(msg):

@@ -455,6 +455,10 @@ if TYPE_CHECKING:
         YES = 1
         INFO = 2
 
+    class EthereumDefinitionType(IntEnum):
+        NETWORK = 0
+        TOKEN = 1
+
     class EthereumDataType(IntEnum):
         UINT = 1
         INT = 2
