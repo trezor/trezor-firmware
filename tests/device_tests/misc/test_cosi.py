@@ -136,3 +136,19 @@ def test_slip26_paths(client: Client, model: bytes):
     slip26_model = int.from_bytes(model, "little")
     path = Address([H_(10026), H_(slip26_model), H_(0), H_(0)])
     cosi.commit(client, path)
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        "m/44h/0h/0h/0/0",
+        "m/44h/60h/0h/0/0",
+        "m/44h/60h/1h",
+        "m/84h/60h/1h/0",
+        "m/1",
+        "m/10018/0",
+    ),
+)
+def test_invalid_path(client: Client, path: str) -> None:
+    with pytest.raises(TrezorFailure, match="DataError"):
+        cosi.commit(client, parse_path(path))
