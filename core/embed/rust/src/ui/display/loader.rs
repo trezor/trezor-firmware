@@ -13,7 +13,7 @@ use crate::trezorhal::{
 
 use crate::ui::{
     constant::{screen, LOADER_OUTER},
-    display::toif::{Icon, NamedToif},
+    display::toif::Icon,
 };
 
 pub const LOADER_MIN: u16 = 0;
@@ -73,7 +73,7 @@ pub extern "C" fn loader_uncompress_r(
 
     let i = if icon_data != 0 {
         let data_slice = unsafe { from_raw_parts(icon_data as _, icon_data_size as _) };
-        Some((Icon::new(NamedToif(data_slice, "loader icon")), ic_color))
+        Some((Icon::new(data_slice), ic_color))
     } else {
         None
     };

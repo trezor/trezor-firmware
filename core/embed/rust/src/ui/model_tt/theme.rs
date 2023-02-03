@@ -12,7 +12,6 @@ use crate::{
 
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
 
-use crate::ui::display::toif::NamedToif;
 use num_traits::FromPrimitive;
 
 pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
@@ -53,67 +52,41 @@ pub const QR_SIDE_MAX: u32 = 140;
 pub const ICON_SIZE: i16 = 16;
 
 // UI icons (greyscale).
-pub const ICON_CANCEL: NamedToif = NamedToif(include_res!("model_tt/res/cancel.toif"), "cancel");
-pub const ICON_CONFIRM: NamedToif = NamedToif(include_res!("model_tt/res/confirm.toif"), "confirm");
-pub const ICON_SPACE: NamedToif = NamedToif(include_res!("model_tt/res/space.toif"), "space");
-pub const ICON_BACK: NamedToif = NamedToif(include_res!("model_tt/res/back.toif"), "back");
-pub const ICON_CLICK: NamedToif = NamedToif(include_res!("model_tt/res/click.toif"), "click");
-pub const ICON_NEXT: NamedToif = NamedToif(include_res!("model_tt/res/next.toif"), "next");
-pub const ICON_WARN: NamedToif = NamedToif(include_res!("model_tt/res/warn-icon.toif"), "warn");
-pub const ICON_MAGIC: NamedToif = NamedToif(include_res!("model_tt/res/magic.toif"), "magic");
-pub const ICON_LIST_CURRENT: NamedToif =
-    NamedToif(include_res!("model_tt/res/current.toif"), "current");
-pub const ICON_LIST_CHECK: NamedToif = NamedToif(include_res!("model_tt/res/check.toif"), "check");
-pub const ICON_LOCK: NamedToif = NamedToif(include_res!("model_tt/res/lock.toif"), "lock");
+pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
+pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/confirm.toif");
+pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
+pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
+pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
+pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
+pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warn-icon.toif");
+pub const ICON_MAGIC: &[u8] = include_res!("model_tt/res/magic.toif");
+pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
+pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
+pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock.toif");
 
 // Large, three-color icons.
 pub const WARN_COLOR: Color = YELLOW;
 pub const INFO_COLOR: Color = BLUE;
 pub const SUCCESS_COLOR: Color = GREEN;
 pub const ERROR_COLOR: Color = RED;
-pub const IMAGE_FG_WARN: NamedToif =
-    NamedToif(include_res!("model_tt/res/warn_fg.toif"), "warn_fg");
-pub const IMAGE_FG_SUCCESS: NamedToif =
-    NamedToif(include_res!("model_tt/res/success_fg.toif"), "success_fg");
-pub const IMAGE_FG_ERROR: NamedToif =
-    NamedToif(include_res!("model_tt/res/error_fg.toif"), "error_fg");
-pub const IMAGE_FG_INFO: NamedToif =
-    NamedToif(include_res!("model_tt/res/info_fg.toif"), "info_fg");
-pub const IMAGE_BG_CIRCLE: NamedToif =
-    NamedToif(include_res!("model_tt/res/circle.toif"), "circle");
-pub const IMAGE_BG_TRIANGLE: NamedToif =
-    NamedToif(include_res!("model_tt/res/triangle.toif"), "triangle");
-pub const IMAGE_BG_BACK_BTN: NamedToif =
-    NamedToif(include_res!("model_tt/res/back_btn.toif"), "back_btn");
-pub const IMAGE_BG_BACK_BTN_TALL: NamedToif = NamedToif(
-    include_res!("model_tt/res/back_btn_tall.toif"),
-    "back_btn_tall",
-);
+pub const IMAGE_FG_WARN: &[u8] = include_res!("model_tt/res/warn_fg.toif");
+pub const IMAGE_FG_SUCCESS: &[u8] = include_res!("model_tt/res/success_fg.toif");
+pub const IMAGE_FG_ERROR: &[u8] = include_res!("model_tt/res/error_fg.toif");
+pub const IMAGE_FG_INFO: &[u8] = include_res!("model_tt/res/info_fg.toif");
+pub const IMAGE_BG_CIRCLE: &[u8] = include_res!("model_tt/res/circle.toif");
+pub const IMAGE_BG_TRIANGLE: &[u8] = include_res!("model_tt/res/triangle.toif");
+pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/back_btn.toif");
+pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/back_btn_tall.toif");
 
 // Default homescreen
 pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");
 
 // Scrollbar/PIN dots.
-pub const DOT_ACTIVE: NamedToif = NamedToif(
-    include_res!("model_tt/res/scroll-active.toif"),
-    "scroll-active",
-);
-pub const DOT_INACTIVE: NamedToif = NamedToif(
-    include_res!("model_tt/res/scroll-inactive.toif"),
-    "scroll-inactive",
-);
-pub const DOT_INACTIVE_HALF: NamedToif = NamedToif(
-    include_res!("model_tt/res/scroll-inactive-half.toif"),
-    "scroll-inactive-half",
-);
-pub const DOT_INACTIVE_QUARTER: NamedToif = NamedToif(
-    include_res!("model_tt/res/scroll-inactive-quarter.toif"),
-    "scroll-inactive-quarter",
-);
-pub const DOT_SMALL: NamedToif = NamedToif(
-    include_res!("model_tt/res/scroll-small.toif"),
-    "scroll-small",
-);
+pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
+pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");
+pub const DOT_INACTIVE_HALF: &[u8] = include_res!("model_tt/res/scroll-inactive-half.toif");
+pub const DOT_INACTIVE_QUARTER: &[u8] = include_res!("model_tt/res/scroll-inactive-quarter.toif");
+pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
 
 pub const fn label_default() -> TextStyle {
     TEXT_NORMAL
