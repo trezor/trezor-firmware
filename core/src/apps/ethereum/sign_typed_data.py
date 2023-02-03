@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from trezor.wire import Context
     from trezor.utils import HashWriter
+    from .definitions import Definitions
 
     from trezor.messages import (
         EthereumSignTypedData,
@@ -22,7 +23,10 @@ if TYPE_CHECKING:
 
 @with_keychain_from_path(*PATTERNS_ADDRESS)
 async def sign_typed_data(
-    ctx: Context, msg: EthereumSignTypedData, keychain: Keychain
+    ctx: Context,
+    msg: EthereumSignTypedData,
+    keychain: Keychain,
+    defs: Definitions,
 ) -> EthereumTypedDataSignature:
     from trezor.crypto.curve import secp256k1
     from apps.common import paths
@@ -47,7 +51,7 @@ async def sign_typed_data(
     )
 
     return EthereumTypedDataSignature(
-        address=address_from_bytes(address_bytes),
+        address=address_from_bytes(address_bytes, defs.network),
         signature=signature[1:] + signature[0:1],
     )
 

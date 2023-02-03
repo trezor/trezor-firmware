@@ -16,6 +16,7 @@
 
 from typing import Iterator
 
+from trezor.messages import EthereumTokenInfo
 <%
 from collections import defaultdict
 
@@ -26,30 +27,37 @@ def group_tokens(tokens):
     return r
 %>\
 
-class TokenInfo:
-    def __init__(self, symbol: str, decimals: int) -> None:
-        self.symbol = symbol
-        self.decimals = decimals
+UNKNOWN_TOKEN = EthereumTokenInfo(
+    symbol="Wei UNKN",
+    decimals=0,
+    address=b"",
+    chain_id=0,
+    name="Unknown token",
+)
 
 
-UNKNOWN_TOKEN = TokenInfo("Wei UNKN", 0)
-
-
-def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
-    for addr, symbol, decimal in _token_iterator(chain_id):
+def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo | None:
+    for addr, symbol, decimal, name in _token_iterator(chain_id):
         if address == addr:
-            return TokenInfo(symbol, decimal)
-    return UNKNOWN_TOKEN
+            return EthereumTokenInfo(
+                symbol=symbol,
+                decimals=decimal,
+                address=address,
+                chain_id=chain_id,
+                name=name,
+            )
+    return None
 
 
-def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
+def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:
 % for token_chain_id, tokens in group_tokens(supported_on("trezor2", erc20)).items():
-    if chain_id == ${token_chain_id}:
+    if chain_id == ${token_chain_id}:  # ${tokens[0].chain}
         % for t in tokens:
-        yield (  # address, symbol, decimals
+        yield (  # address, symbol, decimals, name
             ${black_repr(t.address_bytes)},
             ${black_repr(t.symbol)},
             ${t.decimals},
+            ${black_repr(t.name.strip())},
         )
         % endfor
 % endfor

@@ -1,19 +1,27 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
+from . import networks
+
 if TYPE_CHECKING:
     from trezor.messages import EthereumFieldType
-    from .networks import NetworkInfo
+    from .networks import EthereumNetworkInfo
 
 
-def address_from_bytes(address_bytes: bytes, network: NetworkInfo | None = None) -> str:
+RSKIP60_NETWORKS = (30, 31)
+
+
+def address_from_bytes(
+    address_bytes: bytes, network: EthereumNetworkInfo = networks.UNKNOWN_NETWORK
+) -> str:
     """
     Converts address in bytes to a checksummed string as defined
     in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md
     """
     from trezor.crypto.hashlib import sha3_256
 
-    if network is not None and network.rskip60:
+    if network.chain_id in RSKIP60_NETWORKS:
+        # rskip60 is a different way to calculate checksum
         prefix = str(network.chain_id) + "0x"
     else:
         prefix = ""
