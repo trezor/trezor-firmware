@@ -172,7 +172,7 @@ _FIDO_ATT_CERT = b"0\x82\x01\xcd0\x82\x01s\xa0\x03\x02\x01\x02\x02\x04\x03E`\xc4
 _BOGUS_APPID_CHROME = b"A" * 32
 _BOGUS_APPID_FIREFOX = b"\0" * 32
 _BOGUS_APPIDS = (_BOGUS_APPID_CHROME, _BOGUS_APPID_FIREFOX)
-_AAGUID = b"\xd6\xd0\xbd\xc3b\xee\xc4\xdb\xde\x8dzenJD\x87"  # First 16 bytes of SHA-256("TREZOR 2")
+_AAGUID = b'\xfa+\x99\xdc\x9e9BW\x8f\x92J0\xd2<A\x18'  # Yubikey
 
 # authentication control byte
 _AUTH_ENFORCE = const(0x03)  # enforce user presence and sign
