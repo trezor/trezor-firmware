@@ -1,5 +1,4 @@
 use crate::{
-    trezorhal,
     trezorhal::{
         display::ToifFormat,
         uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
@@ -15,22 +14,8 @@ use super::Color;
 
 const TOIF_HEADER_LENGTH: usize = 12;
 
-pub fn toif_info(data: &[u8]) -> Option<(Offset, ToifFormat)> {
-    if let Ok(info) = trezorhal::display::toif_info(data) {
-        Some((
-            Offset::new(
-                unwrap!(info.width.try_into()),
-                unwrap!(info.height.try_into()),
-            ),
-            info.format,
-        ))
-    } else {
-        None
-    }
-}
-
 pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
-    let r = Rect::from_center_and_size(center, icon.toif.size);
+    let r = Rect::from_center_and_size(center, icon.toif.size());
     let area = r.translate(get_offset());
     let clamped = area.clamp(constant::screen());
     let colortable = get_color_table(fg_color, bg_color);
@@ -65,29 +50,49 @@ pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
 }
 
 /// Holding toif data and allowing it to draw itself.
+/// See https://docs.trezor.io/trezor-firmware/misc/toif.html for data format.
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Toif {
-    pub data: &'static [u8],
-    pub size: Offset,
-    pub format: ToifFormat,
+    data: &'static [u8],
 }
 
 impl Toif {
-    pub fn new(data: &'static [u8]) -> Self {
-        let info = unwrap!(toif_info(data));
-        Self {
-            data: data[TOIF_HEADER_LENGTH..].as_ref(),
-            size: info.0,
-            format: info.1,
+    pub const fn new(data: &'static [u8]) -> Option<Self> {
+        if data.len() < TOIF_HEADER_LENGTH || data[0] != b'T' || data[1] != b'O' || data[2] != b'I'
+        {
+            return None;
+        }
+        let zdatalen = u32::from_le_bytes([data[8], data[9], data[10], data[11]]) as usize;
+        if zdatalen + TOIF_HEADER_LENGTH != data.len() {
+            return None;
+        }
+        Some(Self { data })
+    }
+
+    pub const fn format(&self) -> ToifFormat {
+        match self.data[3] {
+            b'f' => ToifFormat::FullColorBE,
+            b'g' => ToifFormat::GrayScaleOH,
+            b'F' => ToifFormat::FullColorLE,
+            b'G' => ToifFormat::GrayScaleEH,
+            _ => panic!(),
         }
     }
 
-    pub fn width(&self) -> i16 {
-        self.size.x
+    pub const fn width(&self) -> i16 {
+        u16::from_le_bytes([self.data[4], self.data[5]]) as i16
     }
 
-    pub fn height(&self) -> i16 {
-        self.size.y
+    pub const fn height(&self) -> i16 {
+        u16::from_le_bytes([self.data[6], self.data[7]]) as i16
+    }
+
+    pub const fn size(&self) -> Offset {
+        Offset::new(self.width(), self.height())
+    }
+
+    pub fn zdata(&self) -> &'static [u8] {
+        &self.data[TOIF_HEADER_LENGTH..]
     }
 
     pub fn uncompress(&self, dest: &mut [u8]) {
@@ -99,7 +104,7 @@ impl Toif {
         &'a self,
         window: Option<&'a mut [u8; UZLIB_WINDOW_SIZE]>,
     ) -> UzlibContext {
-        UzlibContext::new(self.data, window)
+        UzlibContext::new(self.zdata(), window)
     }
 }
 
@@ -110,15 +115,15 @@ pub struct Icon {
 
 impl Icon {
     pub fn new(data: &'static [u8]) -> Self {
-        let toif = Toif::new(data);
-        assert!(toif.format == ToifFormat::GrayScaleEH);
+        let toif = unwrap!(Toif::new(data));
+        assert!(toif.format() == ToifFormat::GrayScaleEH);
         Self { toif }
     }
 
     /// Display the icon with baseline Point, aligned according to the
     /// `alignment` argument.
     pub fn draw(&self, baseline: Point, alignment: Alignment2D, fg_color: Color, bg_color: Color) {
-        let r = Rect::snap(baseline, self.toif.size, alignment);
+        let r = Rect::snap(baseline, self.toif.size(), alignment);
         icon(self, r.center(), fg_color, bg_color);
     }
 }

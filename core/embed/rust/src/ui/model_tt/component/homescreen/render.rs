@@ -131,10 +131,11 @@ fn homescreen_position_text(
     let text_width_clamped = text_width.clamp(0, screen().width());
 
     let icon_size = if let Some(icon) = text.icon {
-        assert!(icon.toif.width() <= HOMESCREEN_MAX_ICON_SIZE);
-        assert!(icon.toif.height() <= HOMESCREEN_MAX_ICON_SIZE);
+        let size = icon.toif.size();
+        assert!(size.x <= HOMESCREEN_MAX_ICON_SIZE);
+        assert!(size.y <= HOMESCREEN_MAX_ICON_SIZE);
         icon.toif.uncompress(icon_buffer);
-        icon.toif.size
+        size
     } else {
         Offset::zero()
     };

@@ -24,11 +24,10 @@ use crate::{
     error::Error,
     time::Duration,
     trezorhal::{display, qr, time, uzlib::UzlibContext},
-    ui::lerp::Lerp,
+    ui::{component::image::Image, lerp::Lerp},
 };
 use core::slice;
 
-use crate::ui::component::image::Image;
 pub use crate::ui::display::toif::Icon;
 #[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
@@ -228,8 +227,9 @@ pub fn rect_rounded2_partial(
     let mut icon_width = 0;
 
     if let Some((icon, icon_color)) = icon {
-        if icon.toif.width() <= MAX_ICON_SIZE && icon.toif.height() <= MAX_ICON_SIZE {
-            icon_area = Rect::from_center_and_size(center, icon.toif.size);
+        let icon_size = icon.toif.size();
+        if icon_size.x <= MAX_ICON_SIZE && icon_size.y <= MAX_ICON_SIZE {
+            icon_area = Rect::from_center_and_size(center, icon_size);
             icon_area_clamped = icon_area.clamp(constant::screen());
             icon.toif.uncompress(&mut icon_data);
             icon_colortable = get_color_table(icon_color, bg_color);
@@ -461,10 +461,10 @@ pub fn text_over_image(
         empty_img.buffer.copy_from_slice(&img1.buffer);
 
         area = a;
-        r_img = Rect::from_top_left_and_size(a.top_left() + offset_img, image.toif.size);
+        r_img = Rect::from_top_left_and_size(a.top_left() + offset_img, image.toif.size());
         offset_img_final = offset_img;
     } else {
-        area = Rect::from_top_left_and_size(offset_img.into(), image.toif.size);
+        area = Rect::from_top_left_and_size(offset_img.into(), image.toif.size());
         r_img = area;
         offset_img_final = Offset::zero();
     }
@@ -583,26 +583,26 @@ pub fn icon_over_icon(
     let final_offset_bg;
     if let Some(a) = bg_area {
         area = a;
-        r_bg = Rect::from_top_left_and_size(a.top_left() + offset_bg, icon_bg.toif.size);
+        r_bg = Rect::from_top_left_and_size(a.top_left() + offset_bg, icon_bg.toif.size());
         final_offset_bg = offset_bg;
     } else {
         r_bg =
-            Rect::from_top_left_and_size(Point::new(offset_bg.x, offset_bg.y), icon_bg.toif.size);
+            Rect::from_top_left_and_size(Point::new(offset_bg.x, offset_bg.y), icon_bg.toif.size());
         area = r_bg;
         final_offset_bg = Offset::zero();
     }
 
-    let r_fg = Rect::from_top_left_and_size(area.top_left() + offset_fg, icon_fg.toif.size);
+    let r_fg = Rect::from_top_left_and_size(area.top_left() + offset_fg, icon_fg.toif.size());
 
     let clamped = area.clamp(constant::screen()).ensure_even_width();
 
     set_window(clamped);
 
     let mut window_bg = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx_bg = UzlibContext::new(icon_bg.toif.data, Some(&mut window_bg));
+    let mut ctx_bg = UzlibContext::new(icon_bg.toif.zdata(), Some(&mut window_bg));
 
     let mut window_fg = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx_fg = UzlibContext::new(icon_fg.toif.data, Some(&mut window_fg));
+    let mut ctx_fg = UzlibContext::new(icon_fg.toif.zdata(), Some(&mut window_fg));
 
     dma2d_setup_4bpp_over_4bpp(color_icon_bg.into(), bg_color.into(), color_icon_fg.into());
 
