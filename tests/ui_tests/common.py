@@ -57,7 +57,7 @@ def prepare_fixtures(
         group = grouped_tests.setdefault(idx, {})
         group[result.test.fixtures_name] = result.actual_hash
 
-    missing_tests = set()
+    missing_tests: set[TestCase] = set()
 
     # merge with previous fixtures
     fixtures = deepcopy(get_fixtures())
@@ -99,16 +99,10 @@ def screens_and_hashes(screen_path: Path) -> tuple[list[Path], list[str]]:
     if not screen_path.exists():
         return [], []
 
-    hashes = []
-    paths = []
+    paths: list[Path] = []
+    hashes: list[str] = []
     for file in sorted(screen_path.iterdir()):
         paths.append(file)
-        if len(file.stem) == 32:
-            try:
-                hashes.append(bytes.fromhex(file.stem))
-                continue
-            except ValueError:
-                pass
         hashes.append(_get_image_hash(file))
     return paths, hashes
 
@@ -175,6 +169,12 @@ def screens_diff(
     diff = SequenceMatcher(
         None, expected_hashes, actual_hashes, autojunk=False
     ).get_opcodes()
+    # Example diff result:
+    # [('equal', 0, 1, 0, 1), ('replace', 1, 2, 1, 3), ('equal', 2, 6, 3, 7)]
+    # For situation when:
+    # - first screen is the same for both
+    # - second screen has changes and there is new third screen
+    # - rest is the same
     for _tag, i1, i2, j1, j2 in diff:
         # tag is one of "replace", "delete", "equal", "insert"
         # i1, i2 and j1, j2 are slice indexes for expected/actual respectively
@@ -283,7 +283,7 @@ class TestResult:
         )
 
     @classmethod
-    def recent_tests(cls) -> t.Iterator[Self]:
+    def recent_results(cls) -> t.Iterator[Self]:
         for testdir in sorted(SCREENS_DIR.iterdir()):
             meta = testdir / "metadata.json"
             if not meta.exists():

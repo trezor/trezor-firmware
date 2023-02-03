@@ -10,7 +10,7 @@ from tests.ui_tests.common import TestResult, _hash_files, get_fixtures  # isort
 
 FIXTURES = get_fixtures()
 
-for result in TestResult.recent_tests():
+for result in TestResult.recent_results():
     if not result.passed or result.expected_hash != result.actual_hash:
         print("WARNING: skipping failed test", result.test.id)
         continue

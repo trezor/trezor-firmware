@@ -94,7 +94,7 @@ def index() -> Path:
     new_tests = list((TESTREPORT_PATH / "new").iterdir())
 
     actual_hashes = {
-        result.test.id: result.actual_hash for result in TestResult.recent_tests()
+        result.test.id: result.actual_hash for result in TestResult.recent_results()
     }
 
     title = "UI Test report " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -143,8 +143,8 @@ def all_screens() -> Path:
 
     Shows all test-cases at one place.
     """
-    recent_tests = list(TestResult.recent_tests())
-    model = recent_tests[0].test.model if recent_tests else None
+    recent_results = list(TestResult.recent_results())
+    model = recent_results[0].test.model if recent_results else None
 
     title = "All test cases"
     doc = document(title=title, model=model)
@@ -154,7 +154,7 @@ def all_screens() -> Path:
 
         count = 0
         result_count = 0
-        for result in recent_tests:
+        for result in recent_results:
             result_count += 1
             h2(result.test.id, id=result.test.id)
             for image in result.images:
@@ -170,11 +170,11 @@ def all_screens() -> Path:
 
 def all_unique_screens() -> Path:
     """Generate an HTML file with all the unique screens from the current test run."""
-    results = TestResult.recent_tests()
+    recent_results = TestResult.recent_results()
     result_count = 0
     model = None
-    test_cases = defaultdict(list)
-    for result in results:
+    test_cases: dict[str, list[str]] = defaultdict(list)
+    for result in recent_results:
         result_count += 1
         model = result.test.model
         for image in result.images:

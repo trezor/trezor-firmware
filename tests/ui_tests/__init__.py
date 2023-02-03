@@ -90,7 +90,9 @@ def setup(main_runner: bool) -> None:
 
 def list_missing() -> set[str]:
     # Only listing the ones for the current model
-    _, missing = common.prepare_fixtures(TestResult.recent_tests(), remove_missing=True)
+    _, missing = common.prepare_fixtures(
+        TestResult.recent_results(), remove_missing=True
+    )
     return {test.id for test in missing}
 
 
@@ -99,7 +101,7 @@ def update_fixtures(remove_missing: bool = False) -> int:
 
     Used in --ui=record and in update_fixtures.py
     """
-    results = list(TestResult.recent_tests())
+    results = list(TestResult.recent_results())
     for result in results:
         result.store_recorded()
 
@@ -162,7 +164,7 @@ def sessionfinish(
     testreport.generate_reports()
     if test_ui == "test" and check_missing and list_missing():
         common.write_fixtures(
-            TestResult.recent_tests(),
+            TestResult.recent_results(),
             remove_missing=True,
             dest=FIXTURES_SUGGESTION_FILE,
         )
@@ -175,7 +177,7 @@ def sessionfinish(
 
 
 def main() -> None:
-    for result in TestResult.recent_tests():
+    for result in TestResult.recent_results():
         try:
             _process_tested(result)
             print("PASSED:", result.test.id)
