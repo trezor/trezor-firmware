@@ -17,8 +17,8 @@
 import re
 from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 
-from . import exceptions, messages
-from .tools import expect, prepare_message_bytes, session
+from . import definitions, exceptions, messages
+from .tools import expect, prepare_message_bytes, session, unharden
 
 if TYPE_CHECKING:
     from .client import TrezorClient
@@ -141,15 +141,39 @@ def encode_data(value: Any, type_name: str) -> bytes:
     raise ValueError(f"Unsupported data type for direct field encoding: {type_name}")
 
 
+def network_from_address_n(
+    address_n: "Address",
+    source: definitions.Source,
+) -> Optional[bytes]:
+    """Get network definition bytes based on address_n.
+
+    Tries to extract the slip44 identifier and lookup the network definition.
+    Returns None on failure.
+    """
+    if len(address_n) < 2:
+        return None
+
+    # unharden the slip44 part if needed
+    slip44 = unharden(address_n[1])
+    return source.get_network_by_slip44(slip44)
+
+
 # ====== Client functions ====== #
 
 
 @expect(messages.EthereumAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient", n: "Address", show_display: bool = False
+    client: "TrezorClient",
+    n: "Address",
+    show_display: bool = False,
+    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     return client.call(
-        messages.EthereumGetAddress(address_n=n, show_display=show_display)
+        messages.EthereumGetAddress(
+            address_n=n,
+            show_display=show_display,
+            encoded_network=encoded_network,
+        )
     )
 
 
@@ -174,6 +198,7 @@ def sign_tx(
     data: Optional[bytes] = None,
     chain_id: Optional[int] = None,
     tx_type: Optional[int] = None,
+    definitions: Optional[messages.EthereumDefinitions] = None,
 ) -> Tuple[int, bytes, bytes]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -187,6 +212,7 @@ def sign_tx(
         to=to,
         chain_id=chain_id,
         tx_type=tx_type,
+        definitions=definitions,
     )
 
     if data is None:
@@ -231,6 +257,7 @@ def sign_tx_eip1559(
     max_gas_fee: int,
     max_priority_fee: int,
     access_list: Optional[List[messages.EthereumAccessList]] = None,
+    definitions: Optional[messages.EthereumDefinitions] = None,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -246,6 +273,7 @@ def sign_tx_eip1559(
         access_list=access_list,
         data_length=length,
         data_initial_chunk=chunk,
+        definitions=definitions,
     )
 
     response = client.call(msg)
@@ -265,11 +293,16 @@ def sign_tx_eip1559(
 
 @expect(messages.EthereumMessageSignature)
 def sign_message(
-    client: "TrezorClient", n: "Address", message: AnyStr
+    client: "TrezorClient",
+    n: "Address",
+    message: AnyStr,
+    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignMessage(
-            address_n=n, message=prepare_message_bytes(message)
+            address_n=n,
+            message=prepare_message_bytes(message),
+            encoded_network=encoded_network,
         )
     )
 
@@ -281,6 +314,7 @@ def sign_typed_data(
     data: Dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
+    definitions: Optional[messages.EthereumDefinitions] = None,
 ) -> "MessageType":
     data = sanitize_typed_data(data)
     types = data["types"]
@@ -289,6 +323,7 @@ def sign_typed_data(
         address_n=n,
         primary_type=data["primaryType"],
         metamask_v4_compat=metamask_v4_compat,
+        definitions=definitions,
     )
     response = client.call(request)
 
@@ -369,11 +404,13 @@ def sign_typed_data_hash(
     n: "Address",
     domain_hash: bytes,
     message_hash: Optional[bytes],
+    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignTypedHash(
             address_n=n,
             domain_separator_hash=domain_hash,
             message_hash=message_hash,
+            encoded_network=encoded_network,
         )
     )
