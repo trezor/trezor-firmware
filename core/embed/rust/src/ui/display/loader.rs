@@ -43,10 +43,11 @@ pub fn loader_uncompress(
     const ICON_MAX_SIZE: i16 = constant::LOADER_ICON_MAX_SIZE;
 
     if let Some((icon, color)) = icon {
-        if icon.toif.width() <= ICON_MAX_SIZE && icon.toif.height() <= ICON_MAX_SIZE {
+        let toif_size = icon.toif.size();
+        if toif_size.x <= ICON_MAX_SIZE && toif_size.y <= ICON_MAX_SIZE {
             let mut icon_data = [0_u8; ((ICON_MAX_SIZE * ICON_MAX_SIZE) / 2) as usize];
             icon.toif.uncompress(&mut icon_data);
-            let i = Some((icon, color, icon.toif.size));
+            let i = Some((icon, color, toif_size));
             loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, i);
         } else {
             loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, None);
@@ -237,7 +238,7 @@ pub fn loader_rust(
                     let x_i = x_c - icon_area.x0;
                     let y_i = y_c - icon_area.y0;
 
-                    let data = unwrap!(icon_data).data()
+                    let data = unwrap!(icon_data).zdata()
                         [(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
                     if (x_i & 0x01) == 0 {
                         underlying_color = icon_colortable[(data & 0xF) as usize];
@@ -337,7 +338,7 @@ pub fn loader_rust(
 
             icon_buffer_used.buffer[icon_offset as usize..(icon_offset + icon_width / 2) as usize]
                 .copy_from_slice(
-                    &unwrap!(icon_data).toif.data[(y_i * (icon_width / 2)) as usize
+                    &unwrap!(icon_data).toif.zdata()[(y_i * (icon_width / 2)) as usize
                         ..((y_i + 1) * (icon_width / 2)) as usize],
                 );
             icon_buffer = icon_buffer_used;

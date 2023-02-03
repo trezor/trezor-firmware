@@ -16,8 +16,8 @@ pub struct Image {
 
 impl Image {
     pub fn new(data: &'static [u8]) -> Self {
-        let toif = Toif::new(data);
-        assert!(toif.format == ToifFormat::FullColorLE);
+        let toif = unwrap!(Toif::new(data));
+        assert!(toif.format() == ToifFormat::FullColorLE);
         Self {
             toif,
             area: Rect::zero(),
@@ -27,8 +27,8 @@ impl Image {
     /// Display the icon with baseline Point, aligned according to the
     /// `alignment` argument.
     pub fn draw(&self, baseline: Point, alignment: Alignment2D) {
-        let r = Rect::snap(baseline, self.toif.size, alignment);
-        image(r.x0, r.y0, r.width(), r.height(), self.toif.data);
+        let r = Rect::snap(baseline, self.toif.size(), alignment);
+        image(r.x0, r.y0, r.width(), r.height(), self.toif.zdata());
     }
 }
 
@@ -51,7 +51,7 @@ impl Component for Image {
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(Rect::from_center_and_size(
             self.area.center(),
-            self.toif.size,
+            self.toif.size(),
         ));
     }
 }
@@ -101,12 +101,12 @@ impl Component for BlendedImage {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.bg_top_left = self.bg.toif.size.snap(bounds.center(), CENTER);
+        self.bg_top_left = self.bg.toif.size().snap(bounds.center(), CENTER);
 
-        let ft_top_left = self.fg.toif.size.snap(bounds.center(), CENTER);
+        let ft_top_left = self.fg.toif.size().snap(bounds.center(), CENTER);
         self.fg_offset = ft_top_left - self.bg_top_left;
 
-        Rect::from_top_left_and_size(self.bg_top_left, self.bg.toif.size)
+        Rect::from_top_left_and_size(self.bg_top_left, self.bg.toif.size())
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -120,7 +120,7 @@ impl Component for BlendedImage {
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(Rect::from_top_left_and_size(
             self.bg_top_left,
-            self.bg.toif.size,
+            self.bg.toif.size(),
         ));
     }
 }
