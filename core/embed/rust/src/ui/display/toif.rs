@@ -15,11 +15,6 @@ use super::Color;
 
 const TOIF_HEADER_LENGTH: usize = 12;
 
-/// Storing the icon together with its name
-/// Needs to be a tuple-struct, so it can be made `const`
-#[derive(Debug, Clone, Copy)]
-pub struct NamedToif(pub &'static [u8], pub &'static str);
-
 pub fn toif_info(data: &[u8]) -> Option<(Offset, ToifFormat)> {
     if let Ok(info) = trezorhal::display::toif_info(data) {
         Some((
@@ -73,17 +68,15 @@ pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Toif {
     pub data: &'static [u8],
-    pub name: &'static str, // useful for debugging purposes.
     pub size: Offset,
     pub format: ToifFormat,
 }
 
 impl Toif {
-    pub fn new(named_toif: NamedToif) -> Self {
-        let info = unwrap!(toif_info(named_toif.0));
+    pub fn new(data: &'static [u8]) -> Self {
+        let info = unwrap!(toif_info(data));
         Self {
-            data: named_toif.0[TOIF_HEADER_LENGTH..].as_ref(),
-            name: named_toif.1,
+            data: data[TOIF_HEADER_LENGTH..].as_ref(),
             size: info.0,
             format: info.1,
         }
@@ -99,7 +92,7 @@ impl Toif {
 
     pub fn uncompress(&self, dest: &mut [u8]) {
         let mut ctx = self.decompression_context(None);
-        unwrap!(ctx.uncompress(dest), self.name);
+        unwrap!(ctx.uncompress(dest));
     }
 
     pub fn decompression_context<'a>(
@@ -116,9 +109,9 @@ pub struct Icon {
 }
 
 impl Icon {
-    pub fn new(named_toif: NamedToif) -> Self {
-        let toif = Toif::new(named_toif);
-        ensure!(toif.format == ToifFormat::GrayScaleEH, toif.name);
+    pub fn new(data: &'static [u8]) -> Self {
+        let toif = Toif::new(data);
+        assert!(toif.format == ToifFormat::GrayScaleEH);
         Self { toif }
     }
 

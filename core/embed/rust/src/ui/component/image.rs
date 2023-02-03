@@ -3,10 +3,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never},
         display,
-        display::{
-            toif::{NamedToif, Toif},
-            Color, Icon,
-        },
+        display::{toif::Toif, Color, Icon},
         geometry::{Alignment2D, Offset, Point, Rect, CENTER},
     },
 };
@@ -18,9 +15,9 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn new(named_toif: NamedToif) -> Self {
-        let toif = Toif::new(named_toif);
-        ensure!(toif.format == ToifFormat::FullColorLE, toif.name);
+    pub fn new(data: &'static [u8]) -> Self {
+        let toif = Toif::new(data);
+        assert!(toif.format == ToifFormat::FullColorLE);
         Self {
             toif,
             area: Rect::zero(),
