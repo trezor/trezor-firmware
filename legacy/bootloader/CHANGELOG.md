@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.12.0] [January 2023]
+## 1.12.1 [February 2023]
+
+### Fixed
+- Correctly distrust v2-signed firmwares.
+
+
+## 1.12.0 [internal only - January 2023]
 
 ### Added
 - T1 bootloader: verify firmware signatures based on SignMessage, add signature debugging  [#2568]
