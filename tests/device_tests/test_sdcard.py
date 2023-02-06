@@ -75,7 +75,7 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_change_pin():
         yield  # do you really want to change PIN?
-        assert "CHANGE PIN" == layout().get_title()
+        assert "PIN SETTINGS" == layout().get_title()
         client.debug.press_yes()
 
         yield  # enter current PIN
@@ -103,7 +103,7 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_change_pin_format():
         yield  # do you really want to change PIN?
-        assert "CHANGE PIN" == layout().get_title()
+        assert "PIN SETTINGS" == layout().get_title()
         client.debug.press_yes()
 
         yield  # enter current PIN
