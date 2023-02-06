@@ -144,8 +144,8 @@ async def _require_confirm_change_label(ctx: GenericContext, label: str) -> None
     await confirm_action(
         ctx,
         "set_label",
-        "Change label",
-        description="Do you really want to change the label to {}?",
+        "Device name",
+        description="Do you want to change device name to {}?",
         description_param=label,
         br_code=BRT_PROTECT_CALL,
     )
@@ -198,7 +198,7 @@ async def _require_confirm_change_display_rotation(
         ctx,
         "set_rotation",
         "Change rotation",
-        description="Do you really want to change display rotation to {}?",
+        description="Do you want to change device rotation to {}?",
         description_param=label,
         br_code=BRT_PROTECT_CALL,
     )
