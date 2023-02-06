@@ -40,27 +40,81 @@ ALPINE_TARBALL=${ALPINE_FILE:-alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar
 NIX_VERSION=${NIX_VERSION:-2.4}
 CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/$ALPINE_TARBALL"}
 
-VARIANTS_core=(0 1)
-VARIANTS_legacy=(0 1)
+function help_and_die() {
+  echo "Usage: $0 [options] tag"
+  echo "Options:"
+  echo "  --skip-bitcoinonly"
+  echo "  --skip-normal"
+  echo "  --skip-core"
+  echo "  --skip-legacy"
+  echo "  --repository path/to/repo"
+  echo "  --help"
+  echo
+  echo "Set PRODUCTION=0 to run non-production builds."
+  exit 0
+}
 
-if [ "$1" == "--skip-bitcoinonly" ]; then
-  VARIANTS_core=(0)
-  VARIANTS_legacy=(0)
-  shift
+OPT_BUILD_CORE=1
+OPT_BUILD_LEGACY=1
+OPT_BUILD_NORMAL=1
+OPT_BUILD_BITCOINONLY=1
+
+REPOSITORY="/local"
+
+while true; do
+  case "$1" in
+    -h|--help)
+      help_and_die
+      ;;
+    --skip-bitcoinonly)
+      OPT_BUILD_BITCOINONLY=0
+      shift
+      ;;
+    --skip-normal)
+      OPT_BUILD_NORMAL=0
+      shift
+      ;;
+    --skip-core)
+      OPT_BUILD_CORE=0
+      shift
+      ;;
+    --skip-legacy)
+      OPT_BUILD_LEGACY=0
+      shift
+      ;;
+    --repository)
+      REPOSITORY="$2"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ -z "$1" ]; then
+  help_and_die
 fi
 
-if [ "$1" == "--skip-core" ]; then
-  VARIANTS_core=()
-  shift
+variants=()
+if [ "$OPT_BUILD_NORMAL" -eq 1 ]; then
+  variants+=(0)
+fi
+if [ "$OPT_BUILD_BITCOINONLY" -eq 1 ]; then
+  variants+=(1)
 fi
 
-if [ "$1" == "--skip-legacy" ]; then
-  VARIANTS_legacy=()
-  shift
+VARIANTS_core=()
+VARIANTS_legacy=()
+
+if [ "$OPT_BUILD_CORE" -eq 1 ]; then
+  VARIANTS_core=("${variants[@]}")
+fi
+if [ "$OPT_BUILD_LEGACY" -eq 1 ]; then
+  VARIANTS_legacy=("${variants[@]}")
 fi
 
-TAG=${1:-master}
-REPOSITORY=${2:-/local}
+TAG="$1"
 PRODUCTION=${PRODUCTION:-1}
 
 
