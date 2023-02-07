@@ -633,9 +633,9 @@
 },
 "TT": {
 "click_tests": {
-"TT_test_autolock.py::test_autolock_interrupts_passphrase": "ecfc5031f2842460510451aa5345b3dd946f8041ebf24afe89c3cdb96f0bfcdd",
+"TT_test_autolock.py::test_autolock_interrupts_passphrase": "8e45b1e888f0d4a7df02cd3b41407cf8fb83389ba9faceb7eb75e45e56ce2d72",
 "TT_test_autolock.py::test_autolock_interrupts_signing": "59666e372f5c10ef2ed10427829a128d5bf4fbf4e7a4792f51327e34e4328d74",
-"TT_test_autolock.py::test_autolock_passphrase_keyboard": "ce176c566cc895b2532e36752fe1c3d817073ca6f62587333bf13dc1834e0beb",
+"TT_test_autolock.py::test_autolock_passphrase_keyboard": "0ff48a1a94222cce776b6c261c1a20167d71b970ee9a9ee5254db942f3aec970",
 "TT_test_autolock.py::test_dryrun_enter_word_slowly": "cf9761167b8b155c60db2da5a4a6a689dd9f598e9551e06b21551851d6873e2d",
 "TT_test_autolock.py::test_dryrun_locks_at_number_of_words": "aa479397af496496db214b5debb4ab4d30c0e8e7b347ec3169bb76aaf5ce735b",
 "TT_test_autolock.py::test_dryrun_locks_at_word_entry": "145c53e02422062fd3d6b2c48b624ef85f2c54d153fc583acfdd7fb3a62b2a6b",
