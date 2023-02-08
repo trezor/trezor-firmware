@@ -66,7 +66,7 @@ Throughout the system, coins are identified by a _key_ - a colon-separated strin
 generated from the coin's type and shortcut:
 
 * for Bitcoin-likes, key is `bitcoin:<shortcut>`
-* for Ethereum networks, key is `eth:<shortcut>`
+* for Ethereum networks, key is `eth:<shortcut>:<chain_id>`
 * for ERC20 tokens, key is `erc20:<chain_symbol>:<token_shortcut>`
 * for NEM mosaic, key is `nem:<shortcut>`
 * for others, key is `misc:<shortcut>`
