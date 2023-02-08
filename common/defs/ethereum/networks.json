@@ -13,7 +13,7 @@
         "chain_id": 3,
         "is_testnet": true,
         "name": "Ropsten",
-        "shortcut": "tROP",
+        "shortcut": "tETH",
         "slip44": 1
     },
     {
@@ -21,7 +21,7 @@
         "chain_id": 4,
         "is_testnet": true,
         "name": "Rinkeby",
-        "shortcut": "tRIN",
+        "shortcut": "tETH",
         "slip44": 1
     },
     {
@@ -29,7 +29,7 @@
         "chain_id": 5,
         "is_testnet": true,
         "name": "Görli",
-        "shortcut": "tGOR",
+        "shortcut": "tETH",
         "slip44": 1
     },
     {

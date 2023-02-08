@@ -31,8 +31,7 @@ Used to query and manage info in `support.json`. This mainly supports the releas
 The following commands are available:
 
 * **`check`**: check validity of json data. Used in CI.
-* **`fix`**: fix expected problems: prune keys without associated coins and ensure
-  that ERC20 tokens are correctly entered as duplicate.
+* **`fix`**: prune keys without associated coins.
 * **`show`**: keyword-search for a coin and show its support status for each device.
 * **`set`**: set support data.
 * **`release`**: perform the [release workflow](#release-workflow).
@@ -82,7 +81,7 @@ fee.
 # Release Workflow
 
 This entails collecting information on coins whose support status is unknown and
-including new Ethereum chains and ERC20 tokens.
+bumping timestamp of external definitions <??? TODO>.
 
 ## Maintaining Support Status
 
@@ -110,10 +109,6 @@ misc:ONT - Ontology (ONT)
 Afterwards, review and commit changes to `defs/support.json`, and update the `trezor-common`
 submodule in your target firmware.
 
-ERC20 tokens in _unknown_ state are considered _soon_ as well, unless their symbols
-are duplicates. Use `support.py fix` to synchronize duplicate status in `support.json` file.
-Or mark them as unsupported explicitly.
-
 ## Releasing a new firmware
 
 #### **Step 1:** run the release script
@@ -122,29 +117,10 @@ Or mark them as unsupported explicitly.
 ./tools/release.sh
 ```
 
-All currently known unreleased ERC20 tokens are automatically set to the given version.
-
-**_Note that "soon" feature was already removed and following paragraph is deprecated._**
-
-_All coins marked _soon_ are set to the current version. This is automatic - coins that
-were marked _soon_ were used in code generation and so should be released. If you want
-to avoid this, you will have to manually revert each coin to _soon_ status, either with
-`support.py set`, or by manually editing `support.json`._
-
 Coins in state _unknown_, i.e., coins that are known in the definitions but not listed
-in support files, will be also added. But you will be interactively asked to confirm
-each one. Use `-y` or `--add-all` to auto-add all of them.
-
-Use `-n` or `--dry-run` to see changes without writing them to `support.json`. Use
-`-v` or `--verbose` to also show ERC20 tokens which are processed silently by default.
-
-Use `-g` or `--git-tag` to automatically tag the current `HEAD` with a version, e.g.,
-`trezor2-2.1.0`. This might become default in the future.
-
-XXX this should also commit the changes though, otherwise the tag will apply to the wrong
-commit.
+in support files, will be interactively added one by one. To avoid that, run `support.py
+release -y` separately.
 
 #### **Step 2:** review and commit your changes
 
-Use `git diff` to review changes made, commit and push. If you tagged the commit in the
-previous step, don't forget to `git push --tags` too.
+Use `git diff` to review changes made, commit and push.
