@@ -41,7 +41,7 @@ Advanced usage:
 ### Fuzzer-specific Configuration Flags
 
 * `-DFUZZ_ALLOW_SLOW` to enable optional fuzzing targets of slow functions
-* select a specific fuzz testing harness with `-DFUZZER_EXCLUSIVE_TARGET=` to disable the use of all other targets
+* select a specific fuzz testing harness with `-DFUZZ_EXCLUSIVE_TARGET=` to disable the use of all other targets
 
 ### Other Flags
 
@@ -58,6 +58,12 @@ To be determined:
 * `-DSHA2_UNROLL_TRANSFORM` SHA2 optimization flags
 * `-fsanitize-coverage=edge,trace-cmp,trace-div,indirect-calls,trace-gep,no-prune` to add program counter granularity
 * starting with clang-15, the additional `trace-loads` and `trace-stores` sanitizer coverage options are also available
+
+### Architecture-specific Configuration
+
+* aarch64 supports Hardware-assisted AddressSanitizer via `-fsanitize=hwaddress`
+    * initial testing suggests that this is usable but slower than Address Sanitizer on some systems
+    * use `lld` instead of the default linker
 
 ## Operation
 
@@ -101,5 +107,7 @@ The resulting file can be used as a fuzzer dictionary.
 
 ## Using Honggfuzz Fuzzer
 
-Although this code is designed primarily for libFuzzer, it can also be used with [Honggfuzz](https://honggfuzz.dev).
-However, the usage details are out of scope of this document.
+Although this code is designed primarily for libFuzzer, it can also be used with [Honggfuzz](https://honggfuzz.dev) in a hybrid Honggfuzz/libFuzzer mode. The setup and usage details are mostly out of scope of this document, but here are some helpful pointers:
+
+* compile with a clang-based `hfuzz_cc` Honggfuzz compiler variant
+* set `-DFUZZ_HONGGFUZZ=1` to suppress compatibility issues

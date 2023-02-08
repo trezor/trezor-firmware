@@ -72,22 +72,41 @@
 #endif
 #endif
 
-/* code design notes
+#ifndef FUZZ_HONGGFUZZ
+// Recent libFuzzer implementations support marking inputs as non-interesting
+// via return -1; instead of the regular return 0;
+// see
+// https://github.com/llvm/llvm-project/commit/92fb310151d2b1e349695fc0f1c5d5d50afb3b52
+#define FUZZ_MARK_UNINTERESTING -1
+#else
+// honggfuzz does not understand the special code
+// use regular return code to avoid issues
+#define FUZZ_MARK_UNINTERESTING 0
+#endif
+
+/* Code design notes
  *
- * TODO note down design tradeoffs for this fuzzer style
+ * By combining many individual function harnesses into one binary, a
+ * collection of target functions can be fuzzed collectively without handling
+ * dozens of individual binaries or corpus directories
+ * As a tradeoff, the fuzzing is expected to be less efficient due to
+ * statistically less successful input crossover or dictionary use
+ *
+ * If required, an exclusive target function can be picked at compile time
+ * for more narrow testing
  */
 
-/* code performance notes
+/* Code performance notes
  *
- * use #define over runtime checks for performance reasons
- * avoid VLA arrays for performance reasons
- * potential performance drawbacks of heap usage are accepted for better out of
- * bounds error detection some expensive functions are hidden with compile-time
- * switches fuzzer harnesses are meant to exit early if the preconditions are
- * not met
+ * Use #define over runtime checks for performance reasons
+ * Avoid VLA arrays for performance reasons
+ * Potential performance drawbacks of heap usage are accepted for better out of
+ * bounds error detection
+ * Some expensive functions are hidden with compile-time switches
+ * Fuzzer harnesses are meant to exit early if the preconditions are not met
  */
 
-/* fuzzer input data handling */
+/* Fuzzer input data handling */
 const uint8_t *fuzzer_ptr;
 size_t fuzzer_length;
 
@@ -102,7 +121,7 @@ const uint8_t *fuzzer_input(size_t len) {
   return result;
 }
 
-/* fuzzer state handling */
+/* Fuzzer state handling */
 void fuzzer_reset_state(void) {
   // reset the PRNGs to make individual fuzzer runs deterministic
   srand(0);
@@ -118,7 +137,7 @@ void fuzzer_reset_state(void) {
 #endif
 }
 
-void crash(void) {
+__attribute__((noreturn)) void crash(void) {
   // intentionally exit the program
   // the fuzzer framework treats this as a crash
   exit(1);
@@ -146,11 +165,11 @@ void check_msan(void *pointer, size_t length) {
 }
 
 // simplify the pointer check after a var_pointer = malloc()
-// return -1 to mark fuzz input as uninteresting for the fuzz engine
+// the return code marks the fuzz input as uninteresting for the fuzz engine
 // warning: use only if no manual memory cleanup is needed
 #define RETURN_IF_NULL(var_pointer) \
   if (var_pointer == NULL) {        \
-    return -1;                      \
+    return FUZZ_MARK_UNINTERESTING; \
   }
 
 void zkp_initialize_context_or_crash(void) {
@@ -163,13 +182,13 @@ void zkp_initialize_context_or_crash(void) {
   }
 }
 
-/* individual fuzzer harness functions */
+/* Individual fuzzer harness functions */
 
 int fuzz_bn_format(void) {
   bignum256 target_bignum;
   // we need some amount of initial data
   if (fuzzer_length < sizeof(target_bignum) + 1 + 1) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
 #define FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE 512
@@ -191,7 +210,7 @@ int fuzz_bn_format(void) {
 
   // check for the second half of the data
   if (fuzzer_length < (size_t)(prefixlen + suffixlen + 4 + 4 + 1 - 2)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(&decimals, fuzzer_input(4), 4);
   memcpy(&exponent, fuzzer_input(4), 4);
@@ -204,7 +223,7 @@ int fuzz_bn_format(void) {
   char *suffix = malloc(suffixlen);
   if (suffix == NULL) {
     free(prefix);
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memset(prefix, 0, prefixlen);
@@ -234,7 +253,7 @@ int fuzz_bn_format(void) {
 
 int fuzz_base32_decode(void) {
   if (fuzzer_length < 2 || fuzzer_length > BASE32_DECODE_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   char *in_buffer = malloc(fuzzer_length);
@@ -243,7 +262,7 @@ int fuzz_base32_decode(void) {
   uint8_t *out_buffer = malloc(fuzzer_length);
   if (out_buffer == NULL) {
     free(in_buffer);
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   size_t outlen = fuzzer_length;
@@ -269,7 +288,7 @@ int fuzz_base32_decode(void) {
 
 int fuzz_base32_encode(void) {
   if (fuzzer_length > BASE32_ENCODE_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   uint8_t *in_buffer = malloc(fuzzer_length);
@@ -279,7 +298,7 @@ int fuzz_base32_encode(void) {
   char *out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   // mutate in_buffer
@@ -305,7 +324,7 @@ int fuzz_base32_encode(void) {
 
 int fuzz_base58_encode_check(void) {
   if (fuzzer_length > BASE58_ENCODE_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   uint8_t *in_buffer = malloc(fuzzer_length);
@@ -315,7 +334,7 @@ int fuzz_base58_encode_check(void) {
   char *out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   // mutate in_buffer
@@ -347,7 +366,7 @@ int fuzz_base58_encode_check(void) {
 
 int fuzz_base58_decode_check(void) {
   if (fuzzer_length > BASE58_DECODE_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   uint8_t *in_buffer = malloc(fuzzer_length + 1);
@@ -379,7 +398,7 @@ int fuzz_base58_decode_check(void) {
 
 int fuzz_xmr_base58_addr_decode_check(void) {
   if (fuzzer_length > XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   // TODO no null termination used !?
@@ -390,7 +409,7 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   uint8_t *out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   // tag is only written to
@@ -419,7 +438,7 @@ int fuzz_xmr_base58_addr_decode_check(void) {
 // a more focused variant of the xmr_base58_addr_decode_check() harness
 int fuzz_xmr_base58_decode(void) {
   if (fuzzer_length > XMR_BASE58_DECODE_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   // TODO better size heuristic
@@ -429,7 +448,7 @@ int fuzz_xmr_base58_decode(void) {
   uint8_t *out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memset(out_buffer, 0, outlen);
@@ -455,7 +474,7 @@ int fuzz_xmr_base58_addr_encode_check(void) {
   size_t tag_size = sizeof(tag_in);
   if (fuzzer_length < tag_size + 1 ||
       fuzzer_length > XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   // mutate tag_in
@@ -468,7 +487,7 @@ int fuzz_xmr_base58_addr_encode_check(void) {
   char *out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memset(out_buffer, 0, outlen);
@@ -506,7 +525,7 @@ int fuzz_xmr_base58_addr_encode_check(void) {
 // a more focused variant of the xmr_base58_addr_encode_check() harness
 int fuzz_xmr_base58_encode(void) {
   if (fuzzer_length > XMR_BASE58_ENCODE_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   // TODO better size heuristic
@@ -516,7 +535,7 @@ int fuzz_xmr_base58_encode(void) {
   char *out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memset(out_buffer, 0, outlen);
@@ -540,7 +559,7 @@ int fuzz_xmr_serialize_varint(void) {
   size_t varint_in_size = sizeof(varint_in);
   if (fuzzer_length <= varint_in_size ||
       fuzzer_length > XMR_SERIALIZE_VARINT_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   uint8_t out_buffer[XMR_SERIALIZE_VARINT_MAX_INPUT_LEN] = {0};
@@ -574,7 +593,7 @@ int fuzz_xmr_serialize_varint(void) {
 
 int fuzz_nem_validate_address(void) {
   if (fuzzer_length < 1 || fuzzer_length > NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   uint8_t network = fuzzer_input(1)[0];
@@ -599,7 +618,7 @@ int fuzz_nem_get_address(void) {
 
   // TODO switch to < comparison?
   if (fuzzer_length != (sizeof(ed25519_public_key_fuzz) + sizeof(version))) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   char address[NEM_ADDRESS_SIZE + 1] = {0};
@@ -619,7 +638,7 @@ int fuzz_xmr_get_subaddress_secret_key(void) {
   uint32_t major = 0;
   uint32_t minor = 0;
   if (fuzzer_length != (sizeof(bignum256modm) + 2 * sizeof(uint32_t))) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   bignum256modm output = {0};
@@ -641,7 +660,7 @@ int fuzz_xmr_derive_private_key(void) {
 
   if (fuzzer_length !=
       (sizeof(bignum256modm) + sizeof(ge25519) + sizeof(uint32_t))) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memcpy(base, fuzzer_input(sizeof(bignum256modm)), sizeof(bignum256modm));
@@ -661,7 +680,7 @@ int fuzz_xmr_derive_public_key(void) {
   uint32_t idx = 0;
 
   if (fuzzer_length != (2 * sizeof(ge25519) + sizeof(uint32_t))) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memcpy(&base, fuzzer_input(sizeof(ge25519)), sizeof(ge25519));
@@ -680,7 +699,7 @@ int fuzz_xmr_derive_public_key(void) {
 int fuzz_shamir_interpolate(void) {
   if (fuzzer_length != (2 * sizeof(uint8_t) + SHAMIR_MAX_SHARE_COUNT +
                         SHAMIR_MAX_DATA_LEN + sizeof(size_t))) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   uint8_t result[SHAMIR_MAX_LEN] = {0};
@@ -727,7 +746,7 @@ int fuzz_ecdsa_sign_digest_functions(void) {
   uint8_t sig2[64] = {0};
   uint8_t pby1, pby2 = 0;
   if (fuzzer_length < 1 + sizeof(priv_key) + sizeof(digest)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   const ecdsa_curve *curve;
 
@@ -788,7 +807,7 @@ int fuzz_ecdsa_verify_digest_functions(void) {
   uint8_t pub_key[65] = {0};
 
   if (fuzzer_length < 1 + sizeof(hash) + sizeof(sig) + sizeof(pub_key)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memcpy(&curve_decider, fuzzer_input(1), 1);
@@ -806,12 +825,6 @@ int fuzz_ecdsa_verify_digest_functions(void) {
 
   int res1 = ecdsa_verify_digest(curve, (const uint8_t *)&pub_key,
                                  (const uint8_t *)&sig, (const uint8_t *)&hash);
-  if (res1 == 0) {
-    // See if the fuzzer ever manages to get find a correct verification
-    // intentionally trigger a crash to make this case observable
-    // TODO this is not an actual problem, remove in the future
-    crash();
-  }
 
   // the zkp_ecdsa* function only accepts the secp256k1 curve
   if (curve == &secp256k1) {
@@ -834,7 +847,7 @@ int fuzz_word_index(void) {
 #define MAX_WORD_LENGTH 12
 
   if (fuzzer_length < MAX_WORD_LENGTH) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   char word[MAX_WORD_LENGTH + 1] = {0};
@@ -849,7 +862,7 @@ int fuzz_word_index(void) {
 
 int fuzz_slip39_word_completion_mask(void) {
   if (fuzzer_length != 2) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   uint16_t sequence = (fuzzer_ptr[0] << 8) + fuzzer_ptr[1];
   fuzzer_input(2);
@@ -863,7 +876,7 @@ int fuzz_slip39_word_completion_mask(void) {
 #define MAX_MNEMONIC_FUZZ_LENGTH 256
 int fuzz_mnemonic_check(void) {
   if (fuzzer_length < MAX_MNEMONIC_FUZZ_LENGTH) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   char mnemonic[MAX_MNEMONIC_FUZZ_LENGTH + 1] = {0};
@@ -885,7 +898,7 @@ int fuzz_mnemonic_check(void) {
 
 int fuzz_mnemonic_from_data(void) {
   if (fuzzer_length < 16 || fuzzer_length > 32) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   const char *mnemo_result = mnemonic_from_data(fuzzer_ptr, fuzzer_length);
@@ -910,7 +923,7 @@ int fuzz_mnemonic_from_data(void) {
 #define MAX_PASSPHRASE_FUZZ_LENGTH 257
 int fuzz_mnemonic_to_seed(void) {
   if (fuzzer_length < MAX_MNEMONIC_FUZZ_LENGTH + MAX_PASSPHRASE_FUZZ_LENGTH) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   char mnemonic[MAX_PASSPHRASE_FUZZ_LENGTH + 1] = {0};
@@ -934,7 +947,7 @@ int fuzz_ethereum_address_checksum(void) {
   bool rskip60 = false;
 
   if (fuzzer_length < sizeof(addr) + sizeof(address) + sizeof(chain_id) + 1) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memcpy(addr, fuzzer_input(sizeof(addr)), sizeof(addr));
@@ -950,7 +963,7 @@ int fuzz_ethereum_address_checksum(void) {
 
 int fuzz_aes(void) {
   if (fuzzer_length < 1 + 16 + 16 + 32) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   aes_encrypt_ctx ctxe;
@@ -1028,7 +1041,7 @@ int fuzz_chacha_drbg(void) {
 
   if (fuzzer_length < CHACHA_DRBG_ENTROPY_LENGTH + CHACHA_DRBG_RESEED_LENGTH +
                           CHACHA_DRBG_NONCE_LENGTH) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   uint8_t entropy[CHACHA_DRBG_ENTROPY_LENGTH] = {0};
@@ -1063,7 +1076,7 @@ int fuzz_ed25519_sign_verify(void) {
 
   if (fuzzer_length <
       sizeof(secret_key) + sizeof(signature) + sizeof(message)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memcpy(&secret_key, fuzzer_input(sizeof(secret_key)), sizeof(secret_key));
@@ -1094,7 +1107,7 @@ int fuzz_zkp_bip340_sign_digest(void) {
 
   if (fuzzer_length <
       sizeof(priv_key) + sizeof(aux_input) + sizeof(digest) + sizeof(sig)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(priv_key, fuzzer_input(sizeof(priv_key)), sizeof(priv_key));
   memcpy(digest, fuzzer_input(sizeof(digest)), sizeof(digest));
@@ -1121,7 +1134,7 @@ int fuzz_zkp_bip340_verify_digest(void) {
   uint8_t sig[64] = {0};
 
   if (fuzzer_length < sizeof(digest) + sizeof(pub_key) + sizeof(sig)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(pub_key, fuzzer_input(sizeof(pub_key)), sizeof(pub_key));
   memcpy(digest, fuzzer_input(sizeof(digest)), sizeof(digest));
@@ -1129,11 +1142,7 @@ int fuzz_zkp_bip340_verify_digest(void) {
 
   res = zkp_bip340_verify_digest(pub_key, sig, digest);
 
-  // res == 0 is valid, but crash to make successful passes visible
-  // TODO remove this later
-  if (res == 0) {
-    crash();
-  }
+  (void)res;
 
   return 0;
 }
@@ -1146,7 +1155,7 @@ int fuzz_zkp_bip340_tweak_keys(void) {
 
   if (fuzzer_length <
       sizeof(internal_priv) + sizeof(root_hash) + sizeof(internal_pub)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(internal_priv, fuzzer_input(sizeof(internal_priv)),
          sizeof(internal_priv));
@@ -1172,7 +1181,7 @@ int fuzz_ecdsa_get_public_key_functions(void) {
   const ecdsa_curve *curve = &secp256k1;
 
   if (fuzzer_length < sizeof(privkey)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(privkey, fuzzer_input(sizeof(privkey)), sizeof(privkey));
 
@@ -1182,7 +1191,7 @@ int fuzz_ecdsa_get_public_key_functions(void) {
   int res_65_2 = zkp_ecdsa_get_public_key65(curve, privkey, pubkey65_2);
 
   // the function pairs have different return error codes for the same input
-  // so only fail if the one succeeds where the other does not
+  // only fail if the one succeeds where the other does not
   if ((res_33_1 == 0 && res_33_2 != 0) || (res_33_1 != 0 && res_33_2 == 0)) {
     // function result mismatch
     crash();
@@ -1216,7 +1225,7 @@ int fuzz_ecdsa_recover_pub_from_sig_functions(void) {
   uint8_t pubkey2[65] = {0};
 
   if (fuzzer_length < sizeof(digest) + sizeof(sig) + sizeof(recid)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(digest, fuzzer_input(sizeof(digest)), sizeof(digest));
   memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
@@ -1248,7 +1257,7 @@ int fuzz_ecdsa_sig_from_der(void) {
   uint8_t out[72] = {0};
 
   if (fuzzer_length < sizeof(der)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(der, fuzzer_input(sizeof(der)), sizeof(der));
   // null-terminate
@@ -1268,7 +1277,7 @@ int fuzz_ecdsa_sig_to_der(void) {
   uint8_t der[72] = {0};
 
   if (fuzzer_length < sizeof(sig)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
 
@@ -1282,7 +1291,7 @@ int fuzz_ecdsa_sig_to_der(void) {
 int fuzz_button_sequence_to_word(void) {
   uint16_t input = 0;
   if (fuzzer_length < sizeof(input)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(&input, fuzzer_input(sizeof(input)), sizeof(input));
 
@@ -1295,7 +1304,7 @@ int fuzz_xmr_add_keys(void) {
   ge25519 A, B;
 
   if (fuzzer_length < sizeof(bignum256modm) * 2 + sizeof(ge25519) * 2) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(&a, fuzzer_input(sizeof(bignum256modm)), sizeof(bignum256modm));
   memcpy(&b, fuzzer_input(sizeof(bignum256modm)), sizeof(bignum256modm));
@@ -1325,7 +1334,7 @@ int fuzz_ecdh_multiply(void) {
   uint8_t pub_key[65];
   uint8_t decider;
   if (fuzzer_length < sizeof(priv_key) + sizeof(pub_key) + sizeof(decider)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(&priv_key, fuzzer_input(sizeof(priv_key)), sizeof(priv_key));
   memcpy(&pub_key, fuzzer_input(sizeof(pub_key)), sizeof(pub_key));
@@ -1369,7 +1378,7 @@ int fuzz_segwit_addr_encode(void) {
   char *hrp = "bc";
 
   if (fuzzer_length < sizeof(chosen_witver) + sizeof(chosen_witprog_len)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
   memcpy(&chosen_witver, fuzzer_input(sizeof(chosen_witver)),
          sizeof(chosen_witver));
@@ -1377,7 +1386,7 @@ int fuzz_segwit_addr_encode(void) {
          sizeof(chosen_witprog_len));
 
   if (chosen_witprog_len > fuzzer_length) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   char output_address[MAX_ADDR_SIZE] = {0};
@@ -1395,8 +1404,6 @@ int fuzz_segwit_addr_encode(void) {
   return 0;
 }
 
-// int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len,
-// const char* hrp, const char* addr) {
 int fuzz_segwit_addr_decode(void) {
   int decoded_witver = 0;
   size_t decoded_witprog_len = 0;
@@ -1405,14 +1412,14 @@ int fuzz_segwit_addr_decode(void) {
   uint8_t chosen_addr_len = 0;
 
   if (fuzzer_length < sizeof(chosen_addr_len)) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   memcpy(&chosen_addr_len, fuzzer_input(sizeof(chosen_addr_len)),
          sizeof(chosen_addr_len));
 
   if (chosen_addr_len > fuzzer_length) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   char *addr = malloc(chosen_addr_len + 1);
@@ -1433,14 +1440,14 @@ int fuzz_segwit_addr_decode(void) {
   return 0;
 }
 
-/* fuzzer main function */
+/* Fuzzer main function */
 
 #define META_HEADER_SIZE 3
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // reject input that is too short
   if (size < META_HEADER_SIZE) {
-    return -1;
+    return FUZZ_MARK_UNINTERESTING;
   }
 
   fuzzer_reset_state();
@@ -1459,16 +1466,12 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
   // if active: reject all other inputs that are not the selected target
   // this is helpful for directing the fuzzing focus on a specific case
-#ifdef FUZZER_EXCLUSIVE_TARGET
-  if (target_decision != FUZZER_EXCLUSIVE_TARGET) {
-    return -1;
+#ifdef FUZZ_EXCLUSIVE_TARGET
+  if (target_decision != FUZZ_EXCLUSIVE_TARGET) {
+    return FUZZ_MARK_UNINTERESTING;
   }
 #endif
 
-  // recent libFuzzer implementations support marking inputs as non-interesting
-  // via return -1; instead of the regular return 0;
-  // see
-  // https://github.com/llvm/llvm-project/commit/92fb310151d2b1e349695fc0f1c5d5d50afb3b52
   int target_result = 0;
 
   // TODO reorder and regroup target functions
@@ -1567,7 +1570,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     case 30:
       target_result = fuzz_ethereum_address_checksum();
       break;
-
     case 41:
       zkp_initialize_context_or_crash();
       target_result = fuzz_zkp_bip340_sign_digest();
@@ -1608,8 +1610,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       break;
 
     default:
-      // mark as uninteresting input
-      return -1;
+      return FUZZ_MARK_UNINTERESTING;
+      // break will never be reached
       break;
   }
   return target_result;
