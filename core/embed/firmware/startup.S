@@ -48,10 +48,12 @@ reset_handler:
   // according to "ARM Cortex-M Programming Guide to Memory Barrier Instructions" Application Note 321, section 4.7:
   // "If it is not necessary to ensure that a pended interrupt is recognized immediately before
   // subsequent operations, it is not necessary to insert a memory barrier instruction."
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
-  cpsie f
-#elif defined TREZOR_MODEL_1
+#if defined STM32F405xx
   cpsie if
+#elif defined STM32F427xx || defined STM32F429xx
+  cpsie f
+#else
+    #error "Unknown MCU"
 #endif
 
   // enter the application code

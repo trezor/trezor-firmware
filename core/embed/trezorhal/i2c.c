@@ -1,6 +1,7 @@
 
 
 #include STM32_HAL_H
+#include TREZOR_BOARD
 #include "i2c.h"
 #include "common.h"
 
@@ -8,12 +9,14 @@ static I2C_HandleTypeDef i2c_handle;
 
 void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
   // enable I2C clock
-  __HAL_RCC_I2C1_CLK_ENABLE();
-  // GPIO have already been initialised by touch_init
+  I2C_INSTANCE_CLK_EN();
+  I2C_INSTANCE_SCL_CLK_EN();
+  I2C_INSTANCE_SDA_CLK_EN();
 }
 
 void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
-  __HAL_RCC_I2C1_CLK_DISABLE();
+  // disable I2C clock
+  I2C_INSTANCE_CLK_DIS();
 }
 
 void i2c_init(void) {
@@ -21,19 +24,26 @@ void i2c_init(void) {
     return;
   }
 
+  HAL_I2C_MspInit(&i2c_handle);
+
   GPIO_InitTypeDef GPIO_InitStructure;
 
-  // configure CTP I2C SCL and SDA GPIO lines (PB6 & PB7)
+  // configure CTP I2C SCL and SDA GPIO lines
   GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed =
       GPIO_SPEED_FREQ_LOW;  // I2C is a KHz bus and low speed is still good into
   // the low MHz
-  GPIO_InitStructure.Alternate = GPIO_AF4_I2C1;
-  GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-  i2c_handle.Instance = I2C1;
+  GPIO_InitStructure.Alternate = I2C_INSTANCE_PIN_AF;
+  GPIO_InitStructure.Pin = I2C_INSTANCE_SCL_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_SCL_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Alternate = I2C_INSTANCE_PIN_AF;
+  GPIO_InitStructure.Pin = I2C_INSTANCE_SDA_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_SDA_PORT, &GPIO_InitStructure);
+
+  i2c_handle.Instance = I2C_INSTANCE;
   i2c_handle.Init.ClockSpeed = 200000;
   i2c_handle.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
   i2c_handle.Init.OwnAddress1 = 0xFE;  // master
@@ -56,9 +66,10 @@ void _i2c_deinit(void) {
   }
 }
 
-void _i2c_ensure_pin(uint16_t GPIO_Pin, GPIO_PinState PinState) {
-  HAL_GPIO_WritePin(GPIOB, GPIO_Pin, PinState);
-  while (HAL_GPIO_ReadPin(GPIOB, GPIO_Pin) != PinState)
+void _i2c_ensure_pin(GPIO_TypeDef *port, uint16_t GPIO_Pin,
+                     GPIO_PinState PinState) {
+  HAL_GPIO_WritePin(port, GPIO_Pin, PinState);
+  while (HAL_GPIO_ReadPin(port, GPIO_Pin) != PinState)
     ;
 }
 
@@ -77,37 +88,41 @@ void i2c_cycle(void) {
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = I2C_INSTANCE_SDA_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_SDA_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = I2C_INSTANCE_SCL_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_SCL_PORT, &GPIO_InitStructure);
   HAL_Delay(50);
 
   // 3. Check SCL and SDA High level
-  _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_SET);
-  _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_SET);
+  _i2c_ensure_pin(I2C_INSTANCE_SCL_PORT, I2C_INSTANCE_SCL_PIN, GPIO_PIN_SET);
+  _i2c_ensure_pin(I2C_INSTANCE_SDA_PORT, I2C_INSTANCE_SDA_PIN, GPIO_PIN_SET);
   // 4+5. Check SDA Low level
-  _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_RESET);
+  _i2c_ensure_pin(I2C_INSTANCE_SDA_PORT, I2C_INSTANCE_SDA_PIN, GPIO_PIN_RESET);
   // 6+7. Check SCL Low level
-  _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_RESET);
+  _i2c_ensure_pin(I2C_INSTANCE_SCL_PORT, I2C_INSTANCE_SCL_PIN, GPIO_PIN_RESET);
   // 8+9. Check SCL High level
-  _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_SET);
+  _i2c_ensure_pin(I2C_INSTANCE_SCL_PORT, I2C_INSTANCE_SCL_PIN, GPIO_PIN_SET);
   // 10+11.  Check SDA High level
-  _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_SET);
+  _i2c_ensure_pin(I2C_INSTANCE_SDA_PORT, I2C_INSTANCE_SDA_PIN, GPIO_PIN_SET);
 
   // 12. Configure SCL/SDA as Alternate function Open-Drain
   GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Alternate = GPIO_AF4_I2C1;
-  GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_InitStructure.Alternate = I2C_INSTANCE_PIN_AF;
+  GPIO_InitStructure.Pin = I2C_INSTANCE_SCL_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_SCL_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = I2C_INSTANCE_SDA_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_SDA_PORT, &GPIO_InitStructure);
   HAL_Delay(50);
 
   // 13. Set SWRST bit in I2Cx_CR1 register
-  __HAL_RCC_I2C1_FORCE_RESET();
+  I2C_INSTANCE_FORCE_RESET();
   HAL_Delay(50);
 
   // 14. Clear SWRST bit in I2Cx_CR1 register
-  __HAL_RCC_I2C1_RELEASE_RESET();
+  I2C_INSTANCE_RELEASE_RESET();
 
   // 15. Enable the I2C peripheral
   i2c_init();
@@ -121,4 +136,17 @@ HAL_StatusTypeDef i2c_transmit(uint8_t addr, uint8_t *data, uint16_t len,
 HAL_StatusTypeDef i2c_receive(uint8_t addr, uint8_t *data, uint16_t len,
                               uint32_t timeout) {
   return HAL_I2C_Master_Receive(&i2c_handle, addr, data, len, timeout);
+}
+
+HAL_StatusTypeDef i2c_mem_write(uint8_t addr, uint16_t mem_addr,
+                                uint16_t mem_addr_size, uint8_t *data,
+                                uint16_t len, uint32_t timeout) {
+  return HAL_I2C_Mem_Write(&i2c_handle, addr, mem_addr, mem_addr_size, data,
+                           len, timeout);
+}
+HAL_StatusTypeDef i2c_mem_read(uint8_t addr, uint16_t mem_addr,
+                               uint16_t mem_addr_size, uint8_t *data,
+                               uint16_t len, uint32_t timeout) {
+  return HAL_I2C_Mem_Read(&i2c_handle, addr, mem_addr, mem_addr_size, data, len,
+                          timeout);
 }
