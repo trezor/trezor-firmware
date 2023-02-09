@@ -8,13 +8,13 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 DMA2D = False
 
-if TREZOR_MODEL in ('1', ):
+if TREZOR_MODEL in ('1', 'DISC1'):
     # skip bootloader build
     env = Environment()
     def build_bootloader(target,source,env):
         print(f'Bootloader: nothing to build for Model {TREZOR_MODEL}')
     program_bin = env.Command(
-                 target='bootloader.bin',
+                 target='bootloader.elf',
                  source=None,
                  action=build_bootloader
              )
@@ -140,6 +140,15 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
+if TREZOR_MODEL in ('T', 'R'):
+    CPU_MODEL   = 'STM32F427xx'
+elif TREZOR_MODEL in ('DISC1', ):
+    CPU_MODEL   = 'STM32F429xx'
+elif TREZOR_MODEL in ('1',):
+    CPU_MODEL   = 'STM32F405xx'
+else:
+    raise ValueError('Unknown Trezor model')
+
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 MODEL_AS_NUMBER = str(boards.get_hw_model_as_number(MODEL_IDENTIFIER))
 
@@ -167,6 +176,7 @@ env.Replace(
     CPPDEFINES=[
         'BOOTLOADER',
         'TREZOR_EMULATOR',
+        CPU_MODEL,
         'HW_MODEL=' + MODEL_AS_NUMBER,
         'HW_REVISION=' + ('6' if TREZOR_MODEL in ('R',) else '0'),
         'TREZOR_MODEL_'+TREZOR_MODEL,

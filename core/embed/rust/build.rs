@@ -76,6 +76,7 @@ fn prepare_bindings() -> bindgen::Builder {
         "-I../../vendor/micropython",
         "-I../../vendor/micropython/lib/uzlib",
         "-I../lib",
+        "-DSTM32F427xx",
         format!("-DTREZOR_MODEL_{}", model()).as_str(),
         format!("-DTREZOR_BOARD=\"{}\"", board()).as_str(),
     ]);
@@ -90,7 +91,6 @@ fn prepare_bindings() -> bindgen::Builder {
             "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
             "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
             "-I../../vendor/micropython/lib/cmsis/inc",
-            "-DSTM32F427xx",
             "-DUSE_HAL_DRIVER",
             "-DSTM32_HAL_H=<stm32f4xx.h>",
         ]);

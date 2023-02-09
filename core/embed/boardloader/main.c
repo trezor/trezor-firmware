@@ -29,6 +29,9 @@
 #ifdef USE_SD_CARD
 #include "sdcard.h"
 #endif
+#ifdef USE_SDRAM
+#include "sdram.h"
+#endif
 
 #include "lowlevel.h"
 #include "model.h"
@@ -213,6 +216,10 @@ int main(void) {
   }
 
   clear_otg_hs_memory();
+
+#ifdef USE_SDRAM
+  sdram_init();
+#endif
 
   display_init();
   display_clear();

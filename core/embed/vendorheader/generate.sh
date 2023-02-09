@@ -5,7 +5,7 @@ cd $(dirname $0)
 BUILDVH=$(realpath ../../tools/build_vendorheader)
 BINCTL=$(realpath ../../tools/headertool.py)
 
-MODELS=(T2T1 T2B1)
+MODELS=(T2T1 T2B1 D001)
 
 for MODEL in ${MODELS[@]}; do
     cd $MODEL

@@ -6,6 +6,17 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
+if TREZOR_MODEL in ('DISC1', ):
+    # skip reflash build
+    env = Environment()
+    def build_reflash(target,source,env):
+        print(f'Reflash: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='reflash.bin',
+                 source=None,
+                 action=build_reflash)
+    Return()
+
 FEATURES_WANTED = ["input", "sd_card"]
 
 CCFLAGS_MOD = ''

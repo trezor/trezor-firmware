@@ -18,6 +18,7 @@
  */
 
 #include STM32_HAL_H
+#include TREZOR_BOARD
 #include "stm32f4xx_ll_cortex.h"
 
 // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABDJJGF.html
@@ -64,6 +65,15 @@ void mpu_config_bootloader(void) {
               LL_MPU_REGION_SIZE_256KB | LL_MPU_REGION_FULL_ACCESS |
               MPU_RASR_XN_Msk | MPU_SUBREGION_DISABLE(0xC0);
 
+#ifdef USE_SDRAM
+  // Peripherals (0x40000000 - 0x5FFFFFFF, read-write, execute never)
+  // SDRAM (0xC0000000 - 0xDFFFFFFF, read-write, execute never)
+  MPU->RNR = MPU_REGION_NUMBER4;
+  MPU->RBAR = 0;
+  MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_PERIPH |
+              LL_MPU_REGION_SIZE_4GB | LL_MPU_REGION_FULL_ACCESS |
+              MPU_RASR_XN_Msk | MPU_SUBREGION_DISABLE(0xBB);
+#else
   // Peripherals (0x40000000 - 0x5FFFFFFF, read-write, execute never)
   // External RAM (0x60000000 - 0x7FFFFFFF, read-write, execute never)
   MPU->RNR = MPU_REGION_NUMBER4;
@@ -71,6 +81,7 @@ void mpu_config_bootloader(void) {
   MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_PERIPH |
               LL_MPU_REGION_SIZE_1GB | LL_MPU_REGION_FULL_ACCESS |
               MPU_RASR_XN_Msk;
+#endif
 
 #if defined STM32F427xx || defined STM32F429xx
   // CCMRAM (0x10000000 - 0x1000FFFF, read-write, execute never)
@@ -145,6 +156,15 @@ void mpu_config_firmware(void) {
               LL_MPU_REGION_SIZE_256KB | LL_MPU_REGION_FULL_ACCESS |
               MPU_RASR_XN_Msk | MPU_SUBREGION_DISABLE(0xC0);
 
+#ifdef USE_SDRAM
+  // Peripherals (0x40000000 - 0x5FFFFFFF, read-write, execute never)
+  // SDRAM (0xC0000000 - 0xDFFFFFFF, read-write, execute never)
+  MPU->RNR = MPU_REGION_NUMBER6;
+  MPU->RBAR = 0;
+  MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_PERIPH |
+              LL_MPU_REGION_SIZE_4GB | LL_MPU_REGION_FULL_ACCESS |
+              MPU_RASR_XN_Msk | MPU_SUBREGION_DISABLE(0xBB);
+#else
   // Peripherals (0x40000000 - 0x5FFFFFFF, read-write, execute never)
   // External RAM (0x60000000 - 0x7FFFFFFF, read-write, execute never)
   MPU->RNR = MPU_REGION_NUMBER6;
@@ -152,6 +172,7 @@ void mpu_config_firmware(void) {
   MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_PERIPH |
               LL_MPU_REGION_SIZE_1GB | LL_MPU_REGION_FULL_ACCESS |
               MPU_RASR_XN_Msk;
+#endif
 
 #if defined STM32F427xx || defined STM32F429xx
   // CCMRAM (0x10000000 - 0x1000FFFF, read-write, execute never)
