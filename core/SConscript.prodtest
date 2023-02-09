@@ -6,6 +6,17 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
+if TREZOR_MODEL in ('DISC1', ):
+    # skip prodtest build
+    env = Environment()
+    def build_prodtest(target,source,env):
+        print(f'Prodtest: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='prodtest.bin',
+                 source=None,
+                 action=build_prodtest)
+    Return()
+
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led"]
 
 CCFLAGS_MOD = ''

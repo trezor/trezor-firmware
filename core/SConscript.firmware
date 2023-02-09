@@ -33,7 +33,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
-if TREZOR_MODEL in ('T', ):
+if TREZOR_MODEL in ('T', 'DISC1', ):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -332,13 +332,16 @@ SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_ltdc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sd.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sdram.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fmc.c',
@@ -429,10 +432,16 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL,)
 
-if TREZOR_MODEL in ('T', 'R'):
+if TREZOR_MODEL in ('T', 'R', ):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
+    LD_VARIANT  = ''
+    RUST_TARGET = 'thumbv7em-none-eabihf'
+elif TREZOR_MODEL in ('DISC1', ):
+    CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
+    CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
+    CPU_MODEL   = 'STM32F429xx'
     LD_VARIANT  = ''
     RUST_TARGET = 'thumbv7em-none-eabihf'
 elif TREZOR_MODEL in ('1',):
@@ -570,7 +579,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/recovery.py'))
     if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/fido.py'))
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T', 'DISC1', ):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/__init__.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/homescreen.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/reset.py'))
@@ -704,7 +713,11 @@ def cargo_build():
         profile = ''
 
     # T1 does not have its own Rust feature, it shares it with TR
-    model_feature = 'model_tr' if TREZOR_MODEL == '1' else f'model_t{TREZOR_MODEL.lower()}'
+    if  TREZOR_MODEL  in ('1', 'R', ):
+        model_feature = 'model_tr'
+    else:
+        model_feature = 'model_tt'
+
     features = ['micropython', 'protobuf', model_feature]
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
@@ -765,7 +778,6 @@ cmake_gen = env.Command(
     action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
 )
 
-
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 if BOOTLOADER_QA:
     VENDORHEADER = 'embed/vendorheader/vendorheader_qa_DO_NOT_SIGN_signed_dev.bin'
@@ -785,16 +797,17 @@ obj_program.extend(
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
 
-obj_program.extend(
-    env.Command(
-        target='embed/firmware/bootloaders/bootloader.o',
-        source=f'embed/firmware/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-        action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
-        ' --rename-section .data=.bootloader'
-        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_start=_binary_embed_firmware_bootloader_bin_start'
-        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_end=_binary_embed_firmware_bootloader_bin_end'
-        f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_size=_binary_embed_firmware_bootloader_bin_size'
-        ' $SOURCE $TARGET', ))
+if TREZOR_MODEL not in ('DISC1', ):
+    obj_program.extend(
+        env.Command(
+            target='embed/firmware/bootloaders/bootloader.o',
+            source=f'embed/firmware/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+            action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
+            ' --rename-section .data=.bootloader'
+            f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_start=_binary_embed_firmware_bootloader_bin_start'
+            f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_end=_binary_embed_firmware_bootloader_bin_end'
+            f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_size=_binary_embed_firmware_bootloader_bin_size'
+            ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)
 
@@ -818,7 +831,7 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 
-if TREZOR_MODEL in ('T', 'R'):
+if TREZOR_MODEL in ('T', 'R', 'DISC1', ):
     action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',

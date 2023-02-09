@@ -10,6 +10,17 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D =  TREZOR_MODEL in ('T', )
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
+if TREZOR_MODEL in ('DISC1', ):
+    # skip unix build
+    env = Environment()
+    def build_unix(target,source,env):
+        print(f'Emulator: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='trezor-emu-core',
+                 source=None,
+                 action=build_unix)
+    Return()
+
 FEATURE_FLAGS = {
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
 }

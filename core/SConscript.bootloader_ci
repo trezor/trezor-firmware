@@ -6,13 +6,13 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-if TREZOR_MODEL in ('1', ):
+if TREZOR_MODEL in ('1', 'DISC1', ):
     # skip bootloader_ci build
     env = Environment()
     def build_bootloader_ci(target,source,env):
         print(f'Bootloader_ci: nothing to build for Model {TREZOR_MODEL}')
     program_bin = env.Command(
-                 target='bootloader_ci.bin',
+                 target='bootloader.bin',
                  source=None,
                  action=build_bootloader_ci
              )
@@ -25,7 +25,7 @@ CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
 
-if TREZOR_MODEL in ('1', 'R'):
+if TREZOR_MODEL in ('1', 'R', ):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD=None
     FONT_BOLD=None

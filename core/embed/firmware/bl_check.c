@@ -99,7 +99,9 @@ static secbool known_bootloader(const uint8_t *hash, int len) {
     #define BOOTLOADER_FF BOOTLOADER_T2B1_FF
   #endif
 #else
+#if PRODUCTION || BOOTLOADER_QA
   #error "Cannot select bootloader hashes for unknown model."
+#endif
 #endif
 // clang-format on
 

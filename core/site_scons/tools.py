@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import subprocess
-from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t, trezor_r_v6
+from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t, trezor_r_v6, discovery
 
 HERE = Path(__file__).parent.resolve()
 
@@ -34,8 +34,11 @@ def configure_board(model, features_wanted, env, defines, sources):
             return trezor_r_v4.configure(env, features_wanted, defines, sources)
         else:
             return trezor_r_v6.configure(env, features_wanted, defines, sources)
+    elif model in ('DISC1',):
+        return discovery.configure(env, features_wanted, defines, sources)
     else:
         raise Exception("Unknown model")
+
 
 
 def get_model_identifier(model):
@@ -45,6 +48,8 @@ def get_model_identifier(model):
         return "T2T1"
     elif model == 'R':
         return "T2B1"
+    elif model == 'DISC1':
+        return "D001"
     else:
         raise Exception("Unknown model")
 

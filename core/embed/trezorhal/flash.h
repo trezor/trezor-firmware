@@ -26,9 +26,9 @@
 
 // see docs/memory.md for more information
 
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
+#if defined STM32F427xx || defined STM32F429xx
 #define FLASH_SECTOR_COUNT 24
-#elif defined TREZOR_MODEL_1
+#elif defined STM32F405xx
 #define FLASH_SECTOR_COUNT 12
 #else
 #error Unknown Trezor model
@@ -40,14 +40,14 @@
 
 //                                           3
 
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
+#if defined STM32F427xx || defined STM32F429xx
 #define FLASH_SECTOR_STORAGE_1 4
 #define FLASH_SECTOR_STORAGE_2 16
-#elif defined TREZOR_MODEL_1
+#elif defined STM32F405xx
 #define FLASH_SECTOR_STORAGE_1 2
 #define FLASH_SECTOR_STORAGE_2 3
 #else
-#error Unknown Trezor model
+#error Unknown MCU
 #endif
 
 #define FLASH_SECTOR_BOOTLOADER 5
