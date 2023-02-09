@@ -10,6 +10,17 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D =  TREZOR_MODEL in ('T', )
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
+if TREZOR_MODEL in ('DISC1', ):
+    # skip unix build
+    env = Environment()
+    def build_unix(target,source,env):
+        print(f'Emulator: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='trezor-emu-core',
+                 source=None,
+                 action=build_unix)
+    Return()
+
 FEATURE_FLAGS = {
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
 }
@@ -25,7 +36,7 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 
-if TREZOR_MODEL in ('R',):
+if TREZOR_MODEL in ('1', 'R'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD='Font_Unifont_Bold_16'
     FONT_BOLD='Font_PixelOperator_Bold_8'
@@ -436,6 +447,15 @@ if ARGUMENTS.get('TREZOR_MEMPERF', '0') == '1':
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
+if TREZOR_MODEL in ('T', 'R'):
+    CPU_MODEL   = 'STM32F427xx'
+elif TREZOR_MODEL in ('DISC1', ):
+    CPU_MODEL   = 'STM32F429xx'
+elif TREZOR_MODEL in ('1',):
+    CPU_MODEL   = 'STM32F405xx'
+else:
+    raise ValueError('Unknown Trezor model')
+
 env.Replace(
     CCFLAGS='$COPT '
     '-g3 '
@@ -455,6 +475,7 @@ env.Replace(
         'vendor/micropython/lib/mp-readline',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
+        CPU_MODEL,
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'TREZOR_BOARD=\\"board-unix.h\\"',

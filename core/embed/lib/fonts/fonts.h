@@ -21,15 +21,12 @@
 #define _FONTS_H
 
 #include "fonts/font_bitmap.h"
+#include TREZOR_BOARD
 
-#if defined TREZOR_MODEL_T
+#ifdef USE_RGB_COLORS
 #define TREZOR_FONT_BPP 4
-#elif defined TREZOR_MODEL_1
-#define TREZOR_FONT_BPP 1
-#elif defined TREZOR_MODEL_R
-#define TREZOR_FONT_BPP 1
 #else
-#error Unknown Trezor model
+#define TREZOR_FONT_BPP 1
 #endif
 
 #define COMPOSE(font_name, suffix) font_name##suffix

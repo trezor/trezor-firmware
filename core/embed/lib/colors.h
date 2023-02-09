@@ -21,8 +21,9 @@
 #define _COLORS_H
 
 #include "common.h"
+#include TREZOR_BOARD
 
-#ifdef TREZOR_MODEL_T
+#ifdef USE_RGB_COLORS
 #define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
 #endif
 

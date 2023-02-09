@@ -91,11 +91,8 @@ def get_features() -> Features:
             Capability.U2F,
             Capability.Shamir,
             Capability.ShamirGroups,
+            Capability.PassphraseEntry,
         ]
-
-    # Some models are not capable of PassphraseEntry
-    if utils.MODEL in ("T", "R"):
-        f.capabilities.append(Capability.PassphraseEntry)
 
     # Only some models are capable of SD card
     if utils.USE_SD_CARD:

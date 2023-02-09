@@ -7,3 +7,9 @@ HAL_StatusTypeDef i2c_transmit(uint8_t addr, uint8_t *data, uint16_t len,
                                uint32_t timeout);
 HAL_StatusTypeDef i2c_receive(uint8_t addr, uint8_t *data, uint16_t len,
                               uint32_t timeout);
+HAL_StatusTypeDef i2c_mem_write(uint8_t addr, uint16_t mem_addr,
+                                uint16_t mem_addr_size, uint8_t *data,
+                                uint16_t len, uint32_t timeout);
+HAL_StatusTypeDef i2c_mem_read(uint8_t addr, uint16_t mem_addr,
+                               uint16_t mem_addr_size, uint8_t *data,
+                               uint16_t len, uint32_t timeout);

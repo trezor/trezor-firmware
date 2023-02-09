@@ -193,11 +193,6 @@ def get_passphrase_always_on_device() -> bool:
     - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
     - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
     """
-    from trezor import utils
-
-    # Some models do not support passphrase input on device
-    if utils.MODEL in ("1",):
-        return False
     return common.get_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
 
 
