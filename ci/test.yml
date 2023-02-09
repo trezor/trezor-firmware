@@ -647,7 +647,7 @@ core unix memory profiler:
 connect test core:
   image: ghcr.io/trezor/trezor-user-env
   stage: test
-  allow_failure: true
+  when: manual
   tags:
     - runner-internal
   needs:
