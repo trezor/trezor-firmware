@@ -203,10 +203,10 @@ void collect_hw_entropy(void) {
 // where this setting might be unknown
 void ensure_compatible_settings(void) {
 #ifdef TREZOR_MODEL_T
-  display_set_big_endian();
+  // display_set_big_endian();
   display_orientation(0);
   set_core_clock(CLOCK_168_MHZ);
-  display_set_slow_pwm();
+  // display_set_slow_pwm();
 #endif
 }
 

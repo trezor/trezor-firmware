@@ -323,7 +323,7 @@ int bootloader_main(void) {
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
-  display_set_little_endian();
+  // display_set_little_endian();
 #endif
 
   ui_screen_boot_empty(false);

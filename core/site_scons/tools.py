@@ -1,7 +1,7 @@
 import os.path
 
 import subprocess
-from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t
+from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t, discovery
 
 
 
@@ -19,17 +19,22 @@ def add_font(font_name, font, defines, sources):
 def configure_board(model, features_wanted, env, defines, sources):
     model_r_version = 4
 
-    if model in ('1',):
-        return trezor_1.configure(env, features_wanted, defines, sources)
-    elif model in ('T',):
-        return trezor_t.configure(env, features_wanted, defines, sources)
-    elif model in ('R',):
-        if model_r_version == 3:
-            return trezor_r_v3.configure(env, features_wanted, defines, sources)
-        else:
-            return trezor_r_v4.configure(env, features_wanted, defines, sources)
+    disc = True
+    if disc:
+        return discovery.configure(env, features_wanted, defines, sources)
     else:
-        raise Exception("Unknown model")
+        if model in ('1',):
+            return trezor_1.configure(env, features_wanted, defines, sources)
+        elif model in ('T',):
+            return trezor_t.configure(env, features_wanted, defines, sources)
+        elif model in ('R',):
+            if model_r_version == 3:
+                return trezor_r_v3.configure(env, features_wanted, defines, sources)
+            else:
+                return trezor_r_v4.configure(env, features_wanted, defines, sources)
+        else:
+            raise Exception("Unknown model")
+
 
 
 def get_model_identifier(model):
