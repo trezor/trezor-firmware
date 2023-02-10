@@ -234,14 +234,21 @@ def create_reports() -> None:
         added(path, test_name)
 
     for test_name, (master_hash, current_hash) in diff_tests.items():
-        with tmpdir() as master_screens:
-            download.fetch_recorded(master_hash, master_screens)
+        with tmpdir() as master_root:
+            master_screens = master_root / "downloaded"
+            master_screens.mkdir()
+            try:
+                download.fetch_recorded(master_hash, master_screens)
+            except RuntimeError as e:
+                print("WARNING:", e)
 
             current_screens = SCREENS_DIR / test_name / "actual"
             if not current_screens.exists():
-                raise RuntimeError(
-                    "Folder does not exist, did the test run?", current_screens
-                )
+                print("WARNING: Folder does not exist, did the test run?")
+                print(current_screens)
+                current_screens = master_root / "empty_current_screens"
+                current_screens.mkdir()
+
             diff(
                 master_screens,
                 current_screens,
