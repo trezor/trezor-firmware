@@ -234,6 +234,7 @@ ui tests fixtures deploy:
     GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
+    - core click test
     - core device test
     - legacy device test
   script:
