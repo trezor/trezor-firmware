@@ -299,6 +299,8 @@ apps.management.backup_device
 import apps.management.backup_device
 apps.management.backup_types
 import apps.management.backup_types
+apps.management.ble.upload_ble_firmware_init
+import apps.management.ble.upload_ble_firmware_init
 apps.management.change_pin
 import apps.management.change_pin
 apps.management.change_wipe_code

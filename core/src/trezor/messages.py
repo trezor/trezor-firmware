@@ -1177,6 +1177,50 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPrevExtraDataWrapper"]:
             return isinstance(msg, cls)
 
+    class UploadBLEFirmwareInit(protobuf.MessageType):
+        init_data: "bytes"
+        binsize: "int"
+
+        def __init__(
+            self,
+            *,
+            init_data: "bytes",
+            binsize: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["UploadBLEFirmwareInit"]:
+            return isinstance(msg, cls)
+
+    class UploadBLEFirmwareNextChunk(protobuf.MessageType):
+        offset: "int"
+
+        def __init__(
+            self,
+            *,
+            offset: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["UploadBLEFirmwareNextChunk"]:
+            return isinstance(msg, cls)
+
+    class UploadBLEFirmwareChunk(protobuf.MessageType):
+        data: "bytes"
+
+        def __init__(
+            self,
+            *,
+            data: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["UploadBLEFirmwareChunk"]:
+            return isinstance(msg, cls)
+
     class CardanoBlockchainPointerType(protobuf.MessageType):
         block_index: "int"
         tx_index: "int"

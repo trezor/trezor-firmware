@@ -347,6 +347,7 @@ SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sdram.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fmc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c',
@@ -381,6 +382,8 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/usbd_ioreq.c',
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
+    'embed/trezorhal/dfu/dfu.c',
+    'embed/trezorhal/dfu/fwu.c',
 ]
 
 
@@ -478,6 +481,7 @@ env.Replace(
         'embed/rust',
         'embed/firmware',
         'embed/lib',
+        'embed/firmware/dfu',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
