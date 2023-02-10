@@ -29,6 +29,7 @@ stages:
 
 before_script:
   - . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh || true
+  - which cached-nix-shell > /dev/null || alias cached-nix-shell=nix-shell
   - cached-nix-shell --run "poetry install --remove-untracked"
   - export LEGACY_VERSION=$(cached-nix-shell --run "./tools/version.sh legacy/firmware/version.h")
   - export CORE_VERSION=$(cached-nix-shell --run "./tools/version.sh core/embed/firmware/version.h")
