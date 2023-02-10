@@ -72,6 +72,9 @@ if TYPE_CHECKING:
         FirmwareUpload = 7
         FirmwareRequest = 8
         SelfTest = 32
+        UploadBLEFirmwareInit = 8000
+        UploadBLEFirmwareNextChunk = 8001
+        UploadBLEFirmwareChunk = 8002
         GetPublicKey = 11
         PublicKey = 12
         SignTx = 15
