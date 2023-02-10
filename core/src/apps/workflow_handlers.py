@@ -55,6 +55,10 @@ def _find_message_handler_module(msg_type: int) -> str:
     if utils.USE_SD_CARD and msg_type == MessageType.SdProtect:
         return "apps.management.sd_protect"
 
+    # BLE
+    if msg_type == MessageType.UploadBLEFirmwareInit:
+        return "apps.management.ble.upload_ble_firmware_init"
+
     # bitcoin
     if msg_type == MessageType.AuthorizeCoinJoin:
         return "apps.bitcoin.authorize_coinjoin"

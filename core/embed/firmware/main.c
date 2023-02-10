@@ -72,6 +72,9 @@
 #include "supervise.h"
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
+
+#include "dfu/dfu.h"
+
 #endif
 
 // from util.s
@@ -142,6 +145,8 @@ int main(void) {
 #ifdef USE_SD_CARD
   sdcard_init();
 #endif
+
+  dfu_init();
 
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode

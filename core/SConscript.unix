@@ -348,6 +348,7 @@ SOURCE_MICROPYTHON = [
 
 SOURCE_UNIX = [
     'embed/unix/common.c',
+    'embed/unix/dfu/dfu.c',
     'embed/unix/display-unix.c',
     'embed/unix/flash.c',
     'embed/unix/main.c',
