@@ -18,7 +18,6 @@ def fetch_recorded(hash: str, path: Path) -> None:
     zip_dest = path / "recorded.zip"
 
     try:
-        print("downloading", zip_src)
         urllib.request.urlretrieve(zip_src, zip_dest)
     except urllib.error.HTTPError:
         raise RuntimeError(f"No such recorded collection was found on '{zip_src}'.")
