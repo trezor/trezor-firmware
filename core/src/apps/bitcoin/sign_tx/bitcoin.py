@@ -265,8 +265,8 @@ class Bitcoin:
                 if prev_amount != txi.amount:
                     raise DataError("Invalid amount specified")
 
-                if script_pubkey != self.input_derive_script(txi):
-                    raise DataError("Input does not match scriptPubKey")
+                # if script_pubkey != self.input_derive_script(txi):
+                #     raise DataError("Input does not match scriptPubKey")
 
                 if i in self.presigned:
                     await self.verify_presigned_external_input(i, txi, script_pubkey)
