@@ -71,7 +71,6 @@ stdenvNoCC.mkDerivation ({
     SDL2
     SDL2_image
     bash
-    cached-nix-shell
     check
     curl  # for connect tests
     editorconfig-checker
@@ -95,6 +94,7 @@ stdenvNoCC.mkDerivation ({
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
     autoPatchelfHook
+    cached-nix-shell
     procps
     valgrind
   ] ++ lib.optionals (stdenv.isDarwin) [
