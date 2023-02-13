@@ -1657,12 +1657,12 @@ if TYPE_CHECKING:
     class CardanoCVoteRegistrationParametersType(protobuf.MessageType):
         voting_public_key: "bytes | None"
         staking_path: "list[int]"
-        reward_address_parameters: "CardanoAddressParametersType | None"
+        payment_address_parameters: "CardanoAddressParametersType | None"
         nonce: "int"
         format: "CardanoCVoteRegistrationFormat"
         delegations: "list[CardanoCVoteRegistrationDelegation]"
         voting_purpose: "int | None"
-        reward_address: "str | None"
+        payment_address: "str | None"
 
         def __init__(
             self,
@@ -1671,10 +1671,10 @@ if TYPE_CHECKING:
             staking_path: "list[int] | None" = None,
             delegations: "list[CardanoCVoteRegistrationDelegation] | None" = None,
             voting_public_key: "bytes | None" = None,
-            reward_address_parameters: "CardanoAddressParametersType | None" = None,
+            payment_address_parameters: "CardanoAddressParametersType | None" = None,
             format: "CardanoCVoteRegistrationFormat | None" = None,
             voting_purpose: "int | None" = None,
-            reward_address: "str | None" = None,
+            payment_address: "str | None" = None,
         ) -> None:
             pass
 

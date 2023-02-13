@@ -469,7 +469,7 @@
         "auxiliary_data": {
           "cvote_registration_parameters": {
             "staking_path": "m/1852'/1815'/0'/2/0",
-            "reward_address_parameters": {
+            "payment_address_parameters": {
               "addressType": 0,
               "path": "m/1852'/1815'/0'/0/0",
               "stakingPath": "m/1852'/1815'/0'/2/0"

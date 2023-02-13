@@ -357,16 +357,18 @@ async def show_device_owned_output_credentials(
         await _show_credential(ctx, stake_credential, intro_text, purpose="output")
 
 
-async def show_cvote_registration_reward_credentials(
+async def show_cvote_registration_payment_credentials(
     ctx: Context,
     payment_credential: Credential,
     stake_credential: Credential,
     show_both_credentials: bool,
     show_payment_warning: bool,
 ) -> None:
-    intro_text = "The vote key registration reward address is owned by this device. Its"
+    intro_text = (
+        "The vote key registration payment address is owned by this device. Its"
+    )
     await _show_credential(
-        ctx, payment_credential, intro_text, purpose="cvote_reg_reward_address"
+        ctx, payment_credential, intro_text, purpose="cvote_reg_payment_address"
     )
     if show_both_credentials or show_payment_warning:
         extra_text = CVOTE_REWARD_ELIGIBILITY_WARNING if show_payment_warning else None
@@ -374,7 +376,7 @@ async def show_cvote_registration_reward_credentials(
             ctx,
             stake_credential,
             intro_text,
-            purpose="cvote_reg_reward_address",
+            purpose="cvote_reg_payment_address",
             extra_text=extra_text,
         )
 
@@ -383,13 +385,13 @@ async def _show_credential(
     ctx: Context,
     credential: Credential,
     intro_text: str,
-    purpose: Literal["address", "output", "cvote_reg_reward_address"],
+    purpose: Literal["address", "output", "cvote_reg_payment_address"],
     extra_text: str | None = None,
 ) -> None:
     title = {
         "address": f"{ADDRESS_TYPE_NAMES[credential.address_type]} address",
         "output": "Confirm transaction",
-        "cvote_reg_reward_address": "Confirm transaction",
+        "cvote_reg_payment_address": "Confirm transaction",
     }[purpose]
 
     props: list[PropertyType] = []
@@ -412,7 +414,7 @@ async def _show_credential(
         append((None, "Path is unusual."))
     if credential.is_mismatch:
         append((None, "Credential doesn't match payment credential."))
-    if credential.is_reward and purpose != "cvote_reg_reward_address":
+    if credential.is_reward and purpose != "cvote_reg_payment_address":
         # for cvote registrations, this is handled by extra_text at the end
         append(("Address is a reward address.", None))
     if credential.is_no_staking:
@@ -794,20 +796,20 @@ async def confirm_cvote_registration_delegation(
     )
 
 
-async def confirm_cvote_registration_reward_address(
+async def confirm_cvote_registration_payment_address(
     ctx: Context,
-    reward_address: str,
+    payment_address: str,
     should_show_payment_warning: bool,
 ) -> None:
     props = [
         ("Vote key registration (CIP-36)", None),
-        ("Rewards go to:", reward_address),
+        ("Rewards go to:", payment_address),
     ]
     if should_show_payment_warning:
         props.append((CVOTE_REWARD_ELIGIBILITY_WARNING, None))
     await confirm_properties(
         ctx,
-        "confirm_cvote_registration_reward_address",
+        "confirm_cvote_registration_payment_address",
         title="Confirm transaction",
         props=props,
         br_code=ButtonRequestType.Other,

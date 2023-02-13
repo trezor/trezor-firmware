@@ -2658,12 +2658,12 @@ class CardanoCVoteRegistrationParametersType(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("voting_public_key", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("staking_path", "uint32", repeated=True, required=False, default=None),
-        3: protobuf.Field("reward_address_parameters", "CardanoAddressParametersType", repeated=False, required=False, default=None),
+        3: protobuf.Field("payment_address_parameters", "CardanoAddressParametersType", repeated=False, required=False, default=None),
         4: protobuf.Field("nonce", "uint64", repeated=False, required=True),
         5: protobuf.Field("format", "CardanoCVoteRegistrationFormat", repeated=False, required=False, default=CardanoCVoteRegistrationFormat.CIP15),
         6: protobuf.Field("delegations", "CardanoCVoteRegistrationDelegation", repeated=True, required=False, default=None),
         7: protobuf.Field("voting_purpose", "uint64", repeated=False, required=False, default=None),
-        8: protobuf.Field("reward_address", "string", repeated=False, required=False, default=None),
+        8: protobuf.Field("payment_address", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2673,19 +2673,19 @@ class CardanoCVoteRegistrationParametersType(protobuf.MessageType):
         staking_path: Optional[Sequence["int"]] = None,
         delegations: Optional[Sequence["CardanoCVoteRegistrationDelegation"]] = None,
         voting_public_key: Optional["bytes"] = None,
-        reward_address_parameters: Optional["CardanoAddressParametersType"] = None,
+        payment_address_parameters: Optional["CardanoAddressParametersType"] = None,
         format: Optional["CardanoCVoteRegistrationFormat"] = CardanoCVoteRegistrationFormat.CIP15,
         voting_purpose: Optional["int"] = None,
-        reward_address: Optional["str"] = None,
+        payment_address: Optional["str"] = None,
     ) -> None:
         self.staking_path: Sequence["int"] = staking_path if staking_path is not None else []
         self.delegations: Sequence["CardanoCVoteRegistrationDelegation"] = delegations if delegations is not None else []
         self.nonce = nonce
         self.voting_public_key = voting_public_key
-        self.reward_address_parameters = reward_address_parameters
+        self.payment_address_parameters = payment_address_parameters
         self.format = format
         self.voting_purpose = voting_purpose
-        self.reward_address = reward_address
+        self.payment_address = payment_address
 
 
 class CardanoTxAuxiliaryData(protobuf.MessageType):
