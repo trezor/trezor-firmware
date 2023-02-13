@@ -75,18 +75,18 @@ def _validate_cvote_registration_parameters(
 
     assert_cond(SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.staking_path))
 
-    reward_address_fields_provided = 0
-    if parameters.reward_address is not None:
-        reward_address_fields_provided += 1
-        addresses.validate_cvote_reward_address(
-            parameters.reward_address, protocol_magic, network_id
+    payment_address_fields_provided = 0
+    if parameters.payment_address is not None:
+        payment_address_fields_provided += 1
+        addresses.validate_cvote_payment_address(
+            parameters.payment_address, protocol_magic, network_id
         )
-    if parameters.reward_address_parameters:
-        reward_address_fields_provided += 1
-        addresses.validate_cvote_reward_address_parameters(
-            parameters.reward_address_parameters
+    if parameters.payment_address_parameters:
+        payment_address_fields_provided += 1
+        addresses.validate_cvote_payment_address_parameters(
+            parameters.payment_address_parameters
         )
-    assert_cond(reward_address_fields_provided == 1)
+    assert_cond(payment_address_fields_provided == 1)
 
     if parameters.voting_purpose is not None:
         assert_cond(parameters.format == CardanoCVoteRegistrationFormat.CIP36)
@@ -138,8 +138,8 @@ async def show(
 
 
 def _should_show_payment_warning(address_type: CardanoAddressType) -> bool:
-    # For non-payment cvote reward addresses, we show a warning that the address is not
-    # actually eligible for rewards. https://github.com/cardano-foundation/CIPs/pull/373
+    # For cvote payment addresses that are actually REWARD addresses, we show a warning that the
+    # address is not eligible for rewards. https://github.com/cardano-foundation/CIPs/pull/373
     # However, the registration is otherwise valid, so we allow such addresses since we don't
     # want to prevent the user from voting just because they use an outdated SW wallet.
     return address_type not in addresses.ADDRESS_TYPES_PAYMENT
@@ -164,21 +164,21 @@ async def _show_cvote_registration(
             ctx, encoded_public_key, delegation.weight
         )
 
-    if parameters.reward_address:
+    if parameters.payment_address:
         show_payment_warning = _should_show_payment_warning(
-            addresses.get_type(addresses.get_bytes_unsafe(parameters.reward_address))
+            addresses.get_type(addresses.get_bytes_unsafe(parameters.payment_address))
         )
-        await layout.confirm_cvote_registration_reward_address(
-            ctx, parameters.reward_address, show_payment_warning
+        await layout.confirm_cvote_registration_payment_address(
+            ctx, parameters.payment_address, show_payment_warning
         )
     else:
-        address_parameters = parameters.reward_address_parameters
+        address_parameters = parameters.payment_address_parameters
         assert address_parameters  # _validate_cvote_registration_parameters
         show_both_credentials = should_show_credentials(address_parameters)
         show_payment_warning = _should_show_payment_warning(
             address_parameters.address_type
         )
-        await layout.show_cvote_registration_reward_credentials(
+        await layout.show_cvote_registration_payment_credentials(
             ctx,
             Credential.payment_credential(address_parameters),
             Credential.stake_credential(address_parameters),
@@ -281,12 +281,12 @@ def _get_signed_cvote_registration_payload(
 
     staking_key = derive_public_key(keychain, parameters.staking_path)
 
-    if parameters.reward_address:
-        reward_address = addresses.get_bytes_unsafe(parameters.reward_address)
+    if parameters.payment_address:
+        payment_address = addresses.get_bytes_unsafe(parameters.payment_address)
     else:
-        address_parameters = parameters.reward_address_parameters
+        address_parameters = parameters.payment_address_parameters
         assert address_parameters  # _validate_cvote_registration_parameters
-        reward_address = addresses.derive_bytes(
+        payment_address = addresses.derive_bytes(
             keychain,
             address_parameters,
             protocol_magic,
@@ -298,7 +298,7 @@ def _get_signed_cvote_registration_payload(
     payload: CVoteRegistrationPayload = {
         1: delegations_or_key,
         2: staking_key,
-        3: reward_address,
+        3: payment_address,
         4: parameters.nonce,
     }
     if voting_purpose is not None:

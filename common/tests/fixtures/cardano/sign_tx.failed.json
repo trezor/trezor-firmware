@@ -1299,7 +1299,7 @@
       }
     },
     {
-      "description": "transaction with cvote registration containing byron reward address",
+      "description": "transaction with cvote registration containing byron payment address",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1313,7 +1313,7 @@
             "voting_public_key": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "nonce": 22634813,
-            "reward_address_parameters": {
+            "payment_address_parameters": {
               "addressType": 8,
               "path": "m/44'/1815'/0'/0/0"
             }
@@ -1362,7 +1362,7 @@
           "cvote_registration_parameters": {
             "voting_public_key": "38DA0B509D45BF6C87BD55594B92F97081D3923B8C1334B9B8D0BF13FC1C12D0",
             "staking_path": "m/1852'/1815'/0'/2/0",
-            "reward_address_parameters": {
+            "payment_address_parameters": {
               "addressType": 0,
               "path": "m/1852'/1815'/0'/0/0",
               "stakingPath": "m/1852'/1815'/0'/2/0"
@@ -1412,7 +1412,7 @@
           "cvote_registration_parameters": {
             "voting_public_key": "38DA0B509D45BF6C87BD55594B92F97081D3923B8C1334B9B8D0BF13FC1C12D0",
             "staking_path": "m/1852'/1815'/0'/2/0",
-            "reward_address_parameters": {
+            "payment_address_parameters": {
               "addressType": 0,
               "path": "m/1852'/1815'/0'/0/0",
               "stakingPath": "m/1852'/1815'/0'/2/0"

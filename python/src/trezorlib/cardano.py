@@ -591,12 +591,12 @@ def parse_auxiliary_data(
             ),
             staking_path=tools.parse_path(cvote_registration["staking_path"]),
             nonce=cvote_registration["nonce"],
-            reward_address=cvote_registration.get("reward_address"),
-            reward_address_parameters=_parse_address_parameters(
-                cvote_registration["reward_address_parameters"],
+            payment_address=cvote_registration.get("payment_address"),
+            payment_address_parameters=_parse_address_parameters(
+                cvote_registration["payment_address_parameters"],
                 str(AUXILIARY_DATA_MISSING_FIELDS_ERROR),
             )
-            if "reward_address_parameters" in cvote_registration
+            if "payment_address_parameters" in cvote_registration
             else None,
             format=serialization_format,
             delegations=delegations,

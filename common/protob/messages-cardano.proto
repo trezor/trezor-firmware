@@ -371,12 +371,12 @@ message CardanoCVoteRegistrationDelegation {
 message CardanoCVoteRegistrationParametersType {
     optional bytes voting_public_key = 1; // mutually exclusive with delegations
     repeated uint32 staking_path = 2;
-    optional CardanoAddressParametersType reward_address_parameters = 3; // mutually exclusive with reward_address
+    optional CardanoAddressParametersType payment_address_parameters = 3; // mutually exclusive with payment_address
     required uint64 nonce = 4;
     optional CardanoCVoteRegistrationFormat format = 5 [default=CIP15];
     repeated CardanoCVoteRegistrationDelegation delegations = 6;  // mutually exclusive with voting_public_key; max 32 delegations
     optional uint64 voting_purpose = 7;
-    optional string reward_address = 8; // mutually exclusive with reward_address_parameters
+    optional string payment_address = 8; // mutually exclusive with payment_address_parameters
 }
 
 /**
