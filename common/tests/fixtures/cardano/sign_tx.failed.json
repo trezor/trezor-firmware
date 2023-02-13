@@ -1299,7 +1299,7 @@
       }
     },
     {
-      "description": "transaction with governance registration containing byron reward address",
+      "description": "transaction with cvote registration containing byron reward address",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1309,7 +1309,7 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "voting_public_key": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "nonce": 22634813,
@@ -1348,7 +1348,7 @@
       }
     },
     {
-      "description": "transaction with both auxiliary data blob and governance registration",
+      "description": "transaction with both auxiliary data blob and cvote registration",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1359,7 +1359,7 @@
         "withdrawals": [],
         "auxiliary_data": {
           "hash": "ea4c91860dd5ec5449f8f985d227946ff39086b17f10b5afb93d12ee87050b6a",
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "voting_public_key": "38DA0B509D45BF6C87BD55594B92F97081D3923B8C1334B9B8D0BF13FC1C12D0",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "reward_address_parameters": {
@@ -1399,7 +1399,7 @@
       }
     },
     {
-      "description": "transaction with both voting public key and delegations in governance registration",
+      "description": "transaction with both voting public key and delegations in cvote registration",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1409,7 +1409,7 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "voting_public_key": "38DA0B509D45BF6C87BD55594B92F97081D3923B8C1334B9B8D0BF13FC1C12D0",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "reward_address_parameters": {

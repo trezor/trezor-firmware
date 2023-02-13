@@ -66,10 +66,10 @@ enum CardanoPoolRelayType {
 
 enum CardanoTxAuxiliaryDataSupplementType {
     NONE = 0;
-    GOVERNANCE_REGISTRATION_SIGNATURE = 1;
+    CVOTE_REGISTRATION_SIGNATURE = 1;
 }
 
-enum CardanoGovernanceRegistrationFormat {
+enum CardanoCVoteRegistrationFormat {
     CIP15 = 0;
     CIP36 = 1;
 }
@@ -360,7 +360,7 @@ message CardanoTxWithdrawal {
 /**
  * @embed
  */
-message CardanoGovernanceRegistrationDelegation {
+message CardanoCVoteRegistrationDelegation {
     required bytes voting_public_key = 1;
     required uint32 weight = 2;
 }
@@ -368,13 +368,13 @@ message CardanoGovernanceRegistrationDelegation {
 /**
  * @embed
  */
-message CardanoGovernanceRegistrationParametersType {
+message CardanoCVoteRegistrationParametersType {
     optional bytes voting_public_key = 1; // mutually exclusive with delegations
     repeated uint32 staking_path = 2;
     optional CardanoAddressParametersType reward_address_parameters = 3; // mutually exclusive with reward_address
     required uint64 nonce = 4;
-    optional CardanoGovernanceRegistrationFormat format = 5 [default=CIP15];
-    repeated CardanoGovernanceRegistrationDelegation delegations = 6;  // mutually exclusive with voting_public_key; max 32 delegations
+    optional CardanoCVoteRegistrationFormat format = 5 [default=CIP15];
+    repeated CardanoCVoteRegistrationDelegation delegations = 6;  // mutually exclusive with voting_public_key; max 32 delegations
     optional uint64 voting_purpose = 7;
     optional string reward_address = 8; // mutually exclusive with reward_address_parameters
 }
@@ -385,7 +385,7 @@ message CardanoGovernanceRegistrationParametersType {
  * @next CardanoTxAuxiliaryDataSupplement
  */
 message CardanoTxAuxiliaryData {
-    optional CardanoGovernanceRegistrationParametersType governance_registration_parameters = 1;
+    optional CardanoCVoteRegistrationParametersType cvote_registration_parameters = 1;
     optional bytes hash = 2;
 }
 
@@ -453,7 +453,7 @@ message CardanoTxItemAck {
 message CardanoTxAuxiliaryDataSupplement {
     required CardanoTxAuxiliaryDataSupplementType type = 1;
     optional bytes auxiliary_data_hash = 2;
-    optional bytes governance_signature = 3;
+    optional bytes cvote_registration_signature = 3;
 }
 
 /**

@@ -836,7 +836,7 @@ class Signer:
             self.ctx,
             self.keychain,
             auxiliary_data_hash,
-            data.governance_registration_parameters,
+            data.cvote_registration_parameters,
             msg.protocol_magic,
             msg.network_id,
             self.should_show_details,

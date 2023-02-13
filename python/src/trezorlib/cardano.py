@@ -61,11 +61,11 @@ REQUIRED_FIELDS_POOL_PARAMETERS = (
     "owners",
 )
 REQUIRED_FIELDS_TOKEN_GROUP = ("policy_id", "tokens")
-REQUIRED_FIELDS_GOVERNANCE_REGISTRATION = (
+REQUIRED_FIELDS_CVOTE_REGISTRATION = (
     "staking_path",
     "nonce",
 )
-REQUIRED_FIELDS_GOVERNANCE_DELEGATION = ("voting_public_key", "weight")
+REQUIRED_FIELDS_CVOTE_DELEGATION = ("voting_public_key", "weight")
 
 INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
 
@@ -562,58 +562,53 @@ def parse_auxiliary_data(
     # include all provided fields so we can test validation in FW
     hash = parse_optional_bytes(auxiliary_data.get("hash"))
 
-    governance_registration_parameters = None
-    if "governance_registration_parameters" in auxiliary_data:
-        governance_registration = auxiliary_data["governance_registration_parameters"]
-        if not all(
-            k in governance_registration
-            for k in REQUIRED_FIELDS_GOVERNANCE_REGISTRATION
-        ):
+    cvote_registration_parameters = None
+    if "cvote_registration_parameters" in auxiliary_data:
+        cvote_registration = auxiliary_data["cvote_registration_parameters"]
+        if not all(k in cvote_registration for k in REQUIRED_FIELDS_CVOTE_REGISTRATION):
             raise AUXILIARY_DATA_MISSING_FIELDS_ERROR
 
-        serialization_format = governance_registration.get("format")
+        serialization_format = cvote_registration.get("format")
 
         delegations = []
-        for delegation in governance_registration.get("delegations", []):
-            if not all(k in delegation for k in REQUIRED_FIELDS_GOVERNANCE_DELEGATION):
+        for delegation in cvote_registration.get("delegations", []):
+            if not all(k in delegation for k in REQUIRED_FIELDS_CVOTE_DELEGATION):
                 raise AUXILIARY_DATA_MISSING_FIELDS_ERROR
             delegations.append(
-                messages.CardanoGovernanceRegistrationDelegation(
+                messages.CardanoCVoteRegistrationDelegation(
                     voting_public_key=bytes.fromhex(delegation["voting_public_key"]),
                     weight=int(delegation["weight"]),
                 )
             )
 
         voting_purpose = None
-        if serialization_format == messages.CardanoGovernanceRegistrationFormat.CIP36:
-            voting_purpose = governance_registration.get("voting_purpose")
+        if serialization_format == messages.CardanoCVoteRegistrationFormat.CIP36:
+            voting_purpose = cvote_registration.get("voting_purpose")
 
-        governance_registration_parameters = (
-            messages.CardanoGovernanceRegistrationParametersType(
-                voting_public_key=parse_optional_bytes(
-                    governance_registration.get("voting_public_key")
-                ),
-                staking_path=tools.parse_path(governance_registration["staking_path"]),
-                nonce=governance_registration["nonce"],
-                reward_address=governance_registration.get("reward_address"),
-                reward_address_parameters=_parse_address_parameters(
-                    governance_registration["reward_address_parameters"],
-                    str(AUXILIARY_DATA_MISSING_FIELDS_ERROR),
-                )
-                if "reward_address_parameters" in governance_registration
-                else None,
-                format=serialization_format,
-                delegations=delegations,
-                voting_purpose=voting_purpose,
+        cvote_registration_parameters = messages.CardanoCVoteRegistrationParametersType(
+            voting_public_key=parse_optional_bytes(
+                cvote_registration.get("voting_public_key")
+            ),
+            staking_path=tools.parse_path(cvote_registration["staking_path"]),
+            nonce=cvote_registration["nonce"],
+            reward_address=cvote_registration.get("reward_address"),
+            reward_address_parameters=_parse_address_parameters(
+                cvote_registration["reward_address_parameters"],
+                str(AUXILIARY_DATA_MISSING_FIELDS_ERROR),
             )
+            if "reward_address_parameters" in cvote_registration
+            else None,
+            format=serialization_format,
+            delegations=delegations,
+            voting_purpose=voting_purpose,
         )
 
-    if hash is None and governance_registration_parameters is None:
+    if hash is None and cvote_registration_parameters is None:
         raise AUXILIARY_DATA_MISSING_FIELDS_ERROR
 
     return messages.CardanoTxAuxiliaryData(
         hash=hash,
-        governance_registration_parameters=governance_registration_parameters,
+        cvote_registration_parameters=cvote_registration_parameters,
     )
 
 

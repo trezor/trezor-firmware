@@ -291,9 +291,9 @@ Each transaction may contain auxiliary data. Auxiliary data format can be found 
 
 Auxiliary data can be sent to Trezor as a hash or as an object with parameters. The hash will be included in the transaction body as is and will be shown to the user.
 
-The only object currently supported is governance voting key registration (currently, this is used only by Catalyst, but there may be other governance use cases in the future). To be in compliance with the CDDL and other Cardano tools, governance voting key registration object is being wrapped in a tuple and an empty tuple follows it. The empty tuple represents `auxiliary_scripts` which are not yet supported on Trezor and are thus always empty. Byron addresses are not supported as governance reward addresses. The governance registration signature is returned in the form of `CardanoTxAuxiliaryDataSupplement` which also contains the auxiliary data hash calculated by Trezor.
+The only object currently supported is CIP-15/CIP-36 vote key registration (currently, this is used only by Catalyst, but there may be other voting use cases in the future). To be in compliance with the CDDL and other Cardano tools, vote key registration object is being wrapped in a tuple and an empty tuple follows it. The empty tuple represents `auxiliary_scripts` which are not yet supported on Trezor and are thus always empty. Byron addresses are not supported as the addresses to receive rewards. The registration signature is returned in the form of `CardanoTxAuxiliaryDataSupplement` which also contains the auxiliary data hash calculated by Trezor.
 
-[Governance Registration Transaction Metadata Format](https://cips.cardano.org/cips/cip36/)
+[CIP-36 Vote Registration Transaction Metadata Format](https://cips.cardano.org/cips/cip36/)
 
 ### Native scripts
 

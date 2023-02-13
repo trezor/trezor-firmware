@@ -24,9 +24,9 @@ if TYPE_CHECKING:
     from trezor.enums import ButtonRequestType  # noqa: F401
     from trezor.enums import Capability  # noqa: F401
     from trezor.enums import CardanoAddressType  # noqa: F401
+    from trezor.enums import CardanoCVoteRegistrationFormat  # noqa: F401
     from trezor.enums import CardanoCertificateType  # noqa: F401
     from trezor.enums import CardanoDerivationType  # noqa: F401
-    from trezor.enums import CardanoGovernanceRegistrationFormat  # noqa: F401
     from trezor.enums import CardanoNativeScriptHashDisplayFormat  # noqa: F401
     from trezor.enums import CardanoNativeScriptType  # noqa: F401
     from trezor.enums import CardanoPoolRelayType  # noqa: F401
@@ -1638,7 +1638,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["CardanoTxWithdrawal"]:
             return isinstance(msg, cls)
 
-    class CardanoGovernanceRegistrationDelegation(protobuf.MessageType):
+    class CardanoCVoteRegistrationDelegation(protobuf.MessageType):
         voting_public_key: "bytes"
         weight: "int"
 
@@ -1651,16 +1651,16 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoGovernanceRegistrationDelegation"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoCVoteRegistrationDelegation"]:
             return isinstance(msg, cls)
 
-    class CardanoGovernanceRegistrationParametersType(protobuf.MessageType):
+    class CardanoCVoteRegistrationParametersType(protobuf.MessageType):
         voting_public_key: "bytes | None"
         staking_path: "list[int]"
         reward_address_parameters: "CardanoAddressParametersType | None"
         nonce: "int"
-        format: "CardanoGovernanceRegistrationFormat"
-        delegations: "list[CardanoGovernanceRegistrationDelegation]"
+        format: "CardanoCVoteRegistrationFormat"
+        delegations: "list[CardanoCVoteRegistrationDelegation]"
         voting_purpose: "int | None"
         reward_address: "str | None"
 
@@ -1669,27 +1669,27 @@ if TYPE_CHECKING:
             *,
             nonce: "int",
             staking_path: "list[int] | None" = None,
-            delegations: "list[CardanoGovernanceRegistrationDelegation] | None" = None,
+            delegations: "list[CardanoCVoteRegistrationDelegation] | None" = None,
             voting_public_key: "bytes | None" = None,
             reward_address_parameters: "CardanoAddressParametersType | None" = None,
-            format: "CardanoGovernanceRegistrationFormat | None" = None,
+            format: "CardanoCVoteRegistrationFormat | None" = None,
             voting_purpose: "int | None" = None,
             reward_address: "str | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoGovernanceRegistrationParametersType"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoCVoteRegistrationParametersType"]:
             return isinstance(msg, cls)
 
     class CardanoTxAuxiliaryData(protobuf.MessageType):
-        governance_registration_parameters: "CardanoGovernanceRegistrationParametersType | None"
+        cvote_registration_parameters: "CardanoCVoteRegistrationParametersType | None"
         hash: "bytes | None"
 
         def __init__(
             self,
             *,
-            governance_registration_parameters: "CardanoGovernanceRegistrationParametersType | None" = None,
+            cvote_registration_parameters: "CardanoCVoteRegistrationParametersType | None" = None,
             hash: "bytes | None" = None,
         ) -> None:
             pass
@@ -1769,14 +1769,14 @@ if TYPE_CHECKING:
     class CardanoTxAuxiliaryDataSupplement(protobuf.MessageType):
         type: "CardanoTxAuxiliaryDataSupplementType"
         auxiliary_data_hash: "bytes | None"
-        governance_signature: "bytes | None"
+        cvote_registration_signature: "bytes | None"
 
         def __init__(
             self,
             *,
             type: "CardanoTxAuxiliaryDataSupplementType",
             auxiliary_data_hash: "bytes | None" = None,
-            governance_signature: "bytes | None" = None,
+            cvote_registration_signature: "bytes | None" = None,
         ) -> None:
             pass
 
