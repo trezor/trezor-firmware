@@ -1002,7 +1002,7 @@
       }
     },
     {
-      "description": "transaction with CIP15 governance registration",
+      "description": "transaction with CIP15 registration",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1012,7 +1012,7 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "reward_address_parameters": {
@@ -1060,12 +1060,12 @@
         "auxiliary_data_supplement": {
           "type": 1,
           "auxiliary_data_hash": "a943e9166f1bb6d767b175384d3bd7d23645170df36fc1861fbf344135d8e120",
-          "governance_signature": "74f27d877bbb4a5fc4f7c56869905c11f70bad0af3de24b23afaa1d024e750930f434ecc4b73e5d1723c2cb8548e8bf6098ac876487b3a6ed0891cb76994d409"
+          "cvote_registration_signature": "74f27d877bbb4a5fc4f7c56869905c11f70bad0af3de24b23afaa1d024e750930f434ecc4b73e5d1723c2cb8548e8bf6098ac876487b3a6ed0891cb76994d409"
         }
       }
     },
     {
-      "description": "transaction with CIP36 governance registration and voting purpose not specified",
+      "description": "transaction with CIP36 registration and voting purpose not specified",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1075,7 +1075,7 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "staking_path": "m/1852'/1815'/0'/2/0",
             "reward_address_parameters": {
               "addressType": 0,
@@ -1133,12 +1133,12 @@
         "auxiliary_data_supplement": {
           "type": 1,
           "auxiliary_data_hash": "9d4c00f5b5b67760931fd7ed9850ff8e14dcdf957685191ab4bc755c52f0ed56",
-          "governance_signature": "2671b8e668ffce235647ac89deda6cc222e7b31a3d44606c2723fcf711b29f9af1e30b0c6b4f87ba37ddf9f6adf0226c39c09e655255890644a3dc4e64c3a001"
+          "cvote_registration_signature": "2671b8e668ffce235647ac89deda6cc222e7b31a3d44606c2723fcf711b29f9af1e30b0c6b4f87ba37ddf9f6adf0226c39c09e655255890644a3dc4e64c3a001"
         }
       }
     },
     {
-      "description": "transaction with CIP36 governance registration and OTHER voting purpose",
+      "description": "transaction with CIP36 registration and OTHER voting purpose",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1148,7 +1148,7 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "staking_path": "m/1852'/1815'/0'/2/0",
             "reward_address_parameters": {
               "addressType": 0,
@@ -1203,12 +1203,12 @@
         "auxiliary_data_supplement": {
           "type": 1,
           "auxiliary_data_hash": "28b7ffa6800833bdfe5421739eaa21d4a49cde1d84e762b147001169f7c0a385",
-          "governance_signature": "ebc00c615f988c6fc2e132d4419a719f04bbec56fe2569a00746a9e9b0d6e5bdd0809515cb2522c773c991c5ae39834403654d36b37e70b14897c0e98c8c0a0c"
+          "cvote_registration_signature": "ebc00c615f988c6fc2e132d4419a719f04bbec56fe2569a00746a9e9b0d6e5bdd0809515cb2522c773c991c5ae39834403654d36b37e70b14897c0e98c8c0a0c"
         }
       }
     },
     {
-      "description": "transaction with CIP36 governance registration and external reward address",
+      "description": "transaction with CIP36 registration and external reward address",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1218,7 +1218,7 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "staking_path": "m/1852'/1815'/0'/2/0",
             "nonce": 22634813,
             "format": 1,
@@ -1268,12 +1268,12 @@
         "auxiliary_data_supplement": {
           "type": 1,
           "auxiliary_data_hash": "3830a90f2c5dc23ddd478cefcb8642f0b36afa77769239146d9cba83ed196e41",
-          "governance_signature": "ba05ac525e5dcc74e5a6cdbb7fb111d8e21163d79fe76777a5b730fe93512f09415f6f7b4904b12c6f12fe33b6c553d9889beb024299fa1256a0d3e98c8ff203"
+          "cvote_registration_signature": "ba05ac525e5dcc74e5a6cdbb7fb111d8e21163d79fe76777a5b730fe93512f09415f6f7b4904b12c6f12fe33b6c553d9889beb024299fa1256a0d3e98c8ff203"
         }
       }
     },
     {
-      "description": "transaction with CIP36 governance registration and non-payment reward address parameters",
+      "description": "transaction with CIP36 registration and non-payment reward address parameters",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1283,7 +1283,7 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "staking_path": "m/1852'/1815'/0'/2/0",
             "reward_address_parameters": {
               "addressType": 14,
@@ -1336,12 +1336,12 @@
         "auxiliary_data_supplement": {
           "type": 1,
           "auxiliary_data_hash": "eb63742c2908aedcc6db3df903377f07302828c0e0eb4a01d38c9049845780c5",
-          "governance_signature": "97e7fd23473f984454ea6d17f8f3f4c7019fa63b87596356db89f7906bb1ce6e51c7d0efe68772d6a6cd83011b1777912cae2cc94661148af51d8f1ba791fe0d"
+          "cvote_registration_signature": "97e7fd23473f984454ea6d17f8f3f4c7019fa63b87596356db89f7906bb1ce6e51c7d0efe68772d6a6cd83011b1777912cae2cc94661148af51d8f1ba791fe0d"
         }
       }
     },
     {
-      "description": "transaction with CIP36 governance registration and non-payment external reward address",
+      "description": "transaction with CIP36 registration and non-payment external reward address",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1351,7 +1351,7 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "staking_path": "m/1852'/1815'/0'/2/0",
             "nonce": 22634813,
             "format": 1,
@@ -1401,7 +1401,7 @@
         "auxiliary_data_supplement": {
           "type": 1,
           "auxiliary_data_hash": "eb63742c2908aedcc6db3df903377f07302828c0e0eb4a01d38c9049845780c5",
-          "governance_signature": "97e7fd23473f984454ea6d17f8f3f4c7019fa63b87596356db89f7906bb1ce6e51c7d0efe68772d6a6cd83011b1777912cae2cc94661148af51d8f1ba791fe0d"
+          "cvote_registration_signature": "97e7fd23473f984454ea6d17f8f3f4c7019fa63b87596356db89f7906bb1ce6e51c7d0efe68772d6a6cd83011b1777912cae2cc94661148af51d8f1ba791fe0d"
         }
       }
     },
@@ -1932,7 +1932,7 @@
           }
         ],
         "auxiliary_data": {
-          "governance_registration_parameters": {
+          "cvote_registration_parameters": {
             "staking_path": "m/1852'/1815'/0'/2/0",
             "reward_address_parameters": {
               "addressType": 0,
@@ -1992,7 +1992,7 @@
         "auxiliary_data_supplement": {
           "type": 1,
           "auxiliary_data_hash": "544c9ae849c82e31224865ff936decc6160047409eee4a6b4178b729fe3d286c",
-          "governance_signature": "3064949c9f186138f95e228075d0119dd5cb50e1b7e75d24d569fa547e018a597615da7c79a39ca8e394ee1ba8acb83e70be80f37e69aef3b86e7c4a6bd44903"
+          "cvote_registration_signature": "3064949c9f186138f95e228075d0119dd5cb50e1b7e75d24d569fa547e018a597615da7c79a39ca8e394ee1ba8acb83e70be80f37e69aef3b86e7c4a6bd44903"
         }
       }
     },

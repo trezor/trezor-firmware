@@ -381,9 +381,9 @@ if TYPE_CHECKING:
 
     class CardanoTxAuxiliaryDataSupplementType(IntEnum):
         NONE = 0
-        GOVERNANCE_REGISTRATION_SIGNATURE = 1
+        CVOTE_REGISTRATION_SIGNATURE = 1
 
-    class CardanoGovernanceRegistrationFormat(IntEnum):
+    class CardanoCVoteRegistrationFormat(IntEnum):
         CIP15 = 0
         CIP36 = 1
 

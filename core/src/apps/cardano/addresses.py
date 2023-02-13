@@ -233,13 +233,13 @@ def validate_output_address_parameters(
     assert_params_cond(parameters.address_type in ADDRESS_TYPES_PAYMENT_KEY)
 
 
-def validate_governance_reward_address_parameters(
+def validate_cvote_reward_address_parameters(
     parameters: messages.CardanoAddressParametersType,
 ) -> None:
     validate_address_parameters(parameters)
 
     # Despite the name, the address doesn't have to be a REWARD address.
-    # see also validate_governance_reward_address
+    # see also validate_cvote_reward_address
     assert_params_cond(parameters.address_type in ADDRESS_TYPES_SHELLEY)
 
 
@@ -299,7 +299,7 @@ def validate_reward_address(address: str, protocol_magic: int, network_id: int) 
     )
 
 
-def validate_governance_reward_address(
+def validate_cvote_reward_address(
     address: str, protocol_magic: int, network_id: int
 ) -> None:
     address_type = _validate_and_get_type(address, protocol_magic, network_id)

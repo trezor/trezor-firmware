@@ -68,7 +68,7 @@ CERTIFICATE_TYPE_NAMES = {
 
 BRT_Other = ButtonRequestType.Other  # global_import_cache
 
-GOVERNANCE_REWARD_ELIGIBILITY_WARNING = (
+CVOTE_REWARD_ELIGIBILITY_WARNING = (
     "Warning: The address is not a payment address, it is not eligible for rewards."
 )
 
@@ -357,26 +357,24 @@ async def show_device_owned_output_credentials(
         await _show_credential(ctx, stake_credential, intro_text, purpose="output")
 
 
-async def show_governance_registration_reward_credentials(
+async def show_cvote_registration_reward_credentials(
     ctx: Context,
     payment_credential: Credential,
     stake_credential: Credential,
     show_both_credentials: bool,
     show_payment_warning: bool,
 ) -> None:
-    intro_text = "The governance registration reward address is owned by this device. Its"
+    intro_text = "The vote key registration reward address is owned by this device. Its"
     await _show_credential(
-        ctx, payment_credential, intro_text, purpose="gov_reg_reward_address"
+        ctx, payment_credential, intro_text, purpose="cvote_reg_reward_address"
     )
     if show_both_credentials or show_payment_warning:
-        extra_text = (
-            GOVERNANCE_REWARD_ELIGIBILITY_WARNING if show_payment_warning else None
-        )
+        extra_text = CVOTE_REWARD_ELIGIBILITY_WARNING if show_payment_warning else None
         await _show_credential(
             ctx,
             stake_credential,
             intro_text,
-            purpose="gov_reg_reward_address",
+            purpose="cvote_reg_reward_address",
             extra_text=extra_text,
         )
 
@@ -385,13 +383,13 @@ async def _show_credential(
     ctx: Context,
     credential: Credential,
     intro_text: str,
-    purpose: Literal["address", "output", "gov_reg_reward_address"],
+    purpose: Literal["address", "output", "cvote_reg_reward_address"],
     extra_text: str | None = None,
 ) -> None:
     title = {
         "address": f"{ADDRESS_TYPE_NAMES[credential.address_type]} address",
         "output": "Confirm transaction",
-        "gov_reg_reward_address": "Confirm transaction",
+        "cvote_reg_reward_address": "Confirm transaction",
     }[purpose]
 
     props: list[PropertyType] = []
@@ -414,8 +412,8 @@ async def _show_credential(
         append((None, "Path is unusual."))
     if credential.is_mismatch:
         append((None, "Credential doesn't match payment credential."))
-    if credential.is_reward and purpose != "gov_reg_reward_address":
-        # for governance registrations, this is handled by extra_text at the end
+    if credential.is_reward and purpose != "cvote_reg_reward_address":
+        # for cvote registrations, this is handled by extra_text at the end
         append(("Address is a reward address.", None))
     if credential.is_no_staking:
         append(
@@ -775,13 +773,13 @@ def _format_stake_credential(
         raise ValueError
 
 
-async def confirm_governance_registration_delegation(
+async def confirm_cvote_registration_delegation(
     ctx: Context,
     public_key: str,
     weight: int,
 ) -> None:
     props: list[PropertyType] = [
-        ("Governance voting key registration", None),
+        ("Vote key registration (CIP-36)", None),
         ("Delegating to:", public_key),
     ]
     if weight is not None:
@@ -789,41 +787,41 @@ async def confirm_governance_registration_delegation(
 
     await confirm_properties(
         ctx,
-        "confirm_governance_registration_delegation",
+        "confirm_cvote_registration_delegation",
         title="Confirm transaction",
         props=props,
         br_code=ButtonRequestType.Other,
     )
 
 
-async def confirm_governance_registration_reward_address(
+async def confirm_cvote_registration_reward_address(
     ctx: Context,
     reward_address: str,
     should_show_payment_warning: bool,
 ) -> None:
     props = [
-        ("Governance voting key registration", None),
+        ("Vote key registration (CIP-36)", None),
         ("Rewards go to:", reward_address),
     ]
     if should_show_payment_warning:
-        props.append((GOVERNANCE_REWARD_ELIGIBILITY_WARNING, None))
+        props.append((CVOTE_REWARD_ELIGIBILITY_WARNING, None))
     await confirm_properties(
         ctx,
-        "confirm_governance_registration_reward_address",
+        "confirm_cvote_registration_reward_address",
         title="Confirm transaction",
         props=props,
         br_code=ButtonRequestType.Other,
     )
 
 
-async def confirm_governance_registration(
+async def confirm_cvote_registration(
     ctx: Context,
     public_key: str | None,
     staking_path: list[int],
     nonce: int,
     voting_purpose: int | None,
 ) -> None:
-    props: list[PropertyType] = [("Governance voting key registration", None)]
+    props: list[PropertyType] = [("Vote key registration (CIP-36)", None)]
     if public_key is not None:
         props.append(("Voting public key:", public_key))
     props.extend(
@@ -845,7 +843,7 @@ async def confirm_governance_registration(
 
     await confirm_properties(
         ctx,
-        "confirm_governance_registration",
+        "confirm_cvote_registration",
         title="Confirm transaction",
         props=props,
         br_code=ButtonRequestType.Other,

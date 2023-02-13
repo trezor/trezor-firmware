@@ -353,12 +353,12 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.BinanceTimeInForce
     trezor.enums.CardanoAddressType
     import trezor.enums.CardanoAddressType
+    trezor.enums.CardanoCVoteRegistrationFormat
+    import trezor.enums.CardanoCVoteRegistrationFormat
     trezor.enums.CardanoCertificateType
     import trezor.enums.CardanoCertificateType
     trezor.enums.CardanoDerivationType
     import trezor.enums.CardanoDerivationType
-    trezor.enums.CardanoGovernanceRegistrationFormat
-    import trezor.enums.CardanoGovernanceRegistrationFormat
     trezor.enums.CardanoNativeScriptHashDisplayFormat
     import trezor.enums.CardanoNativeScriptHashDisplayFormat
     trezor.enums.CardanoNativeScriptType

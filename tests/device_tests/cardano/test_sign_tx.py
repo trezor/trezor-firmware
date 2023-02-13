@@ -159,8 +159,10 @@ def _transform_expected_result(result):
             "type": supplement["type"],
             "auxiliary_data_hash": bytes.fromhex(supplement["auxiliary_data_hash"]),
         }
-        if governance_signature := supplement.get("governance_signature"):
+        if cvote_registration_signature := supplement.get(
+            "cvote_registration_signature"
+        ):
             transformed_result["auxiliary_data_supplement"][
-                "governance_signature"
-            ] = bytes.fromhex(governance_signature)
+                "cvote_registration_signature"
+            ] = bytes.fromhex(cvote_registration_signature)
     return transformed_result
