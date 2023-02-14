@@ -36,14 +36,15 @@ hardware core regular device test:
     - core fw regular debug build
   variables:
     PYTEST_TIMEOUT: "1200"
+    NIX_SHELL: "nix-shell"
   script:
     - cd ci/hardware_tests
     - set -a
     - source hardware.cfg
     - set +a
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
-    - nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
+    - $NIX_SHELL --run "cd ../.. && poetry install"
+    - $NIX_SHELL --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
+    - $NIX_SHELL --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 6h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -66,14 +67,15 @@ hardware core btconly device test:
   variables:
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
     PYTEST_TIMEOUT: "1200"
+    NIX_SHELL: "nix-shell"
   script:
     - cd ci/hardware_tests
     - set -a
     - source hardware.cfg
     - set +a
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
-    - nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
+    - $NIX_SHELL --run "cd ../.. && poetry install"
+    - $NIX_SHELL --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
+    - $NIX_SHELL --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 4h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -93,14 +95,15 @@ hardware core monero test:
     - core fw regular debug build
   variables:
     TESTOPTS: --trezor_path webusb
+    NIX_SHELL: "nix-shell"
   script:
     - cd ci/hardware_tests
     - set -a
     - source hardware.cfg
     - set +a
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
-    - nix-shell --arg fullDeps true --run "cd ../../core/tests && ./run_tests_device_emu_monero.sh $TESTOPTS | ts -s"
+    - $NIX_SHELL --run "cd ../.. && poetry install"
+    - $NIX_SHELL --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
+    - $NIX_SHELL --arg fullDeps true --run "cd ../../core/tests && ./run_tests_device_emu_monero.sh $TESTOPTS | ts -s"
   timeout: 1h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -122,9 +125,11 @@ hardware legacy regular device test:
     - tpmb
   needs:
     - legacy fw regular debug build
+  variables:
+    NIX_SHELL: "nix-shell"
   script:
     - cd ci/hardware_tests
-    - nix-shell --run "./t1_hw_test.sh | ts -s"
+    - $NIX_SHELL --run "./t1_hw_test.sh | ts -s"
   timeout: 1h10m
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -138,6 +143,7 @@ hardware legacy btconly device test:
   stage: test
   variables:
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
+    NIX_SHELL: "nix-shell"
   only:
     - schedules  # nightly build
     - /^legacy\//
@@ -150,7 +156,7 @@ hardware legacy btconly device test:
     - legacy fw btconly debug build
   script:
     - cd ci/hardware_tests
-    - nix-shell --run "./t1_hw_test.sh | ts -s"
+    - $NIX_SHELL --run "./t1_hw_test.sh | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
