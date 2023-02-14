@@ -1,6 +1,8 @@
 use super::theme;
 use crate::ui::{
-    component::{label::Label, text::TextStyle, Child, Component, Event, EventCtx},
+    component::{
+        base::ComponentExt, label::Label, text::TextStyle, Child, Component, Event, EventCtx,
+    },
     display::{self, toif::Icon, Color},
     geometry::{Alignment, Insets, Offset, Rect},
     util::icon_text_center,
@@ -44,6 +46,23 @@ where
 
     pub fn inner(&self) -> &T {
         self.content.inner()
+    }
+
+    pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: U) {
+        self.title.mutate(ctx, |ctx, t| {
+            t.set_text(new_title);
+            t.request_complete_repaint(ctx)
+        })
+    }
+
+    pub fn update_content<F>(&mut self, ctx: &mut EventCtx, update_fn: F)
+    where
+        F: Fn(&mut T),
+    {
+        self.content.mutate(ctx, |ctx, c| {
+            update_fn(c);
+            c.request_complete_repaint(ctx)
+        })
     }
 }
 

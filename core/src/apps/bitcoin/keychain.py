@@ -384,7 +384,7 @@ def address_n_to_name(
 ) -> str | None:
     ACCOUNT_TYPES = (
         AccountType(
-            "Legacy account",
+            "Legacy",
             PATTERN_BIP44,
             InputScriptType.SPENDADDRESS,
             require_segwit=True,
@@ -392,7 +392,7 @@ def address_n_to_name(
             require_taproot=False,
         ),
         AccountType(
-            "Account",
+            "",
             PATTERN_BIP44,
             InputScriptType.SPENDADDRESS,
             require_segwit=False,
@@ -400,7 +400,7 @@ def address_n_to_name(
             require_taproot=False,
         ),
         AccountType(
-            "Legacy SegWit account",
+            "L. SegWit",
             PATTERN_BIP49,
             InputScriptType.SPENDP2SHWITNESS,
             require_segwit=True,
@@ -408,7 +408,7 @@ def address_n_to_name(
             require_taproot=False,
         ),
         AccountType(
-            "SegWit account",
+            "SegWit",
             PATTERN_BIP84,
             InputScriptType.SPENDWITNESS,
             require_segwit=True,
@@ -416,7 +416,7 @@ def address_n_to_name(
             require_taproot=False,
         ),
         AccountType(
-            "Taproot account",
+            "Taproot",
             PATTERN_BIP86,
             InputScriptType.SPENDTAPROOT,
             require_segwit=False,
@@ -424,7 +424,7 @@ def address_n_to_name(
             require_taproot=True,
         ),
         AccountType(
-            "Coinjoin account",
+            "Coinjoin",
             PATTERN_SLIP25_TAPROOT,
             InputScriptType.SPENDTAPROOT,
             require_segwit=False,

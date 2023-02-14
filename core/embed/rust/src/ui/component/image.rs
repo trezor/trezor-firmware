@@ -87,6 +87,12 @@ impl BlendedImage {
         }
     }
 
+    // NOTE: currently this function is used too rarely to justify writing special
+    // case for unblended image.
+    pub fn single(icon: Icon, color: Color, area_color: Color) -> Self {
+        Self::new(icon, icon, color, color, area_color)
+    }
+
     fn paint_image(&self) {
         display::icon_over_icon(
             None,

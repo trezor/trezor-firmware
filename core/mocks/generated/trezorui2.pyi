@@ -82,10 +82,23 @@ def confirm_blob(
     data: str | bytes,
     description: str | None,
     extra: str | None,
+    verb: str | None = None,
     verb_cancel: str | None = None,
     hold: bool = False,
 ) -> object:
     """Confirm byte sequence data."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def confirm_address(
+    *,
+    title: str,
+    data: str | bytes,
+    description: str | None,
+    extra: str | None,
+) -> object:
+    """Confirm address. Similar to `confirm_blob` but has corner info button
+    and allows left swipe which does the same thing as the button."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -117,6 +130,18 @@ def show_qr(
     case_sensitive: bool,
 ) -> object:
     """Show QR code."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_address_details(
+    *,
+    address: str,
+    case_sensitive: bool,
+    account: str | None,
+    path: str | None,
+    xpubs: list[tuple[str, str]],
+) -> object:
+    """Show address details - QR code, account, path, cosigner xpubs."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -220,6 +245,11 @@ def show_info(
     time_ms: int = 0,
 ) -> object:
     """Info modal. No buttons shown when `button` is empty string."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_mismatch() -> object:
+    """Warning modal, receiving address mismatch."""
 
 
 # rust/src/ui/model_tt/layout.rs

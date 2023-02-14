@@ -164,8 +164,6 @@ async def show_address(
     network: str | None = None,
     multisig_index: int | None = None,
     xpubs: Sequence[str] = (),
-    address_extra: str | None = None,
-    title_qr: str | None = None,
 ) -> None:
     result = await interact(
         ctx,

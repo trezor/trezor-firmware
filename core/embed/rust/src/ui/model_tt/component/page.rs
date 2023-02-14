@@ -1,7 +1,8 @@
 use crate::ui::{
     component::{
-        base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, FixedHeightBar, Label,
-        Pad, Paginate,
+        base::ComponentExt,
+        paginated::{AuxPageMsg, PageMsg},
+        Component, Event, EventCtx, FixedHeightBar, Label, Pad, Paginate,
     },
     display::{self, toif::Icon, Color},
     geometry::{Insets, Rect},
@@ -21,6 +22,7 @@ pub struct SwipePage<T, U> {
     scrollbar: ScrollBar,
     hint: Label<&'static str>,
     button_back: Option<Button<&'static str>>,
+    swipe_left: bool,
     fade: Option<u16>,
 }
 
@@ -39,6 +41,7 @@ where
             pad: Pad::with_background(background),
             hint: Label::centered("SWIPE TO CONTINUE", theme::label_page_hint()),
             button_back: None,
+            swipe_left: false,
             fade: None,
         }
     }
@@ -48,9 +51,15 @@ where
         self
     }
 
+    pub fn with_swipe_left(mut self) -> Self {
+        self.swipe_left = true;
+        self
+    }
+
     fn setup_swipe(&mut self) {
         self.swipe.allow_up = self.scrollbar.has_next_page();
         self.swipe.allow_down = self.scrollbar.has_previous_page();
+        self.swipe.allow_left = self.swipe_left;
     }
 
     fn on_page_change(&mut self, ctx: &mut EventCtx) {
@@ -138,6 +147,9 @@ where
                     self.on_page_change(ctx);
                     return None;
                 }
+                SwipeDirection::Left if self.swipe_left => {
+                    return Some(PageMsg::Aux(AuxPageMsg::SwipeLeft));
+                }
                 _ => {
                     // Ignore other directions.
                 }
@@ -152,7 +164,7 @@ where
             }
         } else {
             if let Some(ButtonMsg::Clicked) = self.button_back.event(ctx, event) {
-                return Some(PageMsg::GoBack);
+                return Some(PageMsg::Aux(AuxPageMsg::GoBack));
             }
             self.hint.event(ctx, event);
         }
