@@ -96,6 +96,9 @@ DATA = {
 
 def input_flow_show_more(client: Client):
     """Clicks show_more button wherever possible"""
+    yield  # confirm address
+    client.debug.press_yes()
+
     yield  # confirm domain
     client.debug.wait_layout()
     client.debug.click(SHOW_MORE)
@@ -136,6 +139,9 @@ def input_flow_show_more(client: Client):
 
 def input_flow_cancel(client: Client):
     """Clicks cancelling button"""
+    yield  # confirm address
+    client.debug.press_yes()
+
     yield  # confirm domain
     client.debug.press_no()
 
