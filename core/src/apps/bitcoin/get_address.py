@@ -41,7 +41,7 @@ async def get_address(
     from apps.common.paths import address_n_to_str, validate_path
 
     from . import addresses
-    from .keychain import validate_path_against_script_type
+    from .keychain import address_n_to_name, validate_path_against_script_type
     from .multisig import multisig_pubkey_index
 
     multisig = msg.multisig  # local_cache_attribute
@@ -95,6 +95,7 @@ async def get_address(
             mac = get_address_mac(address, coin.slip44, keychain)
 
     if msg.show_display:
+        path = address_n_to_str(address_n)
         if multisig:
             if multisig.nodes:
                 pubnodes = multisig.nodes
@@ -102,23 +103,30 @@ async def get_address(
                 pubnodes = [hd.node for hd in multisig.pubkeys]
             multisig_index = multisig_pubkey_index(multisig, node.public_key())
 
-            title = f"Multisig {multisig.m} of {len(pubnodes)}"
             await show_address(
                 ctx,
                 address_short,
                 case_sensitive=address_case_sensitive,
-                title=title,
+                path=path,
                 multisig_index=multisig_index,
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
+                account=f"Multisig {multisig.m} of {len(pubnodes)}",
             )
         else:
-            title = address_n_to_str(address_n)
+            account_name = address_n_to_name(coin, address_n, script_type)
+            if account_name is None:
+                account = "Unknown path"
+            elif account_name == "":
+                account = coin.coin_shortcut
+            else:
+                account = f"{coin.coin_shortcut} {account_name}"
             await show_address(
                 ctx,
                 address_short,
                 address_qr=address,
                 case_sensitive=address_case_sensitive,
-                title=title,
+                path=path,
+                account=account,
             )
 
     return Address(address=address, mac=mac)

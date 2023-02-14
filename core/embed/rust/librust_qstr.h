@@ -21,6 +21,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_jpeg_test;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_homescreen;
+  MP_QSTR_confirm_address;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_coinjoin;
@@ -40,6 +41,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_success;
   MP_QSTR_show_warning;
   MP_QSTR_show_info;
+  MP_QSTR_show_mismatch;
   MP_QSTR_show_simple;
   MP_QSTR_request_number;
   MP_QSTR_request_pin;
@@ -56,6 +58,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_progress;
+  MP_QSTR_show_address_details;
 
   MP_QSTR_attach_timer_fn;
   MP_QSTR_touch_event;
@@ -107,6 +110,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_time_ms;
   MP_QSTR_app_name;
   MP_QSTR_icon_name;
+  MP_QSTR_account;
   MP_QSTR_accounts;
   MP_QSTR_indeterminate;
   MP_QSTR_notification;
@@ -114,4 +118,5 @@ static void _librust_qstrs(void) {
   MP_QSTR_bootscreen;
   MP_QSTR_skip_first_paint;
   MP_QSTR_wrong_pin;
+  MP_QSTR_xpubs;
 }

@@ -3,6 +3,15 @@ use crate::ui::component::{
     FormattedText,
 };
 
+pub enum AuxPageMsg {
+    /// Page component was instantiated with BACK button on every page and it
+    /// was pressed.
+    GoBack,
+
+    /// Page component was configured to react to swipes and user swiped left.
+    SwipeLeft,
+}
+
 /// Common message type for pagination components.
 pub enum PageMsg<T, U> {
     /// Pass-through from paged component.
@@ -12,9 +21,8 @@ pub enum PageMsg<T, U> {
     /// "OK" and "Cancel" buttons.
     Controls(U),
 
-    /// Page component was instantiated with BACK button on every page and it
-    /// was pressed.
-    GoBack,
+    /// Auxilliary events used by exotic pages on touchscreens.
+    Aux(AuxPageMsg),
 }
 
 pub trait Paginate {

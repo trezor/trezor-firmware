@@ -129,9 +129,11 @@ class LayoutContent:
 
         # First line should have content after the tag, last line does not store content
         tag = f"< {tag_name}"
-        if tag in self.lines[0]:
-            first_line = self.lines[0].split(tag)[1]
-            all_lines = [first_line] + self.lines[1:-1]
+        for i in range(len(self.lines)):
+            if tag in self.lines[i]:
+                first_line = self.lines[i].split(tag)[1]
+                all_lines = [first_line] + self.lines[i + 1 : -1]
+                break
         else:
             all_lines = self.lines[1:-1]
 

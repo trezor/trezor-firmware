@@ -1,8 +1,11 @@
 use crate::ui::{
     component::{
         image::BlendedImage,
-        text::paragraphs::{
-            Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecShort, Paragraphs, VecExt,
+        text::{
+            paragraphs::{
+                Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecShort, Paragraphs, VecExt,
+            },
+            TextStyle,
         },
         Child, Component, Event, EventCtx, Never,
     },
@@ -116,13 +119,17 @@ where
         }
     }
 
-    pub fn with_description(mut self, description: T) -> Self {
-        if !description.as_ref().is_empty() {
+    pub fn with_text(mut self, style: &'static TextStyle, text: T) -> Self {
+        if !text.as_ref().is_empty() {
             self.paragraphs
                 .inner_mut()
-                .add(Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, description).centered());
+                .add(Paragraph::new(style, text).centered());
         }
         self
+    }
+
+    pub fn with_description(self, description: T) -> Self {
+        self.with_text(&theme::TEXT_NORMAL_OFF_WHITE, description)
     }
 
     pub fn new_shares(lines: [T; 4], controls: U) -> Self {

@@ -30,12 +30,11 @@ async def get_address(
     address = node.nem_address(network)
 
     if msg.show_display:
-        title = address_n_to_str(address_n)
         await show_address(
             ctx,
             address,
             case_sensitive=False,
-            title=title,
+            path=address_n_to_str(address_n),
             network=get_network_str(network),
         )
 

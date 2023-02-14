@@ -1,3 +1,4 @@
+mod address_details;
 mod button;
 mod dialog;
 mod fido;
@@ -7,6 +8,7 @@ mod frame;
 mod hold_to_confirm;
 #[cfg(feature = "dma2d")]
 mod homescreen;
+mod horizontal_page;
 mod keyboard;
 mod loader;
 mod number_input;
@@ -17,9 +19,10 @@ mod scroll;
 mod swipe;
 mod welcome_screen;
 
+pub use address_details::AddressDetails;
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
-    CancelInfoConfirmMsg, IconText, SelectWordMsg,
+    CancelInfoConfirmMsg, FloatingButton, FloatingButtonMsg, IconText, SelectWordMsg,
 };
 pub use dialog::{Dialog, DialogMsg, IconDialog};
 pub use fido::{FidoConfirm, FidoMsg};
@@ -27,6 +30,7 @@ pub use frame::{Frame, NotificationFrame};
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 #[cfg(feature = "dma2d")]
 pub use homescreen::{Homescreen, HomescreenMsg, Lockscreen};
+pub use horizontal_page::HorizontalPage;
 pub use keyboard::{
     bip39::Bip39Input,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},

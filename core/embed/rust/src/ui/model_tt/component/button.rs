@@ -2,7 +2,8 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, GridPlaced, Map, TimerToken,
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, Floating, GridPlaced, Map,
+            Paginate, TimerToken, VSplit,
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
@@ -34,7 +35,7 @@ impl<T> Button<T> {
     /// (positive).
     pub const BASELINE_OFFSET: i16 = -3;
 
-    pub fn new(content: ButtonContent<T>) -> Self {
+    pub const fn new(content: ButtonContent<T>) -> Self {
         Self {
             content,
             area: Rect::zero(),
@@ -46,19 +47,19 @@ impl<T> Button<T> {
         }
     }
 
-    pub fn with_text(text: T) -> Self {
+    pub const fn with_text(text: T) -> Self {
         Self::new(ButtonContent::Text(text))
     }
 
-    pub fn with_icon(icon: Icon) -> Self {
+    pub const fn with_icon(icon: Icon) -> Self {
         Self::new(ButtonContent::Icon(icon))
     }
 
-    pub fn with_icon_and_text(content: IconText) -> Self {
+    pub const fn with_icon_and_text(content: IconText) -> Self {
         Self::new(ButtonContent::IconAndText(content))
     }
 
-    pub fn with_icon_blend(bg: Icon, fg: Icon, fg_offset: Offset) -> Self {
+    pub const fn with_icon_blend(bg: Icon, fg: Icon, fg_offset: Offset) -> Self {
         Self::new(ButtonContent::IconBlend(bg, fg, fg_offset))
     }
 
@@ -425,6 +426,29 @@ impl<T> Button<T> {
         Self::cancel_confirm(left, right, right_size_factor)
     }
 
+    pub fn cancel_confirm_square(
+        left: Button<T>,
+        right: Button<T>,
+    ) -> CancelConfirmSquare<
+        T,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+    >
+    where
+        T: AsRef<str>,
+    {
+        theme::button_bar(VSplit::new(
+            theme::BUTTON_HEIGHT,
+            theme::BUTTON_SPACING,
+            left.map(|msg| {
+                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Cancelled)
+            }),
+            right.map(|msg| {
+                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+            }),
+        ))
+    }
+
     pub fn cancel_info_confirm(
         confirm: T,
         info: T,
@@ -542,6 +566,9 @@ type CancelInfoConfirm<T, F0, F1, F2> = FixedHeightBar<(
     Map<GridPlaced<Button<T>>, F2>,
 )>;
 
+type CancelConfirmSquare<T, F0, F1> =
+    FixedHeightBar<VSplit<Map<Button<T>, F0>, Map<Button<T>, F1>>>;
+
 pub enum CancelInfoConfirmMsg {
     Cancelled,
     Info,
@@ -608,5 +635,89 @@ impl IconText {
             self.icon
                 .draw(icon_pos, CENTER, style.text_color, style.button_color);
         }
+    }
+}
+
+pub struct FloatingButton<T> {
+    inner: T,
+    button: Floating<Button<&'static str>>,
+}
+
+pub enum FloatingButtonMsg<T> {
+    ButtonClicked,
+    Content(T),
+}
+
+impl<T> FloatingButton<T>
+where
+    T: Component,
+{
+    pub const fn top_right_corner(icon: Icon, inner: T) -> Self {
+        Self {
+            inner,
+            button: Floating::top_right(
+                theme::CORNER_BUTTON_SIDE,
+                theme::CORNER_BUTTON_SPACING,
+                Button::with_icon(icon),
+            ),
+        }
+    }
+
+    pub fn inner(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<T> Component for FloatingButton<T>
+where
+    T: Component,
+{
+    type Msg = FloatingButtonMsg<T::Msg>;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.button.place(bounds);
+        self.inner.place(bounds)
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
+            return Some(FloatingButtonMsg::ButtonClicked);
+        }
+        self.inner.event(ctx, event).map(FloatingButtonMsg::Content)
+    }
+
+    fn paint(&mut self) {
+        self.inner.paint();
+        self.button.paint();
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.inner.bounds(sink);
+        self.button.bounds(sink);
+    }
+}
+
+impl<T> Paginate for FloatingButton<T>
+where
+    T: Paginate,
+{
+    fn page_count(&mut self) -> usize {
+        self.inner.page_count()
+    }
+
+    fn change_page(&mut self, to_page: usize) {
+        self.inner.change_page(to_page)
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for FloatingButton<T>
+where
+    T: Component + crate::trace::Trace,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("FloatingButton");
+        t.field("inner", self.inner());
+        t.close();
     }
 }
