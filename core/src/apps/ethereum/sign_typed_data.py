@@ -27,21 +27,27 @@ async def sign_typed_data(
     from trezor.crypto.curve import secp256k1
     from apps.common import paths
     from .helpers import address_from_bytes
+    from .layout import require_confirm_address
     from trezor.messages import EthereumTypedDataSignature
 
     await paths.validate_path(ctx, keychain, msg.address_n)
+
+    node = keychain.derive(msg.address_n)
+    address_bytes: bytes = node.ethereum_pubkeyhash()
+
+    # Display address so user can validate it
+    await require_confirm_address(ctx, address_bytes)
 
     data_hash = await _generate_typed_data_hash(
         ctx, msg.primary_type, msg.metamask_v4_compat
     )
 
-    node = keychain.derive(msg.address_n)
     signature = secp256k1.sign(
         node.private_key(), data_hash, False, secp256k1.CANONICAL_SIG_ETHEREUM
     )
 
     return EthereumTypedDataSignature(
-        address=address_from_bytes(node.ethereum_pubkeyhash()),
+        address=address_from_bytes(address_bytes),
         signature=signature[1:] + signature[0:1],
     )
 

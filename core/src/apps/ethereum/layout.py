@@ -114,6 +114,19 @@ def require_confirm_unknown_token(
     )
 
 
+def require_confirm_address(ctx: Context, address_bytes: bytes) -> Awaitable[None]:
+    from ubinascii import hexlify
+    from trezor.ui.layouts import confirm_address
+
+    address_hex = "0x" + hexlify(address_bytes).decode()
+    return confirm_address(
+        ctx,
+        "Signing address",
+        address_hex,
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
 def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitable[None]:
     return confirm_blob(
         ctx,
