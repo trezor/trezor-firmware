@@ -90,13 +90,19 @@ async def select_word(
     count: int,
     group_index: int | None = None,
 ) -> str:
-    assert len(words) == 3
     if share_index is None:
         title: str = "CHECK SEED"
     elif group_index is None:
         title = f"CHECK SHARE #{share_index + 1}"
     else:
         title = f"CHECK G{group_index + 1} - SHARE {share_index + 1}"
+
+    # It may happen (with a very low probability)
+    # that there will be less than three unique words to choose from.
+    # In that case, duplicating the last word to make it three.
+    words = list(words)
+    while len(words) < 3:
+        words.append(words[-1])
 
     result = await ctx.wait(
         RustLayout(
