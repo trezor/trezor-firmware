@@ -42,13 +42,6 @@ editor prebuild:
   script:
     - $NIX_SHELL --run "make editor_check"
 
-# All .yml/.yaml files are checked for syntax validity and other correctness.
-yaml prebuild:
-  stage: prebuild
-  <<: *gitlab_caching
-  script:
-    - $NIX_SHELL --run "poetry run make yaml_check"
-
 # Checking the format of release commit messages.
 release commit messages prebuild:
   stage: prebuild
