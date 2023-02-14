@@ -19,7 +19,7 @@ core unix coverage posttest:
     - core u2f test
     - core fido2 test
   script:
-    - cached-nix-shell --run "poetry run make -C core coverage"
+    - $NIX_SHELL --run "poetry run make -C core coverage"
   coverage: '/COVERAGE: \d+%/'
   artifacts:
     name: core-unix-coverage-posttest
@@ -39,7 +39,7 @@ unix ui changes:
     - core device test
     - legacy device test
   script:
-    - cached-nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff"
+    - $NIX_SHELL --run "poetry run python -m tests.ui_tests.reporting master-diff"
     - mv tests/ui_tests/reports/master_diff .
   artifacts:
     name: core-unix-ui-changes

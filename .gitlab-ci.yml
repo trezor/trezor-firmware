@@ -19,6 +19,11 @@ variables:
 
   # No need for TLS because everything runs on the same machine
   DOCKER_TLS_CERTDIR: ""
+
+  # Hardware tests don't use docker so there's no benefit of prebuilt cache, however they
+  # still run the before_script from this file.
+  NIX_SHELL: "cached-nix-shell"
+
 stages:
   - environment
   - prebuild
@@ -29,10 +34,9 @@ stages:
 
 before_script:
   - . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh || true
-  - which cached-nix-shell > /dev/null || alias cached-nix-shell=nix-shell
-  - cached-nix-shell --run "poetry install --remove-untracked"
-  - export LEGACY_VERSION=$(cached-nix-shell --run "./tools/version.sh legacy/firmware/version.h")
-  - export CORE_VERSION=$(cached-nix-shell --run "./tools/version.sh core/embed/firmware/version.h")
+  - $NIX_SHELL --run "poetry install --remove-untracked"
+  - export LEGACY_VERSION=$($NIX_SHELL --run "./tools/version.sh legacy/firmware/version.h")
+  - export CORE_VERSION=$($NIX_SHELL --run "./tools/version.sh core/embed/firmware/version.h")
 
 include:
   - ci/environment.yml
