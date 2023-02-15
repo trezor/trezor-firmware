@@ -28,7 +28,6 @@
 #include <unistd.h>
 
 #include "profile.h"
-#include "touch.h"
 #include "usb.h"
 
 #include "memzero.h"

@@ -29,7 +29,9 @@
 #include "random_delays.h"
 #include "rng.h"
 #include "secbool.h"
-#include "touch.h"
+#ifdef USE_TOUCH
+#include "touch/touch.h"
+#endif
 #include "usb.h"
 #include "version.h"
 
@@ -215,8 +217,10 @@ static void check_bootloader_version(void) {
 
 int main(void) {
   random_delays_init();
+#ifdef USE_TOUCH
   touch_init();
   touch_power_on();
+#endif
 
   mpu_config_bootloader();
 

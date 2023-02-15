@@ -19,6 +19,8 @@ if TREZOR_MODEL in ('1', ):
              )
     Return()
 
+FEATURES_WANTED = ["input", "rgb_led"]
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -133,12 +135,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/vectortable.s',
 ]
 
-if TREZOR_MODEL in ('R'):
-    SOURCE_TREZORHAL.append('embed/trezorhal/button.c')
-    SOURCE_TREZORHAL.append('embed/trezorhal/rgb_led.c')
-if TREZOR_MODEL in ('T',):
-    SOURCE_TREZORHAL.append('embed/trezorhal/touch.c')
-
 if DMA2D:
     SOURCE_STMHAL.append('vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c')
     SOURCE_TREZORHAL.append('embed/trezorhal/dma2d.c')
@@ -155,7 +151,7 @@ tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
-tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
+FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
 env.Replace(
     CP='cp',

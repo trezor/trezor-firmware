@@ -1,6 +1,9 @@
 #ifndef _TREZOR_R_V3_H
 #define _TREZOR_R_V3_H
 
+#define USE_BUTTON 1
+#define USE_SBU 1
+
 #include "displays/ug-2828tswig01.h"
 
 #define BTN_LEFT_PIN GPIO_PIN_0

@@ -72,7 +72,7 @@ void mpu_config_bootloader(void) {
               LL_MPU_REGION_SIZE_1GB | LL_MPU_REGION_FULL_ACCESS |
               MPU_RASR_XN_Msk;
 
-#ifdef STM32F427xx
+#if defined STM32F427xx || defined STM32F429xx
   // CCMRAM (0x10000000 - 0x1000FFFF, read-write, execute never)
   MPU->RNR = MPU_REGION_NUMBER5;
   MPU->RBAR = CCMDATARAM_BASE;
@@ -153,7 +153,7 @@ void mpu_config_firmware(void) {
               LL_MPU_REGION_SIZE_1GB | LL_MPU_REGION_FULL_ACCESS |
               MPU_RASR_XN_Msk;
 
-#ifdef STM32F427xx
+#if defined STM32F427xx || defined STM32F429xx
   // CCMRAM (0x10000000 - 0x1000FFFF, read-write, execute never)
   MPU->RNR = MPU_REGION_NUMBER7;
   MPU->RBAR = CCMDATARAM_BASE;
