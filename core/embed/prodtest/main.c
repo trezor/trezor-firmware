@@ -32,7 +32,7 @@
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
-#include "touch.h"
+#include "touch/touch.h"
 #include "usb.h"
 
 #include "memzero.h"

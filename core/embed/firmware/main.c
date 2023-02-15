@@ -44,24 +44,28 @@
 #include "image.h"
 #include "mpu.h"
 #include "random_delays.h"
-#ifdef TREZOR_MODEL_R
+#ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
-#ifdef TREZOR_MODEL_T
+#ifdef USE_DMA2D
 #include "dma2d.h"
 #endif
-#if defined TREZOR_MODEL_R || defined TREZOR_MODEL_1
+#ifdef USE_BUTTON
 #include "button.h"
+#endif
+#ifdef USE_TOUCH
+#include "touch/touch.h"
+#endif
+#ifdef USE_SD_CARD
+#include "sdcard.h"
 #endif
 
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
 #endif
 #include "rng.h"
-#include "sdcard.h"
 #include "stm32.h"
 #include "supervise.h"
-#include "touch.h"
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
@@ -111,18 +115,23 @@ int main(void) {
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
 #endif
 
-#if defined TREZOR_MODEL_1
+#if defined TREZOR_MODEL_T
+  set_core_clock(CLOCK_180_MHZ);
+#endif
+
+#ifdef USE_BUTTON
   button_init();
 #endif
 
-#if defined TREZOR_MODEL_R
-  button_init();
+#ifdef USE_RGB_LED
   rgb_led_init();
 #endif
 
-#if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
+#ifdef USE_TOUCH
   touch_init();
+#endif
+
+#ifdef USE_SD_CARD
   sdcard_init();
 #endif
 

@@ -34,7 +34,7 @@ typedef struct {
   uint32_t plln;
 } clock_conf_t;
 
-#ifdef STM32F427xx
+#if defined STM32F427xx || defined STM32F429xx
 #ifdef TREZOR_MODEL_T
 #define DEFAULT_FREQ 168U
 #define DEFAULT_PLLQ 7U

@@ -1,6 +1,8 @@
 #ifndef _TREZOR_1_H
 #define _TREZOR_1_H
 
+#define USE_BUTTON 1
+
 #include "displays/vg-2864ksweg01.h"
 
 #define BTN_LEFT_PIN GPIO_PIN_5

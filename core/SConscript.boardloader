@@ -18,6 +18,8 @@ if TREZOR_MODEL in ('1', ):
              )
     Return()
 
+FEATURES_WANTED = ["sdcard"]
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -92,7 +94,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/flash.c',
     'embed/trezorhal/lowlevel.c',
     'embed/trezorhal/mini_printf.c',
-    'embed/trezorhal/sdcard.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/systick.c',
     'embed/trezorhal/rng.c',
@@ -102,7 +103,7 @@ SOURCE_TREZORHAL = [
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
-tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
+FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
 env.Replace(
     CP='cp',

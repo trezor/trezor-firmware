@@ -16,6 +16,8 @@ FEATURE_FLAGS = {
     "SYSTEM_VIEW": False,
 }
 
+FEATURES_WANTED = ["input", "sbu", "sdcard", "rgb_led"]
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -376,21 +378,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
-if TREZOR_MODEL in ('T',):
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/sbu.c',
-        'embed/trezorhal/sdcard.c',
-        'embed/trezorhal/touch.c',
-    ]
-elif TREZOR_MODEL in ('R',):
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/button.c',
-        'embed/trezorhal/rgb_led.c',
-    ]
-elif TREZOR_MODEL in ('1',):
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/button.c',
-    ]
 
 
 if DMA2D:
@@ -435,7 +422,7 @@ SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0'), PYOPT, BITCOIN_ONLY))
 
-tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
+FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
 env.Tool('micropython')
 

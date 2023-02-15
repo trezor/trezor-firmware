@@ -28,7 +28,7 @@
 #include <unistd.h>
 
 #include "button.h"
-#include "touch.h"
+#include "touch/touch.h"
 #include "usb.h"
 
 // Whether USB data pins were connected on last check (USB configured)

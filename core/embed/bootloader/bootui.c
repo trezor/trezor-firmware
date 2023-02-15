@@ -34,12 +34,12 @@
 #include "mini_printf.h"
 #include "version.h"
 
-#if defined TREZOR_MODEL_T
-#include "touch.h"
-#elif defined TREZOR_MODEL_R
+#if defined USE_TOUCH
+#include "touch/touch.h"
+#elif defined USE_BUTTON
 #include "button.h"
 #else
-#error Unknown Trezor model
+#error No input method defined
 #endif
 
 #define BACKLIGHT_NORMAL 150
@@ -376,7 +376,7 @@ void ui_fadeout(void) {
 
 int ui_user_input(int zones) {
   for (;;) {
-#if defined TREZOR_MODEL_T
+#if defined USE_TOUCH
     uint32_t evt = touch_click();
     uint16_t x = touch_unpack_x(evt);
     uint16_t y = touch_unpack_y(evt);
@@ -400,7 +400,7 @@ int ui_user_input(int zones) {
         y < 54 + 32) {
       return INPUT_INFO;
     }
-#elif defined TREZOR_MODEL_R
+#elif defined USE_BUTTON
     uint32_t evt = button_read();
     if (evt == (BTN_LEFT | BTN_EVT_DOWN)) {
       return INPUT_CANCEL;
@@ -409,7 +409,7 @@ int ui_user_input(int zones) {
       return INPUT_CONFIRM;
     }
 #else
-#error Unknown Trezor model
+#error No input method defined
 #endif
   }
 }

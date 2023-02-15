@@ -6,6 +6,8 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
+FEATURES_WANTED = ["input", "sdcard"]
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -78,11 +80,8 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/rng.c',
-    'embed/trezorhal/sbu.c',
-    'embed/trezorhal/sdcard.c',
     'embed/trezorhal/systick.c',
     'embed/trezorhal/stm32.c',
-    'embed/trezorhal/touch.c',
     'embed/trezorhal/usb.c',
     'embed/trezorhal/usbd_conf.c',
     'embed/trezorhal/usbd_core.c',
@@ -100,7 +99,7 @@ tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
-tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
+FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
 env.Replace(
     CP='cp',

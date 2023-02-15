@@ -26,7 +26,7 @@
 #include "flash.h"
 #include "image.h"
 #include "rng.h"
-#ifdef TREZOR_MODEL_T
+#ifdef USE_SD_CARD
 #include "sdcard.h"
 #endif
 
@@ -68,7 +68,7 @@ struct BoardCapabilities capablities
 extern uint32_t sram_start[];
 #define sdcard_buf sram_start
 
-#if defined TREZOR_MODEL_T
+#if defined USE_SD_CARD
 static uint32_t check_sdcard(void) {
   if (sectrue != sdcard_power_on()) {
     return 0;
@@ -218,7 +218,7 @@ int main(void) {
   display_init();
   display_clear();
 
-#if defined TREZOR_MODEL_T
+#if defined USE_SD_CARD
   sdcard_init();
 
   if (check_sdcard()) {

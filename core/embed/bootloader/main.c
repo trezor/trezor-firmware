@@ -30,12 +30,16 @@
 #include "random_delays.h"
 #include "secbool.h"
 #include "stm32.h"
-#ifdef TREZOR_MODEL_T
+#ifdef USE_DMA2D
 #include "dma2d.h"
-#include "touch.h"
 #endif
-#if defined TREZOR_MODEL_R
+#ifdef USE_TOUCH
+#include "touch/touch.h"
+#endif
+#ifdef USE_BUTTON
 #include "button.h"
+#endif
+#ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
 #include "usb.h"
@@ -259,12 +263,16 @@ int main(void) {
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
   display_set_little_endian();
+#endif
+#ifdef USE_TOUCH
   touch_power_on();
   touch_init();
 #endif
 
-#if defined TREZOR_MODEL_R
+#ifdef USE_BUTTON
   button_init();
+#endif
+#ifdef USE_RGB_LED
   rgb_led_init();
 #endif
 
@@ -285,7 +293,7 @@ int main(void) {
   // delay to detect touch or skip if we know we are staying in bootloader
   // anyway
   uint32_t touched = 0;
-#if defined TREZOR_MODEL_T
+#ifdef USE_TOUCH
   if (stay_in_bootloader != sectrue) {
     for (int i = 0; i < 100; i++) {
       touched = touch_is_detected() | touch_read();
@@ -295,7 +303,7 @@ int main(void) {
       hal_delay(1);
     }
   }
-#elif defined TREZOR_MODEL_R
+#elif defined USE_BUTTON
   button_read();
   if (button_state_left() == 1) {
     touched = 1;
@@ -425,9 +433,9 @@ int main(void) {
 
     if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
       ui_screen_boot_click();
-#if defined TREZOR_MODEL_T
+#if defined USE_TOUCH
       touch_click();
-#elif defined TREZOR_MODEL_R
+#elif defined USE_BUTTON
       for (;;) {
         button_read();
         if (button_state_left() != 0 && button_state_right() != 0) {
