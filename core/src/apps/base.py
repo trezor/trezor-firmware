@@ -128,6 +128,7 @@ def get_features() -> Features:
         f.auto_lock_delay_ms = storage_device.get_autolock_delay_ms()
         f.display_rotation = storage_device.get_rotation()
         f.experimental_features = storage_device.get_experimental_features()
+        f.hide_passphrase_from_host = storage_device.get_hide_passphrase_from_host()
 
     return f
 

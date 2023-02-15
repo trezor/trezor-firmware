@@ -122,6 +122,7 @@ message Features {
     optional bool experimental_features = 40;   // are experimental message types enabled?
     optional bool busy = 41;                    // is the device busy, showing "Do not disconnect"?
     optional HomescreenFormat homescreen_format = 42;   // format of the homescreen, 1 = TOIf 144x144, 2 = jpg 240x240
+    optional bool hide_passphrase_from_host = 43;   // should we hide the passphrase when it comes from host?
 }
 
 /**
@@ -168,6 +169,7 @@ message ApplySettings {
     optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry
     optional SafetyCheckLevel safety_checks = 9;  // Safety check level, set to Prompt to limit path namespace enforcement
     optional bool experimental_features = 10;  // enable experimental message types
+    optional bool hide_passphrase_from_host = 11;  // do not show passphrase coming from host
 }
 
 /**

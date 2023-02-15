@@ -1705,6 +1705,7 @@
 "TT_test_session.py::test_end_session_only_current": "bd83a31d0fc4c23953dfd0d138e4441984e34698ace96aad5308a4ae51b712ae",
 "TT_test_session.py::test_session_recycling": "07f265234a3269c8c99172e2f67abf626e17a542e6f4c00b45c5b685d0e4c240",
 "TT_test_session_id_and_passphrase.py::test_cardano_passphrase": "26e3b8bc6b1ba85fc89d5b237096685309a95f73350d2fca646720fb750d0e8f",
+"TT_test_session_id_and_passphrase.py::test_hide_passphrase_from_host": "ccdb34cba3b759d91500b3c2b2ee5d427167d21b6aefa709b659aed298760605",
 "TT_test_session_id_and_passphrase.py::test_max_sessions_with_passphrases": "5c85cb246fe4bb07076ed88f426e6133368f3417472cf2dfbef2daac32a088aa",
 "TT_test_session_id_and_passphrase.py::test_multiple_passphrases": "12231bae2ea96b600c96ade946e5dda29d6625d128906cf14728869c1e697987",
 "TT_test_session_id_and_passphrase.py::test_multiple_sessions": "bd83a31d0fc4c23953dfd0d138e4441984e34698ace96aad5308a4ae51b712ae",

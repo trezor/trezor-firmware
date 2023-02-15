@@ -18,9 +18,10 @@ import random
 
 import pytest
 
-from trezorlib import exceptions, messages
+from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.messages import FailureType
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.messages import FailureType, SafetyCheckLevel
 from trezorlib.tools import parse_path
 
 XPUB_PASSPHRASES = {
@@ -373,6 +374,83 @@ def test_passphrase_length(client: Client):
     call(passphrase="A" * 48 + "š", expected_result=True)
     # "š" has two bytes - 49x A and "š" should not (51 bytes)
     call(passphrase="A" * 49 + "š", expected_result=False)
+
+
+@pytest.mark.skip_t1
+@pytest.mark.setup_client(passphrase=True)
+def test_hide_passphrase_from_host(client: Client):
+    # Without safety checks, turning it on fails
+    with pytest.raises(TrezorFailure, match="Safety checks are strict"), client:
+        device.apply_settings(client, hide_passphrase_from_host=True)
+
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+
+    # Turning it on
+    device.apply_settings(client, hide_passphrase_from_host=True)
+
+    passphrase = "abc"
+
+    with client:
+
+        def input_flow():
+            yield
+            layout = client.debug.wait_layout()
+            assert (
+                "Passphrase provided by host will be used but will not be displayed due to the device settings."
+                in layout.get_content()
+            )
+            client.debug.press_yes()
+
+        client.watch_layout()
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(
+            [
+                messages.PassphraseRequest,
+                messages.ButtonRequest,
+                messages.PublicKey,
+            ]
+        )
+        client.use_passphrase(passphrase)
+        result = client.call(XPUB_REQUEST)
+        assert isinstance(result, messages.PublicKey)
+        xpub_hidden_passphrase = result.xpub
+
+    # Turning it off
+    device.apply_settings(client, hide_passphrase_from_host=False)
+
+    # Starting new session, otherwise the passphrase would be cached
+    _init_session(client)
+
+    with client:
+
+        def input_flow():
+            yield
+            layout = client.debug.wait_layout()
+            assert "Next screen will show the passphrase!" in layout.get_content()
+            client.debug.press_yes()
+
+            yield
+            layout = client.debug.wait_layout()
+            assert "Use this passphrase?" in layout.get_content()
+            assert passphrase in layout.get_content()
+            client.debug.press_yes()
+
+        client.watch_layout()
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(
+            [
+                messages.PassphraseRequest,
+                messages.ButtonRequest,
+                messages.ButtonRequest,
+                messages.PublicKey,
+            ]
+        )
+        client.use_passphrase(passphrase)
+        result = client.call(XPUB_REQUEST)
+        assert isinstance(result, messages.PublicKey)
+        xpub_shown_passphrase = result.xpub
+
+    assert xpub_hidden_passphrase == xpub_shown_passphrase
 
 
 def _get_xpub_cardano(client: Client, passphrase):
