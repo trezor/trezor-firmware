@@ -43,6 +43,7 @@ def apply_settings(
     display_rotation: Optional[int] = None,
     safety_checks: Optional[messages.SafetyCheckLevel] = None,
     experimental_features: Optional[bool] = None,
+    hide_passphrase_from_host: Optional[bool] = None,
 ) -> "MessageType":
     settings = messages.ApplySettings(
         label=label,
@@ -54,6 +55,7 @@ def apply_settings(
         display_rotation=display_rotation,
         safety_checks=safety_checks,
         experimental_features=experimental_features,
+        hide_passphrase_from_host=hide_passphrase_from_host,
     )
 
     out = client.call(settings)
