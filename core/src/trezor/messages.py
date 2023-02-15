@@ -2104,6 +2104,7 @@ if TYPE_CHECKING:
         experimental_features: "bool | None"
         busy: "bool | None"
         homescreen_format: "HomescreenFormat | None"
+        hide_passphrase_from_host: "bool | None"
 
         def __init__(
             self,
@@ -2147,6 +2148,7 @@ if TYPE_CHECKING:
             experimental_features: "bool | None" = None,
             busy: "bool | None" = None,
             homescreen_format: "HomescreenFormat | None" = None,
+            hide_passphrase_from_host: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2190,6 +2192,7 @@ if TYPE_CHECKING:
         passphrase_always_on_device: "bool | None"
         safety_checks: "SafetyCheckLevel | None"
         experimental_features: "bool | None"
+        hide_passphrase_from_host: "bool | None"
 
         def __init__(
             self,
@@ -2203,6 +2206,7 @@ if TYPE_CHECKING:
             passphrase_always_on_device: "bool | None" = None,
             safety_checks: "SafetyCheckLevel | None" = None,
             experimental_features: "bool | None" = None,
+            hide_passphrase_from_host: "bool | None" = None,
         ) -> None:
             pass
 

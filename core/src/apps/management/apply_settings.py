@@ -58,6 +58,7 @@ async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
     display_rotation = msg.display_rotation  # local_cache_attribute
     msg_safety_checks = msg.safety_checks  # local_cache_attribute
     experimental_features = msg.experimental_features  # local_cache_attribute
+    hide_passphrase_from_host = msg.hide_passphrase_from_host  # local_cache_attribute
 
     if (
         homescreen is None
@@ -68,6 +69,7 @@ async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
         and auto_lock_delay_ms is None
         and msg_safety_checks is None
         and experimental_features is None
+        and hide_passphrase_from_host is None
     ):
         raise ProcessError("No setting provided")
 
@@ -116,6 +118,12 @@ async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
     if experimental_features is not None:
         await _require_confirm_experimental_features(ctx, experimental_features)
         storage_device.set_experimental_features(experimental_features)
+
+    if hide_passphrase_from_host is not None:
+        if safety_checks.is_strict():
+            raise ProcessError("Safety checks are strict")
+        await _require_confirm_hide_passphrase_from_host(ctx, hide_passphrase_from_host)
+        storage_device.set_hide_passphrase_from_host(hide_passphrase_from_host)
 
     reload_settings_from_storage()
 
@@ -267,5 +275,18 @@ async def _require_confirm_experimental_features(
             "Only for development and beta testing!",
             "Enable experimental features?",
             reverse=True,
+            br_code=BRT_PROTECT_CALL,
+        )
+
+
+async def _require_confirm_hide_passphrase_from_host(
+    ctx: GenericContext, enable: bool
+) -> None:
+    if enable:
+        await confirm_action(
+            ctx,
+            "set_hide_passphrase_from_host",
+            "Hide passphrase",
+            description="Hide passphrase coming from host?",
             br_code=BRT_PROTECT_CALL,
         )

@@ -59,19 +59,29 @@ async def _request_on_host(ctx: Context) -> str:
     if passphrase:
         from trezor.ui.layouts import confirm_action, confirm_blob
 
-        await confirm_action(
-            ctx,
-            "passphrase_host1",
-            "Hidden wallet",
-            description="Access hidden wallet?\n\nNext screen will show the passphrase!",
-        )
+        # We want to hide the passphrase, or show it, according to settings.
+        if storage_device.get_hide_passphrase_from_host():
+            explanation = "Passphrase provided by host will be used but will not be displayed due to the device settings."
+            await confirm_action(
+                ctx,
+                "passphrase_host1_hidden",
+                "Hidden wallet",
+                description=f"Access hidden wallet?\n\n{explanation}",
+            )
+        else:
+            await confirm_action(
+                ctx,
+                "passphrase_host1",
+                "Hidden wallet",
+                description="Access hidden wallet?\n\nNext screen will show the passphrase!",
+            )
 
-        await confirm_blob(
-            ctx,
-            "passphrase_host2",
-            "Hidden wallet",
-            passphrase,
-            "Use this passphrase?\n",
-        )
+            await confirm_blob(
+                ctx,
+                "passphrase_host2",
+                "Hidden wallet",
+                passphrase,
+                "Use this passphrase?\n",
+            )
 
     return passphrase
