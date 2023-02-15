@@ -337,3 +337,14 @@ passphrase.aliases = {
     "enabled": passphrase_on,
     "disabled": passphrase_off,
 }
+
+
+@passphrase.command(name="hide")
+@click.argument("hide", type=ChoiceType({"on": True, "off": False}))
+@with_client
+def hide_passphrase_from_host(client: "TrezorClient", hide: bool) -> str:
+    """Enable or disable hiding passphrase coming from host.
+
+    This is a developer feature. Use with caution.
+    """
+    return device.apply_settings(client, hide_passphrase_from_host=hide)
