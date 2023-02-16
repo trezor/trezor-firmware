@@ -28,7 +28,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, Empty, FormattedText, Timeout, TimeoutMsg,
+            Border, Component, Empty, FormattedText, Qr, Timeout, TimeoutMsg,
         },
         display::{self, tjpgd::jpeg_info, toif::Icon},
         geometry,
@@ -332,6 +332,12 @@ where
     }
 }
 
+impl ComponentMsgObj for Qr {
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!();
+    }
+}
+
 extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -568,10 +574,7 @@ extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
             Frame::left_aligned(
                 theme::label_title(),
                 title,
-                Dialog::new(
-                    painter::qrcode_painter(address, theme::QR_SIDE_MAX, case_sensitive),
-                    buttons,
-                ),
+                Dialog::new(Qr::new(address, case_sensitive)?.with_border(4), buttons),
             )
             .with_border(theme::borders()),
         )?;

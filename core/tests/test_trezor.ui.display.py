@@ -64,9 +64,6 @@ class TestDisplay(unittest.TestCase):
         self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 9, 1), 0)
         self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 15, 1), 0)
 
-    def test_qrcode(self):
-        display.qrcode(0, 0, 'Test', 4)
-
     def test_loader(self):
         display.loader(333, False, 0, 0xFFFF, 0x0000)
 

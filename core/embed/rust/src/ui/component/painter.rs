@@ -51,17 +51,6 @@ impl<F> crate::trace::Trace for Painter<F> {
     }
 }
 
-pub fn qrcode_painter<T>(data: T, max_size: u32, case_sensitive: bool) -> Painter<impl FnMut(Rect)>
-where
-    T: AsRef<str>,
-{
-    // Ignore errors as we currently can't propagate them out of paint().
-    let f = move |area: Rect| {
-        display::qrcode(area.center(), data.as_ref(), max_size, case_sensitive).unwrap_or(())
-    };
-    Painter::new(f)
-}
-
 pub fn image_painter(image: Image) -> Painter<impl FnMut(Rect)> {
     let f = move |area: Rect| image.draw(area.center(), CENTER);
     Painter::new(f)

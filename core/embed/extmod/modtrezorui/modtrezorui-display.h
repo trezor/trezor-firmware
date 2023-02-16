@@ -479,28 +479,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_split_obj,
                                            4, 4,
                                            mod_trezorui_Display_text_split);
 
-/// def qrcode(self, x: int, y: int, data: str, scale: int) -> None:
-///     """
-///     Renders data encoded as a QR code centered at position (x,y).
-///     Scale determines a zoom factor.
-///     """
-STATIC mp_obj_t mod_trezorui_Display_qrcode(size_t n_args,
-                                            const mp_obj_t *args) {
-  mp_int_t x = mp_obj_get_int(args[1]);
-  mp_int_t y = mp_obj_get_int(args[2]);
-  mp_int_t scale = mp_obj_get_int(args[4]);
-  if (scale < 1 || scale > 10) {
-    mp_raise_ValueError("Scale has to be between 1 and 10");
-  }
-  const char *data = mp_obj_str_get_str(args[3]);
-  if (data) {
-    display_qrcode(x, y, data, scale);
-  }
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_qrcode_obj, 5,
-                                           5, mod_trezorui_Display_qrcode);
-
 /// def orientation(self, degrees: int | None = None) -> int:
 ///     """
 ///     Sets display orientation to 0, 90, 180 or 270 degrees.
@@ -631,7 +609,6 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_text_width_obj)},
     {MP_ROM_QSTR(MP_QSTR_text_split),
      MP_ROM_PTR(&mod_trezorui_Display_text_split_obj)},
-    {MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_trezorui_Display_qrcode_obj)},
     {MP_ROM_QSTR(MP_QSTR_orientation),
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
     {MP_ROM_QSTR(MP_QSTR_backlight),

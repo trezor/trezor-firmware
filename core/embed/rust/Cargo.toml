@@ -43,6 +43,9 @@ debug = 2
 split-debuginfo = "off"
 debug = 2
 
+[dependencies]
+qrcodegen = { version = "1.8.0", path = "../../vendor/QR-Code-generator/rust-no-heap" }
+
 # Runtime dependencies
 
 [dependencies.cty]

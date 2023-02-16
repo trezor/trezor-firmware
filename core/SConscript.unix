@@ -175,7 +175,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/fonts/font_bitmap.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
-    'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',

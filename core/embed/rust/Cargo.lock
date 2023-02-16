@@ -208,6 +208,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "qrcodegen"
+version = "1.8.0"
+
+[[package]]
 name = "quote"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -287,6 +291,7 @@ dependencies = [
  "heapless",
  "num-derive",
  "num-traits",
+ "qrcodegen",
 ]
 
 [[package]]

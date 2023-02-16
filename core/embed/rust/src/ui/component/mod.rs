@@ -12,6 +12,7 @@ pub mod pad;
 pub mod paginated;
 pub mod painter;
 pub mod placed;
+pub mod qr_code;
 pub mod text;
 pub mod timeout;
 
@@ -24,8 +25,9 @@ pub use marquee::Marquee;
 pub use maybe::Maybe;
 pub use pad::Pad;
 pub use paginated::{PageMsg, Paginate};
-pub use painter::{qrcode_painter, Painter};
+pub use painter::Painter;
 pub use placed::{FixedHeightBar, GridPlaced};
+pub use qr_code::Qr;
 pub use text::{
     formatted::FormattedText,
     layout::{LineBreaking, PageBreaking, TextLayout},

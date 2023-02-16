@@ -20,9 +20,8 @@ use crate::trezorhal::{
 use crate::ui::geometry::TOP_LEFT;
 
 use crate::{
-    error::Error,
     time::Duration,
-    trezorhal::{buffers::get_text_buffer, display, qr, time, uzlib::UzlibContext},
+    trezorhal::{buffers::get_text_buffer, display, time, uzlib::UzlibContext},
     ui::lerp::Lerp,
 };
 use core::slice;
@@ -804,10 +803,6 @@ pub fn dotted_line(start: Point, width: i16, color: Color) {
     for x in (start.x..width).step_by(2) {
         display::bar(x, start.y, 1, 1, color.into());
     }
-}
-
-pub fn qrcode(center: Point, data: &str, max_size: u32, case_sensitive: bool) -> Result<(), Error> {
-    qr::render_qrcode(center.x, center.y, data, max_size, case_sensitive)
 }
 
 pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
