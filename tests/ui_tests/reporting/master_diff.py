@@ -66,14 +66,15 @@ def get_diff() -> tuple[dict[str, str], dict[str, str], dict[str, tuple[str, str
                 testname(test): current_tests[test]
                 for test in (current_tests.keys() - master_tests.keys())
             }
-            # items in both branches
-            same = master_tests.items() - removed_here.items() - added_here.items()
-            # create the diff
+            # create the diff from items in both branches
             diff_here = {}
-            for master_test, master_hash in same:
+            for master_test, master_hash in master_tests.items():
+                full_test_name = testname(master_test)
+                if full_test_name in removed_here:
+                    continue
                 if current_tests.get(master_test) == master_hash:
                     continue
-                diff_here[testname(master_test)] = (
+                diff_here[full_test_name] = (
                     master_tests[master_test],
                     current_tests[master_test],
                 )
@@ -81,6 +82,7 @@ def get_diff() -> tuple[dict[str, str], dict[str, str], dict[str, tuple[str, str
             removed.update(removed_here)
             added.update(added_here)
             diff.update(diff_here)
+            print(f"{model} {group}")
             print(f"  removed: {len(removed_here)}")
             print(f"  added: {len(added_here)}")
             print(f"  diff: {len(diff_here)}")
@@ -214,6 +216,20 @@ def create_dirs() -> None:
     IMAGES_PATH.mkdir(exist_ok=True)
 
 
+def _get_screen_path(test_name: str) -> Path | None:
+    path = SCREENS_DIR / test_name / "actual"
+    if path.exists():
+        return path
+    path = SCREENS_DIR / test_name / "recorded"
+    if path.exists():
+        print(
+            f"WARNING: no actual screens for {test_name}, recording may be outdated: {path}"
+        )
+        return path
+    print(f"WARNING: missing screens for {test_name}. Did the test run?")
+    return None
+
+
 def create_reports() -> None:
     removed_tests, added_tests, diff_tests = get_diff()
 
@@ -228,10 +244,10 @@ def create_reports() -> None:
             removed(temp_dir, test_name)
 
     for test_name, test_hash in added_tests.items():
-        path = SCREENS_DIR / test_name / "actual"
-        if not path.exists():
-            raise RuntimeError("Folder does not exist, has it been recorded?", path)
-        added(path, test_name)
+        screen_path = _get_screen_path(test_name)
+        if not screen_path:
+            continue
+        added(screen_path, test_name)
 
     for test_name, (master_hash, current_hash) in diff_tests.items():
         with tmpdir() as master_root:
@@ -242,10 +258,8 @@ def create_reports() -> None:
             except RuntimeError as e:
                 print("WARNING:", e)
 
-            current_screens = SCREENS_DIR / test_name / "actual"
-            if not current_screens.exists():
-                print("WARNING: Folder does not exist, did the test run?")
-                print(current_screens)
+            current_screens = _get_screen_path(test_name)
+            if not current_screens:
                 current_screens = master_root / "empty_current_screens"
                 current_screens.mkdir()
 
