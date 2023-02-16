@@ -8,7 +8,6 @@ pub mod display;
 pub mod dma2d;
 mod ffi;
 pub mod io;
-pub mod qr;
 pub mod random;
 #[cfg(feature = "model_tr")]
 pub mod rgb_led;

@@ -19,8 +19,6 @@
 
 #define _GNU_SOURCE
 
-#include "qr-code-generator/qrcodegen.h"
-
 #include "uzlib.h"
 
 #include "buffers.h"
@@ -868,6 +866,9 @@ int display_text_split(const char *text, int textlen, int font,
   return textlen;
 }
 
+#ifdef TREZOR_PRODTEST
+
+#include "qr-code-generator/qrcodegen.h"
 #define QR_MAX_VERSION 9
 
 void display_qrcode(int x, int y, const char *data, uint8_t scale) {
@@ -907,6 +908,8 @@ void display_qrcode(int x, int y, const char *data, uint8_t scale) {
   }
   PIXELDATA_DIRTY();
 }
+
+#endif
 
 void display_offset(int set_xy[2], int *get_x, int *get_y) {
   if (set_xy) {
