@@ -109,7 +109,7 @@ class BridgeTransport(Transport):
     """
 
     PATH_PREFIX = "bridge"
-    ENABLED = True
+    ENABLED: bool = True
 
     def __init__(
         self, device: Dict[str, Any], legacy: bool, debug: bool = False
