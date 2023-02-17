@@ -818,7 +818,7 @@ if CMAKELISTS != 0:
 env.Depends(program_elf, rust)
 
 BINARY_NAME = f"build/firmware/firmware-{tools.get_model_identifier(TREZOR_MODEL)}"
-if BITCOIN_ONLY != 0:
+if not EVERYTHING:
     BINARY_NAME += "-btconly"
 BINARY_NAME += "-" + tools.get_version('embed/firmware/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
