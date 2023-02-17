@@ -203,7 +203,7 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             "google.com",  # label
             "google",  # icon_name
             None,  # use_sign_count
-            None,  # use_self_attestation
+            False,  # use_self_attestation
         )
     if rp_id_hash == b"\xd4\xc9\xd9\x02\x73\x26\x27\x1a\x89\xce\x51\xfc\xaf\x32\x8e\xd6\x73\xf1\x7b\xe3\x34\x69\xff\x97\x9e\x8a\xb8\xdd\x50\x1e\x66\x4f":
         # WebAuthn key for Google
@@ -211,7 +211,7 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             "google.com",  # label
             "google",  # icon_name
             None,  # use_sign_count
-            None,  # use_self_attestation
+            False,  # use_self_attestation
         )
     if rp_id_hash == b"\x9c\x2e\x02\xc4\xff\xf7\x76\x62\xe1\xde\x80\x3b\x43\x9e\x11\xc0\xdd\x0c\x3f\x66\x42\xce\xc4\xe6\x84\xd6\x49\x87\x0a\xd1\xbb\x59":
         # WebAuthn key for Invity
