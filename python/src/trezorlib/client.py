@@ -17,7 +17,7 @@
 import logging
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar
 
 from mnemonic import Mnemonic
 
@@ -30,6 +30,8 @@ if TYPE_CHECKING:
     from .protobuf import MessageType
     from .ui import TrezorClientUI
     from .transport import Transport
+
+UI = TypeVar("UI", bound="TrezorClientUI")
 
 LOG = logging.getLogger(__name__)
 
@@ -70,7 +72,7 @@ def get_default_client(
     return TrezorClient(transport, ui, **kwargs)
 
 
-class TrezorClient:
+class TrezorClient(Generic[UI]):
     """Trezor client, a connection to a Trezor device.
 
     This class allows you to manage connection state, send and receive protobuf
@@ -81,7 +83,7 @@ class TrezorClient:
     def __init__(
         self,
         transport: "Transport",
-        ui: "TrezorClientUI",
+        ui: UI,
         session_id: Optional[bytes] = None,
         derive_cardano: Optional[bool] = None,
         model: Optional[models.TrezorModel] = None,
