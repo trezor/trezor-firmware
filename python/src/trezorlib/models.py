@@ -60,7 +60,9 @@ TREZOR_R = TrezorModel(
 TREZORS = {TREZOR_ONE, TREZOR_T, TREZOR_R}
 
 
-def by_name(name: str) -> Optional[TrezorModel]:
+def by_name(name: Optional[str]) -> Optional[TrezorModel]:
+    if name is None:
+        return TREZOR_ONE
     for model in TREZORS:
         if model.name == name:
             return model
