@@ -160,12 +160,17 @@ fn select_line_breaks(
 
 pub trait GlyphMetrics {
     fn char_width(&self, ch: char) -> i16;
+    fn text_width(&self, text: &str) -> i16;
     fn line_height(&self) -> i16;
 }
 
 impl GlyphMetrics for Font {
     fn char_width(&self, ch: char) -> i16 {
         Font::char_width(*self, ch)
+    }
+
+    fn text_width(&self, text: &str) -> i16 {
+        Font::text_width(*self, text)
     }
 
     fn line_height(&self) -> i16 {
@@ -216,6 +221,10 @@ mod tests {
 
         fn line_height(&self) -> i16 {
             self.height
+        }
+
+        fn text_width(&self, text: &str) -> i16 {
+            self.width * text.len() as i16
         }
     }
 
