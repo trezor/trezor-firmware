@@ -392,6 +392,9 @@ impl PageOffset {
 
         // Find out the dimensions of the paragraph at given char offset.
         let mut layout = paragraph.layout(area);
+        if self.chr > 0 {
+            layout.continues_from_prev_page = true;
+        }
         let fit = layout.fit_text(paragraph.content.as_ref());
         let (used, remaining_area) = area.split_top(fit.height());
         layout.bounds = used;

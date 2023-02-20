@@ -497,8 +497,8 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes on\nand on and on and on\nand on and will definitely\nnot fit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n> buttons:<FixedHeightBar inner:<Button text:NO > > >";
-        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs There's just so much\nletters in it.\n> buttons:<FixedHeightBar inner:<Button text:NO > > >";
+        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes on\nand on and on and on\nand on and will definitely\nnot fit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I...\n> buttons:<FixedHeightBar inner:<Button text:NO > > >";
+        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs guess. There's just so\nmuch letters in it.\n> buttons:<FixedHeightBar inner:<Button text:NO > > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);
@@ -533,9 +533,9 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is using a\nbold font. It doesn't\nneed to be all that long.\nAnd this one is\nusing MONO. Mono\nspace is nice fo\nr numbers, they\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs have the same wi\ndth and can be s\ncanned quickly.\nEven if they spa\nn several pages\nor something.\nLet's add another one...\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs for a good measure. This\none should overflow all\nthe way to the third\npage with a bit of luck.\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
+        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is using a\nbold font. It doesn't\nneed to be all that long.\nAnd this one is\nusing MONO. Mono\nspace is nice fo\nr numbers,...\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
+        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs ...they have th\ne same width and\ncan be scanned q\nuickly. Even if\nthey span severa\nl pages or somet\nhing.\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
+        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs Let's add another one\nfor a good measure. This\none should overflow all\nthe way to the third\npage with a bit of luck.\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);

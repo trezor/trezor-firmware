@@ -114,9 +114,12 @@ pub struct Icon {
 }
 
 impl Icon {
-    pub fn new(data: &'static [u8]) -> Self {
-        let toif = unwrap!(Toif::new(data));
-        assert!(toif.format() == ToifFormat::GrayScaleEH);
+    pub const fn new(data: &'static [u8]) -> Self {
+        let toif = match Toif::new(data) {
+            Some(t) => t,
+            None => panic!("Invalid image."),
+        };
+        assert!(matches!(toif.format(), ToifFormat::GrayScaleEH));
         Self { toif }
     }
 
