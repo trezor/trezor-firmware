@@ -20,9 +20,7 @@ variables:
   # No need for TLS because everything runs on the same machine
   DOCKER_TLS_CERTDIR: ""
 
-  # Hardware tests don't use docker so there's no benefit of prebuilt cache, however they
-  # still run the before_script from this file.
-  NIX_SHELL: "cached-nix-shell"
+  NIX_SHELL: "nix-shell"
 
 stages:
   - environment

@@ -263,7 +263,6 @@ core unix frozen debug build arm:
     - /^secfix\//
   variables:
     PYOPT: "0"
-    NIX_SHELL: "nix-shell"
   script:
     - $NIX_SHELL --run "poetry run make -C core build_unix_frozen"
     - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-arm
@@ -447,7 +446,6 @@ legacy emu regular debug build arm:
   variables:
     DEBUG_LINK: "1"
     EMULATOR: "1"
-    NIX_SHELL: "nix-shell"
   script:
     - $NIX_SHELL --run "poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.elf  legacy/firmware/trezor-arm.elf

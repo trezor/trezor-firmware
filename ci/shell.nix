@@ -94,7 +94,6 @@ stdenvNoCC.mkDerivation ({
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
     autoPatchelfHook
-    cached-nix-shell
     procps
     valgrind
   ] ++ lib.optionals (stdenv.isDarwin) [
