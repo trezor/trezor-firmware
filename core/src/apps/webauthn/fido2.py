@@ -211,8 +211,8 @@ _MAX_CRED_COUNT_IN_LIST = const(10)
 # The CID of the last WINK command. Used to ensure that we do only one WINK at a time on any given CID.
 _last_wink_cid = 0
 
-# The CID of the last successful U2F_AUTHENTICATE check-only request.
-_last_good_auth_check_cid = 0
+# Indicates whether the last U2F_AUTHENTICATE had a valid key handle.
+_last_auth_valid = False
 
 
 class CborError(Exception):
@@ -545,10 +545,7 @@ async def handle_reports(iface: HID) -> None:
             req = await _read_cmd(iface)
             if req is None:
                 continue
-            if dialog_mgr.is_busy() and req.cid not in (
-                dialog_mgr.get_cid(),
-                _CID_BROADCAST,
-            ):
+            if not dialog_mgr.allow_cid(req.cid):
                 resp: Cmd | None = cmd_error(req.cid, _ERR_CHANNEL_BUSY)
             else:
                 resp = _dispatch_cmd(req, dialog_mgr)
@@ -617,6 +614,10 @@ class State:
         self.iface = iface
         self.finished = False
 
+    def allow_cid(self, cid: int) -> bool:
+        # Generally allow any CID, because Safari browser changes CID for every U2F message.
+        return True
+
     def keepalive_status(self) -> int:
         # Run the keepalive loop to check for timeout, but do not send any keepalive messages.
         return _KEEPALIVE_STATUS_NONE
@@ -657,14 +658,9 @@ class U2fState(State):
 
 
 class U2fConfirmRegister(U2fState):
-    def __init__(
-        self, cid: int, iface: HID, req_data: bytes, cred: U2fCredential
-    ) -> None:
-        super().__init__(cid, iface, req_data, cred)
-
     async def confirm_dialog(self) -> bool:
         if self._cred.rp_id_hash in _BOGUS_APPIDS:
-            if self.cid == _last_good_auth_check_cid:
+            if _last_auth_valid:
                 await show_popup(
                     "U2F",
                     "This device is already registered with this application.",
@@ -684,23 +680,17 @@ class U2fConfirmRegister(U2fState):
 
     def __eq__(self, other: object) -> bool:
         return (
-            isinstance(other, U2fConfirmRegister)
-            and self.cid == other.cid
-            and self._req_data == other._req_data
+            isinstance(other, U2fConfirmRegister) and self._req_data == other._req_data
         )
 
 
 class U2fConfirmAuthenticate(U2fState):
-    def __init__(self, cid: int, iface: HID, req_data: bytes, cred: Credential) -> None:
-        super().__init__(cid, iface, req_data, cred)
-
     async def confirm_dialog(self) -> bool:
         return await _confirm_fido("U2F Authenticate", self._cred)
 
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, U2fConfirmAuthenticate)
-            and self.cid == other.cid
             and self._req_data == other._req_data
         )
 
@@ -725,8 +715,9 @@ class U2fUnlock(State):
 
 
 class Fido2State(State):
-    def __init__(self, cid: int, iface: HID) -> None:
-        super().__init__(cid, iface)
+    def allow_cid(self, cid: int) -> bool:
+        # In FIDO2 lock out other channels until user interaction or timeout.
+        return cid == self.cid
 
     def keepalive_status(self) -> int:
         return _KEEPALIVE_STATUS_UP_NEEDED
@@ -906,6 +897,10 @@ class Fido2ConfirmGetAssertion(Fido2State):
 
 
 class Fido2ConfirmNoPin(State):
+    def allow_cid(self, cid: int) -> bool:
+        # In FIDO2 lock out other channels until user interaction or timeout.
+        return cid == self.cid
+
     def timeout_ms(self) -> int:
         return _FIDO2_CONFIRM_TIMEOUT_MS
 
@@ -946,9 +941,6 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
 
 
 class Fido2ConfirmReset(Fido2State):
-    def __init__(self, cid: int, iface: HID) -> None:
-        super().__init__(cid, iface)
-
     async def confirm_dialog(self) -> bool:
         from trezor.ui.layouts.fido import confirm_fido_reset
 
@@ -989,10 +981,12 @@ class DialogManager:
             loop.close(self.keepalive)
         self._clear()
 
-    def get_cid(self) -> int:
-        if self.state is None:
-            return 0
-        return self.state.cid
+    def allow_cid(self, cid: int) -> bool:
+        return (
+            not self.is_busy()
+            or cid == _CID_BROADCAST
+            or (self.state is not None and self.state.allow_cid(cid))
+        )
 
     def is_busy(self) -> bool:
         if utime.ticks_ms() >= self.deadline:
@@ -1296,6 +1290,9 @@ def _msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
 
 
 def _msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
+    global _last_auth_valid
+    _last_auth_valid = False
+
     cid = req.cid  # local_cache_attribute
     data = req.data  # local_cache_attribute
     info = log.info  # local_cache_attribute
@@ -1330,12 +1327,12 @@ def _msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
         # specific error logged in _node_from_key_handle
         return msg_error(cid, _SW_WRONG_DATA)
 
+    _last_auth_valid = True
+
     # if _AUTH_CHECK_ONLY is requested, return, because keyhandle has been checked already
     if req.p1 == _AUTH_CHECK_ONLY:
         if __debug__:
             info(__name__, "_AUTH_CHECK_ONLY")
-        global _last_good_auth_check_cid
-        _last_good_auth_check_cid = cid
         return msg_error(cid, _SW_CONDITIONS_NOT_SATISFIED)
 
     # from now on, only _AUTH_ENFORCE is supported
