@@ -36,7 +36,6 @@ hardware core regular device test:
     - core fw regular debug build
   variables:
     PYTEST_TIMEOUT: "1200"
-    NIX_SHELL: "nix-shell"
   script:
     - cd ci/hardware_tests
     - set -a
@@ -67,7 +66,6 @@ hardware core btconly device test:
   variables:
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
     PYTEST_TIMEOUT: "1200"
-    NIX_SHELL: "nix-shell"
   script:
     - cd ci/hardware_tests
     - set -a
@@ -95,7 +93,6 @@ hardware core monero test:
     - core fw regular debug build
   variables:
     TESTOPTS: --trezor_path webusb
-    NIX_SHELL: "nix-shell"
   script:
     - cd ci/hardware_tests
     - set -a
@@ -125,8 +122,6 @@ hardware legacy regular device test:
     - tpmb
   needs:
     - legacy fw regular debug build
-  variables:
-    NIX_SHELL: "nix-shell"
   script:
     - cd ci/hardware_tests
     - $NIX_SHELL --run "./t1_hw_test.sh | ts -s"
@@ -143,7 +138,6 @@ hardware legacy btconly device test:
   stage: test
   variables:
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
-    NIX_SHELL: "nix-shell"
   only:
     - schedules  # nightly build
     - /^legacy\//
