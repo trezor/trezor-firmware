@@ -10,6 +10,18 @@ _progress_layout: ProgressLayout | None = None
 _started_with_empty_loader = False
 keepalive_callback: Any = None
 
+_ignore_loader_messages: tuple[str, ...] = ()
+
+
+def ignore_nonpin_loader_messages() -> None:
+    global _ignore_loader_messages
+    _ignore_loader_messages = ("Processing", "Starting up")
+
+
+def allow_all_loader_messages() -> None:
+    global _ignore_loader_messages
+    _ignore_loader_messages = ()
+
 
 def render_empty_loader(message: str, description: str) -> None:
     """Render empty loader to prevent the screen appear to be frozen."""
@@ -27,9 +39,8 @@ def render_empty_loader(message: str, description: str) -> None:
 def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
     from trezor.ui.layouts import pin_progress
 
-    # We do not want to show the progress loader when starting the device.
-    # Progress should be shown only for PIN purposes.
-    if message == "Starting up":
+    # Possibility to ignore certain messages - not showing loader for them
+    if message in _ignore_loader_messages:
         return False
 
     global _previous_seconds

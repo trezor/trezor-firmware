@@ -52,6 +52,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
   MP_QSTR_show_lockscreen;
+  MP_QSTR_draw_welcome_screen;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_progress;
