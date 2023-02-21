@@ -27,6 +27,11 @@ def render_empty_loader(message: str, description: str) -> None:
 def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
     from trezor.ui.layouts import pin_progress
 
+    # We do not want to show the progress loader when starting the device.
+    # Progress should be shown only for PIN purposes.
+    if message == "Starting up":
+        return False
+
     global _previous_seconds
     global _previous_remaining
     global _progress_layout
