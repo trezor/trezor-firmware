@@ -7,13 +7,9 @@ if TYPE_CHECKING:
 
 
 async def reboot_to_bootloader(ctx: Context, msg: RebootToBootloader) -> NoReturn:
-    import storage.device
-    from trezor import io, loop, utils, wire
+    from trezor import io, loop, utils
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
-
-    if not storage.device.get_experimental_features():
-        raise wire.UnexpectedMessage("Experimental features are not enabled")
 
     await confirm_action(
         ctx,
