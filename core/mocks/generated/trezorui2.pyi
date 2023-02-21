@@ -423,3 +423,8 @@ def show_busyscreen(
     skip_first_paint: bool,
 ) -> CANCELLED:
     """Homescreen used for indicating coinjoin in progress."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def draw_welcome_screen() -> None:
+    """Show logo icon with the model name at the bottom and return."""

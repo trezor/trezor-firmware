@@ -30,7 +30,7 @@ use crate::{
             },
             Border, Component, Empty, FormattedText, Timeout, TimeoutMsg,
         },
-        display::{tjpgd::jpeg_info, toif::Icon},
+        display::{self, tjpgd::jpeg_info, toif::Icon},
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -51,8 +51,9 @@ use super::{
         MnemonicKeyboardMsg, NotificationFrame, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
         SelectWordCount, SelectWordCountMsg, SelectWordMsg, Slip39Input, SwipeHoldPage, SwipePage,
+        WelcomeScreen,
     },
-    theme,
+    constant, theme,
 };
 
 impl TryFrom<CancelConfirmMsg> for Obj {
@@ -1343,6 +1344,16 @@ extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn draw_welcome_screen() -> Obj {
+    // No need of util::try_or_raise, this does not allocate
+    let mut screen = WelcomeScreen::new();
+    screen.place(constant::screen());
+    display::sync();
+    screen.paint();
+    display::set_backlight(150); // BACKLIGHT_NORMAL
+    Obj::const_none()
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -1708,6 +1719,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> CANCELLED:
     ///     """Homescreen used for indicating coinjoin in progress."""
     Qstr::MP_QSTR_show_busyscreen => obj_fn_kw!(0, new_show_busyscreen).as_obj(),
+
+    /// def draw_welcome_screen() -> None:
+    ///     """Show logo icon with the model name at the bottom and return."""
+    Qstr::MP_QSTR_draw_welcome_screen => obj_fn_0!(draw_welcome_screen).as_obj(),
 };
 
 #[cfg(test)]

@@ -13,6 +13,7 @@ mod page;
 mod progress;
 mod scroll;
 mod swipe;
+mod welcome_screen;
 
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
@@ -37,5 +38,6 @@ pub use page::{SwipeHoldPage, SwipePage};
 pub use progress::Progress;
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};
+pub use welcome_screen::WelcomeScreen;
 
 use super::theme;

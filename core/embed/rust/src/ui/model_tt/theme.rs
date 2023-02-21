@@ -63,6 +63,7 @@ pub const ICON_MAGIC: &[u8] = include_res!("model_tt/res/magic.toif");
 pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
 pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
 pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock.toif");
+pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/logo.toif");
 
 // Large, three-color icons.
 pub const WARN_COLOR: Color = YELLOW;
