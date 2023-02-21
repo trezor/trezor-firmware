@@ -457,7 +457,7 @@
       }
     },
     {
-      "description": "transaction with CIP36 registration and voting purpose not specified",
+      "description": "transaction with CIP36 registration and vote purpose not specified",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -478,11 +478,11 @@
             "format": 1,
             "delegations": [
               {
-                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 1
               },
               {
-                "voting_public_key": "2af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "2af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 2
               }
             ]

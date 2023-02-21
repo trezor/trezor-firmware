@@ -1639,13 +1639,13 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CardanoCVoteRegistrationDelegation(protobuf.MessageType):
-        voting_public_key: "bytes"
+        vote_public_key: "bytes"
         weight: "int"
 
         def __init__(
             self,
             *,
-            voting_public_key: "bytes",
+            vote_public_key: "bytes",
             weight: "int",
         ) -> None:
             pass
@@ -1655,7 +1655,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CardanoCVoteRegistrationParametersType(protobuf.MessageType):
-        voting_public_key: "bytes | None"
+        vote_public_key: "bytes | None"
         staking_path: "list[int]"
         payment_address_parameters: "CardanoAddressParametersType | None"
         nonce: "int"
@@ -1670,7 +1670,7 @@ if TYPE_CHECKING:
             nonce: "int",
             staking_path: "list[int] | None" = None,
             delegations: "list[CardanoCVoteRegistrationDelegation] | None" = None,
-            voting_public_key: "bytes | None" = None,
+            vote_public_key: "bytes | None" = None,
             payment_address_parameters: "CardanoAddressParametersType | None" = None,
             format: "CardanoCVoteRegistrationFormat | None" = None,
             voting_purpose: "int | None" = None,

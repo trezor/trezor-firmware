@@ -63,15 +63,15 @@ def _validate_cvote_registration_parameters(
     protocol_magic: int,
     network_id: int,
 ) -> None:
-    voting_key_fields_provided = 0
-    if parameters.voting_public_key is not None:
-        voting_key_fields_provided += 1
-        _validate_voting_public_key(parameters.voting_public_key)
+    vote_key_fields_provided = 0
+    if parameters.vote_public_key is not None:
+        vote_key_fields_provided += 1
+        _validate_vote_public_key(parameters.vote_public_key)
     if parameters.delegations:
-        voting_key_fields_provided += 1
+        vote_key_fields_provided += 1
         assert_cond(parameters.format == CardanoCVoteRegistrationFormat.CIP36)
         _validate_delegations(parameters.delegations)
-    assert_cond(voting_key_fields_provided == 1)
+    assert_cond(vote_key_fields_provided == 1)
 
     assert_cond(SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.staking_path))
 
@@ -92,7 +92,7 @@ def _validate_cvote_registration_parameters(
         assert_cond(parameters.format == CardanoCVoteRegistrationFormat.CIP36)
 
 
-def _validate_voting_public_key(key: bytes) -> None:
+def _validate_vote_public_key(key: bytes) -> None:
     assert_cond(len(key) == _CVOTE_PUBLIC_KEY_LENGTH)
 
 
@@ -101,7 +101,7 @@ def _validate_delegations(
 ) -> None:
     assert_cond(len(delegations) <= _MAX_DELEGATION_COUNT)
     for delegation in delegations:
-        _validate_voting_public_key(delegation.voting_public_key)
+        _validate_vote_public_key(delegation.vote_public_key)
 
 
 def _get_voting_purpose_to_serialize(
@@ -158,7 +158,7 @@ async def _show_cvote_registration(
 
     for delegation in parameters.delegations:
         encoded_public_key = bech32.encode(
-            bech32.HRP_CVOTE_PUBLIC_KEY, delegation.voting_public_key
+            bech32.HRP_CVOTE_PUBLIC_KEY, delegation.vote_public_key
         )
         await layout.confirm_cvote_registration_delegation(
             ctx, encoded_public_key, delegation.weight
@@ -187,9 +187,9 @@ async def _show_cvote_registration(
         )
 
     encoded_public_key: str | None = None
-    if parameters.voting_public_key:
+    if parameters.vote_public_key:
         encoded_public_key = bech32.encode(
-            bech32.HRP_CVOTE_PUBLIC_KEY, parameters.voting_public_key
+            bech32.HRP_CVOTE_PUBLIC_KEY, parameters.vote_public_key
         )
 
     voting_purpose: int | None = (
@@ -271,11 +271,11 @@ def _get_signed_cvote_registration_payload(
     delegations_or_key: Delegations | bytes
     if len(parameters.delegations) > 0:
         delegations_or_key = [
-            (delegation.voting_public_key, delegation.weight)
+            (delegation.vote_public_key, delegation.weight)
             for delegation in parameters.delegations
         ]
-    elif parameters.voting_public_key:
-        delegations_or_key = parameters.voting_public_key
+    elif parameters.vote_public_key:
+        delegations_or_key = parameters.vote_public_key
     else:
         raise RuntimeError  # should not be reached - _validate_cvote_registration_parameters
 

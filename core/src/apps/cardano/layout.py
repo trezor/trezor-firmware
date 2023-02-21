@@ -818,14 +818,14 @@ async def confirm_cvote_registration_payment_address(
 
 async def confirm_cvote_registration(
     ctx: Context,
-    public_key: str | None,
+    vote_public_key: str | None,
     staking_path: list[int],
     nonce: int,
     voting_purpose: int | None,
 ) -> None:
     props: list[PropertyType] = [("Vote key registration (CIP-36)", None)]
-    if public_key is not None:
-        props.append(("Voting public key:", public_key))
+    if vote_public_key is not None:
+        props.append(("Vote public key:", vote_public_key))
     props.extend(
         [
             (
