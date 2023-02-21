@@ -1310,7 +1310,7 @@
         "withdrawals": [],
         "auxiliary_data": {
           "cvote_registration_parameters": {
-            "voting_public_key": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "vote_public_key": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "nonce": 22634813,
             "payment_address_parameters": {
@@ -1360,7 +1360,7 @@
         "auxiliary_data": {
           "hash": "ea4c91860dd5ec5449f8f985d227946ff39086b17f10b5afb93d12ee87050b6a",
           "cvote_registration_parameters": {
-            "voting_public_key": "38DA0B509D45BF6C87BD55594B92F97081D3923B8C1334B9B8D0BF13FC1C12D0",
+            "vote_public_key": "38DA0B509D45BF6C87BD55594B92F97081D3923B8C1334B9B8D0BF13FC1C12D0",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "payment_address_parameters": {
               "addressType": 0,
@@ -1399,7 +1399,7 @@
       }
     },
     {
-      "description": "transaction with both voting public key and delegations in cvote registration",
+      "description": "transaction with both vote public key and delegations in cvote registration",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -1410,7 +1410,7 @@
         "withdrawals": [],
         "auxiliary_data": {
           "cvote_registration_parameters": {
-            "voting_public_key": "38DA0B509D45BF6C87BD55594B92F97081D3923B8C1334B9B8D0BF13FC1C12D0",
+            "vote_public_key": "38DA0B509D45BF6C87BD55594B92F97081D3923B8C1334B9B8D0BF13FC1C12D0",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "payment_address_parameters": {
               "addressType": 0,
@@ -1421,7 +1421,7 @@
             "format": 1,
             "delegations": [
               {
-                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 1
               }
             ]

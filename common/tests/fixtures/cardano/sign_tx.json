@@ -1013,7 +1013,7 @@
         "withdrawals": [],
         "auxiliary_data": {
           "cvote_registration_parameters": {
-            "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
             "staking_path": "m/1852'/1815'/0'/2/0",
             "payment_address_parameters": {
               "addressType": 0,
@@ -1086,11 +1086,11 @@
             "format": 1,
             "delegations": [
               {
-                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 1
               },
               {
-                "voting_public_key": "2af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "2af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 2
               }
             ]
@@ -1159,7 +1159,7 @@
             "format": 1,
             "delegations": [
               {
-                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 1
               }
             ],
@@ -1224,7 +1224,7 @@
             "format": 1,
             "delegations": [
               {
-                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 1
               }
             ],
@@ -1293,7 +1293,7 @@
             "format": 1,
             "delegations": [
               {
-                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 1
               }
             ]
@@ -1357,7 +1357,7 @@
             "format": 1,
             "delegations": [
               {
-                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 1
               }
             ],
@@ -1943,7 +1943,7 @@
             "format": 1,
             "delegations": [
               {
-                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "vote_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
                 "weight": 1
               }
             ],

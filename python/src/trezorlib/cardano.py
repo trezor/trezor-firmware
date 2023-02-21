@@ -65,7 +65,7 @@ REQUIRED_FIELDS_CVOTE_REGISTRATION = (
     "staking_path",
     "nonce",
 )
-REQUIRED_FIELDS_CVOTE_DELEGATION = ("voting_public_key", "weight")
+REQUIRED_FIELDS_CVOTE_DELEGATION = ("vote_public_key", "weight")
 
 INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
 
@@ -576,7 +576,7 @@ def parse_auxiliary_data(
                 raise AUXILIARY_DATA_MISSING_FIELDS_ERROR
             delegations.append(
                 messages.CardanoCVoteRegistrationDelegation(
-                    voting_public_key=bytes.fromhex(delegation["voting_public_key"]),
+                    vote_public_key=bytes.fromhex(delegation["vote_public_key"]),
                     weight=int(delegation["weight"]),
                 )
             )
@@ -586,8 +586,8 @@ def parse_auxiliary_data(
             voting_purpose = cvote_registration.get("voting_purpose")
 
         cvote_registration_parameters = messages.CardanoCVoteRegistrationParametersType(
-            voting_public_key=parse_optional_bytes(
-                cvote_registration.get("voting_public_key")
+            vote_public_key=parse_optional_bytes(
+                cvote_registration.get("vote_public_key")
             ),
             staking_path=tools.parse_path(cvote_registration["staking_path"]),
             nonce=cvote_registration["nonce"],
