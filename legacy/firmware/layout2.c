@@ -790,12 +790,8 @@ void layoutAddress(const char *address, const char *desc, bool qrcode,
     }
 
     oledInvert(0, 0, 63, 63);
-    if (side > 0 && side <= 33) {
-      // For QR code V4 (33x33), still maintaining two pixels per module
-      // so that it is nicely readable. Not showing the bottom row,
-      // which is not a problem thanks to the QR code's error correction.
-      // It is a use-case for BTC taproot addresses.
-      int offset = side <= 29 ? 32 - side : 0;
+    if (side > 0 && side <= 29) {
+      int offset = 32 - side;
       for (int i = 0; i < side; i++) {
         for (int j = 0; j < side; j++) {
           if (qrcodegen_getModule(codedata, i, j)) {
