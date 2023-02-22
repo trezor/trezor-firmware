@@ -1882,7 +1882,7 @@ def _cbor_get_info(req: Cmd) -> Cmd:
         _GETINFO_RESP_EXTENSIONS: ["hmac-secret"],
         _GETINFO_RESP_AAGUID: _AAGUID,
         _GETINFO_RESP_OPTIONS: {
-            "rk": _ALLOW_RESIDENT_CREDENTIALS,
+            "rk": bool(_ALLOW_RESIDENT_CREDENTIALS),
             "up": True,
             "uv": True,
         },
