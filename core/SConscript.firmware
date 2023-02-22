@@ -379,8 +379,9 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/usbd_ioreq.c',
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
-    'embed/trezorhal/dfu/dfu.c',
-    'embed/trezorhal/dfu/fwu.c',
+    'embed/trezorhal/ble/comm.c',
+    'embed/trezorhal/ble/dfu.c',
+    'embed/trezorhal/ble/fwu.c',
 ]
 
 
@@ -473,7 +474,7 @@ env.Replace(
         'embed/rust',
         'embed/firmware',
         'embed/lib',
-        'embed/firmware/dfu',
+        'embed/firmware/ble',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython',

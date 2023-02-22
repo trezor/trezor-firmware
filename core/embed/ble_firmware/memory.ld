@@ -6,7 +6,7 @@ GROUP(-lgcc -lc -lnosys)
 MEMORY
 {
   FLASH (rx) : ORIGIN = 0x27000, LENGTH = 0xd9000
-  RAM (rwx) :  ORIGIN = 0x20002300, LENGTH = 0x3dd00
+  RAM (rwx) :  ORIGIN = 0x20002ae8, LENGTH = 0x3d518
 }
 
 SECTIONS
@@ -57,17 +57,17 @@ SECTIONS
     KEEP(*(SORT(.sdh_soc_observers*)))
     PROVIDE(__stop_sdh_soc_observers = .);
   } > FLASH
-  .pwr_mgmt_data :
-  {
-    PROVIDE(__start_pwr_mgmt_data = .);
-    KEEP(*(SORT(.pwr_mgmt_data*)))
-    PROVIDE(__stop_pwr_mgmt_data = .);
-  } > FLASH
   .sdh_ble_observers :
   {
     PROVIDE(__start_sdh_ble_observers = .);
     KEEP(*(SORT(.sdh_ble_observers*)))
     PROVIDE(__stop_sdh_ble_observers = .);
+  } > FLASH
+  .pwr_mgmt_data :
+  {
+    PROVIDE(__start_pwr_mgmt_data = .);
+    KEEP(*(SORT(.pwr_mgmt_data*)))
+    PROVIDE(__stop_pwr_mgmt_data = .);
   } > FLASH
   .sdh_req_observers :
   {
