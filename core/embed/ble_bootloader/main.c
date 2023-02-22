@@ -77,7 +77,7 @@ static void on_error(void) {
 
 void app_error_handler(uint32_t error_code, uint32_t line_num,
                        const uint8_t* p_file_name) {
-  NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
+  NRF_LOG_ERROR("%s:%d, %d", p_file_name, line_num, error_code);
   on_error();
 }
 

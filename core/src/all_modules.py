@@ -33,6 +33,8 @@ from trezor import utils
 
 all_modules
 import all_modules
+bluetooth
+import bluetooth
 boot
 import boot
 main

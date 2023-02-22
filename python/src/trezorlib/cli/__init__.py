@@ -16,10 +16,15 @@
 
 import functools
 import sys
+import threading
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 import click
+import dbus
+import dbus.mainloop.glib
+import dbus.service
+from gi.repository import GLib
 
 from .. import exceptions, transport
 from ..client import TrezorClient
@@ -134,20 +139,36 @@ def with_client(func: "Callable[Concatenate[TrezorClient, P], R]") -> "Callable[
     def trezorctl_command_with_client(
         obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
     ) -> "R":
-        with obj.client_context() as client:
-            session_was_resumed = obj.session_id == client.session_id
-            if not session_was_resumed and obj.session_id is not None:
-                # tried to resume but failed
-                click.echo("Warning: failed to resume session.", err=True)
 
+        loop = GLib.MainLoop()
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+        def callback_wrapper():
             try:
-                return func(client, *args, **kwargs)
-            finally:
-                if not session_was_resumed:
+                with obj.client_context() as client:
+                    session_was_resumed = obj.session_id == client.session_id
+                    if not session_was_resumed and obj.session_id is not None:
+                        # tried to resume but failed
+                        click.echo("Warning: failed to resume session.", err=True)
+
                     try:
-                        client.end_session()
-                    except Exception:
-                        pass
+                        return func(client, *args, **kwargs)
+                    except Exception as e:
+                        print(e)
+                    finally:
+                        if not session_was_resumed:
+                            try:
+                                client.end_session()
+                            except Exception:
+                                pass
+            except Exception as e:
+                print(e)
+            finally:
+                loop.quit()
+
+        threading.Thread(target=callback_wrapper, daemon=True).start()
+        loop.run()
+        return None
 
     # the return type of @click.pass_obj is improperly specified and pyright doesn't
     # understand that it converts f(obj, *args, **kwargs) to f(*args, **kwargs)
