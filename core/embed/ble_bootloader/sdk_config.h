@@ -1365,7 +1365,7 @@
 // <i> to received packets being dropped.
 
 #ifndef NRF_DFU_SERIAL_UART_RX_BUFFERS
-#define NRF_DFU_SERIAL_UART_RX_BUFFERS 3
+#define NRF_DFU_SERIAL_UART_RX_BUFFERS 10
 #endif
 
 // </h>
@@ -1760,7 +1760,7 @@
 // <268435456=> 1000000 baud
 
 #ifndef UART_DEFAULT_CONFIG_BAUDRATE
-#define UART_DEFAULT_CONFIG_BAUDRATE 30801920
+#define UART_DEFAULT_CONFIG_BAUDRATE 268435456
 #endif
 
 // <o> UART_DEFAULT_CONFIG_IRQ_PRIORITY  - Interrupt priority

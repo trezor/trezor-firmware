@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "dfu/dfu.h"
+#include "ble/dfu.h"
 
 /// package: trezorio.ble
 
@@ -65,12 +65,26 @@ STATIC mp_obj_t mod_trezorio_BLE_update_chunk(mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_update_chunk_obj,
                                  mod_trezorio_BLE_update_chunk);
 
+/// def write(self, msg: bytes) -> int:
+///     """
+///     Sends message using BLE.
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_write(mp_obj_t self, mp_obj_t msg) {
+  mp_buffer_info_t buf = {0};
+  mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
+  ble_comm_send(buf.buf, buf.len);
+  return MP_OBJ_NEW_SMALL_INT(buf.len);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_BLE_write_obj,
+                                 mod_trezorio_BLE_write);
+
 STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ble)},
     {MP_ROM_QSTR(MP_QSTR_update_init),
      MP_ROM_PTR(&mod_trezorio_BLE_update_init_obj)},
     {MP_ROM_QSTR(MP_QSTR_update_chunk),
      MP_ROM_PTR(&mod_trezorio_BLE_update_chunk_obj)},
+    {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_BLE_write_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_BLE_globals,
                             mod_trezorio_BLE_globals_table);

@@ -72,7 +72,7 @@
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 
-#include "dfu/dfu.h"
+#include "ble/comm.h"
 
 #endif
 
@@ -145,7 +145,7 @@ int main(void) {
   sdcard_init();
 #endif
 
-  dfu_init();
+  ble_comm_init();
 
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode

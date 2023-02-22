@@ -172,7 +172,6 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_handling_error.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_mbr.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_req_handler.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial_uart.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_settings.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_transport.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_utils.c',
@@ -191,6 +190,8 @@ SOURCE_NRFHAL = [
 SOURCE_BLE_BOOTLOADER = [
     'embed/ble_bootloader/main.c',
     'embed/ble_bootloader/dfu_public_key.c',
+    # originally embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial_uart.c',
+    'embed/ble_bootloader/nrf_dfu_serial_uart.c',
 ]
 
 if DEBUG:

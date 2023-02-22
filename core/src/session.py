@@ -1,6 +1,7 @@
 from trezor import log, loop, utils, wire, workflow
 
 import apps.base
+import bluetooth
 import usb
 
 apps.base.boot()
@@ -23,6 +24,7 @@ workflow.start_default()
 wire.setup(usb.iface_wire)
 if __debug__:
     wire.setup(usb.iface_debug, is_debug_session=True)
+wire.setup(bluetooth.iface_ble)
 
 loop.run()
 
