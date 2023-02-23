@@ -227,7 +227,7 @@ def show_simple(
     *,
     title: str | None,
     description: str,
-    button: str,
+    button: str | None = None,
 ) -> object:
     """Simple dialog with text and one button."""
 

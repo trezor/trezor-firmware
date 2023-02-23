@@ -73,15 +73,15 @@ async def _request_on_host(ctx: Context) -> str:
                 ctx,
                 "passphrase_host1",
                 "Hidden wallet",
-                description="Access hidden wallet?\n\nNext screen will show the passphrase!",
+                description="Next screen will show the passphrase.",
+                verb="Continue",
             )
 
             await confirm_blob(
                 ctx,
                 "passphrase_host2",
-                "Hidden wallet",
+                "Confirm passphrase",
                 passphrase,
-                "Use this passphrase?\n",
             )
 
     return passphrase
