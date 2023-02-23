@@ -849,7 +849,7 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
         let description: StrBuffer =
             kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
-        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let button: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_button, StrBuffer::empty())?;
 
         let obj = if let Some(t) = title {
             LayoutObj::new(Frame::left_aligned(
@@ -863,7 +863,7 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
                 ),
             ))?
             .into()
-        } else {
+        } else if !button.is_empty() {
             LayoutObj::new(Border::new(
                 theme::borders(),
                 Dialog::new(
@@ -871,6 +871,17 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
+                ),
+            ))?
+            .into()
+        } else {
+            LayoutObj::new(Border::new(
+                theme::borders(),
+                Dialog::new(
+                    Paragraphs::new(
+                        [Paragraph::new(&theme::TEXT_DEMIBOLD, description).centered()],
+                    ),
+                    Empty,
                 ),
             ))?
             .into()
@@ -1541,7 +1552,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str | None,
     ///     description: str,
-    ///     button: str,
+    ///     button: str | None = None,
     /// ) -> object:
     ///     """Simple dialog with text and one button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),

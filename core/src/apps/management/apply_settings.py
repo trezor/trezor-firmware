@@ -160,7 +160,7 @@ async def _require_confirm_change_label(ctx: GenericContext, label: str) -> None
 
 
 async def _require_confirm_change_passphrase(ctx: GenericContext, use: bool) -> None:
-    template = "Do you really want to {} passphrase encryption?"
+    template = "Do you want to {} passphrase protection?"
     description = template.format("enable" if use else "disable")
     await confirm_action(
         ctx,
