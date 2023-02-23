@@ -164,6 +164,7 @@ _U2FHID_IF_VERSION = const(2)  # interface version
 _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
 _FIDO_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
 _FIDO_ATT_CERT = b"0\x82\x01\xcd0\x82\x01s\xa0\x03\x02\x01\x02\x02\x04\x03E`\xc40\n\x06\x08*\x86H\xce=\x04\x03\x020.1,0*\x06\x03U\x04\x03\x0c#Trezor FIDO Root CA Serial 841513560 \x17\r200406100417Z\x18\x0f20500406100417Z0x1\x0b0\t\x06\x03U\x04\x06\x13\x02CZ1\x1c0\x1a\x06\x03U\x04\n\x0c\x13SatoshiLabs, s.r.o.1\"0 \x06\x03U\x04\x0b\x0c\x19Authenticator Attestation1'0%\x06\x03U\x04\x03\x0c\x1eTrezor FIDO EE Serial 548784040Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc1\xa33010!\x06\x0b+\x06\x01\x04\x01\x82\xe5\x1c\x01\x01\x04\x04\x12\x04\x10\xd6\xd0\xbd\xc3b\xee\xc4\xdb\xde\x8dzenJD\x870\x0c\x06\x03U\x1d\x13\x01\x01\xff\x04\x020\x000\n\x06\x08*\x86H\xce=\x04\x03\x02\x03H\x000E\x02 \x0b\xce\xc4R\xc3\n\x11'\xe5\xd5\xf5\xfc\xf5\xd6Wy\x11+\xe50\xad\x9d-TXJ\xbeE\x86\xda\x93\xc6\x02!\x00\xaf\xca=\xcf\xd8A\xb0\xadz\x9e$}\x0ff\xf4L,\x83\xf9T\xab\x95O\x896\xc15\x08\x7fX\xf1\x95"
+_BOGUS_RP_ID = ".dummy"
 _BOGUS_APPID_CHROME = b"A" * 32
 _BOGUS_APPID_FIREFOX = b"\0" * 32
 _BOGUS_APPIDS = (_BOGUS_APPID_CHROME, _BOGUS_APPID_FIREFOX)
@@ -211,7 +212,7 @@ _MAX_CRED_COUNT_IN_LIST = const(10)
 # The CID of the last WINK command. Used to ensure that we do only one WINK at a time on any given CID.
 _last_wink_cid = 0
 
-# Indicates whether the last U2F_AUTHENTICATE had a valid key handle.
+# Indicates whether the last U2F_AUTHENTICATE or CBOR_GET_ASSERTION had a valid key handle / credential ID.
 _last_auth_valid = False
 
 
@@ -608,6 +609,23 @@ async def _confirm_fido(title: str, credential: Credential) -> bool:
         return False
 
 
+async def _confirm_bogus_app(title: str) -> None:
+    if _last_auth_valid:
+        await show_popup(
+            title,
+            "This device is already registered with this application.",
+            "Already registered.",
+            timeout_ms=_POPUP_TIMEOUT_MS,
+        )
+    else:
+        await show_popup(
+            title,
+            "This device is not registered with this application.",
+            "Not registered.",
+            timeout_ms=_POPUP_TIMEOUT_MS,
+        )
+
+
 class State:
     def __init__(self, cid: int, iface: HID) -> None:
         self.cid = cid
@@ -660,20 +678,7 @@ class U2fState(State):
 class U2fConfirmRegister(U2fState):
     async def confirm_dialog(self) -> bool:
         if self._cred.rp_id_hash in _BOGUS_APPIDS:
-            if _last_auth_valid:
-                await show_popup(
-                    "U2F",
-                    "This device is already registered with this application.",
-                    "Already registered.",
-                    timeout_ms=_POPUP_TIMEOUT_MS,
-                )
-            else:
-                await show_popup(
-                    "U2F",
-                    "This device is not registered with this application.",
-                    "Not registered.",
-                    timeout_ms=_POPUP_TIMEOUT_MS,
-                )
+            await _confirm_bogus_app("U2F")
             return False
         else:
             return await _confirm_fido("U2F Register", self._cred)
@@ -791,6 +796,9 @@ class Fido2ConfirmMakeCredential(Fido2State):
         self._user_verification = user_verification
 
     async def confirm_dialog(self) -> bool:
+        if self._cred.rp_id == _BOGUS_RP_ID:
+            await _confirm_bogus_app("FIDO2")
+            return True
         if not await _confirm_fido("FIDO2 Register", self._cred):
             return False
         if self._user_verification:
@@ -1725,6 +1733,9 @@ def _cbor_get_assertion_process(req: Cmd, dialog_mgr: DialogManager) -> State | 
     if user_verification and not config.has_pin():
         # User verification requested, but PIN is not enabled.
         return Fido2ConfirmNoPin(cid, dialog_mgr.iface)
+
+    global _last_auth_valid
+    _last_auth_valid = bool(cred_list)
 
     if not cred_list:
         # No credentials. This authenticator is not registered.
