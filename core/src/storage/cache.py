@@ -1,3 +1,4 @@
+import builtins
 import gc
 from micropython import const
 from typing import TYPE_CHECKING
@@ -271,6 +272,16 @@ def get_int(key: int, default: T | None = None) -> int | T | None:  # noqa: F811
         return default
     else:
         return int.from_bytes(encoded, "big")
+
+
+def get_int_all_sessions(key: int) -> builtins.set[int]:
+    sessions = [_SESSIONLESS_CACHE] if key & _SESSIONLESS_FLAG else _SESSIONS
+    values = builtins.set()
+    for session in sessions:
+        encoded = session.get(key)
+        if encoded is not None:
+            values.add(int.from_bytes(encoded, "big"))
+    return values
 
 
 def is_set(key: int) -> bool:
