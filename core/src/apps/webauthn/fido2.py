@@ -930,6 +930,7 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
     def __init__(self, cid: int, iface: HID, rp_id: str) -> None:
         cred = Fido2Credential()
         cred.rp_id = rp_id
+        cred.rp_id_hash = hashlib.sha256(rp_id).digest()
         super().__init__(
             cid, iface, b"", [cred], {}, resident=False, user_verification=False
         )
