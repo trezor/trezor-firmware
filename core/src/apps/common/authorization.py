@@ -46,6 +46,12 @@ def get() -> protobuf.MessageType | None:
     return protobuf.load_message_buffer(buffer, msg_wire_type)
 
 
+def is_set_any_session(auth_type: MessageType) -> bool:
+    return auth_type in storage_cache.get_int_all_sessions(
+        APP_COMMON_AUTHORIZATION_TYPE
+    )
+
+
 def get_wire_types() -> Iterable[int]:
     stored_auth_type = storage_cache.get(APP_COMMON_AUTHORIZATION_TYPE)
     if stored_auth_type is None:
