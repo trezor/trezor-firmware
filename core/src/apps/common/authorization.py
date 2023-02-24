@@ -17,7 +17,7 @@ APP_COMMON_AUTHORIZATION_TYPE = (
 
 
 def is_set() -> bool:
-    return bool(storage_cache.get(APP_COMMON_AUTHORIZATION_TYPE))
+    return storage_cache.get(APP_COMMON_AUTHORIZATION_TYPE) is not None
 
 
 def set(auth_message: protobuf.MessageType) -> None:
@@ -29,21 +29,17 @@ def set(auth_message: protobuf.MessageType) -> None:
     # (because only wire-level messages have wire_type, which we use as identifier)
     ensure(auth_message.MESSAGE_WIRE_TYPE is not None)
     assert auth_message.MESSAGE_WIRE_TYPE is not None  # so that typechecker knows too
-    storage_cache.set(
-        APP_COMMON_AUTHORIZATION_TYPE,
-        auth_message.MESSAGE_WIRE_TYPE.to_bytes(2, "big"),
-    )
+    storage_cache.set_int(APP_COMMON_AUTHORIZATION_TYPE, auth_message.MESSAGE_WIRE_TYPE)
     storage_cache.set(APP_COMMON_AUTHORIZATION_DATA, buffer)
 
 
 def get() -> protobuf.MessageType | None:
-    stored_auth_type = storage_cache.get(APP_COMMON_AUTHORIZATION_TYPE)
+    stored_auth_type = storage_cache.get_int(APP_COMMON_AUTHORIZATION_TYPE)
     if not stored_auth_type:
         return None
 
-    msg_wire_type = int.from_bytes(stored_auth_type, "big")
     buffer = storage_cache.get(APP_COMMON_AUTHORIZATION_DATA, b"")
-    return protobuf.load_message_buffer(buffer, msg_wire_type)
+    return protobuf.load_message_buffer(buffer, stored_auth_type)
 
 
 def is_set_any_session(auth_type: MessageType) -> bool:
@@ -53,12 +49,11 @@ def is_set_any_session(auth_type: MessageType) -> bool:
 
 
 def get_wire_types() -> Iterable[int]:
-    stored_auth_type = storage_cache.get(APP_COMMON_AUTHORIZATION_TYPE)
+    stored_auth_type = storage_cache.get_int(APP_COMMON_AUTHORIZATION_TYPE)
     if stored_auth_type is None:
         return ()
 
-    msg_wire_type = int.from_bytes(stored_auth_type, "big")
-    return WIRE_TYPES.get(msg_wire_type, ())
+    return WIRE_TYPES.get(stored_auth_type, ())
 
 
 def clear() -> None:
