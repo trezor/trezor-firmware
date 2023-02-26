@@ -92,9 +92,9 @@ if TYPE_CHECKING:
 experimental_enabled = False
 
 
-def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
+def setup(iface: WireInterface, is_debug_session: bool = False, mutex=None) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session))
+    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session, mutex))
 
 
 def _wrap_protobuf_load(
@@ -383,7 +383,7 @@ async def _handle_single_message(
 
 
 async def handle_session(
-    iface: WireInterface, session_id: int, is_debug_session: bool = False
+    iface: WireInterface, session_id: int, is_debug_session: bool = False, mutex=None
 ) -> None:
     if __debug__ and is_debug_session:
         ctx_buffer = WIRE_BUFFER_DEBUG
@@ -408,6 +408,18 @@ async def handle_session(
                 # wait for a new one coming from the wire.
                 try:
                     msg = await ctx.read_from_wire()
+                    if mutex is not None:
+                        if mutex.get_busy(iface.iface_num()):
+                            await ctx.write(
+                                Failure(
+                                    code=FailureType.DeviceIsBusy,
+                                    message="Device is busy",
+                                )
+                            )
+                            continue
+                        else:
+                            mutex.set_busy(iface.iface_num())
+
                 except codec_v1.CodecError as exc:
                     if __debug__:
                         log.exception(__name__, exc)
