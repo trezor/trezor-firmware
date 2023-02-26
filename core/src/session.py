@@ -1,3 +1,5 @@
+from mutex import Mutex
+
 from trezor import log, loop, utils, wire, workflow
 
 import apps.base
@@ -20,11 +22,19 @@ if __debug__:
 apps.base.set_homescreen()
 workflow.start_default()
 
+
+mutex = Mutex()
+
+mutex.add(usb.iface_wire.iface_num())
+mutex.add(usb.iface_debug.iface_num())
+mutex.add(bluetooth.iface_ble.iface_num())
+
 # initialize the wire codec
-wire.setup(usb.iface_wire)
+wire.setup(usb.iface_wire, mutex=mutex)
 if __debug__:
-    wire.setup(usb.iface_debug, is_debug_session=True)
-wire.setup(bluetooth.iface_ble)
+    wire.setup(usb.iface_debug, is_debug_session=True, mutex=mutex)
+wire.setup(bluetooth.iface_ble, mutex=mutex)
+
 
 loop.run()
 
