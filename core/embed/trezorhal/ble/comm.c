@@ -20,6 +20,8 @@
 #include STM32_HAL_H
 #include TREZOR_BOARD
 
+#include "comm.h"
+
 static UART_HandleTypeDef urt;
 
 void ble_comm_init(void) {
@@ -47,7 +49,7 @@ void ble_comm_init(void) {
 }
 
 void ble_comm_send(uint8_t *data, uint32_t len) {
-  HAL_UART_Transmit(&urt, data, len, 10);
+  HAL_UART_Transmit(&urt, data, len, 30);
 }
 
 uint32_t ble_comm_receive(uint8_t *data, uint32_t len) {
@@ -63,5 +65,69 @@ uint32_t ble_comm_receive(uint8_t *data, uint32_t len) {
       return len - urt.RxXferCount - 1;
     }
   }
+  return 0;
+}
+
+void ble_int_comm_send(uint8_t *data, uint32_t len, bool internal) {
+  uint16_t msg_len = len + 4;
+  uint8_t len_hi = msg_len >> 8;
+  uint8_t len_lo = msg_len & 0xFF;
+  uint8_t eom = 0x55;
+
+  uint8_t init_byte = 0;
+  if (internal) {
+    init_byte = 0xA0;
+  } else {
+    init_byte = 0xA1;
+  }
+
+  HAL_UART_Transmit(&urt, &init_byte, 1, 1);
+  HAL_UART_Transmit(&urt, &len_hi, 1, 1);
+  HAL_UART_Transmit(&urt, &len_lo, 1, 1);
+
+  HAL_UART_Transmit(&urt, data, len, 10);
+  HAL_UART_Transmit(&urt, &eom, 1, 1);
+}
+
+uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len, bool *internal) {
+  data[0] = 0;
+  if (urt.Instance->SR & USART_SR_RXNE) {
+    uint8_t init_byte = 0;
+    HAL_UART_Receive(&urt, &init_byte, 1, 1);
+
+    if (init_byte == 0xA0 || init_byte == 0xA1) {
+      uint8_t len_hi = 0;
+      uint8_t len_lo = 0;
+      HAL_UART_Receive(&urt, &len_hi, 1, 1);
+      HAL_UART_Receive(&urt, &len_lo, 1, 1);
+
+      uint16_t act_len = (len_hi << 8) | len_lo;
+
+      HAL_StatusTypeDef result = HAL_UART_Receive(&urt, data, act_len - 4, 5);
+
+      if (result != HAL_OK) {
+        return 0;
+      }
+
+      uint8_t eom = 0;
+      HAL_UART_Receive(&urt, &eom, 1, 1);
+
+      if (eom == 0x55) {
+        if (init_byte == 0xA0) {
+          *internal = true;
+        } else {
+          *internal = false;
+        }
+        return act_len - 4;
+      }
+      return 0;
+
+    } else {
+      // disregard byte.
+      // todo: flush everything on the line, also for other errors
+      return 0;
+    }
+  }
+
   return 0;
 }

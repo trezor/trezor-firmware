@@ -39,3 +39,21 @@ message UploadBLEFirmwareNextChunk {
 message UploadBLEFirmwareChunk {
     required bytes data = 1;
 }
+
+
+/**
+ * Request: initiates new pairing request
+ * @start
+ * @next AuthKey
+ * @next Failure
+ */
+message PairingRequest {
+}
+
+/**
+ * Request: confirms pairing request with auth key entered on the device
+ * @end
+ */
+message AuthKey {
+    required bytes key = 1;
+}
