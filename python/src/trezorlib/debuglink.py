@@ -369,14 +369,14 @@ class DebugLink:
     def swipe_up(self, wait: bool = False) -> None:
         self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
 
-    def swipe_down(self) -> None:
-        self.input(swipe=messages.DebugSwipeDirection.DOWN)
+    def swipe_down(self, wait: bool = False) -> None:
+        self.input(swipe=messages.DebugSwipeDirection.DOWN, wait=wait)
 
-    def swipe_right(self) -> None:
-        self.input(swipe=messages.DebugSwipeDirection.RIGHT)
+    def swipe_right(self, wait: bool = False) -> None:
+        self.input(swipe=messages.DebugSwipeDirection.RIGHT, wait=wait)
 
-    def swipe_left(self) -> None:
-        self.input(swipe=messages.DebugSwipeDirection.LEFT)
+    def swipe_left(self, wait: bool = False) -> None:
+        self.input(swipe=messages.DebugSwipeDirection.LEFT, wait=wait)
 
     def stop(self) -> None:
         self._call(messages.DebugLinkStop(), nowait=True)
