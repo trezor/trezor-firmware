@@ -140,6 +140,8 @@ enum MessageType {
     MessageType_UploadBLEFirmwareInit = 8000 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_UploadBLEFirmwareNextChunk = 8001 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_UploadBLEFirmwareChunk = 8002 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_PairingRequest = 8003 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_AuthKey = 8004 [(bitcoin_only) = true, (wire_out) = true];
 
     // Bitcoin
     MessageType_GetPublicKey = 11 [(bitcoin_only) = true, (wire_in) = true];

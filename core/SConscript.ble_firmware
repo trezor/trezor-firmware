@@ -251,14 +251,29 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/components/ble/nrf_ble_gatt/nrf_ble_gatt.c',
   'embed/sdk/nrf52/components/ble/nrf_ble_qwr/nrf_ble_qwr.c',
   'embed/sdk/nrf52/external/utf_converter/utf.c',
-  'embed/sdk/nrf52/components/ble/ble_services/ble_nus/ble_nus.c',
   'embed/sdk/nrf52/components/softdevice/common/nrf_sdh.c',
   'embed/sdk/nrf52/components/softdevice/common/nrf_sdh_ble.c',
   'embed/sdk/nrf52/components/softdevice/common/nrf_sdh_soc.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/gatt_cache_manager.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/gatts_cache_manager.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/id_manager.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/peer_data_storage.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/peer_database.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/peer_id.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/peer_manager.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/peer_manager_handler.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/pm_buffer.c',
+  'embed/sdk/nrf52/components/libraries/fds/fds.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/security_manager.c',
+  'embed/sdk/nrf52/components/ble/peer_manager/security_dispatcher.c',
+  'embed/sdk/nrf52/components/libraries/fstorage/nrf_fstorage.c',
+  'embed/sdk/nrf52/components/libraries/fstorage/nrf_fstorage_sd.c',
+
 ]
 
 SOURCE_BLE_FIRMWARE = [
     'embed/ble_firmware/main.c',
+    'embed/ble_firmware/ble_nus.c',
 ]
 
 if MMD:
