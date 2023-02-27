@@ -350,10 +350,10 @@ def passed(result: TestResult) -> Path:
 
 def missing(result: TestResult) -> Path:
     """Generate an HTML file for a newly seen test-case."""
-    return recorded(result, header="New testcase")
+    return recorded(result, header="New testcase", dir="new")
 
 
-def recorded(result: TestResult, header: str = "Recorded") -> Path:
+def recorded(result: TestResult, header: str = "Recorded", dir: str = "passed") -> Path:
     """Generate an HTML file for a passed test-case.
 
     Shows all the screens from it in exact order.
@@ -371,6 +371,6 @@ def recorded(result: TestResult, header: str = "Recorded") -> Path:
 
             for screen in result.images:
                 with tr():
-                    html.image_column(screen, TESTREPORT_PATH / "new")
+                    html.image_column(screen, TESTREPORT_PATH / dir)
 
-    return html.write(TESTREPORT_PATH / "new", doc, result.test.id + ".html")
+    return html.write(TESTREPORT_PATH / dir, doc, result.test.id + ".html")
