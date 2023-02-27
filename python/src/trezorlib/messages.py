@@ -83,6 +83,8 @@ class MessageType(IntEnum):
     UploadBLEFirmwareInit = 8000
     UploadBLEFirmwareNextChunk = 8001
     UploadBLEFirmwareChunk = 8002
+    PairingRequest = 8003
+    AuthKey = 8004
     GetPublicKey = 11
     PublicKey = 12
     SignTx = 15
@@ -2087,6 +2089,24 @@ class UploadBLEFirmwareChunk(protobuf.MessageType):
         data: "bytes",
     ) -> None:
         self.data = data
+
+
+class PairingRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8003
+
+
+class AuthKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8004
+    FIELDS = {
+        1: protobuf.Field("key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: "bytes",
+    ) -> None:
+        self.key = key
 
 
 class FirmwareErase(protobuf.MessageType):

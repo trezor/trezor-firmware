@@ -34,6 +34,7 @@
 
 // Whether USB data pins were connected on last check (USB configured)
 bool usb_connected_previously = true;
+bool ble_last_internal = false;
 
 #define CHECK_PARAM_RANGE(value, minimum, maximum)  \
   if (value < minimum || value > maximum) {         \

@@ -1221,6 +1221,26 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["UploadBLEFirmwareChunk"]:
             return isinstance(msg, cls)
 
+    class PairingRequest(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PairingRequest"]:
+            return isinstance(msg, cls)
+
+    class AuthKey(protobuf.MessageType):
+        key: "bytes"
+
+        def __init__(
+            self,
+            *,
+            key: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthKey"]:
+            return isinstance(msg, cls)
+
     class CardanoBlockchainPointerType(protobuf.MessageType):
         block_index: "int"
         tx_index: "int"

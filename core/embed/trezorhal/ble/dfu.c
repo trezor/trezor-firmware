@@ -121,7 +121,6 @@ dfu_result_t dfu_update_do(uint8_t *datfile, uint32_t datfile_len,
 
 void txFunction(struct SFwu *fwu, uint8_t *buf, uint8_t len) {
   ble_comm_send(buf, len);
-  ;
 }
 
 static uint8_t readData(uint8_t *data, int maxLen) {

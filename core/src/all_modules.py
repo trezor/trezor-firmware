@@ -303,6 +303,8 @@ apps.management.backup_device
 import apps.management.backup_device
 apps.management.backup_types
 import apps.management.backup_types
+apps.management.ble.pairing_request
+import apps.management.ble.pairing_request
 apps.management.ble.upload_ble_firmware_init
 import apps.management.ble.upload_ble_firmware_init
 apps.management.change_pin
