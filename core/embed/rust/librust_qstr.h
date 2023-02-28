@@ -16,7 +16,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_CONFIRMED;
   MP_QSTR_CANCELLED;
   MP_QSTR_INFO;
+  MP_QSTR_disable_animation;
+  MP_QSTR_jpeg_info;
+  MP_QSTR_jpeg_test;
   MP_QSTR_confirm_action;
+  MP_QSTR_confirm_homescreen;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_coinjoin;
@@ -44,13 +48,20 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_slip39;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
+  MP_QSTR_show_busyscreen;
   MP_QSTR_show_group_share_success;
+  MP_QSTR_show_homescreen;
+  MP_QSTR_show_lockscreen;
+  MP_QSTR_draw_welcome_screen;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
+  MP_QSTR_show_progress;
 
   MP_QSTR_attach_timer_fn;
   MP_QSTR_touch_event;
   MP_QSTR_button_event;
+  MP_QSTR_progress_event;
+  MP_QSTR_usb_event;
   MP_QSTR_timer;
   MP_QSTR_paint;
   MP_QSTR_request_complete_repaint;
@@ -90,10 +101,17 @@ static void _librust_qstrs(void) {
   MP_QSTR_min_count;
   MP_QSTR_max_count;
   MP_QSTR_items;
+  MP_QSTR_image;
   MP_QSTR_active;
   MP_QSTR_info_button;
   MP_QSTR_time_ms;
   MP_QSTR_app_name;
   MP_QSTR_icon_name;
   MP_QSTR_accounts;
+  MP_QSTR_indeterminate;
+  MP_QSTR_notification;
+  MP_QSTR_notification_level;
+  MP_QSTR_bootscreen;
+  MP_QSTR_skip_first_paint;
+  MP_QSTR_wrong_pin;
 }

@@ -3,9 +3,10 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx},
-        display::{self, Color},
+        display::{self, toif::Icon, Color},
         geometry::{Offset, Rect},
         model_tt::constant,
+        util::animation_disabled,
     },
 };
 
@@ -41,6 +42,16 @@ impl Loader {
             shrinking_duration: Duration::from_millis(500),
             styles: theme::loader_default(),
         }
+    }
+
+    pub fn with_durations(
+        mut self,
+        growing_duration: Duration,
+        shrinking_duration: Duration,
+    ) -> Self {
+        self.growing_duration = growing_duration;
+        self.shrinking_duration = shrinking_duration;
+        self
     }
 
     pub fn start_growing(&mut self, ctx: &mut EventCtx, now: Instant) {
@@ -131,7 +142,9 @@ impl Component for Loader {
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
             if self.is_animating() {
                 // We have something to paint, so request to be painted in the next pass.
-                ctx.request_paint();
+                if !animation_disabled() {
+                    ctx.request_paint();
+                }
 
                 if self.is_completely_grown(now) {
                     return Some(LoaderMsg::GrownCompletely);
@@ -160,6 +173,7 @@ impl Component for Loader {
             } else {
                 self.styles.active
             };
+
             display::loader(
                 progress,
                 self.offset_y,
@@ -177,7 +191,7 @@ pub struct LoaderStyleSheet {
 }
 
 pub struct LoaderStyle {
-    pub icon: Option<(&'static [u8], Color)>,
+    pub icon: Option<(Icon, Color)>,
     pub loader_color: Color,
     pub background_color: Color,
 }

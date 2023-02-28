@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import EthereumDataType  # noqa: F401
     from trezor.enums import FailureType  # noqa: F401
+    from trezor.enums import HomescreenFormat  # noqa: F401
     from trezor.enums import InputScriptType  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
     from trezor.enums import MoneroNetworkType  # noqa: F401
@@ -2102,6 +2103,8 @@ if TYPE_CHECKING:
         display_rotation: "int | None"
         experimental_features: "bool | None"
         busy: "bool | None"
+        homescreen_format: "HomescreenFormat | None"
+        hide_passphrase_from_host: "bool | None"
 
         def __init__(
             self,
@@ -2144,6 +2147,8 @@ if TYPE_CHECKING:
             display_rotation: "int | None" = None,
             experimental_features: "bool | None" = None,
             busy: "bool | None" = None,
+            homescreen_format: "HomescreenFormat | None" = None,
+            hide_passphrase_from_host: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2187,6 +2192,7 @@ if TYPE_CHECKING:
         passphrase_always_on_device: "bool | None"
         safety_checks: "SafetyCheckLevel | None"
         experimental_features: "bool | None"
+        hide_passphrase_from_host: "bool | None"
 
         def __init__(
             self,
@@ -2200,6 +2206,7 @@ if TYPE_CHECKING:
             passphrase_always_on_device: "bool | None" = None,
             safety_checks: "SafetyCheckLevel | None" = None,
             experimental_features: "bool | None" = None,
+            hide_passphrase_from_host: "bool | None" = None,
         ) -> None:
             pass
 

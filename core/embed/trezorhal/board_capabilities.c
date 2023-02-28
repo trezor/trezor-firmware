@@ -24,11 +24,11 @@
 #define handle_fault(msg) \
   (__fatal_error("Fault detected", msg, __FILE__, __LINE__, __func__))
 
-static uint8_t board_name[MODEL_NAME_MAX_LENGTH + 1] = {0};
+static uint32_t board_name = 0;
 
 static struct BoardloaderVersion boardloader_version;
 
-const uint8_t *get_board_name() { return board_name; }
+const uint32_t get_board_name() { return board_name; }
 
 const struct BoardloaderVersion *get_boardloader_version() {
   return &boardloader_version;
@@ -49,7 +49,6 @@ void parse_boardloader_capabilities() {
   while (pos <= end - 2) {
     enum CapabilityTag tag = pos[0];
     uint8_t length = pos[1];
-    uint8_t used_length;
     pos += 2;
 
     if (pos + length > end) {
@@ -61,9 +60,10 @@ void parse_boardloader_capabilities() {
         // not used yet, just advance pointer
         break;
       case MODEL_NAME:
-        used_length = MIN(MODEL_NAME_MAX_LENGTH, length);
-        memcpy(board_name, pos, used_length);
-        board_name[MODEL_NAME_MAX_LENGTH] = 0;
+        if (length != sizeof(uint32_t)) {
+          break;
+        }
+        memcpy((uint8_t *)&board_name, pos, sizeof(uint32_t));
         break;
       case BOARDLOADER_VERSION:
         if (length != sizeof(boardloader_version)) {

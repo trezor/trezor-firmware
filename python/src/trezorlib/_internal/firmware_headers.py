@@ -54,7 +54,7 @@ def all_zero(data: bytes) -> bool:
     return all(b == 0 for b in data)
 
 
-def _check_signature_any(fw: "SignableImageProto", is_devel: bool) -> Status:
+def _check_signature_any(fw: "SignableImageProto", is_devel: bool = False) -> Status:
     if not fw.signature_present():
         return Status.MISSING
     try:
@@ -308,7 +308,7 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
         if not terse:
             output.append(f"Fingerprint: {click.style(self.digest().hex(), bold=True)}")
 
-        sig_status = _check_signature_any(self, is_devel=False)
+        sig_status = _check_signature_any(self)
         sym = SYM_OK if sig_status.is_ok() else SYM_FAIL
         output.append(f"{sym} Signature is {sig_status.value}")
 
@@ -383,7 +383,7 @@ class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
             self.header,
             self.code_hashes(),
             self.digest(),
-            _check_signature_any(self, False),
+            _check_signature_any(self),
         )
 
     def verify(self, dev_keys: bool = False) -> None:
@@ -470,7 +470,7 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
             self.header,
             self.code_hashes(),
             self.digest(),
-            _check_signature_any(self, False),
+            _check_signature_any(self),
         )
 
     def public_keys(

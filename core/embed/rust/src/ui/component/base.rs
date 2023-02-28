@@ -15,6 +15,7 @@ use crate::{
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
+use crate::ui::event::USBEvent;
 
 /// Type used by components that do not return any messages.
 ///
@@ -103,6 +104,16 @@ impl<T> Child<T> {
             ctx.paint_requested = prev_requested;
         }
         result
+    }
+
+    /// Do not draw on screen until an event requests paint. This is used by
+    /// homescreens to avoid flickering when workflow restart happens.
+    pub fn skip_paint(&mut self) {
+        self.marked_for_paint = false;
+    }
+
+    pub fn will_paint(&self) -> bool {
+        self.marked_for_paint
     }
 }
 
@@ -330,14 +341,17 @@ where
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Event {
+pub enum Event<'a> {
     #[cfg(feature = "buttons")]
     Button(ButtonEvent),
     #[cfg(feature = "touch")]
     Touch(TouchEvent),
+    USB(USBEvent),
     /// Previously requested timer was triggered. This invalidates the timer
     /// token (another timer has to be requested).
     Timer(TimerToken),
+    /// Advance progress bar. Progress screens only.
+    Progress(u16, &'a str),
     /// Component has been attached to component tree. This event is sent once
     /// before any other events.
     Attach,

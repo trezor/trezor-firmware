@@ -8,19 +8,21 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionAllOutSetAck
+    from apps.monero.layout import MoneroTransactionProgress
     from .state import State
 
 
-async def all_outputs_set(state: State) -> MoneroTransactionAllOutSetAck:
+def all_outputs_set(
+    state: State, progress: MoneroTransactionProgress
+) -> MoneroTransactionAllOutSetAck:
     import gc
-    from apps.monero import layout
 
     mem_trace = state.mem_trace  # local_cache_attribute
 
     mem_trace(0)
 
-    await layout.transaction_step(state, state.STEP_ALL_OUT)
-    mem_trace(1)
+    progress.step(state, state.STEP_ALL_OUT)
+    state.mem_trace(1)
 
     _validate(state)
     state.is_processing_offloaded = False

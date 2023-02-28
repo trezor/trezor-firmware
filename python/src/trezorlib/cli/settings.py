@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import os
 from typing import TYPE_CHECKING, Optional, cast
 
 import click
@@ -59,7 +60,7 @@ def image_to_t1(filename: str) -> bytes:
     return image.tobytes("raw", "1")
 
 
-def image_to_tt(filename: str) -> bytes:
+def image_to_toif_144x144(filename: str) -> bytes:
     if filename.endswith(".toif"):
         try:
             toif_image = toif.load(filename)
@@ -87,6 +88,40 @@ def image_to_tt(filename: str) -> bytes:
         raise click.ClickException("Wrong image mode - should be full_color")
 
     return toif_image.to_bytes()
+
+
+def image_to_jpeg_240x240(filename: str) -> bytes:
+    if not (filename.endswith(".jpg") or filename.endswith(".jpeg")):
+        raise click.ClickException("Please use a jpg image")
+
+    elif not PIL_AVAILABLE:
+        raise click.ClickException(
+            "Image library is missing. Please install via 'pip install Pillow'."
+        )
+
+    else:
+        try:
+            image = Image.open(filename)
+        except Exception as e:
+            raise click.ClickException("Failed to open image") from e
+
+    if "progressive" in image.info:
+        raise click.ClickException("Progressive JPEG is not supported")
+
+    if image.size != (240, 240):
+        raise click.ClickException("Wrong size of image - should be 240x240")
+
+    image.close()
+
+    file_stats = os.stat(filename)
+
+    if file_stats.st_size > 16384:
+        raise click.ClickException("File is too big, please use maximum 16kB")
+
+    in_file = open(filename, "rb")
+    bytes = in_file.read()
+    in_file.close()
+    return bytes
 
 
 def _should_remove(enable: Optional[bool], remove: bool) -> bool:
@@ -208,7 +243,21 @@ def homescreen(client: "TrezorClient", filename: str) -> str:
         if client.features.model == "1":
             img = image_to_t1(filename)
         else:
-            img = image_to_tt(filename)
+            if (
+                client.features.homescreen_format
+                == messages.HomescreenFormat.Jpeg240x240
+            ):
+                img = image_to_jpeg_240x240(filename)
+            elif (
+                client.features.homescreen_format
+                == messages.HomescreenFormat.Toif144x144
+                or client.features.homescreen_format is None
+            ):
+                img = image_to_toif_144x144(filename)
+            else:
+                raise click.ClickException(
+                    "Unknown image format requested by the device."
+                )
 
     return device.apply_settings(client, homescreen=img)
 
@@ -288,3 +337,14 @@ passphrase.aliases = {
     "enabled": passphrase_on,
     "disabled": passphrase_off,
 }
+
+
+@passphrase.command(name="hide")
+@click.argument("hide", type=ChoiceType({"on": True, "off": False}))
+@with_client
+def hide_passphrase_from_host(client: "TrezorClient", hide: bool) -> str:
+    """Enable or disable hiding passphrase coming from host.
+
+    This is a developer feature. Use with caution.
+    """
+    return device.apply_settings(client, hide_passphrase_from_host=hide)

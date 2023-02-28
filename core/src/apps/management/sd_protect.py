@@ -175,7 +175,7 @@ def require_confirm_sd_protect(ctx: Context, msg: SdProtect) -> Awaitable[None]:
     elif msg.operation == SdProtectOperationType.DISABLE:
         text = "Do you really want to remove SD card protection from your device?"
     elif msg.operation == SdProtectOperationType.REFRESH:
-        text = "Do you really want to replace the current\nSD card secret with a newly generated one?"
+        text = "Do you really want to replace the current SD card secret with a newly generated one?"
     else:
         raise ProcessError("Unknown operation")
 

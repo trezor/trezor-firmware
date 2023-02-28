@@ -39,9 +39,10 @@ async def sign_tx(ctx: Context, msg: EosSignTx, keychain: Keychain) -> EosSigned
     await require_sign_tx(ctx, num_actions)
 
     # actions
-    for _ in range(num_actions):
+    for index in range(num_actions):
         action = await ctx.call(EosTxActionRequest(), EosTxActionAck)
-        await process_action(ctx, sha, action)
+        is_last = index == num_actions - 1
+        await process_action(ctx, sha, action, is_last)
 
     write_uvarint(sha, 0)
     write_bytes_fixed(sha, bytearray(32), 32)

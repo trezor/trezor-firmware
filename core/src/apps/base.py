@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage.cache as storage_cache
 import storage.device as storage_device
 from trezor import config, utils, wire, workflow
-from trezor.enums import MessageType
+from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
 
 from . import workflow_handlers
@@ -75,6 +75,7 @@ def get_features() -> Features:
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
         busy=busy_expiry_ms() > 0,
+        homescreen_format=HomescreenFormat.Jpeg240x240,
     )
 
     if utils.BITCOIN_ONLY:
@@ -127,6 +128,7 @@ def get_features() -> Features:
         f.auto_lock_delay_ms = storage_device.get_autolock_delay_ms()
         f.display_rotation = storage_device.get_rotation()
         f.experimental_features = storage_device.get_experimental_features()
+        f.hide_passphrase_from_host = storage_device.get_hide_passphrase_from_host()
 
     return f
 
@@ -261,8 +263,8 @@ async def handle_UnlockPath(ctx: wire.Context, msg: UnlockPath) -> protobuf.Mess
         await confirm_action(
             ctx,
             "confirm_coinjoin_access",
-            title="CoinJoin account",
-            description="Do you want to allow access to your CoinJoin account?",
+            title="Coinjoin account",
+            description="Do you want to allow access to your coinjoin account?",
         )
 
     wire_types = (MessageType.GetAddress, MessageType.GetPublicKey, MessageType.SignTx)
@@ -291,12 +293,12 @@ def set_homescreen() -> None:
     set_default = workflow.set_default  # local_cache_attribute
 
     if storage_cache.is_set(storage_cache.APP_COMMON_BUSY_DEADLINE_MS):
-        from apps.homescreen.busyscreen import busyscreen
+        from apps.homescreen import busyscreen
 
         set_default(busyscreen)
 
     elif not config.is_unlocked():
-        from apps.homescreen.lockscreen import lockscreen
+        from apps.homescreen import lockscreen
 
         set_default(lockscreen)
 
@@ -306,7 +308,7 @@ def set_homescreen() -> None:
         set_default(recovery_homescreen)
 
     else:
-        from apps.homescreen.homescreen import homescreen
+        from apps.homescreen import homescreen
 
         set_default(homescreen)
 

@@ -151,11 +151,20 @@ int display_orientation(int degrees) {
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
       DISPLAY_ORIENTATION = degrees;
 
+      display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
+      for (uint32_t i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY; i++) {
+        // 2 bytes per pixel because we're using RGB 5-6-5 format
+        PIXELDATA(0x0000);
+      }
+
+      uint16_t shift = 0;
       char BX = 0, BY = 0;
       uint32_t id = display_identify();
       if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
           (id == DISPLAY_ID_ST7789V)) {
 #define RGB (1 << 3)
+#define ML (1 << 4)  // vertical refresh order
+#define MH (1 << 2)  // horizontal refresh order
 #define MV (1 << 5)
 #define MX (1 << 6)
 #define MY (1 << 7)
@@ -170,12 +179,14 @@ int display_orientation(int degrees) {
             BY = (id == DISPLAY_ID_GC9307);
             break;
           case 90:
-            display_command_parameter = MV | MX;
-            BX = (id == DISPLAY_ID_GC9307);
+            display_command_parameter = MV | MX | MH | ML;
+            BX = (id != DISPLAY_ID_GC9307);
+            shift = 1;
             break;
           case 180:
-            display_command_parameter = MX | MY;
-            BY = (id != DISPLAY_ID_GC9307);
+            display_command_parameter = MX | MY | MH | ML;
+            BY = (id == DISPLAY_ID_GC9307);
+            shift = 1;
             break;
           case 270:
             display_command_parameter = MV | MY;
@@ -187,6 +198,23 @@ int display_orientation(int degrees) {
         }
         CMD(0x36);
         DATA(display_command_parameter);
+
+        if (shift) {
+          // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is
+          // gate 80.; gate scan direction 319 -> 0
+          CMD(0xE4);
+          DATA(0x1D);
+          DATA(0x00);
+          DATA(0x11);
+        } else {
+          // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is
+          // gate 80.; gate scan direction 319 -> 0
+          CMD(0xE4);
+          DATA(0x1D);
+          DATA(0x0A);
+          DATA(0x11);
+        }
+
         // reset the column and page extents
         display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
       }
@@ -489,6 +517,44 @@ void display_init_seq(void) {
   display_unsleep();
 }
 
+void display_setup_fmc(void) {
+  // Reference UM1725 "Description of STM32F4 HAL and LL drivers",
+  // section 64.2.1 "How to use this driver"
+  SRAM_HandleTypeDef external_display_data_sram;
+  external_display_data_sram.Instance = FMC_NORSRAM_DEVICE;
+  external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
+  external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
+  external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
+  external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
+  external_display_data_sram.Init.BurstAccessMode =
+      FMC_BURST_ACCESS_MODE_DISABLE;
+  external_display_data_sram.Init.WaitSignalPolarity =
+      FMC_WAIT_SIGNAL_POLARITY_LOW;
+  external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
+  external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
+  external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
+  external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
+  external_display_data_sram.Init.ExtendedMode = FMC_EXTENDED_MODE_DISABLE;
+  external_display_data_sram.Init.AsynchronousWait =
+      FMC_ASYNCHRONOUS_WAIT_DISABLE;
+  external_display_data_sram.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
+  external_display_data_sram.Init.ContinuousClock =
+      FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
+  external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
+
+  // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
+  FMC_NORSRAM_TimingTypeDef normal_mode_timing;
+  normal_mode_timing.AddressSetupTime = 5;
+  normal_mode_timing.AddressHoldTime = 1;  // don't care
+  normal_mode_timing.DataSetupTime = 6;
+  normal_mode_timing.BusTurnAroundDuration = 0;  // don't care
+  normal_mode_timing.CLKDivision = 2;            // don't care
+  normal_mode_timing.DataLatency = 2;            // don't care
+  normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
+
+  HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
+}
+
 void display_init(void) {
   // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -565,41 +631,7 @@ void display_init(void) {
   GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
 
-  // Reference UM1725 "Description of STM32F4 HAL and LL drivers",
-  // section 64.2.1 "How to use this driver"
-  SRAM_HandleTypeDef external_display_data_sram;
-  external_display_data_sram.Instance = FMC_NORSRAM_DEVICE;
-  external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
-  external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
-  external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
-  external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
-  external_display_data_sram.Init.BurstAccessMode =
-      FMC_BURST_ACCESS_MODE_DISABLE;
-  external_display_data_sram.Init.WaitSignalPolarity =
-      FMC_WAIT_SIGNAL_POLARITY_LOW;
-  external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
-  external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
-  external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
-  external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
-  external_display_data_sram.Init.ExtendedMode = FMC_EXTENDED_MODE_DISABLE;
-  external_display_data_sram.Init.AsynchronousWait =
-      FMC_ASYNCHRONOUS_WAIT_DISABLE;
-  external_display_data_sram.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
-  external_display_data_sram.Init.ContinuousClock =
-      FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
-  external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
-
-  // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
-  FMC_NORSRAM_TimingTypeDef normal_mode_timing;
-  normal_mode_timing.AddressSetupTime = 4;
-  normal_mode_timing.AddressHoldTime = 1;
-  normal_mode_timing.DataSetupTime = 4;
-  normal_mode_timing.BusTurnAroundDuration = 0;
-  normal_mode_timing.CLKDivision = 2;
-  normal_mode_timing.DataLatency = 2;
-  normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
-
-  HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
+  display_setup_fmc();
 
   display_init_seq();
 
@@ -607,6 +639,10 @@ void display_init(void) {
 }
 
 void display_reinit(void) {
+  // reinitialize FMC to set correct timing, have to do this in reinit because
+  // boardloader is fixed.
+  display_setup_fmc();
+
   // important for model T as this is not set in boardloader
   display_set_little_endian();
 
@@ -626,17 +662,19 @@ void display_reinit(void) {
   display_backlight(DISPLAY_BACKLIGHT);
 }
 
-void display_refresh(void) {
+void display_sync(void) {
   uint32_t id = display_identify();
   if (id && (id != DISPLAY_ID_GC9307)) {
     // synchronize with the panel synchronization signal
     // in order to avoid visual tearing effects
-    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
-    }
     while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
+    }
+    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
     }
   }
 }
+
+void display_refresh(void) {}
 
 void display_set_slow_pwm(void) {
   // enable PWM timer

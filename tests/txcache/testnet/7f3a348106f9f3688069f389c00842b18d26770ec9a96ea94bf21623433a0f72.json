@@ -1,0 +1,40 @@
+{
+  "bin_outputs": [
+    {
+      "amount": 601,
+      "script_pubkey": "001481a889eb2bab85282006b6418e3265bff9563a75"
+    },
+    {
+      "amount": 8159,
+      "script_pubkey": "00149076768ac4b06c247dbc1a89b66327a5051bdc0c"
+    }
+  ],
+  "inputs": [
+    {
+      "coinjoin_flags": 0,
+      "prev_hash": "a6d3bc4b297a9dae38a0a4650c191947cefe4bd27ce96699d21df287eb9d457c",
+      "prev_index": 1,
+      "script_sig": "",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967293
+    },
+    {
+      "coinjoin_flags": 0,
+      "prev_hash": "bd99f985131e4d008f3fd0cccf54f9bb1cf7752d1fcd04aa485ec69937cd40ae",
+      "prev_index": 0,
+      "script_sig": "",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967293
+    },
+    {
+      "coinjoin_flags": 0,
+      "prev_hash": "d5616b728472378f365d2d28215d89c296d28b685e2f15ca7d2e4dccdb73fa5c",
+      "prev_index": 0,
+      "script_sig": "",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967293
+    }
+  ],
+  "lock_time": 0,
+  "version": 1
+}

@@ -1,9 +1,9 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor.messages import AuthorizeCoinJoin
+from trezor.messages import AuthorizeCoinJoin, SignMessage
 
-from apps.common.paths import PATTERN_BIP44, PathSchema
+from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema
 
 from . import authorization
 from .common import BITCOIN_NAMES
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
         GetAddress,
         GetOwnershipId,
         GetPublicKey,
-        SignMessage,
         VerifyMessage,
         GetOwnershipProof,
         SignTx,
@@ -64,7 +63,7 @@ PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
 PATTERN_BIP84 = "m/84'/coin_type'/account'/change/address_index"
 # BIP-86 for taproot: https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki
 PATTERN_BIP86 = "m/86'/coin_type'/account'/change/address_index"
-# SLIP-25 for CoinJoin: https://github.com/satoshilabs/slips/blob/master/slip-0025.md
+# SLIP-25 for coinjoin: https://github.com/satoshilabs/slips/blob/master/slip-0025.md
 # Only account=0 and script_type=1 are supported for now.
 PATTERN_SLIP25_TAPROOT = "m/10025'/coin_type'/0'/1'/change/address_index"
 PATTERN_SLIP25_TAPROOT_EXTERNAL = "m/10025'/coin_type'/0'/1'/0/address_index"
@@ -75,7 +74,7 @@ PATTERN_GREENADDRESS_B = "m/3'/[1-100]'/[1,4]/address_index"
 PATTERN_GREENADDRESS_SIGN_A = "m/1195487518"
 PATTERN_GREENADDRESS_SIGN_B = "m/1195487518/6/address_index"
 
-PATTERN_CASA = "m/49/coin_type/account/change/address_index"
+PATTERN_CASA_UNHARDENED = "m/49/coin_type/account/change/address_index"
 
 PATTERN_UNCHAINED_HARDENED = (
     "m/45'/coin_type'/account'/[0-1000000]/change/address_index"
@@ -85,11 +84,15 @@ PATTERN_UNCHAINED_UNHARDENED = (
 )
 PATTERN_UNCHAINED_DEPRECATED = "m/45'/coin_type'/account'/[0-1000000]/address_index"
 
+# Model 1 firmware signing.
+# 826421588 is ASCII string "T1B1" as a little-endian 32-bit integer.
+PATTERN_SLIP26_T1_FW = "m/10026'/826421588'/2'/0'"
+
 # SLIP-44 coin type for Bitcoin
-_SLIP44_BITCOIN = const(0)
+SLIP44_BITCOIN = const(0)
 
 # SLIP-44 coin type for all Testnet coins
-_SLIP44_TESTNET = const(1)
+SLIP44_TESTNET = const(1)
 
 
 def validate_path_against_script_type(
@@ -116,20 +119,22 @@ def validate_path_against_script_type(
 
     if script_type == InputScriptType.SPENDADDRESS and not multisig:
         append(PATTERN_BIP44)
-        if slip44 == _SLIP44_BITCOIN:
+        if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
 
+        if SignMessage.is_type_of(msg):
+            append(PATTERN_SLIP26_T1_FW)
     elif (
         script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
         and multisig
     ):
         append(PATTERN_BIP48_RAW)
-        if slip44 == _SLIP44_BITCOIN or (
-            coin.fork_id is not None and slip44 != _SLIP44_TESTNET
+        if slip44 == SLIP44_BITCOIN or (
+            coin.fork_id is not None and slip44 != SLIP44_TESTNET
         ):
             append(PATTERN_BIP45)
-        if slip44 == _SLIP44_BITCOIN:
+        if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
@@ -139,19 +144,20 @@ def validate_path_against_script_type(
 
     elif coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
         append(PATTERN_BIP49)
+        append(PATTERN_CASA)
         if multisig:
             append(PATTERN_BIP48_P2SHSEGWIT)
-        if slip44 == _SLIP44_BITCOIN:
+        if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
-            append(PATTERN_CASA)
+            append(PATTERN_CASA_UNHARDENED)
 
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
         append(PATTERN_BIP84)
         if multisig:
             append(PATTERN_BIP48_SEGWIT)
-        if slip44 == _SLIP44_BITCOIN:
+        if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
 
@@ -173,21 +179,23 @@ def _get_schemas_for_coin(
     patterns = [
         PATTERN_BIP44,
         PATTERN_BIP48_RAW,
+        PATTERN_CASA,
     ]
 
     # patterns without coin_type field must be treated as if coin_type == 0
-    if coin.slip44 == _SLIP44_BITCOIN or (
-        coin.fork_id is not None and coin.slip44 != _SLIP44_TESTNET
+    if coin.slip44 == SLIP44_BITCOIN or (
+        coin.fork_id is not None and coin.slip44 != SLIP44_TESTNET
     ):
         patterns.append(PATTERN_BIP45)
 
-    if coin.slip44 == _SLIP44_BITCOIN:
+    if coin.slip44 == SLIP44_BITCOIN:
         patterns.extend(
             (
                 PATTERN_GREENADDRESS_A,
                 PATTERN_GREENADDRESS_B,
                 PATTERN_GREENADDRESS_SIGN_A,
                 PATTERN_GREENADDRESS_SIGN_B,
+                PATTERN_SLIP26_T1_FW,
             )
         )
 
@@ -195,7 +203,7 @@ def _get_schemas_for_coin(
     if coin.coin_name in BITCOIN_NAMES:
         patterns.extend(
             (
-                PATTERN_CASA,
+                PATTERN_CASA_UNHARDENED,
                 PATTERN_UNCHAINED_HARDENED,
                 PATTERN_UNCHAINED_UNHARDENED,
                 PATTERN_UNCHAINED_DEPRECATED,
@@ -235,9 +243,9 @@ def get_schemas_from_patterns(
     # cannot allow spending any testnet coins from Bitcoin paths, because
     # otherwise an attacker could trick the user into spending BCH on a Bitcoin
     # path by signing a seemingly harmless BCH Testnet transaction.
-    if coin.fork_id is not None and coin.slip44 != _SLIP44_TESTNET:
+    if coin.fork_id is not None and coin.slip44 != SLIP44_TESTNET:
         schemas.extend(
-            PathSchema.parse(pattern, _SLIP44_BITCOIN) for pattern in patterns
+            PathSchema.parse(pattern, SLIP44_BITCOIN) for pattern in patterns
         )
 
     return schemas
@@ -290,7 +298,7 @@ def _get_unlock_schemas(
         patterns = []
         if SignTx.is_type_of(msg) or GetOwnershipProof.is_type_of(msg):
             # SignTx and GetOwnershipProof need access to all SLIP-25 addresses
-            # to create CoinJoin outputs.
+            # to create coinjoin outputs.
             patterns.append(PATTERN_SLIP25_TAPROOT)
         else:
             # In case of other messages like GetAddress or SignMessage there is

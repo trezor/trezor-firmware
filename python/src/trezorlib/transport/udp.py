@@ -36,7 +36,7 @@ class UdpTransport(ProtocolBasedTransport):
     DEFAULT_HOST = "127.0.0.1"
     DEFAULT_PORT = 21324
     PATH_PREFIX = "udp"
-    ENABLED = True
+    ENABLED: bool = True
 
     def __init__(self, device: Optional[str] = None) -> None:
         if not device:
@@ -84,11 +84,17 @@ class UdpTransport(ProtocolBasedTransport):
 
     @classmethod
     def find_by_path(cls, path: str, prefix_search: bool = False) -> "UdpTransport":
+        try:
+            path = path.replace(f"{cls.PATH_PREFIX}:", "")
+            return cls._try_path(path)
+        except TransportException:
+            if not prefix_search:
+                raise
+
         if prefix_search:
             return super().find_by_path(path, prefix_search)
         else:
-            path = path.replace(f"{cls.PATH_PREFIX}:", "")
-            return cls._try_path(path)
+            raise TransportException(f"No UDP device at {path}")
 
     def wait_until_ready(self, timeout: float = 10) -> None:
         try:

@@ -1,9 +1,10 @@
 use crate::ui::{
     component::{base::ComponentExt, Child, Component, Event, EventCtx, Never},
     display,
+    display::toif::Icon,
     geometry::{Grid, Insets, Offset, Rect},
     model_tt::component::{
-        button::{Button, ButtonContent, ButtonMsg::Clicked},
+        button::{Button, ButtonContent, ButtonMsg},
         keyboard::common::{
             paint_pending_marker, MultiTapKeyboard, TextBox, HEADER_HEIGHT, HEADER_PADDING_BOTTOM,
             HEADER_PADDING_SIDE,
@@ -23,7 +24,7 @@ pub struct PassphraseKeyboard {
     input: Child<Input>,
     back: Child<Button<&'static str>>,
     confirm: Child<Button<&'static str>>,
-    keys: [[Child<Button<&'static str>>; KEY_COUNT]; PAGE_COUNT],
+    keys: [Child<Button<&'static str>>; KEY_COUNT],
     scrollbar: ScrollBar,
     fade: bool,
 }
@@ -46,27 +47,20 @@ impl PassphraseKeyboard {
         Self {
             page_swipe: Swipe::horizontal(),
             input: Input::new().into_child(),
-            confirm: Button::with_icon(theme::ICON_CONFIRM)
+            confirm: Button::with_icon(Icon::new(theme::ICON_CONFIRM))
                 .styled(theme::button_confirm())
                 .into_child(),
             back: Button::with_icon_blend(
-                theme::IMAGE_BG_BACK_BTN,
-                theme::ICON_BACK,
+                Icon::new(theme::IMAGE_BG_BACK_BTN),
+                Icon::new(theme::ICON_BACK),
                 Offset::new(30, 12),
             )
             .styled(theme::button_reset())
             .initially_enabled(false)
+            .with_long_press(theme::ERASE_HOLD_DURATION)
             .into_child(),
-            keys: KEYBOARD.map(|page| {
-                page.map(|text| {
-                    if text == " " {
-                        let icon = theme::ICON_SPACE;
-                        Child::new(Button::with_icon(icon))
-                    } else {
-                        Child::new(Button::with_text(text))
-                    }
-                })
-            }),
+            keys: KEYBOARD[STARTING_PAGE]
+                .map(|text| Child::new(Button::new(Self::key_content(text)))),
             scrollbar: ScrollBar::horizontal(),
             fade: false,
         }
@@ -78,6 +72,13 @@ impl PassphraseKeyboard {
             ButtonContent::Icon(_) => " ",
             ButtonContent::Empty => "",
             ButtonContent::IconBlend(_, _, _) => "",
+        }
+    }
+
+    fn key_content(text: &'static str) -> ButtonContent<&'static str> {
+        match text {
+            " " => ButtonContent::Icon(Icon::new(theme::ICON_SPACE)),
+            t => ButtonContent::Text(t),
         }
     }
 
@@ -93,15 +94,22 @@ impl PassphraseKeyboard {
         // Clear the pending state.
         self.input
             .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
-        // Make sure to completely repaint the new buttons.
-        for btn in &mut self.keys[key_page] {
-            btn.request_complete_repaint(ctx);
-        }
+        // Update buttons.
+        self.replace_button_content(ctx, key_page);
         // Reset backlight to normal level on next paint.
         self.fade = true;
         // So that swipe does not visually enable the input buttons when max length
         // reached
         self.update_input_btns_state(ctx);
+    }
+
+    fn replace_button_content(&mut self, ctx: &mut EventCtx, page: usize) {
+        for (i, btn) in self.keys.iter_mut().enumerate() {
+            let text = KEYBOARD[page][i];
+            let content = Self::key_content(text);
+            btn.mutate(ctx, |ctx, b| b.set_content(ctx, content));
+            btn.request_complete_repaint(ctx);
+        }
     }
 
     /// Possibly changing the buttons' state after change of the input.
@@ -121,7 +129,7 @@ impl PassphraseKeyboard {
 
     /// When the input has reached max length, disable all the input buttons.
     fn update_input_btns_state(&mut self, ctx: &mut EventCtx) {
-        for btn in self.keys[self.scrollbar.active_page].iter_mut() {
+        for btn in self.keys.iter_mut() {
             btn.mutate(ctx, |ctx, b| {
                 if self.input.inner().textbox.is_full() {
                     b.disable(ctx);
@@ -162,20 +170,18 @@ impl Component for PassphraseKeyboard {
         self.scrollbar
             .set_count_and_active_page(PAGE_COUNT, STARTING_PAGE);
 
-        // Place all the possible character buttons on all swipe-separated screens.
-        for swipe_screen in &mut self.keys {
-            for (key, btn) in swipe_screen.iter_mut().enumerate() {
-                // Assign the keys in each page to buttons on a 5x3 grid, starting
-                // from the second row.
-                let area = key_grid.cell(if key < 9 {
-                    // The grid has 3 columns, and we skip the first row.
-                    key
-                } else {
-                    // For the last key (the "0" position) we skip one cell.
-                    key + 1
-                });
-                btn.place(area);
-            }
+        // Place all the character buttons.
+        for (key, btn) in &mut self.keys.iter_mut().enumerate() {
+            // Assign the keys in each page to buttons on a 5x3 grid, starting
+            // from the second row.
+            let area = key_grid.cell(if key < 9 {
+                // The grid has 3 columns, and we skip the first row.
+                key
+            } else {
+                // For the last key (the "0" position) we skip one cell.
+                key + 1
+            });
+            btn.place(area);
         }
 
         bounds
@@ -192,31 +198,43 @@ impl Component for PassphraseKeyboard {
             self.on_page_swipe(ctx, swipe);
             return None;
         }
-        if let Some(Clicked) = self.confirm.event(ctx, event) {
+        if let Some(ButtonMsg::Clicked) = self.confirm.event(ctx, event) {
             // Confirm button was clicked, we're done.
             return Some(PassphraseKeyboardMsg::Confirmed);
         }
-        if let Some(Clicked) = self.back.event(ctx, event) {
-            // Backspace button was clicked. If we have any content in the textbox, let's
-            // delete the last character. Otherwise cancel.
-            return if self.input.inner().textbox.is_empty() {
-                Some(PassphraseKeyboardMsg::Cancelled)
-            } else {
+
+        match self.back.event(ctx, event) {
+            Some(ButtonMsg::Clicked) => {
+                // Backspace button was clicked. If we have any content in the textbox, let's
+                // delete the last character. Otherwise cancel.
+                return if self.input.inner().textbox.is_empty() {
+                    Some(PassphraseKeyboardMsg::Cancelled)
+                } else {
+                    self.input.mutate(ctx, |ctx, i| {
+                        i.multi_tap.clear_pending_state(ctx);
+                        i.textbox.delete_last(ctx);
+                    });
+                    self.after_edit(ctx);
+                    None
+                };
+            }
+            Some(ButtonMsg::LongPressed) => {
                 self.input.mutate(ctx, |ctx, i| {
                     i.multi_tap.clear_pending_state(ctx);
-                    i.textbox.delete_last(ctx);
+                    i.textbox.clear(ctx);
                 });
                 self.after_edit(ctx);
-                None
-            };
+                return None;
+            }
+            _ => {}
         }
 
         // Process key button events in case we did not reach maximum passphrase length.
         // (All input buttons should be disallowed in that case, this is just a safety
         // measure.)
         if !self.input.inner().textbox.is_full() {
-            for (key, btn) in self.keys[self.scrollbar.active_page].iter_mut().enumerate() {
-                if let Some(Clicked) = btn.event(ctx, event) {
+            for (key, btn) in self.keys.iter_mut().enumerate() {
+                if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
                     // Key button was clicked. If this button is pending, let's cycle the pending
                     // character in textbox. If not, let's just append the first character.
                     let text = Self::key_text(btn.inner().content());
@@ -237,7 +255,7 @@ impl Component for PassphraseKeyboard {
         self.scrollbar.paint();
         self.confirm.paint();
         self.back.paint();
-        for btn in &mut self.keys[self.scrollbar.active_page] {
+        for btn in &mut self.keys {
             btn.paint();
         }
         if self.fade {
@@ -252,7 +270,7 @@ impl Component for PassphraseKeyboard {
         self.scrollbar.bounds(sink);
         self.confirm.bounds(sink);
         self.back.bounds(sink);
-        for btn in &self.keys[self.scrollbar.active_page] {
+        for btn in &self.keys {
             btn.bounds(sink)
         }
     }
@@ -287,7 +305,7 @@ impl Component for Input {
     }
 
     fn paint(&mut self) {
-        let style = theme::label_default();
+        let style = theme::label_keyboard();
 
         let mut text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
             - Offset::y(style.text_font.text_baseline());

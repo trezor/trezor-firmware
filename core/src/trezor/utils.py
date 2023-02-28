@@ -136,16 +136,6 @@ def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
         yield items[i : i + size]
 
 
-def chunks_intersperse(items: str, size: int, sep: str = "\n") -> Iterator[str]:
-    first = True
-    for i in range(0, len(items), size):
-        if not first:
-            yield sep
-        else:
-            first = False
-        yield items[i : i + size]
-
-
 if TYPE_CHECKING:
 
     class HashContext(Protocol):
@@ -167,6 +157,42 @@ if TYPE_CHECKING:
 
         def extend(self, __buf: bytes) -> None:
             ...
+
+
+if False:  # noqa
+
+    class DebugHashContextWrapper:
+        """
+        Use this wrapper to debug hashing operations. When digest() is called,
+        it will log all of the data that was provided to update().
+
+        Example usage:
+        self.h_prevouts = HashWriter(DebugHashContextWrapper(sha256()))
+        """
+
+        def __init__(self, ctx: HashContext) -> None:
+            self.ctx = ctx
+            self.data = ""
+
+        def update(self, data: bytes) -> None:
+            from ubinascii import hexlify
+
+            self.ctx.update(data)
+            self.data += hexlify(data).decode() + " "
+
+        def digest(self) -> bytes:
+            from trezor import log
+            from ubinascii import hexlify
+
+            digest = self.ctx.digest()
+            log.debug(
+                __name__,
+                "%s hash: %s, data: %s",
+                self.ctx.__class__.__name__,
+                hexlify(digest).decode(),
+                self.data,
+            )
+            return digest
 
 
 class HashWriter:

@@ -1,0 +1,5 @@
+{
+  "name": "Apple",
+  "webauthn": ["apple.com"],
+  "use_self_attestation": false
+}

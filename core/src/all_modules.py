@@ -103,6 +103,8 @@ trezor.enums.DecredStakingSpendType
 import trezor.enums.DecredStakingSpendType
 trezor.enums.FailureType
 import trezor.enums.FailureType
+trezor.enums.HomescreenFormat
+import trezor.enums.HomescreenFormat
 trezor.enums.InputScriptType
 import trezor.enums.InputScriptType
 trezor.enums.MessageType
@@ -135,24 +137,20 @@ trezor.pin
 import trezor.pin
 trezor.protobuf
 import trezor.protobuf
-trezor.res
-import trezor.res
-trezor.res.resources
-import trezor.res.resources
 trezor.sdcard
 import trezor.sdcard
 trezor.strings
 import trezor.strings
 trezor.ui
 import trezor.ui
-trezor.ui.components.common.confirm
-import trezor.ui.components.common.confirm
 trezor.ui.layouts
 import trezor.ui.layouts
 trezor.ui.layouts.common
 import trezor.ui.layouts.common
 trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
+trezor.ui.layouts.homescreen
+import trezor.ui.layouts.homescreen
 trezor.ui.layouts.recovery
 import trezor.ui.layouts.recovery
 trezor.ui.layouts.reset
@@ -163,14 +161,12 @@ trezor.ui.layouts.tt_v2
 import trezor.ui.layouts.tt_v2
 trezor.ui.layouts.tt_v2.fido
 import trezor.ui.layouts.tt_v2.fido
+trezor.ui.layouts.tt_v2.homescreen
+import trezor.ui.layouts.tt_v2.homescreen
 trezor.ui.layouts.tt_v2.recovery
 import trezor.ui.layouts.tt_v2.recovery
 trezor.ui.layouts.tt_v2.reset
 import trezor.ui.layouts.tt_v2.reset
-trezor.ui.loader
-import trezor.ui.loader
-trezor.ui.popup
-import trezor.ui.popup
 trezor.ui.style
 import trezor.ui.style
 trezor.utils
@@ -293,12 +289,6 @@ apps.debug.load_device
 import apps.debug.load_device
 apps.homescreen
 import apps.homescreen
-apps.homescreen.busyscreen
-import apps.homescreen.busyscreen
-apps.homescreen.homescreen
-import apps.homescreen.homescreen
-apps.homescreen.lockscreen
-import apps.homescreen.lockscreen
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings
@@ -341,6 +331,8 @@ apps.misc
 import apps.misc
 apps.misc.cipher_key_value
 import apps.misc.cipher_key_value
+apps.misc.cosi_commit
+import apps.misc.cosi_commit
 apps.misc.get_ecdh_session_key
 import apps.misc.get_ecdh_session_key
 apps.misc.get_entropy

@@ -9,10 +9,9 @@ if TYPE_CHECKING:
         GetOwnershipProof,
         SignTx,
         TxInput,
+        TxOutput,
     )
     from trezor.protobuf import MessageType
-
-    from apps.common.coininfo import CoinInfo
 
 FEE_RATE_DECIMALS = const(6)
 
@@ -38,13 +37,23 @@ class CoinJoinAuthorization:
             and msg.commitment_data.startswith(bytes(coordinator))
         )
 
-    def check_sign_tx_input(self, txi: TxInput, coin: CoinInfo) -> bool:
-        # Check whether the current input matches the parameters of the request.
+    def check_internal_input(self, txi: TxInput) -> bool:
+        # Check whether the input matches the parameters of the request.
         return (
             len(txi.address_n) >= BIP32_WALLET_DEPTH
             and txi.address_n[:-BIP32_WALLET_DEPTH] == self.params.address_n
-            and coin.coin_name == self.params.coin_name
             and txi.script_type == self.params.script_type
+        )
+
+    def check_internal_output(self, txo: TxOutput) -> bool:
+        from .common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
+
+        # Check whether the output matches the parameters of the request.
+        return (
+            len(txo.address_n) >= BIP32_WALLET_DEPTH
+            and txo.address_n[:-BIP32_WALLET_DEPTH] == self.params.address_n
+            and CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[txo.script_type]
+            == self.params.script_type
         )
 
     def approve_sign_tx(self, msg: SignTx) -> bool:
@@ -56,7 +65,11 @@ class CoinJoinAuthorization:
             return False
 
         params.max_rounds -= 1
-        authorization.set(params)
+        if params.max_rounds >= 1:
+            authorization.set(params)
+        else:
+            authorization.clear()
+
         return True
 
 

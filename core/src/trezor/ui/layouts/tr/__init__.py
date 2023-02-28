@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, Sequence
 
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
+from trezor.utils import DISABLE_ANIMATION
 
 import trezorui2
 
-from ...components.common.confirm import is_confirmed
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
@@ -14,7 +14,15 @@ if TYPE_CHECKING:
     ExceptionType = BaseException | Type[BaseException]
 
 
-class _RustLayout(ui.Layout):
+if __debug__:
+    trezorui2.disable_animation(bool(DISABLE_ANIMATION))
+
+
+def is_confirmed(x: Any) -> bool:
+    return x is trezorui2.CONFIRMED
+
+
+class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
         self.layout = layout
@@ -31,6 +39,7 @@ class _RustLayout(ui.Layout):
         button = loop.wait(io.BUTTON)
         ui.display.clear()
         self.layout.paint()
+        ui.refresh()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             event, button_num = yield button
@@ -41,6 +50,7 @@ class _RustLayout(ui.Layout):
             if msg is not None:
                 raise ui.Result(msg)
             self.layout.paint()
+            ui.refresh()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
@@ -50,6 +60,7 @@ class _RustLayout(ui.Layout):
             if msg is not None:
                 raise ui.Result(msg)
             self.layout.paint()
+            ui.refresh()
 
 
 async def confirm_action(
@@ -60,15 +71,15 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: str | bytes | None = "OK",
-    verb_cancel: str | bytes | None = "cancel",
+    verb: str = "CONFIRM",
+    verb_cancel: str | None = None,
     hold: bool = False,
     reverse: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
-    if isinstance(verb, bytes) or isinstance(verb_cancel, bytes):
-        raise NotImplementedError
+    if verb_cancel is not None:
+        verb_cancel = verb_cancel.upper()
 
     if description is not None and description_param is not None:
         if description_param_font != ui.BOLD:
@@ -80,7 +91,7 @@ async def confirm_action(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_action(
                 title=title.upper(),
                 action=action,
@@ -108,7 +119,7 @@ async def confirm_text(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title.upper(),
                 data=data,
@@ -129,7 +140,7 @@ async def show_success(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title="Success",
                 data=content,
@@ -158,7 +169,7 @@ async def show_address(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title="ADDRESS",
                 data=address,
@@ -181,7 +192,7 @@ async def confirm_output(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=f"Send {amount} to {address}?",
@@ -208,7 +219,7 @@ async def confirm_total(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=f"{total_label}{total_amount}\n{fee_label}{fee_amount}",
@@ -234,7 +245,7 @@ async def confirm_blob(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=str(data),
@@ -246,10 +257,6 @@ async def confirm_blob(
     )
     if not is_confirmed(result):
         raise wire.ActionCancelled
-
-
-def draw_simple_text(title: str, description: str = "") -> None:
-    log.error(__name__, "draw_simple_text not implemented")
 
 
 async def request_pin_on_device(

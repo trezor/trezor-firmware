@@ -60,7 +60,7 @@ class ZcashHasher:
 
     # The `txid_digest` method is currently a dead code,
     # but we keep it for future use cases.
-    if False:
+    if False:  # noqa
 
         def txid_digest(self) -> bytes:
             """

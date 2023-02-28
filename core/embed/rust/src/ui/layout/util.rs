@@ -6,14 +6,27 @@ use crate::{
         iter::{Iter, IterBuf},
         list::List,
         obj::Obj,
+        util::try_or_raise,
     },
-    ui::component::text::{
-        paragraphs::{Paragraph, ParagraphSource, ParagraphStrType},
-        TextStyle,
+    ui::{
+        component::text::{
+            paragraphs::{Paragraph, ParagraphSource, ParagraphStrType},
+            TextStyle,
+        },
+        util::set_animation_disabled,
     },
 };
 use cstr_core::cstr;
 use heapless::Vec;
+
+#[cfg(feature = "jpeg")]
+use crate::{
+    micropython::{
+        buffer::get_buffer,
+        ffi::{mp_obj_new_int, mp_obj_new_tuple},
+    },
+    ui::display::tjpgd::{jpeg_info, jpeg_test},
+};
 
 pub fn iter_into_objs<const N: usize>(iterable: Obj) -> Result<[Obj; N], Error> {
     let err = Error::ValueError(cstr!("Invalid iterable length"));
@@ -227,4 +240,54 @@ impl ParagraphStrType for StrBuffer {
     fn skip_prefix(&self, chars: usize) -> Self {
         self.offset(chars)
     }
+}
+
+pub extern "C" fn upy_disable_animation(disable: Obj) -> Obj {
+    let block = || {
+        set_animation_disabled(disable.try_into()?);
+        Ok(Obj::const_none())
+    };
+    unsafe { try_or_raise(block) }
+}
+
+#[cfg(feature = "jpeg")]
+pub extern "C" fn upy_jpeg_info(data: Obj) -> Obj {
+    let block = || {
+        let buffer = unsafe { get_buffer(data) };
+
+        if let Ok(buffer) = buffer {
+            let info = jpeg_info(buffer);
+
+            if let Some(info) = info {
+                let obj = unsafe {
+                    let values = [
+                        mp_obj_new_int(info.0.x as _),
+                        mp_obj_new_int(info.0.y as _),
+                        mp_obj_new_int(info.1 as _),
+                    ];
+                    mp_obj_new_tuple(3, values.as_ptr())
+                };
+
+                Ok(obj)
+            } else {
+                Err(Error::ValueError(cstr!("Invalid image format.")))
+            }
+        } else {
+            Err(Error::ValueError(cstr!("Buffer error.")))
+        }
+    };
+
+    unsafe { try_or_raise(block) }
+}
+
+#[cfg(feature = "jpeg")]
+pub extern "C" fn upy_jpeg_test(data: Obj) -> Obj {
+    let block = || {
+        let buffer =
+            unsafe { get_buffer(data) }.map_err(|_| Error::ValueError(cstr!("Buffer error.")))?;
+        let result = jpeg_test(buffer);
+        Ok(result.into())
+    };
+
+    unsafe { try_or_raise(block) }
 }

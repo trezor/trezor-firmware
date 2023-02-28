@@ -30,7 +30,6 @@ from trezorlib.transport import enumerate_devices, get_transport
 from . import ui_tests
 from .device_handler import BackgroundDeviceHandler
 from .emulators import EmulatorWrapper
-from .ui_tests.reporting import testreport
 
 if TYPE_CHECKING:
     from trezorlib._internal.emulator import Emulator
@@ -209,13 +208,13 @@ def client(
     if not setup_params["uninitialized"]:
         debuglink.load_device(
             _raw_client,
-            mnemonic=setup_params["mnemonic"],
-            pin=setup_params["pin"],
+            mnemonic=setup_params["mnemonic"],  # type: ignore
+            pin=setup_params["pin"],  # type: ignore
             passphrase_protection=use_passphrase,
             label="test",
             language="en-US",
-            needs_backup=setup_params["needs_backup"],
-            no_backup=setup_params["no_backup"],
+            needs_backup=setup_params["needs_backup"],  # type: ignore
+            no_backup=setup_params["no_backup"],  # type: ignore
         )
 
         if request.node.get_closest_marker("experimental"):
@@ -226,10 +225,7 @@ def client(
 
         _raw_client.clear_session()
 
-    if test_ui:
-        with ui_tests.screen_recording(_raw_client, request):
-            yield _raw_client
-    else:
+    with ui_tests.screen_recording(_raw_client, request):
         yield _raw_client
 
     _raw_client.close()
@@ -246,36 +242,19 @@ def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) 
 
 
 def pytest_sessionstart(session: pytest.Session) -> None:
-    ui_tests.read_fixtures()
-    if session.config.getoption("ui") and _is_main_runner(session):
-        testreport.clear_dir()
-
-
-def _should_write_ui_report(exitstatus: pytest.ExitCode) -> bool:
-    # generate UI report and check missing only if pytest is exitting cleanly
-    # I.e., the test suite passed or failed (as opposed to ctrl+c break, internal error,
-    # etc.)
-    return exitstatus in (pytest.ExitCode.OK, pytest.ExitCode.TESTS_FAILED)
+    if session.config.getoption("ui"):
+        ui_tests.setup(main_runner=_is_main_runner(session))
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -> None:
-    if not _should_write_ui_report(exitstatus):
-        return
-
-    missing = session.config.getoption("ui_check_missing")
     test_ui = session.config.getoption("ui")
-
-    if test_ui == "test":
-        if missing and ui_tests.list_missing():
-            session.exitstatus = pytest.ExitCode.TESTS_FAILED
-        ui_tests.write_fixtures_suggestion(missing)
-        testreport.generate_reports()
-    elif test_ui == "record":
-        if exitstatus == pytest.ExitCode.OK:
-            ui_tests.write_fixtures(missing)
-        else:
-            ui_tests.write_fixtures_suggestion(missing, only_passed_tests=True)
-        testreport.generate_reports()
+    if test_ui and _is_main_runner(session):
+        session.exitstatus = ui_tests.sessionfinish(
+            exitstatus,
+            test_ui,  # type: ignore
+            bool(session.config.getoption("ui_check_missing")),
+            bool(session.config.getoption("record_text_layout")),
+        )
 
 
 def pytest_terminal_summary(
@@ -285,36 +264,13 @@ def pytest_terminal_summary(
     println("")
 
     ui_option = config.getoption("ui")
-    missing_tests = ui_tests.list_missing()
-    if ui_option and _should_write_ui_report(exitstatus) and missing_tests:
-        println(f"{len(missing_tests)} expected UI tests did not run.")
-        if config.getoption("ui_check_missing"):
-            println("-------- List of missing tests follows: --------")
-            for test in missing_tests:
-                println("\t" + test)
-
-            if ui_option == "test":
-                println("UI test failed.")
-            elif ui_option == "record":
-                println("Removing missing tests from record.")
-            println("")
-
-    if ui_option == "test" and _should_write_ui_report(exitstatus):
-        println("\n-------- Suggested fixtures.json diff: --------")
-        print("See", ui_tests.SUGGESTION_FILE)
-        println("")
-
-    if ui_option == "record" and exitstatus != pytest.ExitCode.OK:
-        println(
-            f"\n-------- WARNING! Recording to {ui_tests.HASH_FILE.name} was disabled due to failed tests. --------"
+    if ui_option:
+        ui_tests.terminal_summary(
+            terminalreporter.write_line,
+            ui_option,  # type: ignore
+            bool(config.getoption("ui_check_missing")),
+            exitstatus,
         )
-        print("See", ui_tests.SUGGESTION_FILE, "for suggestions for ONLY PASSED tests.")
-        println("")
-
-    if _should_write_ui_report(exitstatus):
-        println("-------- UI tests summary: --------")
-        println("Run ./tests/show_results.py to open test summary")
-        println("")
 
 
 def pytest_addoption(parser: "Parser") -> None:
@@ -344,6 +300,13 @@ def pytest_addoption(parser: "Parser") -> None:
         choices=["core", "legacy"],
         help="Which emulator to use: 'core' or 'legacy'. "
         "Only valid in connection with `--control-emulators`",
+    )
+    parser.addoption(
+        "--record-text-layout",
+        action="store_true",
+        default=False,
+        help="Saving debugging traces for each screen change. "
+        "Will generate a report with text from all test-cases. ",
     )
 
 
@@ -385,20 +348,8 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         pytest.skip("Skipping altcoin test")
 
 
-def pytest_runtest_teardown(item: pytest.Item) -> None:
-    """Called after a test item finishes.
-
-    Dumps the current UI test report HTML.
-    """
-    # Not calling `testreport.generate_reports()` not to generate
-    # the `all_screens` report, as would take a lot of time.
-    # That will be generated in `pytest_sessionfinish`.
-    if item.session.config.getoption("ui"):
-        testreport.index()
-
-
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item: pytest.Item, call) -> None:
+def pytest_runtest_makereport(item: pytest.Item, call) -> Generator:
     # Make test results available in fixtures.
     # See https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
     # The device_handler fixture uses this as 'request.node.rep_call.passed' attribute,
@@ -409,12 +360,12 @@ def pytest_runtest_makereport(item: pytest.Item, call) -> None:
 
 
 @pytest.fixture
-def device_handler(client: Client, request: pytest.FixtureRequest) -> None:
+def device_handler(client: Client, request: pytest.FixtureRequest) -> Generator:
     device_handler = BackgroundDeviceHandler(client)
     yield device_handler
 
     # get call test result
-    test_res = ui_tests.get_last_call_test_result(request)
+    test_res = ui_tests.common.get_last_call_test_result(request)
 
     if test_res is None:
         return

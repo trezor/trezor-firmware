@@ -30,9 +30,13 @@
 #include "messages.pb.h"
 #include "protect.h"
 #include "ripemd160.h"
+#include "secp256k1.h"
 #include "segwit_addr.h"
 #include "util.h"
 #include "zkp_bip340.h"
+#ifdef USE_SECP256K1_ZKP_ECDSA
+#include "zkp_ecdsa.h"
+#endif
 
 #if !BITCOIN_ONLY
 #include "cash_addr.h"
@@ -70,10 +74,10 @@
 /* size of a Decred witness (without script): 8 amount, 4 block height, 4 block
  * index */
 #define TXSIZE_DECRED_WITNESS 16
-/* support version of Decred script_version */
-#define DECRED_SCRIPT_VERSION 0
 
 static const uint8_t segwit_header[2] = {0, 1};
+
+static const uint8_t SLIP19_VERSION_MAGIC[] = {0x53, 0x4c, 0x00, 0x19};
 
 static inline uint32_t op_push_size(uint32_t i) {
   if (i < 0x4C) {
@@ -206,8 +210,7 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
     ecdsa_get_address_segwit_p2sh(
         node->public_key, coin->address_type_p2sh, coin->curve->hasher_pubkey,
         coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
-  } else if (script_type == InputScriptType_SPENDADDRESS ||
-             script_type == InputScriptType_SPENDMULTISIG) {
+  } else if (script_type == InputScriptType_SPENDADDRESS) {
 #if !BITCOIN_ONLY
     if (coin->cashaddr_prefix) {
       ecdsa_get_address_raw(node->public_key, CASHADDR_P2KH | CASHADDR_160,
@@ -229,8 +232,8 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
   return 1;
 }
 
-static int address_to_script_pubkey(const CoinInfo *coin, const char *address,
-                                    uint8_t *script_pubkey, pb_size_t *size) {
+int address_to_script_pubkey(const CoinInfo *coin, const char *address,
+                             uint8_t *script_pubkey, pb_size_t *size) {
   uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
   size_t addr_raw_len = base58_decode_check(address, coin->curve->hasher_base58,
                                             addr_raw, MAX_ADDR_RAW_SIZE);
@@ -317,118 +320,29 @@ static int address_to_script_pubkey(const CoinInfo *coin, const char *address,
   return 0;
 }
 
-int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
-                   const HDNode *root, TxOutputType *in, TxOutputBinType *out,
-                   bool needs_confirm) {
-  memzero(out, sizeof(TxOutputBinType));
-  out->amount = in->amount;
-  out->decred_script_version = DECRED_SCRIPT_VERSION;
-
-  if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
-    // only 0 satoshi allowed for OP_RETURN
-    if (in->amount != 0 || in->has_address || (in->address_n_count > 0) ||
-        in->has_multisig) {
-      return 0;  // failed to compile output
-    }
-    if (needs_confirm) {
-      if (in->op_return_data.size >= 8 &&
-          memcmp(in->op_return_data.bytes, "omni", 4) ==
-              0) {  // OMNI transaction
-        layoutConfirmOmni(in->op_return_data.bytes, in->op_return_data.size);
-      } else {
-        layoutConfirmOpReturn(in->op_return_data.bytes,
-                              in->op_return_data.size);
-      }
-      if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput,
-                         false)) {
-        return -1;  // user aborted
-      }
-    }
-    uint32_t r = 0;
-    out->script_pubkey.bytes[0] = 0x6A;
-    r++;  // OP_RETURN
-    r += op_push(in->op_return_data.size, out->script_pubkey.bytes + r);
-    memcpy(out->script_pubkey.bytes + r, in->op_return_data.bytes,
-           in->op_return_data.size);
-    r += in->op_return_data.size;
-    out->script_pubkey.size = r;
-    return r;
-  }
-
-  if (in->address_n_count > 0) {
-    static CONFIDENTIAL HDNode node;
-    InputScriptType input_script_type = 0;
-
-    switch (in->script_type) {
-      case OutputScriptType_PAYTOADDRESS:
-        input_script_type = InputScriptType_SPENDADDRESS;
-        break;
-      case OutputScriptType_PAYTOMULTISIG:
-        input_script_type = InputScriptType_SPENDMULTISIG;
-        break;
-      case OutputScriptType_PAYTOWITNESS:
-        input_script_type = InputScriptType_SPENDWITNESS;
-        break;
-      case OutputScriptType_PAYTOP2SHWITNESS:
-        input_script_type = InputScriptType_SPENDP2SHWITNESS;
-        break;
-      case OutputScriptType_PAYTOTAPROOT:
-        input_script_type = InputScriptType_SPENDTAPROOT;
-        break;
-      default:
-        return 0;  // failed to compile output
-    }
-    memcpy(&node, root, sizeof(HDNode));
-    if (hdnode_private_ckd_cached(&node, in->address_n, in->address_n_count,
-                                  NULL) == 0) {
-      return 0;  // failed to compile output
-    }
-    if (hdnode_fill_public_key(&node) != 0) {
-      return 0;  // failed to compile output
-    }
-    if (!compute_address(coin, input_script_type, &node, in->has_multisig,
-                         &in->multisig, in->address)) {
-      return 0;  // failed to compile output
-    }
-  } else if (!in->has_address) {
-    return 0;  // failed to compile output
-  }
-
-  if (!address_to_script_pubkey(coin, in->address, out->script_pubkey.bytes,
-                                &out->script_pubkey.size)) {
-    return 0;
-  }
-
-  if (needs_confirm) {
-    layoutConfirmOutput(coin, amount_unit, in);
-    if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
-      return -1;  // user aborted
-    }
-  }
-
-  return out->script_pubkey.size;
+void op_return_to_script_pubkey(const uint8_t *op_return_data,
+                                size_t op_return_size, uint8_t *script_pubkey,
+                                pb_size_t *script_pubkey_size) {
+  uint32_t r = 0;
+  script_pubkey[0] = 0x6A;
+  r++;  // OP_RETURN
+  r += op_push(op_return_size, script_pubkey + r);
+  memcpy(script_pubkey + r, op_return_data, op_return_size);
+  r += op_return_size;
+  *script_pubkey_size = r;
 }
 
-int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
-                             TxInputType *in) {
-  if (in->script_type == InputScriptType_EXTERNAL) {
-    // External inputs should have scriptPubKey set by the host.
-    return in->has_script_pubkey;
-  }
-
-  static CONFIDENTIAL HDNode node;
-  memcpy(&node, root, sizeof(HDNode));
+bool get_script_pubkey(const CoinInfo *coin, HDNode *node, bool has_multisig,
+                       const MultisigRedeemScriptType *multisig,
+                       InputScriptType script_type, uint8_t *script_pubkey,
+                       pb_size_t *script_pubkey_size) {
   char address[MAX_ADDR_SIZE] = {0};
   bool res = true;
-  res = res && hdnode_private_ckd_cached(&node, in->address_n,
-                                         in->address_n_count, NULL);
-  res = res && (hdnode_fill_public_key(&node) == 0);
-  res = res && compute_address(coin, in->script_type, &node, in->has_multisig,
-                               &in->multisig, address);
-  memzero(&node, sizeof(node));
-  res = res && address_to_script_pubkey(coin, address, in->script_pubkey.bytes,
-                                        &in->script_pubkey.size);
-  in->has_script_pubkey = res;
+  res = res && (hdnode_fill_public_key(node) == 0);
+  res = res && compute_address(coin, script_type, node, has_multisig, multisig,
+                               address);
+  res = res && address_to_script_pubkey(coin, address, script_pubkey,
+                                        script_pubkey_size);
   return res;
 }
 
@@ -553,6 +467,82 @@ uint32_t serialize_script_multisig(const CoinInfo *coin,
   r += op_push(script_len, out + r);
   r += compile_script_multisig(coin, multisig, out + r);
   return r;
+}
+
+uint32_t serialize_p2wpkh_witness(const uint8_t *signature,
+                                  uint32_t signature_len,
+                                  const uint8_t *public_key,
+                                  uint32_t public_key_len, uint8_t sighash,
+                                  uint8_t *out) {
+  uint32_t r = 0;
+
+  // 2 stack items
+  r += ser_length(2, out + r);
+
+  // length-prefixed signature with sighash type
+  r += ser_length(signature_len + 1, out + r);
+  memcpy(out + r, signature, signature_len);
+  r += signature_len;
+  out[r] = sighash;
+  r += 1;
+
+  // length-prefixed public key
+  r += tx_serialize_script(public_key_len, public_key, out + r);
+  return r;
+}
+
+uint32_t serialize_p2tr_witness(const uint8_t *signature,
+                                uint32_t signature_len, uint8_t sighash,
+                                uint8_t *out) {
+  uint32_t r = 0;
+
+  // 1 stack item
+  r += ser_length(1, out + r);
+
+  // length-prefixed signature with optional sighash type
+  uint32_t sighash_len = sighash ? 1 : 0;
+  r += ser_length(signature_len + sighash_len, out + r);
+  memcpy(out + r, signature, signature_len);
+  r += signature_len;
+  if (sighash) {
+    out[r] = sighash;
+    r += 1;
+  }
+
+  return r;
+}
+
+bool tx_sign_ecdsa(const ecdsa_curve *curve, const uint8_t *private_key,
+                   const uint8_t *hash, uint8_t *out, pb_size_t *size) {
+  int ret = 0;
+  uint8_t signature[64] = {0};
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  if (curve == &secp256k1) {
+    ret =
+        zkp_ecdsa_sign_digest(curve, private_key, hash, signature, NULL, NULL);
+  } else
+#endif
+  {
+    ret = ecdsa_sign_digest(curve, private_key, hash, signature, NULL, NULL);
+  }
+  if (ret != 0) {
+    return false;
+  }
+
+  *size = ecdsa_sig_to_der(signature, out);
+  return true;
+}
+
+bool tx_sign_bip340(const uint8_t *private_key, const uint8_t *hash,
+                    uint8_t *out, pb_size_t *size) {
+  static CONFIDENTIAL uint8_t output_private_key[32] = {0};
+  bool ret = (zkp_bip340_tweak_private_key(private_key, NULL,
+                                           output_private_key) == 0);
+  ret =
+      ret && (zkp_bip340_sign_digest(output_private_key, hash, out, NULL) == 0);
+  *size = ret ? 64 : 0;
+  memzero(output_private_key, sizeof(output_private_key));
+  return ret;
 }
 
 // tx methods
@@ -1142,3 +1132,222 @@ uint32_t tx_decred_witness_weight(const TxInputType *txinput) {
   return 4 * size;
 }
 #endif
+
+bool get_ownership_proof(const CoinInfo *coin, InputScriptType script_type,
+                         const HDNode *node, uint8_t flags,
+                         const uint8_t ownership_id[OWNERSHIP_ID_SIZE],
+                         const uint8_t *script_pubkey,
+                         size_t script_pubkey_size,
+                         const uint8_t *commitment_data,
+                         size_t commitment_data_size, OwnershipProof *out) {
+  size_t r = 0;
+
+  // Write versionMagic (4 bytes).
+  memcpy(out->ownership_proof.bytes + r, SLIP19_VERSION_MAGIC,
+         sizeof(SLIP19_VERSION_MAGIC));
+  r += sizeof(SLIP19_VERSION_MAGIC);
+
+  // Write flags (1 byte).
+  out->ownership_proof.bytes[r] = flags;
+  r += 1;
+
+  // Write number of ownership IDs (1 byte).
+  r += ser_length(1, out->ownership_proof.bytes + r);
+
+  // Write ownership ID (32 bytes).
+  memcpy(out->ownership_proof.bytes + r, ownership_id, OWNERSHIP_ID_SIZE);
+  r += OWNERSHIP_ID_SIZE;
+
+  // Compute sighash = SHA-256(proofBody || proofFooter).
+  Hasher hasher = {0};
+  uint8_t sighash[SHA256_DIGEST_LENGTH] = {0};
+  hasher_InitParam(&hasher, HASHER_SHA2, NULL, 0);
+  hasher_Update(&hasher, out->ownership_proof.bytes, r);
+  tx_script_hash(&hasher, script_pubkey_size, script_pubkey);
+  tx_script_hash(&hasher, commitment_data_size, commitment_data);
+  hasher_Final(&hasher, sighash);
+
+  // Write proofSignature.
+  if (script_type == InputScriptType_SPENDWITNESS) {
+    if (!tx_sign_ecdsa(coin->curve->params, node->private_key, sighash,
+                       out->signature.bytes, &out->signature.size)) {
+      return false;
+    }
+    // Write length-prefixed empty scriptSig (1 byte).
+    r += ser_length(0, out->ownership_proof.bytes + r);
+
+    // Write
+    // 1. number of stack items (1 byte)
+    // 2. signature + sighash type length (1 byte)
+    // 3. DER-encoded signature (max. 71 bytes)
+    // 4. sighash type (1 byte)
+    // 5. public key length (1 byte)
+    // 6. public key (33 bytes)
+    r += serialize_p2wpkh_witness(out->signature.bytes, out->signature.size,
+                                  node->public_key, 33, SIGHASH_ALL,
+                                  out->ownership_proof.bytes + r);
+  } else if (script_type == InputScriptType_SPENDTAPROOT) {
+    if (!tx_sign_bip340(node->private_key, sighash, out->signature.bytes,
+                        &out->signature.size)) {
+      return false;
+    }
+    // Write length-prefixed empty scriptSig (1 byte).
+    r += ser_length(0, out->ownership_proof.bytes + r);
+
+    // Write
+    // 1. number of stack items (1 byte)
+    // 2. signature length (1 byte)
+    // 3. signature (64 bytes)
+    r += serialize_p2tr_witness(out->signature.bytes, out->signature.size, 0,
+                                out->ownership_proof.bytes + r);
+  } else {
+    return false;
+  }
+
+  out->ownership_proof.size = r;
+  return true;
+}
+
+bool tx_input_verify_nonownership(
+    const CoinInfo *coin, const TxInputType *txinput,
+    const uint8_t ownership_id[OWNERSHIP_ID_SIZE]) {
+  size_t r = 0;
+  // Check versionMagic.
+  if (txinput->ownership_proof.size < r + sizeof(SLIP19_VERSION_MAGIC) ||
+      memcmp(txinput->ownership_proof.bytes + r, SLIP19_VERSION_MAGIC,
+             sizeof(SLIP19_VERSION_MAGIC)) != 0) {
+    return false;
+  }
+  r += sizeof(SLIP19_VERSION_MAGIC);
+
+  // Skip flags.
+  r += 1;
+
+  // Ensure that there is only one ownership ID.
+  if (txinput->ownership_proof.size < r + 1 ||
+      txinput->ownership_proof.bytes[r] != 1) {
+    return false;
+  }
+  r += 1;
+
+  // Ensure that the ownership ID is not ours.
+  if (txinput->ownership_proof.size < r + OWNERSHIP_ID_SIZE ||
+      memcmp(txinput->ownership_proof.bytes + r, ownership_id,
+             OWNERSHIP_ID_SIZE) == 0) {
+    return false;
+  }
+  r += OWNERSHIP_ID_SIZE;
+
+  // Compute the ownership proof digest.
+  Hasher hasher = {0};
+  hasher_InitParam(&hasher, HASHER_SHA2, NULL, 0);
+  hasher_Update(&hasher, txinput->ownership_proof.bytes, r);
+  tx_script_hash(&hasher, txinput->script_pubkey.size,
+                 txinput->script_pubkey.bytes);
+  tx_script_hash(&hasher, txinput->commitment_data.size,
+                 txinput->commitment_data.bytes);
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  hasher_Final(&hasher, digest);
+
+  // Ensure that there is no scriptSig, since we only support native SegWit
+  // ownership proofs.
+  if (txinput->ownership_proof.size < r + 1 ||
+      txinput->ownership_proof.bytes[r] != 0) {
+    return false;
+  }
+  r += 1;
+
+  if (txinput->script_pubkey.size == 22 &&
+      memcmp(txinput->script_pubkey.bytes, "\x00\x14", 2) == 0) {
+    // SegWit v0 (probably P2WPKH)
+    const uint8_t *pubkey_hash = txinput->script_pubkey.bytes + 2;
+
+    // Ensure that there are two stack items.
+    if (txinput->ownership_proof.size < r + 1 ||
+        txinput->ownership_proof.bytes[r] != 2) {
+      return false;
+    }
+    r += 1;
+
+    // Read the signature.
+    if (txinput->ownership_proof.size < r + 1) {
+      return false;
+    }
+    size_t signature_size = txinput->ownership_proof.bytes[r];
+    r += 1;
+
+    uint8_t signature[64] = {0};
+    if (txinput->ownership_proof.size < r + signature_size ||
+        ecdsa_sig_from_der(txinput->ownership_proof.bytes + r,
+                           signature_size - 1, signature) != 0) {
+      return false;
+    }
+    r += signature_size;
+
+    // Read the public key.
+    if (txinput->ownership_proof.size < r + 34 ||
+        txinput->ownership_proof.bytes[r] != 33) {
+      return false;
+    }
+    const uint8_t *public_key = txinput->ownership_proof.bytes + r + 1;
+    r += 34;
+
+    // Check the public key matches the scriptPubKey.
+    uint8_t expected_pubkey_hash[20] = {0};
+    ecdsa_get_pubkeyhash(public_key, coin->curve->hasher_pubkey,
+                         expected_pubkey_hash);
+    if (memcmp(pubkey_hash, expected_pubkey_hash,
+               sizeof(expected_pubkey_hash)) != 0) {
+      return false;
+    }
+
+    // Ensure that we have read the entire ownership proof.
+    if (r != txinput->ownership_proof.size) {
+      return false;
+    }
+
+#ifdef USE_SECP256K1_ZKP_ECDSA
+    if (coin->curve->params == &secp256k1) {
+      if (zkp_ecdsa_verify_digest(coin->curve->params, public_key, signature,
+                                  digest) != 0) {
+        return false;
+      }
+    } else
+#endif
+    {
+      if (ecdsa_verify_digest(coin->curve->params, public_key, signature,
+                              digest) != 0) {
+        return false;
+      }
+    }
+  } else if (txinput->script_pubkey.size == 34 &&
+             memcmp(txinput->script_pubkey.bytes, "\x51\x20", 2) == 0) {
+    // SegWit v1 (P2TR)
+    const uint8_t *output_public_key = txinput->script_pubkey.bytes + 2;
+
+    // Ensure that there is one stack item consisting of 64 bytes.
+    if (txinput->ownership_proof.size < r + 2 ||
+        memcmp(txinput->ownership_proof.bytes + r, "\x01\x40", 2) != 0) {
+      return false;
+    }
+    r += 2;
+
+    // Read the signature.
+    const uint8_t *signature = txinput->ownership_proof.bytes + r;
+    r += 64;
+
+    // Ensure that we have read the entire ownership proof.
+    if (r != txinput->ownership_proof.size) {
+      return false;
+    }
+
+    if (zkp_bip340_verify_digest(output_public_key, signature, digest) != 0) {
+      return false;
+    }
+  } else {
+    // Unsupported script type.
+    return false;
+  }
+
+  return true;
+}

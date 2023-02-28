@@ -97,7 +97,7 @@ def set_default(constructor: Callable[[], loop.Task]) -> None:
     default_constructor = constructor
 
 
-if False:
+if False:  # noqa
 
     def kill_default() -> None:
         """Forcefully shut down default task.

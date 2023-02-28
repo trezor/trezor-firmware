@@ -1,4 +1,4 @@
-use core::{mem, ops::Deref};
+use core::mem;
 use heapless::String;
 
 use crate::{
@@ -9,9 +9,9 @@ use crate::{
             base::ComponentExt, text::TextStyle, Child, Component, Event, EventCtx, Label, Maybe,
             Never, Pad, TimerToken,
         },
-        display::{self, Font},
+        display::{self, toif::Icon, Font},
         event::TouchEvent,
-        geometry::{Alignment, Grid, Insets, Offset, Rect},
+        geometry::{Grid, Insets, Offset, Rect, CENTER, TOP_LEFT},
         model_tt::component::{
             button::{Button, ButtonContent, ButtonMsg, ButtonMsg::Clicked},
             theme,
@@ -28,7 +28,6 @@ const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 14;
 const MAX_VISIBLE_DIGITS: usize = 16;
 const DIGIT_COUNT: usize = 10; // 0..10
-const ERASE_HOLD_DURATION: Duration = Duration::from_secs(2);
 
 const HEADER_HEIGHT: i16 = 25;
 const HEADER_PADDING_SIDE: i16 = 5;
@@ -57,7 +56,7 @@ pub struct PinKeyboard<T> {
 
 impl<T> PinKeyboard<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     // Label position fine-tuning.
     const MAJOR_OFF: Offset = Offset::y(-2);
@@ -71,16 +70,17 @@ where
     ) -> Self {
         // Control buttons.
         let erase_btn = Button::with_icon_blend(
-            theme::IMAGE_BG_BACK_BTN,
-            theme::ICON_BACK,
+            Icon::new(theme::IMAGE_BG_BACK_BTN),
+            Icon::new(theme::ICON_BACK),
             Offset::new(30, 12),
         )
         .styled(theme::button_reset())
-        .with_long_press(ERASE_HOLD_DURATION)
+        .with_long_press(theme::ERASE_HOLD_DURATION)
         .initially_enabled(false);
         let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 
-        let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
+        let cancel_btn =
+            Button::with_icon(Icon::new(theme::ICON_CANCEL)).styled(theme::button_cancel());
         let cancel_btn =
             Maybe::new(Pad::with_background(theme::BG), cancel_btn, allow_cancel).into_child();
 
@@ -96,7 +96,7 @@ where
             textbox_pad: Pad::with_background(theme::label_default().background_color),
             erase_btn,
             cancel_btn,
-            confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
+            confirm_btn: Button::with_icon(Icon::new(theme::ICON_CONFIRM))
                 .styled(theme::button_confirm())
                 .initially_enabled(false)
                 .into_child(),
@@ -151,7 +151,7 @@ where
 
 impl<T> Component for PinKeyboard<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     type Msg = PinKeyboardMsg;
 
@@ -370,9 +370,7 @@ impl PinDots {
     }
 
     fn paint_dots(&self, area: Rect) {
-        let mut cursor = self
-            .size()
-            .snap(area.center(), Alignment::Center, Alignment::Center);
+        let mut cursor = self.size().snap(area.center(), CENTER);
 
         let digits = self.digits.len();
         let dots_visible = digits.min(MAX_VISIBLE_DOTS);
@@ -385,9 +383,9 @@ impl PinDots {
 
         // Small leftmost dot.
         if digits > dots_visible + 1 {
-            display::icon_top_left(
+            Icon::new(theme::DOT_SMALL).draw(
                 cursor - Offset::x(2 * step),
-                theme::DOT_SMALL,
+                TOP_LEFT,
                 self.style.text_color,
                 self.style.background_color,
             );
@@ -395,9 +393,9 @@ impl PinDots {
 
         // Greyed out dot.
         if digits > dots_visible {
-            display::icon_top_left(
+            Icon::new(theme::DOT_ACTIVE).draw(
                 cursor - Offset::x(step),
-                theme::DOT_ACTIVE,
+                TOP_LEFT,
                 theme::GREY_LIGHT,
                 self.style.background_color,
             );
@@ -405,9 +403,9 @@ impl PinDots {
 
         // Draw a dot for each PIN digit.
         for _ in 0..dots_visible {
-            display::icon_top_left(
+            Icon::new(theme::DOT_ACTIVE).draw(
                 cursor,
-                theme::DOT_ACTIVE,
+                TOP_LEFT,
                 self.style.text_color,
                 self.style.background_color,
             );
@@ -465,7 +463,7 @@ impl Component for PinDots {
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for PinKeyboard<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("PinKeyboard");

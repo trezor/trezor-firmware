@@ -143,6 +143,7 @@ def _responses(
     INP1: messages.TxInputType,
     INP2: messages.TxInputType,
     change: int = 0,
+    foreign: bool = False,
 ):
     tt = client.features.model == "T"
     resp = [
@@ -150,15 +151,23 @@ def _responses(
         request_input(1),
         request_output(0),
     ]
+
     if change != 1:
         resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
         if tt:
             resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
+    elif foreign:
+        resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
+
     resp.append(request_output(1))
+
     if change != 2:
         resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
         if tt:
             resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
+    elif foreign:
+        resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
+
     resp += [
         messages.ButtonRequest(code=B.SignTx),
         (tt, messages.ButtonRequest(code=B.SignTx)),
@@ -233,7 +242,9 @@ def test_external_internal(client: Client):
     )
 
     with client:
-        client.set_expected_responses(_responses(client, INP1, INP2, change=2))
+        client.set_expected_responses(
+            _responses(client, INP1, INP2, change=2, foreign=True)
+        )
         _, serialized_tx = btc.sign_tx(
             client,
             "Bitcoin",
@@ -264,7 +275,9 @@ def test_internal_external(client: Client):
     )
 
     with client:
-        client.set_expected_responses(_responses(client, INP1, INP2, change=1))
+        client.set_expected_responses(
+            _responses(client, INP1, INP2, change=1, foreign=True)
+        )
         _, serialized_tx = btc.sign_tx(
             client,
             "Bitcoin",

@@ -13,12 +13,13 @@ core unix coverage posttest:
     COVERAGE_THRESHOLD: "78"
   <<: *gitlab_caching
   needs:
+    - core click test
     - core device test
     - core monero test
     - core u2f test
     - core fido2 test
   script:
-    - nix-shell --run "poetry run make -C core coverage"
+    - $NIX_SHELL --run "poetry run make -C core coverage"
   coverage: '/COVERAGE: \d+%/'
   artifacts:
     name: core-unix-coverage-posttest
@@ -34,11 +35,12 @@ unix ui changes:
     - master
   <<: *gitlab_caching
   needs:
+    - core click test
     - core device test
     - legacy device test
   script:
-    - nix-shell --run "cd tests/ui_tests ; poetry run python reporting/report_master_diff.py TT_ T1_"
-    - mv tests/ui_tests/reporting/reports/master_diff/ .
+    - $NIX_SHELL --run "poetry run python -m tests.ui_tests.reporting master-diff"
+    - mv tests/ui_tests/reports/master_diff .
   artifacts:
     name: core-unix-ui-changes
     paths:

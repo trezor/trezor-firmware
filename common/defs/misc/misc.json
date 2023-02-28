@@ -87,7 +87,7 @@
         }
     },
     {
-        "name": "Cardano Testnet",
+        "name": "Cardano Preview Testnet",
         "shortcut": "tADA",
         "slip44": 1815,
         "curve": "ed25519",

@@ -487,7 +487,7 @@ static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
 
 bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
                      uint32_t address_n_count, const uint32_t *address_n,
-                     bool has_multisig, bool full_check) {
+                     bool has_multisig, PathSchema unlock, bool full_check) {
   // This function checks that the path is a recognized path for the given coin.
   // Used by GetAddress to prevent ransom attacks where a user could be coerced
   // to use an address with an unenumerable path and used by SignTx to ensure
@@ -527,15 +527,25 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
       valid = valid && (address_n[2] <= PATH_MAX_CHANGE);
       valid = valid && (address_n[3] <= PATH_MAX_ADDRESS_INDEX);
     } else if (address_n_count == 5) {
-      // Unchained Capital compatibility pattern. Will be removed in the
-      // future.
-      // m / 45' / coin_type' / account' / [0-1000000] / address_index
-      valid = valid && check_cointype(coin, address_n[1], full_check);
-      valid = valid && (address_n[2] & PATH_HARDENED);
-      valid =
-          valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
-      valid = valid && (address_n[3] <= 1000000);
-      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+      if (address_n[1] & PATH_HARDENED) {
+        // Unchained Capital compatibility pattern. Will be removed in the
+        // future.
+        // m / 45' / coin_type' / account' / [0-1000000] / address_index
+        valid = valid && check_cointype(coin, address_n[1], full_check);
+        valid = valid && (address_n[2] & PATH_HARDENED);
+        valid =
+            valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+        valid = valid && (address_n[3] <= 1000000);
+        valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+      } else {
+        // Casa proposed "universal multisig" pattern with unhardened parts.
+        // m/45'/coin_type/account/change/address_index
+        valid = valid &&
+                check_cointype(coin, address_n[1] | PATH_HARDENED, full_check);
+        valid = valid && (address_n[2] <= PATH_MAX_ACCOUNT);
+        valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+        valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+      }
     } else if (address_n_count == 6) {
       // Unchained Capital compatibility pattern. Will be removed in the
       // future.
@@ -722,6 +732,127 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     return valid;
   }
 
+  // m/10025' : SLIP25 CoinJoin
+  // m / purpose' / coin_type' / account' / script_type' / change /
+  // address_index
+  if (address_n[0] == PATH_SLIP25_PURPOSE) {
+    valid = valid && coin->has_taproot;
+    valid = valid && (coin->bech32_prefix != NULL);
+    valid = valid && (address_n_count == 6);
+    valid = valid && check_cointype(coin, address_n[1], full_check);
+    valid = valid && (address_n[2] == (PATH_HARDENED | 0));  // Only first acc.
+    valid = valid && (address_n[3] == (PATH_HARDENED | 1));  // Only SegWit v1.
+    valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
+    valid = valid &&
+            ((unlock == SCHEMA_SLIP25_TAPROOT) ||
+             (unlock == SCHEMA_SLIP25_TAPROOT_EXTERNAL && address_n[4] == 0));
+    valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
+      // we do not support Multisig for CoinJoin
+      valid = valid && !has_multisig;
+      valid = valid && (script_type == InputScriptType_SPENDTAPROOT);
+    }
+    return valid;
+  }
+
   // unknown path
   return false;
 }
+
+bool is_multisig_input_script_type(InputScriptType script_type) {
+  // we do not support Multisig with Taproot yet
+  if (script_type == InputScriptType_SPENDMULTISIG ||
+      script_type == InputScriptType_SPENDP2SHWITNESS ||
+      script_type == InputScriptType_SPENDWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+bool is_multisig_output_script_type(OutputScriptType script_type) {
+  // we do not support Multisig with Taproot yet
+  if (script_type == OutputScriptType_PAYTOMULTISIG ||
+      script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      script_type == OutputScriptType_PAYTOWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+bool is_internal_input_script_type(InputScriptType script_type) {
+  if (script_type == InputScriptType_SPENDADDRESS ||
+      script_type == InputScriptType_SPENDMULTISIG ||
+      script_type == InputScriptType_SPENDP2SHWITNESS ||
+      script_type == InputScriptType_SPENDWITNESS ||
+      script_type == InputScriptType_SPENDTAPROOT) {
+    return true;
+  }
+  return false;
+}
+
+bool is_change_output_script_type(OutputScriptType script_type) {
+  if (script_type == OutputScriptType_PAYTOADDRESS ||
+      script_type == OutputScriptType_PAYTOMULTISIG ||
+      script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      script_type == OutputScriptType_PAYTOWITNESS ||
+      script_type == OutputScriptType_PAYTOTAPROOT) {
+    return true;
+  }
+  return false;
+}
+
+bool is_segwit_input_script_type(InputScriptType script_type) {
+  if (script_type == InputScriptType_SPENDP2SHWITNESS ||
+      script_type == InputScriptType_SPENDWITNESS ||
+      script_type == InputScriptType_SPENDTAPROOT) {
+    return true;
+  }
+  return false;
+}
+
+bool is_segwit_output_script_type(OutputScriptType script_type) {
+  if (script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      script_type == OutputScriptType_PAYTOWITNESS ||
+      script_type == OutputScriptType_PAYTOTAPROOT) {
+    return true;
+  }
+  return false;
+}
+
+bool change_output_to_input_script_type(OutputScriptType output_script_type,
+                                        InputScriptType *input_script_type) {
+  switch (output_script_type) {
+    case OutputScriptType_PAYTOADDRESS:
+      *input_script_type = InputScriptType_SPENDADDRESS;
+      return true;
+    case OutputScriptType_PAYTOMULTISIG:
+      *input_script_type = InputScriptType_SPENDMULTISIG;
+      return true;
+    case OutputScriptType_PAYTOWITNESS:
+      *input_script_type = InputScriptType_SPENDWITNESS;
+      return true;
+    case OutputScriptType_PAYTOP2SHWITNESS:
+      *input_script_type = InputScriptType_SPENDP2SHWITNESS;
+      return true;
+    case OutputScriptType_PAYTOTAPROOT:
+      *input_script_type = InputScriptType_SPENDTAPROOT;
+      return true;
+    default:
+      return false;
+  }
+}
+
+void slip21_from_seed(const uint8_t *seed, int seed_len, Slip21Node *out) {
+  hmac_sha512((uint8_t *)"Symmetric key seed", 18, seed, seed_len, out->data);
+}
+
+void slip21_derive_path(Slip21Node *inout, const uint8_t *label,
+                        size_t label_len) {
+  HMAC_SHA512_CTX hctx = {0};
+  hmac_sha512_Init(&hctx, inout->data, 32);
+  hmac_sha512_Update(&hctx, (uint8_t *)"\0", 1);
+  hmac_sha512_Update(&hctx, label, label_len);
+  hmac_sha512_Final(&hctx, inout->data);
+}
+
+const uint8_t *slip21_key(const Slip21Node *node) { return &node->data[32]; }

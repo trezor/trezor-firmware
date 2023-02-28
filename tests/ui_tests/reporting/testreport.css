@@ -14,7 +14,7 @@ tr.bad a, tr.bad a:visited {
     position: fixed;
     top: 50px;
     right: 5px;
-    width: 300px;
+    width: 500px;
     padding: 1em;
 }
 
@@ -39,6 +39,15 @@ tr.bad a, tr.bad a:visited {
     border-color: lightgreen;
 }
 
+#markbox #mark-update {
+    color: green;
+    border-color: darkgreen;
+}
+
+#markbox #mark-update:hover {
+    border-color: lightgreen;
+}
+
 #markbox #mark-bad {
     color: darkred;
     border-color: darkred;
@@ -50,4 +59,9 @@ tr.bad a, tr.bad a:visited {
 
 .script-hidden {
     display: none;
+}
+
+.model-T1 img, .model-TR img {
+    image-rendering: pixelated;
+    width: 256px;
 }

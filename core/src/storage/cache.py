@@ -31,6 +31,8 @@ APP_COMMON_SAFETY_CHECKS_TEMPORARY = const(1 | _SESSIONLESS_FLAG)
 STORAGE_DEVICE_EXPERIMENTAL_FEATURES = const(2 | _SESSIONLESS_FLAG)
 APP_COMMON_REQUEST_PIN_LAST_UNLOCK = const(3 | _SESSIONLESS_FLAG)
 APP_COMMON_BUSY_DEADLINE_MS = const(4 | _SESSIONLESS_FLAG)
+APP_MISC_COSI_NONCE = const(5 | _SESSIONLESS_FLAG)
+APP_MISC_COSI_COMMITMENT = const(6 | _SESSIONLESS_FLAG)
 
 
 # === Homescreen storage ===
@@ -137,6 +139,8 @@ class SessionlessCache(DataCache):
             1,  # STORAGE_DEVICE_EXPERIMENTAL_FEATURES
             8,  # APP_COMMON_REQUEST_PIN_LAST_UNLOCK
             8,  # APP_COMMON_BUSY_DEADLINE_MS
+            32,  # APP_MISC_COSI_NONCE
+            32,  # APP_MISC_COSI_COMMITMENT
         )
         super().__init__()
 
@@ -214,10 +218,6 @@ def end_current_session() -> None:
 
     _SESSIONS[_active_session_idx].clear()
     _active_session_idx = None
-
-
-def is_session_started() -> bool:
-    return _active_session_idx is not None
 
 
 def set(key: int, value: bytes) -> None:

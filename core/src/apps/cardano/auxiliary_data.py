@@ -14,10 +14,6 @@ if TYPE_CHECKING:
     Delegations = list[tuple[bytes, int]]
     GovernanceRegistrationPayload = dict[int, Delegations | bytes | int]
     SignedGovernanceRegistrationPayload = tuple[GovernanceRegistrationPayload, bytes]
-    GovernanceRegistrationSignature = dict[int, bytes]
-    GovernanceRegistration = dict[
-        int, GovernanceRegistrationPayload | GovernanceRegistrationSignature
-    ]
 
     from trezor import messages
     from trezor.wire import Context

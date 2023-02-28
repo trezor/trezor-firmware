@@ -34,6 +34,7 @@ _SD_SALT_AUTH_KEY          = const(0x12)  # bytes
 INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
+_HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
@@ -142,10 +143,6 @@ def set_passphrase_enabled(enable: bool) -> None:
     common.set_bool(_NAMESPACE, _USE_PASSPHRASE, enable)
     if not enable:
         set_passphrase_always_on_device(False)
-
-
-def get_homescreen() -> bytes | None:
-    return common.get(_NAMESPACE, _HOMESCREEN, public=True)
 
 
 def set_homescreen(homescreen: bytes) -> None:
@@ -338,3 +335,17 @@ def set_experimental_features(enabled: bool) -> None:
     cached_bytes = b"\x01" if enabled else b""
     storage_cache.set(storage_cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES, cached_bytes)
     common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled)
+
+
+def set_hide_passphrase_from_host(hide: bool) -> None:
+    """
+    Whether we should hide the passphrase from the host.
+    """
+    common.set_bool(_NAMESPACE, _HIDE_PASSPHRASE_FROM_HOST, hide)
+
+
+def get_hide_passphrase_from_host() -> bool:
+    """
+    Whether we should hide the passphrase from the host.
+    """
+    return common.get_bool(_NAMESPACE, _HIDE_PASSPHRASE_FROM_HOST)

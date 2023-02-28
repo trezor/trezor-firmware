@@ -53,3 +53,9 @@ impl TouchEvent {
         Ok(result)
     }
 }
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum USBEvent {
+    /// USB host has connected/disconnected.
+    Connected(bool),
+}

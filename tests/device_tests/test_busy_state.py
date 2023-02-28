@@ -24,8 +24,6 @@ from trezorlib.tools import parse_path
 
 PIN = "1234"
 
-pytestmark = pytest.mark.skip_t1
-
 
 @pytest.mark.setup_client(pin=PIN)
 def test_busy_state(client: Client):

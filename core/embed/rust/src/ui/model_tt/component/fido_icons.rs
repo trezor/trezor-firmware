@@ -2,6 +2,8 @@
 //! (by running `make templates` in `core`)
 //! do not edit manually!
 
+
+const ICON_APPLE: &[u8] = include_res!("model_tt/res/fido/icon_apple.toif");
 const ICON_AWS: &[u8] = include_res!("model_tt/res/fido/icon_aws.toif");
 const ICON_BINANCE: &[u8] = include_res!("model_tt/res/fido/icon_binance.toif");
 const ICON_BITBUCKET: &[u8] = include_res!("model_tt/res/fido/icon_bitbucket.toif");
@@ -40,6 +42,7 @@ const ICON_WEBAUTHN: &[u8] = include_res!("model_tt/res/fido/icon_webauthn.toif"
 pub fn get_fido_icon_data<T: AsRef<str>>(icon_name: Option<T>) -> &'static [u8] {
     if let Some(icon_name) = icon_name {
         match icon_name.as_ref() {
+            "apple" => ICON_APPLE,
             "aws" => ICON_AWS,
             "binance" => ICON_BINANCE,
             "bitbucket" => ICON_BITBUCKET,

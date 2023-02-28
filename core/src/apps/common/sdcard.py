@@ -23,7 +23,7 @@ async def _confirm_retry_wrong_card(ctx: wire.GenericContext) -> None:
         await show_error_and_raise(
             ctx,
             "warning_wrong_sd",
-            "Please unplug the\ndevice and insert the correct SD card.",
+            "Please unplug the device and insert the correct SD card.",
             "Wrong SD card.",
             exc=SdCardUnavailable("Wrong SD card."),
         )
@@ -45,7 +45,7 @@ async def _confirm_retry_insert_card(ctx: wire.GenericContext) -> None:
         await show_error_and_raise(
             ctx,
             "warning_no_sd",
-            "Please unplug the\ndevice and insert your SD card.",
+            "Please unplug the device and insert your SD card.",
             "SD card required.",
             exc=SdCardUnavailable("SD card required."),
         )

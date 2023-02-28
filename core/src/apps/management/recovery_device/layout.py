@@ -62,7 +62,7 @@ async def request_mnemonic(
             await show_warning(
                 ctx,
                 "warning_known_share",
-                "Share already entered,\nplease enter\na different share.",
+                "Share already entered, please enter a different share.",
             )
             return None
         except word_validity.IdentifierMismatch:
@@ -70,7 +70,7 @@ async def request_mnemonic(
             await show_warning(
                 ctx,
                 "warning_mismatched_share",
-                "You have entered\na share from another\nShamir Backup.",
+                "You have entered a share from another Shamir Backup.",
             )
             return None
         except word_validity.ThresholdReached:
@@ -78,7 +78,7 @@ async def request_mnemonic(
             await show_warning(
                 ctx,
                 "warning_group_threshold",
-                "Threshold of this\ngroup has been reached.\nInput share from\ndifferent group.",
+                "Threshold of this group has been reached. Input share from different group.",
             )
             return None
 
@@ -92,15 +92,17 @@ async def show_dry_run_result(
 
     if result:
         if is_slip39:
-            text = "The entered recovery\nshares are valid and\nmatch what is currently\nin the device."
+            text = "The entered recovery shares are valid and match what is currently in the device."
         else:
-            text = "The entered recovery\nseed is valid and\nmatches the one\nin the device."
+            text = (
+                "The entered recovery seed is valid and matches the one in the device."
+            )
         await show_success(ctx, "success_dry_recovery", text, button="Continue")
     else:
         if is_slip39:
-            text = "The entered recovery\nshares are valid but\ndo not match what is\ncurrently in the device."
+            text = "The entered recovery shares are valid but do not match what is currently in the device."
         else:
-            text = "The entered recovery\nseed is valid but does\nnot match the one\nin the device."
+            text = "The entered recovery seed is valid but does not match the one in the device."
         await show_warning(ctx, "warning_dry_recovery", text, button="Continue")
 
 
@@ -109,13 +111,13 @@ async def show_invalid_mnemonic(ctx: GenericContext, word_count: int) -> None:
         await show_warning(
             ctx,
             "warning_invalid_share",
-            "You have entered\nan invalid recovery\nshare.",
+            "You have entered an invalid recovery share.",
         )
     else:
         await show_warning(
             ctx,
             "warning_invalid_seed",
-            "You have entered\nan invalid recovery\nseed.",
+            "You have entered an invalid recovery seed.",
         )
 
 

@@ -77,7 +77,9 @@ def print_firmware_version(fw: "firmware.FirmwareType") -> None:
         _print_version(fw.firmware.header.version)
 
 
-def validate_signatures(fw: "firmware.FirmwareType") -> None:
+def validate_signatures(
+    fw: "firmware.FirmwareType", prompt_unsigned: bool = True
+) -> None:
     """Check the signatures on the firmware.
 
     Prints the validity status.
@@ -86,14 +88,17 @@ def validate_signatures(fw: "firmware.FirmwareType") -> None:
     """
     try:
         fw.verify()
-        click.echo("Signatures are valid.")
     except firmware.Unsigned:
-        if not isinstance(fw, firmware.LegacyFirmware):
-            raise
+        if not prompt_unsigned or not isinstance(
+            fw, (firmware.LegacyFirmware, firmware.LegacyV2Firmware)
+        ):
+            click.echo("Firmware is not signed, aborting.")
+            sys.exit(4)
 
         # allow legacy firmware without signatures
         if not click.confirm("No signatures found. Continue?", default=False):
             sys.exit(1)
+
         if firmware.is_onev2(fw):
             try:
                 assert fw.embedded_v2 is not None
@@ -337,6 +342,7 @@ def validate_firmware(
     fingerprint: Optional[str] = None,
     bootloader_onev2: Optional[bool] = None,
     trezor_major_version: Optional[int] = None,
+    prompt_unsigned: bool = True,
 ) -> None:
     """Validate the firmware through multiple tests.
 
@@ -351,8 +357,8 @@ def validate_firmware(
         sys.exit(2)
 
     print_firmware_version(fw)
-    validate_signatures(fw)
     validate_fingerprint(fw, fingerprint)
+    validate_signatures(fw, prompt_unsigned=prompt_unsigned)
 
     if bootloader_onev2 is not None and trezor_major_version is not None:
         check_device_match(
@@ -447,6 +453,7 @@ def verify(
         fingerprint=fingerprint,
         bootloader_onev2=bootloader_onev2,
         trezor_major_version=trezor_major_version,
+        prompt_unsigned=False,
     )
 
 

@@ -4,7 +4,7 @@ from micropython import const
 from trezorui import Display
 from typing import TYPE_CHECKING, Any, Awaitable, Generator
 
-from trezor import io, loop, res, utils, workflow
+from trezor import io, loop, utils, workflow
 
 # all rendering is done through a singleton of `Display`
 display = Display()
@@ -50,10 +50,6 @@ if utils.EMULATOR or utils.MODEL in ("1", "R"):
     loop.after_step_hook = refresh
 
 
-def rgb(r: int, g: int, b: int) -> int:
-    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
-
-
 # import style later to avoid circular dep
 from trezor.ui import style  # isort:skip
 
@@ -91,50 +87,15 @@ def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
             display.backlight(val)
             return
     current = display.backlight()
-    if current > val:
+    if current < 0:
+        display.backlight(val)
+        return
+    elif current > val:
         step = -step
     for i in range(current, val, step):
         display.backlight(i)
         utime.sleep_us(delay)
-
-
-def header(
-    title: str,
-    icon: str = style.ICON_DEFAULT,
-    fg: int = style.FG,
-    bg: int = style.BG,
-    ifg: int = style.GREEN,
-) -> None:
-    if icon is not None:
-        display.icon(14, 15, res.load(icon), ifg, bg)
-    display.text(44, 35, title, BOLD, fg, bg)
-
-
-# Common for both header functions
-MODEL_HEADER_HEIGHTS = {"1": 12, "R": 15, "T": 30}
-MODEL_Y_BASELINES = {"1": 10, "R": 11, "T": 22}
-
-
-def header_warning(message: str) -> None:
-    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
-    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
-
-    display.bar(0, 0, WIDTH, height, style.YELLOW)
-    display.text_center(
-        WIDTH // 2, y_baseline, message, BOLD, style.BLACK, style.YELLOW
-    )
-
-
-def header_error(message: str) -> None:
-    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
-    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
-
-    display.bar(0, 0, WIDTH, height, style.RED)
-    display.text_center(WIDTH // 2, y_baseline, message, BOLD, style.WHITE, style.RED)
-
-
-def get_header_height() -> int:
-    return MODEL_HEADER_HEIGHTS[utils.MODEL]
+    display.backlight(val)
 
 
 # Component events.  Should be different from `io.TOUCH_*` events.
@@ -328,7 +289,7 @@ class Layout(Component):
 
     def _before_render(self) -> None:
         # Before the first render, we dim the display.
-        backlight_fade(style.BACKLIGHT_DIM)
+        backlight_fade(style.BACKLIGHT_NONE)
         # Clear the screen of any leftovers, make sure everything is marked for
         # repaint (we can be running the same layout instance multiple times)
         # and paint it.

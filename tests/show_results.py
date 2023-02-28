@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import http.server
+import json
 import multiprocessing
 import os
 import posixpath
+import sys
 import time
 import webbrowser
 from pathlib import Path
@@ -11,8 +13,12 @@ from urllib.parse import unquote
 
 import click
 
+from ui_tests.common import SCREENS_DIR, TestResult, write_fixtures
+from ui_tests.reporting import testreport  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
-TEST_RESULT_PATH = ROOT / "tests" / "ui_tests" / "reporting" / "reports" / "test"
+
+sys.path.append(str(ROOT / "tests"))
 
 
 class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -42,7 +48,7 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = posixpath.normpath(path)
         words = path.split("/")
         words = filter(None, words)
-        path = str(TEST_RESULT_PATH)  # XXX this is the only modified line
+        path = str(testreport.TESTREPORT_PATH)  # XXX this is the only modified line
         for word in words:
             if os.path.dirname(word) or word in (os.curdir, os.pardir):
                 # Ignore components that are not a simple file/directory name
@@ -51,6 +57,32 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
         if trailing_slash:
             path += "/"
         return path
+
+    def do_GET(self) -> None:
+        if self.path in ("/", "/index.html"):
+            testreport.index()
+
+        return super().do_GET()
+
+    def do_POST(self) -> None:
+        if self.path == "/fixtures.json":
+
+            length = int(self.headers.get("content-length"))
+            field_data = self.rfile.read(length)
+            data = json.loads(field_data)
+
+            test_name = data.get("test")
+            test_hash = data.get("hash")
+
+            if test_name is not None and test_hash is not None:
+                test_path = SCREENS_DIR / test_name
+                result = TestResult.load(test_path)
+                assert result.actual_hash == test_hash
+                write_fixtures([result])
+
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
 
 
 def launch_http_server(port: int) -> None:

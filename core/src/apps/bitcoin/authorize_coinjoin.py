@@ -39,6 +39,9 @@ async def authorize_coinjoin(
     ):
         raise DataError("Invalid coordinator name.")
 
+    if msg.max_rounds < 1:
+        raise DataError("Invalid number of rounds.")
+
     if msg.max_rounds > _MAX_ROUNDS and safety_checks_is_strict:
         raise DataError("The number of rounds is unexpectedly large.")
 
@@ -86,4 +89,4 @@ async def authorize_coinjoin(
 
     authorization.set(msg)
 
-    return Success(message="CoinJoin authorized")
+    return Success(message="Coinjoin authorized")

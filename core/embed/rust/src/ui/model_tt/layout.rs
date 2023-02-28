@@ -1,9 +1,10 @@
-use core::{cmp::Ordering, convert::TryInto, ops::Deref};
+use core::{cmp::Ordering, convert::TryInto};
+use cstr_core::cstr;
 
 use crate::{
     error::Error,
     micropython::{
-        buffer::StrBuffer,
+        buffer::{get_buffer, StrBuffer},
         gc::Gc,
         iter::{Iter, IterBuf},
         list::List,
@@ -19,6 +20,7 @@ use crate::{
             image::BlendedImage,
             paginated::{PageMsg, Paginate},
             painter,
+            placed::GridPlaced,
             text::{
                 paragraphs::{
                     Checklist, Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecLong,
@@ -26,13 +28,17 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, Timeout, TimeoutMsg,
+            Border, Component, Empty, FormattedText, Timeout, TimeoutMsg,
         },
+        display::{self, tjpgd::jpeg_info, toif::Icon},
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{iter_into_array, iter_into_objs, ConfirmBlob, PropsList},
+            util::{
+                iter_into_array, iter_into_objs, upy_disable_animation, upy_jpeg_info,
+                upy_jpeg_test, ConfirmBlob, PropsList,
+            },
         },
     },
 };
@@ -41,12 +47,13 @@ use super::{
     component::{
         Bip39Input, Button, ButtonMsg, ButtonStyleSheet, CancelConfirmMsg, CancelInfoConfirmMsg,
         Dialog, DialogMsg, FidoConfirm, FidoMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
-        IconDialog, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NotificationFrame,
-        NumberInputDialog, NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
-        PinKeyboard, PinKeyboardMsg, SelectWordCount, SelectWordCountMsg, SelectWordMsg,
-        Slip39Input, SwipeHoldPage, SwipePage,
+        Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput, MnemonicKeyboard,
+        MnemonicKeyboardMsg, NotificationFrame, NumberInputDialog, NumberInputDialogMsg,
+        PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
+        SelectWordCount, SelectWordCountMsg, SelectWordMsg, Slip39Input, SwipeHoldPage, SwipePage,
+        WelcomeScreen,
     },
-    theme,
+    constant, theme,
 };
 
 impl TryFrom<CancelConfirmMsg> for Obj {
@@ -95,7 +102,7 @@ impl TryFrom<SelectWordCountMsg> for Obj {
 impl<F, T, U> ComponentMsgObj for FidoConfirm<F, T, U>
 where
     F: Fn(usize) -> T,
-    T: Deref<Target = str> + From<&'static str>,
+    T: ParagraphStrType + From<&'static str>,
     U: Component<Msg = CancelConfirmMsg>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
@@ -149,7 +156,7 @@ where
 
 impl<T> ComponentMsgObj for PinKeyboard<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -171,7 +178,7 @@ impl ComponentMsgObj for PassphraseKeyboard {
 impl<T, U> ComponentMsgObj for MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = str>,
+    U: AsRef<str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -284,6 +291,47 @@ where
     }
 }
 
+impl<T> ComponentMsgObj for Progress<T>
+where
+    T: ParagraphStrType,
+{
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!()
+    }
+}
+
+impl<T> ComponentMsgObj for Homescreen<T>
+where
+    T: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for Lockscreen<T>
+where
+    T: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<T, S> ComponentMsgObj for (GridPlaced<Paragraphs<T>>, GridPlaced<FormattedText<S, S>>)
+where
+    T: ParagraphSource,
+    S: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!()
+    }
+}
+
 extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -321,10 +369,11 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             } else {
                 SwipeHoldPage::new(paragraphs, theme::BG)
             };
-            LayoutObj::new(Frame::new(title, page))?
+            LayoutObj::new(Frame::left_aligned(theme::label_title(), title, page))?
         } else {
             let buttons = Button::cancel_confirm_text(verb_cancel, verb);
-            LayoutObj::new(Frame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 title,
                 SwipePage::new(paragraphs, buttons, theme::BG),
             ))?
@@ -354,10 +403,15 @@ fn confirm_blob(
     .into_paragraphs();
 
     let obj = if hold {
-        LayoutObj::new(Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)))?
+        LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
+            title,
+            SwipeHoldPage::new(paragraphs, theme::BG),
+        ))?
     } else if let Some(verb) = verb {
         let buttons = Button::cancel_confirm_text(verb_cancel, verb);
-        LayoutObj::new(Frame::new(
+        LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?
@@ -408,13 +462,15 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             &theme::TEXT_MONO,
         )?;
         let obj = if hold {
-            LayoutObj::new(Frame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 title,
                 SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG),
             ))?
         } else {
             let buttons = Button::cancel_confirm_text(None, "CONFIRM");
-            LayoutObj::new(Frame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 title,
                 SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
             ))?
@@ -424,24 +480,72 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let data: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
+
+        // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
+        // in every paint pass.
+        // SAFETY: We expect no existing mutable reference. Resulting reference is
+        //         discarded before returning to micropython.
+        let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
+
+        let size = match jpeg_info(buffer_func()) {
+            Some(info) => info.0,
+            _ => return Err(Error::ValueError(cstr!("Invalid image."))),
+        };
+
+        let buttons = Button::cancel_confirm_text(None, "CONFIRM");
+        let obj = LayoutObj::new(
+            Frame::centered(
+                theme::label_title(),
+                title,
+                Dialog::new(painter::jpeg_painter(buffer_func, size, 1), buttons),
+            )
+            .with_border(theme::borders()),
+        )?;
+        Ok(obj.into())
+    };
+
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let description: StrBuffer = "\nBy continuing you agree to".into();
-        let url: StrBuffer = "https://trezor.io/tos".into();
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, prompt),
-            Paragraph::new(&theme::TEXT_NORMAL, description),
-            Paragraph::new(&theme::TEXT_BOLD, url),
-        ]);
-
-        let buttons = Button::cancel_confirm_text(None, "CONTINUE");
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            SwipePage::new(paragraphs, buttons, theme::BG),
-        ))?;
+        let paragraphs = Paragraphs::new(Paragraph::new(
+            &theme::TEXT_NORMAL,
+            StrBuffer::from("By continuing you agree\nto Trezor Company's\nterms and conditions."),
+        ));
+        let url = FormattedText::new(
+            theme::TEXT_NORMAL,
+            theme::FORMATTED,
+            "More info at {demibold}trezor.io/tos",
+        );
+        let buttons = Button::cancel_confirm(
+            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
+            Button::with_text(button).styled(theme::button_confirm()),
+            3,
+        );
+        let obj = LayoutObj::new(
+            Frame::left_aligned(
+                theme::label_title(),
+                title,
+                Dialog::new(
+                    (
+                        GridPlaced::new(paragraphs)
+                            .with_grid(3, 1)
+                            .with_from_to((0, 0), (1, 0)),
+                        GridPlaced::new(url).with_grid(3, 1).with_row_col(2, 0),
+                    ),
+                    buttons,
+                ),
+            )
+            .with_border(theme::borders()),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -461,7 +565,8 @@ extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         );
 
         let obj = LayoutObj::new(
-            Frame::new(
+            Frame::left_aligned(
+                theme::label_title(),
                 title,
                 Dialog::new(
                     painter::qrcode_painter(address, theme::QR_SIDE_MAX, case_sensitive),
@@ -505,7 +610,8 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
             Paragraph::new(&theme::TEXT_MONO, total_amount),
         ]);
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "JOINT TRANSACTION",
             SwipeHoldPage::new(paragraphs, theme::BG),
         ))?;
@@ -537,12 +643,13 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         ]);
 
         let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
+            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("NEXT").styled(theme::button_confirm()),
             2,
         );
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "MODIFY AMOUNT",
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?;
@@ -571,12 +678,13 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         ]);
 
         let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
+            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("NEXT").styled(theme::button_confirm()),
             2,
         );
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "MODIFY FEE",
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?;
@@ -596,32 +704,14 @@ fn new_show_modal(
     let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
     let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
-    let obj = match (allow_cancel, time_ms) {
-        (true, 0) => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                Button::cancel_confirm(
-                    Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel()),
-                    Button::with_text(button).styled(button_style),
-                    2,
-                ),
-            )
-            .with_description(description),
-        )?
-        .into(),
-        (false, 0) => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                theme::button_bar(Button::with_text(button).styled(button_style).map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                })),
-            )
-            .with_description(description),
-        )?
-        .into(),
-        (_, time_ms) => LayoutObj::new(
+    let no_buttons = button.as_ref().is_empty();
+    let obj = if no_buttons && time_ms == 0 {
+        // No buttons and no timer, used when we only want to draw the dialog once and
+        // then throw away the layout object.
+        LayoutObj::new(IconDialog::new(icon, title, Empty).with_description(description))?.into()
+    } else if no_buttons && time_ms > 0 {
+        // Timeout, no buttons.
+        LayoutObj::new(
             IconDialog::new(
                 icon,
                 title,
@@ -631,7 +721,35 @@ fn new_show_modal(
             )
             .with_description(description),
         )?
-        .into(),
+        .into()
+    } else if allow_cancel {
+        // Two buttons.
+        LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                Button::cancel_confirm(
+                    Button::with_icon(Icon::new(theme::ICON_CANCEL)).styled(theme::button_cancel()),
+                    Button::with_text(button).styled(button_style),
+                    2,
+                ),
+            )
+            .with_description(description),
+        )?
+        .into()
+    } else {
+        // Single button.
+        LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                theme::button_bar(Button::with_text(button).styled(button_style).map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                })),
+            )
+            .with_description(description),
+        )?
+        .into()
     };
 
     Ok(obj)
@@ -640,8 +758,8 @@ fn new_show_modal(
 extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_ERROR,
+            Icon::new(theme::IMAGE_BG_CIRCLE),
+            Icon::new(theme::IMAGE_FG_ERROR),
             theme::ERROR_COLOR,
             theme::FG,
             theme::BG,
@@ -669,14 +787,16 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
         };
 
         let controls = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel()),
+            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("CONFIRM").styled(theme::button_confirm()),
             2,
         );
 
         let fido_page = FidoConfirm::new(app_name, get_page, page_count, icon, controls);
 
-        let obj = LayoutObj::new(Frame::new(title, fido_page).with_border(theme::borders()))?;
+        let obj = LayoutObj::new(
+            Frame::centered(theme::label_title(), title, fido_page).with_border(theme::borders()),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -685,8 +805,8 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            theme::IMAGE_BG_TRIANGLE,
-            theme::IMAGE_FG_WARN,
+            Icon::new(theme::IMAGE_BG_TRIANGLE),
+            Icon::new(theme::IMAGE_FG_WARN),
             theme::WARN_COLOR,
             theme::FG,
             theme::BG,
@@ -699,8 +819,8 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_SUCCESS,
+            Icon::new(theme::IMAGE_BG_CIRCLE),
+            Icon::new(theme::IMAGE_FG_SUCCESS),
             theme::SUCCESS_COLOR,
             theme::FG,
             theme::BG,
@@ -713,8 +833,8 @@ extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_INFO,
+            Icon::new(theme::IMAGE_BG_CIRCLE),
+            Icon::new(theme::IMAGE_FG_INFO),
             theme::INFO_COLOR,
             theme::FG,
             theme::BG,
@@ -732,7 +852,8 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
         let obj = if let Some(t) = title {
-            LayoutObj::new(Frame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 t,
                 Dialog::new(
                     Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
@@ -784,8 +905,12 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         let buttons = Button::cancel_info_confirm(button, info_button);
 
         let obj = LayoutObj::new(
-            Frame::new(title, Dialog::new(paragraphs.into_paragraphs(), buttons))
-                .with_border(theme::borders()),
+            Frame::left_aligned(
+                theme::label_title(),
+                title,
+                Dialog::new(paragraphs.into_paragraphs(), buttons),
+            )
+            .with_border(theme::borders()),
         )?;
         Ok(obj.into())
     };
@@ -814,7 +939,8 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
                 (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
             }));
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipePage::new(paragraphs.into_paragraphs(), button, theme::BG).with_back_button(),
         ))?;
@@ -835,7 +961,8 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             Paragraph::new(&theme::TEXT_BOLD, max_feerate),
         ]);
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "AUTHORIZE COINJOIN",
             SwipeHoldPage::new(paragraphs, theme::BG),
         ))?;
@@ -849,7 +976,12 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
         let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
-        let warning: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_warning)?.try_into_option()?;
+        let warning: bool = kwargs.get_or(Qstr::MP_QSTR_wrong_pin, false)?;
+        let warning = if warning {
+            Some("Wrong PIN".into())
+        } else {
+            None
+        };
         let obj = LayoutObj::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel))?;
         Ok(obj.into())
     };
@@ -894,7 +1026,8 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
         let buttons = Button::select_word(words);
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipePage::new(paragraphs, buttons, theme::BG),
         ))?;
@@ -916,7 +1049,8 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, text).break_after());
         }
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             title,
             SwipeHoldPage::without_cancel(paragraphs.into_paragraphs(), theme::BG),
         ))?;
@@ -932,6 +1066,7 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
         let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
         let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
         let description_callback: Obj = kwargs.get(Qstr::MP_QSTR_description)?;
+        assert!(description_callback != Obj::const_none());
 
         let callback = move |i: u32| {
             StrBuffer::try_from(
@@ -943,7 +1078,8 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
         };
 
         let obj = LayoutObj::new(
-            Frame::new(
+            Frame::left_aligned(
+                theme::label_title(),
                 title,
                 NumberInputDialog::new(min_count, max_count, count, callback),
             )
@@ -975,12 +1111,13 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         }
 
         let obj = LayoutObj::new(
-            Frame::new(
+            Frame::left_aligned(
+                theme::label_title(),
                 title,
                 Dialog::new(
                     Checklist::from_paragraphs(
-                        theme::ICON_LIST_CURRENT,
-                        theme::ICON_LIST_CHECK,
+                        Icon::new(theme::ICON_LIST_CURRENT),
+                        Icon::new(theme::ICON_LIST_CHECK),
                         active,
                         paragraphs
                             .into_paragraphs()
@@ -1032,13 +1169,13 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
         let obj = if info_button {
             LayoutObj::new(NotificationFrame::new(
-                theme::ICON_WARN,
+                Icon::new(theme::ICON_WARN),
                 notification,
                 Dialog::new(paragraphs, Button::<&'static str>::abort_info_enter()),
             ))?
         } else {
             LayoutObj::new(NotificationFrame::new(
-                theme::ICON_WARN,
+                Icon::new(theme::ICON_WARN),
                 notification,
                 Dialog::new(paragraphs, Button::cancel_confirm_text(None, button)),
             ))?
@@ -1066,8 +1203,12 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
         );
 
         let obj = LayoutObj::new(
-            Frame::new(title, Dialog::new(paragraphs, SelectWordCount::new()))
-                .with_border(theme::borders()),
+            Frame::left_aligned(
+                theme::label_title(),
+                title,
+                Dialog::new(paragraphs, SelectWordCount::new()),
+            )
+            .with_border(theme::borders()),
         )?;
         Ok(obj.into())
     };
@@ -1108,7 +1249,8 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
                 .add(Paragraph::new(&theme::TEXT_NORMAL, description).break_after());
         }
 
-        let obj = LayoutObj::new(Frame::new(
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
             "REMAINING SHARES",
             SwipePage::new(
                 paragraphs.into_paragraphs(),
@@ -1121,6 +1263,95 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let indeterminate: bool = kwargs.get_or(Qstr::MP_QSTR_indeterminate, false)?;
+        let description: StrBuffer =
+            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
+
+        // Description updates are received as &str and we need to provide a way to
+        // convert them to StrBuffer.
+        let obj = LayoutObj::new(Progress::new(
+            title,
+            indeterminate,
+            description,
+            StrBuffer::alloc,
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let label: StrBuffer = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
+        let notification: Option<StrBuffer> =
+            kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
+        let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
+        let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
+        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
+
+        let notification = notification.map(|w| (w, notification_level));
+        let obj = LayoutObj::new(Homescreen::new(label, notification, hold))?;
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let label: StrBuffer = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
+        let bootscreen: bool = kwargs.get(Qstr::MP_QSTR_bootscreen)?.try_into()?;
+        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
+
+        let obj = LayoutObj::new(Lockscreen::new(label, bootscreen))?;
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let time_ms: u32 = kwargs.get(Qstr::MP_QSTR_time_ms)?.try_into()?;
+        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
+
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
+            title,
+            Dialog::new(
+                Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, description).centered()),
+                Timeout::new(time_ms).map(|msg| {
+                    (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Cancelled)
+                }),
+            ),
+        ))?;
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn draw_welcome_screen() -> Obj {
+    // No need of util::try_or_raise, this does not allocate
+    let mut screen = WelcomeScreen::new();
+    screen.place(constant::screen());
+    display::sync();
+    screen.paint();
+    display::set_backlight(150); // BACKLIGHT_NORMAL
+    Obj::const_none()
 }
 
 #[no_mangle]
@@ -1136,6 +1367,18 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// INFO: object
     Qstr::MP_QSTR_INFO => INFO.as_obj(),
 
+    /// def disable_animation(disable: bool) -> None:
+    ///     """Disable animations, debug builds only."""
+    Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
+
+    /// def jpeg_info(data: bytes) -> (width: int, height: int, mcu_height: int):
+    ///     """Get JPEG image dimensions."""
+    Qstr::MP_QSTR_jpeg_info => obj_fn_1!(upy_jpeg_info).as_obj(),
+
+    /// def jpeg_test(data: bytes) -> bool:
+    ///     """Test JPEG image."""
+    Qstr::MP_QSTR_jpeg_test => obj_fn_1!(upy_jpeg_test).as_obj(),
+
     /// def confirm_action(
     ///     *,
     ///     title: str,
@@ -1149,6 +1392,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+
+    /// def confirm_homescreen(
+    ///     *,
+    ///     title: str,
+    ///     image: bytes,
+    /// ) -> object:
+    ///     """Confirm homescreen."""
+    Qstr::MP_QSTR_confirm_homescreen => obj_fn_kw!(0, new_confirm_homescreen).as_obj(),
 
     /// def confirm_blob(
     ///     *,
@@ -1175,7 +1427,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_reset_device(
     ///     *,
     ///     title: str,
-    ///     prompt: str,
+    ///     button: str,
     /// ) -> object:
     ///     """Confirm TOS before device setup."""
     Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
@@ -1249,7 +1501,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> object:
-    ///     """Error modal."""
+    ///     """Error modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_error => obj_fn_kw!(0, new_show_error).as_obj(),
 
     /// def show_warning(
@@ -1260,7 +1512,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> object:
-    ///     """Warning modal."""
+    ///     """Warning modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
 
     /// def show_success(
@@ -1271,7 +1523,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> object:
-    ///     """Success modal."""
+    ///     """Success modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
 
     /// def show_info(
@@ -1282,7 +1534,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> object:
-    ///     """Info modal."""
+    ///     """Info modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
     /// def show_simple(
@@ -1328,7 +1580,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     prompt: str,
     ///     subprompt: str,
     ///     allow_cancel: bool = True,
-    ///     warning: str | None = None,
+    ///     wrong_pin: bool = False,
     /// ) -> str | object:
     ///     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
@@ -1379,7 +1631,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     count: int,
     ///     min_count: int,
     ///     max_count: int,
-    ///     description: Callable[[int], str],
+    ///     description: Callable[[int], str] | None = None,
     /// ) -> object:
     ///    """Number input with + and - buttons, description, and info button."""
     Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
@@ -1409,7 +1661,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,
-    /// ) -> int | trezorui2.CANCELLED:
+    /// ) -> int | CANCELLED:
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
@@ -1426,6 +1678,51 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> int:
     ///    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
     Qstr::MP_QSTR_show_remaining_shares => obj_fn_kw!(0, new_show_remaining_shares).as_obj(),
+
+    /// def show_progress(
+    ///     *,
+    ///     title: str,
+    ///     indeterminate: bool = False,
+    ///     description: str | None = None,
+    /// ) -> object:
+    ///    """Show progress loader. Please note that the number of lines reserved on screen for
+    ///    description is determined at construction time. If you want multiline descriptions
+    ///    make sure the initial desciption has at least that amount of lines."""
+    Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
+
+    /// def show_homescreen(
+    ///     *,
+    ///     label: str,
+    ///     hold: bool,
+    ///     notification: str | None,
+    ///     notification_level: int = 0,
+    ///     skip_first_paint: bool,
+    /// ) -> CANCELLED:
+    ///     """Idle homescreen."""
+    Qstr::MP_QSTR_show_homescreen => obj_fn_kw!(0, new_show_homescreen).as_obj(),
+
+    /// def show_lockscreen(
+    ///     *,
+    ///     label: str,
+    ///     bootscreen: bool,
+    ///     skip_first_paint: bool,
+    /// ) -> CANCELLED:
+    ///     """Homescreen for locked device."""
+    Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
+
+    /// def show_busyscreen(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     time_ms: int,
+    ///     skip_first_paint: bool,
+    /// ) -> CANCELLED:
+    ///     """Homescreen used for indicating coinjoin in progress."""
+    Qstr::MP_QSTR_show_busyscreen => obj_fn_kw!(0, new_show_busyscreen).as_obj(),
+
+    /// def draw_welcome_screen() -> None:
+    ///     """Show logo icon with the model name at the bottom and return."""
+    Qstr::MP_QSTR_draw_welcome_screen => obj_fn_0!(draw_welcome_screen).as_obj(),
 };
 
 #[cfg(test)]

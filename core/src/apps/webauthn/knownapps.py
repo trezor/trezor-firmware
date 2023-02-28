@@ -21,6 +21,14 @@ class FIDOApp:
 
 # fmt: off
 def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
+    if rp_id_hash == b"\x22\x65\xcb\xcc\x3e\xf2\x41\x06\xc9\xe0\xed\xdb\xd0\x4f\x3c\xca\x0d\x03\x22\x5d\xa3\xfc\xca\x8e\x2d\x86\xf7\xa3\x94\xaf\x92\x83":
+        # WebAuthn key for Apple
+        return FIDOApp(
+            "apple.com",  # label
+            "apple",  # icon_name
+            None,  # use_sign_count
+            False,  # use_self_attestation
+        )
     if rp_id_hash == b"\x96\x89\x78\xa2\x99\x53\xde\x52\xd3\xef\x0f\x0c\x71\xb7\xb7\xb6\xb1\xaf\x9f\x08\xe2\x57\x89\x6a\x8d\x81\x26\x91\x85\x30\x29\x3b":
         # U2F key for Amazon Web Services
         return FIDOApp(
@@ -203,7 +211,7 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             "google.com",  # label
             "google",  # icon_name
             None,  # use_sign_count
-            None,  # use_self_attestation
+            False,  # use_self_attestation
         )
     if rp_id_hash == b"\xd4\xc9\xd9\x02\x73\x26\x27\x1a\x89\xce\x51\xfc\xaf\x32\x8e\xd6\x73\xf1\x7b\xe3\x34\x69\xff\x97\x9e\x8a\xb8\xdd\x50\x1e\x66\x4f":
         # WebAuthn key for Google
@@ -211,7 +219,7 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             "google.com",  # label
             "google",  # icon_name
             None,  # use_sign_count
-            None,  # use_self_attestation
+            False,  # use_self_attestation
         )
     if rp_id_hash == b"\x9c\x2e\x02\xc4\xff\xf7\x76\x62\xe1\xde\x80\x3b\x43\x9e\x11\xc0\xdd\x0c\x3f\x66\x42\xce\xc4\xe6\x84\xd6\x49\x87\x0a\xd1\xbb\x59":
         # WebAuthn key for Invity

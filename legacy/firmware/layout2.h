@@ -48,16 +48,22 @@ void layoutDialogSwipeEx(const BITMAP *icon, const char *btnNo,
                          const char *line1, const char *line2,
                          const char *line3, const char *line4,
                          const char *line5, const char *line6, uint8_t font);
+void layoutDialogSwipeWrapping(const BITMAP *icon, const char *btnNo,
+                               const char *btnYes, const char *heading,
+                               const char *description, const char *wrap_text);
 void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScreensaver(void);
+void layoutHomescreen(void);
+void layoutBusyscreen(void);
 void layoutHome(void);
 void layoutConfirmOutput(const CoinInfo *coin, AmountUnit amount_unit,
                          const TxOutputType *out);
 void layoutConfirmOmni(const uint8_t *data, uint32_t size);
 void layoutConfirmOpReturn(const uint8_t *data, uint32_t size);
 void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
-                     uint64_t total_in, uint64_t total_out, uint64_t change_out,
+                     uint64_t total_in, uint64_t external_in,
+                     uint64_t total_out, uint64_t change_out,
                      uint64_t tx_weight);
 void layoutConfirmReplacement(const char *description, uint8_t txid[32]);
 void layoutConfirmModifyOutput(const CoinInfo *coin, AmountUnit amount_unit,
@@ -68,10 +74,14 @@ void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
                             uint64_t tx_weight);
 void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
                             uint64_t fee);
+void layoutFeeRateOverThreshold(const CoinInfo *coin, uint32_t fee_per_kvbyte);
 void layoutChangeCountOverThreshold(uint32_t change_count);
 void layoutConfirmUnverifiedExternalInputs(void);
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled);
+void layoutAuthorizeCoinJoin(const CoinInfo *coin, uint64_t max_rounds,
+                             uint32_t max_fee_per_kvbyte);
+void layoutConfirmCoinjoinAccess(void);
 void layoutVerifyAddress(const CoinInfo *coin, const char *address);
 void layoutCipherKeyValue(bool encrypt, const char *key);
 void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing);
@@ -114,6 +124,8 @@ void layoutConfirmSafetyChecks(SafetyCheckLevel safety_checks_level);
 
 void layoutConfirmHash(const BITMAP *icon, const char *description,
                        const uint8_t *hash, uint32_t len);
+
+void layoutConfirmOwnershipProof(void);
 
 const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen);
 const char **split_message_hex(const uint8_t *msg, uint32_t len);

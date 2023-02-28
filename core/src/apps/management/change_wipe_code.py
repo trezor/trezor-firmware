@@ -26,7 +26,7 @@ async def change_wipe_code(ctx: Context, msg: ChangeWipeCode) -> Success:
     await _require_confirm_action(ctx, msg, has_wipe_code)
 
     # Get the unlocking PIN.
-    pin, salt = await request_pin_and_sd_salt(ctx)
+    pin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
 
     if not msg.remove:
         # Pre-check the entered PIN.
@@ -107,7 +107,7 @@ async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
             # _wipe_code_invalid
             await show_popup(
                 "Invalid wipe code",
-                "The wipe code must be\ndifferent from your PIN.\n\nPlease try again.",
+                "The wipe code must be different from your PIN.\n\nPlease try again.",
             )
             continue
 
@@ -117,5 +117,5 @@ async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
         # _wipe_code_mismatch
         await show_popup(
             "Code mismatch",
-            "The wipe codes you\nentered do not match.\n\nPlease try again.",
+            "The wipe codes you entered do not match.\n\nPlease try again.",
         )

@@ -1,3 +1,10 @@
+use crate::ui::{
+    component::text::TextStyle,
+    display,
+    display::toif::Icon,
+    geometry::{Offset, Point, CENTER},
+};
+
 pub trait ResultExt {
     fn assert_if_debugging_ui(self, message: &str);
 }
@@ -29,6 +36,60 @@ pub fn u32_to_str(num: u32, buffer: &mut [u8]) -> Option<&str> {
             Some(core::str::from_utf8(result).unwrap())
         }
     }
+}
+
+#[cfg(feature = "ui_debug")]
+static mut DISABLE_ANIMATION: bool = false;
+
+#[cfg(feature = "ui_debug")]
+pub fn animation_disabled() -> bool {
+    // SAFETY: single-threaded access
+    unsafe { DISABLE_ANIMATION }
+}
+
+#[cfg(feature = "ui_debug")]
+pub fn set_animation_disabled(disabled: bool) {
+    // SAFETY: single-threaded access
+    unsafe {
+        DISABLE_ANIMATION = disabled;
+    }
+}
+
+#[cfg(not(feature = "ui_debug"))]
+pub fn animation_disabled() -> bool {
+    false
+}
+#[cfg(not(feature = "ui_debug"))]
+pub fn set_animation_disabled(_disabled: bool) {}
+
+/// Display an icon and a text centered relative to given `Point`.
+pub fn icon_text_center(
+    baseline: Point,
+    icon: Icon,
+    space: i16,
+    text: &str,
+    style: TextStyle,
+    text_offset: Offset,
+) {
+    let icon_width = icon.toif.width();
+    let text_width = style.text_font.text_width(text);
+    let text_height = style.text_font.text_height();
+    let text_center = baseline + Offset::new((icon_width + space) / 2, text_height / 2);
+    let icon_center = baseline - Offset::x((text_width + space) / 2);
+
+    display::text_center(
+        text_center + text_offset,
+        text,
+        style.text_font,
+        style.text_color,
+        style.background_color,
+    );
+    icon.draw(
+        icon_center,
+        CENTER,
+        style.text_color,
+        style.background_color,
+    );
 }
 
 #[cfg(test)]

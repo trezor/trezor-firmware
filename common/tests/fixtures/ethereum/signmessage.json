@@ -83,6 +83,16 @@
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
                 "sig": "fa9d60644436f27eb88956a50893e9a47f67c42fb1b57a44bde4c6e127ab777e0c23b234b6ec9327ffd0620daaa514243ebb5a3652a1bac2d720e0f5555b2e071c"
             }
+        },
+        {
+            "parameters": {
+                "msg": "This is an example of a signed message at a different path.",
+                "path": "m/45'/60/2/1/1"
+            },
+            "result": {
+                "address": "0x3beC5F707Ef56057354f4c062C53cd089E8Ea02C",
+                "sig": "27c75ccd53136ef1c470784d16440c798effbff4928fcee36a9080c2e929ce3f727aabcd4a0de88881ae02003bd16bc9d3f199d78266c41596db14fac134b44f1c"
+            }
         }
     ]
 }

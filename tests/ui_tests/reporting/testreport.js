@@ -24,8 +24,26 @@ function itemKeyFromIndexEntry(entry) {
 }
 
 
-function markState(state) {
-    window.localStorage.setItem(itemKeyFromOneTest(), state)
+async function markState(state) {
+    if (state === 'update') {
+        let lastIndex = decodeURIComponent(window.location.href).split("/").reverse()[0].lastIndexOf(".")
+        let stem = decodeURIComponent(window.location.href).split("/").reverse()[0].slice(0, lastIndex)
+        await fetch('http://localhost:8000/fixtures.json', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "test": stem,
+                "hash": document.body.dataset.actualHash
+            })
+         })
+        window.localStorage.setItem(itemKeyFromOneTest(), 'ok')
+    } else {
+        window.localStorage.setItem(itemKeyFromOneTest(), state)
+    }
+
     if (window.nextHref) {
         window.location.assign(window.nextHref)
     } else {
@@ -36,9 +54,9 @@ function markState(state) {
 
 function resetState(whichState) {
     function shouldReset(value) {
-        if (value == whichState) return true
-        if (whichState != "all") return false
-        return (value == "bad" || value == "ok")
+        if (value === whichState) return true
+        if (whichState !== "all") return false
+        return (value === "bad" || value === "ok")
     }
 
     let keysToReset = []
@@ -64,13 +82,13 @@ function findNextForHref(doc, href) {
         let a = tr.querySelector("a")
         if (!a) continue
         if (foundIt) return a.href
-        else if (a.href == href) foundIt = true
+        else if (a.href === href) foundIt = true
     }
 }
 
 
 function openLink(ev) {
-    if (ev.button == 2) {
+    if (ev.button === 2) {
         // let right click through
         return true;
     }
@@ -78,8 +96,7 @@ function openLink(ev) {
     // capture other clicks
     ev.preventDefault()
     let href = ev.target.href
-    let newWindow = window.open(href)
-    newWindow
+    window.open(href)
 }
 
 
@@ -124,7 +141,7 @@ function onLoadTestCase() {
 
 
 function onLoad() {
-    if (window.location.protocol == "file") return
+    if (window.location.protocol === "file") return
 
     for (let elem of document.getElementsByClassName("script-hidden")) {
         elem.classList.remove("script-hidden")

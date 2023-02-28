@@ -51,10 +51,10 @@ class FirmwareHeader(Struct):
     hw_model: Model
     hw_revision: int
     monotonic: int
-    hashes: t.Sequence[bytes]
+    hashes: t.List[bytes]
 
-    v1_signatures: t.Sequence[bytes]
-    v1_key_indexes: t.Sequence[int]
+    v1_signatures: t.List[bytes]
+    v1_key_indexes: t.List[int]
 
     sigmask: int
     signature: bytes

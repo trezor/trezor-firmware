@@ -2,7 +2,9 @@ use crate::{
     time::Instant,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, FixedHeightBar, Pad},
+        display::toif::Icon,
         geometry::{Grid, Insets, Rect},
+        util::animation_disabled,
     },
 };
 
@@ -125,7 +127,7 @@ pub enum CancelHoldMsg {
 impl CancelHold {
     pub fn new(button_style: ButtonStyleSheet) -> FixedHeightBar<Self> {
         theme::button_bar(Self {
-            cancel: Some(Button::with_icon(theme::ICON_CANCEL).into_child()),
+            cancel: Some(Button::with_icon(Icon::new(theme::ICON_CANCEL)).into_child()),
             hold: Button::with_text("HOLD TO CONFIRM")
                 .styled(button_style)
                 .into_child(),
@@ -220,7 +222,7 @@ where
             loader.start_shrinking(ctx, now);
         }
         Some(ButtonMsg::Clicked) => {
-            if loader.is_completely_grown(now) {
+            if loader.is_completely_grown(now) || animation_disabled() {
                 return true;
             } else {
                 loader.start_shrinking(ctx, now);

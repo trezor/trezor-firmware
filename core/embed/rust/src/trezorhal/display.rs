@@ -1,22 +1,15 @@
 use super::ffi;
 use core::ptr;
 use cty::c_int;
-use num_traits::FromPrimitive;
 
 use crate::trezorhal::buffers::BufferText;
 
-#[derive(PartialEq, Debug, Eq, FromPrimitive)]
+#[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
 pub enum ToifFormat {
     FullColorBE = ffi::toif_format_t_TOIF_FULL_COLOR_BE as _,
     GrayScaleOH = ffi::toif_format_t_TOIF_GRAYSCALE_OH as _,
     FullColorLE = ffi::toif_format_t_TOIF_FULL_COLOR_LE as _,
     GrayScaleEH = ffi::toif_format_t_TOIF_GRAYSCALE_EH as _,
-}
-
-pub struct ToifInfo {
-    pub width: u16,
-    pub height: u16,
-    pub format: ToifFormat,
 }
 
 pub fn backlight(val: i32) -> i32 {
@@ -97,18 +90,9 @@ pub fn bar_radius(x: i16, y: i16, w: i16, h: i16, fgcolor: u16, bgcolor: u16, ra
     }
 }
 
-pub fn icon(x: i16, y: i16, w: i16, h: i16, data: &[u8], fgcolor: u16, bgcolor: u16) {
+pub fn bar_radius_buffer(x: i16, y: i16, w: i16, h: i16, radius: u8, buffer: &mut BufferText) {
     unsafe {
-        ffi::display_icon(
-            x.into(),
-            y.into(),
-            w.into(),
-            h.into(),
-            data.as_ptr() as _,
-            data.len() as _,
-            fgcolor,
-            bgcolor,
-        )
+        ffi::display_bar_radius_buffer(x.into(), y.into(), w.into(), h.into(), radius, buffer as _)
     }
 }
 
@@ -122,31 +106,6 @@ pub fn image(x: i16, y: i16, w: i16, h: i16, data: &[u8]) {
             data.as_ptr() as _,
             data.len() as _,
         )
-    }
-}
-
-pub fn toif_info(data: &[u8]) -> Result<ToifInfo, ()> {
-    let mut width: cty::uint16_t = 0;
-    let mut height: cty::uint16_t = 0;
-    let mut format: ffi::toif_format_t = ffi::toif_format_t_TOIF_FULL_COLOR_BE;
-    if unsafe {
-        ffi::display_toif_info(
-            data.as_ptr() as _,
-            data.len() as _,
-            &mut width,
-            &mut height,
-            &mut format,
-        )
-    } {
-        let format = ToifFormat::from_usize(format as usize).unwrap_or(ToifFormat::FullColorBE);
-
-        Ok(ToifInfo {
-            width,
-            height,
-            format,
-        })
-    } else {
-        Err(())
     }
 }
 
@@ -208,5 +167,11 @@ pub fn get_offset() -> (i16, i16) {
         let mut y: c_int = 0;
         ffi::display_offset(ptr::null_mut(), &mut x, &mut y);
         (x as i16, y as i16)
+    }
+}
+
+pub fn sync() {
+    unsafe {
+        ffi::display_sync();
     }
 }

@@ -1,8 +1,7 @@
-use core::ops::Deref;
-
 use crate::ui::{
     component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
-    geometry::{Alignment, Grid, Offset, Rect},
+    display::toif::Icon,
+    geometry::{Grid, Offset, Rect, CENTER},
     model_tt::{
         component::{Button, ButtonMsg},
         theme,
@@ -29,7 +28,7 @@ pub struct MnemonicKeyboard<T, U> {
 impl<T, U> MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = str>,
+    U: AsRef<str>,
 {
     pub fn new(input: T, prompt: U) -> Self {
         Self {
@@ -40,11 +39,12 @@ where
             back: Child::new(Maybe::hidden(
                 theme::BG,
                 Button::with_icon_blend(
-                    theme::IMAGE_BG_BACK_BTN_TALL,
-                    theme::ICON_BACK,
+                    Icon::new(theme::IMAGE_BG_BACK_BTN_TALL),
+                    Icon::new(theme::ICON_BACK),
                     Offset::new(30, 17),
                 )
-                .styled(theme::button_clear()),
+                .styled(theme::button_clear())
+                .with_long_press(theme::ERASE_HOLD_DURATION),
             )),
             input: Child::new(Maybe::hidden(theme::BG, input)),
             keys: T::keys().map(Button::with_text).map(Child::new),
@@ -89,7 +89,7 @@ where
 impl<T, U> Component for MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = str>,
+    U: AsRef<str>,
 {
     type Msg = MnemonicKeyboardMsg;
 
@@ -101,8 +101,7 @@ where
 
         let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
         let prompt_size = self.prompt.inner().inner().max_size();
-        let prompt_top_left = prompt_size.snap(prompt_center, Alignment::Center, Alignment::Center);
-        let prompt_area = Rect::from_top_left_and_size(prompt_top_left, prompt_size);
+        let prompt_area = Rect::snap(prompt_center, prompt_size, CENTER);
 
         self.prompt.place(prompt_area);
         self.back.place(back_area);
@@ -126,11 +125,21 @@ where
             }
             _ => {}
         }
-        if let Some(ButtonMsg::Clicked) = self.back.event(ctx, event) {
-            self.input
-                .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_click(ctx));
-            self.on_input_change(ctx);
-            return None;
+
+        match self.back.event(ctx, event) {
+            Some(ButtonMsg::Clicked) => {
+                self.input
+                    .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_click(ctx));
+                self.on_input_change(ctx);
+                return None;
+            }
+            Some(ButtonMsg::LongPressed) => {
+                self.input
+                    .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_long_press(ctx));
+                self.on_input_change(ctx);
+                return None;
+            }
+            _ => {}
         }
         for (key, btn) in self.keys.iter_mut().enumerate() {
             if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
@@ -165,6 +174,7 @@ pub trait MnemonicInput: Component<Msg = MnemonicInputMsg> {
     fn can_key_press_lead_to_a_valid_word(&self, key: usize) -> bool;
     fn on_key_click(&mut self, ctx: &mut EventCtx, key: usize);
     fn on_backspace_click(&mut self, ctx: &mut EventCtx);
+    fn on_backspace_long_press(&mut self, ctx: &mut EventCtx);
     fn is_empty(&self) -> bool;
     fn mnemonic(&self) -> Option<&'static str>;
 }

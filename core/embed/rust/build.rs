@@ -178,6 +178,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_dict")
         // fun
         .allowlist_type("mp_obj_fun_builtin_fixed_t")
+        .allowlist_var("mp_type_fun_builtin_0")
         .allowlist_var("mp_type_fun_builtin_1")
         .allowlist_var("mp_type_fun_builtin_2")
         .allowlist_var("mp_type_fun_builtin_3")
@@ -287,13 +288,13 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_text_width")
         .allowlist_function("display_bar")
         .allowlist_function("display_bar_radius")
-        .allowlist_function("display_icon")
+        .allowlist_function("display_bar_radius_buffer")
         .allowlist_function("display_image")
-        .allowlist_function("display_toif_info")
         .allowlist_function("display_loader")
         .allowlist_function("display_pixeldata")
         .allowlist_function("display_pixeldata_dirty")
         .allowlist_function("display_set_window")
+        .allowlist_function("display_sync")
         .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
         .allowlist_type("toif_format_t")
@@ -320,16 +321,23 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("hal_delay")
         .allowlist_function("hal_ticks_ms")
         // dma2d
+        .allowlist_function("dma2d_setup_4bpp")
         .allowlist_function("dma2d_setup_4bpp_over_4bpp")
         .allowlist_function("dma2d_setup_4bpp_over_16bpp")
+        .allowlist_function("dma2d_start")
         .allowlist_function("dma2d_start_blend")
         .allowlist_function("dma2d_wait_for_transfer")
         //buffers
         .allowlist_function("buffers_get_line_buffer_16bpp")
         .allowlist_function("buffers_get_line_buffer_4bpp")
         .allowlist_function("buffers_get_text_buffer")
+        .allowlist_function("buffers_get_jpeg_buffer")
+        .allowlist_function("buffers_get_jpeg_work_buffer")
+        .allowlist_function("buffers_get_blurring_buffer")
         .allowlist_var("text_buffer_height")
-        .allowlist_var("buffer_width");
+        .allowlist_var("buffer_width")
+        //usb
+        .allowlist_function("usb_configured");
     // Write the bindings to a file in the OUR_DIR.
     bindings
         .generate()

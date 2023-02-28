@@ -11,7 +11,6 @@ trezor = {path = "./python", develop = true}
 scons = "*"
 protobuf = "*"
 pyblake2 = "*"
-Pyro4 = "*"
 nanopb = "^0.4.3"
 
 ## test tools
@@ -71,6 +70,7 @@ cryptography = "*"
 hypothesis = "*"
 inotify = "*"
 yamllint = "^1.25.0"
+vulture = "^2.6"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"

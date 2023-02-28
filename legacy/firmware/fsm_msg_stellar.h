@@ -51,20 +51,16 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg) {
     return;
   }
 
+  stellar_publicAddressAsStr(node->public_key + 1, resp->address,
+                             sizeof(resp->address));
+
   if (msg->has_show_display && msg->show_display) {
-    const char **str_addr_rows = stellar_lineBreakAddress(node->public_key + 1);
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-                      _("Share public account ID?"), str_addr_rows[0],
-                      str_addr_rows[1], str_addr_rows[2], NULL, NULL, NULL);
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      layoutHome();
+    if (!fsm_layoutAddress(resp->address, _("Public account ID"), false, 0,
+                           msg->address_n, msg->address_n_count, true, NULL, 0,
+                           0, NULL)) {
       return;
     }
   }
-
-  stellar_publicAddressAsStr(node->public_key + 1, resp->address,
-                             sizeof(resp->address));
 
   msg_write(MessageType_MessageType_StellarAddress, resp);
 

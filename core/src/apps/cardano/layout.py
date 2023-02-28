@@ -232,7 +232,7 @@ async def confirm_sending(
         to,
         format_coin_amount(ada_amount, network_id),
         title,
-        ButtonRequestType.Other,
+        br_code=ButtonRequestType.Other,
     )
 
 
@@ -412,9 +412,9 @@ async def warn_tx_output_contains_tokens(
     ctx: Context, is_collateral_return: bool = False
 ) -> None:
     content = (
-        "The collateral return\noutput contains tokens."
+        "The collateral return output contains tokens."
         if is_collateral_return
-        else "The following\ntransaction output\ncontains tokens."
+        else "The following transaction output contains tokens."
     )
     await confirm_metadata(
         ctx,

@@ -15,8 +15,8 @@ async def get_entropy(ctx: Context, msg: GetEntropy) -> Entropy:
         ctx,
         "get_entropy",
         "Confirm entropy",
-        "Do you really want\nto send entropy?",
-        "Continue only if you\nknow what you are doing!",
+        "Do you really want to send entropy?",
+        "Continue only if you know what you are doing!",
         br_code=ButtonRequestType.ProtectCall,
     )
 

@@ -38,6 +38,33 @@ impl<T> Gc<T> {
     }
 }
 
+impl<T: Default> Gc<[T]> {
+    /// Allocate slice on the heap managed by the MicroPython garbage collector
+    /// and fill with default values.
+    pub fn new_slice(len: usize) -> Result<Self, Error> {
+        let layout = Layout::array::<T>(len).unwrap();
+        // TODO: Assert that `layout.align()` is the same as the GC alignment.
+        // SAFETY:
+        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
+        //    not support custom alignment.
+        //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack
+        //    or the MicroPython heap.
+        // EXCEPTION: Returns null instead of raising.
+        unsafe {
+            let raw = ffi::gc_alloc(layout.size(), 0);
+            if raw.is_null() {
+                return Err(Error::AllocationFailed);
+            }
+            let typed: *mut T = raw.cast();
+            for i in 0..len {
+                ptr::write(typed.add(i), T::default());
+            }
+            let array_ptr = ptr::slice_from_raw_parts_mut(typed, len);
+            Ok(Self::from_raw(array_ptr as _))
+        }
+    }
+}
+
 impl<T: ?Sized> Gc<T> {
     /// Construct a `Gc` from a raw pointer.
     ///

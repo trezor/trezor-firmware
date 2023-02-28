@@ -1,4 +1,3 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.enums import EthereumDataType
@@ -21,10 +20,6 @@ if TYPE_CHECKING:
     )
 
 
-# Maximum data size we support
-_MAX_VALUE_BYTE_SIZE = const(1024)
-
-
 @with_keychain_from_path(*PATTERNS_ADDRESS)
 async def sign_typed_data(
     ctx: Context, msg: EthereumSignTypedData, keychain: Keychain
@@ -32,21 +27,27 @@ async def sign_typed_data(
     from trezor.crypto.curve import secp256k1
     from apps.common import paths
     from .helpers import address_from_bytes
+    from .layout import require_confirm_address
     from trezor.messages import EthereumTypedDataSignature
 
     await paths.validate_path(ctx, keychain, msg.address_n)
+
+    node = keychain.derive(msg.address_n)
+    address_bytes: bytes = node.ethereum_pubkeyhash()
+
+    # Display address so user can validate it
+    await require_confirm_address(ctx, address_bytes)
 
     data_hash = await _generate_typed_data_hash(
         ctx, msg.primary_type, msg.metamask_v4_compat
     )
 
-    node = keychain.derive(msg.address_n)
     signature = secp256k1.sign(
         node.private_key(), data_hash, False, secp256k1.CANONICAL_SIG_ETHEREUM
     )
 
     return EthereumTypedDataSignature(
-        address=address_from_bytes(node.ethereum_pubkeyhash()),
+        address=address_from_bytes(address_bytes),
         signature=signature[1:] + signature[0:1],
     )
 
@@ -426,14 +427,12 @@ def _validate_value(field: EthereumFieldType, value: bytes) -> None:
 
     Raise DataError if encountering a problem, so clients are notified.
     """
-    # Checking if the size corresponds to what is defined in types,
-    # and also setting our maximum supported size in bytes
-    if field.size is not None:
-        if len(value) != field.size:
-            raise DataError("Invalid length")
-    else:
-        if len(value) > _MAX_VALUE_BYTE_SIZE:
-            raise DataError(f"Invalid length, bigger than {_MAX_VALUE_BYTE_SIZE}")
+    # Checking if the size corresponds to what is defined in types.
+    # Not having any maximum field size - it is a responsibility of the client
+    # (and message creator) to make sure the data is not too large to cause problems
+    # on the Trezor side.
+    if field.size is not None and len(value) != field.size:
+        raise DataError("Invalid length")
 
     # Specific tests for some data types
     if field.data_type == EthereumDataType.BOOL:

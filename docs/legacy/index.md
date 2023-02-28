@@ -8,7 +8,7 @@ Ensure that you have Docker installed. You can follow [Docker's installation ins
 
 Clone this repository, then use `build-docker.sh` to build all images:
 ```sh
-git clone https://github.com/trezor/trezor-firmware.git
+git clone --recurse-submodules https://github.com/trezor/trezor-firmware.git
 cd trezor-firmware
 ./build-docker.sh
 ```

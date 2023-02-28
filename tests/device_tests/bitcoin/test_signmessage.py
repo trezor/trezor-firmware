@@ -29,11 +29,12 @@ from trezorlib.tools import parse_path
 S = messages.InputScriptType
 
 
-def case(id, *args, altcoin=False):
+def case(id, *args, altcoin=False, skip_t1=False):
+    marks = []
     if altcoin:
-        marks = pytest.mark.altcoin
-    else:
-        marks = ()
+        marks.append(pytest.mark.altcoin)
+    if skip_t1:
+        marks.append(pytest.mark.skip_t1)
     return pytest.param(*args, id=id, marks=marks)
 
 
@@ -154,6 +155,18 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
         "1GWFxtwWmNVqotUPXLcKVL2mUKpshuJYo",
         MESSAGE_NFC,
         NFKD_NFC_SIGNATURE,
+    ),
+    # ==== T1 FW signing ====
+    case(
+        "t1 firmware path",
+        "Bitcoin",
+        "m/10026'/826421588'/2'/0'",
+        S.SPENDADDRESS,
+        False,
+        "1FoHjQT6bAEu2FQGzTgqj4PBneoiCAk4ZN",
+        b"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "1f40ae58dd68480a2f39eecf4decfe79ceacde3f865502db67c083b8465b33535c0750d5377b7ac62e534f71c922cd029f659761f8ac99e859df36322c5b320eff",
+        skip_t1=True,
     ),
     # ==== Testnet script types ====
     case(

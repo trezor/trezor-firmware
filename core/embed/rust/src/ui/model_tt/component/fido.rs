@@ -1,7 +1,5 @@
-use core::ops::Deref;
-
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Image, Label},
+    component::{image::Image, Child, Component, Event, EventCtx, Label},
     display,
     geometry::{Alignment, Insets, Rect},
     model_tt::component::{
@@ -39,7 +37,7 @@ pub struct FidoConfirm<F: Fn(usize) -> T, T, U> {
 impl<F, T, U> FidoConfirm<F, T, U>
 where
     F: Fn(usize) -> T,
-    T: Deref<Target = str> + From<&'static str>,
+    T: AsRef<str> + From<&'static str>,
     U: Component<Msg = CancelConfirmMsg>,
 {
     pub fn new(
@@ -49,7 +47,7 @@ where
         icon_name: Option<T>,
         controls: U,
     ) -> Self {
-        let icon_data = get_fido_icon_data(icon_name.as_deref());
+        let icon_data = get_fido_icon_data(icon_name.as_ref());
 
         // Preparing scrollbar and setting its page-count.
         let mut scrollbar = ScrollBar::horizontal();
@@ -104,7 +102,7 @@ where
 impl<F, T, U> Component for FidoConfirm<F, T, U>
 where
     F: Fn(usize) -> T,
-    T: Deref<Target = str> + From<&'static str>,
+    T: AsRef<str> + From<&'static str>,
     U: Component<Msg = CancelConfirmMsg>,
 {
     type Msg = FidoMsg;
@@ -179,7 +177,9 @@ where
         // Account name is optional.
         // Showing it only if it differs from app name.
         // (Dummy requests usually have some text as both app_name and account_name.)
-        if !current_account.is_empty() && current_account.deref() != self.app_name.text().deref() {
+        if !current_account.as_ref().is_empty()
+            && current_account.as_ref() != self.app_name.text().as_ref()
+        {
             self.account_name.set_text(current_account);
             self.account_name.paint();
         }

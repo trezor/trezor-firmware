@@ -19,35 +19,28 @@ style prebuild:
     GIT_SUBMODULE_STRATEGY: "none"
   <<: *gitlab_caching
   script:
-    - nix-shell --run "poetry run make -j1 style_check"
+    - $NIX_SHELL --run "poetry run make -j1 style_check"
 
 # Check validity of coin definitions and protobuf files.
 common prebuild:
   stage: prebuild
   <<: *gitlab_caching
   script:
-    - nix-shell --run "poetry run make defs_check"
+    - $NIX_SHELL --run "poetry run make defs_check"
 
 # Check validity of auto-generated files.
 gen prebuild:
   stage: prebuild
   <<: *gitlab_caching
   script:
-    - nix-shell --run "poetry run make -j1 gen_check"
+    - $NIX_SHELL --run "poetry run make -j1 gen_check"
 
 # Checking format of .editorconfig files.
 editor prebuild:
   stage: prebuild
   <<: *gitlab_caching
   script:
-    - nix-shell --run "make editor_check"
-
-# All .yml/.yaml files are checked for syntax validity and other correctness.
-yaml prebuild:
-  stage: prebuild
-  <<: *gitlab_caching
-  script:
-    - nix-shell --run "poetry run make yaml_check"
+    - $NIX_SHELL --run "make editor_check"
 
 # Checking the format of release commit messages.
 release commit messages prebuild:
@@ -63,7 +56,7 @@ release commit messages prebuild:
       # We want this to run on gitlab.com/satoshilabs/trezor/trezor-firmware only.
       - $CI_PROJECT_PATH_SLUG == 'satoshilabs-trezor-trezor-firmware'
   script:
-    - nix-shell --run "ci/check_release_commit_messages.sh"
+    - $NIX_SHELL --run "ci/check_release_commit_messages.sh"
 
 # Verifying that all commits changing some functionality have a changelog entry
 # or contain `[no changelog]` in the commit message.
@@ -76,4 +69,4 @@ changelog prebuild:
     GIT_SUBMODULE_STRATEGY: "none"
     GIT_STRATEGY: clone
   script:
-    - nix-shell --run "ci/check_changelog.sh"
+    - $NIX_SHELL --run "ci/check_changelog.sh"

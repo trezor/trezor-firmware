@@ -59,6 +59,9 @@ void secp256k1_default_error_callback_fn(const char *str, void *data) {
 /* Screen timeout */
 uint32_t system_millis_lock_start = 0;
 
+/* Busyscreen timeout */
+uint32_t system_millis_busy_deadline = 0;
+
 void check_lock_screen(void) {
   buttonUpdate();
 
@@ -69,7 +72,8 @@ void check_lock_screen(void) {
   }
 
   // button held for long enough (5 seconds)
-  if (layoutLast == layoutHome && button.NoDown >= 114000 * 5) {
+  if ((layoutLast == layoutHomescreen || layoutLast == layoutBusyscreen) &&
+      button.NoDown >= 114000 * 5) {
     layoutDialog(&bmp_icon_question, _("Cancel"), _("Lock Device"), NULL,
                  _("Do you really want to"), _("lock your Trezor?"), NULL, NULL,
                  NULL, NULL);
@@ -99,13 +103,22 @@ void check_lock_screen(void) {
   }
 
   // if homescreen is shown for too long
-  if (layoutLast == layoutHome) {
+  if (layoutLast == layoutHomescreen) {
     if ((timer_ms() - system_millis_lock_start) >=
         config_getAutoLockDelayMs()) {
       // lock the screen
       config_lockDevice();
       layoutScreensaver();
     }
+  }
+}
+
+void check_busy_screen(void) {
+  // Clear the busy screen once it expires.
+  if (system_millis_busy_deadline != 0 &&
+      system_millis_busy_deadline < timer_ms()) {
+    system_millis_busy_deadline = 0;
+    layoutHome();
   }
 }
 
@@ -184,6 +197,7 @@ int main(void) {
     usbPoll();
 #endif
     check_lock_screen();
+    check_busy_screen();
   }
 
   return 0;

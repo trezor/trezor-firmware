@@ -25,7 +25,7 @@ def confirm_recovery(debug: "DebugLink", legacy_ui: bool = False) -> None:
     if legacy_ui:
         layout.text.startswith("Recovery mode")
     else:
-        assert layout.get_title() == "RECOVERY MODE"
+        assert layout.get_title().startswith("WALLET RECOVERY")
     debug.click(buttons.OK, wait=True)
 
 
@@ -85,4 +85,4 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
 
 def finalize(debug: "DebugLink") -> None:
     layout = debug.click(buttons.OK, wait=True)
-    assert layout.text == "Homescreen"
+    assert layout.text.startswith("< Homescreen ")

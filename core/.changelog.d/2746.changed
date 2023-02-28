@@ -1,0 +1,1 @@
+Ethereum's EIP-712 signing no longer restricts the maximum field size to 1024 bytes.

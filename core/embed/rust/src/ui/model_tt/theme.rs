@@ -1,15 +1,20 @@
-use crate::ui::{
-    component::{
-        text::{formatted::FormattedFonts, LineBreaking, PageBreaking, TextStyle},
-        FixedHeightBar,
+use crate::{
+    time::Duration,
+    ui::{
+        component::{
+            text::{formatted::FormattedFonts, LineBreaking, PageBreaking, TextStyle},
+            FixedHeightBar,
+        },
+        display::{Color, Font},
+        geometry::Insets,
     },
-    display::{Color, Font},
-    geometry::Insets,
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
 
 use num_traits::FromPrimitive;
+
+pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
 
 // Typical backlight values.
 pub const BACKLIGHT_NORMAL: i32 = 150;
@@ -35,6 +40,7 @@ pub const OFF_WHITE: Color = Color::rgb(0xDE, 0xDE, 0xDE); // very light grey
 pub const GREY_LIGHT: Color = Color::rgb(0xA8, 0xA8, 0xA8); // greyish
 pub const GREY_MEDIUM: Color = Color::rgb(0x64, 0x64, 0x64);
 pub const GREY_DARK: Color = Color::rgb(0x33, 0x33, 0x33); // greyer
+pub const VIOLET: Color = Color::rgb(0x9E, 0x27, 0xD6);
 
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 2;
@@ -53,8 +59,11 @@ pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
 pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
 pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
 pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warn-icon.toif");
+pub const ICON_MAGIC: &[u8] = include_res!("model_tt/res/magic.toif");
 pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
 pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
+pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock.toif");
+pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/logo.toif");
 
 // Large, three-color icons.
 pub const WARN_COLOR: Color = YELLOW;
@@ -69,6 +78,9 @@ pub const IMAGE_BG_CIRCLE: &[u8] = include_res!("model_tt/res/circle.toif");
 pub const IMAGE_BG_TRIANGLE: &[u8] = include_res!("model_tt/res/triangle.toif");
 pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/back_btn.toif");
 pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/back_btn_tall.toif");
+
+// Default homescreen
+pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");
 
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
@@ -111,6 +123,14 @@ pub const fn label_recovery_title() -> TextStyle {
 
 pub const fn label_recovery_description() -> TextStyle {
     TEXT_NORMAL_OFF_WHITE
+}
+
+pub const fn label_progress() -> TextStyle {
+    TEXT_BOLD
+}
+
+pub const fn label_title() -> TextStyle {
+    TextStyle::new(Font::BOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub fn button_default() -> ButtonStyleSheet {
@@ -431,5 +451,5 @@ pub const fn borders_scroll() -> Insets {
 }
 
 pub const fn borders_notification() -> Insets {
-    Insets::new(6, 10, 14, 10)
+    Insets::new(48, 10, 14, 10)
 }

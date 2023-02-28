@@ -48,6 +48,7 @@
 #include "secp256k1.h"
 #include "signing.h"
 #include "supervise.h"
+#include "timer.h"
 #include "transaction.h"
 #include "trezor.h"
 #include "usb.h"
@@ -67,6 +68,11 @@
 // message methods
 
 static uint8_t msg_resp[MSG_OUT_DECODED_SIZE] __attribute__((aligned));
+
+// Authorization message type triggered by DoPreauthorized.
+static MessageType authorization_type = 0;
+
+static uint32_t unlock_path = 0;
 
 #define RESP_INIT(TYPE)                                                    \
   TYPE *resp = (TYPE *)(void *)msg_resp;                                   \
@@ -98,10 +104,11 @@ static uint8_t msg_resp[MSG_OUT_DECODED_SIZE] __attribute__((aligned));
     return;                 \
   }
 
-#define CHECK_UNLOCKED         \
-  if (!session_isUnlocked()) { \
-    layoutHome();              \
-    return;                    \
+#define CHECK_UNLOCKED                                              \
+  if (!session_isUnlocked()) {                                      \
+    fsm_sendFailure(FailureType_Failure_ProcessError, _("Locked")); \
+    layoutHome();                                                   \
+    return;                                                         \
   }
 
 #define CHECK_PARAM(cond, errormsg)                             \
@@ -241,6 +248,24 @@ static HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n,
   return &node;
 }
 
+static bool fsm_getSlip21Key(const char *path[], size_t path_count,
+                             uint8_t key[32]) {
+  const uint8_t *seed = config_getSeed();
+  if (seed == NULL) {
+    return false;
+  }
+
+  static CONFIDENTIAL Slip21Node node;
+  slip21_from_seed(seed, 64, &node);
+  for (size_t i = 0; i < path_count; ++i) {
+    slip21_derive_path(&node, (uint8_t *)path[i], strlen(path[i]));
+  }
+  memcpy(key, slip21_key(&node), 32);
+  memzero(&node, sizeof(node));
+
+  return true;
+}
+
 static bool fsm_layoutAddress(const char *address, const char *desc,
                               bool ignorecase, size_t prefixlen,
                               const uint32_t *address_n, size_t address_n_count,
@@ -353,6 +378,14 @@ bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len) {
   }
 }
 
+bool fsm_layoutCommitmentData(const uint8_t *msg, uint32_t len) {
+  if (is_valid_ascii(msg, len)) {
+    return fsm_layoutPaginated(_("Commitment data"), msg, len, true);
+  } else {
+    return fsm_layoutPaginated(_("Binary commitment data"), msg, len, false);
+  }
+}
+
 void fsm_msgRebootToBootloader(void) {
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to"), _("restart device in"),
@@ -377,10 +410,22 @@ void fsm_msgRebootToBootloader(void) {
 void fsm_abortWorkflows(void) {
   recovery_abort();
   signing_abort();
+  authorization_type = 0;
+  unlock_path = 0;
 #if !BITCOIN_ONLY
   ethereum_signing_abort();
   stellar_signingAbort();
 #endif
+}
+
+void fsm_postMsgCleanup(MessageType message_type) {
+  if (message_type != MessageType_MessageType_DoPreauthorized) {
+    authorization_type = 0;
+  }
+
+  if (message_type != MessageType_MessageType_UnlockPath) {
+    unlock_path = 0;
+  }
 }
 
 bool fsm_layoutPathWarning(void) {

@@ -83,4 +83,9 @@ SECTIONS {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
     . = ABSOLUTE(sram_end); /* this explicitly sets the end of the heap */
   } >SRAM
+
+  .data_ccm : ALIGN(4) {
+    *(.no_dma_buffers*);
+    . = ALIGN(4);
+  } >CCMRAM
 }

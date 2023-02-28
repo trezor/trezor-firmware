@@ -4,6 +4,7 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![allow(dead_code)]
 #![feature(lang_items)]
+#![feature(optimize_attribute)]
 
 #[macro_use]
 extern crate num_derive;
@@ -17,6 +18,7 @@ mod trezorhal;
 mod micropython;
 #[cfg(feature = "protobuf")]
 mod protobuf;
+mod storage;
 mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;

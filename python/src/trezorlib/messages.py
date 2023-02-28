@@ -437,6 +437,11 @@ class SafetyCheckLevel(IntEnum):
     PromptTemporarily = 2
 
 
+class HomescreenFormat(IntEnum):
+    Toif144x144 = 1
+    Jpeg240x240 = 2
+
+
 class Capability(IntEnum):
     Bitcoin = 1
     Bitcoin_like = 2
@@ -3137,6 +3142,8 @@ class Features(protobuf.MessageType):
         39: protobuf.Field("display_rotation", "uint32", repeated=False, required=False, default=None),
         40: protobuf.Field("experimental_features", "bool", repeated=False, required=False, default=None),
         41: protobuf.Field("busy", "bool", repeated=False, required=False, default=None),
+        42: protobuf.Field("homescreen_format", "HomescreenFormat", repeated=False, required=False, default=None),
+        43: protobuf.Field("hide_passphrase_from_host", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3181,6 +3188,8 @@ class Features(protobuf.MessageType):
         display_rotation: Optional["int"] = None,
         experimental_features: Optional["bool"] = None,
         busy: Optional["bool"] = None,
+        homescreen_format: Optional["HomescreenFormat"] = None,
+        hide_passphrase_from_host: Optional["bool"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3221,6 +3230,8 @@ class Features(protobuf.MessageType):
         self.display_rotation = display_rotation
         self.experimental_features = experimental_features
         self.busy = busy
+        self.homescreen_format = homescreen_format
+        self.hide_passphrase_from_host = hide_passphrase_from_host
 
 
 class LockDevice(protobuf.MessageType):
@@ -3258,6 +3269,7 @@ class ApplySettings(protobuf.MessageType):
         8: protobuf.Field("passphrase_always_on_device", "bool", repeated=False, required=False, default=None),
         9: protobuf.Field("safety_checks", "SafetyCheckLevel", repeated=False, required=False, default=None),
         10: protobuf.Field("experimental_features", "bool", repeated=False, required=False, default=None),
+        11: protobuf.Field("hide_passphrase_from_host", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3273,6 +3285,7 @@ class ApplySettings(protobuf.MessageType):
         passphrase_always_on_device: Optional["bool"] = None,
         safety_checks: Optional["SafetyCheckLevel"] = None,
         experimental_features: Optional["bool"] = None,
+        hide_passphrase_from_host: Optional["bool"] = None,
     ) -> None:
         self.language = language
         self.label = label
@@ -3284,6 +3297,7 @@ class ApplySettings(protobuf.MessageType):
         self.passphrase_always_on_device = passphrase_always_on_device
         self.safety_checks = safety_checks
         self.experimental_features = experimental_features
+        self.hide_passphrase_from_host = hide_passphrase_from_host
 
 
 class ApplyFlags(protobuf.MessageType):

@@ -28,6 +28,10 @@ if TYPE_CHECKING:
     from trezor.ui.layouts import PropertyType
 
 
+# Whether action is last - and should be HoldToConfirm
+is_last = False
+
+
 # Because icon and br_code are almost always the same
 # (and also calling with positional arguments takes less space)
 async def _confirm_properties(
@@ -41,6 +45,7 @@ async def _confirm_properties(
         br_type,
         title,
         props,
+        hold=is_last,
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
@@ -265,6 +270,7 @@ async def confirm_action_unknown(
             ("Action Name:", eos_name_to_string(action.name)),
             ("Checksum:", checksum),
         ),
+        hold=is_last,
         br_code=ButtonRequestType.ConfirmOutput,
     )
 

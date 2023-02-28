@@ -10,7 +10,7 @@ from apps.common import safety_checks
 
 from .. import writers
 from ..common import input_is_external_unverified
-from ..keychain import validate_path_against_script_type
+from ..keychain import SLIP44_TESTNET, validate_path_against_script_type
 from . import helpers, tx_weight
 from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo
@@ -83,7 +83,7 @@ class Approver:
             if txi.orig_hash:
                 self.orig_external_in += txi.amount
 
-    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
 
@@ -101,8 +101,8 @@ class Approver:
         self.payment_req_verifier = None
         self.show_payment_req_details = False
 
-    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        self._add_output(txo, script_pubkey)
+    async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        await self._add_output(txo, script_pubkey)
         self.change_out += txo.amount
         if self.payment_req_verifier:
             self.payment_req_verifier.add_change_output(txo)
@@ -117,7 +117,7 @@ class Approver:
         script_pubkey: bytes,
         orig_txo: TxOutput | None = None,
     ) -> None:
-        self._add_output(txo, script_pubkey)
+        await self._add_output(txo, script_pubkey)
         if self.payment_req_verifier:
             self.payment_req_verifier.add_external_output(txo)
 
@@ -160,8 +160,21 @@ class BasicApprover(Approver):
         ):
             raise ProcessError("Transaction has changed during signing")
 
-    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        super().add_change_output(txo, script_pubkey)
+    async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
+
+        if txo.address_n and not validate_path_against_script_type(
+            self.coin,
+            address_n=txo.address_n,
+            script_type=CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[txo.script_type],
+            multisig=bool(txo.multisig),
+        ):
+            await helpers.confirm_foreign_address(txo.address_n)
+
+        await super()._add_output(txo, script_pubkey)
+
+    async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        await super().add_change_output(txo, script_pubkey)
         self.change_count += 1
 
     async def add_external_output(
@@ -212,14 +225,13 @@ class BasicApprover(Approver):
     async def add_payment_request(
         self, msg: TxAckPaymentRequest, keychain: Keychain
     ) -> None:
-        from trezor.ui.components.common.confirm import INFO
-
         await super().add_payment_request(msg, keychain)
         if msg.amount is None:
             raise DataError("Missing payment request amount.")
 
         result = await helpers.confirm_payment_request(msg, self.coin, self.amount_unit)
-        self.show_payment_req_details = result is INFO
+        # When user wants to see more info, the result will be False.
+        self.show_payment_req_details = result is False
 
     async def approve_orig_txids(
         self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
@@ -336,8 +348,8 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
-    # Minimum registrable output amount accepted by the CoinJoin coordinator.
-    # The CoinJoin request may specify an even lower amount.
+    # Minimum registrable output amount accepted by the coinjoin coordinator.
+    # The coinjoin request may specify an even lower amount.
     MIN_REGISTRABLE_OUTPUT_AMOUNT = const(5000)
 
     # Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
@@ -347,10 +359,12 @@ class CoinJoinApprover(Approver):
     COINJOIN_FLAGS_SIGNABLE = const(0x01)
     COINJOIN_FLAGS_NO_FEE = const(0x02)
 
+    # The public key used for verifying coinjoin requests in production on mainnet.
     COINJOIN_REQ_PUBKEY = b"\x02W\x03\xbb\xe1[\xb0\x8e\x98!\xfed\xaf\xf6\xb2\xef\x1a1`\xe3y\x9d\xd8\xf0\xce\xbf,y\xe8g\xdd\x12]"
-    if __debug__:
-        # secp256k1 public key of m/0h for "all all ... all" seed.
-        COINJOIN_REQ_PUBKEY_DEBUG = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
+
+    # The public key used for verifying coinjoin requests on testnet and in debug mode.
+    # secp256k1 public key of m/0h for "all all ... all" seed.
+    COINJOIN_REQ_PUBKEY_TEST = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
 
     def __init__(
         self,
@@ -361,14 +375,14 @@ class CoinJoinApprover(Approver):
         super().__init__(tx, coin)
 
         if not tx.coinjoin_request:
-            raise DataError("Missing CoinJoin request.")
+            raise DataError("Missing coinjoin request.")
 
         self.request = tx.coinjoin_request
         self.authorization = authorization
         self.coordination_fee_base = 0
 
-        # Begin hashing the CoinJoin request.
-        self.h_request = HashWriter(sha256(b"CJR1"))  # "CJR1" = CoinJoin Request v1.
+        # Begin hashing the coinjoin request.
+        self.h_request = HashWriter(sha256(b"CJR1"))  # "CJR1" = Coinjoin Request v1.
         writers.write_bytes_prefixed(
             self.h_request, authorization.params.coordinator.encode()
         )
@@ -388,7 +402,7 @@ class CoinJoinApprover(Approver):
 
     async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         self.our_weight.add_input(txi)
-        if not self.authorization.check_sign_tx_input(txi, self.coin):
+        if not self.authorization.check_internal_input(txi):
             raise ProcessError("Unauthorized path")
 
         # Compute the masking bit for the signable bit in coinjoin flags.
@@ -420,20 +434,20 @@ class CoinJoinApprover(Approver):
         # The main reason for this is that we are not comfortable with using the same private key
         # in multiple signatures schemes (ECDSA and Schnorr) and we want to be sure that the user
         # went through a warning screen before we sign the input.
-        if not self.authorization.check_sign_tx_input(txi, self.coin):
+        if not self.authorization.check_internal_input(txi):
             raise ProcessError("Unauthorized path")
 
     def add_external_input(self, txi: TxInput) -> None:
         super().add_external_input(txi)
 
-        # External inputs should always be verifiable in CoinJoin. This check
+        # External inputs should always be verifiable in coinjoin. This check
         # is not critical for security, we are just being cautious, because
-        # CoinJoin is automated and this is not a very legitimate use-case.
+        # coinjoin is automated and this is not a very legitimate use-case.
         if input_is_external_unverified(txi):
             raise ProcessError("Unverifiable external input.")
 
-    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        super().add_change_output(txo, script_pubkey)
+    async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        await super().add_change_output(txo, script_pubkey)
         self.our_weight.add_output(script_pubkey)
 
     async def approve_orig_txids(
@@ -445,7 +459,7 @@ class CoinJoinApprover(Approver):
         if not isinstance(tx_info.sig_hasher, BitcoinSigHasher):
             raise ProcessError("Unexpected signature hasher.")
 
-        # Finish hashing the CoinJoin request.
+        # Finish hashing the coinjoin request.
         writers.write_bytes_fixed(
             self.h_request, tx_info.sig_hasher.h_prevouts.get_digest(), 32
         )
@@ -453,10 +467,10 @@ class CoinJoinApprover(Approver):
             self.h_request, tx_info.sig_hasher.h_outputs.get_digest(), 32
         )
 
-        # Verify the CoinJoin request signature.
-        if __debug__:
+        # Verify the coinjoin request signature.
+        if __debug__ or self.coin.slip44 == SLIP44_TESTNET:
             if secp256k1.verify(
-                self.COINJOIN_REQ_PUBKEY_DEBUG,
+                self.COINJOIN_REQ_PUBKEY_TEST,
                 self.request.signature,
                 self.h_request.get_digest(),
             ):
@@ -474,7 +488,7 @@ class CoinJoinApprover(Approver):
         await super().approve_tx(tx_info, orig_txs)
 
         if not self._verify_coinjoin_request(tx_info):
-            raise DataError("Invalid signature in CoinJoin request.")
+            raise DataError("Invalid signature in coinjoin request.")
 
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
@@ -506,7 +520,7 @@ class CoinJoinApprover(Approver):
             self.weight.get_weight() - self.weight.get_base_weight()
         )
 
-        # Calculate the minimum registrable output amount in a CoinJoin plus the mining fee that it
+        # Calculate the minimum registrable output amount in a coinjoin plus the mining fee that it
         # would cost to register. Amounts below this value are left to the coordinator or miners
         # and effectively constitute an extra fee for the user.
         min_allowed_output_amount_plus_fee = (
@@ -522,10 +536,13 @@ class CoinJoinApprover(Approver):
             raise ProcessError("Total fee over threshold.")
 
         if not self.authorization.approve_sign_tx(tx_info.tx):
-            raise ProcessError("Exceeded number of CoinJoin rounds.")
+            raise ProcessError("Exceeded number of coinjoin rounds.")
 
-    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        super()._add_output(txo, script_pubkey)
+    async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        await super()._add_output(txo, script_pubkey)
+
+        if txo.address_n and not self.authorization.check_internal_output(txo):
+            raise ProcessError("Unauthorized path")
 
         if txo.payment_req_index:
             raise DataError("Unexpected payment request.")

@@ -38,6 +38,14 @@ pub fn complete_word(prefix: &str) -> Option<&'static str> {
     }
 }
 
+pub fn options_num(prefix: &str) -> Option<usize> {
+    if prefix.is_empty() {
+        None
+    } else {
+        Some(Wordlist::all().filter_prefix(prefix).len())
+    }
+}
+
 pub fn word_completion_mask(prefix: &str) -> u32 {
     // SAFETY: `mnemonic_word_completion_mask` shouldn't retain nor modify the
     // passed byte string, making the call safe.

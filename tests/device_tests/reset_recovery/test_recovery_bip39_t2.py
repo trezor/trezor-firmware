@@ -31,7 +31,7 @@ def test_tt_pin_passphrase(client: Client):
 
     def input_flow():
         yield
-        assert "Do you really want to recover a wallet?" in layout().get_content()
+        assert "recover wallet" in layout().text.lower()
         client.debug.press_yes()
 
         yield
@@ -85,7 +85,7 @@ def test_tt_nopin_nopassphrase(client: Client):
 
     def input_flow():
         yield
-        assert "Do you really want to recover a wallet?" in layout().get_content()
+        assert "recover wallet" in layout().text.lower()
         client.debug.press_yes()
 
         yield

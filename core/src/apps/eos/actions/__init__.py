@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 async def process_action(
-    ctx: wire.Context, sha: HashWriter, action: EosTxActionAck
+    ctx: wire.Context, sha: HashWriter, action: EosTxActionAck, is_last: bool
 ) -> None:
     from .. import helpers, writers
     from . import layout
@@ -17,6 +17,10 @@ async def process_action(
 
     if not _check_action(action, name, account):
         raise ValueError("Invalid action")
+
+    # Little cheat, not having to create "is_last" argument for every action layout
+    # (not worth spending so many bytes in flash on this)
+    layout.is_last = is_last
 
     w = bytearray()
     if account == "eosio":

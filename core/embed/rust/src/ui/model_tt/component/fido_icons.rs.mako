@@ -1,6 +1,7 @@
 //! generated from webauthn_icons.rs.mako
 //! (by running `make templates` in `core`)
 //! do not edit manually!
+
 <%
 icons: list[tuple[str, str]] = []
 for app in fido:

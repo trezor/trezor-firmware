@@ -6,6 +6,7 @@ use core::{
 use crate::{
     error::Error,
     micropython::{
+        buffer::StrBuffer,
         gc::Gc,
         map::Map,
         obj::{Obj, ObjBase},
@@ -17,6 +18,7 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Never, TimerToken},
         constant,
+        display::sync,
         geometry::Rect,
     },
 };
@@ -25,6 +27,7 @@ use crate::{
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
+use crate::ui::event::USBEvent;
 
 /// Conversion trait implemented by components that know how to convert their
 /// message values into MicroPython `Obj`s.
@@ -60,8 +63,9 @@ use maybe_trace::MaybeTrace;
 pub trait ObjComponent: MaybeTrace {
     fn obj_place(&mut self, bounds: Rect) -> Rect;
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
-    fn obj_paint(&mut self);
+    fn obj_paint(&mut self) -> bool;
     fn obj_bounds(&self, sink: &mut dyn FnMut(Rect));
+    fn obj_skip_paint(&mut self) {}
 }
 
 impl<T> ObjComponent for Child<T>
@@ -80,12 +84,18 @@ where
         }
     }
 
-    fn obj_paint(&mut self) {
+    fn obj_paint(&mut self) -> bool {
+        let will_paint = self.will_paint();
         self.paint();
+        will_paint
     }
 
     fn obj_bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.bounds(sink)
+    }
+
+    fn obj_skip_paint(&mut self) {
+        self.skip_paint()
     }
 }
 
@@ -124,6 +134,13 @@ impl LayoutObj {
                 page_count: 1,
             }),
         })
+    }
+
+    pub fn skip_first_paint(&self) {
+        let mut inner = self.inner.borrow_mut();
+
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_skip_paint();
     }
 
     /// Timer callback is expected to be a callable object of the following
@@ -173,8 +190,9 @@ impl LayoutObj {
         Ok(msg)
     }
 
-    /// Run a paint pass over the component tree.
-    fn obj_paint_if_requested(&self) {
+    /// Run a paint pass over the component tree. Returns true if any component
+    /// actually requested painting since last invocation of the function.
+    fn obj_paint_if_requested(&self) -> bool {
         let mut inner = self.inner.borrow_mut();
 
         // Place the root component on the screen in case it was previously requested.
@@ -183,8 +201,10 @@ impl LayoutObj {
             unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
         }
 
+        sync();
+
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_paint();
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_paint()
     }
 
     /// Run a tracing pass over the component tree. Passed `callback` is called
@@ -271,6 +291,8 @@ impl LayoutObj {
                 Qstr::MP_QSTR_attach_timer_fn => obj_fn_2!(ui_layout_attach_timer_fn).as_obj(),
                 Qstr::MP_QSTR_touch_event => obj_fn_var!(4, 4, ui_layout_touch_event).as_obj(),
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
+                Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
+                Qstr::MP_QSTR_usb_event => obj_fn_var!(2, 2, ui_layout_usb_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
@@ -335,8 +357,10 @@ impl TryFrom<Duration> for Obj {
     }
 }
 
-impl From<Never> for Obj {
-    fn from(_: Never) -> Self {
+impl TryFrom<Never> for Obj {
+    type Error = Error;
+
+    fn try_from(_: Never) -> Result<Self, Self::Error> {
         unreachable!()
     }
 }
@@ -394,6 +418,33 @@ extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
 
+extern "C" fn ui_layout_progress_event(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 3 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let value: u16 = args[1].try_into()?;
+        let description: StrBuffer = args[2].try_into()?;
+        let msg = this.obj_event(Event::Progress(value, description.as_ref()))?;
+        Ok(msg)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+extern "C" fn ui_layout_usb_event(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 2 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let event = USBEvent::Connected(args[1].try_into()?);
+        let msg = this.obj_event(Event::USB(event))?;
+        Ok(msg)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
 extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
@@ -407,8 +458,8 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        this.obj_paint_if_requested();
-        Ok(Obj::const_true())
+        let painted = this.obj_paint_if_requested().into();
+        Ok(painted)
     };
     unsafe { util::try_or_raise(block) }
 }

@@ -197,6 +197,15 @@ class DebugLink:
         self.t1_screenshot_directory: Optional[Path] = None
         self.t1_screenshot_counter = 0
 
+        # Optional file for saving text representation of the screen
+        self.screen_text_file: Optional[Path] = None
+        self.last_screen_content = ""
+
+    def set_screen_text_file(self, file_path: Optional[Path]) -> None:
+        if file_path is not None:
+            file_path.write_bytes(b"")
+        self.screen_text_file = file_path
+
     def open(self) -> None:
         self.transport.begin_session()
 
@@ -292,11 +301,42 @@ class DebugLink:
         decision = messages.DebugLinkDecision(
             button=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
         )
+
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
             return LayoutContent(ret.lines)
 
+        # Getting the current screen after the (nowait) decision
+        self.save_current_screen_if_relevant(wait=False)
+
         return None
+
+    def save_current_screen_if_relevant(self, wait: bool = True) -> None:
+        """Optionally saving the textual screen output."""
+        if self.screen_text_file is None:
+            return
+
+        if wait:
+            layout = self.wait_layout()
+        else:
+            layout = self.read_layout()
+        self.save_debug_screen(layout.lines)
+
+    def save_debug_screen(self, lines: List[str]) -> None:
+        if self.screen_text_file is None:
+            return
+
+        content = "\n".join(lines)
+
+        # Not writing the same screen twice
+        if content == self.last_screen_content:
+            return
+
+        self.last_screen_content = content
+
+        with open(self.screen_text_file, "a") as f:
+            f.write(content)
+            f.write("\n" + 80 * "/" + "\n")
 
     # Type overloads make sure that when we supply `wait=True` into `click()`,
     # it will always return `LayoutContent` and we do not need to assert `is not None`.
@@ -449,6 +489,12 @@ class DebugUI:
         self.debuglink.take_t1_screenshot_if_relevant()
 
         if self.input_flow is None:
+            # Only calling screen-saver when not in input-flow
+            # as it collides with wait-layout of input flows.
+            # All input flows call debuglink.input(), so
+            # recording their screens that way (as well as
+            # possible swipes below).
+            self.debuglink.save_current_screen_if_relevant(wait=True)
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
             else:
@@ -618,6 +664,11 @@ class TrezorClientDebugLink(TrezorClient):
             Callable[[protobuf.MessageType], protobuf.MessageType],
         ] = {}
 
+    def ensure_open(self) -> None:
+        """Only open session if there isn't already an open one."""
+        if self.session_counter == 0:
+            self.open()
+
     def open(self) -> None:
         super().open()
         if self.session_counter == 1:
@@ -715,7 +766,6 @@ class TrezorClientDebugLink(TrezorClient):
     def __exit__(self, exc_type: Any, value: Any, traceback: Any) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
-        self.watch_layout(False)
         # copy expected/actual responses before clearing them
         expected_responses = self.expected_responses
         actual_responses = self.actual_responses

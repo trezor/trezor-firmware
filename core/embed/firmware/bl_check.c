@@ -20,12 +20,14 @@
 #include <stdint.h>
 #include <string.h>
 #include "blake2s.h"
+#include "board_capabilities.h"
 #include "common.h"
 #include "flash.h"
+#include "image.h"
 
 // symbols from bootloader.bin => bootloader.o
-extern const uint32_t _binary_embed_firmware_bootloader_bin_start;
-extern const uint32_t _binary_embed_firmware_bootloader_bin_size;
+extern const void _binary_embed_firmware_bootloader_bin_start;
+extern const void _binary_embed_firmware_bootloader_bin_size;
 
 /*
 static secbool known_bootloader(const uint8_t *hash, int len) {
@@ -97,6 +99,48 @@ void check_and_replace_bootloader(void) {
       (const uint32_t *)&_binary_embed_firmware_bootloader_bin_start;
   const uint32_t len =
       (const uint32_t)&_binary_embed_firmware_bootloader_bin_size;
+
+  const image_header *new_bld_hdr = read_image_header(
+      (uint8_t *)data, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE);
+
+  ensure(new_bld_hdr == (const image_header *)data ? sectrue : secfalse,
+         "Invalid embedded bootloader");
+
+  ensure(check_image_model(new_bld_hdr), "Incompatible embedded bootloader");
+
+  const image_header *current_bld_hdr = read_image_header(
+      bl_data, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE);
+
+  // cannot find valid header for current bootloader, something is wrong
+  ensure(current_bld_hdr == (const image_header *)bl_data ? sectrue : secfalse,
+         "Invalid bootloader header");
+
+  ensure(check_image_model(current_bld_hdr), "Incompatible bootloader found");
+
+  if (new_bld_hdr->monotonic < current_bld_hdr->monotonic) {
+    // reject downgrade
+    return;
+  }
+
+  uint32_t board_name = get_board_name();
+  if (board_name == 0 || strncmp((const char *)&board_name, "T2T1", 4) == 0) {
+    // no board capabilities, assume Model T
+    if ((strncmp((const char *)&new_bld_hdr->hw_model, "T2T1", 4) != 0) &&
+        (new_bld_hdr->hw_model != 0)) {
+      // reject non-model T bootloader
+      // 0 represents pre-model check bootloader
+      ensure(secfalse, "Incompatible embedded bootloader");
+    }
+  }
+  // at this point, due to the previous check_image_model call, we know that the
+  // new_bld_hdr is
+  //  meant for the same model as this firmware, so we can check the board name
+  //  against the firmware hw_model.
+  else if (board_name != HW_MODEL) {
+    // reject incompatible bootloader
+    ensure(secfalse, "Incompatible embedded bootloader");
+  }
+
   ensure(flash_erase(FLASH_SECTOR_BOOTLOADER), NULL);
   ensure(flash_unlock_write(), NULL);
   for (int i = 0; i < len / sizeof(uint32_t); i++) {

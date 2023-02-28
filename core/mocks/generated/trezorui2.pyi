@@ -3,30 +3,9 @@ CONFIRMED: object
 CANCELLED: object
 
 
-# rust/src/ui/model_t1/layout.rs
-def confirm_action(
-    *,
-    title: str,
-    action: str | None = None,
-    description: str | None = None,
-    verb: str | None = None,
-    verb_cancel: str | None = None,
-    hold: bool | None = None,
-    reverse: bool = False,
-) -> object:
-    """Confirm action."""
-
-
-# rust/src/ui/model_t1/layout.rs
-def confirm_text(
-    *,
-    title: str,
-    data: str,
-    description: str | None,
-) -> object:
-    """Confirm text."""
-CONFIRMED: object
-CANCELLED: object
+# rust/src/ui/model_tr/layout.rs
+def disable_animation(disable: bool) -> None:
+    """Disable animations, debug builds only."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -37,7 +16,8 @@ def confirm_action(
     description: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    hold: bool | None = None,
+    hold: bool = False,
+    hold_danger: bool = False,  # unused on TR
     reverse: bool = False,
 ) -> object:
     """Confirm action."""
@@ -57,6 +37,21 @@ INFO: object
 
 
 # rust/src/ui/model_tt/layout.rs
+def disable_animation(disable: bool) -> None:
+    """Disable animations, debug builds only."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def jpeg_info(data: bytes) -> (width: int, height: int, mcu_height: int):
+    """Get JPEG image dimensions."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def jpeg_test(data: bytes) -> bool:
+    """Test JPEG image."""
+
+
+# rust/src/ui/model_tt/layout.rs
 def confirm_action(
     *,
     title: str,
@@ -69,6 +64,15 @@ def confirm_action(
     reverse: bool = False,
 ) -> object:
     """Confirm action."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def confirm_homescreen(
+    *,
+    title: str,
+    image: bytes,
+) -> object:
+    """Confirm homescreen."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -99,7 +103,7 @@ def confirm_properties(
 def confirm_reset_device(
     *,
     title: str,
-    prompt: str,
+    button: str,
 ) -> object:
     """Confirm TOS before device setup."""
 
@@ -179,7 +183,7 @@ def show_error(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> object:
-    """Error modal."""
+    """Error modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -191,7 +195,7 @@ def show_warning(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> object:
-    """Warning modal."""
+    """Warning modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -203,7 +207,7 @@ def show_success(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> object:
-    """Success modal."""
+    """Success modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -215,7 +219,7 @@ def show_info(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> object:
-    """Info modal."""
+    """Info modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -266,7 +270,7 @@ def request_pin(
     prompt: str,
     subprompt: str,
     allow_cancel: bool = True,
-    warning: str | None = None,
+    wrong_pin: bool = False,
 ) -> str | object:
     """Request pin on device."""
 
@@ -323,7 +327,7 @@ def request_number(
     count: int,
     min_count: int,
     max_count: int,
-    description: Callable[[int], str],
+    description: Callable[[int], str] | None = None,
 ) -> object:
    """Number input with + and - buttons, description, and info button."""
 
@@ -356,7 +360,7 @@ def confirm_recovery(
 def select_word_count(
     *,
     dry_run: bool,
-) -> int | trezorui2.CANCELLED:
+) -> int | CANCELLED:
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
 
@@ -374,3 +378,53 @@ def show_remaining_shares(
     pages: Iterable[tuple[str, str]],
 ) -> int:
    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_progress(
+    *,
+    title: str,
+    indeterminate: bool = False,
+    description: str | None = None,
+) -> object:
+   """Show progress loader. Please note that the number of lines reserved on screen for
+   description is determined at construction time. If you want multiline descriptions
+   make sure the initial desciption has at least that amount of lines."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_homescreen(
+    *,
+    label: str,
+    hold: bool,
+    notification: str | None,
+    notification_level: int = 0,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Idle homescreen."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_lockscreen(
+    *,
+    label: str,
+    bootscreen: bool,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Homescreen for locked device."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_busyscreen(
+    *,
+    title: str,
+    description: str,
+    time_ms: int,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Homescreen used for indicating coinjoin in progress."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def draw_welcome_screen() -> None:
+    """Show logo icon with the model name at the bottom and return."""

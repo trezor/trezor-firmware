@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action
+from trezor.ui.layouts import confirm_action, confirm_homescreen
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
 
 def _validate_homescreen(homescreen: bytes) -> None:
-    from trezor import ui
+    import trezorui2
     import storage.device as storage_device
 
     if homescreen == b"":
@@ -26,13 +26,17 @@ def _validate_homescreen(homescreen: bytes) -> None:
         )
 
     try:
-        w, h, toif_format = ui.display.toif_info(homescreen)
+        w, h, mcu_height = trezorui2.jpeg_info(homescreen)
     except ValueError:
         raise DataError("Invalid homescreen")
-    if w != 144 or h != 144:
-        raise DataError("Homescreen must be 144x144 pixel large")
-    if toif_format != ui.display.TOIF_FULL_COLOR_BE:
-        raise DataError("Homescreen must be full-color TOIF image")
+    if w != 240 or h != 240:
+        raise DataError("Homescreen must be 240x240 pixel large")
+    if mcu_height > 16:
+        raise DataError("Unsupported jpeg type")
+    try:
+        trezorui2.jpeg_test(homescreen)
+    except ValueError:
+        raise DataError("Invalid homescreen")
 
 
 async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
@@ -54,6 +58,7 @@ async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
     display_rotation = msg.display_rotation  # local_cache_attribute
     msg_safety_checks = msg.safety_checks  # local_cache_attribute
     experimental_features = msg.experimental_features  # local_cache_attribute
+    hide_passphrase_from_host = msg.hide_passphrase_from_host  # local_cache_attribute
 
     if (
         homescreen is None
@@ -64,12 +69,13 @@ async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
         and auto_lock_delay_ms is None
         and msg_safety_checks is None
         and experimental_features is None
+        and hide_passphrase_from_host is None
     ):
         raise ProcessError("No setting provided")
 
     if homescreen is not None:
         _validate_homescreen(homescreen)
-        await _require_confirm_change_homescreen(ctx)
+        await _require_confirm_change_homescreen(ctx, homescreen)
         try:
             storage_device.set_homescreen(homescreen)
         except ValueError:
@@ -113,27 +119,41 @@ async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
         await _require_confirm_experimental_features(ctx, experimental_features)
         storage_device.set_experimental_features(experimental_features)
 
+    if hide_passphrase_from_host is not None:
+        if safety_checks.is_strict():
+            raise ProcessError("Safety checks are strict")
+        await _require_confirm_hide_passphrase_from_host(ctx, hide_passphrase_from_host)
+        storage_device.set_hide_passphrase_from_host(hide_passphrase_from_host)
+
     reload_settings_from_storage()
 
     return Success(message="Settings applied")
 
 
-async def _require_confirm_change_homescreen(ctx: GenericContext) -> None:
-    await confirm_action(
-        ctx,
-        "set_homescreen",
-        "Set homescreen",
-        description="Do you really want to change the homescreen image?",
-        br_code=BRT_PROTECT_CALL,
-    )
+async def _require_confirm_change_homescreen(
+    ctx: GenericContext, homescreen: bytes
+) -> None:
+    if homescreen == b"":
+        await confirm_action(
+            ctx,
+            "set_homescreen",
+            "Set homescreen",
+            description="Do you really want to set default homescreen image?",
+            br_code=BRT_PROTECT_CALL,
+        )
+    else:
+        await confirm_homescreen(
+            ctx,
+            homescreen,
+        )
 
 
 async def _require_confirm_change_label(ctx: GenericContext, label: str) -> None:
     await confirm_action(
         ctx,
         "set_label",
-        "Change label",
-        description="Do you really want to change the label to {}?",
+        "Device name",
+        description="Do you want to change device name to {}?",
         description_param=label,
         br_code=BRT_PROTECT_CALL,
     )
@@ -186,7 +206,7 @@ async def _require_confirm_change_display_rotation(
         ctx,
         "set_rotation",
         "Change rotation",
-        description="Do you really want to change display rotation to {}?",
+        description="Do you want to change device rotation to {}?",
         description_param=label,
         br_code=BRT_PROTECT_CALL,
     )
@@ -255,5 +275,18 @@ async def _require_confirm_experimental_features(
             "Only for development and beta testing!",
             "Enable experimental features?",
             reverse=True,
+            br_code=BRT_PROTECT_CALL,
+        )
+
+
+async def _require_confirm_hide_passphrase_from_host(
+    ctx: GenericContext, enable: bool
+) -> None:
+    if enable:
+        await confirm_action(
+            ctx,
+            "set_hide_passphrase_from_host",
+            "Hide passphrase",
+            description="Hide passphrase coming from host?",
             br_code=BRT_PROTECT_CALL,
         )

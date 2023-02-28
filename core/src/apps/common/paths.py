@@ -290,9 +290,6 @@ class PathSchema:
             components = ["m"]
             append = components.append  # local_cache_attribute
 
-            def unharden(item: int) -> int:
-                return item ^ (item & HARDENED)
-
             for component in self.schema:
                 if isinstance(component, Interval):
                     a, b = component.min, component.max
@@ -341,6 +338,8 @@ PATTERN_SEP5 = "m/44'/coin_type'/account'"
 # https://github.com/trezor/trezor-firmware/issues/1749
 PATTERN_SEP5_LEDGER_LIVE_LEGACY = "m/44'/coin_type'/0'/account"
 
+PATTERN_CASA = "m/45'/coin_type/account/change/address_index"
+
 
 async def validate_path(
     ctx: wire.Context,
@@ -378,3 +377,7 @@ def address_n_to_str(address_n: Iterable[int]) -> str:
         return "m"
 
     return "m/" + "/".join(_path_item(i) for i in address_n)
+
+
+def unharden(item: int) -> int:
+    return item ^ (item & HARDENED)

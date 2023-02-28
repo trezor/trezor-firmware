@@ -87,6 +87,8 @@ int main(void) {
   enable_systemview();
 #endif
 
+  display_reinit();
+
 #if !defined TREZOR_MODEL_1
   parse_boardloader_capabilities();
 
@@ -108,8 +110,6 @@ int main(void) {
   // enable BUS fault and USAGE fault handlers
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
 #endif
-
-  display_reinit();
 
 #if defined TREZOR_MODEL_1
   button_init();

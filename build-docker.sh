@@ -32,6 +32,7 @@ if [ -z "$ALPINE_CHECKSUM" ]; then
  fi
 
 
+DOCKER=${DOCKER:-docker}
 CONTAINER_NAME=${CONTAINER_NAME:-trezor-firmware-env.nix}
 ALPINE_CDN=${ALPINE_CDN:-https://dl-cdn.alpinelinux.org/alpine}
 ALPINE_RELEASE=${ALPINE_RELEASE:-3.15}
@@ -137,7 +138,13 @@ echo
 echo ">>> DOCKER BUILD ALPINE_VERSION=$ALPINE_VERSION ALPINE_ARCH=$ALPINE_ARCH NIX_VERSION=$NIX_VERSION -t $CONTAINER_NAME"
 echo
 
-docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" -t "$CONTAINER_NAME" ci/
+$DOCKER build \
+  --network=host \
+  --build-arg ALPINE_VERSION="$ALPINE_VERSION" \
+  --build-arg ALPINE_ARCH="$ALPINE_ARCH" \
+  --build-arg NIX_VERSION="$NIX_VERSION" \
+  -t "$CONTAINER_NAME" \
+  ci/
 
 # stat under macOS has slightly different cli interface
 USER=$(stat -c "%u" . 2>/dev/null || stat -f "%u" .)
@@ -179,7 +186,10 @@ EOF
   echo ">>> DOCKER RUN core BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
   echo
 
-  docker run -it --rm \
+  $DOCKER run \
+    --network=host \
+    -it \
+    --rm \
     -v "$DIR:/local" \
     -v "$DIR/build/core$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
@@ -225,7 +235,10 @@ EOF
   echo ">>> DOCKER RUN legacy BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
   echo
 
-  docker run -it --rm \
+  $DOCKER run \
+    --network=host \
+    -it \
+    --rm \
     -v "$DIR:/local" \
     -v "$DIR/build/legacy$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
@@ -233,7 +246,6 @@ EOF
     --init \
     "$CONTAINER_NAME" \
     /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"
-
 done
 
 # all built, show fingerprints

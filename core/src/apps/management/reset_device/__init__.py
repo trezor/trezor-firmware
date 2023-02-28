@@ -25,11 +25,14 @@ _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
 
 async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
     from trezor import config
-    from trezor.ui.loader import LoadingAnimation
     from apps.common.request_pin import request_pin_confirm
-    from trezor.ui.layouts import confirm_backup, confirm_reset_device
+    from trezor.ui.layouts import (
+        confirm_backup,
+        confirm_reset_device,
+    )
     from trezor.crypto import bip39, random
     from trezor.messages import Success, EntropyAck, EntropyRequest
+    from trezor.pin import render_empty_loader
 
     backup_type = msg.backup_type  # local_cache_attribute
 
@@ -38,13 +41,15 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
 
     # make sure user knows they're setting up a new wallet
     if backup_type == BAK_T_SLIP39_BASIC:
-        prompt = "Create a new wallet\nwith Shamir Backup?"
+        title = "Wallet creation\n(Shamir)"
     elif backup_type == BAK_T_SLIP39_ADVANCED:
-        prompt = "Create a new wallet\nwith Super Shamir?"
+        title = "Wallet creation\n(Super Shamir)"
     else:
-        prompt = "Do you want to create\na new wallet?"
-    await confirm_reset_device(ctx, prompt)
-    await LoadingAnimation()
+        title = "Wallet creation"
+    await confirm_reset_device(ctx, title)
+
+    # Rendering empty loader so users do not feel a freezing screen
+    render_empty_loader("PROCESSING", "")
 
     # wipe storage to make sure the device is in a clear state
     storage.reset()

@@ -1,114 +1,46 @@
-import hashlib
-import json
-import re
+from __future__ import annotations
+
 import shutil
 from contextlib import contextmanager
-from pathlib import Path
-from typing import Dict, Generator, Optional, Set
+from typing import Callable, Generator
 
 import pytest
 from _pytest.outcomes import Failed
-from PIL import Image
 
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
+from . import common
+from .common import SCREENS_DIR, UI_TESTS_DIR, TestCase, TestResult
 from .reporting import testreport
 
-UI_TESTS_DIR = Path(__file__).resolve().parent
-SCREENS_DIR = UI_TESTS_DIR / "screens"
-HASH_FILE = UI_TESTS_DIR / "fixtures.json"
-SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"
-FILE_HASHES: Dict[str, str] = {}
-ACTUAL_HASHES: Dict[str, str] = {}
-PROCESSED: Set[str] = set()
-FAILED_TESTS: Set[str] = set()
-
-# T1/TT, to be set in screen_recording(), as we do not know it beforehand
-# TODO: it is not the cleanest, we could create a class out of this file
-MODEL = ""
+FIXTURES_SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"
 
 
-def get_test_name(node_id: str) -> str:
-    # Test item name is usually function name, but when parametrization is used,
-    # parameters are also part of the name. Some functions have very long parameter
-    # names (tx hashes etc) that run out of maximum allowable filename length, so
-    # we limit the name to first 100 chars. This is not a problem with txhashes.
-    new_name = node_id.replace("tests/device_tests/", "")
-    # remove ::TestClass:: if present because it is usually the same as the test file name
-    new_name = re.sub(r"::.*?::", "-", new_name)
-    new_name = new_name.replace("/", "-")  # in case there is "/"
-    if len(new_name) <= 100:
-        return new_name
-    return new_name[:91] + "-" + hashlib.sha256(new_name.encode()).hexdigest()[:8]
-
-
-def _process_recorded(screen_path: Path, test_name: str) -> None:
+def _process_recorded(result: TestResult) -> None:
     # calculate hash
-    actual_hash = _hash_files(screen_path)
-    FILE_HASHES[test_name] = actual_hash
-    ACTUAL_HASHES[test_name] = actual_hash
-    _rename_records(screen_path)
-    testreport.recorded(screen_path, test_name, actual_hash)
+    result.store_recorded()
+    testreport.recorded(result)
 
 
-def _rename_records(screen_path: Path) -> None:
-    # rename screenshots
-    for index, record in enumerate(sorted(screen_path.iterdir())):
-        record.replace(screen_path / f"{index:08}.png")
-
-
-def _hash_files(path: Path) -> str:
-    files = path.iterdir()
-    hasher = hashlib.sha256()
-    for file in sorted(files):
-        hasher.update(_get_bytes_from_png(str(file)))
-
-    return hasher.digest().hex()
-
-
-def _get_bytes_from_png(png_file: str) -> bytes:
-    """Decode a PNG file into bytes representing all the pixels.
-
-    Is necessary because Linux and Mac are using different PNG encoding libraries,
-    and we need the file hashes to be the same on both platforms.
-    """
-    return Image.open(png_file).tobytes()
-
-
-def _process_tested(fixture_test_path: Path, test_name: str) -> None:
-    actual_path = fixture_test_path / "actual"
-    actual_hash = _hash_files(actual_path)
-    ACTUAL_HASHES[test_name] = actual_hash
-
-    _rename_records(actual_path)
-
-    expected_hash = FILE_HASHES.get(test_name)
-    if expected_hash is None:
-        pytest.fail(f"Hash of {test_name} not found in fixtures.json")
-
-    if actual_hash != expected_hash:
-        assert expected_hash is not None
-        file_path = testreport.failed(
-            fixture_test_path, test_name, actual_hash, expected_hash
-        )
-
+def _process_tested(result: TestResult) -> None:
+    if result.expected_hash is None:
+        file_path = testreport.missing(result)
         pytest.fail(
-            f"Hash of {test_name} differs.\n"
-            f"Expected:  {expected_hash}\n"
-            f"Actual:    {actual_hash}\n"
+            f"Hash of {result.test.id} not found in fixtures.json\n"
+            f"Expected:  {result.expected_hash}\n"
+            f"Actual:    {result.actual_hash}\n"
+            f"Diff file: {file_path}"
+        )
+    elif result.actual_hash != result.expected_hash:
+        file_path = testreport.failed(result)
+        pytest.fail(
+            f"Hash of {result.test.id} differs\n"
+            f"Expected:  {result.expected_hash}\n"
+            f"Actual:    {result.actual_hash}\n"
             f"Diff file: {file_path}"
         )
     else:
-        testreport.passed(fixture_test_path, test_name, actual_hash)
-
-
-def get_last_call_test_result(request: pytest.FixtureRequest) -> Optional[bool]:
-    # if test did not finish, e.g. interrupted by Ctrl+C, the pytest_runtest_makereport
-    # did not create the attribute we need
-    if not hasattr(request.node, "rep_call"):
-        return None
-
-    return request.node.rep_call.passed
+        testreport.passed(result)
 
 
 @contextmanager
@@ -116,107 +48,151 @@ def screen_recording(
     client: Client, request: pytest.FixtureRequest
 ) -> Generator[None, None, None]:
     test_ui = request.config.getoption("ui")
-    test_name = get_test_name(request.node.nodeid)
+    if not test_ui:
+        yield
+        return
 
-    # Differentiating test names between T1 and TT
-    # Making the model global for other functions
-    global MODEL
-    MODEL = f"T{client.features.model}"
+    record_text_layout = request.config.getoption("record_text_layout")
 
-    test_name = f"{MODEL}_{test_name}"
+    testcase = TestCase.build(client, request)
+    testcase.dir.mkdir(exist_ok=True, parents=True)
 
-    screens_test_path = SCREENS_DIR / test_name
-
-    if test_ui == "record":
-        screen_path = screens_test_path / "recorded"
-    else:
-        screen_path = screens_test_path / "actual"
-
-    if not screens_test_path.exists():
-        screens_test_path.mkdir()
     # remove previous files
-    shutil.rmtree(screen_path, ignore_errors=True)
-    screen_path.mkdir()
+    shutil.rmtree(testcase.actual_dir, ignore_errors=True)
+    testcase.actual_dir.mkdir()
 
     try:
-        client.debug.start_recording(str(screen_path))
+        client.debug.start_recording(str(testcase.actual_dir))
+        if record_text_layout:
+            client.debug.set_screen_text_file(testcase.screen_text_file)
+            client.debug.watch_layout(True)
         yield
     finally:
+        client.ensure_open()
         # Wait for response to Initialize, which gives the emulator time to catch up
         # and redraw the homescreen. Otherwise there's a race condition between that
         # and stopping recording.
+        if record_text_layout:
+            client.debug.set_screen_text_file(None)
+            client.debug.watch_layout(False)
         client.init_device()
         client.debug.stop_recording()
 
-    if test_ui:
-        PROCESSED.add(test_name)
-        if get_last_call_test_result(request) is False:
-            FAILED_TESTS.add(test_name)
-
-        if test_ui == "record":
-            _process_recorded(screen_path, test_name)
-        else:
-            _process_tested(screens_test_path, test_name)
-
-
-def list_missing() -> Set[str]:
-    # Only listing the ones for the current model
-    relevant_cases = {
-        case for case in FILE_HASHES.keys() if case.startswith(f"{MODEL}_")
-    }
-    return relevant_cases - PROCESSED
-
-
-def read_fixtures() -> None:
-    if not HASH_FILE.exists():
-        raise ValueError("File fixtures.json not found.")
-    global FILE_HASHES
-    FILE_HASHES = json.loads(HASH_FILE.read_text())
-
-
-def write_fixtures(remove_missing: bool) -> None:
-    HASH_FILE.write_text(_get_fixtures_content(FILE_HASHES, remove_missing))
-
-
-def write_fixtures_suggestion(
-    remove_missing: bool, only_passed_tests: bool = False
-) -> None:
-    SUGGESTION_FILE.write_text(
-        _get_fixtures_content(ACTUAL_HASHES, remove_missing, only_passed_tests)
-    )
-
-
-def _get_fixtures_content(
-    fixtures: Dict[str, str], remove_missing: bool, only_passed_tests: bool = False
-) -> str:
-    if remove_missing:
-        # Not removing the ones for different model
-        nonrelevant_cases = {
-            f: h for f, h in FILE_HASHES.items() if not f.startswith(f"{MODEL}_")
-        }
-
-        filtered_processed_tests = PROCESSED
-        if only_passed_tests:
-            filtered_processed_tests = PROCESSED - FAILED_TESTS
-
-        processed_fixtures = {i: fixtures[i] for i in filtered_processed_tests}
-        fixtures = {**nonrelevant_cases, **processed_fixtures}
+    result = testcase.build_result(request)
+    if test_ui == "record":
+        _process_recorded(result)
     else:
-        fixtures = fixtures
+        _process_tested(result)
 
-    return json.dumps(fixtures, indent="", sort_keys=True) + "\n"
+
+def setup(main_runner: bool) -> None:
+    # clear metadata and "actual" recordings before current run, keep "recorded" around
+    if main_runner:
+        for meta in SCREENS_DIR.glob("*/metadata.json"):
+            meta.unlink()
+            shutil.rmtree(meta.parent / "actual", ignore_errors=True)
+
+    # clear testreport
+    testreport.setup(main_runner)
+
+
+def list_missing() -> set[str]:
+    # Only listing the ones for the current model
+    _, missing = common.prepare_fixtures(
+        TestResult.recent_results(), remove_missing=True
+    )
+    return {test.id for test in missing}
+
+
+def update_fixtures(remove_missing: bool = False) -> int:
+    """Update the fixtures.json file with the actual hashes from the latest run.
+
+    Used in --ui=record and in update_fixtures.py
+    """
+    results = list(TestResult.recent_results())
+    for result in results:
+        result.store_recorded()
+
+    common.write_fixtures(results, remove_missing=remove_missing)
+    return len(results)
+
+
+def _should_write_ui_report(exitstatus: pytest.ExitCode) -> bool:
+    # generate UI report and check missing only if pytest is exitting cleanly
+    # I.e., the test suite passed or failed (as opposed to ctrl+c break, internal error,
+    # etc.)
+    return exitstatus in (pytest.ExitCode.OK, pytest.ExitCode.TESTS_FAILED)
+
+
+def terminal_summary(
+    println: Callable[[str], None],
+    ui_option: str,
+    check_missing: bool,
+    exitstatus: pytest.ExitCode,
+) -> None:
+    println("")
+
+    normal_exit = _should_write_ui_report(exitstatus)
+    missing_tests = list_missing()
+    if ui_option and normal_exit and missing_tests:
+        println(f"{len(missing_tests)} expected UI tests did not run.")
+        if check_missing:
+            println("-------- List of missing tests follows: --------")
+            for test in missing_tests:
+                println("\t" + test)
+
+            if ui_option == "test":
+                println("UI test failed.")
+            elif ui_option == "record":
+                println("Removing missing tests from record.")
+            println("")
+
+    if ui_option == "record" and exitstatus != pytest.ExitCode.OK:
+        println(
+            "\n-------- WARNING! Recording to fixtures.json was disabled due to failed tests. --------"
+        )
+        println("")
+
+    if normal_exit:
+        println("-------- UI tests summary: --------")
+        println("Run ./tests/show_results.py to open test summary")
+        println("")
+
+        println("-------- Accepting all recent UI changes: --------")
+        println("Run ./tests/update_fixtures.py to apply all changes")
+        println("")
+
+
+def sessionfinish(
+    exitstatus: pytest.ExitCode,
+    test_ui: str,
+    check_missing: bool,
+    record_text_layout: bool,
+) -> pytest.ExitCode:
+    if not _should_write_ui_report(exitstatus):
+        return exitstatus
+
+    testreport.generate_reports(record_text_layout)
+    if test_ui == "test" and check_missing and list_missing():
+        common.write_fixtures(
+            TestResult.recent_results(),
+            remove_missing=True,
+            dest=FIXTURES_SUGGESTION_FILE,
+        )
+        return pytest.ExitCode.TESTS_FAILED
+
+    if test_ui == "record" and exitstatus == pytest.ExitCode.OK:
+        update_fixtures(check_missing)
+
+    return exitstatus
 
 
 def main() -> None:
-    read_fixtures()
-    for record in SCREENS_DIR.iterdir():
-        if not (record / "actual").exists():
-            continue
-
+    for result in TestResult.recent_results():
         try:
-            _process_tested(record, record.name)
-            print("PASSED:", record.name)
+            _process_tested(result)
+            print("PASSED:", result.test.id)
         except Failed:
-            print("FAILED:", record.name)
+            print("FAILED:", result.test.id)
 
     testreport.generate_reports()

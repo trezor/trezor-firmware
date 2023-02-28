@@ -41,8 +41,8 @@ async def load_device(ctx: Context, msg: LoadDevice) -> Success:
         ctx,
         "warn_loading_seed",
         "Loading seed",
-        "Loading private seed\nis not recommended.",
-        "Continue only if you\nknow what you are doing!",
+        "Loading private seed is not recommended.",
+        "Continue only if you know what you are doing!",
     )
     # END _warn
 
