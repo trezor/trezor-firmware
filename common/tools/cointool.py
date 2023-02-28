@@ -329,10 +329,11 @@ def check_dups(buckets: CoinBuckets, print_at_level: int = logging.WARNING) -> b
             and not coin_info.is_token(coin)
         ]  # we do not count override-marked coins as duplicates here
         cleared = not any(coin.get("duplicate") for coin in bucket)
+        eth_testnet = symbol == "teth"
 
         # string generation
         dup_str = ", ".join(coin_str(coin) for coin in bucket)
-        if len(nontokens) > 1:
+        if len(nontokens) > 1 and not eth_testnet:
             # Two or more colliding nontokens. This is always fatal.
             # XXX consider allowing two nontokens as long as only one is supported?
             level = logging.ERROR
