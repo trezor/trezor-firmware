@@ -186,19 +186,9 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             9,
         )
         yield (  # address, symbol, decimals
-            b"\xad\xe0\x0c\x28\x24\x4d\x5c\xe1\x7d\x72\xe4\x03\x30\xb1\xc3\x18\xcd\x12\xb7\xc3",
-            "ADX",
-            18,
-        )
-        yield (  # address, symbol, decimals
             b"\xd9\xa4\xcb\x9d\xc9\x29\x6e\x11\x1c\x66\xdf\xac\xab\x8b\xe0\x34\xee\x2e\x1c\x2c",
             "ADX-LOYALTY",
             18,
-        )
-        yield (  # address, symbol, decimals
-            b"\x44\x70\xbb\x87\xd7\x7b\x96\x3a\x01\x3d\xb9\x39\xbe\x33\x2f\x92\x7f\x2b\x99\x2e",
-            "ADXL",
-            4,
         )
         yield (  # address, symbol, decimals
             b"\x5c\xa9\xa7\x1b\x1d\x01\x84\x9c\x0a\x95\x49\x0c\xc0\x05\x59\x71\x7f\xcf\x0d\x1d",
@@ -1736,6 +1726,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             18,
         )
         yield (  # address, symbol, decimals
+            b"\x8f\x69\x3c\xa8\xd2\x1b\x15\x71\x07\x18\x4d\x29\xd3\x98\xa8\xd0\x82\xb3\x8b\x76",
+            "DATA",
+            18,
+        )
+        yield (  # address, symbol, decimals
             b"\x1b\x5f\x21\xee\x98\xee\xd4\x8d\x29\x2e\x8e\x2d\x3e\xd8\x2b\x40\xa9\x72\x8a\x22",
             "DATABroker",
             18,
@@ -3041,6 +3036,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             18,
         )
         yield (  # address, symbol, decimals
+            b"\x90\x0d\xb9\x99\x07\x4d\x92\x77\xc5\xda\x2a\x43\xf2\x52\xd7\x43\x66\x23\x0d\xa0",
+            "GIV",
+            18,
+        )
+        yield (  # address, symbol, decimals
             b"\xa5\xb3\x99\xa7\x6b\xba\xbe\xf9\x3d\x70\x25\x55\x25\xc1\xd2\xbc\xc3\x70\x1d\x0b",
             "GL",
             18,
@@ -3143,6 +3143,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         yield (  # address, symbol, decimals
             b"\xb7\x08\x35\xd7\x82\x2e\xbb\x94\x26\xb5\x65\x43\xe3\x91\x84\x6c\x10\x7b\xd3\x2c",
             "GTC",
+            18,
+        )
+        yield (  # address, symbol, decimals
+            b"\x30\xe1\x93\xbd\x3f\x52\x71\x3d\x55\x62\xcf\x31\x6f\x35\x11\x50\x34\x52\x5f\x44",
+            "GTEC",
             18,
         )
         yield (  # address, symbol, decimals
@@ -3438,6 +3443,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         yield (  # address, symbol, decimals
             b"\xa8\xb6\x52\x49\xde\x7f\x85\x49\x4b\xc1\xfe\x75\xf5\x25\xf5\x68\xaa\x7d\xfa\x39",
             "iBAT",
+            18,
+        )
+        yield (  # address, symbol, decimals
+            b"\x69\x1c\x25\xc4\x61\xda\xfc\x47\x79\x2b\x6e\x4d\x67\x4f\xbb\x63\x7b\xca\x1c\x6f",
+            "iBBT",
             18,
         )
         yield (  # address, symbol, decimals
@@ -4067,7 +4077,7 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         )
         yield (  # address, symbol, decimals
             b"\xa4\xe8\xc3\xec\x45\x61\x07\xea\x67\xd3\x07\x5b\xf9\xe3\xdf\x3a\x75\x82\x3d\xb0",
-            "LOOMOLD",
+            "[deprecated] LOOM",
             18,
         )
         yield (  # address, symbol, decimals
@@ -4238,11 +4248,6 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         yield (  # address, symbol, decimals
             b"\x5b\x8d\x43\xff\xde\x4a\x29\x82\xb9\xa5\x38\x7c\xdf\x21\xd5\x4e\xad\x64\xac\x8d",
             "MEST",
-            18,
-        )
-        yield (  # address, symbol, decimals
-            b"\xa3\xd5\x8c\x4e\x56\xfe\xdc\xae\x3a\x7c\x43\xa7\x25\xae\xe9\xa7\x1f\x0e\xce\x4e",
-            "MET",
             18,
         )
         yield (  # address, symbol, decimals
@@ -4978,11 +4983,6 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         yield (  # address, symbol, decimals
             b"\x9f\xba\x68\x4d\x77\xd2\xd6\xa1\x40\x8c\x24\xb6\x0a\x1f\x55\x34\xe7\x1f\x5b\x75",
             "PATR",
-            18,
-        )
-        yield (  # address, symbol, decimals
-            b"\x8e\x87\x0d\x67\xf6\x60\xd9\x5d\x5b\xe5\x30\x38\x0d\x0e\xc0\xbd\x38\x82\x89\xe1",
-            "PAX",
             18,
         )
         yield (  # address, symbol, decimals
@@ -5946,6 +5946,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             8,
         )
         yield (  # address, symbol, decimals
+            b"\x06\xa0\x1a\x4d\x57\x94\x79\xdd\x5d\x88\x4e\xbf\x61\xa3\x17\x27\xa3\xd8\xd4\x42",
+            "Skey",
+            8,
+        )
+        yield (  # address, symbol, decimals
             b"\x2b\xdc\x0d\x42\x99\x60\x17\xfc\xe2\x14\xb2\x16\x07\xa5\x15\xda\x41\xa9\xe0\xc5",
             "SKIN",
             6,
@@ -6048,16 +6053,6 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         yield (  # address, symbol, decimals
             b"\x74\x4d\x70\xfd\xbe\x2b\xa4\xcf\x95\x13\x16\x26\x61\x4a\x17\x63\xdf\x80\x5b\x9e",
             "SNT",
-            18,
-        )
-        yield (  # address, symbol, decimals
-            b"\x28\x59\x02\x1e\xe7\xf2\xcb\x10\x16\x2e\x67\xf3\x3a\xf2\xd2\x27\x64\xb3\x1a\xff",
-            "SNTR",
-            4,
-        )
-        yield (  # address, symbol, decimals
-            b"\xc0\x11\xa7\x24\x00\xe5\x8e\xcd\x99\xee\x49\x7c\xf8\x9e\x37\x75\xd4\xbd\x73\x2f",
-            "SNX",
             18,
         )
         yield (  # address, symbol, decimals
@@ -6179,11 +6174,6 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             b"\x32\xf3\xb8\xa0\x0b\x69\x12\xd0\x31\x4b\xe2\x12\xfe\x95\x38\xb7\xb9\x43\x0c\x12",
             "SRX",
             8,
-        )
-        yield (  # address, symbol, decimals
-            b"\x6e\x20\x50\xcb\xfb\x3e\xd8\xa4\xd3\x9b\x64\xcc\x9f\x47\xe7\x11\xa0\x3a\x5a\x89",
-            "SSH",
-            18,
         )
         yield (  # address, symbol, decimals
             b"\x62\x4d\x52\x0b\xab\x2e\x4a\xd8\x39\x35\xfa\x50\x3f\xb1\x30\x61\x43\x74\xe8\x50",
@@ -6341,6 +6331,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             18,
         )
         yield (  # address, symbol, decimals
+            b"\x6e\x20\x50\xcb\xfb\x3e\xd8\xa4\xd3\x9b\x64\xcc\x9f\x47\xe7\x11\xa0\x3a\x5a\x89",
+            "SWRM",
+            18,
+        )
+        yield (  # address, symbol, decimals
             b"\xb9\xe7\xf8\x56\x8e\x08\xd5\x65\x9f\x5d\x29\xc4\x99\x71\x73\xd8\x4c\xdf\x26\x07",
             "SWT",
             18,
@@ -6483,6 +6478,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         yield (  # address, symbol, decimals
             b"\x2a\x1d\xba\xbe\x65\xc5\x95\xb0\x02\x2e\x75\x20\x8c\x34\x01\x41\x39\xd5\xd3\x57",
             "TDH",
+            18,
+        )
+        yield (  # address, symbol, decimals
+            b"\x31\x7e\xb4\xad\x9c\xfa\xc6\x23\x2f\x00\x46\x83\x13\x22\xe8\x95\x50\x7b\xcb\xeb",
+            "TDX",
             18,
         )
         yield (  # address, symbol, decimals
@@ -6689,6 +6689,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             b"\xcb\x94\xbe\x6f\x13\xa1\x18\x2e\x4a\x4b\x61\x40\xcb\x7b\xf2\x02\x5d\x28\xe4\x1b",
             "TRST",
             6,
+        )
+        yield (  # address, symbol, decimals
+            b"\xf1\x0e\x3e\x8f\x6b\x02\xb5\x94\xb7\xc9\x5f\xca\x59\xdc\x7e\x5c\xe7\x36\x4d\xf5",
+            "TRUCCO",
+            8,
         )
         yield (  # address, symbol, decimals
             b"\x2c\x53\x7e\x56\x24\xe4\xaf\x88\xa7\xae\x40\x60\xc0\x22\x60\x93\x76\xc8\xd0\xeb",
@@ -8141,6 +8146,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             2,
         )
         yield (  # address, symbol, decimals
+            b"\x8e\x87\x0d\x67\xf6\x60\xd9\x5d\x5b\xe5\x30\x38\x0d\x0e\xc0\xbd\x38\x82\x89\xe1",
+            "USDP",
+            18,
+        )
+        yield (  # address, symbol, decimals
             b"\xa4\xbd\xb1\x1d\xc0\xa2\xbe\xc8\x8d\x24\xa3\xaa\x1e\x6b\xb1\x72\x01\x11\x2e\xbe",
             "USDS",
             6,
@@ -8531,6 +8541,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             18,
         )
         yield (  # address, symbol, decimals
+            b"\x8a\xa9\x38\x1b\x25\x44\xb4\x8c\x26\xf3\xb8\x50\xf6\xe0\x7e\x2c\x51\x61\xeb\x3e",
+            "WDOGE",
+            8,
+        )
+        yield (  # address, symbol, decimals
             b"\x84\x0f\xe7\x5a\xbf\xad\xc0\xf2\xd5\x40\x37\x82\x95\x71\xb2\x78\x2e\x91\x9c\xe4",
             "WEB",
             18,
@@ -8699,6 +8714,11 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             b"\x1e\x26\xb3\xd0\x7e\x57\xf4\x53\xca\xe3\x0f\x7d\xdd\x2f\x94\x5f\x5b\xf3\xef\x33",
             "XCLR",
             8,
+        )
+        yield (  # address, symbol, decimals
+            b"\x0c\xf0\xee\x63\x78\x8a\x08\x49\xfe\x52\x97\xf3\x40\x7f\x70\x1e\x12\x2c\xc0\x23",
+            "XDATA",
+            18,
         )
         yield (  # address, symbol, decimals
             b"\x41\xab\x1b\x6f\xcb\xb2\xfa\x9d\xce\xd8\x1a\xcb\xde\xc1\x3e\xa6\x31\x5f\x2b\xf2",
@@ -9190,13 +9210,13 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
             18,
         )
         yield (  # address, symbol, decimals
-            b"\x97\x76\x75\xb8\x63\xb3\xb1\xcf\x46\xa9\x27\xfd\xdc\xbe\x0c\x83\x1b\xf5\x01\x35",
-            "BOBCB",
+            b"\x44\x0c\xd8\x3c\x16\x0d\xe5\xc9\x6d\xdb\x20\x24\x68\x15\xea\x44\xc7\xab\xbc\xa8",
+            "BITP",
             18,
         )
         yield (  # address, symbol, decimals
-            b"\x44\x0c\xd8\x3c\x16\x0d\xe5\xc9\x6d\xdb\x20\x24\x68\x15\xea\x44\xc7\xab\xbc\xa8",
-            "BPro",
+            b"\x97\x76\x75\xb8\x63\xb3\xb1\xcf\x46\xa9\x27\xfd\xdc\xbe\x0c\x83\x1b\xf5\x01\x35",
+            "BOBCB",
             18,
         )
         yield (  # address, symbol, decimals
@@ -9207,7 +9227,7 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         yield (  # address, symbol, decimals
             b"\xe3\x55\xc2\x80\x13\x1d\xfa\xf1\x8b\xf1\xc3\x64\x8a\xee\x3c\x39\x6d\xb6\xb5\xfd",
             "BRZ",
-            18,
+            4,
         )
         yield (  # address, symbol, decimals
             b"\xab\x2d\x29\x0b\x7a\x60\x0f\x5e\xa8\xd5\xb9\x33\xf6\xf1\x5c\x86\x7f\xd7\xe6\x0e",
@@ -9227,17 +9247,17 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         yield (  # address, symbol, decimals
             b"\x87\x26\x64\xa8\x85\xa1\x99\x5d\x75\x4e\x36\x66\xa2\x3f\xad\x5c\x80\x14\x01\xc4",
             "cRBTC",
-            18,
+            8,
         )
         yield (  # address, symbol, decimals
             b"\xb7\xff\x2c\x56\xc8\x97\x56\x2c\x0a\xa6\x74\x7d\x26\x79\xd3\x5f\x5e\x93\x74\x92",
             "cRIF",
-            18,
+            8,
         )
         yield (  # address, symbol, decimals
             b"\xd2\x56\xc1\x21\xa5\x07\xca\xdd\x26\x87\x59\x9e\x27\xfa\x45\xe3\x1b\x7c\x31\x99",
             "crUSDT",
-            18,
+            8,
         )
         yield (  # address, symbol, decimals
             b"\xe7\x00\x69\x1d\xa7\xb9\x85\x1f\x2f\x35\xf8\xb8\x18\x2c\x69\xc5\x3c\xca\xd9\xdb",
@@ -9474,12 +9494,12 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
         )
     if chain_id == 43114:
         yield (  # address, symbol, decimals
-            b"\xb3\x1f\x66\xaa\x3c\x1e\x78\x53\x63\xf0\x87\x5a\x1b\x74\xe2\x7b\x85\xfd\x66\xc7",
-            "AVAX",
-            18,
-        )
-        yield (  # address, symbol, decimals
             b"\xde\x3a\x24\x02\x85\x80\x88\x44\x48\xa5\x39\x78\x72\x04\x6a\x01\x96\x49\xb0\x84",
             "USDT",
             6,
+        )
+        yield (  # address, symbol, decimals
+            b"\xb3\x1f\x66\xaa\x3c\x1e\x78\x53\x63\xf0\x87\x5a\x1b\x74\xe2\x7b\x85\xfd\x66\xc7",
+            "WAVAX",
+            18,
         )
