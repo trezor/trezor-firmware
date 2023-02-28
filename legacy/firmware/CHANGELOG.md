@@ -4,24 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.12.0] (internal only - January 2023)
+## 1.12.1 [15th March 2023]
 
 ### Added
-- Support Ledger Live legacy derivation path "m/44'/coin_type'/0'/account"  [#1749]
-- Show fee rate when replacing transaction  [#2442]
-- T1 bootloader: verify firmware signatures based on SignMessage, add signature debugging  [#2568]
+- Support Ledger Live legacy derivation path `m/44'/coin_type'/0'/account`.  [#1749]
+- Show fee rate when replacing transaction.  [#2442]
+- T1 bootloader: verify firmware signatures based on SignMessage, add signature debugging.  [#2568]
+- Allow proposed Casa m/45' multisig paths for Bitcoin and Ethereum.  [#2682]
+- Implement SLIP-0025 coinjoin accounts.  [#2718]
+- Implement `serialize` option in SignTx.  [#2718]
+- Support native SegWit external inputs with non-ownership proof.  [#2718]
+- Implement SLIP-0019 proofs of ownership for native SegWit.  [#2718]
+- Implement coinjoin signing.  [#2718]
 
 ### Changed
-- Do not convert bech32 addresses to uppercase in QR code to increase compatibility  [#2190]
-- Do not allow access to SLIP25 paths.  [#2289]
-- Extend decimals of fee rate to 2 digits  [#2486]
-- Display only sat instead of sat BTC  [#2487]
+- Do not convert bech32 addresses to uppercase in QR code to increase compatibility.  [#2190]
+- Extend decimals of fee rate to 2 digits.  [#2486]
+- Display only sat instead of sat BTC.  [#2487]
+- Increase `SignIdentity.challenge_hidden` max_size to 512 bytes.  [#2743]
+- Included bootloader 1.12.1.
 
 ### Fixed
-- Bootloader VTOR and FW handover fix  [#163]
+- Bootloader VTOR and FW handover fix.  [#163]
+- Show full Stellar address and QR code.  [#1453]
+- Wrap long Ethereum fee to next line if it does not fit.  [#2373]
+
+### Security
+- Match and validate script type of change-outputs in Bitcoin signing.
 
 
-## [1.11.2] (17th August 2022)
+## 1.11.2 [17th August 2022]
 
 ### Added
 - Show the fee rate on the signing confirmation screen.  [#2249]
@@ -540,6 +552,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1369]: https://github.com/trezor/trezor-firmware/pull/1369
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402
 [#1415]: https://github.com/trezor/trezor-firmware/pull/1415
+[#1453]: https://github.com/trezor/trezor-firmware/pull/1453
 [#1461]: https://github.com/trezor/trezor-firmware/pull/1461
 [#1491]: https://github.com/trezor/trezor-firmware/pull/1491
 [#1518]: https://github.com/trezor/trezor-firmware/pull/1518
@@ -583,6 +596,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2249]: https://github.com/trezor/trezor-firmware/pull/2249
 [#2261]: https://github.com/trezor/trezor-firmware/pull/2261
 [#2289]: https://github.com/trezor/trezor-firmware/pull/2289
+[#2373]: https://github.com/trezor/trezor-firmware/pull/2373
 [#2394]: https://github.com/trezor/trezor-firmware/pull/2394
 [#2422]: https://github.com/trezor/trezor-firmware/pull/2422
 [#2433]: https://github.com/trezor/trezor-firmware/pull/2433
@@ -590,3 +604,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2486]: https://github.com/trezor/trezor-firmware/pull/2486
 [#2487]: https://github.com/trezor/trezor-firmware/pull/2487
 [#2568]: https://github.com/trezor/trezor-firmware/pull/2568
+[#2682]: https://github.com/trezor/trezor-firmware/pull/2682
+[#2718]: https://github.com/trezor/trezor-firmware/pull/2718
+[#2743]: https://github.com/trezor/trezor-firmware/pull/2743
