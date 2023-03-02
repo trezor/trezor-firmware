@@ -263,7 +263,7 @@ void *layoutLast = NULL;
 void layoutDialogSwipeWrapping(const BITMAP *icon, const char *btnNo,
                                const char *btnYes, const char *heading,
                                const char *description, const char *wrap_text) {
-  const uint32_t row_len = 20;
+  const uint32_t row_len = 18;
   const char **str =
       split_message((const uint8_t *)wrap_text, strlen(wrap_text), row_len);
   layoutDialogSwipe(icon, btnNo, btnYes, NULL, heading, description, str[0],
