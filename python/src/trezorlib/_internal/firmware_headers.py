@@ -337,7 +337,6 @@ class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
         assert isinstance(vh, VendorHeader)
 
         is_devel = self.vendor_header.vhash() == VHASH_DEVEL
-
         return (
             vh._format(terse=not verbose)
             + "\n"

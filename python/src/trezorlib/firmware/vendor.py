@@ -130,14 +130,16 @@ class VendorHeader(Struct):
         digest = self.digest()
         if not dev_keys:
             public_keys = TREZOR_T.bootloader_keys
+            sigs_needed = TREZOR_T.bootloader_sigs_needed
         else:
             public_keys = TREZOR_T_DEV.bootloader_keys
+            sigs_needed = TREZOR_T_DEV.bootloader_sigs_needed
         # TODO: add model awareness
         try:
             cosi.verify(
                 self.signature,
                 digest,
-                TREZOR_T.bootloader_sigs_needed,
+                sigs_needed,
                 public_keys,
                 self.sigmask,
             )

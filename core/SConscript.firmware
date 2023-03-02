@@ -5,15 +5,13 @@ import os
 import tools
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
-PRODUCTION = ARGUMENTS.get('PRODUCTION', '0')
+PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D = TREZOR_MODEL in ('T', )
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-if PRODUCTION != '1' and BOOTLOADER_QA:
-    raise ValueError('Firmware variant for bootloader upgrade testing must be done with PRODUCTION=1')
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -428,7 +426,7 @@ tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), PRODUCTION, PYOPT, BITCOIN_ONLY))
+env = Environment(ENV=os.environ, CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY}")
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
@@ -765,7 +763,7 @@ if FROZEN:
 
 env.Replace(
     ALLSOURCES=source_files,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
 
 
 cmake_gen = env.Command(
@@ -775,7 +773,16 @@ cmake_gen = env.Command(
 )
 
 
-VENDORHEADER = 'embed/vendorheader/vendorheader_' + ('unsafe_signed_prod.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
+MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
+if BOOTLOADER_QA:
+    VENDORHEADER = 'embed/vendorheader/vendorheader_qa_DO_NOT_SIGN_signed_dev.bin'
+    BOOTLOADER_SUFFIX = MODEL_IDENTIFIER + '_qa'
+elif PRODUCTION:
+    VENDORHEADER = 'embed/vendorheader/vendorheader_satoshilabs_signed_prod.bin'
+    BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
+else:
+    VENDORHEADER = 'embed/vendorheader/vendorheader_unsafe_signed_prod.bin'
+    BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
 
 obj_program.extend(
     env.Command(
@@ -784,9 +791,6 @@ obj_program.extend(
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
-
-
-BOOTLOADER_SUFFIX =  tools.get_model_identifier(TREZOR_MODEL) + ('_QA' if BOOTLOADER_QA else '')
 
 obj_program.extend(
     env.Command(
@@ -826,7 +830,7 @@ if TREZOR_MODEL in ('T', 'R'):
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-        '$HEADERTOOL -h $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
         '$CP $TARGET ' + BINARY_NAME,
     ]

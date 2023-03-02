@@ -186,14 +186,9 @@ class VendorFirmware(Struct):
         return self.firmware.digest()
 
     def verify(self, dev_keys: bool = False) -> None:
-        if dev_keys:
-            raise ValueError(
-                "Cannot select dev keys for a vendor firmware; use development vendor header instead."
-            )
-
         self.firmware.validate_code_hashes()
 
-        self.vendor_header.verify()
+        self.vendor_header.verify(dev_keys)
         digest = self.digest()
         try:
             cosi.verify(

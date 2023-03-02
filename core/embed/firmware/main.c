@@ -96,7 +96,7 @@ int main(void) {
 #if !defined TREZOR_MODEL_1
   parse_boardloader_capabilities();
 
-#if PRODUCTION
+#if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
 #endif
   // Enable MPU
