@@ -31,9 +31,9 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
 if TREZOR_MODEL in ('T', ):
-    FONT_NORMAL='Font_TTHoves_Regular_18'
-    FONT_DEMIBOLD='Font_TTHoves_DemiBold_18'
-    FONT_BOLD='Font_TTHoves_Bold_16'
+    FONT_NORMAL='Font_TTHoves_Regular_21'
+    FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
+    FONT_BOLD='Font_TTHoves_Bold_17'
     FONT_MONO='Font_RobotoMono_Regular_20'
 
 # modtrezorconfig
