@@ -14,7 +14,7 @@ terminate_test() {
 set -e
 trap terminate_test EXIT
 
-export TEST_MIN_HF=13  # No need to test hard fork 12 or lower
+export TEST_MIN_HF=15  # No need to test hard fork 12 or lower
 
 if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
   echo "Tests with native Monero app is supported only on Linux and OSX at the moment. Your OS: $OSTYPE"
@@ -23,8 +23,8 @@ fi
 
 # When updating URL and sha256sum also update the URL in ci/shell.nix.
 error=1
-: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.18.1.0-dev-tests-u18.04-01/trezor_tests}"
-: "${TREZOR_MONERO_TESTS_SHA256SUM:=7a8bab583d5f2f06f092ea297b1417008f20c1c5ca23c74e0eb11660068dead9}"
+: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.18.1.1-dev-tests-u18.04-02/trezor_tests}"
+: "${TREZOR_MONERO_TESTS_SHA256SUM:=81424cfc3965abdc24de573274bf631337b52fd25cefc895513214c613fe05c9}"
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
 : "${TREZOR_MONERO_TESTS_CHAIN:=$CORE_DIR/tests/trezor_monero_tests.chain}"
@@ -41,7 +41,8 @@ fi
 echo "Running tests"
 TIME_TESTS_START=$SECONDS
 if [[ "$OSTYPE" == "linux-gnu" && "$FORCE_DOCKER_USE" != 1 ]]; then
-  TEST_MAX_HF=15 TEST_MIN_HF=15 "$TREZOR_MONERO_TESTS_PATH" --heavy_tests --chain=$TREZOR_MONERO_TESTS_CHAIN $@ 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
+  echo "Note: use --heavy-tests with real device (and TREZOR_PATH) env var"
+  TEST_MAX_HF=15 TEST_MIN_HF=15 "$TREZOR_MONERO_TESTS_PATH" --fix-chain --chain-path=$TREZOR_MONERO_TESTS_CHAIN $@ 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
   error=$?
 
 elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then
