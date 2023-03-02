@@ -177,9 +177,9 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
 process_face("Roboto", "Regular", 20)
 process_face("Roboto", "Bold", 20)
 
-process_face("TTHoves", "Regular", 18, ext="otf")
-process_face("TTHoves", "DemiBold", 18, ext="otf")
-process_face("TTHoves", "Bold", 16, ext="otf")
+process_face("TTHoves", "Regular", 21, ext="otf", shave_bearingX=1)
+process_face("TTHoves", "DemiBold", 21, ext="otf", shave_bearingX=1)
+process_face("TTHoves", "Bold", 17, ext="otf", shave_bearingX=1)
 process_face("RobotoMono", "Regular", 20)
 
 process_face("PixelOperator", "Regular", 8, bpp=1, shave_bearingX=1)
