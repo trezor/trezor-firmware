@@ -3,13 +3,15 @@ import json
 
 import click
 
-from trezorlib import firmware
+from trezorlib import firmware, toif
 
 
 def minimum_header_len(spec):
     spec = spec.copy()
     spec["header_len"] = 512000
-    reparsed = firmware.VendorHeader.parse(firmware.VendorHeader.build(spec))
+    reparsed = firmware.VendorHeader.SUBCON.parse(
+        firmware.VendorHeader.SUBCON.build(spec)
+    )
     data_length = reparsed._end_offset - reparsed._start_offset
     # data length + 65 for signatures, rounded up to nearest multiple of 512
     return (data_length + 65 + 511) // 512 * 512
@@ -22,7 +24,7 @@ def minimum_header_len(spec):
 def build_vendorheader(specfile, image, outfile):
     spec = json.load(specfile)
     spec["pubkeys"] = [bytes.fromhex(k) for k in spec["pubkeys"]]
-    spec["image"] = firmware.Toif.parse(image.read())
+    spec["image"] = toif.ToifStruct.parse(image.read())
     spec["sigmask"] = 0
     spec["signature"] = b"\x00" * 64
 
@@ -34,11 +36,17 @@ def build_vendorheader(specfile, image, outfile):
             f"Specified header_len {spec['header_len']} too low. "
             f"Minimum allowable value is {min_length}."
         )
+    elif spec["header_len"] == min_length:
+        click.echo(f"{specfile.name}: Header has correct length.")
+    else:
+        click.echo(
+            f"{specfile.name}: Extending header ({min_length} bytes) to {spec['header_len']} bytes."
+        )
 
     if spec["header_len"] % 512 != 0:
         raise click.ClickException("Invalid header_len: must be a multiple of 512")
 
-    outfile.write(firmware.VendorHeader.build(spec))
+    outfile.write(firmware.VendorHeader.SUBCON.build(spec))
 
 
 if __name__ == "__main__":
