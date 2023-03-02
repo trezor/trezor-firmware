@@ -148,15 +148,15 @@
                 "to_address": "0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
                 "chain_id": 1,
                 "nonce": "0x0",
-                "gas_limit": "0x141414141414141414",
-                "max_gas_fee": "0x14141414141414141414",
-                "max_priority_fee": "0x11111111111111111",
+                "gas_limit": "0xff",
+                "max_gas_fee": "0x15681d9b48e13b1e2",
+                "max_priority_fee": "0x6b14e9f812f366fb9",
                 "value": "0xa"
             },
             "result": {
                 "sig_v": 0,
-                "sig_r": "3f3bfa6762b33819f268a98744803e1876aa440a6fd2ebef90cfd606bb893429",
-                "sig_s": "241e1128a715a5386c3b6d0998f9f42c21ee080568fbf2c642a05916c30737e2"
+                "sig_r": "e592ffedd8b802c95b634520f2b700f27e394ed47fe2555f2f378e26cdc2c1ff",
+                "sig_s": "0ad471ea5e6fdc90dc25c4a012f12d48bb3d5679cd5a39ad7d5bbfc26b5d333f"
             }
         }
     ]
