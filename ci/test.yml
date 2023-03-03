@@ -58,8 +58,9 @@ core device test:
     - core unix frozen debug build
   variables:
     TREZOR_PROFILING: 1
+    MULTICORE: 4  # more could interfere with other jobs
   script:
-    - $NIX_SHELL --run "poetry run make -C core test_emu_ui | ts -s"
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
   after_script:
     - mv core/src/.coverage core/.coverage.test_emu
     - mv tests/ui_tests/reports/test/ test_ui_report
