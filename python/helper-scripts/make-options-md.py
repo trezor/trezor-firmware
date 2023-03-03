@@ -25,31 +25,31 @@ from trezorlib.cli import trezorctl
 
 DELIMITER_STR = "### ALL CONTENT BELOW IS GENERATED"
 
-options_rst = open(os.path.dirname(__file__) + "/../docs/OPTIONS.rst", "r+")
+options_md = open(os.path.dirname(__file__) + "/../docs/OPTIONS.md", "r+")
 
 lead_in: List[str] = []
 
-for line in options_rst:
+for line in options_md:
     lead_in.append(line)
     if DELIMITER_STR in line:
         break
 
-options_rst.seek(0)
-options_rst.truncate(0)
+options_md.seek(0)
+options_md.truncate(0)
 
 for line in lead_in:
-    options_rst.write(line)
+    options_md.write(line)
 
 
 def _print(s: str = "") -> None:
-    options_rst.write(s + "\n")
+    options_md.write(s + "\n")
 
 
 def rst_code_block(help_str: str) -> None:
-    _print(".. code::")
-    _print()
+    _print("```")
     for line in help_str.split("\n"):
-        _print(("  " + line) if line else "")
+        _print(line)
+    _print("```")
     _print()
 
 
@@ -62,8 +62,7 @@ for subcommand in sorted(trezorctl.cli.commands):
         continue
 
     heading = cmd.get_short_help_str(limit=99)
-    _print(heading)
-    _print("~" * len(heading))
+    _print("### " + heading)
     _print()
     rst_code_block(f"trezorctl {subcommand} --help")
     ctx = click.Context(cmd, info_name=f"trezorctl {subcommand}", terminal_width=99)

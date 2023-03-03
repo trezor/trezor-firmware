@@ -260,7 +260,7 @@ be in the generated mnemonic (recovery seed). It is hardcoded to 12
 words for Trezor Model T but if done with python's trezorctl command it
 can be chosen (for initialization with python's trezorctl command, 24
 words mnemonic is default). After showing mnemonic on the Trezor device,
-Trezor Model T requires 2 random words to
+Trezor Model T requires 3 random words to
 be entered to the device to confirm the user has written down the
 mnemonic properly. If there are errors in entered words, the device
 shows the recovery seed again. If the backup check is successful, the
@@ -281,10 +281,10 @@ optional check of the seed validity and optional setting up the PIN,
 which has to be confirmed. Finally the recovered wallet is saved into
 device storage. The same process is used with the dry run recovery, the
 differences are that this process can be done only with already
-initialized deviice and that the mnemonic is not saved into the device
+initialized device and that the mnemonic is not saved into the device
 but it is only compared to the mnemonic already loaded into the device
 with the successful result (The seed is valid and matches the one in the
-device) or unsuccessful result(The seed is valid but does not match the
+device) or unsuccessful result (The seed is valid but does not match the
 one in the device).
 
 ## LoadDevice

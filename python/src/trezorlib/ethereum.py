@@ -148,6 +148,16 @@ def encode_data(value: Any, type_name: str) -> bytes:
 def get_address(
     client: "TrezorClient", n: "Address", show_display: bool = False
 ) -> "MessageType":
+    """Get Ethereum address for specified path.
+
+    Args:
+        client: initialized TrezorClient
+        n: BIP32 path
+        show_display: show address on device before sending the result
+
+    Returns:
+        str: Ethereum address
+    """
     return client.call(
         messages.EthereumGetAddress(address_n=n, show_display=show_display)
     )
@@ -157,6 +167,16 @@ def get_address(
 def get_public_node(
     client: "TrezorClient", n: "Address", show_display: bool = False
 ) -> "MessageType":
+    """Get Ethereum public node for specified path.
+
+    Args:
+        client: initialized TrezorClient
+        n: BIP32 path
+        show_display: show address on device before sending the result
+
+    Returns:
+        EthereumPublicKey message
+    """
     return client.call(
         messages.EthereumGetPublicKey(address_n=n, show_display=show_display)
     )
@@ -175,6 +195,25 @@ def sign_tx(
     chain_id: Optional[int] = None,
     tx_type: Optional[int] = None,
 ) -> Tuple[int, bytes, bytes]:
+    """Sign Ethereum transaction.
+
+    Args:
+        client: initialized TrezorClient
+        n: BIP32 path
+        nonce: transaction nonce - <=256 bit unsigned big endian
+        gas_price: gas price - <=256 bit unsigned big endian (in wei)
+        gas_limit: gas limit - <=256 bit unsigned big endian
+        to: recipient address
+        value: transaction value - <=256 bit unsigned big endian (in wei)
+        data: transaction data
+        chain_id: chain Id for EIP 155
+        tx_type: transaction type - used for Wanchain
+
+    Returns:
+        signature-v
+        signature-r
+        signature-s
+    """
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
 
@@ -232,6 +271,26 @@ def sign_tx_eip1559(
     max_priority_fee: int,
     access_list: Optional[List[messages.EthereumAccessList]] = None,
 ) -> Tuple[int, bytes, bytes]:
+    """Sign Ethereum EIP-1559 transaction.
+
+    Args:
+        client: initialized TrezorClient
+        n: BIP32 path
+        nonce: transaction nonce - <=256 bit unsigned big endian
+        gas_limit: gas limit - <=256 bit unsigned big endian
+        to: recipient address
+        value: transaction value - <=256 bit unsigned big endian (in wei)
+        data: transaction data
+        chain_id: chain Id for EIP 155
+        max_gas_fee: maximum gas fee - <=256 bit unsigned big endian (in wei)
+        max_priority_fee: maximum priority fee - <=256 bit unsigned big endian (in wei)
+        access_list: access list
+
+    Returns:
+        signature-v
+        signature-r
+        signature-s
+    """
     length = len(data)
     data, chunk = data[1024:], data[:1024]
     msg = messages.EthereumSignTxEIP1559(
@@ -267,6 +326,16 @@ def sign_tx_eip1559(
 def sign_message(
     client: "TrezorClient", n: "Address", message: AnyStr
 ) -> "MessageType":
+    """Sign Ethereum message.
+
+    Args:
+        client: initialized TrezorClient
+        n: BIP32 path
+        message: message to sign
+
+    Returns:
+        EthereumMessageSignature message
+    """
     return client.call(
         messages.EthereumSignMessage(
             address_n=n, message=prepare_message_bytes(message)
@@ -282,6 +351,17 @@ def sign_typed_data(
     *,
     metamask_v4_compat: bool = True,
 ) -> "MessageType":
+    """Sign Ethereum typed data.
+
+    Args:
+        client: initialized TrezorClient
+        n: BIP32 path
+        data: typed data to sign
+        metamask_v4_compat: be compatible with Metamask v4 implementation
+
+    Returns:
+        EthereumTypedDataSignature message
+    """
     data = sanitize_typed_data(data)
     types = data["types"]
 
@@ -350,6 +430,17 @@ def sign_typed_data(
 def verify_message(
     client: "TrezorClient", address: str, signature: bytes, message: AnyStr
 ) -> bool:
+    """Verify Ethereum message.
+
+    Args:
+        client: initialized TrezorClient
+        address: address to verify the signature with
+        signature: signature to verify
+        message: message to verify
+
+    Returns:
+        True if the signature is valid, False otherwise
+    """
     try:
         resp = client.call(
             messages.EthereumVerifyMessage(
@@ -370,6 +461,17 @@ def sign_typed_data_hash(
     domain_hash: bytes,
     message_hash: Optional[bytes],
 ) -> "MessageType":
+    """Sign Ethereum typed data hash.
+
+    Args:
+        client: initialized TrezorClient
+        n: BIP32 path
+        domain_hash: Hash of domainSeparator of typed data to be signed
+        message_hash: Hash of the typed data to be signed (empty if domain-only data)
+
+    Returns:
+        EthereumTypedDataSignature message
+    """
     return client.call(
         messages.EthereumSignTypedHash(
             address_n=n,
