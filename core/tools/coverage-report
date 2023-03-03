@@ -1,10 +1,30 @@
 #!/bin/sh
 
-COVERAGE_THRESHOLD=${COVERAGE_THRESHOLD:-0}
+readonly COVERAGE_THRESHOLD=${COVERAGE_THRESHOLD:-0}
 
-coverage run --source=./src /dev/null 2>/dev/null
-mv .coverage .coverage.empty
-coverage combine .coverage.*
+if [ ${COVERAGE_THRESHOLD} -ne 0 ]; then
+  echo "COVERAGE_THRESHOLD set to ${COVERAGE_THRESHOLD}%"
+fi
+
+# Moving coverage files from src (tests usually save it there).
+mv -v src/.coverage* . 2>/dev/null
+
+# When there are some .coverage.* files, it is a sign
+# we need to combine them into one .coverage file.
+if ls .coverage.* 2>/dev/null; then
+  # Need to create an empty coverage file containing
+  # all existing code files, to get coverage over whole src.
+  echo "Creating .coverage.empty file"
+  coverage run --source=./src /dev/null 2>/dev/null
+  mv .coverage .coverage.empty
+  echo "Combining .coverage.* files"
+  coverage combine .coverage.*
+elif [ ! -f .coverage ]; then
+  echo "ERROR: .coverage file not found"
+  exit 1
+else
+  echo "Using already existing .coverage file"
+fi
 
 EXCLUDES="\
 src/all_modules.py,\
@@ -16,10 +36,23 @@ coverage html \
   --omit="$EXCLUDES" \
   --fail-under=${COVERAGE_THRESHOLD}
 
-if [ $? -eq 2 ]; then
-  echo "Code coverage is less than ${COVERAGE_THRESHOLD}%"
+EXIT_CODE=$?
+
+RESULT=$(grep pc_cov htmlcov/index.html | egrep -o '[0-9]{1,3}%')
+
+# Catching the case when coverage is less than threshold
+if [ ${EXIT_CODE} -eq 2 ]; then
+  echo "ERROR: Code coverage is less than ${COVERAGE_THRESHOLD}% - ${RESULT}"
+  echo "See core/htmlcov/index.html for details."
   exit 1
 fi
 
-RESULT=$(grep pc_cov htmlcov/index.html | egrep -o '[0-9]{1,3}%')
-echo "COVERAGE: ${RESULT}"
+# Catching all other errors
+if [ ${EXIT_CODE} -ne 0 ]; then
+  echo "ERROR: Coverage generation failed with exit code ${EXIT_CODE} - see output above"
+  exit ${EXIT_CODE}
+fi
+
+# Happy path
+echo "SUCCESS: COVERAGE: ${RESULT}"
+echo "See core/htmlcov/index.html for details."
