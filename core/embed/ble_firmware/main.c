@@ -451,6 +451,20 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
   }
 }
 
+static void int_comm_send(uint8_t *tx_data, uint16_t len) {
+  uint32_t err_code;
+
+  for (uint32_t i = 0; i < len; i++) {
+    do {
+      err_code = app_uart_put(tx_data[i]);
+      if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_BUSY)) {
+        NRF_LOG_ERROR("Failed sending data to STM. Error 0x%x. ", err_code);
+        APP_ERROR_CHECK(err_code);
+      }
+    } while (err_code == NRF_ERROR_BUSY);
+  }
+}
+
 /**@brief Function for handling BLE events.
  *
  * @param[in]   p_ble_evt   Bluetooth stack event.
@@ -497,21 +511,19 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
           0x55,  // EOM
       };
 
-      for (uint32_t i = 0; i < sizeof(tx_data); i++) {
-        do {
-          err_code = app_uart_put(tx_data[i]);
-          if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_BUSY)) {
-            NRF_LOG_ERROR("Failed receiving NUS message. Error 0x%x. ",
-                          err_code);
-            APP_ERROR_CHECK(err_code);
-          }
-        } while (err_code == NRF_ERROR_BUSY);
-      }
+      int_comm_send(tx_data, sizeof(tx_data));
 
       uint8_t p_key[6] = {0};
 
       while (!m_uart_rx_data_ready_internal)
         ;
+
+      uint16_t message_type = (m_uart_rx_data[3] << 8) | m_uart_rx_data[4];
+
+      if (message_type != 8004) {
+        break;
+      }
+
       for (int i = 0; i < 6; i++) {
         p_key[i] = m_uart_rx_data[i + 11];
       }
@@ -756,33 +768,6 @@ static void uart_init(void) {
 }
 /**@snippet [UART Initialization] */
 
-/**@brief Function for initializing the Advertising functionality.
- */
-// static void advertising_init(void) {
-//  uint32_t err_code;
-//  ble_advertising_init_t init;
-//
-//  memset(&init, 0, sizeof(init));
-//
-//  init.advdata.name_type = BLE_ADVDATA_FULL_NAME;
-//  init.advdata.include_appearance = false;
-//  init.advdata.flags = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
-//
-//  init.srdata.uuids_complete.uuid_cnt =
-//      sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
-//  init.srdata.uuids_complete.p_uuids = m_adv_uuids;
-//
-//  init.config.ble_adv_fast_enabled = true;
-//  init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
-//  init.config.ble_adv_fast_timeout = APP_ADV_DURATION;
-//  init.evt_handler = on_adv_evt;
-//
-//  err_code = ble_advertising_init(&m_advertising, &init);
-//  APP_ERROR_CHECK(err_code);
-//
-//  ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
-//}
-
 static void advertising_init(void) {
   uint32_t err_code;
   uint8_t adv_flags;
@@ -953,7 +938,35 @@ static void pm_evt_handler(pm_evt_t const *p_evt) {
         whitelist_set(PM_PEER_ID_LIST_SKIP_NO_ID_ADDR);
       }
       break;
+    case PM_EVT_CONN_SEC_CONFIG_REQ: {
+      uint8_t tx_data[] = {
+          0xA0,  // internal message
+          0x00,  // length - HI
+          0x0D,  // length - LO
+          0x3F, 0x23, 0x23, 0x1F, 0x45, 0x00, 0x00, 0x00, 0x00,
+          0x55,  // EOM
+      };
 
+      int_comm_send(tx_data, sizeof(tx_data));
+
+      while (!m_uart_rx_data_ready_internal)
+        ;
+
+      uint16_t message_type = (m_uart_rx_data[3] << 8) | m_uart_rx_data[4];
+
+      m_uart_rx_data_ready_internal = false;
+
+      if (message_type == 2) {
+        // Allow or reject pairing request from an already bonded peer.
+        pm_conn_sec_config_t conn_sec_config = {.allow_repairing = true};
+        pm_conn_sec_config_reply(p_evt->conn_handle, &conn_sec_config);
+      } else {
+        // Allow or reject pairing request from an already bonded peer.
+        pm_conn_sec_config_t conn_sec_config = {.allow_repairing = false};
+        pm_conn_sec_config_reply(p_evt->conn_handle, &conn_sec_config);
+      }
+
+    } break;
     default:
       break;
   }

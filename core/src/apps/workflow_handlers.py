@@ -60,6 +60,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.management.ble.upload_ble_firmware_init"
     if msg_type == MessageType.PairingRequest:
         return "apps.management.ble.pairing_request"
+    if msg_type == MessageType.RepairRequest:
+        return "apps.management.ble.repair_request"
 
     # bitcoin
     if msg_type == MessageType.AuthorizeCoinJoin:

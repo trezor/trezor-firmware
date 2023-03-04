@@ -57,3 +57,14 @@ message PairingRequest {
 message AuthKey {
     required bytes key = 1;
 }
+
+
+/**
+ * Request: initiates repairing request
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message RepairRequest {
+}
+
