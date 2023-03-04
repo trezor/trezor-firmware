@@ -55,6 +55,7 @@ UploadBLEFirmwareNextChunk = 8001
 UploadBLEFirmwareChunk = 8002
 PairingRequest = 8003
 AuthKey = 8004
+RepairRequest = 8005
 GetPublicKey = 11
 PublicKey = 12
 SignTx = 15
