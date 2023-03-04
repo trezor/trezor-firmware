@@ -85,6 +85,7 @@ class MessageType(IntEnum):
     UploadBLEFirmwareChunk = 8002
     PairingRequest = 8003
     AuthKey = 8004
+    RepairRequest = 8005
     GetPublicKey = 11
     PublicKey = 12
     SignTx = 15
@@ -2107,6 +2108,10 @@ class AuthKey(protobuf.MessageType):
         key: "bytes",
     ) -> None:
         self.key = key
+
+
+class RepairRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8005
 
 
 class FirmwareErase(protobuf.MessageType):

@@ -207,7 +207,7 @@ async def raise_if_not_confirmed(a: Awaitable[T], exc: Any = ActionCancelled) ->
 
 async def confirm_action(
     ctx: GenericContext,
-    br_type: str,
+    br_type: str | None,
     title: str,
     action: str | None = None,
     description: str | None = None,
