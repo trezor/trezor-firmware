@@ -190,7 +190,7 @@ async def show_tx_init(ctx: Context, title: str) -> bool:
         "Confirm transaction",
         (
             (
-                ui.BOLD,
+                ui.DEMIBOLD,
                 title,
             ),
             (ui.NORMAL, "Choose level of details:"),

@@ -70,7 +70,6 @@ async def confirm_action(
     action: str | None = None,
     description: str | None = None,
     description_param: str | None = None,
-    description_param_font: int = ui.BOLD,
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
@@ -82,8 +81,6 @@ async def confirm_action(
         verb_cancel = verb_cancel.upper()
 
     if description is not None and description_param is not None:
-        if description_param_font != ui.BOLD:
-            log.error(__name__, "confirm_action description_param_font not implemented")
         description = description.format(description_param)
 
     if hold:

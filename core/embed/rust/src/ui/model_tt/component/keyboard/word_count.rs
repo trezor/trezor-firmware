@@ -22,7 +22,7 @@ pub enum SelectWordCountMsg {
 impl SelectWordCount {
     pub fn new() -> Self {
         SelectWordCount {
-            button: LABELS.map(Button::with_text),
+            button: LABELS.map(|t| Button::with_text(t).styled(theme::button_pin())),
         }
     }
 }
@@ -31,7 +31,7 @@ impl Component for SelectWordCount {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (_, bounds) = bounds.split_bottom(theme::button_rows(2));
+        let (_, bounds) = bounds.split_bottom(2 * theme::BUTTON_HEIGHT + theme::BUTTON_SPACING);
         let grid = Grid::new(bounds, 2, 6).with_spacing(theme::BUTTON_SPACING);
         for (btn, (x, y)) in self.button.iter_mut().zip(CELLS) {
             btn.place(grid.cells(GridCellSpan {

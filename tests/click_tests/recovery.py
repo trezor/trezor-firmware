@@ -41,7 +41,7 @@ def select_number_of_words(
         assert layout.text == "WordSelector"
     else:
         # Two title options
-        assert layout.get_title() in ("SEED CHECK", "RECOVERY MODE")
+        assert layout.get_title() in ("SEED CHECK", "WALLET RECOVERY")
 
     # click the number
     word_option_offset = 6
