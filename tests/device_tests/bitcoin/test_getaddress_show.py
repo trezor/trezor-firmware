@@ -281,7 +281,7 @@ def test_show_multisig_xpubs(
         def input_flow():
             yield  # show address
             layout = client.debug.wait_layout()
-            assert layout.get_title() == "RECEIVE ADDRESS (MULTISIG)"
+            assert "RECEIVE ADDRESS (MULTISIG)" in layout.get_title()
             assert layout.get_content().replace(" ", "") == address
 
             client.debug.click(CORNER_BUTTON)
@@ -294,12 +294,11 @@ def test_show_multisig_xpubs(
 
             # Three xpub pages with the same testing logic
             for xpub_num in range(3):
-                expected_title = f"MULTISIG XPUB #{xpub_num + 1}  " + (
+                expected_title = f"MULTISIG XPUB #{xpub_num + 1} " + (
                     "(YOURS)" if i == xpub_num else "(COSIGNER)"
                 )
-
                 layout = client.debug.swipe_left(wait=True)
-                assert layout.get_title() == expected_title
+                assert expected_title in layout.get_title()
                 content = layout.get_content().replace(" ", "")
                 assert xpubs[xpub_num] in content
 

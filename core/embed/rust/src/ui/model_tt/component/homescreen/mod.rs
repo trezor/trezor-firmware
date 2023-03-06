@@ -22,7 +22,7 @@ use super::{theme, Loader, LoaderMsg};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
-const LABEL_Y: i16 = 216;
+const LABEL_Y: i16 = 222;
 const LOCKED_Y: i16 = 107;
 const TAP_Y: i16 = 134;
 const HOLD_Y: i16 = 35;
@@ -181,7 +181,7 @@ where
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.paint_loader();
         } else {
-            let mut label_style = theme::TEXT_BOLD;
+            let mut label_style = theme::TEXT_DEMIBOLD;
             label_style.text_color = theme::FG;
 
             let text = HomescreenText {
@@ -262,10 +262,7 @@ where
             ("LOCKED", "Tap to unlock")
         };
 
-        let mut tap_style = theme::TEXT_NORMAL;
-        tap_style.text_color = theme::OFF_WHITE;
-
-        let mut label_style = theme::TEXT_BOLD;
+        let mut label_style = theme::TEXT_DEMIBOLD;
         label_style.text_color = theme::GREY_LIGHT;
 
         let texts: [HomescreenText; 3] = [
@@ -277,7 +274,7 @@ where
             },
             HomescreenText {
                 text: tap,
-                style: tap_style,
+                style: theme::TEXT_NORMAL,
                 offset: Offset::new(10, TAP_Y),
                 icon: None,
             },

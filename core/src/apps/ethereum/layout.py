@@ -168,8 +168,8 @@ async def should_show_domain(ctx: Context, name: bytes, version: bytes) -> bool:
 
     para = (
         (ui.NORMAL, "Name and version"),
-        (ui.BOLD, domain_name),
-        (ui.BOLD, domain_version),
+        (ui.DEMIBOLD, domain_name),
+        (ui.DEMIBOLD, domain_version),
     )
     return await should_show_more(
         ctx,
@@ -188,7 +188,7 @@ async def should_show_struct(
     button_text: str = "Show full struct",
 ) -> bool:
     para = (
-        (ui.BOLD, description),
+        (ui.DEMIBOLD, description),
         (
             ui.NORMAL,
             format_plural("Contains {count} {plural}", len(data_members), "key"),

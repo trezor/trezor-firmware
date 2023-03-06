@@ -2,13 +2,10 @@ use crate::ui::{
     component::{base::ComponentExt, Child, Component, Event, EventCtx, Never},
     display,
     display::toif::Icon,
-    geometry::{Grid, Insets, Offset, Rect},
+    geometry::{Grid, Offset, Rect},
     model_tt::component::{
         button::{Button, ButtonContent, ButtonMsg},
-        keyboard::common::{
-            paint_pending_marker, MultiTapKeyboard, TextBox, HEADER_HEIGHT, HEADER_PADDING_BOTTOM,
-            HEADER_PADDING_SIDE,
-        },
+        keyboard::common::{paint_pending_marker, MultiTapKeyboard, TextBox},
         swipe::{Swipe, SwipeDirection},
         theme, ScrollBar,
     },
@@ -41,6 +38,7 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ];
 
 const MAX_LENGTH: usize = 50;
+const INPUT_AREA_HEIGHT: i16 = ScrollBar::DOT_SIZE + 9;
 
 impl PassphraseKeyboard {
     pub fn new() -> Self {
@@ -59,8 +57,9 @@ impl PassphraseKeyboard {
             .initially_enabled(false)
             .with_long_press(theme::ERASE_HOLD_DURATION)
             .into_child(),
-            keys: KEYBOARD[STARTING_PAGE]
-                .map(|text| Child::new(Button::new(Self::key_content(text)))),
+            keys: KEYBOARD[STARTING_PAGE].map(|text| {
+                Child::new(Button::new(Self::key_content(text)).styled(theme::button_pin()))
+            }),
             scrollbar: ScrollBar::horizontal(),
             fade: false,
         }
@@ -152,14 +151,13 @@ impl Component for PassphraseKeyboard {
     fn place(&mut self, bounds: Rect) -> Rect {
         let bounds = bounds.inset(theme::borders());
 
-        let (input_area, key_grid_area) = bounds.split_top(HEADER_HEIGHT + HEADER_PADDING_BOTTOM);
+        let (input_area, key_grid_area) =
+            bounds.split_bottom(4 * theme::PIN_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
 
-        let (input_area, scroll_area) =
-            input_area.split_bottom(ScrollBar::DOT_SIZE + theme::KEYBOARD_SPACING);
+        let (input_area, scroll_area) = input_area.split_bottom(INPUT_AREA_HEIGHT);
         let (scroll_area, _) = scroll_area.split_top(ScrollBar::DOT_SIZE);
-        let input_area = input_area.inset(Insets::sides(HEADER_PADDING_SIDE));
 
-        let key_grid = Grid::new(key_grid_area, 4, 3).with_spacing(theme::KEYBOARD_SPACING);
+        let key_grid = Grid::new(key_grid_area, 4, 3).with_spacing(theme::BUTTON_SPACING);
         let confirm_btn_area = key_grid.cell(11);
         let back_btn_area = key_grid.cell(9);
 

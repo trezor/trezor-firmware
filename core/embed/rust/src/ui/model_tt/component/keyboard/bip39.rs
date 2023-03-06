@@ -215,20 +215,21 @@ impl Bip39Input {
             {
                 // Confirm button.
                 self.button.enable(ctx);
-                self.button.set_stylesheet(ctx, theme::button_confirm());
+                self.button.set_stylesheet(ctx, theme::button_pin_confirm());
                 self.button
-                    .set_content(ctx, ButtonContent::Icon(Icon::new(theme::ICON_CONFIRM)));
+                    .set_content(ctx, ButtonContent::Icon(Icon::new(theme::ICON_LIST_CHECK)));
             } else {
                 // Auto-complete button.
                 self.button.enable(ctx);
-                self.button.set_stylesheet(ctx, theme::button_default());
+                self.button
+                    .set_stylesheet(ctx, theme::button_pin_autocomplete());
                 self.button
                     .set_content(ctx, ButtonContent::Icon(Icon::new(theme::ICON_CLICK)));
             }
         } else {
             // Disabled button.
             self.button.disable(ctx);
-            self.button.set_stylesheet(ctx, theme::button_default());
+            self.button.set_stylesheet(ctx, theme::button_pin());
             self.button.set_content(ctx, ButtonContent::Text(""));
         }
     }
