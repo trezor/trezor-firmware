@@ -511,7 +511,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             1,
         );
         let obj = LayoutObj::new(FloatingButton::top_right_corner(
-            Icon::new(theme::ICON_INFO_CIRCLE),
+            Icon::new(theme::ICON_CORNER_INFO),
             Frame::left_aligned(
                 theme::label_title(),
                 title,
@@ -671,7 +671,7 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
 
         let obj = LayoutObj::new(
             HorizontalPage::new(
-                FloatingButton::top_right_corner(Icon::new(theme::ICON_CANCEL_LARGER), ad),
+                FloatingButton::top_right_corner(Icon::new(theme::ICON_CORNER_CANCEL), ad),
                 theme::BG,
             )
             .with_swipe_right_to_go_back(),
@@ -906,7 +906,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            Icon::new(theme::IMAGE_BG_TRIANGLE),
+            Icon::new(theme::IMAGE_BG_OCTAGON),
             Icon::new(theme::IMAGE_FG_WARN),
             theme::WARN_COLOR,
             theme::FG,
@@ -952,8 +952,13 @@ extern "C" fn new_show_mismatch() -> Obj {
         let url: StrBuffer = "trezor.io/support".into();
         let button = "QUIT";
 
-        let icon = BlendedImage::single(Icon::new(theme::ICON_OCTA), theme::WARN_COLOR, theme::BG);
-
+        let icon = BlendedImage::new(
+            Icon::new(theme::IMAGE_BG_OCTAGON),
+            Icon::new(theme::IMAGE_FG_WARN),
+            theme::WARN_COLOR,
+            theme::FG,
+            theme::BG,
+        );
         let obj = LayoutObj::new(
             IconDialog::new(
                 icon,

@@ -50,43 +50,53 @@ pub const RADIUS: u8 = 2;
 // Full-size QR code.
 pub const QR_SIDE_MAX: u32 = 140;
 
-// Size of icons in the UI (i.e. inside buttons).
-pub const ICON_SIZE: i16 = 16;
-
 // UI icons (greyscale).
-pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
-pub const ICON_CANCEL_LARGER: &[u8] = include_res!("model_tt/res/cancel-larger.toif");
-pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/confirm.toif");
+// Button icons.
+pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/x24.toif");
+pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/check24.toif");
 pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
-pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
-pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
-pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
-pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warn-icon.toif");
+pub const ICON_BACK: &[u8] = include_res!("model_tt/res/caret-left24.toif");
+pub const ICON_FORWARD: &[u8] = include_res!("model_tt/res/caret-right24.toif");
+pub const ICON_UP: &[u8] = include_res!("model_tt/res/caret-up24.toif");
+pub const ICON_DOWN: &[u8] = include_res!("model_tt/res/caret-down24.toif");
+pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/finger24.toif");
+
+pub const ICON_CORNER_CANCEL: &[u8] = include_res!("model_tt/res/x32.toif");
+pub const ICON_CORNER_INFO: &[u8] = include_res!("model_tt/res/info32.toif");
+
+// Checklist symbols.
+pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/arrow-right16.toif");
+pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check16.toif");
+
+// Homescreen notifications.
+pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warning16.toif");
+pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock16.toif");
+pub const ICON_COINJOIN: &[u8] = include_res!("model_tt/res/coinjoin16.toif");
 pub const ICON_MAGIC: &[u8] = include_res!("model_tt/res/magic.toif");
-pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
-pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
-pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock.toif");
-pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/logo.toif");
-pub const ICON_SUCCESS_SMALL: &[u8] = include_res!("model_tt/res/success_bld.toif");
-pub const ICON_WARN_SMALL: &[u8] = include_res!("model_tt/res/warn_bld.toif");
+
+// Text arrows.
 pub const ICON_PAGE_NEXT: &[u8] = include_res!("model_tt/res/page-next.toif");
 pub const ICON_PAGE_PREV: &[u8] = include_res!("model_tt/res/page-prev.toif");
-pub const ICON_OCTA: &[u8] = include_res!("model_tt/res/octa-bang.toif");
-pub const ICON_INFO_CIRCLE: &[u8] = include_res!("model_tt/res/info-circle.toif");
 
 // Large, three-color icons.
 pub const WARN_COLOR: Color = YELLOW;
 pub const INFO_COLOR: Color = BLUE;
 pub const SUCCESS_COLOR: Color = GREEN;
 pub const ERROR_COLOR: Color = RED;
-pub const IMAGE_FG_WARN: &[u8] = include_res!("model_tt/res/warn_fg.toif");
-pub const IMAGE_FG_SUCCESS: &[u8] = include_res!("model_tt/res/success_fg.toif");
-pub const IMAGE_FG_ERROR: &[u8] = include_res!("model_tt/res/error_fg.toif");
-pub const IMAGE_FG_INFO: &[u8] = include_res!("model_tt/res/info_fg.toif");
-pub const IMAGE_BG_CIRCLE: &[u8] = include_res!("model_tt/res/circle.toif");
-pub const IMAGE_BG_TRIANGLE: &[u8] = include_res!("model_tt/res/triangle.toif");
-pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/back_btn.toif");
-pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/back_btn_tall.toif");
+pub const IMAGE_FG_WARN: &[u8] = include_res!("model_tt/res/fg-warning48.toif");
+pub const IMAGE_FG_SUCCESS: &[u8] = include_res!("model_tt/res/fg-check48.toif");
+pub const IMAGE_FG_ERROR: &[u8] = include_res!("model_tt/res/fg-error48.toif");
+pub const IMAGE_FG_INFO: &[u8] = include_res!("model_tt/res/fg-info48.toif");
+pub const IMAGE_FG_USER: &[u8] = include_res!("model_tt/res/fg-user48.toif");
+pub const IMAGE_BG_CIRCLE: &[u8] = include_res!("model_tt/res/circle48.toif");
+pub const IMAGE_BG_OCTAGON: &[u8] = include_res!("model_tt/res/octagon48.toif");
+
+// Non-square button backgrounds.
+pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/bg-back40.toif");
+pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/bg-back52.toif");
+
+// Welcome screen.
+pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/logo.toif");
 
 // Default homescreen
 pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");
@@ -97,6 +107,10 @@ pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif"
 pub const DOT_INACTIVE_HALF: &[u8] = include_res!("model_tt/res/scroll-inactive-half.toif");
 pub const DOT_INACTIVE_QUARTER: &[u8] = include_res!("model_tt/res/scroll-inactive-quarter.toif");
 pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
+
+// Bootloader. TODO
+pub const ICON_SUCCESS_SMALL: &[u8] = include_res!("model_tt/res/success_bld.toif");
+pub const ICON_WARN_SMALL: &[u8] = include_res!("model_tt/res/warn_bld.toif");
 
 pub const fn label_default() -> TextStyle {
     TEXT_NORMAL
