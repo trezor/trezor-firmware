@@ -25,7 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Included bootloader 1.12.1.
 
 ### Fixed
-- Bootloader VTOR and FW handover fix.  [#163]
+- Bootloader VTOR and FW handover fix.
 - Show full Stellar address and QR code.  [#1453]
 - Wrap long Ethereum fee to next line if it does not fit.  [#2373]
 
@@ -537,7 +537,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed all current limits on size of signed transaction.
 
 [#131]: https://github.com/trezor/trezor-firmware/pull/131
-[#163]: https://github.com/trezor/trezor-firmware/pull/163
 [#965]: https://github.com/trezor/trezor-firmware/pull/965
 [#1018]: https://github.com/trezor/trezor-firmware/pull/1018
 [#1030]: https://github.com/trezor/trezor-firmware/pull/1030
