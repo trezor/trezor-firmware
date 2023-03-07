@@ -23,6 +23,7 @@ clippy = []
 jpeg = []
 disp_i8080_8bit_dw = []  # write pixels directly to peripheral
 disp_i8080_16bit_dw = []  # write pixels directly to peripheral
+ble = []
 debug = ["ui_debug"]
 sbu = []
 sd_card = []

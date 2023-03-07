@@ -191,6 +191,7 @@ CPPPATH_MOD += [
   'embed/sdk/nrf52/components/nfc/ndef/conn_hand_parser/ac_rec_parser',
   'embed/sdk/nrf52/components/libraries/stack_guard',
   'embed/sdk/nrf52/components/libraries/log/src',
+  'embed'
 ]
 SOURCE_MOD += [
 ]
@@ -274,6 +275,7 @@ SOURCE_NRFHAL = [
 SOURCE_BLE_FIRMWARE = [
     'embed/ble_firmware/main.c',
     'embed/ble_firmware/ble_nus.c',
+    'embed/ble_firmware/int_comm.c',
 ]
 
 if MMD:
