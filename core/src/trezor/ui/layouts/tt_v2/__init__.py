@@ -213,7 +213,7 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: str = "CONFIRM",
+    verb: str | None = None,
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,
@@ -221,6 +221,8 @@ async def confirm_action(
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
+    if verb is not None:
+        verb = verb.upper()
     if verb_cancel is not None:
         verb_cancel = verb_cancel.upper()
 
@@ -237,7 +239,7 @@ async def confirm_action(
                     title=title.upper(),
                     action=action,
                     description=description,
-                    verb=verb.upper(),
+                    verb=verb,
                     verb_cancel=verb_cancel,
                     hold=hold,
                     hold_danger=hold_danger,

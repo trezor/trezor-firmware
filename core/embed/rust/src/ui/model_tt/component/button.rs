@@ -2,8 +2,8 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, Floating, GridPlaced, Map,
-            Paginate, TimerToken, VSplit,
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, Floating, Map, Paginate,
+            Split, TimerToken,
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
@@ -63,16 +63,16 @@ impl<T> Button<T> {
         Self::new(ButtonContent::IconBlend(bg, fg, fg_offset))
     }
 
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self::new(ButtonContent::Empty)
     }
 
-    pub fn styled(mut self, styles: ButtonStyleSheet) -> Self {
+    pub const fn styled(mut self, styles: ButtonStyleSheet) -> Self {
         self.styles = styles;
         self
     }
 
-    pub fn with_expanded_touch_area(mut self, expand: Insets) -> Self {
+    pub const fn with_expanded_touch_area(mut self, expand: Insets) -> Self {
         self.touch_expand = Some(expand);
         self
     }
@@ -377,7 +377,7 @@ impl<T> Button<T> {
     pub fn cancel_confirm(
         left: Button<T>,
         right: Button<T>,
-        right_size_factor: usize,
+        left_is_small: bool,
     ) -> CancelConfirm<
         T,
         impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
@@ -386,59 +386,13 @@ impl<T> Button<T> {
     where
         T: AsRef<str>,
     {
-        let columns = 1 + right_size_factor;
-        theme::button_bar((
-            GridPlaced::new(left)
-                .with_grid(1, columns)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_row_col(0, 0)
-                .map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Cancelled)
-                }),
-            GridPlaced::new(right)
-                .with_grid(1, columns)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_from_to((0, 1), (0, right_size_factor))
-                .map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                }),
-        ))
-    }
-
-    pub fn cancel_confirm_text(
-        left: Option<T>,
-        right: T,
-    ) -> CancelConfirm<
-        T,
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
-        let (left, right_size_factor) = if let Some(verb) = left {
-            (Button::with_text(verb), 1)
+        let width = if left_is_small {
+            theme::BUTTON_WIDTH
         } else {
-            (Button::with_icon(Icon::new(theme::ICON_CANCEL)), 2)
+            0
         };
-        let right = Button::with_text(right).styled(theme::button_confirm());
-
-        Self::cancel_confirm(left, right, right_size_factor)
-    }
-
-    pub fn cancel_confirm_square(
-        left: Button<T>,
-        right: Button<T>,
-    ) -> CancelConfirmSquare<
-        T,
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    >
-    where
-        T: AsRef<str>,
-    {
-        theme::button_bar(VSplit::new(
-            theme::BUTTON_HEIGHT,
+        theme::button_bar(Split::vertical(
+            width,
             theme::BUTTON_SPACING,
             left.map(|msg| {
                 (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Cancelled)
@@ -447,6 +401,34 @@ impl<T> Button<T> {
                 (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
             }),
         ))
+    }
+
+    pub fn cancel_confirm_text(
+        left: Option<T>,
+        right: Option<T>,
+    ) -> CancelConfirm<
+        T,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+    >
+    where
+        T: AsRef<str>,
+    {
+        let left_is_small: bool;
+
+        let left = if let Some(verb) = left {
+            left_is_small = verb.as_ref().len() <= 4;
+            Button::with_text(verb)
+        } else {
+            left_is_small = right.is_some();
+            Button::with_icon(Icon::new(theme::ICON_CANCEL))
+        };
+        let right = if let Some(verb) = right {
+            Button::with_text(verb).styled(theme::button_confirm())
+        } else {
+            Button::with_icon(Icon::new(theme::ICON_CONFIRM)).styled(theme::button_confirm())
+        };
+        Self::cancel_confirm(left, right, left_is_small)
     }
 
     pub fn cancel_info_confirm(
@@ -461,67 +443,27 @@ impl<T> Button<T> {
     where
         T: AsRef<str>,
     {
-        let right = Button::with_text(confirm).styled(theme::button_confirm());
-        let top = Button::with_text(info);
-        let left = Button::with_icon(Icon::new(theme::ICON_CANCEL));
-        theme::button_bar_rows(
-            2,
-            (
-                GridPlaced::new(left)
-                    .with_grid(2, 3)
-                    .with_spacing(theme::BUTTON_SPACING)
-                    .with_row_col(1, 0)
-                    .map(|msg| {
-                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
-                    }),
-                GridPlaced::new(top)
-                    .with_grid(2, 3)
-                    .with_spacing(theme::BUTTON_SPACING)
-                    .with_from_to((0, 0), (0, 2))
-                    .map(|msg| {
-                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info)
-                    }),
-                GridPlaced::new(right)
-                    .with_grid(2, 3)
-                    .with_spacing(theme::BUTTON_SPACING)
-                    .with_from_to((1, 1), (1, 2))
-                    .map(|msg| {
-                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
-                    }),
+        let right = Button::with_text(confirm)
+            .styled(theme::button_confirm())
+            .map(|msg| {
+                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
+            });
+        let top = Button::with_text(info)
+            .styled(theme::button_moreinfo())
+            .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info));
+        let left = Button::with_icon(Icon::new(theme::ICON_CANCEL)).map(|msg| {
+            (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
+        });
+        let total_height = theme::BUTTON_HEIGHT + theme::BUTTON_SPACING + theme::INFO_BUTTON_HEIGHT;
+        FixedHeightBar::bottom(
+            Split::horizontal(
+                theme::INFO_BUTTON_HEIGHT,
+                theme::BUTTON_SPACING,
+                top,
+                Split::vertical(theme::BUTTON_WIDTH, theme::BUTTON_SPACING, left, right),
             ),
+            total_height,
         )
-    }
-
-    pub fn abort_info_enter() -> CancelInfoConfirm<
-        &'static str,
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-    > {
-        let left = Button::with_text("ABORT").styled(theme::button_cancel());
-        let middle = Button::with_text("INFO");
-        let right = Button::with_text("ENTER").styled(theme::button_confirm());
-        theme::button_bar((
-            GridPlaced::new(left)
-                .with_grid(1, 3)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_row_col(0, 0)
-                .map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
-                }),
-            GridPlaced::new(middle)
-                .with_grid(1, 3)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_row_col(0, 1)
-                .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info)),
-            GridPlaced::new(right)
-                .with_grid(1, 3)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_row_col(0, 2)
-                .map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
-                }),
-        ))
     }
 
     pub fn select_word(
@@ -536,38 +478,41 @@ impl<T> Button<T> {
         T: AsRef<str>,
     {
         let btn = move |i, word| {
-            GridPlaced::new(Button::with_text(word))
-                .with_grid(3, 1)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_row_col(i, 0)
+            Button::with_text(word)
+                .styled(theme::button_pin())
                 .map(move |msg| {
                     (matches!(msg, ButtonMsg::Clicked)).then(|| SelectWordMsg::Selected(i))
                 })
         };
 
         let [top, middle, bottom] = words;
-        theme::button_bar_rows(3, (btn(0, top), btn(1, middle), btn(2, bottom)))
+        let total_height = 3 * theme::BUTTON_HEIGHT + 2 * theme::BUTTON_SPACING;
+        FixedHeightBar::bottom(
+            Split::horizontal(
+                theme::BUTTON_HEIGHT,
+                theme::BUTTON_SPACING,
+                btn(0, top),
+                Split::horizontal(
+                    theme::BUTTON_HEIGHT,
+                    theme::BUTTON_SPACING,
+                    btn(1, middle),
+                    btn(2, bottom),
+                ),
+            ),
+            total_height,
+        )
     }
 }
-
-type CancelConfirm<T, F0, F1> = FixedHeightBar<(
-    Map<GridPlaced<Button<T>>, F0>,
-    Map<GridPlaced<Button<T>>, F1>,
-)>;
 
 pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
 }
 
-type CancelInfoConfirm<T, F0, F1, F2> = FixedHeightBar<(
-    Map<GridPlaced<Button<T>>, F0>,
-    Map<GridPlaced<Button<T>>, F1>,
-    Map<GridPlaced<Button<T>>, F2>,
-)>;
+type CancelInfoConfirm<T, F0, F1, F2> =
+    FixedHeightBar<Split<Map<Button<T>, F0>, Split<Map<Button<T>, F1>, Map<Button<T>, F2>>>>;
 
-type CancelConfirmSquare<T, F0, F1> =
-    FixedHeightBar<VSplit<Map<Button<T>, F0>, Map<Button<T>, F1>>>;
+type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<Map<Button<T>, F0>, Map<Button<T>, F1>>>;
 
 pub enum CancelInfoConfirmMsg {
     Cancelled,
@@ -658,7 +603,9 @@ where
             button: Floating::top_right(
                 theme::CORNER_BUTTON_SIDE,
                 theme::CORNER_BUTTON_SPACING,
-                Button::with_icon(icon),
+                Button::with_icon(icon)
+                    .with_expanded_touch_area(Insets::uniform(theme::CORNER_BUTTON_SPACING))
+                    .styled(theme::button_moreinfo()),
             ),
         }
     }

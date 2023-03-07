@@ -47,7 +47,9 @@ where
                 .with_long_press(theme::ERASE_HOLD_DURATION),
             )),
             input: Child::new(Maybe::hidden(theme::BG, input)),
-            keys: T::keys().map(Button::with_text).map(Child::new),
+            keys: T::keys()
+                .map(|t| Button::with_text(t).styled(theme::button_pin()))
+                .map(Child::new),
         }
     }
 

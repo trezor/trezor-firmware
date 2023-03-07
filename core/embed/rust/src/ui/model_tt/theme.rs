@@ -288,6 +288,38 @@ pub const fn button_reset() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_moreinfo() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: FG,
+            button_color: BG,
+            background_color: BG,
+            border_color: GREY_DARK,
+            border_radius: RADIUS,
+            border_width: 2,
+        },
+        active: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: FG,
+            button_color: BG,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 2,
+        },
+        disabled: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            background_color: BG,
+            border_color: GREY_DARK,
+            border_radius: RADIUS,
+            border_width: 2,
+        },
+    }
+}
+
 pub const fn button_info() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
@@ -444,27 +476,21 @@ pub const FORMATTED: FormattedFonts = FormattedFonts {
     mono: Font::MONO,
 };
 
-pub const CONTENT_BORDER: i16 = 5;
-pub const KEYBOARD_SPACING: i16 = 8;
-pub const BUTTON_HEIGHT: i16 = 38;
+pub const CONTENT_BORDER: i16 = 0;
+pub const BUTTON_HEIGHT: i16 = 50;
+pub const BUTTON_WIDTH: i16 = 56;
 pub const BUTTON_SPACING: i16 = 6;
+pub const KEYBOARD_SPACING: i16 = BUTTON_SPACING;
 pub const CHECKLIST_SPACING: i16 = 10;
 pub const RECOVERY_SPACING: i16 = 18;
-pub const CORNER_BUTTON_SIDE: i16 = 32;
-pub const CORNER_BUTTON_SPACING: i16 = 8;
-
-/// Standard button height in pixels.
-pub const fn button_rows(count: usize) -> i16 {
-    let count = count as i16;
-    BUTTON_HEIGHT * count + BUTTON_SPACING * count.saturating_sub(1)
-}
-
-pub const fn button_bar_rows<T>(rows: usize, inner: T) -> FixedHeightBar<T> {
-    FixedHeightBar::bottom(inner, button_rows(rows))
-}
+pub const CORNER_BUTTON_SIDE: i16 = 44;
+pub const CORNER_BUTTON_SPACING: i16 = BUTTON_SPACING;
+pub const INFO_BUTTON_HEIGHT: i16 = 44;
+pub const PIN_BUTTON_HEIGHT: i16 = 40;
+pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
 
 pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
-    button_bar_rows(1, inner)
+    FixedHeightBar::bottom(inner, BUTTON_HEIGHT)
 }
 
 /// +----------+

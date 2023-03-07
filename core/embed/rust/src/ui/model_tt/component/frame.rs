@@ -126,11 +126,11 @@ where
     T: Component,
     U: AsRef<str>,
 {
-    const HEIGHT: i16 = 32;
+    const HEIGHT: i16 = 36;
     const COLOR: Color = theme::YELLOW;
     const TEXT_OFFSET: Offset = Offset::new(1, -2);
     const ICON_SPACE: i16 = 8;
-    const BORDER: i16 = 8;
+    const BORDER: i16 = 6;
 
     pub fn new(icon: Icon, title: U, content: T) -> Self {
         Self {

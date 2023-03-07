@@ -381,7 +381,10 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let action: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
         let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, "CONFIRM".into())?;
+        let verb: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb_cancel: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -452,7 +455,7 @@ fn confirm_blob(
             SwipeHoldPage::new(paragraphs, theme::BG),
         ))?
     } else if let Some(verb) = verb {
-        let buttons = Button::cancel_confirm_text(verb_cancel, verb);
+        let buttons = Button::cancel_confirm_text(verb_cancel, Some(verb));
         LayoutObj::new(Frame::left_aligned(
             theme::label_title(),
             title,
@@ -504,12 +507,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         }
         .into_paragraphs();
 
-        let buttons = Button::cancel_confirm(
-            Button::<&'static str>::with_icon(Icon::new(theme::ICON_CANCEL)),
-            Button::<&'static str>::with_icon(Icon::new(theme::ICON_CONFIRM))
-                .styled(theme::button_confirm()),
-            1,
-        );
+        let buttons = Button::cancel_confirm_text(None, Some("CONFIRM"));
         let obj = LayoutObj::new(FloatingButton::top_right_corner(
             Icon::new(theme::ICON_CORNER_INFO),
             Frame::left_aligned(
@@ -542,7 +540,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
                 SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG),
             ))?
         } else {
-            let buttons = Button::cancel_confirm_text(None, "CONFIRM");
+            let buttons = Button::cancel_confirm_text(None, Some("CONFIRM"));
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 title,
@@ -570,7 +568,7 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
             _ => return Err(Error::ValueError(cstr!("Invalid image."))),
         };
 
-        let buttons = Button::cancel_confirm_text(None, "CONFIRM");
+        let buttons = Button::cancel_confirm_text(None, Some("CONFIRM"));
         let obj = LayoutObj::new(
             Frame::centered(
                 theme::label_title(),
@@ -602,7 +600,7 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let buttons = Button::cancel_confirm(
             Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text(button).styled(theme::button_confirm()),
-            3,
+            true,
         );
         let obj = LayoutObj::new(
             Frame::left_aligned(
@@ -635,7 +633,7 @@ extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         let buttons = Button::cancel_confirm(
             Button::with_text(verb_cancel),
             Button::with_text("CONFIRM".into()).styled(theme::button_confirm()),
-            1,
+            false,
         );
 
         let obj = LayoutObj::new(
@@ -746,7 +744,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         let buttons = Button::cancel_confirm(
             Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("NEXT").styled(theme::button_confirm()),
-            2,
+            true,
         );
 
         let obj = LayoutObj::new(Frame::left_aligned(
@@ -781,7 +779,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         let buttons = Button::cancel_confirm(
             Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("NEXT").styled(theme::button_confirm()),
-            2,
+            true,
         );
 
         let obj = LayoutObj::new(Frame::left_aligned(
@@ -832,7 +830,7 @@ fn new_show_modal(
                 Button::cancel_confirm(
                     Button::with_icon(Icon::new(theme::ICON_CANCEL)).styled(theme::button_cancel()),
                     Button::with_text(button).styled(button_style),
-                    2,
+                    true,
                 ),
             )
             .with_description(description),
@@ -890,7 +888,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
         let controls = Button::cancel_confirm(
             Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text("CONFIRM").styled(theme::button_confirm()),
-            2,
+            true,
         );
 
         let fido_page = FidoConfirm::new(app_name, get_page, page_count, icon, controls);
@@ -963,9 +961,10 @@ extern "C" fn new_show_mismatch() -> Obj {
             IconDialog::new(
                 icon,
                 title,
-                Button::cancel_confirm_square(
+                Button::cancel_confirm(
                     Button::with_icon(Icon::new(theme::ICON_BACK)),
                     Button::with_text(button).styled(theme::button_reset()),
+                    true,
                 ),
             )
             .with_description(description)
@@ -1167,7 +1166,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let words: [StrBuffer; 3] = iter_into_array(words_iterable)?;
 
-        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
+        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_DEMIBOLD, description)]);
         let buttons = Button::select_word(words);
 
         let obj = LayoutObj::new(Frame::left_aligned(
@@ -1315,13 +1314,16 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
             LayoutObj::new(NotificationFrame::new(
                 Icon::new(theme::ICON_WARN),
                 notification,
-                Dialog::new(paragraphs, Button::<&'static str>::abort_info_enter()),
+                Dialog::new(
+                    paragraphs,
+                    Button::cancel_info_confirm("CONTINUE", "MORE INFO"),
+                ),
             ))?
         } else {
             LayoutObj::new(NotificationFrame::new(
                 Icon::new(theme::ICON_WARN),
                 notification,
-                Dialog::new(paragraphs, Button::cancel_confirm_text(None, button)),
+                Dialog::new(paragraphs, Button::cancel_confirm_text(None, Some(button))),
             ))?
         };
         Ok(obj.into())
@@ -1920,7 +1922,7 @@ mod tests {
     #[test]
     fn trace_example_layout() {
         let buttons =
-            Button::cancel_confirm(Button::with_text("Left"), Button::with_text("Right"), 1);
+            Button::cancel_confirm(Button::with_text("Left"), Button::with_text("Right"), false);
         let mut layout = Dialog::new(
             FormattedText::new(
                 theme::TEXT_NORMAL,
