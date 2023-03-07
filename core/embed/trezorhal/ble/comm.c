@@ -21,8 +21,11 @@
 #include TREZOR_BOARD
 
 #include "comm.h"
+#include "int_comm_defs.h"
+#include "state.h"
 
 static UART_HandleTypeDef urt;
+static uint8_t last_init_byte = 0;
 
 void ble_comm_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -46,6 +49,8 @@ void ble_comm_init(void) {
   urt.Instance = USART1;
 
   HAL_UART_Init(&urt);
+
+  set_initialized(false);
 }
 
 void ble_comm_send(uint8_t *data, uint32_t len) {
@@ -68,20 +73,13 @@ uint32_t ble_comm_receive(uint8_t *data, uint32_t len) {
   return 0;
 }
 
-void ble_int_comm_send(uint8_t *data, uint32_t len, bool internal) {
-  uint16_t msg_len = len + 4;
+void ble_int_comm_send(uint8_t *data, uint32_t len, uint8_t message_type) {
+  uint16_t msg_len = len + OVERHEAD_SIZE;
   uint8_t len_hi = msg_len >> 8;
   uint8_t len_lo = msg_len & 0xFF;
-  uint8_t eom = 0x55;
+  uint8_t eom = EOM;
 
-  uint8_t init_byte = 0;
-  if (internal) {
-    init_byte = 0xA0;
-  } else {
-    init_byte = 0xA1;
-  }
-
-  HAL_UART_Transmit(&urt, &init_byte, 1, 1);
+  HAL_UART_Transmit(&urt, &message_type, 1, 1);
   HAL_UART_Transmit(&urt, &len_hi, 1, 1);
   HAL_UART_Transmit(&urt, &len_lo, 1, 1);
 
@@ -89,13 +87,52 @@ void ble_int_comm_send(uint8_t *data, uint32_t len, bool internal) {
   HAL_UART_Transmit(&urt, &eom, 1, 1);
 }
 
-uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len, bool *internal) {
-  data[0] = 0;
+void process_poll(uint8_t *data, uint32_t len) {
+  uint8_t cmd = data[0];
+
+  switch (cmd) {
+    case INTERNAL_EVENT_INITIALIZED: {
+      set_connected(false);
+      set_initialized(true);
+      break;
+    }
+    case INTERNAL_EVENT_CONNECTED: {
+      set_connected(true);
+      set_initialized(true);
+      break;
+    }
+    case INTERNAL_EVENT_DISCONNECTED: {
+      set_connected(false);
+      set_initialized(true);
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+void flush_line(void) {
+  while (urt.Instance->SR & USART_SR_RXNE) {
+    (void)urt.Instance->DR;
+  }
+}
+
+uint32_t ble_int_comm_poll(void) {
+  uint8_t data[64] = {0};
   if (urt.Instance->SR & USART_SR_RXNE) {
     uint8_t init_byte = 0;
-    HAL_UART_Receive(&urt, &init_byte, 1, 1);
 
-    if (init_byte == 0xA0 || init_byte == 0xA1) {
+    if (last_init_byte != 0) {
+      if (last_init_byte == INTERNAL_EVENT) {
+        init_byte = last_init_byte;
+      } else {
+        return 0;
+      }
+    } else {
+      HAL_UART_Receive(&urt, &init_byte, 1, 1);
+    }
+
+    if (init_byte == INTERNAL_EVENT) {
       uint8_t len_hi = 0;
       uint8_t len_lo = 0;
       HAL_UART_Receive(&urt, &len_hi, 1, 1);
@@ -103,28 +140,104 @@ uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len, bool *internal) {
 
       uint16_t act_len = (len_hi << 8) | len_lo;
 
-      HAL_StatusTypeDef result = HAL_UART_Receive(&urt, data, act_len - 4, 5);
+      if (act_len > sizeof(data) + OVERHEAD_SIZE) {
+        last_init_byte = 0;
+        flush_line();
+        return 0;
+      }
+
+      HAL_StatusTypeDef result =
+          HAL_UART_Receive(&urt, data, act_len - OVERHEAD_SIZE, 5);
 
       if (result != HAL_OK) {
+        last_init_byte = 0;
+        flush_line();
         return 0;
       }
 
       uint8_t eom = 0;
       HAL_UART_Receive(&urt, &eom, 1, 1);
 
-      if (eom == 0x55) {
-        if (init_byte == 0xA0) {
+      if (eom == EOM) {
+        process_poll(data, act_len - OVERHEAD_SIZE);
+        last_init_byte = 0;
+        return act_len - OVERHEAD_SIZE;
+      }
+      return 0;
+
+    } else if (init_byte == INTERNAL_MESSAGE || init_byte == EXTERNAL_MESSAGE) {
+      last_init_byte = init_byte;
+    } else {
+      flush_line();
+    }
+    return 0;
+  }
+
+  if (!ble_initialized()) {
+    uint8_t cmd = INTERNAL_CMD_SEND_STATE;
+    ble_int_comm_send(&cmd, sizeof(cmd), INTERNAL_EVENT);
+  }
+
+  return 0;
+}
+
+uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len, bool *internal) {
+  if (urt.Instance->SR & USART_SR_RXNE) {
+    uint8_t init_byte = 0;
+
+    if (last_init_byte != 0) {
+      if (last_init_byte == INTERNAL_MESSAGE ||
+          last_init_byte == EXTERNAL_MESSAGE) {
+        init_byte = last_init_byte;
+      } else {
+        return 0;
+      }
+
+    } else {
+      HAL_UART_Receive(&urt, &init_byte, 1, 1);
+    }
+
+    if (init_byte == INTERNAL_MESSAGE || init_byte == EXTERNAL_MESSAGE) {
+      uint8_t len_hi = 0;
+      uint8_t len_lo = 0;
+      HAL_UART_Receive(&urt, &len_hi, 1, 1);
+      HAL_UART_Receive(&urt, &len_lo, 1, 1);
+
+      uint16_t act_len = (len_hi << 8) | len_lo;
+
+      if (act_len > len + OVERHEAD_SIZE) {
+        last_init_byte = 0;
+        flush_line();
+        return 0;
+      }
+
+      HAL_StatusTypeDef result =
+          HAL_UART_Receive(&urt, data, act_len - OVERHEAD_SIZE, 5);
+
+      if (result != HAL_OK) {
+        last_init_byte = 0;
+        flush_line();
+        return 0;
+      }
+
+      uint8_t eom = 0;
+      HAL_UART_Receive(&urt, &eom, 1, 1);
+
+      if (eom == EOM) {
+        if (init_byte == INTERNAL_MESSAGE) {
           *internal = true;
         } else {
           *internal = false;
         }
-        return act_len - 4;
+        last_init_byte = 0;
+        return act_len - OVERHEAD_SIZE;
       }
       return 0;
 
+    } else if (init_byte == INTERNAL_EVENT) {
+      last_init_byte = init_byte;
     } else {
-      // disregard byte.
-      // todo: flush everything on the line, also for other errors
+      flush_line();
       return 0;
     }
   }

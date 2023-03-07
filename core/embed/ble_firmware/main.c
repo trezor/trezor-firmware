@@ -84,6 +84,8 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 
+#include "int_comm.h"
+
 #define APP_BLE_CONN_CFG_TAG \
   1 /**< A tag identifying the SoftDevice BLE configuration. */
 
@@ -139,11 +141,30 @@
 #define UART_TX_BUF_SIZE 256 /**< UART TX buffer size. */
 #define UART_RX_BUF_SIZE 256 /**< UART RX buffer size. */
 
-BLE_NUS_DEF(m_nus,
-            NRF_SDH_BLE_TOTAL_LINK_COUNT); /**< BLE NUS service instance. */
-NRF_BLE_GATT_DEF(m_gatt);                  /**< GATT module instance. */
+NRF_BLE_GATT_DEF(m_gatt);           /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);             /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising); /**< Advertising module instance. */
+
+#define SEC_PARAM_BOND 1     /**< Perform bonding. */
+#define SEC_PARAM_MITM 0     /**< Man In The Middle protection not required. */
+#define SEC_PARAM_LESC 0     /**< LE Secure Connections not enabled. */
+#define SEC_PARAM_KEYPRESS 0 /**< Keypress notifications not enabled. */
+#define SEC_PARAM_IO_CAPABILITIES \
+  BLE_GAP_IO_CAPS_KEYBOARD_DISPLAY /**< No I/O capabilities. */
+#define SEC_PARAM_OOB 0            /**< Out Of Band data not available. */
+#define SEC_PARAM_MIN_KEY_SIZE 7   /**< Minimum encryption key size. */
+#define SEC_PARAM_MAX_KEY_SIZE 16  /**< Maximum encryption key size. */
+
+#define SCHED_MAX_EVENT_DATA_SIZE \
+  APP_TIMER_SCHED_EVENT_DATA_SIZE /**< Maximum size of scheduler events. */
+#ifdef SVCALL_AS_NORMAL_FUNCTION
+#define SCHED_QUEUE_SIZE                                                     \
+  20 /**< Maximum number of events in the scheduler queue. More is needed in \
+        case of Serialization. */
+#else
+#define SCHED_QUEUE_SIZE \
+  10 /**< Maximum number of events in the scheduler queue. */
+#endif
 
 static pm_peer_id_t
     m_peer_id; /**< Device reference handle to the current bonded central. */
@@ -155,9 +176,6 @@ static uint16_t m_ble_nus_max_data_len =
           peer by the Nordic UART service module. */
 static ble_uuid_t m_adv_uuids[] = /**< Universally unique service identifier. */
     {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};
-
-static uint8_t m_uart_rx_data[BLE_NUS_MAX_DATA_LEN];
-static bool m_uart_rx_data_ready_internal = false;
 
 /**@brief Function for assert macro callback.
  *
@@ -224,51 +242,11 @@ static void nrf_qwr_error_handler(uint32_t nrf_error) {
   APP_ERROR_HANDLER(nrf_error);
 }
 
-/**@brief Function for handling the data from the Nordic UART Service.
- *
- * @details This function will process the data received from the Nordic UART
- * BLE Service and send it to the UART module.
- *
- * @param[in] p_evt       Nordic UART Service event.
- */
-/**@snippet [Handling the data received over BLE] */
-static void nus_data_handler(ble_nus_evt_t *p_evt) {
-  if (p_evt->type == BLE_NUS_EVT_RX_DATA) {
-    uint32_t err_code;
-
-    NRF_LOG_DEBUG("Received data from BLE NUS. Writing data on UART.");
-    NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data,
-                          p_evt->params.rx_data.length);
-
-    if (p_evt->params.rx_data.length != 64) {
-      return;
-    }
-
-    app_uart_put(0xA1);  // external message
-    app_uart_put(0x00);  // len - HI
-    app_uart_put(0x44);  // len - LO
-
-    for (uint32_t i = 0; i < p_evt->params.rx_data.length; i++) {
-      do {
-        err_code = app_uart_put(p_evt->params.rx_data.p_data[i]);
-        if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_BUSY)) {
-          NRF_LOG_ERROR("Failed receiving NUS message. Error 0x%x. ", err_code);
-          APP_ERROR_CHECK(err_code);
-        }
-      } while (err_code == NRF_ERROR_BUSY);
-    }
-
-    app_uart_put(0x55);  // EOM
-  }
-}
-/**@snippet [Handling the data received over BLE] */
-
 /**@brief Function for initializing services that will be used by the
  * application.
  */
 static void services_init(void) {
   uint32_t err_code;
-  ble_nus_init_t nus_init;
   nrf_ble_qwr_init_t qwr_init = {0};
 
   // Initialize Queued Write Module.
@@ -277,13 +255,7 @@ static void services_init(void) {
   err_code = nrf_ble_qwr_init(&m_qwr, &qwr_init);
   APP_ERROR_CHECK(err_code);
 
-  // Initialize NUS.
-  memset(&nus_init, 0, sizeof(nus_init));
-
-  nus_init.data_handler = nus_data_handler;
-
-  err_code = ble_nus_init(&m_nus, &nus_init);
-  APP_ERROR_CHECK(err_code);
+  nus_init(&m_conn_handle);
 }
 
 /**@brief Function for handling errors from the Connection Parameters module.
@@ -451,20 +423,6 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
   }
 }
 
-static void int_comm_send(uint8_t *tx_data, uint16_t len) {
-  uint32_t err_code;
-
-  for (uint32_t i = 0; i < len; i++) {
-    do {
-      err_code = app_uart_put(tx_data[i]);
-      if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_BUSY)) {
-        NRF_LOG_ERROR("Failed sending data to STM. Error 0x%x. ", err_code);
-        APP_ERROR_CHECK(err_code);
-      }
-    } while (err_code == NRF_ERROR_BUSY);
-  }
-}
-
 /**@brief Function for handling BLE events.
  *
  * @param[in]   p_ble_evt   Bluetooth stack event.
@@ -478,6 +436,8 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
       NRF_LOG_INFO("Connected");
       err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
       APP_ERROR_CHECK(err_code);
+
+      send_connected_event();
       m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
       err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
       APP_ERROR_CHECK(err_code);
@@ -486,6 +446,7 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
     case BLE_GAP_EVT_DISCONNECTED:
       NRF_LOG_INFO("Disconnected");
       // LED indication will be changed when advertising starts.
+      send_disconnected_event();
       m_conn_handle = BLE_CONN_HANDLE_INVALID;
       break;
 
@@ -503,37 +464,19 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
     case BLE_GAP_EVT_AUTH_KEY_REQUEST: {
       NRF_LOG_INFO("Key requested.");
 
-      uint8_t tx_data[] = {
-          0xA0,  // internal message
-          0x00,  // length - HI
-          0x0D,  // length - LO
-          0x3F, 0x23, 0x23, 0x1F, 0x43, 0x00, 0x00, 0x00, 0x00,
-          0x55,  // EOM
-      };
-
-      int_comm_send(tx_data, sizeof(tx_data));
-
       uint8_t p_key[6] = {0};
 
-      while (!m_uart_rx_data_ready_internal)
-        ;
+      bool ok = send_auth_key_request(p_key, sizeof(p_key));
 
-      uint16_t message_type = (m_uart_rx_data[3] << 8) | m_uart_rx_data[4];
-
-      if (message_type != 8004) {
-        break;
+      if (ok) {
+        NRF_LOG_INFO("Received data: %c", p_key);
+        err_code =
+            sd_ble_gap_auth_key_reply(p_ble_evt->evt.gap_evt.conn_handle,
+                                      BLE_GAP_AUTH_KEY_TYPE_PASSKEY, p_key);
+      } else {
+        NRF_LOG_INFO("Auth key request failed.");
       }
 
-      for (int i = 0; i < 6; i++) {
-        p_key[i] = m_uart_rx_data[i + 11];
-      }
-      m_uart_rx_data_ready_internal = false;
-
-      NRF_LOG_INFO("Received data: %c", p_key);
-
-      err_code =
-          sd_ble_gap_auth_key_reply(p_ble_evt->evt.gap_evt.conn_handle,
-                                    BLE_GAP_AUTH_KEY_TYPE_PASSKEY, p_key);
       // APP_ERROR_CHECK(err_code);
       break;
     }
@@ -643,105 +586,6 @@ void bsp_event_handler(bsp_event_t event) {
       break;
   }
 }
-
-/**@brief   Function for handling app_uart events.
- *
- * @details This function will receive a single character from the app_uart
- * module and append it to a string. The string will be be sent over BLE when
- * the last character received was a 'new line' '\n' (hex 0x0A) or if the string
- * has reached the maximum data length.
- */
-/**@snippet [Handling the data received over UART] */
-void uart_event_handle(app_uart_evt_t *p_event) {
-  static uint8_t index = 0;
-  static uint8_t external = 0;
-  static uint16_t len = 0;
-  uint32_t err_code;
-  uint8_t rx_byte = 0;
-
-  switch (p_event->evt_type) {
-    case APP_UART_DATA_READY:
-      while (app_uart_get(&rx_byte) == NRF_SUCCESS) {
-        if (index == 0) {
-          // decide destination
-          if (rx_byte == 0xA0) {
-            // internal message
-            external = 0;
-            index += 1;
-            continue;
-          } else if (rx_byte == 0xA1) {
-            // external message
-            external = 1;
-            index += 1;
-            continue;
-
-          } else {
-            // unknown message
-            continue;
-          }
-        }
-
-        if (index == 1) {
-          // len HI
-          len = rx_byte << 8;
-          index += 1;
-          continue;
-        }
-
-        if (index == 2) {
-          // len LO
-          len |= rx_byte;
-          index += 1;
-          continue;
-        }
-
-        if (index < (len - 1)) {
-          // command
-          m_uart_rx_data[index - 3] = rx_byte;
-          index += 1;
-          continue;
-        }
-
-        if (index >= (len - 1)) {
-          {
-            if (rx_byte == 0x55) {
-              if (external) {
-                NRF_LOG_DEBUG("Ready to send data over BLE NUS");
-                NRF_LOG_HEXDUMP_DEBUG(m_uart_rx_data, index);
-
-                do {
-                  uint16_t length = (uint16_t)len - 4;
-                  err_code = ble_nus_data_send(&m_nus, m_uart_rx_data, &length,
-                                               m_conn_handle);
-                  if ((err_code != NRF_ERROR_INVALID_STATE) &&
-                      (err_code != NRF_ERROR_RESOURCES) &&
-                      (err_code != NRF_ERROR_NOT_FOUND)) {
-                    APP_ERROR_CHECK(err_code);
-                  }
-                } while (err_code == NRF_ERROR_RESOURCES);
-              } else {
-                m_uart_rx_data_ready_internal = true;
-              }
-            }
-            index = 0;
-          }
-        }
-      }
-      break;
-
-      //    case APP_UART_COMMUNICATION_ERROR:
-      //      APP_ERROR_HANDLER(p_event->data.error_communication);
-      //      break;
-      //
-      //    case APP_UART_FIFO_ERROR:
-      //      APP_ERROR_HANDLER(p_event->data.error_code);
-      //      break;
-
-    default:
-      break;
-  }
-}
-/**@snippet [Handling the data received over UART] */
 
 /**@brief  Function for initializing the UART module.
  */
@@ -888,27 +732,6 @@ static void advertising_start(bool erase_bonds) {
   }
 }
 
-#define SEC_PARAM_BOND 1     /**< Perform bonding. */
-#define SEC_PARAM_MITM 0     /**< Man In The Middle protection not required. */
-#define SEC_PARAM_LESC 0     /**< LE Secure Connections not enabled. */
-#define SEC_PARAM_KEYPRESS 0 /**< Keypress notifications not enabled. */
-#define SEC_PARAM_IO_CAPABILITIES \
-  BLE_GAP_IO_CAPS_KEYBOARD_DISPLAY /**< No I/O capabilities. */
-#define SEC_PARAM_OOB 0            /**< Out Of Band data not available. */
-#define SEC_PARAM_MIN_KEY_SIZE 7   /**< Minimum encryption key size. */
-#define SEC_PARAM_MAX_KEY_SIZE 16  /**< Maximum encryption key size. */
-
-#define SCHED_MAX_EVENT_DATA_SIZE \
-  APP_TIMER_SCHED_EVENT_DATA_SIZE /**< Maximum size of scheduler events. */
-#ifdef SVCALL_AS_NORMAL_FUNCTION
-#define SCHED_QUEUE_SIZE                                                     \
-  20 /**< Maximum number of events in the scheduler queue. More is needed in \
-        case of Serialization. */
-#else
-#define SCHED_QUEUE_SIZE \
-  10 /**< Maximum number of events in the scheduler queue. */
-#endif
-
 /**@brief Function for handling Peer Manager events.
  *
  * @param[in] p_evt  Peer Manager event.
@@ -939,29 +762,14 @@ static void pm_evt_handler(pm_evt_t const *p_evt) {
       }
       break;
     case PM_EVT_CONN_SEC_CONFIG_REQ: {
-      uint8_t tx_data[] = {
-          0xA0,  // internal message
-          0x00,  // length - HI
-          0x0D,  // length - LO
-          0x3F, 0x23, 0x23, 0x1F, 0x45, 0x00, 0x00, 0x00, 0x00,
-          0x55,  // EOM
-      };
+      bool ok = send_repair_request();
 
-      int_comm_send(tx_data, sizeof(tx_data));
-
-      while (!m_uart_rx_data_ready_internal)
-        ;
-
-      uint16_t message_type = (m_uart_rx_data[3] << 8) | m_uart_rx_data[4];
-
-      m_uart_rx_data_ready_internal = false;
-
-      if (message_type == 2) {
-        // Allow or reject pairing request from an already bonded peer.
+      if (ok) {
+        // Allow pairing request from an already bonded peer.
         pm_conn_sec_config_t conn_sec_config = {.allow_repairing = true};
         pm_conn_sec_config_reply(p_evt->conn_handle, &conn_sec_config);
       } else {
-        // Allow or reject pairing request from an already bonded peer.
+        // Reject pairing request from an already bonded peer.
         pm_conn_sec_config_t conn_sec_config = {.allow_repairing = false};
         pm_conn_sec_config_reply(p_evt->conn_handle, &conn_sec_config);
       }
@@ -1031,7 +839,9 @@ int main(void) {
   peer_manager_init();
 
   // Start execution.
-  advertising_start(true);
+  advertising_start(erase_bonds);
+
+  send_initialized();
 
   // Enter main loop.
   for (;;) {

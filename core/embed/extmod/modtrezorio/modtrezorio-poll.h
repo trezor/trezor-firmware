@@ -20,11 +20,13 @@
 #include <string.h>
 
 #include "ble/comm.h"
+#include "ble/state.h"
 #include "button.h"
 #include "common.h"
 #include "display.h"
 #include "embed/extmod/trezorobj.h"
 
+#define BLE_EVENTS_IFACE (252)
 #define USB_DATA_IFACE (253)
 #define BUTTON_IFACE (254)
 #define TOUCH_IFACE (255)
@@ -126,6 +128,15 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           usb_connected_previously = usb_connected;
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
           ret->items[1] = usb_connected ? mp_const_true : mp_const_false;
+          return mp_const_true;
+        }
+      } else if (iface == BLE_EVENTS_IFACE) {
+        ble_int_comm_poll();
+        uint8_t connected = ble_connected();
+        if (connected != ble_connected_previously) {
+          ble_connected_previously = connected;
+          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+          ret->items[1] = connected ? mp_const_true : mp_const_false;
           return mp_const_true;
         }
       }

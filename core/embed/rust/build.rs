@@ -347,6 +347,8 @@ fn generate_trezorhal_bindings() {
         .no_copy("buffer_blurring_t")
         .allowlist_var("text_buffer_height")
         .allowlist_var("buffer_width")
+        // ble
+        .allowlist_function("ble_connected")
         //usb
         .allowlist_function("usb_configured")
         // touch
