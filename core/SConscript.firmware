@@ -385,6 +385,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/ble/comm.c',
     'embed/trezorhal/ble/dfu.c',
     'embed/trezorhal/ble/fwu.c',
+    'embed/trezorhal/ble/state.c',
 ]
 
 

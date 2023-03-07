@@ -34,6 +34,7 @@
 
 // Whether USB data pins were connected on last check (USB configured)
 bool usb_connected_previously = true;
+uint8_t ble_connected_previously = false;
 bool ble_last_internal = false;
 
 #define CHECK_PARAM_RANGE(value, minimum, maximum)  \
@@ -120,6 +121,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_POLL_WRITE), MP_ROM_INT(POLL_WRITE)},
 
     {MP_ROM_QSTR(MP_QSTR_USB_CHECK), MP_ROM_INT(USB_DATA_IFACE)},
+    {MP_ROM_QSTR(MP_QSTR_BLE_CHECK), MP_ROM_INT(BLE_EVENTS_IFACE)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorio_globals,

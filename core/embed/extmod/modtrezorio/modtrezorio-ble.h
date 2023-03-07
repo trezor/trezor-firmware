@@ -72,7 +72,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_update_chunk_obj,
 STATIC mp_obj_t mod_trezorio_BLE_write(mp_obj_t self, mp_obj_t msg) {
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
-  ble_int_comm_send(buf.buf, buf.len, ble_last_internal);
+  ble_int_comm_send(buf.buf, buf.len,
+                    ble_last_internal ? INTERNAL_MESSAGE : EXTERNAL_MESSAGE);
   return MP_OBJ_NEW_SMALL_INT(buf.len);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_BLE_write_obj,
