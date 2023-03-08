@@ -8,6 +8,9 @@ class BleInterface:
     def iface_num(self) -> int:
         return 16
 
+    def iface_type(self):
+        return ble.iface_type(self)
+
     def write(self, msg: bytes) -> int:
         return ble.write(self, msg)
 

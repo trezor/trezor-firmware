@@ -79,6 +79,16 @@ STATIC mp_obj_t mod_trezorio_BLE_write(mp_obj_t self, mp_obj_t msg) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_BLE_write_obj,
                                  mod_trezorio_BLE_write);
 
+/// def iface_type(self) -> int:
+///     """
+///     Internal / External distinction
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_iface_type(mp_obj_t self) {
+  return MP_OBJ_NEW_SMALL_INT(ble_last_internal ? 1 : 0);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_iface_type_obj,
+                                 mod_trezorio_BLE_iface_type);
+
 STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ble)},
     {MP_ROM_QSTR(MP_QSTR_update_init),
@@ -86,6 +96,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_update_chunk),
      MP_ROM_PTR(&mod_trezorio_BLE_update_chunk_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_BLE_write_obj)},
+    {MP_ROM_QSTR(MP_QSTR_iface_type),
+     MP_ROM_PTR(&mod_trezorio_BLE_iface_type_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_BLE_globals,
                             mod_trezorio_BLE_globals_table);

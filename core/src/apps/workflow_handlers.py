@@ -13,7 +13,7 @@ def register(wire_type: int, handler: Handler[Msg]) -> None:
     workflow_handlers[wire_type] = handler
 
 
-def _find_message_handler_module(msg_type: int) -> str:
+def _find_message_handler_module(msg_type: int, iface: WireInterface) -> str:
     """Statically find the appropriate workflow handler.
 
     For now, new messages must be registered by hand in the if-elif manner below.
@@ -56,12 +56,16 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.management.sd_protect"
 
     # BLE
-    if msg_type == MessageType.UploadBLEFirmwareInit:
-        return "apps.management.ble.upload_ble_firmware_init"
-    if msg_type == MessageType.PairingRequest:
-        return "apps.management.ble.pairing_request"
-    if msg_type == MessageType.RepairRequest:
-        return "apps.management.ble.repair_request"
+    if iface.iface_num() != 16:
+        # cannot update over BLE
+        if msg_type == MessageType.UploadBLEFirmwareInit:
+            return "apps.management.ble.upload_ble_firmware_init"
+
+    if iface.iface_num() == 16 and iface.iface_type() == 1:
+        if msg_type == MessageType.PairingRequest:
+            return "apps.management.ble.pairing_request"
+        if msg_type == MessageType.RepairRequest:
+            return "apps.management.ble.repair_request"
 
     # bitcoin
     if msg_type == MessageType.AuthorizeCoinJoin:
@@ -200,7 +204,7 @@ def find_registered_handler(iface: WireInterface, msg_type: int) -> Handler | No
         return workflow_handlers[msg_type]
 
     try:
-        modname = _find_message_handler_module(msg_type)
+        modname = _find_message_handler_module(msg_type, iface)
         handler_name = modname[modname.rfind(".") + 1 :]
         module = __import__(modname, None, None, (handler_name,), 0)
         return getattr(module, handler_name)
