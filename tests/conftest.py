@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
 import pytest
@@ -36,6 +37,10 @@ if TYPE_CHECKING:
     from _pytest.config import Config
     from _pytest.config.argparsing import Parser
     from _pytest.terminal import TerminalReporter
+
+
+HERE = Path(__file__).resolve().parent
+
 
 # So that we see details of failed asserts from this module
 pytest.register_assert_rewrite("tests.common")
@@ -83,8 +88,23 @@ def emulator(request: pytest.FixtureRequest) -> Generator["Emulator", None, None
         # 1. normal link, 2. debug link and 3. webauthn fake interface
         return 20000 + int(worker_id[2:]) * 3
 
+    # So that we can generate coverage reports
+    profiling = os.environ.get("TREZOR_PROFILING") == "1"
+    if profiling:
+        core_dir = HERE.parent / "core"
+        profiling_wrapper = core_dir / "prof" / "prof.py"
+        main_args = [str(profiling_wrapper)]
+        # So that the coverage reports have the correct paths
+        os.environ["TREZOR_SRC"] = str(core_dir / "src")
+    else:
+        main_args = ["-m", "main"]
+
     with EmulatorWrapper(
-        model, port=_get_port(), headless=True, auto_interact=not interact
+        model,
+        port=_get_port(),
+        headless=True,
+        auto_interact=not interact,
+        main_args=main_args,
     ) as emu:
         yield emu
 
