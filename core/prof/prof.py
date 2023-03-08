@@ -50,7 +50,14 @@ class _Prof:
 
     def write_data(self):
         print("Total traces executed: ", __prof__.trace_count)
-        with open(".coverage", "w") as f:
+        # In case of multithreaded tests, we might be called multiple times.
+        # Making sure the threads do not overwrite each other's data.
+        worker_id = getenv("PYTEST_XDIST_WORKER")
+        if worker_id:
+            file_name = f".coverage.{worker_id}"
+        else:
+            file_name = ".coverage"
+        with open(file_name, "w") as f:
             # wtf so private much beautiful wow
             f.write("!coverage.py: This is a private format, don't read it directly!")
             # poormans json
@@ -67,10 +74,13 @@ class AllocCounter:
         if self.last_line is None:
             return
 
-        entry = self.data.setdefault(self.last_line, {
-            "total_allocs": 0,
-            "calls": 0,
-        })
+        entry = self.data.setdefault(
+            self.last_line,
+            {
+                "total_allocs": 0,
+                "calls": 0,
+            },
+        )
         entry["total_allocs"] += allocs
         entry["calls"] += 1
 
