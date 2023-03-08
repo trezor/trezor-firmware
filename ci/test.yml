@@ -285,6 +285,7 @@ core click test:
       - tests/ui_tests/fixtures.suggestion.json
       - tests/trezor.log
       - tests/junit.xml
+      - core/.coverage.*
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
