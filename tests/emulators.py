@@ -17,7 +17,7 @@
 import tempfile
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from trezorlib._internal.emulator import CoreEmulator, Emulator, LegacyEmulator
 
@@ -75,6 +75,7 @@ class EmulatorWrapper:
         port: Optional[int] = None,
         headless: bool = True,
         auto_interact: bool = True,
+        main_args: Sequence[str] = ("-m", "main"),
     ) -> None:
         if tag is not None:
             executable = filename_from_tag(gen, tag)
@@ -107,6 +108,7 @@ class EmulatorWrapper:
                 port=port,
                 headless=headless,
                 auto_interact=auto_interact,
+                main_args=main_args,
             )
         else:
             raise ValueError(

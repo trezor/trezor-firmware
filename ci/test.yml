@@ -57,12 +57,12 @@ core device test:
   needs:
     - core unix frozen debug build
   variables:
-    TREZOR_PROFILING: 1
+    TREZOR_PROFILING: 1  # so that we get coverage data
     MULTICORE: 4  # more could interfere with other jobs
   script:
     - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
   after_script:
-    - mv core/src/.coverage core/.coverage.test_emu
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
     - mv tests/ui_tests/reports/test/ test_ui_report
     - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
     - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
