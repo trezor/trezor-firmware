@@ -84,6 +84,7 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 
+#include "dis.h"
 #include "int_comm.h"
 
 #define APP_BLE_CONN_CFG_TAG \
@@ -255,6 +256,7 @@ static void services_init(void) {
   err_code = nrf_ble_qwr_init(&m_qwr, &qwr_init);
   APP_ERROR_CHECK(err_code);
 
+  dis_init();
   nus_init(&m_conn_handle);
 }
 

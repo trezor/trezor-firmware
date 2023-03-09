@@ -269,6 +269,7 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/components/ble/peer_manager/security_dispatcher.c',
   'embed/sdk/nrf52/components/libraries/fstorage/nrf_fstorage.c',
   'embed/sdk/nrf52/components/libraries/fstorage/nrf_fstorage_sd.c',
+  'embed/sdk/nrf52/components/ble/ble_services/ble_dis/ble_dis.c',
 
 ]
 
@@ -276,6 +277,7 @@ SOURCE_BLE_FIRMWARE = [
     'embed/ble_firmware/main.c',
     'embed/ble_firmware/ble_nus.c',
     'embed/ble_firmware/int_comm.c',
+    'embed/ble_firmware/dis.c',
 ]
 
 if MMD:
