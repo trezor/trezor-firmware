@@ -315,12 +315,24 @@ impl<'a> InputStream<'a> {
     pub fn read_uvarint(&mut self) -> Result<u64, Error> {
         let mut uint = 0;
         let mut shift = 0;
-        loop {
+        let mut last_byte = true;
+        while shift <= 64 - 7 {
+            // Shifting by 64 - 7 and then adding 7 bits is always safe.
             let byte = self.read_byte()?;
             uint += (byte as u64 & 0x7F) << shift;
             shift += 7;
             if byte & 0x80 == 0 {
+                last_byte = false;
                 break;
+            }
+        }
+        if last_byte {
+            // After reading 9 bytes, there is only one bit remaining to be set.
+            let byte = self.read_byte()?;
+            if byte > 1 {
+                return Err(Error::OutOfRange);
+            } else {
+                uint += (byte as u64) << shift;
             }
         }
         Ok(uint)
