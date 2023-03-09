@@ -31,6 +31,19 @@ impl StrBuffer {
         Self::from("")
     }
 
+    // SAFETY:
+    // Caller is responsible for ensuring that data under `ptr` is valid for the
+    // whole lifetime of the result, plus possible copies/clones/offsets.
+    // This generally holds for GC-managed pointers and for static data.
+    // Dangerous with anything else.
+    pub unsafe fn from_ptr_and_len(ptr: *const u8, len: usize) -> Self {
+        Self {
+            ptr,
+            len: unwrap!(len.try_into()),
+            off: 0,
+        }
+    }
+
     pub fn alloc(val: &str) -> Result<Self, Error> {
         unsafe {
             Self::alloc_with(val.len(), |buffer| {
@@ -63,11 +76,8 @@ impl StrBuffer {
             // Null-terminate the string for C ASCIIZ compatibility. This will not be
             // reflected in Rust-visible slice, the zero byte is after the end.
             raw.add(len).write(0);
-            Ok(Self {
-                ptr: raw,
-                len: unwrap!(len.try_into()),
-                off: 0,
-            })
+            // SAFETY: pointer is GC-managed.
+            Ok(Self::from_ptr_and_len(raw, len))
         }
     }
 
@@ -107,11 +117,8 @@ impl TryFrom<Obj> for StrBuffer {
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
         if obj.is_str() {
             let bufinfo = get_buffer_info(obj, ffi::MP_BUFFER_READ)?;
-            let new = Self {
-                ptr: bufinfo.buf as _,
-                len: bufinfo.len.try_into()?,
-                off: 0,
-            };
+            // SAFETY: bufinfo.buf should point to a GC head pointer or static data.
+            let new = unsafe { Self::from_ptr_and_len(bufinfo.buf as _, bufinfo.len) };
 
             // MicroPython _should_ ensure that values of type `str` are UTF-8.
             // Rust seems to be stricter in what it considers UTF-8 though.
@@ -151,11 +158,9 @@ impl AsRef<str> for StrBuffer {
 
 impl From<&'static str> for StrBuffer {
     fn from(val: &'static str) -> Self {
-        Self {
-            ptr: val.as_ptr(),
-            len: unwrap!(val.len().try_into()),
-            off: 0,
-        }
+        // SAFETY: Safe for &'static strs.
+        // Do not try to do it with arbitrary &'a str.
+        unsafe { Self::from_ptr_and_len(val.as_ptr(), val.len()) }
     }
 }
 
