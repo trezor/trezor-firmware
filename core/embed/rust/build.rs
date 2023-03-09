@@ -295,6 +295,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_pixeldata_dirty")
         .allowlist_function("display_set_window")
         .allowlist_function("display_sync")
+        .allowlist_function("display_is_old")
         .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
         .allowlist_type("toif_format_t")

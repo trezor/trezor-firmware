@@ -115,6 +115,10 @@ int display_orientation(int degrees) {
 
 int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
 
+secbool display_is_old() {
+  return sectrue;
+}
+
 int display_backlight(int val) {
   DISPLAY_BACKLIGHT = 255;
   return DISPLAY_BACKLIGHT;

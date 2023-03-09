@@ -21,6 +21,7 @@
 #define _DISPLAY_INTERFACE_H
 
 #include <stdint.h>
+#include "secbool.h"
 #include "common.h"
 #include TREZOR_BOARD
 
@@ -35,6 +36,8 @@ void display_pixeldata(uint16_t c);
 #endif
 
 void display_reset_state();
+
+secbool display_is_old();
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 int display_orientation(int degrees);

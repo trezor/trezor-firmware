@@ -3,6 +3,10 @@ use core::ptr;
 use cty::c_int;
 
 use crate::trezorhal::buffers::BufferText;
+#[cfg(feature = "model_tt")]
+use crate::ui::display::Color;
+#[cfg(feature = "model_tt")]
+use crate::ui::model_tt::theme::replace_colors_for_old_tt_display;
 
 #[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
 pub enum ToifFormat {
@@ -16,7 +20,25 @@ pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_backlight(val) }
 }
 
-pub fn text(baseline_x: i16, baseline_y: i16, text: &str, font: i32, fgcolor: u16, bgcolor: u16) {
+#[cfg(feature = "model_tt")]
+pub fn tt_old_display() -> bool {
+    ffi::sectrue == unsafe { ffi::display_is_old() }
+}
+
+pub fn text(
+    baseline_x: i16,
+    baseline_y: i16,
+    text: &str,
+    font: i32,
+    mut fgcolor: u16,
+    mut bgcolor: u16,
+) {
+    #[cfg(feature = "model_tt")]
+    if tt_old_display() {
+        fgcolor = replace_colors_for_old_tt_display(Color::from_u16(fgcolor)).to_u16();
+        bgcolor = replace_colors_for_old_tt_display(Color::from_u16(bgcolor)).to_u16();
+    }
+
     unsafe {
         ffi::display_text(
             baseline_x.into(),
@@ -72,7 +94,12 @@ pub fn text_baseline(font: i32) -> i16 {
     unsafe { ffi::font_baseline(font).try_into().unwrap_or(i16::MAX) }
 }
 
-pub fn bar(x: i16, y: i16, w: i16, h: i16, fgcolor: u16) {
+pub fn bar(x: i16, y: i16, w: i16, h: i16, mut fgcolor: u16) {
+    #[cfg(feature = "model_tt")]
+    if tt_old_display() {
+        fgcolor = replace_colors_for_old_tt_display(Color::from_u16(fgcolor)).to_u16();
+    }
+
     unsafe { ffi::display_bar(x.into(), y.into(), w.into(), h.into(), fgcolor) }
 }
 

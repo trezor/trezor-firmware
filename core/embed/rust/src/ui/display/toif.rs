@@ -12,9 +12,20 @@ use crate::{
 
 use super::Color;
 
+#[cfg(feature = "model_tt")]
+use crate::trezorhal::display::tt_old_display;
+#[cfg(feature = "model_tt")]
+use crate::ui::model_tt::theme::replace_colors_for_old_tt_display;
+
 const TOIF_HEADER_LENGTH: usize = 12;
 
-pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
+pub fn icon(icon: &Icon, center: Point, mut fg_color: Color, mut bg_color: Color) {
+    #[cfg(feature = "model_tt")]
+    if tt_old_display() {
+        fg_color = replace_colors_for_old_tt_display(fg_color);
+        bg_color = replace_colors_for_old_tt_display(bg_color);
+    }
+
     let r = Rect::from_center_and_size(center, icon.toif.size());
     let area = r.translate(get_offset());
     let clamped = area.clamp(constant::screen());
