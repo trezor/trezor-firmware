@@ -149,7 +149,7 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
 
 void display_bar_radius_buffer(int x, int y, int w, int h, uint8_t r,
                                buffer_text_t *buffer) {
-  if (h > 32) {
+  if (h > TEXT_BUFFER_HEIGHT) {
     return;
   }
   if (r != 2 && r != 4 && r != 8 && r != 16) {
