@@ -128,10 +128,6 @@ pub const fn label_keyboard_minor() -> TextStyle {
     TEXT_NORMAL_OFF_WHITE
 }
 
-pub const fn label_page_hint() -> TextStyle {
-    TextStyle::new(Font::BOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
-}
-
 pub const fn label_warning() -> TextStyle {
     TEXT_DEMIBOLD
 }
@@ -564,11 +560,11 @@ pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
 /// |    14    |
 /// +----------+
 pub const fn borders() -> Insets {
-    Insets::new(13, 10, 14, 10)
+    Insets::new(6, 6, 6, 6)
 }
 
 pub const fn borders_scroll() -> Insets {
-    Insets::new(13, 5, 14, 10)
+    Insets::new(6, 6, 6, 6)
 }
 
 pub const fn borders_horizontal_scroll() -> Insets {
@@ -576,5 +572,5 @@ pub const fn borders_horizontal_scroll() -> Insets {
 }
 
 pub const fn borders_notification() -> Insets {
-    Insets::new(48, 10, 14, 10)
+    Insets::new(48, 6, 6, 6)
 }
