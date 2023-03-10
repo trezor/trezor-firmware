@@ -38,8 +38,8 @@ pub const BLUE: Color = Color::rgb(0x06, 0x1E, 0xAD); // button
 pub const BLUE_DARK: Color = Color::rgb(0x04, 0x10, 0x58); // button pressed
 pub const OFF_WHITE: Color = Color::rgb(0xDE, 0xDE, 0xDE); // very light grey
 pub const GREY_LIGHT: Color = Color::rgb(0x90, 0x90, 0x90); // secondary text
-pub const GREY_MEDIUM: Color = Color::rgb(0x45, 0x45, 0x45); // button pressed
-pub const GREY_DARK: Color = Color::rgb(0x1A, 0x1A, 0x1A); // button
+pub const GREY_MEDIUM: Color = Color::rgb(0x4F, 0x4F, 0x4F); // button pressed
+pub const GREY_DARK: Color = Color::rgb(0x28, 0x28, 0x28); // button
 pub const VIOLET: Color = Color::rgb(0x95, 0x00, 0xCA);
 
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xAD, 0x2B, 0x2B);
