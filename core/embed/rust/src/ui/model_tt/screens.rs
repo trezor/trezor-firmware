@@ -10,7 +10,10 @@ use crate::ui::{
     model_tt::{
         component::ResultScreen,
         constant,
-        theme::{FATAL_ERROR_COLOR, ICON_WARN_SMALL, TEXT_ERROR_BOLD, TEXT_ERROR_NORMAL, WHITE},
+        theme::{
+            FATAL_ERROR_COLOR, FATAL_ERROR_HIGHLIGHT_COLOR, ICON_WARNING40, TEXT_ERROR_BOLD,
+            TEXT_ERROR_HIGHLIGHT, TEXT_ERROR_NORMAL, WHITE,
+        },
     },
 };
 
@@ -49,15 +52,21 @@ pub fn screen_fatal_error(msg: Option<&str>, file: &str) {
     };
     let mut messages = ParagraphVecShort::new();
 
-    messages
-        .add(Paragraph::new(&TEXT_ERROR_BOLD, "PLEASE CONTACT\nTREZOR SUPPORT".into()).centered());
+    messages.add(
+        Paragraph::new(
+            &TEXT_ERROR_HIGHLIGHT,
+            "PLEASE CONTACT\nTREZOR SUPPORT".into(),
+        )
+        .centered(),
+    );
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     let mut frame = ResultScreen::new(
         WHITE,
         FATAL_ERROR_COLOR,
-        Icon::new(ICON_WARN_SMALL),
+        FATAL_ERROR_HIGHLIGHT_COLOR,
+        Icon::new(ICON_WARNING40),
         m_top,
         m_bottom,
         true,
@@ -87,14 +96,16 @@ pub fn screen_error_shutdown(label: &str, msg: Option<&str>) {
     };
     let mut messages = ParagraphVecShort::new();
 
-    messages.add(Paragraph::new(&TEXT_ERROR_BOLD, "PLEASE UNPLUG\nTHE DEVICE".into()).centered());
+    messages
+        .add(Paragraph::new(&TEXT_ERROR_HIGHLIGHT, "PLEASE UNPLUG\nTHE DEVICE".into()).centered());
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     let mut frame = ResultScreen::new(
         WHITE,
         FATAL_ERROR_COLOR,
-        Icon::new(ICON_WARN_SMALL),
+        FATAL_ERROR_HIGHLIGHT_COLOR,
+        Icon::new(ICON_WARNING40),
         m_top,
         m_bottom,
         true,

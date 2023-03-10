@@ -42,7 +42,8 @@ pub const GREY_MEDIUM: Color = Color::rgb(0x4F, 0x4F, 0x4F); // button pressed
 pub const GREY_DARK: Color = Color::rgb(0x28, 0x28, 0x28); // button
 pub const VIOLET: Color = Color::rgb(0x95, 0x00, 0xCA);
 
-pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xAD, 0x2B, 0x2B);
+pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
+pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 2;
@@ -70,6 +71,7 @@ pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check16.toif");
 
 // Homescreen notifications.
 pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warning16.toif");
+pub const ICON_WARNING40: &[u8] = include_res!("model_tt/res/warning40.toif");
 pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock16.toif");
 pub const ICON_COINJOIN: &[u8] = include_res!("model_tt/res/coinjoin16.toif");
 pub const ICON_MAGIC: &[u8] = include_res!("model_tt/res/magic.toif");
@@ -107,10 +109,6 @@ pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif"
 pub const DOT_INACTIVE_HALF: &[u8] = include_res!("model_tt/res/scroll-inactive-half.toif");
 pub const DOT_INACTIVE_QUARTER: &[u8] = include_res!("model_tt/res/scroll-inactive-quarter.toif");
 pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
-
-// Bootloader. TODO
-pub const ICON_SUCCESS_SMALL: &[u8] = include_res!("model_tt/res/success_bld.toif");
-pub const ICON_WARN_SMALL: &[u8] = include_res!("model_tt/res/warn_bld.toif");
 
 pub const fn label_default() -> TextStyle {
     TEXT_NORMAL
@@ -522,6 +520,13 @@ pub const TEXT_ERROR_NORMAL: TextStyle =
     TextStyle::new(Font::NORMAL, FG, FATAL_ERROR_COLOR, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_ERROR_BOLD: TextStyle =
     TextStyle::new(Font::BOLD, FG, FATAL_ERROR_COLOR, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_ERROR_HIGHLIGHT: TextStyle = TextStyle::new(
+    Font::BOLD,
+    FG,
+    FATAL_ERROR_HIGHLIGHT_COLOR,
+    GREY_LIGHT,
+    GREY_LIGHT,
+);
 
 pub const TEXT_NORMAL_OFF_WHITE: TextStyle =
     TextStyle::new(Font::NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);

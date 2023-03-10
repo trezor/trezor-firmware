@@ -146,11 +146,13 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
         r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
         if (r < 0) {  // error
           screen_wipe_fail();
+          hal_delay(100);
           usb_stop();
           usb_deinit();
           return SHUTDOWN;
         } else {  // success
           screen_wipe_success();
+          hal_delay(100);
           usb_stop();
           usb_deinit();
           return SHUTDOWN;

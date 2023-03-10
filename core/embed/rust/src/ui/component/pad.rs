@@ -18,6 +18,13 @@ impl Pad {
         }
     }
 
+    pub fn with_clear(self) -> Self {
+        Self {
+            clear: true,
+            ..self
+        }
+    }
+
     pub fn place(&mut self, area: Rect) {
         self.area = area;
     }

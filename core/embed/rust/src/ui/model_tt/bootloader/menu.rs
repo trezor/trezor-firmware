@@ -1,17 +1,21 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Pad},
-    constant::{screen, WIDTH},
+    constant::{screen, HEIGHT, WIDTH},
     display::Icon,
     geometry::{Alignment, Insets, Point, Rect},
     model_tt::{
         bootloader::theme::{
-            button_bld_menu, button_bld_menu_item, BLD_BG, CLOSE, CONTENT_PADDING,
-            CORNER_BUTTON_AREA, ERASE, REBOOT, TEXT_TITLE, TITLE_AREA,
+            button_bld, button_bld_menu, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
+            CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TEXT_TITLE,
+            TITLE_AREA, TITLE_Y_ADJUSTMENT, X32,
         },
         component::{Button, ButtonMsg::Clicked, IconText},
     },
 };
 use heapless::String;
+
+const BUTTON_AREA_START: i16 = 56;
+const BUTTON_SPACING: i16 = 8;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]
@@ -30,28 +34,23 @@ pub struct Menu {
 }
 
 impl Menu {
-    pub fn new(bld_version: &'static str) -> Self {
-        let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REBOOT));
-        let content_reset = IconText::new("FACTORY RESET", Icon::new(ERASE));
+    pub fn new(_bld_version: &'static str) -> Self {
+        let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
+        let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
 
         let mut title: String<32> = String::new();
         unwrap!(title.push_str("BOOTLOADER "));
-        unwrap!(title.push_str(bld_version));
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
             title: Child::new(Label::new(title, Alignment::Start, TEXT_TITLE)),
             close: Child::new(
-                Button::with_icon(Icon::new(CLOSE))
+                Button::with_icon(Icon::new(X32))
                     .styled(button_bld_menu())
-                    .with_expanded_touch_area(Insets::uniform(13)),
+                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
             ),
-            reboot: Child::new(
-                Button::with_icon_and_text(content_reboot).styled(button_bld_menu_item()),
-            ),
-            reset: Child::new(
-                Button::with_icon_and_text(content_reset).styled(button_bld_menu_item()),
-            ),
+            reboot: Child::new(Button::with_icon_and_text(content_reboot).styled(button_bld())),
+            reset: Child::new(Button::with_icon_and_text(content_reset).styled(button_bld())),
         };
         instance.bg.clear();
         instance
@@ -64,14 +63,28 @@ impl Component for Menu {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bg.place(screen());
         self.title.place(TITLE_AREA);
+        let title_height = self.title.inner().area().height();
+        self.title.place(Rect::new(
+            Point::new(
+                CONTENT_PADDING,
+                TITLE_AREA.center().y - (title_height / 2) - TITLE_Y_ADJUSTMENT,
+            ),
+            Point::new(WIDTH - CONTENT_PADDING, HEIGHT),
+        ));
         self.close.place(CORNER_BUTTON_AREA);
         self.reboot.place(Rect::new(
-            Point::new(CONTENT_PADDING, 64),
-            Point::new(WIDTH - CONTENT_PADDING, 64 + 38),
+            Point::new(CONTENT_PADDING, BUTTON_AREA_START),
+            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START + BUTTON_HEIGHT),
         ));
         self.reset.place(Rect::new(
-            Point::new(CONTENT_PADDING, 110),
-            Point::new(WIDTH - CONTENT_PADDING, 110 + 38),
+            Point::new(
+                CONTENT_PADDING,
+                BUTTON_AREA_START + BUTTON_HEIGHT + BUTTON_SPACING,
+            ),
+            Point::new(
+                WIDTH - CONTENT_PADDING,
+                BUTTON_AREA_START + 2 * BUTTON_HEIGHT + BUTTON_SPACING,
+            ),
         ));
         bounds
     }

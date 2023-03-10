@@ -1,14 +1,11 @@
-use crate::{
-    alpha,
-    ui::{
-        component::{
-            text::paragraphs::{ParagraphStrType, ParagraphVecShort, Paragraphs},
-            Child, Component, Event, EventCtx, Never, Pad,
-        },
-        constant::screen,
-        display::{self, Color, Icon},
-        geometry::{Offset, Point, Rect, CENTER},
+use crate::ui::{
+    component::{
+        text::paragraphs::{ParagraphStrType, ParagraphVecShort, Paragraphs},
+        Child, Component, Event, EventCtx, Never, Pad,
     },
+    constant::screen,
+    display::{self, Color, Icon},
+    geometry::{Point, Rect, CENTER},
 };
 
 use crate::ui::model_tt::constant::{HEIGHT, WIDTH};
@@ -18,6 +15,7 @@ pub struct ResultScreen<T> {
     small_pad: Pad,
     fg_color: Color,
     bg_color: Color,
+    msg_area_color: Color,
     icon: Icon,
     message_top: Child<Paragraphs<ParagraphVecShort<T>>>,
     message_bottom: Child<Paragraphs<ParagraphVecShort<T>>>,
@@ -27,6 +25,7 @@ impl<T: ParagraphStrType> ResultScreen<T> {
     pub fn new(
         fg_color: Color,
         bg_color: Color,
+        msg_area_color: Color,
         icon: Icon,
         message_top: Paragraphs<ParagraphVecShort<T>>,
         message_bottom: Paragraphs<ParagraphVecShort<T>>,
@@ -37,6 +36,7 @@ impl<T: ParagraphStrType> ResultScreen<T> {
             small_pad: Pad::with_background(bg_color),
             fg_color,
             bg_color,
+            msg_area_color,
             icon,
             message_top: Child::new(message_top),
             message_bottom: Child::new(message_bottom),
@@ -59,9 +59,9 @@ impl<T: ParagraphStrType> Component for ResultScreen<T> {
             .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, HEIGHT)));
 
         self.message_top
-            .place(Rect::new(Point::new(15, 59), Point::new(WIDTH - 15, 149)));
+            .place(Rect::new(Point::new(15, 59), Point::new(WIDTH - 15, 176)));
 
-        let bottom_area = Rect::new(Point::new(15, 151), Point::new(WIDTH - 15, HEIGHT));
+        let bottom_area = Rect::new(Point::new(6, 176), Point::new(WIDTH - 6, 176 + 56));
 
         self.small_pad.place(bottom_area);
         self.message_bottom.place(bottom_area);
@@ -83,11 +83,13 @@ impl<T: ParagraphStrType> Component for ResultScreen<T> {
             self.fg_color,
             self.bg_color,
         );
-        display::rect_fill(
-            Rect::from_top_left_and_size(Point::new(12, 149), Offset::new(216, 1)),
-            Color::alpha(self.bg_color, alpha!(0.2)),
-        );
         self.message_top.paint();
+        display::rect_fill_rounded(
+            Rect::new(Point::new(6, 176), Point::new(WIDTH - 6, 176 + 56)),
+            self.msg_area_color,
+            self.bg_color,
+            2,
+        );
         self.message_bottom.paint();
     }
 }

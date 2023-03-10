@@ -7,14 +7,17 @@ use crate::ui::{
     display::Icon,
     geometry::{Alignment, Insets, Point, Rect},
     model_tt::{
-        bootloader::theme::{button_bld_menu, button_bld_menu_item, BLD_BG, MENU},
+        bootloader::theme::{button_bld, button_bld_menu, BLD_BG, MENU32},
         component::ButtonMsg::Clicked,
     },
 };
 use heapless::String;
 
 use crate::ui::model_tt::{
-    bootloader::theme::{CONTENT_PADDING, CORNER_BUTTON_AREA, TEXT_TITLE, TITLE_AREA},
+    bootloader::theme::{
+        BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING, CORNER_BUTTON_AREA, TEXT_TITLE,
+        TITLE_AREA, TITLE_Y_ADJUSTMENT,
+    },
     component::Button,
     constant::WIDTH,
 };
@@ -40,20 +43,17 @@ impl<'a> Intro<'a> {
         unwrap!(title.push_str("BOOTLOADER "));
         unwrap!(title.push_str(bld_version));
 
-        let mut instance = Self {
-            bg: Pad::with_background(BLD_BG),
+        Self {
+            bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(Label::new(title, Alignment::Start, TEXT_TITLE)),
             menu: Child::new(
-                Button::with_icon(Icon::new(MENU))
+                Button::with_icon(Icon::new(MENU32))
                     .styled(button_bld_menu())
                     .with_expanded_touch_area(Insets::uniform(13)),
             ),
-            host: Child::new(Button::with_text("INSTALL FIRMWARE").styled(button_bld_menu_item())),
+            host: Child::new(Button::with_text("INSTALL FIRMWARE").styled(button_bld())),
             text: Child::new(content),
-        };
-
-        instance.bg.clear();
-        instance
+        }
     }
 }
 
@@ -61,17 +61,26 @@ impl<'a> Component for Intro<'a> {
     type Msg = IntroMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        const BUTTON_AREA_START: i16 = 188;
         self.bg.place(screen());
+
         self.title.place(TITLE_AREA);
+        let title_height = self.title.inner().area().height();
+        self.title.place(Rect::new(
+            Point::new(
+                CONTENT_PADDING,
+                TITLE_AREA.center().y - (title_height / 2) - TITLE_Y_ADJUSTMENT,
+            ),
+            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START - CONTENT_PADDING),
+        ));
+
         self.menu.place(CORNER_BUTTON_AREA);
         self.host.place(Rect::new(
-            Point::new(10, BUTTON_AREA_START),
-            Point::new(10 + 220, BUTTON_AREA_START + 38),
+            Point::new(CONTENT_PADDING, BUTTON_AREA_START),
+            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START + BUTTON_HEIGHT),
         ));
         self.text.place(Rect::new(
-            Point::new(CONTENT_PADDING, 75),
-            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START),
+            Point::new(CONTENT_PADDING, TITLE_AREA.y1 + CONTENT_PADDING),
+            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START - CONTENT_PADDING),
         ));
         bounds
     }
