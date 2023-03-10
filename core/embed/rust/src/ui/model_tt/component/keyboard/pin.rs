@@ -59,8 +59,8 @@ where
     T: AsRef<str>,
 {
     // Label position fine-tuning.
-    const MAJOR_OFF: Offset = Offset::y(-2);
-    const MINOR_OFF: Offset = Offset::y(-1);
+    const MAJOR_OFF: Offset = Offset::y(11);
+    const MINOR_OFF: Offset = Offset::y(11);
 
     pub fn new(
         major_prompt: T,
@@ -165,14 +165,14 @@ where
         // Prompts and PIN dots display.
         let (header, keypad) = bounds
             .inset(borders_no_top)
-            .split_top(theme::borders().top + HEADER_HEIGHT + HEADER_PADDING_BOTTOM);
+            .split_bottom(4 * theme::PIN_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
         let prompt = header.inset(HEADER_PADDING);
         // the inset -3 is a workaround for long text in "re-enter wipe code"
         let major_area = prompt.translate(Self::MAJOR_OFF).inset(Insets::right(-3));
         let minor_area = prompt.translate(Self::MINOR_OFF);
 
         // Control buttons.
-        let grid = Grid::new(keypad, 4, 3).with_spacing(theme::KEYBOARD_SPACING);
+        let grid = Grid::new(keypad, 4, 3).with_spacing(theme::BUTTON_SPACING);
 
         // Prompts and PIN dots display.
         self.textbox_pad.place(header);

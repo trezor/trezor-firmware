@@ -3,9 +3,8 @@ use crate::ui::{
     component::{
         base::ComponentExt, label::Label, text::TextStyle, Child, Component, Event, EventCtx,
     },
-    display::{self, toif::Icon, Color},
+    display::{self, Color, Font},
     geometry::{Alignment, Insets, Offset, Rect},
-    util::icon_text_center,
 };
 
 pub struct Frame<T, U> {
@@ -116,7 +115,6 @@ where
 
 pub struct NotificationFrame<T, U> {
     area: Rect,
-    icon: Icon,
     title: U,
     content: Child<T>,
 }
@@ -128,13 +126,10 @@ where
 {
     const HEIGHT: i16 = 36;
     const COLOR: Color = theme::YELLOW;
-    const TEXT_OFFSET: Offset = Offset::new(1, -2);
-    const ICON_SPACE: i16 = 8;
     const BORDER: i16 = 6;
 
-    pub fn new(icon: Icon, title: U, content: T) -> Self {
+    pub fn new(title: U, content: T) -> Self {
         Self {
-            icon,
             title,
             area: Rect::zero(),
             content: Child::new(content),
@@ -145,22 +140,18 @@ where
         self.content.inner()
     }
 
-    pub fn paint_notification(area: Rect, icon: Icon, title: &str, color: Color) {
+    pub fn paint_notification(area: Rect, title: &str, color: Color) {
         let (area, _) = area
             .inset(Insets::uniform(Self::BORDER))
             .split_top(Self::HEIGHT);
-        let style = TextStyle {
-            background_color: color,
-            ..theme::TEXT_BOLD
-        };
+        let font = Font::BOLD;
         display::rect_fill_rounded(area, color, theme::BG, 2);
-        icon_text_center(
-            area.center(),
-            icon,
-            Self::ICON_SPACE,
+        display::text_center(
+            area.center() + Offset::y((font.text_max_height() - font.text_baseline()) / 2),
             title,
-            style,
-            Self::TEXT_OFFSET,
+            Font::BOLD,
+            theme::FG,
+            color,
         );
     }
 }
@@ -184,7 +175,7 @@ where
     }
 
     fn paint(&mut self) {
-        Self::paint_notification(self.area, self.icon, self.title.as_ref(), Self::COLOR);
+        Self::paint_notification(self.area, self.title.as_ref(), Self::COLOR);
         self.content.paint();
     }
 

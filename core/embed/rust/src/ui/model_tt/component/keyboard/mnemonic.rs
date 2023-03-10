@@ -43,7 +43,7 @@ where
                     Icon::new(theme::ICON_BACK),
                     Offset::new(30, 17),
                 )
-                .styled(theme::button_clear())
+                .styled(theme::button_reset())
                 .with_long_press(theme::ERASE_HOLD_DURATION),
             )),
             input: Child::new(Maybe::hidden(theme::BG, input)),
@@ -96,8 +96,10 @@ where
     type Msg = MnemonicKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let grid =
-            Grid::new(bounds.inset(theme::borders()), 4, 3).with_spacing(theme::KEYBOARD_SPACING);
+        let (_, bounds) = bounds
+            .inset(theme::borders())
+            .split_bottom(4 * theme::MNEMONIC_BUTTON_HEIGHT + 3 * theme::KEYBOARD_SPACING);
+        let grid = Grid::new(bounds, 4, 3).with_spacing(theme::KEYBOARD_SPACING);
         let back_area = grid.row_col(0, 0);
         let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
 

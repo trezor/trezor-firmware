@@ -588,15 +588,16 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
-        let paragraphs = Paragraphs::new(Paragraph::new(
-            &theme::TEXT_NORMAL,
-            StrBuffer::from("By continuing you agree\nto Trezor Company's\nterms and conditions."),
-        ));
-        let url = FormattedText::new(
-            theme::TEXT_NORMAL,
-            theme::FORMATTED,
-            "More info at {demibold}trezor.io/tos",
-        );
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(
+                &theme::TEXT_NORMAL,
+                StrBuffer::from(
+                    "By continuing you agree\nto Trezor Company's\nterms and conditions.\r",
+                ),
+            ),
+            Paragraph::new(&theme::TEXT_NORMAL, StrBuffer::from("More info at")),
+            Paragraph::new(&theme::TEXT_DEMIBOLD, StrBuffer::from("trezor.io/tos")),
+        ]);
         let buttons = Button::cancel_confirm(
             Button::with_icon(Icon::new(theme::ICON_CANCEL)),
             Button::with_text(button).styled(theme::button_confirm()),
@@ -606,15 +607,7 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
             Frame::left_aligned(
                 theme::label_title(),
                 title,
-                Dialog::new(
-                    (
-                        GridPlaced::new(paragraphs)
-                            .with_grid(3, 1)
-                            .with_from_to((0, 0), (1, 0)),
-                        GridPlaced::new(url).with_grid(3, 1).with_row_col(2, 0),
-                    ),
-                    buttons,
-                ),
+                Dialog::new(paragraphs, buttons),
             )
             .with_border(theme::borders()),
         )?;
@@ -1299,7 +1292,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false).unwrap();
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, title).centered(),
+            Paragraph::new(&theme::TEXT_DEMIBOLD, title).centered(),
             Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, description).centered(),
         ])
         .with_spacing(theme::RECOVERY_SPACING);
@@ -1312,7 +1305,6 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
         let obj = if info_button {
             LayoutObj::new(NotificationFrame::new(
-                Icon::new(theme::ICON_WARN),
                 notification,
                 Dialog::new(
                     paragraphs,
@@ -1321,7 +1313,6 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
             ))?
         } else {
             LayoutObj::new(NotificationFrame::new(
-                Icon::new(theme::ICON_WARN),
                 notification,
                 Dialog::new(paragraphs, Button::cancel_confirm_text(None, Some(button))),
             ))?
@@ -1341,11 +1332,15 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
         let title = if dry_run {
             "SEED CHECK"
         } else {
-            "RECOVERY MODE"
+            "WALLET RECOVERY"
         };
 
         let paragraphs = Paragraphs::new(
-            Paragraph::new(&theme::TEXT_BOLD, StrBuffer::from("Number of words?")).centered(),
+            Paragraph::new(
+                &theme::TEXT_DEMIBOLD,
+                StrBuffer::from("Select number of words in your recovery seed."),
+            )
+            .centered(),
         );
 
         let obj = LayoutObj::new(

@@ -384,6 +384,70 @@ pub const fn button_pin() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_pin_confirm() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: GREEN,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::MONO,
+            text_color: GREY_LIGHT,
+            button_color: GREEN,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
+pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: BG,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: Font::MONO,
+            text_color: FG,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::MONO,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
 pub const fn button_counter() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
