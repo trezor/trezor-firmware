@@ -421,7 +421,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 title,
-                SwipePage::new(paragraphs, buttons, theme::BG),
+                SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
             ))?
         };
         Ok(obj.into())
@@ -459,7 +459,7 @@ fn confirm_blob(
         LayoutObj::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            SwipePage::new(paragraphs, buttons, theme::BG),
+            SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
         ))?
     } else {
         panic!("Either `hold=true` or `verb=Some(StrBuffer)` must be specified");
@@ -513,7 +513,9 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             Frame::left_aligned(
                 theme::label_title(),
                 title,
-                SwipePage::new(paragraphs, buttons, theme::BG).with_swipe_left(),
+                SwipePage::new(paragraphs, buttons, theme::BG)
+                    .with_swipe_left()
+                    .with_cancel_on_first_page(),
             ),
         ))?;
         Ok(obj.into())
@@ -529,7 +531,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 
         let paragraphs = PropsList::new(
             items,
-            &theme::TEXT_BOLD,
+            &theme::TEXT_DEMIBOLD,
             &theme::TEXT_NORMAL,
             &theme::TEXT_MONO,
         )?;
@@ -544,7 +546,8 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             LayoutObj::new(Frame::left_aligned(
                 theme::label_title(),
                 title,
-                SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
+                SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG)
+                    .with_cancel_on_first_page(),
             ))?
         };
         Ok(obj.into())
@@ -743,7 +746,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         let obj = LayoutObj::new(Frame::left_aligned(
             theme::label_title(),
             "MODIFY AMOUNT",
-            SwipePage::new(paragraphs, buttons, theme::BG),
+            SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
         ))?;
         Ok(obj.into())
     };
@@ -778,7 +781,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         let obj = LayoutObj::new(Frame::left_aligned(
             theme::label_title(),
             "MODIFY FEE",
-            SwipePage::new(paragraphs, buttons, theme::BG),
+            SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
         ))?;
         Ok(obj.into())
     };
@@ -1930,7 +1933,7 @@ mod tests {
         layout.place(SCREEN);
         assert_eq!(
             trace(&layout),
-            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > controls:<FixedHeightBar inner:<Tuple 0:<GridPlaced inner:<Button text:Left > > 1:<GridPlaced inner:<Button text:Right > > > > >",
+            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some\nmore text. And parame-\nters! > controls:<FixedHeightBar inner:<Split first:<Button text:Left > second:<Button text:Right > > > >",
         )
     }
 }
