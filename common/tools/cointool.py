@@ -459,6 +459,7 @@ FIDO_KNOWN_KEYS = frozenset(
         "name",
         "use_sign_count",
         "use_self_attestation",
+        "use_compact",
         "no_icon",
         "icon",
     )
