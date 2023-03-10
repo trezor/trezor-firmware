@@ -12,11 +12,13 @@ class FIDOApp:
         icon_name: str | None,
         use_sign_count: bool | None,
         use_self_attestation: bool | None,
+        use_compact: bool | None,
     ) -> None:
         self.label = label
         self.icon_name = icon_name
         self.use_sign_count = use_sign_count
         self.use_self_attestation = use_self_attestation
+        self.use_compact = use_compact
 
 
 <%
@@ -44,6 +46,7 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             ${black_repr(app.icon_name)},  # icon_name
             ${black_repr(app.use_sign_count)},  # use_sign_count
             ${black_repr(app.use_self_attestation)},  # use_self_attestation
+            ${black_repr(app.use_compact)},  # use_compact
         )
 % endfor
 

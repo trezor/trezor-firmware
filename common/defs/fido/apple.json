@@ -1,5 +1,7 @@
 {
   "name": "Apple",
   "webauthn": ["apple.com"],
-  "use_self_attestation": false
+  "use_sign_count": false,
+  "use_self_attestation": false,
+  "use_compact": true
 }

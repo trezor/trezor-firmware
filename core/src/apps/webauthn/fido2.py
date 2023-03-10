@@ -1502,7 +1502,7 @@ def _cbor_make_credential_process(req: Cmd, dialog_mgr: DialogManager) -> State 
         cred = Fido2Credential()
         cred.rp_id = rp_id
         cred.rp_id_hash = rp_id_hash
-        cred.rp_name = param[_MAKECRED_CMD_RP].get("name", None)
+        cred.rp_name = rp.get("name", None)
         cred.user_id = user["id"]
         cred.user_name = user.get("name", None)
         cred.user_display_name = user.get("displayName", None)
@@ -1552,6 +1552,20 @@ def _cbor_make_credential_process(req: Cmd, dialog_mgr: DialogManager) -> State 
         cred.use_sign_count = app.use_sign_count
     else:
         cred.use_sign_count = bool(_DEFAULT_USE_SIGN_COUNT)
+
+    if app is not None and app.use_compact:
+        # Remove unnecessary information.
+
+        # The user_id is mandatory only for resident credentials.
+        if not resident_key:
+            cred.user_id = None
+
+        # We prefer to show rp_id, so we don't need rp_name.
+        cred.rp_name = None
+
+        # We prefer to show user_name, so we don't need user_display_name if we have user_name.
+        if cred.user_name:
+            cred.user_display_name = None
 
     # Check data types.
     if (

@@ -138,6 +138,7 @@ class FidoApp(TypedDict):
     u2f: list[dict[str, str]]
     use_sign_count: bool
     use_self_attestation: bool
+    use_compact: bool
     no_icon: bool
 
     key: str
@@ -431,6 +432,7 @@ def _load_fido_apps() -> FidoApps:
         app = load_json(file)
         app.setdefault("use_sign_count", None)
         app.setdefault("use_self_attestation", None)
+        app.setdefault("use_compact", None)
         app.setdefault("u2f", [])
         app.setdefault("webauthn", [])
 
