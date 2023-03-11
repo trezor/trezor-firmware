@@ -37,6 +37,7 @@ void ui_screen_boot(const vendor_header* const vhdr,
 void ui_screen_boot_wait(int wait_seconds);
 void ui_screen_boot_click(void);
 
+void ui_screen_welcome_model(void);
 void ui_screen_welcome(void);
 
 uint32_t ui_screen_intro(const vendor_header* const vhdr,

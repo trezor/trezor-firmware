@@ -21,7 +21,7 @@ from trezor.ui.layouts.homescreen import Lockscreen
 
 from apps.common.request_pin import can_lock_device, verify_user_pin
 
-_WELCOME_SCREEN_MS = 1500  # how long do we want to show welcome screen (minimum)
+_WELCOME_SCREEN_MS = 1200  # how long do we want to show welcome screen (minimum)
 
 
 def enforce_welcome_screen_duration() -> None:

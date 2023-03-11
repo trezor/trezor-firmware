@@ -5,7 +5,7 @@ use crate::{
         display::{self, Font},
         event::TouchEvent,
         geometry::Point,
-        model_tt::constant,
+        model_tt::{component::WelcomeScreen, constant},
     },
 };
 use heapless::String;
@@ -16,6 +16,7 @@ mod connect;
 pub mod intro;
 pub mod menu;
 pub mod theme;
+pub mod welcome;
 
 use crate::{
     strutil::hexlify,
@@ -23,7 +24,7 @@ use crate::{
         component::text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
         constant::screen,
         display::{Color, Icon},
-        geometry::{Alignment, LinearPlacement, CENTER},
+        geometry::{Alignment, LinearPlacement, TOP_CENTER},
         model_tt::{
             bootloader::{
                 connect::Connect,
@@ -33,6 +34,7 @@ use crate::{
                     CHECK40, DOWNLOAD32, FIRE32, FIRE40, LOGO_EMPTY, TEXT_WIPE_BOLD,
                     TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, WELCOME_HIGHLIGHT_COLOR, X24,
                 },
+                welcome::Welcome,
             },
             component::{Button, ResultScreen},
             theme::{
@@ -401,7 +403,7 @@ extern "C" fn screen_boot_empty(firmware_present: bool, fading: bool) {
     };
     display::rect_fill(constant::screen(), bg);
     let icon = Icon::new(LOGO_EMPTY);
-    icon.draw(screen().center(), CENTER, fg, bg);
+    icon.draw(Point::new(screen().center().x, 48), TOP_CENTER, fg, bg);
 
     if fading {
         fadein();
@@ -502,16 +504,13 @@ extern "C" fn screen_install_success(
 }
 
 #[no_mangle]
-extern "C" fn screen_welcome() {
-    fadeout();
-    display::rect_fill(screen(), WELCOME_COLOR);
+extern "C" fn screen_welcome_model() {
+    let mut frame = WelcomeScreen::new();
+    show(&mut frame, true);
+}
 
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_WELCOME, "Get started with").centered());
-    messages.add(Paragraph::new(&theme::TEXT_WELCOME, "your trezor at").centered());
-    messages.add(Paragraph::new(&theme::TEXT_WELCOME_URL, "trezor.io/start").centered());
-    let mut frame =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-    show(&mut frame, false);
-    fadein();
+#[no_mangle]
+extern "C" fn screen_welcome() {
+    let mut frame = Welcome::new();
+    show(&mut frame, true);
 }

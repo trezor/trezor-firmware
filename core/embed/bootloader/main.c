@@ -359,6 +359,8 @@ int main(void) {
 
     ui_set_initial_setup(true);
 
+    ui_screen_welcome_model();
+    hal_delay(1000);
     ui_screen_welcome();
 
     // erase storage

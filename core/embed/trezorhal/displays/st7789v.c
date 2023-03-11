@@ -647,20 +647,18 @@ void display_reinit(void) {
   // important for model T as this is not set in boardloader
   display_set_little_endian();
 
-  // enable PWM timer
-  TIM_HandleTypeDef TIM1_Handle;
-  TIM1_Handle.Instance = TIM1;
-  TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
-  // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration,
-  // we want 1 MHz
-  TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
-  TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
-  TIM1_Handle.Init.RepetitionCounter = 0;
-  HAL_TIM_PWM_Init(&TIM1_Handle);
+  uint32_t prev_arr = TIM1->ARR;
+  uint32_t prev_ccr1 = TIM1->CCR1;
+
+  uint8_t prev_val = (prev_ccr1 * 255) / prev_arr;
+  DISPLAY_BACKLIGHT = prev_val;
+  DISPLAY_ORIENTATION = 0;
 
   pwm_period = LED_PWM_TIM_PERIOD;
-  display_backlight(DISPLAY_BACKLIGHT);
+  TIM1->CR1 |= TIM_CR1_ARPE;
+  TIM1->CR2 |= TIM_CR2_CCPC;
+  TIM1->CCR1 = pwm_period * prev_val / 255;
+  TIM1->ARR = LED_PWM_TIM_PERIOD - 1;
 }
 
 void display_sync(void) {
@@ -678,20 +676,16 @@ void display_sync(void) {
 void display_refresh(void) {}
 
 void display_set_slow_pwm(void) {
-  // enable PWM timer
-  TIM_HandleTypeDef TIM1_Handle;
-  TIM1_Handle.Instance = TIM1;
-  TIM1_Handle.Init.Period = LED_PWM_SLOW_TIM_PERIOD - 1;
-  // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration,
-  // we want 1 MHz
-  TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
-  TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
-  TIM1_Handle.Init.RepetitionCounter = 0;
-  HAL_TIM_PWM_Init(&TIM1_Handle);
+  uint32_t prev_arr = TIM1->ARR;
+  uint32_t prev_ccr1 = TIM1->CCR1;
+
+  uint8_t prev_val = (prev_ccr1 * 255) / prev_arr;
 
   pwm_period = LED_PWM_SLOW_TIM_PERIOD;
-  display_backlight(DISPLAY_BACKLIGHT);
+  TIM1->CR1 |= TIM_CR1_ARPE;
+  TIM1->CR2 |= TIM_CR2_CCPC;
+  TIM1->ARR = LED_PWM_SLOW_TIM_PERIOD - 1;
+  TIM1->CCR1 = pwm_period * prev_val / 255;
 }
 
 void display_set_little_endian(void) {

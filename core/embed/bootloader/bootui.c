@@ -117,6 +117,7 @@ void ui_screen_boot_click(void) {
 
 // welcome UI
 
+void ui_screen_welcome_model(void) { screen_welcome_model(); }
 void ui_screen_welcome(void) { screen_welcome(); }
 
 uint32_t ui_screen_intro(const vendor_header *const vhdr,

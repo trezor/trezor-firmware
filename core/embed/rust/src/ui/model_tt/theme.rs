@@ -98,7 +98,7 @@ pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/bg-back40.toif")
 pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/bg-back52.toif");
 
 // Welcome screen.
-pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/logo.toif");
+pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/lock_full.toif");
 
 // Default homescreen
 pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");

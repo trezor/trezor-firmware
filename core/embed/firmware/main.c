@@ -135,8 +135,6 @@ int main(void) {
   sdcard_init();
 #endif
 
-  display_clear();
-
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode
   // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html

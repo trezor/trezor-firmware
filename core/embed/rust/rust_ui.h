@@ -24,5 +24,6 @@ void screen_wipe_fail(void);
 uint32_t screen_install_success(const char* reboot_msg, bool initial_setup,
                                 bool complete_draw);
 uint32_t screen_install_fail(void);
+void screen_welcome_model(void);
 void screen_welcome(void);
 void screen_boot_empty(bool firmware_present, bool fading);

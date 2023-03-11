@@ -1,3 +1,5 @@
+#[cfg(feature = "bootloader")]
+use crate::ui::model_tt::bootloader::theme::DEVICE_NAME;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::{self, Icon},
@@ -33,6 +35,13 @@ impl Component for WelcomeScreen {
     }
 
     fn paint(&mut self) {
+        Icon::new(theme::ICON_LOGO).draw(
+            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
+            geometry::TOP_CENTER,
+            theme::FG,
+            theme::BG,
+        );
+        #[cfg(not(feature = "bootloader"))]
         display::text_center(
             self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
             MODEL_NAME,
@@ -40,9 +49,10 @@ impl Component for WelcomeScreen {
             theme::FG,
             theme::BG,
         );
-        Icon::new(theme::ICON_LOGO).draw(
-            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-            geometry::TOP_CENTER,
+        #[cfg(feature = "bootloader")]
+        Icon::new(DEVICE_NAME).draw(
+            self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN) + Offset::y(1),
+            geometry::BOTTOM_CENTER,
             theme::FG,
             theme::BG,
         );
