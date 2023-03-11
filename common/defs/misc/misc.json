@@ -175,5 +175,16 @@
             "Homepage": "https://tether.to"
         },
         "wallet": {}
+    },
+    {
+        "name": "Nostr",
+        "shortcut": "NOSTR",
+        "slip44": 1237,
+        "curve": "secp256k1",
+        "decimals": 0,
+        "links": {
+            "Github": "https://github.com/nostr-protocol/nostr"
+        },
+        "wallet": {}
     }
 ]
