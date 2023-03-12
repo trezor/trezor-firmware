@@ -162,7 +162,9 @@ impl TextLayout {
     }
 
     pub fn initial_cursor(&self) -> Point {
-        self.bounds.top_left() + Offset::y(self.style.text_font.text_height() + self.padding_top)
+        let font = &self.style.text_font;
+        self.bounds.top_left()
+            + Offset::y(font.text_max_height() - font.text_baseline() + self.padding_top)
     }
 
     pub fn fit_text(&self, text: &str) -> LayoutFit {
