@@ -1930,7 +1930,7 @@ mod tests {
         layout.place(SCREEN);
         assert_eq!(
             trace(&layout),
-            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > controls:<FixedHeightBar inner:<Tuple 0:<GridPlaced inner:<Button text:Left > > 1:<GridPlaced inner:<Button text:Right > > > > >",
+            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some\nmore text. And paramet-\ners! > controls:<FixedHeightBar inner:<Split first:<Button text:Left > second:<Button text:Right > > > >",
         )
     }
 }
