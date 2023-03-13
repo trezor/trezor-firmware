@@ -52,7 +52,7 @@ def process_bitmap_buffer(buf, bpp):
     return res
 
 
-def drop_left_columns(buf: list[int], width: int, drop: int):
+def drop_left_columns(buf, width, drop):
     res = []
     for i in range(len(buf)):
         if i % width >= drop:
