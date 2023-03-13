@@ -2,8 +2,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, Floating, Map, Paginate,
-            Split, TimerToken,
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, Map, Split, TimerToken,
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
@@ -514,6 +513,7 @@ type CancelInfoConfirm<T, F0, F1, F2> =
 
 type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<Map<Button<T>, F0>, Map<Button<T>, F1>>>;
 
+#[derive(Clone, Copy)]
 pub enum CancelInfoConfirmMsg {
     Cancelled,
     Info,
@@ -580,91 +580,5 @@ impl IconText {
             self.icon
                 .draw(icon_pos, CENTER, style.text_color, style.button_color);
         }
-    }
-}
-
-pub struct FloatingButton<T> {
-    inner: T,
-    button: Floating<Button<&'static str>>,
-}
-
-pub enum FloatingButtonMsg<T> {
-    ButtonClicked,
-    Content(T),
-}
-
-impl<T> FloatingButton<T>
-where
-    T: Component,
-{
-    pub const fn top_right_corner(icon: Icon, inner: T) -> Self {
-        Self {
-            inner,
-            button: Floating::top_right(
-                theme::CORNER_BUTTON_SIDE,
-                theme::CORNER_BUTTON_SPACING,
-                Button::with_icon(icon)
-                    .with_expanded_touch_area(Insets::uniform(theme::CORNER_BUTTON_SPACING))
-                    .styled(theme::button_moreinfo()),
-            ),
-        }
-    }
-
-    pub fn inner(&self) -> &T {
-        &self.inner
-    }
-}
-
-impl<T> Component for FloatingButton<T>
-where
-    T: Component,
-{
-    type Msg = FloatingButtonMsg<T::Msg>;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.button.place(bounds);
-        self.inner.place(bounds)
-    }
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
-            return Some(FloatingButtonMsg::ButtonClicked);
-        }
-        self.inner.event(ctx, event).map(FloatingButtonMsg::Content)
-    }
-
-    fn paint(&mut self) {
-        self.inner.paint();
-        self.button.paint();
-    }
-
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.inner.bounds(sink);
-        self.button.bounds(sink);
-    }
-}
-
-impl<T> Paginate for FloatingButton<T>
-where
-    T: Paginate,
-{
-    fn page_count(&mut self) -> usize {
-        self.inner.page_count()
-    }
-
-    fn change_page(&mut self, to_page: usize) {
-        self.inner.change_page(to_page)
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for FloatingButton<T>
-where
-    T: Component + crate::trace::Trace,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("FloatingButton");
-        t.field("inner", self.inner());
-        t.close();
     }
 }
