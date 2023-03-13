@@ -56,6 +56,31 @@ void __attribute__((noreturn)) trezor_shutdown(void) {
 }
 
 void __attribute__((noreturn))
+error_uni(const char *label, const char *msg, const char *footer) {
+  display_orientation(0);
+
+#ifdef FANCY_FATAL_ERROR
+
+  screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
+  display_refresh();
+#else
+  display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+  if (label) {
+    display_printf("%s\n", label);
+  }
+  if (msg) {
+    display_printf("%s\n", msg);
+  }
+  if (footer) {
+    display_printf("\n%s\n", footer);
+  }
+#endif
+  display_backlight(255);
+  display_refresh();
+  trezor_shutdown();
+}
+
+void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,
               const char *func) {
   display_orientation(0);
@@ -64,7 +89,8 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 #ifdef FANCY_FATAL_ERROR
   char buf[256] = {0};
   mini_snprintf(buf, sizeof(buf), "%s: %d", file, line);
-  screen_fatal_error_c(msg, buf);
+  screen_fatal_error_rust("FATAL ERROR", msg != NULL ? msg : buf,
+                          "PLEASE VISIT\nTREZOR.IO/RSOD");
   display_refresh();
 #else
   display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
@@ -94,8 +120,10 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 void __attribute__((noreturn))
 error_shutdown(const char *label, const char *msg) {
   display_orientation(0);
+
 #ifdef FANCY_FATAL_ERROR
-  screen_error_shutdown_c(label, msg);
+
+  screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
   display_refresh();
 #else
   display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
@@ -105,7 +133,7 @@ error_shutdown(const char *label, const char *msg) {
   if (msg) {
     display_printf("%s\n", msg);
   }
-  display_printf("\nPlease unplug the device.\n");
+  display_printf("\nPLEASE VISIT TREZOR.IO/RSOD\n");
 #endif
   display_backlight(255);
   trezor_shutdown();
@@ -141,7 +169,7 @@ void clear_otg_hs_memory(void) {
 uint32_t __stack_chk_guard = 0;
 
 void __attribute__((noreturn)) __stack_chk_fail(void) {
-  error_shutdown("Internal error", "(SS)");
+  error_shutdown("INTERNAL ERROR", "(SS)");
 }
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
@@ -183,11 +211,10 @@ void ensure_compatible_settings(void) {
 }
 
 void show_wipe_code_screen(void) {
-  error_shutdown(
-      "DEVICE WIPED!",
-      "You have entered the wipe code. All private data has been erased.");
+  error_uni("WIPE CODE ENTERED", "All data has been erased from the device",
+            "PLEASE RECONNECT\nTHE DEVICE");
 }
 void show_pin_too_many_screen(void) {
-  error_shutdown("DEVICE WIPED!",
-                 "Too many wrong PIN attempts. Storage has been wiped.");
+  error_uni("TOO MANY PIN ATTEMPTS", "All data has been erased from the device",
+            "PLEASE RECONNECT\nTHE DEVICE");
 }

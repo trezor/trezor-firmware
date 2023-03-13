@@ -355,7 +355,7 @@ extern "C" fn screen_wipe_success() {
         BLD_WIPE_CANCEL_BTN_COLOR,
         Icon::new(CHECK40),
         m_top,
-        m_bottom,
+        Some(m_bottom),
         true,
     );
     show(&mut frame, true);
@@ -383,7 +383,7 @@ extern "C" fn screen_wipe_fail() {
         BLD_WIPE_CANCEL_BTN_COLOR,
         Icon::new(WARNING40),
         m_top,
-        m_bottom,
+        Some(m_bottom),
         true,
     );
     show(&mut frame, true);
@@ -433,7 +433,7 @@ extern "C" fn screen_install_fail() {
         BLD_BTN_COLOR,
         Icon::new(WARNING40),
         m_top,
-        m_bottom,
+        Some(m_bottom),
         true,
     );
     show(&mut frame, true);
@@ -457,7 +457,7 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) {
         BLD_BTN_COLOR,
         Icon::new(CHECK40),
         m_top,
-        m_bottom,
+        Some(m_bottom),
         complete_draw,
     );
     show(&mut frame, complete_draw);
@@ -483,7 +483,7 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) {
         WELCOME_HIGHLIGHT_COLOR,
         Icon::new(CHECK40),
         m_top,
-        m_bottom,
+        Some(m_bottom),
         complete_draw,
     );
     show(&mut frame, complete_draw);

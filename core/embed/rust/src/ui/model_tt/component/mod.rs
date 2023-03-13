@@ -5,6 +5,7 @@ mod dialog;
 mod fido;
 #[rustfmt::skip]
 mod fido_icons;
+mod error;
 mod frame;
 mod hold_to_confirm;
 #[cfg(feature = "dma2d")]
@@ -27,6 +28,7 @@ pub use button::{
 };
 pub use coinjoin_progress::CoinJoinProgress;
 pub use dialog::{Dialog, DialogMsg, IconDialog};
+pub use error::ErrorScreen;
 pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, FrameMsg, NotificationFrame};
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};

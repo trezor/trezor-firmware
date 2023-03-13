@@ -7,34 +7,25 @@ pub use super::model_tr::screens::*;
 pub use super::model_tt::screens::*;
 use crate::ui::util::from_c_str;
 
-#[no_mangle]
-extern "C" fn screen_fatal_error_c(msg: *const cty::c_char, file: *const cty::c_char) {
-    let msg = if msg.is_null() {
-        None
-    } else {
-        unsafe { from_c_str(msg) }
+macro_rules! convert_str {
+    ($str:expr) => {
+        if ($str).is_null() {
+            ""
+        } else {
+            unwrap!(unsafe { from_c_str($str) })
+        }
     };
-    let file = if file.is_null() {
-        ""
-    } else {
-        unwrap!(unsafe { from_c_str(file) })
-    };
-
-    screen_fatal_error(msg, file);
 }
 
 #[no_mangle]
-extern "C" fn screen_error_shutdown_c(msg: *const cty::c_char, file: *const cty::c_char) {
-    let msg = if msg.is_null() {
-        None
-    } else {
-        unsafe { from_c_str(msg) }
-    };
-    let file = if file.is_null() {
-        ""
-    } else {
-        unwrap!(unsafe { from_c_str(file) })
-    };
+extern "C" fn screen_fatal_error_rust(
+    title: *const cty::c_char,
+    msg: *const cty::c_char,
+    footer: *const cty::c_char,
+) {
+    let title = convert_str!(title);
+    let msg = convert_str!(msg);
+    let footer = convert_str!(footer);
 
-    screen_fatal_error(msg, file);
+    screen_fatal_error(title, msg, footer);
 }

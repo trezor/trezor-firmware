@@ -8,17 +8,23 @@ use crate::ui::{
     geometry::{Point, Rect, CENTER},
 };
 
-use crate::ui::model_tt::constant::{HEIGHT, WIDTH};
+use crate::ui::model_tt::{
+    constant::WIDTH,
+    theme::{RESULT_FOOTER_HEIGHT, RESULT_FOOTER_START, RESULT_PADDING},
+};
+
+const MESSAGE_AREA_START: i16 = 82;
+const ICON_CENTER_Y: i16 = 62;
 
 pub struct ResultScreen<T> {
     bg: Pad,
-    small_pad: Pad,
+    footer_pad: Pad,
     fg_color: Color,
     bg_color: Color,
     msg_area_color: Color,
     icon: Icon,
-    message_top: Child<Paragraphs<ParagraphVecShort<T>>>,
-    message_bottom: Child<Paragraphs<ParagraphVecShort<T>>>,
+    message: Child<Paragraphs<ParagraphVecShort<T>>>,
+    footer: Option<Child<Paragraphs<ParagraphVecShort<T>>>>,
 }
 
 impl<T: ParagraphStrType> ResultScreen<T> {
@@ -27,25 +33,25 @@ impl<T: ParagraphStrType> ResultScreen<T> {
         bg_color: Color,
         msg_area_color: Color,
         icon: Icon,
-        message_top: Paragraphs<ParagraphVecShort<T>>,
-        message_bottom: Paragraphs<ParagraphVecShort<T>>,
+        message: Paragraphs<ParagraphVecShort<T>>,
+        footer: Option<Paragraphs<ParagraphVecShort<T>>>,
         complete_draw: bool,
     ) -> Self {
         let mut instance = Self {
             bg: Pad::with_background(bg_color),
-            small_pad: Pad::with_background(bg_color),
+            footer_pad: Pad::with_background(bg_color),
             fg_color,
             bg_color,
             msg_area_color,
             icon,
-            message_top: Child::new(message_top),
-            message_bottom: Child::new(message_bottom),
+            message: Child::new(message),
+            footer: footer.map(Child::new),
         };
 
         if complete_draw {
             instance.bg.clear();
         } else {
-            instance.small_pad.clear();
+            instance.footer_pad.clear();
         }
         instance
     }
@@ -55,16 +61,33 @@ impl<T: ParagraphStrType> Component for ResultScreen<T> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.bg
-            .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, HEIGHT)));
+        self.bg.place(screen());
 
-        self.message_top
-            .place(Rect::new(Point::new(15, 59), Point::new(WIDTH - 15, 176)));
+        let message_arae = if let Some(footer) = &mut self.footer {
+            let footer_area = Rect::new(
+                Point::new(RESULT_PADDING, RESULT_FOOTER_START),
+                Point::new(
+                    WIDTH - RESULT_PADDING,
+                    RESULT_FOOTER_START + RESULT_FOOTER_HEIGHT,
+                ),
+            );
+            self.footer_pad.place(footer_area);
+            footer.place(footer_area);
+            Rect::new(
+                Point::new(RESULT_PADDING, MESSAGE_AREA_START),
+                Point::new(WIDTH - RESULT_PADDING, RESULT_FOOTER_START),
+            )
+        } else {
+            Rect::new(
+                Point::new(RESULT_PADDING, MESSAGE_AREA_START),
+                Point::new(
+                    WIDTH - RESULT_PADDING,
+                    RESULT_FOOTER_START + RESULT_FOOTER_HEIGHT,
+                ),
+            )
+        };
 
-        let bottom_area = Rect::new(Point::new(6, 176), Point::new(WIDTH - 6, 176 + 56));
-
-        self.small_pad.place(bottom_area);
-        self.message_bottom.place(bottom_area);
+        self.message.place(message_arae);
 
         bounds
     }
@@ -75,21 +98,30 @@ impl<T: ParagraphStrType> Component for ResultScreen<T> {
 
     fn paint(&mut self) {
         self.bg.paint();
-        self.small_pad.paint();
+        self.footer_pad.paint();
 
         self.icon.draw(
-            Point::new(screen().center().x, 45),
+            Point::new(screen().center().x, ICON_CENTER_Y),
             CENTER,
             self.fg_color,
             self.bg_color,
         );
-        self.message_top.paint();
-        display::rect_fill_rounded(
-            Rect::new(Point::new(6, 176), Point::new(WIDTH - 6, 176 + 56)),
-            self.msg_area_color,
-            self.bg_color,
-            2,
-        );
-        self.message_bottom.paint();
+        self.message.paint();
+
+        if let Some(bottom) = &mut self.footer {
+            display::rect_fill_rounded(
+                Rect::new(
+                    Point::new(RESULT_PADDING, RESULT_FOOTER_START),
+                    Point::new(
+                        WIDTH - RESULT_PADDING,
+                        RESULT_FOOTER_START + RESULT_FOOTER_HEIGHT,
+                    ),
+                ),
+                self.msg_area_color,
+                self.bg_color,
+                2,
+            );
+            bottom.paint();
+        }
     }
 }

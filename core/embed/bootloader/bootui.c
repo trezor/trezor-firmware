@@ -191,11 +191,11 @@ void ui_screen_done(int restart_seconds, secbool full_redraw) {
   const char *str;
   char count_str[24];
   if (restart_seconds >= 1) {
-    mini_snprintf(count_str, sizeof(count_str), "DONE! RESTARTING IN %d",
+    mini_snprintf(count_str, sizeof(count_str), "RESTARTING IN %d",
                   restart_seconds);
     str = count_str;
   } else {
-    str = "DONE! RECONNECT THE DEVICE";
+    str = "RECONNECT THE DEVICE";
   }
 
   screen_install_success(str, initial_setup, full_redraw);

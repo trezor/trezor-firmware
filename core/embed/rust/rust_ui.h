@@ -17,8 +17,8 @@ uint32_t screen_intro(const char* bld_version_str, const char* vendor_str,
                       uint8_t vendor_str_len, const char* version_str);
 uint32_t screen_menu(const char* bld_version_str);
 void screen_connect(void);
-void screen_fatal_error_c(const char* msg, const char* file);
-void screen_error_shutdown_c(const char* label, const char* msg);
+void screen_fatal_error_rust(const char* title, const char* msg,
+                             const char* footer);
 void screen_wipe_success(void);
 void screen_wipe_fail(void);
 uint32_t screen_install_success(const char* reboot_msg, bool initial_setup,

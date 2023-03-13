@@ -556,6 +556,9 @@ pub const CORNER_BUTTON_SPACING: i16 = BUTTON_SPACING;
 pub const INFO_BUTTON_HEIGHT: i16 = 44;
 pub const PIN_BUTTON_HEIGHT: i16 = 40;
 pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
+pub const RESULT_PADDING: i16 = 6;
+pub const RESULT_FOOTER_START: i16 = 178;
+pub const RESULT_FOOTER_HEIGHT: i16 = 56;
 
 pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
     FixedHeightBar::bottom(inner, BUTTON_HEIGHT)

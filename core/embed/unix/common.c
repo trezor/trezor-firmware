@@ -49,15 +49,47 @@ void __attribute__((noreturn)) trezor_shutdown(void) {
 #endif
 
 void __attribute__((noreturn))
+error_uni(const char *label, const char *msg, const char *footer) {
+  display_orientation(0);
+
+#ifdef FANCY_FATAL_ERROR
+
+  screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
+  display_refresh();
+#else
+  display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+  if (label) {
+    display_printf("%s\n", label);
+  }
+  if (msg) {
+    display_printf("%s\n", msg);
+  }
+  if (footer) {
+    display_printf("\n%s\n", footer);
+  }
+#endif
+  display_backlight(255);
+  display_refresh();
+  hal_delay(3000);
+  trezor_shutdown();
+}
+
+void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,
               const char *func) {
   display_orientation(0);
   display_backlight(255);
 
 #ifdef FANCY_FATAL_ERROR
-  char buf[256] = {0};
-  snprintf(buf, sizeof(buf), "%s: %d", file, line);
-  screen_fatal_error_c(msg, buf);
+  if (msg == NULL) {
+    msg = "Unknown error";
+    char buf[256] = {0};
+    snprintf(buf, sizeof(buf), "%s: %d", file, line);
+    screen_fatal_error_rust("FATAL ERROR", buf, "PLEASE VISIT\nTREZOR.IO/RSOD");
+  } else {
+    screen_fatal_error_rust("FATAL ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
+  }
+
   display_refresh();
 #else
   display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
@@ -96,7 +128,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 void __attribute__((noreturn))
 error_shutdown(const char *label, const char *msg) {
 #ifdef FANCY_FATAL_ERROR
-  screen_error_shutdown_c(label, msg);
+  screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
   display_refresh();
 #else
   display_clear();
@@ -176,11 +208,10 @@ uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 void collect_hw_entropy(void) { memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN); }
 
 void show_wipe_code_screen(void) {
-  error_shutdown(
-      "DEVICE WIPED!",
-      "You have entered the wipe code. All private data has been erased.");
+  error_uni("WIPE CODE ENTERED", "All data has been erased from the device",
+            "PLEASE RECONNECT\nTHE DEVICE");
 }
 void show_pin_too_many_screen(void) {
-  error_shutdown("DEVICE WIPED!",
-                 "Too many wrong PIN attempts. Storage has been wiped.");
+  error_uni("TOO MANY PIN ATTEMPTS", "All data has been erased from the device",
+            "PLEASE RECONNECT\nTHE DEVICE");
 }

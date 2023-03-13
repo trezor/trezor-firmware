@@ -5,15 +5,11 @@ use crate::ui::{
         text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
         Component,
     },
-    display::Icon,
     geometry::LinearPlacement,
     model_tt::{
-        component::ResultScreen,
+        component::ErrorScreen,
         constant,
-        theme::{
-            FATAL_ERROR_COLOR, FATAL_ERROR_HIGHLIGHT_COLOR, ICON_WARNING40, TEXT_ERROR_BOLD,
-            TEXT_ERROR_HIGHLIGHT, TEXT_ERROR_NORMAL, WHITE,
-        },
+        theme::{TEXT_ERROR_HIGHLIGHT, TEXT_ERROR_NORMAL},
     },
 };
 
@@ -29,87 +25,28 @@ unsafe fn get_str(text: &str) -> StrBuffer {
     unsafe { StrBuffer::from_ptr_and_len(text.as_ptr(), text.len()) }
 }
 
-pub fn screen_fatal_error(msg: Option<&str>, file: &str) {
+pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
     // SAFETY: these will get placed into `frame` which does not outlive this
     // function
-    let msg = msg.map(|s| unsafe { get_str(s) });
-    let file = unsafe { get_str(file) };
+    let title = unsafe { get_str(title) };
+    let msg = unsafe { get_str(msg) };
+    let footer = unsafe { get_str(footer) };
 
-    let m_top = if let Some(msg) = msg {
-        let mut messages = ParagraphVecShort::new();
-
-        messages.add(Paragraph::new(&TEXT_ERROR_BOLD, "FATAL ERROR!".into()).centered());
-        messages.add(Paragraph::new(&TEXT_ERROR_NORMAL, msg).centered());
-
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center())
-    } else {
-        let mut messages = ParagraphVecShort::new();
-
-        messages.add(Paragraph::new(&TEXT_ERROR_BOLD, "FATAL ERROR!".into()).centered());
-        messages.add(Paragraph::new(&TEXT_ERROR_NORMAL, file).centered());
-
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center())
-    };
     let mut messages = ParagraphVecShort::new();
 
-    messages.add(
-        Paragraph::new(
-            &TEXT_ERROR_HIGHLIGHT,
-            "PLEASE CONTACT\nTREZOR SUPPORT".into(),
-        )
-        .centered(),
-    );
+    messages.add(Paragraph::new(&TEXT_ERROR_NORMAL, msg).centered());
+
+    let m_top =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+
+    let mut messages = ParagraphVecShort::new();
+
+    messages.add(Paragraph::new(&TEXT_ERROR_HIGHLIGHT, footer).centered());
+
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(
-        WHITE,
-        FATAL_ERROR_COLOR,
-        FATAL_ERROR_HIGHLIGHT_COLOR,
-        Icon::new(ICON_WARNING40),
-        m_top,
-        m_bottom,
-        true,
-    );
-    frame.place(constant::screen());
-    frame.paint();
-}
-
-pub fn screen_error_shutdown(label: &str, msg: Option<&str>) {
-    // SAFETY: these will get placed into `frame` which does not outlive this
-    // function
-    let msg = msg.map(|s| unsafe { get_str(s) });
-    let label = unsafe { get_str(label) };
-
-    let m_top = if let Some(msg) = msg {
-        let mut messages = ParagraphVecShort::new();
-
-        messages.add(Paragraph::new(&TEXT_ERROR_BOLD, label).centered());
-        messages.add(Paragraph::new(&TEXT_ERROR_NORMAL, msg).centered());
-
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center())
-    } else {
-        let mut messages = ParagraphVecShort::new();
-
-        messages.add(Paragraph::new(&TEXT_ERROR_BOLD, label).centered());
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center())
-    };
-    let mut messages = ParagraphVecShort::new();
-
-    messages
-        .add(Paragraph::new(&TEXT_ERROR_HIGHLIGHT, "PLEASE UNPLUG\nTHE DEVICE".into()).centered());
-    let m_bottom =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut frame = ResultScreen::new(
-        WHITE,
-        FATAL_ERROR_COLOR,
-        FATAL_ERROR_HIGHLIGHT_COLOR,
-        Icon::new(ICON_WARNING40),
-        m_top,
-        m_bottom,
-        true,
-    );
+    let mut frame = ErrorScreen::new(title, m_top, m_bottom);
     frame.place(constant::screen());
     frame.paint();
 }
