@@ -52,6 +52,14 @@ def process_bitmap_buffer(buf, bpp):
     return res
 
 
+def drop_left_columns(buf: list[int], width: int, drop: int):
+    res = []
+    for i in range(len(buf)):
+        if i % width >= drop:
+            res.append(buf[i])
+    return res
+
+
 def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
     print("Processing ... %s %s %s" % (name, style, size))
     face = freetype.Face("fonts/%s-%s.%s" % (name, style, ext))
@@ -68,7 +76,7 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
         f.write("// - the rest is packed %d-bit glyph data\n\n" % bpp)
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
-            face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
+            face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL | freetype.FT_LOAD_FORCE_AUTOHINT)
             bitmap = face.glyph.bitmap
             metrics = face.glyph.metrics
             assert metrics.width // 64 == bitmap.width
@@ -85,10 +93,13 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
             advance = metrics.horiAdvance // 64
             bearingX = metrics.horiBearingX // 64
 
+            remove_left = shave_bearingX
             # discard space on the left side
-            if shave_bearingX > 0:
-                advance -= min(advance, bearingX, shave_bearingX)
-                bearingX -= min(advance, bearingX, shave_bearingX)
+            if remove_left > 0:
+                diff = min(advance, bearingX, shave_bearingX)
+                advance -= diff
+                bearingX -= diff
+                remove_left -= diff
             # the following code is here just for some letters (listed below)
             # not using negative bearingX makes life so much easier; add it to advance instead
             if bearingX < 0:
@@ -104,6 +115,14 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
                 print("normalizing bearingY %d for '%s'" % (bearingY, c))
                 bearingY = 0
             assert bearingY >= 0 and bearingY <= 255
+            buf = list(bitmap.buffer)
+            if remove_left > 0 and width > 0:
+                assert bearingX == 0
+                buf = drop_left_columns(buf, width, remove_left)
+                assert width > remove_left
+                width -= remove_left
+                assert advance > remove_left
+                advance -= remove_left
             print(
                 'Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes, metrics: %d, %d, %d)'
                 % (
@@ -121,7 +140,6 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
                 "/* %c */ static const uint8_t Font_%s_%s_%d_glyph_%d[] = { %d, %d, %d, %d, %d"
                 % (c, name, style, size, i, width, rows, advance, bearingX, bearingY)
             )
-            buf = list(bitmap.buffer)
             if len(buf) > 0:
                 f.write(
                     ", "
