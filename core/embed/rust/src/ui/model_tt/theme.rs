@@ -553,22 +553,18 @@ pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
 }
 
 /// +----------+
-/// |    13    |
+/// |     6    |
 /// |  +----+  |
-/// |10|    |10|
+/// | 6|    | 6|
 /// |  +----+  |
-/// |    14    |
+/// |     6    |
 /// +----------+
 pub const fn borders() -> Insets {
     Insets::new(6, 6, 6, 6)
 }
 
-pub const fn borders_scroll() -> Insets {
-    Insets::new(6, 6, 6, 6)
-}
-
 pub const fn borders_horizontal_scroll() -> Insets {
-    Insets::new(13, 10, 0, 10)
+    Insets::new(6, 6, 0, 6)
 }
 
 pub const fn borders_notification() -> Insets {

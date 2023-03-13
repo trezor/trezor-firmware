@@ -7,13 +7,13 @@ use crate::{
             text::paragraphs::{
                 Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecShort, Paragraphs, VecExt,
             },
-            Component, Event, EventCtx, Never, Paginate, Qr,
+            Component, Event, EventCtx, Paginate, Qr,
         },
         geometry::Rect,
     },
 };
 
-use super::{theme, Frame};
+use super::{theme, Frame, FrameMsg};
 
 const MAX_XPUBS: usize = 16;
 
@@ -57,18 +57,21 @@ where
                 "RECEIVE ADDRESS".into(),
                 Qr::new(qr_address, case_sensitive)?.with_border(7),
             )
+            .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
             details: Frame::left_aligned(
                 theme::label_title(),
                 "RECEIVING TO".into(),
                 para.into_paragraphs(),
             )
+            .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
             xpub_view: Frame::left_aligned(
                 theme::label_title(),
                 " \n ".into(),
                 Paragraph::new(&theme::TEXT_MONO, "".into()).into_paragraphs(),
             )
+            .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
             xpubs: Vec::new(),
             xpub_page_count: Vec::new(),
@@ -142,7 +145,7 @@ impl<T> Component for AddressDetails<T>
 where
     T: ParagraphStrType + Clone,
 {
-    type Msg = Never;
+    type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.qr_code.place(bounds);
@@ -159,10 +162,14 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match self.current_page {
+        let msg = match self.current_page {
             0 => self.qr_code.event(ctx, event),
             1 => self.details.event(ctx, event),
             _ => self.xpub_view.event(ctx, event),
+        };
+        match msg {
+            Some(FrameMsg::Button(_)) => Some(()),
+            _ => None,
         }
     }
 

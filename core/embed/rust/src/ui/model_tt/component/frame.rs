@@ -3,14 +3,22 @@ use crate::ui::{
     component::{
         base::ComponentExt, label::Label, text::TextStyle, Child, Component, Event, EventCtx,
     },
-    display::{self, Color, Font},
+    display::{self, Color, Font, Icon},
     geometry::{Alignment, Insets, Offset, Rect},
+    model_tt::component::{Button, ButtonMsg, CancelInfoConfirmMsg},
 };
 
 pub struct Frame<T, U> {
     border: Insets,
     title: Child<Label<U>>,
+    button: Option<Child<Button<&'static str>>>,
+    button_msg: CancelInfoConfirmMsg,
     content: Child<T>,
+}
+
+pub enum FrameMsg<T> {
+    Content(T),
+    Button(CancelInfoConfirmMsg),
 }
 
 impl<T, U> Frame<T, U>
@@ -21,7 +29,9 @@ where
     pub fn new(style: TextStyle, alignment: Alignment, title: U, content: T) -> Self {
         Self {
             title: Child::new(Label::new(title, alignment, style)),
-            border: theme::borders_scroll(),
+            border: theme::borders(),
+            button: None,
+            button_msg: CancelInfoConfirmMsg::Cancelled,
             content: Child::new(content),
         }
     }
@@ -41,6 +51,35 @@ where
     pub fn with_border(mut self, border: Insets) -> Self {
         self.border = border;
         self
+    }
+
+    fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg) -> Self {
+        let touch_area = Insets {
+            left: self.border.left * 4,
+            bottom: self.border.bottom * 4,
+            ..self.border
+        };
+        self.button = Some(Child::new(
+            Button::with_icon(icon)
+                .with_expanded_touch_area(touch_area)
+                .styled(theme::button_moreinfo()),
+        ));
+        self.button_msg = msg;
+        self
+    }
+
+    pub fn with_cancel_button(self) -> Self {
+        self.with_button(
+            Icon::new(theme::ICON_CORNER_CANCEL),
+            CancelInfoConfirmMsg::Cancelled,
+        )
+    }
+
+    pub fn with_info_button(self) -> Self {
+        self.with_button(
+            Icon::new(theme::ICON_CORNER_INFO),
+            CancelInfoConfirmMsg::Info,
+        )
     }
 
     pub fn inner(&self) -> &T {
@@ -71,31 +110,51 @@ where
     T: Component,
     U: AsRef<str>,
 {
-    type Msg = T::Msg;
+    type Msg = FrameMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         const TITLE_SPACE: i16 = theme::BUTTON_SPACING;
 
         let bounds = bounds.inset(self.border);
-        let title_area = bounds.inset(Insets::sides(theme::CONTENT_BORDER));
-        let title_area = self.title.place(title_area);
-        let content_area = bounds.inset(Insets::top(title_area.height() + TITLE_SPACE));
-        self.content.place(content_area);
+        if let Some(b) = &mut self.button {
+            let button_side = theme::CORNER_BUTTON_SIDE;
+            let (title_area, button_area) = bounds.split_right(button_side);
+            let (button_area, _) = button_area.split_top(button_side);
+            b.place(button_area);
+            let title_area = self.title.place(title_area);
+            let title_height = title_area.height();
+            let height = title_area.height().max(button_side);
+            if title_height < button_side {
+                self.title
+                    .place(title_area.translate(Offset::y((button_side - title_height) / 2)));
+            }
+            let content_area = bounds.inset(Insets::top(height + TITLE_SPACE));
+            self.content.place(content_area);
+        } else {
+            let title_area = self.title.place(bounds);
+            let content_area = bounds.inset(Insets::top(title_area.height() + TITLE_SPACE));
+            self.content.place(content_area);
+        }
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.title.event(ctx, event);
-        self.content.event(ctx, event)
+        if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
+            return Some(FrameMsg::Button(self.button_msg));
+        }
+        self.content.event(ctx, event).map(FrameMsg::Content)
     }
 
     fn paint(&mut self) {
         self.title.paint();
+        self.button.paint();
         self.content.paint();
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.title.bounds(sink);
+        self.button.bounds(sink);
         self.content.bounds(sink);
     }
 }
@@ -109,6 +168,9 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Frame");
         t.field("title", &self.title);
+        if let Some(b) = &self.button {
+            t.field("button", b);
+        }
         t.field("content", &self.content);
         t.close();
     }
@@ -150,7 +212,7 @@ where
         display::text_center(
             area.center() + Offset::y((font.text_max_height() - font.text_baseline()) / 2),
             title,
-            Font::BOLD,
+            font,
             theme::FG,
             color,
         );
