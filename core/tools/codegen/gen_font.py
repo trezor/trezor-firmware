@@ -60,7 +60,7 @@ def drop_left_columns(buf: list[int], width: int, drop: int):
     return res
 
 
-def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
+def process_face(name, style, size, bpp=4, shaveX=0, ext="ttf"):
     print("Processing ... %s %s %s" % (name, style, size))
     face = freetype.Face("fonts/%s-%s.%s" % (name, style, ext))
     face.set_pixel_sizes(0, size)
@@ -76,7 +76,7 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
         f.write("// - the rest is packed %d-bit glyph data\n\n" % bpp)
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
-            face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL | freetype.FT_LOAD_FORCE_AUTOHINT)
+            face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
             bitmap = face.glyph.bitmap
             metrics = face.glyph.metrics
             assert metrics.width // 64 == bitmap.width
@@ -93,10 +93,10 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
             advance = metrics.horiAdvance // 64
             bearingX = metrics.horiBearingX // 64
 
-            remove_left = shave_bearingX
+            remove_left = shaveX
             # discard space on the left side
-            if remove_left > 0:
-                diff = min(advance, bearingX, shave_bearingX)
+            if shaveX > 0:
+                diff = min(advance, bearingX, shaveX)
                 advance -= diff
                 bearingX -= diff
                 remove_left -= diff
@@ -116,6 +116,7 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
                 bearingY = 0
             assert bearingY >= 0 and bearingY <= 255
             buf = list(bitmap.buffer)
+            # discard non-space pixels on the left side
             if remove_left > 0 and width > 0:
                 assert bearingX == 0
                 buf = drop_left_columns(buf, width, remove_left)
@@ -123,6 +124,7 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
                 width -= remove_left
                 assert advance > remove_left
                 advance -= remove_left
+                print('Glyph "%c": removed %d pixel columns from the left' % (c, remove_left))
             print(
                 'Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes, metrics: %d, %d, %d)'
                 % (
@@ -195,11 +197,11 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
 process_face("Roboto", "Regular", 20)
 process_face("Roboto", "Bold", 20)
 
-process_face("TTHoves", "Regular", 21, ext="otf", shave_bearingX=1)
-process_face("TTHoves", "DemiBold", 21, ext="otf", shave_bearingX=1)
-process_face("TTHoves", "Bold", 17, ext="otf", shave_bearingX=1)
+process_face("TTHoves", "Regular", 21, ext="otf")
+process_face("TTHoves", "DemiBold", 21, ext="otf")
+process_face("TTHoves", "Bold", 17, ext="otf")
 process_face("RobotoMono", "Regular", 20)
 
-process_face("PixelOperator", "Regular", 8, bpp=1, shave_bearingX=1)
-process_face("PixelOperator", "Bold", 8, bpp=1, shave_bearingX=1)
-process_face("PixelOperatorMono", "Regular", 8, bpp=1, shave_bearingX=1)
+process_face("PixelOperator", "Regular", 8, bpp=1, shaveX=1)
+process_face("PixelOperator", "Bold", 8, bpp=1, shaveX=1)
+process_face("PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1)
