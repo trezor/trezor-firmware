@@ -304,7 +304,7 @@ pub const fn button_moreinfo() -> ButtonStyleSheet {
             text_color: FG,
             button_color: BG,
             background_color: BG,
-            border_color: FG,
+            border_color: GREY_MEDIUM,
             border_radius: RADIUS,
             border_width: 2,
         },
