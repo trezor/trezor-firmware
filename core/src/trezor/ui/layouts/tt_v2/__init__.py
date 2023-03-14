@@ -413,7 +413,7 @@ async def show_address(
 
             def xpub_title(i: int):
                 result = f"MULTISIG XPUB #{i + 1}\n"
-                result += " (YOURS)" if i == multisig_index else " (COSIGNER)"
+                result += "(YOURS)" if i == multisig_index else "(COSIGNER)"
                 return result
 
             result = await interact(
@@ -430,8 +430,7 @@ async def show_address(
                 "show_address_details",
                 ButtonRequestType.Address,
             )
-            # Can only go back from the address details but corner button returns INFO.
-            assert result in (INFO, CANCELLED)
+            assert result is CANCELLED
 
         else:
             result = await interact(

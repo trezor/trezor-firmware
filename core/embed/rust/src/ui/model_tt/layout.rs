@@ -358,7 +358,7 @@ where
 
 impl<T> ComponentMsgObj for AddressDetails<T>
 where
-    T: ParagraphStrType,
+    T: ParagraphStrType + Clone,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())

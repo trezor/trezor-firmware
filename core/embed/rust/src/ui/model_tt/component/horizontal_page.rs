@@ -8,7 +8,7 @@ use crate::ui::{
 
 use super::{theme, ScrollBar, Swipe, SwipeDirection};
 
-const SCROLLBAR_HEIGHT: i16 = 32;
+const SCROLLBAR_HEIGHT: i16 = 18;
 
 pub struct HorizontalPage<T> {
     content: T,

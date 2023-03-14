@@ -15,24 +15,30 @@ use crate::{
 
 use super::{theme, Frame, FrameMsg};
 
+const MAX_XPUBS: usize = 16;
+
 pub struct AddressDetails<T> {
     qr_code: Frame<Qr, T>,
     details: Frame<Paragraphs<ParagraphVecShort<T>>, T>,
     xpub_view: Frame<Paragraphs<Paragraph<T>>, T>,
-    xpubs: Vec<(T, T), 16>,
+    xpubs: Vec<(T, T), MAX_XPUBS>,
+    xpub_pages: Vec<u8, MAX_XPUBS>,
     current_page: usize,
 }
 
 impl<T> AddressDetails<T>
 where
-    T: ParagraphStrType + From<&'static str>,
+    T: ParagraphStrType,
 {
     pub fn new(
         qr_address: T,
         case_sensitive: bool,
         account: Option<T>,
         path: Option<T>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, Error>
+    where
+        T: From<&'static str>,
+    {
         let mut para = ParagraphVecShort::new();
         if let Some(a) = account {
             para.add(Paragraph::new(&theme::TEXT_NORMAL, "Account:".into()));
@@ -68,15 +74,49 @@ where
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
             xpubs: Vec::new(),
+            xpub_pages: Vec::new(),
             current_page: 0,
         };
         Ok(result)
     }
 
     pub fn add_xpub(&mut self, title: T, xpub: T) -> Result<(), Error> {
+        self.xpub_pages.push(1u8).map_err(|_| Error::OutOfRange)?;
         self.xpubs
             .push((title, xpub))
             .map_err(|_| Error::OutOfRange)
+    }
+
+    fn switch_xpub(&mut self, i: usize, page: usize) -> usize
+    where
+        T: Clone,
+    {
+        // Context is needed for updating child so that it can request repaint. In this
+        // case the parent component that handles paging always requests complete
+        // repaint after page change so we can use a dummy context here.
+        let mut dummy_ctx = EventCtx::new();
+        self.xpub_view
+            .update_title(&mut dummy_ctx, self.xpubs[i].0.clone());
+        self.xpub_view.update_content(&mut dummy_ctx, |p| {
+            p.inner_mut().update(self.xpubs[i].1.clone());
+            let npages = p.page_count();
+            p.change_page(page);
+            npages
+        })
+    }
+
+    fn lookup(&self, scrollbar_page: usize) -> (usize, usize) {
+        let mut xpub_index = 0;
+        let mut xpub_page = scrollbar_page;
+        for xpub_len in &self.xpub_pages {
+            if *xpub_len as usize <= xpub_page {
+                xpub_page -= *xpub_len as usize;
+                xpub_index += 1;
+            } else {
+                break;
+            }
+        }
+        (xpub_index, xpub_page)
     }
 }
 
@@ -85,30 +125,23 @@ where
     T: ParagraphStrType + Clone,
 {
     fn page_count(&mut self) -> usize {
-        2 + self.xpubs.len()
+        let total_xpub_pages: u8 = self.xpub_pages.iter().copied().sum();
+        2 + (total_xpub_pages as usize)
     }
 
     fn change_page(&mut self, to_page: usize) {
         self.current_page = to_page;
         if to_page > 1 {
             let i = to_page - 2;
-            // Context is needed for updating child so that it can request repaint. In this
-            // case the parent component that handles paging always requests complete
-            // repaint after page change so we can use a dummy context here.
-            let mut dummy_ctx = EventCtx::new();
-            self.xpub_view
-                .update_title(&mut dummy_ctx, self.xpubs[i].0.clone());
-            self.xpub_view.update_content(&mut dummy_ctx, |p| {
-                p.inner_mut().update(self.xpubs[i].1.clone());
-                p.change_page(0)
-            });
+            let (xpub_index, xpub_page) = self.lookup(i);
+            self.switch_xpub(xpub_index, xpub_page);
         }
     }
 }
 
 impl<T> Component for AddressDetails<T>
 where
-    T: ParagraphStrType,
+    T: ParagraphStrType + Clone,
 {
     type Msg = ();
 
@@ -116,6 +149,13 @@ where
         self.qr_code.place(bounds);
         self.details.place(bounds);
         self.xpub_view.place(bounds);
+
+        self.xpub_pages.clear();
+        for i in 0..self.xpubs.len() {
+            let npages = self.switch_xpub(i, 0) as u8;
+            unwrap!(self.xpub_pages.push(npages));
+        }
+
         bounds
     }
 

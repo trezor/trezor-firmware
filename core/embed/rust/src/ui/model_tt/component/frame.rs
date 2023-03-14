@@ -81,13 +81,14 @@ where
         })
     }
 
-    pub fn update_content<F>(&mut self, ctx: &mut EventCtx, update_fn: F)
+    pub fn update_content<F, R>(&mut self, ctx: &mut EventCtx, update_fn: F) -> R
     where
-        F: Fn(&mut T),
+        F: Fn(&mut T) -> R,
     {
         self.content.mutate(ctx, |ctx, c| {
-            update_fn(c);
-            c.request_complete_repaint(ctx)
+            let res = update_fn(c);
+            c.request_complete_repaint(ctx);
+            res
         })
     }
 }
