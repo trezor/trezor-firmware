@@ -75,6 +75,8 @@ trezor.crypto.bech32
 import trezor.crypto.bech32
 trezor.crypto.cashaddr
 import trezor.crypto.cashaddr
+trezor.crypto.cosi
+import trezor.crypto.cosi
 trezor.crypto.curve
 import trezor.crypto.curve
 trezor.crypto.der
