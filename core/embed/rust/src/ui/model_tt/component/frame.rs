@@ -53,21 +53,33 @@ where
         self
     }
 
-    pub fn with_cancel_button(mut self) -> Self {
+    pub fn with_button(mut self, icon: Icon, msg: CancelInfoConfirmMsg) -> Self {
+        let touch_area = Insets {
+            left: self.border.left * 4,
+            bottom: self.border.bottom * 4,
+            ..self.border
+        };
         self.button = Some(Child::new(
-            Button::with_icon(Icon::new(theme::ICON_CORNER_CANCEL))
+            Button::with_icon(icon)
+                .with_expanded_touch_area(touch_area)
                 .styled(theme::button_moreinfo()),
         ));
-        self.button_msg = CancelInfoConfirmMsg::Cancelled;
+        self.button_msg = msg;
         self
     }
 
-    pub fn with_info_button(mut self) -> Self {
-        self.button = Some(Child::new(
-            Button::with_icon(Icon::new(theme::ICON_CORNER_INFO)).styled(theme::button_moreinfo()),
-        ));
-        self.button_msg = CancelInfoConfirmMsg::Info;
-        self
+    pub fn with_cancel_button(self) -> Self {
+        self.with_button(
+            Icon::new(theme::ICON_CORNER_CANCEL),
+            CancelInfoConfirmMsg::Cancelled,
+        )
+    }
+
+    pub fn with_info_button(self) -> Self {
+        self.with_button(
+            Icon::new(theme::ICON_CORNER_INFO),
+            CancelInfoConfirmMsg::Info,
+        )
     }
 
     pub fn inner(&self) -> &T {
