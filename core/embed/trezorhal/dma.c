@@ -74,18 +74,34 @@ struct _dma_descr_t {
 
 // Parameters to dma_init() for SDIO tx and rx.
 static const DMA_InitTypeDef dma_init_struct_sdio = {
-    .Channel             = 0,
-    .Direction           = 0,
-    .PeriphInc           = DMA_PINC_DISABLE,
-    .MemInc              = DMA_MINC_ENABLE,
-    .PeriphDataAlignment = DMA_PDATAALIGN_WORD,
-    .MemDataAlignment    = DMA_MDATAALIGN_WORD,
-    .Mode                = DMA_PFCTRL,
-    .Priority            = DMA_PRIORITY_VERY_HIGH,
-    .FIFOMode            = DMA_FIFOMODE_ENABLE,
-    .FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL,
-    .MemBurst            = DMA_MBURST_INC4,
-    .PeriphBurst         = DMA_PBURST_INC4,
+        .Channel             = 0,
+        .Direction           = 0,
+        .PeriphInc           = DMA_PINC_DISABLE,
+        .MemInc              = DMA_MINC_ENABLE,
+        .PeriphDataAlignment = DMA_PDATAALIGN_WORD,
+        .MemDataAlignment    = DMA_MDATAALIGN_WORD,
+        .Mode                = DMA_PFCTRL,
+        .Priority            = DMA_PRIORITY_VERY_HIGH,
+        .FIFOMode            = DMA_FIFOMODE_ENABLE,
+        .FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL,
+        .MemBurst            = DMA_MBURST_INC4,
+        .PeriphBurst         = DMA_PBURST_INC4,
+};
+
+// Parameters to dma_init() for SPI 4 RX
+static const DMA_InitTypeDef dma_init_struct_spi4 = {
+        .Channel             = 0,
+        .Direction           = 0,
+        .PeriphInc           = DMA_PINC_DISABLE,
+        .MemInc              = DMA_MINC_ENABLE,
+        .PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+        .MemDataAlignment    = DMA_MDATAALIGN_BYTE,
+        .Mode                = DMA_NORMAL,
+        .Priority            = DMA_PRIORITY_VERY_HIGH,
+        .FIFOMode            = DMA_FIFOMODE_DISABLE,
+        .FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL,
+        .MemBurst            = DMA_MBURST_SINGLE,
+        .PeriphBurst         = DMA_PBURST_SINGLE,
 };
 
 #define NCONTROLLERS            (2)
@@ -98,6 +114,7 @@ static const DMA_InitTypeDef dma_init_struct_sdio = {
 #define DMA2_ENABLE_MASK (0xff00) // Bits in dma_enable_mask corresponding to DMA2
 
 const dma_descr_t dma_SDIO_0 = { DMA2_Stream3, DMA_CHANNEL_4, dma_id_11,  &dma_init_struct_sdio };
+const dma_descr_t dma_SPI_4_RX = { DMA2_Stream0, DMA_CHANNEL_4, dma_id_8,  &dma_init_struct_spi4 };
 
 static const uint8_t dma_irqn[NSTREAM] = {
     DMA1_Stream0_IRQn,
