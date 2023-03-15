@@ -1,4 +1,4 @@
-name: Add to GitHub Project
+name: "[Bot] add to GitHub project"
 
 on: [issues, pull_request]
 
@@ -9,18 +9,18 @@ permissions:
   repository-projects: write
 
 jobs:
-  gh-automate-projects:
+  project-add-pull-request:
     runs-on: ubuntu-latest
     steps:
-      - name: Add new pull request to the Pull Requests project board
+      - name: Add new pull request to the Firmware project
+        uses: actions/add-to-project@main
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
-        run: gh pr edit $PULL_REQUEST --add-project "Pull Requests"
-        env:
-          PULL_REQUEST: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+        with:
+          project-url: https://github.com/orgs/trezor/projects/60
+          github-token: ${{ secrets.GH_BOT_TOKEN }}
 
-  add-to-beta-project:
-    name: Add new issue to the beta Issues Firmware project
+  project-add-issue:
+    name: Add new issue to the Firmware project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/add-to-project@main
