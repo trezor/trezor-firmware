@@ -21,11 +21,29 @@
 #include TREZOR_BOARD
 
 #include "comm.h"
+#include <string.h>
+#include "dma.h"
 #include "int_comm_defs.h"
 #include "state.h"
 
+#define SPI_PACKET_SIZE 64
+#define SPI_QUEUE_SIZE 4
+
 static UART_HandleTypeDef urt;
 static uint8_t last_init_byte = 0;
+
+static SPI_HandleTypeDef spi = {0};
+static DMA_HandleTypeDef spi_dma = {0};
+
+typedef struct {
+  uint8_t buffer[SPI_PACKET_SIZE];
+  bool used;
+  bool ready;
+} spi_buffer_t;
+
+spi_buffer_t spi_queue[SPI_QUEUE_SIZE];
+static int head = 0, tail = 0;
+static bool overrun = 1;
 
 void ble_comm_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -50,7 +68,40 @@ void ble_comm_init(void) {
 
   HAL_UART_Init(&urt);
 
+  __HAL_RCC_DMA2_CLK_ENABLE();
+  __HAL_RCC_SPI4_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+
+  GPIO_InitStructure.Pin = GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6;
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Alternate = GPIO_AF5_SPI4;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+  dma_init(&spi_dma, &dma_SPI_4_RX, DMA_PERIPH_TO_MEMORY, &spi);
+
+  spi.Instance = SPI4;
+  spi.Init.Mode = SPI_MODE_SLAVE;
+  spi.Init.Direction = SPI_DIRECTION_2LINES;  // rx only?
+  spi.Init.DataSize = SPI_DATASIZE_8BIT;
+  spi.Init.CLKPolarity = SPI_POLARITY_LOW;
+  spi.Init.CLKPhase = SPI_PHASE_1EDGE;
+  spi.Init.NSS = SPI_NSS_HARD_INPUT;
+  spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  spi.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  spi.Init.TIMode = SPI_TIMODE_DISABLE;
+  spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  spi.Init.CRCPolynomial = 0;
+  spi.hdmarx = &spi_dma;
+
+  spi_dma.Parent = &spi;
+
+  HAL_SPI_Init(&spi);
+
   set_initialized(false);
+
+  HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, 64);
 }
 
 void ble_comm_send(uint8_t *data, uint32_t len) {
@@ -181,13 +232,12 @@ uint32_t ble_int_comm_poll(void) {
   return 0;
 }
 
-uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len, bool *internal) {
+uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len) {
   if (urt.Instance->SR & USART_SR_RXNE) {
     uint8_t init_byte = 0;
 
     if (last_init_byte != 0) {
-      if (last_init_byte == INTERNAL_MESSAGE ||
-          last_init_byte == EXTERNAL_MESSAGE) {
+      if (last_init_byte == INTERNAL_MESSAGE) {
         init_byte = last_init_byte;
       } else {
         return 0;
@@ -197,7 +247,7 @@ uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len, bool *internal) {
       HAL_UART_Receive(&urt, &init_byte, 1, 1);
     }
 
-    if (init_byte == INTERNAL_MESSAGE || init_byte == EXTERNAL_MESSAGE) {
+    if (init_byte == INTERNAL_MESSAGE) {
       uint8_t len_hi = 0;
       uint8_t len_lo = 0;
       HAL_UART_Receive(&urt, &len_hi, 1, 1);
@@ -224,11 +274,6 @@ uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len, bool *internal) {
       HAL_UART_Receive(&urt, &eom, 1, 1);
 
       if (eom == EOM) {
-        if (init_byte == INTERNAL_MESSAGE) {
-          *internal = true;
-        } else {
-          *internal = false;
-        }
         last_init_byte = 0;
         return act_len - OVERHEAD_SIZE;
       }
@@ -240,6 +285,42 @@ uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len, bool *internal) {
       flush_line();
       return 0;
     }
+  }
+
+  return 0;
+}
+
+bool start_spi_dma(void) {
+  if (spi_queue[tail].used || spi_queue[tail].ready) {
+    overrun = true;
+    return false;
+  }
+  spi_queue[tail].used = true;
+  HAL_SPI_Receive_DMA(&spi, spi_queue[tail].buffer, SPI_PACKET_SIZE);
+  return true;
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
+  spi_queue[tail].ready = true;
+  tail = (tail + 1) % SPI_QUEUE_SIZE;
+  start_spi_dma();
+}
+
+uint32_t ble_ext_comm_receive(uint8_t *data, uint32_t len) {
+  if (spi_queue[head].ready) {
+    uint8_t *buffer = (uint8_t *)spi_queue[head].buffer;
+    memcpy(data, buffer, len > SPI_PACKET_SIZE ? SPI_PACKET_SIZE : len);
+
+    spi_queue[head].used = false;
+    spi_queue[head].ready = false;
+    head = (head + 1) % SPI_QUEUE_SIZE;
+
+    if (overrun && start_spi_dma()) {
+      // overrun was before, need to restart the DMA
+      overrun = false;
+    }
+
+    return len > SPI_PACKET_SIZE ? SPI_PACKET_SIZE : len;
   }
 
   return 0;

@@ -56,12 +56,12 @@ def _find_message_handler_module(msg_type: int, iface: WireInterface) -> str:
         return "apps.management.sd_protect"
 
     # BLE
-    if iface.iface_num() != 16:
+    if iface.iface_num() != 16 and iface.iface_num() != 17:
         # cannot update over BLE
         if msg_type == MessageType.UploadBLEFirmwareInit:
             return "apps.management.ble.upload_ble_firmware_init"
 
-    if iface.iface_num() == 16 and iface.iface_type() == 1:
+    if iface.iface_num() == 16:
         if msg_type == MessageType.PairingRequest:
             return "apps.management.ble.pairing_request"
         if msg_type == MessageType.RepairRequest:

@@ -16,7 +16,14 @@ def update_chunk(chunk: bytes) -> int:
 
 
 # extmod/modtrezorio/modtrezorio-ble.h
-def write(self, msg: bytes) -> int:
+def write_int(self, msg: bytes) -> int:
     """
-    Sends message using BLE.
+    Sends internal message to NRF.
+    """
+
+
+# extmod/modtrezorio/modtrezorio-ble.h
+def write_ext(self, msg: bytes) -> int:
+    """
+    Sends message over BLE
     """

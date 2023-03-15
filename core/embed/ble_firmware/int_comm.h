@@ -6,6 +6,8 @@
 #include "ble_nus.h"
 #include "stdint.h"
 
+void spi_init(void);
+
 void nus_init(uint16_t *p_conn_handle);
 
 void nus_data_handler(ble_nus_evt_t *p_evt);
