@@ -56,6 +56,11 @@ class TestDecodeDefinition(unittest.TestCase):
         bad_signature = signature[:-1] + b"\xff"
         self.assertFailed(payload + proof + bad_signature)
 
+    def test_not_enough_signatures(self):
+        payload = make_payload()
+        proof, signature = sign_payload(payload, [], threshold=1)
+        self.assertFailed(payload + proof + signature)
+
     def test_missing_signature(self):
         payload = make_payload()
         proof, signature = sign_payload(payload, [])

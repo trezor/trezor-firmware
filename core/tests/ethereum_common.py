@@ -2,12 +2,11 @@ from ubinascii import unhexlify  # noqa: F401
 
 from trezor import messages, protobuf
 from trezor.enums import EthereumDefinitionType
+from trezor.crypto import cosi
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
 
-DEFINITIONS_DEV_PRIVATE_KEY = unhexlify(
-    "4141414141414141414141414141414141414141414141414141414141414141"
-)
+PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
 
 def make_network(
@@ -60,7 +59,11 @@ def make_payload(
     return payload
 
 
-def sign_payload(payload: bytes, merkle_neighbors: list[bytes]) -> tuple[bytes, bytes]:
+def sign_payload(
+    payload: bytes,
+    merkle_neighbors: list[bytes],
+    threshold: int = 3,
+) -> tuple[bytes, bytes]:
     digest = sha256(b"\x00" + payload).digest()
     merkle_proof = []
     for item in merkle_neighbors:
@@ -69,8 +72,29 @@ def sign_payload(payload: bytes, merkle_neighbors: list[bytes]) -> tuple[bytes, 
         merkle_proof.append(digest)
 
     merkle_proof = len(merkle_proof).to_bytes(1, "little") + b"".join(merkle_proof)
-    signature = ed25519.sign(DEFINITIONS_DEV_PRIVATE_KEY, digest)
-    return merkle_proof, signature
+
+    nonces, commits, pubkeys = [], [], []
+    for i, private_key in enumerate(PRIVATE_KEYS_DEV[:threshold]):
+        nonce, commit = cosi.commit()
+        pubkey = ed25519.publickey(private_key)
+        nonces.append(nonce)
+        commits.append(commit)
+        pubkeys.append(pubkey)
+
+    global_commit = cosi.combine_publickeys(commits)
+    global_pubkey = cosi.combine_publickeys(pubkeys)
+    sigmask = 0
+    signatures = []
+    for i, nonce in enumerate(nonces):
+        sigmask |= 1 << i
+        sig = cosi.sign(
+            PRIVATE_KEYS_DEV[i], digest, nonce, global_commit, global_pubkey
+        )
+        signatures.append(sig)
+
+    signature = cosi.combine_signatures(global_commit, signatures)
+    sigmask_byte = sigmask.to_bytes(1, "little")
+    return merkle_proof, sigmask_byte + signature
 
 
 def encode_network(
