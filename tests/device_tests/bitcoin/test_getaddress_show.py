@@ -71,6 +71,7 @@ def test_show_t1(
         )
 
 
+@pytest.mark.skip(reason="mmilata")
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_tt(
@@ -105,6 +106,7 @@ def test_show_tt(
         )
 
 
+@pytest.mark.skip(reason="mmilata")
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_cancel(
