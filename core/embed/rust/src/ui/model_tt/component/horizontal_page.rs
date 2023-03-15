@@ -3,12 +3,13 @@ use crate::ui::{
         base::ComponentExt, AuxPageMsg, Component, Event, EventCtx, Never, Pad, PageMsg, Paginate,
     },
     display::{self, Color},
-    geometry::Rect,
+    geometry::{Insets, Rect},
 };
 
 use super::{theme, ScrollBar, Swipe, SwipeDirection};
 
 const SCROLLBAR_HEIGHT: i16 = 18;
+const SCROLLBAR_BORDER: i16 = 4;
 
 pub struct HorizontalPage<T> {
     content: T,
@@ -75,10 +76,11 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         self.swipe.place(bounds);
 
-        let (content, scrollbar) = bounds.split_bottom(SCROLLBAR_HEIGHT);
+        let (content, scrollbar) = bounds.split_bottom(SCROLLBAR_HEIGHT + SCROLLBAR_BORDER);
         self.pad.place(content);
         self.content.place(content);
-        self.scrollbar.place(scrollbar);
+        self.scrollbar
+            .place(scrollbar.inset(Insets::bottom(SCROLLBAR_BORDER)));
 
         self.scrollbar
             .set_count_and_active_page(self.content.page_count(), 0);
