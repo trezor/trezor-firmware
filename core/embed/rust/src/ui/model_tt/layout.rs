@@ -389,12 +389,12 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             let mut paragraphs = ParagraphVecShort::new();
             if !reverse {
                 paragraphs
-                    .add(Paragraph::new(&theme::TEXT_BOLD, action))
+                    .add(Paragraph::new(&theme::TEXT_DEMIBOLD, action))
                     .add(Paragraph::new(&theme::TEXT_NORMAL, description));
             } else {
                 paragraphs
                     .add(Paragraph::new(&theme::TEXT_NORMAL, description))
-                    .add(Paragraph::new(&theme::TEXT_BOLD, action));
+                    .add(Paragraph::new(&theme::TEXT_DEMIBOLD, action));
             }
             paragraphs.into_paragraphs()
         };
@@ -433,7 +433,7 @@ fn confirm_blob(
         extra: extra.unwrap_or_else(StrBuffer::empty),
         data: data.try_into()?,
         description_font: &theme::TEXT_NORMAL,
-        extra_font: &theme::TEXT_BOLD,
+        extra_font: &theme::TEXT_DEMIBOLD,
         data_font: &theme::TEXT_MONO,
     }
     .into_paragraphs();
@@ -492,7 +492,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             extra: extra.unwrap_or_else(StrBuffer::empty),
             data: data.try_into()?,
             description_font: &theme::TEXT_NORMAL,
-            extra_font: &theme::TEXT_BOLD,
+            extra_font: &theme::TEXT_DEMIBOLD,
             data_font: &theme::TEXT_MONO,
         }
         .into_paragraphs();
@@ -1062,9 +1062,9 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_NORMAL, "Maximum rounds:".into()),
-            Paragraph::new(&theme::TEXT_BOLD, max_rounds),
+            Paragraph::new(&theme::TEXT_MONO, max_rounds),
             Paragraph::new(&theme::TEXT_NORMAL, "Maximum mining fee:".into()),
-            Paragraph::new(&theme::TEXT_BOLD, max_feerate),
+            Paragraph::new(&theme::TEXT_MONO, max_feerate),
         ]);
 
         let obj = LayoutObj::new(Frame::left_aligned(
@@ -1347,7 +1347,7 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
         for page in iter {
             let [title, description]: [StrBuffer; 2] = iter_into_array(page)?;
             paragraphs
-                .add(Paragraph::new(&theme::TEXT_BOLD, title))
+                .add(Paragraph::new(&theme::TEXT_DEMIBOLD, title))
                 .add(Paragraph::new(&theme::TEXT_NORMAL, description).break_after());
         }
 
