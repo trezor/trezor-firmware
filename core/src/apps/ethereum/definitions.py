@@ -1,16 +1,7 @@
 from typing import TYPE_CHECKING
 
-from trezor import protobuf, utils
-from trezor.crypto.curve import ed25519
-from trezor.crypto.hashlib import sha256
-from trezor.enums import EthereumDefinitionType
 from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 from trezor.wire import DataError
-
-from apps.common import readers
-
-from . import definitions_constants as consts, networks, tokens
-from .networks import UNKNOWN_NETWORK
 
 if TYPE_CHECKING:
     from typing import TypeVar
@@ -20,8 +11,17 @@ if TYPE_CHECKING:
 
 
 def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefType:
+    from trezor.crypto.cosi import verify as cosi_verify
+    from trezor.crypto.hashlib import sha256
+    from trezor.enums import EthereumDefinitionType
+    from trezor.protobuf import decode as protobuf_decode
+    from trezor.utils import BufferReader
+
+    from apps.common import readers
+    from . import definitions_constants as consts
+
     # check network definition
-    r = utils.BufferReader(definition)
+    r = BufferReader(definition)
     expected_type_number = EthereumDefinitionType.NETWORK
     # TODO: can't check equality of MsgDefObjs now, so we check the name
     if expected_type.MESSAGE_NAME == EthereumTokenInfo.MESSAGE_NAME:
@@ -59,7 +59,8 @@ def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefTyp
             hasher.update(hash_b)
             hash = hasher.digest()
 
-        signed_tree_root = r.read_memoryview(64)
+        sigmask = r.get()
+        signature = r.read_memoryview(64)
 
         if r.remaining_count():
             raise DataError("Invalid Ethereum definition")
@@ -68,22 +69,18 @@ def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefTyp
         raise DataError("Invalid Ethereum definition")
 
     # verify signature
-    if not ed25519.verify(consts.DEFINITIONS_PUBLIC_KEY, signed_tree_root, hash):
-        error_msg = DataError("Invalid definition signature")
-        if __debug__:
-            # check against dev key
-            if not ed25519.verify(
-                consts.DEFINITIONS_DEV_PUBLIC_KEY,
-                signed_tree_root,
-                hash,
-            ):
-                raise error_msg
-        else:
-            raise error_msg
+    result = cosi_verify(signature, hash, consts.THRESHOLD, consts.PUBLIC_KEYS, sigmask)
+    if __debug__:
+        debug_result = cosi_verify(
+            signature, hash, consts.THRESHOLD, consts.DEV_PUBLIC_KEYS, sigmask
+        )
+        result = result or debug_result
+    if not result:
+        raise DataError("Invalid definition signature")
 
     # decode it if it's OK
     try:
-        return protobuf.decode(payload, expected_type, True)
+        return protobuf_decode(payload, expected_type, True)
     except ValueError:
         raise DataError("Invalid Ethereum definition")
 
@@ -107,14 +104,16 @@ class Definitions:
         chain_id: int | None = None,
         slip44: int | None = None,
     ) -> Self:
+        from .networks import UNKNOWN_NETWORK, by_chain_id, by_slip44
+
         network = UNKNOWN_NETWORK
         tokens: dict[bytes, EthereumTokenInfo] = {}
 
         # if we have a built-in definition, use it
         if chain_id is not None:
-            network = networks.by_chain_id(chain_id)
+            network = by_chain_id(chain_id)
         elif slip44 is not None:
-            network = networks.by_slip44(slip44)
+            network = by_slip44(slip44)
         else:
             # ignore encoded definitions if we can't match them to request details
             return cls(UNKNOWN_NETWORK, {})
@@ -143,12 +142,14 @@ class Definitions:
         return cls(network, tokens)
 
     def get_token(self, address: bytes) -> EthereumTokenInfo:
+        from .tokens import token_by_chain_address, UNKNOWN_TOKEN
+
         # if we have a built-in definition, use it
-        token = tokens.token_by_chain_address(self.network.chain_id, address)
+        token = token_by_chain_address(self.network.chain_id, address)
         if token is not None:
             return token
 
         if address in self._tokens:
             return self._tokens[address]
 
-        return tokens.UNKNOWN_TOKEN
+        return UNKNOWN_TOKEN
