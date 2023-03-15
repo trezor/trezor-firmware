@@ -31,7 +31,8 @@
 #define BUTTON_IFACE (254)
 #define TOUCH_IFACE (255)
 #define USB_RW_IFACE_MAX (15)  // 0-15 reserved for USB
-#define BLE_IFACE (16)
+#define BLE_IFACE_INT (16)
+#define BLE_IFACE_EXT (17)
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
 
@@ -189,10 +190,24 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
             return mp_const_true;
           }
         }
-      } else if (iface == BLE_IFACE) {
+      } else if (iface == BLE_IFACE_INT) {
         if (mode == POLL_READ) {
           uint8_t buf[64] = {0};
-          int len = ble_int_comm_receive(buf, sizeof(buf), &ble_last_internal);
+          int len = ble_int_comm_receive(buf, sizeof(buf));
+          if (len > 0) {
+            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+            ret->items[1] = mp_obj_new_bytes(buf, len);
+            return mp_const_true;
+          }
+        } else if (mode == POLL_WRITE) {
+          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+          ret->items[1] = mp_const_none;
+          return mp_const_true;
+        }
+      } else if (iface == BLE_IFACE_EXT) {
+        if (mode == POLL_READ) {
+          uint8_t buf[64] = {0};
+          int len = ble_ext_comm_receive(buf, sizeof(buf));
           if (len > 0) {
             ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
             ret->items[1] = mp_obj_new_bytes(buf, len);

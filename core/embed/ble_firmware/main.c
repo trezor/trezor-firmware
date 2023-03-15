@@ -66,6 +66,7 @@
 #include "nrf.h"
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_qwr.h"
+#include "nrf_drv_spi.h"
 #include "nrf_pwr_mgmt.h"
 #include "nrf_sdh.h"
 #include "nrf_sdh_ble.h"
@@ -826,6 +827,7 @@ int main(void) {
   bool erase_bonds;
 
   // Initialize.
+  spi_init();
   uart_init();
   log_init();
   timers_init();

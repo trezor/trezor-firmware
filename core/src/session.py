@@ -27,13 +27,15 @@ mutex = Mutex()
 
 mutex.add(usb.iface_wire.iface_num())
 mutex.add(usb.iface_debug.iface_num())
-mutex.add(bluetooth.iface_ble.iface_num())
+mutex.add(bluetooth.iface_ble_int.iface_num())
+mutex.add(bluetooth.iface_ble_ext.iface_num())
 
 # initialize the wire codec
 wire.setup(usb.iface_wire, mutex=mutex)
 if __debug__:
     wire.setup(usb.iface_debug, is_debug_session=True, mutex=mutex)
-wire.setup(bluetooth.iface_ble, mutex=mutex)
+wire.setup(bluetooth.iface_ble_int, mutex=mutex)
+wire.setup(bluetooth.iface_ble_ext, mutex=mutex)
 
 
 loop.run()

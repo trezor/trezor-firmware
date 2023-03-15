@@ -77,6 +77,7 @@ bool ble_last_internal = false;
 /// BUTTON_RIGHT: int  # button number of right button
 
 /// USB_CHECK: int # interface id for check of USB data connection
+/// BLE_CHECK: int # interface id for check of BLE data connection
 
 /// WireInterface = Union[HID, WebUSB, BleInterface]
 
