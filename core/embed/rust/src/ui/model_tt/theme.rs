@@ -128,10 +128,6 @@ pub const fn label_keyboard_minor() -> TextStyle {
     TEXT_NORMAL_OFF_WHITE
 }
 
-pub const fn label_page_hint() -> TextStyle {
-    TextStyle::new(Font::BOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
-}
-
 pub const fn label_warning() -> TextStyle {
     TEXT_DEMIBOLD
 }
