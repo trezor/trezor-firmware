@@ -46,24 +46,6 @@
             }
         },
         {
-            "name": "GoChain",
-            "parameters": {
-                "path": "m/44'/6060'/0'/0/0"
-            },
-            "result": {
-                "address": "0xA26a450ef46a5f11a510eBA2119A3236fa0Aca92"
-            }
-        },
-        {
-            "name": "Wanchain",
-            "parameters": {
-                "path": "m/44'/5718350'/0'/0/0"
-            },
-            "result": {
-                "address": "0xe432a7533D689ceed00B7EE91d9368b8A1693bD2"
-            }
-        },
-        {
             "name": "Ledger Live legacy path",
             "parameters": {
                 "path": "m/44'/60'/0'/0"

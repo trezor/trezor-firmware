@@ -5,27 +5,7 @@
     },
     "tests": [
         {
-            "name": "known_erc20_token",
-            "parameters": {
-                "comment": "Sending 200,000,000 ADT tokens to address 0x574bbb36871ba6b78e27f4b4dcfb76ea0091880b",
-                "data": "a9059cbb000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b000000000000000000000000000000000000000000000000000000000bebc200",
-                "path": "m/44'/60'/0'/0/0",
-                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
-                "chain_id": 1,
-                "nonce": "0x0",
-                "gas_price": "0x14",
-                "gas_limit": "0x14",
-                "tx_type": null,
-                "value": "0x0"
-            },
-            "result": {
-                "sig_v": 37,
-                "sig_r": "ec1df922115d256745410fbc2070296756583c8786e4d402a88d4e29ec513fa9",
-                "sig_s": "7001bfe3ba357e4a9f9e0d3a3f8a8962257615a4cf215db93e48b98999fc51b7"
-            }
-        },
-        {
-            "name": "unknown_erc20_token",
+            "name": "erc20_token",
             "parameters": {
                 "comment": "Sending 291 Grzegorz Brzęczyszczykiewicz tokens to address 0x574bbb36871ba6b78e27f4b4dcfb76ea0091880b",
                 "data": "a9059cbb000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000123",
