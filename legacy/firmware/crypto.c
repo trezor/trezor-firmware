@@ -856,3 +856,47 @@ void slip21_derive_path(Slip21Node *inout, const uint8_t *label,
 }
 
 const uint8_t *slip21_key(const Slip21Node *node) { return &node->data[32]; }
+
+bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t *message,
+                      const size_t message_len, const int threshold,
+                      const ed25519_public_key *pubkeys,
+                      const int pubkeys_count, const uint8_t sigmask)
+
+{
+  if (sigmask == 0 || threshold < 1 || pubkeys_count < 1 || pubkeys_count > 8) {
+    // invalid parameters:
+    // - sigmask must specify at least one signer
+    // - at least one signature must be required
+    // - at least one pubkey must be provided
+    // - at most 8 pubkeys are supported (bit size of sigmask)
+    return false;
+  }
+  if (sigmask >= (1 << pubkeys_count)) {
+    // sigmask indicates more signers than provided pubkeys
+    return false;
+  }
+
+  ed25519_public_key selected_keys[8] = {0};
+  int N = 0;
+  for (int i = 0; i < pubkeys_count; i++) {
+    if (sigmask & (1 << i)) {
+      memcpy(selected_keys[N], pubkeys[i], sizeof(ed25519_public_key));
+      N++;
+    }
+  }
+
+  if (N < threshold) {
+    // not enough signatures
+    return false;
+  }
+
+  ed25519_public_key pk_combined = {0};
+  int res = ed25519_cosi_combine_publickeys(pk_combined, selected_keys, N);
+  if (res != 0) {
+    // error combining public keys
+    return false;
+  }
+
+  res = ed25519_sign_open(message, message_len, pk_combined, signature);
+  return res == 0;
+}
