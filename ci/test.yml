@@ -149,7 +149,8 @@ core monero test:
   variables:
     TREZOR_PROFILING: 1
   script:
-    - $NIX_SHELL --arg fullDeps true --run "poetry run make -C core test_emu_monero | ts -s"
+    # see `python test` job for _PYTHON_SYSCONFIGDATA_NAME explanation
+    - $NIX_SHELL --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && poetry run make -C core test_emu_monero | ts -s"
     - mv core/src/.coverage core/.coverage.test_emu_monero
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"

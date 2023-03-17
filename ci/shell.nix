@@ -3,18 +3,18 @@
  }:
 
 let
-  # the last commit from master as of 2022-08-02
+  # the last commit from master as of 2023-04-14
   rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/b38c1683594aeefa5c3c4dde115401f059146be6.tar.gz";
-    sha256 = "0rk4i42cys2v7k2ir57x5qa8dc37nrs432cdpbr4cddskgvyi8ky";
+    url = "https://github.com/oxalica/rust-overlay/archive/db7bf4a2dd295adeeaa809d36387098926a15487.tar.gz";
+    sha256 = "0gk6kag09w8lyn9was8dpjgslxw5p81bx04379m9v6ky09kw482d";
   });
-  # the last successful build of nixpkgs-unstable as of 2022-06-20
+  # the last successful build of nixpkgs-unstable as of 2023-04-14
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/e0a42267f73ea52adc061a64650fddc59906fc99.tar.gz";
-    sha256 = "0r1dsj51x2rm016xwvdnkm94v517jb1rpn4rk63k6krc4d0n3kh9";
+    url = "https://github.com/NixOS/nixpkgs/archive/c58e6fbf258df1572b535ac1868ec42faf7675dd.tar.gz";
+    sha256 = "18pna0yinvdprhhcmhyanlgrmgf81nwpc0j2z9fy9mc8cqkx3937";
   }) { overlays = [ rustOverlay ]; };
   # commit before python36 was removed
-  python36nixpkgs = import (builtins.fetchTarball {
+  oldPythonNixpkgs = import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/b9126f77f553974c90ab65520eff6655415fc5f4.tar.gz";
     sha256 = "02s3qkb6kz3ndyx7rfndjbvp4vlwiqc42fxypn3g6jnc0v5jyz95";
   }) { };
@@ -28,8 +28,19 @@ let
     ${nixpkgs.patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
     chmod -w $out
   '';
+  # do not expose rust's gcc: https://github.com/oxalica/rust-overlay/issues/70
+  # Create a wrapper that only exposes $pkg/bin. This prevents pulling in
+  # development deps, packages to a nix-shell. This is especially important
+  # when packages are combined from different nixpkgs versions.
+  mkBinOnlyWrapper = pkg:
+    nixpkgs.runCommand "${pkg.pname}-${pkg.version}-bin" { inherit (pkg) meta; } ''
+      mkdir -p "$out/bin"
+      for bin in "${nixpkgs.lib.getBin pkg}/bin/"*; do
+          ln -s "$bin" "$out/bin/"
+      done
+    '';
   # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
-  rustProfiles = nixpkgs.rust-bin.nightly."2022-08-02";
+  rustProfiles = nixpkgs.rust-bin.nightly."2023-04-14";
   rustNightly = rustProfiles.minimal.override {
     targets = [
       "thumbv7em-none-eabihf" # TT
@@ -42,17 +53,6 @@ let
   llvmPackages = nixpkgs.llvmPackages_13;
   # see pyright/README.md for update procedure
   pyright = nixpkgs.callPackage ./pyright {};
-  # HWI tests need https://github.com/bitcoin/bitcoin/pull/22558
-  # remove this once nixpkgs version contains this patch
-  bitcoind = (nixpkgs.bitcoind.overrideAttrs (attrs: {
-    version = attrs.version + "-taproot-psbt";
-    src = nixpkgs.fetchFromGitHub {
-      owner = "achow101";
-      repo = "bitcoin";
-      rev = "b704884935766748cf533577c1babacfb6d4b5a5"; # taproot-psbt
-      sha256 = "sha256-gz/knimKY1pkpsp1YmYHPMCbeiSxKGSOGJOSEgFbptE=";
-    };
-  }));
 in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
@@ -61,12 +61,12 @@ stdenvNoCC.mkDerivation ({
     bitcoind
     # install other python versions for tox testing
     # NOTE: running e.g. "python3" in the shell runs the first version in the following list,
-    #       and poetry uses the default version (currently 3.9)
-    python39
+    #       and poetry uses the default version (currently 3.10)
     python310
+    python39
     python38
-    python37
-    python36nixpkgs.python36
+    oldPythonNixpkgs.python37
+    oldPythonNixpkgs.python36
   ] ++ [
     SDL2
     SDL2_image
@@ -74,6 +74,7 @@ stdenvNoCC.mkDerivation ({
     check
     curl  # for connect tests
     editorconfig-checker
+    gcc11
     gcc-arm-embedded
     git
     gitAndTools.git-subrepo
@@ -86,9 +87,9 @@ stdenvNoCC.mkDerivation ({
     openssl
     pkgconfig
     poetry
-    protobuf
+    protobuf3_19
     pyright
-    rustNightly
+    (mkBinOnlyWrapper rustNightly)
     wget
     zlib
     moreutils
