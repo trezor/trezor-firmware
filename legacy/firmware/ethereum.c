@@ -343,7 +343,7 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
   memcpy(pad_val + (32 - value_len), value, value_len);
   bn_read_be(pad_val, &val);
 
-  char amount[32] = {0};
+  char amount[64] = {0};
   if (token == NULL) {
     if (bn_is_zero(&val)) {
       strcpy(amount, _("message"));
