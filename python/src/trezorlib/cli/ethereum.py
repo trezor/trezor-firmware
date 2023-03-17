@@ -309,7 +309,7 @@ def get_public_node(client: "TrezorClient", address: str, show_display: bool) ->
     "-g", "--gas-limit", type=int, help="Gas limit (required for offline signing)"
 )
 @click.option(
-    "-t",
+    "-G",
     "--gas-price",
     help="Gas price (required for offline signing)",
     callback=_amount_to_int,
