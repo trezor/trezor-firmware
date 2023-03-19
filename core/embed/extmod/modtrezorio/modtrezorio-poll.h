@@ -206,7 +206,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         }
       } else if (iface == BLE_IFACE_EXT) {
         if (mode == POLL_READ) {
-          uint8_t buf[64] = {0};
+          uint8_t buf[BLE_PACKET_SIZE] = {0};
           int len = ble_ext_comm_receive(buf, sizeof(buf));
           if (len > 0) {
             ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);

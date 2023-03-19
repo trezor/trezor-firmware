@@ -2,6 +2,8 @@
 #ifndef __INT_COMM_DEFS__
 #define __INT_COMM_DEFS__
 
+#define BLE_PACKET_SIZE (244)
+
 #define COMM_HEADER_SIZE (3)
 #define COMM_FOOTER_SIZE (1)
 #define OVERHEAD_SIZE (COMM_HEADER_SIZE + COMM_FOOTER_SIZE)

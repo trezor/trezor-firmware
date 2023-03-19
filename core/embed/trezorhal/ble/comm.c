@@ -26,8 +26,7 @@
 #include "int_comm_defs.h"
 #include "state.h"
 
-#define SPI_PACKET_SIZE 64
-#define SPI_QUEUE_SIZE 4
+#define SPI_QUEUE_SIZE 10
 
 static UART_HandleTypeDef urt;
 static uint8_t last_init_byte = 0;
@@ -36,14 +35,17 @@ static SPI_HandleTypeDef spi = {0};
 static DMA_HandleTypeDef spi_dma = {0};
 
 typedef struct {
-  uint8_t buffer[SPI_PACKET_SIZE];
+  uint8_t buffer[BLE_PACKET_SIZE];
   bool used;
   bool ready;
 } spi_buffer_t;
 
 spi_buffer_t spi_queue[SPI_QUEUE_SIZE];
 static int head = 0, tail = 0;
-static bool overrun = 1;
+static bool overrun = false;
+volatile uint16_t overrun_count = 0;
+volatile uint16_t msg_cntr = 0;
+volatile uint16_t first_overrun_at = 0;
 
 void ble_comm_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -101,7 +103,10 @@ void ble_comm_init(void) {
 
   set_initialized(false);
 
-  HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, 64);
+  HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, BLE_PACKET_SIZE);
+  spi_queue[0].used = true;
+
+  tail = 0;
 }
 
 void ble_comm_send(uint8_t *data, uint32_t len) {
@@ -291,25 +296,35 @@ uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len) {
 }
 
 bool start_spi_dma(void) {
-  if (spi_queue[tail].used || spi_queue[tail].ready) {
+  int tmp_tail = (tail + 1) % SPI_QUEUE_SIZE;
+  if (spi_queue[tmp_tail].used || spi_queue[tmp_tail].ready) {
     overrun = true;
+    overrun_count++;
+    if (first_overrun_at == 0) {
+      first_overrun_at = msg_cntr;
+    }
     return false;
   }
-  spi_queue[tail].used = true;
-  HAL_SPI_Receive_DMA(&spi, spi_queue[tail].buffer, SPI_PACKET_SIZE);
+  spi_queue[tmp_tail].used = true;
+  HAL_SPI_Receive_DMA(&spi, spi_queue[tmp_tail].buffer, BLE_PACKET_SIZE);
+
+  tail = tmp_tail;
   return true;
 }
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
   spi_queue[tail].ready = true;
-  tail = (tail + 1) % SPI_QUEUE_SIZE;
+  msg_cntr++;
   start_spi_dma();
 }
 
+#include "supervise.h"
+
 uint32_t ble_ext_comm_receive(uint8_t *data, uint32_t len) {
+  svc_disableIRQ(DMA2_Stream0_IRQn);
   if (spi_queue[head].ready) {
     uint8_t *buffer = (uint8_t *)spi_queue[head].buffer;
-    memcpy(data, buffer, len > SPI_PACKET_SIZE ? SPI_PACKET_SIZE : len);
+    memcpy(data, buffer, len > BLE_PACKET_SIZE ? BLE_PACKET_SIZE : len);
 
     spi_queue[head].used = false;
     spi_queue[head].ready = false;
@@ -320,8 +335,26 @@ uint32_t ble_ext_comm_receive(uint8_t *data, uint32_t len) {
       overrun = false;
     }
 
-    return len > SPI_PACKET_SIZE ? SPI_PACKET_SIZE : len;
+    if (data[0] != '?') {
+      // bad packet, restart the DMA
+      HAL_SPI_Abort(&spi);
+
+      memset(spi_queue, 0, sizeof(spi_queue));
+      head = 0;
+      tail = 0;
+      overrun = false;
+      HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, BLE_PACKET_SIZE);
+      spi_queue[0].used = true;
+      // todo return error?
+      svc_enableIRQ(DMA2_Stream0_IRQn);
+
+      return 0;
+    }
+
+    svc_enableIRQ(DMA2_Stream0_IRQn);
+    return len > BLE_PACKET_SIZE ? BLE_PACKET_SIZE : len;
   }
 
+  svc_enableIRQ(DMA2_Stream0_IRQn);
   return 0;
 }
