@@ -132,7 +132,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       } else if (iface == BLE_EVENTS_IFACE) {
-        ble_int_comm_poll();
+        ble_event_poll();
         uint8_t connected = ble_connected();
         if (connected != ble_connected_previously) {
           ble_connected_previously = connected;
@@ -206,7 +206,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         }
       } else if (iface == BLE_IFACE_EXT) {
         if (mode == POLL_READ) {
-          uint8_t buf[64] = {0};
+          uint8_t buf[BLE_PACKET_SIZE] = {0};
           int len = ble_ext_comm_receive(buf, sizeof(buf));
           if (len > 0) {
             ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);

@@ -322,10 +322,14 @@ class Characteristic:
     def read(self):
         return bytes(self._char.ReadValue({}))
 
-    def write(self, value):
+    def write(self, value, command=True):
         start = time.time()
         try:
-            self._char.WriteValue(value, {})
+            if command:
+                self._char.WriteValue(value, {"type": "command"})
+            else:
+                self._char.WriteValue(value, {"type": "request"})
+
         except dbus.DBusException as e:
             if (
                 e.get_dbus_name() == "org.bluez.Error.Failed"
