@@ -68,7 +68,7 @@ class BleTransport(ProtocolBasedTransport):
                 self.ble_device = d
                 break
 
-        super().__init__(protocol=ProtocolV1(self))
+        super().__init__(protocol=ProtocolV1(self, replen=244))
 
     def get_path(self) -> str:
         return "{}:{}".format(self.PATH_PREFIX, self.device)

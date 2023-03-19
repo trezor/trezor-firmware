@@ -26,24 +26,31 @@
 #include "int_comm_defs.h"
 #include "state.h"
 
-#define SPI_PACKET_SIZE 64
-#define SPI_QUEUE_SIZE 4
+#define SPI_QUEUE_SIZE 10
+#define UART_PACKET_SIZE 64
 
 static UART_HandleTypeDef urt;
-static uint8_t last_init_byte = 0;
 
 static SPI_HandleTypeDef spi = {0};
 static DMA_HandleTypeDef spi_dma = {0};
 
 typedef struct {
-  uint8_t buffer[SPI_PACKET_SIZE];
+  uint8_t buffer[BLE_PACKET_SIZE];
   bool used;
   bool ready;
 } spi_buffer_t;
 
 spi_buffer_t spi_queue[SPI_QUEUE_SIZE];
 static int head = 0, tail = 0;
-static bool overrun = 1;
+static bool overrun = false;
+volatile uint16_t overrun_count = 0;
+volatile uint16_t msg_cntr = 0;
+volatile uint16_t first_overrun_at = 0;
+
+static uint8_t int_comm_buffer[UART_PACKET_SIZE];
+static uint16_t int_comm_msg_len = 0;
+static uint8_t int_event_buffer[UART_PACKET_SIZE];
+static uint16_t int_event_msg_len = 0;
 
 void ble_comm_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -101,7 +108,10 @@ void ble_comm_init(void) {
 
   set_initialized(false);
 
-  HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, 64);
+  HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, BLE_PACKET_SIZE);
+  spi_queue[0].used = true;
+
+  tail = 0;
 }
 
 void ble_comm_send(uint8_t *data, uint32_t len) {
@@ -168,22 +178,13 @@ void flush_line(void) {
   }
 }
 
-uint32_t ble_int_comm_poll(void) {
-  uint8_t data[64] = {0};
+void ble_uart_receive(void) {
   if (urt.Instance->SR & USART_SR_RXNE) {
     uint8_t init_byte = 0;
 
-    if (last_init_byte != 0) {
-      if (last_init_byte == INTERNAL_EVENT) {
-        init_byte = last_init_byte;
-      } else {
-        return 0;
-      }
-    } else {
-      HAL_UART_Receive(&urt, &init_byte, 1, 1);
-    }
+    HAL_UART_Receive(&urt, &init_byte, 1, 1);
 
-    if (init_byte == INTERNAL_EVENT) {
+    if (init_byte == INTERNAL_EVENT || init_byte == INTERNAL_MESSAGE) {
       uint8_t len_hi = 0;
       uint8_t len_lo = 0;
       HAL_UART_Receive(&urt, &len_hi, 1, 1);
@@ -191,125 +192,111 @@ uint32_t ble_int_comm_poll(void) {
 
       uint16_t act_len = (len_hi << 8) | len_lo;
 
-      if (act_len > sizeof(data) + OVERHEAD_SIZE) {
-        last_init_byte = 0;
+      if (act_len > UART_PACKET_SIZE + OVERHEAD_SIZE) {
         flush_line();
-        return 0;
+        return;
+      }
+
+      uint8_t *data = NULL;
+      uint16_t *len = NULL;
+      if (init_byte == INTERNAL_EVENT) {
+        data = int_event_buffer;
+        len = &int_event_msg_len;
+      } else if (init_byte == INTERNAL_MESSAGE) {
+        data = int_comm_buffer;
+        len = &int_comm_msg_len;
+      } else {
+        memset(data, 0, UART_PACKET_SIZE);
+        *len = 0;
+        flush_line();
+        return;
       }
 
       HAL_StatusTypeDef result =
           HAL_UART_Receive(&urt, data, act_len - OVERHEAD_SIZE, 5);
 
       if (result != HAL_OK) {
-        last_init_byte = 0;
+        memset(data, 0, UART_PACKET_SIZE);
+        *len = 0;
         flush_line();
-        return 0;
+        return;
       }
 
       uint8_t eom = 0;
       HAL_UART_Receive(&urt, &eom, 1, 1);
 
       if (eom == EOM) {
-        process_poll(data, act_len - OVERHEAD_SIZE);
-        last_init_byte = 0;
-        return act_len - OVERHEAD_SIZE;
+        *len = act_len - OVERHEAD_SIZE;
+      } else {
+        memset(data, 0, UART_PACKET_SIZE);
+        *len = 0;
+        flush_line();
       }
-      return 0;
-
-    } else if (init_byte == INTERNAL_MESSAGE || init_byte == EXTERNAL_MESSAGE) {
-      last_init_byte = init_byte;
     } else {
       flush_line();
     }
-    return 0;
+  }
+  //
+}
+
+void ble_event_poll() {
+  ble_uart_receive();
+
+  if (int_event_msg_len > 0) {
+    process_poll(int_event_buffer, int_event_msg_len);
+    memset(int_event_buffer, 0, UART_PACKET_SIZE);
+    int_event_msg_len = 0;
   }
 
   if (!ble_initialized()) {
     uint8_t cmd = INTERNAL_CMD_SEND_STATE;
     ble_int_comm_send(&cmd, sizeof(cmd), INTERNAL_EVENT);
   }
-
-  return 0;
 }
 
 uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len) {
-  if (urt.Instance->SR & USART_SR_RXNE) {
-    uint8_t init_byte = 0;
-
-    if (last_init_byte != 0) {
-      if (last_init_byte == INTERNAL_MESSAGE) {
-        init_byte = last_init_byte;
-      } else {
-        return 0;
-      }
-
-    } else {
-      HAL_UART_Receive(&urt, &init_byte, 1, 1);
-    }
-
-    if (init_byte == INTERNAL_MESSAGE) {
-      uint8_t len_hi = 0;
-      uint8_t len_lo = 0;
-      HAL_UART_Receive(&urt, &len_hi, 1, 1);
-      HAL_UART_Receive(&urt, &len_lo, 1, 1);
-
-      uint16_t act_len = (len_hi << 8) | len_lo;
-
-      if (act_len > len + OVERHEAD_SIZE) {
-        last_init_byte = 0;
-        flush_line();
-        return 0;
-      }
-
-      HAL_StatusTypeDef result =
-          HAL_UART_Receive(&urt, data, act_len - OVERHEAD_SIZE, 5);
-
-      if (result != HAL_OK) {
-        last_init_byte = 0;
-        flush_line();
-        return 0;
-      }
-
-      uint8_t eom = 0;
-      HAL_UART_Receive(&urt, &eom, 1, 1);
-
-      if (eom == EOM) {
-        last_init_byte = 0;
-        return act_len - OVERHEAD_SIZE;
-      }
-      return 0;
-
-    } else if (init_byte == INTERNAL_EVENT) {
-      last_init_byte = init_byte;
-    } else {
-      flush_line();
-      return 0;
-    }
+  ble_uart_receive();
+  if (int_comm_msg_len > 0) {
+    memcpy(data, int_comm_buffer,
+           int_comm_msg_len > len ? len : int_comm_msg_len);
+    memset(int_comm_buffer, 0, UART_PACKET_SIZE);
+    uint32_t res = int_comm_msg_len;
+    int_comm_msg_len = 0;
+    return res;
   }
-
   return 0;
 }
 
 bool start_spi_dma(void) {
-  if (spi_queue[tail].used || spi_queue[tail].ready) {
+  int tmp_tail = (tail + 1) % SPI_QUEUE_SIZE;
+  if (spi_queue[tmp_tail].used || spi_queue[tmp_tail].ready) {
     overrun = true;
+    overrun_count++;
+    if (first_overrun_at == 0) {
+      first_overrun_at = msg_cntr;
+    }
     return false;
   }
-  spi_queue[tail].used = true;
-  HAL_SPI_Receive_DMA(&spi, spi_queue[tail].buffer, SPI_PACKET_SIZE);
+  spi_queue[tmp_tail].used = true;
+  HAL_SPI_Receive_DMA(&spi, spi_queue[tmp_tail].buffer, BLE_PACKET_SIZE);
+
+  tail = tmp_tail;
   return true;
 }
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
   spi_queue[tail].ready = true;
-  tail = (tail + 1) % SPI_QUEUE_SIZE;
+  msg_cntr++;
   start_spi_dma();
 }
 
+#include "supervise.h"
+
 uint32_t ble_ext_comm_receive(uint8_t *data, uint32_t len) {
+  svc_disableIRQ(DMA2_Stream0_IRQn);
   if (spi_queue[head].ready) {
     uint8_t *buffer = (uint8_t *)spi_queue[head].buffer;
-    memcpy(data, buffer, len > SPI_PACKET_SIZE ? SPI_PACKET_SIZE : len);
+    memcpy(data, buffer, len > BLE_PACKET_SIZE ? BLE_PACKET_SIZE : len);
 
     spi_queue[head].used = false;
     spi_queue[head].ready = false;
@@ -320,8 +307,26 @@ uint32_t ble_ext_comm_receive(uint8_t *data, uint32_t len) {
       overrun = false;
     }
 
-    return len > SPI_PACKET_SIZE ? SPI_PACKET_SIZE : len;
+    if (data[0] != '?') {
+      // bad packet, restart the DMA
+      HAL_SPI_Abort(&spi);
+
+      memset(spi_queue, 0, sizeof(spi_queue));
+      head = 0;
+      tail = 0;
+      overrun = false;
+      HAL_SPI_Receive_DMA(&spi, spi_queue[0].buffer, BLE_PACKET_SIZE);
+      spi_queue[0].used = true;
+      // todo return error?
+      svc_enableIRQ(DMA2_Stream0_IRQn);
+
+      return 0;
+    }
+
+    svc_enableIRQ(DMA2_Stream0_IRQn);
+    return len > BLE_PACKET_SIZE ? BLE_PACKET_SIZE : len;
   }
 
+  svc_enableIRQ(DMA2_Stream0_IRQn);
   return 0;
 }

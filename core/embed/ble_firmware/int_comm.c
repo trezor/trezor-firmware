@@ -15,6 +15,7 @@
 #define SPI_SS_PIN 31
 
 static uint8_t m_uart_rx_data[BLE_NUS_MAX_DATA_LEN];
+static uint8_t m_spi_tx_data[BLE_PACKET_SIZE];
 static bool m_uart_rx_data_ready_internal = false;
 static uint16_t *m_p_conn_handle = NULL;
 
@@ -22,9 +23,9 @@ BLE_NUS_DEF(m_nus,
             NRF_SDH_BLE_TOTAL_LINK_COUNT); /**< BLE NUS service instance. */
 
 static const nrf_drv_spi_t spi =
-    NRF_DRV_SPI_INSTANCE(SPI_INSTANCE); /**< SPI instance. */
-static volatile bool spi_xfer_done; /**< Flag used to indicate that SPI instance
-                                       completed the transfer. */
+    NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);    /**< SPI instance. */
+static volatile bool spi_xfer_done = true; /**< Flag used to indicate that SPI
+                                       instance completed the transfer. */
 
 /**
  * @brief SPI user event handler.
@@ -200,12 +201,17 @@ void nus_data_handler(ble_nus_evt_t *p_evt) {
     NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data,
                           p_evt->params.rx_data.length);
 
-    if (p_evt->params.rx_data.length != 64) {
+    if (p_evt->params.rx_data.length != BLE_PACKET_SIZE) {
       return;
     }
 
-    nrf_drv_spi_transfer(&spi, p_evt->params.rx_data.p_data,
-                         p_evt->params.rx_data.length, NULL, 0);
+    while (!spi_xfer_done)
+      ;
+    spi_xfer_done = false;
+
+    memcpy(m_spi_tx_data, p_evt->params.rx_data.p_data, BLE_PACKET_SIZE);
+
+    nrf_drv_spi_transfer(&spi, m_spi_tx_data, BLE_PACKET_SIZE, NULL, 0);
   }
 }
 /**@snippet [Handling the data received over BLE] */
