@@ -20,6 +20,7 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -69,6 +70,7 @@ static SDL_Surface *PREV_SAVED;
 
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
+static float DISPLAY_GAMMA = 0.55f;
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
@@ -87,12 +89,36 @@ static struct {
   } pos;
 } PIXELWINDOW;
 
+uint16_t gamma_correct(uint16_t c) {
+  // NOTE: 0x1f/31 and 0x3f/63 are maximum values of RGB components
+  // given the color is 16-bit (5 bits for R, 6 bits for G, 5 bits for B).
+  int r = (c >> 11) & 0x1f;
+  int g = (c >> 5) & 0x3f;
+  int b = c & 0x1f;
+
+  float fr = r / 31.0;
+  float fg = g / 63.0;
+  float fb = b / 31.0;
+
+  fr = pow(fr, DISPLAY_GAMMA);
+  fg = pow(fg, DISPLAY_GAMMA);
+  fb = pow(fb, DISPLAY_GAMMA);
+
+  r = (int)round(fr * 31.0);
+  g = (int)round(fg * 63.0);
+  b = (int)round(fb * 31.0);
+
+  return (r << 11) | (g << 5) | b;
+}
+
 void display_pixeldata(uint16_t c) {
 #if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   // set to white if highest bits of all R, G, B values are set to 1
   // bin(10000 100000 10000) = hex(0x8410)
   // otherwise set to black
   c = (c & 0x8410) ? 0xFFFF : 0x0000;
+#elif defined TREZOR_MODEL_T
+  c = gamma_correct(c);
 #endif
   if (!RENDERER) {
     display_init();
