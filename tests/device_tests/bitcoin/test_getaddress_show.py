@@ -71,7 +71,6 @@ def test_show_t1(
         )
 
 
-@pytest.mark.skip(reason="mmilata")
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_tt(
@@ -79,12 +78,12 @@ def test_show_tt(
 ):
     def input_flow():
         yield
-        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.click(CORNER_BUTTON)
         yield
         client.debug.swipe_left(wait=True)
         client.debug.swipe_right(wait=True)
         client.debug.swipe_left(wait=True)
-        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.click(CORNER_BUTTON)
         yield
         client.debug.press_no()
         yield
@@ -106,7 +105,6 @@ def test_show_tt(
         )
 
 
-@pytest.mark.skip(reason="mmilata")
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_cancel(
@@ -114,10 +112,10 @@ def test_show_cancel(
 ):
     def input_flow():
         yield
-        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.click(CORNER_BUTTON)
         yield
         client.debug.swipe_left(wait=True)
-        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.click(CORNER_BUTTON)
         yield
         client.debug.press_no()
         yield
