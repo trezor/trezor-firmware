@@ -5,10 +5,15 @@ import os
 import tools
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
+PRODUCTION = ARGUMENTS.get('PRODUCTION', '0')
+BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D = TREZOR_MODEL in ('T', )
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+
+if PRODUCTION != '1' and BOOTLOADER_QA:
+    raise ValueError('Firmware variant for bootloader upgrade testing must be done with PRODUCTION=1')
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -424,7 +429,7 @@ tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0'), PYOPT, BITCOIN_ONLY))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), PRODUCTION, PYOPT, BITCOIN_ONLY))
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
@@ -782,7 +787,7 @@ obj_program.extend(
         ' $SOURCE $TARGET', ))
 
 
-BOOTLOADER_SUFFIX =  tools.get_model_identifier(TREZOR_MODEL)
+BOOTLOADER_SUFFIX =  tools.get_model_identifier(TREZOR_MODEL) + ('_QA' if BOOTLOADER_QA else '')
 
 obj_program.extend(
     env.Command(

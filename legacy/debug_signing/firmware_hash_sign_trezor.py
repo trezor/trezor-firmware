@@ -16,8 +16,8 @@ except IndexError:
     out_fw_fname = in_fw_fname + ".signed"
 
 # These 3 keys will be used in this order to sign the FW
-# each index can be >= 1 and <= 5
-sig_indices = [1, 2, 3]
+# each index can be >= 1 and <= 3
+sig_indices = [1, 2]
 
 print(f"Input trezor.bin file: {in_fw_fname}")
 print(f"Output signed trezor.bin file: {out_fw_fname}")

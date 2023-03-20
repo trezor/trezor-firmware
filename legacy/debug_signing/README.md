@@ -8,12 +8,12 @@
 1. **FW header hash is different from whole FW hash in the one output by cibuild**
 1. Run the emulator or device (make sure not to confuse which are you using for signing)
 1. Run `firmware_hash_sign_trezor.py ../firmware/trezor.bin ../firmware/trezor.bin.signed`
-1. Accept 3 signature requests on signing device
-1. This will show you a list of 3 signatures for 3 keys
+1. Accept 2 signature requests on signing device
+1. This will show you a list of 2 signatures for 3 keys
 1. It will output `../firmware.trezor.bin.signed`
 
-By default the scripts uses the `[1, 2, 3]` sigindices, you can modify `sig_indices`
-inside to have different order or different keys (1 <= index <= 5 )
+By default the scripts uses the `[1, 2]` sigindices, you can modify `sig_indices`
+inside to have different order or different keys (1 <= index <= 3 )
 
 Update FW on T1 either via `trezorctl device firmware-update` or
 `make flash_firmware_jlink`.

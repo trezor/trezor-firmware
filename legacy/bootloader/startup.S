@@ -20,18 +20,6 @@ memset_reg:
   .type reset_handler, STT_FUNC
 reset_handler:
 
-#if PRODUCTION
-// we need to perform this in case an old bootloader (<1.8.0)
-// is starting the new firmware, these will be set incorrectly
-  ldr r0, =0xE000ED08  // r0 = VTOR address
-  ldr r1, =0x08010400  // r1 = FLASH_APP_START
-  str r1, [r0]         // assign
-  ldr r0, =_stack      // r0 = stack pointer
-  msr msp, r0          // set stack pointer
-  dsb
-  isb
-#endif
-
   ldr r0, =_stay_in_bootloader_flag_addr  // r0 - address of storage for "stay in bootloader" flag
   ldr r11, [r0]        // r11 - keep in register and hope it gets to main
 

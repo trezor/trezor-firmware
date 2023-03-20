@@ -1,1 +1,0 @@
-Do not convert bech32 addresses to uppercase in QR code to increase compatibility
