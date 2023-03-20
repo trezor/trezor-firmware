@@ -24,8 +24,8 @@ bool get_features(Features *resp) {
 #else
   const image_header *hdr =
       (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
-  // only v3 signatures count as signed
-  if (SIG_OK == signatures_ok(hdr, NULL, true)) {
+  // allow both v2 and v3 signatures
+  if (SIG_OK == signatures_match(hdr, NULL)) {
     strlcpy(resp->fw_vendor, "SatoshiLabs", sizeof(resp->fw_vendor));
   } else {
     strlcpy(resp->fw_vendor, "UNSAFE, DO NOT USE!", sizeof(resp->fw_vendor));

@@ -1,7 +1,3 @@
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 11
-#define VERSION_PATCH 0
-
-#define VERSION_MAJOR_CHAR "\x01"
-#define VERSION_MINOR_CHAR "\x0B"
-#define VERSION_PATCH_CHAR "\x00"
+#define VERSION_MINOR 12
+#define VERSION_PATCH 2

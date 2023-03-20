@@ -161,6 +161,12 @@ int main(void) {
     if (SIG_OK != signed_firmware) {
       show_unofficial_warning(fingerprint);
     }
+#if !PRODUCTION && !BOOTLOADER_QA && !DEBUG_T1_SIGNATURES
+    // try to avoid bricking board SWD debug by accident
+    else {
+      show_halt("Official firmware", "Won't run on debug device");
+    }
+#endif
 
     if (SIG_OK != check_firmware_hashes(hdr)) {
       show_halt("Broken firmware", "detected.");
