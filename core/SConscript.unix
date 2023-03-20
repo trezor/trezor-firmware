@@ -55,6 +55,7 @@ CPPPATH_MOD += [
 CPPDEFINES_MOD += [
     'AES_128',
     'AES_192',
+    'USE_INSECURE_PRNG',
     ('USE_BIP32_CACHE', '0'),
     ('USE_KECCAK', '1'),
     ('USE_ETHEREUM', '1' if EVERYTHING else '0'),

@@ -49,8 +49,9 @@ CPPDEFINES_MOD += [
     'ED25519_NO_PRECOMP',
     'TREZOR_UI2',
     'USE_RUST_LOADER',
-    'FANCY_FATAL_ERROR'
+    'FANCY_FATAL_ERROR',
 ]
+
 SOURCE_MOD += [
     'vendor/trezor-crypto/blake2s.c',
     'vendor/trezor-crypto/chacha_drbg.c',
@@ -77,6 +78,7 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
     'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/fonts/font_bitmap.c',
+    'embed/extmod/modtrezorcrypto/rand.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
