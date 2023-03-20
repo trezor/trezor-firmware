@@ -49,11 +49,16 @@
 #ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
+#ifdef USE_BLE
+#include "ble/comm.h"
+#endif
+
 #include "usb.h"
 #include "version.h"
 
 #include "bootui.h"
 #include "messages.h"
+#include "messages.pb.h"
 #include "rust_ui.h"
 
 const uint8_t BOOTLOADER_KEY_M = 2;
@@ -70,8 +75,6 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
     (const uint8_t *)"\xee\x93\xa4\xf6\x6f\x8d\x16\xb8\x19\xbb\x9b\xeb\x9f\xfc\xcd\xfc\xdc\x14\x12\xe8\x7f\xee\x6a\x32\x4c\x2a\x99\xa1\xe0\xe6\x71\x48",
 #endif
 };
-
-#define USB_IFACE_NUM 0
 
 typedef enum {
   CONTINUE = 0,
@@ -119,98 +122,225 @@ static void usb_init_all(secbool usb21_landing) {
   usb_start();
 }
 
-static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
-                                        const image_header *const hdr) {
+static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
+                                         const image_header *const hdr) {
   // if both are NULL, we don't have a firmware installed
   // let's show a webusb landing page in this case
   usb_init_all((vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
 
-  uint8_t buf[USB_PACKET_SIZE];
+  uint8_t buf_usb[USB_PACKET_SIZE];
+#ifdef USE_BLE
+  uint8_t ble_buf[BLE_PACKET_SIZE];
+#endif
+  uint8_t *buf = NULL;
+
+  uint8_t active_iface = 0;
+  int r = 0;
 
   for (;;) {
+    for (;;) {
 #ifdef TREZOR_EMULATOR
-    emulator_poll_events();
+      emulator_poll_events();
 #endif
-    int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE,
-                                     USB_TIMEOUT);
-    if (r != USB_PACKET_SIZE) {
-      continue;
+      r = usb_webusb_read_blocking(USB_IFACE_NUM, buf_usb, USB_PACKET_SIZE, 20);
+      if (r == USB_PACKET_SIZE) {
+        active_iface = USB_IFACE_NUM;
+        buf = buf_usb;
+        break;
+      }
+#ifdef USE_BLE
+      r = ble_ext_comm_receive(ble_buf, sizeof(ble_buf));
+
+      if (r == BLE_PACKET_SIZE) {
+        active_iface = BLE_EXT_IFACE_NUM;
+        buf = ble_buf;
+        break;
+      }
+
+      r = ble_int_comm_receive(ble_buf, sizeof(ble_buf));
+      if (r != 0) {
+        active_iface = BLE_INT_IFACE_NUM;
+        buf = ble_buf;
+        break;
+      }
+
+      (void)ble_int_comm_poll();
+#endif
     }
-    uint16_t msg_id;
-    uint32_t msg_size;
-    uint32_t response;
-    if (sectrue != msg_parse_header(buf, &msg_id, &msg_size)) {
-      // invalid header -> discard
-      continue;
+
+#ifdef USE_BLE
+    if (active_iface == BLE_INT_IFACE_NUM) {
+      for (;;) {
+        bool next = false;
+        if (r == 0) {
+          (void)ble_int_comm_poll();
+
+          if (active_iface == BLE_INT_IFACE_NUM) {
+            r = ble_int_comm_receive(ble_buf, sizeof(ble_buf));
+
+            if (r == 0) {
+              continue;
+            }
+          } else {
+            // unknown interface
+            return CONTINUE;
+          }
+        }
+
+        r = 0;
+
+        uint16_t msg_id;
+        uint32_t msg_size;
+        uint32_t response;
+        if (sectrue != msg_parse_header(buf, &msg_id, &msg_size)) {
+          // invalid header -> discard
+          continue;
+        }
+        switch (msg_id) {
+          case MessageType_MessageType_PairingRequest:  // pairing request
+            response = process_msg_Pairing(active_iface, msg_size, ble_buf);
+            if (response != INPUT_CONFIRM) {
+              hal_delay(100);
+              usb_stop();
+              usb_deinit();
+              return RETURN;
+            }
+            screen_connect();
+            next = true;
+
+            break;
+          case MessageType_MessageType_RepairRequest:  // repairing request
+            response = process_msg_Repair(active_iface, msg_size, ble_buf);
+            if (response != INPUT_CONFIRM) {
+              hal_delay(100);
+              usb_stop();
+              usb_deinit();
+              return RETURN;
+            }
+            // screen_connect();
+            // todo - screen connect or timeout?
+            break;
+          default:
+            process_msg_unknown(active_iface, msg_size, ble_buf);
+            break;
+        }
+        if (next) {
+          break;
+        }
+      }
     }
-    switch (msg_id) {
-      case 0:  // Initialize
-        process_msg_Initialize(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
-        break;
-      case 1:  // Ping
-        process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
-        break;
-      case 5:  // WipeDevice
-        response = ui_screen_wipe_confirm();
-        if (INPUT_CANCEL == response) {
-          send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
-          hal_delay(100);
-          usb_stop();
-          usb_deinit();
-          return RETURN;
+#endif
+
+    if (active_iface == USB_IFACE_NUM || active_iface == BLE_EXT_IFACE_NUM) {
+      for (;;) {
+#ifdef TREZOR_EMULATOR
+        emulator_poll_events();
+#endif
+        if (r == 0) {
+          if (active_iface == USB_IFACE_NUM) {
+            r = usb_webusb_read_blocking(active_iface, buf_usb, USB_PACKET_SIZE,
+                                         USB_TIMEOUT);
+            if (r != USB_PACKET_SIZE) {
+              continue;
+            }
+          }
+#ifdef USE_BLE
+          else if (active_iface == BLE_EXT_IFACE_NUM) {
+            r = ble_ext_comm_receive(ble_buf, sizeof(ble_buf));
+
+            if (r != BLE_PACKET_SIZE) {
+              continue;
+            }
+          }
+#endif
+          else {
+            // unknown interface
+            return CONTINUE;
+          }
         }
-        ui_screen_wipe();
-        r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
-        if (r < 0) {  // error
-          screen_wipe_fail();
-          hal_delay(100);
-          usb_stop();
-          usb_deinit();
-          return SHUTDOWN;
-        } else {  // success
-          screen_wipe_success();
-          hal_delay(100);
-          usb_stop();
-          usb_deinit();
-          return SHUTDOWN;
+
+        r = 0;
+
+        uint16_t msg_id;
+        uint32_t msg_size;
+        uint32_t response;
+        int32_t upload_response;
+        if (sectrue != msg_parse_header(buf, &msg_id, &msg_size)) {
+          // invalid header -> discard
+          continue;
         }
-        break;
-      case 6:  // FirmwareErase
-        process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
-        break;
-      case 7:  // FirmwareUpload
-        r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
-        if (r < 0 && r != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
-          ui_screen_fail();
-          usb_stop();
-          usb_deinit();
-          return SHUTDOWN;
-        } else if (r == UPLOAD_ERR_USER_ABORT) {
-          hal_delay(100);
-          usb_stop();
-          usb_deinit();
-          return RETURN;
-        } else if (r == 0) {  // last chunk received
-          ui_screen_install_progress_upload(1000);
-          ui_screen_done(4, sectrue);
-          ui_screen_done(3, secfalse);
-          hal_delay(1000);
-          ui_screen_done(2, secfalse);
-          hal_delay(1000);
-          ui_screen_done(1, secfalse);
-          hal_delay(1000);
-          usb_stop();
-          usb_deinit();
-          ui_screen_boot_empty(true);
-          return CONTINUE;
+        switch (msg_id) {
+          case 0:  // Initialize
+            process_msg_Initialize(active_iface, msg_size, buf, vhdr, hdr);
+            break;
+          case 1:  // Ping
+            process_msg_Ping(active_iface, msg_size, buf);
+            break;
+          case 5:  // WipeDevice
+            response = ui_screen_wipe_confirm();
+            if (INPUT_CANCEL == response) {
+              send_user_abort(active_iface, "Wipe cancelled");
+              hal_delay(100);
+              usb_stop();
+              usb_deinit();
+              return RETURN;
+            }
+            ui_screen_wipe();
+            upload_response =
+                process_msg_WipeDevice(active_iface, msg_size, buf);
+            if (upload_response < 0) {  // error
+              screen_wipe_fail();
+              usb_stop();
+              usb_deinit();
+              return SHUTDOWN;
+            } else {  // success
+              screen_wipe_success();
+              usb_stop();
+              usb_deinit();
+              return SHUTDOWN;
+            }
+            break;
+          case 6:  // FirmwareErase
+            process_msg_FirmwareErase(active_iface, msg_size, buf);
+            break;
+          case 7:  // FirmwareUpload
+            upload_response =
+                process_msg_FirmwareUpload(active_iface, msg_size, buf);
+            if (upload_response < 0 &&
+                upload_response !=
+                    UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
+              ui_screen_fail();
+              usb_stop();
+              usb_deinit();
+              return SHUTDOWN;
+            } else if (upload_response == UPLOAD_ERR_USER_ABORT) {
+              hal_delay(100);
+              usb_stop();
+              usb_deinit();
+              return RETURN;
+            } else if (upload_response == 0) {  // last chunk received
+              ui_screen_install_progress_upload(1000);
+              ui_screen_done(4, sectrue);
+              ui_screen_done(3, secfalse);
+              hal_delay(1000);
+              ui_screen_done(2, secfalse);
+              hal_delay(1000);
+              ui_screen_done(1, secfalse);
+              hal_delay(1000);
+              usb_stop();
+              usb_deinit();
+              ui_screen_boot_empty(true, true);
+              return CONTINUE;
+            }
+            break;
+          case 55:  // GetFeatures
+            process_msg_GetFeatures(active_iface, msg_size, buf, vhdr, hdr);
+            break;
+          default:
+            process_msg_unknown(active_iface, msg_size, buf);
+            break;
         }
-        break;
-      case 55:  // GetFeatures
-        process_msg_GetFeatures(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
-        break;
-      default:
-        process_msg_unknown(USB_IFACE_NUM, msg_size, buf);
-        break;
+      }
     }
   }
 }
@@ -343,6 +473,9 @@ int bootloader_main(void) {
 #ifdef USE_RGB_LED
   rgb_led_init();
 #endif
+#ifdef USE_BLE
+  ble_comm_init();
+#endif
 
 #if PRODUCTION
   check_bootloader_version();
@@ -402,7 +535,7 @@ int bootloader_main(void) {
            NULL);
 
     // and start the usb loop
-    if (bootloader_usb_loop(NULL, NULL) != CONTINUE) {
+    if (bootloader_comm_loop(NULL, NULL) != CONTINUE) {
       return 1;
     }
   }
@@ -461,7 +594,7 @@ int bootloader_main(void) {
           break;
         case SCREEN_WAIT_FOR_HOST:
           screen_connect();
-          switch (bootloader_usb_loop(&vhdr, hdr)) {
+          switch (bootloader_comm_loop(&vhdr, hdr)) {
             case CONTINUE:
               continue_to_firmware = true;
               break;

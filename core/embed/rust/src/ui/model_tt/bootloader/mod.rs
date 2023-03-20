@@ -25,6 +25,7 @@ use crate::{
         util::{from_c_array, from_c_str},
     },
 };
+use core::slice;
 use heapless::String;
 use num_traits::ToPrimitive;
 
@@ -72,13 +73,16 @@ fn fadeout() {
     display::fade_backlight_duration(BACKLIGHT_DIM, 150);
 }
 
-fn run<F>(frame: &mut F) -> u32
+fn run<F>(frame: &mut F, clear: bool) -> u32
 where
     F: Component,
     F::Msg: ReturnToC,
 {
     frame.place(constant::screen());
     fadeout();
+    if clear {
+        display::rect_fill(screen(), BLACK);
+    }
     display::sync();
     frame.paint();
     fadein();
@@ -191,7 +195,7 @@ extern "C" fn screen_install_confirm(
         Some(("FW FINGERPRINT", fingerprint_str)),
     );
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 #[no_mangle]
@@ -222,12 +226,12 @@ extern "C" fn screen_wipe_confirm() -> u32 {
         None,
     );
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 #[no_mangle]
 extern "C" fn screen_menu() -> u32 {
-    run(&mut Menu::new())
+    run(&mut Menu::new(), false)
 }
 
 #[no_mangle]
@@ -253,7 +257,7 @@ extern "C" fn screen_intro(
 
     let mut frame = Intro::new(title_str.as_str(), version_str.as_str());
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 fn screen_progress(
@@ -418,4 +422,34 @@ extern "C" fn screen_welcome_model() {
 extern "C" fn screen_welcome() {
     let mut frame = Welcome::new();
     show(&mut frame, true);
+}
+
+#[no_mangle]
+extern "C" fn screen_pairing_confirm(buffer: *const cty::uint8_t) -> u32 {
+    let pin_slice = unsafe { slice::from_raw_parts_mut(buffer as *mut u8, 6) };
+
+    let mut pin = PinKeyboard::new("Enter passkey", "", None, true);
+    let res = run(&mut pin, true);
+
+    let pin = pin.pin().as_bytes();
+
+    pin_slice.copy_from_slice(&pin[0..6]);
+
+    res
+}
+
+#[no_mangle]
+extern "C" fn screen_repair_confirm() -> u32 {
+    let left = Button::with_text("DENY").styled(button_install_cancel());
+    let right = Button::with_text("ALLOW").styled(button_install_confirm());
+
+    let mut messages = ParagraphVecShort::new();
+
+    messages.add(Paragraph::new(&TEXT_NORMAL_BLACK, "Allow repair?").centered());
+
+    let message =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+
+    let mut pin = Confirm::new(BLACK, None, left, right, false, (None, message), None);
+    run(&mut pin, true)
 }

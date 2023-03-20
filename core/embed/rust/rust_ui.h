@@ -25,3 +25,6 @@ uint32_t screen_install_fail(void);
 void screen_welcome_model(void);
 void screen_welcome(void);
 void screen_boot_empty(bool fading);
+
+uint32_t screen_pairing_confirm(uint8_t* buffer);
+uint32_t screen_repair_confirm(void);
