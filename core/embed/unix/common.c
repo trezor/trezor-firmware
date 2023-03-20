@@ -18,6 +18,7 @@
  */
 
 #include <SDL.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -31,7 +32,7 @@
 #include "memzero.h"
 
 extern void main_clean_exit();
-extern int GAMMA_CORRECTION_PERCENTAGE;
+extern float DISPLAY_GAMMA;
 
 void __attribute__((noreturn)) __shutdown(void) {
   printf("SHUTDOWN\n");
@@ -148,14 +149,12 @@ static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
           display_save("emu");
           return 0;
         case SDLK_LEFT:
-          GAMMA_CORRECTION_PERCENTAGE -= 1;
-          printf("GAMMA_CORRECTION_PERCENTAGE: %d\n",
-                 GAMMA_CORRECTION_PERCENTAGE);
+          DISPLAY_GAMMA = fmaxf(0.0f, DISPLAY_GAMMA - 0.05f);
+          printf("DISPLAY_GAMMA: %0.2f\n", DISPLAY_GAMMA);
           return 0;
         case SDLK_RIGHT:
-          GAMMA_CORRECTION_PERCENTAGE += 1;
-          printf("GAMMA_CORRECTION_PERCENTAGE: %d\n",
-                 GAMMA_CORRECTION_PERCENTAGE);
+          DISPLAY_GAMMA = fminf(8.0f, DISPLAY_GAMMA + 0.05f);
+          printf("DISPLAY_GAMMA: %0.2f\n", DISPLAY_GAMMA);
           return 0;
       }
       break;

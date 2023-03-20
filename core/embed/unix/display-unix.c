@@ -70,7 +70,7 @@ static SDL_Surface *PREV_SAVED;
 
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
-int GAMMA_CORRECTION_PERCENTAGE = 55;
+float DISPLAY_GAMMA = 0.55f;
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
@@ -98,11 +98,9 @@ uint16_t gamma_correct(uint16_t c) {
   float fg = g / 63.0;
   float fb = b / 31.0;
 
-  float gamma = GAMMA_CORRECTION_PERCENTAGE / 100.0;
-
-  fr = pow(fr, gamma);
-  fg = pow(fg, gamma);
-  fb = pow(fb, gamma);
+  fr = pow(fr, DISPLAY_GAMMA);
+  fg = pow(fg, DISPLAY_GAMMA);
+  fb = pow(fb, DISPLAY_GAMMA);
 
   r = (int)round(fr * 31.0);
   g = (int)round(fg * 63.0);
