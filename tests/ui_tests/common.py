@@ -84,8 +84,8 @@ def write_fixtures(
 ) -> None:
     global FIXTURES
     content, _ = prepare_fixtures(results, remove_missing)
-    FIXTURES = FixturesType(content)
     dest.write_text(json.dumps(content, indent=0, sort_keys=True) + "\n")
+    FIXTURES = FixturesType({})  # reset the cache
 
 
 def _rename_records(screen_path: Path) -> None:
