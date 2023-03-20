@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "common.h"
 #include "display-unix.h"
@@ -69,6 +70,7 @@ static SDL_Surface *PREV_SAVED;
 
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
+int INCREASE_BRIGHTNESS_PERCENT = 25;
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
@@ -87,12 +89,42 @@ static struct {
   } pos;
 } PIXELWINDOW;
 
+uint16_t brighten_emu_colors(uint16_t c) {
+  int r = (c >> 11) & 0x1f;
+  int g = (c >> 5) & 0x3f;
+  int b = c & 0x1f;
+
+  uint16_t maxChannelValue = 31; // Maximum value for R and B channels in 16-bit color (5 bits per channel)
+  uint16_t maxGreenValue = 63; // Maximum value for G channel in 16-bit color (6 bits)
+
+  // add INCREASE_BRIGHTNESS_PERCENT * diff to each channel - if the channel is not zero
+  if (r != 0) {
+    int diff_r = maxChannelValue - r;
+    int r_add = (int)(diff_r * INCREASE_BRIGHTNESS_PERCENT) / 100;
+    r += r_add;
+  }
+  if (g != 0) {
+    int diff_g = maxGreenValue - g;
+    int g_add = (int)(diff_g * INCREASE_BRIGHTNESS_PERCENT) / 100;
+    g += g_add;
+  }
+  if (b != 0) {
+    int diff_b = maxChannelValue - b;
+    int b_add = (int)(diff_b * INCREASE_BRIGHTNESS_PERCENT) / 100;
+    b += b_add;
+  }
+
+  return (r << 11) | (g << 5) | b;
+}
+
 void display_pixeldata(uint16_t c) {
 #if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   // set to white if highest bits of all R, G, B values are set to 1
   // bin(10000 100000 10000) = hex(0x8410)
   // otherwise set to black
   c = (c & 0x8410) ? 0xFFFF : 0x0000;
+#elif defined TREZOR_MODEL_T
+  c = brighten_emu_colors(c);
 #endif
   if (!RENDERER) {
     display_init();
