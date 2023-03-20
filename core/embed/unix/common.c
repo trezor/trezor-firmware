@@ -31,7 +31,7 @@
 #include "memzero.h"
 
 extern void main_clean_exit();
-extern int INCREASE_BRIGHTNESS_PERCENT;
+extern int GAMMA_CORRECTION_PERCENTAGE;
 
 void __attribute__((noreturn)) __shutdown(void) {
   printf("SHUTDOWN\n");
@@ -148,16 +148,14 @@ static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
           display_save("emu");
           return 0;
         case SDLK_LEFT:
-          INCREASE_BRIGHTNESS_PERCENT -= 1;
-          printf("INCREASE_BRIGHTNESS_PERCENT: %d\n",
-                 INCREASE_BRIGHTNESS_PERCENT);
-          display_refresh();
+          GAMMA_CORRECTION_PERCENTAGE -= 1;
+          printf("GAMMA_CORRECTION_PERCENTAGE: %d\n",
+                 GAMMA_CORRECTION_PERCENTAGE);
           return 0;
         case SDLK_RIGHT:
-          INCREASE_BRIGHTNESS_PERCENT += 1;
-          printf("INCREASE_BRIGHTNESS_PERCENT: %d\n",
-                 INCREASE_BRIGHTNESS_PERCENT);
-          display_refresh();
+          GAMMA_CORRECTION_PERCENTAGE += 1;
+          printf("GAMMA_CORRECTION_PERCENTAGE: %d\n",
+                 GAMMA_CORRECTION_PERCENTAGE);
           return 0;
       }
       break;
