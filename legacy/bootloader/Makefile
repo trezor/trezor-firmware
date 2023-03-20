@@ -1,5 +1,6 @@
 NAME  = bootloader-unaligned
 
+OBJS += startup.o
 OBJS += bootloader.o
 OBJS += usb.o
 
@@ -18,7 +19,6 @@ OBJS += ../oled.small.o
 OBJS += ../random_delays.small.o
 OBJS += ../rng.small.o
 OBJS += ../setup.small.o
-OBJS += ../startup.o
 OBJS += ../supervise.small.o
 OBJS += ../timer.small.o
 OBJS += ../usb21_standard.small.o

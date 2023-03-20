@@ -80,7 +80,11 @@ jump_to_firmware(const vector_table_t *ivt, int trust) {
   } else {  // untrusted firmware
     timer_init();
     mpu_config_firmware();  // * configure MPU for the firmware
-    __asm__ volatile("msr msp, %0" ::"r"(_stack));
+
+    // Setup stack in unprivileged mode (MSR works only for privileged)
+    // This syntax will use _stack as immediate value to put into SP
+    // instead of dereferencing it
+    __asm__ volatile("mov sp, %[input]" ::[input] "r"(&_stack));
   }
 
   // Jump to address

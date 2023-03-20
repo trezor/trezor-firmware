@@ -88,9 +88,6 @@ def cli(project, version):
             VERSION_MAJOR=major,
             VERSION_MINOR=minor,
             VERSION_PATCH=patch,
-            VERSION_MAJOR_CHAR=hex_lit(major),
-            VERSION_MINOR_CHAR=hex_lit(minor),
-            VERSION_PATCH_CHAR=hex_lit(patch),
         )
     else:
         raise click.ClickException(f"Unknown project {project}.")

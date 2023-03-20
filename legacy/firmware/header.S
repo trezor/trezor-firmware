@@ -20,7 +20,10 @@ g_header:
     .byte FIX_VERSION_MINOR          // fix_vminor
     .byte FIX_VERSION_PATCH          // fix_vpatch
     .byte 0                          // fix_vbuild
-    . = . + 8                        // reserved
+    .word HW_MODEL                   // type of the designated hardware
+    .byte HW_REVISION                // revision of the designated hardware
+    .byte 0                          // monotonic version placeholder - not used in legacy
+    . = . + 2                        // reserved
     . = . + 512                      // hash1 ... hash16
     . = . + 64                       // sig1
     . = . + 64                       // sig2

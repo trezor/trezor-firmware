@@ -40,6 +40,7 @@ OBJS += usb.o
 OBJS += bl_check.o
 OBJS += otp.o
 OBJS += header.o
+OBJS += startup.o
 endif
 
 OBJS += messages.o
@@ -172,9 +173,15 @@ endif
 	@printf "  MAKO    $@\n"
 	$(Q)$(PYTHON) ../vendor/trezor-common/tools/cointool.py render $(MAKO_RENDER_FLAG) $@.mako
 
+ifeq ($(BOOTLOADER_QA), 0)
 bl_data.h: bl_data.py bootloader.dat
-	@printf "  PYTHON  bl_data.py\n"
-	$(Q)$(PYTHON) bl_data.py
+	@printf "  PYTHON  bl_data.py bootloader.dat\n"
+	$(Q)$(PYTHON) bl_data.py bootloader.dat
+else
+bl_data.h: bl_data.py bootloader_qa.dat
+	@printf "  PYTHON  bl_data.py bootloader_qa.dat\n"
+	$(Q)$(PYTHON) bl_data.py bootloader_qa.dat
+endif
 
 header.o: version.h
 

@@ -45,9 +45,9 @@ class Signatures:
         Patch signatures from signature_pairs.
         Requires filling signature_pairs beforehand.
         """
-        assert len(self.signature_pairs) == 3
+        assert len(self.signature_pairs) <= 3
 
-        for i in range(3):
+        for i in range(len(self.signature_pairs)):
             sigindex_ofs = self.sigindex_offsets[i]
             sig_ofs = self.sig_offsets[i]
             (sigindex, sig) = self.signature_pairs[i]

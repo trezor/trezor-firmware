@@ -1,5 +1,5 @@
 
-## [{{ versiondata.version }}] ({{versiondata.date}})
+## {{ versiondata.version }} [{{versiondata.date}}]
 {% for section, _ in sections.items() %}
 {% if section %}{{section}}{% endif -%}
 {% if sections[section] %}

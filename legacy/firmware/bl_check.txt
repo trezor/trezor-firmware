@@ -1,0 +1,2 @@
+e9ec8fa2fefad2b3b6b7c4ab76691a3361b3eefb8a0ddaa34d7e45b63b3d5664 1.12.0 shipped with fw 1.12.0
+94f1c90db28db1f8ce5dca966976343658f5dadee83834987c8b049c49d1edd0 1.12.1 shipped with fw 1.12.1
