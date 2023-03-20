@@ -20,7 +20,7 @@ if TREZOR_MODEL in ('1', ):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led"]
+FEATURES_WANTED = ["input", "rgb_led", "ble"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -34,9 +34,9 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
 if TREZOR_MODEL in ('T', 'DISC1', ):
     FONT_NORMAL='Font_TTHoves_Regular_21'
-    FONT_DEMIBOLD=None
+    FONT_DEMIBOLD='Font_TTHoves_Regular_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
-    FONT_MONO=None
+    FONT_MONO='Font_TTHoves_Regular_21'
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
@@ -104,6 +104,7 @@ SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sdram.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fmc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c',
@@ -126,6 +127,7 @@ SOURCE_BOOTLOADER = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
+    'embed/trezorhal/dma.c',
     'embed/trezorhal/image.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',

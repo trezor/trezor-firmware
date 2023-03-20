@@ -16,6 +16,9 @@ enum MessageType {
     MessageType_ButtonRequest = 26;
     MessageType_ButtonAck = 27;
     MessageType_GetFeatures = 55;
+    MessageType_PairingRequest = 8003;
+    MessageType_AuthKey = 8004;
+    MessageType_RepairRequest = 8005;
 }
 
 /**
@@ -140,3 +143,32 @@ message FirmwareUpload {
     required bytes payload = 1; // firmware to be loaded into device
     optional bytes hash = 2;    // hash of the payload
 }
+
+
+/**
+ * Request: initiates new pairing request
+ * @start
+ * @next AuthKey
+ * @next Failure
+ */
+message PairingRequest {
+}
+
+/**
+ * Request: confirms pairing request with auth key entered on the device
+ * @end
+ */
+message AuthKey {
+    required bytes key = 1;
+}
+
+
+/**
+ * Request: initiates repairing request
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message RepairRequest {
+}
+

@@ -22,6 +22,7 @@
 
 #include "comm.h"
 #include <string.h>
+#include "buffers.h"
 #include "dma.h"
 #include "int_comm_defs.h"
 #include "state.h"
@@ -40,7 +41,7 @@ typedef struct {
   bool ready;
 } spi_buffer_t;
 
-spi_buffer_t spi_queue[SPI_QUEUE_SIZE];
+BUFFER_SECTION spi_buffer_t spi_queue[SPI_QUEUE_SIZE];
 static int head = 0, tail = 0;
 static bool overrun = false;
 volatile uint16_t overrun_count = 0;
