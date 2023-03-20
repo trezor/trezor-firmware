@@ -1,5 +1,6 @@
-from storage import common
 from trezor.crypto import slip39
+
+from storage import common
 
 # Mnemonics stored during SLIP-39 recovery process.
 # Each mnemonic is stored under key = index.

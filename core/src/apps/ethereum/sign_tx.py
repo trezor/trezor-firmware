@@ -12,8 +12,8 @@ if TYPE_CHECKING:
     from trezor.messages import EthereumSignTx, EthereumTxAck
     from trezor.wire import Context
 
-    from .keychain import EthereumSignTxAny
     from . import tokens
+    from .keychain import EthereumSignTxAny
 
 
 # Maximum chain_id which returns the full signature_v (which must fit into an uint32).
@@ -26,14 +26,11 @@ MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
 async def sign_tx(
     ctx: Context, msg: EthereumSignTx, keychain: Keychain
 ) -> EthereumTxRequest:
-    from trezor.utils import HashWriter
-    from trezor.crypto.hashlib import sha3_256
     from apps.common import paths
-    from .layout import (
-        require_confirm_data,
-        require_confirm_fee,
-        require_confirm_tx,
-    )
+    from trezor.crypto.hashlib import sha3_256
+    from trezor.utils import HashWriter
+
+    from .layout import require_confirm_data, require_confirm_fee, require_confirm_tx
 
     # check
     if msg.tx_type not in [1, 6, None]:
@@ -102,8 +99,8 @@ async def sign_tx(
 async def handle_erc20(
     ctx: Context, msg: EthereumSignTxAny
 ) -> tuple[tokens.TokenInfo | None, bytes, bytes, int]:
-    from .layout import require_confirm_unknown_token
     from . import tokens
+    from .layout import require_confirm_unknown_token
 
     data_initial_chunk = msg.data_initial_chunk  # local_cache_attribute
 

@@ -3,21 +3,20 @@ from typing import TYPE_CHECKING
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import GetOwnershipId, OwnershipId
-    from trezor.wire import Context
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
+    from trezor.messages import GetOwnershipId, OwnershipId
+    from trezor.wire import Context
 
 
 @with_keychain
 async def get_ownership_id(
     ctx: Context, msg: GetOwnershipId, keychain: Keychain, coin: CoinInfo
 ) -> OwnershipId:
-    from trezor.wire import DataError
+    from apps.common.paths import validate_path
     from trezor.enums import InputScriptType
     from trezor.messages import OwnershipId
-
-    from apps.common.paths import validate_path
+    from trezor.wire import DataError
 
     from . import addresses, common, scripts
     from .keychain import validate_path_against_script_type

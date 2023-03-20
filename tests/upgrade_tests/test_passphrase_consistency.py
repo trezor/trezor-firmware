@@ -17,7 +17,6 @@
 from typing import Iterator
 
 import pytest
-
 from trezorlib import btc, device, mapping, messages, models, protobuf
 from trezorlib._internal.emulator import Emulator
 from trezorlib.tools import parse_path

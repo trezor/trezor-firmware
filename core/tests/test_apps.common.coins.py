@@ -1,6 +1,6 @@
-from common import *
-
 from apps.common import coins
+
+from common import *
 
 
 class TestCoins(unittest.TestCase):

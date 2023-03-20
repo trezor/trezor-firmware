@@ -13,7 +13,6 @@ import time
 from pathlib import Path
 
 import click
-
 from trezorlib import (
     binance,
     btc,

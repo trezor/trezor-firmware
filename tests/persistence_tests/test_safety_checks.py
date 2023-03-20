@@ -1,7 +1,6 @@
 from typing import Iterator
 
 import pytest
-
 from trezorlib import debuglink, device
 from trezorlib.messages import SafetyCheckLevel
 

@@ -19,7 +19,6 @@ import time
 from typing import TYPE_CHECKING
 
 import pytest
-
 from trezorlib import btc, device, exceptions, messages
 from trezorlib.tools import parse_path
 

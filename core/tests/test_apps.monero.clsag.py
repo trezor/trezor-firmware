@@ -1,11 +1,11 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
-    from apps.monero.xmr import crypto, crypto_helpers, clsag
+    import ubinascii
+    from apps.monero.xmr import clsag, crypto, crypto_helpers
     from apps.monero.xmr.serialize_messages.tx_ct_key import CtKey
     from trezor.crypto import monero as tcry
     from trezor.crypto import random
-    import ubinascii
 
     point_mul8_into = tcry.ge25519_mul8
 

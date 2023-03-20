@@ -1,12 +1,12 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
-    from trezor.crypto import monero as tcry
-    from trezor.enums import MoneroNetworkType
     from apps.monero.xmr import crypto, crypto_helpers, monero
     from apps.monero.xmr.addresses import encode_addr
     from apps.monero.xmr.credentials import AccountCreds
     from apps.monero.xmr.networks import net_version
+    from trezor.crypto import monero as tcry
+    from trezor.enums import MoneroNetworkType
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

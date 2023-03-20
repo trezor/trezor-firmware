@@ -12,7 +12,6 @@ from pathlib import Path
 from urllib.parse import unquote
 
 import click
-
 from ui_tests.common import SCREENS_DIR, TestResult, write_fixtures
 from ui_tests.reporting import testreport  # noqa: E402
 

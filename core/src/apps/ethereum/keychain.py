@@ -8,8 +8,7 @@ from . import CURVE, networks
 if TYPE_CHECKING:
     from typing import Callable, Iterable, TypeVar
 
-    from trezor.wire import Context
-
+    from apps.common.keychain import Handler, HandlerWithKeychain, MsgOut
     from trezor.messages import (
         EthereumGetAddress,
         EthereumGetPublicKey,
@@ -18,8 +17,7 @@ if TYPE_CHECKING:
         EthereumSignTxEIP1559,
         EthereumSignTypedData,
     )
-
-    from apps.common.keychain import MsgOut, Handler, HandlerWithKeychain
+    from trezor.wire import Context
 
     EthereumMessages = (
         EthereumGetAddress

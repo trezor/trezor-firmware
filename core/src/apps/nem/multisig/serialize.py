@@ -24,6 +24,7 @@ def serialize_multisig_signature(
     address_public_key: bytes,
 ) -> bytes:
     from trezor.crypto import hashlib, nem
+
     from ..helpers import NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE
 
     w = serialize_tx_common(common, public_key, NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE)

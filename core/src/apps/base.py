@@ -11,15 +11,15 @@ from . import workflow_handlers
 if TYPE_CHECKING:
     from trezor import protobuf
     from trezor.messages import (
-        Features,
-        Initialize,
-        EndSession,
-        GetFeatures,
         Cancel,
+        CancelAuthorization,
+        DoPreauthorized,
+        EndSession,
+        Features,
+        GetFeatures,
+        Initialize,
         LockDevice,
         Ping,
-        DoPreauthorized,
-        CancelAuthorization,
         SetBusy,
     )
 
@@ -54,12 +54,10 @@ def busy_expiry_ms() -> int:
 def get_features() -> Features:
     import storage.recovery as storage_recovery
     import storage.sd_salt as storage_sd_salt
-
+    from apps.common import mnemonic, safety_checks
     from trezor import sdcard
     from trezor.enums import Capability
     from trezor.messages import Features
-
-    from apps.common import mnemonic, safety_checks
 
     f = Features(
         vendor="trezor.io",
@@ -198,8 +196,8 @@ async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
 
 async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     if msg.button_protection:
-        from trezor.ui.layouts import confirm_action
         from trezor.enums import ButtonRequestType as B
+        from trezor.ui.layouts import confirm_action
 
         await confirm_action(ctx, "ping", "Confirm", "ping", br_code=B.ProtectCall)
     return Success(message=msg.message)
@@ -208,8 +206,8 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
 async def handle_DoPreauthorized(
     ctx: wire.Context, msg: DoPreauthorized
 ) -> protobuf.MessageType:
-    from trezor.messages import PreauthorizedRequest
     from apps.common import authorization
+    from trezor.messages import PreauthorizedRequest
 
     if not authorization.is_set():
         raise wire.ProcessError("No preauthorized operation")
@@ -230,12 +228,12 @@ async def handle_DoPreauthorized(
 
 
 async def handle_UnlockPath(ctx: wire.Context, msg: UnlockPath) -> protobuf.MessageType:
-    from trezor.crypto import hmac
-    from trezor.messages import UnlockedPathRequest
-    from trezor.ui.layouts import confirm_action
     from apps.common.paths import SLIP25_PURPOSE
     from apps.common.seed import Slip21Node, get_seed
     from apps.common.writers import write_uint32_le
+    from trezor.crypto import hmac
+    from trezor.messages import UnlockedPathRequest
+    from trezor.ui.layouts import confirm_action
 
     _KEYCHAIN_MAC_KEY_PATH = [b"TREZOR", b"Keychain MAC key"]
 

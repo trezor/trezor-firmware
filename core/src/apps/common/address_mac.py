@@ -21,6 +21,7 @@ def check_address_mac(
 
 def get_address_mac(address: str, slip44: int, keychain: Keychain) -> bytes:
     from trezor.crypto import hmac
+
     from .writers import write_bytes_unchecked, write_compact_size, write_uint32_le
 
     # k = Key(m/"SLIP-0024"/"Address MAC key")

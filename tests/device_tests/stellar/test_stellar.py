@@ -53,7 +53,6 @@
 from base64 import b64encode
 
 import pytest
-
 from trezorlib import messages, protobuf, stellar
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path

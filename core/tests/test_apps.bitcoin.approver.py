@@ -1,24 +1,25 @@
-from common import unittest, await_result, H_
-
 import storage.cache
-from trezor import wire
-from trezor.crypto import bip32
-from trezor.crypto.curve import bip340, secp256k1
-from trezor.crypto.hashlib import sha256
-from trezor.messages import AuthorizeCoinJoin
-from trezor.messages import TxInput
-from trezor.messages import TxOutput
-from trezor.messages import SignTx
-from trezor.messages import CoinJoinRequest
-from trezor.enums import InputScriptType, OutputScriptType
-from trezor.utils import HashWriter
-
-from apps.common import coins
+from apps.bitcoin import writers
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
-from apps.bitcoin import writers
+from apps.common import coins
+from trezor import wire
+from trezor.crypto import bip32
+from trezor.crypto.curve import bip340, secp256k1
+from trezor.crypto.hashlib import sha256
+from trezor.enums import InputScriptType, OutputScriptType
+from trezor.messages import (
+    AuthorizeCoinJoin,
+    CoinJoinRequest,
+    SignTx,
+    TxInput,
+    TxOutput,
+)
+from trezor.utils import HashWriter
+
+from common import H_, await_result, unittest
 
 
 class TestApprover(unittest.TestCase):

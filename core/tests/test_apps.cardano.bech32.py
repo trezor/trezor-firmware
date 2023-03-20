@@ -1,6 +1,7 @@
+from apps.cardano.helpers import bech32
+
 from common import *
 
-from apps.cardano.helpers import bech32
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestCardanoBech32(unittest.TestCase):

@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 import pytest
-
 from trezorlib import device, messages
 
 from .. import buttons

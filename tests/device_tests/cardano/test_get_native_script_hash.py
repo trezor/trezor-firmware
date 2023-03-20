@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
-
 from trezorlib import messages
 from trezorlib.cardano import get_native_script_hash, parse_native_script
 from trezorlib.debuglink import TrezorClientDebugLink as Client

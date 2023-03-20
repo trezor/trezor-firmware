@@ -19,10 +19,10 @@ from unittest import mock
 
 import pytest
 from shamir_mnemonic import shamir
-
 from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.messages import BackupType, ButtonRequestType as B
+from trezorlib.messages import BackupType
+from trezorlib.messages import ButtonRequestType as B
 
 from ...common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
 

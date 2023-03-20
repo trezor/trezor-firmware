@@ -17,7 +17,6 @@
 from typing import Iterator
 
 import pytest
-
 from trezorlib import device
 from trezorlib.debuglink import DebugLink
 

@@ -1,5 +1,6 @@
-from common import *
 from apps.common.paths import HARDENED
+
+from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.ethereum.helpers import address_from_bytes

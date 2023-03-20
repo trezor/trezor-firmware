@@ -2,7 +2,6 @@ from collections import namedtuple
 from hashlib import sha256
 
 from ecdsa import ECDH, SECP256k1, SigningKey
-
 from trezorlib import btc, messages
 
 SLIP44 = 1  # Testnet

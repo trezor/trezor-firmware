@@ -1,8 +1,8 @@
 import sys
 
+import micropython
 from uio import open
 from uos import getenv
-import micropython
 
 # We need to insert "" to sys.path so that the frozen build can import main from the
 # frozen modules, and regular build can import it from current directory.

@@ -2,7 +2,6 @@
 import json
 import sys
 
-
 if len(sys.argv) < 2:
     print("""\
 USAGE: ./analyze-memory-dump.py somefile.json

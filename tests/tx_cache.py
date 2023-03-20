@@ -22,7 +22,6 @@ from pathlib import Path
 
 import click
 import requests
-
 from trezorlib import btc, messages, protobuf
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent

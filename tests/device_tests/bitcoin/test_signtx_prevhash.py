@@ -3,7 +3,6 @@ from hashlib import sha256
 from io import BytesIO
 
 import pytest
-
 from trezorlib import btc, messages, tools
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure

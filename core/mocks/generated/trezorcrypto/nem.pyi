@@ -1,6 +1,5 @@
 from typing import *
 
-
 # extmod/modtrezorcrypto/modtrezorcrypto-nem.h
 def validate_address(address: str, network: int) -> bool:
     """

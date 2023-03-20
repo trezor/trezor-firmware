@@ -20,7 +20,6 @@ import sys
 from typing import BinaryIO, TextIO
 
 import click
-
 from trezorlib import firmware
 
 

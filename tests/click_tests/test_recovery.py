@@ -17,7 +17,6 @@
 from typing import TYPE_CHECKING
 
 import pytest
-
 from trezorlib import device, messages
 
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6

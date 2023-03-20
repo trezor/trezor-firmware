@@ -6,13 +6,12 @@ if TYPE_CHECKING:
 
 
 async def verify_message(ctx: Context, msg: EthereumVerifyMessage) -> Success:
-    from trezor.wire import DataError
+    from apps.common.signverify import decode_message
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha3_256
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_signverify, show_success
-
-    from apps.common.signverify import decode_message
+    from trezor.wire import DataError
 
     from .helpers import address_from_bytes, bytes_from_address
     from .sign_message import message_digest

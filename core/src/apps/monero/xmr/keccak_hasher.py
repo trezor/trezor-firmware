@@ -24,8 +24,8 @@ class KeccakXmrArchive:
 
 
 def get_keccak_writer(ctx: HashContext | None = None) -> HashWriter:
-    from trezor.utils import HashWriter
     from apps.monero.xmr import crypto_helpers
+    from trezor.utils import HashWriter
 
     if ctx is None:
         ctx = crypto_helpers.get_keccak()

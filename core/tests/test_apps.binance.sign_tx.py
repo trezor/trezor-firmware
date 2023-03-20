@@ -1,16 +1,18 @@
-from common import *
-
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
 
+from common import *
+
 if not utils.BITCOIN_ONLY:
     from apps.binance.helpers import produce_json_for_signing
-    from trezor.messages import BinanceCancelMsg
-    from trezor.messages import BinanceCoin
-    from trezor.messages import BinanceInputOutput
-    from trezor.messages import BinanceOrderMsg
-    from trezor.messages import BinanceSignTx
-    from trezor.messages import BinanceTransferMsg
+    from trezor.messages import (
+        BinanceCancelMsg,
+        BinanceCoin,
+        BinanceInputOutput,
+        BinanceOrderMsg,
+        BinanceSignTx,
+        BinanceTransferMsg,
+    )
 
 
 # NOTE: copy-pasted from apps.binance.sign_tx

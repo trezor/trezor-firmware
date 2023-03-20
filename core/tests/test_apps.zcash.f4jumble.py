@@ -1,6 +1,7 @@
+from apps.zcash.f4jumble import f4jumble, f4unjumble
+
 from common import *
 
-from apps.zcash.f4jumble import f4jumble, f4unjumble
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestZcashF4jumble(unittest.TestCase):

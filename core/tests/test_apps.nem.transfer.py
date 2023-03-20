@@ -1,13 +1,13 @@
-from common import *
-
 from trezor.crypto import hashlib
+
+from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.nem.helpers import *
     from apps.nem.mosaic import *
     from apps.nem.transfer import *
     from apps.nem.transfer.serialize import *
-    from trezor.messages import NEMTransfer, NEMTransactionCommon, NEMSignTx, NEMMosaic
+    from trezor.messages import NEMMosaic, NEMSignTx, NEMTransactionCommon, NEMTransfer
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

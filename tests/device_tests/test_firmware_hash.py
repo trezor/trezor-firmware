@@ -1,7 +1,6 @@
 from hashlib import blake2s
 
 import pytest
-
 from trezorlib import firmware
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 

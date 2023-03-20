@@ -6,7 +6,6 @@ from typing import Callable, Generator
 
 import pytest
 from _pytest.outcomes import Failed
-
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from . import common

@@ -2,17 +2,17 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import storage.sd_salt as storage_sd_salt
+from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
+from apps.common.sdcard import ensure_sdcard
 from trezor import config
 from trezor.enums import SdProtectOperationType
 from trezor.messages import Success
 from trezor.ui.layouts import show_success
 from trezor.wire import ProcessError
 
-from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
-from apps.common.sdcard import ensure_sdcard
-
 if TYPE_CHECKING:
     from typing import Awaitable
+
     from trezor.messages import SdProtect
     from trezor.wire import Context
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import click
 from PIL import Image
-
 from trezorlib import toif
 
 HERE = Path(__file__).resolve().parent

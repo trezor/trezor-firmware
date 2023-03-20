@@ -17,7 +17,6 @@
 import time
 
 import pytest
-
 from trezorlib import messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import PinException

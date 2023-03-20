@@ -1,4 +1,5 @@
 from typing import *
+
 FR_OK: int                   # (0) Succeeded
 FR_DISK_ERR: int             # (1) A hard error occurred in the low level disk I/O layer
 FR_INT_ERR: int              # (2) Assertion failed

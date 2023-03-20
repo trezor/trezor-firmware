@@ -24,7 +24,6 @@ import ecdsa
 from ecdsa.curves import SECP256k1
 from ecdsa.ellipticcurve import INFINITY, Point
 from ecdsa.util import number_to_string, string_to_number
-
 from trezorlib import messages, tools
 
 

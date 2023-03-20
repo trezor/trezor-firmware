@@ -5,19 +5,18 @@ from apps.common.keychain import with_slip44_keychain
 from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
-    from trezor.messages import NEMSignTx, NEMSignedTx
     from apps.common.keychain import Keychain
+    from trezor.messages import NEMSignedTx, NEMSignTx
     from trezor.wire import Context
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(ctx: Context, msg: NEMSignTx, keychain: Keychain) -> NEMSignedTx:
-    from trezor.wire import DataError
-    from trezor.crypto.curve import ed25519
-    from trezor.messages import NEMSignedTx
-
     from apps.common import seed
     from apps.common.paths import validate_path
+    from trezor.crypto.curve import ed25519
+    from trezor.messages import NEMSignedTx
+    from trezor.wire import DataError
 
     from . import mosaic, multisig, namespace, transfer
     from .helpers import NEM_HASH_ALG, check_path

@@ -16,14 +16,10 @@
 
 
 import pytest
-
 from trezorlib import btc, messages
-from trezorlib.debuglink import (
-    LayoutContent,
-    TrezorClientDebugLink as Client,
-    message_filters,
-    multipage_content,
-)
+from trezorlib.debuglink import LayoutContent
+from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import message_filters, multipage_content
 from trezorlib.tools import parse_path
 
 S = messages.InputScriptType

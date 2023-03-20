@@ -13,6 +13,7 @@ protobuf = "*"
 pyblake2 = "*"
 nanopb = "^0.4.3"
 
+
 ## test tools
 pytest = "^6.1.0"
 coverage = "<5"  # coverage 5+ uses binary sqlite format
@@ -79,3 +80,6 @@ towncrier = "^21.9.0"
 [build-system]
 requires = ["poetry>=1;<1.1", "pip>=20"]
 build-backend = "poetry.masonry.api"
+
+[tool.isort]
+profile = "black"

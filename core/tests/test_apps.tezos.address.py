@@ -1,6 +1,6 @@
-from common import *
-
 from apps.common.paths import HARDENED
+
+from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.tezos.sign_tx import _get_address_from_contract

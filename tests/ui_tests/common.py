@@ -15,9 +15,8 @@ from pathlib import Path
 
 import pytest
 from PIL import Image
-from typing_extensions import Self
-
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from typing_extensions import Self
 
 UI_TESTS_DIR = Path(__file__).resolve().parent
 SCREENS_DIR = UI_TESTS_DIR / "screens"

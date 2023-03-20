@@ -3,11 +3,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from apps.common.paths import Bip32Path
-
     from trezor.enums import MoneroNetworkType
 
-    from .xmr.crypto import Scalar
     from .xmr.credentials import AccountCreds
+    from .xmr.crypto import Scalar
 
 
 def get_creds(
@@ -44,8 +43,8 @@ def compute_tx_key(
 def compute_enc_key_host(
     view_key_private: Scalar, tx_prefix_hash: bytes
 ) -> tuple[bytes, bytes]:
-    from trezor.crypto import random
     from apps.monero.xmr import crypto_helpers
+    from trezor.crypto import random
 
     salt = random.bytes(32)
     passwd = crypto_helpers.keccak_2hash(

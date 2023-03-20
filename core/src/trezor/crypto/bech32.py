@@ -20,9 +20,10 @@
 
 """Reference implementation for Bech32/Bech32m and segwit addresses."""
 
+from typing import TYPE_CHECKING
+
 from micropython import const
 from trezorcrypto import bech32
-from typing import TYPE_CHECKING
 
 bech32_decode = bech32.decode  # reexported
 

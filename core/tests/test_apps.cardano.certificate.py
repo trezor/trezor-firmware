@@ -1,13 +1,13 @@
-from common import *
+from apps.common.paths import HARDENED
 from trezor import wire
 from trezor.enums import CardanoCertificateType
-from trezor.messages import CardanoTxCertificate, CardanoPoolParametersType
+from trezor.messages import CardanoPoolParametersType, CardanoTxCertificate
 
-from apps.common.paths import HARDENED
+from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.cardano import certificates
-    from apps.cardano.helpers import protocol_magics, network_ids
+    from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.helpers.account_path_check import AccountPathChecker
 
 

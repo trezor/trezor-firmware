@@ -17,7 +17,6 @@
 import hashlib
 
 import pytest
-
 from trezorlib import _ed25519, cosi
 
 RFC8032_VECTORS = (

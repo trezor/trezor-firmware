@@ -1,9 +1,15 @@
-from common import *
 from apps.common.paths import HARDENED
 
+from common import *
+
 if not utils.BITCOIN_ONLY:
+    from apps.nem.helpers import (
+        NEM_NETWORK_MAINNET,
+        NEM_NETWORK_MIJIN,
+        NEM_NETWORK_TESTNET,
+        check_path,
+    )
     from trezor.crypto import nem
-    from apps.nem.helpers import check_path, NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

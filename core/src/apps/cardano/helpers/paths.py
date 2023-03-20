@@ -1,6 +1,5 @@
-from micropython import const
-
 from apps.common.paths import HARDENED, PathSchema, unharden  # noqa: F401
+from micropython import const
 
 _SLIP44_ID = const(1815)
 

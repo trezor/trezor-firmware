@@ -1,6 +1,5 @@
 from typing import *
 
-
 # extmod/modtrezorui/modtrezorui-display.h
 class Display:
     """

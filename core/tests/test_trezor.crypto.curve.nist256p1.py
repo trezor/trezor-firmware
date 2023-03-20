@@ -1,7 +1,7 @@
-from common import *
-
 from trezor.crypto import random
 from trezor.crypto.curve import nist256p1
+
+from common import *
 
 
 class TestCryptoNist256p1(unittest.TestCase):

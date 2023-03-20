@@ -1,11 +1,16 @@
-from common import *
-from mock_storage import mock_storage
-
-import storage
 import storage.recovery
 from apps.management.recovery_device.recover import process_slip39
+from apps.management.recovery_device.word_validity import (
+    AlreadyAdded,
+    IdentifierMismatch,
+    ThresholdReached,
+    check,
+)
+from mock_storage import mock_storage
 from trezor.enums import BackupType
-from apps.management.recovery_device.word_validity import check, IdentifierMismatch, AlreadyAdded, ThresholdReached
+
+import storage
+from common import *
 
 MNEMONIC_SLIP39_BASIC_20_3of6 = [
     "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",

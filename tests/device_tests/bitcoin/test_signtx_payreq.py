@@ -17,7 +17,6 @@
 from collections import namedtuple
 
 import pytest
-
 from trezorlib import btc, messages, misc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure

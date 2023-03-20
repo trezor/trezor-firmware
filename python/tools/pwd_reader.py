@@ -25,7 +25,6 @@ from urllib.parse import urlparse
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-
 from trezorlib import misc, ui
 from trezorlib.client import TrezorClient
 from trezorlib.tools import parse_path

@@ -1,6 +1,7 @@
-from common import *
-from trezor.crypto import slip39, random
 from slip39_vectors import vectors
+from trezor.crypto import random, slip39
+
+from common import *
 
 
 def combinations(iterable, r):

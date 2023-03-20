@@ -17,7 +17,6 @@
 import random
 
 import pytest
-
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure

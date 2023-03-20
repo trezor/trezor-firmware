@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
-
 from trezorlib import device, messages
 from trezorlib.client import MAX_PIN_LENGTH
 from trezorlib.debuglink import TrezorClientDebugLink as Client

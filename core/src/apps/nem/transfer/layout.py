@@ -24,6 +24,7 @@ async def ask_transfer(
     encrypted: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_output, confirm_text
+
     from ..helpers import NEM_MAX_DIVISIBILITY
 
     if transfer.payload:
@@ -56,8 +57,9 @@ async def _ask_transfer_mosaic(
 ) -> None:
     from trezor.enums import NEMMosaicLevy
     from trezor.ui.layouts import confirm_action, confirm_properties
-    from ..mosaic.helpers import get_mosaic_definition
+
     from ..helpers import NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
+    from ..mosaic.helpers import get_mosaic_definition
 
     if is_nem_xem_mosaic(mosaic):
         return
@@ -137,6 +139,7 @@ async def ask_importance_transfer(
     ctx: Context, common: NEMTransactionCommon, imp: NEMImportanceTransfer
 ) -> None:
     from trezor.enums import NEMImportanceTransferMode
+
     from ..layout import require_confirm_text
 
     if imp.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:

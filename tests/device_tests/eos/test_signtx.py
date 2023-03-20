@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
-
 from trezorlib import eos
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import EosSignedTx

@@ -12,8 +12,6 @@ from trezor.wire import DataError, ProcessError
 from ..layout import format_amount
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
-
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
@@ -22,14 +20,15 @@ if TYPE_CHECKING:
         StellarChangeTrustOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
+        StellarManageBuyOfferOp,
         StellarManageDataOp,
         StellarManageSellOfferOp,
         StellarPathPaymentStrictReceiveOp,
         StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
         StellarSetOptionsOp,
-        StellarManageBuyOfferOp,
     )
+    from trezor.wire import Context
 
 
 async def confirm_source_account(ctx: Context, source_account: str) -> None:
@@ -134,6 +133,7 @@ async def _confirm_offer(
     | StellarManageBuyOfferOp,
 ) -> None:
     from trezor.messages import StellarManageBuyOfferOp
+
     from ..layout import format_asset
 
     buying_asset = op.buying_asset  # local_cache_attribute
@@ -245,6 +245,7 @@ async def confirm_payment_op(ctx: Context, op: StellarPaymentOp) -> None:
 async def confirm_set_options_op(ctx: Context, op: StellarSetOptionsOp) -> None:
     from trezor.enums import StellarSignerType
     from trezor.ui.layouts import confirm_blob, confirm_text
+
     from .. import helpers
 
     if op.inflation_destination_account:

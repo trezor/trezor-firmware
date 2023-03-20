@@ -7,7 +7,6 @@ import sys
 import time
 
 import click
-
 import coin_info
 import marketcap
 

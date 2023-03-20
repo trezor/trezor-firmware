@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Optional, TextIO
 
 import click
-
 import trezorlib.debuglink
 import trezorlib.device
 from trezorlib._internal.emulator import CoreEmulator

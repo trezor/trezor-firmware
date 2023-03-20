@@ -41,10 +41,9 @@ import re
 import shutil
 import subprocess
 import sys
-import time
 import textwrap
-
-from datetime import tzinfo, timedelta, datetime
+import time
+from datetime import datetime, timedelta, tzinfo
 
 __all__ = ["Blob", "Reset", "FileChange", "Commit", "Tag", "Progress",
            "Checkpoint", "FastExportParser", "ProgressWriter",

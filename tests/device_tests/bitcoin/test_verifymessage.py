@@ -17,7 +17,6 @@
 import base64
 
 import pytest
-
 from trezorlib import btc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 

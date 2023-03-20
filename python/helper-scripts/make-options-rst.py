@@ -20,7 +20,6 @@ import os
 from typing import List
 
 import click
-
 from trezorlib.cli import trezorctl
 
 DELIMITER_STR = "### ALL CONTENT BELOW IS GENERATED"

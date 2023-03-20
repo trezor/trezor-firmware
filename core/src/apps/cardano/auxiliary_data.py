@@ -1,10 +1,9 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
+from apps.common import cbor
+from micropython import const
 from trezor.crypto import hashlib
 from trezor.enums import CardanoAddressType, CardanoCVoteRegistrationFormat
-
-from apps.common import cbor
 
 from . import addresses, layout
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
@@ -211,8 +210,8 @@ def get_hash_and_supplement(
     protocol_magic: int,
     network_id: int,
 ) -> tuple[bytes, messages.CardanoTxAuxiliaryDataSupplement]:
-    from trezor.enums import CardanoTxAuxiliaryDataSupplementType
     from trezor import messages
+    from trezor.enums import CardanoTxAuxiliaryDataSupplementType
 
     if parameters := auxiliary_data.cvote_registration_parameters:
         (

@@ -1,10 +1,10 @@
 # pylint: disable=wrong-import-position
-import utime
-from micropython import const
-from trezorui import Display
 from typing import TYPE_CHECKING, Any, Awaitable, Generator
 
+import utime
+from micropython import const
 from trezor import io, loop, utils, workflow
+from trezorui import Display
 
 # all rendering is done through a singleton of `Display`
 display = Display()

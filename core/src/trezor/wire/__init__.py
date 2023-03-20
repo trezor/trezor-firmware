@@ -35,9 +35,9 @@ reads the message's header. When the message type is known the first handler is 
 
 """
 
-from micropython import const
 from typing import TYPE_CHECKING
 
+from micropython import const
 from storage.cache import InvalidSessionError
 from trezor import log, loop, protobuf, utils, workflow
 from trezor.enums import FailureType
@@ -61,6 +61,7 @@ if TYPE_CHECKING:
         Protocol,
         TypeVar,
     )
+
     from trezorio import WireInterface
 
     Msg = TypeVar("Msg", bound=protobuf.MessageType)

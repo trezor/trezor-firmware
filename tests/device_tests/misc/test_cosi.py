@@ -17,7 +17,6 @@
 from hashlib import sha256
 
 import pytest
-
 from trezorlib import cosi
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure

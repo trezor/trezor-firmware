@@ -1,5 +1,4 @@
 from micropython import const
-
 from trezor import config
 
 # Namespaces:

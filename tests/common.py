@@ -19,14 +19,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Generator, List, Optional
 
 import pytest
-
 from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType
 
 if TYPE_CHECKING:
-    from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
-    from trezorlib.messages import ButtonRequest
     from _pytest.mark.structures import MarkDecorator
+    from trezorlib.debuglink import DebugLink
+    from trezorlib.debuglink import TrezorClientDebugLink as Client
+    from trezorlib.messages import ButtonRequest
 
 
 # fmt: off

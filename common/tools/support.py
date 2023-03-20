@@ -5,7 +5,6 @@ import re
 import sys
 
 import click
-
 import coin_info
 
 SUPPORT_INFO = coin_info.get_support_data()

@@ -3,12 +3,11 @@ from pathlib import Path
 import construct
 import pytest
 import requests
-
 from trezorlib import firmware
 from trezorlib.firmware import (
-    VendorFirmware,
     LegacyFirmware,
     LegacyV2Firmware,
+    VendorFirmware,
     VendorHeader,
 )
 

@@ -18,7 +18,6 @@ from unittest import mock
 
 import pytest
 from mnemonic import Mnemonic
-
 from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure

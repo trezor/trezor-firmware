@@ -17,7 +17,6 @@
 from enum import IntEnum
 
 import pytest
-
 from trezorlib import messages, protobuf
 
 

@@ -17,7 +17,6 @@
 
 import pytest
 import shamir_mnemonic as shamir
-
 from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure

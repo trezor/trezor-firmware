@@ -9,9 +9,10 @@ from . import mnemonic
 from .passphrase import get as get_passphrase
 
 if TYPE_CHECKING:
-    from .paths import Bip32Path, Slip21Path
-    from trezor.wire import Context
     from trezor.crypto import bip32
+    from trezor.wire import Context
+
+    from .paths import Bip32Path, Slip21Path
 
 
 class Slip21Node:

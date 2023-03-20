@@ -16,7 +16,6 @@
 
 import pytest
 from mnemonic import Mnemonic
-
 from trezorlib import messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 

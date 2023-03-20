@@ -18,7 +18,6 @@ import dataclasses
 from typing import TYPE_CHECKING, List, Optional
 
 import pytest
-
 from trezorlib import btc, debuglink, device, exceptions, fido, models
 from trezorlib.messages import BackupType
 from trezorlib.tools import H_

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import EthereumFieldType, EthereumStructMember
     from trezor.wire import Context
+
     from . import tokens
 
 
@@ -29,8 +30,9 @@ def require_confirm_tx(
     chain_id: int,
     token: tokens.TokenInfo | None = None,
 ) -> Awaitable[None]:
-    from .helpers import address_from_bytes
     from trezor.ui.layouts import confirm_output
+
+    from .helpers import address_from_bytes
 
     if to_bytes:
         to_str = address_from_bytes(to_bytes, networks.by_chain_id(chain_id))
@@ -100,8 +102,8 @@ async def require_confirm_eip1559_fee(
 def require_confirm_unknown_token(
     ctx: Context, address_bytes: bytes
 ) -> Awaitable[None]:
-    from ubinascii import hexlify
     from trezor.ui.layouts import confirm_address
+    from ubinascii import hexlify
 
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
     return confirm_address(
@@ -115,8 +117,8 @@ def require_confirm_unknown_token(
 
 
 def require_confirm_address(ctx: Context, address_bytes: bytes) -> Awaitable[None]:
-    from ubinascii import hexlify
     from trezor.ui.layouts import confirm_address
+    from ubinascii import hexlify
 
     address_hex = "0x" + hexlify(address_bytes).decode()
     return confirm_address(
@@ -229,6 +231,7 @@ async def confirm_typed_value(
     array_index: int | None = None,
 ) -> None:
     from trezor.enums import EthereumDataType
+
     from .helpers import get_type_name
 
     type_name = get_type_name(field)

@@ -1,7 +1,7 @@
-from common import *
 from apps.common.paths import HARDENED
-
 from trezor.crypto.curve import secp256k1
+
+from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.binance.helpers import address_from_public_key

@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
-
 from trezorlib import cardano, messages
 from trezorlib.btc import get_public_node
 from trezorlib.debuglink import TrezorClientDebugLink as Client

@@ -17,7 +17,6 @@
 import time
 
 import pytest
-
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure

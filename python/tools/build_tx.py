@@ -22,7 +22,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import click
 import requests
-
 from trezorlib import btc, messages, tools
 from trezorlib.cli import ChoiceType
 from trezorlib.cli.btc import INPUT_SCRIPTS, OUTPUT_SCRIPTS

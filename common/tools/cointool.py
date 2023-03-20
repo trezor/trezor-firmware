@@ -13,7 +13,6 @@ from hashlib import sha256
 from typing import Any, Callable, Iterator, TextIO, cast
 
 import click
-
 import coin_info
 from coin_info import Coin, CoinBuckets, Coins, CoinsInfo, FidoApps, SupportInfo
 

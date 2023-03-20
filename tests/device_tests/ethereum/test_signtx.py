@@ -15,9 +15,9 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
-
 from trezorlib import ethereum, exceptions, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client, message_filters
+from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 

@@ -17,7 +17,6 @@
 import time
 
 import pytest
-
 from trezorlib import btc, device
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import SafetyCheckLevel

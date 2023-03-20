@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from consts import StellarMessageType
     from trezor.utils import Writer
     from trezor.wire import Context
-    from consts import StellarMessageType
 
 
 async def process_operation(ctx: Context, w: Writer, op: StellarMessageType) -> None:

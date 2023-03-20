@@ -1,22 +1,21 @@
-from common import *
-from storage import cache
-from trezor import wire
-from trezor.crypto import bip39
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
+from trezor import wire
+from trezor.crypto import bip39
+
+from common import *
+from storage import cache
 
 if not utils.BITCOIN_ONLY:
     from apps.ethereum import CURVE
     from apps.ethereum.keychain import (
         PATTERNS_ADDRESS,
         _schemas_from_address_n,
-        with_keychain_from_path,
         with_keychain_from_chain_id,
+        with_keychain_from_path,
     )
     from apps.ethereum.networks import by_chain_id, by_slip44
-
-    from trezor.messages import EthereumGetAddress
-    from trezor.messages import EthereumSignTx
+    from trezor.messages import EthereumGetAddress, EthereumSignTx
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import click
-
 from ui_tests import update_fixtures
 
 

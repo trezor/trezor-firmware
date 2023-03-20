@@ -9,7 +9,6 @@ import re
 import sys
 
 import click
-
 import coin_info
 import marketcap
 

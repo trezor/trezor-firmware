@@ -1,5 +1,6 @@
-from common import *
 from trezor import config
+
+from common import *
 from storage import device
 
 

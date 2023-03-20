@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
-
 from trezorlib import messages, tezos
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.protobuf import dict_to_proto

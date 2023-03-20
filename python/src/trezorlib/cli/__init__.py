@@ -26,13 +26,14 @@ from ..client import TrezorClient
 from ..ui import ClickUI, ScriptUI
 
 if TYPE_CHECKING:
-    from ..transport import Transport
-    from ..ui import TrezorClientUI
-
     # Needed to enforce a return value from decorators
     # More details: https://www.python.org/dev/peps/pep-0612/
     from typing import TypeVar
-    from typing_extensions import ParamSpec, Concatenate
+
+    from typing_extensions import Concatenate, ParamSpec
+
+    from ..transport import Transport
+    from ..ui import TrezorClientUI
 
     P = ParamSpec("P")
     R = TypeVar("R")

@@ -28,8 +28,8 @@ from .tools import expect, parse_path, session
 
 if TYPE_CHECKING:
     from .protobuf import MessageType
-    from .ui import TrezorClientUI
     from .transport import Transport
+    from .ui import TrezorClientUI
 
 UI = TypeVar("UI", bound="TrezorClientUI")
 

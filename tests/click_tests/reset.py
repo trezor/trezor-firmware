@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from shamir_mnemonic import shamir
-
 from trezorlib import messages
 
 from .. import buttons
