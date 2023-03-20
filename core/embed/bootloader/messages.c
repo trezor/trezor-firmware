@@ -24,6 +24,11 @@
 #include <pb_encode.h>
 #include "messages.pb.h"
 
+#include TREZOR_BOARD
+
+#ifdef USE_BLE
+#include "ble/comm.h"
+#endif
 #include "common.h"
 #include "flash.h"
 #include "image.h"
@@ -36,6 +41,7 @@
 #include "rust_ui.h"
 
 #include "memzero.h"
+#include STM32_HAL_H
 
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"
@@ -59,12 +65,11 @@ typedef struct {
   uint8_t packet_index;
   uint8_t packet_pos;
   uint8_t buf[USB_PACKET_SIZE];
-} usb_write_state;
+} write_state;
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
-static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf,
-                       size_t count) {
-  usb_write_state *state = (usb_write_state *)(stream->state);
+static bool _write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count) {
+  write_state *state = (write_state *)(stream->state);
 
   size_t written = 0;
   // while we have data left
@@ -84,9 +89,20 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf,
              USB_PACKET_SIZE - state->packet_pos);
       written += USB_PACKET_SIZE - state->packet_pos;
       // send packet
-      int r = usb_webusb_write_blocking(state->iface_num, state->buf,
-                                        USB_PACKET_SIZE, USB_TIMEOUT);
-      ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
+
+      if (state->iface_num == USB_IFACE_NUM) {
+        int r = usb_webusb_write_blocking(state->iface_num, state->buf,
+                                          USB_PACKET_SIZE, USB_TIMEOUT);
+        ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
+      }
+#ifdef USE_BLE
+      else if (state->iface_num == BLE_INT_IFACE_NUM) {
+        ble_int_comm_send(state->buf, USB_PACKET_SIZE, INTERNAL_MESSAGE);
+      } else if (state->iface_num == BLE_EXT_IFACE_NUM) {
+        ble_int_comm_send(state->buf, USB_PACKET_SIZE, EXTERNAL_MESSAGE);
+      }
+#endif
+
       // prepare new packet
       state->packet_index++;
       memzero(state->buf, USB_PACKET_SIZE);
@@ -98,7 +114,7 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf,
   return true;
 }
 
-static void _usb_write_flush(usb_write_state *state) {
+static void _write_flush(write_state *state) {
   // if packet is not filled up completely
   if (state->packet_pos < USB_PACKET_SIZE) {
     // pad it with zeroes
@@ -106,9 +122,18 @@ static void _usb_write_flush(usb_write_state *state) {
             USB_PACKET_SIZE - state->packet_pos);
   }
   // send packet
-  int r = usb_webusb_write_blocking(state->iface_num, state->buf,
-                                    USB_PACKET_SIZE, USB_TIMEOUT);
-  ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
+  if (state->iface_num == USB_IFACE_NUM) {
+    int r = usb_webusb_write_blocking(state->iface_num, state->buf,
+                                      USB_PACKET_SIZE, USB_TIMEOUT);
+    ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
+  }
+#ifdef USE_BLE
+  else if (state->iface_num == BLE_INT_IFACE_NUM) {
+    ble_int_comm_send(state->buf, USB_PACKET_SIZE, INTERNAL_MESSAGE);
+  } else if (state->iface_num == BLE_EXT_IFACE_NUM) {
+    ble_int_comm_send(state->buf, USB_PACKET_SIZE, EXTERNAL_MESSAGE);
+  }
+#endif
 }
 
 static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
@@ -124,7 +149,7 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
   }
   const uint32_t msg_size = sizestream.bytes_written;
 
-  usb_write_state state = {
+  write_state state = {
       .iface_num = iface_num,
       .packet_index = 0,
       .packet_pos = MSG_HEADER1_LEN,
@@ -142,7 +167,7 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
           },
   };
 
-  pb_ostream_t stream = {.callback = &_usb_write,
+  pb_ostream_t stream = {.callback = _write,
                          .state = &state,
                          .max_size = SIZE_MAX,
                          .bytes_written = 0,
@@ -152,9 +177,17 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
     return secfalse;
   }
 
-  _usb_write_flush(&state);
+  _write_flush(&state);
+  return secfalse;
+}
 
-  return sectrue;
+/* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
+static bool _write_authkey(pb_ostream_t *stream, const pb_field_iter_t *field,
+                           void *const *arg) {
+  uint8_t *key = (uint8_t *)(*arg);
+  if (!pb_encode_tag_for_field(stream, field)) return false;
+
+  return pb_encode_string(stream, (uint8_t *)key, 6);
 }
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
@@ -185,6 +218,11 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
            MIN(LEN, sizeof(msg_send.FIELD.bytes)));               \
     msg_send.FIELD.size = MIN(LEN, sizeof(msg_send.FIELD.bytes)); \
   }
+#define MSG_SEND_CALLBACK(FIELD, CALLBACK, ARGUMENT) \
+  {                                                  \
+    msg_send.FIELD.funcs.encode = &CALLBACK;         \
+    msg_send.FIELD.arg = (void *)ARGUMENT;           \
+  }
 #define MSG_SEND(TYPE) \
   _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg_send)
 
@@ -192,8 +230,9 @@ typedef struct {
   uint8_t iface_num;
   uint8_t packet_index;
   uint8_t packet_pos;
+  uint16_t packet_size;
   uint8_t *buf;
-} usb_read_state;
+} read_state;
 
 static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
   for (int retry = 0;; retry++) {
@@ -213,16 +252,54 @@ static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
   }
 }
 
+#ifdef USE_BLE
+static void _ble_read_retry(uint8_t iface_num, uint8_t *buf) {
+  for (int retry = 0;; retry++) {
+    int r = ble_ext_comm_receive(buf, BLE_PACKET_SIZE);
+    if (r != BLE_PACKET_SIZE) {  // reading failed
+      if (r == 0 && retry < 500) {
+        // only timeout => let's try again
+        HAL_Delay(10);
+        continue;
+      } else {
+        // error
+        error_shutdown("BLE ERROR",
+                       "Error reading from BLE. Try different BLE cable.");
+      }
+    }
+    return;  // success
+  }
+}
+
+static void _ble_read_retry_int(uint8_t iface_num, uint8_t *buf) {
+  for (int retry = 0;; retry++) {
+    int r = ble_int_comm_receive(buf, USB_PACKET_SIZE);
+    if (r == 0) {  // reading failed
+      if (retry < 500) {
+        // only timeout => let's try again
+        HAL_Delay(10);
+        continue;
+      } else {
+        // error
+        error_shutdown("BLE ERROR",
+                       "Error reading from BLE. Try different BLE cable.");
+      }
+    }
+    return;  // success
+  }
+}
+#endif
+
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
-static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count) {
-  usb_read_state *state = (usb_read_state *)(stream->state);
+static bool _read(pb_istream_t *stream, uint8_t *buf, size_t count) {
+  read_state *state = (read_state *)(stream->state);
 
   size_t read = 0;
   // while we have data left
   while (read < count) {
     size_t remaining = count - read;
     // if all remaining data fit into our packet
-    if (state->packet_pos + remaining <= USB_PACKET_SIZE) {
+    if (state->packet_pos + remaining <= state->packet_size) {
       // append data from buf to state->buf
       memcpy(buf + read, state->buf + state->packet_pos, remaining);
       // advance position
@@ -232,10 +309,19 @@ static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count) {
     } else {
       // append data that fits
       memcpy(buf + read, state->buf + state->packet_pos,
-             USB_PACKET_SIZE - state->packet_pos);
-      read += USB_PACKET_SIZE - state->packet_pos;
+             state->packet_size - state->packet_pos);
+      read += state->packet_size - state->packet_pos;
       // read next packet (with retry)
-      _usb_webusb_read_retry(state->iface_num, state->buf);
+#ifdef USE_BLE
+      if (state->iface_num == BLE_EXT_IFACE_NUM) {
+        _ble_read_retry(state->iface_num, state->buf);
+      } else if (state->iface_num == BLE_INT_IFACE_NUM) {
+        _ble_read_retry_int(state->iface_num, state->buf);
+      } else
+#endif
+      {
+        _usb_webusb_read_retry(state->iface_num, state->buf);
+      }
       // prepare next packet
       state->packet_index++;
       state->packet_pos = MSG_HEADER2_LEN;
@@ -245,16 +331,24 @@ static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count) {
   return true;
 }
 
-static void _usb_read_flush(usb_read_state *state) { (void)state; }
+static void _read_flush(read_state *state) { (void)state; }
 
 static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
                          const pb_msgdesc_t *fields, void *msg) {
-  usb_read_state state = {.iface_num = iface_num,
-                          .packet_index = 0,
-                          .packet_pos = MSG_HEADER1_LEN,
-                          .buf = buf};
+  uint16_t packet_size = USB_PACKET_SIZE;
+#ifdef USE_BLE
+  if (iface_num == BLE_EXT_IFACE_NUM) {
+    packet_size = BLE_PACKET_SIZE;
+  }
+#endif
 
-  pb_istream_t stream = {.callback = &_usb_read,
+  read_state state = {.iface_num = iface_num,
+                      .packet_index = 0,
+                      .packet_pos = MSG_HEADER1_LEN,
+                      .packet_size = packet_size,
+                      .buf = buf};
+
+  pb_istream_t stream = {.callback = &_read,
                          .state = &state,
                          .bytes_left = msg_size,
                          .errmsg = NULL};
@@ -263,7 +357,7 @@ static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
     return secfalse;
   }
 
-  _usb_read_flush(&state);
+  _read_flush(&state);
 
   return sectrue;
 }
@@ -304,6 +398,39 @@ static void send_msg_features(uint8_t iface_num,
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
   }
   MSG_SEND(Features);
+}
+
+uint32_t process_msg_Pairing(uint8_t iface_num, uint32_t msg_size,
+                             uint8_t *buf) {
+  uint8_t buffer[6];
+  MSG_RECV_INIT(PairingRequest);
+  MSG_RECV(PairingRequest);
+
+  uint32_t result = screen_pairing_confirm(buffer);
+
+  if (result == INPUT_CONFIRM) {
+    MSG_SEND_INIT(AuthKey);
+    MSG_SEND_CALLBACK(key, _write_authkey, buffer);
+    MSG_SEND(AuthKey);
+  } else {
+    send_user_abort(iface_num, "Pairing cancelled");
+  }
+
+  return result;
+}
+
+uint32_t process_msg_Repair(uint8_t iface_num, uint32_t msg_size,
+                            uint8_t *buf) {
+  MSG_RECV_INIT(RepairRequest);
+  MSG_RECV(RepairRequest);
+  uint32_t result = screen_repair_confirm();
+  if (result == INPUT_CONFIRM) {
+    MSG_SEND_INIT(Success);
+    MSG_SEND(Success);
+  } else {
+    send_user_abort(iface_num, "Pairing cancelled");
+  }
+  return result;
 }
 
 void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
