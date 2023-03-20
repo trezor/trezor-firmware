@@ -70,7 +70,7 @@ static SDL_Surface *PREV_SAVED;
 
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
-static float DISPLAY_GAMMA = 0.55f;
+float DISPLAY_GAMMA = 0.55f;
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
