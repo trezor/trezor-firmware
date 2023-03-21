@@ -1,0 +1,1 @@
+Fix RNG for bootloader and make insecure PRNG opt-in, not opt-out.
