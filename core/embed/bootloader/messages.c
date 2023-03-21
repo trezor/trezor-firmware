@@ -198,6 +198,7 @@ static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
     if (r != USB_PACKET_SIZE) {  // reading failed
       if (r == 0 && retry < 10) {
         // only timeout => let's try again
+        continue;
       } else {
         // error
         error_shutdown("USB ERROR",
