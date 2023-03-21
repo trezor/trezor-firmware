@@ -52,12 +52,12 @@ pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
 /// Holding toif data and allowing it to draw itself.
 /// See https://docs.trezor.io/trezor-firmware/misc/toif.html for data format.
 #[derive(PartialEq, Eq, Clone, Copy)]
-pub struct Toif {
-    data: &'static [u8],
+pub struct Toif<'i> {
+    data: &'i [u8],
 }
 
-impl Toif {
-    pub const fn new(data: &'static [u8]) -> Option<Self> {
+impl<'i> Toif<'i> {
+    pub const fn new(data: &'i [u8]) -> Option<Self> {
         if data.len() < TOIF_HEADER_LENGTH || data[0] != b'T' || data[1] != b'O' || data[2] != b'I'
         {
             return None;
@@ -91,7 +91,7 @@ impl Toif {
         Offset::new(self.width(), self.height())
     }
 
-    pub fn zdata(&self) -> &'static [u8] {
+    pub fn zdata(&self) -> &'i [u8] {
         &self.data[TOIF_HEADER_LENGTH..]
     }
 
@@ -110,7 +110,7 @@ impl Toif {
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Icon {
-    pub toif: Toif,
+    pub toif: Toif<'static>,
 }
 
 impl Icon {

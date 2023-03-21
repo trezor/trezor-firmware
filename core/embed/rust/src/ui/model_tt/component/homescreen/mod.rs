@@ -14,6 +14,15 @@ use crate::{
     },
 };
 
+use crate::{
+    trezorhal::{display::ToifFormat, uzlib::UZLIB_WINDOW_SIZE},
+    ui::{
+        display::{tjpgd::BufferInput, toif::Toif},
+        model_tt::component::homescreen::render::{
+            HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
+        },
+    },
+};
 use render::{
     homescreen, homescreen_blurred, HomescreenNotification, HomescreenText, HOMESCREEN_IMAGE_SIZE,
 };
@@ -195,16 +204,39 @@ where
             let notification = self.get_notification();
 
             let res = get_image();
+            let mut show_default = true;
+
             if let Ok(data) = res {
+                if is_image_jpeg(data.as_ref()) {
+                    let mut input = BufferInput(data.as_ref());
+                    let mut hs_img = HomescreenJpeg::new(&mut input);
+                    homescreen(
+                        &mut hs_img,
+                        &[text],
+                        notification,
+                        self.paint_notification_only,
+                    );
+                    show_default = false;
+                } else if is_image_toif(data.as_ref()) {
+                    let input = unwrap!(Toif::new(data.as_ref()));
+                    let mut window = [0; UZLIB_WINDOW_SIZE];
+                    let mut hs_img =
+                        HomescreenToif::new(input.decompression_context(Some(&mut window)));
+                    homescreen(
+                        &mut hs_img,
+                        &[text],
+                        notification,
+                        self.paint_notification_only,
+                    );
+                    show_default = false;
+                }
+            }
+
+            if show_default {
+                let mut input = BufferInput(IMAGE_HOMESCREEN);
+                let mut hs_img = HomescreenJpeg::new(&mut input);
                 homescreen(
-                    data.as_ref(),
-                    &[text],
-                    notification,
-                    self.paint_notification_only,
-                );
-            } else {
-                homescreen(
-                    IMAGE_HOMESCREEN,
+                    &mut hs_img,
                     &[text],
                     notification,
                     self.paint_notification_only,
@@ -289,10 +321,28 @@ where
         ];
 
         let res = get_image();
+        let mut show_default = true;
+
         if let Ok(data) = res {
-            homescreen_blurred(data.as_ref(), &texts);
-        } else {
-            homescreen_blurred(IMAGE_HOMESCREEN, &texts);
+            if is_image_jpeg(data.as_ref()) {
+                let mut input = BufferInput(data.as_ref());
+                let mut hs_img = HomescreenJpeg::new(&mut input);
+                homescreen_blurred(&mut hs_img, &texts);
+                show_default = false;
+            } else if is_image_toif(data.as_ref()) {
+                let input = unwrap!(Toif::new(data.as_ref()));
+                let mut window = [0; UZLIB_WINDOW_SIZE];
+                let mut hs_img =
+                    HomescreenToif::new(input.decompression_context(Some(&mut window)));
+                homescreen_blurred(&mut hs_img, &texts);
+                show_default = false;
+            }
+        }
+
+        if show_default {
+            let mut input = BufferInput(IMAGE_HOMESCREEN);
+            let mut hs_img = HomescreenJpeg::new(&mut input);
+            homescreen_blurred(&mut hs_img, &texts);
         }
     }
 }
@@ -303,19 +353,34 @@ fn get_image() -> Result<Gc<[u8]>, ()> {
         if let Ok(mut buffer) = result {
             let buf = unsafe { Gc::<[u8]>::as_mut(&mut buffer) };
             if get_avatar(buf).is_ok() {
-                let jpeg = jpeg_info(buffer.as_ref());
-                if let Some((size, mcu_height)) = jpeg {
-                    if size.x == HOMESCREEN_IMAGE_SIZE
-                        && size.y == HOMESCREEN_IMAGE_SIZE
-                        && mcu_height <= 16
-                    {
-                        return Ok(buffer);
-                    }
-                }
+                return Ok(buffer);
             }
         }
     };
     Err(())
+}
+
+fn is_image_jpeg(buffer: &[u8]) -> bool {
+    let jpeg = jpeg_info(buffer);
+    if let Some((size, mcu_height)) = jpeg {
+        if size.x == HOMESCREEN_IMAGE_SIZE && size.y == HOMESCREEN_IMAGE_SIZE && mcu_height <= 16 {
+            return true;
+        }
+    }
+    false
+}
+
+fn is_image_toif(buffer: &[u8]) -> bool {
+    let toif = Toif::new(buffer);
+    if let Some(toif) = toif {
+        if toif.size().x == HOMESCREEN_TOIF_SIZE
+            && toif.size().y == HOMESCREEN_TOIF_SIZE
+            && toif.format() == ToifFormat::FullColorBE
+        {
+            return true;
+        }
+    }
+    false
 }
 
 #[cfg(feature = "ui_debug")]

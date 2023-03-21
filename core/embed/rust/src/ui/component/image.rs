@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Image {
-    pub toif: Toif,
+    pub toif: Toif<'static>,
     area: Rect,
 }
 
