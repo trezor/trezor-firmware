@@ -54,6 +54,7 @@ pub trait Component {
     /// the `Child` wrapper.
     fn paint(&mut self);
 
+    #[cfg(feature = "ui_bounds")]
     /// Report current paint bounds of this component. Used for debugging.
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
@@ -146,6 +147,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.component.bounds(sink)
     }
@@ -199,6 +201,7 @@ where
         self.1.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.0.bounds(sink);
         self.1.bounds(sink);
@@ -249,6 +252,7 @@ where
         self.2.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.0.bounds(sink);
         self.1.bounds(sink);
@@ -301,6 +305,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         if let Some(ref c) = self {
             c.bounds(sink)

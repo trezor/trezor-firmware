@@ -64,7 +64,7 @@ pub trait ObjComponent: MaybeTrace {
     fn obj_place(&mut self, bounds: Rect) -> Rect;
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
     fn obj_paint(&mut self) -> bool;
-    fn obj_bounds(&self, sink: &mut dyn FnMut(Rect));
+    fn obj_bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
     fn obj_skip_paint(&mut self) {}
 }
 
@@ -90,6 +90,7 @@ where
         will_paint
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn obj_bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.bounds(sink)
     }
@@ -509,7 +510,7 @@ extern "C" fn ui_layout_trace(_this: Obj, _callback: Obj) -> Obj {
     Obj::const_none()
 }
 
-#[cfg(feature = "ui_debug")]
+#[cfg(feature = "ui_bounds")]
 extern "C" fn ui_layout_bounds(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
@@ -519,7 +520,7 @@ extern "C" fn ui_layout_bounds(this: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-#[cfg(not(feature = "ui_debug"))]
+#[cfg(not(feature = "ui_bounds"))]
 extern "C" fn ui_layout_bounds(_this: Obj) -> Obj {
     Obj::const_none()
 }

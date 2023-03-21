@@ -264,6 +264,7 @@ impl Component for PassphraseKeyboard {
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.input.bounds(sink);
         self.scrollbar.bounds(sink);
@@ -367,6 +368,7 @@ impl Component for Input {
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area)
     }

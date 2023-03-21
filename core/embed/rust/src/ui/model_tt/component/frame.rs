@@ -152,6 +152,7 @@ where
         self.content.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.title.bounds(sink);
         self.button.bounds(sink);
@@ -242,6 +243,7 @@ where
         self.content.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area);
         self.content.bounds(sink);

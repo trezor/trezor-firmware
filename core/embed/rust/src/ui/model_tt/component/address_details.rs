@@ -181,6 +181,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         match self.current_page {
             0 => self.qr_code.bounds(sink),

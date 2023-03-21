@@ -279,6 +279,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.pad.area);
         self.scrollbar.bounds(sink);
@@ -458,6 +459,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.loader.bounds(sink);
         self.inner.bounds(sink);

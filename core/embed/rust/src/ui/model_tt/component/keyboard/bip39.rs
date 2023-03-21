@@ -144,6 +144,7 @@ impl Component for Bip39Input {
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.button.bounds(sink);
     }

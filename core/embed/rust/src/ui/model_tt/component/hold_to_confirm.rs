@@ -91,6 +91,7 @@ where
         self.buttons.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.pad.area);
         if self.loader.is_animating() {
@@ -171,6 +172,7 @@ impl Component for CancelHold {
         self.hold.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.cancel.bounds(sink);
         self.hold.bounds(sink);
