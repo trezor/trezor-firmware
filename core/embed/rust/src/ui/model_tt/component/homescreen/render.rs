@@ -8,6 +8,7 @@ use crate::{
         buffers::{get_blurring_buffer, get_jpeg_buffer, get_jpeg_work_buffer, BufferJpeg},
         display,
         display::bar_radius_buffer,
+        uzlib::UzlibContext,
     },
     ui::{
         constant::screen,
@@ -51,6 +52,9 @@ struct HomescreenTextInfo {
 }
 
 pub const HOMESCREEN_IMAGE_SIZE: i16 = 240;
+pub const HOMESCREEN_TOIF_SIZE: i16 = 144;
+pub const HOMESCREEN_TOIF_Y_OFFSET: i16 = 27;
+pub const HOMESCREEN_TOIF_X_OFFSET: usize = ((WIDTH - HOMESCREEN_TOIF_SIZE) / 2) as usize;
 
 const HOMESCREEN_MAX_ICON_SIZE: i16 = 20;
 const NOTIFICATION_HEIGHT: i16 = 36;
@@ -78,6 +82,102 @@ const COLORS: usize = 3;
 const RED_IDX: usize = 0;
 const GREEN_IDX: usize = 1;
 const BLUE_IDX: usize = 2;
+
+pub trait HomescreenDecompressor {
+    fn get_height(&self) -> i16;
+    fn decompress(&mut self);
+    fn get_data(&mut self) -> &mut BufferJpeg;
+}
+
+pub struct HomescreenJpeg<'i> {
+    pub output: BufferOutput<'i>,
+    pub jdec: Option<JDEC<'i, 'i>>,
+}
+
+impl<'i> HomescreenJpeg<'i> {
+    pub fn new(input: &'i mut BufferInput<'i>) -> Self {
+        Self {
+            output: BufferOutput::new(unsafe { get_jpeg_buffer(0, true) }, WIDTH, 16),
+            jdec: JDEC::new(input, unsafe {
+                get_jpeg_work_buffer(0, true).buffer.as_mut_slice()
+            })
+            .ok(),
+        }
+    }
+}
+
+impl<'i> HomescreenDecompressor for HomescreenJpeg<'i> {
+    fn get_height(&self) -> i16 {
+        if let Some(dec) = self.jdec.as_ref() {
+            return dec.mcu_height();
+        }
+        1
+    }
+
+    fn decompress(&mut self) {
+        self.jdec.as_mut().map(|dec| dec.decomp(&mut self.output));
+    }
+
+    fn get_data(&mut self) -> &mut BufferJpeg {
+        self.output.buffer()
+    }
+}
+
+pub struct HomescreenToif<'i> {
+    pub output: BufferOutput<'i>,
+    pub decomp_context: UzlibContext<'i>,
+    line: i16,
+}
+
+impl<'i> HomescreenToif<'i> {
+    pub fn new(context: UzlibContext<'i>) -> Self {
+        Self {
+            output: BufferOutput::new(unsafe { get_jpeg_buffer(0, true) }, WIDTH, 16),
+            decomp_context: context,
+            line: 0,
+        }
+    }
+}
+
+impl<'i> HomescreenDecompressor for HomescreenToif<'i> {
+    fn get_height(&self) -> i16 {
+        1
+    }
+
+    fn decompress(&mut self) {
+        // SAFETY: Aligning to u8 slice is safe, because the original slice is aligned
+        // to 16 bits, therefore there are also no residuals (prefix/suffix).
+        // The data in the slices are integers, so these are valid for both u16
+        // and u8.
+        if self.line >= HOMESCREEN_TOIF_Y_OFFSET
+            && self.line < HOMESCREEN_TOIF_Y_OFFSET + HOMESCREEN_TOIF_SIZE
+        {
+            let (_, workbuf, _) = unsafe { self.output.buffer().buffer.align_to_mut::<u8>() };
+            let result = self.decomp_context.uncompress(
+                &mut workbuf[2 * HOMESCREEN_TOIF_X_OFFSET
+                    ..2 * HOMESCREEN_TOIF_X_OFFSET + 2 * HOMESCREEN_TOIF_SIZE as usize],
+            );
+
+            if result.is_err() {
+                self.output.buffer().buffer.fill(0);
+            } else {
+                for i in 0..HOMESCREEN_TOIF_SIZE as usize {
+                    workbuf.swap(
+                        2 * HOMESCREEN_TOIF_X_OFFSET + 2 * i,
+                        2 * HOMESCREEN_TOIF_X_OFFSET + 2 * i + 1,
+                    );
+                }
+            }
+        } else {
+            self.output.buffer().buffer.fill(0);
+        }
+        self.line += 1;
+    }
+
+    fn get_data(&mut self) -> &mut BufferJpeg {
+        self.output.buffer()
+    }
+}
 
 fn homescreen_get_fg_text(
     y_tmp: i16,
@@ -428,7 +528,7 @@ fn get_data(buffer: &mut BufferJpeg, line_num: i16, mcu_height: i16) -> &mut [u1
     &mut buffer.buffer[data_start..data_end]
 }
 
-pub fn homescreen_blurred(data: &[u8], texts: &[HomescreenText]) {
+pub fn homescreen_blurred(data: &mut dyn HomescreenDecompressor, texts: &[HomescreenText]) {
     let mut icon_data = [0_u8; (HOMESCREEN_MAX_ICON_SIZE * HOMESCREEN_MAX_ICON_SIZE / 2) as usize];
 
     let text_buffer = unsafe { get_text_buffer(0, true) };
@@ -437,27 +537,15 @@ pub fn homescreen_blurred(data: &[u8], texts: &[HomescreenText]) {
     let mut text_info =
         homescreen_position_text(unwrap!(texts.get(0)), text_buffer, &mut icon_data);
 
-    let jpeg_pool = unsafe { get_jpeg_work_buffer(0, true).buffer.as_mut_slice() };
-    let jpeg_buffer = unsafe { get_jpeg_buffer(0, true) };
-    let mut jpeg_input = BufferInput(data);
-    let mut jpeg_output = BufferOutput::new(jpeg_buffer, WIDTH, 16);
-    let mut mcu_height = 8;
-    let mut jd: Option<JDEC> = JDEC::new(&mut jpeg_input, jpeg_pool).ok();
-
-    if let Some(dec) = &jd {
-        mcu_height = dec.mcu_height();
-        if !(dec.width() == WIDTH && dec.height() == HEIGHT && mcu_height <= 16) {
-            jd = None
-        }
-    }
-    jd.as_mut().map(|dec| dec.decomp(&mut jpeg_output));
+    let mcu_height = data.get_height();
+    data.decompress();
 
     set_window(screen());
 
     let mut blurring = BlurringContext::new();
 
     // handling top edge case: preload the edge value N+1 times
-    blurring.compute_line_avgs(jpeg_output.buffer(), mcu_height);
+    blurring.compute_line_avgs(data.get_data(), mcu_height);
 
     for _ in 0..=BLUR_RADIUS {
         blurring.vertical_avg_add();
@@ -466,12 +554,12 @@ pub fn homescreen_blurred(data: &[u8], texts: &[HomescreenText]) {
 
     // load enough values to be able to compute first line averages
     for _ in 0..BLUR_RADIUS {
-        blurring.compute_line_avgs(jpeg_output.buffer(), mcu_height);
+        blurring.compute_line_avgs(data.get_data(), mcu_height);
         blurring.vertical_avg_add();
         blurring.inc_add();
 
         if (blurring.get_line_num() % mcu_height) == 0 {
-            jd.as_mut().map(|dec| dec.decomp(&mut jpeg_output));
+            data.decompress();
         }
     }
 
@@ -479,7 +567,7 @@ pub fn homescreen_blurred(data: &[u8], texts: &[HomescreenText]) {
         // several lines have been already decompressed before this loop, adjust for
         // that
         if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) {
-            blurring.compute_line_avgs(jpeg_output.buffer(), mcu_height);
+            blurring.compute_line_avgs(data.get_data(), mcu_height);
         }
 
         let done = homescreen_line_blurred(&icon_data, text_buffer, text_info, &blurring, y);
@@ -510,14 +598,14 @@ pub fn homescreen_blurred(data: &[u8], texts: &[HomescreenText]) {
         }
 
         if (blurring.get_line_num() % mcu_height) == 0 && (blurring.get_line_num() < HEIGHT) {
-            jd.as_mut().map(|dec| dec.decomp(&mut jpeg_output));
+            data.decompress();
         }
     }
     dma2d_wait_for_transfer();
 }
 
 pub fn homescreen(
-    data: &[u8],
+    data: &mut dyn HomescreenDecompressor,
     texts: &[HomescreenText],
     notification: Option<HomescreenNotification>,
     notification_only: bool,
@@ -551,34 +639,20 @@ pub fn homescreen(
         homescreen_position_text(unwrap!(texts.get(0)), text_buffer, &mut icon_data)
     };
 
-    let jpeg_pool = unsafe { get_jpeg_work_buffer(0, true).buffer.as_mut_slice() };
-    let jpeg_buffer = unsafe { get_jpeg_buffer(0, true) };
-    let mut jpeg_input = BufferInput(data);
-    let mut jpeg_output = BufferOutput::new(jpeg_buffer, WIDTH, 16);
-    let mut mcu_height = 8;
-    let mut jd: Option<JDEC> = JDEC::new(&mut jpeg_input, jpeg_pool).ok();
-
-    if let Some(dec) = &jd {
-        mcu_height = dec.mcu_height();
-        if !(dec.width() == WIDTH && dec.height() == HEIGHT && mcu_height <= 16) {
-            jd = None
-        }
-    }
-
     set_window(screen());
 
-    let mcu_height = mcu_height as i16;
+    let mcu_height = data.get_height();
 
     for y in 0..HEIGHT {
         if (y % mcu_height) == 0 {
-            jd.as_mut().map(|dec| dec.decomp(&mut jpeg_output));
+            data.decompress();
         }
 
         let done = homescreen_line(
             &icon_data,
             text_buffer,
             text_info,
-            jpeg_output.buffer(),
+            data.get_data(),
             mcu_height,
             y,
         );
