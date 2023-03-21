@@ -163,6 +163,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.prompt.bounds(sink);
         self.input.bounds(sink);

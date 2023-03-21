@@ -118,6 +118,7 @@ where
         self.confirm_button.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area);
         self.input.bounds(sink);
@@ -226,6 +227,7 @@ impl Component for NumberInput {
         self.inc.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.dec.bounds(sink);
         self.inc.bounds(sink);

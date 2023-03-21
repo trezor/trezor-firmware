@@ -39,6 +39,7 @@ where
         self.inner.paint()
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.inner.bounds(sink);
     }

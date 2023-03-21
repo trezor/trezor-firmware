@@ -270,6 +270,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.major_prompt.bounds(sink);
         self.minor_prompt.bounds(sink);
@@ -454,6 +455,7 @@ impl Component for PinDots {
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area);
         sink(self.area.inset(HEADER_PADDING));

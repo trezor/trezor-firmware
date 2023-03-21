@@ -191,6 +191,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.icon.bounds(sink);
         self.app_name.bounds(sink);

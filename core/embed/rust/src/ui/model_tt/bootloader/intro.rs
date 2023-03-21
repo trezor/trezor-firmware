@@ -94,6 +94,7 @@ impl<'a> Component for Intro<'a> {
         self.menu.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.menu.bounds(sink);
     }
