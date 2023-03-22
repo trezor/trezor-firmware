@@ -75,6 +75,17 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
   const CoinInfo *coin = fsm_getCoin(true, "Bitcoin");
   if (!coin) return;
 
+  // Only allow m/44' and m/45' subtrees. This allows usage with _any_ SLIP-44
+  // (Ethereum or otherwise), plus the Casa multisig subtree. Anything else must
+  // go through (a) GetPublicKey or (b) a dedicated coin-specific message.
+  if (!msg->address_n_count || (msg->address_n[0] != (44 | PATH_HARDENED) &&
+                                msg->address_n[0] != (45 | PATH_HARDENED))) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Invalid path for EthereumGetPublicKey"));
+    layoutHome();
+    return;
+  }
+
   const char *curve = coin->curve_name;
   uint32_t fingerprint;
   HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,
