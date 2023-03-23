@@ -37,6 +37,10 @@
 
 #include "memzero.h"
 
+#ifdef TREZOR_EMULATOR
+#include "emulator.h"
+#endif
+
 #define MSG_HEADER1_LEN 9
 #define MSG_HEADER2_LEN 1
 
@@ -370,7 +374,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
                           void **arg) {
 #define BUFSIZE 32768
 
-  uint32_t offset = (uint32_t)(*arg);
+  size_t offset = (size_t)(*arg);
 
   if (stream->bytes_left > IMAGE_CHUNK_SIZE) {
     chunk_size = 0;
@@ -460,8 +464,8 @@ static void detect_installation(const vendor_header *current_vhdr,
 }
 
 static int firmware_upload_chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT;
-static uint32_t headers_offset = 0;
-static uint32_t read_offset = 0;
+static size_t headers_offset = 0;
+static size_t read_offset = 0;
 
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                                uint8_t *buf) {

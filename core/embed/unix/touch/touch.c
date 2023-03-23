@@ -23,12 +23,16 @@
 
 #if defined TREZOR_MODEL_T
 
+#include "common.h"
 #include "touch.h"
 
 extern int sdl_display_res_x, sdl_display_res_y;
 extern int sdl_touch_offset_x, sdl_touch_offset_y;
 
+static bool _touch_detected = false;
+
 uint32_t touch_read(void) {
+  emulator_poll_events();
   SDL_Event event;
   SDL_PumpEvents();
   if (SDL_PollEvent(&event) > 0) {
@@ -56,6 +60,7 @@ uint32_t touch_read(void) {
         }
         switch (event.type) {
           case SDL_MOUSEBUTTONDOWN:
+            _touch_detected = true;
             return TOUCH_START | touch_pack_xy(x, y);
           case SDL_MOUSEMOTION:
             // remove other SDL_MOUSEMOTION events from queue
@@ -65,6 +70,7 @@ uint32_t touch_read(void) {
             }
             break;
           case SDL_MOUSEBUTTONUP:
+            _touch_detected = false;
             return TOUCH_END | touch_pack_xy(x, y);
         }
         break;
@@ -73,6 +79,11 @@ uint32_t touch_read(void) {
   }
   return 0;
 }
+
+void touch_init(void) {}
+void touch_power_on(void) {}
+
+uint32_t touch_is_detected(void) { return _touch_detected; }
 
 #elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 

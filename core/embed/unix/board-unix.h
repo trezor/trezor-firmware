@@ -3,4 +3,6 @@
 
 #include "display-unix.h"
 
+#define USE_TOUCH 1
+
 #endif  //_BOARD_UNIX_H

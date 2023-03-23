@@ -1,0 +1,1 @@
+../trezorhal/image.h

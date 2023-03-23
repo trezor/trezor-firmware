@@ -21,7 +21,11 @@
 
 #include "bootui.h"
 #include "display.h"
+#ifdef TREZOR_EMULATOR
+#include "emulator.h"
+#else
 #include "mini_printf.h"
+#endif
 #include "rust_ui.h"
 #include "version.h"
 
@@ -187,7 +191,7 @@ void ui_screen_wipe_progress(int pos, int len) {
 }
 
 // done UI
-void ui_screen_done(int restart_seconds, secbool full_redraw) {
+void ui_screen_done(uint8_t restart_seconds, secbool full_redraw) {
   const char *str;
   char count_str[24];
   if (restart_seconds >= 1) {

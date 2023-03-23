@@ -21,15 +21,19 @@
 #include <sys/types.h>
 
 #include "common.h"
-#include "compiler_traits.h"
 #include "display.h"
 #include "flash.h"
 #include "image.h"
-#include "mini_printf.h"
-#include "mpu.h"
 #include "random_delays.h"
 #include "secbool.h"
+#ifdef TREZOR_EMULATOR
+#include "emulator.h"
+#else
+#include "compiler_traits.h"
+#include "mini_printf.h"
+#include "mpu.h"
 #include "stm32.h"
+#endif
 #ifdef USE_DMA2D
 #include "dma2d.h"
 #endif
@@ -89,8 +93,12 @@ static void usb_init_all(secbool usb21_landing) {
 
   static const usb_webusb_info_t webusb_info = {
       .iface_num = USB_IFACE_NUM,
+#ifdef TREZOR_EMULATOR
+      .emu_port = 21324,
+#else
       .ep_in = USB_EP_DIR_IN | 0x01,
       .ep_out = USB_EP_DIR_OUT | 0x01,
+#endif
       .subclass = 0,
       .protocol = 0,
       .max_packet_len = sizeof(rx_buffer),
@@ -114,6 +122,9 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
   uint8_t buf[USB_PACKET_SIZE];
 
   for (;;) {
+#ifdef TREZOR_EMULATOR
+    emulator_poll_events();
+#endif
     int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE,
                                      USB_TIMEOUT);
     if (r != USB_PACKET_SIZE) {
@@ -248,10 +259,14 @@ static void check_bootloader_version(void) {
 
 #endif
 
+#ifndef TREZOR_EMULATOR
 int main(void) {
   // grab "stay in bootloader" flag as soon as possible
   register uint32_t r11 __asm__("r11");
   volatile uint32_t stay_in_bootloader_flag = r11;
+#else
+int bootloader_main(void) {
+#endif
 
   random_delays_init();
   // display_init_seq();
@@ -339,7 +354,11 @@ int main(void) {
       if (touched) {
         break;
       }
+#ifdef TREZOR_EMULATOR
+      hal_delay(25);
+#else
       hal_delay(1);
+#endif
     }
   }
 #elif defined USE_BUTTON

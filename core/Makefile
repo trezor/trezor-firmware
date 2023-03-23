@@ -7,7 +7,8 @@ SCONS = scons -Q -j $(JOBS)
 BUILD_DIR             = build
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
 BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
-BOOTLOADER_CI_BUILD_DIR  = $(BUILD_DIR)/bootloader_ci
+BOOTLOADER_CI_BUILD_DIR   = $(BUILD_DIR)/bootloader_ci
+BOOTLOADER_EMU_BUILD_DIR  = $(BUILD_DIR)/bootloader_emu
 PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
 REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
@@ -169,6 +170,9 @@ build_bootloader: ## build bootloader
 
 build_bootloader_ci: ## build CI device testing bootloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin
+
+build_bootloader_emu: ## build the unix bootloader emulator
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" $(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
 
 build_prodtest: ## build production test firmware
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" $(PRODTEST_BUILD_DIR)/prodtest.bin

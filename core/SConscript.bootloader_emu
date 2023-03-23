@@ -1,0 +1,259 @@
+# pylint: disable=E0602
+
+import os
+import tools
+import boards
+
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+DMA2D = False
+
+if TREZOR_MODEL in ('1', ):
+    # skip bootloader build
+    env = Environment()
+    def build_bootloader(target,source,env):
+        print(f'Bootloader: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='bootloader.bin',
+                 source=None,
+                 action=build_bootloader
+             )
+    Return()
+
+FEATURES_WANTED = ["input", "rgb_led"]
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = []
+SOURCE_MOD = []
+
+if TREZOR_MODEL in ('1', 'R'):
+    FONT_NORMAL='Font_PixelOperator_Regular_8'
+    FONT_DEMIBOLD=None
+    FONT_BOLD=None
+    FONT_MONO='Font_PixelOperatorMono_Regular_8'
+if TREZOR_MODEL in ('T', ):
+    FONT_NORMAL='Font_TTHoves_Regular_21'
+    FONT_DEMIBOLD=None
+    FONT_BOLD='Font_TTHoves_Bold_17'
+    FONT_MONO=None
+
+# modtrezorcrypto
+CCFLAGS_MOD += '-Wno-sequence-point '
+CPPPATH_MOD += [
+    'vendor/trezor-crypto',
+]
+CPPDEFINES_MOD += [
+    'AES_128',
+    'AES_192',
+    'USE_KECCAK',
+    'ED25519_NO_PRECOMP',
+    'TREZOR_UI2',
+    'USE_RUST_LOADER',
+    'FANCY_FATAL_ERROR'
+]
+SOURCE_MOD += [
+    'vendor/trezor-crypto/blake2s.c',
+    'vendor/trezor-crypto/chacha_drbg.c',
+    'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-scalarmult-base.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-basepoint-table.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.c',
+    'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
+    'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/rand.c',
+    'vendor/trezor-crypto/sha2.c',
+]
+
+# modtrezorui
+CPPPATH_MOD += [
+        'vendor/micropython/lib/uzlib',
+]
+
+SOURCE_MOD += [
+    'embed/extmod/modtrezorui/buffers.c',
+    'embed/extmod/modtrezorui/colors.c',
+    'embed/extmod/modtrezorui/display.c',
+    'embed/extmod/modtrezorui/fonts/fonts.c',
+    'embed/extmod/modtrezorui/fonts/font_bitmap.c',
+    'embed/extmod/modtrezorcrypto/rand.c',
+    'vendor/micropython/lib/uzlib/adler32.c',
+    'vendor/micropython/lib/uzlib/crc32.c',
+    'vendor/micropython/lib/uzlib/tinflate.c',
+]
+
+SOURCE_NANOPB = [
+    'vendor/nanopb/pb_common.c',
+    'vendor/nanopb/pb_decode.c',
+    'vendor/nanopb/pb_encode.c',
+]
+
+SOURCE_BOOTLOADER = [
+    'embed/bootloader/bootui.c',
+    'embed/bootloader/main.c',
+    'embed/bootloader/messages.c',
+    'embed/bootloader/emulator.c',
+    'embed/bootloader/protob/messages.pb.c',
+]
+
+SOURCE_TREZORHAL = [
+    'embed/trezorhal/image.c',
+]
+
+SOURCE_UNIX = [
+    'embed/unix/common.c',
+    'embed/unix/display-unix.c',
+    'embed/unix/flash.c',
+    'embed/unix/profile.c',
+    'embed/unix/random_delays.c',
+    'embed/unix/rng.c',
+    'embed/unix/touch/touch.c',
+    'embed/unix/usb.c',
+]
+
+# fonts
+tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
+
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+
+env.Replace(
+    CP='cp',
+    AS='as',
+    AR='ar',
+    CC='gcc',
+    LINK='ld',
+    SIZE='size',
+    STRIP='strip',
+    OBJCOPY='objcopy',
+    PYTHON='python',
+    MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py', )
+
+env.Replace(
+    TREZOR_MODEL=TREZOR_MODEL, )
+
+MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
+MODEL_AS_NUMBER = str(boards.get_hw_model_as_number(MODEL_IDENTIFIER))
+
+env.Replace(
+    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
+    CCFLAGS='$COPT '
+    '-g3 '
+    '-nostdlib '
+    '-std=gnu99 -Wall -Werror -Wpointer-arith -Wno-missing-braces -fno-common '
+    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-ffreestanding '
+    '-fstack-protector-all '
+    + CCFLAGS_MOD,
+    CPPPATH=[
+        'embed/rust',
+        'embed/bootloader',
+        'embed/bootloader/nanopb',
+        'embed/bootloader/protob',
+        'embed/unix',
+        'embed/extmod/modtrezorui',
+        'vendor/nanopb',
+    ] + CPPPATH_MOD,
+    CPPDEFINES=[
+        'BOOTLOADER',
+        'TREZOR_EMULATOR',
+        'HW_MODEL=' + MODEL_AS_NUMBER,
+        'HW_REVISION=0',
+        'TREZOR_MODEL_'+TREZOR_MODEL,
+        'TREZOR_BOARD=\\"board-unix.h\\"',
+        'PB_FIELD_16BIT',
+        'PB_ENCODE_ARRAYS_UNPACKED',
+        'PB_VALIDATE_UTF8',
+    ] + CPPDEFINES_MOD,
+    ASPPFLAGS='$CFLAGS $CCFLAGS', )
+
+try:
+    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
+except OSError:
+    print("SDL2 not installed, Emulator build is not possible")
+
+
+env.Replace(
+    ALLSOURCES=SOURCE_MOD + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_TREZORHAL + SOURCE_UNIX,
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
+
+cmake_gen = env.Command(
+    target='CMakeLists.txt',
+    source='',
+    action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
+)
+
+
+#
+# Rust library
+#
+
+RUST_TARGET = 'x86_64-unknown-linux-gnu'
+RUST_PROFILE = 'release'
+RUST_LIB = 'trezor_lib'
+RUST_LIBDIR = f'build/bootloader_emu/rust/{RUST_TARGET}/{RUST_PROFILE}'
+RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+
+def cargo_build():
+    # Determine the profile build flags.
+    if RUST_PROFILE == 'release':
+        profile = '--release'
+    else:
+        profile = ''
+    if TREZOR_MODEL in ("1",):
+        features = ["model_t1"]
+    elif TREZOR_MODEL in ("R",):
+        features = ["model_tr"]
+    else:
+        features = ["model_tt"]
+    features.append("bitcoin_only")
+    features.append("ui")
+    features.append("bootloader")
+
+    cargo_opts = [
+        f'--target={RUST_TARGET}',
+        f'--target-dir=../../build/bootloader_emu/rust',
+        '--no-default-features',
+        '--features ' + ','.join(features),
+        '-Z build-std=core',
+        '-Z build-std-features=panic_immediate_abort',
+    ]
+
+    return f'cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
+
+rust = env.Command(
+    target=RUST_LIBPATH,
+    source='',
+    action=cargo_build(), )
+
+env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
+env.Append(LINKFLAGS=f' -l{RUST_LIB}')
+env.Append(LINKFLAGS=f' -lm')
+
+#
+# Program objects
+#
+
+obj_program = []
+obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_BOOTLOADER)
+obj_program += env.Object(source=SOURCE_NANOPB)
+obj_program += env.Object(source=SOURCE_TREZORHAL)
+obj_program += env.Object(source=SOURCE_UNIX)
+
+program_elf = env.Command(
+    target='bootloader.elf',
+    source=obj_program,
+    action=
+    '$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS', )
+
+env.Depends(program_elf, rust)
+
+if CMAKELISTS != 0:
+    env.Depends(program_elf, cmake_gen)

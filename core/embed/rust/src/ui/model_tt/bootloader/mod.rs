@@ -97,6 +97,7 @@ where
             }
             display::sync();
             frame.paint();
+            display::refresh();
         }
     }
 }
@@ -501,6 +502,7 @@ extern "C" fn screen_install_success(
     } else {
         screen_install_success_bld(msg, complete_draw)
     }
+    display::refresh();
 }
 
 #[no_mangle]
