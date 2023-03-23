@@ -99,7 +99,14 @@ void usb_start(void) {
   }
 }
 
-void usb_stop(void) {}
+void usb_stop(void) {
+  for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
+    if (usb_ifaces[i].sock >= 0) {
+      close(usb_ifaces[i].sock);
+      usb_ifaces[i].sock = -1;
+    }
+  }
+}
 
 secbool usb_hid_add(const usb_hid_info_t *info) {
   if (info->iface_num < USBD_MAX_NUM_INTERFACES &&
@@ -219,6 +226,18 @@ int usb_webusb_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
   return usb_emulated_read(iface_num, buf, len);
 }
 
+int usb_webusb_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
+                             int timeout) {
+  const uint32_t start = clock();
+  while (sectrue != usb_webusb_can_read(iface_num)) {
+    if (timeout >= 0 &&
+        (1000 * (clock() - start)) / CLOCKS_PER_SEC >= timeout) {
+      return 0;  // Timeout
+    }
+  }
+  return usb_webusb_read(iface_num, buf, len);
+}
+
 int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
   if (iface_num >= USBD_MAX_NUM_INTERFACES ||
       usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
@@ -245,6 +264,18 @@ int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
     return 0;
   }
   return usb_emulated_write(iface_num, buf, len);
+}
+
+int usb_webusb_write_blocking(uint8_t iface_num, const uint8_t *buf,
+                              uint32_t len, int timeout) {
+  const uint32_t start = clock();
+  while (sectrue != usb_webusb_can_write(iface_num)) {
+    if (timeout >= 0 &&
+        (1000 * (clock() - start)) / CLOCKS_PER_SEC >= timeout) {
+      return 0;  // Timeout
+    }
+  }
+  return usb_webusb_write(iface_num, buf, len);
 }
 
 void pendsv_kbd_intr(void) {}
