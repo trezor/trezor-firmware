@@ -66,7 +66,7 @@ void ui_fadein(void);
 void ui_fadeout(void);
 void ui_set_initial_setup(bool initial);
 
-void ui_screen_boot_empty(bool firmware_present, bool fading);
+void ui_screen_boot_empty(bool fading);
 
 // clang-format off
 #define INPUT_CANCEL 0x01        // Cancel button

@@ -195,7 +195,7 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           hal_delay(1000);
           usb_stop();
           usb_deinit();
-          ui_screen_boot_empty(true, true);
+          ui_screen_boot_empty(true);
           return CONTINUE;
         }
         break;
@@ -320,7 +320,7 @@ int bootloader_main(void) {
   display_set_little_endian();
 #endif
 
-  ui_screen_boot_empty(firmware_present == sectrue, false);
+  ui_screen_boot_empty(false);
 
 #ifdef USE_TOUCH
   touch_power_on();
@@ -419,7 +419,7 @@ int bootloader_main(void) {
             screen = SCREEN_INTRO;
           }
           if (ui_result == 2) {  // reboot
-            ui_screen_boot_empty(true, true);
+            ui_screen_boot_empty(true);
             continue_to_firmware = true;
           }
           if (ui_result == 3) {  // wipe

@@ -37,9 +37,7 @@ use crate::{
                 welcome::Welcome,
             },
             component::{Button, ResultScreen},
-            theme::{
-                BACKLIGHT_DIM, BACKLIGHT_NORMAL, BLACK, FG, GREY_DARK, TEXT_ERROR_HIGHLIGHT, WHITE,
-            },
+            theme::{BACKLIGHT_DIM, BACKLIGHT_NORMAL, BLACK, FG, TEXT_ERROR_HIGHLIGHT, WHITE},
         },
         util::{from_c_array, from_c_str},
     },
@@ -391,17 +389,14 @@ extern "C" fn screen_wipe_fail() {
 }
 
 #[no_mangle]
-extern "C" fn screen_boot_empty(firmware_present: bool, fading: bool) {
+extern "C" fn screen_boot_empty(fading: bool) {
     if fading {
         fadeout();
     }
 
-    let fg = if firmware_present { GREY_DARK } else { WHITE };
-    let bg = if firmware_present {
-        BLACK
-    } else {
-        WELCOME_COLOR
-    };
+    let fg = WHITE;
+    let bg = BLACK;
+
     display::rect_fill(constant::screen(), bg);
     let icon = Icon::new(LOGO_EMPTY);
     icon.draw(Point::new(screen().center().x, 48), TOP_CENTER, fg, bg);
