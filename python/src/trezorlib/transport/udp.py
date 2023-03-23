@@ -69,6 +69,9 @@ class UdpTransport(ProtocolBasedTransport):
                 raise TransportException(
                     f"No Trezor device found at address {d.get_path()}"
                 )
+        except Exception as e:
+            raise TransportException(f"Error opening {d.get_path()}") from e
+
         finally:
             d.close()
 
@@ -85,8 +88,8 @@ class UdpTransport(ProtocolBasedTransport):
     @classmethod
     def find_by_path(cls, path: str, prefix_search: bool = False) -> "UdpTransport":
         try:
-            path = path.replace(f"{cls.PATH_PREFIX}:", "")
-            return cls._try_path(path)
+            address = path.replace(f"{cls.PATH_PREFIX}:", "")
+            return cls._try_path(address)
         except TransportException:
             if not prefix_search:
                 raise
