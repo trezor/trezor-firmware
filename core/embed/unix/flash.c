@@ -92,6 +92,11 @@ const uint8_t STORAGE_SECTORS[STORAGE_SECTORS_COUNT] = {
 static uint8_t *FLASH_BUFFER = NULL;
 static uint32_t FLASH_SIZE;
 
+#define OTP_BLOCK_SIZE 32
+#define FLASH_SECTOR_OTP (FLASH_SECTOR_COUNT)
+
+static uint8_t OTP_BUFFER[OTP_BLOCK_SIZE * 64];
+
 static void flash_exit(void) {
   int r = munmap(FLASH_BUFFER, FLASH_SIZE);
   ensure(sectrue * (r == 0), "munmap failed");
@@ -129,6 +134,9 @@ void flash_init(void) {
   ensure(sectrue * (map != MAP_FAILED), "mmap failed");
 
   FLASH_BUFFER = (uint8_t *)map;
+
+  // fill OTP buffer with ones
+  memset(OTP_BUFFER, 0xFF, sizeof(OTP_BUFFER));
 
   atexit(flash_exit);
 }
@@ -203,12 +211,28 @@ secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data) {
 
 secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
                        uint8_t datalen) {
-  return secfalse;
+  if (offset + datalen > OTP_BLOCK_SIZE) {
+    return secfalse;
+  }
+  uint32_t offset_in_sector = block * OTP_BLOCK_SIZE + offset;
+  memcpy(data, OTP_BUFFER + offset_in_sector, datalen);
+  return sectrue;
 }
 
 secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
                         uint8_t datalen) {
-  return secfalse;
+  if (offset + datalen > OTP_BLOCK_SIZE) {
+    return secfalse;
+  }
+  uint32_t offset_in_sector = block * OTP_BLOCK_SIZE + offset;
+  uint8_t *flash = OTP_BUFFER + offset_in_sector;
+  for (int i = 0; i < datalen; i++) {
+    if ((flash[i] & data[i]) != data[i]) {
+      return secfalse;  // we cannot change zeroes to ones
+    }
+    flash[i] = data[i];
+  }
+  return sectrue;
 }
 
 secbool flash_otp_lock(uint8_t block) { return secfalse; }
