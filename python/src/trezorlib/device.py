@@ -101,7 +101,8 @@ def sd_protect(
 @session
 def wipe(client: "TrezorClient") -> "MessageType":
     ret = client.call(messages.WipeDevice())
-    client.init_device()
+    if not client.features.bootloader_mode:
+        client.init_device()
     return ret
 
 
