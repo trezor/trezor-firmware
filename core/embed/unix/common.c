@@ -148,14 +148,20 @@ static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
         case SDLK_p:
           display_save("emu");
           return 0;
+#if defined TREZOR_MODEL_T
+        // Left and right arrows controlling display gamma
+        // Only for TT (in button models, arrows do different things)
         case SDLK_LEFT:
           DISPLAY_GAMMA = fmaxf(0.0f, DISPLAY_GAMMA - 0.05f);
           printf("DISPLAY_GAMMA: %0.2f\n", DISPLAY_GAMMA);
+          display_refresh();
           return 0;
         case SDLK_RIGHT:
           DISPLAY_GAMMA = fminf(8.0f, DISPLAY_GAMMA + 0.05f);
           printf("DISPLAY_GAMMA: %0.2f\n", DISPLAY_GAMMA);
+          display_refresh();
           return 0;
+#endif
       }
       break;
   }
