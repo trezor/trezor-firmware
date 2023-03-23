@@ -56,6 +56,7 @@ void show_pin_too_many_screen(void);
        : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
 
 void hal_delay(uint32_t ms);
+uint32_t hal_ticks_ms();
 void emulator_poll_events(void);
 
 void collect_hw_entropy(void);

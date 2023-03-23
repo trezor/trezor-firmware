@@ -20,5 +20,7 @@
 #ifndef __TREZORHAL_RANDOM_DELAYS_H__
 #define __TREZORHAL_RANDOM_DELAYS_H__
 
+void random_delays_init(void);
 void wait_random(void);
+
 #endif

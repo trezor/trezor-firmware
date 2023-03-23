@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include "common.h"
 
 void loader_uncompress_r(int32_t y_offset, uint16_t fg_color, uint16_t bg_color,
