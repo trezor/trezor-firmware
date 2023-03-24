@@ -1,7 +1,7 @@
 mod ffi {
     extern "C" {
         // trezorhal/common.c
-        pub fn shutdown() -> !;
+        pub fn trezor_shutdown() -> !;
     }
 }
 
@@ -13,7 +13,7 @@ use heapless::String;
 use crate::ui::util::u32_to_str;
 
 fn shutdown() -> ! {
-    unsafe { ffi::shutdown() }
+    unsafe { ffi::trezor_shutdown() }
 }
 
 #[cfg(feature = "bootloader")]
