@@ -17,6 +17,7 @@ pub enum FlowMsg {
     Confirmed,
     ConfirmedIndex(usize),
     Cancelled,
+    Info,
 }
 
 pub struct Flow<F, const M: usize> {
@@ -258,6 +259,7 @@ where
                             return Some(FlowMsg::Confirmed);
                         }
                     }
+                    ButtonAction::Info => return Some(FlowMsg::Info),
                     ButtonAction::Select => {}
                     ButtonAction::Action(_) => {}
                 }

@@ -3,13 +3,13 @@ use crate::{
     ui::{
         component::{
             text::{
-                layout::{LayoutFit, LayoutSink, QrCodeInfo, TextNoOp, TextRenderer},
+                layout::{LayoutFit, LayoutSink, TextNoOp, TextRenderer},
                 TextStyle,
             },
             LineBreaking, Paginate, TextLayout,
         },
         display::{Font, Icon},
-        geometry::{Alignment, Offset, Point, Rect},
+        geometry::{Alignment, Offset, Rect},
         model_tr::theme,
         util::ResultExt,
     },
@@ -104,8 +104,14 @@ impl<const M: usize> Page<M> {
             theme::FG,
             theme::FG,
         )
-        .with_ellipsis_icon(Icon::new(theme::ICON_NEXT_PAGE), theme::ELLIPSIS_ICON_MARGIN)
-        .with_prev_page_icon(Icon::new(theme::ICON_PREV_PAGE), theme::PREV_PAGE_ICON_MARGIN);
+        .with_ellipsis_icon(
+            Icon::new(theme::ICON_NEXT_PAGE),
+            theme::ELLIPSIS_ICON_MARGIN,
+        )
+        .with_prev_page_icon(
+            Icon::new(theme::ICON_PREV_PAGE),
+            theme::PREV_PAGE_ICON_MARGIN,
+        );
         Self {
             ops: Vec::new(),
             text_layout: TextLayout::new(style),
@@ -221,21 +227,6 @@ impl<const M: usize> Page<M> {
 
     pub fn next_page(self) -> Self {
         self.with_new_item(Op::NextPage)
-    }
-
-    pub fn qr_code(
-        self,
-        text: StrBuffer,
-        max_size: i16,
-        case_sensitive: bool,
-        center: Point,
-    ) -> Self {
-        self.with_new_item(Op::QrCode(QrCodeInfo::new(
-            text,
-            max_size,
-            case_sensitive,
-            center,
-        )))
     }
 
     pub fn font(self, font: Font) -> Self {

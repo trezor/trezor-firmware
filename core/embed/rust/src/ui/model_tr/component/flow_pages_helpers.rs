@@ -5,7 +5,7 @@ use crate::{
     micropython::buffer::StrBuffer,
     ui::{
         component::{
-            text::layout::{LayoutFit, LayoutSink, QrCodeInfo},
+            text::layout::{LayoutFit, LayoutSink},
             TextLayout,
         },
         display::{Color, Font},
@@ -43,8 +43,6 @@ impl ToDisplay {
 pub enum Op {
     /// Render text with current color and font.
     Text(ToDisplay),
-    /// Render QR Code.
-    QrCode(QrCodeInfo),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.
@@ -91,10 +89,6 @@ impl TextLayout {
                             None
                         }
                     }
-                    Op::QrCode(_) if skipped < skip_bytes => {
-                        skipped = skipped.saturating_add(PROCESSED_CHARS_ONE);
-                        None
-                    }
                     Op::NextPage if skipped < skip_bytes => {
                         skipped = skipped.saturating_add(PROCESSED_CHARS_ONE);
                         None
@@ -136,21 +130,6 @@ impl TextLayout {
                             height: self.layout_height(init_cursor, *cursor),
                         };
                     }
-                    Op::QrCode(qr_details) => {
-                        self.layout_qr_code(qr_details, sink);
-                        // QR codes are always the last component that can be shown
-                        // on the given page (meaning a series of Op's).
-                        // Throwing Fitting to force the end of the whole page.
-                        // (It would be too complicated to account for it by modifying cursor, etc.,
-                        // and there is not a need for it currently. If we want QR code together
-                        // with some other things on the same screen, just first render the other
-                        // things and do the QR code last.)
-                        total_processed_chars += PROCESSED_CHARS_ONE;
-                        return LayoutFit::Fitting {
-                            processed_chars: total_processed_chars,
-                            height: self.layout_height(init_cursor, *cursor),
-                        };
-                    }
                     // Drawing text or icon
                     Op::Text(to_display) => {
                         // Try to fit text on the current page and if they do not fit,
@@ -188,12 +167,5 @@ impl TextLayout {
             processed_chars: total_processed_chars,
             height: self.layout_height(init_cursor, *cursor),
         }
-    }
-
-    /// Fitting the QR code on the current screen.
-    /// Not returning `LayoutFit`, QR codes are handled differently,
-    /// they automatically throw out of bounds.
-    pub fn layout_qr_code(&self, qr_code_info: QrCodeInfo, sink: &mut dyn LayoutSink) {
-        sink.qrcode(qr_code_info);
     }
 }

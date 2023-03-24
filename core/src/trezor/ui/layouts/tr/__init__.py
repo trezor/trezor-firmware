@@ -475,33 +475,69 @@ async def show_address(
     multisig_index: int | None = None,
     xpubs: Sequence[str] = (),
 ) -> None:
+    # Will be a marquee in case of multisig
     title = (
-        "RECEIVE ADDRESS\n(MULTISIG)"
+        "RECEIVE ADDRESS (MULTISIG)"
         if multisig_index is not None
         else "RECEIVE ADDRESS"
     )
-
-    await raise_if_not_confirmed(
-        interact(
+    while True:
+        result = await interact(
             ctx,
             RustLayout(
-                # TODO: unite with TT::trezorui2.confirm_address
-                trezorui2.show_receive_address(
-                    title=title.upper(),
-                    address=address,
-                    address_qr=address if address_qr is None else address_qr,
-                    account=account or "Unknown",
-                    derivation_path=path or "Unknown",
-                    case_sensitive=case_sensitive,
+                trezorui2.confirm_address(
+                    title=title,
+                    data=address,
+                    description="",  # unused on TR
+                    extra=None,  # unused on TR
                 )
             ),
             "show_address",
             ButtonRequestType.Address,
         )
-    )
 
-    # TODO: support showing multisig xpubs?
-    # TODO: send button requests in the flow above?
+        # User confirmed with middle button.
+        if result is CONFIRMED:
+            break
+
+        # User pressed right button, go to address details.
+        elif result is INFO:
+
+            def xpub_title(i: int) -> str:
+                # Will be marquee (cannot fit one line)
+                result = f"MULTISIG XPUB #{i + 1}"
+                result += " (YOURS)" if i == multisig_index else " (COSIGNER)"
+                return result
+
+            result = await interact(
+                ctx,
+                RustLayout(
+                    trezorui2.show_address_details(
+                        address=address if address_qr is None else address_qr,
+                        case_sensitive=case_sensitive,
+                        account=account,
+                        path=path,
+                        xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
+                    )
+                ),
+                "show_address_details",
+                ButtonRequestType.Address,
+            )
+            # Can only go back from the address details.
+            assert result is CANCELLED
+
+        # User pressed left cancel button, show mismatch dialogue.
+        else:
+            result = await interact(
+                ctx,
+                RustLayout(trezorui2.show_mismatch()),
+                "warning_address_mismatch",
+                ButtonRequestType.Warning,
+            )
+            assert result in (CONFIRMED, CANCELLED)
+            # Right button aborts action, left goes back to showing address.
+            if result is CONFIRMED:
+                raise ActionCancelled
 
 
 def show_pubkey(

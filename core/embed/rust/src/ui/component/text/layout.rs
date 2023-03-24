@@ -1,11 +1,8 @@
 use super::iter::GlyphMetrics;
-use crate::{
-    micropython::buffer::StrBuffer,
-    ui::{
-        display,
-        display::{Color, Font, toif::Icon},
-        geometry::{Alignment, Dimensions, Offset, Point, Rect, BOTTOM_LEFT},
-    },
+use crate::ui::{
+    display,
+    display::{toif::Icon, Color, Font},
+    geometry::{Alignment, Dimensions, Offset, Point, Rect, BOTTOM_LEFT},
 };
 
 const ELLIPSIS: &str = "...";
@@ -32,26 +29,6 @@ pub enum PageBreaking {
     /// Same as `CutAndInsertEllipsis` but also insert an ellipsis/icon at the
     /// beginning of the next page.
     CutAndInsertEllipsisBoth,
-}
-
-/// Holding information about a QR code to be displayed.
-#[derive(Clone)]
-pub struct QrCodeInfo {
-    pub data: StrBuffer,
-    pub max_size: i16,
-    pub case_sensitive: bool,
-    pub center: Point,
-}
-
-impl QrCodeInfo {
-    pub fn new(data: StrBuffer, max_size: i16, case_sensitive: bool, center: Point) -> Self {
-        Self {
-            data,
-            max_size,
-            case_sensitive,
-            center,
-        }
-    }
 }
 
 /// Visual instructions for laying out a formatted block of text.
@@ -206,11 +183,7 @@ impl TextLayout {
 
     /// Draw as much text as possible on the current screen.
     pub fn render_text(&self, text: &str) {
-        self.layout_text(
-            text,
-            &mut self.initial_cursor(),
-            &mut TextRenderer,
-        );
+        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
     }
 
     /// Y coordinate of the bottom of the available space/bounds
@@ -426,8 +399,6 @@ impl LayoutFit {
 pub trait LayoutSink {
     /// Text should be processed.
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
-    /// QR code should be displayed.
-    fn qrcode(&mut self, _qr_code: QrCodeInfo) {}
     /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     /// Ellipsis at the end of the page.
@@ -509,22 +480,6 @@ impl LayoutSink for TextRenderer {
             );
         }
     }
-
-    fn qrcode(&mut self, qr_code: QrCodeInfo) {
-        // TODO: replace this by new QR code
-        // OR
-        // Get rid of this and use the same flow as TT
-        // OR
-        // Use it for TT as well
-        // display::text_left(qr_code.center, qr_code.data.as_ref(), layout.style.text_font, layout.style.text_color, layout.style.background_color)
-        // display::qrcode(
-        //     qr_code.center,
-        //     qr_code.data.as_ref(),
-        //     qr_code.max_size as _,
-        //     qr_code.case_sensitive,
-        // )
-        // .unwrap_or(())
-    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -539,11 +494,6 @@ pub mod trace {
     impl<'a> LayoutSink for TraceSink<'a> {
         fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
             self.0.string(text);
-        }
-
-        fn qrcode(&mut self, qr_code: QrCodeInfo) {
-            self.0.string("QR code: ");
-            self.0.string(qr_code.data.as_ref());
         }
 
         fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {

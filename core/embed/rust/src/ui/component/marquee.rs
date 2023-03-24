@@ -54,6 +54,10 @@ where
         }
     }
 
+    pub fn set_text(&mut self, text: T) {
+        self.text = text;
+    }
+
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {
         if let State::Initial = self.state {
             let text_width = self.font.text_width(self.text.as_ref());

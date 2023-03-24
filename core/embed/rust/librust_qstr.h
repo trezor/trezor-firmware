@@ -61,7 +61,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_share_words;
   MP_QSTR_show_checklist;
   MP_QSTR_show_group_share_success;
-  MP_QSTR_show_qr;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_progress;

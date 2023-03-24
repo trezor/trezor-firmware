@@ -439,11 +439,7 @@ def test_hide_passphrase_from_host(client: Client):
 
             yield
             layout = client.debug.wait_layout()
-            assert "confirm passphrase" in layout.get_title().lower()
-
-            if client.debug.model == "R":
-                client.debug.press_right()
-                layout = client.debug.wait_layout()
+            assert "confirm passphrase" in layout.title().lower()
 
             assert passphrase in layout.text_content()
             client.debug.press_yes()

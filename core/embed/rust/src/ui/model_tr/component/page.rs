@@ -114,7 +114,7 @@ where
         ButtonLayout::new(btn_left, None, btn_right)
     }
 
-    /// Get the let button details, depending whether the page is first, last,
+    /// Get the left button details, depending whether the page is first, last,
     /// or in the middle.
     fn get_left_button_details(&self, is_first: bool, is_last: bool) -> Option<ButtonDetails> {
         if is_first {

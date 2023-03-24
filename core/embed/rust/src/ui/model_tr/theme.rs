@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{text::TextStyle, LineBreaking},
-    display::{Color, Font, toif::Icon},
+    display::{toif::Icon, Color, Font},
     geometry::Offset,
 };
 
@@ -79,12 +79,6 @@ pub const CHECKLIST_CURRENT_OFFSET: Offset = Offset::x(3);
 pub const BUTTON_CONTENT_HEIGHT: i16 = 7;
 pub const BUTTON_OUTLINE: i16 = 3;
 pub const BUTTON_HEIGHT: i16 = BUTTON_CONTENT_HEIGHT + 2 * BUTTON_OUTLINE;
-
-/// Full-size QR code.
-/// Accounting for little larger QR code than the screen,
-/// to fit taproot addresses (top and bottom row will not be visible).
-// TODO: test if this is visible, as it had problems on T1
-pub const QR_SIDE_MAX: i16 = 66;
 
 // How many pixels should be between text and icons.
 pub const ELLIPSIS_ICON_MARGIN: i16 = 4;

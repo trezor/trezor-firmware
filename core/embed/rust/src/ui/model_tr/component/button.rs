@@ -691,6 +691,8 @@ pub enum ButtonAction {
     Cancel,
     /// Confirm the whole layout - send Msg::Confirmed
     Confirm,
+    /// Send INFO message from layout - send Msg::Info
+    Info,
     /// Select current choice value
     Select,
     /// Some custom specific action
@@ -820,6 +822,15 @@ impl ButtonActions {
         )
     }
 
+    /// Cancelling with left, confirming with middle and info with right
+    pub fn cancel_confirm_info() -> Self {
+        Self::new(
+            Some(ButtonAction::Cancel),
+            Some(ButtonAction::Confirm),
+            Some(ButtonAction::Info),
+        )
+    }
+
     /// Going to the beginning with left, confirming with right
     pub fn beginning_none_confirm() -> Self {
         Self::new(
@@ -900,6 +911,7 @@ impl ButtonAction {
             }
             ButtonAction::Cancel => "Cancel".into(),
             ButtonAction::Confirm => "Confirm".into(),
+            ButtonAction::Info => "Info".into(),
             ButtonAction::Select => "Select".into(),
             ButtonAction::Action(action) => (*action).into(),
         }

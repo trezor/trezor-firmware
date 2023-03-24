@@ -37,6 +37,18 @@ impl Title {
         self.title.as_ref()
     }
 
+    pub fn set_text(&mut self, ctx: &mut EventCtx, new_text: StrBuffer) {
+        self.title = new_text;
+        self.marquee.set_text(self.title);
+        let text_width = theme::FONT_HEADER.text_width(new_text.as_ref());
+        self.needs_marquee = text_width > self.area.width();
+        // Resetting the marquee to the beginning and starting it when necessary.
+        self.marquee.reset();
+        if self.needs_marquee {
+            self.marquee.start(ctx, Instant::now());
+        }
+    }
+
     /// Display title/header at the top left of the given area.
     /// Returning the painted height of the whole header.
     pub fn paint_header_left(title: StrBuffer, area: Rect) -> i16 {

@@ -1,3 +1,4 @@
+mod address_details;
 mod button;
 mod button_controller;
 mod changing_text;
@@ -12,8 +13,8 @@ mod input_methods;
 mod loader;
 mod no_btn_dialog;
 mod page;
-mod result;
 mod progress;
+mod result;
 mod result_anim;
 mod result_popup;
 mod scrollbar;
@@ -23,6 +24,7 @@ mod title;
 
 use super::theme;
 
+pub use address_details::{AddressDetails, AddressDetailsMsg};
 pub use button::{
     Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonMsg,
     ButtonPos, ButtonStyle, ButtonStyleSheet,
@@ -47,8 +49,8 @@ pub use input_methods::{
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use no_btn_dialog::{NoBtnDialog, NoBtnDialogMsg};
 pub use page::ButtonPage;
-pub use result::ResultScreen;
 pub use progress::Progress;
+pub use result::ResultScreen;
 pub use result_anim::{ResultAnim, ResultAnimMsg};
 pub use result_popup::{ResultPopup, ResultPopupMsg};
 pub use scrollbar::ScrollBar;

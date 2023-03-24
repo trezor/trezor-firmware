@@ -467,7 +467,7 @@ class DebugLink:
         now = time.monotonic()
         while True:
             layout = self.read_layout()
-            if layout_text in layout.text:
+            if layout_text in layout.str_content:
                 return layout
             if time.monotonic() - now > timeout:
                 raise RuntimeError("Timeout waiting for layout")

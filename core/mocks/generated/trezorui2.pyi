@@ -38,6 +38,17 @@ def confirm_blob(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_address(
+    *,
+    title: str,
+    data: str | bytes,
+    description: str | None,  # unused on TR
+    extra: str | None,  # unused on TR
+) -> object:
+    """Confirm address."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_properties(
     *,
     title: str,
@@ -114,16 +125,15 @@ def confirm_total(
 
 
 # rust/src/ui/model_tr/layout.rs
-def show_receive_address(
+def show_address_details(
     *,
-    title: str,
     address: str,
-    address_qr: str,
-    account: str,
-    derivation_path: str,
     case_sensitive: bool,
+    account: str | None,
+    path: str | None,
+    xpubs: list[tuple[str, str]],
 ) -> object:
-    """Show receive address together with QR code and details about it."""
+    """Show address details - QR code, account, path, cosigner xpubs."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -163,6 +173,11 @@ def show_info(
     time_ms: int = 0,
 ) -> object:
     """Info modal."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_mismatch() -> object:
+    """Warning modal, receiving address mismatch."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -430,17 +445,6 @@ def confirm_reset_device(
     button: str,
 ) -> object:
     """Confirm TOS before device setup."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def show_qr(
-    *,
-    title: str,
-    address: str,
-    verb_cancel: str,
-    case_sensitive: bool,
-) -> object:
-    """Show QR code."""
 
 
 # rust/src/ui/model_tt/layout.rs

@@ -255,8 +255,16 @@ class InputFlowShowAddressQRCode(InputFlowBase):
 
     def input_flow_tr(self) -> GeneratorType:
         yield
+        # Go into details
         self.debug.press_right()
-        self.debug.press_yes()
+        yield
+        # Go through details and back
+        self.debug.press_right()
+        self.debug.press_left()
+        self.debug.press_left()
+        yield
+        # Confirm
+        self.debug.press_middle()
 
 
 class InputFlowShowAddressQRCodeCancel(InputFlowBase):
@@ -279,8 +287,19 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
 
     def input_flow_tr(self) -> GeneratorType:
         yield
+        # Go into details
         self.debug.press_right()
-        self.debug.press_yes()
+        yield
+        # Go through details and back
+        self.debug.press_right()
+        self.debug.press_left()
+        self.debug.press_left()
+        yield
+        # Cancel
+        self.debug.press_left()
+        yield
+        # Confirm address mismatch
+        self.debug.press_right()
 
 
 class InputFlowShowMultisigXPUBs(InputFlowBase):
@@ -321,6 +340,44 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.press_no()
         yield  # show address
         self.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # show address
+        layout = self.debug.wait_layout()
+        assert "RECEIVE ADDRESS (MULTISIG)" in layout.title()
+        assert layout.text_content().replace(" ", "") == self.address
+
+        self.debug.press_right()
+        yield  # show QR code
+        assert "Qr" in self.debug.wait_layout().str_content
+
+        layout = self.debug.press_right(wait=True)
+        # address details
+        assert "Multisig 2 of 3" in layout.str_content
+
+        # Three xpub pages with the same testing logic
+        for xpub_num in range(3):
+            expected_title = f"MULTISIG XPUB #{xpub_num + 1} " + (
+                "(YOURS)" if self.index == xpub_num else "(COSIGNER)"
+            )
+            layout = self.debug.press_right(wait=True)
+            assert expected_title in layout.title()
+            xpub_part_1 = layout.text_content().replace(" ", "")
+            # Press "SHOW MORE"
+            layout = self.debug.press_middle(wait=True)
+            xpub_part_2 = layout.text_content().replace(" ", "")
+            # Go back
+            self.debug.press_left(wait=True)
+            assert self.xpubs[xpub_num] == xpub_part_1 + xpub_part_2
+
+        for _ in range(5):
+            self.debug.press_left()
+        yield  # show address
+        self.debug.press_left()
+        yield  # address mismatch
+        self.debug.press_left()
+        yield  # show address
+        self.debug.press_middle()
 
 
 class InputFlowPaymentRequestDetails(InputFlowBase):

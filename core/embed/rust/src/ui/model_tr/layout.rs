@@ -43,13 +43,13 @@ use crate::{
 
 use super::{
     component::{
-        ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelInfoConfirmMsg, Flow,
-        FlowMsg, FlowPages, Frame, Homescreen, HomescreenMsg, Lockscreen, NoBtnDialog,
-        NoBtnDialogMsg, NumberInput, NumberInputMsg, Page, PassphraseEntry, PassphraseEntryMsg,
-        PinEntry, PinEntryMsg, Progress, ShareWords, ShowMore, SimpleChoice, SimpleChoiceMsg,
-        WordlistEntry, WordlistEntryMsg, WordlistType,
+        AddressDetails, AddressDetailsMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage,
+        CancelInfoConfirmMsg, Flow, FlowMsg, FlowPages, Frame, Homescreen, HomescreenMsg,
+        Lockscreen, NoBtnDialog, NoBtnDialogMsg, NumberInput, NumberInputMsg, Page,
+        PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress, ShareWords, ShowMore,
+        SimpleChoice, SimpleChoiceMsg, WordlistEntry, WordlistEntryMsg, WordlistType,
     },
-    constant, theme,
+    theme,
 };
 
 pub enum CancelConfirmMsg {
@@ -117,6 +117,7 @@ where
             FlowMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             FlowMsg::Cancelled => Ok(CANCELLED.as_obj()),
             FlowMsg::ConfirmedIndex(index) => index.try_into(),
+            FlowMsg::Info => Ok(INFO.as_obj()),
         }
     }
 }
@@ -126,6 +127,14 @@ impl ComponentMsgObj for PinEntry {
         match msg {
             PinEntryMsg::Confirmed => self.pin().try_into(),
             PinEntryMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl ComponentMsgObj for AddressDetails {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            AddressDetailsMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -376,6 +385,74 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
+        let account: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
+        let path: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
+
+        // let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
+        // let mut iter_buf = IterBuf::new();
+        // let iter = Iter::try_from_obj_with_buf(xpubs, &mut iter_buf)?;
+
+        // for i in iter {
+        //     let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
+        //     ad.add_xpub(xtitle, text)?;
+        // }
+
+        // let get_page = move |page_index| {
+        //     // Showing two screens - the recipient address and summary confirmation
+        //     match page_index {
+        //         0 => {
+        //             // QR CODE
+        //             let btn_layout = ButtonLayout::arrow_none_arrow();
+        //             let btn_actions = ButtonActions::cancel_none_next();
+        //             Page::<15>::new(btn_layout, btn_actions, Font::MONO).qr_code(
+        //                 address,
+        //                 case_sensitive,
+        //                 constant::screen(),
+        //             )
+        //         }
+        //         1 => {
+        //             // ADDRESS INFO
+        //             let btn_layout = ButtonLayout::arrow_none_none();
+        //             let btn_actions = ButtonActions::prev_none_none();
+        //             Page::<15>::new(btn_layout, btn_actions, Font::MONO)
+        //                 .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+        //                 .text_bold("Account:".into())
+        //                 .newline()
+        //                 .text_mono(unwrap!(account))
+        //                 .newline()
+        //                 .text_bold("Derivation path:".into())
+        //                 .newline()
+        //                 .text_mono(unwrap!(path))
+        //         }
+        //         _ => unreachable!(),
+        //     }
+        // };
+        // let pages = FlowPages::new(get_page, 2);
+
+        // let obj = LayoutObj::new(Flow::new(pages))?;
+        // Ok(obj.into())
+
+        let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
+        let mut iter_buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(xpubs, &mut iter_buf)?;
+
+        let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
+
+        for i in iter {
+            let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
+            ad.add_xpub(xtitle, text)?;
+        }
+
+        let obj = LayoutObj::new(ad)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -541,70 +618,23 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_receive_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
-        let address_qr: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_qr)?.try_into()?;
-        let account: StrBuffer = kwargs.get(Qstr::MP_QSTR_account)?.try_into()?;
-        let derivation_path: StrBuffer = kwargs.get(Qstr::MP_QSTR_derivation_path)?.try_into()?;
-        let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
+        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
 
         let get_page = move |page_index| {
-            // Showing two screens - the recipient address and summary confirmation
-            match page_index {
-                0 => {
-                    // RECEIVE ADDRESS
-                    let btn_layout = ButtonLayout::cancel_armed_text("CONFIRM".into(), "i".into());
-                    let btn_actions = ButtonActions::last_confirm_next();
-                    Page::<15>::new(btn_layout, btn_actions, Font::BOLD)
-                        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
-                        .text_bold(title)
-                        .newline()
-                        .newline_half()
-                        .text_mono(address)
-                }
-                1 => {
-                    // QR CODE
-                    let btn_layout = ButtonLayout::arrow_none_arrow();
-                    let btn_actions = ButtonActions::prev_none_next();
-                    Page::<15>::new(btn_layout, btn_actions, Font::MONO).qr_code(
-                        address_qr,
-                        theme::QR_SIDE_MAX,
-                        case_sensitive,
-                        constant::screen().center(),
-                    )
-                }
-                2 => {
-                    // ADDRESS INFO
-                    let btn_layout = ButtonLayout::arrow_none_none();
-                    let btn_actions = ButtonActions::prev_none_none();
-                    Page::<15>::new(btn_layout, btn_actions, Font::MONO)
-                        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
-                        .text_bold("Account:".into())
-                        .newline()
-                        .text_mono(account)
-                        .newline()
-                        .text_bold("Derivation path:".into())
-                        .newline()
-                        .text_mono(derivation_path)
-                }
-                3 => {
-                    // ADDRESS MISMATCH
-                    let btn_layout = ButtonLayout::arrow_none_text("QUIT".into());
-                    let btn_actions = ButtonActions::beginning_none_cancel();
-                    Page::<15>::new(btn_layout, btn_actions, Font::MONO)
-                        .text_bold("ADDRESS MISMATCH?".into())
-                        .newline()
-                        .newline_half()
-                        .text_mono("Please contact Trezor support at trezor.io/support".into())
-                }
-                _ => unreachable!(),
-            }
-        };
-        let pages = FlowPages::new(get_page, 4);
+            assert!(page_index == 0);
 
-        let obj = LayoutObj::new(Flow::new(pages))?;
+            let btn_layout = ButtonLayout::cancel_armed_text("CONFIRM".into(), "i".into());
+            let btn_actions = ButtonActions::cancel_confirm_info();
+            Page::<15>::new(btn_layout, btn_actions, Font::BOLD)
+                .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+                .text_mono(address)
+        };
+        let pages = FlowPages::new(get_page, 1);
+
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -854,6 +884,27 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_mismatch() -> Obj {
+    let block = move || {
+        let get_page = move |page_index| {
+            assert!(page_index == 0);
+
+            let btn_layout = ButtonLayout::arrow_none_text("QUIT".into());
+            let btn_actions = ButtonActions::cancel_none_confirm();
+            Page::<15>::new(btn_layout, btn_actions, Font::MONO)
+                .text_bold("ADDRESS MISMATCH?".into())
+                .newline()
+                .newline_half()
+                .text_mono("Please contact Trezor support at trezor.io/support".into())
+        };
+        let pages = FlowPages::new(get_page, 1);
+
+        let obj = LayoutObj::new(Flow::new(pages))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -1246,6 +1297,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
 
+    /// def confirm_address(
+    ///     *,
+    ///     title: str,
+    ///     data: str | bytes,
+    ///     description: str | None,  # unused on TR
+    ///     extra: str | None,  # unused on TR
+    /// ) -> object:
+    ///     """Confirm address."""
+    Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
+
+
     /// def confirm_properties(
     ///     *,
     ///     title: str,
@@ -1264,6 +1326,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm TOS before device setup."""
     Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
+
+    /// def show_address_details(
+    ///     *,
+    ///     address: str,
+    ///     case_sensitive: bool,
+    ///     account: str | None,
+    ///     path: str | None,
+    ///     xpubs: list[tuple[str, str]],
+    /// ) -> object:
+    ///     """Show address details - QR code, account, path, cosigner xpubs."""
+    Qstr::MP_QSTR_show_address_details => obj_fn_kw!(0, new_show_address_details).as_obj(),
 
     /// def confirm_value(
     ///     *,
@@ -1315,18 +1388,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
 
-    /// def show_receive_address(
-    ///     *,
-    ///     title: str,
-    ///     address: str,
-    ///     address_qr: str,
-    ///     account: str,
-    ///     derivation_path: str,
-    ///     case_sensitive: bool,
-    /// ) -> object:
-    ///     """Show receive address together with QR code and details about it."""
-    Qstr::MP_QSTR_show_receive_address => obj_fn_kw!(0, new_show_receive_address).as_obj(),
-
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, tutorial).as_obj(),
@@ -1362,6 +1423,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Info modal."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
+
+    /// def show_mismatch() -> object:
+    ///     """Warning modal, receiving address mismatch."""
+    Qstr::MP_QSTR_show_mismatch => obj_fn_0!(new_show_mismatch).as_obj(),
 
     /// def confirm_with_info(
     ///     *,

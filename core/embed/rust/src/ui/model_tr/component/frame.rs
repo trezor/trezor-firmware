@@ -25,14 +25,33 @@ where
         }
     }
 
-    pub fn inner(&self) -> &T {
-        self.content.inner()
-    }
-
     /// Aligning the title to the center, instead of the left.
     pub fn with_title_centered(mut self) -> Self {
         self.title = self.title.with_centered();
         self
+    }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
+    }
+
+    pub fn inner_mut(&mut self) -> &mut T {
+        self.content.inner_mut()
+    }
+
+    pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: StrBuffer) {
+        self.title.set_text(ctx, new_title);
+    }
+
+    pub fn update_content<F, R>(&mut self, ctx: &mut EventCtx, update_fn: F) -> R
+    where
+        F: Fn(&mut T) -> R,
+    {
+        self.content.mutate(ctx, |ctx, c| {
+            let res = update_fn(c);
+            c.request_complete_repaint(ctx);
+            res
+        })
     }
 }
 
