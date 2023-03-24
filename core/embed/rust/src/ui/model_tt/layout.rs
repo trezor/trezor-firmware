@@ -28,7 +28,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, Empty, FormattedText, Qr, Timeout, TimeoutMsg,
+            Border, Component, Empty, FormattedText, Never, Qr, Timeout, TimeoutMsg,
         },
         display::{self, tjpgd::jpeg_info, toif::Icon},
         geometry,
@@ -46,12 +46,12 @@ use crate::{
 use super::{
     component::{
         AddressDetails, Bip39Input, Button, ButtonMsg, ButtonStyleSheet, CancelConfirmMsg,
-        CancelInfoConfirmMsg, Dialog, DialogMsg, FidoConfirm, FidoMsg, Frame, FrameMsg,
-        HoldToConfirm, HoldToConfirmMsg, Homescreen, HomescreenMsg, HorizontalPage, IconDialog,
-        Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NotificationFrame,
-        NumberInputDialog, NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
-        PinKeyboard, PinKeyboardMsg, Progress, SelectWordCount, SelectWordCountMsg, SelectWordMsg,
-        Slip39Input, SwipeHoldPage, SwipePage, WelcomeScreen,
+        CancelInfoConfirmMsg, CoinJoinProgress, Dialog, DialogMsg, FidoConfirm, FidoMsg, Frame,
+        FrameMsg, HoldToConfirm, HoldToConfirmMsg, Homescreen, HomescreenMsg, HorizontalPage,
+        IconDialog, Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg,
+        NotificationFrame, NumberInputDialog, NumberInputDialogMsg, PassphraseKeyboard,
+        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress, SelectWordCount,
+        SelectWordCountMsg, SelectWordMsg, Slip39Input, SwipeHoldPage, SwipePage, WelcomeScreen,
     },
     constant, theme,
 };
@@ -336,6 +336,17 @@ where
     }
 }
 
+impl<T> ComponentMsgObj for (Timeout, T)
+where
+    T: Component<Msg = TimeoutMsg>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            TimeoutMsg::TimedOut => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
 impl ComponentMsgObj for Qr {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!();
@@ -362,6 +373,16 @@ where
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
+    }
+}
+
+impl<T, U> ComponentMsgObj for CoinJoinProgress<T, U>
+where
+    T: AsRef<str>,
+    U: Component<Msg = Never>,
+{
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!();
     }
 }
 
@@ -1064,9 +1085,9 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
         let max_feerate: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, "Maximum rounds:".into()),
+            Paragraph::new(&theme::TEXT_NORMAL, "Max rounds".into()),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
-            Paragraph::new(&theme::TEXT_NORMAL, "Maximum mining fee:".into()),
+            Paragraph::new(&theme::TEXT_NORMAL, "Max mining fee".into()),
             Paragraph::new(&theme::TEXT_MONO, max_feerate),
         ]);
 
@@ -1390,6 +1411,30 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_progress_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let indeterminate: bool = kwargs.get_or(Qstr::MP_QSTR_indeterminate, false)?;
+        let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
+        let skip_first_paint: bool = kwargs.get_or(Qstr::MP_QSTR_skip_first_paint, false)?;
+
+        // The second type parameter is actually not used in `new()` but we need to
+        // provide it.
+        let progress = CoinJoinProgress::<_, Never>::new(title, indeterminate);
+        let obj = if time_ms > 0 && indeterminate {
+            let timeout = Timeout::new(time_ms);
+            LayoutObj::new((timeout, progress.map(|_msg| None)))?
+        } else {
+            LayoutObj::new(progress)?
+        };
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let label: StrBuffer = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
@@ -1416,31 +1461,6 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let obj = LayoutObj::new(Lockscreen::new(label, bootscreen))?;
-        if skip_first_paint {
-            obj.skip_first_paint();
-        }
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let time_ms: u32 = kwargs.get(Qstr::MP_QSTR_time_ms)?.try_into()?;
-        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
-
-        let obj = LayoutObj::new(Frame::left_aligned(
-            theme::label_title(),
-            title,
-            Dialog::new(
-                Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, description).centered()),
-                Timeout::new(time_ms).map(|msg| {
-                    (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Cancelled)
-                }),
-            ),
-        ))?;
         if skip_first_paint {
             obj.skip_first_paint();
         }
@@ -1822,6 +1842,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    make sure the initial desciption has at least that amount of lines."""
     Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
 
+    /// def show_progress_coinjoin(
+    ///     *,
+    ///     title: str,
+    ///     indeterminate: bool = False,
+    ///     time_ms: int = 0,
+    ///     skip_first_paint: bool = False,
+    /// ) -> object:
+    ///    """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
+    ///    time_ms timeout is passed."""
+    Qstr::MP_QSTR_show_progress_coinjoin => obj_fn_kw!(0, new_show_progress_coinjoin).as_obj(),
+
     /// def show_homescreen(
     ///     *,
     ///     label: str,
@@ -1841,16 +1872,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> CANCELLED:
     ///     """Homescreen for locked device."""
     Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
-
-    /// def show_busyscreen(
-    ///     *,
-    ///     title: str,
-    ///     description: str,
-    ///     time_ms: int,
-    ///     skip_first_paint: bool,
-    /// ) -> CANCELLED:
-    ///     """Homescreen used for indicating coinjoin in progress."""
-    Qstr::MP_QSTR_show_busyscreen => obj_fn_kw!(0, new_show_busyscreen).as_obj(),
 
     /// def draw_welcome_screen() -> None:
     ///     """Show logo icon with the model name at the bottom and return."""

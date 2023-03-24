@@ -1,5 +1,6 @@
 mod address_details;
 mod button;
+mod coinjoin_progress;
 mod dialog;
 mod fido;
 #[rustfmt::skip]
@@ -24,6 +25,7 @@ pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
     CancelInfoConfirmMsg, IconText, SelectWordMsg,
 };
+pub use coinjoin_progress::CoinJoinProgress;
 pub use dialog::{Dialog, DialogMsg, IconDialog};
 pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, FrameMsg, NotificationFrame};

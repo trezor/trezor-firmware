@@ -16,6 +16,7 @@ class Progress:
         self.progress = 0
         self.steps = 0
         self.signing = False
+        self.is_coinjoin = False
 
         # We don't know how long it will take to fetch the previous transactions,
         # so for each one we reserve _PREV_TX_MULTIPLIER steps in the signing
@@ -24,9 +25,10 @@ class Progress:
         # prev_tx input or output in the overall signing progress.
         self.prev_tx_step = 0
 
-    def init(self, tx: SignTx) -> None:
+    def init(self, tx: SignTx, is_coinjoin: bool = False) -> None:
         self.progress = 0
         self.signing = False
+        self.is_coinjoin = is_coinjoin
 
         # Step 1 and 2 - load inputs and outputs
         self.steps = tx.inputs_count + tx.outputs_count
@@ -109,13 +111,16 @@ class Progress:
 
     def report_init(self) -> None:
         from trezor import workflow
-        from trezor.ui.layouts import bitcoin_progress
+        from trezor.ui.layouts import bitcoin_progress, coinjoin_progress
 
+        progress_layout = bitcoin_progress
+        if self.is_coinjoin:
+            progress_layout = coinjoin_progress
         workflow.close_others()
         if self.signing:
-            self.progress_layout = bitcoin_progress("Signing transaction")
+            self.progress_layout = progress_layout("Signing transaction")
         else:
-            self.progress_layout = bitcoin_progress("Loading transaction")
+            self.progress_layout = progress_layout("Loading transaction")
 
     def report(self) -> None:
         from trezor import utils

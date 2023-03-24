@@ -391,7 +391,7 @@ impl<T> Button<T> {
         } else {
             0
         };
-        theme::button_bar(Split::vertical(
+        theme::button_bar(Split::left(
             width,
             theme::BUTTON_SPACING,
             left.map(|msg| {
@@ -456,11 +456,11 @@ impl<T> Button<T> {
         });
         let total_height = theme::BUTTON_HEIGHT + theme::BUTTON_SPACING + theme::INFO_BUTTON_HEIGHT;
         FixedHeightBar::bottom(
-            Split::horizontal(
+            Split::top(
                 theme::INFO_BUTTON_HEIGHT,
                 theme::BUTTON_SPACING,
                 top,
-                Split::vertical(theme::BUTTON_WIDTH, theme::BUTTON_SPACING, left, right),
+                Split::left(theme::BUTTON_WIDTH, theme::BUTTON_SPACING, left, right),
             ),
             total_height,
         )
@@ -488,11 +488,11 @@ impl<T> Button<T> {
         let [top, middle, bottom] = words;
         let total_height = 3 * theme::BUTTON_HEIGHT + 2 * theme::BUTTON_SPACING;
         FixedHeightBar::bottom(
-            Split::horizontal(
+            Split::top(
                 theme::BUTTON_HEIGHT,
                 theme::BUTTON_SPACING,
                 btn(0, top),
-                Split::horizontal(
+                Split::top(
                     theme::BUTTON_HEIGHT,
                     theme::BUTTON_SPACING,
                     btn(1, middle),
