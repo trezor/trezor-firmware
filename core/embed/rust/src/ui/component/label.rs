@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::Font,
-    geometry::{Alignment, Offset, Rect},
+    geometry::{Alignment, Insets, Offset, Rect},
 };
 
 use super::{text::TextStyle, TextLayout};
@@ -9,6 +9,7 @@ use super::{text::TextStyle, TextLayout};
 pub struct Label<T> {
     text: T,
     layout: TextLayout,
+    vertical: Alignment,
 }
 
 impl<T> Label<T>
@@ -19,6 +20,7 @@ where
         Self {
             text,
             layout: TextLayout::new(style).with_align(align),
+            vertical: Alignment::Start,
         }
     }
 
@@ -32,6 +34,11 @@ where
 
     pub fn centered(text: T, style: TextStyle) -> Self {
         Self::new(text, Alignment::Center, style)
+    }
+
+    pub fn vertically_aligned(mut self, align: Alignment) -> Self {
+        self.vertical = align;
+        self
     }
 
     pub fn text(&self) -> &T {
@@ -68,7 +75,13 @@ where
             .with_bounds(bounds)
             .fit_text(self.text.as_ref())
             .height();
-        self.layout = self.layout.with_bounds(bounds.with_height(height));
+        let diff = bounds.height() - height;
+        let insets = match self.vertical {
+            Alignment::Start => Insets::bottom(diff),
+            Alignment::Center => Insets::new(diff / 2, 0, diff / 2 + diff % 2, 0),
+            Alignment::End => Insets::top(diff),
+        };
+        self.layout.bounds = bounds.inset(insets);
         self.layout.bounds
     }
 

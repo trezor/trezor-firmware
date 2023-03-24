@@ -1135,15 +1135,9 @@ async def request_pin_on_device(
 class RustProgress:
     def __init__(
         self,
-        title: str,
-        description: str | None = None,
-        indeterminate: bool = False,
+        layout: Any,
     ):
-        self.layout: Any = trezorui2.show_progress(
-            title=title.upper(),
-            indeterminate=indeterminate,
-            description=description or "",
-        )
+        self.layout = layout
         ui.backlight_fade(ui.style.BACKLIGHT_DIM)
         ui.display.clear()
         self.layout.attach_timer_fn(self.set_timer)
@@ -1160,25 +1154,41 @@ class RustProgress:
         ui.refresh()
 
 
-def progress(message: str = "PLEASE WAIT") -> ProgressLayout:
-    return RustProgress(message.upper())
+def progress(
+    message: str = "PLEASE WAIT",
+    description: str | None = None,
+    indeterminate: bool = False,
+) -> ProgressLayout:
+    return RustProgress(
+        layout=trezorui2.show_progress(
+            title=message.upper(),
+            indeterminate=indeterminate,
+            description=description or "",
+        )
+    )
 
 
 def bitcoin_progress(message: str) -> ProgressLayout:
-    return RustProgress(message.upper())
+    return progress(message)
+
+
+def coinjoin_progress(message: str) -> ProgressLayout:
+    return RustProgress(
+        layout=trezorui2.show_progress_coinjoin(title=message, indeterminate=False)
+    )
 
 
 def pin_progress(message: str, description: str) -> ProgressLayout:
-    return RustProgress(message.upper(), description=description)
+    return progress(message, description=description)
 
 
 def monero_keyimage_sync_progress() -> ProgressLayout:
-    return RustProgress("SYNCING")
+    return progress("SYNCING")
 
 
 def monero_live_refresh_progress() -> ProgressLayout:
-    return RustProgress("REFRESHING", description="", indeterminate=True)
+    return progress("REFRESHING", indeterminate=True)
 
 
 def monero_transaction_progress_inner() -> ProgressLayout:
-    return RustProgress("SIGNING TRANSACTION", description="")
+    return progress("SIGNING TRANSACTION")

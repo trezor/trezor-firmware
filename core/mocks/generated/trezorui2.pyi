@@ -423,6 +423,18 @@ def show_progress(
 
 
 # rust/src/ui/model_tt/layout.rs
+def show_progress_coinjoin(
+    *,
+    title: str,
+    indeterminate: bool = False,
+    time_ms: int = 0,
+    skip_first_paint: bool = False,
+) -> object:
+   """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
+   time_ms timeout is passed."""
+
+
+# rust/src/ui/model_tt/layout.rs
 def show_homescreen(
     *,
     label: str,
@@ -442,17 +454,6 @@ def show_lockscreen(
     skip_first_paint: bool,
 ) -> CANCELLED:
     """Homescreen for locked device."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def show_busyscreen(
-    *,
-    title: str,
-    description: str,
-    time_ms: int,
-    skip_first_paint: bool,
-) -> CANCELLED:
-    """Homescreen used for indicating coinjoin in progress."""
 
 
 # rust/src/ui/model_tt/layout.rs
