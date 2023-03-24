@@ -1,5 +1,11 @@
 CC = cc
-CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces -fPIC -fsanitize=address,undefined -DTREZOR_MODEL_T
+
+CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces
+CFLAGS += -fPIC
+CFALGS += -fsanitize=address,undefined
+CFLAGS += -DTREZOR_MODEL_T
+CFLAGS += -DUSE_INSECURE_PRNG
+
 LIBS =
 INC = -I ../../../crypto -I ../.. -I .
 BASE = ../../../
