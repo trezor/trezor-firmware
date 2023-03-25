@@ -130,10 +130,13 @@ test_emu_ui_record: ## record and hash screens for ui integration tests
 
 test_emu_ui_record_multicore: ## quickly record all screens
 	make test_emu_ui_multicore || echo "All errors are recorded in fixtures.json"
-	make test_emu_accept_fixtures
+	make test_emu_accept_fixtures_remove_missing
 
 test_emu_accept_fixtures:  # accept UI fixtures from the last run of UI tests
 	../tests/update_fixtures.py
+
+test_emu_accept_fixtures_remove_missing:  # as above + remove all missing tests
+	../tests/update_fixtures.py -r
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
