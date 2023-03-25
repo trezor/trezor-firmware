@@ -47,9 +47,10 @@ use super::{
         CancelInfoConfirmMsg, Flow, FlowMsg, FlowPages, Frame, Homescreen, HomescreenMsg,
         Lockscreen, NoBtnDialog, NoBtnDialogMsg, NumberInput, NumberInputMsg, Page,
         PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress, ShareWords, ShowMore,
-        SimpleChoice, SimpleChoiceMsg, WordlistEntry, WordlistEntryMsg, WordlistType,
+        SimpleChoice, SimpleChoiceMsg, WelcomeScreen, WordlistEntry, WordlistEntryMsg,
+        WordlistType,
     },
-    theme,
+    theme, constant
 };
 
 pub enum CancelConfirmMsg {
@@ -1200,14 +1201,12 @@ extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut 
 }
 
 extern "C" fn draw_welcome_screen() -> Obj {
-    // TODO: create some welcome screen
     // No need of util::try_or_raise, this does not allocate
-    // let mut screen = WelcomeScreen::new();
-    // screen.place(constant::screen());
+    let mut screen = WelcomeScreen::new();
+    screen.place(constant::screen());
     display::sync();
-    // screen.paint();
-    // display::set_backlight(constant::BACKLIGHT_NORMAL);
-    display::set_backlight(150); // BACKLIGHT_NORMAL
+    screen.paint();
+    display::set_backlight(theme::BACKLIGHT_NORMAL);
     Obj::const_none()
 }
 
