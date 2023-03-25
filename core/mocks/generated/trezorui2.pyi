@@ -70,6 +70,18 @@ def confirm_reset_device(
 
 
 # rust/src/ui/model_tr/layout.rs
+def show_address_details(
+    *,
+    address: str,
+    case_sensitive: bool,
+    account: str | None,
+    path: str | None,
+    xpubs: list[tuple[str, str]],
+) -> object:
+    """Show address details - QR code, account, path, cosigner xpubs."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_value(
     *,
     title: str,
@@ -122,18 +134,6 @@ def confirm_total(
     fee_label: str,
 ) -> object:
     """Confirm summary of a transaction."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def show_address_details(
-    *,
-    address: str,
-    case_sensitive: bool,
-    account: str | None,
-    path: str | None,
-    xpubs: list[tuple[str, str]],
-) -> object:
-    """Show address details - QR code, account, path, cosigner xpubs."""
 
 
 # rust/src/ui/model_tr/layout.rs
