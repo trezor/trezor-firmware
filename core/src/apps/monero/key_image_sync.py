@@ -1,22 +1,20 @@
 from typing import TYPE_CHECKING
 
-from trezor.wire import DataError
-
 from apps.common.keychain import auto_keychain
 from apps.monero import layout
+from trezor.wire import DataError
 
 if TYPE_CHECKING:
+    from apps.common.keychain import Keychain
     from trezor.messages import (
+        MoneroKeyImageExportInitAck,
         MoneroKeyImageExportInitRequest,
         MoneroKeyImageSyncFinalAck,
-        MoneroKeyImageExportInitAck,
         MoneroKeyImageSyncStepAck,
         MoneroKeyImageSyncStepRequest,
     )
     from trezor.ui.layouts.common import ProgressLayout
     from trezor.wire import Context
-
-    from apps.common.keychain import Keychain
 
     from .xmr.credentials import AccountCreds
 
@@ -26,6 +24,7 @@ async def key_image_sync(
     ctx: Context, msg: MoneroKeyImageExportInitRequest, keychain: Keychain
 ) -> MoneroKeyImageSyncFinalAck:
     import gc
+
     from trezor.messages import (
         MoneroKeyImageSyncFinalAck,
         MoneroKeyImageSyncFinalRequest,
@@ -70,11 +69,11 @@ async def _init_step(
     msg: MoneroKeyImageExportInitRequest,
     keychain: Keychain,
 ) -> MoneroKeyImageExportInitAck:
-    from trezor.messages import MoneroKeyImageExportInitAck
-    from trezor.crypto import random
     from apps.common import paths
-    from apps.monero.xmr import monero
     from apps.monero import misc
+    from apps.monero.xmr import monero
+    from trezor.crypto import random
+    from trezor.messages import MoneroKeyImageExportInitAck
 
     await paths.validate_path(ctx, keychain, msg.address_n)
 
@@ -100,12 +99,9 @@ def _sync_step(
     tds: MoneroKeyImageSyncStepRequest,
     progress: ProgressLayout,
 ) -> MoneroKeyImageSyncStepAck:
-    from trezor import log
-    from trezor.messages import (
-        MoneroExportedKeyImage,
-        MoneroKeyImageSyncStepAck,
-    )
     from apps.monero.xmr import chacha_poly, crypto, key_image
+    from trezor import log
+    from trezor.messages import MoneroExportedKeyImage, MoneroKeyImageSyncStepAck
 
     assert s.creds is not None
 

@@ -12,6 +12,7 @@ from .. import backup_types
 
 if TYPE_CHECKING:
     from typing import Callable
+
     from trezor.enums import BackupType
     from trezor.wire import GenericContext
 
@@ -42,9 +43,10 @@ async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
 async def request_mnemonic(
     ctx: GenericContext, word_count: int, backup_type: BackupType | None
 ) -> str | None:
-    from . import word_validity
     from trezor.ui.layouts.common import button_request
     from trezor.ui.layouts.recovery import request_word
+
+    from . import word_validity
 
     await button_request(ctx, "mnemonic", ButtonRequestType.MnemonicInput)
 
@@ -128,10 +130,11 @@ async def homescreen_dialog(
     subtext: str | None = None,
     info_func: Callable | None = None,
 ) -> None:
-    from .recover import RecoveryAborted
     import storage.recovery as storage_recovery
-    from trezor.wire import ActionCancelled
     from trezor.ui.layouts.recovery import continue_recovery
+    from trezor.wire import ActionCancelled
+
+    from .recover import RecoveryAborted
 
     while True:
         dry_run = storage_recovery.is_dry_run()

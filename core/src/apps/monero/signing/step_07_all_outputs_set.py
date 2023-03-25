@@ -7,8 +7,9 @@ The prefix hash is then complete.
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import MoneroTransactionAllOutSetAck
     from apps.monero.layout import MoneroTransactionProgress
+    from trezor.messages import MoneroTransactionAllOutSetAck
+
     from .state import State
 
 
@@ -58,8 +59,7 @@ def all_outputs_set(
     # transaction prefix matches expected transaction prefix sent in the
     # init step.
 
-    from trezor.messages import MoneroRingCtSig
-    from trezor.messages import MoneroTransactionAllOutSetAck
+    from trezor.messages import MoneroRingCtSig, MoneroTransactionAllOutSetAck
 
     # Initializes RCTsig structure (fee, tx prefix hash, type)
     rv_pb = MoneroRingCtSig(
@@ -124,9 +124,9 @@ def _set_tx_extra(state: State) -> bytes:
     Extra field is supposed to be sorted (by sort_tx_extra() in the Monero)
     Tag ordering: TX_EXTRA_TAG_PUBKEY, TX_EXTRA_TAG_ADDITIONAL_PUBKEYS, TX_EXTRA_NONCE
     """
-    from trezor import utils
     from apps.monero.xmr import crypto
     from apps.monero.xmr.serialize import int_serialize
+    from trezor import utils
 
     extra_nonce = state.extra_nonce  # local_cache_attribute
 

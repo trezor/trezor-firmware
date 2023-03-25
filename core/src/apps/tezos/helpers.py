@@ -1,10 +1,9 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
+from apps.common.readers import read_uint32_be
+from micropython import const
 from trezor.utils import BufferReader, ensure
 from trezor.wire import DataError
-
-from apps.common.readers import read_uint32_be
 
 if TYPE_CHECKING:
     from trezor.utils import Writer

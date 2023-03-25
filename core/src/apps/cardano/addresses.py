@@ -1,6 +1,6 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
+from micropython import const
 from trezor.crypto import base58
 from trezor.enums import CardanoAddressType
 from trezor.wire import ProcessError
@@ -12,7 +12,9 @@ from .helpers.utils import get_public_key_hash
 
 if TYPE_CHECKING:
     from typing import Any
+
     from trezor import messages
+
     from .seed import Keychain
 
 

@@ -4,9 +4,9 @@ from apps.common.keychain import auto_keychain
 from apps.monero.layout import MoneroTransactionProgress
 
 if TYPE_CHECKING:
-    from trezor.messages import MoneroTransactionFinalAck
     from apps.common.keychain import Keychain
     from apps.monero.signing.state import State
+    from trezor.messages import MoneroTransactionFinalAck
     from trezor.wire import Context
 
 
@@ -15,8 +15,9 @@ async def sign_tx(
     ctx: Context, received_msg, keychain: Keychain
 ) -> MoneroTransactionFinalAck:
     import gc
-    from trezor import log, utils
+
     from apps.monero.signing.state import State
+    from trezor import log, utils
 
     state = State(ctx)
     mods = utils.unimport_begin()
@@ -49,8 +50,8 @@ async def sign_tx(
 async def _sign_tx_dispatch(
     state: State, msg, keychain: Keychain, progress: MoneroTransactionProgress
 ) -> tuple:
-    from trezor.enums import MessageType
     from trezor import wire
+    from trezor.enums import MessageType
 
     MESSAGE_WIRE_TYPE = msg.MESSAGE_WIRE_TYPE  # local_cache_attribute
 

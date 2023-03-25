@@ -3,6 +3,7 @@ from storage import common, device
 
 def wipe() -> None:
     from trezor import config
+
     from storage import cache
 
     config.wipe()

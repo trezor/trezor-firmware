@@ -9,7 +9,7 @@ from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
-    from trezor.messages import EthereumSignTx, EthereumTxAck, EthereumTokenInfo
+    from trezor.messages import EthereumSignTx, EthereumTokenInfo, EthereumTxAck
     from trezor.wire import Context
 
     from .definitions import Definitions
@@ -29,14 +29,11 @@ async def sign_tx(
     keychain: Keychain,
     defs: Definitions,
 ) -> EthereumTxRequest:
-    from trezor.utils import HashWriter
-    from trezor.crypto.hashlib import sha3_256
     from apps.common import paths
-    from .layout import (
-        require_confirm_data,
-        require_confirm_fee,
-        require_confirm_tx,
-    )
+    from trezor.crypto.hashlib import sha3_256
+    from trezor.utils import HashWriter
+
+    from .layout import require_confirm_data, require_confirm_fee, require_confirm_tx
 
     # check
     if msg.tx_type not in [1, 6, None]:
@@ -107,8 +104,8 @@ async def handle_erc20(
     msg: MsgInSignTx,
     definitions: Definitions,
 ) -> tuple[EthereumTokenInfo | None, bytes, bytes, int]:
-    from .layout import require_confirm_unknown_token
     from . import tokens
+    from .layout import require_confirm_unknown_token
 
     data_initial_chunk = msg.data_initial_chunk  # local_cache_attribute
     token = None

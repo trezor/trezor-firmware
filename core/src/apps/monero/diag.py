@@ -6,9 +6,9 @@ if TYPE_CHECKING:
 
 if __debug__:
     import gc
-    import micropython
     import sys
 
+    import micropython
     from trezor import log
 
     PREV_MEM = gc.mem_free()

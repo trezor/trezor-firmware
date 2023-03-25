@@ -1,5 +1,6 @@
-from micropython import const
 from typing import TYPE_CHECKING
+
+from micropython import const
 
 from .common import BIP32_WALLET_DEPTH
 
@@ -22,6 +23,7 @@ class CoinJoinAuthorization:
 
     def check_get_ownership_proof(self, msg: GetOwnershipProof) -> bool:
         from trezor import utils
+
         from .writers import write_bytes_prefixed
 
         params = self.params  # local_cache_attribute

@@ -3,20 +3,21 @@ from typing import TYPE_CHECKING
 from . import seed
 
 if TYPE_CHECKING:
+    from trezor.messages import CardanoAddress, CardanoGetAddress
     from trezor.wire import Context
-    from trezor.messages import CardanoGetAddress, CardanoAddress
 
 
 @seed.with_keychain
 async def get_address(
     ctx: Context, msg: CardanoGetAddress, keychain: seed.Keychain
 ) -> CardanoAddress:
-    from trezor.messages import CardanoAddress
     from trezor import log, wire
+    from trezor.messages import CardanoAddress
+
+    from . import addresses
     from .helpers.credential import Credential, should_show_credentials
     from .helpers.utils import validate_network_info
     from .layout import show_cardano_address, show_credentials
-    from . import addresses
 
     address_parameters = msg.address_parameters  # local_cache_attribute
 

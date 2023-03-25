@@ -1,19 +1,20 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor.wire import DataError
-
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
+from micropython import const
+from trezor.wire import DataError
 
 if TYPE_CHECKING:
     from typing import Sequence
-    from apps.common.coininfo import CoinInfo
+
+    from apps.bitcoin.keychain import Keychain
+    from apps.bitcoin.sign_tx.approvers import Approver
     from apps.bitcoin.sign_tx.tx_info import OriginalTxInfo, TxInfo
     from apps.bitcoin.writers import Writer
-    from apps.bitcoin.sign_tx.approvers import Approver
+    from apps.common.coininfo import CoinInfo
+    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
     from trezor.utils import HashWriter
-    from trezor.messages import PrevTx, TxInput, TxOutput, SignTx
-    from apps.bitcoin.keychain import Keychain
+
     from .hasher import ZcashHasher
 
 _OVERWINTERED = const(0x8000_0000)
@@ -121,6 +122,7 @@ class Zcash(Bitcoinlike):
     def output_derive_script(self, txo: TxOutput) -> bytes:
         from apps.bitcoin import scripts
         from trezor.enums import OutputScriptType
+
         from .unified_addresses import Typecode, decode
 
         # unified addresses

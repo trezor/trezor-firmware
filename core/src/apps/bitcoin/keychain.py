@@ -1,33 +1,30 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
+from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema, unharden
+from micropython import const
 from trezor.enums import InputScriptType
 from trezor.messages import AuthorizeCoinJoin, SignMessage
-
-from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema, unharden
 
 from . import authorization
 from .common import BITCOIN_NAMES
 
 if TYPE_CHECKING:
     from typing import Awaitable, Callable, Iterable, TypeVar
-    from typing_extensions import Protocol
 
-    from trezor.protobuf import MessageType
-    from trezor.wire import Context
-
+    from apps.common import coininfo
+    from apps.common.keychain import Handler, Keychain, MsgOut
+    from apps.common.paths import Bip32Path
     from trezor.messages import (
         GetAddress,
         GetOwnershipId,
-        GetPublicKey,
-        VerifyMessage,
         GetOwnershipProof,
+        GetPublicKey,
         SignTx,
+        VerifyMessage,
     )
-
-    from apps.common.keychain import Keychain, MsgOut, Handler
-    from apps.common.paths import Bip32Path
-    from apps.common import coininfo
+    from trezor.protobuf import MessageType
+    from trezor.wire import Context
+    from typing_extensions import Protocol
 
     BitcoinMessage = (
         AuthorizeCoinJoin

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Any
+
     from trezor.ui.layouts.common import ProgressLayout
 
 _previous_seconds: int | None = None

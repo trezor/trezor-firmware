@@ -10,21 +10,21 @@ from . import layout
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable
-    from trezor.enums import AmountUnit
-    from trezor.wire import Context
 
+    from apps.common.coininfo import CoinInfo
+    from apps.common.paths import Bip32Path
+    from trezor.enums import AmountUnit
     from trezor.messages import (
         PrevInput,
         PrevOutput,
         PrevTx,
         SignTx,
+        TxAckPaymentRequest,
         TxInput,
         TxOutput,
         TxRequest,
-        TxAckPaymentRequest,
     )
-    from apps.common.coininfo import CoinInfo
-    from apps.common.paths import Bip32Path
+    from trezor.wire import Context
 
 # Machine instructions
 # ===

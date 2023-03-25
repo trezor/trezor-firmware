@@ -1,7 +1,7 @@
 import gc
-from micropython import const
 from typing import TYPE_CHECKING
 
+from micropython import const
 from trezor import utils
 
 if TYPE_CHECKING:
@@ -290,7 +290,7 @@ def delete(key: int) -> None:
 
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, TypeVar, ParamSpec
+    from typing import Awaitable, Callable, ParamSpec, TypeVar
 
     P = ParamSpec("P")
     ByteFunc = Callable[P, bytes]

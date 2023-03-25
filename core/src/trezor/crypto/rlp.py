@@ -1,5 +1,6 @@
-from micropython import const
 from typing import TYPE_CHECKING
+
+from micropython import const
 
 if TYPE_CHECKING:
     from trezor.utils import Writer

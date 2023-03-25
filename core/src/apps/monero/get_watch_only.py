@@ -3,10 +3,9 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
-    from trezor.messages import MoneroGetWatchKey, MoneroWatchKey
-
     from apps.common.keychain import Keychain
+    from trezor.messages import MoneroGetWatchKey, MoneroWatchKey
+    from trezor.wire import Context
 
 
 @auto_keychain(__name__)

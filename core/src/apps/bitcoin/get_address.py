@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import GetAddress, HDNodeType, Address
-    from trezor import wire
-    from apps.common.keychain import Keychain
     from apps.common.coininfo import CoinInfo
+    from apps.common.keychain import Keychain
+    from trezor import wire
+    from trezor.messages import Address, GetAddress, HDNodeType
 
 
 def _get_xpubs(
@@ -33,12 +33,11 @@ def _get_xpubs(
 async def get_address(
     ctx: wire.Context, msg: GetAddress, keychain: Keychain, coin: CoinInfo
 ) -> Address:
+    from apps.common.address_mac import get_address_mac
+    from apps.common.paths import address_n_to_str, validate_path
     from trezor.enums import InputScriptType
     from trezor.messages import Address
     from trezor.ui.layouts import show_address
-
-    from apps.common.address_mac import get_address_mac
-    from apps.common.paths import address_n_to_str, validate_path
 
     from . import addresses
     from .keychain import address_n_to_name, validate_path_against_script_type

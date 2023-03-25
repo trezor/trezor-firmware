@@ -9,13 +9,13 @@ from ..writers import (
 
 if TYPE_CHECKING:
     from trezor.crypto import bip32
-    from trezor.utils import Writer
     from trezor.messages import (
         NEMImportanceTransfer,
         NEMMosaic,
         NEMTransactionCommon,
         NEMTransfer,
     )
+    from trezor.utils import Writer
 
 
 def serialize_transfer(
@@ -86,10 +86,8 @@ def get_transfer_payload(
     transfer: NEMTransfer, node: bip32.HDNode
 ) -> tuple[bytes, bool]:
     from trezor.crypto import random
-    from ..helpers import (
-        AES_BLOCK_SIZE,
-        NEM_SALT_SIZE,
-    )
+
+    from ..helpers import AES_BLOCK_SIZE, NEM_SALT_SIZE
 
     if transfer.public_key is not None:
         if not transfer.payload:
