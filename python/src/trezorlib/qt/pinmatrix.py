@@ -19,33 +19,33 @@ import sys
 from typing import Any
 
 try:
-    from PyQt5.QtWidgets import (
-        QPushButton,
-        QLineEdit,
-        QSizePolicy,
-        QLabel,
-        QApplication,
-        QWidget,
-        QGridLayout,
-        QVBoxLayout,
-        QHBoxLayout,
-    )
+    from PyQt5.QtCore import QT_VERSION_STR, QRegExp, Qt
     from PyQt5.QtGui import QRegExpValidator
-    from PyQt5.QtCore import QRegExp, Qt, QT_VERSION_STR
-except Exception:
-    from PyQt4.QtGui import (  # noqa: I
-        QPushButton,
-        QLineEdit,
-        QSizePolicy,
-        QRegExpValidator,
-        QLabel,
+    from PyQt5.QtWidgets import (
         QApplication,
-        QWidget,
         QGridLayout,
-        QVBoxLayout,
         QHBoxLayout,
+        QLabel,
+        QLineEdit,
+        QPushButton,
+        QSizePolicy,
+        QVBoxLayout,
+        QWidget,
     )
-    from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt, QT_VERSION_STR  # noqa: I
+except Exception:
+    from PyQt4.QtCore import QT_VERSION_STR, SIGNAL, QObject, QRegExp, Qt  # noqa: I
+    from PyQt4.QtGui import (  # noqa: I
+        QApplication,
+        QGridLayout,
+        QHBoxLayout,
+        QLabel,
+        QLineEdit,
+        QPushButton,
+        QRegExpValidator,
+        QSizePolicy,
+        QVBoxLayout,
+        QWidget,
+    )
 
 
 class PinButton(QPushButton):

@@ -22,8 +22,8 @@ from .tools import dict_from_camelcase, expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .tools import Address
     from .protobuf import MessageType
+    from .tools import Address
 
 REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")

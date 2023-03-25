@@ -22,8 +22,8 @@ from .tools import expect, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .tools import Address
     from .protobuf import MessageType
+    from .tools import Address
 
 
 @expect(messages.BinanceAddress, field="address", ret_type=str)

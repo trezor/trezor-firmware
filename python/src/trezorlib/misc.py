@@ -20,9 +20,9 @@ from . import messages
 from .tools import expect
 
 if TYPE_CHECKING:
-    from .tools import Address
     from .client import TrezorClient
     from .protobuf import MessageType
+    from .tools import Address
 
 
 @expect(messages.Entropy, field="entropy", ret_type=bytes)

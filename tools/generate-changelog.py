@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import datetime
-from pathlib import Path
 import re
 import subprocess
+from pathlib import Path
 
 import click
 

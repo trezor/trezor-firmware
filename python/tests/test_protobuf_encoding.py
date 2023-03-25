@@ -14,9 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import logging
 from enum import IntEnum
 from io import BytesIO
-import logging
 
 import pytest
 

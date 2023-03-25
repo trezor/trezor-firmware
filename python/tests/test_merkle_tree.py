@@ -14,19 +14,18 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import pytest
-
 import typing as t
 
-from trezorlib.merkle_tree import (
-    MerkleTree,
-    Leaf,
-    Node,
-    leaf_hash,
-    internal_hash,
-    evaluate_proof,
-)
+import pytest
 
+from trezorlib.merkle_tree import (
+    Leaf,
+    MerkleTree,
+    Node,
+    evaluate_proof,
+    internal_hash,
+    leaf_hash,
+)
 
 NODE_VECTORS = (  # node, expected_hash
     (  # leaf node

@@ -21,8 +21,8 @@ from . import exceptions, messages
 from .tools import expect
 
 if TYPE_CHECKING:
-    from .protobuf import MessageType
     from .client import TrezorClient
+    from .protobuf import MessageType
     from .tools import Address
 
     StellarMessageType = Union[
@@ -52,22 +52,22 @@ try:
         CreatePassiveSellOffer,
         HashMemo,
         IdMemo,
+        ManageBuyOffer,
         ManageData,
         ManageSellOffer,
+        MuxedAccount,
+        Network,
         NoneMemo,
         Operation,
         PathPaymentStrictReceive,
         PathPaymentStrictSend,
         Payment,
+        Price,
         ReturnHashMemo,
         SetOptions,
         TextMemo,
         TransactionEnvelope,
         TrustLineEntryFlag,
-        Price,
-        Network,
-        ManageBuyOffer,
-        MuxedAccount,
     )
     from stellar_sdk.xdr.signer_key_type import SignerKeyType
 
