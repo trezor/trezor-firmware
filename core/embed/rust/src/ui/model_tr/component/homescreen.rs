@@ -2,10 +2,11 @@ use crate::{
     micropython::buffer::StrBuffer,
     ui::{
         component::{Component, Event, EventCtx, Pad},
-        display::Font,
+        display::{Font, Icon},
         event::{ButtonEvent, USBEvent},
-        geometry::{Offset, Point, Rect},
+        geometry::{self, Offset, Point, Rect},
         model_tr::constant,
+        util::icon_text_center,
     },
 };
 
@@ -16,6 +17,7 @@ const TOP_CENTER: Point = AREA.top_center();
 const LABEL_Y: i16 = 62;
 const LOCKED_Y: i16 = 32;
 const TAP_Y: i16 = 47;
+const ICON_TOP_MARGIN: i16 = 11;
 
 pub struct Homescreen {
     label: StrBuffer,
@@ -73,11 +75,20 @@ impl Component for Homescreen {
     fn paint(&mut self) {
         self.pad.paint();
         self.paint_notification();
-        display_center(
-            TOP_CENTER + Offset::y(LABEL_Y),
-            &self.label.as_ref(),
-            Font::BOLD,
+        Icon::new(theme::ICON_LOGO).draw(
+            TOP_CENTER + Offset::y(ICON_TOP_MARGIN),
+            geometry::TOP_CENTER,
+            theme::FG,
+            theme::BG,
         );
+        let label = self.label.as_ref();
+        // Special case for the initial screen label
+        if label == "Go to trezor.io/start" {
+            display_center(TOP_CENTER + Offset::y(54), &"Go to", Font::BOLD);
+            display_center(TOP_CENTER + Offset::y(64), &"trezor.io/start", Font::BOLD);
+        } else {
+            display_center(TOP_CENTER + Offset::y(LABEL_Y), &label, Font::NORMAL);
+        };
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -112,17 +123,29 @@ impl Component for Lockscreen {
     }
 
     fn paint(&mut self) {
-        let (locked, tap) = if self.bootscreen {
-            ("NOT CONNECTED", "Click to connect")
+        let instruction = if self.bootscreen {
+            "CLICK TO CONNECT"
         } else {
-            ("LOCKED", "Click to unlock")
+            "CLICK TO UNLOCK"
         };
-        display_center(TOP_CENTER + Offset::y(LOCKED_Y), &locked, Font::MONO);
-        display_center(TOP_CENTER + Offset::y(TAP_Y), &tap, Font::MONO);
         display_center(
-            TOP_CENTER + Offset::y(LABEL_Y),
+            TOP_CENTER + Offset::y(Font::MONO.line_height()),
+            &instruction,
+            Font::MONO,
+        );
+        Icon::new(theme::ICON_LOGO).draw(
+            TOP_CENTER + Offset::y(ICON_TOP_MARGIN),
+            geometry::TOP_CENTER,
+            theme::FG,
+            theme::BG,
+        );
+        icon_text_center(
+            TOP_CENTER + Offset::y(LABEL_Y - Font::NORMAL.text_height() / 2),
+            Icon::new(theme::ICON_LOCK),
+            4,
             &self.label.as_ref(),
-            Font::BOLD,
+            theme::TEXT_NORMAL,
+            Offset::zero(),
         );
     }
 }
