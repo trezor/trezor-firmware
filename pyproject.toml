@@ -80,3 +80,6 @@ towncrier = "^21.9.0"
 [build-system]
 requires = ["poetry>=1;<1.1", "pip>=20"]
 build-backend = "poetry.masonry.api"
+
+[tool.isort]
+profile = "black"

@@ -27,8 +27,8 @@ from .tools import expect, prepare_message_bytes, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .tools import Address
     from .protobuf import MessageType
+    from .tools import Address
 
     class ScriptSig(TypedDict):
         asm: str

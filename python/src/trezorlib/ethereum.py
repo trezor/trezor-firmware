@@ -22,8 +22,8 @@ from .tools import expect, prepare_message_bytes, session, unharden
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .tools import Address
     from .protobuf import MessageType
+    from .tools import Address
 
 
 def int_to_big_endian(value: int) -> bytes:

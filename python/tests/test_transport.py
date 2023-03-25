@@ -34,8 +34,8 @@ def test_disabled_transport():
 def test_import_all_transports():
     from trezorlib.transport.bridge import BridgeTransport
     from trezorlib.transport.hid import HidTransport
-    from trezorlib.transport.webusb import WebUsbTransport
     from trezorlib.transport.udp import UdpTransport
+    from trezorlib.transport.webusb import WebUsbTransport
 
     assert BridgeTransport
     assert HidTransport

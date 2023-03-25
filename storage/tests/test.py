@@ -3,6 +3,7 @@
 from hashlib import sha256
 
 from c.storage import Storage as StorageC
+
 from python.src.storage import Storage as StoragePy
 
 

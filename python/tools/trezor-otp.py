@@ -22,6 +22,7 @@ import re
 import sys
 
 import pyotp
+
 from trezorlib.client import TrezorClient
 from trezorlib.misc import decrypt_keyvalue, encrypt_keyvalue
 from trezorlib.tools import parse_path

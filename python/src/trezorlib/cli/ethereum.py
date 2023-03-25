@@ -40,6 +40,7 @@ from . import with_client
 
 if TYPE_CHECKING:
     import web3
+
     from ..client import TrezorClient
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/60'/0'/0/0"

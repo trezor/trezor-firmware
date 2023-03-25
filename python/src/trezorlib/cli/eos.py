@@ -23,8 +23,8 @@ from .. import eos, tools
 from . import with_client
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
     from .. import messages
+    from ..client import TrezorClient
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/194'/0'/0/0"
 

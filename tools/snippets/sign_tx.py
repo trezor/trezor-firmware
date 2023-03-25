@@ -19,7 +19,6 @@ from decimal import Decimal
 from typing import Dict, List
 
 import requests
-
 from trezorlib import btc, messages
 from trezorlib.client import get_default_client
 from trezorlib.debuglink import TrezorClientDebugLink
