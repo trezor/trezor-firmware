@@ -368,8 +368,8 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/model_tt/layout.rs
-def jpeg_info(data: bytes) -> (width: int, height: int, mcu_height: int):
-    """Get JPEG image dimensions."""
+def jpeg_info(data: bytes) -> tuple[int, int, int]:
+    """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -383,7 +383,7 @@ def confirm_action(
     title: str,
     action: str | None,
     description: str | None,
-    verb: str = str | None = None,
+    verb: str | None = None,
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,

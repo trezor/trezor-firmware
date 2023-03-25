@@ -1450,8 +1450,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
-    /// def jpeg_info(data: bytes) -> (width: int, height: int, mcu_height: int):
-    ///     """Get JPEG image dimensions."""
+    /// def jpeg_info(data: bytes) -> tuple[int, int, int]:
+    ///     """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
     Qstr::MP_QSTR_jpeg_info => obj_fn_1!(upy_jpeg_info).as_obj(),
 
     /// def jpeg_test(data: bytes) -> bool:
@@ -1463,7 +1463,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     action: str | None,
     ///     description: str | None,
-    ///     verb: str = str | None = None,
+    ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     hold_danger: bool = False,
