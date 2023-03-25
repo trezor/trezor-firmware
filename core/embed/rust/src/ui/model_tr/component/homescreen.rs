@@ -143,7 +143,7 @@ impl Component for Lockscreen {
             TOP_CENTER + Offset::y(LABEL_Y - Font::NORMAL.text_height() / 2),
             Icon::new(theme::ICON_LOCK),
             4,
-            &self.label.as_ref(),
+            self.label.as_ref(),
             theme::TEXT_NORMAL,
             Offset::zero(),
         );
