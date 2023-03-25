@@ -9,8 +9,6 @@ pub const LOADER_OUTER: f32 = 32_f32;
 pub const LOADER_INNER: f32 = 18_f32;
 pub const LOADER_ICON_MAX_SIZE: i16 = 8;
 
-pub const BACKLIGHT_NORMAL: i32 = 150;
-
 pub const fn size() -> Offset {
     Offset::new(WIDTH, HEIGHT)
 }

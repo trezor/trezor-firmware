@@ -392,50 +392,6 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
         let account: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
         let path: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
 
-        // let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
-        // let mut iter_buf = IterBuf::new();
-        // let iter = Iter::try_from_obj_with_buf(xpubs, &mut iter_buf)?;
-
-        // for i in iter {
-        //     let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
-        //     ad.add_xpub(xtitle, text)?;
-        // }
-
-        // let get_page = move |page_index| {
-        //     // Showing two screens - the recipient address and summary confirmation
-        //     match page_index {
-        //         0 => {
-        //             // QR CODE
-        //             let btn_layout = ButtonLayout::arrow_none_arrow();
-        //             let btn_actions = ButtonActions::cancel_none_next();
-        //             Page::<15>::new(btn_layout, btn_actions, Font::MONO).qr_code(
-        //                 address,
-        //                 case_sensitive,
-        //                 constant::screen(),
-        //             )
-        //         }
-        //         1 => {
-        //             // ADDRESS INFO
-        //             let btn_layout = ButtonLayout::arrow_none_none();
-        //             let btn_actions = ButtonActions::prev_none_none();
-        //             Page::<15>::new(btn_layout, btn_actions, Font::MONO)
-        //                 .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
-        //                 .text_bold("Account:".into())
-        //                 .newline()
-        //                 .text_mono(unwrap!(account))
-        //                 .newline()
-        //                 .text_bold("Derivation path:".into())
-        //                 .newline()
-        //                 .text_mono(unwrap!(path))
-        //         }
-        //         _ => unreachable!(),
-        //     }
-        // };
-        // let pages = FlowPages::new(get_page, 2);
-
-        // let obj = LayoutObj::new(Flow::new(pages))?;
-        // Ok(obj.into())
-
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
         let mut iter_buf = IterBuf::new();
         let iter = Iter::try_from_obj_with_buf(xpubs, &mut iter_buf)?;
@@ -1250,6 +1206,7 @@ extern "C" fn draw_welcome_screen() -> Obj {
     // screen.place(constant::screen());
     display::sync();
     // screen.paint();
+    // display::set_backlight(constant::BACKLIGHT_NORMAL);
     display::set_backlight(150); // BACKLIGHT_NORMAL
     Obj::const_none()
 }

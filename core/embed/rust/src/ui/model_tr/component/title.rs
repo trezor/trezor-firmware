@@ -50,8 +50,7 @@ impl Title {
     }
 
     /// Display title/header at the top left of the given area.
-    /// Returning the painted height of the whole header.
-    pub fn paint_header_left(title: StrBuffer, area: Rect) -> i16 {
+    pub fn paint_header_left(title: StrBuffer, area: Rect) {
         let text_height = theme::FONT_HEADER.text_height();
         let title_baseline = area.top_left() + Offset::y(text_height - 1);
         display::text_left(
@@ -61,12 +60,10 @@ impl Title {
             theme::FG,
             theme::BG,
         );
-        text_height
     }
 
     /// Display title/header centered at the top of the given area.
-    /// Returning the painted height of the whole header.
-    pub fn paint_header_centered(title: StrBuffer, area: Rect) -> i16 {
+    pub fn paint_header_centered(title: StrBuffer, area: Rect) {
         let text_height = theme::FONT_HEADER.text_height();
         let title_baseline = area.top_center() + Offset::y(text_height - 1);
         display::text_center(
@@ -76,7 +73,6 @@ impl Title {
             theme::FG,
             theme::BG,
         );
-        text_height
     }
 }
 

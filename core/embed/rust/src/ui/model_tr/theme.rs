@@ -1,10 +1,13 @@
 use crate::ui::{
-    component::{text::TextStyle, LineBreaking},
+    component::{text::TextStyle, LineBreaking, PageBreaking},
     display::{toif::Icon, Color, Font},
     geometry::Offset,
 };
 
 use num_traits::FromPrimitive;
+
+// Typical backlight values.
+pub const BACKLIGHT_NORMAL: u16 = 150;
 
 // Color palette.
 pub const WHITE: Color = Color::white();
@@ -21,9 +24,11 @@ pub const FONT_CHOICE_ITEMS: Font = Font::NORMAL;
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, FG, FG);
 pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, FG, FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(Icon::new(ICON_NEXT_PAGE), ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(Icon::new(ICON_PREV_PAGE), PREV_PAGE_ICON_MARGIN);
 pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, FG, FG)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(Icon::new(ICON_NEXT_PAGE), ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(Icon::new(ICON_PREV_PAGE), PREV_PAGE_ICON_MARGIN);
 /// Mono data text does not have hyphens

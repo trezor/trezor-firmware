@@ -35,7 +35,7 @@ use crate::{
 // Reexports
 pub use crate::ui::display::toif::Icon;
 pub use color::Color;
-pub use font::{Font, Glyph};
+pub use font::{Font, Glyph, GlyphMetrics};
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
 
 pub fn backlight() -> u16 {
@@ -145,7 +145,7 @@ impl<T: AsRef<str>> TextOverlay<T> {
             text,
             font,
             max_height: font.max_height(),
-            baseline: font.baseline(),
+            baseline: font.text_baseline(),
         }
     }
 
@@ -178,7 +178,12 @@ impl<T: AsRef<str>> TextOverlay<T> {
 
         let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
-        for g in self.text.as_ref().bytes().filter_map(|c| self.font.get_glyph(c)) {
+        for g in self
+            .text
+            .as_ref()
+            .bytes()
+            .filter_map(|c| self.font.get_glyph(c))
+        {
             let top = self.max_height - self.baseline - g.bearing_y;
             let char_area = Rect::new(
                 Point::new(tot_adv + g.bearing_x, top),

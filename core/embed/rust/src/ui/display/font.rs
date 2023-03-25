@@ -7,7 +7,7 @@ use crate::{
 };
 use core::slice;
 
-use super::{get_color_table, get_offset, pixeldata, set_window, Color};
+use super::{get_offset, pixeldata, set_window, Color};
 
 pub struct Glyph {
     pub width: i16,
@@ -107,7 +107,6 @@ impl Glyph {
     }
 }
 
-
 /// Font constants. Keep in sync with FONT_ definitions in
 /// `extmod/modtrezorui/fonts/fonts.h`.
 #[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
@@ -161,10 +160,6 @@ impl Font {
         display::text_max_height(self.into()) as i16
     }
 
-    pub fn baseline(self) -> i16 {
-        display::text_baseline(self.into()) as i16
-    }
-
     pub fn line_height(self) -> i16 {
         constant::LINE_SPACE + self.text_height()
     }
@@ -176,18 +171,6 @@ impl Font {
             return None;
         }
         unsafe { Some(Glyph::load(gl_data)) }
-    }
-
-    pub fn display_text(self, text: &str, baseline: Point, fg_color: Color, bg_color: Color) {
-        let colortable = get_color_table(fg_color, bg_color);
-        let mut adv_total = 0;
-        for c in text.bytes() {
-            let g = self.get_glyph(c);
-            if let Some(gly) = g {
-                let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
-                adv_total += adv;
-            }
-        }
     }
 
     /// Get the length of the longest suffix from a given `text`
@@ -204,5 +187,25 @@ impl Font {
         }
 
         text.len() // it fits in its entirety
+    }
+}
+
+pub trait GlyphMetrics {
+    fn char_width(&self, ch: char) -> i16;
+    fn text_width(&self, text: &str) -> i16;
+    fn line_height(&self) -> i16;
+}
+
+impl GlyphMetrics for Font {
+    fn char_width(&self, ch: char) -> i16 {
+        Font::char_width(*self, ch)
+    }
+
+    fn text_width(&self, text: &str) -> i16 {
+        Font::text_width(*self, text)
+    }
+
+    fn line_height(&self) -> i16 {
+        Font::line_height(*self)
     }
 }

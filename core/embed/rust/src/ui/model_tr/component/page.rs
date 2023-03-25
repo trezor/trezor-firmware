@@ -2,6 +2,7 @@ use crate::ui::{
     component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
     display::Color,
     geometry::{Insets, Rect},
+    model_tr::constant,
 };
 
 use super::{theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos};
@@ -154,24 +155,22 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
-        let content_area = content_area.inset(Insets::top(1));
-        // Do not pad the button area nor the scrollbar, leave it to them.
+        // Pad only the content, buttons handle it themselves.
         self.pad.place(content_area);
-        self.content.place(content_area);
+        // Moving the content LINE_SPACE pixels down, otherwise the top would not be
+        // padded correctly
+        self.content
+            .place(content_area.inset(Insets::top(constant::LINE_SPACE)));
         // Need to be called here, only after content is placed
         // and we can calculate the page count.
         self.page_count = self.content.inner_mut().page_count();
         self.set_buttons_for_initial_page(self.page_count);
-
         self.buttons.place(button_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.page_count);
-        let button_event = self.buttons.event(ctx, event);
-
-        if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
+        if let Some(ButtonControllerMsg::Triggered(pos)) = self.buttons.event(ctx, event) {
             match pos {
                 ButtonPos::Left => {
                     if self.has_previous_page() {

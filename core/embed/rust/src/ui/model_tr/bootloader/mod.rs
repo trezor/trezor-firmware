@@ -19,7 +19,7 @@ use crate::ui::{
         text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
         Event, EventCtx,
     },
-    constant::{screen, BACKLIGHT_NORMAL, WIDTH},
+    constant::{screen, WIDTH},
     display::{fade_backlight_duration, Color, Icon, TextOverlay},
     event::ButtonEvent,
     geometry::{LinearPlacement, Offset, Rect, CENTER},
@@ -31,7 +31,7 @@ use crate::ui::{
             theme::{bld_button_cancel, bld_button_default, BLD_BG, BLD_FG},
         },
         component::{Button, ButtonPos, ResultScreen},
-        theme::{ICON_FAIL, ICON_SUCCESS, LOGO_EMPTY},
+        theme::{ICON_FAIL, ICON_SUCCESS, LOGO_EMPTY, BACKLIGHT_NORMAL},
     },
     util::{from_c_array, from_c_str},
 };
@@ -78,7 +78,7 @@ where
 {
     frame.place(SCREEN_ADJ);
     frame.paint();
-    fade_backlight_duration(BACKLIGHT_NORMAL as _, 500);
+    fade_backlight_duration(BACKLIGHT_NORMAL, 500);
 
     while button_eval().is_some() {}
 

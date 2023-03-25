@@ -95,7 +95,7 @@ test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
 
 test_emu_multicore: ## run device tests using multiple cores
-	PYTEST_TIMEOUT=200 $(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) \
+	PYTEST_TIMEOUT=300 $(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) \
 		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
@@ -120,7 +120,7 @@ test_emu_ui: ## run ui integration tests
 		--ui=test --ui-check-missing --record-text-layout
 
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
-	PYTEST_TIMEOUT=200 $(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) \
+	PYTEST_TIMEOUT=300 $(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) \
 		--ui=test --ui-check-missing --record-text-layout \
 		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
 

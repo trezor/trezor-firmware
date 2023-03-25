@@ -4,7 +4,10 @@ use crate::{
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx},
         geometry::{Insets, Rect},
-        model_tr::component::{scrollbar::SCROLLBAR_SPACE, title::Title},
+        model_tr::{
+            component::{scrollbar::SCROLLBAR_SPACE, title::Title},
+            constant,
+        },
     },
 };
 
@@ -132,7 +135,8 @@ where
             if self.content.inner().page_count() == 1 {
                 (bounds, Rect::zero(), Rect::zero())
             } else {
-                let (scrollbar_area, content_area) = bounds.split_top(ScrollBar::MAX_DOT_SIZE);
+                let (scrollbar_area, content_area) =
+                    bounds.split_top(ScrollBar::MAX_DOT_SIZE + constant::LINE_SPACE);
                 (content_area, scrollbar_area, Rect::zero())
             }
         } else {

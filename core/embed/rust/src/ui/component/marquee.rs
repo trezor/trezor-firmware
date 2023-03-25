@@ -59,6 +59,11 @@ where
     }
 
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {
+        // Not starting if animations are disabled.
+        if animation_disabled() {
+            return;
+        }
+
         if let State::Initial = self.state {
             let text_width = self.font.text_width(self.text.as_ref());
             let max_offset = self.area.width() - text_width;
@@ -155,6 +160,11 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Not doing anything if animations are disabled.
+        if animation_disabled() {
+            return None;
+        }
+
         let now = Instant::now();
 
         if let Event::Timer(token) = event {
@@ -173,9 +183,7 @@ where
                     _ => {}
                 }
                 // We have something to paint, so request to be painted in the next pass.
-                if !animation_disabled() {
-                    ctx.request_paint();
-                }
+                ctx.request_paint();
                 // There is further progress in the animation, request an animation frame event.
                 ctx.request_anim_frame();
             }
@@ -183,9 +191,7 @@ where
             if token == EventCtx::ANIM_FRAME_TIMER {
                 if self.is_animating() {
                     // We have something to paint, so request to be painted in the next pass.
-                    if !animation_disabled() {
-                        ctx.request_paint();
-                    }
+                    ctx.request_paint();
                     // There is further progress in the animation, request an animation frame
                     // event.
                     ctx.request_anim_frame();

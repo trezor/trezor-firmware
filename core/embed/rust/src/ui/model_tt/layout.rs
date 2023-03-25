@@ -1429,7 +1429,7 @@ extern "C" fn draw_welcome_screen() -> Obj {
     screen.place(constant::screen());
     display::sync();
     screen.paint();
-    display::set_backlight(150); // BACKLIGHT_NORMAL
+    display::set_backlight(theme::BACKLIGHT_NORMAL);
     Obj::const_none()
 }
 
