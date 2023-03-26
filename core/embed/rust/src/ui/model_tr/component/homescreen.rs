@@ -10,7 +10,11 @@ use crate::{
     },
 };
 
-use super::{common::display_center, theme};
+use super::{
+    common::display_center,
+    game::{Game, GameMsg},
+    theme,
+};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
@@ -24,6 +28,8 @@ pub struct Homescreen {
     notification: Option<(StrBuffer, u8)>,
     usb_connected: bool,
     pad: Pad,
+    show_game: bool,
+    game: Game,
 }
 
 pub enum HomescreenMsg {
@@ -37,6 +43,8 @@ impl Homescreen {
             notification,
             usb_connected: true,
             pad: Pad::with_background(theme::BG),
+            show_game: false,
+            game: Game::new(),
         }
     }
 
@@ -64,16 +72,34 @@ impl Component for Homescreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.pad.place(AREA);
+        self.game.place(AREA);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        Self::event_usb(self, ctx, event);
+        if self.show_game {
+            if let Some(GameMsg::Dismissed) = self.game.event(ctx, event) {
+                self.show_game = false;
+                self.pad.clear();
+                ctx.request_paint();
+            }
+        } else {
+            Self::event_usb(self, ctx, event);
+            if let Event::Button(ButtonEvent::ButtonReleased(_)) = event {
+                self.show_game = true;
+                self.pad.clear();
+                ctx.request_paint();
+            }
+        }
         None
     }
 
     fn paint(&mut self) {
         self.pad.paint();
+        if self.show_game {
+            self.game.paint();
+            return;
+        }
         self.paint_notification();
         Icon::new(theme::ICON_LOGO).draw(
             TOP_CENTER + Offset::y(ICON_TOP_MARGIN),
@@ -84,8 +110,11 @@ impl Component for Homescreen {
         let label = self.label.as_ref();
         // Special case for the initial screen label
         if label == "Go to trezor.io/start" {
-            display_center(TOP_CENTER + Offset::y(54), &"Go to", Font::BOLD);
-            display_center(TOP_CENTER + Offset::y(64), &"trezor.io/start", Font::BOLD);
+            display_center(
+                TOP_CENTER + Offset::y(LABEL_Y),
+                &"Press to play",
+                Font::BOLD,
+            );
         } else {
             display_center(TOP_CENTER + Offset::y(LABEL_Y), &label, Font::NORMAL);
         };

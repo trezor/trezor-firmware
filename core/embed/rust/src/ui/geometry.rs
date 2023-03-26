@@ -493,6 +493,11 @@ impl Rect {
             self.bottom_left() - Offset::y(1),
         ]
     }
+
+    /// Whether two rects collide with each other
+    pub fn collides(&self, other: Rect) -> bool {
+        self.x0 < other.x1 && self.x1 > other.x0 && self.y0 < other.y1 && self.y1 > other.y0
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

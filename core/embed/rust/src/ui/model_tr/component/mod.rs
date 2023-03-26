@@ -7,6 +7,7 @@ mod flow;
 mod flow_pages;
 mod flow_pages_helpers;
 mod frame;
+mod game;
 mod hold_to_confirm;
 mod homescreen;
 mod input_methods;
