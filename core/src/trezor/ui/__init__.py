@@ -12,7 +12,6 @@ display = Display()
 # re-export constants from modtrezorui
 NORMAL: int = Display.FONT_NORMAL
 BOLD: int = Display.FONT_BOLD
-DEMIBOLD: int = Display.FONT_DEMIBOLD
 MONO: int = Display.FONT_MONO
 WIDTH: int = Display.WIDTH
 HEIGHT: int = Display.HEIGHT

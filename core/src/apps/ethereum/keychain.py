@@ -1,55 +1,35 @@
 from typing import TYPE_CHECKING
 
-from trezor.messages import EthereumNetworkInfo
-
 from apps.common import paths
 from apps.common.keychain import get_keychain
 
-from . import CURVE, definitions, networks
+from . import CURVE, networks
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Iterable, TypeVar
-
-    from apps.common.keychain import Keychain
+    from typing import Callable, Iterable, TypeVar
 
     from apps.common.keychain import Handler, HandlerWithKeychain, MsgOut
     from trezor.messages import (
         EthereumGetAddress,
+        EthereumGetPublicKey,
         EthereumSignMessage,
         EthereumSignTx,
         EthereumSignTxEIP1559,
         EthereumSignTypedData,
     )
+    from trezor.wire import Context
 
-    from apps.common.keychain import (
-        MsgOut,
-        Handler,
+    EthereumMessages = (
+        EthereumGetAddress
+        | EthereumGetPublicKey
+        | EthereumSignTx
+        | EthereumSignMessage
+        | EthereumSignTypedData
     )
+    MsgIn = TypeVar("MsgIn", bound=EthereumMessages)
 
-    # messages for "with_keychain_and_network_from_path" decorator
-    MsgInAddressN = TypeVar(
-        "MsgInAddressN",
-        EthereumGetAddress,
-        EthereumSignMessage,
-        EthereumSignTypedData,
-    )
-
-    HandlerAddressN = Callable[
-        [Context, MsgInAddressN, Keychain, definitions.Definitions],
-        Awaitable[MsgOut],
-    ]
-
-    # messages for "with_keychain_and_defs_from_chain_id" decorator
-    MsgInSignTx = TypeVar(
-        "MsgInSignTx",
-        EthereumSignTx,
-        EthereumSignTxEIP1559,
-    )
-
-    HandlerChainId = Callable[
-        [Context, MsgInSignTx, Keychain, definitions.Definitions],
-        Awaitable[MsgOut],
-    ]
+    EthereumSignTxAny = EthereumSignTx | EthereumSignTxEIP1559
+    MsgInChainId = TypeVar("MsgInChainId", bound=EthereumSignTxAny)
 
 
 # We believe Ethereum should use 44'/60'/a' for everything, because it is
@@ -66,83 +46,67 @@ PATTERNS_ADDRESS = (
 )
 
 
-def _slip44_from_address_n(address_n: paths.Bip32Path) -> int | None:
-    HARDENED = paths.HARDENED  # local_cache_attribute
-    if len(address_n) < 2:
-        return None
-
-    if address_n[0] == 45 | HARDENED and not address_n[1] & HARDENED:
-        return address_n[1]
-
-    return address_n[1] & ~HARDENED
-
-
-def _defs_from_message(
-    msg: Any, chain_id: int | None = None, slip44: int | None = None
-) -> definitions.Definitions:
-    encoded_network = None
-    encoded_token = None
-
-    # try to get both from msg.definitions
-    if hasattr(msg, "definitions"):
-        if msg.definitions is not None:
-            encoded_network = msg.definitions.encoded_network
-            encoded_token = msg.definitions.encoded_token
-
-    elif hasattr(msg, "encoded_network"):
-        encoded_network = msg.encoded_network
-
-    return definitions.Definitions.from_encoded(
-        encoded_network, encoded_token, chain_id, slip44
-    )
-
-
-def _schemas_from_network(
-    patterns: Iterable[str],
-    network_info: EthereumNetworkInfo,
+def _schemas_from_address_n(
+    patterns: Iterable[str], address_n: paths.Bip32Path
 ) -> Iterable[paths.PathSchema]:
-    slip44_id: tuple[int, ...]
-    if network_info is networks.UNKNOWN_NETWORK:
-        # allow Ethereum or testnet paths for unknown networks
-        slip44_id = (60, 1)
-    elif network_info.slip44 not in (60, 1):
-        # allow cross-signing with Ethereum unless it's testnet
-        slip44_id = (network_info.slip44, 60)
+    # Casa paths (purpose of 45) do not have hardened coin types
+    if address_n[0] == 45 | paths.HARDENED and not address_n[1] & paths.HARDENED:
+        slip44_hardened = address_n[1] | paths.HARDENED
     else:
-        slip44_id = (network_info.slip44,)
+        slip44_hardened = address_n[1]
 
+    if slip44_hardened not in networks.all_slip44_ids_hardened():
+        return ()
+
+    if not slip44_hardened & paths.HARDENED:
+        return ()
+
+    slip44_id = slip44_hardened - paths.HARDENED
     schemas = [paths.PathSchema.parse(pattern, slip44_id) for pattern in patterns]
     return [s.copy() for s in schemas]
 
 
 def with_keychain_from_path(
     *patterns: str,
-) -> Callable[[HandlerAddressN[MsgInAddressN, MsgOut]], Handler[MsgInAddressN, MsgOut]]:
-    def decorator(
-        func: HandlerAddressN[MsgInAddressN, MsgOut]
-    ) -> Handler[MsgInAddressN, MsgOut]:
-        async def wrapper(ctx: Context, msg: MsgInAddressN) -> MsgOut:
-            slip44 = _slip44_from_address_n(msg.address_n)
-            defs = _defs_from_message(msg, slip44=slip44)
-            schemas = _schemas_from_network(patterns, defs.network)
+) -> Callable[[HandlerWithKeychain[MsgIn, MsgOut]], Handler[MsgIn, MsgOut]]:
+    def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
+        async def wrapper(ctx: Context, msg: MsgIn) -> MsgOut:
+            schemas = _schemas_from_address_n(patterns, msg.address_n)
             keychain = await get_keychain(ctx, CURVE, schemas)
             with keychain:
-                return await func(ctx, msg, keychain, defs)
+                return await func(ctx, msg, keychain)
 
         return wrapper
 
     return decorator
 
 
+def _schemas_from_chain_id(msg: EthereumSignTxAny) -> Iterable[paths.PathSchema]:
+    info = networks.by_chain_id(msg.chain_id)
+    slip44_id: tuple[int, ...]
+    if info is None:
+        # allow Ethereum or testnet paths for unknown networks
+        slip44_id = (60, 1)
+    elif info.slip44 not in (60, 1):
+        # allow cross-signing with Ethereum unless it's testnet
+        slip44_id = (info.slip44, 60)
+    else:
+        slip44_id = (info.slip44,)
+
+    schemas = [
+        paths.PathSchema.parse(pattern, slip44_id) for pattern in PATTERNS_ADDRESS
+    ]
+    return [s.copy() for s in schemas]
+
+
 def with_keychain_from_chain_id(
-    func: HandlerChainId[MsgInSignTx, MsgOut]
-) -> Handler[MsgInSignTx, MsgOut]:
+    func: HandlerWithKeychain[MsgInChainId, MsgOut]
+) -> Handler[MsgInChainId, MsgOut]:
     # this is only for SignTx, and only PATTERN_ADDRESS is allowed
-    async def wrapper(ctx: Context, msg: MsgInSignTx) -> MsgOut:
-        defs = _defs_from_message(msg, chain_id=msg.chain_id)
-        schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
+    async def wrapper(ctx: Context, msg: MsgInChainId) -> MsgOut:
+        schemas = _schemas_from_chain_id(msg)
         keychain = await get_keychain(ctx, CURVE, schemas)
         with keychain:
-            return await func(ctx, msg, keychain, defs)
+            return await func(ctx, msg, keychain)
 
     return wrapper

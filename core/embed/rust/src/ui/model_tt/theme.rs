@@ -50,53 +50,43 @@ pub const RADIUS: u8 = 2;
 // Full-size QR code.
 pub const QR_SIDE_MAX: u32 = 140;
 
+// Size of icons in the UI (i.e. inside buttons).
+pub const ICON_SIZE: i16 = 16;
+
 // UI icons (greyscale).
-// Button icons.
-pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/x24.toif");
-pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/check24.toif");
+pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
+pub const ICON_CANCEL_LARGER: &[u8] = include_res!("model_tt/res/cancel-larger.toif");
+pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/confirm.toif");
 pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
-pub const ICON_BACK: &[u8] = include_res!("model_tt/res/caret-left24.toif");
-pub const ICON_FORWARD: &[u8] = include_res!("model_tt/res/caret-right24.toif");
-pub const ICON_UP: &[u8] = include_res!("model_tt/res/caret-up24.toif");
-pub const ICON_DOWN: &[u8] = include_res!("model_tt/res/caret-down24.toif");
-pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/finger24.toif");
-
-pub const ICON_CORNER_CANCEL: &[u8] = include_res!("model_tt/res/x32.toif");
-pub const ICON_CORNER_INFO: &[u8] = include_res!("model_tt/res/info32.toif");
-
-// Checklist symbols.
-pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/arrow-right16.toif");
-pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check16.toif");
-
-// Homescreen notifications.
-pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warning16.toif");
-pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock16.toif");
-pub const ICON_COINJOIN: &[u8] = include_res!("model_tt/res/coinjoin16.toif");
+pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
+pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
+pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
+pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warn-icon.toif");
 pub const ICON_MAGIC: &[u8] = include_res!("model_tt/res/magic.toif");
-
-// Text arrows.
+pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
+pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
+pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock.toif");
+pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/logo.toif");
+pub const ICON_SUCCESS_SMALL: &[u8] = include_res!("model_tt/res/success_bld.toif");
+pub const ICON_WARN_SMALL: &[u8] = include_res!("model_tt/res/warn_bld.toif");
 pub const ICON_PAGE_NEXT: &[u8] = include_res!("model_tt/res/page-next.toif");
 pub const ICON_PAGE_PREV: &[u8] = include_res!("model_tt/res/page-prev.toif");
+pub const ICON_OCTA: &[u8] = include_res!("model_tt/res/octa-bang.toif");
+pub const ICON_INFO_CIRCLE: &[u8] = include_res!("model_tt/res/info-circle.toif");
 
 // Large, three-color icons.
 pub const WARN_COLOR: Color = YELLOW;
 pub const INFO_COLOR: Color = BLUE;
 pub const SUCCESS_COLOR: Color = GREEN;
 pub const ERROR_COLOR: Color = RED;
-pub const IMAGE_FG_WARN: &[u8] = include_res!("model_tt/res/fg-warning48.toif");
-pub const IMAGE_FG_SUCCESS: &[u8] = include_res!("model_tt/res/fg-check48.toif");
-pub const IMAGE_FG_ERROR: &[u8] = include_res!("model_tt/res/fg-error48.toif");
-pub const IMAGE_FG_INFO: &[u8] = include_res!("model_tt/res/fg-info48.toif");
-pub const IMAGE_FG_USER: &[u8] = include_res!("model_tt/res/fg-user48.toif");
-pub const IMAGE_BG_CIRCLE: &[u8] = include_res!("model_tt/res/circle48.toif");
-pub const IMAGE_BG_OCTAGON: &[u8] = include_res!("model_tt/res/octagon48.toif");
-
-// Non-square button backgrounds.
-pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/bg-back40.toif");
-pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/bg-back52.toif");
-
-// Welcome screen.
-pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/logo.toif");
+pub const IMAGE_FG_WARN: &[u8] = include_res!("model_tt/res/warn_fg.toif");
+pub const IMAGE_FG_SUCCESS: &[u8] = include_res!("model_tt/res/success_fg.toif");
+pub const IMAGE_FG_ERROR: &[u8] = include_res!("model_tt/res/error_fg.toif");
+pub const IMAGE_FG_INFO: &[u8] = include_res!("model_tt/res/info_fg.toif");
+pub const IMAGE_BG_CIRCLE: &[u8] = include_res!("model_tt/res/circle.toif");
+pub const IMAGE_BG_TRIANGLE: &[u8] = include_res!("model_tt/res/triangle.toif");
+pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/back_btn.toif");
+pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/back_btn_tall.toif");
 
 // Default homescreen
 pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");
@@ -107,10 +97,6 @@ pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif"
 pub const DOT_INACTIVE_HALF: &[u8] = include_res!("model_tt/res/scroll-inactive-half.toif");
 pub const DOT_INACTIVE_QUARTER: &[u8] = include_res!("model_tt/res/scroll-inactive-quarter.toif");
 pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
-
-// Bootloader. TODO
-pub const ICON_SUCCESS_SMALL: &[u8] = include_res!("model_tt/res/success_bld.toif");
-pub const ICON_WARN_SMALL: &[u8] = include_res!("model_tt/res/warn_bld.toif");
 
 pub const fn label_default() -> TextStyle {
     TEXT_NORMAL
@@ -126,6 +112,10 @@ pub const fn label_keyboard_warning() -> TextStyle {
 
 pub const fn label_keyboard_minor() -> TextStyle {
     TEXT_NORMAL_OFF_WHITE
+}
+
+pub const fn label_page_hint() -> TextStyle {
+    TextStyle::new(Font::BOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub const fn label_warning() -> TextStyle {
@@ -284,38 +274,6 @@ pub const fn button_reset() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_moreinfo() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: BG,
-            background_color: BG,
-            border_color: GREY_DARK,
-            border_radius: RADIUS,
-            border_width: 2,
-        },
-        active: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: FG,
-            button_color: BG,
-            background_color: BG,
-            border_color: GREY_MEDIUM,
-            border_radius: RADIUS,
-            border_width: 2,
-        },
-        disabled: &ButtonStyle {
-            font: Font::BOLD,
-            text_color: GREY_LIGHT,
-            button_color: BG,
-            background_color: BG,
-            border_color: GREY_DARK,
-            border_radius: RADIUS,
-            border_width: 2,
-        },
-    }
-}
-
 pub const fn button_info() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
@@ -372,70 +330,6 @@ pub const fn button_pin() -> ButtonStyleSheet {
             font: Font::MONO,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
-            background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-    }
-}
-
-pub const fn button_pin_confirm() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREEN,
-            background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        active: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREY_DARK,
-            background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        disabled: &ButtonStyle {
-            font: Font::MONO,
-            text_color: GREY_LIGHT,
-            button_color: GREEN,
-            background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-    }
-}
-
-pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: BG,
-            background_color: BG,
-            border_color: BG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        active: &ButtonStyle {
-            font: Font::MONO,
-            text_color: FG,
-            button_color: GREY_DARK,
-            background_color: BG,
-            border_color: FG,
-            border_radius: RADIUS,
-            border_width: 0,
-        },
-        disabled: &ButtonStyle {
-            font: Font::MONO,
-            text_color: GREY_LIGHT,
-            button_color: BG,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -527,6 +421,7 @@ pub const TEXT_CHECKLIST_SELECTED: TextStyle =
     TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_CHECKLIST_DONE: TextStyle =
     TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_XPUB: TextStyle = TEXT_NORMAL.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 
 pub const FORMATTED: FormattedFonts = FormattedFonts {
     normal: Font::NORMAL,
@@ -535,38 +430,48 @@ pub const FORMATTED: FormattedFonts = FormattedFonts {
     mono: Font::MONO,
 };
 
-pub const CONTENT_BORDER: i16 = 0;
-pub const BUTTON_HEIGHT: i16 = 50;
-pub const BUTTON_WIDTH: i16 = 56;
+pub const CONTENT_BORDER: i16 = 5;
+pub const KEYBOARD_SPACING: i16 = 8;
+pub const BUTTON_HEIGHT: i16 = 38;
 pub const BUTTON_SPACING: i16 = 6;
-pub const KEYBOARD_SPACING: i16 = BUTTON_SPACING;
 pub const CHECKLIST_SPACING: i16 = 10;
 pub const RECOVERY_SPACING: i16 = 18;
-pub const CORNER_BUTTON_SIDE: i16 = 44;
-pub const CORNER_BUTTON_SPACING: i16 = BUTTON_SPACING;
-pub const INFO_BUTTON_HEIGHT: i16 = 44;
-pub const PIN_BUTTON_HEIGHT: i16 = 40;
-pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
+pub const CORNER_BUTTON_SIDE: i16 = 32;
+pub const CORNER_BUTTON_SPACING: i16 = 8;
+
+/// Standard button height in pixels.
+pub const fn button_rows(count: usize) -> i16 {
+    let count = count as i16;
+    BUTTON_HEIGHT * count + BUTTON_SPACING * count.saturating_sub(1)
+}
+
+pub const fn button_bar_rows<T>(rows: usize, inner: T) -> FixedHeightBar<T> {
+    FixedHeightBar::bottom(inner, button_rows(rows))
+}
 
 pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
-    FixedHeightBar::bottom(inner, BUTTON_HEIGHT)
+    button_bar_rows(1, inner)
 }
 
 /// +----------+
-/// |     6    |
+/// |    13    |
 /// |  +----+  |
-/// | 6|    | 6|
+/// |10|    |10|
 /// |  +----+  |
-/// |     6    |
+/// |    14    |
 /// +----------+
 pub const fn borders() -> Insets {
-    Insets::new(6, 6, 6, 6)
+    Insets::new(13, 10, 14, 10)
+}
+
+pub const fn borders_scroll() -> Insets {
+    Insets::new(13, 5, 14, 10)
 }
 
 pub const fn borders_horizontal_scroll() -> Insets {
-    Insets::new(6, 6, 0, 6)
+    Insets::new(13, 10, 0, 10)
 }
 
 pub const fn borders_notification() -> Insets {
-    Insets::new(48, 6, 6, 6)
+    Insets::new(48, 10, 14, 10)
 }

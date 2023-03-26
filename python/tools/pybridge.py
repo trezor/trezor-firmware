@@ -33,11 +33,10 @@ import time
 import typing as t
 
 import click
-from bottle import post, request, response, run
-
 import trezorlib.mapping
 import trezorlib.models
 import trezorlib.transport
+from bottle import post, request, response, run
 from trezorlib.client import TrezorClient
 from trezorlib.protobuf import format_message
 from trezorlib.transport.bridge import BridgeTransport

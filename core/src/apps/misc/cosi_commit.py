@@ -25,9 +25,6 @@ SCHEMA_SLIP26 = PathSchema.parse("m/10026'/[0-2139062143]'/[0-4]'/0'", slip44_id
 
 async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
     import storage.cache as storage_cache
-    from trezor.crypto import cosi
-    from trezor.crypto.curve import ed25519
-    from trezor.ui.layouts import confirm_blob
     from apps.common import paths
     from apps.common.keychain import get_keychain
     from trezor.crypto.curve import ed25519
@@ -41,7 +38,7 @@ async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
     pubkey = ed25519.publickey(seckey)
 
     if not storage_cache.is_set(storage_cache.APP_MISC_COSI_COMMITMENT):
-        nonce, commitment = cosi.commit()
+        nonce, commitment = ed25519.cosi_commit()
         storage_cache.set(storage_cache.APP_MISC_COSI_NONCE, nonce)
         storage_cache.set(storage_cache.APP_MISC_COSI_COMMITMENT, commitment)
     commitment = storage_cache.get(storage_cache.APP_MISC_COSI_COMMITMENT)
@@ -71,7 +68,7 @@ async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
     if nonce is None:
         raise RuntimeError
 
-    signature = cosi.sign(
+    signature = ed25519.cosi_sign(
         seckey, sign_msg.data, nonce, sign_msg.global_commitment, sign_msg.global_pubkey
     )
     return CosiSignature(signature=signature)

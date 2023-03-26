@@ -7,7 +7,7 @@
 
 from typing import TYPE_CHECKING
 
-from trezor.messages import EthereumNetworkInfo
+from apps.common.paths import HARDENED
 
 if TYPE_CHECKING:
     from typing import Iterator
@@ -17,52 +17,71 @@ if TYPE_CHECKING:
     NetworkInfoTuple = tuple[
         int,  # chain_id
         int,  # slip44
-        str,  # symbol
+        str,  # shortcut
         str,  # name
+        bool  # rskip60
     ]
     # fmt: on
 
-UNKNOWN_NETWORK = EthereumNetworkInfo(
-    chain_id=0,
-    slip44=0,
-    symbol="UNKN",
-    name="Unknown network",
-)
+
+def shortcut_by_chain_id(chain_id: int) -> str:
+    n = by_chain_id(chain_id)
+    return n.shortcut if n is not None else "UNKN"
 
 
-def by_chain_id(chain_id: int) -> EthereumNetworkInfo:
+def by_chain_id(chain_id: int) -> "NetworkInfo" | None:
     for n in _networks_iterator():
         n_chain_id = n[0]
         if n_chain_id == chain_id:
-            return EthereumNetworkInfo(
+            return NetworkInfo(
                 chain_id=n[0],
                 slip44=n[1],
-                symbol=n[2],
+                shortcut=n[2],
                 name=n[3],
+                rskip60=n[4],
             )
-    return UNKNOWN_NETWORK
+    return None
 
 
-def by_slip44(slip44: int) -> EthereumNetworkInfo:
+def by_slip44(slip44: int) -> "NetworkInfo" | None:
     for n in _networks_iterator():
         n_slip44 = n[1]
         if n_slip44 == slip44:
-            return EthereumNetworkInfo(
+            return NetworkInfo(
                 chain_id=n[0],
                 slip44=n[1],
-                symbol=n[2],
+                shortcut=n[2],
                 name=n[3],
+                rskip60=n[4],
             )
-    return UNKNOWN_NETWORK
+    return None
+
+
+def all_slip44_ids_hardened() -> Iterator[int]:
+    for n in _networks_iterator():
+        # n_slip_44 is the second element
+        yield n[1] | HARDENED
+
+
+class NetworkInfo:
+    def __init__(
+        self, chain_id: int, slip44: int, shortcut: str, name: str, rskip60: bool
+    ) -> None:
+        self.chain_id = chain_id
+        self.slip44 = slip44
+        self.shortcut = shortcut
+        self.name = name
+        self.rskip60 = rskip60
 
 
 # fmt: off
 def _networks_iterator() -> Iterator[NetworkInfoTuple]:
-% for n in sorted(supported_on("trezor2", eth), key=lambda network: (int(network.chain_id), network.name)):
+% for n in supported_on("trezor2", eth):
     yield (
         ${n.chain_id},  # chain_id
         ${n.slip44},  # slip44
-        "${n.shortcut}",  # symbol
+        "${n.shortcut}",  # shortcut
         "${n.name}",  # name
+        ${n.rskip60},  # rskip60
     )
 % endfor

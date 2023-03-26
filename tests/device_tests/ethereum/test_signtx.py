@@ -19,27 +19,15 @@ from trezorlib import ethereum, exceptions, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.tools import parse_path, unharden
+from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
-from .common import encode_network
 
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 SHOW_ALL = (143, 167)
 GO_BACK = (16, 220)
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
-
-
-def make_defs(parameters: dict) -> messages.EthereumDefinitions:
-    # With removal of most built-in defs from firmware, we have test vectors
-    # that no longer run. Because this is not the place to test the definitions,
-    # we generate fake entries so that we can check the signing results.
-    address_n = parse_path(parameters["path"])
-    slip44 = unharden(address_n[1])
-    network = encode_network(chain_id=parameters["chain_id"], slip44=slip44)
-
-    return messages.EthereumDefinitions(encoded_network=network)
 
 
 @parametrize_using_common_fixtures(
@@ -59,7 +47,6 @@ def test_signtx(client: Client, parameters, result):
             value=int(parameters["value"], 16),
             tx_type=parameters["tx_type"],
             data=bytes.fromhex(parameters["data"]),
-            definitions=make_defs(parameters),
         )
 
     expected_v = 2 * parameters["chain_id"] + 35
@@ -83,7 +70,6 @@ def test_signtx_eip1559(client: Client, parameters, result):
             chain_id=parameters["chain_id"],
             value=int(parameters["value"], 16),
             data=bytes.fromhex(parameters["data"]),
-            definitions=make_defs(parameters),
         )
 
     assert sig_r.hex() == result["sig_r"]

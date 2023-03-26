@@ -17,7 +17,3 @@ These scripts do not need to have a high standard, but each of those should have
 
 ## [monero_unused_functions](./monero_unused_functions.py)
 - Find functions from Monero cryptography that are not used.
-
-## [eth_defs_unpack.py](./eth_defs_unpack.py)
-- Unpacks the definitions from a `definitions-sparse.zip` that does not contain the
-  Merkle proofs for space-saving. This format is not currently distributed.

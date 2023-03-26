@@ -6,6 +6,7 @@ from pathlib import Path
 
 import click
 import ecdsa
+
 from trezorlib.firmware.legacy import LegacyV2Firmware
 from trezorlib.firmware.models import TREZOR_ONE_V3_DEV
 

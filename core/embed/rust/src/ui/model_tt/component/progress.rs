@@ -119,7 +119,6 @@ where
         self.description.paint();
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(Self::AREA);
         self.title.bounds(sink);

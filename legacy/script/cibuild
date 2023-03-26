@@ -29,23 +29,4 @@ if [ "$EMULATOR" != 1 ]; then
     make -C firmware sign
     make -C intermediate_fw
     make -C intermediate_fw sign
-
-    # Giving the firmware bin a descriptive name
-    if [ "$BITCOIN_ONLY" = 1 ]; then
-        BTCONLY="-bitcoinonly"
-    else
-        BTCONLY=""
-    fi
-    VERSION_MAJOR=$(grep -P '\bVERSION_MAJOR\b' firmware/version.h | cut -d' ' -f3)
-    VERSION_MINOR=$(grep -P '\bVERSION_MINOR\b' firmware/version.h | cut -d' ' -f3)
-    VERSION_PATCH=$(grep -P '\bVERSION_PATCH\b' firmware/version.h | cut -d' ' -f3)
-    VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
-    GITHASH=$(git rev-parse --short HEAD)
-    if git status --porcelain | grep -q '.'; then
-        echo "There are changes in the repository."
-        DIRTY="-dirty"
-    else
-        DIRTY=""
-    fi
-    cp firmware/trezor.bin firmware/firmware-T1B1${BTCONLY}-${VERSION}-${GITHASH}${DIRTY}.bin
 fi

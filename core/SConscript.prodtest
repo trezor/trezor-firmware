@@ -10,9 +10,7 @@ FEATURES_WANTED = ["input", "sbu", "sdcard", "rdb_led"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
-CPPDEFINES_MOD = [
-    'USE_INSECURE_PRNG',
-]
+CPPDEFINES_MOD = []
 SOURCE_MOD = []
 
 if TREZOR_MODEL in ('1', 'R'):

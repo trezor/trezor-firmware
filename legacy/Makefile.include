@@ -104,7 +104,6 @@ CFLAGS   += -DHW_REVISION=0
 
 ifeq ($(EMULATOR),1)
 CFLAGS   += -DEMULATOR=1
-CFLAGS   += -DUSE_INSECURE_PRNG=1
 
 CFLAGS   += -include $(TOP_DIR)emulator/emulator.h
 CFLAGS   += -include stdio.h
@@ -126,6 +125,7 @@ LDSCRIPT  = $(TOP_DIR)/memory.ld
 endif
 
 CFLAGS   += -DEMULATOR=0
+CFLAGS   += -DRAND_PLATFORM_INDEPENDENT=1
 
 LDFLAGS  += --static \
             -Wl,--start-group \

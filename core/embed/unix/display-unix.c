@@ -20,7 +20,6 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
-#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -63,25 +62,15 @@
 
 static SDL_Window *WINDOW;
 static SDL_Renderer *RENDERER;
-// BUFFER_TO_DISPLAY will contain the actual pixels to be displayed,
-// it will be filled from BUFFER by gamma-correcting the pixel colors.
-// Screenshots will be taken with data from BUFFER.
 static SDL_Surface *BUFFER;
-static SDL_Surface *BUFFER_TO_DISPLAY;
 static SDL_Texture *TEXTURE, *BACKGROUND;
 
 static SDL_Surface *PREV_SAVED;
 
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
-float DISPLAY_GAMMA = 0.55f;
-// Will depend on SDL_VIDEODRIVER env variable
-static bool DO_GAMMA_CORRECTION = true;
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
-
-// Using RGB565 (16-bit) color format.
-typedef uint16_t pixel_color;
 
 // this is just for compatibility with DMA2D using algorithms
 uint8_t *const DISPLAY_DATA_ADDRESS = 0;
@@ -98,32 +87,7 @@ static struct {
   } pos;
 } PIXELWINDOW;
 
-pixel_color gamma_correct(pixel_color c) {
-  // NOTE: 0x1f/31 and 0x3f/63 are maximum values of RGB components
-  // given the color is 16-bit (5 bits for R, 6 bits for G, 5 bits for B).
-  int r = (c >> 11) & 0x1f;
-  int g = (c >> 5) & 0x3f;
-  int b = c & 0x1f;
-
-  r = (int)round(pow(r / 31.0, DISPLAY_GAMMA) * 31.0);
-  g = (int)round(pow(g / 63.0, DISPLAY_GAMMA) * 63.0);
-  b = (int)round(pow(b / 31.0, DISPLAY_GAMMA) * 31.0);
-
-  return (r << 11) | (g << 5) | b;
-}
-
-void gamma_correct_buffer_to_display(void) {
-  // Gamma correct all the pixels in BUFFER_TO_DISPLAY.
-  pixel_color *pixels = (pixel_color *)BUFFER_TO_DISPLAY->pixels;
-  for (int y = 0; y < BUFFER_TO_DISPLAY->h; y++) {
-    for (int x = 0; x < BUFFER_TO_DISPLAY->w; x++) {
-      int index = y * BUFFER_TO_DISPLAY->pitch / 2 + x;
-      pixels[index] = gamma_correct(pixels[index]);
-    }
-  }
-}
-
-void display_pixeldata(pixel_color c) {
+void display_pixeldata(uint16_t c) {
 #if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   // set to white if highest bits of all R, G, B values are set to 1
   // bin(10000 100000 10000) = hex(0x8410)
@@ -135,9 +99,9 @@ void display_pixeldata(pixel_color c) {
   }
   if (PIXELWINDOW.pos.x <= PIXELWINDOW.end.x &&
       PIXELWINDOW.pos.y <= PIXELWINDOW.end.y) {
-    ((pixel_color *)
+    ((uint16_t *)
          BUFFER->pixels)[PIXELWINDOW.pos.x + PIXELWINDOW.pos.y * BUFFER->pitch /
-                                                 sizeof(pixel_color)] = c;
+                                                 sizeof(uint16_t)] = c;
   }
   PIXELWINDOW.pos.x++;
   if (PIXELWINDOW.pos.x > PIXELWINDOW.end.x) {
@@ -155,7 +119,6 @@ void display_init_seq(void) {}
 void display_deinit(void) {
   SDL_FreeSurface(PREV_SAVED);
   SDL_FreeSurface(BUFFER);
-  SDL_FreeSurface(BUFFER_TO_DISPLAY);
   if (BACKGROUND != NULL) {
     SDL_DestroyTexture(BACKGROUND);
   }
@@ -177,15 +140,6 @@ void display_init(void) {
     ensure(secfalse, "SDL_Init error");
   }
   atexit(display_deinit);
-
-  // Not doing gamma correction for "dummy" SDL driver
-  // (not to slow down device/UI tests)
-  char *sdl_env = getenv("SDL_VIDEODRIVER");
-  if (sdl_env && strcmp(sdl_env, "dummy") == 0) {
-    DO_GAMMA_CORRECTION = false;
-  } else {
-    DO_GAMMA_CORRECTION = true;
-  }
 
   char *window_title = NULL;
   char *window_title_alloc = NULL;
@@ -220,9 +174,6 @@ void display_init(void) {
   SDL_RenderClear(RENDERER);
   BUFFER = SDL_CreateRGBSurface(0, MAX_DISPLAY_RESX, MAX_DISPLAY_RESY, 16,
                                 0xF800, 0x07E0, 0x001F, 0x0000);
-  BUFFER_TO_DISPLAY =
-      SDL_CreateRGBSurface(0, MAX_DISPLAY_RESX, MAX_DISPLAY_RESY, 16, 0xF800,
-                           0x07E0, 0x001F, 0x0000);
   TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565,
                               SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX,
                               DISPLAY_RESY);
@@ -295,17 +246,7 @@ void display_refresh(void) {
   } else {
     SDL_RenderClear(RENDERER);
   }
-  // Fill BUFFER_TO_DISPLAY with BUFFER data
-  SDL_BlitSurface(BUFFER, NULL, BUFFER_TO_DISPLAY, NULL);
-#if defined TREZOR_MODEL_T
-  // Gamma-correcting the display buffer for model T when wanted
-  if (DO_GAMMA_CORRECTION) {
-    gamma_correct_buffer_to_display();
-  }
-#endif
-  // Show the display buffer
-  SDL_UpdateTexture(TEXTURE, NULL, BUFFER_TO_DISPLAY->pixels,
-                    BUFFER_TO_DISPLAY->pitch);
+  SDL_UpdateTexture(TEXTURE, NULL, BUFFER->pixels, BUFFER->pitch);
 #define BACKLIGHT_NORMAL 150
   SDL_SetTextureAlphaMod(TEXTURE,
                          MIN(255, 255 * DISPLAY_BACKLIGHT / BACKLIGHT_NORMAL));

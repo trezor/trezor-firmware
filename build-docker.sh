@@ -224,7 +224,6 @@ for BITCOIN_ONLY in ${VARIANTS_legacy[@]}; do
     cp bootloader/bootloader.bin build/bootloader/bootloader.bin
     cp intermediate_fw/trezor.bin build/intermediate_fw/inter.bin
     cp firmware/trezor.bin build/firmware/firmware.bin
-    cp firmware/firmware*.bin build/firmware/ || true  # ignore missing file as it will not be present in old tags
     cp firmware/trezor.elf build/firmware/firmware.elf
     poetry run ../python/tools/firmware-fingerprint.py \
                -o build/firmware/firmware.bin.fingerprint \

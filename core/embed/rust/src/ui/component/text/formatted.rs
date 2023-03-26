@@ -138,7 +138,6 @@ where
         self.layout_content(&mut TextRenderer);
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.layout.bounds)
     }

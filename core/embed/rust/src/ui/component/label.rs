@@ -80,7 +80,6 @@ where
         self.layout.render_text(self.text.as_ref());
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.layout.bounds)
     }

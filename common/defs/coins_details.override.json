@@ -1,0 +1,45 @@
+{
+    "erc20:eth:BAT": {
+        "name": "Basic Attention Token"
+    },
+    "erc20:eth:LINK (Chainlink)": {
+        "name": "Chainlink"
+    },
+    "erc20:eth:SOL": {
+        "shortcut": "SOLA"
+    },
+    "eth:CLO": {
+        "coinmarketcap_alias": "callisto-network"
+    },
+    "eth:ESN": {
+        "coinmarketcap_alias": "ethersocial"
+    },
+    "nem:DIMTOK": {
+        "coinmarketcap_alias": "dimcoin"
+    },
+    "eth:AUX": {
+        "links": {
+            "Github": "https://github.com/auxiliumglobal"
+        },
+        "wallet": {
+            "MyEtherWallet": null
+        }
+    },
+    "eth:EOS": {
+        "hidden": true,
+        "ignore_cmc_rank": true,
+        "reason": "this exists as misc:EOS and the eth: entry is probably a mistake"
+    },
+    "eth:XDC": {
+        "wallet": {
+            "MyCrypto": null,
+            "MyEtherWallet": null,
+            "XDC Wallet": "https://wallet.xinfin.network"
+        }
+    },
+    "misc:LSK": {
+        "hidden": true,
+        "ignore_cmc_rank": true,
+        "reason": "delisted incompatible hardfork"
+    }
+}

@@ -87,12 +87,13 @@ where
             theme::CONTENT_BORDER,
         ));
 
-        let grid = Grid::new(button_area, 1, 2).with_spacing(theme::KEYBOARD_SPACING);
+        let grid = Grid::new(button_area, 1, 3).with_spacing(theme::KEYBOARD_SPACING);
         self.input.place(input_area);
         self.paragraphs.place(content_area);
         self.paragraphs_pad.place(content_area);
         self.info_button.place(grid.row_col(0, 0));
-        self.confirm_button.place(grid.row_col(0, 1));
+        self.confirm_button
+            .place(grid.row_col(0, 1).union(grid.row_col(0, 2)));
         bounds
     }
 
@@ -118,7 +119,6 @@ where
         self.confirm_button.paint();
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area);
         self.input.bounds(sink);
@@ -227,7 +227,6 @@ impl Component for NumberInput {
         self.inc.paint();
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.dec.bounds(sink);
         self.inc.bounds(sink);

@@ -1,9 +1,0 @@
-EthereumNetworkInfo.name                max_size:256
-EthereumNetworkInfo.symbol              max_size:256
-
-EthereumTokenInfo.name                  max_size:256
-EthereumTokenInfo.address               max_size:20
-EthereumTokenInfo.symbol                max_size:256
-
-EthereumDefinitions.encoded_network max_size:1024
-EthereumDefinitions.encoded_token   max_size:1024

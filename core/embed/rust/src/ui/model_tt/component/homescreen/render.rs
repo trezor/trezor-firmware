@@ -53,20 +53,19 @@ struct HomescreenTextInfo {
 pub const HOMESCREEN_IMAGE_SIZE: i16 = 240;
 
 const HOMESCREEN_MAX_ICON_SIZE: i16 = 20;
-const NOTIFICATION_HEIGHT: i16 = 36;
-const NOTIFICATION_BORDER: i16 = 6;
+const NOTIFICATION_HEIGHT: i16 = 32;
+const NOTIFICATION_BORDER: i16 = 8;
 const NOTIFICATION_ICON_SPACE: i16 = 8;
 const NOTIFICATION_TEXT_OFFSET: Offset = Offset::new(1, -2);
 const TEXT_ICON_SPACE: i16 = 2;
 
-const HOMESCREEN_DIM_HEIGHT: i16 = 35;
-const HOMESCREEN_DIM_START: i16 = 198;
-const HOMESCREEN_DIM: f32 = 0.65;
-const HOMESCREEN_DIM_BORDER: i16 = theme::BUTTON_SPACING;
+const HOMESCREEN_DIM_HIEGHT: i16 = 30;
+const HOMESCREEN_DIM_START: i16 = 195;
+const HOMESCREEN_DIM: f32 = 0.85;
+const HOMESCREEN_DIM_BORDER: i16 = 20;
 
-const LOCKSCREEN_DIM: f32 = 0.55;
+const LOCKSCREEN_DIM: f32 = 0.85;
 const LOCKSCREEN_DIM_BG: f32 = 0.0;
-const LOCKSCREEN_DIM_ALL: bool = true;
 
 const BLUR_SIZE: usize = 9;
 const BLUR_DIV: u32 =
@@ -175,14 +174,14 @@ fn homescreen_position_text(
 fn homescreen_dim_area(x: i16, y: i16) -> bool {
     y >= HOMESCREEN_DIM_START
         && (y > HOMESCREEN_DIM_START + 1
-            && y < (HOMESCREEN_DIM_START + HOMESCREEN_DIM_HEIGHT - 1)
+            && y < (HOMESCREEN_DIM_START + HOMESCREEN_DIM_HIEGHT - 1)
             && x > HOMESCREEN_DIM_BORDER
             && x < WIDTH - HOMESCREEN_DIM_BORDER)
         || (y > HOMESCREEN_DIM_START
-            && y < (HOMESCREEN_DIM_START + HOMESCREEN_DIM_HEIGHT)
+            && y < (HOMESCREEN_DIM_START + HOMESCREEN_DIM_HIEGHT)
             && x > HOMESCREEN_DIM_BORDER + 1
             && x < WIDTH - (HOMESCREEN_DIM_BORDER + 1))
-        || ((HOMESCREEN_DIM_START..=(HOMESCREEN_DIM_START + HOMESCREEN_DIM_HEIGHT)).contains(&y)
+        || ((HOMESCREEN_DIM_START..=(HOMESCREEN_DIM_START + HOMESCREEN_DIM_HIEGHT)).contains(&y)
             && x > HOMESCREEN_DIM_BORDER + 2
             && x < WIDTH - (HOMESCREEN_DIM_BORDER + 2))
 }
@@ -198,7 +197,7 @@ fn homescreen_line_blurred(
     let mut img_buffer = unsafe { get_buffer_16bpp((y & 0x1) as u16, false) };
 
     for x in 0..HOMESCREEN_IMAGE_SIZE {
-        let c = if LOCKSCREEN_DIM_ALL {
+        let c = if homescreen_dim_area(x, y) {
             let x = x as usize;
 
             let coef = (65536_f32 * LOCKSCREEN_DIM) as u32;

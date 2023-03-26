@@ -71,7 +71,6 @@ where
         self.controls.paint();
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.content.bounds(sink);
         self.controls.bounds(sink);
@@ -193,7 +192,6 @@ where
         self.controls.paint();
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.image.bounds(sink);
         self.paragraphs.bounds(sink);

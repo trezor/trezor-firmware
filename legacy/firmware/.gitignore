@@ -1,8 +1,7 @@
 coin_info.[ch]
 nem_mosaics.[ch]
-ethereum_definitions_constants.h
-ethereum_networks.c
-ethereum_tokens.c
+ethereum_networks.h
+ethereum_tokens.[ch]
 u2f_knownapps.h
 
 bl_data.h

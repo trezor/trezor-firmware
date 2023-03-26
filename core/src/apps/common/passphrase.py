@@ -66,7 +66,7 @@ async def _request_on_host(ctx: Context) -> str:
                 ctx,
                 "passphrase_host1_hidden",
                 "Hidden wallet",
-                description=f"Access hidden wallet?\n{explanation}",
+                description=f"Access hidden wallet?\n\n{explanation}",
             )
         else:
             await confirm_action(

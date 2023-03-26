@@ -201,7 +201,6 @@ where
         )
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area);
         for layout in &self.visible {
@@ -596,7 +595,6 @@ where
         }
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area);
         self.paragraphs.bounds(sink);

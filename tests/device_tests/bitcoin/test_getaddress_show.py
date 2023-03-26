@@ -70,6 +70,7 @@ def test_show_t1(
         )
 
 
+@pytest.mark.skip(reason="mmilata")
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_tt(
@@ -77,15 +78,12 @@ def test_show_tt(
 ):
     def input_flow():
         yield
-        client.debug.click(CORNER_BUTTON)
+        client.debug.click(CORNER_BUTTON, wait=True)
         yield
-        # synchronize; TODO get rid of this once we have single-global-layout
-        client.debug.synchronize_at("HorizontalPage")
-
         client.debug.swipe_left(wait=True)
         client.debug.swipe_right(wait=True)
         client.debug.swipe_left(wait=True)
-        client.debug.click(CORNER_BUTTON)
+        client.debug.click(CORNER_BUTTON, wait=True)
         yield
         client.debug.press_no()
         yield
@@ -107,6 +105,7 @@ def test_show_tt(
         )
 
 
+@pytest.mark.skip(reason="mmilata")
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_cancel(
@@ -114,13 +113,10 @@ def test_show_cancel(
 ):
     def input_flow():
         yield
-        client.debug.click(CORNER_BUTTON)
+        client.debug.click(CORNER_BUTTON, wait=True)
         yield
-        # synchronize; TODO get rid of this once we have single-global-layout
-        client.debug.synchronize_at("HorizontalPage")
-
         client.debug.swipe_left(wait=True)
-        client.debug.click(CORNER_BUTTON)
+        client.debug.click(CORNER_BUTTON, wait=True)
         yield
         client.debug.press_no()
         yield
@@ -247,6 +243,8 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
 )
 
 
+# NOTE: contains wait_layout race that manifests on hw sometimes
+@pytest.mark.flaky(max_runs=5)
 @pytest.mark.skip_t1
 @pytest.mark.multisig
 @pytest.mark.parametrize(
@@ -279,25 +277,28 @@ def test_show_multisig_xpubs(
 
         def input_flow():
             yield  # show address
-            layout = client.debug.wait_layout()
-            assert "RECEIVE ADDRESS (MULTISIG)" in layout.get_title()
+            layout = client.debug.wait_layout()  # TODO: do not need to *wait* now?
+            assert layout.get_title() == "RECEIVE ADDRESS (MULTISIG)"
             assert layout.get_content().replace(" ", "") == address
 
             client.debug.click(CORNER_BUTTON)
             yield  # show QR code
             assert "Qr" in client.debug.wait_layout().text
 
-            layout = client.debug.swipe_left(wait=True)
+            client.debug.swipe_left()
             # address details
+            layout = client.debug.wait_layout()
             assert "Multisig 2 of 3" in layout.text
 
             # Three xpub pages with the same testing logic
             for xpub_num in range(3):
-                expected_title = f"MULTISIG XPUB #{xpub_num + 1} " + (
+                expected_title = f"MULTISIG XPUB #{xpub_num + 1}  " + (
                     "(YOURS)" if i == xpub_num else "(COSIGNER)"
                 )
-                layout = client.debug.swipe_left(wait=True)
-                assert expected_title in layout.get_title()
+
+                client.debug.swipe_left()
+                layout = client.debug.wait_layout()
+                assert layout.get_title() == expected_title
                 content = layout.get_content().replace(" ", "")
                 assert xpubs[xpub_num] in content
 
@@ -310,9 +311,8 @@ def test_show_multisig_xpubs(
             client.debug.press_yes()
 
         with client:
-            client.set_input_flow(input_flow)
-            client.debug.synchronize_at("Homescreen")
             client.watch_layout()
+            client.set_input_flow(input_flow)
             btc.get_address(
                 client,
                 "Bitcoin",

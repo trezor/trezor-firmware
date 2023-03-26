@@ -43,7 +43,7 @@
 // from util.s
 extern void shutdown_privileged(void);
 
-void __attribute__((noreturn)) trezor_shutdown(void) {
+void __attribute__((noreturn)) shutdown(void) {
 #ifdef USE_SVC_SHUTDOWN
   svc_shutdown();
 #else
@@ -88,7 +88,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 #endif
   display_printf("\nPlease contact Trezor support.\n");
 #endif
-  trezor_shutdown();
+  shutdown();
 }
 
 void __attribute__((noreturn))
@@ -108,7 +108,7 @@ error_shutdown(const char *label, const char *msg) {
   display_printf("\nPlease unplug the device.\n");
 #endif
   display_backlight(255);
-  trezor_shutdown();
+  shutdown();
 }
 
 #ifndef NDEBUG

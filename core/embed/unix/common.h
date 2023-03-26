@@ -40,7 +40,7 @@
   })
 #endif
 
-void __attribute__((noreturn)) trezor_shutdown(void);
+void __attribute__((noreturn)) shutdown(void);
 
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,

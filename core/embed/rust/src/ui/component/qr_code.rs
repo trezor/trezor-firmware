@@ -141,7 +141,6 @@ impl Component for Qr {
         Self::draw(&qr, area, self.border, scale);
     }
 
-    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area)
     }

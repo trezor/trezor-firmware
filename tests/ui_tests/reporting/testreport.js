@@ -88,8 +88,8 @@ function findNextForHref(doc, href) {
 
 
 function openLink(ev) {
-    if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) {
-        // let everything but unmodified left clicks through
+    if (ev.button === 2) {
+        // let right click through
         return true;
     }
 

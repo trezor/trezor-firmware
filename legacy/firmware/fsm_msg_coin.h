@@ -35,11 +35,6 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     curve = msg->ecdsa_curve_name;
   }
 
-  // XXX note to future developers:
-  // If more path restrictions are added here, don't forget to also check
-  // EthereumGetPublicKey in particular for whether it's possible to go around
-  // the new restrictions that way.
-
   // UnlockPath is required to access SLIP25 paths.
   if (msg->address_n_count > 0 && msg->address_n[0] == PATH_SLIP25_PURPOSE) {
     // Verify that the desired path lies in the unlocked subtree.

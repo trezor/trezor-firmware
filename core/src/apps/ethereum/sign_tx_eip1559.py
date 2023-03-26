@@ -14,8 +14,6 @@ if TYPE_CHECKING:
         EthereumTxRequest,
     )
     from trezor.wire import Context
-    from apps.common.keychain import Keychain
-    from .definitions import Definitions
 
 
 _TX_TYPE = const(2)
@@ -31,10 +29,7 @@ def access_list_item_length(item: EthereumAccessList) -> int:
 
 @with_keychain_from_chain_id
 async def sign_tx_eip1559(
-    ctx: Context,
-    msg: EthereumSignTxEIP1559,
-    keychain: Keychain,
-    defs: Definitions,
+    ctx: Context, msg: EthereumSignTxEIP1559, keychain: Keychain
 ) -> EthereumTxRequest:
     from apps.common import paths
     from trezor import wire
@@ -61,11 +56,11 @@ async def sign_tx_eip1559(
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(ctx, msg, defs)
+    token, address_bytes, recipient, value = await handle_erc20(ctx, msg)
 
     data_total = msg.data_length
 
-    await require_confirm_tx(ctx, recipient, value, defs.network, token)
+    await require_confirm_tx(ctx, recipient, value, msg.chain_id, token)
     if token is None and msg.data_length > 0:
         await require_confirm_data(ctx, msg.data_initial_chunk, data_total)
 
@@ -75,7 +70,7 @@ async def sign_tx_eip1559(
         int.from_bytes(msg.max_priority_fee, "big"),
         int.from_bytes(msg.max_gas_fee, "big"),
         int.from_bytes(gas_limit, "big"),
-        defs.network,
+        msg.chain_id,
         token,
     )
 
