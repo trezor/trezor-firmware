@@ -60,8 +60,8 @@ where
         page_swipe.allow_left = scrollbar.has_next_page();
 
         Self {
-            app_name: Label::new(app_name, Alignment::Center, theme::TEXT_BOLD),
-            account_name: Label::new("".into(), Alignment::Center, theme::TEXT_BOLD),
+            app_name: Label::new(app_name, Alignment::Center, theme::TEXT_DEMIBOLD),
+            account_name: Label::new("".into(), Alignment::Center, theme::TEXT_DEMIBOLD),
             page_swipe,
             icon: Child::new(Image::new(icon_data)),
             get_account,
@@ -191,6 +191,7 @@ where
         }
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.icon.bounds(sink);
         self.app_name.bounds(sink);

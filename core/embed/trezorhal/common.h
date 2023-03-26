@@ -51,7 +51,7 @@
 
 #define STAY_IN_BOOTLOADER_FLAG 0x0FC35A96
 
-void __attribute__((noreturn)) shutdown(void);
+void __attribute__((noreturn)) trezor_shutdown(void);
 
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,

@@ -29,6 +29,7 @@
 ///     FONT_MONO: int  # id of monospace font
 ///     FONT_NORMAL: int  # id of normal-width font
 ///     FONT_BOLD: int  # id of bold-width font
+///     FONT_DEMIBOLD: int  # id of demibold font
 ///     TOIF_FULL_COLOR_BE: int  # full color big endian TOI image
 ///     TOIF_FULL_COLOR_LE: int  # full color little endian TOI image
 ///     TOIF_GRAYSCALE_EH: int  # grayscale even high TOI image
@@ -621,6 +622,7 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_ROM_INT(DISPLAY_RESY)},
     {MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_ROM_INT(FONT_NORMAL)},
     {MP_ROM_QSTR(MP_QSTR_FONT_BOLD), MP_ROM_INT(FONT_BOLD)},
+    {MP_ROM_QSTR(MP_QSTR_FONT_DEMIBOLD), MP_ROM_INT(FONT_DEMIBOLD)},
     {MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_ROM_INT(FONT_MONO)},
     {MP_ROM_QSTR(MP_QSTR_TOIF_FULL_COLOR_BE), MP_ROM_INT(TOIF_FULL_COLOR_BE)},
     {MP_ROM_QSTR(MP_QSTR_TOIF_FULL_COLOR_LE), MP_ROM_INT(TOIF_FULL_COLOR_LE)},

@@ -27,7 +27,7 @@
 
 #define BUFFER_PIXELS DISPLAY_RESX
 
-#define TEXT_BUFFER_HEIGHT 32
+#define TEXT_BUFFER_HEIGHT 36
 
 #if TEXT_BUFFER_HEIGHT < FONT_MAX_HEIGHT
 #error Text buffer height is too small, please adjust to match used fonts

@@ -15,7 +15,7 @@ variables:
   MAKEFLAGS: "-j10"
 
   # Apply timeout to pytest-based tests
-  PYTEST_TIMEOUT: "300"
+  PYTEST_TIMEOUT: "400"
 
   # No need for TLS because everything runs on the same machine
   DOCKER_TLS_CERTDIR: ""

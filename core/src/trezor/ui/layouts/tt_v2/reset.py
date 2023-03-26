@@ -109,7 +109,7 @@ async def select_word(
             trezorui2.select_word(
                 title=title,
                 description=f"Select word {checked_index + 1} of {count}:",
-                words=(words[0].upper(), words[1].upper(), words[2].upper()),
+                words=(words[0], words[1], words[2]),
             )
         )
     )

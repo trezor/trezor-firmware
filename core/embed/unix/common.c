@@ -18,6 +18,7 @@
  */
 
 #include <SDL.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -31,15 +32,14 @@
 #include "memzero.h"
 
 extern void main_clean_exit();
+extern float DISPLAY_GAMMA;
 
-void __attribute__((noreturn)) __shutdown(void) {
+void __attribute__((noreturn)) trezor_shutdown(void) {
   printf("SHUTDOWN\n");
   main_clean_exit(3);
   for (;;)
     ;
 }
-
-void __attribute__((noreturn)) shutdown(void) { __shutdown(); }
 
 #ifdef RGB16
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
@@ -90,7 +90,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
   printf("Hint:\nIsn't the emulator already running?\n");
 #endif
   hal_delay(3000);
-  shutdown();
+  trezor_shutdown();
 }
 
 void __attribute__((noreturn))
@@ -133,7 +133,7 @@ uint32_t hal_ticks_ms() {
 static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
     case SDL_QUIT:
-      __shutdown();
+      trezor_shutdown();
       return 0;
     case SDL_KEYUP:
       if (event->key.repeat) {
@@ -141,11 +141,25 @@ static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
       }
       switch (event->key.keysym.sym) {
         case SDLK_ESCAPE:
-          __shutdown();
+          trezor_shutdown();
           return 0;
         case SDLK_p:
           display_save("emu");
           return 0;
+#if defined TREZOR_MODEL_T
+        // Left and right arrows controlling display gamma
+        // Only for TT (in button models, arrows do different things)
+        case SDLK_LEFT:
+          DISPLAY_GAMMA = fmaxf(0.0f, DISPLAY_GAMMA - 0.05f);
+          printf("DISPLAY_GAMMA: %0.2f\n", DISPLAY_GAMMA);
+          display_refresh();
+          return 0;
+        case SDLK_RIGHT:
+          DISPLAY_GAMMA = fminf(8.0f, DISPLAY_GAMMA + 0.05f);
+          printf("DISPLAY_GAMMA: %0.2f\n", DISPLAY_GAMMA);
+          display_refresh();
+          return 0;
+#endif
       }
       break;
   }

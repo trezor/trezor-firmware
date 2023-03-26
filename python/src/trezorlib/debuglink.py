@@ -17,6 +17,7 @@
 import logging
 import re
 import textwrap
+import time
 from copy import deepcopy
 from datetime import datetime
 from enum import IntEnum
@@ -252,6 +253,16 @@ class DebugLink:
             raise TrezorFailure(obj)
         return LayoutContent(obj.layout_lines)
 
+    def synchronize_at(self, layout_text: str, timeout: float = 5) -> LayoutContent:
+        now = time.monotonic()
+        while True:
+            layout = self.read_layout()
+            if layout_text in layout.text:
+                return layout
+            if time.monotonic() - now > timeout:
+                raise RuntimeError("Timeout waiting for layout")
+            time.sleep(0.1)
+
     def watch_layout(self, watch: bool) -> None:
         """Enable or disable watching layouts.
         If disabled, wait_layout will not work.
@@ -372,11 +383,27 @@ class DebugLink:
     def swipe_down(self, wait: bool = False) -> None:
         self.input(swipe=messages.DebugSwipeDirection.DOWN, wait=wait)
 
-    def swipe_right(self, wait: bool = False) -> None:
-        self.input(swipe=messages.DebugSwipeDirection.RIGHT, wait=wait)
+    @overload
+    def swipe_right(self) -> None:
+        ...
 
-    def swipe_left(self, wait: bool = False) -> None:
-        self.input(swipe=messages.DebugSwipeDirection.LEFT, wait=wait)
+    @overload
+    def swipe_right(self, wait: Literal[True]) -> LayoutContent:
+        ...
+
+    def swipe_right(self, wait: bool = False) -> Union[LayoutContent, None]:
+        return self.input(swipe=messages.DebugSwipeDirection.RIGHT, wait=wait)
+
+    @overload
+    def swipe_left(self) -> None:
+        ...
+
+    @overload
+    def swipe_left(self, wait: Literal[True]) -> LayoutContent:
+        ...
+
+    def swipe_left(self, wait: bool = False) -> Union[LayoutContent, None]:
+        return self.input(swipe=messages.DebugSwipeDirection.LEFT, wait=wait)
 
     def stop(self) -> None:
         self._call(messages.DebugLinkStop(), nowait=True)

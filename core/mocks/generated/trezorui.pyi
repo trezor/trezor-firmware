@@ -10,6 +10,7 @@ class Display:
     FONT_MONO: int  # id of monospace font
     FONT_NORMAL: int  # id of normal-width font
     FONT_BOLD: int  # id of bold-width font
+    FONT_DEMIBOLD: int  # id of demibold font
     TOIF_FULL_COLOR_BE: int  # full color big endian TOI image
     TOIF_FULL_COLOR_LE: int  # full color little endian TOI image
     TOIF_GRAYSCALE_EH: int  # grayscale even high TOI image

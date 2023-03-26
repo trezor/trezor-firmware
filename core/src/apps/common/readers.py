@@ -33,19 +33,25 @@ def read_compact_size(r: BufferReader) -> int:
 
 
 def read_uint16_be(r: BufferReader) -> int:
-    n = r.get()
-    return (n << 8) + r.get()
+    data = r.read_memoryview(2)
+    return int.from_bytes(data, "big")
 
 
 def read_uint32_be(r: BufferReader) -> int:
-    n = r.get()
-    for _ in range(3):
-        n = (n << 8) + r.get()
-    return n
+    data = r.read_memoryview(4)
+    return int.from_bytes(data, "big")
 
 
 def read_uint64_be(r: BufferReader) -> int:
-    n = r.get()
-    for _ in range(7):
-        n = (n << 8) + r.get()
-    return n
+    data = r.read_memoryview(8)
+    return int.from_bytes(data, "big")
+
+
+def read_uint16_le(r: BufferReader) -> int:
+    data = r.read_memoryview(2)
+    return int.from_bytes(data, "little")
+
+
+def read_uint32_le(r: BufferReader) -> int:
+    data = r.read_memoryview(4)
+    return int.from_bytes(data, "little")

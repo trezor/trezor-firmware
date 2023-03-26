@@ -48,6 +48,7 @@ impl Component for Image {
         self.draw(self.area.center(), CENTER);
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(Rect::from_center_and_size(
             self.area.center(),
@@ -123,6 +124,7 @@ impl Component for BlendedImage {
         self.paint_image();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(Rect::from_top_left_and_size(
             self.bg_top_left,

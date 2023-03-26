@@ -21,9 +21,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-extern void __shutdown(void);
-extern const char *display_save(const char *prefix);
-
 #if defined TREZOR_MODEL_T
 
 #include "touch.h"

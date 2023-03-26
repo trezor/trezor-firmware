@@ -27,7 +27,7 @@ async def change_pin(ctx: Context, msg: ChangePin) -> Success:
     await _require_confirm_change_pin(ctx, msg)
 
     # get old pin
-    curpin, salt = await request_pin_and_sd_salt(ctx, "Enter old PIN")
+    curpin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
 
     # if changing pin, pre-check the entered pin before getting new pin
     if curpin and not msg.remove:

@@ -23,7 +23,7 @@ def enter_word(
 def confirm_recovery(debug: "DebugLink", legacy_ui: bool = False) -> None:
     layout = debug.wait_layout()
     if legacy_ui:
-        layout.text.startswith("Recovery mode")
+        assert layout.text.startswith("Recovery mode")
     else:
         assert layout.get_title().startswith("WALLET RECOVERY")
     debug.click(buttons.OK, wait=True)
@@ -41,7 +41,7 @@ def select_number_of_words(
         assert layout.text == "WordSelector"
     else:
         # Two title options
-        assert layout.get_title() in ("SEED CHECK", "RECOVERY MODE")
+        assert layout.get_title() in ("SEED CHECK", "WALLET RECOVERY")
 
     # click the number
     word_option_offset = 6

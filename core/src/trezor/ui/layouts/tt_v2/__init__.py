@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
-import trezorui2
-from trezor import io, log, loop, ui
+from trezor import io, loop, ui
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
@@ -207,8 +206,7 @@ async def confirm_action(
     action: str | None = None,
     description: str | None = None,
     description_param: str | None = None,
-    description_param_font: int = ui.BOLD,
-    verb: str = "CONFIRM",
+    verb: str | None = None,
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,
@@ -216,12 +214,12 @@ async def confirm_action(
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
+    if verb is not None:
+        verb = verb.upper()
     if verb_cancel is not None:
         verb_cancel = verb_cancel.upper()
 
     if description is not None and description_param is not None:
-        if description_param_font != ui.BOLD:
-            log.error(__name__, "confirm_action description_param_font not implemented")
         description = description.format(description_param)
 
     await raise_if_not_confirmed(
@@ -232,7 +230,7 @@ async def confirm_action(
                     title=title.upper(),
                     action=action,
                     description=description,
-                    verb=verb.upper(),
+                    verb=verb,
                     verb_cancel=verb_cancel,
                     hold=hold,
                     hold_danger=hold_danger,
@@ -409,7 +407,7 @@ async def show_address(
 
             def xpub_title(i: int):
                 result = f"MULTISIG XPUB #{i + 1}\n"
-                result += " (YOURS)" if i == multisig_index else " (COSIGNER)"
+                result += "(YOURS)" if i == multisig_index else "(COSIGNER)"
                 return result
 
             result = await interact(
@@ -426,8 +424,7 @@ async def show_address(
                 "show_address_details",
                 ButtonRequestType.Address,
             )
-            # Can only go back from the address details but corner button returns INFO.
-            assert result in (INFO, CANCELLED)
+            assert result is CANCELLED
 
         else:
             result = await interact(

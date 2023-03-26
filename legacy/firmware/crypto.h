@@ -93,6 +93,11 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
 
 int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash);
 
+bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t *message,
+                      const size_t message_len, const int threshold,
+                      const ed25519_public_key *pubkeys,
+                      const int pubkeys_count, const uint8_t sigmask);
+
 bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
                      uint32_t address_n_count, const uint32_t *address_n,
                      bool has_multisig, PathSchema unlock, bool full_check);

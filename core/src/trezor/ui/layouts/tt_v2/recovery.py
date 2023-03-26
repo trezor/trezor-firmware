@@ -42,7 +42,7 @@ async def request_word_count(ctx: GenericContext, dry_run: bool) -> int:
 async def request_word(
     ctx: GenericContext, word_index: int, word_count: int, is_slip39: bool
 ) -> str:
-    prompt = f"Type word {word_index + 1} of {word_count}:"
+    prompt = f"Type word {word_index + 1} of {word_count}"
     if is_slip39:
         keyboard = RustLayout(trezorui2.request_slip39(prompt=prompt))
     else:

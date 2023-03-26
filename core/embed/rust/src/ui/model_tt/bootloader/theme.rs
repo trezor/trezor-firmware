@@ -56,8 +56,8 @@ pub const TITLE_AREA_START_Y: i16 = 8;
 pub const BUTTON_AREA_START: i16 = 188;
 
 // UI icons.
-pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
-pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/confirm.toif");
+pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/x24.toif");
+pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/check24.toif");
 
 // BLD icons
 pub const CLOSE: &[u8] = include_res!("model_tt/res/close.toif");

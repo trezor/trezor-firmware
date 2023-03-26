@@ -75,6 +75,8 @@ trezor.crypto.bech32
 import trezor.crypto.bech32
 trezor.crypto.cashaddr
 import trezor.crypto.cashaddr
+trezor.crypto.cosi
+import trezor.crypto.cosi
 trezor.crypto.curve
 import trezor.crypto.curve
 trezor.crypto.der
@@ -375,6 +377,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.CardanoTxWitnessType
     trezor.enums.EthereumDataType
     import trezor.enums.EthereumDataType
+    trezor.enums.EthereumDefinitionType
+    import trezor.enums.EthereumDefinitionType
     trezor.enums.MoneroNetworkType
     import trezor.enums.MoneroNetworkType
     trezor.enums.NEMImportanceTransferMode
@@ -481,6 +485,10 @@ if not utils.BITCOIN_ONLY:
     import apps.eos.writers
     apps.ethereum
     import apps.ethereum
+    apps.ethereum.definitions
+    import apps.ethereum.definitions
+    apps.ethereum.definitions_constants
+    import apps.ethereum.definitions_constants
     apps.ethereum.get_address
     import apps.ethereum.get_address
     apps.ethereum.get_public_key
