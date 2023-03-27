@@ -29,10 +29,6 @@
 #include "dma2d.h"
 #endif
 
-#ifdef USE_RUST_LOADER
-#include "rust_ui.h"
-#endif
-
 #include "fonts/fonts.h"
 
 #include <stdarg.h>
@@ -337,71 +333,6 @@ void display_image(int x, int y, int w, int h, const void *data,
 }
 #endif
 
-#define AVATAR_BORDER_SIZE 4
-#define AVATAR_BORDER_LOW                        \
-  (AVATAR_IMAGE_SIZE / 2 - AVATAR_BORDER_SIZE) * \
-      (AVATAR_IMAGE_SIZE / 2 - AVATAR_BORDER_SIZE)
-#define AVATAR_BORDER_HIGH (AVATAR_IMAGE_SIZE / 2) * (AVATAR_IMAGE_SIZE / 2)
-#define AVATAR_ANTIALIAS 1
-
-void display_avatar(int x, int y, const void *data, uint32_t datalen,
-                    uint16_t fgcolor, uint16_t bgcolor) {
-#if defined TREZOR_MODEL_T
-  x += DISPLAY_OFFSET.x;
-  y += DISPLAY_OFFSET.y;
-  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-  clamp_coords(x, y, AVATAR_IMAGE_SIZE, AVATAR_IMAGE_SIZE, &x0, &y0, &x1, &y1);
-  display_set_window(x0, y0, x1, y1);
-  x0 -= x;
-  x1 -= x;
-  y0 -= y;
-  y1 -= y;
-
-  struct uzlib_uncomp decomp = {0};
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
-  uint8_t decomp_out[2] = {0};
-  uzlib_prepare(&decomp, decomp_window, data, datalen, decomp_out,
-                sizeof(decomp_out));
-
-  for (uint32_t pos = 0; pos < AVATAR_IMAGE_SIZE * AVATAR_IMAGE_SIZE; pos++) {
-    int st = uzlib_uncompress(&decomp);
-    if (st == TINF_DONE) break;  // all OK
-    if (st < 0) break;           // error
-    const int px = pos % AVATAR_IMAGE_SIZE;
-    const int py = pos / AVATAR_IMAGE_SIZE;
-    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
-      int d = (px - AVATAR_IMAGE_SIZE / 2) * (px - AVATAR_IMAGE_SIZE / 2) +
-              (py - AVATAR_IMAGE_SIZE / 2) * (py - AVATAR_IMAGE_SIZE / 2);
-      if (d < AVATAR_BORDER_LOW) {
-        // inside border area
-        PIXELDATA((decomp_out[0] << 8) | decomp_out[1]);
-      } else if (d > AVATAR_BORDER_HIGH) {
-        // outside border area
-        PIXELDATA(bgcolor);
-      } else {
-        // border area
-#if AVATAR_ANTIALIAS
-        d = 31 * (d - AVATAR_BORDER_LOW) /
-            (AVATAR_BORDER_HIGH - AVATAR_BORDER_LOW);
-        uint16_t c = 0;
-        if (d >= 16) {
-          c = interpolate_color(bgcolor, fgcolor, d - 16);
-        } else {
-          c = interpolate_color(fgcolor, (decomp_out[0] << 8) | decomp_out[1],
-                                d);
-        }
-        PIXELDATA(c);
-#else
-        PIXELDATA(fgcolor);
-#endif
-      }
-    }
-    decomp.dest = (uint8_t *)&decomp_out;
-  }
-  PIXELDATA_DIRTY();
-#endif
-}
-
 #ifndef USE_DMA2D
 void display_icon(int x, int y, int w, int h, const void *data,
                   uint32_t datalen, uint16_t fgcolor, uint16_t bgcolor) {
@@ -618,16 +549,6 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
     }
   }
   PIXELDATA_DIRTY();
-#endif
-}
-#else
-
-void display_loader(uint16_t progress, bool indeterminate, int yoffset,
-                    uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
-                    uint32_t iconlen, uint16_t iconfgcolor) {
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
-  loader_uncompress_r(yoffset, fgcolor, bgcolor, iconfgcolor, progress,
-                      indeterminate, icon, iconlen);
 #endif
 }
 #endif
