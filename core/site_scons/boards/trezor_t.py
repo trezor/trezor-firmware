@@ -14,6 +14,7 @@ def configure(env, features_wanted, defines, sources):
     sources += [f'embed/trezorhal/displays/{display}', ]
 
     if "input" in features_wanted:
+        sources += ['embed/trezorhal/i2c.c', ]
         sources += ['embed/trezorhal/touch/touch.c', ]
         sources += ['embed/trezorhal/touch/ft6x36.c', ]
         features_available.append("touch")
