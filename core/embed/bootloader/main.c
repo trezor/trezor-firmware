@@ -37,6 +37,9 @@
 #ifdef USE_DMA2D
 #include "dma2d.h"
 #endif
+#ifdef USE_I2C
+#include "i2c.h"
+#endif
 #ifdef USE_TOUCH
 #include "touch/touch.h"
 #endif
@@ -324,6 +327,10 @@ int bootloader_main(void) {
 #endif
 
   ui_screen_boot_empty(false);
+
+#ifdef USE_I2C
+  i2c_init();
+#endif
 
 #ifdef USE_TOUCH
   touch_power_on();

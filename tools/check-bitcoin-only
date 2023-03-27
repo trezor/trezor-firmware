@@ -9,6 +9,7 @@ EXCEPTIONS+=( "cinema" "dash" "enemy" "float" "flock" "flower" "floor" "floral" 
 EXCEPTIONS+=( "mnemonic" )  # has NEM in it
 EXCEPTIONS+=( "workflow" "overflow" )  # has Flo in it
 EXCEPTIONS+=( "SyntaxError" )  # has Axe in it
+EXCEPTIONS+=( "DKDNEM" )  # has NEM in it, some sort of weird coincidence
 
 GREP_ARGS=()
 for exception in "${EXCEPTIONS[@]}"; do

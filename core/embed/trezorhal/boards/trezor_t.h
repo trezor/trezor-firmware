@@ -2,6 +2,7 @@
 #define _TREZOR_T_H
 
 #define USE_SD_CARD 1
+#define USE_I2C 1
 #define USE_TOUCH 1
 #define USE_SBU 1
 
