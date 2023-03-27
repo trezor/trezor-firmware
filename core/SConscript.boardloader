@@ -18,7 +18,7 @@ if TREZOR_MODEL in ('1', ):
              )
     Return()
 
-FEATURES_WANTED = ["sdcard"]
+FEATURES_WANTED = ["sd_card"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []

@@ -6,7 +6,7 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-FEATURES_WANTED = ["input", "sbu", "sdcard", "rdb_led"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []

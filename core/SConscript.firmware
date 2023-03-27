@@ -19,7 +19,7 @@ FEATURE_FLAGS = {
     "SYSTEM_VIEW": False,
 }
 
-FEATURES_WANTED = ["input", "sbu", "sdcard", "rgb_led"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -166,11 +166,6 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL in ('T',):
-    SOURCE_MOD += [
-        'embed/extmod/modtrezorio/ff.c',
-        'embed/extmod/modtrezorio/ffunicode.c',
-    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -619,7 +614,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL not in ('T',) else [])
+        ] if 'sd_card' not in FEATURES_AVAILABLE else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -721,6 +716,8 @@ def cargo_build():
         features.append('ui_debug')
     if DMA2D:
         features.append('dma2d')
+
+    features.extend(FEATURES_AVAILABLE)
 
     cargo_opts = [
         f'--target={RUST_TARGET}',
