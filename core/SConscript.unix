@@ -686,6 +686,12 @@ def cargo_build():
     if DMA2D:
         features.append('dma2d')
 
+    if TREZOR_MODEL in ('T',):
+        features.append('touch')
+        features.append('sd_card')
+    if TREZOR_MODEL in ('R', '1'):
+        features.append('button')
+
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 
     return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"  --target {TARGET}'

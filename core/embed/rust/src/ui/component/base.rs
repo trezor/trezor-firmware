@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-#[cfg(feature = "buttons")]
+#[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
@@ -347,7 +347,7 @@ where
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Event<'a> {
-    #[cfg(feature = "buttons")]
+    #[cfg(feature = "button")]
     Button(ButtonEvent),
     #[cfg(feature = "touch")]
     Touch(TouchEvent),

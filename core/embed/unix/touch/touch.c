@@ -21,7 +21,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if defined TREZOR_MODEL_T
+#include TREZOR_BOARD
+#ifdef USE_TOUCH
 
 #include "common.h"
 #include "touch.h"
@@ -85,7 +86,9 @@ void touch_power_on(void) {}
 
 uint32_t touch_is_detected(void) { return _touch_detected; }
 
-#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+#endif
+
+#ifdef USE_BUTTON
 
 #include "button.h"
 
@@ -121,6 +124,4 @@ uint32_t button_read(void) {
   return 0;
 }
 
-#else
-#error Unknown Trezor model
 #endif

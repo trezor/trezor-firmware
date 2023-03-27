@@ -5,6 +5,7 @@ from trezorutils import (  # noqa: F401
     EMULATOR,
     MODEL,
     SCM_REVISION,
+    USE_SD_CARD,
     VERSION_MAJOR,
     VERSION_MINOR,
     VERSION_PATCH,
@@ -14,7 +15,6 @@ from trezorutils import (  # noqa: F401
     halt,
     memcpy,
     reboot_to_bootloader,
-    usb_data_connected,
 )
 from typing import TYPE_CHECKING
 
