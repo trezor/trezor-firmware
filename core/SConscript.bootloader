@@ -75,11 +75,11 @@ CPPPATH_MOD += [
 ]
 
 SOURCE_MOD += [
-    'embed/extmod/modtrezorui/buffers.c',
-    'embed/extmod/modtrezorui/colors.c',
-    'embed/extmod/modtrezorui/display.c',
-    'embed/extmod/modtrezorui/fonts/fonts.c',
-    'embed/extmod/modtrezorui/fonts/font_bitmap.c',
+    'embed/lib/buffers.c',
+    'embed/lib/colors.c',
+    'embed/lib/display.c',
+    'embed/lib/fonts/fonts.c',
+    'embed/lib/fonts/font_bitmap.c',
     'embed/extmod/modtrezorcrypto/rand.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -204,6 +204,7 @@ env.Replace(
         'embed/bootloader',
         'embed/bootloader/nanopb',
         'embed/bootloader/protob',
+        'embed/lib',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
