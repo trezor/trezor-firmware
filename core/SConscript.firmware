@@ -166,11 +166,6 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL in ('T',):
-    SOURCE_MOD += [
-        'embed/extmod/modtrezorio/ff.c',
-        'embed/extmod/modtrezorio/ffunicode.c',
-    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -721,6 +716,8 @@ def cargo_build():
         features.append('ui_debug')
     if DMA2D:
         features.append('dma2d')
+
+    features.extend(FEATURES_AVAILABLE)
 
     cargo_opts = [
         f'--target={RUST_TARGET}',

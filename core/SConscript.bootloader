@@ -264,6 +264,7 @@ def cargo_build():
     features.append("bitcoin_only")
     features.append("ui")
     features.append("bootloader")
+    features.extend(FEATURES_AVAILABLE)
 
     cargo_opts = [
         f'--target={RUST_TARGET}',

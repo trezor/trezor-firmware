@@ -82,7 +82,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 
       if (false) {
       }
-#if defined TREZOR_MODEL_T
+#if defined USE_TOUCH
       else if (iface == TOUCH_IFACE) {
         const uint32_t evt = touch_read();
         if (evt) {
@@ -126,7 +126,8 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       }
-#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+#endif
+#if USE_BUTTON
       else if (iface == BUTTON_IFACE) {
         const uint32_t evt = button_read();
         if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {
@@ -143,8 +144,6 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       }
-#else
-#error Unknown Trezor model
 #endif
       else if (mode == POLL_READ) {
         if (sectrue == usb_hid_can_read(iface)) {

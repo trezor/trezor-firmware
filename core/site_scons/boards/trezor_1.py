@@ -15,7 +15,7 @@ def configure(env, features_wanted, defines, sources):
 
     if "input" in features_wanted:
         sources += ['embed/trezorhal/button.c']
-        features_available.append("button")
+        features_available.append("buttons")
 
     env.get('ENV')['TREZOR_BOARD'] = board
 
