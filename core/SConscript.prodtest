@@ -44,11 +44,11 @@ CPPPATH_MOD += [
 ]
 
 SOURCE_MOD += [
-    'embed/extmod/modtrezorui/display.c',
-    'embed/extmod/modtrezorui/colors.c',
-    'embed/extmod/modtrezorui/fonts/fonts.c',
-    'embed/extmod/modtrezorui/fonts/font_bitmap.c',
-    'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
+    'embed/lib/display.c',
+    'embed/lib/colors.c',
+    'embed/lib/fonts/fonts.c',
+    'embed/lib/fonts/font_bitmap.c',
+    'embed/lib/qr-code-generator/qrcodegen.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -150,6 +150,7 @@ env.Replace(
     LINKFLAGS='-T embed/prodtest/memory.ld -Wl,--gc-sections -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
     CPPPATH=[
         'embed/prodtest',
+        'embed/lib',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
