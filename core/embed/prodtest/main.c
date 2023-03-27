@@ -26,6 +26,7 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
+#include "i2c.h"
 #include "mini_printf.h"
 #include "random_delays.h"
 #include "rng.h"
@@ -374,6 +375,7 @@ int main(void) {
   display_orientation(0);
   random_delays_init();
   sdcard_init();
+  i2c_init();
   touch_init();
   sbu_init();
   usb_init_all();
@@ -438,3 +440,5 @@ int main(void) {
 
   return 0;
 }
+
+void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(HF)"); }
