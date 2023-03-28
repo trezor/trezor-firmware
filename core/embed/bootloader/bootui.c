@@ -110,6 +110,46 @@ void ui_screen_boot_wait(int wait_seconds) {
   display_refresh();
 }
 
+#if defined USE_TOUCH
+#include "touch/touch.h"
+
+void ui_click(void) {
+  // flush touch events if any
+  while (touch_read()) {
+  }
+  // wait for TOUCH_START
+  while ((touch_read() & TOUCH_START) == 0) {
+  }
+  // wait for TOUCH_END
+  while ((touch_read() & TOUCH_END) == 0) {
+  }
+  // flush touch events if any
+  while (touch_read()) {
+  }
+}
+
+#elif defined USE_BUTTON
+#include "button.h"
+
+void ui_click(void) {
+  for (;;) {
+    button_read();
+    if (button_state_left() != 0 && button_state_right() != 0) {
+      break;
+    }
+  }
+  for (;;) {
+    button_read();
+    if (button_state_left() != 1 && button_state_right() != 1) {
+      break;
+    }
+  }
+}
+
+#else
+#error "No input method defined"
+#endif
+
 void ui_screen_boot_click(void) {
   display_bar(0, DISPLAY_RESY - 5 - 20, DISPLAY_RESX, 5 + 20, boot_background);
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5,
@@ -117,6 +157,7 @@ void ui_screen_boot_click(void) {
                       boot_background);
   PIXELDATA_DIRTY();
   display_refresh();
+  ui_click();
 }
 
 // welcome UI

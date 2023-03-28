@@ -513,24 +513,6 @@ int bootloader_main(void) {
 
     if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
       ui_screen_boot_click();
-#if defined USE_TOUCH
-      touch_click();
-#elif defined USE_BUTTON
-      for (;;) {
-        button_read();
-        if (button_state_left() != 0 && button_state_right() != 0) {
-          break;
-        }
-      }
-      for (;;) {
-        button_read();
-        if (button_state_left() != 1 && button_state_right() != 1) {
-          break;
-        }
-      }
-#else
-#error Unknown Trezor model
-#endif
     }
 
     ui_fadeout();

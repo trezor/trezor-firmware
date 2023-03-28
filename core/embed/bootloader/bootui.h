@@ -75,6 +75,4 @@ void ui_screen_boot_empty(bool fading);
 #define INPUT_INFO 0x08          // Info icon
 // clang-format on
 
-int ui_user_input(int zones);
-
 #endif
