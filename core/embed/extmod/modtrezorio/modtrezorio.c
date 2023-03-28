@@ -50,7 +50,9 @@ bool ble_last_internal = false;
 #include "modtrezorio-webusb.h"
 #include "modtrezorio-usb.h"
 // clang-format on
+#ifdef USE_BLE
 #include "modtrezorio-ble.h"
+#endif
 #ifdef USE_SBU
 #include "modtrezorio-sbu.h"
 #endif
@@ -92,8 +94,9 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_fatfs), MP_ROM_PTR(&mod_trezorio_fatfs_module)},
     {MP_ROM_QSTR(MP_QSTR_sdcard), MP_ROM_PTR(&mod_trezorio_sdcard_module)},
 #endif
+#ifdef USE_BLE
     {MP_ROM_QSTR(MP_QSTR_ble), MP_ROM_PTR(&mod_trezorio_BLE_module)},
-
+#endif
 #ifdef USE_TOUCH
     {MP_ROM_QSTR(MP_QSTR_TOUCH), MP_ROM_INT(TOUCH_IFACE)},
     {MP_ROM_QSTR(MP_QSTR_TOUCH_START), MP_ROM_INT((TOUCH_START >> 24) & 0xFFU)},

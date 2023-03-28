@@ -4,7 +4,6 @@ if TYPE_CHECKING:
     from trezor.wire import Handler, Msg
     from trezorio import WireInterface
 
-
 workflow_handlers: dict[int, Handler] = {}
 
 
@@ -55,17 +54,17 @@ def _find_message_handler_module(msg_type: int, iface: WireInterface) -> str:
     if utils.USE_SD_CARD and msg_type == MessageType.SdProtect:
         return "apps.management.sd_protect"
 
-    # BLE
-    if iface.iface_num() != 16 and iface.iface_num() != 17:
-        # cannot update over BLE
-        if msg_type == MessageType.UploadBLEFirmwareInit:
-            return "apps.management.ble.upload_ble_firmware_init"
+    if utils.USE_BLE:
+        if iface.iface_num() != 16 and iface.iface_num() != 17:
+            # cannot update over BLE
+            if msg_type == MessageType.UploadBLEFirmwareInit:
+                return "apps.management.ble.upload_ble_firmware_init"
 
-    if iface.iface_num() == 16:
-        if msg_type == MessageType.PairingRequest:
-            return "apps.management.ble.pairing_request"
-        if msg_type == MessageType.RepairRequest:
-            return "apps.management.ble.repair_request"
+        if iface.iface_num() == 16:
+            if msg_type == MessageType.PairingRequest:
+                return "apps.management.ble.pairing_request"
+            if msg_type == MessageType.RepairRequest:
+                return "apps.management.ble.repair_request"
 
     # bitcoin
     if msg_type == MessageType.AuthorizeCoinJoin:

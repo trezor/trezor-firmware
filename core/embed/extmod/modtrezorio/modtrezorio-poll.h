@@ -131,7 +131,9 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           ret->items[1] = usb_connected ? mp_const_true : mp_const_false;
           return mp_const_true;
         }
-      } else if (iface == BLE_EVENTS_IFACE) {
+      }
+#ifdef USE_BLE
+      else if (iface == BLE_EVENTS_IFACE) {
         ble_int_comm_poll();
         uint8_t connected = ble_connected();
         if (connected != ble_connected_previously) {
@@ -141,6 +143,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       }
+#endif
 #endif
 #if USE_BUTTON
       else if (iface == BUTTON_IFACE) {
@@ -190,7 +193,9 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
             return mp_const_true;
           }
         }
-      } else if (iface == BLE_IFACE_INT) {
+      }
+#ifdef USE_BLE
+      else if (iface == BLE_IFACE_INT) {
         if (mode == POLL_READ) {
           uint8_t buf[64] = {0};
           int len = ble_int_comm_receive(buf, sizeof(buf));
@@ -219,6 +224,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       }
+#endif
     }
 
     if (mp_hal_ticks_ms() >= deadline) {
