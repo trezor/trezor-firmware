@@ -63,6 +63,9 @@
 #ifdef USE_SD_CARD
 #include "sdcard.h"
 #endif
+#ifdef USE_BLE
+#include "ble/comm.h"
+#endif
 
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
@@ -72,8 +75,6 @@
 #include "supervise.h"
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
-
-#include "ble/comm.h"
 
 #endif
 
@@ -146,7 +147,9 @@ int main(void) {
   sdcard_init();
 #endif
 
+#ifdef USE_BLE
   ble_comm_init();
+#endif
 
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode
