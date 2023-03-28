@@ -21,6 +21,13 @@ def configure(env, features_wanted, defines, sources):
         sources += ['embed/trezorhal/touch/stmpe811.c', ]
         features_available.append("touch")
 
+    if "ble" in features_wanted:
+        sources += ['embed/trezorhal/ble/comm.c', ]
+        sources += ['embed/trezorhal/ble/dfu.c', ]
+        sources += ['embed/trezorhal/ble/fwu.c', ]
+        sources += ['embed/trezorhal/ble/state.c', ]
+        features_available.append("ble")
+
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D", ]
         sources += ['embed/lib/dma2d_emul.c', ]

@@ -3,6 +3,7 @@
 
 #define USE_I2C 1
 #define USE_TOUCH 1
+#define USE_BLE 1
 #define USE_SDRAM 1
 #define USE_RGB_COLORS 1
 
