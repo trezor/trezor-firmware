@@ -18,7 +18,7 @@ FEATURE_FLAGS = {
     "SYSTEM_VIEW": False,
 }
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", dma2d"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "ble", "dma2d"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -379,10 +379,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/usbd_ioreq.c',
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
-    'embed/trezorhal/ble/comm.c',
-    'embed/trezorhal/ble/dfu.c',
-    'embed/trezorhal/ble/fwu.c',
-    'embed/trezorhal/ble/state.c',
 ]
 
 

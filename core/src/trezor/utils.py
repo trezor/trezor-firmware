@@ -5,6 +5,7 @@ from trezorutils import (  # noqa: F401
     EMULATOR,
     MODEL,
     SCM_REVISION,
+    USE_BLE,
     USE_SD_CARD,
     VERSION_MAJOR,
     VERSION_MINOR,
