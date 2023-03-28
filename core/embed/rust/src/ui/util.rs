@@ -45,11 +45,13 @@ pub fn u32_to_str(num: u32, buffer: &mut [u8]) -> Option<&str> {
 /// # Safety
 ///
 /// The caller is responsible that the pointer is valid, which means that:
-/// (a) it is not null,
-/// (b) it points to a memory containing a valid C string (zero-terminated
+/// (a) it points to a memory containing a valid C string (zero-terminated
 /// sequence of characters), and
-/// (c) that the pointer has appropriate lifetime.
+/// (b) that the pointer has appropriate lifetime.
 pub unsafe fn from_c_str<'a>(c_str: *const cty::c_char) -> Option<&'a str> {
+    if c_str.is_null() {
+        return None;
+    }
     unsafe {
         let bytes = CStr::from_ptr(c_str).to_bytes();
         if bytes.is_ascii() {
@@ -65,11 +67,13 @@ pub unsafe fn from_c_str<'a>(c_str: *const cty::c_char) -> Option<&'a str> {
 /// # Safety
 ///
 /// The caller is responsible that the pointer is valid, which means that:
-/// (a) it is not null,
-/// (b) it points to a memory containing array of characters, with length `len`,
+/// (a) it points to a memory containing array of characters, with length `len`,
 /// and
-/// (c) that the pointer has appropriate lifetime.
+/// (b) that the pointer has appropriate lifetime.
 pub unsafe fn from_c_array<'a>(c_str: *const cty::c_char, len: usize) -> Option<&'a str> {
+    if c_str.is_null() {
+        return None;
+    }
     unsafe {
         let slice = core::slice::from_raw_parts(c_str as *const u8, len);
         if slice.is_ascii() {
