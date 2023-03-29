@@ -384,25 +384,30 @@ async def show_address(
     multisig_index: int | None = None,
     xpubs: Sequence[str] = (),
 ) -> None:
+    send_button_request = True
     while True:
         title = (
             "RECEIVE ADDRESS\n(MULTISIG)"
             if multisig_index is not None
             else "RECEIVE ADDRESS"
         )
-        result = await interact(
-            ctx,
-            RustLayout(
-                trezorui2.confirm_address(
-                    title=title,
-                    data=address,
-                    description=network or "",
-                    extra=None,
-                )
-            ),
-            "show_address",
-            ButtonRequestType.Address,
+        layout = RustLayout(
+            trezorui2.confirm_address(
+                title=title,
+                data=address,
+                description=network or "",
+                extra=None,
+            )
         )
+        if send_button_request:
+            send_button_request = False
+            await button_request(
+                ctx,
+                "show_address",
+                ButtonRequestType.Address,
+                pages=layout.page_count(),
+            )
+        result = await ctx.wait(layout)
 
         # User pressed right button.
         if result is CONFIRMED:
@@ -416,8 +421,7 @@ async def show_address(
                 result += "(YOURS)" if i == multisig_index else "(COSIGNER)"
                 return result
 
-            result = await interact(
-                ctx,
+            result = await ctx.wait(
                 RustLayout(
                     trezorui2.show_address_details(
                         address=address if address_qr is None else address_qr,
@@ -426,19 +430,12 @@ async def show_address(
                         path=path,
                         xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
                     )
-                ),
-                "show_address_details",
-                ButtonRequestType.Address,
+                )
             )
             assert result is CANCELLED
 
         else:
-            result = await interact(
-                ctx,
-                RustLayout(trezorui2.show_mismatch()),
-                "warning_address_mismatch",
-                ButtonRequestType.Warning,
-            )
+            result = await ctx.wait(RustLayout(trezorui2.show_mismatch()))
             assert result in (CONFIRMED, CANCELLED)
             # Right button aborts action, left goes back to showing address.
             if result is CONFIRMED:

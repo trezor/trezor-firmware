@@ -368,14 +368,14 @@ class DebugLink:
         x, y = click
         return self.input(x=x, y=y, wait=wait)
 
-    def press_yes(self) -> None:
-        self.input(button=messages.DebugButton.YES)
+    def press_yes(self, wait: bool = False) -> None:
+        self.input(button=messages.DebugButton.YES, wait=wait)
 
-    def press_no(self) -> None:
-        self.input(button=messages.DebugButton.NO)
+    def press_no(self, wait: bool = False) -> None:
+        self.input(button=messages.DebugButton.NO, wait=wait)
 
-    def press_info(self) -> None:
-        self.input(button=messages.DebugButton.INFO)
+    def press_info(self, wait: bool = False) -> None:
+        self.input(button=messages.DebugButton.INFO, wait=wait)
 
     def swipe_up(self, wait: bool = False) -> None:
         self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
