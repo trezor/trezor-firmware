@@ -78,20 +78,16 @@ def test_show_tt(
 ):
     def input_flow():
         yield
-        client.debug.click(CORNER_BUTTON)
-        yield
+        client.debug.click(CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
         client.debug.synchronize_at("HorizontalPage")
 
         client.debug.swipe_left(wait=True)
         client.debug.swipe_right(wait=True)
         client.debug.swipe_left(wait=True)
-        client.debug.click(CORNER_BUTTON)
-        yield
-        client.debug.press_no()
-        yield
-        client.debug.press_no()
-        yield
+        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.press_no(wait=True)
+        client.debug.press_no(wait=True)
         client.debug.press_yes()
 
     with client:
@@ -115,16 +111,13 @@ def test_show_cancel(
 ):
     def input_flow():
         yield
-        client.debug.click(CORNER_BUTTON)
-        yield
+        client.debug.click(CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
         client.debug.synchronize_at("HorizontalPage")
 
         client.debug.swipe_left(wait=True)
-        client.debug.click(CORNER_BUTTON)
-        yield
-        client.debug.press_no()
-        yield
+        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.press_no(wait=True)
         client.debug.press_yes()
 
     with client, pytest.raises(Cancelled):
@@ -285,7 +278,6 @@ def test_show_multisig_xpubs(
             assert layout.get_content().replace(" ", "") == address
 
             client.debug.click(CORNER_BUTTON)
-            yield  # show QR code
             assert "Qr" in client.debug.wait_layout().text
 
             layout = client.debug.swipe_left(wait=True)
@@ -302,12 +294,12 @@ def test_show_multisig_xpubs(
                 content = layout.get_content().replace(" ", "")
                 assert xpubs[xpub_num] in content
 
-            client.debug.click(CORNER_BUTTON)
-            yield  # show address
-            client.debug.press_no()
-            yield  # address mismatch
-            client.debug.press_no()
-            yield  # show address
+            client.debug.click(CORNER_BUTTON, wait=True)
+            # show address
+            client.debug.press_no(wait=True)
+            # address mismatch
+            client.debug.press_no(wait=True)
+            # show address
             client.debug.press_yes()
 
         with client:
