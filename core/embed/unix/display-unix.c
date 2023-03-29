@@ -75,13 +75,16 @@ static SDL_Surface *PREV_SAVED;
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
 float DISPLAY_GAMMA = 0.55f;
-// Will depend on SDL_VIDEODRIVER env variable
-static bool DO_GAMMA_CORRECTION = true;
+
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
 // Using RGB565 (16-bit) color format.
 typedef uint16_t pixel_color;
+
+// Will depend on SDL_VIDEODRIVER env variable
+static bool DO_GAMMA_CORRECTION = true;
+static pixel_color GAMMA_LUT[0x10000];
 
 // this is just for compatibility with DMA2D using algorithms
 uint8_t *const DISPLAY_DATA_ADDRESS = 0;
@@ -98,29 +101,44 @@ static struct {
   } pos;
 } PIXELWINDOW;
 
-pixel_color gamma_correct(pixel_color c) {
+static pixel_color gamma_correct(pixel_color c, float gamma) {
   // NOTE: 0x1f/31 and 0x3f/63 are maximum values of RGB components
   // given the color is 16-bit (5 bits for R, 6 bits for G, 5 bits for B).
   int r = (c >> 11) & 0x1f;
   int g = (c >> 5) & 0x3f;
   int b = c & 0x1f;
 
-  r = (int)round(pow(r / 31.0, DISPLAY_GAMMA) * 31.0);
-  g = (int)round(pow(g / 63.0, DISPLAY_GAMMA) * 63.0);
-  b = (int)round(pow(b / 31.0, DISPLAY_GAMMA) * 31.0);
+  r = (int)round(pow(r / 31.0, gamma) * 31.0);
+  g = (int)round(pow(g / 63.0, gamma) * 63.0);
+  b = (int)round(pow(b / 31.0, gamma) * 31.0);
 
   return (r << 11) | (g << 5) | b;
 }
 
-void gamma_correct_buffer_to_display(void) {
+static void prepare_gamma_lut(float gamma) {
+  for (int i = 0; i < 0x10000; i++) {
+    GAMMA_LUT[i] = gamma_correct(i, gamma);
+  }
+}
+
+static void gamma_correct_buffer_to_display(void) {
   // Gamma correct all the pixels in BUFFER_TO_DISPLAY.
   pixel_color *pixels = (pixel_color *)BUFFER_TO_DISPLAY->pixels;
   for (int y = 0; y < BUFFER_TO_DISPLAY->h; y++) {
     for (int x = 0; x < BUFFER_TO_DISPLAY->w; x++) {
       int index = y * BUFFER_TO_DISPLAY->pitch / 2 + x;
-      pixels[index] = gamma_correct(pixels[index]);
+      pixels[index] = GAMMA_LUT[pixels[index]];
     }
   }
+}
+
+float display_gamma(float gamma) {
+  float prev_gamma = DISPLAY_GAMMA;
+  if (gamma != 0) {
+    DISPLAY_GAMMA = gamma;
+    prepare_gamma_lut(gamma);
+  }
+  return prev_gamma;
 }
 
 void display_pixeldata(pixel_color c) {
@@ -185,6 +203,7 @@ void display_init(void) {
     DO_GAMMA_CORRECTION = false;
   } else {
     DO_GAMMA_CORRECTION = true;
+    prepare_gamma_lut(DISPLAY_GAMMA);
   }
 
   char *window_title = NULL;
