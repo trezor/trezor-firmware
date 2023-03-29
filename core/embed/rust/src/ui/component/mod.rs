@@ -20,7 +20,7 @@ pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, TimerToke
 pub use border::Border;
 pub use empty::Empty;
 pub use label::Label;
-pub use map::Map;
+pub use map::MsgMap;
 pub use marquee::Marquee;
 pub use maybe::Maybe;
 pub use pad::Pad;
