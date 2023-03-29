@@ -1,16 +1,8 @@
 #[cfg(feature = "micropython")]
 use crate::micropython::buffer::StrBuffer;
 use crate::ui::{
-    component::{
-        text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
-        Component,
-    },
-    geometry::LinearPlacement,
-    model_tt::{
-        component::ErrorScreen,
-        constant,
-        theme::{TEXT_ERROR_HIGHLIGHT, TEXT_ERROR_NORMAL},
-    },
+    component::Component,
+    model_tt::{component::ErrorScreen, constant},
 };
 
 #[cfg(not(feature = "micropython"))]
@@ -32,21 +24,7 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
     let msg = unsafe { get_str(msg) };
     let footer = unsafe { get_str(footer) };
 
-    let mut messages = ParagraphVecShort::new();
-
-    messages.add(Paragraph::new(&TEXT_ERROR_NORMAL, msg).centered());
-
-    let m_top =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut messages = ParagraphVecShort::new();
-
-    messages.add(Paragraph::new(&TEXT_ERROR_HIGHLIGHT, footer).centered());
-
-    let m_bottom =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut frame = ErrorScreen::new(title, m_top, m_bottom);
+    let mut frame = ErrorScreen::new(title, msg, footer);
     frame.place(constant::screen());
     frame.paint();
 }

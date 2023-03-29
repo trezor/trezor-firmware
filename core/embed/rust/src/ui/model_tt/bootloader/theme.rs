@@ -4,8 +4,8 @@ use crate::ui::{
     display::{Color, Font},
     geometry::{Offset, Point, Rect},
     model_tt::{
-        component::{ButtonStyle, ButtonStyleSheet},
-        theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, GREY_MEDIUM, WHITE},
+        component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
+        theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE},
     },
 };
 
@@ -232,27 +232,13 @@ pub fn button_bld() -> ButtonStyleSheet {
         },
     }
 }
-pub const TEXT_WELCOME: TextStyle = TextStyle::new(
-    Font::NORMAL,
-    GREY_MEDIUM,
-    WELCOME_COLOR,
-    GREY_MEDIUM,
-    GREY_MEDIUM,
-);
-pub const TEXT_WELCOME_URL: TextStyle = TextStyle::new(Font::NORMAL, FG, WELCOME_COLOR, FG, FG);
+
 pub const TEXT_TITLE: TextStyle = TextStyle::new(
     Font::BOLD,
     BLD_TITLE_COLOR,
     BLD_BG,
     BLD_TITLE_COLOR,
     BLD_TITLE_COLOR,
-);
-pub const TEXT_SUBMSG_INITIAL: TextStyle = TextStyle::new(
-    Font::BOLD,
-    WHITE,
-    WELCOME_HIGHLIGHT_COLOR,
-    GREY_MEDIUM,
-    GREY_MEDIUM,
 );
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
@@ -274,4 +260,14 @@ pub const TEXT_WIPE_NORMAL: TextStyle = TextStyle::new(
     BLD_WIPE_TEXT_COLOR,
     BLD_WIPE_TEXT_COLOR,
 );
-pub const TEXT_SUBMSG: TextStyle = TextStyle::new(Font::BOLD, WHITE, BLD_BTN_COLOR, WHITE, WHITE);
+
+pub const RESULT_WIPE: ResultStyle = ResultStyle::new(
+    BLD_WIPE_TEXT_COLOR,
+    BLD_WIPE_COLOR,
+    BLD_WIPE_CANCEL_BTN_COLOR,
+);
+
+pub const RESULT_FW_INSTALL: ResultStyle = ResultStyle::new(BLD_FG, BLD_BG, BLD_BTN_COLOR);
+
+pub const RESULT_INITIAL: ResultStyle =
+    ResultStyle::new(FG, WELCOME_COLOR, WELCOME_HIGHLIGHT_COLOR);

@@ -1,38 +1,38 @@
 use crate::ui::{
-    component::{
-        text::paragraphs::{ParagraphStrType, ParagraphVecShort, Paragraphs},
-        Child, Component, Event, EventCtx, Label, Never, Pad,
-    },
+    component::{Child, Component, Event, EventCtx, Label, Never, Pad},
     constant::screen,
-    display::{self, Icon},
+    display::Icon,
     geometry::{Alignment::Center, Point, Rect, TOP_CENTER},
 };
 
 use crate::ui::model_tt::{
+    component::{ResultFooter, ResultStyle},
     constant::WIDTH,
-    theme::{
-        FATAL_ERROR_COLOR, FATAL_ERROR_HIGHLIGHT_COLOR, ICON_WARNING40, RESULT_FOOTER_HEIGHT,
-        RESULT_FOOTER_START, RESULT_PADDING, TEXT_ERROR_BOLD, WHITE,
-    },
+    theme::{FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE},
 };
 
+const ICON_TOP: i16 = 23;
 const TITLE_AREA_START: i16 = 70;
-const ICON_TOP: i16 = 27;
+const MESSAGE_AREA_START: i16 = 116;
 
-pub struct ErrorScreen<T> {
+#[cfg(feature = "bootloader")]
+const STYLE: &ResultStyle = &crate::ui::model_tt::bootloader::theme::RESULT_WIPE;
+#[cfg(not(feature = "bootloader"))]
+const STYLE: &ResultStyle = &super::theme::RESULT_ERROR;
+
+pub struct ErrorScreen<'a, T> {
     bg: Pad,
     title: Child<Label<T>>,
-    message: Child<Paragraphs<ParagraphVecShort<T>>>,
-    footer: Child<Paragraphs<ParagraphVecShort<T>>>,
+    message: Child<Label<T>>,
+    footer: Child<ResultFooter<'a, T>>,
 }
 
-impl<T: ParagraphStrType> ErrorScreen<T> {
-    pub fn new(
-        title: T,
-        message: Paragraphs<ParagraphVecShort<T>>,
-        footer: Paragraphs<ParagraphVecShort<T>>,
-    ) -> Self {
-        let title = Label::new(title, Center, TEXT_ERROR_BOLD);
+impl<T: AsRef<str>> ErrorScreen<'_, T> {
+    pub fn new(title: T, message: T, footer: T) -> Self {
+        let title = Label::new(title, Center, STYLE.title_style());
+        let message = Label::new(message, Center, STYLE.message_style());
+        let footer = ResultFooter::new(footer, STYLE);
+
         Self {
             bg: Pad::with_background(FATAL_ERROR_COLOR).with_clear(),
             title: Child::new(title),
@@ -42,33 +42,28 @@ impl<T: ParagraphStrType> ErrorScreen<T> {
     }
 }
 
-impl<T: ParagraphStrType> Component for ErrorScreen<T> {
+impl<T: AsRef<str>> Component for ErrorScreen<'_, T> {
     type Msg = Never;
 
-    fn place(&mut self, bounds: Rect) -> Rect {
+    fn place(&mut self, _bounds: Rect) -> Rect {
         self.bg.place(screen());
 
         let title_area = Rect::new(
             Point::new(RESULT_PADDING, TITLE_AREA_START),
-            Point::new(WIDTH - RESULT_PADDING, RESULT_FOOTER_START),
+            Point::new(WIDTH - RESULT_PADDING, MESSAGE_AREA_START),
         );
-
         self.title.place(title_area);
 
-        let (_, message_area) = title_area.split_top(self.title.inner().area().height());
-
+        let message_area = Rect::new(
+            Point::new(RESULT_PADDING, MESSAGE_AREA_START),
+            Point::new(WIDTH - RESULT_PADDING, RESULT_FOOTER_START),
+        );
         self.message.place(message_area);
 
-        let bottom_area = Rect::new(
-            Point::new(RESULT_PADDING, RESULT_FOOTER_START),
-            Point::new(
-                WIDTH - RESULT_PADDING,
-                RESULT_FOOTER_START + RESULT_FOOTER_HEIGHT,
-            ),
-        );
+        let (_, bottom_area) = ResultFooter::<T>::split_bounds();
         self.footer.place(bottom_area);
 
-        bounds
+        screen()
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -87,19 +82,6 @@ impl<T: ParagraphStrType> Component for ErrorScreen<T> {
         );
         self.title.paint();
         self.message.paint();
-
-        display::rect_fill_rounded(
-            Rect::new(
-                Point::new(RESULT_PADDING, RESULT_FOOTER_START),
-                Point::new(
-                    WIDTH - RESULT_PADDING,
-                    RESULT_FOOTER_START + RESULT_FOOTER_HEIGHT,
-                ),
-            ),
-            FATAL_ERROR_HIGHLIGHT_COLOR,
-            FATAL_ERROR_COLOR,
-            2,
-        );
         self.footer.paint();
     }
 }

@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
+use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet, ResultStyle};
 
 use num_traits::FromPrimitive;
 
@@ -516,17 +516,6 @@ pub fn textstyle_number(num: i32) -> &'static TextStyle {
         _ => &TEXT_NORMAL,
     }
 }
-pub const TEXT_ERROR_NORMAL: TextStyle =
-    TextStyle::new(Font::NORMAL, FG, FATAL_ERROR_COLOR, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_ERROR_BOLD: TextStyle =
-    TextStyle::new(Font::BOLD, FG, FATAL_ERROR_COLOR, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_ERROR_HIGHLIGHT: TextStyle = TextStyle::new(
-    Font::BOLD,
-    FG,
-    FATAL_ERROR_HIGHLIGHT_COLOR,
-    GREY_LIGHT,
-    GREY_LIGHT,
-);
 
 pub const TEXT_NORMAL_OFF_WHITE: TextStyle =
     TextStyle::new(Font::NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);
@@ -557,8 +546,8 @@ pub const INFO_BUTTON_HEIGHT: i16 = 44;
 pub const PIN_BUTTON_HEIGHT: i16 = 40;
 pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
 pub const RESULT_PADDING: i16 = 6;
-pub const RESULT_FOOTER_START: i16 = 178;
-pub const RESULT_FOOTER_HEIGHT: i16 = 56;
+pub const RESULT_FOOTER_START: i16 = 171;
+pub const RESULT_FOOTER_HEIGHT: i16 = 62;
 
 pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
     FixedHeightBar::bottom(inner, BUTTON_HEIGHT)
@@ -582,3 +571,6 @@ pub const fn borders_horizontal_scroll() -> Insets {
 pub const fn borders_notification() -> Insets {
     Insets::new(48, 6, 6, 6)
 }
+
+pub const RESULT_ERROR: ResultStyle =
+    ResultStyle::new(FG, FATAL_ERROR_COLOR, FATAL_ERROR_HIGHLIGHT_COLOR);

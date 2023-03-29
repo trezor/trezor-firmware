@@ -47,7 +47,7 @@ pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 pub use page::{SwipeHoldPage, SwipePage};
 pub use progress::Progress;
-pub use result::ResultScreen;
+pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};
 pub use welcome_screen::WelcomeScreen;
