@@ -113,6 +113,7 @@ where
     };
     display::sync();
     frame.paint();
+    display::refresh();
     if fading {
         fadein()
     };
@@ -430,7 +431,7 @@ extern "C" fn screen_install_success(
 #[no_mangle]
 extern "C" fn screen_welcome_model() {
     let mut frame = WelcomeScreen::new();
-    show(&mut frame, true);
+    show(&mut frame, false);
 }
 
 #[no_mangle]

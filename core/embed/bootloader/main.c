@@ -351,7 +351,7 @@ int bootloader_main(void) {
   // anyway
   uint32_t touched = 0;
 #ifdef USE_TOUCH
-  if (stay_in_bootloader != sectrue) {
+  if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
     for (int i = 0; i < 100; i++) {
       touched = touch_is_detected() | touch_read();
       if (touched) {
@@ -373,6 +373,11 @@ int bootloader_main(void) {
 
   // start the bootloader if no or broken firmware found ...
   if (firmware_present != sectrue) {
+#ifdef TREZOR_EMULATOR
+    // wait a bit so that the empty lock icon is visible
+    // (on a real device, we are waiting for touch init which takes longer)
+    hal_delay(400);
+#endif
     // ignore stay in bootloader
     stay_in_bootloader = secfalse;
     touched = false;
