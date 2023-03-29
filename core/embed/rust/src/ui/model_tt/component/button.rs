@@ -2,7 +2,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, Map, Split, TimerToken,
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, TimerToken,
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
@@ -509,10 +509,11 @@ pub enum CancelConfirmMsg {
     Confirmed,
 }
 
-type CancelInfoConfirm<T, F0, F1, F2> =
-    FixedHeightBar<Split<Map<Button<T>, F0>, Split<Map<Button<T>, F1>, Map<Button<T>, F2>>>>;
+type CancelInfoConfirm<T, F0, F1, F2> = FixedHeightBar<
+    Split<MsgMap<Button<T>, F0>, Split<MsgMap<Button<T>, F1>, MsgMap<Button<T>, F2>>>,
+>;
 
-type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<Map<Button<T>, F0>, Map<Button<T>, F1>>>;
+type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<MsgMap<Button<T>, F0>, MsgMap<Button<T>, F1>>>;
 
 #[derive(Clone, Copy)]
 pub enum CancelInfoConfirmMsg {

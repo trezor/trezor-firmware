@@ -5,7 +5,7 @@ use heapless::Vec;
 use crate::{
     time::Duration,
     ui::{
-        component::{maybe::PaintOverlapping, Map},
+        component::{maybe::PaintOverlapping, MsgMap},
         display::Color,
         geometry::{Offset, Rect},
     },
@@ -314,7 +314,7 @@ where
 }
 
 pub trait ComponentExt: Sized {
-    fn map<F>(self, func: F) -> Map<Self, F>;
+    fn map<F>(self, func: F) -> MsgMap<Self, F>;
     fn into_child(self) -> Child<Self>;
     fn request_complete_repaint(&mut self, ctx: &mut EventCtx);
 }
@@ -323,8 +323,8 @@ impl<T> ComponentExt for T
 where
     T: Component,
 {
-    fn map<F>(self, func: F) -> Map<Self, F> {
-        Map::new(self, func)
+    fn map<F>(self, func: F) -> MsgMap<Self, F> {
+        MsgMap::new(self, func)
     }
 
     fn into_child(self) -> Child<Self> {
