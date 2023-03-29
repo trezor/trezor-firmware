@@ -41,7 +41,9 @@
 // 3100 is needed according to tjpgd docs,
 // 256 because we need non overlapping memory in rust
 // 6 << 10 is for huffman decoding table
-#define JPEG_WORK_SIZE (3100 + 256 + (6 << 10))
+// 1000 bytes reserve, as we discovered that we are running out of memory
+// sometimes
+#define JPEG_WORK_SIZE (3100 + 256 + (6 << 10) + 1000)
 
 #if defined BOOTLOADER
 #define BUFFER_SECTION __attribute__((section(".buf")))
