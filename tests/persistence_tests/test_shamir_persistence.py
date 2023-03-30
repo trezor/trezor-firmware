@@ -14,10 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import Iterator
-
-import pytest
-
 from trezorlib import device
 from trezorlib.debuglink import DebugLink
 
@@ -25,24 +21,20 @@ from .. import buttons
 from ..click_tests import recovery
 from ..common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_BASIC_20_3of6
 from ..device_handler import BackgroundDeviceHandler
-from ..emulators import Emulator, EmulatorWrapper
+from ..emulators import Emulator
 from ..upgrade_tests import core_only
 
 
-@pytest.fixture
-def emulator() -> Iterator[Emulator]:
-    with EmulatorWrapper("core") as emu:
-        yield emu
-
-
-def _restart(device_handler: BackgroundDeviceHandler, emulator: Emulator):
-    device_handler.restart(emulator)
+def _restart(
+    device_handler: BackgroundDeviceHandler, core_emulator: Emulator
+) -> DebugLink:
+    device_handler.restart(core_emulator)
     return device_handler.debuglink()
 
 
 @core_only
-def test_abort(emulator: Emulator):
-    device_handler = BackgroundDeviceHandler(emulator.client)
+def test_abort(core_emulator: Emulator):
+    device_handler = BackgroundDeviceHandler(core_emulator.client)
     debug = device_handler.debuglink()
     features = device_handler.features()
 
@@ -55,8 +47,7 @@ def test_abort(emulator: Emulator):
     layout = debug.click(buttons.OK, wait=True)
     assert "Select number of words" in layout.get_content()
 
-    device_handler.restart(emulator)
-    debug = device_handler.debuglink()
+    debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
 
     assert features.recovery_mode is True
@@ -75,8 +66,8 @@ def test_abort(emulator: Emulator):
 
 
 @core_only
-def test_recovery_single_reset(emulator: Emulator):
-    device_handler = BackgroundDeviceHandler(emulator.client)
+def test_recovery_single_reset(core_emulator: Emulator):
+    device_handler = BackgroundDeviceHandler(core_emulator.client)
     debug = device_handler.debuglink()
     features = device_handler.features()
 
@@ -88,7 +79,7 @@ def test_recovery_single_reset(emulator: Emulator):
 
     recovery.select_number_of_words(debug)
 
-    debug = _restart(device_handler, emulator)
+    debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
     assert features.recovery_mode is True
 
@@ -103,7 +94,7 @@ def test_recovery_single_reset(emulator: Emulator):
 
 
 @core_only
-def test_recovery_on_old_wallet(emulator: Emulator):
+def test_recovery_on_old_wallet(core_emulator: Emulator):
     """Check that the recovery workflow started on a disconnected device can survive
     handling by the old Wallet.
 
@@ -112,7 +103,7 @@ def test_recovery_on_old_wallet(emulator: Emulator):
     Initialize+GetFeatures). At minimum, these two messages must not interrupt the
     running recovery.
     """
-    device_handler = BackgroundDeviceHandler(emulator.client)
+    device_handler = BackgroundDeviceHandler(core_emulator.client)
     debug = device_handler.debuglink()
     features = device_handler.features()
 
@@ -124,7 +115,7 @@ def test_recovery_on_old_wallet(emulator: Emulator):
     recovery.confirm_recovery(debug)
 
     # restart to get into stand-alone recovery
-    debug = _restart(device_handler, emulator)
+    debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
     assert features.recovery_mode is True
 
@@ -171,7 +162,7 @@ def test_recovery_on_old_wallet(emulator: Emulator):
 
 
 @core_only
-def test_recovery_multiple_resets(emulator: Emulator):
+def test_recovery_multiple_resets(core_emulator: Emulator):
     def enter_shares_with_restarts(debug: DebugLink) -> None:
         shares = MNEMONIC_SLIP39_ADVANCED_20
         layout = debug.read_layout()
@@ -182,11 +173,11 @@ def test_recovery_multiple_resets(emulator: Emulator):
             layout = recovery.enter_share(debug, share)
             remaining -= 1
             expected_text = "You have entered"
-            debug = _restart(device_handler, emulator)
+            debug = _restart(device_handler, core_emulator)
 
         assert "You have successfully recovered your wallet" in layout.get_content()
 
-    device_handler = BackgroundDeviceHandler(emulator.client)
+    device_handler = BackgroundDeviceHandler(core_emulator.client)
     debug = device_handler.debuglink()
     features = device_handler.features()
 
@@ -201,7 +192,7 @@ def test_recovery_multiple_resets(emulator: Emulator):
     recovery.select_number_of_words(debug)
 
     # restart
-    debug = _restart(device_handler, emulator)
+    debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
     assert features.recovery_mode is True
 
