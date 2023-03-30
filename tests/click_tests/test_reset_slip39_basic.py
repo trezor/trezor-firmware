@@ -15,68 +15,85 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from typing import TYPE_CHECKING
-from unittest import mock
 
 import pytest
 
 from trezorlib import device, messages
 
 from .. import buttons
-from ..common import generate_entropy
+from ..common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from . import reset
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
+pytestmark = [pytest.mark.skip_t1]
 
 
-@pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_slip39_basic_1of1(device_handler: "BackgroundDeviceHandler"):
+    _slip39_basic_reset(device_handler, 1, 1)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_slip39_basic_16of16(device_handler: "BackgroundDeviceHandler"):
+    _slip39_basic_reset(device_handler, 16, 16)
+
+
+@WITH_MOCK_URANDOM
+def _slip39_basic_reset(
+    device_handler: "BackgroundDeviceHandler", num_of_shares: int, threshold: int
+):
     features = device_handler.features()
     debug = device_handler.debuglink()
 
     assert features.initialized is False
 
-    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-    with mock.patch("os.urandom", os_urandom), device_handler:
-        device_handler.run(
-            device.reset,
-            strength=128,
-            backup_type=messages.BackupType.Slip39_Basic,
-            pin_protection=False,
-        )
+    device_handler.run(
+        device.reset,
+        strength=128,
+        backup_type=messages.BackupType.Slip39_Basic,
+        pin_protection=False,
+    )
 
-        # confirm new wallet
-        reset.confirm_wait(debug, "Wallet creation")
+    # confirm new wallet
+    reset.confirm_new_wallet(debug)
 
-        # confirm back up
-        reset.confirm_read(debug, "Success")
+    # confirm back up
+    reset.confirm_read(debug, "Success")
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
 
-        # set num of shares
-        # default is 5 so we press RESET_MINUS 4 times
-        reset.set_selection(debug, buttons.RESET_MINUS, 4)
+    # set num of shares - default is 5
+    if num_of_shares < 5:
+        reset.set_selection(debug, buttons.RESET_MINUS, 5 - num_of_shares)
+    else:
+        reset.set_selection(debug, buttons.RESET_PLUS, num_of_shares - 5)
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
 
-        # set threshold
-        # threshold will default to 1
-        reset.set_selection(debug, buttons.RESET_MINUS, 0)
+    # set threshold
+    # TODO: could make it general as well
+    if num_of_shares == 1 and threshold == 1:
+        reset.set_selection(debug, buttons.RESET_PLUS, 0)
+    elif num_of_shares == 16 and threshold == 16:
+        reset.set_selection(debug, buttons.RESET_PLUS, 11)
+    else:
+        raise RuntimeError("not a supported combination")
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
 
-        # confirm backup warning
-        reset.confirm_read(debug, "Caution")
+    # confirm backup warning (hold-to-confirm on TR)
+    reset.confirm_read(debug, "Caution", hold=True)
 
+    all_words: list[str] = []
+    for _ in range(num_of_shares):
         # read words
-        words = reset.read_words(debug)
+        words = reset.read_words(debug, messages.BackupType.Slip39_Basic)
 
         # confirm words
         reset.confirm_words(debug, words)
@@ -84,98 +101,23 @@ def test_reset_slip39_basic_1of1(device_handler: "BackgroundDeviceHandler"):
         # confirm share checked
         reset.confirm_read(debug, "Success")
 
-        # confirm backup done
-        reset.confirm_read(debug, "Success")
+        all_words.append(" ".join(words))
 
-        # generate secret locally
-        internal_entropy = debug.state().reset_entropy
-        assert internal_entropy is not None
-        secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
+    # confirm backup done
+    reset.confirm_read(debug, "Success")
 
-        # validate that all combinations will result in the correct master secret
-        validate = [" ".join(words)]
-        reset.validate_mnemonics(validate, secret)
+    # generate secret locally
+    internal_entropy = debug.state().reset_entropy
+    assert internal_entropy is not None
+    secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
 
-        assert device_handler.result() == "Initialized"
-        features = device_handler.features()
-        assert features.initialized is True
-        assert features.needs_backup is False
-        assert features.pin_protection is False
-        assert features.passphrase_protection is False
-        assert features.backup_type is messages.BackupType.Slip39_Basic
+    # validate that all combinations will result in the correct master secret
+    reset.validate_mnemonics(all_words, secret)
 
-
-@pytest.mark.skip_t1
-@pytest.mark.setup_client(uninitialized=True)
-def test_reset_slip39_basic_16of16(device_handler: "BackgroundDeviceHandler"):
+    assert device_handler.result() == "Initialized"
     features = device_handler.features()
-    debug = device_handler.debuglink()
-
-    assert features.initialized is False
-
-    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-    with mock.patch("os.urandom", os_urandom), device_handler:
-        device_handler.run(
-            device.reset,
-            strength=128,
-            backup_type=messages.BackupType.Slip39_Basic,
-            pin_protection=False,
-        )
-
-        # confirm new wallet
-        reset.confirm_wait(debug, "Wallet creation")
-
-        # confirm back up
-        reset.confirm_read(debug, "Success")
-
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
-
-        # set num of shares
-        # default is 5 so we add 11
-        reset.set_selection(debug, buttons.RESET_PLUS, 11)
-
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
-
-        # set threshold
-        # default is 5 so we add 11
-        reset.set_selection(debug, buttons.RESET_PLUS, 11)
-
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
-
-        # confirm backup warning
-        reset.confirm_read(debug, "Caution")
-
-        all_words: list[str] = []
-        for _ in range(16):
-            # read words
-            words = reset.read_words(debug)
-
-            # confirm words
-            reset.confirm_words(debug, words)
-
-            # confirm share checked
-            reset.confirm_read(debug, "Success")
-
-            all_words.append(" ".join(words))
-
-        # confirm backup done
-        reset.confirm_read(debug, "Success")
-
-        # generate secret locally
-        internal_entropy = debug.state().reset_entropy
-        assert internal_entropy is not None
-        secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
-
-        # validate that all combinations will result in the correct master secret
-        reset.validate_mnemonics(all_words, secret)
-
-        assert device_handler.result() == "Initialized"
-        features = device_handler.features()
-        assert features.initialized is True
-        assert features.needs_backup is False
-        assert features.pin_protection is False
-        assert features.passphrase_protection is False
-        assert features.backup_type is messages.BackupType.Slip39_Basic
+    assert features.initialized is True
+    assert features.needs_backup is False
+    assert features.pin_protection is False
+    assert features.passphrase_protection is False
+    assert features.backup_type is messages.BackupType.Slip39_Basic
