@@ -113,6 +113,12 @@ test_emu_click: ## run click tests
 test_emu_click_ui: ## run click tests with UI testing
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests --ui=test --ui-check-missing $(TESTOPTS)
 
+test_emu_persistence: ## run persistence tests
+	$(PYTEST) $(TESTPATH)/persistence_tests $(TESTOPTS)
+
+test_emu_persistence_ui: ## run persistence tests with UI testing
+	$(PYTEST) $(TESTPATH)/persistence_tests --ui=test --ui-check-missing $(TESTOPTS)
+
 test_emu_ui: ## run ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
 		--ui=test --ui-check-missing --record-text-layout
