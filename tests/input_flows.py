@@ -224,20 +224,16 @@ class InputFlowShowAddressQRCode(InputFlowBase):
 
     def input_flow_tt(self) -> GeneratorType:
         yield
-        self.debug.click(buttons.CORNER_BUTTON)
-        yield
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("HorizontalPage")
 
         self.debug.swipe_left(wait=True)
         self.debug.swipe_right(wait=True)
         self.debug.swipe_left(wait=True)
-        self.debug.click(buttons.CORNER_BUTTON)
-        yield
-        self.debug.press_no()
-        yield
-        self.debug.press_no()
-        yield
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.press_no(wait=True)
         self.debug.press_yes()
 
 
@@ -247,16 +243,13 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
 
     def input_flow_tt(self) -> GeneratorType:
         yield
-        self.debug.click(buttons.CORNER_BUTTON)
-        yield
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("HorizontalPage")
 
         self.debug.swipe_left(wait=True)
-        self.debug.click(buttons.CORNER_BUTTON)
-        yield
-        self.debug.press_no()
-        yield
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
         self.debug.press_yes()
 
 
@@ -274,7 +267,6 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         assert layout.text_content().replace(" ", "") == self.address
 
         self.debug.click(buttons.CORNER_BUTTON)
-        yield  # show QR code
         assert "Qr" in self.debug.wait_layout().str_content
 
         layout = self.debug.swipe_left(wait=True)
@@ -291,12 +283,12 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
             content = layout.text_content().replace(" ", "")
             assert self.xpubs[xpub_num] in content
 
-        self.debug.click(buttons.CORNER_BUTTON)
-        yield  # show address
-        self.debug.press_no()
-        yield  # address mismatch
-        self.debug.press_no()
-        yield  # show address
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # show address
+        self.debug.press_no(wait=True)
+        # address mismatch
+        self.debug.press_no(wait=True)
+        # show address
         self.debug.press_yes()
 
 
@@ -349,13 +341,14 @@ class InputFlowSignTxHighFee(InputFlowBase):
             B.ConfirmOutput,
             B.FeeOverThreshold,
             B.SignTx,
-            B.SignTx,
         ]
         yield from self.go_through_all_screens(screens)
 
 
 def lock_time_input_flow_tt(
-    debug: DebugLink, layout_assert_func: Callable[[str], None]
+    debug: DebugLink,
+    layout_assert_func: Callable[[str], None],
+    double_confirm: bool = False,
 ) -> GeneratorType:
     yield  # confirm output
     debug.wait_layout()
@@ -371,8 +364,9 @@ def lock_time_input_flow_tt(
 
     yield  # confirm transaction
     debug.press_yes()
-    yield  # confirm transaction
-    debug.press_yes()
+    if double_confirm:
+        yield  # confirm transaction
+        debug.press_yes()
 
 
 class InputFlowLockTimeBlockHeight(InputFlowBase):
@@ -385,7 +379,9 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
         assert self.block_height in layout_text
 
     def input_flow_tt(self) -> GeneratorType:
-        yield from lock_time_input_flow_tt(self.debug, self.layout_assert_func)
+        yield from lock_time_input_flow_tt(
+            self.debug, self.layout_assert_func, double_confirm=True
+        )
 
 
 class InputFlowLockTimeDatetime(InputFlowBase):

@@ -21,15 +21,13 @@ from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
-from ...common import generate_entropy
+from ...common import EXTERNAL_ENTROPY, generate_entropy
 
 pytestmark = pytest.mark.skip_t2
 
 
-def reset_device(client: Client, strength):
+def reset_device(client: Client, strength: int):
     # No PIN, no passphrase
-    external_entropy = b"zlutoucky kun upel divoke ody" * 2
-
     ret = client.call_raw(
         messages.ResetDevice(
             display_random=False,
@@ -48,10 +46,10 @@ def reset_device(client: Client, strength):
     # Provide entropy
     assert isinstance(ret, messages.EntropyRequest)
     internal_entropy = client.debug.state().reset_entropy
-    ret = client.call_raw(messages.EntropyAck(entropy=external_entropy))
+    ret = client.call_raw(messages.EntropyAck(entropy=EXTERNAL_ENTROPY))
 
     # Generate mnemonic locally
-    entropy = generate_entropy(strength, internal_entropy, external_entropy)
+    entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
     expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
     mnemonic = []
@@ -104,7 +102,6 @@ def test_reset_device_192(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_256_pin(client: Client):
-    external_entropy = b"zlutoucky kun upel divoke ody" * 2
     strength = 256
 
     ret = client.call_raw(
@@ -147,10 +144,10 @@ def test_reset_device_256_pin(client: Client):
     # Provide entropy
     assert isinstance(ret, messages.EntropyRequest)
     internal_entropy = client.debug.state().reset_entropy
-    ret = client.call_raw(messages.EntropyAck(entropy=external_entropy))
+    ret = client.call_raw(messages.EntropyAck(entropy=EXTERNAL_ENTROPY))
 
     # Generate mnemonic locally
-    entropy = generate_entropy(strength, internal_entropy, external_entropy)
+    entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
     expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
     mnemonic = []
@@ -194,7 +191,6 @@ def test_reset_device_256_pin(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_failed_pin(client: Client):
-    # external_entropy = b'zlutoucky kun upel divoke ody' * 2
     strength = 128
 
     ret = client.call_raw(

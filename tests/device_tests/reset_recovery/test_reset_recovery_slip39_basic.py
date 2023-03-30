@@ -15,24 +15,24 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import itertools
-from unittest import mock
 
 import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.messages import BackupType, ButtonRequestType as B
+from trezorlib.messages import BackupType
 from trezorlib.tools import parse_path
 
-from ...common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
-
-EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
-MOCK_OS_URANDOM = mock.Mock(return_value=EXTERNAL_ENTROPY)
+from ...common import WITH_MOCK_URANDOM
+from ...input_flows import (
+    InputFlowSlip39BasicRecovery,
+    InputFlowSlip39BasicResetRecovery,
+)
 
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
-@mock.patch("os.urandom", MOCK_OS_URANDOM)
+@WITH_MOCK_URANDOM
 def test_reset_recovery(client: Client):
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
@@ -47,62 +47,10 @@ def test_reset_recovery(client: Client):
         assert address_before == address_after
 
 
-def reset(client: Client, strength=128):
-    all_mnemonics = []
-
-    def input_flow():
-        # 1. Confirm Reset
-        # 2. Backup your seed
-        # 3. Confirm warning
-        # 4. shares info
-        # 5. Set & Confirm number of shares
-        # 6. threshold info
-        # 7. Set & confirm threshold value
-        # 8. Confirm show seeds
-        yield from click_through(client.debug, screens=8, code=B.ResetDevice)
-
-        # show & confirm shares
-        for _ in range(5):
-            # mnemonic phrases
-            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
-            all_mnemonics.append(mnemonic)
-
-            # Confirm continue to next share
-            br = yield
-            assert br.code == B.Success
-            client.debug.press_yes()
-
-        # safety warning
-        br = yield
-        assert br.code == B.Success
-        client.debug.press_yes()
-
+def reset(client: Client, strength: int = 128) -> list[str]:
     with client:
-        client.set_expected_responses(
-            [
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.EntropyRequest(),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-            ]
-            + [
-                # individual mnemonic
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-            ]
-            * 5  # number of shares
-            + [
-                messages.ButtonRequest(code=B.Success),
-                messages.Success,
-                messages.Features,
-            ]
-        )
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicResetRecovery(client)
+        client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
         device.reset(
@@ -122,20 +70,13 @@ def reset(client: Client, strength=128):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
 
-    return all_mnemonics
+    return IF.mnemonics
 
 
-def recover(client: Client, shares):
-    debug = client.debug
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # run recovery flow
-        yield from recovery_enter_shares(debug, shares)
-
+def recover(client: Client, shares: list[str]):
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSlip39BasicRecovery(client, shares)
+        client.set_input_flow(IF.get())
         ret = device.recover(client, pin_protection=False, label="label")
 
     # Workflow successfully ended
