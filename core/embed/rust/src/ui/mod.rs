@@ -4,6 +4,8 @@ pub mod macros;
 pub mod animation;
 pub mod component;
 pub mod constant;
+#[cfg(feature = "ui_debug")]
+pub mod debug;
 pub mod display;
 pub mod event;
 pub mod geometry;

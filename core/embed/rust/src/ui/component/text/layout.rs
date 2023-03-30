@@ -506,18 +506,18 @@ impl<'a> Op<'a> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct Span {
+pub struct Span {
     /// How many characters from the input text this span is laying out.
-    length: usize,
+    pub length: usize,
     /// How many chars from the input text should we skip before fitting the
     /// next span?
-    skip_next_chars: usize,
+    pub skip_next_chars: usize,
     /// By how much to offset the cursor after this span. If the vertical offset
     /// is bigger than zero, it means we are breaking the line.
-    advance: Offset,
+    pub advance: Offset,
     /// If we are breaking the line, should we insert a hyphen right after this
     /// span to indicate a word-break?
-    insert_hyphen_before_line_break: bool,
+    pub insert_hyphen_before_line_break: bool,
 }
 
 impl Span {
