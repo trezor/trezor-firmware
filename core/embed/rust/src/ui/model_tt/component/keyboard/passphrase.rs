@@ -1,11 +1,13 @@
 use crate::ui::{
-    component::{base::ComponentExt, Child, Component, Event, EventCtx, Never},
+    component::{
+        base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
+    },
     display,
     display::toif::Icon,
     geometry::{Grid, Offset, Rect},
     model_tt::component::{
         button::{Button, ButtonContent, ButtonMsg},
-        keyboard::common::{paint_pending_marker, MultiTapKeyboard, TextBox},
+        keyboard::common::{paint_pending_marker, MultiTapKeyboard},
         swipe::{Swipe, SwipeDirection},
         theme, ScrollBar,
     },
