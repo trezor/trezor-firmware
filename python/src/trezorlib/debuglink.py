@@ -195,6 +195,9 @@ class DebugLink:
         # To be set by TrezorClientDebugLink (is not known during creation time)
         self.model: Optional[str] = None
 
+        # Where screenshots are being saved
+        self.screenshot_recording_dir: Optional[str] = None
+
         # For T1 screenshotting functionality in DebugUI
         self.t1_take_screenshots = False
         self.t1_screenshot_directory: Optional[Path] = None
@@ -411,16 +414,24 @@ class DebugLink:
     def reseed(self, value: int) -> protobuf.MessageType:
         return self._call(messages.DebugLinkReseedRandom(value=value))
 
-    def start_recording(self, directory: str) -> None:
+    def start_recording(
+        self, directory: str, refresh_index: Optional[int] = None
+    ) -> None:
+        self.screenshot_recording_dir = directory
         # Different recording logic between TT and T1
         if self.model == "T":
-            self._call(messages.DebugLinkRecordScreen(target_directory=directory))
+            self._call(
+                messages.DebugLinkRecordScreen(
+                    target_directory=directory, refresh_index=refresh_index
+                )
+            )
         else:
             self.t1_screenshot_directory = Path(directory)
             self.t1_screenshot_counter = 0
             self.t1_take_screenshots = True
 
     def stop_recording(self) -> None:
+        self.screenshot_recording_dir = None
         # Different recording logic between TT and T1
         if self.model == "T":
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
