@@ -304,10 +304,12 @@ impl Rect {
         self.bottom_left().center(self.bottom_right())
     }
 
+    /// Whether a `Point` is inside the `Rect`.
     pub const fn contains(&self, point: Point) -> bool {
         point.x >= self.x0 && point.x < self.x1 && point.y >= self.y0 && point.y < self.y1
     }
 
+    /// Create a bigger `Rect` that contains both `self` and `other`.
     pub const fn union(&self, other: Self) -> Self {
         Self {
             x0: min(self.x0, other.x0),
@@ -317,6 +319,8 @@ impl Rect {
         }
     }
 
+    /// Create a smaller `Rect` from the bigger one by moving
+    /// all the four sides closer to the center.
     pub const fn inset(&self, insets: Insets) -> Self {
         Self {
             x0: self.x0 + insets.left,
@@ -335,6 +339,12 @@ impl Rect {
         }
     }
 
+    /// Move all the sides closer to the center by the same distance.
+    pub const fn shrink(&self, size: i16) -> Self {
+        self.inset(Insets::uniform(size))
+    }
+
+    /// Leave just the left side of a certain `width`.
     pub const fn cut_from_left(&self, width: i16) -> Self {
         Self {
             x0: self.x0,
@@ -344,6 +354,7 @@ impl Rect {
         }
     }
 
+    /// Leave just the right side of a certain `width`.
     pub const fn cut_from_right(&self, width: i16) -> Self {
         Self {
             x0: self.x1 - width,
@@ -353,6 +364,7 @@ impl Rect {
         }
     }
 
+    /// Split `Rect` into top and bottom, given the top one's `height`.
     pub const fn split_top(self, height: i16) -> (Self, Self) {
         let height = clamp(height, 0, self.height());
 
@@ -367,10 +379,12 @@ impl Rect {
         (top, bottom)
     }
 
+    /// Split `Rect` into top and bottom, given the bottom one's `height`.
     pub const fn split_bottom(self, height: i16) -> (Self, Self) {
         self.split_top(self.height() - height)
     }
 
+    /// Split `Rect` into left and right, given the left one's `width`.
     pub const fn split_left(self, width: i16) -> (Self, Self) {
         let width = clamp(width, 0, self.width());
 
@@ -385,6 +399,7 @@ impl Rect {
         (left, right)
     }
 
+    /// Split `Rect` into left and right, given the right one's `width`.
     pub const fn split_right(self, width: i16) -> (Self, Self) {
         self.split_left(self.width() - width)
     }
@@ -406,6 +421,7 @@ impl Rect {
         }
     }
 
+    /// Moving `Rect` by the given offset.
     pub const fn translate(&self, offset: Offset) -> Self {
         Self {
             x0: self.x0 + offset.x,
@@ -413,6 +429,16 @@ impl Rect {
             x1: self.x1 + offset.x,
             y1: self.y1 + offset.y,
         }
+    }
+
+    /// Get all four corner points.
+    pub fn corner_points(&self) -> [Point; 4] {
+        [
+            self.top_left(),
+            self.top_right() - Offset::x(1),
+            self.bottom_right() - Offset::uniform(1),
+            self.bottom_left() - Offset::y(1),
+        ]
     }
 }
 
@@ -538,7 +564,7 @@ impl Grid {
         let cell_height = (self.area.height() - spacing_height) / nrows;
 
         // Not every area can be fully covered by equal-sized cells and spaces, there
-        // might be serveral pixels left unused. We'll distribute them by 1px to
+        // might be several pixels left unused. We'll distribute them by 1px to
         // the leftmost cells.
         let leftover_width = (self.area.width() - spacing_width) % ncols;
         let leftover_height = (self.area.height() - spacing_height) % nrows;
