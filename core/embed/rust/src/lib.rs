@@ -39,6 +39,9 @@ fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
 
     if let Some(location) = panic_info.location() {
         let file = location.file();
+        print!(file);
+        print!(":");
+        println!(inttostr!(location.line()));
         trezorhal::fatal_error::__fatal_error("", "rs", file, location.line(), "");
     } else {
         trezorhal::fatal_error::__fatal_error("", "rs", "", 0, "");
