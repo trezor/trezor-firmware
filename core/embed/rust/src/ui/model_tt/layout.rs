@@ -1578,8 +1578,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
-    /// def jpeg_info(data: bytes) -> (width: int, height: int, mcu_height: int):
-    ///     """Get JPEG image dimensions."""
+    /// def jpeg_info(data: bytes) -> tuple[int, int, int]:
+    ///     """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
     Qstr::MP_QSTR_jpeg_info => obj_fn_1!(upy_jpeg_info).as_obj(),
 
     /// def jpeg_test(data: bytes) -> bool:
@@ -1881,7 +1881,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     /// ) -> object:
     ///    """Checklist of backup steps. Active index is highlighted, previous items have check
-    ///    mark nex to them."""
+    ///    mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
     /// def confirm_recovery(
@@ -1898,7 +1898,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,
-    /// ) -> int | CANCELLED:
+    /// ) -> int | str:  # TT returns int
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
@@ -1924,7 +1924,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///    """Show progress loader. Please note that the number of lines reserved on screen for
     ///    description is determined at construction time. If you want multiline descriptions
-    ///    make sure the initial desciption has at least that amount of lines."""
+    ///    make sure the initial description has at least that amount of lines."""
     Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
 
     /// def show_progress_coinjoin(
@@ -1967,11 +1967,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 mod tests {
     use crate::{
         trace::Trace,
-        ui::{
-            component::{Component, FormattedText},
-            geometry::Rect,
-            model_tt::constant,
-        },
+        ui::{geometry::Rect, model_tt::constant},
     };
 
     use super::*;
