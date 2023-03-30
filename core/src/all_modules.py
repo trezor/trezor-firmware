@@ -153,6 +153,8 @@ trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
 trezor.ui.layouts.homescreen
 import trezor.ui.layouts.homescreen
+trezor.ui.layouts.progress
+import trezor.ui.layouts.progress
 trezor.ui.layouts.recovery
 import trezor.ui.layouts.recovery
 trezor.ui.layouts.reset
@@ -165,6 +167,8 @@ trezor.ui.layouts.tt_v2.fido
 import trezor.ui.layouts.tt_v2.fido
 trezor.ui.layouts.tt_v2.homescreen
 import trezor.ui.layouts.tt_v2.homescreen
+trezor.ui.layouts.tt_v2.progress
+import trezor.ui.layouts.tt_v2.progress
 trezor.ui.layouts.tt_v2.recovery
 import trezor.ui.layouts.tt_v2.recovery
 trezor.ui.layouts.tt_v2.reset
