@@ -62,6 +62,7 @@ where
     button_prev_cancels: ButtonPrevCancels,
     is_go_back: Option<fn(&U::Msg) -> bool>,
     swipe_left: bool,
+    swipe_right: bool,
     fade: Option<u16>,
 }
 
@@ -83,6 +84,7 @@ where
             button_prev_cancels: ButtonPrevCancels::Never,
             is_go_back: None,
             swipe_left: false,
+            swipe_right: false,
             fade: None,
         }
     }
@@ -111,10 +113,16 @@ where
         self
     }
 
+    pub fn with_swipe_right(mut self) -> Self {
+        self.swipe_right = true;
+        self
+    }
+
     fn setup_swipe(&mut self) {
         self.swipe.allow_up = self.scrollbar.has_next_page();
         self.swipe.allow_down = self.scrollbar.has_previous_page();
         self.swipe.allow_left = self.swipe_left;
+        self.swipe.allow_right = self.swipe_right;
     }
 
     fn on_page_change(&mut self, ctx: &mut EventCtx) {
@@ -218,6 +226,9 @@ where
                 }
                 SwipeDirection::Left if self.swipe_left => {
                     return Some(PageMsg::Aux(AuxPageMsg::SwipeLeft));
+                }
+                SwipeDirection::Right if self.swipe_right => {
+                    return Some(PageMsg::Aux(AuxPageMsg::SwipeRight));
                 }
                 _ => {
                     // Ignore other directions.
@@ -394,6 +405,11 @@ where
             pad: Pad::with_background(background),
         }
     }
+
+    pub fn with_swipe_left(mut self) -> Self {
+        self.inner = self.inner.with_swipe_left();
+        self
+    }
 }
 
 impl<T> Component for SwipeHoldPage<T>
@@ -418,6 +434,7 @@ where
                 return Some(PageMsg::Controls(CancelConfirmMsg::Cancelled))
             }
             Some(PageMsg::Controls(CancelHoldMsg::HoldButton(b))) => Some(b),
+            Some(PageMsg::Aux(a)) => return Some(PageMsg::Aux(a)),
             _ => None,
         };
         if handle_hold_event(

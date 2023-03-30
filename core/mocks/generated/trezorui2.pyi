@@ -145,24 +145,37 @@ def show_address_details(
 
 
 # rust/src/ui/model_tt/layout.rs
+def show_spending_details(
+    *,
+    account: str,
+    fee_rate: str | None = None,
+) -> object:
+    """Show metadata when for outgoing transaction."""
+
+
+# rust/src/ui/model_tt/layout.rs
 def confirm_value(
     *,
     title: str,
-    description: str,
     value: str,
+    description: str | None = None,
+    subtitle: str | None = None,
     verb: str | None = None,
+    verb_cancel: str | None = None,
+    info_button: bool = False,
     hold: bool = False,
 ) -> object:
     """Confirm value. Merge of confirm_total and confirm_output."""
 
 
 # rust/src/ui/model_tt/layout.rs
-def confirm_joint_total(
+def confirm_total(
     *,
-    spending_amount: str,
-    total_amount: str,
+    title: str,
+    items: List[Tuple[str, str]],
+    info_button: bool = False,
 ) -> object:
-    """Confirm total if there are external inputs."""
+    """Transaction summary. Always hold to confirm."""
 
 
 # rust/src/ui/model_tt/layout.rs

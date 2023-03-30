@@ -38,13 +38,26 @@ class UiConfirm:
 
 
 class UiConfirmOutput(UiConfirm):
-    def __init__(self, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit):
+    def __init__(
+        self,
+        output: TxOutput,
+        coin: CoinInfo,
+        amount_unit: AmountUnit,
+        output_index: int,
+    ):
         self.output = output
         self.coin = coin
         self.amount_unit = amount_unit
+        self.output_index = output_index
 
     def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
-        return layout.confirm_output(ctx, self.output, self.coin, self.amount_unit)
+        return layout.confirm_output(
+            ctx,
+            self.output,
+            self.coin,
+            self.amount_unit,
+            self.output_index,
+        )
 
 
 class UiConfirmDecredSSTXSubmission(UiConfirm):
@@ -222,8 +235,8 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
         )
 
 
-def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmOutput(output, coin, amount_unit))
+def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
+    return (yield UiConfirmOutput(output, coin, amount_unit, output_index))
 
 
 def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]

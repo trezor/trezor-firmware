@@ -170,7 +170,6 @@ def _responses(
 
     resp += [
         messages.ButtonRequest(code=B.SignTx),
-        (tt, messages.ButtonRequest(code=B.SignTx)),
         request_input(0),
         request_meta(INP1.prev_hash),
         request_input(0, INP1.prev_hash),

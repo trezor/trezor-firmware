@@ -73,7 +73,6 @@ def test_opreturn(client: Client):
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_4075a1),
                 request_input(0, TXHASH_4075a1),

@@ -44,8 +44,7 @@ async def ask_transfer(
     await confirm_output(
         ctx,
         transfer.recipient,
-        f"Send {format_amount(_get_xem_amount(transfer), NEM_MAX_DIVISIBILITY)} XEM",
-        "Confirm transfer",
+        f"{format_amount(_get_xem_amount(transfer), NEM_MAX_DIVISIBILITY)} XEM",
     )
 
     await require_confirm_final(ctx, common.fee)

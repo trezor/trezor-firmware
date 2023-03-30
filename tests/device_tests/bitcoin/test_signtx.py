@@ -20,7 +20,7 @@ import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import H_, parse_path
 
 from ...tx_cache import TxCache
@@ -51,6 +51,9 @@ TXHASH_d2dcda = bytes.fromhex(
 )
 TXHASH_e5040e = bytes.fromhex(
     "e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd"
+)
+TXHASH_ec5194 = bytes.fromhex(
+    "ec519494bea3746bd5fbdd7a15dac5049a873fa674c67e596d46505b9b835425"
 )
 TXHASH_50f6f1 = bytes.fromhex(
     "50f6f1209ca92d7359564be803cb2c932cde7d370f7cee50fd1fad6790f6206d"
@@ -87,6 +90,9 @@ TXHASH_1f326f = bytes.fromhex(
 )
 
 
+CORNER_BUTTON = (215, 25)
+
+
 def test_one_one_fee(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
@@ -112,7 +118,6 @@ def test_one_one_fee(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_0dac36),
                 request_input(0, TXHASH_0dac36),
@@ -168,7 +173,6 @@ def test_testnet_one_two_fee(client: Client):
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_e5040e),
                 request_input(0, TXHASH_e5040e),
@@ -220,7 +224,6 @@ def test_testnet_fee_high_warning(client: Client):
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.FeeOverThreshold),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_25fee5),
                 request_input(0, TXHASH_25fee5),
@@ -274,7 +277,6 @@ def test_one_two_fee(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_50f6f1),
                 request_input(0, TXHASH_50f6f1),
@@ -340,7 +342,6 @@ def test_one_three_fee(client: Client):
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(2),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_bb5169),
                 request_input(0, TXHASH_bb5169),
@@ -410,7 +411,6 @@ def test_two_two(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_ac4ca0),
                 request_input(0, TXHASH_ac4ca0),
@@ -558,7 +558,6 @@ def test_lots_of_change(client: Client):
             + [
                 messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_892d06),
                 request_input(0, TXHASH_892d06),
@@ -608,7 +607,6 @@ def test_fee_high_warning(client: Client):
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.FeeOverThreshold),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_1f326f),
                 request_input(0, TXHASH_1f326f),
@@ -665,7 +663,6 @@ def test_fee_high_hardfail(client: Client):
                 B.ConfirmOutput,
                 B.ConfirmOutput,
                 B.FeeOverThreshold,
-                B.SignTx,
                 B.SignTx,
             ):
                 br = yield
@@ -743,7 +740,6 @@ def test_p2sh(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_58d56a),
                 request_input(0, TXHASH_58d56a),
@@ -834,7 +830,6 @@ def test_attack_change_outputs(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_ac4ca0),
                 request_input(0, TXHASH_ac4ca0),
@@ -1003,7 +998,6 @@ def test_attack_change_input_address(client: Client):
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_d2dcda),
                 request_input(0, TXHASH_d2dcda),
@@ -1054,7 +1048,6 @@ def test_spend_coinbase(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_005f6f),
                 request_input(0, FAKE_TXHASH_005f6f),
@@ -1116,7 +1109,6 @@ def test_two_changes(client: Client):
                 request_output(1),
                 request_output(2),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_e5040e),
                 request_input(0, TXHASH_e5040e),
@@ -1176,7 +1168,6 @@ def test_change_on_main_chain_allowed(client: Client):
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_e5040e),
                 request_input(0, TXHASH_e5040e),
@@ -1440,7 +1431,6 @@ def test_lock_time(client: Client, lock_time, sequence):
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_0dac36),
                 request_input(0, TXHASH_0dac36),
@@ -1551,8 +1541,6 @@ def test_lock_time_datetime(client: Client, lock_time_str):
 
         yield  # confirm transaction
         client.debug.press_yes()
-        yield  # confirm transaction
-        client.debug.press_yes()
 
     lock_time_naive = datetime.strptime(lock_time_str, "%Y-%m-%d %H:%M:%S")
     lock_time_utc = lock_time_naive.replace(tzinfo=timezone.utc)
@@ -1568,5 +1556,160 @@ def test_lock_time_datetime(client: Client, lock_time_str):
             [inp1],
             [out1],
             lock_time=lock_time_timestamp,
+            prev_txes=TX_CACHE_MAINNET,
+        )
+
+
+@pytest.mark.skip_t1(reason="Cannot test layouts on T1")
+def test_information(client: Client):
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+        sequence=0xFFFF_FFFE,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    def input_flow():
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.press_yes()
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.press_yes()
+
+        yield  # confirm transaction
+        client.debug.wait_layout()
+        client.debug.press_info()
+
+        layout = client.debug.wait_layout()
+        content = layout.get_content().lower()
+        assert "sending from" in content
+        assert "legacy #6" in content
+        assert "fee rate" in content
+        assert "71.56 sat" in content
+        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow)
+        client.watch_layout(True)
+
+        btc.sign_tx(
+            client,
+            "Bitcoin",
+            [inp1],
+            [out1],
+            prev_txes=TX_CACHE_MAINNET,
+        )
+
+
+@pytest.mark.skip_t1(reason="Cannot test layouts on T1")
+def test_information_mixed(client: Client):
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+        amount=31_000_000,
+        prev_hash=TXHASH_e5040e,
+        prev_index=0,
+    )
+    inp2 = messages.TxInputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("m/86h/1h/0h/1/0"),
+        amount=4_600,
+        prev_hash=TXHASH_ec5194,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    out1 = messages.TxOutputType(
+        address="msj42CCGruhRsFrGATiUuh25dtxYtnpbTx",
+        amount=31_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    def input_flow():
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.press_yes()
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.press_yes()
+
+        yield  # confirm transaction
+        client.debug.wait_layout()
+        client.debug.press_info()
+
+        layout = client.debug.wait_layout()
+        content = layout.get_content().lower()
+        assert "sending from" in content
+        assert "multiple accounts" in content
+        assert "fee rate" in content
+        assert "18.33 sat" in content
+        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow)
+        client.watch_layout(True)
+
+        btc.sign_tx(
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1],
+            prev_txes=TX_CACHE_TESTNET,
+        )
+
+
+@pytest.mark.skip_t1(reason="Cannot test layouts on T1")
+def test_information_cancel(client: Client):
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+        sequence=0xFFFF_FFFE,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    def input_flow():
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.press_yes()
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.press_yes()
+
+        yield  # confirm transaction
+        client.debug.wait_layout()
+        client.debug.press_info()
+
+        client.debug.wait_layout()
+        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.press_no()
+
+    with client, pytest.raises(Cancelled):
+        client.set_input_flow(input_flow)
+        client.watch_layout(True)
+
+        btc.sign_tx(
+            client,
+            "Bitcoin",
+            [inp1],
+            [out1],
             prev_txes=TX_CACHE_MAINNET,
         )

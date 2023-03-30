@@ -531,37 +531,63 @@ async def confirm_output(
     ctx: GenericContext,
     address: str,
     amount: str,
-    title: str = "SENDING",
+    title: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     address_label: str | None = None,
+    output_index: int | None = None,
 ) -> None:
-    title = title.upper()
-    if title.startswith("CONFIRM "):
-        title = title[len("CONFIRM ") :]
+    if title is not None:
+        if title.upper().startswith("CONFIRM "):
+            title = title[len("CONFIRM ") :]
+        amount_title = title.upper()
+        recipient_title = title.upper()
+    elif output_index is not None:
+        amount_title = f"AMOUNT #{output_index + 1}"
+        recipient_title = f"RECIPIENT #{output_index + 1}"
+    else:
+        amount_title = "SENDING AMOUNT"
+        recipient_title = "SENDING TO"
 
-    description = f"To your {address_label}:" if address_label else "To:"
-    await confirm_value(
-        ctx,
-        title,
-        address,
-        description,
-        "confirm_output",
-        br_code,
-        verb="NEXT",
-    )
+    while True:
+        result = await interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_value(
+                    title=recipient_title,
+                    subtitle=address_label,
+                    description=None,
+                    value=address,
+                    verb="CONTINUE",
+                    hold=False,
+                    info_button=False,
+                )
+            ),
+            "confirm_output",
+            br_code,
+        )
+        if result is not CONFIRMED:
+            raise ActionCancelled
 
-    # Second screen could be HoldToConfirm if requested
-    await confirm_value(
-        ctx,
-        title,
-        amount,
-        "Amount:",
-        "confirm_output",
-        br_code,
-        verb=None if hold else "NEXT",
-        hold=hold,
-    )
+        result = await interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_value(
+                    title=amount_title,
+                    subtitle=None,
+                    description=None,
+                    value=amount,
+                    verb=None if hold else "CONFIRM",
+                    verb_cancel="^",
+                    hold=hold,
+                    info_button=False,
+                )
+            ),
+            "confirm_output",
+            br_code,
+        )
+        if result is CONFIRMED:
+            return
 
 
 async def confirm_payment_request(
@@ -780,7 +806,9 @@ def confirm_value(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     *,
     verb: str | None = None,
+    subtitle: str | None = None,
     hold: bool = False,
+    info_button: bool = False,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
@@ -793,10 +821,12 @@ def confirm_value(
             RustLayout(
                 trezorui2.confirm_value(
                     title=title.upper(),
+                    subtitle=subtitle,
                     description=description,
                     value=value,
                     verb=verb,
                     hold=hold,
+                    info_button=info_button,
                 )
             ),
             br_type,
@@ -837,47 +867,63 @@ async def confirm_total(
     total_amount: str,
     fee_amount: str,
     fee_rate_amount: str | None = None,
-    title: str = "SENDING",
+    title: str = "SUMMARY",
     total_label: str = "Total amount:",
-    fee_label: str = "Fee:",
+    fee_label: str = "Including fee:",
     account_label: str | None = None,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
-    await confirm_value(
+    layout = RustLayout(
+        trezorui2.confirm_total(
+            title=title,
+            items=[
+                (total_label, total_amount),
+                (fee_label, fee_amount),
+            ],
+            info_button=account_label is not None,
+        )
+    )
+    await button_request(
         ctx,
-        title,
-        f"{fee_amount}\n({fee_rate_amount})"
-        if fee_rate_amount is not None
-        else fee_amount,
-        fee_label,
         br_type,
         br_code,
-        verb="NEXT",
+        pages=layout.page_count(),
     )
 
-    await confirm_value(
-        ctx,
-        title,
-        total_amount,
-        f"From {account_label}\r\n{total_label}" if account_label else total_label,
-        br_type,
-        br_code,
-        hold=True,
-    )
+    while True:
+        result = await ctx.wait(layout)
+
+        if result is CONFIRMED:
+            return
+        elif result is INFO and account_label is not None:
+            result = await ctx.wait(
+                RustLayout(
+                    trezorui2.show_spending_details(
+                        account=account_label, fee_rate=fee_rate_amount
+                    )
+                )
+            )
+            assert result is CANCELLED
+            layout.request_complete_repaint()
+            continue
+
+        raise ActionCancelled
 
 
 async def confirm_joint_total(
     ctx: GenericContext, spending_amount: str, total_amount: str
 ) -> None:
-
     await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
-                trezorui2.confirm_joint_total(
-                    spending_amount=spending_amount,
-                    total_amount=total_amount,
+                trezorui2.confirm_total(
+                    title="JOINT TRANSACTION",
+                    items=[
+                        ("You are contributing:", spending_amount),
+                        ("To the total amount:", total_amount),
+                    ],
                 )
             ),
             "confirm_joint_total",

@@ -148,7 +148,6 @@ def test_data_streaming(client: Client):
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 (tt, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
                 (tt, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
-                (tt, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
                 message_filters.EthereumTxRequest(
                     data_length=1_024,
                     signature_r=None,

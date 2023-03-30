@@ -418,7 +418,11 @@ impl<T> Button<T> {
 
         let left = if let Some(verb) = left {
             left_is_small = verb.as_ref().len() <= 4;
-            Button::with_text(verb)
+            if verb.as_ref() == "^" {
+                Button::with_icon(Icon::new(theme::ICON_UP))
+            } else {
+                Button::with_text(verb)
+            }
         } else {
             left_is_small = right.is_some();
             Button::with_icon(Icon::new(theme::ICON_CANCEL))
