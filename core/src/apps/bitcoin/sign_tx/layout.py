@@ -1,11 +1,12 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from apps.common.paths import address_n_to_str
-from micropython import const
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata
+
+from apps.common.paths import address_n_to_str
 
 from .. import addresses
 from ..common import (
@@ -18,12 +19,13 @@ from ..keychain import address_n_to_name
 if TYPE_CHECKING:
     from typing import Any
 
-    from apps.common.coininfo import CoinInfo
-    from apps.common.paths import Bip32Path
-    from trezor.enums import AmountUnit
     from trezor.messages import TxAckPaymentRequest, TxOutput
     from trezor.ui.layouts import LayoutType
+    from trezor.enums import AmountUnit
     from trezor.wire import Context
+
+    from apps.common.coininfo import CoinInfo
+    from apps.common.paths import Bip32Path
 
 _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500_000_000)
 
@@ -50,9 +52,8 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
 async def confirm_output(
     ctx: Context, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
 ) -> None:
-    from trezor.enums import OutputScriptType
-
     from . import omni
+    from trezor.enums import OutputScriptType
 
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
         data = output.op_return_data

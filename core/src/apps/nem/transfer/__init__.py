@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING
 from . import layout, serialize
 
 if TYPE_CHECKING:
-    from trezor.crypto import bip32
     from trezor.messages import NEMImportanceTransfer, NEMTransactionCommon, NEMTransfer
     from trezor.wire import Context
+    from trezor.crypto import bip32
 
 
 async def transfer(

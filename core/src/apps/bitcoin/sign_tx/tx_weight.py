@@ -5,9 +5,9 @@
 # Heavily inspired by:
 # https://github.com/trezor/trezor-mcu/commit/e1fa7af1da79e86ccaae5f3cd2a6c4644f546f8a
 
+from micropython import const
 from typing import TYPE_CHECKING
 
-from micropython import const
 from trezor import wire
 from trezor.enums import InputScriptType
 

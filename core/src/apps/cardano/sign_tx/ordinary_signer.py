@@ -76,7 +76,11 @@ class OrdinarySigner(Signer):
             raise ProcessError("Invalid witness request")
 
     async def _show_witness_request(self, witness_path: list[int]) -> None:
-        from ..helpers.paths import SCHEMA_PAYMENT, SCHEMA_STAKING, WITNESS_PATH_NAME
+        from ..helpers.paths import (
+            SCHEMA_PAYMENT,
+            SCHEMA_STAKING,
+            WITNESS_PATH_NAME,
+        )
 
         # super() omitted intentionally
         # We only allow payment, staking or minting paths.

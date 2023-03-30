@@ -9,11 +9,12 @@ if TYPE_CHECKING:
 async def get_public_key(
     ctx: Context, msg: GetPublicKey, auth_msg: MessageType | None = None
 ) -> PublicKey:
-    from apps.common import coininfo, paths
-    from apps.common.keychain import FORBIDDEN_KEY_PATH, get_keychain
     from trezor import wire
     from trezor.enums import InputScriptType
     from trezor.messages import HDNodeType, PublicKey, UnlockPath
+
+    from apps.common import coininfo, paths
+    from apps.common.keychain import FORBIDDEN_KEY_PATH, get_keychain
 
     coin_name = msg.coin_name or "Bitcoin"
     script_type = msg.script_type or InputScriptType.SPENDADDRESS

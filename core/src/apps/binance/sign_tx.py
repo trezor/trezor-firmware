@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
+    from trezor.messages import BinanceSignTx, BinanceSignedTx
     from apps.common.keychain import Keychain
-    from trezor.messages import BinanceSignedTx, BinanceSignTx
     from trezor.wire import Context
 
 
@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 async def sign_tx(
     ctx: Context, envelope: BinanceSignTx, keychain: Keychain
 ) -> BinanceSignedTx:
-    from apps.common import paths
     from trezor import wire
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
@@ -24,6 +23,8 @@ async def sign_tx(
         BinanceTransferMsg,
         BinanceTxRequest,
     )
+
+    from apps.common import paths
 
     from . import helpers, layout
 

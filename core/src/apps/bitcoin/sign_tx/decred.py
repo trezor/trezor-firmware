@@ -1,12 +1,13 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from apps.bitcoin.sign_tx.tx_weight import TxWeightCalculator
-from apps.common.writers import write_compact_size
-from micropython import const
 from trezor.crypto.hashlib import blake256
 from trezor.enums import InputScriptType
 from trezor.utils import HashWriter
 from trezor.wire import DataError, ProcessError
+
+from apps.bitcoin.sign_tx.tx_weight import TxWeightCalculator
+from apps.common.writers import write_compact_size
 
 from .. import scripts_decred, writers
 from ..common import ecdsa_hash_pubkey
@@ -27,15 +28,23 @@ OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
 if TYPE_CHECKING:
     from typing import Sequence
 
+    from trezor.crypto import bip32
+    from trezor.messages import (
+        SignTx,
+        TxInput,
+        TxOutput,
+        PrevTx,
+        PrevInput,
+        PrevOutput,
+    )
+
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
-    from trezor.crypto import bip32
-    from trezor.messages import PrevInput, PrevOutput, PrevTx, SignTx, TxInput, TxOutput
 
+    from .sig_hasher import SigHasher
+    from . import approvers
     from ..common import SigHashType
     from ..writers import Writer
-    from . import approvers
-    from .sig_hasher import SigHasher
 
 
 # Decred input size (without script): 32 prevhash, 4 idx, 1 Decred tree, 4 sequence
@@ -204,10 +213,9 @@ class Decred(Bitcoin):
 
     async def step4_serialize_inputs(self) -> None:
         from trezor.enums import DecredStakingSpendType
-
-        from .. import multisig
         from ..common import SigHashType, ecdsa_sign
         from .progress import progress
+        from .. import multisig
 
         inputs_count = self.tx_info.tx.inputs_count  # local_cache_attribute
         coin = self.coin  # local_cache_attribute

@@ -1,7 +1,7 @@
-from typing import TYPE_CHECKING
-
 import ustruct
 from micropython import const
+from typing import TYPE_CHECKING
+
 from trezor import io, loop, utils
 
 if TYPE_CHECKING:

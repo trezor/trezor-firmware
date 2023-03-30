@@ -2,14 +2,13 @@
 Minimalistic CBOR implementation, supports only what we need in cardano.
 """
 
+from micropython import const
 from typing import TYPE_CHECKING
 
-from micropython import const
 from trezor import log
 
 if TYPE_CHECKING:
     from typing import Any, Generic, Iterator, TypeVar
-
     from trezor.utils import BufferReader
 
     K = TypeVar("K")

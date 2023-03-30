@@ -1,20 +1,20 @@
+import ustruct
+from micropython import const
 from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
 import storage.device as storage_device
-import ustruct
-from apps.common import cbor, seed
-from apps.common.paths import HARDENED
-from micropython import const
 from trezor import utils
 from trezor.crypto import chacha20poly1305, der, hashlib, hmac, random
 from trezor.crypto.curve import ed25519, nist256p1
-from ubinascii import hexlify
+
+from apps.common import cbor, seed
+from apps.common.paths import HARDENED
 
 from .common import COSE_ALG_EDDSA, COSE_ALG_ES256, COSE_CURVE_ED25519, COSE_CURVE_P256
 
 if TYPE_CHECKING:
     from typing import Iterable
-
     from trezor.crypto import bip32
 
 

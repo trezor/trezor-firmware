@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import NoReturn
-
     from trezor.messages import RebootToBootloader
+    from typing import NoReturn
     from trezor.wire import Context
 
 

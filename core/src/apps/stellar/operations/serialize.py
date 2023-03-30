@@ -13,6 +13,8 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
+    from trezor.utils import Writer
+
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
@@ -29,7 +31,6 @@ if TYPE_CHECKING:
         StellarPaymentOp,
         StellarSetOptionsOp,
     )
-    from trezor.utils import Writer
 
 
 def write_account_merge_op(w: Writer, msg: StellarAccountMergeOp) -> None:

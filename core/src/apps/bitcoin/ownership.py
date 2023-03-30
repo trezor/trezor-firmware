@@ -1,21 +1,22 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from apps.bitcoin.writers import write_bytes_prefixed
-from apps.common.readers import read_compact_size
-from micropython import const
 from trezor import utils
 from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
 from trezor.wire import DataError
 
+from apps.bitcoin.writers import write_bytes_prefixed
+from apps.common.readers import read_compact_size
+
 from .scripts import read_bip322_signature_proof
 
 if TYPE_CHECKING:
-    from apps.common.coininfo import CoinInfo
-    from apps.common.keychain import Keychain
-    from trezor.crypto import bip32
-    from trezor.enums import InputScriptType
     from trezor.messages import MultisigRedeemScriptType
+    from trezor.enums import InputScriptType
+    from apps.common.coininfo import CoinInfo
+    from trezor.crypto import bip32
+    from apps.common.keychain import Keychain
 
 # This module implements the SLIP-0019 proof of ownership format, see
 # https://github.com/satoshilabs/slips/blob/master/slip-0019.md.
@@ -37,11 +38,14 @@ def generate_proof(
     script_pubkey: bytes,
     commitment_data: bytes,
 ) -> tuple[bytes, bytes]:
-    from apps.bitcoin.writers import write_bytes_fixed, write_compact_size, write_uint8
     from trezor.enums import InputScriptType
-
-    from . import common
+    from apps.bitcoin.writers import (
+        write_bytes_fixed,
+        write_compact_size,
+        write_uint8,
+    )
     from .scripts import write_bip322_signature_proof
+    from . import common
 
     flags = 0
     if user_confirmed:

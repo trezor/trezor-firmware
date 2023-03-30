@@ -1,8 +1,7 @@
 import sys
-from typing import Any
-
 import utime
 from micropython import const
+from typing import Any
 
 _DEBUG = const(10)
 _INFO = const(20)

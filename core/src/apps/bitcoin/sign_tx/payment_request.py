@@ -1,14 +1,14 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from micropython import const
 from trezor.wire import DataError
 
 from .. import writers
 
 if TYPE_CHECKING:
+    from trezor.messages import TxAckPaymentRequest, TxOutput
     from apps.common import coininfo
     from apps.common.keychain import Keychain
-    from trezor.messages import TxAckPaymentRequest, TxOutput
 
 _MEMO_TYPE_TEXT = const(1)
 _MEMO_TYPE_REFUND = const(2)
@@ -25,12 +25,10 @@ class PaymentRequestVerifier:
     def __init__(
         self, msg: TxAckPaymentRequest, coin: coininfo.CoinInfo, keychain: Keychain
     ) -> None:
-        from apps.common.address_mac import check_address_mac
+        from storage import cache
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
-
-        from storage import cache
-
+        from apps.common.address_mac import check_address_mac
         from .. import writers  # pylint: disable=import-outside-toplevel
 
         self.h_outputs = HashWriter(sha256())

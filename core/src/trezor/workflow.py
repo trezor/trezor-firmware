@@ -1,7 +1,7 @@
+import utime
 from typing import TYPE_CHECKING
 
 import storage.cache
-import utime
 from trezor import log, loop
 
 if TYPE_CHECKING:
@@ -13,6 +13,7 @@ if __debug__:
     # Used in `on_close` below for memory statistics.
 
     import micropython
+
     from trezor import utils
 
 

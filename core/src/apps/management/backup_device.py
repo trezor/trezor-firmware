@@ -7,9 +7,10 @@ if TYPE_CHECKING:
 
 async def backup_device(ctx: Context, msg: BackupDevice) -> Success:
     import storage.device as storage_device
-    from apps.common import mnemonic
     from trezor import wire
     from trezor.messages import Success
+
+    from apps.common import mnemonic
 
     from .reset_device import backup_seed, layout
 

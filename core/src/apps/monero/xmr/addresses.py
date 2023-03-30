@@ -1,10 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import (
-        MoneroAccountPublicAddress,
-        MoneroTransactionDestinationEntry,
-    )
+    from trezor.messages import MoneroAccountPublicAddress
+    from trezor.messages import MoneroTransactionDestinationEntry
 
 
 def encode_addr(

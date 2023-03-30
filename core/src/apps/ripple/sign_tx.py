@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
+    from trezor.messages import RippleSignTx, RippleSignedTx
     from apps.common.keychain import Keychain
-    from trezor.messages import RippleSignedTx, RippleSignTx
     from trezor.wire import Context
 
 
@@ -13,13 +13,12 @@ if TYPE_CHECKING:
 async def sign_tx(
     ctx: Context, msg: RippleSignTx, keychain: Keychain
 ) -> RippleSignedTx:
-    from apps.common import paths
     from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha512
     from trezor.messages import RippleSignedTx
     from trezor.wire import ProcessError
-
+    from apps.common import paths
     from . import helpers, layout
     from .serialize import serialize
 

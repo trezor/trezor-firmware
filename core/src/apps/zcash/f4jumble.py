@@ -5,6 +5,7 @@ reference implementation: https://github.com/zcash/librustzcash/blob/main/compon
 """
 
 from micropython import const
+
 from trezor.crypto.hashlib import blake2b
 
 _HASH_LENGTH = const(64)

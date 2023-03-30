@@ -3,22 +3,24 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from apps.common.keychain import Keychain
-    from trezor.messages import MoneroAddress, MoneroGetAddress
+    from trezor.messages import MoneroGetAddress, MoneroAddress
     from trezor.wire import Context
+
+    from apps.common.keychain import Keychain
 
 
 @auto_keychain(__name__)
 async def get_address(
     ctx: Context, msg: MoneroGetAddress, keychain: Keychain
 ) -> MoneroAddress:
+    from trezor import wire
+    from trezor.messages import MoneroAddress
+    from trezor.ui.layouts import show_address
+
     from apps.common import paths
     from apps.monero import misc
     from apps.monero.xmr import addresses, crypto_helpers, monero
     from apps.monero.xmr.networks import net_version
-    from trezor import wire
-    from trezor.messages import MoneroAddress
-    from trezor.ui.layouts import show_address
 
     account = msg.account  # local_cache_attribute
     minor = msg.minor  # local_cache_attribute

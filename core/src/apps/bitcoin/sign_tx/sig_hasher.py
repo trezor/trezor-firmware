@@ -10,11 +10,9 @@ from ..writers import (
 
 if TYPE_CHECKING:
     from typing import Protocol, Sequence
-
-    from apps.common import coininfo
-    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
-
     from ..common import SigHashType
+    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
+    from apps.common import coininfo
 
     class SigHasher(Protocol):
         def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
@@ -87,7 +85,6 @@ class BitcoinSigHasher:
     ) -> bytes:
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
-
         from .. import scripts
         from ..writers import get_tx_hash
 

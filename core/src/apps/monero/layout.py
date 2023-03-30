@@ -14,7 +14,10 @@ DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
 if TYPE_CHECKING:
     from trezor.enums import MoneroNetworkType
-    from trezor.messages import MoneroTransactionData, MoneroTransactionDestinationEntry
+    from trezor.messages import (
+        MoneroTransactionData,
+        MoneroTransactionDestinationEntry,
+    )
     from trezor.wire import Context
 
     from .signing.state import State

@@ -1,6 +1,6 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from micropython import const
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_success
 from trezor.ui.layouts.reset import (  # noqa: F401
@@ -14,7 +14,6 @@ from trezor.ui.layouts.reset import (  # noqa: F401
 
 if TYPE_CHECKING:
     from typing import Sequence
-
     from trezor.wire import GenericContext
 
 if __debug__:

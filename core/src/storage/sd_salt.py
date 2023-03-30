@@ -1,12 +1,12 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 import storage.device
-from micropython import const
 from trezor import io
 from trezor.sdcard import with_filesystem
 
 if TYPE_CHECKING:
-    from typing import Callable, TypeVar
+    from typing import TypeVar, Callable
 
     T = TypeVar("T", bound=Callable)
 

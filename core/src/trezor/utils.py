@@ -1,7 +1,5 @@
 import gc
 import sys
-from typing import TYPE_CHECKING
-
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
@@ -18,6 +16,7 @@ from trezorutils import (  # noqa: F401
     reboot_to_bootloader,
     usb_data_connected,
 )
+from typing import TYPE_CHECKING
 
 DISABLE_ANIMATION = 0
 
@@ -31,7 +30,13 @@ if __debug__:
         LOG_MEMORY = 0
 
 if TYPE_CHECKING:
-    from typing import Any, Iterator, Protocol, Sequence, TypeVar
+    from typing import (
+        Any,
+        Iterator,
+        Protocol,
+        TypeVar,
+        Sequence,
+    )
 
     from trezor.protobuf import MessageType
 

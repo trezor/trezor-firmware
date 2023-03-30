@@ -1,11 +1,12 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from apps.common import safety_checks
-from micropython import const
 from trezor.crypto.curve import bip340, secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
 from trezor.wire import DataError, ProcessError
+
+from apps.common import safety_checks
 
 from .. import writers
 from ..common import input_is_external_unverified
@@ -15,14 +16,15 @@ from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo
 
 if TYPE_CHECKING:
+    from trezor.crypto import bip32
+    from trezor.messages import SignTx, TxInput, TxOutput, TxAckPaymentRequest
+
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
-    from trezor.crypto import bip32
-    from trezor.messages import SignTx, TxAckPaymentRequest, TxInput, TxOutput
 
     from ..authorization import CoinJoinAuthorization
-    from .payment_request import PaymentRequestVerifier
     from .tx_info import TxInfo
+    from .payment_request import PaymentRequestVerifier
 
 
 # An Approver object computes the transaction totals and either prompts the user

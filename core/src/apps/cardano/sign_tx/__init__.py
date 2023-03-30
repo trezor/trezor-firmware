@@ -4,18 +4,17 @@ from .. import seed
 
 if TYPE_CHECKING:
     from typing import Type
-
-    from trezor.messages import CardanoSignTxFinished, CardanoSignTxInit
     from trezor.wire import Context
+    from trezor.messages import CardanoSignTxFinished, CardanoSignTxInit
 
 
 @seed.with_keychain
 async def sign_tx(
     ctx: Context, msg: CardanoSignTxInit, keychain: seed.Keychain
 ) -> CardanoSignTxFinished:
+    from trezor.messages import CardanoSignTxFinished
     from trezor import log, wire
     from trezor.enums import CardanoTxSigningMode
-    from trezor.messages import CardanoSignTxFinished
 
     from .signer import Signer
 

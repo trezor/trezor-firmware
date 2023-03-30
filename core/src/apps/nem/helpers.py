@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from micropython import const
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from apps.common import paths
@@ -47,7 +46,6 @@ def get_network_str(network: int) -> str:
 def check_path(path: paths.Bip32Path, network: int) -> bool:
     """Validates that the appropriate coin_type is set for the given network."""
     from apps.common import paths
-
     from . import SLIP44_ID
 
     if len(path) < 2:

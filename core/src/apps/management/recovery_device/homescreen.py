@@ -9,13 +9,13 @@ from .. import backup_types
 from . import layout, recover
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType
     from trezor.wire import GenericContext
+    from trezor.enums import BackupType
 
 
 async def recovery_homescreen() -> None:
-    from apps.homescreen import homescreen
     from trezor import workflow
+    from apps.homescreen import homescreen
 
     if not storage_recovery.is_in_progress():
         workflow.set_default(homescreen)
@@ -28,7 +28,6 @@ async def recovery_homescreen() -> None:
 
 async def recovery_process(ctx: GenericContext) -> Success:
     from trezor.enums import MessageType
-
     import storage
 
     wire.AVOID_RESTARTING_FOR = (MessageType.Initialize, MessageType.GetFeatures)
@@ -101,9 +100,9 @@ async def _continue_recovery_process(ctx: GenericContext) -> Success:
 async def _finish_recovery_dry_run(
     ctx: GenericContext, secret: bytes, backup_type: BackupType
 ) -> Success:
-    from apps.common import mnemonic
-    from trezor import utils
     from trezor.crypto.hashlib import sha256
+    from trezor import utils
+    from apps.common import mnemonic
 
     if backup_type is None:
         raise RuntimeError
@@ -138,8 +137,8 @@ async def _finish_recovery_dry_run(
 async def _finish_recovery(
     ctx: GenericContext, secret: bytes, backup_type: BackupType
 ) -> Success:
-    from trezor.enums import BackupType
     from trezor.ui.layouts import show_success
+    from trezor.enums import BackupType
 
     if backup_type is None:
         raise RuntimeError
@@ -226,8 +225,8 @@ async def _show_remaining_groups_and_shares(ctx: GenericContext) -> None:
     """
     Show info dialog for Slip39 Advanced - what shares are to be entered.
     """
-    import storage.recovery_shares as storage_recovery_shares
     from trezor.crypto import slip39
+    import storage.recovery_shares as storage_recovery_shares
 
     shares_remaining = storage_recovery.fetch_slip39_remaining_shares()
     # should be stored at this point

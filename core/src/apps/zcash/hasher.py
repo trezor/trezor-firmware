@@ -7,6 +7,8 @@ specification: https://zips.z.cash/zip-0244
 
 from typing import TYPE_CHECKING
 
+from trezor.crypto.hashlib import blake2b
+
 from apps.bitcoin.writers import (
     TX_HASH_SIZE,
     write_bytes_fixed,
@@ -17,15 +19,13 @@ from apps.bitcoin.writers import (
     write_uint32,
     write_uint64,
 )
-from trezor.crypto.hashlib import blake2b
 
 if TYPE_CHECKING:
     from typing import Sequence
-
-    from apps.bitcoin.common import SigHashType
+    from trezor.messages import TxInput, TxOutput, SignTx, PrevTx
+    from trezor.utils import Writer, HashWriter
     from apps.common.coininfo import CoinInfo
-    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
-    from trezor.utils import HashWriter, Writer
+    from apps.bitcoin.common import SigHashType
 
 
 def write_hash(w: Writer, hash: bytes) -> None:

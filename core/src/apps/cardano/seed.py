@@ -1,22 +1,23 @@
 from typing import TYPE_CHECKING
 
-from apps.common import mnemonic
-from apps.common.seed import get_seed
+from storage import cache, device
 from trezor import wire
 from trezor.crypto import cardano
 
-from storage import cache, device
+from apps.common import mnemonic
+from apps.common.seed import get_seed
 
 from .helpers.paths import BYRON_ROOT, MINTING_ROOT, MULTISIG_ROOT, SHELLEY_ROOT
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, TypeVar
+    from typing import Callable, Awaitable, TypeVar
 
-    from apps.common.keychain import Handler, MsgOut
     from apps.common.paths import Bip32Path
+    from apps.common.keychain import MsgOut, Handler
+
     from trezor import messages
-    from trezor.crypto import bip32
     from trezor.enums import CardanoDerivationType
+    from trezor.crypto import bip32
 
     CardanoMessages = (
         messages.CardanoGetAddress

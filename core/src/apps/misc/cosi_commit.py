@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING
 
-from apps.common.paths import PathSchema, unharden
 from trezor.enums import ButtonRequestType
 from trezor.messages import CosiCommitment, CosiSign, CosiSignature
 from trezor.wire import DataError
+
+from apps.common.paths import PathSchema, unharden
 
 if TYPE_CHECKING:
     from trezor.messages import CosiCommit
@@ -25,11 +26,11 @@ SCHEMA_SLIP26 = PathSchema.parse("m/10026'/[0-2139062143]'/[0-4]'/0'", slip44_id
 
 async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
     import storage.cache as storage_cache
-    from apps.common import paths
-    from apps.common.keychain import get_keychain
     from trezor.crypto import cosi
     from trezor.crypto.curve import ed25519
     from trezor.ui.layouts import confirm_blob
+    from apps.common import paths
+    from apps.common.keychain import get_keychain
 
     keychain = await get_keychain(ctx, "ed25519", [SCHEMA_SLIP18, SCHEMA_SLIP26])
     await paths.validate_path(ctx, keychain, msg.address_n)

@@ -1,11 +1,12 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from apps.common.writers import write_compact_size
-from micropython import const
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
 from trezor.utils import HashWriter, empty_bytearray
 from trezor.wire import DataError, ProcessError
+
+from apps.common.writers import write_compact_size
 
 from .. import addresses, common, multisig, scripts, writers
 from ..common import SigHashType, ecdsa_sign, input_is_external
@@ -19,15 +20,24 @@ from .tx_info import OriginalTxInfo
 if TYPE_CHECKING:
     from typing import Sequence
 
+    from trezor.crypto import bip32
+
+    from trezor.messages import (
+        PrevInput,
+        PrevOutput,
+        PrevTx,
+        SignTx,
+        TxInput,
+        TxOutput,
+    )
+
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
-    from trezor.crypto import bip32
-    from trezor.messages import PrevInput, PrevOutput, PrevTx, SignTx, TxInput, TxOutput
 
-    from ..writers import Writer
     from . import approvers
     from .sig_hasher import SigHasher
     from .tx_info import TxInfo
+    from ..writers import Writer
 
 
 # the number of bytes to preallocate for serialized transaction chunks
@@ -92,7 +102,6 @@ class Bitcoin:
             TxRequestDetailsType,
             TxRequestSerializedType,
         )
-
         from . import approvers
         from .tx_info import TxInfo
 

@@ -10,7 +10,6 @@ from trezor.crypto.bech32 import Encoding, convertbits
 
 if TYPE_CHECKING:
     from enum import IntEnum
-
     from apps.common.coininfo import CoinInfo
 else:
     IntEnum = object
@@ -47,11 +46,10 @@ def padding(hrp: str) -> bytes:
 
 
 def encode(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
-    from apps.common.writers import write_bytes_fixed, write_compact_size
     from trezor.crypto.bech32 import bech32_encode
     from trezor.utils import empty_bytearray
-
     from .f4jumble import f4jumble
+    from apps.common.writers import write_bytes_fixed, write_compact_size
 
     # multiple transparent receivers forbidden
     assert not (Typecode.P2PKH in receivers and Typecode.P2SH in receivers)
@@ -83,11 +81,10 @@ def encode(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
 
 
 def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
-    from apps.common.readers import read_compact_size
     from trezor.crypto.bech32 import bech32_decode
     from trezor.utils import BufferReader
     from trezor.wire import DataError
-
+    from apps.common.readers import read_compact_size
     from .f4jumble import f4unjumble
 
     try:

@@ -1,17 +1,20 @@
-from typing import TYPE_CHECKING
-
 from micropython import const
+from typing import TYPE_CHECKING
 
 from .. import common, writers
 
 if TYPE_CHECKING:
     from typing import Protocol
+    from trezor.messages import (
+        PrevTx,
+        SignTx,
+        TxInput,
+        TxOutput,
+    )
+    from trezor.utils import HashWriter
+    from .sig_hasher import SigHasher
 
     from apps.common.coininfo import CoinInfo
-    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
-    from trezor.utils import HashWriter
-
-    from .sig_hasher import SigHasher
 
     class Signer(Protocol):
         coin: CoinInfo
@@ -55,11 +58,10 @@ class TxInfoBase:
     def __init__(self, signer: Signer, tx: SignTx | PrevTx) -> None:
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
-
         from .matchcheck import (
             MultisigFingerprintChecker,
-            ScriptTypeChecker,
             WalletPathChecker,
+            ScriptTypeChecker,
         )
 
         # Checksum of multisig inputs, used to validate change-output.

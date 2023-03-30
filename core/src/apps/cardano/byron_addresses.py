@@ -1,9 +1,10 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from apps.common import cbor
-from micropython import const
 from trezor.crypto import crc
 from trezor.wire import ProcessError
+
+from apps.common import cbor
 
 from .helpers import protocol_magics
 

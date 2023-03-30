@@ -4,9 +4,7 @@ from trezor.wire import DataError
 
 if TYPE_CHECKING:
     from typing import Sequence
-
     from apps.common.coininfo import CoinInfo
-
     from .common import SigHashType
 
 
@@ -19,8 +17,8 @@ class SignatureVerifier:
         coin: CoinInfo,
     ):
         from trezor import utils
-        from trezor.crypto.hashlib import sha256
         from trezor.wire import DataError  # local_cache_global
+        from trezor.crypto.hashlib import sha256
 
         from .common import OP_0, OP_1, SigHashType, ecdsa_hash_pubkey
         from .scripts import (

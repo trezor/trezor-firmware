@@ -1,14 +1,13 @@
+import utime
 from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
-import utime
 from trezor import config, wire
 
 from .sdcard import request_sd_salt
 
 if TYPE_CHECKING:
     from typing import Any, NoReturn
-
     from trezor.wire import Context, GenericContext
 
 

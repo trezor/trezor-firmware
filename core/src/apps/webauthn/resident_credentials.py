@@ -1,12 +1,11 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 import storage.resident_credentials as storage_resident_credentials
-from micropython import const
 from storage.resident_credentials import MAX_RESIDENT_CREDENTIALS
 
 if TYPE_CHECKING:
     from typing import Iterator
-
     from .credential import Fido2Credential
 
 

@@ -1,14 +1,13 @@
-from typing import TYPE_CHECKING
-
 from micropython import const
+from typing import TYPE_CHECKING
 
 from .authorization import FEE_RATE_DECIMALS
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
+    from trezor.messages import AuthorizeCoinJoin, Success
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
-    from trezor.messages import AuthorizeCoinJoin, Success
     from trezor.wire import Context
 
 _MAX_COORDINATOR_LEN = const(36)
@@ -20,13 +19,14 @@ _MAX_COORDINATOR_FEE_RATE = 5 * pow(10, FEE_RATE_DECIMALS)  # 5 %
 async def authorize_coinjoin(
     ctx: Context, msg: AuthorizeCoinJoin, keychain: Keychain, coin: CoinInfo
 ) -> Success:
-    from apps.common import authorization, safety_checks
-    from apps.common.keychain import FORBIDDEN_KEY_PATH
-    from apps.common.paths import SLIP25_PURPOSE, validate_path
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_coinjoin, confirm_metadata
     from trezor.wire import DataError
+
+    from apps.common import authorization, safety_checks
+    from apps.common.keychain import FORBIDDEN_KEY_PATH
+    from apps.common.paths import SLIP25_PURPOSE, validate_path
 
     from .common import BIP32_WALLET_DEPTH, format_fee_rate
     from .keychain import validate_path_against_script_type

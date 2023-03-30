@@ -4,16 +4,16 @@ from apps.common.keychain import auto_keychain
 from apps.monero import layout, misc
 
 if TYPE_CHECKING:
-    from apps.common.keychain import Keychain
     from trezor.messages import (
-        MoneroLiveRefreshFinalAck,
-        MoneroLiveRefreshStartAck,
-        MoneroLiveRefreshStartRequest,
         MoneroLiveRefreshStepAck,
         MoneroLiveRefreshStepRequest,
+        MoneroLiveRefreshStartRequest,
+        MoneroLiveRefreshFinalAck,
+        MoneroLiveRefreshStartAck,
     )
     from trezor.ui.layouts.common import ProgressLayout
     from trezor.wire import Context
+    from apps.common.keychain import Keychain
 
     from .xmr.credentials import AccountCreds
 
@@ -23,7 +23,6 @@ async def live_refresh(
     ctx: Context, msg: MoneroLiveRefreshStartRequest, keychain: Keychain
 ) -> MoneroLiveRefreshFinalAck:
     import gc
-
     from trezor.enums import MessageType
     from trezor.messages import MoneroLiveRefreshFinalAck, MoneroLiveRefreshStepRequest
 
@@ -78,9 +77,9 @@ def _refresh_step(
     msg: MoneroLiveRefreshStepRequest,
     progress: ProgressLayout,
 ) -> MoneroLiveRefreshStepAck:
-    from apps.monero.xmr import chacha_poly, crypto, crypto_helpers, key_image, monero
-    from trezor import log
     from trezor.messages import MoneroLiveRefreshStepAck
+    from trezor import log
+    from apps.monero.xmr import chacha_poly, crypto, crypto_helpers, key_image, monero
 
     assert s.creds is not None
 

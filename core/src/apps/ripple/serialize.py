@@ -8,9 +8,8 @@
 # the actual data follow. This currently only supports the Payment
 # transaction type and the fields that are required for it.
 
-from typing import TYPE_CHECKING
-
 from micropython import const
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import RippleSignTx

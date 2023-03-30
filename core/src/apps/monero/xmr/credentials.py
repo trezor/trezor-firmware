@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from apps.monero.xmr import crypto
     from trezor.enums import MoneroNetworkType
+    from apps.monero.xmr import crypto
 
 
 class AccountCreds:

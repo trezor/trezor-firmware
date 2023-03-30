@@ -5,17 +5,17 @@ from trezor.ui.layouts import confirm_action, confirm_homescreen
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
-    from trezor.enums import SafetyCheckLevel
     from trezor.messages import ApplySettings, Success
     from trezor.wire import Context, GenericContext
+    from trezor.enums import SafetyCheckLevel
 
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
 
 def _validate_homescreen(homescreen: bytes) -> None:
-    import storage.device as storage_device
     import trezorui2
+    import storage.device as storage_device
 
     if homescreen == b"":
         return
@@ -41,10 +41,10 @@ def _validate_homescreen(homescreen: bytes) -> None:
 
 async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:
     import storage.device as storage_device
-    from apps.base import reload_settings_from_storage
     from apps.common import safety_checks
     from trezor.messages import Success
-    from trezor.wire import NotInitialized, ProcessError
+    from trezor.wire import ProcessError, NotInitialized
+    from apps.base import reload_settings_from_storage
 
     if not storage_device.is_initialized():
         raise NotInitialized("Device is not initialized")

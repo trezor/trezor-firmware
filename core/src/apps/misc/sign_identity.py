@@ -1,22 +1,23 @@
 from typing import TYPE_CHECKING
 
-from apps.common import coininfo
 from trezor.crypto.hashlib import sha256
 
+from apps.common import coininfo
+
 if TYPE_CHECKING:
-    from apps.common.paths import Bip32Path
-    from trezor.messages import IdentityType, SignedIdentity, SignIdentity
+    from trezor.messages import IdentityType, SignIdentity, SignedIdentity
     from trezor.wire import Context
+    from apps.common.paths import Bip32Path
 
 # This module implements the SLIP-0013 authentication using a deterministic hierarchy, see
 # https://github.com/satoshilabs/slips/blob/master/slip-0013.md.
 
 
 async def sign_identity(ctx: Context, msg: SignIdentity) -> SignedIdentity:
-    from apps.common.keychain import get_keychain
-    from apps.common.paths import AlwaysMatchingSchema
     from trezor.messages import SignedIdentity
     from trezor.ui.layouts import confirm_sign_identity
+    from apps.common.keychain import get_keychain
+    from apps.common.paths import AlwaysMatchingSchema
 
     msg_identity = msg.identity  # local_cache_attribute
     msg_identity_proto = msg_identity.proto  # local_cache_attribute
@@ -88,8 +89,8 @@ def serialize_identity_without_proto(identity: IdentityType) -> str:
 
 
 def get_identity_path(identity: str, index: int, num: int) -> Bip32Path:
-    from apps.common.paths import HARDENED
     from ustruct import pack, unpack
+    from apps.common.paths import HARDENED
 
     identity_hash = sha256(pack("<I", index) + identity.encode()).digest()
 

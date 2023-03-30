@@ -1,17 +1,17 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import Success, WipeDevice
     from trezor.wire import GenericContext
+    from trezor.messages import WipeDevice, Success
 
 
 async def wipe_device(ctx: GenericContext, msg: WipeDevice) -> Success:
-    from apps.base import reload_settings_from_storage
+    import storage
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
 
-    import storage
+    from apps.base import reload_settings_from_storage
 
     await confirm_action(
         ctx,

@@ -10,15 +10,16 @@ if TYPE_CHECKING:
 
 
 async def change_pin(ctx: Context, msg: ChangePin) -> Success:
+    from storage.device import is_initialized
+    from trezor.messages import Success
+    from trezor.ui.layouts import show_success
+
     from apps.common.request_pin import (
         error_pin_invalid,
         error_pin_matches_wipe_code,
         request_pin_and_sd_salt,
         request_pin_confirm,
     )
-    from storage.device import is_initialized
-    from trezor.messages import Success
-    from trezor.ui.layouts import show_success
 
     if not is_initialized():
         raise wire.NotInitialized("Device is not initialized")

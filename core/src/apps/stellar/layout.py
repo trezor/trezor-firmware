@@ -7,9 +7,10 @@ from trezor.enums import ButtonRequestType
 from . import consts
 
 if TYPE_CHECKING:
-    from trezor.enums import StellarMemoType
-    from trezor.messages import StellarAsset
     from trezor.wire import Context
+    from trezor.enums import StellarMemoType
+
+    from trezor.messages import StellarAsset
 
 
 async def require_confirm_init(

@@ -1,15 +1,15 @@
 from typing import TYPE_CHECKING
 
-import trezorui2
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
+
+import trezorui2
 
 from ..common import interact
 from . import RustLayout
 
 if TYPE_CHECKING:
-    from typing import Callable, List, Sequence
-
+    from typing import Callable, Sequence, List
     from trezor.enums import BackupType
     from trezor.wire import GenericContext
 

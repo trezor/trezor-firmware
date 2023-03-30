@@ -9,8 +9,6 @@ from apps.monero import signing
 from apps.monero.xmr import crypto, crypto_helpers, monero
 
 if TYPE_CHECKING:
-    from apps.monero.layout import MoneroTransactionProgress
-    from apps.monero.signing.state import State
     from trezor.messages import (
         MoneroAccountPublicAddress,
         MoneroTransactionData,
@@ -18,6 +16,9 @@ if TYPE_CHECKING:
         MoneroTransactionInitAck,
         MoneroTransactionRsigData,
     )
+
+    from apps.monero.layout import MoneroTransactionProgress
+    from apps.monero.signing.state import State
 
 
 async def init_transaction(
@@ -29,10 +30,9 @@ async def init_transaction(
     progress: MoneroTransactionProgress,
 ) -> MoneroTransactionInitAck:
     import gc
-
+    from apps.monero.signing import offloading_keys
     from apps.common import paths
     from apps.monero import layout, misc
-    from apps.monero.signing import offloading_keys
 
     mem_trace = state.mem_trace  # local_cache_attribute
     outputs = tsx_data.outputs  # local_cache_attribute
@@ -126,7 +126,10 @@ async def init_transaction(
 
     mem_trace(6)
 
-    from trezor.messages import MoneroTransactionInitAck, MoneroTransactionRsigData
+    from trezor.messages import (
+        MoneroTransactionInitAck,
+        MoneroTransactionRsigData,
+    )
 
     rsig_data = MoneroTransactionRsigData(offload_type=int(state.rsig_offload))
 
@@ -290,8 +293,8 @@ def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData) -> None:
     """
     Generate master key H( H(TsxData || tx_priv) || rand )
     """
-    from apps.monero.xmr.keccak_hasher import get_keccak_writer
     from trezor import protobuf
+    from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     writer = get_keccak_writer()
     writer.write(protobuf.dump_message_buffer(tsx_data))

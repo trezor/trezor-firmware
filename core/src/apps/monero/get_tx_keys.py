@@ -14,16 +14,16 @@ encrypted using the private spend key. Here the host sends it back
 in `MoneroGetTxKeyRequest.tx_enc_keys` to be decrypted and yet again encrypted
 using the view key, which the host possess.
 """
+from micropython import const
 from typing import TYPE_CHECKING
 
 from apps.common.keychain import auto_keychain
-from micropython import const
 
 _GET_TX_KEY_REASON_TX_DERIVATION = const(1)
 
 if TYPE_CHECKING:
+    from trezor.messages import MoneroGetTxKeyRequest, MoneroGetTxKeyAck
     from apps.common.keychain import Keychain
-    from trezor.messages import MoneroGetTxKeyAck, MoneroGetTxKeyRequest
     from trezor.wire import Context
 
 
@@ -31,11 +31,12 @@ if TYPE_CHECKING:
 async def get_tx_keys(
     ctx: Context, msg: MoneroGetTxKeyRequest, keychain: Keychain
 ) -> MoneroGetTxKeyAck:
+    from trezor import utils, wire
+    from trezor.messages import MoneroGetTxKeyAck
+
     from apps.common import paths
     from apps.monero import layout, misc
     from apps.monero.xmr import chacha_poly, crypto, crypto_helpers
-    from trezor import utils, wire
-    from trezor.messages import MoneroGetTxKeyAck
 
     await paths.validate_path(ctx, keychain, msg.address_n)
 

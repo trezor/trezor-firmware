@@ -1,4 +1,5 @@
 from micropython import const
+
 from trezor import io, utils
 
 bus = io.USB(
