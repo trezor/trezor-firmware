@@ -27,10 +27,9 @@ Possible improvements (TODO):
 
 from __future__ import annotations
 
+import click
 import sys
 from pathlib import Path
-
-import click
 
 try:
     import libcst as cst

@@ -23,13 +23,12 @@ import filecmp
 import os
 import re
 import sys
+import yaml
 from collections import OrderedDict
+from mako.template import Template
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any
-
-import yaml
-from mako.template import Template
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

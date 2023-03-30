@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import argparse
+import ecdsa
 import hashlib
 import struct
-
-import ecdsa
 
 SLOTS = 3
 

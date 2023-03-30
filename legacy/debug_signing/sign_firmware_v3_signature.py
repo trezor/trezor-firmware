@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
+import click
+import ecdsa
 import typing as t
 from hashlib import sha256
 from pathlib import Path
 
-import click
-import ecdsa
 from trezorlib.firmware.legacy import LegacyV2Firmware
 from trezorlib.firmware.models import TREZOR_ONE_V3_DEV
 

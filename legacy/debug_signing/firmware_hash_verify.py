@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
+import ecdsa
 import sys
 from hashlib import sha256
-
-import ecdsa
 
 # arg 1 - hex digest of firmware header with zeroed sigslots
 # arg 2 - public key (compressed or uncompressed)

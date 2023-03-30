@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys
 from collections import defaultdict
-
 from messages_pb2 import (
     MessageType,
     wire_bootloader,

@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
+import ecdsa
 import os
 import pprint
 import sys
-from hashlib import sha1, sha256
-
-import ecdsa
 from fill_t1_fw_signatures import Signatures
+from hashlib import sha1, sha256
 
 secret_keys_hex = [
     "4444444444444444444444444444444444444444444444444444444444444444",
