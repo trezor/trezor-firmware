@@ -1,8 +1,5 @@
 use crate::ui::{
-    component::{
-        text::paragraphs::{ParagraphVecShort, Paragraphs},
-        Child, Component, ComponentExt, Event, EventCtx, Label, Pad,
-    },
+    component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
     constant,
     constant::screen,
     display::{Color, Icon},
@@ -10,7 +7,8 @@ use crate::ui::{
     model_tt::{
         bootloader::theme::{
             button_bld_menu, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING, CORNER_BUTTON_AREA,
-            CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TEXT_TITLE, TITLE_AREA, TITLE_Y_ADJUSTMENT, X32,
+            CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TEXT_FINGERPRINT, TEXT_TITLE, TITLE_AREA,
+            TITLE_Y_ADJUSTMENT, X32,
         },
         component::{Button, ButtonMsg::Clicked},
         constant::WIDTH,
@@ -28,6 +26,13 @@ pub enum ConfirmMsg {
     Confirm = 2,
 }
 
+pub struct ConfirmInfo<'a> {
+    pub title: Child<Label<&'a str>>,
+    pub text: Child<Label<&'a str>>,
+    pub info_button: Child<Button<&'static str>>,
+    pub close_button: Child<Button<&'static str>>,
+}
+
 pub struct Confirm<'a> {
     bg: Pad,
     content_pad: Pad,
@@ -38,10 +43,7 @@ pub struct Confirm<'a> {
     alert: Option<Child<Label<&'a str>>>,
     left_button: Child<Button<&'static str>>,
     right_button: Child<Button<&'static str>>,
-    info_button: Option<Button<&'static str>>,
-    close_button: Option<Button<&'static str>>,
-    info_title: Option<Child<Label<&'static str>>>,
-    info_text: Option<Child<Paragraphs<ParagraphVecShort<&'a str>>>>,
+    info: Option<ConfirmInfo<'a>>,
     show_info: bool,
 }
 
@@ -55,7 +57,7 @@ impl<'a> Confirm<'a> {
         title: Option<Label<&'a str>>,
         msg: Label<&'a str>,
         alert: Option<Label<&'a str>>,
-        info: Option<(&'static str, Paragraphs<ParagraphVecShort<&'a str>>)>,
+        info: Option<(&'a str, &'a str)>,
     ) -> Self {
         let mut instance = Self {
             bg: Pad::with_background(bg_color),
@@ -67,26 +69,25 @@ impl<'a> Confirm<'a> {
             alert: alert.map(Child::new),
             left_button: Child::new(left_button),
             right_button: Child::new(right_button),
-            close_button: None,
-            info_button: None,
-            info_title: None,
-            info_text: None,
+            info: info.map(|(title, text)| ConfirmInfo {
+                title: Child::new(Label::new(title, Alignment::Start, TEXT_TITLE)),
+                text: Child::new(
+                    Label::new(text, Alignment::Start, TEXT_FINGERPRINT)
+                        .with_vertical_align(Alignment::Center),
+                ),
+                info_button: Child::new(
+                    Button::with_icon(Icon::new(INFO32))
+                        .styled(button_bld_menu())
+                        .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
+                ),
+                close_button: Child::new(
+                    Button::with_icon(Icon::new(X32))
+                        .styled(button_bld_menu())
+                        .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
+                ),
+            }),
             show_info: false,
         };
-        if let Some((title, text)) = info {
-            instance.info_title = Some(Child::new(Label::new(title, Alignment::Start, TEXT_TITLE)));
-            instance.info_text = Some(text.into_child());
-            instance.info_button = Some(
-                Button::with_icon(Icon::new(INFO32))
-                    .styled(button_bld_menu())
-                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-            );
-            instance.close_button = Some(
-                Button::with_icon(Icon::new(X32))
-                    .styled(button_bld_menu())
-                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-            );
-        }
         instance.bg.clear();
         instance
     }
@@ -152,21 +153,6 @@ impl<'a> Component for Confirm<'a> {
             Point::new(2 * CONTENT_PADDING + button_size.x, BUTTON_AREA_START),
             button_size,
         ));
-        self.info_button.place(CORNER_BUTTON_AREA);
-        self.close_button.place(CORNER_BUTTON_AREA);
-
-        if let Some(title) = self.info_title.as_mut() {
-            title.place(TITLE_AREA);
-            let title_height = title.inner().area().height();
-
-            title.place(Rect::new(
-                Point::new(
-                    CONTENT_PADDING,
-                    TITLE_AREA.center().y - (title_height / 2) - TITLE_Y_ADJUSTMENT,
-                ),
-                Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START - CONTENT_PADDING),
-            ));
-        }
 
         if let Some(title) = self.title.as_mut() {
             title.place(TITLE_AREA);
@@ -181,28 +167,44 @@ impl<'a> Component for Confirm<'a> {
             ));
         }
 
-        self.info_text.place(Rect::new(
-            Point::new(CONTENT_PADDING, TITLE_AREA.y1),
-            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START),
-        ));
+        if let Some(info) = self.info.as_mut() {
+            info.info_button.place(CORNER_BUTTON_AREA);
+            info.close_button.place(CORNER_BUTTON_AREA);
+            info.text.place(Rect::new(
+                Point::new(CONTENT_PADDING, TITLE_AREA.y1),
+                Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START),
+            ));
+
+            info.title.place(TITLE_AREA);
+            let title_height = info.title.inner().area().height();
+            info.title.place(Rect::new(
+                Point::new(
+                    CONTENT_PADDING,
+                    TITLE_AREA.center().y - (title_height / 2) - TITLE_Y_ADJUSTMENT,
+                ),
+                Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START - CONTENT_PADDING),
+            ));
+        }
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if self.show_info {
-            if let Some(Clicked) = self.close_button.event(ctx, event) {
-                self.show_info = false;
+        if let Some(info) = self.info.as_mut() {
+            if self.show_info {
+                if let Some(Clicked) = info.close_button.event(ctx, event) {
+                    self.show_info = false;
+                    self.content_pad.clear();
+                    self.title.request_complete_repaint(ctx);
+                    self.message.request_complete_repaint(ctx);
+                    return None;
+                }
+            } else if let Some(Clicked) = info.info_button.event(ctx, event) {
+                self.show_info = true;
+                info.text.request_complete_repaint(ctx);
+                info.title.request_complete_repaint(ctx);
                 self.content_pad.clear();
-                self.title.request_complete_repaint(ctx);
-                self.message.request_complete_repaint(ctx);
                 return None;
             }
-        } else if let Some(Clicked) = self.info_button.event(ctx, event) {
-            self.show_info = true;
-            self.info_text.request_complete_repaint(ctx);
-            self.info_title.request_complete_repaint(ctx);
-            self.content_pad.clear();
-            return None;
         }
         if let Some(Clicked) = self.left_button.event(ctx, event) {
             return Some(Self::Msg::Cancel);
@@ -217,27 +219,33 @@ impl<'a> Component for Confirm<'a> {
         self.bg.paint();
         self.content_pad.paint();
 
-        if self.show_info {
-            self.close_button.paint();
-            self.info_title.paint();
-            self.info_text.paint();
-            self.left_button.paint();
-            self.right_button.paint();
-        } else {
-            self.info_button.paint();
-            self.title.paint();
-            self.message.paint();
-            self.alert.paint();
-            self.left_button.paint();
-            self.right_button.paint();
-            if let Some(icon) = self.icon {
-                icon.draw(
-                    Point::new(screen().center().x, ICON_TOP),
-                    TOP_CENTER,
-                    WHITE,
-                    self.bg_color,
-                );
+        if let Some(info) = self.info.as_mut() {
+            if self.show_info {
+                info.close_button.paint();
+                info.title.paint();
+                info.text.paint();
+                self.left_button.paint();
+                self.right_button.paint();
+                // short-circuit before painting the main components
+                return;
+            } else {
+                info.info_button.paint();
+                // pass through to the rest of the paint
             }
+        }
+
+        self.title.paint();
+        self.message.paint();
+        self.alert.paint();
+        self.left_button.paint();
+        self.right_button.paint();
+        if let Some(icon) = self.icon {
+            icon.draw(
+                Point::new(screen().center().x, ICON_TOP),
+                TOP_CENTER,
+                WHITE,
+                self.bg_color,
+            );
         }
     }
 

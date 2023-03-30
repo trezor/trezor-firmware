@@ -17,7 +17,7 @@ void screen_install_progress(int16_t progress, bool initialize,
 void screen_wipe_progress(int16_t progress, bool initialize);
 uint32_t screen_intro(const char* bld_version_str, const char* vendor_str,
                       uint8_t vendor_str_len, const char* version_str);
-uint32_t screen_menu(const char* bld_version_str);
+uint32_t screen_menu(void);
 void screen_connect(void);
 void screen_fatal_error_rust(const char* title, const char* msg,
                              const char* footer);

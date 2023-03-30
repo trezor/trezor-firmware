@@ -12,7 +12,6 @@ use crate::ui::{
         component::{Button, ButtonMsg::Clicked, IconText},
     },
 };
-use heapless::String;
 
 const BUTTON_AREA_START: i16 = 56;
 const BUTTON_SPACING: i16 = 8;
@@ -27,23 +26,20 @@ pub enum MenuMsg {
 
 pub struct Menu {
     bg: Pad,
-    title: Child<Label<String<32>>>,
+    title: Child<Label<&'static str>>,
     close: Child<Button<&'static str>>,
     reboot: Child<Button<&'static str>>,
     reset: Child<Button<&'static str>>,
 }
 
 impl Menu {
-    pub fn new(_bld_version: &'static str) -> Self {
+    pub fn new() -> Self {
         let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
         let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
 
-        let mut title: String<32> = String::new();
-        unwrap!(title.push_str("BOOTLOADER "));
-
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
-            title: Child::new(Label::new(title, Alignment::Start, TEXT_TITLE)),
+            title: Child::new(Label::new("BOOTLOADER", Alignment::Start, TEXT_TITLE)),
             close: Child::new(
                 Button::with_icon(Icon::new(X32))
                     .styled(button_bld_menu())

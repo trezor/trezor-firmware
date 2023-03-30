@@ -21,10 +21,9 @@ pub mod welcome;
 use crate::{
     strutil::hexlify,
     ui::{
-        component::text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
         constant::screen,
         display::{Color, Icon},
-        geometry::{Alignment, LinearPlacement, TOP_CENTER},
+        geometry::{Alignment, TOP_CENTER},
         model_tt::{
             bootloader::{
                 connect::Connect,
@@ -46,6 +45,8 @@ use intro::Intro;
 use menu::Menu;
 
 use self::theme::{RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE};
+
+pub type BootloaderString = String<128>;
 
 const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
 
@@ -150,7 +151,7 @@ extern "C" fn screen_install_confirm(
         core::str::from_utf8_unchecked(fingerprint_buffer.as_ref())
     };
 
-    let mut version_str: String<128> = String::new();
+    let mut version_str: BootloaderString = String::new();
     unwrap!(version_str.push_str("Firmware version "));
     unwrap!(version_str.push_str(version));
     unwrap!(version_str.push_str("\nby "));
@@ -176,12 +177,6 @@ extern "C" fn screen_install_confirm(
         None
     };
 
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_FINGERPRINT, fingerprint_str));
-
-    let fingerprint =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
     let (left, right) = if !(vendor || downgrade) {
         let l = Button::with_text("CANCEL").styled(button_bld());
         let r = Button::with_text("INSTALL").styled(button_confirm());
@@ -200,7 +195,7 @@ extern "C" fn screen_install_confirm(
         Some(title),
         msg,
         alert,
-        Some(("FW FINGERPRINT", fingerprint)),
+        Some(("FW FINGERPRINT", fingerprint_str)),
     );
 
     run(&mut frame)
@@ -239,10 +234,8 @@ extern "C" fn screen_wipe_confirm() -> u32 {
 }
 
 #[no_mangle]
-extern "C" fn screen_menu(bld_version: *const cty::c_char) -> u32 {
-    let bld_version = unwrap!(unsafe { from_c_str(bld_version) });
-
-    run(&mut Menu::new(bld_version))
+extern "C" fn screen_menu() -> u32 {
+    run(&mut Menu::new())
 }
 
 #[no_mangle]
@@ -256,22 +249,17 @@ extern "C" fn screen_intro(
     let version = unwrap!(unsafe { from_c_str(version) });
     let bld_version = unwrap!(unsafe { from_c_str(bld_version) });
 
-    let mut fw: String<64> = String::new();
-    unwrap!(fw.push_str("Firmware "));
-    unwrap!(fw.push_str(version));
+    let mut title_str: BootloaderString = String::new();
+    unwrap!(title_str.push_str("BOOTLOADER "));
+    unwrap!(title_str.push_str(bld_version));
 
-    let mut vendor_: String<64> = String::new();
-    unwrap!(vendor_.push_str("by "));
-    unwrap!(vendor_.push_str(vendor));
+    let mut version_str: BootloaderString = String::new();
+    unwrap!(version_str.push_str("Firmware version "));
+    unwrap!(version_str.push_str(version));
+    unwrap!(version_str.push_str("\nby "));
+    unwrap!(version_str.push_str(vendor));
 
-    let mut messages = ParagraphVecShort::new();
-
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, fw.as_ref()));
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, vendor_.as_ref()));
-
-    let p = Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut frame = Intro::new(bld_version, p);
+    let mut frame = Intro::new(title_str.as_str(), version_str.as_str());
 
     run(&mut frame)
 }

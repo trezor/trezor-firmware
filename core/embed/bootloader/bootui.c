@@ -175,11 +175,7 @@ uint32_t ui_screen_intro(const vendor_header *const vhdr,
   return screen_intro(bld_ver, vhdr->vstr, vhdr->vstr_len, ver_str);
 }
 
-uint32_t ui_screen_menu(void) {
-  char bld_ver[32];
-  format_ver("%d.%d.%d", VERSION_UINT32, bld_ver, sizeof(bld_ver));
-  return screen_menu(bld_ver);
-}
+uint32_t ui_screen_menu(void) { return screen_menu(); }
 
 // install UI
 

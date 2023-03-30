@@ -1,25 +1,16 @@
 use crate::ui::{
-    component::{
-        text::paragraphs::{ParagraphVecShort, Paragraphs},
-        Child, Component, Event, EventCtx, Label, Pad,
-    },
+    component::{Child, Component, Event, EventCtx, Label, Pad},
     constant::screen,
     display::Icon,
     geometry::{Alignment, Insets, Point, Rect},
     model_tt::{
-        bootloader::theme::{button_bld, button_bld_menu, BLD_BG, MENU32},
-        component::ButtonMsg::Clicked,
+        bootloader::theme::{
+            button_bld, button_bld_menu, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
+            CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_TITLE, TITLE_AREA, TITLE_Y_ADJUSTMENT,
+        },
+        component::{Button, ButtonMsg::Clicked},
+        constant::WIDTH,
     },
-};
-use heapless::String;
-
-use crate::ui::model_tt::{
-    bootloader::theme::{
-        BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING, CORNER_BUTTON_AREA, TEXT_TITLE,
-        TITLE_AREA, TITLE_Y_ADJUSTMENT,
-    },
-    component::Button,
-    constant::WIDTH,
 };
 
 #[repr(u32)]
@@ -31,18 +22,14 @@ pub enum IntroMsg {
 
 pub struct Intro<'a> {
     bg: Pad,
-    title: Child<Label<String<32>>>,
+    title: Child<Label<&'a str>>,
     menu: Child<Button<&'static str>>,
     host: Child<Button<&'static str>>,
-    text: Child<Paragraphs<ParagraphVecShort<&'a str>>>,
+    text: Child<Label<&'a str>>,
 }
 
 impl<'a> Intro<'a> {
-    pub fn new(bld_version: &'static str, content: Paragraphs<ParagraphVecShort<&'a str>>) -> Self {
-        let mut title: String<32> = String::new();
-        unwrap!(title.push_str("BOOTLOADER "));
-        unwrap!(title.push_str(bld_version));
-
+    pub fn new(title: &'a str, content: &'a str) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(Label::new(title, Alignment::Start, TEXT_TITLE)),
@@ -52,7 +39,10 @@ impl<'a> Intro<'a> {
                     .with_expanded_touch_area(Insets::uniform(13)),
             ),
             host: Child::new(Button::with_text("INSTALL FIRMWARE").styled(button_bld())),
-            text: Child::new(content),
+            text: Child::new(
+                Label::new(content, Alignment::Start, TEXT_NORMAL)
+                    .with_vertical_align(Alignment::Center),
+            ),
         }
     }
 }
