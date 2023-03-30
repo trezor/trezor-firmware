@@ -179,30 +179,17 @@ uint32_t ui_screen_menu(void) { return screen_menu(); }
 
 // install UI
 
-uint32_t ui_screen_install_confirm_upgrade(const vendor_header *const vhdr,
-                                           const image_header *const hdr) {
+uint32_t ui_screen_install_confirm(const vendor_header *const vhdr,
+                                   const image_header *const hdr,
+                                   secbool should_keep_seed,
+                                   secbool is_newvendor, int version_cmp) {
   uint8_t fingerprint[32];
   char ver_str[64];
   get_image_fingerprint(hdr, fingerprint);
   format_ver("%d.%d.%d", hdr->version, ver_str, sizeof(ver_str));
   return screen_install_confirm(vhdr->vstr, vhdr->vstr_len, ver_str,
-                                fingerprint, false, false);
-}
-
-uint32_t ui_screen_install_confirm_newvendor_or_downgrade_wipe(
-    const vendor_header *const vhdr, const image_header *const hdr,
-    secbool downgrade_wipe) {
-  uint8_t fingerprint[32];
-  char ver_str[64];
-  get_image_fingerprint(hdr, fingerprint);
-  format_ver("%d.%d.%d", hdr->version, ver_str, sizeof(ver_str));
-  if (downgrade_wipe) {
-    return screen_install_confirm(vhdr->vstr, vhdr->vstr_len, ver_str,
-                                  fingerprint, true, false);
-  } else {
-    return screen_install_confirm(vhdr->vstr, vhdr->vstr_len, ver_str,
-                                  fingerprint, false, true);
-  }
+                                fingerprint, should_keep_seed == sectrue,
+                                is_newvendor == sectrue, version_cmp);
 }
 
 void ui_screen_install_start() {

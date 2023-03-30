@@ -9,8 +9,9 @@ void loader_uncompress_r(int32_t y_offset, uint16_t fg_color, uint16_t bg_color,
 
 uint32_t screen_install_confirm(const char* vendor_str, uint8_t vendor_str_len,
                                 const char* version_str,
-                                const uint8_t* fingerprint, bool downgrade,
-                                bool vendor);
+                                const uint8_t* fingerprint,
+                                bool should_keep_seed, bool is_newvendor,
+                                int version_cmp);
 uint32_t screen_wipe_confirm(void);
 void screen_install_progress(int16_t progress, bool initialize,
                              bool initial_setup);

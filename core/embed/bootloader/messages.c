@@ -432,10 +432,10 @@ static void detect_installation(const vendor_header *current_vhdr,
                                 const vendor_header *const new_vhdr,
                                 const image_header *const new_hdr,
                                 secbool *is_new, secbool *is_upgrade,
-                                secbool *is_downgrade_wipe) {
+                                secbool *is_newvendor) {
   *is_new = secfalse;
   *is_upgrade = secfalse;
-  *is_downgrade_wipe = secfalse;
+  *is_newvendor = secfalse;
   if (sectrue != check_vendor_header_keys(current_vhdr)) {
     *is_new = sectrue;
     return;
@@ -454,10 +454,10 @@ static void detect_installation(const vendor_header *current_vhdr,
   vendor_header_hash(new_vhdr, hash1);
   vendor_header_hash(current_vhdr, hash2);
   if (0 != memcmp(hash1, hash2, 32)) {
+    *is_newvendor = sectrue;
     return;
   }
   if (version_compare(new_hdr->version, current_hdr->fix_version) < 0) {
-    *is_downgrade_wipe = sectrue;
     return;
   }
   *is_upgrade = sectrue;
@@ -482,8 +482,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   }
 
   static image_header hdr;
-  secbool is_upgrade = secfalse;
-  secbool is_downgrade_wipe = secfalse;
+  secbool is_newvendor = secfalse;
+  secbool should_keep_seed = secfalse;
 
   if (firmware_block == 0) {
     if (headers_offset == 0) {
@@ -562,20 +562,17 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       if (is_new == secfalse) {
         detect_installation(&current_vhdr, current_hdr, &vhdr, &hdr, &is_new,
-                            &is_upgrade, &is_downgrade_wipe);
+                            &should_keep_seed, &is_newvendor);
       }
 
       uint32_t response = INPUT_CANCEL;
       if (sectrue == is_new) {
         // new installation - auto confirm
         response = INPUT_CONFIRM;
-      } else if (sectrue == is_upgrade) {
-        // firmware upgrade
-        response = ui_screen_install_confirm_upgrade(&vhdr, &hdr);
       } else {
-        // downgrade with wipe or new firmware vendor
-        response = ui_screen_install_confirm_newvendor_or_downgrade_wipe(
-            &vhdr, &hdr, is_downgrade_wipe);
+        int version_cmp = version_compare(hdr.version, current_hdr->version);
+        response = ui_screen_install_confirm(&vhdr, &hdr, should_keep_seed,
+                                             is_newvendor, version_cmp);
       }
 
       if (INPUT_CANCEL == response) {
@@ -601,7 +598,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       // first block with the headers parsed -> the first chunk is now complete
       read_offset = 0;
       // if firmware is not upgrade, erase storage
-      if (sectrue != is_upgrade) {
+      if (sectrue != should_keep_seed) {
         ensure(
             flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL),
             NULL);

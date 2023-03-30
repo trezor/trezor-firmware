@@ -46,11 +46,10 @@ uint32_t ui_screen_intro(const vendor_header* const vhdr,
 
 uint32_t ui_screen_menu(void);
 
-uint32_t ui_screen_install_confirm_upgrade(const vendor_header* const vhdr,
-                                           const image_header* const hdr);
-uint32_t ui_screen_install_confirm_newvendor_or_downgrade_wipe(
-    const vendor_header* const vhdr, const image_header* const hdr,
-    secbool downgrade_wipe);
+uint32_t ui_screen_install_confirm(const vendor_header* const vhdr,
+                                   const image_header* const hdr,
+                                   secbool shold_keep_seed,
+                                   secbool is_newvendor, int version_cmp);
 void ui_screen_install_start();
 void ui_screen_install_progress_erase(int pos, int len);
 void ui_screen_install_progress_upload(int pos);

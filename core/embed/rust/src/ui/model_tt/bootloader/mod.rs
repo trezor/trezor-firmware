@@ -139,8 +139,9 @@ extern "C" fn screen_install_confirm(
     vendor_str_len: u8,
     version: *const cty::c_char,
     fingerprint: *const cty::uint8_t,
-    downgrade: bool,
-    vendor: bool,
+    should_keep_seed: bool,
+    is_newvendor: bool,
+    version_cmp: cty::c_int,
 ) -> u32 {
     let text = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
     let version = unwrap!(unsafe { from_c_str(version) });
@@ -158,23 +159,25 @@ extern "C" fn screen_install_confirm(
     unwrap!(version_str.push_str("\nby "));
     unwrap!(version_str.push_str(text));
 
-    let title_str = if downgrade {
-        "DOWNGRADE FW"
-    } else if vendor {
+    let title_str = if is_newvendor {
         "CHANGE FW\nVENDOR"
-    } else {
+    } else if version_cmp > 0 {
         "UPDATE FIRMWARE"
+    } else if version_cmp == 0 {
+        "REINSTALL FW"
+    } else {
+        "DOWNGRADE FW"
     };
     let title = Label::new(title_str, Alignment::Start, theme::TEXT_BOLD)
         .vertically_aligned(Alignment::Center);
     let msg = Label::new(version_str.as_ref(), Alignment::Start, theme::TEXT_NORMAL);
-    let alert = (vendor || downgrade).then_some(Label::new(
+    let alert = (!should_keep_seed).then_some(Label::new(
         "SEED WILL BE ERASED!",
         Alignment::Start,
         theme::TEXT_BOLD,
     ));
 
-    let (left, right) = if !(vendor || downgrade) {
+    let (left, right) = if should_keep_seed {
         let l = Button::with_text("CANCEL").styled(button_bld());
         let r = Button::with_text("INSTALL").styled(button_confirm());
         (l, r)
