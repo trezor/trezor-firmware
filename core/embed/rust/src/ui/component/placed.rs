@@ -214,12 +214,20 @@ impl<T, U> Split<T, U> {
         }
     }
 
-    pub const fn vertical(size: i16, spacing: i16, first: T, second: U) -> Self {
+    pub const fn left(size: i16, spacing: i16, first: T, second: U) -> Self {
         Self::new(Axis::Vertical, size, spacing, first, second)
     }
 
-    pub const fn horizontal(size: i16, spacing: i16, first: T, second: U) -> Self {
+    pub const fn right(size: i16, spacing: i16, first: T, second: U) -> Self {
+        Self::new(Axis::Vertical, -size, spacing, first, second)
+    }
+
+    pub const fn top(size: i16, spacing: i16, first: T, second: U) -> Self {
         Self::new(Axis::Horizontal, size, spacing, first, second)
+    }
+
+    pub const fn bottom(size: i16, spacing: i16, first: T, second: U) -> Self {
+        Self::new(Axis::Horizontal, -size, spacing, first, second)
     }
 }
 

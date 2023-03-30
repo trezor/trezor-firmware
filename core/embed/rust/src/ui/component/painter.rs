@@ -67,3 +67,8 @@ pub fn jpeg_painter<'a>(
     let f = move |area: Rect| display::tjpgd::jpeg(image(), area.center() - off, scale);
     Painter::new(f)
 }
+
+pub fn rect_painter(fg: display::Color, bg: display::Color) -> Painter<impl FnMut(Rect)> {
+    let f = move |area: Rect| display::rect_fill_rounded(area, fg, bg, 2);
+    Painter::new(f)
+}

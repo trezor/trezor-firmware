@@ -2,7 +2,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, Map, Split, TimerToken,
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, TimerToken,
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
@@ -391,7 +391,7 @@ impl<T> Button<T> {
         } else {
             0
         };
-        theme::button_bar(Split::vertical(
+        theme::button_bar(Split::left(
             width,
             theme::BUTTON_SPACING,
             left.map(|msg| {
@@ -456,11 +456,11 @@ impl<T> Button<T> {
         });
         let total_height = theme::BUTTON_HEIGHT + theme::BUTTON_SPACING + theme::INFO_BUTTON_HEIGHT;
         FixedHeightBar::bottom(
-            Split::horizontal(
+            Split::top(
                 theme::INFO_BUTTON_HEIGHT,
                 theme::BUTTON_SPACING,
                 top,
-                Split::vertical(theme::BUTTON_WIDTH, theme::BUTTON_SPACING, left, right),
+                Split::left(theme::BUTTON_WIDTH, theme::BUTTON_SPACING, left, right),
             ),
             total_height,
         )
@@ -488,11 +488,11 @@ impl<T> Button<T> {
         let [top, middle, bottom] = words;
         let total_height = 3 * theme::BUTTON_HEIGHT + 2 * theme::BUTTON_SPACING;
         FixedHeightBar::bottom(
-            Split::horizontal(
+            Split::top(
                 theme::BUTTON_HEIGHT,
                 theme::BUTTON_SPACING,
                 btn(0, top),
-                Split::horizontal(
+                Split::top(
                     theme::BUTTON_HEIGHT,
                     theme::BUTTON_SPACING,
                     btn(1, middle),
@@ -509,10 +509,11 @@ pub enum CancelConfirmMsg {
     Confirmed,
 }
 
-type CancelInfoConfirm<T, F0, F1, F2> =
-    FixedHeightBar<Split<Map<Button<T>, F0>, Split<Map<Button<T>, F1>, Map<Button<T>, F2>>>>;
+type CancelInfoConfirm<T, F0, F1, F2> = FixedHeightBar<
+    Split<MsgMap<Button<T>, F0>, Split<MsgMap<Button<T>, F1>, MsgMap<Button<T>, F2>>>,
+>;
 
-type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<Map<Button<T>, F0>, Map<Button<T>, F1>>>;
+type CancelConfirm<T, F0, F1> = FixedHeightBar<Split<MsgMap<Button<T>, F0>, MsgMap<Button<T>, F1>>>;
 
 #[derive(Clone, Copy)]
 pub enum CancelInfoConfirmMsg {

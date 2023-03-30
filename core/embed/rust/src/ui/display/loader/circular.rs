@@ -1,6 +1,8 @@
 use crate::ui::{
-    constant, display,
-    display::Color,
+    constant,
+    constant::{screen, LOADER_INNER, LOADER_OUTER},
+    display,
+    display::{toif::Icon, Color},
     geometry::{Offset, Point, Rect},
 };
 
@@ -10,25 +12,35 @@ use crate::trezorhal::{
     dma2d::{dma2d_setup_4bpp_over_4bpp, dma2d_start_blend, dma2d_wait_for_transfer},
 };
 
-use crate::ui::{
-    constant::{screen, LOADER_OUTER},
-    display::toif::Icon,
-};
-
-const LOADER_SIZE: i32 = (LOADER_OUTER * 2.0) as i32;
-
-const OUTER: f32 = constant::LOADER_OUTER;
-const INNER: f32 = constant::LOADER_INNER;
 const ICON_MAX_SIZE: i16 = constant::LOADER_ICON_MAX_SIZE;
 
-const IN_INNER_ANTI: i32 = ((INNER - 0.5) * (INNER - 0.5)) as i32;
-const INNER_MIN: i32 = ((INNER + 0.5) * (INNER + 0.5)) as i32;
-const INNER_MAX: i32 = ((INNER + 1.5) * (INNER + 1.5)) as i32;
-const INNER_OUTER_ANTI: i32 = ((INNER + 2.5) * (INNER + 2.5)) as i32;
-const OUTER_OUT_ANTI: i32 = ((OUTER - 1.5) * (OUTER - 1.5)) as i32;
-const OUTER_MAX: i32 = ((OUTER - 0.5) * (OUTER - 0.5)) as i32;
+#[derive(Clone, Copy)]
+pub struct LoaderDimensions {
+    in_inner_anti: i32,
+    inner_min: i32,
+    inner_max: i32,
+    inner_outer_anti: i32,
+    outer_out_anti: i32,
+    outer_max: i32,
+}
+
+impl LoaderDimensions {
+    pub fn new(outer: i16, inner: i16) -> Self {
+        let outer: f32 = outer.into();
+        let inner: f32 = inner.into();
+        Self {
+            in_inner_anti: ((inner - 0.5) * (inner - 0.5)) as i32,
+            inner_min: ((inner + 0.5) * (inner + 0.5)) as i32,
+            inner_max: ((inner + 1.5) * (inner + 1.5)) as i32,
+            inner_outer_anti: ((inner + 2.5) * (inner + 2.5)) as i32,
+            outer_out_anti: ((outer - 1.5) * (outer - 1.5)) as i32,
+            outer_max: ((outer - 0.5) * (outer - 0.5)) as i32,
+        }
+    }
+}
 
 pub fn loader_circular_uncompress(
+    dim: LoaderDimensions,
     y_offset: i16,
     fg_color: Color,
     bg_color: Color,
@@ -36,20 +48,42 @@ pub fn loader_circular_uncompress(
     indeterminate: bool,
     icon: Option<(Icon, Color)>,
 ) {
-    const ICON_MAX_SIZE: i16 = constant::LOADER_ICON_MAX_SIZE;
-
     if let Some((icon, color)) = icon {
         let toif_size = icon.toif.size();
         if toif_size.x <= ICON_MAX_SIZE && toif_size.y <= ICON_MAX_SIZE {
             let mut icon_data = [0_u8; ((ICON_MAX_SIZE * ICON_MAX_SIZE) / 2) as usize];
             icon.toif.uncompress(&mut icon_data);
             let i = Some((icon_data.as_ref(), color, toif_size));
-            loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, i);
+            loader_rust(
+                dim,
+                y_offset,
+                fg_color,
+                bg_color,
+                progress,
+                indeterminate,
+                i,
+            );
         } else {
-            loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, None);
+            loader_rust(
+                dim,
+                y_offset,
+                fg_color,
+                bg_color,
+                progress,
+                indeterminate,
+                None,
+            );
         }
     } else {
-        loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, None);
+        loader_rust(
+            dim,
+            y_offset,
+            fg_color,
+            bg_color,
+            progress,
+            indeterminate,
+            None,
+        );
     }
 }
 
@@ -60,7 +94,15 @@ pub fn loader_circular(
     bg_color: Color,
     icon: Option<(Icon, Color)>,
 ) {
-    loader_circular_uncompress(y_offset, fg_color, bg_color, progress, false, icon);
+    loader_circular_uncompress(
+        LoaderDimensions::new(LOADER_OUTER, LOADER_INNER),
+        y_offset,
+        fg_color,
+        bg_color,
+        progress,
+        false,
+        icon,
+    );
 }
 
 pub fn loader_circular_indeterminate(
@@ -70,7 +112,15 @@ pub fn loader_circular_indeterminate(
     bg_color: Color,
     icon: Option<(Icon, Color)>,
 ) {
-    loader_circular_uncompress(y_offset, fg_color, bg_color, progress, true, icon);
+    loader_circular_uncompress(
+        LoaderDimensions::new(LOADER_OUTER, LOADER_INNER),
+        y_offset,
+        fg_color,
+        bg_color,
+        progress,
+        true,
+        icon,
+    );
 }
 
 #[inline(always)]
@@ -78,8 +128,8 @@ fn get_loader_vectors(indeterminate: bool, progress: u16) -> (Point, Point) {
     let (start_progress, end_progress) = if indeterminate {
         const LOADER_INDETERMINATE_WIDTH: u16 = 100;
         (
-            progress - LOADER_INDETERMINATE_WIDTH,
-            progress + LOADER_INDETERMINATE_WIDTH,
+            (progress + 1000 - LOADER_INDETERMINATE_WIDTH) % 1000,
+            (progress + LOADER_INDETERMINATE_WIDTH) % 1000,
         )
     } else {
         (0, progress)
@@ -114,12 +164,12 @@ fn loader_get_pixel_color_idx(
     inverted: bool,
     end_vector: Point,
     n_start: Point,
-    x_c: i16,
-    y_c: i16,
+    c: Point,
     center: Point,
+    dim: LoaderDimensions,
 ) -> u8 {
-    let y_p = -(y_c - center.y);
-    let x_p = x_c - center.x;
+    let y_p = -(c.y - center.y);
+    let x_p = c.x - center.x;
 
     let vx = Point::new(x_p, y_p);
     let n_vx = Point::new(-y_p, x_p);
@@ -142,31 +192,31 @@ fn loader_get_pixel_color_idx(
     // - r_inner)/(r_outer-r_inner) is negligible
     if show_all || included {
         //active part
-        if d <= IN_INNER_ANTI {
+        if d <= dim.in_inner_anti {
             0
-        } else if d <= INNER_MIN {
-            ((15 * (d - IN_INNER_ANTI)) / (INNER_MIN - IN_INNER_ANTI)) as u8
-        } else if d <= OUTER_OUT_ANTI {
+        } else if d <= dim.inner_min {
+            ((15 * (d - dim.in_inner_anti)) / (dim.inner_min - dim.in_inner_anti)) as u8
+        } else if d <= dim.outer_out_anti {
             15
-        } else if d <= OUTER_MAX {
-            (15 - ((15 * (d - OUTER_OUT_ANTI)) / (OUTER_MAX - OUTER_OUT_ANTI))) as u8
+        } else if d <= dim.outer_max {
+            (15 - ((15 * (d - dim.outer_out_anti)) / (dim.outer_max - dim.outer_out_anti))) as u8
         } else {
             0
         }
     } else {
         //inactive part
-        if d <= IN_INNER_ANTI {
+        if d <= dim.in_inner_anti {
             0
-        } else if d <= INNER_MIN {
-            ((15 * (d - IN_INNER_ANTI)) / (INNER_MIN - IN_INNER_ANTI)) as u8
-        } else if d <= INNER_MAX {
+        } else if d <= dim.inner_min {
+            ((15 * (d - dim.in_inner_anti)) / (dim.inner_min - dim.in_inner_anti)) as u8
+        } else if d <= dim.inner_max {
             15
-        } else if d <= INNER_OUTER_ANTI {
-            (15 - ((10 * (d - INNER_MAX)) / (INNER_OUTER_ANTI - INNER_MAX))) as u8
-        } else if d <= OUTER_OUT_ANTI {
+        } else if d <= dim.inner_outer_anti {
+            (15 - ((10 * (d - dim.inner_max)) / (dim.inner_outer_anti - dim.inner_max))) as u8
+        } else if d <= dim.outer_out_anti {
             5
-        } else if d <= OUTER_MAX {
-            5 - ((5 * (d - OUTER_OUT_ANTI)) / (OUTER_MAX - OUTER_OUT_ANTI)) as u8
+        } else if d <= dim.outer_max {
+            5 - ((5 * (d - dim.outer_out_anti)) / (dim.outer_max - dim.outer_out_anti)) as u8
         } else {
             0
         }
@@ -175,6 +225,7 @@ fn loader_get_pixel_color_idx(
 
 #[cfg(not(feature = "dma2d"))]
 pub fn loader_rust(
+    dim: LoaderDimensions,
     y_offset: i16,
     fg_color: Color,
     bg_color: Color,
@@ -225,7 +276,7 @@ pub fn loader_rust(
             if use_icon && icon_area_clamped.contains(p) {
                 let x = x_c - center.x;
                 let y = y_c - center.y;
-                if (x as i32 * x as i32 + y as i32 * y as i32) <= IN_INNER_ANTI {
+                if (x as i32 * x as i32 + y as i32 * y as i32) <= dim.in_inner_anti {
                     let x_i = x_c - icon_area.x0;
                     let y_i = y_c - icon_area.y0;
 
@@ -241,7 +292,13 @@ pub fn loader_rust(
 
             if clamped.contains(p) && !icon_pixel {
                 let pix_c_idx = loader_get_pixel_color_idx(
-                    show_all, inverted, end_vector, n_start, x_c, y_c, center,
+                    show_all,
+                    inverted,
+                    end_vector,
+                    n_start,
+                    Point::new(x_c, y_c),
+                    center,
+                    dim,
                 );
                 underlying_color = colortable[pix_c_idx as usize];
             }
@@ -255,6 +312,7 @@ pub fn loader_rust(
 
 #[cfg(feature = "dma2d")]
 pub fn loader_rust(
+    dim: LoaderDimensions,
     y_offset: i16,
     fg_color: Color,
     bg_color: Color,
@@ -341,7 +399,13 @@ pub fn loader_rust(
 
             let pix_c_idx = if clamped.contains(p) {
                 loader_get_pixel_color_idx(
-                    show_all, inverted, end_vector, n_start, x_c, y_c, center,
+                    show_all,
+                    inverted,
+                    end_vector,
+                    n_start,
+                    Point::new(x_c, y_c),
+                    center,
+                    dim,
                 )
             } else {
                 0

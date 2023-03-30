@@ -45,7 +45,9 @@ class Homescreen(HomescreenBase):
         level = 1
         if notification is not None:
             notification = notification.rstrip("!")
-            if "EXPERIMENTAL" in notification:
+            if "COINJOIN" in notification.upper():
+                level = 3
+            elif "EXPERIMENTAL" in notification.upper():
                 level = 2
             elif notification_is_error:
                 level = 0
@@ -112,9 +114,9 @@ class Busyscreen(HomescreenBase):
     def __init__(self, delay_ms: int) -> None:
         skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
-            layout=trezorui2.show_busyscreen(
-                title="PLEASE WAIT",
-                description="Coinjoin in progress.\n\nDo not disconnect your\nTrezor.",
+            layout=trezorui2.show_progress_coinjoin(
+                title="Waiting for others",
+                indeterminate=True,
                 time_ms=delay_ms,
                 skip_first_paint=skip,
             )
