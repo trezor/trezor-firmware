@@ -6,6 +6,9 @@ use crate::ui::{
 
 use super::component::{ButtonStyle, ButtonStyleSheet};
 
+// Typical backlight values.
+pub const BACKLIGHT_NORMAL: u16 = 150;
+
 // Color palette.
 pub const WHITE: Color = Color::rgb(255, 255, 255);
 pub const BLACK: Color = Color::rgb(0, 0, 0);
