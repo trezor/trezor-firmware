@@ -52,9 +52,15 @@ if __debug__:
     LAYOUT_WATCHER_STATE = 1
     LAYOUT_WATCHER_LAYOUT = 2
 
+    REFRESH_INDEX = 0
+
     def screenshot() -> bool:
         if storage.save_screen:
-            display.save(storage.save_screen_directory + "/refresh-")
+            # Starting with "refresh00", allowing for 100 emulator restarts
+            # without losing the order of the screenshots based on filename.
+            display.save(
+                storage.save_screen_directory + f"/refresh{REFRESH_INDEX:0>2}-"
+            )
             return True
         return False
 
@@ -187,6 +193,11 @@ if __debug__:
         ctx: wire.Context, msg: DebugLinkRecordScreen
     ) -> Success:
         if msg.target_directory:
+            # In case emulator is restarted but we still want to record screenshots
+            # into the same directory as before, we need to increment the refresh index,
+            # so that the screenshots are not overwritten.
+            global REFRESH_INDEX
+            REFRESH_INDEX = msg.refresh_index
             storage.save_screen_directory = msg.target_directory
             storage.save_screen = True
         else:
