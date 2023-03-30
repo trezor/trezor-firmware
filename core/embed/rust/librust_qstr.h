@@ -50,7 +50,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_slip39;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
-  MP_QSTR_show_busyscreen;
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
   MP_QSTR_show_lockscreen;
@@ -58,6 +57,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_progress;
+  MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_address_details;
 
   MP_QSTR_attach_timer_fn;

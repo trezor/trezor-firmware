@@ -62,6 +62,7 @@ where
 
     fn level_to_style(level: u8) -> (Color, Icon) {
         match level {
+            3 => (theme::YELLOW, Icon::new(theme::ICON_COINJOIN)),
             2 => (theme::VIOLET, Icon::new(theme::ICON_MAGIC)),
             1 => (theme::YELLOW, Icon::new(theme::ICON_WARN)),
             _ => (theme::RED, Icon::new(theme::ICON_WARN)),

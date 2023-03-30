@@ -5,8 +5,8 @@ pub const HEIGHT: i16 = 240;
 pub const LINE_SPACE: i16 = 4;
 pub const FONT_BPP: i16 = 4;
 
-pub const LOADER_OUTER: f32 = 60_f32;
-pub const LOADER_INNER: f32 = 42_f32;
+pub const LOADER_OUTER: i16 = 60;
+pub const LOADER_INNER: i16 = 42;
 pub const LOADER_ICON_MAX_SIZE: i16 = 64;
 
 pub const BACKLIGHT_NORMAL: i32 = 150;

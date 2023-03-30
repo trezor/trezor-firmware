@@ -9,6 +9,9 @@ use core::slice::from_raw_parts;
 use crate::ui::display::loader::circular::{
     loader_circular as determinate, loader_circular_indeterminate as indeterminate,
 };
+#[cfg(feature = "model_tt")]
+pub use crate::ui::display::loader::circular::{loader_circular_uncompress, LoaderDimensions};
+
 #[cfg(not(feature = "model_tt"))]
 use crate::ui::display::loader::rectangular::loader_rectangular as determinate;
 #[cfg(not(feature = "model_tt"))]

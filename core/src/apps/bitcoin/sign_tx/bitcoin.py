@@ -13,6 +13,7 @@ from ..common import SigHashType, ecdsa_sign, input_is_external
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import helpers
+from .approvers import CoinJoinApprover
 from .helpers import request_tx_input, request_tx_output
 from .progress import progress
 from .tx_info import OriginalTxInfo
@@ -38,7 +39,9 @@ _SERIALIZED_TX_BUFFER = empty_bytearray(_MAX_SERIALIZED_CHUNK_SIZE)
 
 class Bitcoin:
     async def signer(self) -> None:
-        progress.init(self.tx_info.tx)
+        progress.init(
+            self.tx_info.tx, is_coinjoin=isinstance(self.approver, CoinJoinApprover)
+        )
 
         # Add inputs to sig_hasher and h_tx_check and compute the sum of input amounts.
         await self.step1_process_inputs()
