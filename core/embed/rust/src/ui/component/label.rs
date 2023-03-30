@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::Font,
-    geometry::{Alignment, Insets, Offset, Rect},
+    geometry::{Alignment, Insets, Offset, Point, Rect},
 };
 
 use super::{text::TextStyle, TextLayout};
@@ -61,6 +61,14 @@ where
         let font = self.font();
         Offset::new(font.text_width(self.text.as_ref()), font.text_max_height())
     }
+
+    pub fn text_height(&self, width: i16) -> i16 {
+        let bounds = Rect::from_top_left_and_size(Point::zero(), Offset::new(width, i16::MAX));
+        self.layout
+            .with_bounds(bounds)
+            .fit_text(self.text.as_ref())
+            .height()
+    }
 }
 
 impl<T> Component for Label<T>
@@ -70,11 +78,7 @@ where
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let height = self
-            .layout
-            .with_bounds(bounds)
-            .fit_text(self.text.as_ref())
-            .height();
+        let height = self.text_height(bounds.width());
         let diff = bounds.height() - height;
         let insets = match self.vertical {
             Alignment::Start => Insets::bottom(diff),

@@ -26,6 +26,7 @@ use crate::{
         geometry::{Alignment, TOP_CENTER},
         model_tt::{
             bootloader::{
+                confirm::ConfirmTitle,
                 connect::Connect,
                 theme::{
                     button_bld, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
@@ -157,25 +158,21 @@ extern "C" fn screen_install_confirm(
     unwrap!(version_str.push_str("\nby "));
     unwrap!(version_str.push_str(text));
 
-    let title = if downgrade {
-        Label::new("DOWNGRADE FW", Alignment::Start, theme::TEXT_BOLD)
+    let title_str = if downgrade {
+        "DOWNGRADE FW"
     } else if vendor {
-        Label::new("CHANGE FW\nVENDOR", Alignment::Start, theme::TEXT_BOLD)
+        "CHANGE FW\nVENDOR"
     } else {
-        Label::new("UPDATE FIRMWARE", Alignment::Start, theme::TEXT_BOLD)
+        "UPDATE FIRMWARE"
     };
-
+    let title = Label::new(title_str, Alignment::Start, theme::TEXT_BOLD)
+        .vertically_aligned(Alignment::Center);
     let msg = Label::new(version_str.as_ref(), Alignment::Start, theme::TEXT_NORMAL);
-
-    let alert = if vendor || downgrade {
-        Some(Label::new(
-            "SEED WILL BE ERASED!",
-            Alignment::Start,
-            theme::TEXT_BOLD,
-        ))
-    } else {
-        None
-    };
+    let alert = (vendor || downgrade).then_some(Label::new(
+        "SEED WILL BE ERASED!",
+        Alignment::Start,
+        theme::TEXT_BOLD,
+    ));
 
     let (left, right) = if !(vendor || downgrade) {
         let l = Button::with_text("CANCEL").styled(button_bld());
@@ -189,10 +186,9 @@ extern "C" fn screen_install_confirm(
 
     let mut frame = Confirm::new(
         BLD_BG,
-        None,
         left,
         right,
-        Some(title),
+        ConfirmTitle::Text(title),
         msg,
         alert,
         Some(("FW FINGERPRINT", fingerprint_str)),
@@ -203,7 +199,7 @@ extern "C" fn screen_install_confirm(
 
 #[no_mangle]
 extern "C" fn screen_wipe_confirm() -> u32 {
-    let icon = Some(Icon::new(FIRE40));
+    let icon = Icon::new(FIRE40);
 
     let msg = Label::new(
         "Are you sure you want to factory reset the device?",
@@ -221,10 +217,9 @@ extern "C" fn screen_wipe_confirm() -> u32 {
 
     let mut frame = Confirm::new(
         BLD_WIPE_COLOR,
-        icon,
         left,
         right,
-        None,
+        ConfirmTitle::Icon(icon),
         msg,
         Some(alert),
         None,
