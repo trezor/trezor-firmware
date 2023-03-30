@@ -83,21 +83,16 @@ class RustLayout(ui.Layout):
 
         async def handle_swipe(self):
             from apps.debug import notify_layout_change, swipe_signal
-            from trezor.ui import (
-                SWIPE_UP,
-                SWIPE_DOWN,
-                SWIPE_LEFT,
-                SWIPE_RIGHT,
-            )
+            from trezor.enums import DebugSwipeDirection
 
             while True:
                 direction = await swipe_signal()
                 orig_x = orig_y = 120
                 off_x, off_y = {
-                    SWIPE_UP: (0, -30),
-                    SWIPE_DOWN: (0, 30),
-                    SWIPE_LEFT: (-30, 0),
-                    SWIPE_RIGHT: (30, 0),
+                    DebugSwipeDirection.UP: (0, -30),
+                    DebugSwipeDirection.DOWN: (0, 30),
+                    DebugSwipeDirection.LEFT: (-30, 0),
+                    DebugSwipeDirection.RIGHT: (30, 0),
                 }[direction]
 
                 for event, x, y in (

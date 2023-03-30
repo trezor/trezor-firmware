@@ -64,34 +64,18 @@ if __debug__:
             layout_change_chan.publish(storage.current_content)
 
     async def _dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
-        from trezor.enums import DebugButton, DebugSwipeDirection
-        from trezor.ui import (
-            Result,
-            SWIPE_UP,
-            SWIPE_DOWN,
-            SWIPE_LEFT,
-            SWIPE_RIGHT,
-        )
+        from trezor.enums import DebugButton
+        from trezor.ui import Result
 
-        button = msg.button  # local_cache_attribute
-        swipe = msg.swipe  # local_cache_attribute
-
-        if button is not None:
-            if button == DebugButton.NO:
+        if msg.button is not None:
+            if msg.button == DebugButton.NO:
                 await confirm_chan.put(Result(trezorui2.CANCELLED))
-            elif button == DebugButton.YES:
+            elif msg.button == DebugButton.YES:
                 await confirm_chan.put(Result(trezorui2.CONFIRMED))
-            elif button == DebugButton.INFO:
+            elif msg.button == DebugButton.INFO:
                 await confirm_chan.put(Result(trezorui2.INFO))
-        if swipe is not None:
-            if swipe == DebugSwipeDirection.UP:
-                await swipe_chan.put(SWIPE_UP)
-            elif swipe == DebugSwipeDirection.DOWN:
-                await swipe_chan.put(SWIPE_DOWN)
-            elif swipe == DebugSwipeDirection.LEFT:
-                await swipe_chan.put(SWIPE_LEFT)
-            elif swipe == DebugSwipeDirection.RIGHT:
-                await swipe_chan.put(SWIPE_RIGHT)
+        if msg.swipe is not None:
+            await swipe_chan.put(msg.swipe)
         if msg.input is not None:
             await input_chan.put(Result(msg.input))
 
