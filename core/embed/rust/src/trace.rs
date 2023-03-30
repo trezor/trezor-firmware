@@ -1,3 +1,5 @@
+use heapless::String;
+
 /// Visitor passed into `Trace` types.
 pub trait Tracer {
     fn int(&mut self, i: i64);
@@ -6,12 +8,25 @@ pub trait Tracer {
     fn symbol(&mut self, name: &str);
     fn open(&mut self, name: &str);
     fn field(&mut self, name: &str, value: &dyn Trace);
+    fn title(&mut self, title: &str);
+    fn button(&mut self, button: &str);
+    fn content_flag(&mut self);
+    fn kw_pair(&mut self, key: &str, value: &dyn Trace);
     fn close(&mut self);
 }
 
+// Identifiers for tagging various parts of the Trace
+// message - so that things like title or the main screen
+// content can be read in debug mode by micropython.
+pub const TITLE_TAG: &str = " **TITLE** ";
+pub const BTN_TAG: &str = " **BTN** ";
+pub const CONTENT_TAG: &str = " **CONTENT** ";
+// For when the button is not used
+pub const EMPTY_BTN: &str = "---";
+
 /// Value that can describe own structure and data using the `Tracer` interface.
 pub trait Trace {
-    fn trace(&self, d: &mut dyn Tracer);
+    fn trace(&self, t: &mut dyn Tracer);
 }
 
 impl Trace for &[u8] {
@@ -23,6 +38,12 @@ impl Trace for &[u8] {
 impl<const N: usize> Trace for &[u8; N] {
     fn trace(&self, t: &mut dyn Tracer) {
         t.bytes(&self[..])
+    }
+}
+
+impl<const N: usize> Trace for String<N> {
+    fn trace(&self, t: &mut dyn Tracer) {
+        t.string(&self[..])
     }
 }
 
@@ -68,24 +89,54 @@ mod tests {
         }
 
         fn symbol(&mut self, name: &str) {
-            self.extend(name.as_bytes())
+            self.string("<");
+            self.string(name);
+            self.string(">");
         }
 
         fn open(&mut self, name: &str) {
-            self.extend(b"<");
-            self.extend(name.as_bytes());
-            self.extend(b" ");
+            self.string("<");
+            self.string(name);
+            self.string(" ");
         }
 
         fn field(&mut self, name: &str, value: &dyn Trace) {
-            self.extend(name.as_bytes());
-            self.extend(b":");
+            self.string(name);
+            self.string(":");
             value.trace(self);
-            self.extend(b" ");
+            self.string(" ");
+        }
+
+        /// Mark the string as a title/header.
+        fn title(&mut self, title: &str) {
+            self.string(TITLE_TAG);
+            self.string(title);
+            self.string(TITLE_TAG);
+        }
+
+        /// Mark the string as a button content.
+        fn button(&mut self, button: &str) {
+            self.string(BTN_TAG);
+            self.string(button);
+            self.string(BTN_TAG);
+        }
+
+        // Mark the following as content visible on the screen,
+        // until it is called next time.
+        fn content_flag(&mut self) {
+            self.string(CONTENT_TAG);
+        }
+
+        /// Key-value pair for easy parsing
+        fn kw_pair(&mut self, key: &str, value: &dyn Trace) {
+            self.string(key);
+            self.string("::");
+            value.trace(self);
+            self.string(","); // mostly for human readability
         }
 
         fn close(&mut self) {
-            self.extend(b">")
+            self.string(">")
         }
     }
 }

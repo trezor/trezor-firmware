@@ -378,6 +378,7 @@ impl Component for Input {
 impl crate::trace::Trace for PassphraseKeyboard {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("PassphraseKeyboard");
+        t.kw_pair("textbox", &self.input.inner().textbox.content());
         t.close();
     }
 }

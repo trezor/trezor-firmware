@@ -312,8 +312,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("SwipePage");
-        t.field("active_page", &self.scrollbar.active_page);
-        t.field("page_count", &self.scrollbar.page_count);
+        t.kw_pair("active_page", &self.scrollbar.active_page);
+        t.kw_pair("page_count", &self.scrollbar.page_count);
         t.field("content", &self.content);
         t.field("controls", &self.controls);
         t.close();
@@ -561,7 +561,7 @@ mod tests {
         page.place(SCREEN);
 
         let expected =
-            "<SwipePage active_page:0 page_count:1 content:<Paragraphs > controls:<Empty > >";
+        "<SwipePage active_page::0,page_count::1,content:<Paragraphs  **CONTENT**  **CONTENT** > buttons:<Empty > >";
 
         assert_eq!(trace(&page), expected);
         swipe_up(&mut page);
@@ -588,7 +588,7 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected = "<SwipePage active_page:0 page_count:1 content:<Paragraphs This is the first\nparagraph and it should\nfit on the screen\nentirely.\nSecond, bold, paragraph\nshould also fit on the\nscreen whole I think.\n> controls:<Empty > >";
+        let expected = "<SwipePage active_page:0,page_count:1,content:<Paragraphs  **CONTENT** This is the first\nparagraph and it should\nfit on the screen\nentirely.\nSecond, bold, paragraph\nshould also fit on the\nscreen whole I think.\n **CONTENT** > controls:<Empty > >";
 
         assert_eq!(trace(&page), expected);
         swipe_up(&mut page);
@@ -611,8 +611,8 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes on\nand on and on and on and\non and will definitely not\nfit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n> controls:<FixedHeightBar inner:<Button text:NO > > >";
-        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs There's just so much\nletters in it.\n> controls:<FixedHeightBar inner:<Button text:NO > > >";
+        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs  **CONTENT** This is somewhat long\nparagraph that goes on\nand on and on and on and\non and will definitely not\nfit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n **CONTENT** > controls:<FixedHeightBar inner:<Button text:NO > > >";
+        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs  **CONTENT** There's just so much\nletters in it.\n **CONTENT** > controls:<FixedHeightBar inner:<Button text:NO > > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);
@@ -647,9 +647,9 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is using a\nbold font. It doesn't need\nto be all that long.\nAnd this one is u\nsing MONO. Monosp\nace is nice for n\numbers, they...\n> controls:<FixedHeightBar inner:<Button text:IDK > > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs ...have the same\nwidth and can be\nscanned quickly.\nEven if they span\nseveral pages or\nsomething.\nLet's add another one...\n> controls:<FixedHeightBar inner:<Button text:IDK > > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs for a good measure. This\none should overflow all\nthe way to the third page\nwith a bit of luck.\n> controls:<FixedHeightBar inner:<Button text:IDK > > >";
+        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs  **CONTENT** This paragraph is using a\nbold font. It doesn't need\nto be all that long.\nAnd this one is u\nsing MONO. Monosp\nace is nice for n\numbers, they...\n **CONTENT** > controls:<FixedHeightBar inner:<Button text:IDK > > >";
+        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs  **CONTENT** ...have the same\nwidth and can be\nscanned quickly.\nEven if they span\nseveral pages or\nsomething.\nLet's add another one...\n **CONTENT** > controls:<FixedHeightBar inner:<Button text:IDK > > >";
+        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs  **CONTENT** for a good measure. This\none should overflow all\nthe way to the third page\nwith a bit of luck.\n **CONTENT** > controls:<FixedHeightBar inner:<Button text:IDK > > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);
@@ -681,9 +681,9 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs Short one.\n> controls:<FixedHeightBar inner:<Empty > > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs Short two.\n> controls:<FixedHeightBar inner:<Empty > > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs Short three.\n> controls:<FixedHeightBar inner:<Empty > > >";
+        let expected1 = "<SwipePage active_page:0,page_count:3,content:<Paragraphs  **CONTENT** Short one.\n **CONTENT** > controls:<FixedHeightBar inner:<Empty > > >";
+        let expected2 = "<SwipePage active_page:1,page_count:3,content:<Paragraphs  **CONTENT** Short two.\n **CONTENT** > controls:<FixedHeightBar inner:<Empty > > >";
+        let expected3 = "<SwipePage active_page:2,page_count:3,content:<Paragraphs  **CONTENT** Short three.\n **CONTENT** > controls:<FixedHeightBar inner:<Empty > > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_up(&mut page);

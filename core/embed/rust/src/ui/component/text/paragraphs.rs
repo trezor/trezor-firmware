@@ -239,6 +239,7 @@ pub mod trace {
     impl<T: ParagraphSource> crate::trace::Trace for Paragraphs<T> {
         fn trace(&self, t: &mut dyn crate::trace::Tracer) {
             t.open("Paragraphs");
+            t.content_flag();
             Self::foreach_visible(
                 &self.source,
                 &self.visible,
@@ -248,6 +249,7 @@ pub mod trace {
                     t.string("\n");
                 },
             );
+            t.content_flag();
             t.close();
         }
     }

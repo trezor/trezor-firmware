@@ -190,9 +190,9 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Frame");
-        t.field("title", &self.title);
+        t.title(self.title.inner().text().as_ref());
         if let Some(s) = &self.subtitle {
-            t.field("subtitle", s);
+            t.title(s.inner().text().as_ref());
         }
         if let Some(b) = &self.button {
             t.field("button", b);
@@ -283,7 +283,7 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("NotificationFrame");
-        t.field("title", &self.title);
+        t.title(self.title.as_ref());
         t.field("content", &self.content);
         t.close();
     }
