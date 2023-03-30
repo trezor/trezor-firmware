@@ -6,7 +6,7 @@ use crate::{
             FixedHeightBar,
         },
         display::{Color, Font, Icon},
-        geometry::Insets,
+        geometry::{Insets, Offset},
     },
 };
 
@@ -552,6 +552,11 @@ pub const MNEMONIC_BUTTON_HEIGHT: i16 = 52;
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
 pub const RESULT_FOOTER_HEIGHT: i16 = 62;
+
+// checklist settings
+pub const CHECKLIST_CHECK_WIDTH: i16 = 16;
+pub const CHECKLIST_DONE_OFFSET: Offset = Offset::new(-2, 6);
+pub const CHECKLIST_CURRENT_OFFSET: Offset = Offset::new(2, 3);
 
 pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
     FixedHeightBar::bottom(inner, BUTTON_HEIGHT)

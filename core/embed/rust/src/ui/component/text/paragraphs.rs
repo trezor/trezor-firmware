@@ -536,13 +536,15 @@ pub struct Checklist<T> {
     current: usize,
     icon_current: Icon,
     icon_done: Icon,
+    /// How wide will the left icon column be
+    check_width: i16,
+    /// Offset of the icon representing DONE
+    done_offset: Offset,
+    /// Offset of the icon representing CURRENT
+    current_offset: Offset,
 }
 
 impl<T> Checklist<T> {
-    const CHECK_WIDTH: i16 = 16;
-    const DONE_OFFSET: Offset = Offset::new(-2, 6);
-    const CURRENT_OFFSET: Offset = Offset::new(2, 3);
-
     pub fn from_paragraphs(
         icon_current: Icon,
         icon_done: Icon,
@@ -555,7 +557,25 @@ impl<T> Checklist<T> {
             current,
             icon_current,
             icon_done,
+            check_width: 0,
+            done_offset: Offset::zero(),
+            current_offset: Offset::zero(),
         }
+    }
+
+    pub fn with_check_width(mut self, check_width: i16) -> Self {
+        self.check_width = check_width;
+        self
+    }
+
+    pub fn with_done_offset(mut self, done_offset: Offset) -> Self {
+        self.done_offset = done_offset;
+        self
+    }
+
+    pub fn with_current_offset(mut self, current_offset: Offset) -> Self {
+        self.current_offset = current_offset;
+        self
     }
 
     fn paint_icon(&self, layout: &TextLayout, icon: Icon, offset: Offset) {
@@ -577,7 +597,7 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        let para_area = bounds.inset(Insets::left(Self::CHECK_WIDTH));
+        let para_area = bounds.inset(Insets::left(self.check_width));
         self.paragraphs.place(para_area);
         self.area
     }
@@ -591,10 +611,10 @@ where
 
         let current_visible = self.current.saturating_sub(self.paragraphs.offset.par);
         for layout in self.paragraphs.visible.iter().take(current_visible) {
-            self.paint_icon(layout, self.icon_done, Self::DONE_OFFSET);
+            self.paint_icon(layout, self.icon_done, self.done_offset);
         }
         if let Some(layout) = self.paragraphs.visible.iter().nth(current_visible) {
-            self.paint_icon(layout, self.icon_current, Self::CURRENT_OFFSET);
+            self.paint_icon(layout, self.icon_current, self.current_offset);
         }
     }
 
