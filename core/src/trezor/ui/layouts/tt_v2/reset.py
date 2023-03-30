@@ -355,3 +355,10 @@ async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
     )
     if result != CONFIRMED:
         raise ActionCancelled
+
+
+async def show_success_backup(ctx: GenericContext) -> None:
+    from . import show_success
+
+    text = "Use your backup when you need to recover your wallet."
+    await show_success(ctx, "success_backup", text, "Your backup is done.")

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
     from trezor.wire import GenericContext, Context
-    from ..common import PropertyType, ExceptionType, ProgressLayout
+    from ..common import PropertyType, ExceptionType
 
     T = TypeVar("T")
 
@@ -1142,3 +1142,65 @@ async def request_pin_on_device(
         raise PinCancelled
     assert isinstance(result, str)
     return result
+
+
+async def confirm_reenter_pin(
+    ctx: GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "CHECK PIN",
+        action="Please re-enter to confirm.",
+        verb="BEGIN",
+        br_code=br_code,
+    )
+
+
+async def pin_mismatch(
+    ctx: GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "PIN MISMATCH",
+        action="The PINs you entered do not match.\n\nPlease try again.",
+        verb="TRY AGAIN",
+        verb_cancel=None,
+        br_code=br_code,
+    )
+
+
+async def confirm_set_new_pin(
+    ctx: GenericContext,
+    br_type: str,
+    title: str,
+    description: str,
+    information: list[str],
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    await confirm_action(
+        ctx,
+        br_type,
+        title,
+        description=description,
+        verb="ENABLE",
+        br_code=br_code,
+    )
+
+    if "wipe_code" in br_type:
+        title = "WIPE CODE INFO"
+    else:
+        title = "PIN INFORMATION"
+
+    return await confirm_action(
+        ctx,
+        br_type,
+        title=title,
+        description="\n\n".join(information),
+        br_code=br_code,
+    )
