@@ -3773,14 +3773,17 @@ class DebugLinkRecordScreen(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9003
     FIELDS = {
         1: protobuf.Field("target_directory", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("refresh_index", "uint32", repeated=False, required=False, default=0),
     }
 
     def __init__(
         self,
         *,
         target_directory: Optional["str"] = None,
+        refresh_index: Optional["int"] = 0,
     ) -> None:
         self.target_directory = target_directory
+        self.refresh_index = refresh_index
 
 
 class DebugLinkGetState(protobuf.MessageType):
