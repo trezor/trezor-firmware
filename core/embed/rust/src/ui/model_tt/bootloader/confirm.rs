@@ -7,8 +7,7 @@ use crate::ui::{
     model_tt::{
         bootloader::theme::{
             button_bld_menu, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING, CORNER_BUTTON_AREA,
-            CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TEXT_FINGERPRINT, TEXT_TITLE, TITLE_AREA,
-            TITLE_Y_ADJUSTMENT, X32,
+            CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TEXT_FINGERPRINT, TEXT_TITLE, TITLE_AREA, X32,
         },
         component::{Button, ButtonMsg::Clicked},
         constant::WIDTH,
@@ -64,16 +63,19 @@ impl<'a> Confirm<'a> {
             content_pad: Pad::with_background(bg_color),
             bg_color,
             icon,
-            title: title.map(Child::new),
+            title: title.map(|title| Child::new(title.vertically_aligned(Alignment::Center))),
             message: Child::new(msg),
             alert: alert.map(Child::new),
             left_button: Child::new(left_button),
             right_button: Child::new(right_button),
             info: info.map(|(title, text)| ConfirmInfo {
-                title: Child::new(Label::new(title, Alignment::Start, TEXT_TITLE)),
+                title: Child::new(
+                    Label::new(title, Alignment::Start, TEXT_TITLE)
+                        .vertically_aligned(Alignment::Center),
+                ),
                 text: Child::new(
                     Label::new(text, Alignment::Start, TEXT_FINGERPRINT)
-                        .with_vertical_align(Alignment::Center),
+                        .vertically_aligned(Alignment::Center),
                 ),
                 info_button: Child::new(
                     Button::with_icon(Icon::new(INFO32))
@@ -156,33 +158,15 @@ impl<'a> Component for Confirm<'a> {
 
         if let Some(title) = self.title.as_mut() {
             title.place(TITLE_AREA);
-            let title_height = title.inner().area().height();
-
-            title.place(Rect::new(
-                Point::new(
-                    CONTENT_PADDING,
-                    TITLE_AREA.center().y - (title_height / 2) - TITLE_Y_ADJUSTMENT,
-                ),
-                Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START - CONTENT_PADDING),
-            ));
         }
 
         if let Some(info) = self.info.as_mut() {
             info.info_button.place(CORNER_BUTTON_AREA);
             info.close_button.place(CORNER_BUTTON_AREA);
+            info.title.place(TITLE_AREA);
             info.text.place(Rect::new(
                 Point::new(CONTENT_PADDING, TITLE_AREA.y1),
                 Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START),
-            ));
-
-            info.title.place(TITLE_AREA);
-            let title_height = info.title.inner().area().height();
-            info.title.place(Rect::new(
-                Point::new(
-                    CONTENT_PADDING,
-                    TITLE_AREA.center().y - (title_height / 2) - TITLE_Y_ADJUSTMENT,
-                ),
-                Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START - CONTENT_PADDING),
             ));
         }
         bounds

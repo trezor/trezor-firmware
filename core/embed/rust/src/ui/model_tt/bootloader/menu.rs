@@ -1,13 +1,13 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Pad},
-    constant::{screen, HEIGHT, WIDTH},
+    constant::{screen, WIDTH},
     display::Icon,
     geometry::{Alignment, Insets, Point, Rect},
     model_tt::{
         bootloader::theme::{
             button_bld, button_bld_menu, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
             CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TEXT_TITLE,
-            TITLE_AREA, TITLE_Y_ADJUSTMENT, X32,
+            TITLE_AREA, X32,
         },
         component::{Button, ButtonMsg::Clicked, IconText},
     },
@@ -39,7 +39,10 @@ impl Menu {
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
-            title: Child::new(Label::new("BOOTLOADER", Alignment::Start, TEXT_TITLE)),
+            title: Child::new(
+                Label::new("BOOTLOADER", Alignment::Start, TEXT_TITLE)
+                    .vertically_aligned(Alignment::Center),
+            ),
             close: Child::new(
                 Button::with_icon(Icon::new(X32))
                     .styled(button_bld_menu())
@@ -59,14 +62,6 @@ impl Component for Menu {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bg.place(screen());
         self.title.place(TITLE_AREA);
-        let title_height = self.title.inner().area().height();
-        self.title.place(Rect::new(
-            Point::new(
-                CONTENT_PADDING,
-                TITLE_AREA.center().y - (title_height / 2) - TITLE_Y_ADJUSTMENT,
-            ),
-            Point::new(WIDTH - CONTENT_PADDING, HEIGHT),
-        ));
         self.close.place(CORNER_BUTTON_AREA);
         self.reboot.place(Rect::new(
             Point::new(CONTENT_PADDING, BUTTON_AREA_START),

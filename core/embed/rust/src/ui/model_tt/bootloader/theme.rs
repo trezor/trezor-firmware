@@ -49,11 +49,8 @@ pub const CORNER_BUTTON_AREA: Rect = Rect::from_top_left_and_size(
     ),
     Offset::uniform(CORNER_BUTTON_SIZE),
 );
-pub const TITLE_AREA_HEIGHT: i16 = 16;
-pub const TITLE_AREA_START_Y: i16 = 8;
 pub const BUTTON_AREA_START: i16 = 184;
 pub const BUTTON_HEIGHT: i16 = 50;
-pub const TITLE_Y_ADJUSTMENT: i16 = 3;
 
 // BLD icons
 pub const X24: &[u8] = include_res!("model_tt/res/x24.toif");

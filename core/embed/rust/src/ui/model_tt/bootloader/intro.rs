@@ -6,7 +6,7 @@ use crate::ui::{
     model_tt::{
         bootloader::theme::{
             button_bld, button_bld_menu, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
-            CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_TITLE, TITLE_AREA, TITLE_Y_ADJUSTMENT,
+            CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_TITLE, TITLE_AREA,
         },
         component::{Button, ButtonMsg::Clicked},
         constant::WIDTH,
@@ -32,7 +32,10 @@ impl<'a> Intro<'a> {
     pub fn new(title: &'a str, content: &'a str) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
-            title: Child::new(Label::new(title, Alignment::Start, TEXT_TITLE)),
+            title: Child::new(
+                Label::new(title, Alignment::Start, TEXT_TITLE)
+                    .vertically_aligned(Alignment::Center),
+            ),
             menu: Child::new(
                 Button::with_icon(Icon::new(MENU32))
                     .styled(button_bld_menu())
@@ -41,7 +44,7 @@ impl<'a> Intro<'a> {
             host: Child::new(Button::with_text("INSTALL FIRMWARE").styled(button_bld())),
             text: Child::new(
                 Label::new(content, Alignment::Start, TEXT_NORMAL)
-                    .with_vertical_align(Alignment::Center),
+                    .vertically_aligned(Alignment::Center),
             ),
         }
     }
@@ -54,15 +57,6 @@ impl<'a> Component for Intro<'a> {
         self.bg.place(screen());
 
         self.title.place(TITLE_AREA);
-        let title_height = self.title.inner().area().height();
-        self.title.place(Rect::new(
-            Point::new(
-                CONTENT_PADDING,
-                TITLE_AREA.center().y - (title_height / 2) - TITLE_Y_ADJUSTMENT,
-            ),
-            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START - CONTENT_PADDING),
-        ));
-
         self.menu.place(CORNER_BUTTON_AREA);
         self.host.place(Rect::new(
             Point::new(CONTENT_PADDING, BUTTON_AREA_START),
