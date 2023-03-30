@@ -32,14 +32,10 @@ if __debug__:
 
 class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
-    def __init__(self, layout: Any, is_backup: bool = False):
+    def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
-        self.is_backup = is_backup
-
-        if __debug__ and self.is_backup:
-            self.notify_backup()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -105,26 +101,7 @@ class RustLayout(ui.Layout):
                     if msg is not None:
                         raise ui.Result(msg)
 
-                if self.is_backup:
-                    self.notify_backup()
                 notify_layout_change(self)
-
-        def notify_backup(self):
-            from apps.debug import reset_current_words
-
-            content = "\n".join(self.read_content())
-            start = "< Paragraphs "
-            end = ">"
-            start_pos = content.index(start)
-            end_pos = content.index(end, start_pos)
-            words: list[str] = []
-            for line in content[start_pos + len(start) : end_pos].split("\n"):
-                line = line.strip()
-                if not line:
-                    continue
-                space_pos = line.index(" ")
-                words.append(line[space_pos + 1 :])
-            reset_current_words.publish(words)
 
     else:
 
