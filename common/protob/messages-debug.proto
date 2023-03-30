@@ -68,7 +68,8 @@ message DebugLinkReseedRandom {
  * @next Success
  */
 message DebugLinkRecordScreen {
-    optional string target_directory = 1;  // empty or missing to stop recording
+    optional string target_directory = 1;           // empty or missing to stop recording
+    optional uint32 refresh_index = 2 [default=0];  // which index to give the screenshots (after emulator restarts)
 }
 
 /**

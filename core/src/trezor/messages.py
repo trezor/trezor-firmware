@@ -2667,11 +2667,13 @@ if TYPE_CHECKING:
 
     class DebugLinkRecordScreen(protobuf.MessageType):
         target_directory: "str | None"
+        refresh_index: "int"
 
         def __init__(
             self,
             *,
             target_directory: "str | None" = None,
+            refresh_index: "int | None" = None,
         ) -> None:
             pass
 
