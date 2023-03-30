@@ -26,7 +26,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_fido;
-  MP_QSTR_confirm_joint_total;
+  MP_QSTR_confirm_total;
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
   MP_QSTR_confirm_reset_device;
@@ -59,6 +59,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_address_details;
+  MP_QSTR_show_spending_details;
 
   MP_QSTR_attach_timer_fn;
   MP_QSTR_touch_event;
@@ -94,10 +95,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_coin_name;
   MP_QSTR_max_feerate;
   MP_QSTR_max_rounds;
-  MP_QSTR_spending_amount;
-  MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
   MP_QSTR_user_fee_change;
+  MP_QSTR_fee_rate;
   MP_QSTR_words;
   MP_QSTR_pages;
   MP_QSTR_count;

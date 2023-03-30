@@ -10,6 +10,9 @@ pub enum AuxPageMsg {
 
     /// Page component was configured to react to swipes and user swiped left.
     SwipeLeft,
+
+    /// Page component was configured to react to swipes and user swiped right.
+    SwipeRight,
 }
 
 /// Common message type for pagination components.

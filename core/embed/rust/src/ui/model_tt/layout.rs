@@ -228,6 +228,7 @@ where
             PageMsg::Controls(msg) => msg.try_into(),
             PageMsg::Aux(AuxPageMsg::GoBack) => Ok(CANCELLED.as_obj()),
             PageMsg::Aux(AuxPageMsg::SwipeLeft) => Ok(INFO.as_obj()),
+            PageMsg::Aux(AuxPageMsg::SwipeRight) => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -240,7 +241,9 @@ where
         match msg {
             PageMsg::Content(_) => Err(Error::TypeError),
             PageMsg::Controls(msg) => msg.try_into(),
-            PageMsg::Aux(_) => Err(Error::TypeError),
+            PageMsg::Aux(AuxPageMsg::GoBack) => Ok(CANCELLED.as_obj()),
+            PageMsg::Aux(AuxPageMsg::SwipeLeft) => Ok(INFO.as_obj()),
+            PageMsg::Aux(AuxPageMsg::SwipeRight) => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -440,42 +443,98 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-fn confirm_blob(
+struct ConfirmBlobParams {
     title: StrBuffer,
+    subtitle: Option<StrBuffer>,
     data: Obj,
     description: Option<StrBuffer>,
     extra: Option<StrBuffer>,
     verb: Option<StrBuffer>,
     verb_cancel: Option<StrBuffer>,
+    info_button: bool,
     hold: bool,
-) -> Result<Obj, Error> {
-    let paragraphs = ConfirmBlob {
-        description: description.unwrap_or_else(StrBuffer::empty),
-        extra: extra.unwrap_or_else(StrBuffer::empty),
-        data: data.try_into()?,
-        description_font: &theme::TEXT_NORMAL,
-        extra_font: &theme::TEXT_DEMIBOLD,
-        data_font: &theme::TEXT_MONO,
-    }
-    .into_paragraphs();
+}
 
-    let obj = if hold {
-        LayoutObj::new(Frame::left_aligned(
-            theme::label_title(),
+impl ConfirmBlobParams {
+    fn new(
+        title: StrBuffer,
+        data: Obj,
+        description: Option<StrBuffer>,
+        verb: Option<StrBuffer>,
+        verb_cancel: Option<StrBuffer>,
+        hold: bool,
+    ) -> Self {
+        Self {
             title,
-            SwipeHoldPage::new(paragraphs, theme::BG),
-        ))?
-    } else if let Some(verb) = verb {
-        let buttons = Button::cancel_confirm_text(verb_cancel, Some(verb));
-        LayoutObj::new(Frame::left_aligned(
-            theme::label_title(),
-            title,
-            SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
-        ))?
-    } else {
-        panic!("Either `hold=true` or `verb=Some(StrBuffer)` must be specified");
-    };
-    Ok(obj.into())
+            subtitle: None,
+            data,
+            description,
+            extra: None,
+            verb,
+            verb_cancel,
+            info_button: false,
+            hold,
+        }
+    }
+
+    fn with_extra(mut self, extra: Option<StrBuffer>) -> Self {
+        self.extra = extra;
+        self
+    }
+
+    fn with_subtitle(mut self, subtitle: Option<StrBuffer>) -> Self {
+        self.subtitle = subtitle;
+        self
+    }
+
+    fn with_info_button(mut self, info_button: bool) -> Self {
+        self.info_button = info_button;
+        self
+    }
+
+    fn into_layout(self) -> Result<Obj, Error> {
+        let paragraphs = ConfirmBlob {
+            description: self.description.unwrap_or_else(StrBuffer::empty),
+            extra: self.extra.unwrap_or_else(StrBuffer::empty),
+            data: self.data.try_into()?,
+            description_font: &theme::TEXT_NORMAL,
+            extra_font: &theme::TEXT_DEMIBOLD,
+            data_font: &theme::TEXT_MONO,
+        }
+        .into_paragraphs();
+
+        let obj = if self.hold {
+            let mut frame = Frame::left_aligned(
+                theme::label_title(),
+                self.title,
+                SwipeHoldPage::new(paragraphs, theme::BG),
+            );
+            if let Some(subtitle) = self.subtitle {
+                frame = frame.with_subtitle(theme::label_subtitle(), subtitle);
+            }
+            if self.info_button {
+                frame = frame.with_info_button();
+            }
+            LayoutObj::new(frame)?
+        } else if let Some(verb) = self.verb {
+            let buttons = Button::cancel_confirm_text(self.verb_cancel, Some(verb));
+            let mut frame = Frame::left_aligned(
+                theme::label_title(),
+                self.title,
+                SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
+            );
+            if let Some(subtitle) = self.subtitle {
+                frame = frame.with_subtitle(theme::label_subtitle(), subtitle);
+            }
+            if self.info_button {
+                frame = frame.with_info_button();
+            }
+            LayoutObj::new(frame)?
+        } else {
+            panic!("Either `hold=true` or `verb=Some(StrBuffer)` must be specified");
+        };
+        Ok(obj.into())
+    }
 }
 
 extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -495,7 +554,9 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
-        confirm_blob(title, data, description, extra, verb, verb_cancel, hold)
+        ConfirmBlobParams::new(title, data, description, verb, verb_cancel, hold)
+            .with_extra(extra)
+            .into_layout()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -671,41 +732,88 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_spending_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let account: StrBuffer = kwargs.get(Qstr::MP_QSTR_account)?.try_into()?;
+        let fee_rate: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_fee_rate)?.try_into_option()?;
+
+        let mut paragraphs = ParagraphVecShort::new();
+        paragraphs.add(Paragraph::new(
+            &theme::TEXT_NORMAL,
+            "Sending from account:".into(),
+        ));
+        paragraphs.add(Paragraph::new(&theme::TEXT_MONO, account));
+
+        if let Some(f) = fee_rate {
+            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, "Fee rate:".into()));
+            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, f));
+        }
+
+        let obj = LayoutObj::new(
+            Frame::left_aligned(
+                theme::label_title(),
+                "INFORMATION",
+                SwipePage::new(paragraphs.into_paragraphs(), Empty, theme::BG).with_swipe_right(),
+            )
+            .with_cancel_button(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let subtitle: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
         let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let value: Obj = kwargs.get(Qstr::MP_QSTR_value)?;
+        let info_button: bool = unwrap!(kwargs.get_or(Qstr::MP_QSTR_info_button, false));
 
         let verb: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let verb_cancel: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
-        confirm_blob(title, value, description, None, verb, None, hold)
+        ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold)
+            .with_subtitle(subtitle)
+            .with_info_button(info_button)
+            .into_layout()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let spending_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_spending_amount)?.try_into()?;
-        let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false).unwrap();
 
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, "You are contributing:".into()),
-            Paragraph::new(&theme::TEXT_MONO, spending_amount),
-            Paragraph::new(&theme::TEXT_NORMAL, "To the total amount:".into()),
-            Paragraph::new(&theme::TEXT_MONO, total_amount),
-        ]);
+        let mut paragraphs = ParagraphVecShort::new();
 
-        let obj = LayoutObj::new(Frame::left_aligned(
-            theme::label_title(),
-            "JOINT TRANSACTION",
-            SwipeHoldPage::new(paragraphs, theme::BG),
-        ))?;
+        let mut iter_buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
+        for pair in iter {
+            let [label, value]: [StrBuffer; 2] = iter_into_array(pair)?;
+            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label));
+            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+        }
+
+        let mut page = SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG);
+        if info_button {
+            page = page.with_swipe_left();
+        }
+        let mut frame = Frame::left_aligned(theme::label_title(), title, page);
+        if info_button {
+            frame = frame.with_info_button();
+        }
+        let obj = LayoutObj::new(frame)?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1590,24 +1698,36 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Show address details - QR code, account, path, cosigner xpubs."""
     Qstr::MP_QSTR_show_address_details => obj_fn_kw!(0, new_show_address_details).as_obj(),
 
+    /// def show_spending_details(
+    ///     *,
+    ///     account: str,
+    ///     fee_rate: str | None = None,
+    /// ) -> object:
+    ///     """Show metadata when for outgoing transaction."""
+    Qstr::MP_QSTR_show_spending_details => obj_fn_kw!(0, new_show_spending_details).as_obj(),
+
     /// def confirm_value(
     ///     *,
     ///     title: str,
-    ///     description: str,
     ///     value: str,
+    ///     description: str | None = None,
+    ///     subtitle: str | None = None,
     ///     verb: str | None = None,
+    ///     verb_cancel: str | None = None,
+    ///     info_button: bool = False,
     ///     hold: bool = False,
     /// ) -> object:
     ///     """Confirm value. Merge of confirm_total and confirm_output."""
     Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
 
-    /// def confirm_joint_total(
+    /// def confirm_total(
     ///     *,
-    ///     spending_amount: str,
-    ///     total_amount: str,
+    ///     title: str,
+    ///     items: List[Tuple[str, str]],
+    ///     info_button: bool = False,
     /// ) -> object:
-    ///     """Confirm total if there are external inputs."""
-    Qstr::MP_QSTR_confirm_joint_total => obj_fn_kw!(0, new_confirm_joint_total).as_obj(),
+    ///     """Transaction summary. Always hold to confirm."""
+    Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
 
     /// def confirm_modify_output(
     ///     *,

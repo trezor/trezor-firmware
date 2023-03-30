@@ -114,7 +114,6 @@ def test_one_one_fee_sapling(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
-                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_e38206),
                 request_input(0, TXHASH_e38206),

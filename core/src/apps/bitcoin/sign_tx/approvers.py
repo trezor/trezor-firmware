@@ -53,6 +53,9 @@ class Approver:
         self.amount_unit = tx.amount_unit
         self.has_unverified_external_input = False
 
+        # output numbering to be used in confirmation dialogs
+        self.external_output_index = 0
+
     def is_payjoin(self) -> bool:
         # A PayJoin is a replacement transaction which manipulates the external inputs of the
         # original transaction. A replacement transaction is not allowed to remove any inputs from
@@ -220,7 +223,10 @@ class BasicApprover(Approver):
         elif txo.payment_req_index is None or self.show_payment_req_details:
             # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
-            await helpers.confirm_output(txo, self.coin, self.amount_unit)
+            await helpers.confirm_output(
+                txo, self.coin, self.amount_unit, self.external_output_index
+            )
+            self.external_output_index += 1
 
     async def add_payment_request(
         self, msg: TxAckPaymentRequest, keychain: Keychain

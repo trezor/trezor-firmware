@@ -87,7 +87,6 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
     assert "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1" in layout.get_content().replace(" ", "")
 
     debug.click(buttons.OK, wait=True)
-    debug.click(buttons.OK, wait=True)
 
     layout = debug.click(buttons.OK, wait=True)
     assert "Total amount: 0.0039 BTC" in layout.get_content()

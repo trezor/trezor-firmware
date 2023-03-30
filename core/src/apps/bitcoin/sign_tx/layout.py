@@ -49,8 +49,21 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
     return f"{format_amount(amount, decimals)} {shortcut}"
 
 
+def account_label(coin: CoinInfo, address_n: Bip32Path | None) -> str:
+    return (
+        "Multiple accounts"
+        if address_n is None
+        else address_n_to_name(coin, list(address_n) + [0] * BIP32_WALLET_DEPTH)
+        or f"Path {address_n_to_str(address_n)}"
+    )
+
+
 async def confirm_output(
-    ctx: Context, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
+    ctx: Context,
+    output: TxOutput,
+    coin: CoinInfo,
+    amount_unit: AmountUnit,
+    output_index: int,
 ) -> None:
     from . import omni
     from trezor.enums import OutputScriptType
@@ -82,7 +95,7 @@ async def confirm_output(
         if output.payment_req_index is not None:
             title = "Confirm details"
         else:
-            title = "Confirm sending"
+            title = None
 
         address_label = None
         if output.address_n and not output.multisig:
@@ -98,6 +111,7 @@ async def confirm_output(
             format_coin_amount(output.amount, coin, amount_unit),
             title=title,
             address_label=address_label,
+            output_index=output_index,
         )
 
     await layout
@@ -230,18 +244,12 @@ async def confirm_total(
     address_n: Bip32Path | None,
 ) -> None:
 
-    account_label = (
-        "mixed accounts"
-        if address_n is None
-        else address_n_to_name(coin, list(address_n) + [0] * BIP32_WALLET_DEPTH)
-        or f"path {address_n_to_str(address_n)}"
-    )
     await layouts.confirm_total(
         ctx,
         format_coin_amount(spending, coin, amount_unit),
         format_coin_amount(fee, coin, amount_unit),
         fee_rate_amount=format_fee_rate(fee_rate, coin) if fee_rate >= 0 else None,
-        account_label=account_label,
+        account_label=account_label(coin, address_n),
     )
 
 
