@@ -110,7 +110,7 @@ impl Component for Bip39Input {
         // Content starts in the left-center point, offset by 16px to the right and 8px
         // to the bottom.
         let text_baseline = area.top_left().center(area.bottom_left()) + Offset::new(16, 8);
-        display::text(
+        display::text_left(
             text_baseline,
             text,
             style.font,
@@ -121,7 +121,7 @@ impl Component for Bip39Input {
         // Paint the rest of the suggested dictionary word.
         if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
             let word_baseline = text_baseline + Offset::new(width, 0);
-            display::text(
+            display::text_left(
                 word_baseline,
                 word,
                 style.font,

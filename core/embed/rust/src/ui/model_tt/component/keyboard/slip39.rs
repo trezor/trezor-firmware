@@ -159,7 +159,7 @@ impl Component for Slip39Input {
                     .assert_if_debugging_ui("Text buffer is too small");
             }
         }
-        display::text(
+        display::text_left(
             text_baseline,
             text.as_str(),
             style.font,
