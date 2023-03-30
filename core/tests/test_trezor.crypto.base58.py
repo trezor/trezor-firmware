@@ -1,7 +1,8 @@
-from trezor.crypto import base58
+from common import *
+
 from trezor.crypto.hashlib import ripemd160
 
-from common import *
+from trezor.crypto import base58
 
 
 def digestfunc_graphene(x):

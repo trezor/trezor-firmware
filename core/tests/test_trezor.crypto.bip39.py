@@ -1,6 +1,6 @@
-from trezor.crypto import bip39
-
 from common import *
+
+from trezor.crypto import bip39
 
 
 class TestCryptoBip39(unittest.TestCase):

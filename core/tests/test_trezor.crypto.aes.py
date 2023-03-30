@@ -1,6 +1,6 @@
-from trezor.crypto import aes
-
 from common import *
+
+from trezor.crypto import aes
 
 
 class TestCryptoAes(unittest.TestCase):

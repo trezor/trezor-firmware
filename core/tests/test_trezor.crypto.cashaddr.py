@@ -22,9 +22,9 @@
 
 """Reference tests for cashaddr adresses"""
 
+from common import *
 from trezor.crypto import base58, cashaddr
 
-from common import *
 
 VALID_CHECKSUM = [
     "prefix:x64nx6hz",

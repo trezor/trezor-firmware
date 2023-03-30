@@ -1,6 +1,6 @@
-from trezor.crypto import bip32
-
 from common import *
+
+from trezor.crypto import bip32
 
 SECP256K1_NAME = 'secp256k1'
 HARDENED = 0x80000000

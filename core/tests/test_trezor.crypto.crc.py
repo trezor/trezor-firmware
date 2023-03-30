@@ -1,6 +1,6 @@
-from trezor.crypto import crc
-
 from common import *
+
+from trezor.crypto import crc
 
 
 class TestCryptoCrc(unittest.TestCase):

@@ -1,6 +1,6 @@
-from trezor.crypto import der
-
 from common import *
+
+from trezor.crypto import der
 
 
 class TestCryptoDer(unittest.TestCase):

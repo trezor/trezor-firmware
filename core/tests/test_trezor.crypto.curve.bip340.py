@@ -1,7 +1,7 @@
+from common import *
+
 from trezor.crypto import random
 from trezor.crypto.curve import bip340
-
-from common import *
 
 
 class TestCryptoBip340(unittest.TestCase):

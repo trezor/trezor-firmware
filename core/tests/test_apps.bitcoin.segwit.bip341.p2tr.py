@@ -1,10 +1,13 @@
-from trezor.enums import InputScriptType
-from trezor.messages import PrevOutput, SignTx, TxInput
+from common import *
 
 from apps.bitcoin.common import SigHashType
 from apps.bitcoin.sign_tx.sig_hasher import BitcoinSigHasher
 from apps.bitcoin.writers import get_tx_hash
-from common import *
+from trezor.messages import SignTx
+from trezor.messages import TxInput
+from trezor.messages import PrevOutput
+from trezor.enums import InputScriptType
+
 
 VECTORS = [
     {  # https://github.com/bitcoin/bips/pull/1225/commits/f7af1f73b287c14cf2f63afcb8d199feaf6ab5e1

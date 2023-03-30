@@ -21,9 +21,8 @@
 
 """Reference tests for segwit adresses"""
 
-from trezor.crypto import bech32
-
 from common import *
+from trezor.crypto import bech32
 
 
 def segwit_scriptpubkey(witver, witprog):

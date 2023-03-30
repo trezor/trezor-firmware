@@ -1,15 +1,16 @@
+from common import *
+
 from apps.common.cbor import (
     IndefiniteLengthArray,
     OrderedMap,
     Tagged,
     create_array_header,
-    create_embedded_cbor_bytes_header,
     create_map_header,
+    create_embedded_cbor_bytes_header,
     decode,
     encode,
     encode_streamed,
 )
-from common import *
 
 
 class TestCardanoCbor(unittest.TestCase):

@@ -1,6 +1,6 @@
-from trezor.crypto import chacha20poly1305
-
 from common import *
+
+from trezor.crypto import chacha20poly1305
 
 
 class TestCryptoChaCha20Poly1305(unittest.TestCase):

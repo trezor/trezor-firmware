@@ -1,8 +1,8 @@
-from trezor.crypto import cardano, slip39
-
-from apps.cardano.get_public_key import _get_public_key
-from apps.cardano.seed import Keychain
 from common import *
+
+from apps.cardano.seed import Keychain
+from apps.cardano.get_public_key import _get_public_key
+from trezor.crypto import cardano, slip39
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

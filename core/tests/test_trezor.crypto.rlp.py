@@ -1,6 +1,6 @@
-from trezor.crypto import rlp
-
 from common import *
+
+from trezor.crypto import rlp
 
 
 class TestCryptoRlp(unittest.TestCase):

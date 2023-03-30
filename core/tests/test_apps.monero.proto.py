@@ -1,12 +1,11 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
-    import ubinascii
-
     from trezor.crypto import chacha20poly1305
-
-    from apps.monero.signing import offloading_keys, step_09_sign_input
+    from apps.monero.signing import offloading_keys
+    from apps.monero.signing import step_09_sign_input
     from apps.monero.signing.state import State
+    import ubinascii
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

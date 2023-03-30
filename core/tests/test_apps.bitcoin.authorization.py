@@ -1,10 +1,13 @@
-import storage.cache
-from trezor.enums import InputScriptType
-from trezor.messages import AuthorizeCoinJoin, GetOwnershipProof, SignTx
+from common import unittest, H_
 
-from apps.bitcoin.authorization import CoinJoinAuthorization
+import storage.cache
+from trezor.messages import AuthorizeCoinJoin
+from trezor.messages import GetOwnershipProof
+from trezor.messages import SignTx
+from trezor.enums import InputScriptType
+
 from apps.common import coins
-from common import H_, unittest
+from apps.bitcoin.authorization import CoinJoinAuthorization
 
 _ROUND_ID_LEN = 32
 

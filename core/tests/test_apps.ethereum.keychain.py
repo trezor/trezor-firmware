@@ -1,33 +1,35 @@
-import unittest
-from storage import cache
-from trezor import utils, wire
-from trezor.crypto import bip39
-
-from apps.common.keychain import get_keychain
-from apps.common.paths import HARDENED
 from common import *
 
-if not utils.BITCOIN_ONLY:
-    from ethereum_common import encode_network, make_network
-    from trezor.messages import (
-        EthereumDefinitions,
-        EthereumGetAddress,
-        EthereumSignMessage,
-        EthereumSignTx,
-        EthereumSignTxEIP1559,
-        EthereumSignTypedData,
-    )
+import unittest
 
+from storage import cache
+from trezor import wire, utils
+from trezor.crypto import bip39
+from apps.common.keychain import get_keychain
+from apps.common.paths import HARDENED
+
+if not utils.BITCOIN_ONLY:
     from apps.ethereum import CURVE
+    from apps.ethereum.networks import UNKNOWN_NETWORK
     from apps.ethereum.keychain import (
         PATTERNS_ADDRESS,
-        _defs_from_message,
         _schemas_from_network,
+        _defs_from_message,
         _slip44_from_address_n,
-        with_keychain_from_chain_id,
         with_keychain_from_path,
+        with_keychain_from_chain_id,
     )
-    from apps.ethereum.networks import UNKNOWN_NETWORK
+
+    from trezor.messages import (
+        EthereumGetAddress,
+        EthereumSignTx,
+        EthereumDefinitions,
+        EthereumSignMessage,
+        EthereumSignTypedData,
+        EthereumSignTxEIP1559,
+    )
+
+    from ethereum_common import make_network, encode_network
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

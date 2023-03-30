@@ -1,34 +1,36 @@
-from trezor import wire
-from trezor.crypto import bip39
-from trezor.enums import AmountUnit, InputScriptType, OutputScriptType
-from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
-from trezor.messages import (
-    PrevInput,
-    PrevOutput,
-    PrevTx,
-    SignTx,
-    TxAckInput,
-    TxAckInputWrapper,
-    TxAckOutput,
-    TxAckOutputWrapper,
-    TxAckPrevInput,
-    TxAckPrevInputWrapper,
-    TxAckPrevMeta,
-    TxAckPrevOutput,
-    TxAckPrevOutputWrapper,
-    TxInput,
-    TxOutput,
-    TxRequest,
-    TxRequestDetailsType,
-    TxRequestSerializedType,
-)
-from trezor.utils import chunks
+from common import *
 
-from apps.bitcoin.keychain import _get_schemas_for_coin
-from apps.bitcoin.sign_tx import bitcoin, helpers
+from trezor.utils import chunks
+from trezor.crypto import bip39
+from trezor.messages import SignTx
+from trezor.messages import TxAckInput
+from trezor.messages import TxAckInputWrapper
+from trezor.messages import TxInput
+from trezor.messages import TxAckOutput
+from trezor.messages import TxAckOutputWrapper
+from trezor.messages import TxOutput
+from trezor.messages import TxAckPrevMeta
+from trezor.messages import PrevTx
+from trezor.messages import TxAckPrevInput
+from trezor.messages import TxAckPrevInputWrapper
+from trezor.messages import PrevInput
+from trezor.messages import TxAckPrevOutput
+from trezor.messages import TxAckPrevOutputWrapper
+from trezor.messages import PrevOutput
+from trezor.messages import TxRequest
+from trezor.enums.RequestType import TXINPUT, TXMETA, TXOUTPUT, TXFINISHED
+from trezor.messages import TxRequestDetailsType
+from trezor.messages import TxRequestSerializedType
+from trezor.enums import AmountUnit
+from trezor.enums import InputScriptType
+from trezor.enums import OutputScriptType
+from trezor import wire
+
 from apps.common import coins
 from apps.common.keychain import Keychain
-from common import *
+from apps.bitcoin.keychain import _get_schemas_for_coin
+from apps.bitcoin.sign_tx import bitcoin, helpers
+
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 

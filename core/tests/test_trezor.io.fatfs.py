@@ -1,6 +1,6 @@
-from trezorio import fatfs, sdcard
-
 from common import *
+
+from trezorio import sdcard, fatfs
 
 
 class TestTrezorIoFatfs(unittest.TestCase):

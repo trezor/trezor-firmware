@@ -1,6 +1,6 @@
-import storage.common
 from mock import patch
 
+import storage.common
 
 class MockStorage:
     PATCH_METHODS = ("get", "set", "delete")

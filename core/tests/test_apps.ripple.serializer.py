@@ -1,10 +1,10 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
-    from trezor.messages import RipplePayment, RippleSignTx
-
-    from apps.ripple import helpers
+    from trezor.messages import RipplePayment
+    from trezor.messages import RippleSignTx
     from apps.ripple.serialize import serialize
+    from apps.ripple import helpers
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

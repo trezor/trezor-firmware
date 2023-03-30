@@ -1,6 +1,6 @@
-from trezor import io
-
 from common import *
+
+from trezor import io
 
 
 class TestTrezorIoSdcard(unittest.TestCase):

@@ -1,6 +1,6 @@
-from trezor.crypto import hmac
-
 from common import *
+
+from trezor.crypto import hmac
 
 
 class TestCryptoHmac(unittest.TestCase):

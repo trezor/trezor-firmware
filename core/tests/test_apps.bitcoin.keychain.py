@@ -1,10 +1,10 @@
+from common import *
 from storage import cache
 from trezor import wire
 from trezor.crypto import bip39
+from apps.common.paths import HARDENED
 
 from apps.bitcoin.keychain import _get_coin_by_name, _get_keychain_for_coin
-from apps.common.paths import HARDENED
-from common import *
 
 
 class TestBitcoinKeychain(unittest.TestCase):

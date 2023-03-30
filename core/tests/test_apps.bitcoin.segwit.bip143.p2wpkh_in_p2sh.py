@@ -1,6 +1,4 @@
-from trezor.crypto import bip39
-from trezor.enums import InputScriptType, OutputScriptType
-from trezor.messages import PrevOutput, SignTx, TxInput, TxOutput
+from common import *
 
 from apps.bitcoin.common import SigHashType
 from apps.bitcoin.scripts import output_derive_script
@@ -9,7 +7,13 @@ from apps.bitcoin.writers import get_tx_hash
 from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.common.paths import AlwaysMatchingSchema
-from common import *
+from trezor.messages import SignTx
+from trezor.messages import TxInput
+from trezor.messages import TxOutput
+from trezor.messages import PrevOutput
+from trezor.enums import InputScriptType
+from trezor.enums import OutputScriptType
+from trezor.crypto import bip39
 
 
 class TestSegwitBip143(unittest.TestCase):

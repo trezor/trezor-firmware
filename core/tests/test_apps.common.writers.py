@@ -1,5 +1,6 @@
-import apps.common.writers as writers
 from common import *
+
+import apps.common.writers as writers
 
 
 class TestSeed(unittest.TestCase):

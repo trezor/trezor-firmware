@@ -1,10 +1,7 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.helpers.utils import (
-        format_asset_fingerprint,
-        variable_length_encode,
-    )
+    from apps.cardano.helpers.utils import variable_length_encode, format_asset_fingerprint
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

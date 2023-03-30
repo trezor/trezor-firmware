@@ -1,10 +1,10 @@
-from trezor.enums import InputScriptType
-from trezor.messages import PrevOutput, SignTx, TxInput
-from trezor.utils import HashWriter
-
-from apps.common.coininfo import by_name
-from apps.zcash.hasher import ZcashHasher, blake2b, write_hash
 from common import *
+from trezor.messages import TxInput, SignTx, PrevOutput
+from trezor.enums import InputScriptType
+from trezor.utils import HashWriter
+from apps.zcash.hasher import ZcashHasher, blake2b, write_hash
+from apps.common.coininfo import by_name
+
 
 ZCASH_COININFO = by_name("Zcash")
 

@@ -1,6 +1,6 @@
-from trezor.crypto import hashlib
-
 from common import *
+
+from trezor.crypto import hashlib
 
 
 class TestCryptoBlake2s(unittest.TestCase):

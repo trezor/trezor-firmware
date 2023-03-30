@@ -1,13 +1,14 @@
+from common import *
+
 from mock_storage import mock_storage
+
 from storage import cache
+from apps.common import safety_checks
+from apps.common.paths import PATTERN_SEP5, PathSchema
+from apps.common.keychain import LRUCache, Keychain, with_slip44_keychain, get_keychain
 from trezor import wire
 from trezor.crypto import bip39
 from trezor.enums import SafetyCheckLevel
-
-from apps.common import safety_checks
-from apps.common.keychain import Keychain, LRUCache, get_keychain, with_slip44_keychain
-from apps.common.paths import PATTERN_SEP5, PathSchema
-from common import *
 
 
 class TestKeychain(unittest.TestCase):

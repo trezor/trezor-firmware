@@ -1,8 +1,6 @@
-from trezor.utils import ensure
-
-from apps.common.paths import *
 from common import *
-
+from trezor.utils import ensure
+from apps.common.paths import *
 
 # NOTE: moved into tests not to occupy flash space
 # in firmware binary, when it is not used in production

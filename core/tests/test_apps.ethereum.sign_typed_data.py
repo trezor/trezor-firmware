@@ -1,20 +1,24 @@
-from trezor import wire
-from trezor.enums import EthereumDataType as EDT
-from trezor.messages import EthereumFieldType as EFT
-from trezor.messages import EthereumStructMember as ESM
-from trezor.messages import EthereumTypedDataStructAck as ETDSA
-from trezor.messages import EthereumTypedDataValueAck
-
 from common import *
 
+from trezor import wire
+from trezor.messages import EthereumTypedDataStructAck as ETDSA
+from trezor.messages import EthereumStructMember as ESM
+from trezor.messages import EthereumFieldType as EFT
+from trezor.messages import EthereumTypedDataValueAck
+from trezor.enums import EthereumDataType as EDT
+
+
 if not utils.BITCOIN_ONLY:
-    from apps.ethereum.helpers import decode_typed_data, get_type_name
     from apps.ethereum.sign_typed_data import (
-        TypedDataEnvelope,
-        _validate_value,
         encode_field,
-        keccak256,
+        _validate_value,
         validate_field_type,
+        keccak256,
+        TypedDataEnvelope,
+    )
+    from apps.ethereum.helpers import (
+        get_type_name,
+        decode_typed_data,
     )
 
 

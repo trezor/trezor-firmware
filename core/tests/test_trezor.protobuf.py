@@ -1,12 +1,7 @@
-from trezor import protobuf
-from trezor.messages import (
-    DebugLinkMemoryRead,
-    Failure,
-    SignMessage,
-    WebAuthnCredential,
-)
-
 from common import *
+
+from trezor import protobuf
+from trezor.messages import WebAuthnCredential, Failure, SignMessage, DebugLinkMemoryRead
 
 
 def load_uvarint32(data: bytes) -> int:

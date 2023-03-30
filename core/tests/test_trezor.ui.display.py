@@ -1,6 +1,6 @@
-from trezor.ui import display
-
 from common import *
+
+from trezor.ui import display
 
 
 class TestDisplay(unittest.TestCase):

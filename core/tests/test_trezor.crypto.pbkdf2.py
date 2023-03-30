@@ -1,6 +1,6 @@
-from trezor.crypto import pbkdf2
-
 from common import *
+
+from trezor.crypto import pbkdf2
 
 
 class TestCryptoPbkdf2(unittest.TestCase):
