@@ -862,6 +862,9 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
         let user_fee_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_user_fee_change)?.try_into()?;
         let total_fee_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_fee_new)?.try_into()?;
+        let fee_rate_amount: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_fee_rate_amount)?
+            .try_into_option()?;
 
         let (description, change) = match sign {
             s if s < 0 => ("Decrease your fee by:", user_fee_change),
@@ -869,12 +872,19 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             _ => ("Your fee did not change.", StrBuffer::empty()),
         };
 
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, description.into()),
-            Paragraph::new(&theme::TEXT_MONO, change),
-            Paragraph::new(&theme::TEXT_NORMAL, "\nTransaction fee:".into()),
-            Paragraph::new(&theme::TEXT_MONO, total_fee_new),
-        ]);
+        let mut paragraphs_vec = ParagraphVecShort::new();
+        paragraphs_vec
+            .add(Paragraph::new(&theme::TEXT_BOLD, description.into()))
+            .add(Paragraph::new(&theme::TEXT_MONO, change))
+            .add(Paragraph::new(&theme::TEXT_BOLD, "Transaction fee:".into()))
+            .add(Paragraph::new(&theme::TEXT_MONO, total_fee_new));
+
+        if let Some(fee_rate_amount) = fee_rate_amount {
+            paragraphs_vec
+                .add(Paragraph::new(&theme::TEXT_BOLD, "Fee rate:".into()))
+                .add(Paragraph::new(&theme::TEXT_MONO, fee_rate_amount));
+        }
+        let paragraphs = paragraphs_vec.into_paragraphs();
 
         let buttons = Button::cancel_confirm(
             Button::with_icon(Icon::new(theme::ICON_CANCEL)),
@@ -1744,6 +1754,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     sign: int,
     ///     user_fee_change: str,
     ///     total_fee_new: str,
+    ///     fee_rate_amount: str | None,
     /// ) -> object:
     ///     """Decrease or increase transaction fee."""
     Qstr::MP_QSTR_confirm_modify_fee => obj_fn_kw!(0, new_confirm_modify_fee).as_obj(),
