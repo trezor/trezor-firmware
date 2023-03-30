@@ -1,7 +1,6 @@
-use super::iter::GlyphMetrics;
 use crate::ui::{
     display,
-    display::{toif::Icon, Color, Font},
+    display::{toif::Icon, Color, Font, GlyphMetrics},
     geometry::{Alignment, Dimensions, Offset, Point, Rect, BOTTOM_LEFT},
 };
 
