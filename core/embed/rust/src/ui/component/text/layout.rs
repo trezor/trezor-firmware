@@ -69,6 +69,10 @@ pub struct TextStyle {
     pub ellipsis_icon: Option<Icon>,
     /// Optional icon to signal content continues from previous page.
     pub prev_page_ellipsis_icon: Option<Icon>,
+    /// How many pixels to leave between the text and ellipsis icon.
+    pub ellipsis_icon_margin: i16,
+    /// How many pixels to leave between the prev_page icon and the text.
+    pub prev_page_icon_margin: i16,
 
     /// Specifies which line-breaking strategy to use.
     pub line_breaking: LineBreaking,
@@ -91,7 +95,9 @@ impl TextStyle {
             hyphen_color,
             ellipsis_color,
             ellipsis_icon: None,
+            ellipsis_icon_margin: 0,
             prev_page_ellipsis_icon: None,
+            prev_page_icon_margin: 0,
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
         }
@@ -108,20 +114,22 @@ impl TextStyle {
     }
 
     /// Adding optional icon shown instead of "..." ellipsis.
-    pub const fn with_ellipsis_icon(mut self, icon: Icon) -> Self {
+    pub const fn with_ellipsis_icon(mut self, icon: Icon, margin: i16) -> Self {
         self.ellipsis_icon = Some(icon);
+        self.ellipsis_icon_margin = margin;
         self
     }
 
     /// Adding optional icon signalling content continues from previous page.
-    pub const fn with_prev_page_icon(mut self, icon: Icon) -> Self {
+    pub const fn with_prev_page_icon(mut self, icon: Icon, margin: i16) -> Self {
         self.prev_page_ellipsis_icon = Some(icon);
+        self.prev_page_icon_margin = margin;
         self
     }
 
     fn ellipsis_width(&self) -> i16 {
         if let Some(icon) = self.ellipsis_icon {
-            icon.toif.width()
+            icon.toif.width() + self.ellipsis_icon_margin
         } else {
             self.text_font.text_width(ELLIPSIS)
         }
@@ -129,7 +137,7 @@ impl TextStyle {
 
     fn prev_page_ellipsis_width(&self) -> i16 {
         if let Some(icon) = self.prev_page_ellipsis_icon {
-            icon.toif.width()
+            icon.toif.width() + self.prev_page_icon_margin
         } else {
             self.text_font.text_width(ELLIPSIS)
         }

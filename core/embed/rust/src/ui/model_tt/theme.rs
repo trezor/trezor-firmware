@@ -507,8 +507,8 @@ pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, GREY_LIGHT, 
 pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
-    .with_ellipsis_icon(Icon::new(ICON_PAGE_NEXT))
-    .with_prev_page_icon(Icon::new(ICON_PAGE_PREV));
+    .with_ellipsis_icon(Icon::new(ICON_PAGE_NEXT), 0)
+    .with_prev_page_icon(Icon::new(ICON_PAGE_PREV), 0);
 
 /// Convert Python-side numeric id to a `TextStyle`.
 pub fn textstyle_number(num: i32) -> &'static TextStyle {
