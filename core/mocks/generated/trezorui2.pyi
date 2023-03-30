@@ -42,8 +42,8 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/model_tt/layout.rs
-def jpeg_info(data: bytes) -> (width: int, height: int, mcu_height: int):
-    """Get JPEG image dimensions."""
+def jpeg_info(data: bytes) -> tuple[int, int, int]:
+    """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -122,17 +122,6 @@ def confirm_reset_device(
 
 
 # rust/src/ui/model_tt/layout.rs
-def show_qr(
-    *,
-    title: str,
-    address: str,
-    verb_cancel: str,
-    case_sensitive: bool,
-) -> object:
-    """Show QR code."""
-
-
-# rust/src/ui/model_tt/layout.rs
 def show_address_details(
     *,
     address: str,
@@ -195,6 +184,7 @@ def confirm_modify_fee(
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
+    fee_rate_amount: str | None,
 ) -> object:
     """Decrease or increase transaction fee."""
 
@@ -384,7 +374,7 @@ def show_checklist(
     button: str,
 ) -> object:
    """Checklist of backup steps. Active index is highlighted, previous items have check
-   mark nex to them."""
+   mark next to them."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -403,7 +393,7 @@ def confirm_recovery(
 def select_word_count(
     *,
     dry_run: bool,
-) -> int | CANCELLED:
+) -> int | str:  # TT returns int
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
 
@@ -432,7 +422,7 @@ def show_progress(
 ) -> object:
    """Show progress loader. Please note that the number of lines reserved on screen for
    description is determined at construction time. If you want multiline descriptions
-   make sure the initial desciption has at least that amount of lines."""
+   make sure the initial description has at least that amount of lines."""
 
 
 # rust/src/ui/model_tt/layout.rs
