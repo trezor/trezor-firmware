@@ -1,6 +1,7 @@
-from common import *
-from trezor import config
 from storage import device
+from trezor import config
+
+from common import *
 
 
 class TestConfig(unittest.TestCase):

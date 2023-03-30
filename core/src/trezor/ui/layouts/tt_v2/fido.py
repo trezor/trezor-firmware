@@ -1,8 +1,6 @@
-from typing import TYPE_CHECKING
-
-from trezor.enums import ButtonRequestType
-
 import trezorui2
+from trezor.enums import ButtonRequestType
+from typing import TYPE_CHECKING
 
 from ..common import interact
 from . import RustLayout
@@ -14,6 +12,7 @@ if TYPE_CHECKING:
 
 if __debug__:
     from trezor import io, ui
+
     from ... import Result
 
     class _RustFidoLayoutImpl(RustLayout):

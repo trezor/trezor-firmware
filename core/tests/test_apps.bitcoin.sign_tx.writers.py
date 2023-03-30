@@ -1,9 +1,8 @@
-from common import *
-
-from trezor.messages import TxInput
 from trezor.enums import InputScriptType
+from trezor.messages import TxInput
 
 from apps.bitcoin import writers
+from common import *
 
 
 class TestWriters(unittest.TestCase):

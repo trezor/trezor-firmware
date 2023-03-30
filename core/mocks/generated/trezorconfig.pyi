@@ -1,6 +1,5 @@
 from typing import *
 
-
 # extmod/modtrezorconfig/modtrezorconfig.c
 def init(
    ui_wait_callback: Callable[[int, int, str], bool] | None = None

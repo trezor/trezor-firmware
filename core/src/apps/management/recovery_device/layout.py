@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_warning
 from trezor.ui.layouts.recovery import (  # noqa: F401
@@ -7,13 +5,14 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
     show_group_share_success,
     show_remaining_shares,
 )
+from typing import TYPE_CHECKING
 
 from .. import backup_types
 
 if TYPE_CHECKING:
-    from typing import Callable
     from trezor.enums import BackupType
     from trezor.wire import GenericContext
+    from typing import Callable
 
 
 async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
@@ -42,9 +41,10 @@ async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
 async def request_mnemonic(
     ctx: GenericContext, word_count: int, backup_type: BackupType | None
 ) -> str | None:
-    from . import word_validity
     from trezor.ui.layouts.common import button_request
     from trezor.ui.layouts.recovery import request_word
+
+    from . import word_validity
 
     await button_request(ctx, "mnemonic", ButtonRequestType.MnemonicInput)
 
@@ -128,10 +128,11 @@ async def homescreen_dialog(
     subtext: str | None = None,
     info_func: Callable | None = None,
 ) -> None:
-    from .recover import RecoveryAborted
     import storage.recovery as storage_recovery
-    from trezor.wire import ActionCancelled
     from trezor.ui.layouts.recovery import continue_recovery
+    from trezor.wire import ActionCancelled
+
+    from .recover import RecoveryAborted
 
     while True:
         dry_run = storage_recovery.is_dry_run()

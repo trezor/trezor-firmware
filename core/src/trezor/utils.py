@@ -1,5 +1,3 @@
-import gc
-import sys
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
@@ -16,6 +14,9 @@ from trezorutils import (  # noqa: F401
     reboot_to_bootloader,
     usb_data_connected,
 )
+
+import gc
+import sys
 from typing import TYPE_CHECKING
 
 DISABLE_ANIMATION = 0
@@ -30,15 +31,8 @@ if __debug__:
         LOG_MEMORY = 0
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        Iterator,
-        Protocol,
-        TypeVar,
-        Sequence,
-    )
-
     from trezor.protobuf import MessageType
+    from typing import Any, Iterator, Protocol, Sequence, TypeVar
 
 
 def unimport_begin() -> set[str]:
@@ -181,8 +175,9 @@ if False:  # noqa
             self.data += hexlify(data).decode() + " "
 
         def digest(self) -> bytes:
-            from trezor import log
             from ubinascii import hexlify
+
+            from trezor import log
 
             digest = self.ctx.digest()
             log.debug(

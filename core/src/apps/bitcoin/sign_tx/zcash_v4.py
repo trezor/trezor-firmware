@@ -1,23 +1,25 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import blake2b
 from trezor.utils import HashWriter
 from trezor.wire import DataError
+from typing import TYPE_CHECKING
 
 from ..writers import TX_HASH_SIZE, write_bytes_reversed, write_uint32, write_uint64
 from .bitcoinlike import Bitcoinlike
 
 if TYPE_CHECKING:
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
+    from typing import Sequence
+
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
-    from . import approvers
-    from typing import Sequence
-    from .sig_hasher import SigHasher
-    from .tx_info import OriginalTxInfo, TxInfo
+
     from ..common import SigHashType
     from ..writers import Writer
+    from . import approvers
+    from .sig_hasher import SigHasher
+    from .tx_info import OriginalTxInfo, TxInfo
 
 _OVERWINTERED = const(0x8000_0000)
 
@@ -48,6 +50,7 @@ class Zip243SigHasher:
         hash_type: int,
     ) -> bytes:
         import ustruct as struct
+
         from ..scripts import write_bip143_script_code_prefixed
         from ..writers import get_tx_hash, write_bytes_fixed
 
@@ -135,6 +138,7 @@ class ZcashV4(Bitcoinlike):
 
     async def step7_finish(self) -> None:
         from apps.common.writers import write_compact_size
+
         from . import helpers
 
         serialized_tx = self.serialized_tx  # local_cache_attribute

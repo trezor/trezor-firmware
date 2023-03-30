@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (  # noqa: F401
     confirm_action,
@@ -8,16 +6,14 @@ from trezor.ui.layouts import (  # noqa: F401
     monero_live_refresh_progress,
     monero_transaction_progress_inner,
 )
+from typing import TYPE_CHECKING
 
 DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
 if TYPE_CHECKING:
     from trezor.enums import MoneroNetworkType
-    from trezor.messages import (
-        MoneroTransactionData,
-        MoneroTransactionDestinationEntry,
-    )
+    from trezor.messages import MoneroTransactionData, MoneroTransactionDestinationEntry
     from trezor.wire import Context
 
     from .signing.state import State
@@ -158,9 +154,10 @@ async def _require_confirm_output(
     """
     Single transaction destination confirmation
     """
+    from trezor.ui.layouts import confirm_output
+
     from apps.monero.xmr.addresses import encode_addr
     from apps.monero.xmr.networks import net_version
-    from trezor.ui.layouts import confirm_output
 
     version = net_version(network_type, dst.is_subaddress, payment_id is not None)
     addr = encode_addr(

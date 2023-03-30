@@ -2,22 +2,23 @@
 Output destinations are streamed one by one.
 Computes destination one-time address, amount key, range proof + HMAC, out_pk, ecdh_info.
 """
-from typing import TYPE_CHECKING
-
 from trezor import utils
+from typing import TYPE_CHECKING
 
 from apps.monero.signing import offloading_keys
 from apps.monero.xmr import crypto, crypto_helpers
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
-    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import BulletproofPlus
-    from apps.monero.layout import MoneroTransactionProgress
     from trezor.messages import (
         MoneroTransactionDestinationEntry,
-        MoneroTransactionSetOutputAck,
         MoneroTransactionRsigData,
+        MoneroTransactionSetOutputAck,
     )
+
+    from apps.monero.layout import MoneroTransactionProgress
+    from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import BulletproofPlus
+
     from .state import State
 
 
@@ -337,9 +338,8 @@ def _rsig_bp(state: State) -> bytes:
 
 
 def _rsig_process_bp(state: State, rsig_data: MoneroTransactionRsigData):
-    from apps.monero.xmr import range_signatures
+    from apps.monero.xmr import range_signatures, serialize
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import BulletproofPlus
-    from apps.monero.xmr import serialize
 
     bp_obj = serialize.parse_msg(rsig_data.rsig, BulletproofPlus)
     rsig_data.rsig = None

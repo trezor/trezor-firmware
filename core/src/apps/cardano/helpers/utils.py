@@ -1,13 +1,13 @@
-from typing import TYPE_CHECKING
-
 from trezor.crypto import hashlib
+from typing import TYPE_CHECKING
 
 from . import ADDRESS_KEY_HASH_SIZE, bech32
 from .paths import ACCOUNT_PATH_INDEX
 
 if TYPE_CHECKING:
-    from .. import seed
     from trezor.wire import ProcessError
+
+    from .. import seed
 
 
 def variable_length_encode(number: int) -> bytes:
@@ -104,6 +104,7 @@ def validate_network_info(network_id: int, protocol_magic: int) -> None:
     consistency between various testnets (at least for now).
     """
     from trezor import wire
+
     from . import network_ids, protocol_magics
 
     is_mainnet_network_id = network_ids.is_mainnet(network_id)

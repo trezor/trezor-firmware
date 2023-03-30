@@ -1,16 +1,16 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor.enums import CardanoCertificateType, CardanoPoolRelayType
 from trezor.wire import ProcessError
+from typing import TYPE_CHECKING
 
 from . import addresses
 from .helpers.utils import get_public_key_hash
 
 if TYPE_CHECKING:
+    from trezor import messages
     from typing import Any
 
-    from trezor import messages
     from apps.common.cbor import CborSequence
 
     from . import seed

@@ -1,8 +1,8 @@
 import ustruct
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor import io, loop, utils
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezorio import WireInterface

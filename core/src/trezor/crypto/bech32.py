@@ -22,6 +22,7 @@
 
 from micropython import const
 from trezorcrypto import bech32
+
 from typing import TYPE_CHECKING
 
 bech32_decode = bech32.decode  # reexported

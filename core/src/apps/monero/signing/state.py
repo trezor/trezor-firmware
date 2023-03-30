@@ -1,10 +1,11 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
-    from apps.monero.xmr.crypto import Point, Scalar
-    from apps.monero.xmr.credentials import AccountCreds
     from trezor.messages import MoneroTransactionDestinationEntry
+    from trezor.wire import Context
+
+    from apps.monero.xmr.credentials import AccountCreds
+    from apps.monero.xmr.crypto import Point, Scalar
 
     Subaddresses = dict[bytes, tuple[int, int]]
 
@@ -20,9 +21,9 @@ class State:
     STEP_SIGN = 600
 
     def __init__(self, ctx: Context) -> None:
+        from apps.monero.xmr import crypto
         from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
         from apps.monero.xmr.mlsag_hasher import PreMlsagHasher
-        from apps.monero.xmr import crypto
 
         self.ctx = ctx
 

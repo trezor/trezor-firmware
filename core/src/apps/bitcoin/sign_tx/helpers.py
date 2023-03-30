@@ -1,28 +1,27 @@
-from typing import TYPE_CHECKING
-
 from trezor import utils
 from trezor.enums import RequestType
 from trezor.wire import DataError
+from typing import TYPE_CHECKING
 
 from .. import common
 from ..writers import TX_HASH_SIZE
 from . import layout
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable
     from trezor.enums import AmountUnit
-    from trezor.wire import Context
-
     from trezor.messages import (
         PrevInput,
         PrevOutput,
         PrevTx,
         SignTx,
+        TxAckPaymentRequest,
         TxInput,
         TxOutput,
         TxRequest,
-        TxAckPaymentRequest,
     )
+    from trezor.wire import Context
+    from typing import Any, Awaitable
+
     from apps.common.coininfo import CoinInfo
     from apps.common.paths import Bip32Path
 

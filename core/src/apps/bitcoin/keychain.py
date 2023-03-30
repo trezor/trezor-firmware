@@ -1,8 +1,8 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor.enums import InputScriptType
 from trezor.messages import AuthorizeCoinJoin, SignMessage
+from typing import TYPE_CHECKING
 
 from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema, unharden
 
@@ -10,24 +10,22 @@ from . import authorization
 from .common import BITCOIN_NAMES
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, Iterable, TypeVar
-    from typing_extensions import Protocol
-
-    from trezor.protobuf import MessageType
-    from trezor.wire import Context
-
     from trezor.messages import (
         GetAddress,
         GetOwnershipId,
-        GetPublicKey,
-        VerifyMessage,
         GetOwnershipProof,
+        GetPublicKey,
         SignTx,
+        VerifyMessage,
     )
+    from trezor.protobuf import MessageType
+    from trezor.wire import Context
+    from typing import Awaitable, Callable, Iterable, TypeVar
+    from typing_extensions import Protocol
 
-    from apps.common.keychain import Keychain, MsgOut, Handler
-    from apps.common.paths import Bip32Path
     from apps.common import coininfo
+    from apps.common.keychain import Handler, Keychain, MsgOut
+    from apps.common.paths import Bip32Path
 
     BitcoinMessage = (
         AuthorizeCoinJoin
@@ -252,8 +250,9 @@ def get_schemas_from_patterns(
 
 
 def _get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
-    from apps.common import coininfo
     from trezor import wire
+
+    from apps.common import coininfo
 
     if coin_name is None:
         coin_name = "Bitcoin"

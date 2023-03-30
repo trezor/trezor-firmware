@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import SignMessage, MessageSignature
+    from trezor.messages import MessageSignature, SignMessage
     from trezor.wire import Context
 
     from apps.common.coininfo import CoinInfo

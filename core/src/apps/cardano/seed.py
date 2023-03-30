@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING
-
 from storage import cache, device
 from trezor import wire
 from trezor.crypto import cardano
+from typing import TYPE_CHECKING
 
 from apps.common import mnemonic
 from apps.common.seed import get_seed
@@ -10,14 +9,13 @@ from apps.common.seed import get_seed
 from .helpers.paths import BYRON_ROOT, MINTING_ROOT, MULTISIG_ROOT, SHELLEY_ROOT
 
 if TYPE_CHECKING:
-    from typing import Callable, Awaitable, TypeVar
-
-    from apps.common.paths import Bip32Path
-    from apps.common.keychain import MsgOut, Handler
-
     from trezor import messages
-    from trezor.enums import CardanoDerivationType
     from trezor.crypto import bip32
+    from trezor.enums import CardanoDerivationType
+    from typing import Awaitable, Callable, TypeVar
+
+    from apps.common.keychain import Handler, MsgOut
+    from apps.common.paths import Bip32Path
 
     CardanoMessages = (
         messages.CardanoGetAddress
@@ -139,8 +137,9 @@ def derive_and_store_secrets(passphrase: str) -> None:
 async def _get_keychain_bip39(
     ctx: wire.Context, derivation_type: CardanoDerivationType
 ) -> Keychain:
-    from apps.common.seed import derive_and_store_roots
     from trezor.enums import CardanoDerivationType
+
+    from apps.common.seed import derive_and_store_roots
 
     if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")

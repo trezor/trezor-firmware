@@ -1,18 +1,20 @@
-from common import *
-from trezor.crypto import bip32, bip39
 from trezor import wire
-from trezor.messages import GetAddress
+from trezor.crypto import bip32, bip39
 from trezor.enums import InputScriptType
+from trezor.messages import GetAddress
 from trezor.utils import HashWriter
 
-from apps.common import coins
 from apps.bitcoin.addresses import *
 from apps.bitcoin.addresses import (
-    _address_p2wsh, _address_p2wsh_in_p2sh,
-    _address_multisig_p2wsh_in_p2sh, _address_multisig_p2sh
+    _address_multisig_p2sh,
+    _address_multisig_p2wsh_in_p2sh,
+    _address_p2wsh,
+    _address_p2wsh_in_p2sh,
 )
 from apps.bitcoin.keychain import validate_path_against_script_type
 from apps.bitcoin.writers import *
+from apps.common import coins
+from common import *
 
 
 def node_derive(root, path):

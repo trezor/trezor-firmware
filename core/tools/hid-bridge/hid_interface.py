@@ -1,6 +1,5 @@
-import os
-
 import logger
+import os
 import uhid
 
 

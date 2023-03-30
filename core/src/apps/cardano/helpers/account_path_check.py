@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from trezor.wire import ProcessError
+from typing import TYPE_CHECKING
 
 from .. import seed
 
@@ -9,8 +8,8 @@ if TYPE_CHECKING:
         CardanoPoolOwner,
         CardanoTxCertificate,
         CardanoTxOutput,
-        CardanoTxWitnessRequest,
         CardanoTxWithdrawal,
+        CardanoTxWitnessRequest,
     )
 
 

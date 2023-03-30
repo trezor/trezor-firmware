@@ -1,19 +1,21 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor.crypto import rlp
+from typing import TYPE_CHECKING
 
 from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
     from trezor.messages import (
-        EthereumSignTxEIP1559,
         EthereumAccessList,
+        EthereumSignTxEIP1559,
         EthereumTxRequest,
     )
     from trezor.wire import Context
+
     from apps.common.keychain import Keychain
+
     from .definitions import Definitions
 
 
@@ -35,17 +37,19 @@ async def sign_tx_eip1559(
     keychain: Keychain,
     defs: Definitions,
 ) -> EthereumTxRequest:
-    from trezor.crypto.hashlib import sha3_256
-    from trezor.utils import HashWriter
     from trezor import wire
     from trezor.crypto import rlp  # local_cache_global
+    from trezor.crypto.hashlib import sha3_256
+    from trezor.utils import HashWriter
+
     from apps.common import paths
+
     from .layout import (
         require_confirm_data,
         require_confirm_eip1559_fee,
         require_confirm_tx,
     )
-    from .sign_tx import handle_erc20, send_request_chunk, check_common_fields
+    from .sign_tx import check_common_fields, handle_erc20, send_request_chunk
 
     gas_limit = msg.gas_limit  # local_cache_attribute
 
@@ -159,8 +163,8 @@ def _get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
 def _sign_digest(
     msg: EthereumSignTxEIP1559, keychain: Keychain, digest: bytes
 ) -> EthereumTxRequest:
-    from trezor.messages import EthereumTxRequest
     from trezor.crypto.curve import secp256k1
+    from trezor.messages import EthereumTxRequest
 
     node = keychain.derive(msg.address_n)
     signature = secp256k1.sign(

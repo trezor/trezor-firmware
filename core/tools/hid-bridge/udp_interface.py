@@ -1,6 +1,5 @@
-import socket
-
 import logger
+import socket
 
 
 class UDPInterface:

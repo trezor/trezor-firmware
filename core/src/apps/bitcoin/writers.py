@@ -1,7 +1,7 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor.utils import ensure
+from typing import TYPE_CHECKING
 
 from apps.common.writers import (  # noqa: F401
     write_bytes_fixed,
@@ -15,12 +15,7 @@ from apps.common.writers import (  # noqa: F401
 )
 
 if TYPE_CHECKING:
-    from trezor.messages import (
-        PrevInput,
-        PrevOutput,
-        TxInput,
-        TxOutput,
-    )
+    from trezor.messages import PrevInput, PrevOutput, TxInput, TxOutput
     from trezor.utils import HashWriter
 
     from apps.common.writers import Writer

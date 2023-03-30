@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, Generic, TypeVar
-
     from trezor.messages import TxInput, TxOutput
+    from typing import Any, Generic, TypeVar
 
     from apps.common.paths import Bip32Path
 
@@ -111,6 +110,7 @@ class ScriptTypeChecker(MatchChecker):
     def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
         from trezor.enums import InputScriptType
         from trezor.messages import TxOutput
+
         from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
 
         if TxOutput.is_type_of(txio):

@@ -1,6 +1,7 @@
-import sys
 import utime
 from micropython import const
+
+import sys
 from typing import Any
 
 _DEBUG = const(10)

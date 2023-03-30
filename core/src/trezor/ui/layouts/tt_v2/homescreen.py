@@ -1,9 +1,7 @@
-from typing import TYPE_CHECKING
-
 import storage.cache as storage_cache
-from trezor import ui
-
 import trezorui2
+from trezor import ui
+from typing import TYPE_CHECKING
 
 from . import RustLayout
 

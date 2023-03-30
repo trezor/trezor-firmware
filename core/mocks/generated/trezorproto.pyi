@@ -1,5 +1,6 @@
-from typing import *
 from trezor.protobuf import MessageType
+from typing import *
+
 T = TypeVar("T", bound=MessageType)
 
 

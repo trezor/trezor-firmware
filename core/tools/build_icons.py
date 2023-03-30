@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
-import sys
-
 import click
+import sys
+from pathlib import Path
 from PIL import Image
 
 from trezorlib import toif

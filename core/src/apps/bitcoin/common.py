@@ -1,17 +1,18 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto import bech32
 from trezor.crypto.curve import bip340
 from trezor.enums import InputScriptType, OutputScriptType
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from enum import IntEnum
-    from apps.common.coininfo import CoinInfo
+    from trezor.crypto import bip32
     from trezor.messages import TxInput
     from trezor.utils import HashWriter
-    from trezor.crypto import bip32
+
+    from apps.common.coininfo import CoinInfo
 else:
     IntEnum = object
 

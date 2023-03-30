@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import GetAddress, HDNodeType, Address
     from trezor import wire
-    from apps.common.keychain import Keychain
+    from trezor.messages import Address, GetAddress, HDNodeType
+
     from apps.common.coininfo import CoinInfo
+    from apps.common.keychain import Keychain
 
 
 def _get_xpubs(

@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from trezor.enums import CardanoAddressType
+from typing import TYPE_CHECKING
 
 from .paths import SCHEMA_PAYMENT
 

@@ -1,22 +1,15 @@
-from typing import TYPE_CHECKING
-
 from trezor.crypto import bip32
 from trezor.wire import DataError
+from typing import TYPE_CHECKING
 
 from . import paths, safety_checks
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        Awaitable,
-        Callable,
-        Iterable,
-        TypeVar,
-    )
-    from typing_extensions import Protocol
-
     from trezor.protobuf import MessageType
     from trezor.wire import Context
+    from typing import Any, Awaitable, Callable, Iterable, TypeVar
+    from typing_extensions import Protocol
+
     from .seed import Slip21Node
 
     T = TypeVar("T")

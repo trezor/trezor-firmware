@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, Sequence
-
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_properties
+from typing import TYPE_CHECKING, Sequence
 
 from .helpers import DECIMALS
 

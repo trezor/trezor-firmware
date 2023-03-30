@@ -46,11 +46,12 @@ import gc
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from trezor.messages import MoneroRctKeyPublic
     from typing import Any, TypeGuard, TypeVar
 
-    from .serialize_messages.tx_ct_key import CtKey
-    from trezor.messages import MoneroRctKeyPublic
     from apps.monero.xmr import crypto
+
+    from .serialize_messages.tx_ct_key import CtKey
 
     T = TypeVar("T")
 

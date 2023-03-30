@@ -1,8 +1,6 @@
 import os.path
-
 import subprocess
 from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t
-
 
 
 def add_font(font_name, font, defines, sources):

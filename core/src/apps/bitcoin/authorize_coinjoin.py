@@ -1,4 +1,5 @@
 from micropython import const
+
 from typing import TYPE_CHECKING
 
 from .authorization import FEE_RATE_DECIMALS
@@ -6,9 +7,10 @@ from .keychain import with_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import AuthorizeCoinJoin, Success
+    from trezor.wire import Context
+
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
-    from trezor.wire import Context
 
 _MAX_COORDINATOR_LEN = const(36)
 _MAX_ROUNDS = const(500)

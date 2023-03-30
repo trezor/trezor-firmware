@@ -1,11 +1,10 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor.enums import MessageType
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor import protobuf
-
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
@@ -13,8 +12,8 @@ if TYPE_CHECKING:
         StellarChangeTrustOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
-        StellarManageDataOp,
         StellarManageBuyOfferOp,
+        StellarManageDataOp,
         StellarManageSellOfferOp,
         StellarPathPaymentStrictReceiveOp,
         StellarPathPaymentStrictSendOp,

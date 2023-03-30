@@ -1,11 +1,12 @@
-from typing import TYPE_CHECKING
 from ubinascii import hexlify
+
+from typing import TYPE_CHECKING
 
 from . import seed
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
     from trezor.messages import CardanoGetPublicKey, CardanoPublicKey
+    from trezor.wire import Context
 
 
 @seed.with_keychain
@@ -14,7 +15,9 @@ async def get_public_key(
 ) -> CardanoPublicKey:
     from trezor import log, wire
     from trezor.ui.layouts import show_pubkey
+
     from apps.common import paths
+
     from .helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
 
     address_n = msg.address_n  # local_cache_attribute
@@ -42,8 +45,9 @@ async def get_public_key(
 def _get_public_key(
     keychain: seed.Keychain, derivation_path: list[int]
 ) -> CardanoPublicKey:
+    from trezor.messages import CardanoPublicKey, HDNodeType
+
     from .helpers.utils import derive_public_key
-    from trezor.messages import HDNodeType, CardanoPublicKey
 
     node = keychain.derive(derivation_path)
 

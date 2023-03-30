@@ -1,5 +1,4 @@
 import sys
-
 from trezor.utils import ensure
 
 

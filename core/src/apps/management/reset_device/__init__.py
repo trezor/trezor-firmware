@@ -1,10 +1,9 @@
-from typing import TYPE_CHECKING
-
 import storage
 import storage.device as storage_device
 from trezor.crypto import slip39
 from trezor.enums import BackupType
 from trezor.wire import ProcessError
+from typing import TYPE_CHECKING
 
 from . import layout
 
@@ -12,9 +11,8 @@ if __debug__:
     import storage.debug
 
 if TYPE_CHECKING:
-    from trezor.messages import ResetDevice
+    from trezor.messages import ResetDevice, Success
     from trezor.wire import Context
-    from trezor.messages import Success
 
 
 BAK_T_BIP39 = BackupType.Bip39  # global_import_cache
@@ -25,14 +23,12 @@ _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
 
 async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
     from trezor import config
-    from apps.common.request_pin import request_pin_confirm
-    from trezor.ui.layouts import (
-        confirm_backup,
-        confirm_reset_device,
-    )
     from trezor.crypto import bip39, random
-    from trezor.messages import Success, EntropyAck, EntropyRequest
+    from trezor.messages import EntropyAck, EntropyRequest, Success
     from trezor.pin import render_empty_loader
+    from trezor.ui.layouts import confirm_backup, confirm_reset_device
+
+    from apps.common.request_pin import request_pin_confirm
 
     backup_type = msg.backup_type  # local_cache_attribute
 
@@ -181,8 +177,9 @@ async def _backup_slip39_advanced(ctx: Context, encrypted_master_secret: bytes) 
 
 
 def _validate_reset_device(msg: ResetDevice) -> None:
-    from .. import backup_types
     from trezor.wire import UnexpectedMessage
+
+    from .. import backup_types
 
     backup_type = msg.backup_type or _DEFAULT_BACKUP_TYPE
     if backup_type not in (

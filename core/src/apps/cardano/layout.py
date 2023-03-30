@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from trezor import ui
 from trezor.enums import (
     ButtonRequestType,
@@ -9,6 +7,7 @@ from trezor.enums import (
 )
 from trezor.strings import format_amount
 from trezor.ui import layouts
+from typing import TYPE_CHECKING
 
 from apps.common.paths import address_n_to_str
 
@@ -25,12 +24,11 @@ confirm_metadata = layouts.confirm_metadata  # global_import_cache
 confirm_properties = layouts.confirm_properties  # global_import_cache
 
 if TYPE_CHECKING:
-    from typing import Literal
-
-    from trezor.wire import Context
     from trezor import messages
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
     from trezor.ui.layouts import PropertyType
+    from trezor.wire import Context
+    from typing import Literal
 
     from .helpers.credential import Credential
     from .seed import Keychain

@@ -5,9 +5,10 @@ from apps.common.keychain import with_slip44_keychain
 from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
-    from apps.common.keychain import Keychain
+    from trezor.messages import NEMAddress, NEMGetAddress
     from trezor.wire import Context
-    from trezor.messages import NEMGetAddress, NEMAddress
+
+    from apps.common.keychain import Keychain
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
@@ -16,7 +17,9 @@ async def get_address(
 ) -> NEMAddress:
     from trezor.messages import NEMAddress
     from trezor.ui.layouts import show_address
+
     from apps.common.paths import address_n_to_str, validate_path
+
     from .helpers import check_path, get_network_str
     from .validators import validate_network
 

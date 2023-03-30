@@ -7,9 +7,8 @@
 # https://tools.ietf.org/html/draft-josefsson-eddsa-ed25519-00#section-4
 # https://github.com/monero-project/research-lab
 
-from typing import TYPE_CHECKING
-
 from trezor.crypto import monero as tcry
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.crypto.hashlib import sha3_256

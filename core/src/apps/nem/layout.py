@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING
-
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_metadata
+from typing import TYPE_CHECKING
 
 from .helpers import NEM_MAX_DIVISIBILITY
 

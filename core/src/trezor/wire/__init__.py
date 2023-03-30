@@ -36,7 +36,6 @@ reads the message's header. When the message type is known the first handler is 
 """
 
 from micropython import const
-from typing import TYPE_CHECKING
 
 from storage.cache import InvalidSessionError
 from trezor import log, loop, protobuf, utils, workflow
@@ -44,6 +43,7 @@ from trezor.enums import FailureType
 from trezor.messages import Failure
 from trezor.wire import codec_v1
 from trezor.wire.errors import ActionCancelled, DataError, Error
+from typing import TYPE_CHECKING
 
 # Import all errors into namespace, so that `wire.Error` is available from
 # other packages.
@@ -51,6 +51,8 @@ from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
 
 
 if TYPE_CHECKING:
+    from trezorio import WireInterface
+
     from typing import (
         Any,
         Awaitable,
@@ -61,7 +63,6 @@ if TYPE_CHECKING:
         Protocol,
         TypeVar,
     )
-    from trezorio import WireInterface
 
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]

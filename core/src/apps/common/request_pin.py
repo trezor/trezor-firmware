@@ -1,14 +1,14 @@
 import utime
-from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
 from trezor import config, wire
+from typing import TYPE_CHECKING
 
 from .sdcard import request_sd_salt
 
 if TYPE_CHECKING:
-    from typing import Any, NoReturn
     from trezor.wire import Context, GenericContext
+    from typing import Any, NoReturn
 
 
 def can_lock_device() -> bool:

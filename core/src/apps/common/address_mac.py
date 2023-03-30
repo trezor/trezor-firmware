@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from trezor import utils
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
@@ -21,6 +20,7 @@ def check_address_mac(
 
 def get_address_mac(address: str, slip44: int, keychain: Keychain) -> bytes:
     from trezor.crypto import hmac
+
     from .writers import write_bytes_unchecked, write_compact_size, write_uint32_le
 
     # k = Key(m/"SLIP-0024"/"Address MAC key")

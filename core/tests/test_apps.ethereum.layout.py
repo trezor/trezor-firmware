@@ -1,11 +1,11 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
+    from ethereum_common import make_network, make_token
+
     from apps.ethereum import networks
     from apps.ethereum.layout import format_ethereum_amount
     from apps.ethereum.tokens import UNKNOWN_TOKEN
-
-    from ethereum_common import make_network, make_token
 
     ETH = networks.by_chain_id(1)
 

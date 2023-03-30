@@ -1,12 +1,10 @@
+from trezor import config, wire
 from typing import TYPE_CHECKING
 
-from trezor import config, wire
-
 if TYPE_CHECKING:
-    from typing import Awaitable
-
     from trezor.messages import ChangePin, Success
     from trezor.wire import Context
+    from typing import Awaitable
 
 
 async def change_pin(ctx: Context, msg: ChangePin) -> Success:

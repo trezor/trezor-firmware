@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from trezor.crypto import nem
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -31,6 +30,7 @@ async def ask_aggregate_modification(
     multisig: bool,
 ) -> None:
     from trezor.enums import NEMModificationType
+
     from ..layout import require_confirm_final, require_confirm_text
 
     if not multisig:

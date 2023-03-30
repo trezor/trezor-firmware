@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import CipherKeyValue, CipheredKeyValue
+    from trezor.messages import CipheredKeyValue, CipherKeyValue
     from trezor.wire import Context
 
 # This module implements the SLIP-0011 symmetric encryption of key-value pairs using a
@@ -9,12 +9,13 @@ if TYPE_CHECKING:
 
 
 async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValue:
-    from trezor.wire import DataError
-    from trezor.messages import CipheredKeyValue
     from trezor.crypto import aes, hmac
+    from trezor.messages import CipheredKeyValue
+    from trezor.ui.layouts import confirm_action
+    from trezor.wire import DataError
+
     from apps.common.keychain import get_keychain
     from apps.common.paths import AlwaysMatchingSchema
-    from trezor.ui.layouts import confirm_action
 
     keychain = await get_keychain(ctx, "secp256k1", [AlwaysMatchingSchema])
 

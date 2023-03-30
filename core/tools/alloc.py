@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+import click
 from pathlib import Path
 from types import SimpleNamespace
-import click
 
 HERE = Path(__file__).resolve().parent
 

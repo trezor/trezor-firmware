@@ -1,12 +1,12 @@
-from typing import TYPE_CHECKING
-
 from trezor.crypto.hashlib import sha256
+from typing import TYPE_CHECKING
 
 from apps.common import coininfo
 
 if TYPE_CHECKING:
-    from trezor.messages import IdentityType, SignIdentity, SignedIdentity
+    from trezor.messages import IdentityType, SignedIdentity, SignIdentity
     from trezor.wire import Context
+
     from apps.common.paths import Bip32Path
 
 # This module implements the SLIP-0013 authentication using a deterministic hierarchy, see
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 async def sign_identity(ctx: Context, msg: SignIdentity) -> SignedIdentity:
     from trezor.messages import SignedIdentity
     from trezor.ui.layouts import confirm_sign_identity
+
     from apps.common.keychain import get_keychain
     from apps.common.paths import AlwaysMatchingSchema
 
@@ -90,6 +91,7 @@ def serialize_identity_without_proto(identity: IdentityType) -> str:
 
 def get_identity_path(identity: str, index: int, num: int) -> Bip32Path:
     from ustruct import pack, unpack
+
     from apps.common.paths import HARDENED
 
     identity_hash = sha256(pack("<I", index) + identity.encode()).digest()
@@ -104,8 +106,9 @@ def sign_challenge(
     sigtype: str | coininfo.CoinInfo,
     curve: str,
 ) -> bytes:
-    from apps.common.signverify import message_digest
     from trezor.wire import DataError
+
+    from apps.common.signverify import message_digest
 
     if sigtype == "gpg":
         data = challenge_hidden

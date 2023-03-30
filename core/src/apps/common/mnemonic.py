@@ -1,7 +1,6 @@
-from typing import TYPE_CHECKING
-
 import storage.device as storage_device
 from trezor import utils
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType

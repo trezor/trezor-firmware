@@ -1,15 +1,14 @@
-from typing import TYPE_CHECKING
-
 from trezor.wire import DataError
+from typing import TYPE_CHECKING
 
 from apps.common.keychain import auto_keychain
 from apps.monero import layout
 
 if TYPE_CHECKING:
     from trezor.messages import (
+        MoneroKeyImageExportInitAck,
         MoneroKeyImageExportInitRequest,
         MoneroKeyImageSyncFinalAck,
-        MoneroKeyImageExportInitAck,
         MoneroKeyImageSyncStepAck,
         MoneroKeyImageSyncStepRequest,
     )
@@ -70,11 +69,12 @@ async def _init_step(
     msg: MoneroKeyImageExportInitRequest,
     keychain: Keychain,
 ) -> MoneroKeyImageExportInitAck:
-    from trezor.messages import MoneroKeyImageExportInitAck
     from trezor.crypto import random
+    from trezor.messages import MoneroKeyImageExportInitAck
+
     from apps.common import paths
-    from apps.monero.xmr import monero
     from apps.monero import misc
+    from apps.monero.xmr import monero
 
     await paths.validate_path(ctx, keychain, msg.address_n)
 
@@ -101,10 +101,8 @@ def _sync_step(
     progress: ProgressLayout,
 ) -> MoneroKeyImageSyncStepAck:
     from trezor import log
-    from trezor.messages import (
-        MoneroExportedKeyImage,
-        MoneroKeyImageSyncStepAck,
-    )
+    from trezor.messages import MoneroExportedKeyImage, MoneroKeyImageSyncStepAck
+
     from apps.monero.xmr import chacha_poly, crypto, key_image
 
     assert s.creds is not None

@@ -8,9 +8,8 @@ write_uint32 = writers.write_uint32_be
 write_uint64 = writers.write_uint64_be
 
 if TYPE_CHECKING:
-    from typing import AnyStr
-
     from trezor.utils import Writer
+    from typing import AnyStr
 
 
 def write_string(w: Writer, s: AnyStr) -> None:

@@ -1,7 +1,6 @@
-from typing import TYPE_CHECKING
-
 from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 from trezor.wire import DataError
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import TypeVar
@@ -18,6 +17,7 @@ def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefTyp
     from trezor.utils import BufferReader
 
     from apps.common import readers
+
     from . import definitions_constants as consts
 
     # check network definition
@@ -142,7 +142,7 @@ class Definitions:
         return cls(network, tokens)
 
     def get_token(self, address: bytes) -> EthereumTokenInfo:
-        from .tokens import token_by_chain_address, UNKNOWN_TOKEN
+        from .tokens import UNKNOWN_TOKEN, token_by_chain_address
 
         # if we have a built-in definition, use it
         token = token_by_chain_address(self.network.chain_id, address)

@@ -3,16 +3,17 @@ from typing import TYPE_CHECKING
 from . import seed
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
     from trezor.messages import CardanoGetNativeScriptHash, CardanoNativeScriptHash
+    from trezor.wire import Context
 
 
 @seed.with_keychain
 async def get_native_script_hash(
     ctx: Context, msg: CardanoGetNativeScriptHash, keychain: seed.Keychain
 ) -> CardanoNativeScriptHash:
-    from trezor.messages import CardanoNativeScriptHash
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
+    from trezor.messages import CardanoNativeScriptHash
+
     from . import layout, native_script
 
     native_script.validate_native_script(msg.script)

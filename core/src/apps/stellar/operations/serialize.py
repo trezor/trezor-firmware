@@ -1,7 +1,6 @@
-from typing import TYPE_CHECKING
-
 from trezor.enums import StellarAssetType
 from trezor.wire import DataError, ProcessError
+from typing import TYPE_CHECKING
 
 from ..writers import (
     write_bool,
@@ -13,8 +12,6 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
-    from trezor.utils import Writer
-
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
@@ -31,6 +28,7 @@ if TYPE_CHECKING:
         StellarPaymentOp,
         StellarSetOptionsOp,
     )
+    from trezor.utils import Writer
 
 
 def write_account_merge_op(w: Writer, msg: StellarAccountMergeOp) -> None:

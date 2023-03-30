@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import StellarGetAddress, StellarAddress
+    from trezor.messages import StellarAddress, StellarGetAddress
     from trezor.wire import Context
+
     from apps.common.keychain import Keychain
 
 
@@ -12,9 +13,11 @@ if TYPE_CHECKING:
 async def get_address(
     ctx: Context, msg: StellarGetAddress, keychain: Keychain
 ) -> StellarAddress:
-    from apps.common import paths, seed
     from trezor.messages import StellarAddress
     from trezor.ui.layouts import show_address
+
+    from apps.common import paths, seed
+
     from . import helpers
 
     await paths.validate_path(ctx, keychain, msg.address_n)

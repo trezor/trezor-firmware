@@ -1,10 +1,12 @@
-from typing import TYPE_CHECKING
 from ubinascii import hexlify
+
+from typing import TYPE_CHECKING
 
 from . import networks
 
 if TYPE_CHECKING:
     from trezor.messages import EthereumFieldType
+
     from .networks import EthereumNetworkInfo
 
 
@@ -49,6 +51,7 @@ def address_from_bytes(
 
 def bytes_from_address(address: str) -> bytes:
     from ubinascii import unhexlify
+
     from trezor import wire
 
     if len(address) == 40:

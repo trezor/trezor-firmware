@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING
-
 from trezor import utils
 from trezor.crypto import base58
 from trezor.crypto.base58 import blake256d_32
 from trezor.wire import DataError
+from typing import TYPE_CHECKING
 
 from . import scripts
 from .scripts import (  # noqa: F401
@@ -14,8 +13,8 @@ from .scripts import (  # noqa: F401
 from .writers import write_compact_size
 
 if TYPE_CHECKING:
-    from trezor.messages import MultisigRedeemScriptType
     from trezor.enums import InputScriptType
+    from trezor.messages import MultisigRedeemScriptType
 
     from apps.common.coininfo import CoinInfo
 
@@ -34,6 +33,7 @@ def write_input_script_prefixed(
 ) -> None:
     from trezor import wire
     from trezor.enums import InputScriptType
+
     from .multisig import multisig_pubkey_index
 
     if script_type == InputScriptType.SPENDADDRESS:

@@ -1,6 +1,6 @@
-from common import *
-
 from trezor import io, sdcard
+
+from common import *
 
 fatfs = io.fatfs
 

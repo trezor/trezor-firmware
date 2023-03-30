@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from trezor.messages import EthereumNetworkInfo
+from typing import TYPE_CHECKING
 
 from apps.common import paths
 from apps.common.keychain import get_keychain
@@ -8,12 +7,6 @@ from apps.common.keychain import get_keychain
 from . import CURVE, definitions, networks
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Iterable, TypeVar
-
-    from apps.common.keychain import Keychain
-
-    from trezor.wire import Context
-
     from trezor.messages import (
         EthereumGetAddress,
         EthereumSignMessage,
@@ -21,11 +14,10 @@ if TYPE_CHECKING:
         EthereumSignTxEIP1559,
         EthereumSignTypedData,
     )
+    from trezor.wire import Context
+    from typing import Any, Awaitable, Callable, Iterable, TypeVar
 
-    from apps.common.keychain import (
-        MsgOut,
-        Handler,
-    )
+    from apps.common.keychain import Handler, Keychain, MsgOut
 
     # messages for "with_keychain_and_network_from_path" decorator
     MsgInAddressN = TypeVar(

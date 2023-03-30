@@ -9,18 +9,12 @@ See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `race`.
 
 import utime
 import utimeq
-from typing import TYPE_CHECKING
 
 from trezor import io, log
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        Awaitable,
-        Callable,
-        Coroutine,
-        Generator,
-    )
+    from typing import Any, Awaitable, Callable, Coroutine, Generator
 
     Task = Coroutine | Generator
     AwaitableTask = Task | Awaitable

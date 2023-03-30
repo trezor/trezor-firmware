@@ -1,8 +1,8 @@
-import gc
 from micropython import const
-from typing import TYPE_CHECKING
 
+import gc
 from trezor import utils
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Sequence, TypeVar, overload
@@ -290,7 +290,7 @@ def delete(key: int) -> None:
 
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, TypeVar, ParamSpec
+    from typing import Awaitable, Callable, ParamSpec, TypeVar
 
     P = ParamSpec("P")
     ByteFunc = Callable[P, bytes]

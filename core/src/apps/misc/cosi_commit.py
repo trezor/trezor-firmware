@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING
-
 from trezor.enums import ButtonRequestType
 from trezor.messages import CosiCommitment, CosiSign, CosiSignature
 from trezor.wire import DataError
+from typing import TYPE_CHECKING
 
 from apps.common.paths import PathSchema, unharden
 
@@ -29,6 +28,7 @@ async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
     from trezor.crypto import cosi
     from trezor.crypto.curve import ed25519
     from trezor.ui.layouts import confirm_blob
+
     from apps.common import paths
     from apps.common.keychain import get_keychain
 

@@ -1,6 +1,5 @@
-from typing import Callable
-
 from trezor.crypto import base58
+from typing import Callable
 
 # Ripple uses different 58 character alphabet than traditional base58
 _ripple_alphabet = "rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz"

@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from trezor.enums import BackupType
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.crypto.slip39 import Share

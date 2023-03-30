@@ -1,6 +1,5 @@
 from typing import *
 
-
 # extmod/modtrezorcrypto/modtrezorcrypto-slip39.h
 def word_index(word: str) -> int:
     """

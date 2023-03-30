@@ -1,15 +1,16 @@
-from typing import TYPE_CHECKING
-
 from trezor.wire import DataError
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import HDNodeType, MultisigRedeemScriptType
+
     from apps.common import paths
 
 
 def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
     from trezor.crypto.hashlib import sha256
     from trezor.utils import HashWriter
+
     from .writers import write_bytes_fixed, write_uint32
 
     if multisig.nodes:

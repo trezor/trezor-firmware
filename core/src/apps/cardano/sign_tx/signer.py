@@ -1,5 +1,4 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 from trezor import messages
 from trezor.enums import (
@@ -9,6 +8,7 @@ from trezor.enums import (
 )
 from trezor.messages import CardanoTxItemAck, CardanoTxOutput
 from trezor.wire import DataError, ProcessError
+from typing import TYPE_CHECKING
 
 from apps.common import safety_checks
 
@@ -20,11 +20,12 @@ from ..helpers.paths import SCHEMA_STAKING
 from ..helpers.utils import derive_public_key
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, ClassVar
-    from trezor.wire import Context
     from trezor.enums import CardanoAddressType
-    from apps.common.paths import PathSchema
+    from trezor.wire import Context
+    from typing import Any, Awaitable, ClassVar
+
     from apps.common import cbor
+    from apps.common.paths import PathSchema
 
     from ..helpers.hash_builder_collection import HashBuilderEmbeddedCBOR
 

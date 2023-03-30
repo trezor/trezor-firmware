@@ -1,6 +1,6 @@
-from typing import *
 from trezorcrypto.bip32 import HDNode
 
+from typing import *
 
 # extmod/modtrezorcrypto/modtrezorcrypto-cardano.h
 def derive_icarus(

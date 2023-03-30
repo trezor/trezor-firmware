@@ -5,6 +5,7 @@ from apps.common.keychain import auto_keychain
 if TYPE_CHECKING:
     from trezor.messages import BinanceGetPublicKey, BinancePublicKey
     from trezor.wire import Context
+
     from apps.common.keychain import Keychain
 
 

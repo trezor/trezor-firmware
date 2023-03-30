@@ -1,16 +1,14 @@
-from typing import TYPE_CHECKING
-
+import trezorui2
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
-
-import trezorui2
+from typing import TYPE_CHECKING
 
 from ..common import interact
 from . import RustLayout
 
 if TYPE_CHECKING:
-    from typing import Iterable, Callable
     from trezor.wire import GenericContext
+    from typing import Callable, Iterable
 
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache

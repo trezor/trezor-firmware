@@ -5,10 +5,11 @@ sys.path.append("../src")
 from ubinascii import hexlify, unhexlify  # noqa: F401
 
 import unittest  # noqa: F401
+from trezor import utils  # noqa: F401
 from typing import Any, Awaitable
 
-from trezor import utils  # noqa: F401
 from apps.common.paths import HARDENED
+
 
 def H_(x: int) -> int:
     """

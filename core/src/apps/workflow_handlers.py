@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.wire import Handler, Msg
     from trezorio import WireInterface
+
+    from trezor.wire import Handler, Msg
 
 
 workflow_handlers: dict[int, Handler] = {}
@@ -23,8 +24,8 @@ def _find_message_handler_module(msg_type: int) -> str:
     - collecting everything as strings instead of importing directly means that we don't
       need to load any of the modules into memory until we actually need them
     """
-    from trezor.enums import MessageType
     from trezor import utils
+    from trezor.enums import MessageType
 
     # debug
     if __debug__ and msg_type == MessageType.LoadDevice:

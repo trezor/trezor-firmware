@@ -5,6 +5,7 @@ from .keychain import with_keychain
 if TYPE_CHECKING:
     from trezor.messages import GetOwnershipId, OwnershipId
     from trezor.wire import Context
+
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
@@ -13,9 +14,9 @@ if TYPE_CHECKING:
 async def get_ownership_id(
     ctx: Context, msg: GetOwnershipId, keychain: Keychain, coin: CoinInfo
 ) -> OwnershipId:
-    from trezor.wire import DataError
     from trezor.enums import InputScriptType
     from trezor.messages import OwnershipId
+    from trezor.wire import DataError
 
     from apps.common.paths import validate_path
 

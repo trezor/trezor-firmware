@@ -83,3 +83,7 @@ build-backend = "poetry.masonry.api"
 
 [tool.isort]
 profile = "black"
+sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER']
+known_standard_library = ["micropython","ubinascii","ustruct","uctypes","utime","utimeq","trezorio","trezorui","trezorutils","trezorconfig","trezorcrypto"]
+known_third_party = ["curve25519","ecdsa","hypothesis","pytest","mnemonic","shamir-mnemonic","trezor","apps","storage","protobuf"]
+known_first_party = ["trezorlib","apps"]

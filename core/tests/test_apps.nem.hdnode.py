@@ -1,5 +1,6 @@
-from common import *
 from trezor.crypto import bip32
+
+from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.nem import CURVE

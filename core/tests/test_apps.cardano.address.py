@@ -1,15 +1,17 @@
-from common import *
 from trezor import wire
 from trezor.crypto import cardano, slip39
 from trezor.enums import CardanoAddressType
-from trezor.messages import CardanoAddressParametersType
-from trezor.messages import CardanoBlockchainPointerType
+from trezor.messages import CardanoAddressParametersType, CardanoBlockchainPointerType
 
 from apps.common import seed
 from apps.common.paths import HARDENED
+from common import *
 
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.addresses import derive_human_readable, validate_address_parameters
+    from apps.cardano.addresses import (
+        derive_human_readable,
+        validate_address_parameters,
+    )
     from apps.cardano.byron_addresses import _address_hash
     from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.seed import Keychain

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
+import requests
 from base64 import b64decode
 from hashlib import sha256
-import requests
-
 
 REPO = "certifi/python-certifi"
 

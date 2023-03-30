@@ -1,8 +1,8 @@
 from micropython import const
-from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
 from storage import common
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType
@@ -76,8 +76,8 @@ def is_initialized() -> bool:
 
 
 def get_device_id() -> str:
-    from ubinascii import hexlify
     from trezorcrypto import random  # avoid pulling in trezor.crypto
+    from ubinascii import hexlify
 
     dev_id = common.get(_NAMESPACE, DEVICE_ID, public=True)
     if not dev_id:
