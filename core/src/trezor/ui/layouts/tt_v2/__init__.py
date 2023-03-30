@@ -131,7 +131,6 @@ class RustLayout(ui.Layout):
 
         touch = loop.wait(io.TOUCH)
         self._first_paint()
-        # self.layout.bounds()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             event, x, y = yield touch
@@ -142,7 +141,6 @@ class RustLayout(ui.Layout):
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
-            # self.layout.bounds()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
@@ -357,12 +355,12 @@ async def show_address(
     xpubs: Sequence[str] = (),
 ) -> None:
     send_button_request = True
+    title = (
+        "RECEIVE ADDRESS\n(MULTISIG)"
+        if multisig_index is not None
+        else "RECEIVE ADDRESS"
+    )
     while True:
-        title = (
-            "RECEIVE ADDRESS\n(MULTISIG)"
-            if multisig_index is not None
-            else "RECEIVE ADDRESS"
-        )
         layout = RustLayout(
             trezorui2.confirm_address(
                 title=title,
@@ -388,7 +386,7 @@ async def show_address(
         # User pressed corner button or swiped left, go to address details.
         elif result is INFO:
 
-            def xpub_title(i: int):
+            def xpub_title(i: int) -> str:
                 result = f"MULTISIG XPUB #{i + 1}\n"
                 result += "(YOURS)" if i == multisig_index else "(COSIGNER)"
                 return result
@@ -775,7 +773,7 @@ def confirm_value(
     value: str,
     description: str,
     br_type: str,
-    br_code: ButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
     *,
     verb: str | None = None,
     subtitle: str | None = None,
@@ -1021,7 +1019,7 @@ async def confirm_coinjoin(
                 )
             ),
             "coinjoin_final",
-            ButtonRequestType.Other,
+            BR_TYPE_OTHER,
         )
     )
 
@@ -1036,7 +1034,7 @@ async def confirm_sign_identity(
         data=identity,
         description=challenge_visual + "\n" if challenge_visual else "",
         br_type="sign_identity",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
 
@@ -1056,7 +1054,7 @@ async def confirm_signverify(
         title,
         address,
         "Confirm address:",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
     await confirm_blob(
@@ -1065,7 +1063,7 @@ async def confirm_signverify(
         title,
         message,
         "Confirm message:",
-        br_code=ButtonRequestType.Other,
+        br_code=BR_TYPE_OTHER,
     )
 
 
@@ -1139,9 +1137,8 @@ async def request_pin_on_device(
             wrong_pin=wrong_pin,
         )
     )
-    while True:
-        result = await ctx.wait(dialog)
-        if result is CANCELLED:
-            raise PinCancelled
-        assert isinstance(result, str)
-        return result
+    result = await ctx.wait(dialog)
+    if result is CANCELLED:
+        raise PinCancelled
+    assert isinstance(result, str)
+    return result

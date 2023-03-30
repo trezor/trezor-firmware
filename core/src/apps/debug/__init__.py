@@ -122,9 +122,11 @@ if __debug__:
 
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
+
         x = msg.x  # local_cache_attribute
         y = msg.y  # local_cache_attribute
 
+        # TT click on specific coordinates, with possible hold
         if x is not None and y is not None:
             evt_down = io.TOUCH_START, x, y
             evt_up = io.TOUCH_END, x, y
@@ -133,6 +135,7 @@ if __debug__:
                 loop.schedule(touch_hold(x, y, msg.hold_ms))
             else:
                 loop.synthetic_events.append((io.TOUCH, evt_up))
+        # Something more general
         else:
             debuglink_decision_chan.publish(msg)
 
