@@ -150,6 +150,10 @@ pub const fn label_title() -> TextStyle {
     TextStyle::new(Font::BOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
+pub const fn label_subtitle() -> TextStyle {
+    TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+}
+
 pub const fn label_coinjoin_progress() -> TextStyle {
     TextStyle::new(Font::BOLD, FG, YELLOW, FG, FG)
 }

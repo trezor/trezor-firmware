@@ -57,6 +57,10 @@ where
         self.layout.bounds
     }
 
+    pub fn alignment(&self) -> Alignment {
+        self.layout.align
+    }
+
     pub fn max_size(&self) -> Offset {
         let font = self.font();
         Offset::new(font.text_width(self.text.as_ref()), font.text_max_height())
