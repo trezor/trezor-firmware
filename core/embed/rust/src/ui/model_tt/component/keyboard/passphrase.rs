@@ -11,6 +11,7 @@ use crate::ui::{
         swipe::{Swipe, SwipeDirection},
         theme, ScrollBar,
     },
+    util::long_line_content_with_ellipsis,
 };
 
 pub enum PassphraseKeyboardMsg {
@@ -280,7 +281,7 @@ impl Component for PassphraseKeyboard {
 
 struct Input {
     area: Rect,
-    textbox: TextBox<MAX_LENGTH>,
+    pub textbox: TextBox<MAX_LENGTH>,
     multi_tap: MultiTapKeyboard,
 }
 
@@ -309,7 +310,7 @@ impl Component for Input {
     fn paint(&mut self) {
         let style = theme::label_keyboard();
 
-        let mut text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
+        let text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
             - Offset::y(style.text_font.text_baseline());
 
         let text = self.textbox.content();
@@ -324,36 +325,12 @@ impl Component for Input {
         // Accounting for the pending marker, which draws itself one pixel longer than
         // the last character
         let available_area_width = self.area.width() - 1;
-        let text_to_display = if style.text_font.text_width(text) <= available_area_width {
-            text // whole text can fit
-        } else {
-            // Text is longer, showing its right end with ellipsis at the beginning.
-            let ellipsis = "...";
-            let ellipsis_width = style.text_font.text_width(ellipsis);
+        let text_to_display =
+            long_line_content_with_ellipsis(text, "...", style.text_font, available_area_width);
 
-            // Drawing the ellipsis and moving the baseline for the rest of the text.
-            display::text(
-                text_baseline,
-                ellipsis,
-                style.text_font,
-                style.text_color,
-                style.background_color,
-            );
-            text_baseline = text_baseline + Offset::x(ellipsis_width);
-
-            // Finding out how many additional text characters will fit in,
-            // starting from the right end.
-            let remaining_available_width = available_area_width - ellipsis_width;
-            let chars_from_right = style
-                .text_font
-                .longest_suffix(remaining_available_width, text);
-
-            &text[text.len() - chars_from_right..]
-        };
-
-        display::text(
+        display::text_left(
             text_baseline,
-            text_to_display,
+            &text_to_display,
             style.text_font,
             style.text_color,
             style.background_color,
@@ -363,7 +340,7 @@ impl Component for Input {
         if self.multi_tap.pending_key().is_some() {
             paint_pending_marker(
                 text_baseline,
-                text_to_display,
+                &text_to_display,
                 style.text_font,
                 style.text_color,
             );
