@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Generator, Iterator
 
 import pytest
 import xdist
@@ -44,6 +44,28 @@ HERE = Path(__file__).resolve().parent
 
 # So that we see details of failed asserts from this module
 pytest.register_assert_rewrite("tests.common")
+
+
+def _emulator_wrapper_main_args() -> list[str]:
+    """Look at TREZOR_PROFILING env variable, so that we can generate coverage reports."""
+    do_profiling = os.environ.get("TREZOR_PROFILING") == "1"
+    if do_profiling:
+        core_dir = HERE.parent / "core"
+        profiling_wrapper = core_dir / "prof" / "prof.py"
+        # So that the coverage reports have the correct paths
+        os.environ["TREZOR_SRC"] = str(core_dir / "src")
+        return [str(profiling_wrapper)]
+    else:
+        return ["-m", "main"]
+
+
+@pytest.fixture
+def core_emulator(request: pytest.FixtureRequest) -> Iterator[Emulator]:
+    """Fixture returning default core emulator with possibility of screen recording."""
+    with EmulatorWrapper("core", main_args=_emulator_wrapper_main_args()) as emu:
+        # Modifying emu.client to add screen recording (when --ui=test is used)
+        with ui_tests.screen_recording(emu.client, request) as _:
+            yield emu
 
 
 @pytest.fixture(scope="session")
@@ -88,23 +110,12 @@ def emulator(request: pytest.FixtureRequest) -> Generator["Emulator", None, None
         # 1. normal link, 2. debug link and 3. webauthn fake interface
         return 20000 + int(worker_id[2:]) * 3
 
-    # So that we can generate coverage reports
-    profiling = os.environ.get("TREZOR_PROFILING") == "1"
-    if profiling:
-        core_dir = HERE.parent / "core"
-        profiling_wrapper = core_dir / "prof" / "prof.py"
-        main_args = [str(profiling_wrapper)]
-        # So that the coverage reports have the correct paths
-        os.environ["TREZOR_SRC"] = str(core_dir / "src")
-    else:
-        main_args = ["-m", "main"]
-
     with EmulatorWrapper(
         model,
         port=_get_port(),
         headless=True,
         auto_interact=not interact,
-        main_args=main_args,
+        main_args=_emulator_wrapper_main_args(),
     ) as emu:
         yield emu
 
