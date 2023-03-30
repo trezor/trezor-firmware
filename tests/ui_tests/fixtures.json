@@ -1863,6 +1863,16 @@
 "TT_zcash-test_sign_tx.py::test_spend_v5_input": "1acc60a7835328c36a2e42e044d90549f46e1463223d0f2dd27767a528e37a77",
 "TT_zcash-test_sign_tx.py::test_unified_address": "f66499496373669bcb148a8bfdda0c321ada5985c9a31a5c6ac48c1f8769217d",
 "TT_zcash-test_sign_tx.py::test_version_group_id_missing": "80a6e289138a604cf351a29511cf6f85e2243591317894703152787e1351a1a3"
+},
+"persistence_tests": {
+"TT_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptAlways--081810a6": "d4a6d7692b341f8c2cfc9aea6b842f5410f0a53174944085c42e894daa270fef",
+"TT_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "6bb0fd358d92a42b1945c2488a954f1cadc4d84f20e93f587cb8eb8ff69ee9b3",
+"TT_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "8ed84fa3ffad4f6c3432780ad5553e3672f9097d327a32dee714579eece05d20",
+"TT_test_shamir_persistence.py::test_abort": "01ffa622b60df60bac7a7c3d7b89c0c9991cd92c98c7f6fecc4968547074e42a",
+"TT_test_shamir_persistence.py::test_recovery_multiple_resets": "73ab35640ef55cb0404f483738403df2e838e4ef35d19f1fd506f908ad0f1811",
+"TT_test_shamir_persistence.py::test_recovery_on_old_wallet": "9a753ef06e39fe36542f7591030dd2cacc88d13b269b67db0ac3a93ae62b77ce",
+"TT_test_shamir_persistence.py::test_recovery_single_reset": "a02125a9a81332df4a5b2add9db9a909ab2c6844d5de0f9df55fc11145f1980f",
+"TT_test_wipe_code.py::test_wipe_code_activate_core": "a7cd20813a08d3e63a95d41bf509175555f34b70d34aa2c50ecb980f1d170c93"
 }
 }
 }
