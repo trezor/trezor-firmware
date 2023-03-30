@@ -15,8 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import json
+import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, List, Optional
+from typing import TYPE_CHECKING, Generator, Optional
+from unittest import mock
 
 import pytest
 
@@ -58,6 +60,10 @@ TEST_ADDRESS_N = tools.parse_path("m/44h/1h/0h/0/0")
 COMMON_FIXTURES_DIR = (
     Path(__file__).resolve().parent.parent / "common" / "tests" / "fixtures"
 )
+
+# So that all the random things are consistent
+MOCK_OS_URANDOM = mock.Mock(return_value=EXTERNAL_ENTROPY)
+WITH_MOCK_URANDOM = mock.patch("os.urandom", MOCK_OS_URANDOM)
 
 
 def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
@@ -124,7 +130,7 @@ def generate_entropy(
 
 def recovery_enter_shares(
     debug: "DebugLink",
-    shares: List[str],
+    shares: list[str],
     groups: bool = False,
     click_info: bool = False,
 ) -> Generator[None, "ButtonRequest", None]:
@@ -179,7 +185,7 @@ def recovery_enter_shares(
 
 
 def click_through(
-    debug: "DebugLink", screens: int, code: ButtonRequestType = None
+    debug: "DebugLink", screens: int, code: Optional[ButtonRequestType] = None
 ) -> Generator[None, "ButtonRequest", None]:
     """Click through N dialog screens.
 
@@ -214,19 +220,25 @@ def read_and_confirm_mnemonic(
 
         mnemonic = yield from read_and_confirm_mnemonic(client.debug)
     """
-    mnemonic = []
+    mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
-    for _ in range(br.pages - 1):
-        mnemonic.extend(debug.read_reset_word().split())
-        debug.swipe_up(wait=True)
 
-    # last page is confirmation
-    mnemonic.extend(debug.read_reset_word().split())
+    for i in range(br.pages):
+        if i == 0:
+            layout = debug.wait_layout()
+        else:
+            layout = debug.read_layout()
+        words = layout.seed_words()
+        mnemonic.extend(words)
+        # Not swiping on the last page
+        if i < br.pages - 1:
+            debug.swipe_up(wait=True)
+
     debug.press_yes()
 
     # check share
-    for _ in range(3):
+    for i in range(3):
         index = debug.read_reset_word_pos()
         if choose_wrong:
             debug.input(mnemonic[(index + 1) % len(mnemonic)])
@@ -235,6 +247,20 @@ def read_and_confirm_mnemonic(
             debug.input(mnemonic[index])
 
     return " ".join(mnemonic)
+
+
+def click_info_button(debug: "DebugLink"):
+    """Click Shamir backup info button and return back."""
+    debug.press_info()
+    yield  # Info screen with text
+    debug.press_yes()
+
+
+def check_PIN_backoff_time(attempts: int, start: float) -> None:
+    """Helper to assert the exponentially growing delay after incorrect PIN attempts"""
+    expected = (2**attempts) - 1
+    got = round(time.time() - start, 2)
+    assert got >= expected
 
 
 def get_test_address(client: "Client") -> str:
