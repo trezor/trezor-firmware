@@ -171,7 +171,7 @@ FIDO2 device tests.
 ### [core fido2 asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L245)
 
 ### [core click test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L265)
-Click tests.
+Click tests - UI.
 See [docs/tests/click-tests](../tests/click-tests.md) for more info.
 
 ### [core click asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L294)
@@ -183,37 +183,38 @@ See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
 ### [core upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L334)
 
 ### [core persistence test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L356)
-Persistence tests.
+Persistence tests - UI.
 
-### [core persistence asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L372)
+### [core persistence asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L385)
 
-### [core hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L390)
+### [core hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L403)
 
-### [crypto test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L408)
+### [crypto test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L421)
 
-### [legacy device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L439)
+### [legacy device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L453)
+Legacy device test - UI.
 
-### [legacy asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L466)
+### [legacy asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L480)
 
-### [legacy btconly test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L478)
+### [legacy btconly test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L492)
 
-### [legacy btconly asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L498)
+### [legacy btconly asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L512)
 
-### [legacy upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L513)
+### [legacy upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L527)
 
-### [legacy upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L532)
+### [legacy upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L546)
 
-### [legacy hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L553)
+### [legacy hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L567)
 
-### [python test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L572)
+### [python test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L586)
 
-### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L591)
+### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L605)
 
-### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L601)
+### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L615)
 
-### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L625)
+### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L639)
 
-### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L649)
+### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L663)
 
 ---
 ## TEST-HW stage - [test-hw.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml)
@@ -255,7 +256,7 @@ Consists of **2 jobs** below:
 
 ### [core unix coverage posttest](https://github.com/trezor/trezor-firmware/blob/master/ci/posttest.yml#L10)
 
-### [unix ui changes](https://github.com/trezor/trezor-firmware/blob/master/ci/posttest.yml#L32)
+### [unix ui changes](https://github.com/trezor/trezor-firmware/blob/master/ci/posttest.yml#L33)
 
 ---
 ## DEPLOY stage - [deploy.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml)
@@ -284,8 +285,8 @@ Consists of **13 jobs** below:
 
 ### [ui tests fixtures deploy](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L229)
 
-### [sync emulators to aws](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L252)
+### [sync emulators to aws](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L253)
 
-### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L277)
+### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L278)
 
 ---

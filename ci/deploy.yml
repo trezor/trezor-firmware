@@ -236,6 +236,7 @@ ui tests fixtures deploy:
   needs:
     - core click test
     - core device test
+    - core persistence test
     - legacy device test
   script:
     - echo "Deploying to $DEPLOY_PATH"
