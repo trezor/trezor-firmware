@@ -3,6 +3,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..common import MNEMONIC12
 from ..emulators import EmulatorWrapper
+from ..input_flows import InputFlowSetupDevicePINWIpeCode
 from ..upgrade_tests import core_only, legacy_only
 
 PIN = "1234"
@@ -26,24 +27,9 @@ def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
         client, MNEMONIC12, pin, passphrase_protection=False, label="WIPECODE"
     )
 
-    def input_flow():
-        yield  # do you want to set/change the wipe_code?
-        client.debug.press_yes()
-        if pin is not None:
-            yield  # enter current pin
-            client.debug.input(pin)
-        yield  # enter new wipe code
-        client.debug.input(wipe_code)
-        yield  # enter new wipe code again
-        client.debug.input(wipe_code)
-        yield  # success
-        client.debug.press_yes()
-
     with client:
-        client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success, messages.Features]
-        )
-        client.set_input_flow(input_flow)
+        IF = InputFlowSetupDevicePINWIpeCode(client, pin, wipe_code)
+        client.set_input_flow(IF.get())
         device.change_wipe_code(client)
 
 

@@ -50,10 +50,10 @@ def test_abort(emulator: Emulator):
 
     device_handler.run(device.recover, pin_protection=False)
     layout = debug.wait_layout()
-    assert layout.get_title() == "WALLET RECOVERY"
+    assert layout.title() == "WALLET RECOVERY"
 
     layout = debug.click(buttons.OK, wait=True)
-    assert "Select number of words" in layout.get_content()
+    assert "select the number of words" in layout.text_content()
 
     device_handler.restart(emulator)
     debug = device_handler.debuglink()
@@ -63,13 +63,13 @@ def test_abort(emulator: Emulator):
 
     # no waiting for layout because layout doesn't change
     layout = debug.read_layout()
-    assert "Select number of words" in layout.get_content()
+    assert "select the number of words" in layout.text_content()
     layout = debug.click(buttons.CANCEL, wait=True)
 
-    assert layout.get_title() == "ABORT RECOVERY"
+    assert layout.title() == "ABORT RECOVERY"
     layout = debug.click(buttons.OK, wait=True)
 
-    assert layout.text.startswith("< Homescreen")
+    assert layout.str_content.startswith("< Homescreen")
     features = device_handler.features()
     assert features.recovery_mode is False
 
@@ -136,10 +136,10 @@ def test_recovery_on_old_wallet(emulator: Emulator):
 
     # start entering first share
     layout = debug.read_layout()
-    assert "Enter any share" in layout.text
+    assert "Enter any share" in layout.str_content
     debug.press_yes()
     layout = debug.wait_layout()
-    assert layout.text == "< MnemonicKeyboard >"
+    assert "MnemonicKeyboard" in layout.str_content
 
     # enter first word
     debug.input(words[0])
@@ -151,12 +151,12 @@ def test_recovery_on_old_wallet(emulator: Emulator):
 
     # try entering remaining 19 words
     for word in words[1:]:
-        assert layout.text == "< MnemonicKeyboard >"
+        assert "MnemonicKeyboard" in layout.str_content
         debug.input(word)
         layout = debug.wait_layout()
 
     # check that we entered the first share successfully
-    assert "2 more shares" in layout.text
+    assert "2 more shares" in layout.str_content
 
     # try entering the remaining shares
     for share in MNEMONIC_SLIP39_BASIC_20_3of6[1:3]:
@@ -178,13 +178,13 @@ def test_recovery_multiple_resets(emulator: Emulator):
         expected_text = "Enter any share"
         remaining = len(shares)
         for share in shares:
-            assert expected_text in layout.text
+            assert expected_text in layout.str_content
             layout = recovery.enter_share(debug, share)
             remaining -= 1
             expected_text = "You have entered"
             debug = _restart(device_handler, emulator)
 
-        assert "You have successfully recovered your wallet" in layout.get_content()
+        assert "You have finished recovering your wallet" in layout.text_content()
 
     device_handler = BackgroundDeviceHandler(emulator.client)
     debug = device_handler.debuglink()
@@ -212,7 +212,7 @@ def test_recovery_multiple_resets(emulator: Emulator):
     enter_shares_with_restarts(debug)
     debug = device_handler.debuglink()
     layout = debug.read_layout()
-    assert layout.text.startswith("< Homescreen")
+    assert layout.str_content.startswith("< Homescreen")
 
     features = device_handler.features()
     assert features.initialized is True
