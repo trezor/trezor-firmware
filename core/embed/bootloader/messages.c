@@ -482,8 +482,6 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   }
 
   static image_header hdr;
-  secbool is_newvendor = secfalse;
-  secbool should_keep_seed = secfalse;
 
   if (firmware_block == 0) {
     if (headers_offset == 0) {
@@ -560,6 +558,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         }
       }
 
+      secbool should_keep_seed = secfalse;
+      secbool is_newvendor = secfalse;
       if (is_new == secfalse) {
         detect_installation(&current_vhdr, current_hdr, &vhdr, &hdr, &is_new,
                             &should_keep_seed, &is_newvendor);
@@ -582,6 +582,16 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       ui_screen_install_start();
 
+      // if firmware is not upgrade, erase storage
+      if (sectrue != should_keep_seed) {
+        ensure(
+            flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL),
+            NULL);
+      }
+      ensure(flash_erase_sectors(FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT,
+                                 ui_screen_install_progress_erase),
+             NULL);
+
       headers_offset = IMAGE_HEADER_SIZE + vhdr.hdrlen;
       read_offset = IMAGE_INIT_CHUNK_SIZE;
 
@@ -597,15 +607,6 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
     } else {
       // first block with the headers parsed -> the first chunk is now complete
       read_offset = 0;
-      // if firmware is not upgrade, erase storage
-      if (sectrue != should_keep_seed) {
-        ensure(
-            flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL),
-            NULL);
-      }
-      ensure(flash_erase_sectors(FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT,
-                                 ui_screen_install_progress_erase),
-             NULL);
     }
   }
 
