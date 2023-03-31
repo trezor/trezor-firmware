@@ -1,5 +1,6 @@
 from typing import *
 
+
 # extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
 class HDNode:
     """

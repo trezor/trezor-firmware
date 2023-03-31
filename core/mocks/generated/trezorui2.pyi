@@ -1,5 +1,4 @@
 from typing import *
-
 CONFIRMED: object
 CANCELLED: object
 

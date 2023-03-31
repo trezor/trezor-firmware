@@ -1,5 +1,6 @@
 from typing import *
 
+
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 class Point:
     """

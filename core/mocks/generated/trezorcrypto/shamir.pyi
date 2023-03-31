@@ -1,5 +1,6 @@
 from typing import *
 
+
 # extmod/modtrezorcrypto/modtrezorcrypto-shamir.h
 def interpolate(shares: list[tuple[int, bytes]], x: int) -> bytes:
     """

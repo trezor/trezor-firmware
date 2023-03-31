@@ -1,5 +1,6 @@
 from typing import *
 
+
 # extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
 def generate(strength: int) -> str:
     """

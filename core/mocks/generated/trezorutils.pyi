@@ -1,5 +1,6 @@
 from typing import *
 
+
 # extmod/modtrezorutils/modtrezorutils-meminfo.h
 def meminfo(filename: str) -> None:
     """Dumps map of micropython GC arena to a file.

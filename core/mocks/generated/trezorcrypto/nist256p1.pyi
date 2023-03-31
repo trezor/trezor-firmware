@@ -1,5 +1,6 @@
 from typing import *
 
+
 # extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
 def generate_secret() -> bytes:
     """

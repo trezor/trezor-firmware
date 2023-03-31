@@ -1,5 +1,4 @@
 from typing import *
-
 BLOCK_SIZE: int  # size of SD card block
 
 

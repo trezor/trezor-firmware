@@ -1,11 +1,13 @@
 from typing import *
 
+
 # extmod/modtrezorcrypto/modtrezorcrypto-random.h
 def uniform(n: int) -> int:
     """
     Compute uniform random number from interval 0 ... n - 1.
     """
 import builtins
+
 
 # extmod/modtrezorcrypto/modtrezorcrypto-random.h
 def bytes(len: int) -> builtins.bytes:
