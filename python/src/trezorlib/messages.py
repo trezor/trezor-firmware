@@ -2057,15 +2057,15 @@ class FirmwareErase(protobuf.MessageType):
 class FirmwareRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 8
     FIELDS = {
-        1: protobuf.Field("offset", "uint32", repeated=False, required=False, default=None),
-        2: protobuf.Field("length", "uint32", repeated=False, required=False, default=None),
+        1: protobuf.Field("offset", "uint32", repeated=False, required=True),
+        2: protobuf.Field("length", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        offset: Optional["int"] = None,
-        length: Optional["int"] = None,
+        offset: "int",
+        length: "int",
     ) -> None:
         self.offset = offset
         self.length = length

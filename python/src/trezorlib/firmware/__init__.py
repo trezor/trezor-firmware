@@ -97,8 +97,6 @@ def update(
 
     # TREZORv2 method
     while isinstance(resp, messages.FirmwareRequest):
-        assert resp.offset is not None
-        assert resp.length is not None
         length = resp.length
         payload = data[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()

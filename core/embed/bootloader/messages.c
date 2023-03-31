@@ -351,8 +351,8 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
                           ? IMAGE_INIT_CHUNK_SIZE
                           : firmware_remaining;
     MSG_SEND_INIT(FirmwareRequest);
-    MSG_SEND_ASSIGN_VALUE(offset, 0);
-    MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
+    MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, 0);
+    MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
     MSG_SEND(FirmwareRequest);
   } else {
     // invalid firmware size
@@ -588,8 +588,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       // request the rest of the first chunk
       MSG_SEND_INIT(FirmwareRequest);
       chunk_requested = IMAGE_CHUNK_SIZE - read_offset;
-      MSG_SEND_ASSIGN_VALUE(offset, read_offset);
-      MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
+      MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, read_offset);
+      MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
       MSG_SEND(FirmwareRequest);
 
       firmware_remaining -= read_offset;
@@ -624,8 +624,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
     if (firmware_upload_chunk_retry > 0) {
       --firmware_upload_chunk_retry;
       MSG_SEND_INIT(FirmwareRequest);
-      MSG_SEND_ASSIGN_VALUE(offset, firmware_block * IMAGE_CHUNK_SIZE);
-      MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
+      MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, firmware_block * IMAGE_CHUNK_SIZE);
+      MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
       MSG_SEND(FirmwareRequest);
       return (int)firmware_remaining;
     }
@@ -658,8 +658,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                           ? IMAGE_CHUNK_SIZE
                           : firmware_remaining;
     MSG_SEND_INIT(FirmwareRequest);
-    MSG_SEND_ASSIGN_VALUE(offset, firmware_block * IMAGE_CHUNK_SIZE);
-    MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
+    MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, firmware_block * IMAGE_CHUNK_SIZE);
+    MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
     MSG_SEND(FirmwareRequest);
   } else {
     MSG_SEND_INIT(Success);

@@ -99,9 +99,7 @@ typedef struct _FirmwareErase {
 } FirmwareErase;
 
 typedef struct _FirmwareRequest {
-    bool has_offset;
     uint32_t offset;
-    bool has_length;
     uint32_t length;
 } FirmwareRequest;
 
@@ -151,7 +149,7 @@ extern "C" {
 #define ButtonRequest_init_default               {false, _ButtonRequestType_MIN}
 #define ButtonAck_init_default                   {0}
 #define FirmwareErase_init_default               {false, 0}
-#define FirmwareRequest_init_default             {false, 0, false, 0}
+#define FirmwareRequest_init_default             {0, 0}
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
@@ -162,7 +160,7 @@ extern "C" {
 #define ButtonRequest_init_zero                  {false, _ButtonRequestType_MIN}
 #define ButtonAck_init_zero                      {0}
 #define FirmwareErase_init_zero                  {false, 0}
-#define FirmwareRequest_init_zero                {false, 0, false, 0}
+#define FirmwareRequest_init_zero                {0, 0}
 #define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}}
 
 /* Field tags (for use in manual encoding/decoding) */
@@ -256,8 +254,8 @@ X(a, STATIC,   OPTIONAL, UINT32,   length,            1)
 #define FirmwareErase_DEFAULT NULL
 
 #define FirmwareRequest_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, UINT32,   offset,            1) \
-X(a, STATIC,   OPTIONAL, UINT32,   length,            2)
+X(a, STATIC,   REQUIRED, UINT32,   offset,            1) \
+X(a, STATIC,   REQUIRED, UINT32,   length,            2)
 #define FirmwareRequest_CALLBACK NULL
 #define FirmwareRequest_DEFAULT NULL
 
