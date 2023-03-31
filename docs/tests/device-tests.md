@@ -105,9 +105,11 @@ the following marker:
 
 This marker must be registered in `REGISTERED_MARKERS` file in `tests` folder.
 
-If you wish to run a test only on TT, mark it with `@pytest.mark.skip_t1`.
-If the test should only run on T1, mark it with `@pytest.mark.skip_t2`.
-You must not use both on the same test.
+Tests can be run only for specific models - it is done by disallowing the tests for the other models.
+`@pytest.mark.skip_t1`
+`@pytest.mark.skip_t2`
+`@pytest.mark.skip_tr`
+are valid markers to skip current test for T1, TT and TR respectively.
 
 [pytest-random-order]: https://pypi.org/project/pytest-random-order/
 
