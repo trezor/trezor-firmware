@@ -584,8 +584,12 @@ if FROZEN:
                 SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/fido.py',
             ] if not EVERYTHING else []
         ))
-    elif TREZOR_MODEL in ('1', 'R'):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/__init__.py'))
+    elif TREZOR_MODEL in ('R'):
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/*.py',
+            exclude=[
+                SOURCE_PY_DIR + 'trezor/ui/layouts/tr/fido.py',
+            ] if not EVERYTHING else []
+        ))
     else:
         raise ValueError('Unknown Trezor model')
 
