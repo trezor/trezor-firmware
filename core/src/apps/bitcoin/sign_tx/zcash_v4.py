@@ -1,16 +1,17 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import blake2b
 from trezor.utils import HashWriter
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 from ..writers import TX_HASH_SIZE, write_bytes_reversed, write_uint32, write_uint64
 from .bitcoinlike import Bitcoinlike
 
 if TYPE_CHECKING:
-    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
     from typing import Sequence
+
+    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain

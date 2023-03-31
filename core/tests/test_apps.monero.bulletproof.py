@@ -1,7 +1,8 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
-    from apps.monero.xmr import bulletproof as bp, crypto
+    from apps.monero.xmr import bulletproof as bp
+    from apps.monero.xmr import crypto
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import BulletproofPlus
 
 

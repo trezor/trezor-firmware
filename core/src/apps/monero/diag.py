@@ -5,10 +5,10 @@ if TYPE_CHECKING:
 
 
 if __debug__:
-    import micropython
-
     import gc
+    import micropython
     import sys
+
     from trezor import log
 
     PREV_MEM = gc.mem_free()

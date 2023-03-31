@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import TxInput, TxOutput
     from typing import Any, Generic, TypeVar
+
+    from trezor.messages import TxInput, TxOutput
 
     from apps.common.paths import Bip32Path
 

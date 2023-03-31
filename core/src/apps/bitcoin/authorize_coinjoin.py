@@ -1,5 +1,4 @@
 from micropython import const
-
 from typing import TYPE_CHECKING
 
 from .authorization import FEE_RATE_DECIMALS

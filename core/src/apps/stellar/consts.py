@@ -1,7 +1,7 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.enums import MessageType
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor import protobuf

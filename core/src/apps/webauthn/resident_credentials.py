@@ -1,8 +1,8 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 import storage.resident_credentials as storage_resident_credentials
 from storage.resident_credentials import MAX_RESIDENT_CREDENTIALS
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Iterator

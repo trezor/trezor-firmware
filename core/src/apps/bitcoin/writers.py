@@ -1,7 +1,7 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.utils import ensure
-from typing import TYPE_CHECKING
 
 from apps.common.writers import (  # noqa: F401
     write_bytes_fixed,

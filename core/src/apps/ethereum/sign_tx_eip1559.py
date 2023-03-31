@@ -1,7 +1,7 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.crypto import rlp
-from typing import TYPE_CHECKING
 
 from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id

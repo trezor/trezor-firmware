@@ -1,10 +1,10 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata
-from typing import TYPE_CHECKING
 
 from apps.common.paths import address_n_to_str
 
@@ -17,11 +17,12 @@ from ..common import (
 from ..keychain import address_n_to_name
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from trezor.enums import AmountUnit
     from trezor.messages import TxAckPaymentRequest, TxOutput
     from trezor.ui.layouts import LayoutType
     from trezor.wire import Context
-    from typing import Any
 
     from apps.common.coininfo import CoinInfo
     from apps.common.paths import Bip32Path

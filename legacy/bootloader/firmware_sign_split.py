@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-import ecdsa
 import hashlib
 import os
 import subprocess
 from binascii import hexlify, unhexlify
+
+import ecdsa
 
 print("master secret:", end="")
 h = input()

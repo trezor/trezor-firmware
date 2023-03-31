@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import click
 import logging
 import os
 import platform
@@ -11,6 +10,8 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Optional, TextIO
+
+import click
 
 import trezorlib.debuglink
 import trezorlib.device

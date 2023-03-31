@@ -1,6 +1,7 @@
+from typing import TYPE_CHECKING
+
 import trezorui2
 from trezor.enums import ButtonRequestType
-from typing import TYPE_CHECKING
 
 from ..common import interact
 from . import RustLayout

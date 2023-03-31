@@ -1,5 +1,6 @@
-from trezor import utils
 from typing import TYPE_CHECKING
+
+from trezor import utils
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain

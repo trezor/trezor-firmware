@@ -1,8 +1,8 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.enums import InputScriptType
 from trezor.messages import AuthorizeCoinJoin, SignMessage
-from typing import TYPE_CHECKING
 
 from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema, unharden
 
@@ -10,6 +10,8 @@ from . import authorization
 from .common import BITCOIN_NAMES
 
 if TYPE_CHECKING:
+    from typing import Awaitable, Callable, Iterable, TypeVar
+
     from trezor.messages import (
         GetAddress,
         GetOwnershipId,
@@ -20,7 +22,6 @@ if TYPE_CHECKING:
     )
     from trezor.protobuf import MessageType
     from trezor.wire import Context
-    from typing import Awaitable, Callable, Iterable, TypeVar
     from typing_extensions import Protocol
 
     from apps.common import coininfo

@@ -6,6 +6,7 @@ Currently writes all issues that have some Weight.
 import argparse
 import csv
 import os.path
+
 import requests
 
 token = None

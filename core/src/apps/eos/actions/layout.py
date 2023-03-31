@@ -1,10 +1,13 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_properties
-from typing import TYPE_CHECKING
 
 from ..helpers import eos_asset_to_string, eos_name_to_string
 
 if TYPE_CHECKING:
+    from typing import Iterable
+
     from trezor.messages import (
         EosActionBuyRam,
         EosActionBuyRamBytes,
@@ -24,7 +27,6 @@ if TYPE_CHECKING:
     )
     from trezor.ui.layouts import PropertyType
     from trezor.wire import Context
-    from typing import Iterable
 
 
 # Whether action is last - and should be HoldToConfirm

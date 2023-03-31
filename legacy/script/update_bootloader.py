@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import click
 import typing as t
 from hashlib import sha256
 from pathlib import Path
+
+import click
 
 LEGACY_ROOT = Path(__file__).parent.parent.resolve()
 

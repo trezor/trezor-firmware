@@ -1,5 +1,6 @@
-from trezor.wire import ProcessError
 from typing import TYPE_CHECKING
+
+from trezor.wire import ProcessError
 
 from .. import layout
 from ..helpers.paths import SCHEMA_MINT

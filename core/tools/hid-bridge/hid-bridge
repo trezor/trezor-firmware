@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import argparse
-import logger
 import select
+
+import logger
 import uhid
 from hid_interface import HIDInterface
 from udp_interface import UDPInterface

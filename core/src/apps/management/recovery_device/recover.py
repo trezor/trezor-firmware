@@ -1,7 +1,8 @@
+from typing import TYPE_CHECKING
+
 import storage.recovery as storage_recovery
 import storage.recovery_shares
 from trezor.crypto import slip39
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType

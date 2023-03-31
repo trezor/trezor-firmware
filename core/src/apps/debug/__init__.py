@@ -4,13 +4,14 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
+    from typing import TYPE_CHECKING
+
     import trezorui2
     from storage import debug as storage
     from trezor import log, loop, wire
     from trezor.enums import MessageType
     from trezor.messages import DebugLinkLayout, Success
     from trezor.ui import display
-    from typing import TYPE_CHECKING
 
     from apps import workflow_handlers
 

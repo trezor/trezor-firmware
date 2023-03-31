@@ -1,8 +1,9 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils
 from trezor.crypto import base58
 from trezor.crypto.base58 import blake256d_32
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 from . import scripts
 from .scripts import (  # noqa: F401

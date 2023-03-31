@@ -1,5 +1,6 @@
-from trezor.crypto.hashlib import sha256
 from typing import TYPE_CHECKING
+
+from trezor.crypto.hashlib import sha256
 
 from apps.common import coininfo
 

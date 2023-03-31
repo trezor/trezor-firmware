@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import click
 import re
 from pathlib import Path
+
+import click
 
 VERSION_RE = re.compile(r"^(\d+)[.](\d+)[.](\d+)$")
 HEADER_LINE_RE = re.compile(r"^#define ([A-Z_]+) \S+$")

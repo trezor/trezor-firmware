@@ -1,8 +1,8 @@
-from micropython import const
-
 import gc
-from trezor import utils
+from micropython import const
 from typing import TYPE_CHECKING
+
+from trezor import utils
 
 if TYPE_CHECKING:
     from typing import Sequence, TypeVar, overload

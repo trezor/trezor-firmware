@@ -1,17 +1,13 @@
-from common import *
-
-from trezor.messages import MultisigRedeemScriptType
-from trezor.messages import TxInput
-from trezor.messages import TxOutput
-from trezor.messages import HDNodeType
-from trezor.enums import OutputScriptType
 from trezor.crypto import bip39
+from trezor.enums import OutputScriptType
+from trezor.messages import HDNodeType, MultisigRedeemScriptType, TxInput, TxOutput
 
+from apps.bitcoin.scripts import output_derive_script, output_script_paytoopreturn
+from apps.bitcoin.sign_tx.tx_weight import *
 from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.common.paths import AlwaysMatchingSchema
-from apps.bitcoin.sign_tx.tx_weight import *
-from apps.bitcoin.scripts import output_derive_script, output_script_paytoopreturn
+from common import *
 
 
 class TestCalculateTxWeight(unittest.TestCase):

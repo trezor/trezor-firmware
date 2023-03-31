@@ -1,8 +1,9 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils
 from trezor.enums import InputScriptType
 from trezor.utils import BufferReader, empty_bytearray
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 from apps.common.readers import read_compact_size
 from apps.common.writers import write_compact_size
@@ -19,8 +20,9 @@ from .writers import (
 )
 
 if TYPE_CHECKING:
-    from trezor.messages import MultisigRedeemScriptType, TxInput
     from typing import Sequence
+
+    from trezor.messages import MultisigRedeemScriptType, TxInput
 
     from apps.common.coininfo import CoinInfo
 

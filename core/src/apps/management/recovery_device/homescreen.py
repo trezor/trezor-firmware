@@ -1,8 +1,9 @@
+from typing import TYPE_CHECKING
+
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 from trezor import wire
 from trezor.messages import Success
-from typing import TYPE_CHECKING
 
 from .. import backup_types
 from . import layout, recover

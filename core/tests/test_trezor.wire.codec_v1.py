@@ -1,11 +1,12 @@
-from common import *
-from ubinascii import unhexlify
 import ustruct
+from ubinascii import unhexlify
 
 from trezor import io
 from trezor.loop import wait
 from trezor.utils import chunks
 from trezor.wire import codec_v1
+
+from common import *
 
 
 class MockHID:

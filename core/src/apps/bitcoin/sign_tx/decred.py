@@ -1,10 +1,10 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import blake256
 from trezor.enums import InputScriptType
 from trezor.utils import HashWriter
 from trezor.wire import DataError, ProcessError
-from typing import TYPE_CHECKING
 
 from apps.bitcoin.sign_tx.tx_weight import TxWeightCalculator
 from apps.common.writers import write_compact_size
@@ -26,9 +26,10 @@ OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
 )
 
 if TYPE_CHECKING:
+    from typing import Sequence
+
     from trezor.crypto import bip32
     from trezor.messages import PrevInput, PrevOutput, PrevTx, SignTx, TxInput, TxOutput
-    from typing import Sequence
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain

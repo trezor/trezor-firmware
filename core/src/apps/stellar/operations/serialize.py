@@ -1,6 +1,7 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import StellarAssetType
 from trezor.wire import DataError, ProcessError
-from typing import TYPE_CHECKING
 
 from ..writers import (
     write_bool,

@@ -1,7 +1,8 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, confirm_homescreen
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.enums import SafetyCheckLevel

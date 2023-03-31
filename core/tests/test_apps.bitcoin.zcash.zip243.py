@@ -1,12 +1,10 @@
-from common import *
 from trezor.enums import InputScriptType
-from trezor.messages import SignTx
-from trezor.messages import TxInput
-from trezor.messages import PrevOutput
+from trezor.messages import PrevOutput, SignTx, TxInput
 
-from apps.common import coins
 from apps.bitcoin.common import SigHashType
 from apps.bitcoin.writers import get_tx_hash
+from apps.common import coins
+from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.bitcoin.sign_tx.zcash_v4 import Zip243SigHasher

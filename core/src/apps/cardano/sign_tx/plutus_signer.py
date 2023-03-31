@@ -1,5 +1,6 @@
-from trezor import wire
 from typing import TYPE_CHECKING
+
+from trezor import wire
 
 from .. import layout
 from .signer import Signer

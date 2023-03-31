@@ -1,5 +1,4 @@
 from micropython import const
-
 from typing import TYPE_CHECKING
 
 from .common import BIP32_WALLET_DEPTH

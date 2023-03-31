@@ -1,5 +1,6 @@
-import trezorproto
 from typing import TYPE_CHECKING
+
+import trezorproto
 
 decode = trezorproto.decode
 encode = trezorproto.encode

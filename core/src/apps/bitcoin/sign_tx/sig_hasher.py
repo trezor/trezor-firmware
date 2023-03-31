@@ -9,8 +9,9 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
-    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
     from typing import Protocol, Sequence
+
+    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
 
     from apps.common import coininfo
 

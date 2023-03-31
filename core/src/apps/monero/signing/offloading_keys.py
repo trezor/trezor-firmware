@@ -1,5 +1,4 @@
 from micropython import const
-
 from typing import TYPE_CHECKING
 
 from apps.monero.xmr.crypto_helpers import compute_hmac

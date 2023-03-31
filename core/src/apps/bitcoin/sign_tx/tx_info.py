@@ -1,13 +1,13 @@
 from micropython import const
-
 from typing import TYPE_CHECKING
 
 from .. import common, writers
 
 if TYPE_CHECKING:
+    from typing import Protocol
+
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
     from trezor.utils import HashWriter
-    from typing import Protocol
 
     from apps.common.coininfo import CoinInfo
 

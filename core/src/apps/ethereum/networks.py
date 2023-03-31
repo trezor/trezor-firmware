@@ -5,8 +5,9 @@
 # NOTE: using positional arguments saves 4400 bytes in flash size,
 # returning tuples instead of classes saved 800 bytes
 
-from trezor.messages import EthereumNetworkInfo
 from typing import TYPE_CHECKING
+
+from trezor.messages import EthereumNetworkInfo
 
 if TYPE_CHECKING:
     from typing import Iterator

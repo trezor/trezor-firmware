@@ -1,6 +1,6 @@
 import micropython
-
 import sys
+
 from uio import open
 from uos import getenv
 

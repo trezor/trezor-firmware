@@ -1,8 +1,9 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
-    from apps.eos.actions import _check_action
     from trezor.messages import EosTxActionAck
+
+    from apps.eos.actions import _check_action
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

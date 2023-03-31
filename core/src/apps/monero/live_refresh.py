@@ -24,6 +24,7 @@ async def live_refresh(
     ctx: Context, msg: MoneroLiveRefreshStartRequest, keychain: Keychain
 ) -> MoneroLiveRefreshFinalAck:
     import gc
+
     from trezor.enums import MessageType
     from trezor.messages import MoneroLiveRefreshFinalAck, MoneroLiveRefreshStepRequest
 

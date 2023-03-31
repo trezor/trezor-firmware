@@ -37,12 +37,13 @@ Usage:
 - specifying FILES_TO_MODIFY
 - call the script with possible flags - see `python unify_test_files.py --help`
 """
-import click
 import json
 import os
 import re
 from pathlib import Path
 from typing import List
+
+import click
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent

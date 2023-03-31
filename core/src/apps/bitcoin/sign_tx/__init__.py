@@ -1,5 +1,6 @@
-from trezor import utils
 from typing import TYPE_CHECKING
+
+from trezor import utils
 
 from ..keychain import with_keychain
 
@@ -9,6 +10,8 @@ if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash_v4
 
 if TYPE_CHECKING:
+    from typing import Protocol
+
     from trezor.messages import (
         SignTx,
         TxAckInput,
@@ -20,7 +23,6 @@ if TYPE_CHECKING:
         TxRequest,
     )
     from trezor.wire import Context
-    from typing import Protocol
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain

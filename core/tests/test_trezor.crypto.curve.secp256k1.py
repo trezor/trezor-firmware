@@ -1,7 +1,7 @@
-from common import *
-
 from trezor.crypto import random
 from trezor.crypto.curve import secp256k1
+
+from common import *
 
 
 class TestCryptoSecp256k1(unittest.TestCase):

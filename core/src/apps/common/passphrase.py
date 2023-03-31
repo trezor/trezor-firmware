@@ -1,8 +1,8 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.wire import Context

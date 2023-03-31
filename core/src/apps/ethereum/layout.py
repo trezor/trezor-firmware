@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_plural
@@ -8,11 +10,12 @@ from trezor.ui.layouts import (
     confirm_total,
     should_show_more,
 )
-from typing import TYPE_CHECKING
 
 from .helpers import decode_typed_data
 
 if TYPE_CHECKING:
+    from typing import Awaitable, Iterable
+
     from trezor.messages import (
         EthereumFieldType,
         EthereumNetworkInfo,
@@ -20,7 +23,6 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
     )
     from trezor.wire import Context
-    from typing import Awaitable, Iterable
 
 
 def require_confirm_tx(

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (  # noqa: F401
     confirm_action,
@@ -6,7 +8,6 @@ from trezor.ui.layouts import (  # noqa: F401
     monero_live_refresh_progress,
     monero_transaction_progress_inner,
 )
-from typing import TYPE_CHECKING
 
 DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-import click
 import json
+
+import click
 
 from trezorlib import firmware
 

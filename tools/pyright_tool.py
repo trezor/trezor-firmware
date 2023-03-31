@@ -38,7 +38,6 @@ Simplified program flow (as it happens in PyrightTool.run()):
 
 from __future__ import annotations
 
-import click
 import io
 import json
 import re
@@ -50,6 +49,8 @@ from pathlib import Path
 from typing import Dict  # for python38 support, must be used in type aliases
 from typing import List  # for python38 support, must be used in type aliases
 from typing import TYPE_CHECKING, Any, Iterator
+
+import click
 from typing_extensions import (  # for python37 support, is not present in typing there
     Final,
     TypedDict,

@@ -1,10 +1,12 @@
-from trezor.enums import CardanoNativeScriptType
-from trezor.wire import ProcessError
 from typing import TYPE_CHECKING
 
+from trezor.enums import CardanoNativeScriptType
+from trezor.wire import ProcessError
+
 if TYPE_CHECKING:
-    from trezor import messages
     from typing import Any
+
+    from trezor import messages
 
     from apps.common.cbor import CborSequence
 

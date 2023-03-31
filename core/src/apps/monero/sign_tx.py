@@ -16,6 +16,7 @@ async def sign_tx(
     ctx: Context, received_msg, keychain: Keychain
 ) -> MoneroTransactionFinalAck:
     import gc
+
     from trezor import log, utils
 
     from apps.monero.signing.state import State

@@ -1,8 +1,8 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.crypto import crc
 from trezor.wire import ProcessError
-from typing import TYPE_CHECKING
 
 from apps.common import cbor
 

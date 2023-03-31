@@ -1,14 +1,16 @@
+from typing import TYPE_CHECKING
+
 import trezorui2
 from trezor import io, loop, ui
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
-from typing import TYPE_CHECKING
 
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
-    from trezor.wire import Context, GenericContext
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
+
+    from trezor.wire import Context, GenericContext
 
     from ..common import ExceptionType, ProgressLayout, PropertyType
 

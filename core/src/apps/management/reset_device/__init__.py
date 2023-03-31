@@ -1,9 +1,10 @@
+from typing import TYPE_CHECKING
+
 import storage
 import storage.device as storage_device
 from trezor.crypto import slip39
 from trezor.enums import BackupType
 from trezor.wire import ProcessError
-from typing import TYPE_CHECKING
 
 from . import layout
 

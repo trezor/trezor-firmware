@@ -1,6 +1,7 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_address, confirm_metadata, confirm_properties
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.wire import Context

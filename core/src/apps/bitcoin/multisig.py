@@ -1,5 +1,6 @@
-from trezor.wire import DataError
 from typing import TYPE_CHECKING
+
+from trezor.wire import DataError
 
 if TYPE_CHECKING:
     from trezor.messages import HDNodeType, MultisigRedeemScriptType

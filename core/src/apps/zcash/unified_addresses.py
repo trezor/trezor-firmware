@@ -4,8 +4,9 @@ unified addresses according to the ZIP-316.
 see: https://zips.z.cash/zip-0316
 """
 
-from trezor.crypto.bech32 import Encoding, convertbits
 from typing import TYPE_CHECKING
+
+from trezor.crypto.bech32 import Encoding, convertbits
 
 if TYPE_CHECKING:
     from enum import IntEnum

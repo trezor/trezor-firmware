@@ -1,13 +1,15 @@
+from typing import TYPE_CHECKING
+
 import storage.cache as storage_cache
 import trezorui2
 from trezor import ui
-from typing import TYPE_CHECKING
 
 from . import RustLayout
 
 if TYPE_CHECKING:
-    from trezor import loop
     from typing import Any, Tuple
+
+    from trezor import loop
 
 
 class HomescreenBase(RustLayout):

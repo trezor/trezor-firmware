@@ -1,6 +1,6 @@
-from common import *
-
 from trezor import strings
+
+from common import *
 
 
 class TestStrings(unittest.TestCase):

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+
 from fill_t1_fw_signatures import Signatures
 
 from trezorlib.btc import get_public_node, sign_message

@@ -1,8 +1,8 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.crypto import hashlib
 from trezor.enums import CardanoAddressType, CardanoCVoteRegistrationFormat
-from typing import TYPE_CHECKING
 
 from apps.common import cbor
 

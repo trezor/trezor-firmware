@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_warning
 from trezor.ui.layouts.recovery import (  # noqa: F401
@@ -5,14 +7,14 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
     show_group_share_success,
     show_remaining_shares,
 )
-from typing import TYPE_CHECKING
 
 from .. import backup_types
 
 if TYPE_CHECKING:
+    from typing import Callable
+
     from trezor.enums import BackupType
     from trezor.wire import GenericContext
-    from typing import Callable
 
 
 async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:

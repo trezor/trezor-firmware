@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import click
 import datetime
 import re
 import subprocess
 from pathlib import Path
+
+import click
 
 LINK_RE = re.compile(r"\[#(\d+)\]")
 ISSUE_URL = "https://github.com/trezor/trezor-firmware/pull/{issue}"

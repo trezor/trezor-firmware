@@ -1,7 +1,6 @@
-from common import *
-
 from apps.common import coininfo
 from apps.zcash import unified_addresses
+from common import *
 
 P2PKH = unified_addresses.Typecode.P2PKH
 P2SH = unified_addresses.Typecode.P2SH

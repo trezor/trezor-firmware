@@ -1,7 +1,8 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import ButtonRequestType
 from trezor.messages import CosiCommitment, CosiSign, CosiSignature
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 from apps.common.paths import PathSchema, unharden
 

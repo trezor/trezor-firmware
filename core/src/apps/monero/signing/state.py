@@ -137,6 +137,7 @@ class State:
 
     def mem_trace(self, x=None, collect: bool = False) -> None:
         import gc
+
         from trezor import log
 
         if __debug__:

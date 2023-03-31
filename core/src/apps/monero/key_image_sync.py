@@ -1,5 +1,6 @@
-from trezor.wire import DataError
 from typing import TYPE_CHECKING
+
+from trezor.wire import DataError
 
 from apps.common.keychain import auto_keychain
 from apps.monero import layout
@@ -25,6 +26,7 @@ async def key_image_sync(
     ctx: Context, msg: MoneroKeyImageExportInitRequest, keychain: Keychain
 ) -> MoneroKeyImageSyncFinalAck:
     import gc
+
     from trezor.messages import (
         MoneroKeyImageSyncFinalAck,
         MoneroKeyImageSyncFinalRequest,

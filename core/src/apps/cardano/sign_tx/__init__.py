@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING
 from .. import seed
 
 if TYPE_CHECKING:
+    from typing import Type
+
     from trezor.messages import CardanoSignTxFinished, CardanoSignTxInit
     from trezor.wire import Context
-    from typing import Type
 
 
 @seed.with_keychain

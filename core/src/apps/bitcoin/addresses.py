@@ -1,8 +1,9 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import base58
 from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
 from trezor.wire import ProcessError
-from typing import TYPE_CHECKING
 
 from apps.common import address_type
 

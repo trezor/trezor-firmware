@@ -9,7 +9,6 @@
 # transaction type and the fields that are required for it.
 
 from micropython import const
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

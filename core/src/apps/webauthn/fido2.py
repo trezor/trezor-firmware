@@ -2,13 +2,13 @@ import uctypes
 import ustruct
 import utime
 from micropython import const
+from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 from trezor import config, io, log, loop, utils, wire, workflow
 from trezor.crypto import hashlib
 from trezor.crypto.curve import nist256p1
 from trezor.ui.layouts import show_popup
-from typing import TYPE_CHECKING
 
 from apps.base import set_homescreen
 from apps.common import cbor

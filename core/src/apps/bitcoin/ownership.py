@@ -1,10 +1,10 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import utils
 from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 from apps.bitcoin.writers import write_bytes_prefixed
 from apps.common.readers import read_compact_size

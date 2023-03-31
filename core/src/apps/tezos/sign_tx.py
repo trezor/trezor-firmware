@@ -1,6 +1,7 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import TezosContractType
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 from apps.common.keychain import with_slip44_keychain
 from apps.common.writers import write_bytes_fixed, write_uint8, write_uint32_be

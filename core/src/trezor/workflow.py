@@ -1,8 +1,8 @@
 import utime
+from typing import TYPE_CHECKING
 
 import storage.cache
 from trezor import log, loop
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable

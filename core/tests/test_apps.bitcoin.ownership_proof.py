@@ -1,15 +1,21 @@
-from common import unhexlify, unittest
 from trezor.crypto import bip39
 from trezor.enums import InputScriptType
-from trezor.messages import MultisigRedeemScriptType
-from trezor.messages import HDNodeType
+from trezor.messages import HDNodeType, MultisigRedeemScriptType
 
+from apps.bitcoin import ownership, scripts
+from apps.bitcoin.addresses import (
+    _address_multisig_p2sh,
+    _address_multisig_p2wsh,
+    _address_multisig_p2wsh_in_p2sh,
+    _address_p2tr,
+    address_p2wpkh,
+    address_p2wpkh_in_p2sh,
+)
+from apps.bitcoin.multisig import multisig_get_pubkeys
 from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.common.paths import HARDENED, AlwaysMatchingSchema
-from apps.bitcoin import ownership, scripts
-from apps.bitcoin.addresses import _address_p2tr, address_p2wpkh, address_p2wpkh_in_p2sh, _address_multisig_p2wsh, _address_multisig_p2wsh_in_p2sh, _address_multisig_p2sh
-from apps.bitcoin.multisig import multisig_get_pubkeys
+from common import unhexlify, unittest
 
 
 class TestOwnershipProof(unittest.TestCase):

@@ -1,7 +1,8 @@
+from typing import Iterable
+
 import storage.cache as storage_cache
 from trezor import protobuf
 from trezor.enums import MessageType
-from typing import Iterable
 
 WIRE_TYPES: dict[int, tuple[int, ...]] = {
     MessageType.AuthorizeCoinJoin: (MessageType.SignTx, MessageType.GetOwnershipProof),

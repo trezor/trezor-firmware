@@ -1,10 +1,10 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.crypto.curve import bip340, secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
 from trezor.wire import DataError, ProcessError
-from typing import TYPE_CHECKING
 
 from apps.common import safety_checks
 

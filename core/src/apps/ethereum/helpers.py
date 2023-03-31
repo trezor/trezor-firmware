@@ -1,6 +1,5 @@
-from ubinascii import hexlify
-
 from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
 from . import networks
 

@@ -15,7 +15,6 @@ in `MoneroGetTxKeyRequest.tx_enc_keys` to be decrypted and yet again encrypted
 using the view key, which the host possess.
 """
 from micropython import const
-
 from typing import TYPE_CHECKING
 
 from apps.common.keychain import auto_keychain

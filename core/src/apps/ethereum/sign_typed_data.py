@@ -1,6 +1,7 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import EthereumDataType
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 from .helpers import get_type_name
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path

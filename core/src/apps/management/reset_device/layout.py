@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_success
@@ -10,11 +11,11 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_prompt_threshold,
     slip39_show_checklist,
 )
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.wire import GenericContext
     from typing import Sequence
+
+    from trezor.wire import GenericContext
 
 if __debug__:
     from apps import debug

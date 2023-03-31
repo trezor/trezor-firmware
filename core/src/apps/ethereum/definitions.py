@@ -1,9 +1,11 @@
+from typing import TYPE_CHECKING
+
 from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 from trezor.wire import DataError
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import TypeVar
+
     from typing_extensions import Self
 
     DefType = TypeVar("DefType", EthereumNetworkInfo, EthereumTokenInfo)

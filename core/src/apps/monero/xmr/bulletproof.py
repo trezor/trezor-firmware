@@ -1,8 +1,8 @@
-from micropython import const
-
 import gc
-from trezor import utils
+from micropython import const
 from typing import TYPE_CHECKING
+
+from trezor import utils
 
 from apps.monero.xmr import crypto, crypto_helpers
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into

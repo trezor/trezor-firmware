@@ -32,10 +32,10 @@ See https://github.com/satoshilabs/slips/blob/master/slip-0039.md.
 
 from micropython import const
 from trezorcrypto import shamir, slip39
+from typing import TYPE_CHECKING
 
 from trezor.crypto import random
 from trezor.errors import MnemonicError
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable

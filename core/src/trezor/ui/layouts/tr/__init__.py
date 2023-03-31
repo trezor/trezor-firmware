@@ -1,8 +1,9 @@
+from typing import TYPE_CHECKING, Sequence
+
 import trezorui2
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 from trezor.utils import DISABLE_ANIMATION
-from typing import TYPE_CHECKING, Sequence
 
 from ..common import button_request, interact
 

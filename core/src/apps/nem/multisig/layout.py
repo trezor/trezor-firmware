@@ -1,5 +1,6 @@
-from trezor.crypto import nem
 from typing import TYPE_CHECKING
+
+from trezor.crypto import nem
 
 if TYPE_CHECKING:
     from trezor.messages import (

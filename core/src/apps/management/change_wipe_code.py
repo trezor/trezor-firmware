@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Awaitable
+
     from trezor.messages import ChangeWipeCode, Success
     from trezor.wire import Context
-    from typing import Awaitable
 
 
 async def change_wipe_code(ctx: Context, msg: ChangeWipeCode) -> Success:

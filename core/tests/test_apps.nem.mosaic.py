@@ -2,6 +2,7 @@ from common import *
 
 if not utils.BITCOIN_ONLY:
     from trezor.messages import NEMMosaic
+
     from apps.nem.mosaic.helpers import get_mosaic_definition
     from apps.nem.transfer import *
     from apps.nem.transfer.serialize import *
