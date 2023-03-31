@@ -37,10 +37,10 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-    'embed/src/display.c',
-    'embed/src/colors.c',
-    'embed/src/fonts/fonts.c',
-    'embed/src/fonts/font_bitmap.c',
+    'embed/lib/display.c',
+    'embed/lib/colors.c',
+    'embed/lib/fonts/fonts.c',
+    'embed/lib/fonts/font_bitmap.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -141,7 +141,7 @@ env.Replace(
     LINKFLAGS='-T embed/reflash/memory.ld -Wl,--gc-sections -Wl,-Map=build/reflash/reflash.map -Wl,--warn-common',
     CPPPATH=[
         'embed/reflash',
-        'embed/src',
+        'embed/lib',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',

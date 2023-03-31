@@ -170,11 +170,11 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-    'embed/src/buffers.c',
-    'embed/src/colors.c',
-    'embed/src/display.c',
-    'embed/src/fonts/fonts.c',
-    'embed/src/fonts/font_bitmap.c',
+    'embed/lib/buffers.c',
+    'embed/lib/colors.c',
+    'embed/lib/display.c',
+    'embed/lib/fonts/fonts.c',
+    'embed/lib/fonts/font_bitmap.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -442,7 +442,7 @@ env.Replace(
     CPPPATH=[
         '.',
         'embed/rust',
-        'embed/src',
+        'embed/lib',
         'embed/unix',
         'embed/extmod/modtrezorui',
         'vendor/micropython',

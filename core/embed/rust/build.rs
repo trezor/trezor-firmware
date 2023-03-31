@@ -75,7 +75,7 @@ fn prepare_bindings() -> bindgen::Builder {
         "-I../../../storage",
         "-I../../vendor/micropython",
         "-I../../vendor/micropython/lib/uzlib",
-        "-I../src",
+        "-I../lib",
         format!("-DTREZOR_MODEL_{}", model()).as_str(),
         format!("-DTREZOR_BOARD=\"{}\"", board()).as_str(),
     ]);

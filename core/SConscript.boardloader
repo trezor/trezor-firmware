@@ -53,10 +53,10 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-    'embed/src/display.c',
-    'embed/src/colors.c',
-    'embed/src/fonts/fonts.c',
-    'embed/src/fonts/font_bitmap.c',
+    'embed/lib/display.c',
+    'embed/lib/colors.c',
+    'embed/lib/fonts/fonts.c',
+    'embed/lib/fonts/font_bitmap.c',
 ]
 
 SOURCE_STMHAL = [
@@ -141,7 +141,7 @@ env.Replace(
     LINKFLAGS='-T embed/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage',
     CPPPATH=[
         'embed/boardloader',
-        'embed/src',
+        'embed/lib',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/stmhal',
