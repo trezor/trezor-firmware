@@ -625,6 +625,17 @@ where
     }
 }
 
+impl<T> Paginate for Checklist<T>
+where
+    T: ParagraphSource,
+{
+    fn page_count(&mut self) -> usize {
+        1
+    }
+
+    fn change_page(&mut self, _to_page: usize) {}
+}
+
 #[cfg(feature = "ui_debug")]
 impl<T: ParagraphSource> crate::trace::Trace for Checklist<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

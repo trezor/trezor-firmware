@@ -20,7 +20,7 @@ use super::ffi;
 /// The `off` field represents offset from the `ptr` and allows us to do
 /// substring slices while keeping the head pointer as required by GC.
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct StrBuffer {
     ptr: *const u8,
     len: u16,

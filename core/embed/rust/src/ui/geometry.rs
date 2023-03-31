@@ -239,6 +239,21 @@ impl Rect {
         }
     }
 
+    pub const fn from_top_right_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x - size.x, p0.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
+    pub const fn from_bottom_left_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x, p0.y - size.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
+    pub const fn from_bottom_right_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x - size.x, p0.y - size.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
     pub const fn from_center_and_size(p: Point, size: Offset) -> Self {
         let x0 = p.x - size.x / 2;
         let y0 = p.y - size.y / 2;
@@ -304,6 +319,14 @@ impl Rect {
         self.bottom_left().center(self.bottom_right())
     }
 
+    pub const fn left_center(&self) -> Point {
+        self.bottom_left().center(self.top_left())
+    }
+
+    pub const fn right_center(&self) -> Point {
+        self.bottom_right().center(self.top_right())
+    }
+
     /// Whether a `Point` is inside the `Rect`.
     pub const fn contains(&self, point: Point) -> bool {
         point.x >= self.x0 && point.x < self.x1 && point.y >= self.y0 && point.y < self.y1
@@ -364,6 +387,26 @@ impl Rect {
         }
     }
 
+    /// Make the `Rect` wider to the left side.
+    pub const fn extend_left(&self, width: i16) -> Self {
+        Self {
+            x0: self.x0 - width,
+            y0: self.y0,
+            x1: self.x1,
+            y1: self.y1,
+        }
+    }
+
+    /// Make the `Rect` wider to the right side.
+    pub const fn extend_right(&self, width: i16) -> Self {
+        Self {
+            x0: self.x0,
+            y0: self.y0,
+            x1: self.x1 + width,
+            y1: self.y1,
+        }
+    }
+
     /// Split `Rect` into top and bottom, given the top one's `height`.
     pub const fn split_top(self, height: i16) -> (Self, Self) {
         let height = clamp(height, 0, self.height());
@@ -402,6 +445,16 @@ impl Rect {
     /// Split `Rect` into left and right, given the right one's `width`.
     pub const fn split_right(self, width: i16) -> (Self, Self) {
         self.split_left(self.width() - width)
+    }
+
+    /// Split `Rect` into left, center and right, given the center one's
+    /// `width`. Center element is symmetric, left and right have the same
+    /// size.
+    pub const fn split_center(self, width: i16) -> (Self, Self, Self) {
+        let left_right_width = (self.width() - width) / 2;
+        let (left, center_right) = self.split_left(left_right_width);
+        let (center, right) = center_right.split_left(width);
+        (left, center, right)
     }
 
     pub const fn clamp(self, limit: Rect) -> Self {

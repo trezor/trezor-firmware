@@ -16,6 +16,9 @@ use super::{
 };
 use crate::{micropython::buffer::StrBuffer, time::Duration};
 
+#[cfg(feature = "model_tr")]
+use super::model_tr::component::ButtonDetails;
+
 // NOTE: not defining a common trait, like
 // Debug {fn print(&self);}, so that the trait does
 // not need to be imported when using the
@@ -94,6 +97,33 @@ impl Color {
 impl Font {
     pub fn print(&self) {
         println!("Font:: ", "text_height: ", inttostr!(self.text_height()));
+    }
+}
+
+#[cfg(feature = "model_tr")]
+impl ButtonDetails {
+    pub fn print(&self) {
+        let text: String<20> = if let Some(text) = self.text {
+            text.as_ref().into()
+        } else {
+            "None".into()
+        };
+        let force_width: String<20> = if let Some(force_width) = self.force_width {
+            inttostr!(force_width).into()
+        } else {
+            "None".into()
+        };
+        println!(
+            "ButtonDetails:: ",
+            "text: ",
+            text.as_ref(),
+            ", with_outline: ",
+            booltostr!(self.with_outline),
+            ", with_arms: ",
+            booltostr!(self.with_arms),
+            ", force_width: ",
+            force_width.as_ref()
+        );
     }
 }
 

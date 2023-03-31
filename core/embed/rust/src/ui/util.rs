@@ -142,6 +142,13 @@ pub fn icon_text_center(
     );
 }
 
+/// Convert char to a String of chosen length.
+pub fn char_to_string<const L: usize>(ch: char) -> String<L> {
+    let mut s = String::new();
+    unwrap!(s.push(ch));
+    s
+}
+
 /// Returns text to be fit on one line of a given length.
 /// When the text is too long to fit, it is truncated with ellipsis
 /// on the left side.

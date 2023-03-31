@@ -1,5 +1,8 @@
 use heapless::String;
 
+#[cfg(feature = "model_tr")]
+use crate::ui::model_tr::component::ButtonPos;
+
 /// Visitor passed into `Trace` types.
 pub trait Tracer {
     fn int(&mut self, i: i64);
@@ -27,6 +30,18 @@ pub const EMPTY_BTN: &str = "---";
 /// Value that can describe own structure and data using the `Tracer` interface.
 pub trait Trace {
     fn trace(&self, t: &mut dyn Tracer);
+    /// Describes what happens when a certain button is triggered.
+    #[cfg(feature = "model_tr")]
+    fn get_btn_action(&self, _pos: ButtonPos) -> String<25> {
+        "Default".into()
+    }
+    /// Report actions for all three buttons in easy-to-parse format.
+    #[cfg(feature = "model_tr")]
+    fn report_btn_actions(&self, t: &mut dyn Tracer) {
+        t.kw_pair("left_action", &self.get_btn_action(ButtonPos::Left));
+        t.kw_pair("middle_action", &self.get_btn_action(ButtonPos::Middle));
+        t.kw_pair("right_action", &self.get_btn_action(ButtonPos::Right));
+    }
 }
 
 impl Trace for &[u8] {

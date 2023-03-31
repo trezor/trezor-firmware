@@ -5,6 +5,8 @@ pub mod loader;
 pub mod tjpgd;
 pub mod toif;
 
+use heapless::String;
+
 use super::{
     constant,
     geometry::{Offset, Point, Rect},
@@ -126,16 +128,16 @@ pub fn rect_fill_corners(r: Rect, fg_color: Color) {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct TextOverlay<'a> {
+pub struct TextOverlay<T> {
     area: Rect,
-    text: &'a str,
+    text: T,
     font: Font,
     max_height: i16,
     baseline: i16,
 }
 
-impl<'a> TextOverlay<'a> {
-    pub fn new(text: &'a str, font: Font) -> Self {
+impl<T: AsRef<str>> TextOverlay<T> {
+    pub fn new(text: T, font: Font) -> Self {
         let area = Rect::zero();
 
         Self {
@@ -147,8 +149,17 @@ impl<'a> TextOverlay<'a> {
         }
     }
 
+    pub fn set_text(&mut self, text: T) {
+        self.text = text;
+    }
+
+    pub fn get_text(&self) -> &T {
+        &self.text
+    }
+
+    // baseline relative to the underlying render area
     pub fn place(&mut self, baseline: Point) {
-        let text_width = self.font.text_width(self.text);
+        let text_width = self.font.text_width(self.text.as_ref());
         let text_height = self.font.text_height();
 
         let text_area_start = baseline + Offset::new(-(text_width / 2), -text_height);
@@ -167,7 +178,12 @@ impl<'a> TextOverlay<'a> {
 
         let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
-        for g in self.text.bytes().filter_map(|c| self.font.get_glyph(c)) {
+        for g in self
+            .text
+            .as_ref()
+            .bytes()
+            .filter_map(|c| self.font.get_glyph(c))
+        {
             let top = self.max_height - self.baseline - g.bearing_y;
             let char_area = Rect::new(
                 Point::new(tot_adv + g.bearing_x, top),
@@ -756,9 +772,9 @@ fn rect_rounded2_get_pixel(
 /// Optionally draws a text inside the rectangle and adjusts its color to match
 /// the fill. The coordinates of the text are specified in the TextOverlay
 /// struct.
-pub fn bar_with_text_and_fill(
+pub fn bar_with_text_and_fill<T: AsRef<str>>(
     area: Rect,
-    overlay: Option<TextOverlay>,
+    overlay: Option<&TextOverlay<T>>,
     fg_color: Color,
     bg_color: Color,
     fill_from: i16,
@@ -834,6 +850,59 @@ pub fn dotted_line(start: Point, width: i16, color: Color) {
 /// Paints a pixel with a specific color on a given point.
 pub fn paint_point(point: &Point, color: Color) {
     display::bar(point.x, point.y, 1, 1, color.into());
+}
+
+/// Draws longer multiline texts inside an area.
+/// Does not add any characters on the line boundaries.
+///
+/// If it fits, returns the rest of the area.
+/// If it does not fit, returns `None`.
+pub fn text_multiline(
+    area: Rect,
+    text: &str,
+    font: Font,
+    fg_color: Color,
+    bg_color: Color,
+) -> Option<Rect> {
+    let line_height = font.line_height();
+    let characters_overall = text.chars().count();
+    let mut taken_from_top = 0;
+    let mut characters_drawn = 0;
+    'lines: loop {
+        let baseline = area.top_left() + Offset::y(line_height + taken_from_top);
+        if !area.contains(baseline) {
+            // The whole area was consumed.
+            return None;
+        }
+        let mut line_text: String<50> = String::new();
+        'characters: loop {
+            if let Some(character) = text.chars().nth(characters_drawn) {
+                characters_drawn += 1;
+                if character == '\n' {
+                    // The line is forced to end.
+                    break 'characters;
+                }
+                unwrap!(line_text.push(character));
+            } else {
+                // No more characters to draw.
+                break 'characters;
+            }
+            if font.text_width(&line_text) > area.width() {
+                // Cannot fit on the line anymore.
+                line_text.pop();
+                characters_drawn -= 1;
+                break 'characters;
+            }
+        }
+        text_left(baseline, &line_text, font, fg_color, bg_color);
+        taken_from_top += line_height;
+        if characters_drawn == characters_overall {
+            // No more lines to draw.
+            break 'lines;
+        }
+    }
+    // Some of the area was unused and is free to draw some further text.
+    Some(area.split_top(taken_from_top).1)
 }
 
 /// Display text left-aligned to a certain Point
