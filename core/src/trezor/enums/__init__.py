@@ -455,6 +455,11 @@ if TYPE_CHECKING:
         YES = 1
         INFO = 2
 
+    class DebugPhysicalButton(IntEnum):
+        LEFT_BTN = 0
+        MIDDLE_BTN = 1
+        RIGHT_BTN = 2
+
     class EthereumDefinitionType(IntEnum):
         NETWORK = 0
         TOKEN = 1
