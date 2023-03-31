@@ -1,6 +1,7 @@
 from typing import *
 CONFIRMED: object
 CANCELLED: object
+INFO: object
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -12,9 +13,9 @@ def disable_animation(disable: bool) -> None:
 def confirm_action(
     *,
     title: str,
-    action: str | None = None,
-    description: str | None = None,
-    verb: str | None = None,
+    action: str | None,
+    description: str | None,
+    verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,  # unused on TR
@@ -24,13 +25,338 @@ def confirm_action(
 
 
 # rust/src/ui/model_tr/layout.rs
-def confirm_text(
+def confirm_blob(
     *,
     title: str,
-    data: str,
+    data: str | bytes,
     description: str | None,
+    extra: str | None,
+    verb_cancel: str | None = None,
+    hold: bool = False,
 ) -> object:
-    """Confirm text."""
+    """Confirm byte sequence data."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_address(
+    *,
+    title: str,
+    data: str | bytes,
+    description: str | None,  # unused on TR
+    extra: str | None,  # unused on TR
+) -> object:
+    """Confirm address."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_properties(
+    *,
+    title: str,
+    items: list[tuple[str | None, str | bytes | None, bool]],
+    hold: bool = False,
+) -> object:
+    """Confirm list of key-value pairs. The third component in the tuple should be True if
+    the value is to be rendered as binary with monospace font, False otherwise.
+    This only concerns the text style, you need to decode the value to UTF-8 in python."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_reset_device(
+    *,
+    title: str,
+    button: str,
+) -> object:
+    """Confirm TOS before device setup."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_address_details(
+    *,
+    address: str,
+    case_sensitive: bool,
+    account: str | None,
+    path: str | None,
+    xpubs: list[tuple[str, str]],
+) -> object:
+    """Show address details - QR code, account, path, cosigner xpubs."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_value(
+    *,
+    title: str,
+    description: str,
+    value: str,
+    verb: str | None = None,
+    hold: bool = False,
+) -> object:
+    """Confirm value."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_joint_total(
+    *,
+    spending_amount: str,
+    total_amount: str,
+) -> object:
+    """Confirm total if there are external inputs."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_modify_output(
+    *,
+    address: str,
+    sign: int,
+    amount_change: str,
+    amount_new: str,
+) -> object:
+    """Decrease or increase amount for given address."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_output(
+    *,
+    address: str,
+    amount: str,
+    address_title: str,
+    amount_title: str,
+) -> object:
+    """Confirm output."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_total(
+    *,
+    total_amount: str,
+    fee_amount: str,
+    fee_rate_amount: str | None = None,
+    total_label: str,
+    fee_label: str,
+) -> object:
+    """Confirm summary of a transaction."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def tutorial() -> object:
+    """Show user how to interact with the device."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_modify_fee(
+    *,
+    sign: int,
+    user_fee_change: str,
+    total_fee_new: str,
+    fee_rate_amount: str | None,
+) -> object:
+    """Decrease or increase transaction fee."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_fido(
+    *,
+    title: str,
+    app_name: str,
+    icon_name: str | None,  # unused on TR
+    accounts: list[str | None],
+) -> int | object:
+    """FIDO confirmation.
+    Returns page index in case of confirmation and CANCELLED otherwise.
+    """
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_info(
+    *,
+    title: str,
+    description: str = "",
+    time_ms: int = 0,
+) -> object:
+    """Info modal."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_mismatch() -> object:
+    """Warning modal, receiving address mismatch."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_with_info(
+    *,
+    title: str,
+    button: str,  # unused on TR
+    info_button: str,  # unused on TR
+    items: Iterable[Tuple[int, str]],
+) -> object:
+    """Confirm given items but with third button. Always single page
+    without scrolling."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_coinjoin(
+    *,
+    max_rounds: str,
+    max_feerate: str,
+) -> object:
+    """Confirm coinjoin authorization."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_pin(
+    *,
+    prompt: str,
+    subprompt: str,
+    allow_cancel: bool = True,  # unused on TR
+    wrong_pin: bool = False,  # unused on TR
+) -> str | object:
+    """Request pin on device."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_passphrase(
+    *,
+    prompt: str,
+    max_len: int,
+) -> str | object:
+    """Get passphrase."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_bip39(
+    *,
+    prompt: str,
+) -> str:
+    """Get recovery word for BIP39."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_slip39(
+    *,
+    prompt: str,
+) -> str:
+   """SLIP39 word input keyboard."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def select_word(
+    *,
+    title: str,
+    description: str,
+    words: Iterable[str],
+) -> int:
+   """Select mnemonic word from three possibilities - seed check after backup. The
+   iterable must be of exact size. Returns index in range `0..3`."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_share_words(
+    *,
+    title: str,
+    share_words: Iterable[str],
+) -> None:
+    """Shows a backup seed."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_number(
+    *,
+    title: str,
+    count: int,
+    min_count: int,
+    max_count: int,
+    description: Callable[[int], str] | None = None,  # unused on TR
+) -> object:
+   """Number input with + and - buttons, description, and info button."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_checklist(
+    *,
+    title: str,
+    items: Iterable[str],
+    active: int,
+    button: str,
+) -> object:
+   """Checklist of backup steps. Active index is highlighted, previous items have check
+   mark next to them."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_recovery(
+    *,
+    title: str,  # unused on TR
+    description: str,
+    button: str,
+    dry_run: bool,
+    info_button: bool,  # unused on TR
+) -> object:
+   """Device recovery homescreen."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def select_word_count(
+    *,
+    dry_run: bool,
+) -> int | str:  # TR returns str
+   """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_group_share_success(
+    *,
+    lines: Iterable[str]
+) -> int:
+   """Shown after successfully finishing a group."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_progress(
+    *,
+    title: str,
+    indeterminate: bool = False,
+    description: str | None = None,
+) -> object:
+   """Show progress loader. Please note that the number of lines reserved on screen for
+   description is determined at construction time. If you want multiline descriptions
+   make sure the initial description has at least that amount of lines."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_homescreen(
+    *,
+    label: str,
+    hold: bool,
+    notification: str | None,
+    notification_level: int = 0,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Idle homescreen."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_lockscreen(
+    *,
+    label: str,
+    bootscreen: bool,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Homescreen for locked device."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_busyscreen(
+    *,
+    title: str,
+    description: str,
+    time_ms: int,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Homescreen used for indicating coinjoin in progress."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def draw_welcome_screen() -> None:
+    """Show logo icon with the model name at the bottom and return."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object
