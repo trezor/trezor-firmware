@@ -520,8 +520,9 @@ void display_init_seq(void) {
 void display_setup_fmc(void) {
   // Reference UM1725 "Description of STM32F4 HAL and LL drivers",
   // section 64.2.1 "How to use this driver"
-  SRAM_HandleTypeDef external_display_data_sram;
+  SRAM_HandleTypeDef external_display_data_sram = {0};
   external_display_data_sram.Instance = FMC_NORSRAM_DEVICE;
+  external_display_data_sram.Extended = FMC_NORSRAM_EXTENDED_DEVICE;
   external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
   external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
   external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
@@ -543,7 +544,7 @@ void display_setup_fmc(void) {
   external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
 
   // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
-  FMC_NORSRAM_TimingTypeDef normal_mode_timing;
+  FMC_NORSRAM_TimingTypeDef normal_mode_timing = {0};
   normal_mode_timing.AddressSetupTime = 5;
   normal_mode_timing.AddressHoldTime = 1;  // don't care
   normal_mode_timing.DataSetupTime = 6;
