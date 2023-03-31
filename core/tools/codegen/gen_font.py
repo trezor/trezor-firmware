@@ -226,3 +226,7 @@ process_face("RobotoMono", "Medium", 20)
 process_face("PixelOperator", "Regular", 8, bpp=1, shaveX=1)
 process_face("PixelOperator", "Bold", 8, bpp=1, shaveX=1)
 process_face("PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1)
+
+# For model R
+process_face("Unifont", "Regular", 16, bpp=1, shaveX=1, ext="otf")
+process_face("Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf")
