@@ -35,8 +35,8 @@ impl ReturnToC for IntroMsg {
 pub struct Intro {
     bg: Pad,
     title: Child<Title>,
-    host: Child<Button<&'static str>>,
-    menu: Child<Button<&'static str>>,
+    host: Child<Button>,
+    menu: Child<Button>,
     text: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
 }
 
@@ -55,12 +55,14 @@ impl Intro {
             title: Child::new(Title::new(bld_version)),
             host: Child::new(Button::with_text(
                 ButtonPos::Left,
-                "INSTALL FIRMWARE",
+                // TODO: this relies on StrBuffer support for bootloader, decide what to do
+                "INSTALL FIRMWARE".into(),
                 bld_button_default(),
             )),
             menu: Child::new(Button::with_text(
                 ButtonPos::Right,
-                "MENU",
+                // TODO: this relies on StrBuffer support for bootloader, decide what to do
+                "MENU".into(),
                 bld_button_default(),
             )),
             text: Child::new(p1),
@@ -107,6 +109,7 @@ impl Component for Intro {
         self.menu.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.title.bounds(sink);
         self.text.bounds(sink);

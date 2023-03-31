@@ -48,5 +48,6 @@ impl Component for Title {
         );
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
