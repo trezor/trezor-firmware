@@ -343,6 +343,8 @@ apps.management.sd_protect
 import apps.management.sd_protect
 apps.management.set_u2f_counter
 import apps.management.set_u2f_counter
+apps.management.show_tutorial
+import apps.management.show_tutorial
 apps.management.wipe_device
 import apps.management.wipe_device
 apps.misc
