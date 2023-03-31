@@ -64,7 +64,10 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_read(debug, "Success")
 
     # Your backup is done
-    debug.press_yes()
+    if debug.model == "T":
+        debug.press_yes()
+    elif debug.model == "R":
+        debug.press_right()
 
     # TODO: some validation of the generated secret?
 

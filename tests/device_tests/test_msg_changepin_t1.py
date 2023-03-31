@@ -28,7 +28,7 @@ PIN6 = "789456"
 PIN_MAX = "".join(chr((i % 9) + ord("1")) for i in range(MAX_PIN_LENGTH))
 PIN_TOO_LONG = PIN_MAX + "1"
 
-pytestmark = pytest.mark.skip_t2
+pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr]
 
 
 def _check_pin(client: Client, pin):
