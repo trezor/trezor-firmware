@@ -29,8 +29,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_total;
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
+  MP_QSTR_confirm_output;
   MP_QSTR_confirm_reset_device;
-  MP_QSTR_confirm_text;
+  MP_QSTR_confirm_total;
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_with_info;
   MP_QSTR_confirm_more;
@@ -50,9 +51,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
   MP_QSTR_show_group_share_success;
+  MP_QSTR_show_busyscreen;
   MP_QSTR_show_homescreen;
   MP_QSTR_show_lockscreen;
   MP_QSTR_draw_welcome_screen;
+  MP_QSTR_share_words;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_progress;
@@ -67,6 +70,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_usb_event;
   MP_QSTR_timer;
   MP_QSTR_paint;
+  MP_QSTR_place;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_trace;
   MP_QSTR_bounds;
@@ -118,5 +122,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_skip_first_paint;
   MP_QSTR_wrong_pin;
   MP_QSTR_xpubs;
+  MP_QSTR_fee_amount;
   MP_QSTR_fee_rate_amount;
+  MP_QSTR_total_label;
+  MP_QSTR_fee_label;
+  MP_QSTR_address_title;
+  MP_QSTR_amount_title;
+  MP_QSTR_tutorial;
+  MP_QSTR_confirm_joint_total;
+  MP_QSTR_spending_amount;
+  MP_QSTR_total_amount;
 }
