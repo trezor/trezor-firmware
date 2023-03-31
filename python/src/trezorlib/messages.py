@@ -3725,6 +3725,7 @@ class DebugLinkDecision(protobuf.MessageType):
         5: protobuf.Field("y", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("wait", "bool", repeated=False, required=False, default=None),
         7: protobuf.Field("hold_ms", "uint32", repeated=False, required=False, default=None),
+        8: protobuf.Field("physical_button", "DebugPhysicalButton", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3737,6 +3738,7 @@ class DebugLinkDecision(protobuf.MessageType):
         y: Optional["int"] = None,
         wait: Optional["bool"] = None,
         hold_ms: Optional["int"] = None,
+        physical_button: Optional["DebugPhysicalButton"] = None,
     ) -> None:
         self.button = button
         self.swipe = swipe
@@ -3745,6 +3747,7 @@ class DebugLinkDecision(protobuf.MessageType):
         self.y = y
         self.wait = wait
         self.hold_ms = hold_ms
+        self.physical_button = physical_button
 
 
 class DebugLinkLayout(protobuf.MessageType):

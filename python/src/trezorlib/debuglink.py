@@ -508,6 +508,7 @@ class DebugLink:
         self,
         word: Optional[str] = None,
         button: Optional[messages.DebugButton] = None,
+        physical_button: Optional[messages.DebugPhysicalButton] = None,
         swipe: Optional[messages.DebugSwipeDirection] = None,
         x: Optional[int] = None,
         y: Optional[int] = None,
@@ -517,14 +518,21 @@ class DebugLink:
         if not self.allow_interactions:
             return None
 
-        args = sum(a is not None for a in (word, button, swipe, x))
+        args = sum(a is not None for a in (word, button, physical_button, swipe, x))
         if args != 1:
             raise ValueError(
-                "Invalid input - must use one of word, button, swipe, click(x,y)"
+                "Invalid input - must use one of word, button, physical_button, swipe, click(x,y)"
             )
 
         decision = messages.DebugLinkDecision(
-            button=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
+            button=button,
+            physical_button=physical_button,
+            swipe=swipe,
+            input=word,
+            x=x,
+            y=y,
+            wait=wait,
+            hold_ms=hold_ms,
         )
 
         ret = self._call(decision, nowait=not wait)
@@ -564,8 +572,8 @@ class DebugLink:
             f.write(screen_content)
             f.write("\n" + 80 * "/" + "\n")
 
-    # Type overloads make sure that when we supply `wait=True` into `click()`,
-    # it will always return `LayoutContent` and we do not need to assert `is not None`.
+    # Type overloads below make sure that when we supply `wait=True` into functions,
+    # they will always return `LayoutContent` and we do not need to assert `is not None`.
 
     @overload
     def click(self, click: Tuple[int, int]) -> None:
@@ -618,6 +626,57 @@ class DebugLink:
     def swipe_left(self, wait: bool = False) -> Union[LayoutContent, None]:
         return self.input(swipe=messages.DebugSwipeDirection.LEFT, wait=wait)
 
+    @overload
+    def press_left(self) -> None:
+        ...
+
+    @overload
+    def press_left(self, wait: Literal[True]) -> LayoutContent:
+        ...
+
+    def press_left(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(
+            physical_button=messages.DebugPhysicalButton.LEFT_BTN, wait=wait
+        )
+
+    @overload
+    def press_middle(self) -> None:
+        ...
+
+    @overload
+    def press_middle(self, wait: Literal[True]) -> LayoutContent:
+        ...
+
+    def press_middle(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(
+            physical_button=messages.DebugPhysicalButton.MIDDLE_BTN, wait=wait
+        )
+
+    @overload
+    def press_right(self) -> None:
+        ...
+
+    @overload
+    def press_right(self, wait: Literal[True]) -> LayoutContent:
+        ...
+
+    def press_right(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(
+            physical_button=messages.DebugPhysicalButton.RIGHT_BTN, wait=wait
+        )
+
+    def press_right_htc(
+        self, hold_ms: int, extra_ms: int = 200
+    ) -> Optional[LayoutContent]:
+        hold_ms = hold_ms + extra_ms  # safety margin
+        result = self.input(
+            physical_button=messages.DebugPhysicalButton.RIGHT_BTN,
+            hold_ms=hold_ms,
+        )
+        # sleeping little longer for UI to update
+        time.sleep(hold_ms / 1000 + 0.1)
+        return result
+
     def stop(self) -> None:
         self._call(messages.DebugLinkStop(), nowait=True)
 
@@ -626,7 +685,7 @@ class DebugLink:
 
     def start_recording(self, directory: str) -> None:
         # Different recording logic between TT and T1
-        if self.model == "T":
+        if self.model in ("T", "R"):
             self._call(messages.DebugLinkRecordScreen(target_directory=directory))
         else:
             self.t1_screenshot_directory = Path(directory)
@@ -635,7 +694,7 @@ class DebugLink:
 
     def stop_recording(self) -> None:
         # Different recording logic between TT and T1
-        if self.model == "T":
+        if self.model in ("T", "R"):
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
         else:
             self.t1_take_screenshots = False
