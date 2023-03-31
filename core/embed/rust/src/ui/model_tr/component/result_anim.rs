@@ -141,6 +141,8 @@ impl Component for ResultAnim {
     }
 }
 
+// DEBUG-ONLY SECTION BELOW
+
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for ResultAnim {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
