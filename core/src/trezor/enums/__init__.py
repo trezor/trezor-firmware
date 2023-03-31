@@ -63,6 +63,7 @@ if TYPE_CHECKING:
         FirmwareHash = 89
         UnlockPath = 93
         UnlockedPathRequest = 94
+        ShowDeviceTutorial = 95
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81

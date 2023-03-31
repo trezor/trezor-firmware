@@ -71,6 +71,7 @@ class MessageType(IntEnum):
     FirmwareHash = 89
     UnlockPath = 93
     UnlockedPathRequest = 94
+    ShowDeviceTutorial = 95
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -3713,6 +3714,10 @@ class UnlockedPathRequest(protobuf.MessageType):
         mac: Optional["bytes"] = None,
     ) -> None:
         self.mac = mac
+
+
+class ShowDeviceTutorial(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 95
 
 
 class DebugLinkDecision(protobuf.MessageType):

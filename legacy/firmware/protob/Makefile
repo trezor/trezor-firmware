@@ -7,7 +7,7 @@ SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdPro
 	DebugLinkLayout GetNonce \
 	TxAckInput TxAckOutput TxAckPrev TxAckPaymentRequest \
 	EthereumSignTypedData EthereumTypedDataStructRequest EthereumTypedDataStructAck \
-	EthereumTypedDataValueRequest EthereumTypedDataValueAck
+	EthereumTypedDataValueRequest EthereumTypedDataValueAck ShowDeviceTutorial
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar
