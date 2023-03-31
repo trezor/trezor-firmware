@@ -163,6 +163,16 @@ trezor.ui.layouts.reset
 import trezor.ui.layouts.reset
 trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
+trezor.ui.layouts.tr.fido
+import trezor.ui.layouts.tr.fido
+trezor.ui.layouts.tr.homescreen
+import trezor.ui.layouts.tr.homescreen
+trezor.ui.layouts.tr.progress
+import trezor.ui.layouts.tr.progress
+trezor.ui.layouts.tr.recovery
+import trezor.ui.layouts.tr.recovery
+trezor.ui.layouts.tr.reset
+import trezor.ui.layouts.tr.reset
 trezor.ui.layouts.tt_v2
 import trezor.ui.layouts.tt_v2
 trezor.ui.layouts.tt_v2.fido

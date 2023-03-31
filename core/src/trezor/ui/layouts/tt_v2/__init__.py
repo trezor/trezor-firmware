@@ -503,6 +503,7 @@ async def confirm_output(
     amount: str,
     title: str | None = None,
     hold: bool = False,
+    index: int | None = None,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     address_label: str | None = None,
     output_index: int | None = None,

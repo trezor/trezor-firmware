@@ -292,6 +292,7 @@ async def confirm_nondefault_locktime(
     ctx: Context, lock_time: int, lock_time_disabled: bool
 ) -> None:
     from trezor.strings import format_timestamp
+    from trezor import utils
 
     if lock_time_disabled:
         title = "Warning"
@@ -305,6 +306,10 @@ async def confirm_nondefault_locktime(
         title = "Confirm locktime"
         text = "Locktime for this transaction is set to:\n{}"
         param = format_timestamp(lock_time)
+
+    # Getting rid of newlines for TR, to fit one smaller screen:
+    if utils.MODEL in ("R",):
+        text = text.replace("\n", " ")
 
     await confirm_metadata(
         ctx,
