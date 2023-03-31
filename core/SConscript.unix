@@ -686,13 +686,11 @@ def cargo_build():
     if DMA2D:
         features.append('dma2d')
 
-    if TREZOR_MODEL in ('T',) :
+    if TREZOR_MODEL in ('T',):
         features.append('touch')
-    if TREZOR_MODEL in ('R') :
-        features.append('buttons')
-    if TREZOR_MODEL in ('1') :
-        features.append('buttons')
-
+        features.append('sd_card')
+    if TREZOR_MODEL in ('R', '1'):
+        features.append('button')
 
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 

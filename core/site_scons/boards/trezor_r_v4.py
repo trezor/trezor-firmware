@@ -15,7 +15,7 @@ def configure(env, features_wanted, defines, sources):
 
     if "input" in features_wanted:
         sources += ['embed/trezorhal/button.c']
-        features_available.append("buttons")
+        features_available.append("button")
 
     if "sbu" in features_wanted:
         sources += ['embed/trezorhal/sbu.c', ]

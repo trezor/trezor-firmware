@@ -19,11 +19,11 @@ def configure(env, features_wanted, defines, sources):
         sources += ['embed/trezorhal/touch/ft6x36.c', ]
         features_available.append("touch")
 
-    if "sdcard" in features_wanted:
+    if "sd_card" in features_wanted:
         sources += ['embed/trezorhal/sdcard.c', ]
         sources += ['embed/extmod/modtrezorio/ff.c', ]
         sources += ['embed/extmod/modtrezorio/ffunicode.c', ]
-        features_available.append("sdcard")
+        features_available.append("sd_card")
 
     if "sbu" in features_wanted:
         sources += ['embed/trezorhal/sbu.c', ]

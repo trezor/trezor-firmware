@@ -23,7 +23,7 @@ use crate::{
     },
 };
 
-#[cfg(feature = "buttons")]
+#[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
@@ -400,7 +400,7 @@ extern "C" fn ui_layout_touch_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
 
-#[cfg(feature = "buttons")]
+#[cfg(feature = "button")]
 extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 3 {
@@ -414,7 +414,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-#[cfg(not(feature = "buttons"))]
+#[cfg(not(feature = "button"))]
 extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
