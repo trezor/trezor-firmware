@@ -82,7 +82,7 @@ class InputFlowSetupDevicePINWIpeCode(InputFlowBase):
         self.pin = pin
         self.wipe_code = wipe_code
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # do you want to set/change the wipe code?
         self.debug.press_yes()
         yield from swipe_if_necessary(self.debug)  # wipe code info
@@ -111,7 +111,7 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         self.second_code = second_code
         self.reenter_screen = reenter_screen
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # do you want to set/change the pin/wipe code?
         self.debug.press_yes()
         yield from swipe_if_necessary(self.debug)  # pin/wipe code info
@@ -139,7 +139,7 @@ class InputFlowCodeChangeFail(InputFlowBase):
         self.new_pin_1 = new_pin_1
         self.new_pin_2 = new_pin_2
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # do you want to change pin?
         self.debug.press_yes()
         yield  # enter current pin
@@ -164,7 +164,7 @@ class InputFlowWrongPIN(InputFlowBase):
         super().__init__(client)
         self.wrong_pin = wrong_pin
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # do you want to change pin?
         self.debug.press_yes()
         yield  # enter wrong current pin
@@ -179,7 +179,7 @@ class InputFlowPINBackoff(InputFlowBase):
         self.wrong_pin = wrong_pin
         self.good_pin = good_pin
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         """Inputting some bad PINs and finally the correct one"""
         yield  # PIN entry
         for attempt in range(3):
@@ -217,6 +217,19 @@ class InputFlowSignMessagePagination(InputFlowBase):
 
         self.debug.press_yes()
 
+    def input_flow_tr(self) -> GeneratorType:
+        # confirm address
+        yield
+        self.debug.press_yes()
+
+        br = yield
+        # TODO: try load the message_read the same way as in model T
+        if br.pages is not None:
+            for i in range(br.pages):
+                if i < br.pages - 1:
+                    self.debug.swipe_up()
+        self.debug.press_yes()
+
 
 class InputFlowShowAddressQRCode(InputFlowBase):
     def __init__(self, client: Client):
@@ -236,6 +249,17 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         self.debug.press_no(wait=True)
         self.debug.press_yes()
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield
+        # Go into details
+        self.debug.press_right()
+        # Go through details and back
+        self.debug.press_right()
+        self.debug.press_left()
+        self.debug.press_left()
+        # Confirm
+        self.debug.press_middle()
+
 
 class InputFlowShowAddressQRCodeCancel(InputFlowBase):
     def __init__(self, client: Client):
@@ -251,6 +275,19 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         self.debug.press_no(wait=True)
         self.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield
+        # Go into details
+        self.debug.press_right()
+        # Go through details and back
+        self.debug.press_right()
+        self.debug.press_left()
+        self.debug.press_left()
+        # Cancel
+        self.debug.press_left()
+        # Confirm address mismatch
+        self.debug.press_right()
 
 
 class InputFlowShowMultisigXPUBs(InputFlowBase):
@@ -290,6 +327,43 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.press_no(wait=True)
         # show address
         self.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # show address
+        layout = self.debug.wait_layout()
+        assert "RECEIVE ADDRESS (MULTISIG)" in layout.title()
+        assert layout.text_content().replace(" ", "") == self.address
+
+        self.debug.press_right()
+        assert "Qr" in self.debug.wait_layout().str_content
+
+        layout = self.debug.press_right(wait=True)
+        # address details
+        assert "Multisig 2 of 3" in layout.str_content
+
+        # Three xpub pages with the same testing logic
+        for xpub_num in range(3):
+            expected_title = f"MULTISIG XPUB #{xpub_num + 1} " + (
+                "(YOURS)" if self.index == xpub_num else "(COSIGNER)"
+            )
+            layout = self.debug.press_right(wait=True)
+            assert expected_title in layout.title()
+            xpub_part_1 = layout.text_content().replace(" ", "")
+            # Press "SHOW MORE"
+            layout = self.debug.press_middle(wait=True)
+            xpub_part_2 = layout.text_content().replace(" ", "")
+            # Go back
+            self.debug.press_left(wait=True)
+            assert self.xpubs[xpub_num] == xpub_part_1 + xpub_part_2
+
+        for _ in range(5):
+            self.debug.press_left()
+        # show address
+        self.debug.press_left()
+        # address mismatch
+        self.debug.press_left()
+        # show address
+        self.debug.press_middle()
 
 
 class InputFlowPaymentRequestDetails(InputFlowBase):
@@ -344,6 +418,14 @@ class InputFlowSignTxHighFee(InputFlowBase):
         ]
         yield from self.go_through_all_screens(screens)
 
+    def input_flow_tr(self) -> GeneratorType:
+        screens = [
+            B.ConfirmOutput,
+            B.FeeOverThreshold,
+            B.SignTx,
+        ]
+        yield from self.go_through_all_screens(screens)
+
 
 def lock_time_input_flow_tt(
     debug: DebugLink,
@@ -369,6 +451,24 @@ def lock_time_input_flow_tt(
         debug.press_yes()
 
 
+def lock_time_input_flow_tr(
+    debug: DebugLink, layout_assert_func: Callable[[str], None]
+) -> GeneratorType:
+    yield  # confirm output
+    debug.wait_layout()
+    debug.swipe_up()
+    debug.wait_layout()
+    debug.press_yes()
+
+    yield  # confirm locktime
+    layout_text = debug.wait_layout().text_content()
+    layout_assert_func(layout_text)
+    debug.press_yes()
+
+    yield  # confirm transaction
+    debug.press_yes()
+
+
 class InputFlowLockTimeBlockHeight(InputFlowBase):
     def __init__(self, client: Client, block_height: str):
         super().__init__(client)
@@ -383,6 +483,9 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
             self.debug, self.layout_assert_func, double_confirm=True
         )
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield from lock_time_input_flow_tr(self.debug, self.layout_assert_func)
+
 
 class InputFlowLockTimeDatetime(InputFlowBase):
     def __init__(self, client: Client, lock_time_str: str):
@@ -395,6 +498,9 @@ class InputFlowLockTimeDatetime(InputFlowBase):
     def input_flow_tt(self) -> GeneratorType:
         yield from lock_time_input_flow_tt(self.debug, self.layout_assert_func)
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield from lock_time_input_flow_tr(self.debug, self.layout_assert_func)
+
 
 class InputFlowEIP712ShowMore(InputFlowBase):
     SHOW_MORE = (143, 167)
@@ -405,9 +511,12 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        self.debug.click(self.SHOW_MORE)
+        if self.model() == "T":
+            self.debug.click(self.SHOW_MORE)
+        elif self.model() == "R":
+            self.debug.press_right()
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         """Triggers show more wherever possible"""
         yield  # confirm address
         self.debug.press_yes()
@@ -454,7 +563,7 @@ class InputFlowEIP712Cancel(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         """Clicks cancelling button"""
         yield  # confirm domain
         self.debug.press_no()
@@ -465,7 +574,7 @@ class InputFlowEthereumSignTxSkip(InputFlowBase):
         super().__init__(client)
         self.cancel = cancel
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # confirm address
         self.debug.press_yes()
         yield  # confirm amount
@@ -501,6 +610,35 @@ class InputFlowEthereumSignTxScrollDown(InputFlowBase):
         yield  # confirm data
         self.debug.wait_layout()
         self.debug.click(self.SHOW_ALL)
+
+        br = yield  # paginated data
+        assert br.pages is not None
+        for i in range(br.pages):
+            self.debug.wait_layout()
+            if i < br.pages - 1:
+                self.debug.swipe_up()
+
+        self.debug.press_yes()
+        yield  # confirm data
+        if self.cancel:
+            self.debug.press_no()
+        else:
+            self.debug.press_yes()
+            yield  # gas price
+            self.debug.press_yes()
+            yield  # maximum fee
+            self.debug.press_yes()
+            yield  # hold to confirm
+            self.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # confirm address
+        self.debug.wait_layout()
+        self.debug.press_yes()
+        yield  # confirm amount
+        self.debug.wait_layout()
+        self.debug.swipe_up()
+        self.debug.press_yes()
 
         br = yield  # paginated data
         assert br.pages is not None
@@ -592,7 +730,7 @@ class InputFlowBip39Backup(InputFlowBase):
         super().__init__(client)
         self.mnemonic = None
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         # 1. Confirm Reset
         yield from click_through(self.debug, screens=1, code=B.ResetDevice)
 
@@ -606,7 +744,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         self.mnemonic = None
 
     # NOTE: same as above, just two more YES
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Confirm warning
@@ -621,7 +759,7 @@ class InputFlowBip39ResetPIN(InputFlowBase):
         super().__init__(client)
         self.mnemonic = None
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         br = yield  # Confirm Reset
         assert br.code == B.ResetDevice
         self.debug.press_yes()
@@ -664,7 +802,7 @@ class InputFlowBip39ResetFailedCheck(InputFlowBase):
         super().__init__(client)
         self.mnemonic = None
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         # 1. Confirm Reset
         # 2. Backup your seed
         # 3. Confirm warning
@@ -740,6 +878,31 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         assert br.code == B.Success
         self.debug.press_yes()
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Number of shares info
+        self.debug.press_yes()
+        yield  # Number of shares (5)
+        self.debug.input("5")
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Threshold info
+        self.debug.press_yes()
+        yield  # Threshold (3)
+        self.debug.input("3")
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_5_shares(self.debug)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
 
 class InputFlowSlip39BasicResetRecovery(InputFlowBase):
     def __init__(self, client: Client):
@@ -761,6 +924,35 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         self.mnemonics = yield from load_5_shares(self.debug)
 
         br = yield  # safety warning
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Reset
+        self.debug.press_yes()
+        yield  # Backup your seed
+        self.debug.press_yes()
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Number of shares info
+        self.debug.press_yes()
+        yield  # Number of shares (5)
+        self.debug.input("5")
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Threshold info
+        self.debug.press_yes()
+        yield  # Threshold (3)
+        self.debug.input("3")
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_5_shares(self.debug)
+
+        br = yield  # Confirm backup
         assert br.code == B.Success
         self.debug.press_yes()
 
@@ -823,6 +1015,36 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         assert br.code == B.Success
         self.debug.press_yes()
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # 1. Checklist
+        self.debug.press_yes()
+        yield  # 2. Set and confirm group count
+        self.debug.input("5")
+        yield  # 3. Checklist
+        self.debug.press_yes()
+        yield  # 4. Set and confirm group threshold
+        self.debug.input("3")
+        yield  # 5. Checklist
+        self.debug.press_yes()
+        for _ in range(5):  # for each of 5 groups
+            yield  # Number of shares info
+            self.debug.press_yes()
+            yield  # Number of shares (5)
+            self.debug.input("5")
+            yield  # Threshold info
+            self.debug.press_yes()
+            yield  # Threshold (3)
+            self.debug.input("3")
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases - show & confirm shares for all groups
+        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
 
 class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
     def __init__(self, client: Client, click_info: bool):
@@ -843,6 +1065,40 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         #   2. Set & confirm share threshold value
         # 18. Confirm show seeds
         yield from click_through(self.debug, screens=18, code=B.ResetDevice)
+
+        # Mnemonic phrases - show & confirm shares for all groups
+        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+
+        br = yield  # safety warning
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Wallet backup
+        self.debug.press_yes()
+        yield  # Wallet creation
+        self.debug.press_yes()
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Set and confirm group count
+        self.debug.input("5")
+        yield  # Checklist
+        self.debug.press_yes()
+        yield  # Set and confirm group threshold
+        self.debug.input("3")
+        yield  # Checklist
+        self.debug.press_yes()
+        for _ in range(5):  # for each of 5 groups
+            yield  # Number of shares info
+            self.debug.press_yes()
+            yield  # Number of shares (5)
+            self.debug.input("5")
+            yield  # Threshold info
+            self.debug.press_yes()
+            yield  # Threshold (3)
+            self.debug.input("3")
+        yield  # Confirm show seeds
+        self.debug.press_yes()
 
         # Mnemonic phrases - show & confirm shares for all groups
         self.mnemonics = yield from load_5_groups_5_shares(self.debug)
@@ -891,6 +1147,41 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
         self.debug.wait_layout()
         self.debug.click(buttons.OK)
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield
+        assert "check the recovery seed" in self.layout().text_content()
+        self.debug.press_right()
+
+        yield
+        assert "select the number of words" in self.layout().text_content()
+        self.debug.press_yes()
+
+        yield
+        yield
+        assert "NUMBER OF WORDS" in self.layout().title()
+        word_options = (12, 18, 20, 24, 33)
+        index = word_options.index(len(self.mnemonic))
+        for _ in range(index):
+            self.debug.press_right()
+        self.debug.input(str(len(self.mnemonic)))
+
+        yield
+        assert "enter your recovery seed" in self.layout().text_content()
+        self.debug.press_yes()
+
+        yield
+        self.debug.press_right()
+        yield
+        for word in self.mnemonic:
+            assert "WORD" in self.layout().title()
+            self.debug.input(word)
+
+        self.debug.wait_layout()
+        self.debug.press_right()
+        yield
+        self.debug.press_yes()
+        yield
+
 
 class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
     def __init__(self, client: Client):
@@ -912,6 +1203,47 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         yield
         assert "ABORT SEED CHECK" == self.layout().title()
         self.debug.click(buttons.OK)
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield
+        assert "check the recovery seed" in self.layout().text_content()
+        self.debug.press_right()
+
+        yield
+        assert "select the number of words" in self.layout().text_content()
+        self.debug.press_yes()
+
+        yield
+        yield
+        assert "NUMBER OF WORDS" in self.layout().title()
+        # select 12 words
+        self.debug.press_middle()
+
+        yield
+        assert "enter your recovery seed" in self.layout().text_content()
+        self.debug.press_yes()
+
+        yield
+        assert "WORD ENTERING" in self.layout().title()
+        self.debug.press_yes()
+
+        yield
+        for _ in range(12):
+            assert "WORD" in self.layout().title()
+            self.debug.input("stick")
+
+        br = yield
+        assert br.code == messages.ButtonRequestType.Warning
+        assert "invalid recovery seed" in self.layout().text_content()
+        self.debug.press_right()
+
+        yield  # retry screen
+        assert "select the number of words" in self.layout().text_content()
+        self.debug.press_left()
+
+        yield
+        assert "abort" in self.layout().text_content()
+        self.debug.press_right()
 
 
 def bip39_recovery_possible_pin(
@@ -968,6 +1300,53 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
     def input_flow_tt(self) -> GeneratorType:
         yield from bip39_recovery_possible_pin(self.debug, self.mnemonic, pin="654")
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield
+        assert "By continuing you agree" in self.layout().text_content()
+        self.debug.press_right()
+        assert "trezor.io/tos" in self.layout().text_content()
+        self.debug.press_yes()
+
+        yield
+        assert "ENTER" in self.layout().text_content()
+        self.debug.input("654")
+
+        yield
+        assert "re-enter PIN to confirm" in self.layout().text_content()
+        self.debug.press_right()
+
+        yield
+        assert "ENTER" in self.layout().text_content()
+        self.debug.input("654")
+
+        yield
+        assert "select the number of words" in self.layout().text_content()
+        self.debug.press_yes()
+
+        yield
+        yield
+        assert "NUMBER OF WORDS" in self.layout().title()
+        self.debug.input(str(len(self.mnemonic)))
+
+        yield
+        assert "enter your recovery seed" in self.layout().text_content()
+        self.debug.press_yes()
+
+        yield
+        assert "WORD ENTERING" in self.layout().title()
+        self.debug.press_right()
+
+        yield
+        for word in self.mnemonic:
+            assert "WORD" in self.layout().title()
+            self.debug.input(word)
+
+        yield
+        assert (
+            "You have finished recovering your wallet." in self.layout().text_content()
+        )
+        self.debug.press_yes()
+
 
 class InputFlowBip39RecoveryNoPIN(InputFlowBase):
     def __init__(self, client: Client, mnemonic: list[str]):
@@ -977,13 +1356,34 @@ class InputFlowBip39RecoveryNoPIN(InputFlowBase):
     def input_flow_tt(self) -> GeneratorType:
         yield from bip39_recovery_possible_pin(self.debug, self.mnemonic, pin=None)
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm recovery
+        self.debug.press_yes()
+        yield  # Homescreen
+        self.debug.press_yes()
+
+        yield  # Enter word count
+        self.debug.input(str(len(self.mnemonic)))
+
+        yield  # Homescreen
+        self.debug.press_yes()
+        yield  # Homescreen
+        self.debug.press_yes()
+        yield  # Enter words
+        for word in self.mnemonic:
+            self.debug.input(word)
+
+        yield  # confirm success
+        self.debug.press_yes()
+        yield
+
 
 class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
     def __init__(self, client: Client, shares: list[str]):
         super().__init__(client)
         self.shares = shares
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # Confirm Dryrun
         self.debug.press_yes()
         # run recovery flow
@@ -996,7 +1396,7 @@ class InputFlowSlip39AdvancedRecovery(InputFlowBase):
         self.shares = shares
         self.click_info = click_info
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # Confirm Recovery
         self.debug.press_yes()
         # Proceed with recovery
@@ -1009,7 +1409,7 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # Confirm Recovery
         self.debug.press_yes()
         yield  # Homescreen - abort process
@@ -1023,7 +1423,7 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
         super().__init__(client)
         self.shares = shares
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # Confirm Recovery
         self.debug.press_yes()
         yield  # Homescreen - abort process
@@ -1065,6 +1465,40 @@ class InputFlowSlip39AdvancedRecoveryTwoSharesWarning(InputFlowBase):
 
         self.client.cancel()
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_yes()
+        yield  # Homescreen - start process
+        self.debug.press_yes()
+        yield  # Enter number of words
+        self.debug.input(str(len(self.first_share)))
+        yield  # Homescreen - proceed to share entry
+        self.debug.press_yes()
+        yield  # Enter first share
+        self.debug.press_yes()
+        yield  # Enter first share
+        for word in self.first_share:
+            self.debug.input(word)
+
+        yield  # Continue to next share
+        self.debug.press_yes()
+        yield  # Homescreen - next share
+        self.debug.press_yes()
+        yield  # Homescreen - next share
+        self.debug.press_yes()
+        yield  # Enter next share
+        for word in self.second_share:
+            self.debug.input(word)
+
+        yield
+        br = yield
+        assert br.code == messages.ButtonRequestType.Warning
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield
+
+        self.client.cancel()
+
 
 def slip39_recovery_possible_pin(
     debug: DebugLink, shares: list[str], pin: Optional[str]
@@ -1089,7 +1523,7 @@ class InputFlowSlip39BasicRecovery(InputFlowBase):
         super().__init__(client)
         self.shares = shares
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield from slip39_recovery_possible_pin(self.debug, self.shares, pin=None)
 
 
@@ -1099,7 +1533,7 @@ class InputFlowSlip39BasicRecoveryPIN(InputFlowBase):
         self.shares = shares
         self.pin = pin
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield from slip39_recovery_possible_pin(self.debug, self.shares, pin=self.pin)
 
 
@@ -1107,7 +1541,7 @@ class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # Confirm Recovery
         self.debug.press_yes()
         yield  # Homescreen - abort process
@@ -1121,7 +1555,7 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
         super().__init__(client)
         self.shares = shares
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_common(self) -> GeneratorType:
         yield  # Confirm Recovery
         self.debug.press_yes()
         yield  # Homescreen - abort process
@@ -1173,6 +1607,55 @@ class InputFlowSlip39BasicRecoveryRetryFirst(InputFlowBase):
         yield  # Confirm abort
         self.debug.press_yes()
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Homescreen - start process
+        self.debug.press_yes()
+        yield  # Enter number of words
+        self.debug.input("20")
+        yield  # Homescreen - proceed to share entry
+        self.debug.press_yes()
+        yield  # Enter first share
+        self.debug.press_yes()
+        for _ in range(20):
+            self.debug.input("slush")
+
+        yield
+        # assert br.code == messages.ButtonRequestType.Warning
+        self.debug.press_yes()
+
+        yield  # Homescreen - start process
+        self.debug.press_yes()
+        yield  # Enter number of words
+        self.debug.input("33")
+        yield  # Homescreen - proceed to share entry
+        self.debug.press_yes()
+        yield  # Homescreen - proceed to share entry
+        self.debug.press_yes()
+        yield
+        for _ in range(33):
+            self.debug.input("slush")
+
+        yield
+        self.debug.press_yes()
+
+        yield
+        self.debug.press_no()
+
+        yield
+        self.debug.press_right()
+
+        yield
+        self.debug.press_right()
+
+        yield
+        self.debug.press_right()
+
+        yield
+        self.debug.press_yes()
+
 
 class InputFlowSlip39BasicRecoveryRetrySecond(InputFlowBase):
     def __init__(self, client: Client, shares: list[str]):
@@ -1209,6 +1692,45 @@ class InputFlowSlip39BasicRecoveryRetrySecond(InputFlowBase):
         yield  # Confirm abort
         self.debug.press_yes()
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Homescreen - start process
+        self.debug.press_yes()
+        yield  # Enter number of words
+        self.debug.input("20")
+        yield  # Homescreen - proceed to share entry
+        self.debug.press_yes()
+        yield  # Enter first share
+        self.debug.press_yes()
+        yield  # Enter first share
+        share = self.shares[0].split(" ")
+        for word in share:
+            self.debug.input(word)
+
+        yield  # More shares needed
+        self.debug.press_yes()
+
+        yield  # Enter another share
+        share = share[:3] + ["slush"] * 17
+        for word in share:
+            self.debug.input(word)
+
+        yield  # Invalid share
+        # assert br.code == messages.ButtonRequestType.Warning
+        self.debug.press_yes()
+
+        yield  # Proceed to next share
+        share = self.shares[1].split(" ")
+        for word in share:
+            self.debug.input(word)
+
+        yield  # More shares needed
+        self.debug.press_no()
+        yield  # Confirm abort
+        self.debug.press_yes()
+
 
 class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
     def __init__(self, client: Client, share: list[str], nth_word: int):
@@ -1235,6 +1757,39 @@ class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
 
         br = yield
         assert br.code == messages.ButtonRequestType.Warning
+
+        self.client.cancel()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Homescreen - start process
+        self.debug.press_yes()
+        yield  # Enter number of words
+        self.debug.input(str(len(self.share)))
+        yield  # Homescreen - proceed to share entry
+        self.debug.press_yes()
+        yield  # Enter first share
+        self.debug.press_yes()
+        yield  # Enter first share
+        for word in self.share:
+            self.debug.input(word)
+
+        yield  # Continue to next share
+        self.debug.press_yes()
+        yield  # Enter next share
+        self.debug.press_yes()
+        yield  # Enter next share
+        for i, word in enumerate(self.share):
+            if i < self.nth_word:
+                self.debug.input(word)
+            else:
+                self.debug.input(self.share[-1])
+                break
+
+        yield
+        # assert br.code == messages.ButtonRequestType.Warning
 
         self.client.cancel()
 
@@ -1265,6 +1820,39 @@ class InputFlowSlip39BasicRecoverySameShare(InputFlowBase):
 
         self.client.cancel()
 
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Homescreen - start process
+        self.debug.press_yes()
+        yield  # Enter number of words
+        self.debug.input(str(len(self.first_share)))
+        yield  # Homescreen - proceed to share entry
+        self.debug.press_yes()
+        yield  # Homescreen - proceed to share entry
+        self.debug.press_yes()
+        yield  # Enter first share
+        for word in self.first_share:
+            self.debug.input(word)
+
+        yield  # Continue to next share
+        self.debug.press_yes()
+        yield  # Continue to next share
+        self.debug.press_yes()
+        yield  # Enter next share
+        for word in self.second_share:
+            self.debug.input(word)
+
+        br = yield
+        br = yield
+        assert br.code == messages.ButtonRequestType.Warning
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield
+
+        self.client.cancel()
+
 
 class InputFlowResetSkipBackup(InputFlowBase):
     def __init__(self, client: Client):
@@ -1276,4 +1864,14 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield  # Skip Backup
         self.debug.press_no()
         yield  # Confirm skip backup
+        self.debug.press_no()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Skip Backup
+        self.debug.press_no()
+        yield  # Confirm skip backup
+        self.debug.press_right()
         self.debug.press_no()
