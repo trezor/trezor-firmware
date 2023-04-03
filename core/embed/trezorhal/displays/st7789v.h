@@ -10,14 +10,27 @@
 #define DISPLAY_RESY 240
 #define TREZOR_FONT_BPP 4
 
-extern __IO uint8_t *const DISPLAY_CMD_ADDRESS;
-extern __IO uint8_t *const DISPLAY_DATA_ADDRESS;
+#ifdef USE_DISP_I8080_16BIT_DW
+#define DISP_MEM_TYPE uint16_t
+#elif USE_DISP_I8080_8BIT_DW
+#define DISP_MEM_TYPE uint8_t
+#else
+#error "Unsupported display interface"
+#endif
+
+extern __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS;
+extern __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS;
 
 #define CMD(X) (*DISPLAY_CMD_ADDRESS = (X))
 #define DATA(X) (*DISPLAY_DATA_ADDRESS = (X))
+
+#ifdef USE_DISP_I8080_16BIT_DW
+#define PIXELDATA(X) DATA(X)
+#elif USE_DISP_I8080_8BIT_DW
 #define PIXELDATA(X) \
   DATA((X)&0xFF);    \
   DATA((X) >> 8)
+#endif
 
 void display_set_little_endian(void);
 void display_set_big_endian(void);

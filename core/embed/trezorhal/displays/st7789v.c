@@ -21,6 +21,7 @@
 #include TREZOR_BOARD
 #include "display_interface.h"
 #include "memzero.h"
+#include "st7789v.h"
 #include STM32_HAL_H
 
 // using const volatile instead of #define results in binaries that change
@@ -32,13 +33,17 @@ const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
 #define DISPLAY_MEMORY_BASE 0x60000000
 #define DISPLAY_MEMORY_PIN 16
+#ifdef USE_DISP_I8080_16BIT_DW
+#define DISPLAY_ADDR_SHIFT 2
+#elif USE_DISP_I8080_8BIT_DW
+#define DISPLAY_ADDR_SHIFT 1
+#endif
 
-__IO uint8_t *const DISPLAY_CMD_ADDRESS =
-    (__IO uint8_t *const)((uint32_t)DISPLAY_MEMORY_BASE);
-__IO uint8_t *const DISPLAY_DATA_ADDRESS =
-    (__IO uint8_t *const)((uint32_t)DISPLAY_MEMORY_BASE |
-                          (1 << DISPLAY_MEMORY_PIN));
-
+__IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS =
+    (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE);
+__IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
+    (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE |
+                                (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN));
 #define LED_PWM_TIM_PERIOD \
   (255)  // little less than 4kHz with PSC = (SystemCoreClock / 1000000) - 1)
 #define LED_PWM_SLOW_TIM_PERIOD \
@@ -526,7 +531,12 @@ void display_setup_fmc(void) {
   external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
   external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
   external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
+#ifdef USE_DISP_I8080_16BIT_DW
+  external_display_data_sram.Init.MemoryDataWidth =
+      FMC_NORSRAM_MEM_BUS_WIDTH_16;
+#elif USE_DISP_I8080_8BIT_DW
   external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
+#endif
   external_display_data_sram.Init.BurstAccessMode =
       FMC_BURST_ACCESS_MODE_DISABLE;
   external_display_data_sram.Init.WaitSignalPolarity =
@@ -559,6 +569,9 @@ void display_setup_fmc(void) {
 void display_init(void) {
   // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_TIM1_CLK_ENABLE();
   __HAL_RCC_FMC_CLK_ENABLE();
 
@@ -631,6 +644,18 @@ void display_init(void) {
   //                       LCD_D4/PE7   LCD_D5/PE8   LCD_D6/PE9   LCD_D7/PE10
   GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+#ifdef USE_DISP_I8080_16BIT_DW
+  //                       LCD_D8/PE11   LCD_D9/PE12   LCD_D10/PE13 LCD_D11/PE14
+  GPIO_InitStructure.Pin =
+      GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+  //                       LCD_D12/PE15
+  GPIO_InitStructure.Pin = GPIO_PIN_15;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+  //                       LCD_D13/PD8   LCD_D14/PD9   LCD_D15/PD10
+  GPIO_InitStructure.Pin = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+#endif
 
   display_setup_fmc();
 
