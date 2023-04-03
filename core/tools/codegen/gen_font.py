@@ -200,7 +200,7 @@ process_face("Roboto", "Bold", 20)
 process_face("TTHoves", "Regular", 21, ext="otf")
 process_face("TTHoves", "DemiBold", 21, ext="otf")
 process_face("TTHoves", "Bold", 17, ext="otf")
-process_face("RobotoMono", "Regular", 20)
+process_face("RobotoMono", "Medium", 20)
 
 process_face("PixelOperator", "Regular", 8, bpp=1, shaveX=1)
 process_face("PixelOperator", "Bold", 8, bpp=1, shaveX=1)

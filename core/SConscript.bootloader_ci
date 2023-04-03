@@ -34,7 +34,7 @@ if TREZOR_MODEL in ('T', ):
     FONT_NORMAL='Font_Roboto_Regular_20'
     FONT_DEMIBOLD=None
     FONT_BOLD=None
-    FONT_MONO='Font_RobotoMono_Regular_20'
+    FONT_MONO='Font_RobotoMono_Medium_20'
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
