@@ -49,12 +49,12 @@ from pathlib import Path
 from typing import Dict  # for python38 support, must be used in type aliases
 from typing import List  # for python38 support, must be used in type aliases
 from typing import TYPE_CHECKING, Any, Iterator
+
+import click
 from typing_extensions import (  # for python37 support, is not present in typing there
     Final,
     TypedDict,
 )
-
-import click
 
 if TYPE_CHECKING:
     LineIgnores = List["LineIgnore"]

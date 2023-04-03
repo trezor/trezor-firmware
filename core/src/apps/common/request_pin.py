@@ -8,6 +8,7 @@ from .sdcard import request_sd_salt
 
 if TYPE_CHECKING:
     from typing import Any, NoReturn
+
     from trezor.wire import Context, GenericContext
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import glob
+
 try:
     from hashlib import blake2s
 except ImportError:

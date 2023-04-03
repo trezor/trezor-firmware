@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from trezor.messages import Success, WipeDevice
     from trezor.wire import GenericContext
-    from trezor.messages import WipeDevice, Success
 
 
 async def wipe_device(ctx: GenericContext, msg: WipeDevice) -> Success:

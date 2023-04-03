@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import BinanceSignTx, BinanceSignedTx
-    from apps.common.keychain import Keychain
+    from trezor.messages import BinanceSignedTx, BinanceSignTx
     from trezor.wire import Context
+
+    from apps.common.keychain import Keychain
 
 
 @auto_keychain(__name__)

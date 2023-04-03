@@ -21,8 +21,8 @@ def _make_input_output(input_output: BinanceInputOutput) -> str:
 
 
 def produce_json_for_signing(envelope: BinanceSignTx, msg: MessageType) -> str:
-    from trezor.messages import BinanceCancelMsg, BinanceOrderMsg, BinanceTransferMsg
     from trezor import wire
+    from trezor.messages import BinanceCancelMsg, BinanceOrderMsg, BinanceTransferMsg
 
     # NOTE: not defining kwargs in format string saves 7 bytes per each argument
     ENVELOPE_BLUEPRINT = '{{"account_number":"{}","chain_id":"{}","data":null,"memo":"{}","msgs":[{}],"sequence":"{}","source":"{}"}}'

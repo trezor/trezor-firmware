@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import MoneroGetAddress, MoneroAddress
+    from trezor.messages import MoneroAddress, MoneroGetAddress
     from trezor.wire import Context
 
     from apps.common.keychain import Keychain

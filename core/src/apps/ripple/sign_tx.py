@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import RippleSignTx, RippleSignedTx
-    from apps.common.keychain import Keychain
+    from trezor.messages import RippleSignedTx, RippleSignTx
     from trezor.wire import Context
+
+    from apps.common.keychain import Keychain
 
 
 # NOTE: it is one big function because that way it is the most flash-space-efficient
@@ -18,7 +19,9 @@ async def sign_tx(
     from trezor.crypto.hashlib import sha512
     from trezor.messages import RippleSignedTx
     from trezor.wire import ProcessError
+
     from apps.common import paths
+
     from . import helpers, layout
     from .serialize import serialize
 

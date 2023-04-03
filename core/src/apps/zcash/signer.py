@@ -7,13 +7,16 @@ from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
 
 if TYPE_CHECKING:
     from typing import Sequence
-    from apps.common.coininfo import CoinInfo
+
+    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
+    from trezor.utils import HashWriter
+
+    from apps.bitcoin.keychain import Keychain
+    from apps.bitcoin.sign_tx.approvers import Approver
     from apps.bitcoin.sign_tx.tx_info import OriginalTxInfo, TxInfo
     from apps.bitcoin.writers import Writer
-    from apps.bitcoin.sign_tx.approvers import Approver
-    from trezor.utils import HashWriter
-    from trezor.messages import PrevTx, TxInput, TxOutput, SignTx
-    from apps.bitcoin.keychain import Keychain
+    from apps.common.coininfo import CoinInfo
+
     from .hasher import ZcashHasher
 
 _OVERWINTERED = const(0x8000_0000)
@@ -119,8 +122,10 @@ class Zcash(Bitcoinlike):
         write_compact_size(w, 0)  # nActionsOrchard
 
     def output_derive_script(self, txo: TxOutput) -> bytes:
-        from apps.bitcoin import scripts
         from trezor.enums import OutputScriptType
+
+        from apps.bitcoin import scripts
+
         from .unified_addresses import Typecode, decode
 
         # unified addresses

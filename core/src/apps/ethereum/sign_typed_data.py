@@ -8,17 +8,18 @@ from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 from .layout import should_show_struct
 
 if TYPE_CHECKING:
-    from apps.common.keychain import Keychain
-    from trezor.wire import Context
-    from trezor.utils import HashWriter
-    from .definitions import Definitions
-
     from trezor.messages import (
-        EthereumSignTypedData,
         EthereumFieldType,
+        EthereumSignTypedData,
         EthereumTypedDataSignature,
         EthereumTypedDataStructAck,
     )
+    from trezor.utils import HashWriter
+    from trezor.wire import Context
+
+    from apps.common.keychain import Keychain
+
+    from .definitions import Definitions
 
 
 @with_keychain_from_path(*PATTERNS_ADDRESS)
@@ -29,10 +30,12 @@ async def sign_typed_data(
     defs: Definitions,
 ) -> EthereumTypedDataSignature:
     from trezor.crypto.curve import secp256k1
+    from trezor.messages import EthereumTypedDataSignature
+
     from apps.common import paths
+
     from .helpers import address_from_bytes
     from .layout import require_confirm_address
-    from trezor.messages import EthereumTypedDataSignature
 
     await paths.validate_path(ctx, keychain, msg.address_n)
 
@@ -148,8 +151,8 @@ class TypedDataEnvelope:
     async def _collect_types(self, type_name: str) -> None:
         """Recursively collect types from the client."""
         from trezor.messages import (
-            EthereumTypedDataStructRequest,
             EthereumTypedDataStructAck,
+            EthereumTypedDataStructRequest,
         )
 
         req = EthereumTypedDataStructRequest(name=type_name)

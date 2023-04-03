@@ -24,8 +24,8 @@ from . import ChoiceType, with_client
 
 if TYPE_CHECKING:
     from ..client import TrezorClient
-    from . import TrezorConnection
     from ..protobuf import MessageType
+    from . import TrezorConnection
 
 RECOVERY_TYPE = {
     "scrambled": messages.RecoveryDeviceType.ScrambledWords,

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import binascii
+
 from trezorlib.client import TrezorClient
 from trezorlib.transport_hid import HidTransport
 

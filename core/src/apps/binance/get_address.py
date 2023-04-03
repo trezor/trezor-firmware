@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import BinanceGetAddress, BinanceAddress
+    from trezor.messages import BinanceAddress, BinanceGetAddress
     from trezor.wire import Context
+
     from apps.common.keychain import Keychain
 
 

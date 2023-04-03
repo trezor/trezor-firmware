@@ -6,6 +6,7 @@ from storage.resident_credentials import MAX_RESIDENT_CREDENTIALS
 
 if TYPE_CHECKING:
     from typing import Iterator
+
     from .credential import Fido2Credential
 
 

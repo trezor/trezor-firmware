@@ -1,18 +1,18 @@
 from typing import TYPE_CHECKING
 
+import trezorui2
 from trezor import io, loop, ui
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
-
-import trezorui2
 
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
-    from trezor.wire import GenericContext, Context
-    from ..common import PropertyType, ExceptionType, ProgressLayout
+    from trezor.wire import Context, GenericContext
+
+    from ..common import ExceptionType, ProgressLayout, PropertyType
 
     T = TypeVar("T")
 
@@ -82,13 +82,9 @@ class RustLayout(ui.Layout):
             return result
 
         async def handle_swipe(self):
+            from trezor.ui import SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT, SWIPE_UP
+
             from apps.debug import notify_layout_change, swipe_signal
-            from trezor.ui import (
-                SWIPE_UP,
-                SWIPE_DOWN,
-                SWIPE_LEFT,
-                SWIPE_RIGHT,
-            )
 
             while True:
                 direction = await swipe_signal()

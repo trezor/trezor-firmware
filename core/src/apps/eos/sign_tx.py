@@ -3,23 +3,26 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
+    from trezor.messages import EosSignedTx, EosSignTx
     from trezor.wire import Context
-    from trezor.messages import EosSignTx, EosSignedTx
+
     from apps.common.keychain import Keychain
 
 
 @auto_keychain(__name__)
 async def sign_tx(ctx: Context, msg: EosSignTx, keychain: Keychain) -> EosSignedTx:
-    from trezor.wire import DataError
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
     from trezor.messages import EosSignedTx, EosTxActionAck, EosTxActionRequest
     from trezor.utils import HashWriter
+    from trezor.wire import DataError
+
     from apps.common import paths
-    from .writers import write_uvarint, write_header, write_bytes_fixed
+
     from .actions import process_action
     from .helpers import base58_encode
     from .layout import require_sign_tx
+    from .writers import write_bytes_fixed, write_header, write_uvarint
 
     num_actions = msg.num_actions  # local_cache_attribute
 

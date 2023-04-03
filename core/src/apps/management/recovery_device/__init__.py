@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import RecoveryDevice
+    from trezor.messages import RecoveryDevice, Success
     from trezor.wire import Context
-    from trezor.messages import Success
 
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
 # All except `dry_run` are allowed for T1 compatibility, but their values are ignored.
@@ -24,11 +23,13 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
     from trezor import config, wire, workflow
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_action, confirm_reset_device
+
     from apps.common.request_pin import (
         error_pin_invalid,
         request_pin_and_sd_salt,
         request_pin_confirm,
     )
+
     from .homescreen import recovery_homescreen, recovery_process
 
     dry_run = msg.dry_run  # local_cache_attribute

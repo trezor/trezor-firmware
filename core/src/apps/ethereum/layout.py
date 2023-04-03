@@ -32,8 +32,9 @@ def require_confirm_tx(
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
 ) -> Awaitable[None]:
-    from .helpers import address_from_bytes
     from trezor.ui.layouts import confirm_output
+
+    from .helpers import address_from_bytes
 
     if to_bytes:
         to_str = address_from_bytes(to_bytes, network)
@@ -104,6 +105,7 @@ def require_confirm_unknown_token(
     ctx: Context, address_bytes: bytes
 ) -> Awaitable[None]:
     from ubinascii import hexlify
+
     from trezor.ui.layouts import confirm_address
 
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
@@ -119,6 +121,7 @@ def require_confirm_unknown_token(
 
 def require_confirm_address(ctx: Context, address_bytes: bytes) -> Awaitable[None]:
     from ubinascii import hexlify
+
     from trezor.ui.layouts import confirm_address
 
     address_hex = "0x" + hexlify(address_bytes).decode()
@@ -232,6 +235,7 @@ async def confirm_typed_value(
     array_index: int | None = None,
 ) -> None:
     from trezor.enums import EthereumDataType
+
     from .helpers import get_type_name
 
     type_name = get_type_name(field)

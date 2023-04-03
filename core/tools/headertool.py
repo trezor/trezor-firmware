@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+from typing import List, Sequence, Tuple
+
 import click
 
 from trezorlib import cosi, firmware
 from trezorlib._internal import firmware_headers
-
-from typing import List, Sequence, Tuple
 
 # =========================== signing =========================
 

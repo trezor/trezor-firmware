@@ -1,6 +1,6 @@
-from common import *
-
 from trezor.crypto.curve import curve25519
+
+from common import *
 
 
 class TestCryptoCurve25519(unittest.TestCase):

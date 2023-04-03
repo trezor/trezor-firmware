@@ -211,8 +211,8 @@ def get_hash_and_supplement(
     protocol_magic: int,
     network_id: int,
 ) -> tuple[bytes, messages.CardanoTxAuxiliaryDataSupplement]:
-    from trezor.enums import CardanoTxAuxiliaryDataSupplementType
     from trezor import messages
+    from trezor.enums import CardanoTxAuxiliaryDataSupplementType
 
     if parameters := auxiliary_data.cvote_registration_parameters:
         (

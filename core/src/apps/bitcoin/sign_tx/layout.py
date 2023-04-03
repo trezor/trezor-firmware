@@ -19,9 +19,9 @@ from ..keychain import address_n_to_name
 if TYPE_CHECKING:
     from typing import Any
 
+    from trezor.enums import AmountUnit
     from trezor.messages import TxAckPaymentRequest, TxOutput
     from trezor.ui.layouts import LayoutType
-    from trezor.enums import AmountUnit
     from trezor.wire import Context
 
     from apps.common.coininfo import CoinInfo
@@ -52,8 +52,9 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
 async def confirm_output(
     ctx: Context, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
 ) -> None:
-    from . import omni
     from trezor.enums import OutputScriptType
+
+    from . import omni
 
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
         data = output.op_return_data

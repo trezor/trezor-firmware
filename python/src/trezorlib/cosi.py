@@ -23,8 +23,8 @@ from .tools import expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .tools import Address
     from .protobuf import MessageType
+    from .tools import Address
 
 # XXX, these could be NewType's, but that would infect users of the cosi module with these types as well.
 # Unsure if we want that.

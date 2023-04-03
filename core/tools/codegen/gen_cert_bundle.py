@@ -2,8 +2,8 @@
 
 from base64 import b64decode
 from hashlib import sha256
-import requests
 
+import requests
 
 REPO = "certifi/python-certifi"
 

@@ -4,24 +4,18 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from storage import debug as storage
+    from typing import TYPE_CHECKING
 
     import trezorui2
-
+    from storage import debug as storage
     from trezor import log, loop, wire
-    from trezor.ui import display
     from trezor.enums import MessageType
-    from trezor.messages import (
-        DebugLinkLayout,
-        Success,
-    )
+    from trezor.messages import DebugLinkLayout, Success
+    from trezor.ui import display
 
     from apps import workflow_handlers
 
-    from typing import TYPE_CHECKING
-
     if TYPE_CHECKING:
-        from trezor.ui import Layout
         from trezor.messages import (
             DebugLinkDecision,
             DebugLinkEraseSdCard,
@@ -31,6 +25,7 @@ if __debug__:
             DebugLinkState,
             DebugLinkWatchLayout,
         )
+        from trezor.ui import Layout
 
     reset_current_words = loop.chan()
     reset_word_index = loop.chan()
@@ -65,13 +60,7 @@ if __debug__:
 
     async def _dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
         from trezor.enums import DebugButton, DebugSwipeDirection
-        from trezor.ui import (
-            Result,
-            SWIPE_UP,
-            SWIPE_DOWN,
-            SWIPE_LEFT,
-            SWIPE_RIGHT,
-        )
+        from trezor.ui import SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT, SWIPE_UP, Result
 
         button = msg.button  # local_cache_attribute
         swipe = msg.swipe  # local_cache_attribute
@@ -158,6 +147,7 @@ if __debug__:
         ctx: wire.Context, msg: DebugLinkGetState
     ) -> DebugLinkState | None:
         from trezor.messages import DebugLinkState
+
         from apps.common import mnemonic, passphrase
 
         m = DebugLinkState()

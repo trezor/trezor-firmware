@@ -1,18 +1,21 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from apps.common.coininfo import CoinInfo
-    from trezor.messages import VerifyMessage, Success
-    from trezor.wire import Context
     from trezor.enums import InputScriptType
+    from trezor.messages import Success, VerifyMessage
+    from trezor.wire import Context
+
+    from apps.common.coininfo import CoinInfo
 
 
 def _address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
-    from trezor.crypto import base58
-    from trezor.wire import DataError
-    from trezor.enums import InputScriptType
     from trezor import utils
+    from trezor.crypto import base58
+    from trezor.enums import InputScriptType
+    from trezor.wire import DataError
+
     from apps.common import address_type
+
     from . import common
 
     # Determines the script type from a non-multisig address.
@@ -50,11 +53,11 @@ def _address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
 
 async def verify_message(ctx: Context, msg: VerifyMessage) -> Success:
     from trezor import utils
-    from trezor.wire import ProcessError
     from trezor.crypto.curve import secp256k1
     from trezor.enums import InputScriptType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_signverify, show_success
+    from trezor.wire import ProcessError
 
     from apps.common import coins
     from apps.common.signverify import decode_message, message_digest

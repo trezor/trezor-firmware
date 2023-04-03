@@ -111,6 +111,7 @@ class ScriptTypeChecker(MatchChecker):
     def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
         from trezor.enums import InputScriptType
         from trezor.messages import TxOutput
+
         from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
 
         if TxOutput.is_type_of(txio):

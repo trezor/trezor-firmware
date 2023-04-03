@@ -4,6 +4,7 @@ from apps.common import cbor
 
 if TYPE_CHECKING:
     from typing import Any, Generic, TypeVar
+
     from trezor import wire
     from trezor.utils import HashContext
 

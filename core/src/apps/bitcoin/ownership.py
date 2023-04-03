@@ -12,10 +12,11 @@ from apps.common.readers import read_compact_size
 from .scripts import read_bip322_signature_proof
 
 if TYPE_CHECKING:
-    from trezor.messages import MultisigRedeemScriptType
-    from trezor.enums import InputScriptType
-    from apps.common.coininfo import CoinInfo
     from trezor.crypto import bip32
+    from trezor.enums import InputScriptType
+    from trezor.messages import MultisigRedeemScriptType
+
+    from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
 # This module implements the SLIP-0019 proof of ownership format, see
@@ -39,13 +40,11 @@ def generate_proof(
     commitment_data: bytes,
 ) -> tuple[bytes, bytes]:
     from trezor.enums import InputScriptType
-    from apps.bitcoin.writers import (
-        write_bytes_fixed,
-        write_compact_size,
-        write_uint8,
-    )
-    from .scripts import write_bip322_signature_proof
+
+    from apps.bitcoin.writers import write_bytes_fixed, write_compact_size, write_uint8
+
     from . import common
+    from .scripts import write_bip322_signature_proof
 
     flags = 0
     if user_confirmed:

@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr import crypto_helpers, monero
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.credentials import AccountCreds
     from trezor.messages import MoneroTransferDetails
+
     from apps.monero.xmr import crypto
+    from apps.monero.xmr.credentials import AccountCreds
 
     Subaddresses = dict[bytes, tuple[int, int]]
     Sig = list[list[crypto.Scalar]]
@@ -78,6 +79,7 @@ def generate_ring_signature(
     void crypto_ops::generate_ring_signature()
     """
     from trezor.utils import memcpy
+
     from apps.monero.xmr import crypto
 
     Scalar = crypto.Scalar  # local_cache_attribute

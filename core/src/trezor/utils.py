@@ -30,13 +30,7 @@ if __debug__:
         LOG_MEMORY = 0
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        Iterator,
-        Protocol,
-        TypeVar,
-        Sequence,
-    )
+    from typing import Any, Iterator, Protocol, Sequence, TypeVar
 
     from trezor.protobuf import MessageType
 
@@ -181,8 +175,9 @@ if False:  # noqa
             self.data += hexlify(data).decode() + " "
 
         def digest(self) -> bytes:
-            from trezor import log
             from ubinascii import hexlify
+
+            from trezor import log
 
             digest = self.ctx.digest()
             log.debug(

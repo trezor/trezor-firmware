@@ -7,15 +7,18 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionAllInputsSetAck
-    from .state import State
+
     from apps.monero.layout import MoneroTransactionProgress
+
+    from .state import State
 
 
 def all_inputs_set(
     state: State, progress: MoneroTransactionProgress
 ) -> MoneroTransactionAllInputsSetAck:
-    from apps.monero.xmr import crypto
     from trezor.messages import MoneroTransactionAllInputsSetAck
+
+    from apps.monero.xmr import crypto
 
     state.mem_trace(0)
 

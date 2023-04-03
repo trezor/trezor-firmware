@@ -1,9 +1,10 @@
-from common import *
 from apps.common.paths import HARDENED
+from common import *
 
 if not utils.BITCOIN_ONLY:
-    from apps.ethereum.helpers import address_from_bytes
     from ethereum_common import make_network
+
+    from apps.ethereum.helpers import address_from_bytes
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

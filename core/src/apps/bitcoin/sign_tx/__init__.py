@@ -5,29 +5,30 @@ from trezor import utils
 from ..keychain import with_keychain
 
 if not utils.BITCOIN_ONLY:
-    from . import bitcoinlike, decred, zcash_v4
     from apps.zcash.signer import Zcash
+
+    from . import bitcoinlike, decred, zcash_v4
 
 if TYPE_CHECKING:
     from typing import Protocol
 
-    from trezor.wire import Context
     from trezor.messages import (
         SignTx,
         TxAckInput,
         TxAckOutput,
-        TxAckPrevMeta,
-        TxAckPrevInput,
-        TxAckPrevOutput,
         TxAckPrevExtraData,
+        TxAckPrevInput,
+        TxAckPrevMeta,
+        TxAckPrevOutput,
         TxRequest,
     )
+    from trezor.wire import Context
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
-    from . import approvers
     from ..authorization import CoinJoinAuthorization
+    from . import approvers
 
     TxAckType = (
         TxAckInput

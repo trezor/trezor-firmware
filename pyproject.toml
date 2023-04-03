@@ -80,3 +80,10 @@ towncrier = "^21.9.0"
 [build-system]
 requires = ["poetry>=1;<1.1", "pip>=20"]
 build-backend = "poetry.masonry.api"
+
+[tool.isort]
+profile = "black"
+sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER']
+extra_standard_library = ["micropython","ubinascii","ustruct","uctypes","utime","utimeq","trezorio","trezorui","trezorutils","trezorconfig","trezorcrypto"]
+known_third_party = ["curve25519","ecdsa","hypothesis","pytest","mnemonic","shamir-mnemonic","trezor","apps","storage","protobuf"]
+known_first_party = ["trezorlib","apps"]

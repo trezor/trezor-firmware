@@ -19,7 +19,6 @@ from decimal import Decimal
 
 from trezorlib import btc
 
-
 # https://btc1.trezor.io/api/tx-specific/f5e735549daeb480d4348f2574b8967a4f149715edb220a742d8bb654d668348
 TX_JSON_BIG = """
 {

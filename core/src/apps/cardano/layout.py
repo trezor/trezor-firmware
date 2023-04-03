@@ -27,10 +27,10 @@ confirm_properties = layouts.confirm_properties  # global_import_cache
 if TYPE_CHECKING:
     from typing import Literal
 
-    from trezor.wire import Context
     from trezor import messages
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
     from trezor.ui.layouts import PropertyType
+    from trezor.wire import Context
 
     from .helpers.credential import Credential
     from .seed import Keychain

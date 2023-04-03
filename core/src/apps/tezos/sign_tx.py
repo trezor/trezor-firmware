@@ -16,27 +16,30 @@ from .helpers import (  # symbols used more than once
 )
 
 if TYPE_CHECKING:
-    from apps.common.keychain import Keychain
-    from trezor.wire import Context
     from trezor.messages import (
-        TezosSignTx,
         TezosContractID,
-        TezosRevealOp,
         TezosDelegationOp,
-        TezosTransactionOp,
         TezosOriginationOp,
+        TezosRevealOp,
         TezosSignedTx,
+        TezosSignTx,
+        TezosTransactionOp,
     )
     from trezor.utils import Writer
+    from trezor.wire import Context
+
+    from apps.common.keychain import Keychain
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSignedTx:
     from trezor.crypto import hashlib
     from trezor.crypto.curve import ed25519
-    from apps.common.paths import validate_path
-    from trezor.messages import TezosSignedTx
     from trezor.enums import TezosBallotType
+    from trezor.messages import TezosSignedTx
+
+    from apps.common.paths import validate_path
+
     from . import layout
 
     await validate_path(ctx, keychain, msg.address_n)
@@ -177,6 +180,7 @@ def _get_address_from_contract(address: TezosContractID) -> str:
 
 def _get_operation_bytes(w: Writer, msg: TezosSignTx) -> None:
     from apps.common.writers import write_bytes_unchecked
+
     from .helpers import PROPOSAL_HASH_SIZE
 
     reveal = msg.reveal  # local_cache_attribute

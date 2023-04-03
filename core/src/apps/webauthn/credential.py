@@ -15,6 +15,7 @@ from .common import COSE_ALG_EDDSA, COSE_ALG_ES256, COSE_CURVE_ED25519, COSE_CUR
 
 if TYPE_CHECKING:
     from typing import Iterable
+
     from trezor.crypto import bip32
 
 

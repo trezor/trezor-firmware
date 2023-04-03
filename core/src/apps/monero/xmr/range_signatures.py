@@ -14,9 +14,7 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr import crypto
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import (
-        BulletproofPlus,
-    )
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import BulletproofPlus
 
 
 def prove_range_bp_batch(

@@ -14,6 +14,7 @@ from trezor.ui.layouts.reset import (  # noqa: F401
 
 if TYPE_CHECKING:
     from typing import Sequence
+
     from trezor.wire import GenericContext
 
 if __debug__:

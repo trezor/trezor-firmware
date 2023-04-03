@@ -22,9 +22,10 @@ from apps.common.keychain import auto_keychain
 _GET_TX_KEY_REASON_TX_DERIVATION = const(1)
 
 if TYPE_CHECKING:
-    from trezor.messages import MoneroGetTxKeyRequest, MoneroGetTxKeyAck
-    from apps.common.keychain import Keychain
+    from trezor.messages import MoneroGetTxKeyAck, MoneroGetTxKeyRequest
     from trezor.wire import Context
+
+    from apps.common.keychain import Keychain
 
 
 @auto_keychain(__name__)

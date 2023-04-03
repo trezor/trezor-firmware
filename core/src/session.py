@@ -1,7 +1,7 @@
+import usb
 from trezor import log, loop, utils, wire, workflow
 
 import apps.base
-import usb
 
 apps.base.boot()
 
