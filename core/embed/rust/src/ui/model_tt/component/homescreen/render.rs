@@ -51,7 +51,8 @@ struct HomescreenTextInfo {
     pub icon_area: Option<Rect>,
 }
 
-pub const HOMESCREEN_IMAGE_SIZE: i16 = 240;
+pub const HOMESCREEN_IMAGE_WIDTH: i16 = WIDTH;
+pub const HOMESCREEN_IMAGE_HEIGHT: i16 = HEIGHT;
 pub const HOMESCREEN_TOIF_SIZE: i16 = 144;
 pub const HOMESCREEN_TOIF_Y_OFFSET: i16 = 27;
 pub const HOMESCREEN_TOIF_X_OFFSET: usize = ((WIDTH - HOMESCREEN_TOIF_SIZE) / 2) as usize;
@@ -64,7 +65,7 @@ const NOTIFICATION_TEXT_OFFSET: Offset = Offset::new(1, -2);
 const TEXT_ICON_SPACE: i16 = 2;
 
 const HOMESCREEN_DIM_HEIGHT: i16 = 35;
-const HOMESCREEN_DIM_START: i16 = 198;
+const HOMESCREEN_DIM_START: i16 = HOMESCREEN_IMAGE_HEIGHT - 22;
 const HOMESCREEN_DIM: f32 = 0.65;
 const HOMESCREEN_DIM_BORDER: i16 = theme::BUTTON_SPACING;
 
@@ -297,7 +298,7 @@ fn homescreen_line_blurred(
     let t_buffer = unsafe { get_buffer_4bpp((y & 0x1) as u16, true) };
     let mut img_buffer = unsafe { get_buffer_16bpp((y & 0x1) as u16, false) };
 
-    for x in 0..HOMESCREEN_IMAGE_SIZE {
+    for x in 0..HOMESCREEN_IMAGE_WIDTH {
         let c = if LOCKSCREEN_DIM_ALL {
             let x = x as usize;
 
@@ -349,7 +350,7 @@ fn homescreen_line(
 
     let image_data = get_data(data_buffer, y, mcu_height);
 
-    for x in 0..HOMESCREEN_IMAGE_SIZE {
+    for x in 0..HOMESCREEN_IMAGE_WIDTH {
         let d = image_data[x as usize];
 
         let c = if homescreen_dim_area(x, y) {
@@ -427,7 +428,7 @@ fn update_accs_sub(data: &[u16], idx: usize, acc_r: &mut u16, acc_g: &mut u16, a
 
 struct BlurringContext {
     pub lines: &'static mut [[[u16; 240usize]; 3usize]],
-    pub totals: [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+    pub totals: [[u16; HOMESCREEN_IMAGE_WIDTH as usize]; COLORS],
     line_num: i16,
     add_idx: usize,
     rem_idx: usize,
@@ -438,7 +439,7 @@ impl BlurringContext {
         let mem = unsafe { get_blurring_buffer(0, true) };
         Self {
             lines: &mut mem.buffer[0..DECOMP_LINES],
-            totals: [[0; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+            totals: [[0; HOMESCREEN_IMAGE_WIDTH as usize]; COLORS],
             line_num: 0,
             add_idx: 0,
             rem_idx: 0,
@@ -462,19 +463,19 @@ impl BlurringContext {
         let data = get_data(buffer, self.line_num, mcu_height);
 
         for i in -BLUR_RADIUS..=BLUR_RADIUS {
-            let ic = i.clamp(0, HOMESCREEN_IMAGE_SIZE as i16 - 1) as usize;
+            let ic = i.clamp(0, HOMESCREEN_IMAGE_WIDTH as i16 - 1) as usize;
             update_accs_add(data, ic, &mut acc_r, &mut acc_g, &mut acc_b);
         }
 
-        for i in 0..HOMESCREEN_IMAGE_SIZE {
+        for i in 0..HOMESCREEN_IMAGE_WIDTH {
             self.lines[self.add_idx][RED_IDX][i as usize] = acc_r;
             self.lines[self.add_idx][GREEN_IDX][i as usize] = acc_g;
             self.lines[self.add_idx][BLUE_IDX][i as usize] = acc_b;
 
             // clamping handles left and right edges
-            let ic = (i - BLUR_RADIUS).clamp(0, HOMESCREEN_IMAGE_SIZE as i16 - 1) as usize;
+            let ic = (i - BLUR_RADIUS).clamp(0, HOMESCREEN_IMAGE_WIDTH as i16 - 1) as usize;
             let ic2 = (i + BLUR_SIZE as i16 - BLUR_RADIUS)
-                .clamp(0, HOMESCREEN_IMAGE_SIZE as i16 - 1) as usize;
+                .clamp(0, HOMESCREEN_IMAGE_WIDTH as i16 - 1) as usize;
             update_accs_add(data, ic2, &mut acc_r, &mut acc_g, &mut acc_b);
             update_accs_sub(data, ic, &mut acc_r, &mut acc_g, &mut acc_b);
         }
@@ -483,7 +484,7 @@ impl BlurringContext {
 
     // adds one line of averages to sliding total averages
     fn vertical_avg_add(&mut self) {
-        for i in 0..HOMESCREEN_IMAGE_SIZE as usize {
+        for i in 0..HOMESCREEN_IMAGE_WIDTH as usize {
             self.totals[RED_IDX][i] += self.lines[self.add_idx][RED_IDX][i];
             self.totals[GREEN_IDX][i] += self.lines[self.add_idx][GREEN_IDX][i];
             self.totals[BLUE_IDX][i] += self.lines[self.add_idx][BLUE_IDX][i];
@@ -492,7 +493,7 @@ impl BlurringContext {
 
     // adds one line and removes one line of averages to/from sliding total averages
     fn vertical_avg(&mut self) {
-        for i in 0..HOMESCREEN_IMAGE_SIZE as usize {
+        for i in 0..HOMESCREEN_IMAGE_WIDTH as usize {
             self.totals[RED_IDX][i] +=
                 self.lines[self.add_idx][RED_IDX][i] - self.lines[self.rem_idx][RED_IDX][i];
             self.totals[GREEN_IDX][i] +=
@@ -566,7 +567,7 @@ pub fn homescreen_blurred(data: &mut dyn HomescreenDecompressor, texts: &[Homesc
     for y in 0..HEIGHT {
         // several lines have been already decompressed before this loop, adjust for
         // that
-        if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) {
+        if y < HOMESCREEN_IMAGE_HEIGHT - (BLUR_RADIUS + 1) {
             blurring.compute_line_avgs(data.get_data(), mcu_height);
         }
 
@@ -583,11 +584,11 @@ pub fn homescreen_blurred(data: &mut dyn HomescreenDecompressor, texts: &[Homesc
         // for the rest of image
         // the extra -1 is to indicate that this was the last decompressed line,
         // in the next pass the docompression and compute_line_avgs won't happen
-        if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) - 1 {
+        if y < HOMESCREEN_IMAGE_HEIGHT - (BLUR_RADIUS + 1) - 1 {
             blurring.inc_add();
         }
 
-        if y == HOMESCREEN_IMAGE_SIZE {
+        if y == HOMESCREEN_IMAGE_HEIGHT {
             // reached end of image, clear avgs (display black)
             blurring.clear();
         }

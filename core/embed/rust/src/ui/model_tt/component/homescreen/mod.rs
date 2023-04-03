@@ -17,6 +17,7 @@ use crate::{
 use crate::{
     trezorhal::{display::ToifFormat, uzlib::UZLIB_WINDOW_SIZE},
     ui::{
+        constant::HEIGHT,
         display::{tjpgd::BufferInput, toif::Toif},
         model_tt::component::homescreen::render::{
             HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
@@ -24,16 +25,17 @@ use crate::{
     },
 };
 use render::{
-    homescreen, homescreen_blurred, HomescreenNotification, HomescreenText, HOMESCREEN_IMAGE_SIZE,
+    homescreen, homescreen_blurred, HomescreenNotification, HomescreenText,
+    HOMESCREEN_IMAGE_HEIGHT, HOMESCREEN_IMAGE_WIDTH,
 };
 
 use super::{theme, Loader, LoaderMsg};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
-const LABEL_Y: i16 = 222;
-const LOCKED_Y: i16 = 107;
-const TAP_Y: i16 = 134;
+const LABEL_Y: i16 = HEIGHT - 18;
+const LOCKED_Y: i16 = HEIGHT / 2 - 13;
+const TAP_Y: i16 = HEIGHT / 2 + 14;
 const HOLD_Y: i16 = 35;
 const LOADER_OFFSET: Offset = Offset::y(-10);
 const LOADER_DELAY: Duration = Duration::from_millis(500);
@@ -363,7 +365,8 @@ fn get_image() -> Result<Gc<[u8]>, ()> {
 fn is_image_jpeg(buffer: &[u8]) -> bool {
     let jpeg = jpeg_info(buffer);
     if let Some((size, mcu_height)) = jpeg {
-        if size.x == HOMESCREEN_IMAGE_SIZE && size.y == HOMESCREEN_IMAGE_SIZE && mcu_height <= 16 {
+        if size.x == HOMESCREEN_IMAGE_WIDTH && size.y == HOMESCREEN_IMAGE_HEIGHT && mcu_height <= 16
+        {
             return true;
         }
     }
