@@ -39,6 +39,9 @@ pub mod welcome;
 use confirm::Confirm;
 use intro::Intro;
 use menu::Menu;
+use crate::ui::model_tt::bootloader::theme::TEXT_NORMAL;
+use crate::ui::model_tt::component::PinKeyboard;
+use crate::ui::model_tt::theme::button_cancel;
 
 use self::theme::{RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE};
 
@@ -440,16 +443,26 @@ extern "C" fn screen_pairing_confirm(buffer: *const cty::uint8_t) -> u32 {
 
 #[no_mangle]
 extern "C" fn screen_repair_confirm() -> u32 {
-    let left = Button::with_text("DENY").styled(button_install_cancel());
-    let right = Button::with_text("ALLOW").styled(button_install_confirm());
 
-    let mut messages = ParagraphVecShort::new();
+    let msg = Label::new(
+        "Allow repair?",
+        Alignment::Center,
+        TEXT_NORMAL,
+    );
+    let right = Button::with_text("DENY").styled(button_confirm());
+    let left = Button::with_text("ALLOW").styled(button_cancel());
+    let title = Label::new("REPAIR", Alignment::Start, theme::TEXT_BOLD)
+        .vertically_aligned(Alignment::Center);
 
-    messages.add(Paragraph::new(&TEXT_NORMAL_BLACK, "Allow repair?").centered());
+    let mut frame = Confirm::new(
+        BLD_BG,
+        left,
+        right,
+        ConfirmTitle::Text(title),
+        msg,
+        None,
+        None,
+    );
 
-    let message =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut pin = Confirm::new(BLACK, None, left, right, false, (None, message), None);
-    run(&mut pin, true)
+    run(&mut frame, true)
 }

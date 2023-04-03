@@ -329,7 +329,7 @@ static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
               hal_delay(1000);
               usb_stop();
               usb_deinit();
-              ui_screen_boot_empty(true, true);
+              ui_screen_boot_empty(true);
               return CONTINUE;
             }
             break;
