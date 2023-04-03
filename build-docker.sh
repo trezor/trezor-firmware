@@ -171,14 +171,15 @@ for BITCOIN_ONLY in ${VARIANTS_core[@]}; do
     cd /tmp
     git clone "$REPOSITORY" trezor-firmware
     cd trezor-firmware/core
-    ln -s /build build
     git checkout "$TAG"
     git submodule update --init --recursive
     poetry install
-    poetry run make clean vendor build_firmware
+    poetry run make clean vendor build_bootloader build_firmware
     poetry run ../python/tools/firmware-fingerprint.py \
                -o build/firmware/firmware.bin.fingerprint \
                build/firmware/firmware.bin
+    rm -r /build/*
+    cp -r build/* /build
     chown -R $USER:$GROUP /build
 EOF
 
