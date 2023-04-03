@@ -78,7 +78,11 @@ where
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let height = self.text_height(bounds.width());
+        let height = self
+            .layout
+            .with_bounds(bounds)
+            .fit_text(self.text.as_ref())
+            .height();
         let diff = bounds.height() - height;
         let insets = match self.vertical {
             Alignment::Start => Insets::bottom(diff),
