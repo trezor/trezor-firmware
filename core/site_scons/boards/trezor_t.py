@@ -7,6 +7,7 @@ def configure(env, features_wanted, defines, sources):
     display = 'st7789v.c'
     hw_model = get_hw_model_as_number('T2T1')
     hw_revision = 0
+    features_available.append("disp_i8080_8bit_dw")
 
     defines += [f'TREZOR_BOARD=\\"boards/{board}\\"', ]
     defines += [f'HW_MODEL={hw_model}', ]

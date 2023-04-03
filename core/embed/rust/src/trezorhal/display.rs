@@ -104,7 +104,15 @@ pub fn bar_radius_buffer(x: i16, y: i16, w: i16, h: i16, radius: u8, buffer: &mu
 }
 
 #[inline(always)]
-#[cfg(all(feature = "model_tt", target_arch = "arm"))]
+#[cfg(feature = "disp_i8080_16it_dw")]
+pub fn pixeldata(c: u16) {
+    unsafe {
+        ffi::DISPLAY_DATA_ADDRESS.write_volatile(c);
+    }
+}
+
+#[inline(always)]
+#[cfg(feature = "disp_i8080_8bit_dw")]
 pub fn pixeldata(c: u16) {
     unsafe {
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c & 0xff) as u8);
@@ -113,7 +121,7 @@ pub fn pixeldata(c: u16) {
 }
 
 #[inline(always)]
-#[cfg(not(all(feature = "model_tt", target_arch = "arm")))]
+#[cfg(not(all(feature = "disp_i8080_16it_dw", feature = "disp_i8080_8bit_dw")))]
 pub fn pixeldata(c: u16) {
     unsafe {
         ffi::display_pixeldata(c);
