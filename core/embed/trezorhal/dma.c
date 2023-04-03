@@ -239,6 +239,7 @@ void dma_init(DMA_HandleTypeDef *dma, const dma_descr_t *dma_descr, uint32_t dir
         dma_handle[dma_id] = dma;
 
         dma_enable_clock(dma_id);
+        svc_disableIRQ(dma_irqn[dma_id]);
 
         // if this stream was previously configured for this channel/request and direction then we
         // can skip most of the initialisation
