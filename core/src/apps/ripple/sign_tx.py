@@ -47,8 +47,8 @@ async def sign_tx(
 
     if payment.destination_tag is not None:
         await layout.require_confirm_destination_tag(ctx, payment.destination_tag)
-    await layout.require_confirm_fee(ctx, msg.fee)
     await layout.require_confirm_tx(ctx, payment.destination, payment.amount)
+    await layout.require_confirm_total(ctx, payment.amount + msg.fee, msg.fee)
 
     # Signs and encodes signature into DER format
     first_half_of_sha512 = sha512(to_sign).digest()[:32]
