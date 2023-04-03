@@ -1674,7 +1674,7 @@
 "TT_ripple-test_get_address.py::test_ripple_get_address": "80a6e289138a604cf351a29511cf6f85e2243591317894703152787e1351a1a3",
 "TT_ripple-test_get_address.py::test_ripple_get_address_other": "80a6e289138a604cf351a29511cf6f85e2243591317894703152787e1351a1a3",
 "TT_ripple-test_sign_tx.py::test_ripple_sign_invalid_fee": "80a6e289138a604cf351a29511cf6f85e2243591317894703152787e1351a1a3",
-"TT_ripple-test_sign_tx.py::test_ripple_sign_simple_tx": "eb1677859fe11ba49e9bfee5111e81dcbddd7c63dfb1aea6370dfdfb0a5c88fa",
+"TT_ripple-test_sign_tx.py::test_ripple_sign_simple_tx": "ec3cbfd6ab3c1574c78a3864baf66c1497972986dda525c93debdbea49dab442",
 "TT_stellar-test_stellar.py::test_get_address[parameters0-result0]": "cc398b30b3da458cfa14085c647c3e3efa66d85222d8dd7216b8902329d7f036",
 "TT_stellar-test_stellar.py::test_get_address[parameters1-result1]": "6df40614002c6de060e415a0a6b144baf6c79b13e8d79866633426e04fda395b",
 "TT_stellar-test_stellar.py::test_get_address[parameters2-result2]": "90b9af1272540b7742bedb5db34444b2efba9b1e32746e4ddf7cee3a1a413dc0",
