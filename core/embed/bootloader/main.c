@@ -257,7 +257,7 @@ static void check_bootloader_version(void) {
          NULL);
 
   ensure(sectrue * (0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE)),
-         "Bootloader downgraded");
+         "Bootloader downgrade protection");
 }
 
 #endif
@@ -479,27 +479,27 @@ int bootloader_main(void) {
   }
 
   ensure(read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr),
-         "invalid vendor header");
+         "Firmware is corrupted");
 
-  ensure(check_vendor_header_keys(&vhdr), "invalid vendor header signature");
+  ensure(check_vendor_header_keys(&vhdr), "Firmware is corrupted");
 
-  ensure(check_vendor_header_lock(&vhdr), "unauthorized vendor keys");
+  ensure(check_vendor_header_lock(&vhdr), "Unauthorized vendor keys");
 
   hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
                           FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
 
   ensure(hdr == (const image_header *)(FIRMWARE_START + vhdr.hdrlen) ? sectrue
                                                                      : secfalse,
-         "invalid firmware header");
+         "Firmware is corrupted");
 
-  ensure(check_image_model(hdr), "wrong firmware model");
+  ensure(check_image_model(hdr), "Wrong firmware model");
 
   ensure(check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub),
-         "invalid firmware signature");
+         "Firmware is corrupted");
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
                               FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT),
-         "invalid firmware hash");
+         "Firmware is corrupted");
 
   // if all VTRUST flags are unset = ultimate trust => skip the procedure
 
@@ -537,4 +537,4 @@ int bootloader_main(void) {
   return 0;
 }
 
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(HF)"); }
+void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }

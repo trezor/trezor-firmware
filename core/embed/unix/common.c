@@ -85,16 +85,18 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
     msg = "Unknown error";
     char buf[256] = {0};
     snprintf(buf, sizeof(buf), "%s: %d", file, line);
-    screen_fatal_error_rust("FATAL ERROR", buf, "PLEASE VISIT\nTREZOR.IO/RSOD");
+    screen_fatal_error_rust("INTERNAL ERROR", buf,
+                            "PLEASE VISIT\nTREZOR.IO/RSOD");
   } else {
-    screen_fatal_error_rust("FATAL ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
+    screen_fatal_error_rust("INTERNAL ERROR", msg,
+                            "PLEASE VISIT\nTREZOR.IO/RSOD");
   }
 
   display_refresh();
 #else
   display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  display_printf("\nFATAL ERROR:\n");
-  printf("\nFATAL ERROR:\n");
+  display_printf("\nINTERNAL ERROR:\n");
+  printf("\nINTERNAL ERROR:\n");
   if (expr) {
     display_printf("expr: %s\n", expr);
     printf("expr: %s\n", expr);

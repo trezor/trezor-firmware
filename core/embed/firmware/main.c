@@ -184,7 +184,7 @@ int main(void) {
 // MicroPython default exception handler
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-  error_shutdown("INTERNAL ERROR!", "(UE)");
+  error_shutdown("INTERNAL ERROR", "(UE)");
 }
 
 // interrupt handlers
@@ -192,19 +192,19 @@ void __attribute__((noreturn)) nlr_jump_fail(void *val) {
 void NMI_Handler(void) {
   // Clock Security System triggered NMI
   if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
-    error_shutdown("INTERNAL ERROR!", "(CS)");
+    error_shutdown("INTERNAL ERROR", "(CS)");
   }
 }
 
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(HF)"); }
+void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }
 
-void MemManage_Handler_MM(void) { error_shutdown("INTERNAL ERROR!", "(MM)"); }
+void MemManage_Handler_MM(void) { error_shutdown("INTERNAL ERROR", "(MM)"); }
 
-void MemManage_Handler_SO(void) { error_shutdown("INTERNAL ERROR!", "(SO)"); }
+void MemManage_Handler_SO(void) { error_shutdown("INTERNAL ERROR", "(SO)"); }
 
-void BusFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(BF)"); }
+void BusFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(BF)"); }
 
-void UsageFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(UF)"); }
+void UsageFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(UF)"); }
 
 __attribute__((noreturn)) void reboot_to_bootloader() {
   jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE,

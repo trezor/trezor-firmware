@@ -19,7 +19,7 @@ pub fn __fatal_error(_expr: &str, _msg: &str, _file: &str, _line: u32, _func: &s
 
 #[cfg(not(feature = "bootloader"))]
 pub fn __fatal_error(_expr: &str, msg: &str, _file: &str, _line: u32, _func: &str) -> ! {
-    screen_fatal_error("FATAL ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
+    screen_fatal_error("INTERNAL_ERROR", msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
     shutdown()
 }
 

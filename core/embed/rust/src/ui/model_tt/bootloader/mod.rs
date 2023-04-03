@@ -320,7 +320,7 @@ extern "C" fn screen_wipe_success() {
     let mut frame = ResultScreen::new(
         &RESULT_WIPE,
         Icon::new(CHECK40),
-        "Trezor reset\nsuccessfully.",
+        "Trezor reset\nsuccessfully",
         RECONNECT_MESSAGE,
         true,
     );
@@ -332,7 +332,7 @@ extern "C" fn screen_wipe_fail() {
     let mut frame = ResultScreen::new(
         &RESULT_WIPE,
         Icon::new(WARNING40),
-        "Trezor reset was\nnot successful.",
+        "Trezor reset was\nnot successful",
         RECONNECT_MESSAGE,
         true,
     );
@@ -364,7 +364,7 @@ extern "C" fn screen_install_fail() {
     let mut frame = ResultScreen::new(
         &RESULT_FW_INSTALL,
         Icon::new(WARNING40),
-        "Firmware installation was\nnot successful.",
+        "Firmware installation was not successful",
         RECONNECT_MESSAGE,
         true,
     );
@@ -375,7 +375,7 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) {
     let mut frame = ResultScreen::new(
         &RESULT_FW_INSTALL,
         Icon::new(CHECK40),
-        "Firmware installed\nsuccessfully.",
+        "Firmware installed\nsuccessfully",
         msg,
         complete_draw,
     );
@@ -386,7 +386,7 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) {
     let mut frame = ResultScreen::new(
         &RESULT_INITIAL,
         Icon::new(CHECK40),
-        "Firmware installed\nsuccessfully.",
+        "Firmware installed\nsuccessfully",
         msg,
         complete_draw,
     );

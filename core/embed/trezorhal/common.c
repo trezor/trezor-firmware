@@ -89,12 +89,12 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 #ifdef FANCY_FATAL_ERROR
   char buf[256] = {0};
   mini_snprintf(buf, sizeof(buf), "%s: %d", file, line);
-  screen_fatal_error_rust("FATAL ERROR", msg != NULL ? msg : buf,
+  screen_fatal_error_rust("INTERNAL ERROR", msg != NULL ? msg : buf,
                           "PLEASE VISIT\nTREZOR.IO/RSOD");
   display_refresh();
 #else
   display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  display_printf("\nFATAL ERROR:\n");
+  display_printf("\nINTERNAL ERROR:\n");
   if (expr) {
     display_printf("expr: %s\n", expr);
   }
