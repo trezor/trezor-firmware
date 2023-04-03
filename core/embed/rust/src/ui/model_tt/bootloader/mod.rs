@@ -1,11 +1,28 @@
 use crate::{
+    strutil::hexlify,
     trezorhal::io::io_touch_read,
     ui::{
         component::{Component, Event, EventCtx, Label, Never},
-        display::{self, Font},
+        constant::screen,
+        display::{self, Color, Font, Icon},
         event::TouchEvent,
-        geometry::Point,
-        model_tt::{component::WelcomeScreen, constant},
+        geometry::{Alignment, Point, TOP_CENTER},
+        model_tt::{
+            bootloader::{
+                confirm::ConfirmTitle,
+                connect::Connect,
+                theme::{
+                    button_bld, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
+                    BLD_FG, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32, FIRE40,
+                    LOGO_EMPTY, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+                },
+                welcome::Welcome,
+            },
+            component::{Button, ResultScreen, WelcomeScreen},
+            constant,
+            theme::{BACKLIGHT_DIM, BACKLIGHT_NORMAL, BLACK, FG, WHITE},
+        },
+        util::{from_c_array, from_c_str},
     },
 };
 use heapless::String;
@@ -18,29 +35,6 @@ pub mod menu;
 pub mod theme;
 pub mod welcome;
 
-use crate::{
-    strutil::hexlify,
-    ui::{
-        constant::screen,
-        display::{Color, Icon},
-        geometry::{Alignment, TOP_CENTER},
-        model_tt::{
-            bootloader::{
-                confirm::ConfirmTitle,
-                connect::Connect,
-                theme::{
-                    button_bld, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
-                    BLD_FG, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32, FIRE40,
-                    LOGO_EMPTY, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
-                },
-                welcome::Welcome,
-            },
-            component::{Button, ResultScreen},
-            theme::{BACKLIGHT_DIM, BACKLIGHT_NORMAL, BLACK, FG, WHITE},
-        },
-        util::{from_c_array, from_c_str},
-    },
-};
 use confirm::Confirm;
 use intro::Intro;
 use menu::Menu;
