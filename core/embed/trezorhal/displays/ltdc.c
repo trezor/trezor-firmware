@@ -29,7 +29,6 @@
 #define MAX_LAYER_NUMBER 2
 #define LCD_FRAME_BUFFER ((uint32_t)SDRAM_DEVICE_ADDR)
 
-
 LTDC_HandleTypeDef LtdcHandler;
 static RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
 
