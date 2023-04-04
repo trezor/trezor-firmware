@@ -154,7 +154,6 @@ void BSP_SDRAM_DMA_IRQHandler(void);
 
 void sdram_init(void);
 
-
 /**
  * @}
  */
