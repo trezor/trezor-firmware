@@ -16,4 +16,7 @@ async def pairing_request(ctx: GenericContext, _msg: PairingRequest) -> AuthKey:
 
     pin = await request_pin_on_device(ctx, "PAIRING", None, True, False, True)
 
+    if len(pin) != 6:
+        pin = "000000"
+
     return AuthKey(key=pin.encode())

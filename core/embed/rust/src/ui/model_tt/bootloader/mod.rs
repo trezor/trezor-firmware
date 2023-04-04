@@ -36,12 +36,13 @@ pub mod menu;
 pub mod theme;
 pub mod welcome;
 
+use crate::ui::model_tt::{
+    bootloader::theme::TEXT_NORMAL,
+    component::{PinKeyboard},
+};
 use confirm::Confirm;
 use intro::Intro;
 use menu::Menu;
-use crate::ui::model_tt::bootloader::theme::TEXT_NORMAL;
-use crate::ui::model_tt::component::{PinKeyboard, PinKeyboardMsg};
-use crate::ui::model_tt::theme::button_cancel;
 
 use self::theme::{RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE};
 
@@ -446,12 +447,7 @@ extern "C" fn screen_pairing_confirm(buffer: *const cty::uint8_t) -> u32 {
 
 #[no_mangle]
 extern "C" fn screen_repair_confirm() -> u32 {
-
-    let msg = Label::new(
-        "Allow repair?",
-        Alignment::Center,
-        TEXT_NORMAL,
-    );
+    let msg = Label::new("Allow repair?", Alignment::Center, TEXT_NORMAL);
     let right = Button::with_text("ALLOW").styled(button_confirm());
     let left = Button::with_text("DENY").styled(button_bld());
     let title = Label::new("REPAIR", Alignment::Start, theme::TEXT_BOLD)
