@@ -222,7 +222,7 @@ uint32_t ble_int_comm_poll(void) {
       }
       return 0;
 
-    } else if (init_byte == INTERNAL_MESSAGE || init_byte == EXTERNAL_MESSAGE) {
+    } else if (init_byte == INTERNAL_MESSAGE) {
       last_init_byte = init_byte;
     } else {
       flush_line();
