@@ -40,7 +40,7 @@ use confirm::Confirm;
 use intro::Intro;
 use menu::Menu;
 use crate::ui::model_tt::bootloader::theme::TEXT_NORMAL;
-use crate::ui::model_tt::component::PinKeyboard;
+use crate::ui::model_tt::component::{PinKeyboard, PinKeyboardMsg};
 use crate::ui::model_tt::theme::button_cancel;
 
 use self::theme::{RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE};
@@ -434,9 +434,12 @@ extern "C" fn screen_pairing_confirm(buffer: *const cty::uint8_t) -> u32 {
     let mut pin = PinKeyboard::new("Enter passkey", "", None, true);
     let res = run(&mut pin, true);
 
-    let pin = pin.pin().as_bytes();
-
-    pin_slice.copy_from_slice(&pin[0..6]);
+    if res == 2 {
+        let pin = pin.pin().as_bytes();
+        if pin.len() == 6 {
+            pin_slice.copy_from_slice(&pin[0..6]);
+        }
+    }
 
     res
 }
@@ -449,8 +452,8 @@ extern "C" fn screen_repair_confirm() -> u32 {
         Alignment::Center,
         TEXT_NORMAL,
     );
-    let right = Button::with_text("DENY").styled(button_confirm());
-    let left = Button::with_text("ALLOW").styled(button_cancel());
+    let right = Button::with_text("ALLOW").styled(button_confirm());
+    let left = Button::with_text("DENY").styled(button_bld());
     let title = Label::new("REPAIR", Alignment::Start, theme::TEXT_BOLD)
         .vertically_aligned(Alignment::Center);
 

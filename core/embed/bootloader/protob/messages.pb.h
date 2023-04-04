@@ -10,129 +10,129 @@
 #endif
 
 /* Enum definitions */
-typedef enum _MessageType {
-    MessageType_MessageType_Initialize = 0,
-    MessageType_MessageType_Ping = 1,
-    MessageType_MessageType_Success = 2,
-    MessageType_MessageType_Failure = 3,
-    MessageType_MessageType_FirmwareErase = 6,
-    MessageType_MessageType_FirmwareUpload = 7,
-    MessageType_MessageType_FirmwareRequest = 8,
-    MessageType_MessageType_Features = 17,
-    MessageType_MessageType_ButtonRequest = 26,
-    MessageType_MessageType_ButtonAck = 27,
-    MessageType_MessageType_GetFeatures = 55,
-    MessageType_MessageType_PairingRequest = 8003,
-    MessageType_MessageType_AuthKey = 8004,
-    MessageType_MessageType_RepairRequest = 8005
+typedef enum _MessageType { 
+    MessageType_MessageType_Initialize = 0, 
+    MessageType_MessageType_Ping = 1, 
+    MessageType_MessageType_Success = 2, 
+    MessageType_MessageType_Failure = 3, 
+    MessageType_MessageType_FirmwareErase = 6, 
+    MessageType_MessageType_FirmwareUpload = 7, 
+    MessageType_MessageType_FirmwareRequest = 8, 
+    MessageType_MessageType_Features = 17, 
+    MessageType_MessageType_ButtonRequest = 26, 
+    MessageType_MessageType_ButtonAck = 27, 
+    MessageType_MessageType_GetFeatures = 55, 
+    MessageType_MessageType_PairingRequest = 8003, 
+    MessageType_MessageType_AuthKey = 8004, 
+    MessageType_MessageType_RepairRequest = 8005 
 } MessageType;
 
-typedef enum _FailureType {
-    FailureType_Failure_UnexpectedMessage = 1,
-    FailureType_Failure_DataError = 3,
-    FailureType_Failure_ActionCancelled = 4,
-    FailureType_Failure_ProcessError = 9
+typedef enum _FailureType { 
+    FailureType_Failure_UnexpectedMessage = 1, 
+    FailureType_Failure_DataError = 3, 
+    FailureType_Failure_ActionCancelled = 4, 
+    FailureType_Failure_ProcessError = 9 
 } FailureType;
 
-typedef enum _ButtonRequestType {
-    ButtonRequestType_ButtonRequest_Other = 1
+typedef enum _ButtonRequestType { 
+    ButtonRequestType_ButtonRequest_Other = 1 
 } ButtonRequestType;
 
 /* Struct definitions */
-typedef struct _AuthKey {
-    pb_callback_t key;
+typedef struct _AuthKey { 
+    pb_callback_t key; 
 } AuthKey;
 
-typedef struct _ButtonAck {
+typedef struct _ButtonAck { 
     char dummy_field;
 } ButtonAck;
 
-typedef struct _GetFeatures {
+typedef struct _GetFeatures { 
     char dummy_field;
 } GetFeatures;
 
-typedef struct _Initialize {
+typedef struct _Initialize { 
     char dummy_field;
 } Initialize;
 
-typedef struct _PairingRequest {
+typedef struct _PairingRequest { 
     char dummy_field;
 } PairingRequest;
 
-typedef struct _RepairRequest {
+typedef struct _RepairRequest { 
     char dummy_field;
 } RepairRequest;
 
-typedef struct _ButtonRequest {
+typedef struct _ButtonRequest { 
     bool has_code;
-    ButtonRequestType code;
+    ButtonRequestType code; 
 } ButtonRequest;
 
-typedef struct _Failure {
+typedef struct _Failure { 
     bool has_code;
-    FailureType code;
+    FailureType code; 
     bool has_message;
-    char message[256];
+    char message[256]; 
 } Failure;
 
 typedef PB_BYTES_ARRAY_T(20) Features_revision_t;
-typedef struct _Features {
+typedef struct _Features { 
     bool has_vendor;
-    char vendor[33];
-    uint32_t major_version;
-    uint32_t minor_version;
-    uint32_t patch_version;
+    char vendor[33]; 
+    uint32_t major_version; 
+    uint32_t minor_version; 
+    uint32_t patch_version; 
     bool has_bootloader_mode;
-    bool bootloader_mode;
+    bool bootloader_mode; 
     bool has_device_id;
-    char device_id[25];
+    char device_id[25]; 
     bool has_language;
-    char language[17];
+    char language[17]; 
     bool has_label;
-    char label[33];
+    char label[33]; 
     bool has_initialized;
-    bool initialized;
+    bool initialized; 
     bool has_revision;
-    Features_revision_t revision;
+    Features_revision_t revision; 
     bool has_firmware_present;
-    bool firmware_present;
+    bool firmware_present; 
     bool has_model;
-    char model[17];
+    char model[17]; 
     bool has_fw_major;
-    uint32_t fw_major;
+    uint32_t fw_major; 
     bool has_fw_minor;
-    uint32_t fw_minor;
+    uint32_t fw_minor; 
     bool has_fw_patch;
-    uint32_t fw_patch;
+    uint32_t fw_patch; 
     bool has_fw_vendor;
-    char fw_vendor[256];
+    char fw_vendor[256]; 
 } Features;
 
-typedef struct _FirmwareErase {
+typedef struct _FirmwareErase { 
     bool has_length;
-    uint32_t length;
+    uint32_t length; 
 } FirmwareErase;
 
-typedef struct _FirmwareRequest {
-    uint32_t offset;
-    uint32_t length;
+typedef struct _FirmwareRequest { 
+    uint32_t offset; 
+    uint32_t length; 
 } FirmwareRequest;
 
 typedef PB_BYTES_ARRAY_T(32) FirmwareUpload_hash_t;
-typedef struct _FirmwareUpload {
-    pb_callback_t payload;
+typedef struct _FirmwareUpload { 
+    pb_callback_t payload; 
     bool has_hash;
-    FirmwareUpload_hash_t hash;
+    FirmwareUpload_hash_t hash; 
 } FirmwareUpload;
 
-typedef struct _Ping {
+typedef struct _Ping { 
     bool has_message;
-    char message[256];
+    char message[256]; 
 } Ping;
 
-typedef struct _Success {
+typedef struct _Success { 
     bool has_message;
-    char message[256];
+    char message[256]; 
 } Success;
 
 

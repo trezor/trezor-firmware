@@ -24,6 +24,8 @@
 #include <pb_encode.h>
 #include "messages.pb.h"
 
+#include TREZOR_BOARD
+
 #ifdef USE_BLE
 #include "ble/comm.h"
 #endif
