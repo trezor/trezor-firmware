@@ -21,7 +21,7 @@ from typing import BinaryIO, TextIO
 
 import click
 
-from trezorlib import firmware
+from trezorlib._internal import firmware_headers
 
 
 @click.command()
@@ -32,7 +32,7 @@ def firmware_fingerprint(filename: BinaryIO, output: TextIO) -> None:
     data = filename.read()
 
     try:
-        click.echo(firmware.parse(data).digest().hex(), file=output)
+        click.echo(firmware_headers.parse_image(data).digest().hex(), file=output)
     except Exception as e:
         click.echo(e, err=True)
         sys.exit(2)
