@@ -75,8 +75,22 @@ class Homescreen(HomescreenBase):
             self.layout.paint()
             ui.refresh()
 
+    async def ble_checker_task(self) -> None:
+        from trezor import io, loop
+
+        blecheck = loop.wait(io.BLE_CHECK)
+        while True:
+            is_connected = await blecheck
+            self.layout.usb_event(is_connected)
+            self.layout.paint()
+            ui.refresh()
+
     def create_tasks(self) -> Tuple[loop.AwaitableTask, ...]:
-        return super().create_tasks() + (self.usb_checker_task(),)
+        return (
+            super().create_tasks()
+            + (self.usb_checker_task(),)
+            + (self.ble_checker_task(),)
+        )
 
 
 class Lockscreen(HomescreenBase):
