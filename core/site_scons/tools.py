@@ -1,8 +1,12 @@
-import os.path
+from pathlib import Path
 
 import subprocess
 from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t
 
+HERE = Path(__file__).parent.resolve()
+
+# go up from site_scons to core/
+PROJECT_ROOT = HERE.parent.resolve()
 
 
 def add_font(font_name, font, defines, sources):
@@ -48,9 +52,7 @@ def get_version(file):
     minor = 0
     patch = 0
 
-    if not os.path.exists(file):
-        file = os.path.join("..", "..", file)
-
+    file = PROJECT_ROOT / file
     with open(file, 'r') as f:
         for line in f:
             if line.startswith('#define VERSION_MAJOR '):
