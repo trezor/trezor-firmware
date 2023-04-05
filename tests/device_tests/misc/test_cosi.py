@@ -119,23 +119,28 @@ def test_cosi_different_key(client: Client):
 
 
 @pytest.mark.parametrize(
-    "model",
+    "model, image_type",
     (
-        b"T1B1",
-        b"T2T1",
-        b"T2B1",
-        b"T3W1",
-        b"\xfe\xfe\xfe\xfe",
-        b"\x00",
-        b"dog",
-        b"42",
+        (b"T1B1", 0),
+        (b"T2T1", 0),
+        (b"T2B1", 0),
+        (b"T3W1", 0),
+        (b"\xfe\xfe\xfe\xfe", 0),
+        (b"\x00", 0),
+        (b"\x00", 3),
+        (b"dog", 0),
+        (b"42", 0),
+        (b"T2B1", 1),
+        (b"T2B1", 2),
+        (b"T2B1", 3),
     ),
 )
 @pytest.mark.skip_t1
-def test_slip26_paths(client: Client, model: bytes):
+def test_slip26_paths(client: Client, model: bytes, image_type: int):
     slip26_model = int.from_bytes(model, "little")
-    path = Address([H_(10026), H_(slip26_model), H_(0), H_(0)])
-    cosi.commit(client, path)
+    path = Address([H_(10026), H_(slip26_model), H_(image_type), H_(0)])
+    commit = cosi.commit(client, path)
+    cosi.sign(client, path, DIGEST, commit.commitment, commit.pubkey)
 
 
 @pytest.mark.parametrize(
