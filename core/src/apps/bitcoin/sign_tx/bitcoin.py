@@ -1,6 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+from trezor import workflow
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
 from trezor.utils import HashWriter, empty_bytearray
@@ -75,6 +76,10 @@ class Bitcoin:
             self.tx_info.tx,
             self.orig_txs,
         )
+
+        # Following steps can take a long time, make sure autolock doesn't kick in.
+        # This is set to True again after workflow is finished in start_default().
+        workflow.autolock_interrupts_workflow = False
 
         # Verify the transaction input amounts by requesting each previous transaction
         # and checking its output amount. Verify external inputs which have already

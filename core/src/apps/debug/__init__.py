@@ -132,7 +132,9 @@ if __debug__:
     async def dispatch_DebugLinkDecision(
         ctx: wire.Context, msg: DebugLinkDecision
     ) -> None:
-        from trezor import io
+        from trezor import io, workflow
+
+        workflow.idle_timer.touch()
 
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")

@@ -24,18 +24,6 @@ if TYPE_CHECKING:
     )
 
 
-_ALLOW_WHILE_LOCKED = (
-    MessageType.Initialize,
-    MessageType.EndSession,
-    MessageType.GetFeatures,
-    MessageType.Cancel,
-    MessageType.LockDevice,
-    MessageType.DoPreauthorized,
-    MessageType.WipeDevice,
-    MessageType.SetBusy,
-)
-
-
 def busy_expiry_ms() -> int:
     """
     Returns the time left until the busy state expires or 0 if the device is not in the busy state.
@@ -313,17 +301,18 @@ def set_homescreen() -> None:
         set_default(homescreen)
 
 
-def lock_device() -> None:
+def lock_device(interrupt_workflow: bool = True) -> None:
     if config.has_pin():
         config.lock()
         wire.find_handler = get_pinlocked_handler
         set_homescreen()
-        workflow.close_others()
+        if interrupt_workflow:
+            workflow.close_others()
 
 
 def lock_device_if_unlocked() -> None:
     if config.is_unlocked():
-        lock_device()
+        lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
 
 
 async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
@@ -355,7 +344,7 @@ def get_pinlocked_handler(
         if iface is usb.iface_debug:
             return orig_handler
 
-    if msg_type in _ALLOW_WHILE_LOCKED:
+    if msg_type in workflow.ALLOW_WHILE_LOCKED:
         return orig_handler
 
     async def wrapper(ctx: wire.Context, msg: wire.Msg) -> protobuf.MessageType:

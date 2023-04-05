@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import storage.cache
 from trezor import log, loop
+from trezor.enums import MessageType
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -17,6 +18,18 @@ if __debug__:
     from trezor import utils
 
 
+ALLOW_WHILE_LOCKED = (
+    MessageType.Initialize,
+    MessageType.EndSession,
+    MessageType.GetFeatures,
+    MessageType.Cancel,
+    MessageType.LockDevice,
+    MessageType.DoPreauthorized,
+    MessageType.WipeDevice,
+    MessageType.SetBusy,
+)
+
+
 # Set of workflow tasks.  Multiple workflows can be running at the same time.
 tasks: set[loop.spawn] = set()
 
@@ -27,6 +40,9 @@ default_task: loop.spawn | None = None
 # Constructor for the default workflow.  Returns a workflow task.
 default_constructor: Callable[[], loop.Task] | None = None
 
+# Determines whether idle timer firing closes currently running workflow. Storage is locked always.
+autolock_interrupts_workflow: bool = True
+
 
 def _on_start(workflow: loop.spawn) -> None:
     """
@@ -35,7 +51,6 @@ def _on_start(workflow: loop.spawn) -> None:
     # Take note that this workflow task is running.
     if __debug__:
         log.debug(__name__, "start: %s", workflow.task)
-    idle_timer.touch()
     tasks.add(workflow)
 
 
@@ -76,6 +91,7 @@ def start_default() -> None:
     """
     global default_task
     global default_constructor
+    global autolock_interrupts_workflow
 
     assert default_constructor is not None
 
@@ -87,6 +103,8 @@ def start_default() -> None:
     else:
         if __debug__:
             log.debug(__name__, "default already started")
+
+    autolock_interrupts_workflow = True
 
 
 def set_default(constructor: Callable[[], loop.Task]) -> None:
@@ -161,7 +179,7 @@ class IdleTimer:
 
     A global instance `workflow.idle_timer` is available to create events that fire
     after a specified time of no user or host activity. This instance is kept awake
-    by UI taps, swipes, and USB message handling.
+    by UI taps, swipes, and DebugLinkDecision message.
     """
 
     def __init__(self) -> None:
@@ -178,16 +196,27 @@ class IdleTimer:
         self.tasks[callback] = self._timeout_task(callback)
         callback()
 
-    def touch(self) -> None:
+    def touch(self, _restore_from_cache: bool = False) -> None:
         """Wake up the idle timer.
 
-        Events that represent some form of activity (USB messages, touches, etc.) should
-        call `touch()` to notify the timer of the activity. All pending callback timers
-        will reset.
+        Events that represent some form of activity (touches, etc.) should call `touch()`
+        to notify the timer of the activity. All pending callback timers will reset.
+
+        If `_restore_from_cache` is True the function attempts to use previous
+        timestamp stored in storage.cache. If the parameter is False or no
+        deadline is saved, the function computes new deadline based on current
+        time and saves it to storage.cache. This is done to avoid losing an
+        active timer when workflow restart happens and tasks are lost.
         """
+        if _restore_from_cache and storage.cache.autolock_last_touch is not None:
+            now = storage.cache.autolock_last_touch
+        else:
+            now = utime.ticks_ms()
+        storage.cache.autolock_last_touch = now
+
         for callback, task in self.tasks.items():
             timeout_us = self.timeouts[callback]
-            deadline = utime.ticks_add(utime.ticks_ms(), timeout_us)
+            deadline = utime.ticks_add(now, timeout_us)
             loop.schedule(task, None, deadline, reschedule=True)
 
     def set(self, timeout_ms: int, callback: IdleCallback) -> None:
@@ -201,21 +230,16 @@ class IdleTimer:
 
         If `callback` was previously registered, it is updated with a new timeout value.
 
-        `idle_timer.set()` also counts as an activity, so all running idle timers are
-        reset.
+        If there is last activity timestamp saved in `storage.cache` then
+        `idle_timer.set()` uses it to calculate timer deadlines. Otherwise current
+        timestamp is used, resetting any idle timers.
         """
-        # The reason for counting set() as an activity is to clear up an ambiguity that
-        # would arise otherwise. This does not matter now, as callbacks are only
-        # scheduled during periods of activity.
-        # If we ever need to add a callback without touching, we will need to know
-        # when this callback should execute (10 mins from now? from last activity? if
-        # the latter, what if 10 minutes have already elapsed?)
         if callback in self.tasks:
             loop.close(self.tasks[callback])
 
         self.timeouts[callback] = timeout_ms
         self.tasks[callback] = self._timeout_task(callback)
-        self.touch()
+        self.touch(_restore_from_cache=True)
 
     def remove(self, callback: IdleCallback) -> None:
         """Remove an idle callback."""
