@@ -72,6 +72,11 @@ inotify = "*"
 yamllint = "^1.25.0"
 vulture = "^2.6"
 
+# ble
+dbus-python = "*"
+PyGObject = "*"
+nrfutil = "*"
+
 [tool.poetry.dev-dependencies]
 scan-build = "*"
 towncrier = "^21.9.0"
