@@ -128,6 +128,7 @@ if [ "$OPT_BUILD_LEGACY" -eq 1 ]; then
 fi
 
 TAG="$1"
+COMMIT_HASH="$(git rev-parse "$TAG")"
 PRODUCTION=${PRODUCTION:-1}
 
 if which wget > /dev/null ; then
@@ -202,14 +203,13 @@ fi  # init
 # append common part to script
 cat <<EOF >> "$SCRIPT_NAME"
   $GIT_CLEAN_REPO
-  git fetch origin "$TAG"
-  git checkout -B "$TAG" "origin/$TAG"
+  git fetch origin "$COMMIT_HASH"
+  git checkout "$COMMIT_HASH"
   git submodule update --init --recursive
   poetry install
   cd core/embed/rust
   cargo fetch
 
-  git rev-parse HEAD > /build/git-rev
   echo
   echo ">>> AT COMMIT \$(git rev-parse HEAD)"
   echo
@@ -341,7 +341,7 @@ echo "  docker rmi $SNAPSHOT_NAME"
 # all built, show fingerprints
 
 echo
-echo "Built from commit $(cat build/git-rev)"
+echo "Built from commit $COMMIT_HASH"
 echo
 echo "Fingerprints:"
 for VARIANT in core legacy; do
