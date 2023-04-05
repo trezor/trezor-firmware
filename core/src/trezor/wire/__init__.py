@@ -194,8 +194,6 @@ class Context:
                 expected_type.MESSAGE_NAME,
             )
 
-        workflow.idle_timer.touch()
-
         # look up the protobuf class and parse the message
         return _wrap_protobuf_load(msg.data, expected_type)
 
@@ -230,8 +228,6 @@ class Context:
                 self.sid,
                 exptype.MESSAGE_NAME,
             )
-
-        workflow.idle_timer.touch()
 
         # parse the message and return it
         return _wrap_protobuf_load(msg.data, exptype)
@@ -321,6 +317,9 @@ async def _handle_single_message(
         # respond with failure.
         await ctx.write(unexpected_message())
         return None
+
+    if msg.type in workflow.ALLOW_WHILE_LOCKED:
+        workflow.autolock_interrupts_workflow = False
 
     # Here we make sure we always respond with a Failure response
     # in case of any errors.

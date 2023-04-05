@@ -47,6 +47,10 @@ LOCKSCREEN_ON = object()
 BUSYSCREEN_ON = object()
 homescreen_shown: object | None = None
 
+# Timestamp of last autolock activity.
+# Here to persist across main loop restart between workflows.
+autolock_last_touch: int | None = None
+
 
 class InvalidSessionError(Exception):
     pass
@@ -338,8 +342,11 @@ def stored_async(key: int) -> Callable[[AsyncByteFunc[P]], AsyncByteFunc[P]]:
 
 def clear_all() -> None:
     global _active_session_idx
+    global autolock_last_touch
 
     _active_session_idx = None
     _SESSIONLESS_CACHE.clear()
     for session in _SESSIONS:
         session.clear()
+
+    autolock_last_touch = None
