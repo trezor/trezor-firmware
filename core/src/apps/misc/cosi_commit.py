@@ -24,11 +24,42 @@ SCHEMA_SLIP18 = PathSchema.parse("m/10018'/address_index'/*'", slip44_id=())
 SCHEMA_SLIP26 = PathSchema.parse("m/10026'/[0-2139062143]'/[0-4]'/0'", slip44_id=())
 
 
+def _decode_path(address_n: list[int]) -> str | None:
+    signing_types = {
+        0: "bootloader",
+        1: "vendor header",
+        2: "firmware",
+    }
+
+    if len(address_n) == 2 and SCHEMA_SLIP18.match(address_n):
+        signing_type = signing_types.get(unharden(address_n[1]))
+        if signing_type is None:
+            return None
+        return f"T2T1 {signing_type} (old-style)"
+
+    if SCHEMA_SLIP26.match(address_n):
+        model = unharden(address_n[1])
+        signing_type = unharden(address_n[2])
+        if model == 0 and signing_type == 3:
+            return "External definitions"
+
+        model_bytes = model.to_bytes(4, "little")
+        signing_type_str = signing_types.get(signing_type)
+        if (
+            signing_type_str is not None
+            and len(model_bytes) == 4
+            and all(0x20 <= b <= 0x7E for b in model_bytes)
+        ):
+            return f"{model_bytes.decode()} {signing_type_str}"
+
+    return None
+
+
 async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
     import storage.cache as storage_cache
     from trezor.crypto import cosi
     from trezor.crypto.curve import ed25519
-    from trezor.ui.layouts import confirm_blob
+    from trezor.ui.layouts import confirm_blob, confirm_text
     from apps.common import paths
     from apps.common.keychain import get_keychain
 
@@ -54,13 +85,20 @@ async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
     if sign_msg.address_n != msg.address_n:
         raise DataError("Mismatched address_n")
 
-    title = "CoSi sign message"
-    if SCHEMA_SLIP18.match(sign_msg.address_n):
-        index = unharden(msg.address_n[1])
-        title = f"CoSi sign index {index}"
-
+    path_description = _decode_path(sign_msg.address_n)
+    await confirm_text(
+        ctx,
+        "cosi_confirm_key",
+        "COSI KEYS",
+        paths.address_n_to_str(sign_msg.address_n),
+        path_description,
+    )
     await confirm_blob(
-        ctx, "cosi_sign", title, sign_msg.data, br_code=ButtonRequestType.ProtectCall
+        ctx,
+        "cosi_sign",
+        "COSI DATA",
+        sign_msg.data,
+        br_code=ButtonRequestType.ProtectCall,
     )
 
     # clear nonce from cache
