@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import urllib.parse
 from pathlib import Path
 from typing import Iterable
 
@@ -36,7 +37,8 @@ def report_links(
             th("Link to report")
         for test in sorted(tests):
             with tr(data_actual_hash=actual_hashes.get(test.stem, "")):
-                path = test.relative_to(reports_path)
+                urlsafe = urllib.parse.quote(test.name)
+                path = test.with_name(urlsafe).relative_to(reports_path)
                 td(a(test.name, href=path))
 
 
