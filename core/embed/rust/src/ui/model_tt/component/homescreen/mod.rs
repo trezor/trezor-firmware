@@ -2,7 +2,10 @@ mod render;
 
 use crate::{
     time::{Duration, Instant},
-    trezorhal::{ble::start_advertising, usb::usb_configured},
+    trezorhal::{
+        ble::{ble_connected, start_advertising},
+        usb::usb_configured,
+    },
     ui::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
         display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
@@ -21,10 +24,10 @@ use crate::{
             tjpgd::{jpeg_test, BufferInput},
             toif::Toif,
         },
-        display::{tjpgd::BufferInput, toif::Toif},
         event::{ButtonEvent, PhysicalButton},
-        model_tt::component::homescreen::render::{
-            HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
+        model_tt::{
+            component::homescreen::render::{HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE},
+            theme::{BLUE, ICON_MAGIC},
         },
     },
 };
@@ -86,12 +89,18 @@ where
     }
 
     fn get_notification(&self) -> Option<HomescreenNotification> {
-        if !usb_configured() {
+        if !usb_configured() && !ble_connected() {
             let (color, icon) = Self::level_to_style(0);
             Some(HomescreenNotification {
-                text: "NO USB CONNECTION",
+                text: "NO CONNECTION",
                 icon,
                 color,
+            })
+        } else if ble_connected() {
+            Some(HomescreenNotification {
+                text: "BLE CONNECTED",
+                icon: ICON_MAGIC,
+                color: BLUE,
             })
         } else if let Some((notification, level)) = &self.notification {
             let (color, icon) = Self::level_to_style(*level);
@@ -188,7 +197,7 @@ where
         Self::event_usb(self, ctx, event);
         if self.hold_to_lock {
             if Self::event_hold(self, ctx, event) {
-                return Some(HomescreenMsg::Dismissed)
+                return Some(HomescreenMsg::Dismissed);
             }
         }
 
@@ -199,7 +208,6 @@ where
         } else {
             None
         }
-
     }
 
     fn paint(&mut self) {
