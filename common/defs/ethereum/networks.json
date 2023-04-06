@@ -51,7 +51,7 @@
         "slip44": 61
     },
     {
-        "chain": "MATIC",
+        "chain": "matic",
         "chain_id": 137,
         "coingecko_id": "polygon-pos",
         "is_testnet": false,

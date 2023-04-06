@@ -91,12 +91,6 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:
             "Frax",
         )
         yield (  # address, symbol, decimals, name
-            b"\x50\xd1\xc9\x77\x19\x02\x47\x60\x76\xec\xfc\x8b\x2a\x83\xad\x6b\x93\x55\xa4\xc9",
-            "FTT",
-            18,
-            "FTX",
-        )
-        yield (  # address, symbol, decimals, name
             b"\x2a\xf5\xd2\xad\x76\x74\x11\x91\xd1\x5d\xfe\x7b\xf6\xac\x92\xd4\xbd\x91\x2c\xa3",
             "LEO",
             18,
@@ -187,10 +181,10 @@ def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:
             18,
             "Cosmos Hub",
         )
-    if chain_id == 137:  # MATIC
+    if chain_id == 137:  # matic
         yield (  # address, symbol, decimals, name
             b"\x2c\x89\xbb\xc9\x2b\xd8\x6f\x80\x75\xd1\xde\xcc\x58\xc7\xf4\xe0\x10\x7f\x28\x6b",
-            "AVAX",
+            "WAVAX",
             18,
-            "Avalanche",
+            "Wrapped AVAX",
         )
