@@ -363,7 +363,7 @@ if DMA2D:
         'USE_DMA2D',
     ]
     SOURCE_UNIX += [
-        'embed/unix/dma2d.c',
+        'embed/lib/dma2d_emul.c',
     ]
 
 
