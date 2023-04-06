@@ -4,7 +4,7 @@ use crate::{
     micropython::gc::Gc,
     storage::{get_avatar, get_avatar_len},
     time::{Duration, Instant},
-    trezorhal::usb::usb_configured,
+    trezorhal::{ble::ble_connected, usb::usb_configured},
     ui::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
         display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
@@ -19,8 +19,9 @@ use crate::{
     ui::{
         constant::HEIGHT,
         display::{tjpgd::BufferInput, toif::Toif},
-        model_tt::component::homescreen::render::{
-            HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
+        model_tt::{
+            component::homescreen::render::{HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE},
+            theme::{BLUE, ICON_MAGIC},
         },
     },
 };
@@ -81,12 +82,18 @@ where
     }
 
     fn get_notification(&self) -> Option<HomescreenNotification> {
-        if !usb_configured() {
+        if !usb_configured() && !ble_connected() {
             let (color, icon) = Self::level_to_style(0);
             Some(HomescreenNotification {
-                text: "NO USB CONNECTION",
+                text: "NO CONNECTION",
                 icon,
                 color,
+            })
+        } else if ble_connected() {
+            Some(HomescreenNotification {
+                text: "BLE CONNECTED",
+                icon: Icon::new(ICON_MAGIC),
+                color: BLUE,
             })
         } else if let Some((notification, level)) = &self.notification {
             let (color, icon) = Self::level_to_style(*level);
