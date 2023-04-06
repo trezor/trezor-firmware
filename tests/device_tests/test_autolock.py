@@ -133,3 +133,37 @@ def test_autolock_cancels_ui(client: Client):
 
     assert isinstance(resp, messages.Failure)
     assert resp.code == messages.FailureType.ActionCancelled
+
+
+def test_autolock_ignores_initialize(client: Client):
+    set_autolock_delay(client, 10 * 1000)
+
+    assert client.features.unlocked is True
+
+    start = time.monotonic()
+    while time.monotonic() - start < 11:
+        # init_device should always work even if locked
+        client.init_device()
+        time.sleep(0.1)
+
+    # after 11 seconds we are definitely locked
+    assert client.features.unlocked is False
+
+
+def test_autolock_ignores_getaddress(client: Client):
+    set_autolock_delay(client, 10 * 1000)
+
+    assert client.features.unlocked is True
+
+    start = time.monotonic()
+    # let's continue for 9 seconds to give a little leeway to the slow CI
+    while time.monotonic() - start < 9:
+        get_test_address(client)
+        time.sleep(0.1)
+
+    # sleep 2 more seconds to wait for autolock
+    time.sleep(2)
+
+    # after 11 seconds we are definitely locked
+    client.refresh_features()
+    assert client.features.unlocked is False
