@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import datetime
 import fnmatch
 import glob
 import json
@@ -136,10 +137,13 @@ def render_file(
     `src` is a filename, `dst` is an open file object.
     """
     template = mako.template.Template(filename=src)
+    eth_defs_date = datetime.datetime.fromisoformat(
+        DEFINITIONS_TIMESTAMP_PATH.read_text().strip()
+    )
     result = template.render(
         support_info=support_info,
         supported_on=make_support_filter(support_info),
-        ethereum_defs_timestamp=int(DEFINITIONS_TIMESTAMP_PATH.read_text()),
+        ethereum_defs_timestamp=int(eth_defs_date.timestamp()),
         **coins,
         **MAKO_FILTERS,
     )
