@@ -599,6 +599,8 @@
 "T1_test_autolock.py::test_apply_auto_lock_delay_valid[60]": "186dc5f99a14566f8c8985d157e90721f186e6edc4b743a910590b008794164b",
 "T1_test_autolock.py::test_apply_auto_lock_delay_valid[7227]": "811357fd9acb0de12cb31acf96bee107cd0de53b78326fee5b962bbc1bc17662",
 "T1_test_autolock.py::test_autolock_default_value": "cde0dd7c453463cbfbb6bb35289fca350efd43511f2701b634c0fbb81f7d9dec",
+"T1_test_autolock.py::test_autolock_ignores_getaddress": "4f24424b5a55618ecc6d3e57a96071a222892dcef874428c3914ab86eca98c77",
+"T1_test_autolock.py::test_autolock_ignores_initialize": "4f24424b5a55618ecc6d3e57a96071a222892dcef874428c3914ab86eca98c77",
 "T1_test_basic.py::test_device_id_different": "aac15a6d12d21966c77572aeebd56ebc2a47ecba3a508f5a421af2a5da2919e7",
 "T1_test_basic.py::test_device_id_same": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1_test_basic.py::test_features": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -695,6 +697,8 @@
 },
 "TT": {
 "click_tests": {
+"TT_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "03e156da82e7acd3509f831d1fc2e635fcebc673f3c14d61d141273e608fc7a4",
+"TT_test_autolock.py::test_autolock_does_not_interrupt_signing": "6711f75420f88f7500a6adfa8d9d25007871f698e08f048a80450085d9452133",
 "TT_test_autolock.py::test_autolock_interrupts_passphrase": "d1f797544d62708739c340dd4aa4ee28cfc65e9b643f595a55706de5917ee82f",
 "TT_test_autolock.py::test_autolock_interrupts_signing": "ae4d3cc00fd5482b4499eff1c73aec75f4153e34950db910d4f787cc5f9b4208",
 "TT_test_autolock.py::test_autolock_passphrase_keyboard": "d1be209e13144850fc8b2cca8fded027cd53d2a9990af3c5be1db489995dc821",
@@ -1732,6 +1736,8 @@
 "TT_test_autolock.py::test_apply_auto_lock_delay_valid[7227]": "0e00ab4c70dd9fec3511712ebbcdfa2556487efa1e53830248240627c5f1417f",
 "TT_test_autolock.py::test_autolock_cancels_ui": "41bce102e56bcb761e7480690b4f2ded2739522c9642c7233eceafece9641a1e",
 "TT_test_autolock.py::test_autolock_default_value": "0126aab250a451219f64248cb9ff5a34e36e9c8caf85b175f16fbaa90a38e654",
+"TT_test_autolock.py::test_autolock_ignores_getaddress": "21605135cfbb4914cd525d6b76f260a17fe6552fdadcf9a89b2ec6e3572606f5",
+"TT_test_autolock.py::test_autolock_ignores_initialize": "21605135cfbb4914cd525d6b76f260a17fe6552fdadcf9a89b2ec6e3572606f5",
 "TT_test_basic.py::test_device_id_different": "4c7862bedbc9de710152f7b7ab15256ac9885f3c9f8082e6d04125acca6a71d7",
 "TT_test_basic.py::test_device_id_same": "80a6e289138a604cf351a29511cf6f85e2243591317894703152787e1351a1a3",
 "TT_test_basic.py::test_features": "80a6e289138a604cf351a29511cf6f85e2243591317894703152787e1351a1a3",

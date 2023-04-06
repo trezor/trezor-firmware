@@ -690,7 +690,7 @@ class TrezorClientDebugLink(TrezorClient):
         self.actual_responses: Optional[List[protobuf.MessageType]] = None
         self.filters: Dict[
             Type[protobuf.MessageType],
-            Callable[[protobuf.MessageType], protobuf.MessageType],
+            Optional[Callable[[protobuf.MessageType], protobuf.MessageType]],
         ] = {}
 
     def ensure_open(self) -> None:
@@ -711,7 +711,7 @@ class TrezorClientDebugLink(TrezorClient):
     def set_filter(
         self,
         message_type: Type[protobuf.MessageType],
-        callback: Callable[[protobuf.MessageType], protobuf.MessageType],
+        callback: Optional[Callable[[protobuf.MessageType], protobuf.MessageType]],
     ) -> None:
         """Configure a filter function for a specified message type.
 
