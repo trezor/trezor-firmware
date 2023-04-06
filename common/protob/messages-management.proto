@@ -32,8 +32,9 @@ enum SafetyCheckLevel {
  * Format of the homescreen image
  */
 enum HomescreenFormat {
-    Toif144x144 = 1;
-    Jpeg240x240 = 2;
+    Toif = 1;   // full-color toif
+    Jpeg = 2;   // jpeg
+    ToiG = 3;   // greyscale toif
 }
 
 /**
@@ -121,11 +122,13 @@ message Features {
     optional uint32 display_rotation = 39;      // in degrees from North
     optional bool experimental_features = 40;   // are experimental message types enabled?
     optional bool busy = 41;                    // is the device busy, showing "Do not disconnect"?
-    optional HomescreenFormat homescreen_format = 42;   // format of the homescreen, 1 = TOIf 144x144, 2 = jpg 240x240
+    optional HomescreenFormat homescreen_format = 42;   // format of the homescreen, 1 = TOIf, 2 = jpg, 3 = TOIG
     optional bool hide_passphrase_from_host = 43;   // should we hide the passphrase when it comes from host?
     optional string internal_model = 44;        // internal model name
     optional uint32 unit_color = 45;          // color of the unit/device
     optional bool unit_btconly = 46;          // unit/device is intended as bitcoin only
+    optional uint32 homescreen_width = 47;         // homescreen width in pixels
+    optional uint32 homescreen_height = 48;         // homescreen height in pixels
 }
 
 /**

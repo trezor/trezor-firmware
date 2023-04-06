@@ -44,6 +44,7 @@ def get_features() -> Features:
 
     from trezor.enums import Capability
     from trezor.messages import Features
+    from trezor.ui import WIDTH, HEIGHT
 
     from apps.common import mnemonic, safety_checks
 
@@ -62,10 +63,16 @@ def get_features() -> Features:
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
         busy=busy_expiry_ms() > 0,
-        homescreen_format=HomescreenFormat.Jpeg240x240,
+        homescreen_width=WIDTH,
+        homescreen_height=HEIGHT,
         unit_color=utils.unit_color(),
         unit_btconly=utils.unit_btconly(),
     )
+
+    if utils.MODEL in ("1", "R"):
+        f.homescreen_format = HomescreenFormat.ToiG
+    else:
+        f.homescreen_format = HomescreenFormat.Jpeg
 
     if utils.BITCOIN_ONLY:
         f.capabilities = [

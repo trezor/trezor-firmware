@@ -1,7 +1,9 @@
 use crate::ui::geometry::{Offset, Point, Rect};
 
-pub const WIDTH: i16 = 128;
-pub const HEIGHT: i16 = 64;
+use crate::trezorhal::display::{DISPLAY_RESX, DISPLAY_RESY};
+
+pub const WIDTH: i16 = DISPLAY_RESX as _;
+pub const HEIGHT: i16 = DISPLAY_RESY as _;
 pub const LINE_SPACE: i16 = 1;
 pub const FONT_BPP: i16 = 1;
 

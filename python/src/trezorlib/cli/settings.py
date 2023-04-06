@@ -69,47 +69,11 @@ def image_to_t1(filename: Path) -> bytes:
     return image.tobytes("raw", "1")
 
 
-def image_to_tr(filename: Path) -> bytes:
-    if not PIL_AVAILABLE:
-        raise click.ClickException(
-            "Image library is missing. Please install via 'pip install Pillow'."
-        )
-
-    try:
-        image = Image.open(filename)
-    except Exception as e:
-        raise click.ClickException("Failed to load image") from e
-
-    if image.size != T1_TR_IMAGE_SIZE:
-        if click.confirm(
-            f"Image is not 128x64, but {image.size}. Do you want to resize it automatically?",
-            default=True,
-        ):
-            image = image.resize(T1_TR_IMAGE_SIZE, Image.ANTIALIAS)
-        else:
-            raise click.ClickException("Wrong size of the image - should be 128x64")
-
-    image = image.convert("1")  # black-and-white
-    toif_image = toif.from_image(image)
-    return toif_image.to_bytes()
-
-
-def image_to_tt(client: "TrezorClient", path: Path) -> bytes:
-    if client.features.homescreen_format == messages.HomescreenFormat.Jpeg240x240:
-        return image_to_jpeg_240x240(path)
-    elif client.features.homescreen_format in (
-        messages.HomescreenFormat.Toif144x144,
-        None,
-    ):
-        return image_to_toif_144x144(path)
-    else:
-        raise click.ClickException("Unknown image format requested by the device.")
-
-
-def image_to_toif_144x144(filename: Path) -> bytes:
+def image_to_toif(filename: Path, width: int, height: int, greyscale: bool) -> bytes:
     if filename.suffix == ".toif":
         try:
             toif_image = toif.from_bytes(filename.read_bytes())
+            image = toif_image.to_image()
         except Exception as e:
             raise click.ClickException("TOIF file is corrupted") from e
 
@@ -127,16 +91,30 @@ def image_to_toif_144x144(filename: Path) -> bytes:
                 "Failed to convert image to Trezor format"
             ) from e
 
-    if toif_image.size != (144, 144):
-        raise click.ClickException("Wrong size of image - should be 144x144")
+    if toif_image.size != (width, height):
+        if click.confirm(
+            f"Image is not {width}x{height}, but {image.size[0]}x{image.size[1]}. Do you want to resize it automatically?",
+            default=True,
+        ):
+            image = image.resize((width, height), Image.ANTIALIAS)
+        else:
+            raise click.ClickException(
+                f"Wrong size of image - should be {width}x{height}"
+            )
 
-    if toif_image.mode != toif.ToifMode.full_color:
+    if greyscale:
+        image = image.convert("1")
+    toif_image = toif.from_image(image)
+
+    if not greyscale and toif_image.mode != toif.ToifMode.full_color:
         raise click.ClickException("Wrong image mode - should be full_color")
+    if greyscale and toif_image.mode != toif.ToifMode.grayscale_eh:
+        raise click.ClickException("Wrong image mode - should be grayscale_eh")
 
     return toif_image.to_bytes()
 
 
-def image_to_jpeg_240x240(filename: Path) -> bytes:
+def image_to_jpeg(filename: Path, width: int, height: int) -> bytes:
     if filename.suffix in (".jpg", ".jpeg") and not PIL_AVAILABLE:
         click.echo("Warning: Image library is missing, skipping image validation.")
         return filename.read_bytes()
@@ -151,8 +129,16 @@ def image_to_jpeg_240x240(filename: Path) -> bytes:
     except Exception as e:
         raise click.ClickException("Failed to open image") from e
 
-    if image.size != (240, 240):
-        raise click.ClickException("Wrong size of image - should be 240x240")
+    if image.size != (width, height):
+        if click.confirm(
+            f"Image is not {width}x{height}, but {image.size[0]}x{image.size[1]}. Do you want to resize it automatically?",
+            default=True,
+        ):
+            image = image.resize((width, height), Image.ANTIALIAS)
+        else:
+            raise click.ClickException(
+                f"Wrong size of image - should be {width}x{height}"
+            )
 
     if image.mode != "RGB":
         image = image.convert("RGB")
@@ -281,12 +267,45 @@ def homescreen(client: "TrezorClient", filename: str) -> str:
 
         if client.features.model == "1":
             img = image_to_t1(path)
-        elif client.features.model == "R":
-            img = image_to_tr(path)
-        elif client.features.model == "T":
-            img = image_to_tt(client, path)
         else:
-            raise click.ClickException("Unknown device model")
+            if client.features.homescreen_format == messages.HomescreenFormat.Jpeg:
+                width = (
+                    client.features.homescreen_width
+                    if client.features.homescreen_width is not None
+                    else 240
+                )
+                height = (
+                    client.features.homescreen_height
+                    if client.features.homescreen_height is not None
+                    else 240
+                )
+                img = image_to_jpeg(path, width, height)
+            elif client.features.homescreen_format == messages.HomescreenFormat.ToiG:
+                width = client.features.homescreen_width
+                height = client.features.homescreen_height
+                if width is None or height is None:
+                    raise click.ClickException("Device did not report homescreen size.")
+                img = image_to_toif(path, width, height, True)
+            elif (
+                client.features.homescreen_format == messages.HomescreenFormat.Toif
+                or client.features.homescreen_format is None
+            ):
+                width = (
+                    client.features.homescreen_width
+                    if client.features.homescreen_width is not None
+                    else 144
+                )
+                height = (
+                    client.features.homescreen_height
+                    if client.features.homescreen_height is not None
+                    else 144
+                )
+                img = image_to_toif(path, width, height, False)
+
+            else:
+                raise click.ClickException(
+                    "Unknown image format requested by the device."
+                )
 
     return device.apply_settings(client, homescreen=img)
 
