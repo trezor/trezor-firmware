@@ -445,8 +445,8 @@ class SafetyCheckLevel(IntEnum):
 
 
 class HomescreenFormat(IntEnum):
-    Toif144x144 = 1
-    Jpeg240x240 = 2
+    Toif = 1
+    Jpeg = 2
 
 
 class Capability(IntEnum):
@@ -3226,6 +3226,8 @@ class Features(protobuf.MessageType):
         41: protobuf.Field("busy", "bool", repeated=False, required=False, default=None),
         42: protobuf.Field("homescreen_format", "HomescreenFormat", repeated=False, required=False, default=None),
         43: protobuf.Field("hide_passphrase_from_host", "bool", repeated=False, required=False, default=None),
+        44: protobuf.Field("homescreen_width", "uint32", repeated=False, required=False, default=None),
+        45: protobuf.Field("homescreen_height", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3272,6 +3274,8 @@ class Features(protobuf.MessageType):
         busy: Optional["bool"] = None,
         homescreen_format: Optional["HomescreenFormat"] = None,
         hide_passphrase_from_host: Optional["bool"] = None,
+        homescreen_width: Optional["int"] = None,
+        homescreen_height: Optional["int"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3314,6 +3318,8 @@ class Features(protobuf.MessageType):
         self.busy = busy
         self.homescreen_format = homescreen_format
         self.hide_passphrase_from_host = hide_passphrase_from_host
+        self.homescreen_width = homescreen_width
+        self.homescreen_height = homescreen_height
 
 
 class LockDevice(protobuf.MessageType):

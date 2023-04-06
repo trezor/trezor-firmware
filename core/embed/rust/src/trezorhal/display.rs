@@ -4,6 +4,8 @@ use cty::c_int;
 
 use crate::trezorhal::buffers::BufferText;
 
+pub use ffi::{DISPLAY_RESX, DISPLAY_RESY};
+
 #[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
 pub enum ToifFormat {
     FullColorBE = ffi::toif_format_t_TOIF_FULL_COLOR_BE as _,

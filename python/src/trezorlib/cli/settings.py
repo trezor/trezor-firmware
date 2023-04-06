@@ -60,7 +60,7 @@ def image_to_t1(filename: str) -> bytes:
     return image.tobytes("raw", "1")
 
 
-def image_to_toif_144x144(filename: str) -> bytes:
+def image_to_toif(filename: str, width: int, height: int) -> bytes:
     if filename.endswith(".toif"):
         try:
             toif_image = toif.load(filename)
@@ -81,8 +81,8 @@ def image_to_toif_144x144(filename: str) -> bytes:
                 "Failed to convert image to Trezor format"
             ) from e
 
-    if toif_image.size != (144, 144):
-        raise click.ClickException("Wrong size of image - should be 144x144")
+    if toif_image.size != (width, height):
+        raise click.ClickException(f"Wrong size of image - should be {width}x{height}")
 
     if toif_image.mode != toif.ToifMode.full_color:
         raise click.ClickException("Wrong image mode - should be full_color")
@@ -90,7 +90,7 @@ def image_to_toif_144x144(filename: str) -> bytes:
     return toif_image.to_bytes()
 
 
-def image_to_jpeg_240x240(filename: str) -> bytes:
+def image_to_jpeg(filename: str, width: int, height: int) -> bytes:
     if not (filename.endswith(".jpg") or filename.endswith(".jpeg")):
         raise click.ClickException("Please use a jpg image")
 
@@ -108,8 +108,8 @@ def image_to_jpeg_240x240(filename: str) -> bytes:
     if "progressive" in image.info:
         raise click.ClickException("Progressive JPEG is not supported")
 
-    if image.size != (240, 240):
-        raise click.ClickException("Wrong size of image - should be 240x240")
+    if image.size != (width, height):
+        raise click.ClickException(f"Wrong size of image - should be {width}x{height}")
 
     image.close()
 
@@ -243,17 +243,33 @@ def homescreen(client: "TrezorClient", filename: str) -> str:
         if client.features.model == "1":
             img = image_to_t1(filename)
         else:
-            if (
-                client.features.homescreen_format
-                == messages.HomescreenFormat.Jpeg240x240
-            ):
-                img = image_to_jpeg_240x240(filename)
+            if client.features.homescreen_format == messages.HomescreenFormat.Jpeg:
+                width = (
+                    client.features.homescreen_width
+                    if client.features.homescreen_width is not None
+                    else 240
+                )
+                height = (
+                    client.features.homescreen_height
+                    if client.features.homescreen_height is not None
+                    else 240
+                )
+                img = image_to_jpeg(filename, width, height)
             elif (
-                client.features.homescreen_format
-                == messages.HomescreenFormat.Toif144x144
+                client.features.homescreen_format == messages.HomescreenFormat.Toif
                 or client.features.homescreen_format is None
             ):
-                img = image_to_toif_144x144(filename)
+                width = (
+                    client.features.homescreen_width
+                    if client.features.homescreen_width is not None
+                    else 144
+                )
+                height = (
+                    client.features.homescreen_height
+                    if client.features.homescreen_height is not None
+                    else 144
+                )
+                img = image_to_toif(filename, width, height)
             else:
                 raise click.ClickException(
                     "Unknown image format requested by the device."

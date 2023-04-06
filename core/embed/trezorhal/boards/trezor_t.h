@@ -1,6 +1,9 @@
 #ifndef _TREZOR_T_H
 #define _TREZOR_T_H
 
+#define DISPLAY_RESX 240
+#define DISPLAY_RESY 240
+
 #define USE_SD_CARD 1
 #define USE_I2C 1
 #define USE_TOUCH 1
