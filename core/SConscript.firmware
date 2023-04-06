@@ -9,7 +9,6 @@ PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-DMA2D = TREZOR_MODEL in ('T', )
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
 
@@ -19,7 +18,7 @@ FEATURE_FLAGS = {
     "SYSTEM_VIEW": False,
 }
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -383,17 +382,6 @@ SOURCE_TREZORHAL = [
 ]
 
 
-if DMA2D:
-    CPPDEFINES_MOD += [
-        'USE_DMA2D',
-    ]
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/dma2d.c',
-    ]
-    SOURCE_STMHAL += [
-        'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c',
-    ]
-
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
 
 if FEATURE_FLAGS["RDI"]:
@@ -741,8 +729,6 @@ def cargo_build():
     features.append('ui')
     if PYOPT == '0':
         features.append('ui_debug')
-    if DMA2D:
-        features.append('dma2d')
 
     features.extend(FEATURES_AVAILABLE)
 
