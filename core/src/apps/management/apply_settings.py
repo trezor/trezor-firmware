@@ -15,27 +15,31 @@ if TYPE_CHECKING:
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
-if utils.MODEL == "R":
+if utils.MODEL in ("1", "R"):
 
     def _validate_homescreen_model_specific(homescreen: bytes) -> None:
+        from trezor.ui import WIDTH, HEIGHT
+
         try:
             w, h, is_grayscale = trezorui2.toif_info(homescreen)
         except ValueError:
             raise DataError("Invalid homescreen")
-        if w != 128 or h != 64:
-            raise DataError("Homescreen must be 128x64 pixel large")
+        if w != WIDTH or h != HEIGHT:
+            raise DataError(f"Homescreen must be {WIDTH}x{HEIGHT} pixel large")
         if not is_grayscale:
             raise DataError("Homescreen must be grayscale")
 
 else:
 
     def _validate_homescreen_model_specific(homescreen: bytes) -> None:
+        from trezor.ui import WIDTH, HEIGHT
+
         try:
             w, h, mcu_height = trezorui2.jpeg_info(homescreen)
         except ValueError:
             raise DataError("Invalid homescreen")
-        if w != 240 or h != 240:
-            raise DataError("Homescreen must be 240x240 pixel large")
+        if w != WIDTH or h != HEIGHT:
+            raise DataError(f"Homescreen must be {WIDTH}x{HEIGHT} pixel large")
         if mcu_height > 16:
             raise DataError("Unsupported jpeg type")
         try:

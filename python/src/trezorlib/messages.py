@@ -440,8 +440,9 @@ class SafetyCheckLevel(IntEnum):
 
 
 class HomescreenFormat(IntEnum):
-    Toif144x144 = 1
-    Jpeg240x240 = 2
+    Toif = 1
+    Jpeg = 2
+    ToiG = 3
 
 
 class Capability(IntEnum):
@@ -3163,6 +3164,8 @@ class Features(protobuf.MessageType):
         44: protobuf.Field("internal_model", "string", repeated=False, required=False, default=None),
         45: protobuf.Field("unit_color", "uint32", repeated=False, required=False, default=None),
         46: protobuf.Field("unit_btconly", "bool", repeated=False, required=False, default=None),
+        47: protobuf.Field("homescreen_width", "uint32", repeated=False, required=False, default=None),
+        48: protobuf.Field("homescreen_height", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3212,6 +3215,8 @@ class Features(protobuf.MessageType):
         internal_model: Optional["str"] = None,
         unit_color: Optional["int"] = None,
         unit_btconly: Optional["bool"] = None,
+        homescreen_width: Optional["int"] = None,
+        homescreen_height: Optional["int"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3257,6 +3262,8 @@ class Features(protobuf.MessageType):
         self.internal_model = internal_model
         self.unit_color = unit_color
         self.unit_btconly = unit_btconly
+        self.homescreen_width = homescreen_width
+        self.homescreen_height = homescreen_height
 
 
 class LockDevice(protobuf.MessageType):

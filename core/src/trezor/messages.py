@@ -2112,6 +2112,8 @@ if TYPE_CHECKING:
         internal_model: "str | None"
         unit_color: "int | None"
         unit_btconly: "bool | None"
+        homescreen_width: "int | None"
+        homescreen_height: "int | None"
 
         def __init__(
             self,
@@ -2159,6 +2161,8 @@ if TYPE_CHECKING:
             internal_model: "str | None" = None,
             unit_color: "int | None" = None,
             unit_btconly: "bool | None" = None,
+            homescreen_width: "int | None" = None,
+            homescreen_height: "int | None" = None,
         ) -> None:
             pass
 

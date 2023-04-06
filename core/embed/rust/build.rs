@@ -285,6 +285,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_set_window")
         .allowlist_function("display_sync")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
+        .allowlist_var("DISPLAY_RESX")
+        .allowlist_var("DISPLAY_RESY")
         .allowlist_type("toif_format_t")
         // fonts
         .allowlist_function("font_height")

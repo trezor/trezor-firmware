@@ -1,6 +1,11 @@
 #ifndef _STM32F429I_DISC1_H
 #define _STM32F429I_DISC1_H
 
+#define MAX_DISPLAY_RESX 240
+#define MAX_DISPLAY_RESY 320
+#define DISPLAY_RESX 240
+#define DISPLAY_RESY 320
+
 #define USE_I2C 1
 #define USE_TOUCH 1
 #define USE_SDRAM 1

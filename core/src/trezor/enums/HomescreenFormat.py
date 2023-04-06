@@ -2,5 +2,6 @@
 # fmt: off
 # isort:skip_file
 
-Toif144x144 = 1
-Jpeg240x240 = 2
+Toif = 1
+Jpeg = 2
+ToiG = 3
