@@ -2,7 +2,7 @@ mod render;
 
 use crate::{
     time::{Duration, Instant},
-    trezorhal::usb::usb_configured,
+    trezorhal::{ble::ble_connected, ble::start_advertising, usb::usb_configured},
     ui::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
         display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
@@ -18,8 +18,9 @@ use crate::{
     ui::{
         constant::HEIGHT,
         display::{tjpgd::BufferInput, toif::Toif},
-        model_tt::component::homescreen::render::{
-            HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
+        model_tt::{
+            component::homescreen::render::{HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE},
+            theme::{BLUE, ICON_MAGIC},
         },
     },
 };
@@ -81,12 +82,18 @@ where
     }
 
     fn get_notification(&self) -> Option<HomescreenNotification> {
-        if !usb_configured() {
+        if !usb_configured() && !ble_connected() {
             let (color, icon) = Self::level_to_style(0);
             Some(HomescreenNotification {
-                text: "NO USB CONNECTION",
+                text: "NO CONNECTION",
                 icon,
                 color,
+            })
+        } else if ble_connected() {
+            Some(HomescreenNotification {
+                text: "BLE CONNECTED",
+                icon: ICON_MAGIC,
+                color: BLUE,
             })
         } else if let Some((notification, level)) = &self.notification {
             let (color, icon) = Self::level_to_style(*level);
@@ -188,7 +195,9 @@ where
         }
 
         if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
-            Some(HomescreenMsg::Dismissed)
+            start_advertising(false);
+            None
+            //Some(HomescreenMsg::Dismissed)
         } else {
             None
         }
