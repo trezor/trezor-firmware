@@ -46,6 +46,7 @@ def get_features() -> Features:
     from trezor import sdcard
     from trezor.enums import Capability
     from trezor.messages import Features
+    from trezor.ui import WIDTH, HEIGHT
 
     from apps.common import mnemonic, safety_checks
 
@@ -63,7 +64,9 @@ def get_features() -> Features:
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
         busy=busy_expiry_ms() > 0,
-        homescreen_format=HomescreenFormat.Jpeg240x240,
+        homescreen_format=HomescreenFormat.Jpeg,
+        homescreen_width=WIDTH,
+        homescreen_height=HEIGHT,
     )
 
     if utils.BITCOIN_ONLY:
