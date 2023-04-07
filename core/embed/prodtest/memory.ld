@@ -47,7 +47,7 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
-    . = ALIGN(512);
+    . = ALIGN(128K);
   } >FLASH AT>FLASH
 
   .data : ALIGN(4) {
