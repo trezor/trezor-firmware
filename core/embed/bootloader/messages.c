@@ -597,7 +597,10 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       // request the rest of the first chunk
       MSG_SEND_INIT(FirmwareRequest);
-      chunk_requested = IMAGE_CHUNK_SIZE - read_offset;
+      uint32_t chunk_limit = (firmware_remaining > IMAGE_CHUNK_SIZE)
+                                 ? IMAGE_CHUNK_SIZE
+                                 : firmware_remaining;
+      chunk_requested = chunk_limit - read_offset;
       MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, read_offset);
       MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
       MSG_SEND(FirmwareRequest);
