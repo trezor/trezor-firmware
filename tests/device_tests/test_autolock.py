@@ -156,13 +156,13 @@ def test_autolock_ignores_getaddress(client: Client):
     assert client.features.unlocked is True
 
     start = time.monotonic()
-    # let's continue for 9 seconds to give a little leeway to the slow CI
-    while time.monotonic() - start < 9:
+    # let's continue for 8 seconds to give a little leeway to the slow CI
+    while time.monotonic() - start < 8:
         get_test_address(client)
         time.sleep(0.1)
 
-    # sleep 2 more seconds to wait for autolock
-    time.sleep(2)
+    # sleep 3 more seconds to wait for autolock
+    time.sleep(3)
 
     # after 11 seconds we are definitely locked
     client.refresh_features()
