@@ -41,19 +41,19 @@ where
         Self::new(text, Font::BOLD, Alignment::Center)
     }
 
-    // Update the text to be displayed in the line.
+    /// Update the text to be displayed in the line.
     pub fn update_text(&mut self, text: T) {
         self.text = text;
     }
 
-    // Get current text.
+    /// Get current text.
     pub fn get_text(&self) -> &T {
         &self.text
     }
 
-    // Whether we should display the text content.
-    // If not, the whole area (Pad) will still be cleared.
-    // Is valid until this function is called again.
+    /// Whether we should display the text content.
+    /// If not, the whole area (Pad) will still be cleared.
+    /// Is valid until this function is called again.
     pub fn show_or_not(&mut self, show: bool) {
         self.show_content = show;
     }
@@ -91,8 +91,6 @@ where
     }
 
     fn paint_long_content_with_ellipsis(&self) {
-        // TODO: it would be nice to have a "shifting" movement
-        // when changing the text that is not completely visible
         let text_to_display = long_line_content_with_ellipsis(
             self.text.as_ref(),
             "...",
@@ -100,7 +98,16 @@ where
             self.pad.area.width(),
         );
 
-        let baseline = Point::new(self.pad.area.x0, self.y_baseline());
+        // Creating the notion of motion by shifting the text left and right with
+        // each new text character.
+        // (So that it is apparent for the user that the text is changing.)
+        let x_offset = if self.text.as_ref().len() % 2 == 0 {
+            0
+        } else {
+            2
+        };
+
+        let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
         common::display(baseline, &text_to_display, self.font);
     }
 }

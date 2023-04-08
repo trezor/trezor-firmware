@@ -18,6 +18,8 @@ impl<T, E> ResultExt for Result<T, E> {
     fn assert_if_debugging_ui(self, #[allow(unused)] message: &str) {
         #[cfg(feature = "ui_debug")]
         if self.is_err() {
+            print!("Panic from assert_if_debugging_ui: ");
+            println!(message);
             panic!("{}", message);
         }
     }
@@ -152,8 +154,8 @@ pub fn char_to_string<const L: usize>(ch: char) -> String<L> {
 /// Returns text to be fit on one line of a given length.
 /// When the text is too long to fit, it is truncated with ellipsis
 /// on the left side.
-// Hardcoding 50 as the length of the returned String - there should
-// not be any lines as long as this.
+/// Hardcoding 50 as the length of the returned String - there should
+/// not be any lines as long as this.
 pub fn long_line_content_with_ellipsis(
     text: &str,
     ellipsis: &str,

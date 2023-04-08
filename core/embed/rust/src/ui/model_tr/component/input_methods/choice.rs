@@ -336,13 +336,6 @@ where
     /// If defined in the current choice, setting their text,
     /// whether they are long-pressed, and painting them.
     fn set_buttons(&mut self, ctx: &mut EventCtx) {
-        // TODO: offer the possibility to change the buttons from the client
-        // (button details could be changed in the same index)
-        // Use-case: BIN button in PIN is deleting last digit if the PIN is not empty,
-        // otherwise causing Cancel. Would be nice to allow deleting as a single click
-        // and Cancel as HTC. PIN client would check if the PIN is empty/not and
-        // adjust the HTC/not.
-
         let btn_layout = self.choices.get(self.page_counter).btn_layout();
         self.buttons.mutate(ctx, |_ctx, buttons| {
             buttons.set(btn_layout);

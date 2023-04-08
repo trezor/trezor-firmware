@@ -219,17 +219,16 @@ impl PassphraseEntry {
     }
 
     fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
-        let text = if self.show_plain_passphrase {
+        let text_to_show = if self.show_plain_passphrase {
             String::from(self.passphrase())
         } else {
             let mut dots: String<MAX_PASSPHRASE_LENGTH> = String::new();
-            // TODO: ChangingTextLine could have `is_masked: bool` to do this automatically
             for _ in 0..self.textbox.len() {
                 unwrap!(dots.push_str("*"));
             }
             dots
         };
-        self.passphrase_dots.inner_mut().update_text(text);
+        self.passphrase_dots.inner_mut().update_text(text_to_show);
         self.passphrase_dots.request_complete_repaint(ctx);
     }
 
@@ -314,9 +313,11 @@ impl Component for PassphraseEntry {
                         ctx.request_paint();
                     }
                     SPACE_INDEX => {
-                        self.append_char(ctx, ' ');
-                        self.update_passphrase_dots(ctx);
-                        ctx.request_paint();
+                        if !self.is_full() {
+                            self.append_char(ctx, ' ');
+                            self.update_passphrase_dots(ctx);
+                            ctx.request_paint();
+                        }
                     }
                     _ => {
                         self.menu_position = page_counter;
