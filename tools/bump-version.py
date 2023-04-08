@@ -64,7 +64,14 @@ def cli(project, version):
     major, minor, patch = m.group(1, 2, 3)
 
     parts = project.parts
-    if parts[-1] == "core":
+    if parts[-3:] == ("core", "embed", "bootloader"):
+        bump_header(
+            project / "version.h",
+            VERSION_MAJOR=major,
+            VERSION_MINOR=minor,
+            VERSION_PATCH=patch,
+        )
+    elif parts[-1] == "core":
         bump_header(
             project / "embed" / "firmware" / "version.h",
             VERSION_MAJOR=major,
