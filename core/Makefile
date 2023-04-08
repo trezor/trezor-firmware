@@ -352,3 +352,6 @@ coverage:  ## generate coverage report
 
 unused:  ## find unused micropython code
 	vulture src src/_vulture_ignore.txt --exclude "messages.py,*/enums/*"
+
+qstr_check: ## check the consistency of QSTR definitions
+	./tools/qstr_checks.py
