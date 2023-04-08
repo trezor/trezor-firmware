@@ -31,6 +31,7 @@ def confirm_blob(
     data: str | bytes,
     description: str | None,
     extra: str | None,
+    verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
 ) -> object:
@@ -41,7 +42,7 @@ def confirm_blob(
 def confirm_address(
     *,
     title: str,
-    data: str | bytes,
+    data: str,
     description: str | None,  # unused on TR
     extra: str | None,  # unused on TR
 ) -> object:
@@ -129,7 +130,7 @@ def confirm_total(
     *,
     total_amount: str,
     fee_amount: str,
-    fee_rate_amount: str | None = None,
+    fee_rate_amount: str | None,
     total_label: str,
     fee_label: str,
 ) -> object:
@@ -155,7 +156,7 @@ def confirm_modify_fee(
 # rust/src/ui/model_tr/layout.rs
 def confirm_fido(
     *,
-    title: str,
+    title: str,  # unused on TR
     app_name: str,
     icon_name: str | None,  # unused on TR
     accounts: list[str | None],
@@ -216,7 +217,7 @@ def request_pin(
 def request_passphrase(
     *,
     prompt: str,
-    max_len: int,
+    max_len: int,  # unused on TR
 ) -> str | object:
     """Get passphrase."""
 
@@ -240,7 +241,7 @@ def request_slip39(
 # rust/src/ui/model_tr/layout.rs
 def select_word(
     *,
-    title: str,
+    title: str,  # unused on TR
     description: str,
     words: Iterable[str],
 ) -> int:
@@ -253,7 +254,7 @@ def show_share_words(
     *,
     title: str,
     share_words: Iterable[str],
-) -> None:
+) -> object:
     """Shows a backup seed."""
 
 
@@ -272,7 +273,7 @@ def request_number(
 # rust/src/ui/model_tr/layout.rs
 def show_checklist(
     *,
-    title: str,
+    title: str,  # unused on TR
     items: Iterable[str],
     active: int,
     button: str,
@@ -296,7 +297,7 @@ def confirm_recovery(
 # rust/src/ui/model_tr/layout.rs
 def select_word_count(
     *,
-    dry_run: bool,
+    dry_run: bool,  # unused on TR
 ) -> int | str:  # TR returns str
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
@@ -304,7 +305,7 @@ def select_word_count(
 # rust/src/ui/model_tr/layout.rs
 def show_group_share_success(
     *,
-    lines: Iterable[str]
+    lines: Iterable[str],
 ) -> int:
    """Shown after successfully finishing a group."""
 
@@ -314,7 +315,7 @@ def show_progress(
     *,
     title: str,
     indeterminate: bool = False,
-    description: str | None = None,
+    description: str = "",
 ) -> object:
    """Show progress loader. Please note that the number of lines reserved on screen for
    description is determined at construction time. If you want multiline descriptions
@@ -325,7 +326,7 @@ def show_progress(
 def show_homescreen(
     *,
     label: str,
-    hold: bool,
+    hold: bool,  # unused on TR
     notification: str | None,
     notification_level: int = 0,
     skip_first_paint: bool,

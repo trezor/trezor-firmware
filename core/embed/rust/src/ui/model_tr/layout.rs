@@ -931,7 +931,6 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
 extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let _max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
 
         let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered())?;
         Ok(obj.into())
@@ -1020,7 +1019,6 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let _title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
@@ -1081,8 +1079,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 }
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let _dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
+    let block = |_args: &[Obj], _kwargs: &Map| {
         let title = "NUMBER OF WORDS".into();
 
         let choices: Vec<StrBuffer, 5> = ["12", "18", "20", "24", "33"]
@@ -1147,7 +1144,6 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let notification: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
-        let _hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let notification = notification.map(|w| (w, notification_level));
@@ -1249,6 +1245,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     data: str | bytes,
     ///     description: str | None,
     ///     extra: str | None,
+    ///     verb: str = "CONFIRM",
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     /// ) -> object:
@@ -1258,7 +1255,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_address(
     ///     *,
     ///     title: str,
-    ///     data: str | bytes,
+    ///     data: str,
     ///     description: str | None,  # unused on TR
     ///     extra: str | None,  # unused on TR
     /// ) -> object:
@@ -1339,7 +1336,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     total_amount: str,
     ///     fee_amount: str,
-    ///     fee_rate_amount: str | None = None,
+    ///     fee_rate_amount: str | None,
     ///     total_label: str,
     ///     fee_label: str,
     /// ) -> object:
@@ -1362,7 +1359,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def confirm_fido(
     ///     *,
-    ///     title: str,
+    ///     title: str,  # unused on TR
     ///     app_name: str,
     ///     icon_name: str | None,  # unused on TR
     ///     accounts: list[str | None],
@@ -1418,7 +1415,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def request_passphrase(
     ///     *,
     ///     prompt: str,
-    ///     max_len: int,
+    ///     max_len: int,  # unused on TR
     /// ) -> str | object:
     ///     """Get passphrase."""
     Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
@@ -1439,7 +1436,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def select_word(
     ///     *,
-    ///     title: str,
+    ///     title: str,  # unused on TR
     ///     description: str,
     ///     words: Iterable[str],
     /// ) -> int:
@@ -1451,7 +1448,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     share_words: Iterable[str],
-    /// ) -> None:
+    /// ) -> object:
     ///     """Shows a backup seed."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
@@ -1468,7 +1465,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def show_checklist(
     ///     *,
-    ///     title: str,
+    ///     title: str,  # unused on TR
     ///     items: Iterable[str],
     ///     active: int,
     ///     button: str,
@@ -1490,14 +1487,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def select_word_count(
     ///     *,
-    ///     dry_run: bool,
+    ///     dry_run: bool,  # unused on TR
     /// ) -> int | str:  # TR returns str
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
     /// def show_group_share_success(
     ///     *,
-    ///     lines: Iterable[str]
+    ///     lines: Iterable[str],
     /// ) -> int:
     ///    """Shown after successfully finishing a group."""
     Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
@@ -1506,7 +1503,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     indeterminate: bool = False,
-    ///     description: str | None = None,
+    ///     description: str = "",
     /// ) -> object:
     ///    """Show progress loader. Please note that the number of lines reserved on screen for
     ///    description is determined at construction time. If you want multiline descriptions
@@ -1516,7 +1513,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def show_homescreen(
     ///     *,
     ///     label: str,
-    ///     hold: bool,
+    ///     hold: bool,  # unused on TR
     ///     notification: str | None,
     ///     notification_level: int = 0,
     ///     skip_first_paint: bool,
