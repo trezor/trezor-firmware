@@ -876,16 +876,10 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             Paragraph::new(&theme::TEXT_MONO, total_fee_new),
         ]);
 
-        let buttons = Button::cancel_confirm(
-            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
-            Button::with_text("NEXT").styled(theme::button_confirm()),
-            true,
-        );
-
         let obj = LayoutObj::new(Frame::left_aligned(
             theme::label_title(),
             "MODIFY FEE",
-            SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
+            SwipeHoldPage::new(paragraphs, theme::BG),
         ))?;
         Ok(obj.into())
     };
