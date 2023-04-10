@@ -147,7 +147,7 @@ def confirm_value(
     *,
     title: str,
     value: str,
-    description: str | None = None,
+    description: str | None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
@@ -259,8 +259,8 @@ def show_mismatch() -> object:
 def show_simple(
     *,
     title: str | None,
-    description: str,
-    button: str | None = None,
+    description: str = "",
+    button: str = "",
 ) -> object:
     """Simple dialog with text and one button."""
 
@@ -384,7 +384,7 @@ def confirm_recovery(
     description: str,
     button: str,
     dry_run: bool,
-    info_button: bool,
+    info_button: bool = False,
 ) -> object:
    """Device recovery homescreen."""
 
@@ -418,7 +418,7 @@ def show_progress(
     *,
     title: str,
     indeterminate: bool = False,
-    description: str | None = None,
+    description: str = "",
 ) -> object:
    """Show progress loader. Please note that the number of lines reserved on screen for
    description is determined at construction time. If you want multiline descriptions

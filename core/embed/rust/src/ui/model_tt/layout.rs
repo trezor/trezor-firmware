@@ -1674,7 +1674,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     value: str,
-    ///     description: str | None = None,
+    ///     description: str | None,
     ///     subtitle: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
@@ -1777,8 +1777,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def show_simple(
     ///     *,
     ///     title: str | None,
-    ///     description: str,
-    ///     button: str | None = None,
+    ///     description: str = "",
+    ///     button: str = "",
     /// ) -> object:
     ///     """Simple dialog with text and one button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
@@ -1890,7 +1890,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str,
     ///     button: str,
     ///     dry_run: bool,
-    ///     info_button: bool,
+    ///     info_button: bool = False,
     /// ) -> object:
     ///    """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
@@ -1920,7 +1920,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     indeterminate: bool = False,
-    ///     description: str | None = None,
+    ///     description: str = "",
     /// ) -> object:
     ///    """Show progress loader. Please note that the number of lines reserved on screen for
     ///    description is determined at construction time. If you want multiline descriptions
