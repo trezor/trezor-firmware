@@ -160,13 +160,11 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_is_true")
         .allowlist_function("mp_call_function_n_kw")
         .allowlist_function("trezor_obj_get_ll_checked")
-        .allowlist_function("trezor_obj_get_ull_checked")
         .allowlist_function("trezor_obj_str_from_rom_text")
         // buffer
         .allowlist_function("mp_get_buffer")
         .allowlist_var("MP_BUFFER_READ")
         .allowlist_var("MP_BUFFER_WRITE")
-        .allowlist_var("MP_BUFFER_RW")
         .allowlist_var("mp_type_str")
         .allowlist_var("mp_type_bytes")
         .allowlist_var("mp_type_bytearray")
@@ -174,7 +172,6 @@ fn generate_micropython_bindings() {
         // dict
         .allowlist_type("mp_obj_dict_t")
         .allowlist_function("mp_obj_new_dict")
-        .allowlist_function("mp_obj_dict_store")
         .allowlist_var("mp_type_dict")
         // fun
         .allowlist_type("mp_obj_fun_builtin_fixed_t")
@@ -199,7 +196,6 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_list")
         // map
         .allowlist_type("mp_map_elem_t")
-        .allowlist_type("mp_map_lookup_kind_t")
         .allowlist_function("mp_map_init")
         .allowlist_function("mp_map_init_fixed_table")
         .allowlist_function("mp_map_lookup")
@@ -259,10 +255,6 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("flash_init")
         // storage
         .allowlist_var("EXTERNAL_SALT_SIZE")
-        .allowlist_var("FLAG_PUBLIC")
-        .allowlist_var("FLAGS_WRITE")
-        .allowlist_var("MAX_APPID")
-        .allowlist_type("PIN_UI_WAIT_CALLBACK")
         .allowlist_function("storage_init")
         .allowlist_function("storage_wipe")
         .allowlist_function("storage_is_unlocked")
@@ -279,7 +271,6 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("storage_set_counter")
         .allowlist_function("storage_next_counter")
         // display
-        .allowlist_function("display_init")
         .allowlist_function("display_offset")
         .allowlist_function("display_refresh")
         .allowlist_function("display_backlight")
@@ -290,12 +281,10 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_bar_radius")
         .allowlist_function("display_bar_radius_buffer")
         .allowlist_function("display_image")
-        .allowlist_function("display_loader")
         .allowlist_function("display_pixeldata")
         .allowlist_function("display_pixeldata_dirty")
         .allowlist_function("display_set_window")
         .allowlist_function("display_sync")
-        .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
         .allowlist_type("toif_format_t")
         // fonts
@@ -336,18 +325,12 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("buffers_get_jpeg_buffer")
         .allowlist_function("buffers_get_jpeg_work_buffer")
         .allowlist_function("buffers_get_blurring_buffer")
-        .allowlist_var("text_buffer_height")
-        .allowlist_var("buffer_width")
         //usb
         .allowlist_function("usb_configured")
         // touch
         .allowlist_function("touch_read")
         // button
-        .allowlist_function("button_read")
-        .allowlist_var("BTN_EVT_DOWN")
-        .allowlist_var("BTN_EVT_UP")
-        .allowlist_var("BTN_RIGHT")
-        .allowlist_var("BTN_LEFT");
+        .allowlist_function("button_read");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
