@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use super::ffi;
 
 pub fn set_color(color: u32) {

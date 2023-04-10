@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use super::ffi;
 use crate::error::Error;
 use core::ptr;

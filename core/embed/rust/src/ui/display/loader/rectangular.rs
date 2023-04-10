@@ -1,3 +1,5 @@
+#![allow(dead_code)] // clippy marks these unused, as they are only for TR
+
 use crate::ui::{
     constant::{screen, LOADER_INNER},
     display,

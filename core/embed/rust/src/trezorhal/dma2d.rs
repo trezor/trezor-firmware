@@ -1,5 +1,6 @@
 use super::ffi;
 
+#[allow(dead_code)]
 pub fn dma2d_setup_4bpp(fg_color: u16, bg_color: u16) {
     unsafe { ffi::dma2d_setup_4bpp(fg_color, bg_color) }
 }
@@ -12,6 +13,7 @@ pub fn dma2d_setup_4bpp_over_16bpp(overlay_color: u16) {
     unsafe { ffi::dma2d_setup_4bpp_over_16bpp(overlay_color) }
 }
 
+#[allow(dead_code)]
 pub fn dma2d_start(buffer: &[u8], pixels: i16) {
     unsafe {
         ffi::dma2d_start(
