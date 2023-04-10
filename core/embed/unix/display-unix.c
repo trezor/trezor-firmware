@@ -121,6 +121,7 @@ static void prepare_gamma_lut(float gamma) {
   }
 }
 
+#if defined TREZOR_MODEL_T
 static void gamma_correct_buffer_to_display(void) {
   // Gamma correct all the pixels in BUFFER_TO_DISPLAY.
   pixel_color *pixels = (pixel_color *)BUFFER_TO_DISPLAY->pixels;
@@ -131,6 +132,7 @@ static void gamma_correct_buffer_to_display(void) {
     }
   }
 }
+#endif
 
 float display_gamma(float gamma) {
   float prev_gamma = DISPLAY_GAMMA;

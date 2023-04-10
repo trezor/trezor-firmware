@@ -165,7 +165,9 @@ uint32_t hal_ticks_ms() {
 }
 
 static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
+#if defined TREZOR_MODEL_T
   float gamma = display_gamma(0);
+#endif
   switch (event->type) {
     case SDL_QUIT:
       trezor_shutdown();
