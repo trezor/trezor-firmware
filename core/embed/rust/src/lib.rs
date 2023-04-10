@@ -2,7 +2,10 @@
 #![deny(clippy::all)]
 #![allow(clippy::new_without_default)]
 #![deny(unsafe_op_in_unsafe_fn)]
-#![allow(dead_code)]
+// Allowing dead code not to cause a lot of warnings when building for a specific target
+// (when building for TR, a lot of code only used in TT would get marked as unused).
+// Do not allow it for Clippy checks.
+#![cfg_attr(not(feature = "clippy"), allow(dead_code))]
 #![feature(lang_items)]
 #![feature(optimize_attribute)]
 
