@@ -29,7 +29,6 @@ const MAX_VISIBLE_DOTS: usize = 14;
 const MAX_VISIBLE_DIGITS: usize = 16;
 const DIGIT_COUNT: usize = 10; // 0..10
 
-const HEADER_HEIGHT: i16 = 25;
 const HEADER_PADDING_SIDE: i16 = 5;
 const HEADER_PADDING_BOTTOM: i16 = 12;
 

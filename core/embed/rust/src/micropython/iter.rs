@@ -21,15 +21,14 @@ impl IterBuf {
     }
 }
 
-pub struct Iter<'a> {
+pub struct Iter {
     iter: Obj,
-    iter_buf: &'a mut IterBuf,
     finished: bool,
     caught_exception: Obj,
 }
 
-impl<'a> Iter<'a> {
-    pub fn try_from_obj_with_buf(o: Obj, iter_buf: &'a mut IterBuf) -> Result<Self, Error> {
+impl Iter {
+    pub fn try_from_obj_with_buf(o: Obj, iter_buf: &mut IterBuf) -> Result<Self, Error> {
         // SAFETY:
         //  - In the common case, `ffi::mp_getiter` does not heap-allocate, but instead
         //    uses memory from the passed `iter_buf`. We maintain this invariant by
@@ -40,22 +39,13 @@ impl<'a> Iter<'a> {
         let iter = catch_exception(|| unsafe { ffi::mp_getiter(o, &mut iter_buf.iter_buf) })?;
         Ok(Self {
             iter,
-            iter_buf,
             finished: false,
             caught_exception: Obj::const_null(),
         })
     }
-
-    pub fn error(&self) -> Option<Error> {
-        if self.caught_exception.is_null() {
-            None
-        } else {
-            Some(Error::CaughtException(self.caught_exception))
-        }
-    }
 }
 
-impl<'a> Iterator for Iter<'a> {
+impl Iterator for Iter {
     type Item = Obj;
 
     fn next(&mut self) -> Option<Self::Item> {

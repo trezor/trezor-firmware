@@ -7,10 +7,6 @@ use crate::{
     },
 };
 
-pub const HEADER_HEIGHT: i16 = 25;
-pub const HEADER_PADDING_SIDE: i16 = 5;
-pub const HEADER_PADDING_BOTTOM: i16 = 12;
-
 /// Contains state commonly used in implementations multi-tap keyboards.
 pub struct MultiTapKeyboard {
     /// Configured timeout after which we cancel currently pending key.

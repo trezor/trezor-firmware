@@ -662,8 +662,6 @@ pub fn icon_over_icon(
             bg_buffer_used = &mut *bg2;
         }
 
-        const BUFFER_BPP: usize = 4;
-
         let using_fg = process_buffer(
             y,
             r_fg,

@@ -109,29 +109,6 @@ pub fn image(x: i16, y: i16, w: i16, h: i16, data: &[u8]) {
     }
 }
 
-pub fn loader(
-    progress: u16,
-    indeterminate: bool,
-    yoffset: i16,
-    fgcolor: u16,
-    bgcolor: u16,
-    icon: Option<&[u8]>,
-    iconfgcolor: u16,
-) {
-    unsafe {
-        ffi::display_loader(
-            progress,
-            indeterminate,
-            yoffset.into(),
-            fgcolor,
-            bgcolor,
-            icon.map(|i| i.as_ptr()).unwrap_or(ptr::null()),
-            icon.map(|i| i.len()).unwrap_or(0) as _,
-            iconfgcolor,
-        );
-    }
-}
-
 #[inline(always)]
 #[cfg(all(feature = "model_tt", target_arch = "arm"))]
 pub fn pixeldata(c: u16) {
