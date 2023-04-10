@@ -57,14 +57,19 @@ impl ChoiceItem {
         }
     }
 
-    /// Getting the (visible) text width in pixels.
-    pub fn text_width(&self) -> i16 {
+    /// Getting the text width in pixels.
+    fn text_width(&self) -> i16 {
+        self.font.text_width(&self.text)
+    }
+
+    /// Getting the visible text width in pixels.
+    fn visible_text_width(&self) -> i16 {
         self.font.visible_text_width(&self.text)
     }
 
     /// Getting the non-central width in pixels.
     /// It will show an icon if defined, otherwise the text, not both.
-    pub fn width_side(&self) -> i16 {
+    fn width_side(&self) -> i16 {
         if let Some(icon) = self.icon {
             icon.toif.width()
         } else {
@@ -73,23 +78,25 @@ impl ChoiceItem {
     }
 
     /// Whether the whole item fits into the given rectangle.
-    pub fn fits(&self, rect: Rect) -> bool {
+    fn fits(&self, rect: Rect) -> bool {
         self.width_side() <= rect.width()
     }
 
     /// Draws highlight around this choice item.
     /// Must be called before the item is drawn, otherwise it will
     /// cover the item.
-    pub fn paint_rounded_highlight(&self, area: Rect, inverse: bool) {
-        // TODO: outline does not work properly with narrow characters
-        // ("|", "!", "'", etc) - viewable in passphrase click tests
+    fn paint_rounded_highlight(&self, area: Rect, inverse: bool) {
         let bound = theme::BUTTON_OUTLINE;
         let left_bottom =
             area.bottom_center() + Offset::new(-self.width_center() / 2 - bound, bound + 1);
-        let outline_size = Offset::new(
-            self.width_center() + 2 * bound,
-            self.font.text_height() + 2 * bound,
-        );
+        let mut x_size = self.width_center() + 2 * bound;
+        // Shortening the x-size by one pixel when visible text width is even to center
+        // it properly.
+        if self.visible_text_width() % 2 == 0 {
+            x_size -= 1;
+        }
+        let y_size = self.font.text_height() + 2 * bound;
+        let outline_size = Offset::new(x_size, y_size);
         let outline = Rect::from_bottom_left_and_size(left_bottom, outline_size);
         if inverse {
             rect_fill(outline, theme::FG);
@@ -101,7 +108,7 @@ impl ChoiceItem {
 
     /// Painting the item as a choice on the left side from center.
     /// Showing only the icon, if available, otherwise the text.
-    pub fn render_left(&self, area: Rect) {
+    fn render_left(&self, area: Rect) {
         if let Some(icon) = self.icon {
             icon.draw(
                 area.bottom_right() + self.icon_vertical_offset(),
@@ -116,7 +123,7 @@ impl ChoiceItem {
 
     /// Painting the item as a choice on the right side from center.
     /// Showing only the icon, if available, otherwise the text.
-    pub fn render_right(&self, area: Rect) {
+    fn render_right(&self, area: Rect) {
         if let Some(icon) = self.icon {
             icon.draw(
                 area.bottom_left() + self.icon_vertical_offset(),
