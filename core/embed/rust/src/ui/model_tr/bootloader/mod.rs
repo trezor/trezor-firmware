@@ -233,8 +233,6 @@ fn screen_progress(
     display::refresh();
 }
 
-const INITIAL_INSTALL_LOADER_COLOR: Color = Color::rgb(0x4A, 0x90, 0xE2);
-
 #[no_mangle]
 extern "C" fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
     screen_progress(

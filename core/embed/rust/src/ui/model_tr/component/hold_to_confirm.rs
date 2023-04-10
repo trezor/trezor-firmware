@@ -18,7 +18,6 @@ pub enum HoldToConfirmMsg {
 }
 
 pub struct HoldToConfirm {
-    area: Rect,
     pos: ButtonPos,
     loader: Loader,
     text_width: i16,
@@ -33,7 +32,6 @@ impl HoldToConfirm {
     ) -> Self {
         let text_width = styles.normal.font.visible_text_width(text.as_ref());
         Self {
-            area: Rect::zero(),
             pos,
             loader: Loader::text(text, styles).with_growing_duration(duration),
             text_width,

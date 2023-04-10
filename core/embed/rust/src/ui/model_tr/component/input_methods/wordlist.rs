@@ -194,15 +194,6 @@ impl WordlistEntry {
     fn reset_wordlist(&mut self) {
         self.words_list = Self::get_fresh_wordlist(&self.wordlist_type);
     }
-
-    /// Get the index of DELETE item, which is always at the end.
-    fn delete_index(&self) -> usize {
-        if self.offer_words {
-            self.words_list.len()
-        } else {
-            self.letter_choices.len()
-        }
-    }
 }
 
 impl Component for WordlistEntry {

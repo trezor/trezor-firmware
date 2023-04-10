@@ -16,8 +16,6 @@ use super::{common::display_center, theme, ButtonController, ButtonControllerMsg
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
 const LABEL_Y: i16 = 62;
-const LOCKED_Y: i16 = 32;
-const TAP_Y: i16 = 47;
 const ICON_TOP_MARGIN: i16 = 11;
 
 pub struct Homescreen {

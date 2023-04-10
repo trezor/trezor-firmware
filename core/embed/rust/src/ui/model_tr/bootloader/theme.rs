@@ -10,12 +10,6 @@ use crate::ui::{
 pub const BLD_BG: Color = BLACK;
 pub const BLD_FG: Color = WHITE;
 
-// Commonly used corner radius (i.e. for buttons).
-pub const RADIUS: u8 = 2;
-
-// Size of icons in the UI (i.e. inside buttons).
-pub const ICON_SIZE: i32 = 16;
-
 pub fn bld_button_default() -> ButtonStyleSheet {
     ButtonStyleSheet::new(BG, FG, false, false, None, None)
 }
