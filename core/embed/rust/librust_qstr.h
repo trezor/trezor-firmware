@@ -88,14 +88,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_reverse;
   MP_QSTR_prompt;
   MP_QSTR_subprompt;
-  MP_QSTR_warning;
   MP_QSTR_allow_cancel;
   MP_QSTR_max_len;
   MP_QSTR_amount_change;
   MP_QSTR_amount_new;
-  MP_QSTR_ask_pagination;
   MP_QSTR_case_sensitive;
-  MP_QSTR_coin_name;
   MP_QSTR_max_feerate;
   MP_QSTR_max_rounds;
   MP_QSTR_total_fee_new;
