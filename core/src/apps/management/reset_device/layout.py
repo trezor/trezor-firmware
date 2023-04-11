@@ -149,9 +149,9 @@ async def _show_confirmation_success(
 
 
 async def _show_confirmation_failure(ctx: GenericContext) -> None:
-    from trezor.ui.layouts import show_warning
+    from trezor.ui.layouts.recovery import show_recovery_warning
 
-    await show_warning(
+    await show_recovery_warning(
         ctx,
         "warning_backup_check",
         "Please check again.",

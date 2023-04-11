@@ -500,11 +500,11 @@ async def warn_no_collateral_inputs(ctx: Context) -> None:
 
 
 async def warn_unknown_total_collateral(ctx: Context) -> None:
-    await confirm_metadata(
+    await layouts.show_warning(
         ctx,
         "confirm_unknown_total_collateral",
-        "Warning",
-        "Unknown collateral amount, check all items carefully.",
+        "Unknown collateral amount.",
+        "Check all items carefully.",
         br_code=BRT_Other,
     )
 

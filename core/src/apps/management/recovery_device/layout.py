@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import show_warning
 from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
     show_group_share_success,
+    show_recovery_warning,
     show_remaining_shares,
 )
 
@@ -59,7 +59,7 @@ async def request_mnemonic(
             word_validity.check(backup_type, words)
         except word_validity.AlreadyAdded:
             # show_share_already_added
-            await show_warning(
+            await show_recovery_warning(
                 ctx,
                 "warning_known_share",
                 "Share already entered, please enter a different share.",
@@ -67,7 +67,7 @@ async def request_mnemonic(
             return None
         except word_validity.IdentifierMismatch:
             # show_identifier_mismatch
-            await show_warning(
+            await show_recovery_warning(
                 ctx,
                 "warning_mismatched_share",
                 "You have entered a share from another Shamir Backup.",
@@ -75,7 +75,7 @@ async def request_mnemonic(
             return None
         except word_validity.ThresholdReached:
             # show_group_threshold_reached
-            await show_warning(
+            await show_recovery_warning(
                 ctx,
                 "warning_group_threshold",
                 "Threshold of this group has been reached. Input share from different group.",
@@ -103,18 +103,20 @@ async def show_dry_run_result(
             text = "The entered recovery shares are valid but do not match what is currently in the device."
         else:
             text = "The entered recovery seed is valid but does not match the one in the device."
-        await show_warning(ctx, "warning_dry_recovery", text, button="Continue")
+        await show_recovery_warning(
+            ctx, "warning_dry_recovery", text, button="Continue"
+        )
 
 
 async def show_invalid_mnemonic(ctx: GenericContext, word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
-        await show_warning(
+        await show_recovery_warning(
             ctx,
             "warning_invalid_share",
             "You have entered an invalid recovery share.",
         )
     else:
-        await show_warning(
+        await show_recovery_warning(
             ctx,
             "warning_invalid_seed",
             "You have entered an invalid recovery seed.",
