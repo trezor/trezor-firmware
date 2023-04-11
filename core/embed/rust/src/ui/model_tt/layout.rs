@@ -843,7 +843,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
 
         let buttons = Button::cancel_confirm(
             Button::with_icon(Icon::new(theme::ICON_CANCEL)),
-            Button::with_text("NEXT").styled(theme::button_confirm()),
+            Button::with_text("CONFIRM").styled(theme::button_confirm()),
             true,
         );
 
@@ -922,9 +922,9 @@ fn new_show_modal(
                 icon,
                 title,
                 Button::cancel_confirm(
-                    Button::with_icon(Icon::new(theme::ICON_CANCEL)).styled(theme::button_cancel()),
+                    Button::with_icon(Icon::new(theme::ICON_CANCEL)),
                     Button::with_text(button).styled(button_style),
-                    true,
+                    false,
                 ),
             )
             .with_description(description),

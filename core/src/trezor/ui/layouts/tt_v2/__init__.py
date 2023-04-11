@@ -316,20 +316,13 @@ async def confirm_path_warning(
     path: str,
     path_type: str | None = None,
 ) -> None:
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            RustLayout(
-                trezorui2.show_warning(
-                    title="Unknown path"
-                    if not path_type
-                    else f"Unknown {path_type.lower()}",
-                    description=path,
-                )
-            ),
-            "path_warning",
-            ButtonRequestType.UnknownDerivationPath,
-        )
+    title = "Unknown path" if not path_type else f"Unknown {path_type.lower()}"
+    await show_warning(
+        ctx,
+        "path_warning",
+        title,
+        path,
+        br_code=ButtonRequestType.UnknownDerivationPath,
     )
 
 
@@ -483,7 +476,7 @@ async def show_warning(
     br_type: str,
     content: str,
     subheader: str | None = None,
-    button: str = "TRY AGAIN",
+    button: str = "CONTINUE",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
     await raise_if_not_confirmed(
@@ -494,7 +487,6 @@ async def show_warning(
                     title=content,
                     description=subheader or "",
                     button=button.upper(),
-                    allow_cancel=False,
                 )
             ),
             br_type,
@@ -755,7 +747,7 @@ async def confirm_address(
         description or "",
         br_type,
         br_code,
-        verb="NEXT",
+        verb="CONFIRM",
     )
 
 
@@ -793,7 +785,7 @@ def confirm_amount(
         description,
         br_type,
         br_code,
-        verb="NEXT",
+        verb="CONFIRM",
     )
 
 
@@ -814,6 +806,9 @@ def confirm_value(
 
     if not verb and not hold:
         raise ValueError("Either verb or hold=True must be set")
+
+    if verb:
+        verb = verb.upper()
 
     return raise_if_not_confirmed(
         interact(
@@ -940,40 +935,18 @@ async def confirm_metadata(
     param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hold: bool = False,
+    verb: str = "CONTINUE",
 ) -> None:
-    if param:
-        content = content.format(param)
-
-    if br_type == "fee_over_threshold":
-        layout = trezorui2.show_warning(
-            title="Unusually high fee",
-            description=param or "",
-        )
-    elif br_type == "change_count_over_threshold":
-        layout = trezorui2.show_warning(
-            title="A lot of change-outputs",
-            description=f"{param} outputs" if param is not None else "",
-        )
-    else:
-        if param is not None:
-            content = content.format(param)
-        # TODO: "unverified external inputs"
-
-        layout = trezorui2.confirm_action(
-            title=title.upper(),
-            action="",
-            verb="NEXT",
-            description=content,
-            hold=hold,
-        )
-
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            RustLayout(layout),
-            br_type,
-            br_code,
-        )
+    await confirm_action(
+        ctx,
+        br_type,
+        title=title.upper(),
+        action="",
+        description=content,
+        description_param=param,
+        verb=verb.upper(),
+        hold=hold,
+        br_code=br_code,
     )
 
 

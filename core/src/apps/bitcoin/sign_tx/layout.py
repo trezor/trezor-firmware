@@ -78,6 +78,7 @@ async def confirm_output(
                 "omni_transaction",
                 "OMNI transaction",
                 omni.parse(data),
+                verb="Confirm",
                 br_code=ButtonRequestType.ConfirmOutput,
             )
         else:
@@ -257,33 +258,32 @@ async def confirm_feeoverthreshold(
     ctx: Context, fee: int, coin: CoinInfo, amount_unit: AmountUnit
 ) -> None:
     fee_amount = format_coin_amount(fee, coin, amount_unit)
-    await confirm_metadata(
+    await layouts.show_warning(
         ctx,
         "fee_over_threshold",
-        "High fee",
-        "The fee of\n{}is unexpectedly high.",
+        "Unusually high fee.",
         fee_amount,
-        ButtonRequestType.FeeOverThreshold,
+        br_code=ButtonRequestType.FeeOverThreshold,
     )
 
 
 async def confirm_change_count_over_threshold(ctx: Context, change_count: int) -> None:
-    await confirm_metadata(
+    await layouts.show_warning(
         ctx,
         "change_count_over_threshold",
-        "Warning",
-        "There are {}\nchange-outputs.\n",
-        str(change_count),
-        ButtonRequestType.SignTx,
+        "A lot of change-outputs.",
+        f"{str(change_count)} outputs",
+        br_code=ButtonRequestType.SignTx,
     )
 
 
 async def confirm_unverified_external_input(ctx: Context) -> None:
-    await confirm_metadata(
+    await layouts.show_warning(
         ctx,
         "unverified_external_input",
-        "Warning",
         "The transaction contains unverified external inputs.",
+        "Proceed anyway?",
+        button="Proceed",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -294,23 +294,27 @@ async def confirm_nondefault_locktime(
     from trezor.strings import format_timestamp
 
     if lock_time_disabled:
-        title = "Warning"
-        text = "Locktime is set but will have no effect."
-        param: str | None = None
-    elif lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
-        title = "Confirm locktime"
-        text = "Locktime for this transaction is set to blockheight:\n{}"
-        param = str(lock_time)
+        await layouts.show_warning(
+            ctx,
+            "nondefault_locktime",
+            "Locktime is set but will have no effect.",
+            "Proceed anyway?",
+            button="Proceed",
+            br_code=ButtonRequestType.SignTx,
+        )
     else:
-        title = "Confirm locktime"
-        text = "Locktime for this transaction is set to:\n{}"
-        param = format_timestamp(lock_time)
-
-    await confirm_metadata(
-        ctx,
-        "nondefault_locktime",
-        title,
-        text,
-        param,
-        br_code=ButtonRequestType.SignTx,
-    )
+        if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
+            text = "Locktime for this transaction is set to blockheight:"
+            value = str(lock_time)
+        else:
+            text = "Locktime for this transaction is set to:"
+            value = format_timestamp(lock_time)
+        await layouts.confirm_value(
+            ctx,
+            "Confirm locktime",
+            value,
+            text,
+            "nondefault_locktime",
+            br_code=ButtonRequestType.SignTx,
+            verb="Confirm",
+        )

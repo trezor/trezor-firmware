@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
-from trezor.wire import ActionCancelled
 
 import trezorui2
 
 from ..common import interact
-from . import RustLayout
+from . import RustLayout, raise_if_not_confirmed
 
 if TYPE_CHECKING:
     from typing import Iterable, Callable
@@ -79,36 +78,36 @@ async def show_remaining_shares(
             words = "\n".join(group)
             pages.append((title, words))
 
-    result = await interact(
-        ctx,
-        RustLayout(trezorui2.show_remaining_shares(pages=pages)),
-        "show_shares",
-        ButtonRequestType.Other,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(trezorui2.show_remaining_shares(pages=pages)),
+            "show_shares",
+            ButtonRequestType.Other,
+        )
     )
-    if result is not CONFIRMED:
-        raise ActionCancelled
 
 
 async def show_group_share_success(
     ctx: GenericContext, share_index: int, group_index: int
 ) -> None:
-    result = await interact(
-        ctx,
-        RustLayout(
-            trezorui2.show_group_share_success(
-                lines=[
-                    "You have entered",
-                    f"Share {share_index + 1}",
-                    "from",
-                    f"Group {group_index + 1}",
-                ],
-            )
-        ),
-        "share_success",
-        ButtonRequestType.Other,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.show_group_share_success(
+                    lines=[
+                        "You have entered",
+                        f"Share {share_index + 1}",
+                        "from",
+                        f"Group {group_index + 1}",
+                    ],
+                )
+            ),
+            "share_success",
+            ButtonRequestType.Other,
+        )
     )
-    if result is not CONFIRMED:
-        raise ActionCancelled
 
 
 async def continue_recovery(
@@ -157,3 +156,28 @@ async def continue_recovery(
             ButtonRequestType.RecoveryHomepage,
         )
         return result is CONFIRMED
+
+
+async def show_recovery_warning(
+    ctx: GenericContext,
+    br_type: str,
+    content: str,
+    subheader: str | None = None,
+    button: str = "TRY AGAIN",
+    br_code: ButtonRequestType = ButtonRequestType.Warning,
+) -> None:
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.show_warning(
+                    title=content,
+                    description=subheader or "",
+                    button=button.upper(),
+                    allow_cancel=False,
+                )
+            ),
+            br_type,
+            br_code,
+        )
+    )
