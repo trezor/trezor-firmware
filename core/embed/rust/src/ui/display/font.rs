@@ -129,15 +129,43 @@ impl Font {
         display::text_width(text, self.into())
     }
 
-    /// Width of the text that is visible, not including the space
-    /// after the last character.
+    /// Width of the text that is visible.
+    /// Not including the spaces before the first and after the last character.
     pub fn visible_text_width(self, text: &str) -> i16 {
-        let text_minus_one = &text[..text.len() - 1];
+        match text.len() {
+            0 => 0,
+            1 => {
+                let char = unwrap!(text.chars().last());
+                let char_glyph = unwrap!(self.get_glyph(char as u8));
+                char_glyph.width
+            },
+            _ => {
+                let first_char = unwrap!(text.chars().next());
+                let first_char_glyph = unwrap!(self.get_glyph(first_char as u8));
+                let first_char_visible_width = first_char_glyph.adv - first_char_glyph.bearing_x;
 
-        let last_char = unwrap!(text.chars().last());
-        let last_char_glyph = unwrap!(self.get_glyph(last_char as u8));
+                let middle_chars = &text[1..text.len() - 1];
+                let middle_chars_width = self.text_width(middle_chars);
 
-        self.text_width(text_minus_one) + last_char_glyph.width
+                let last_char = unwrap!(text.chars().last());
+                let last_char_glyph = unwrap!(self.get_glyph(last_char as u8));
+                let last_char_visible_width = last_char_glyph.width + last_char_glyph.bearing_x;
+
+                first_char_visible_width + middle_chars_width + last_char_visible_width
+            }
+        }
+    }
+
+    /// Returning the x-bearing (offset) of the first character.
+    /// Useful to enforce that the text is positioned correctly (e.g. centered).
+    pub fn start_x_bearing(self, text: &str) -> i16 {
+        if text.is_empty() {
+            return 0;
+        }
+
+        let first_char = unwrap!(text.chars().next());
+        let first_char_glyph = unwrap!(self.get_glyph(first_char as u8));
+        first_char_glyph.bearing_x
     }
 
     pub fn char_width(self, ch: char) -> i16 {

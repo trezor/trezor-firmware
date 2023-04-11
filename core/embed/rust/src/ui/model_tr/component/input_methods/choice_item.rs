@@ -57,14 +57,15 @@ impl ChoiceItem {
         }
     }
 
-    /// Getting the text width in pixels.
-    fn text_width(&self) -> i16 {
-        self.font.text_width(&self.text)
-    }
-
     /// Getting the visible text width in pixels.
     fn visible_text_width(&self) -> i16 {
         self.font.visible_text_width(&self.text)
+    }
+
+    /// Getting the initial x-bearing of the text in pixels,
+    /// so that we can adjust its positioning to center it properly.
+    fn text_x_bearing(&self) -> i16 {
+        self.font.start_x_bearing(&self.text)
     }
 
     /// Getting the non-central width in pixels.
@@ -73,7 +74,7 @@ impl ChoiceItem {
         if let Some(icon) = self.icon {
             icon.toif.width()
         } else {
-            self.text_width()
+            self.visible_text_width()
         }
     }
 
@@ -89,12 +90,7 @@ impl ChoiceItem {
         let bound = theme::BUTTON_OUTLINE;
         let left_bottom =
             area.bottom_center() + Offset::new(-self.width_center() / 2 - bound, bound + 1);
-        let mut x_size = self.width_center() + 2 * bound;
-        // Shortening the x-size by one pixel when visible text width is even to center
-        // it properly.
-        if self.visible_text_width() % 2 == 0 {
-            x_size -= 1;
-        }
+        let x_size = self.width_center() + 2 * bound;
         let y_size = self.font.text_height() + 2 * bound;
         let outline_size = Offset::new(x_size, y_size);
         let outline = Rect::from_bottom_left_and_size(left_bottom, outline_size);
@@ -175,6 +171,9 @@ impl Choice for ChoiceItem {
             );
             baseline = baseline + Offset::x(icon.toif.width() + ICON_RIGHT_PADDING);
         }
+        // Possibly shifting the baseline left, when there is a text bearing.
+        // This is to center the text properly.
+        baseline = baseline - Offset::x(self.text_x_bearing());
         if inverse {
             display_inverse(baseline, &self.text, self.font);
         } else {
@@ -190,7 +189,7 @@ impl Choice for ChoiceItem {
         } else {
             0
         };
-        icon_width + self.text_width()
+        icon_width + self.visible_text_width()
     }
 
     /// Painting item on the side if it fits, otherwise paint incomplete if
