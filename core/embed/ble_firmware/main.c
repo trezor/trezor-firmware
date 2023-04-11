@@ -787,6 +787,7 @@ static void pm_evt_handler(pm_evt_t const *p_evt) {
  */
 static void peer_manager_init(void) {
   ble_gap_sec_params_t sec_param;
+  pm_privacy_params_t privacy_params;
   ret_code_t err_code;
 
   err_code = pm_init();
@@ -810,6 +811,13 @@ static void peer_manager_init(void) {
 
   err_code = pm_sec_params_set(&sec_param);
   APP_ERROR_CHECK(err_code);
+
+  privacy_params.p_device_irk = NULL;
+  privacy_params.privacy_mode = BLE_GAP_PRIVACY_MODE_DEVICE_PRIVACY;
+  privacy_params.private_addr_cycle_s = 0;
+  privacy_params.private_addr_type =
+      BLE_GAP_ADDR_TYPE_RANDOM_PRIVATE_RESOLVABLE;
+  pm_privacy_set(&privacy_params);
 
   err_code = pm_register(pm_evt_handler);
   APP_ERROR_CHECK(err_code);
