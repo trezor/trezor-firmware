@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-from dominate.tags import br, h1, h2, hr, i, p, table, td, th, tr
+from dominate.tags import a, br, h1, h2, hr, i, p, table, td, th, tr
 
 from ..common import (
     SCREENS_DIR,
@@ -138,19 +138,13 @@ def added(screens_path: Path, test_name: str) -> Path:
     return html.write(MASTERDIFF_PATH / "added", doc, test_name + ".html")
 
 
-def diff(
-    master_screens_path: Path,
-    current_screens_path: Path,
+def create_testcase_html_diff_file(
+    zipped_screens: list[tuple[str | None, str | None]],
     test_name: str,
     master_hash: str,
     current_hash: str,
 ) -> Path:
     doc = document(title=test_name, model=test_name[:2])
-    master_screens, master_hashes = screens_and_hashes(master_screens_path)
-    current_screens, current_hashes = screens_and_hashes(current_screens_path)
-    html.store_images(master_screens, master_hashes)
-    html.store_images(current_screens, current_hashes)
-
     with doc:
         h1(test_name)
         p("This UI test differs from master.", style="color: grey; font-weight: bold;")
@@ -168,9 +162,7 @@ def diff(
                 th("Master")
                 th("Current branch")
 
-            html.diff_table(
-                screens_diff(master_hashes, current_hashes), MASTERDIFF_PATH / "diff"
-            )
+            html.diff_table(zipped_screens, MASTERDIFF_PATH / "diff")
 
     return html.write(MASTERDIFF_PATH / "diff", doc, test_name + ".html")
 
@@ -249,27 +241,71 @@ def create_reports() -> None:
             continue
         added(screen_path, test_name)
 
+    # Holding unique screen differences, connected with a certain testcase
+    # Used for diff report
+    unique_differing_screens: dict[tuple[str | None, str | None], str] = {}
+
     for test_name, (master_hash, current_hash) in diff_tests.items():
         with tmpdir() as master_root:
-            master_screens = master_root / "downloaded"
-            master_screens.mkdir()
+            master_screens_path = master_root / "downloaded"
+            master_screens_path.mkdir()
             try:
-                download.fetch_recorded(master_hash, master_screens)
+                download.fetch_recorded(master_hash, master_screens_path)
             except RuntimeError as e:
                 print("WARNING:", e)
 
-            current_screens = _get_screen_path(test_name)
-            if not current_screens:
-                current_screens = master_root / "empty_current_screens"
-                current_screens.mkdir()
+            current_screens_path = _get_screen_path(test_name)
+            if not current_screens_path:
+                current_screens_path = master_root / "empty_current_screens"
+                current_screens_path.mkdir()
 
-            diff(
-                master_screens,
-                current_screens,
+            # Saving all the images to a common directory
+            # They will be referenced from the HTML files
+            master_screens, master_hashes = screens_and_hashes(master_screens_path)
+            current_screens, current_hashes = screens_and_hashes(current_screens_path)
+            html.store_images(master_screens, master_hashes)
+            html.store_images(current_screens, current_hashes)
+
+            # List of tuples of master and current screens
+            # Useful for both testcase HTML report and the differing screen report
+            zipped_screens = list(screens_diff(master_hashes, current_hashes))
+
+            # Create testcase HTML report
+            create_testcase_html_diff_file(
+                zipped_screens,
                 test_name,
                 master_hash,
                 current_hash,
             )
+
+            # Save differing screens for differing screens report
+            for master, current in zipped_screens:
+                if master != current:
+                    unique_differing_screens[(master, current)] = test_name
+
+    differing_screens_report(unique_differing_screens)
+
+
+def differing_screens_report(
+    unique_differing_screens: dict[tuple[str | None, str | None], str]
+) -> None:
+    doc = document(title="Master differing screens")
+    with doc:
+        with table(border=1, width=600):
+            with tr():
+                th("Expected")
+                th("Actual")
+                th("Testcase (link)")
+
+            for (master, current), testcase in unique_differing_screens.items():
+                with tr(bgcolor="red"):
+                    html.image_column(master, MASTERDIFF_PATH)
+                    html.image_column(current, MASTERDIFF_PATH)
+                    with td():
+                        with a(href=f"diff/{testcase}.html"):
+                            i(testcase)
+
+    html.write(MASTERDIFF_PATH, doc, "differing_screens.html")
 
 
 def main() -> None:
