@@ -29,9 +29,9 @@ SOURCE_MOD = []
 
 if TREZOR_MODEL in ('1', 'R'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
-    FONT_DEMIBOLD=None
-    FONT_BOLD=None
-    FONT_MONO='Font_PixelOperatorMono_Regular_8'
+    FONT_DEMIBOLD='Font_PixelOperator_Regular_8'
+    FONT_BOLD='Font_PixelOperator_Bold_8'
+    FONT_MONO='Font_PixelOperator_Regular_8'
 if TREZOR_MODEL in ('T', ):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD=None
@@ -164,7 +164,7 @@ env.Replace(
         'BOOTLOADER',
         'TREZOR_EMULATOR',
         'HW_MODEL=' + MODEL_AS_NUMBER,
-        'HW_REVISION=0',
+        'HW_REVISION=' + '4' if TREZOR_MODEL in ('R',) else '0',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'TREZOR_BOARD=\\"board-unix.h\\"',
         'PB_FIELD_16BIT',
