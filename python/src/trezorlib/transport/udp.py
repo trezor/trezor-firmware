@@ -141,6 +141,7 @@ class UdpTransport(ProtocolBasedTransport):
             raise TransportException("Unexpected data length")
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
         self.socket.sendall(chunk)
+        time.sleep(0.0001)
 
     def read_chunk(self) -> bytes:
         assert self.socket is not None
