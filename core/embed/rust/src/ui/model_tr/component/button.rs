@@ -561,6 +561,15 @@ where
         )
     }
 
+    /// Left cancel, armed text and icon.
+    pub fn cancel_armed_icon(middle: T, right: Icon) -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon()),
+            Some(ButtonDetails::armed_text(middle)),
+            Some(ButtonDetails::icon(right).with_no_outline()),
+        )
+    }
+
     /// Left back arrow and middle armed text.
     pub fn arrow_armed_none(text: T) -> Self {
         Self::new(

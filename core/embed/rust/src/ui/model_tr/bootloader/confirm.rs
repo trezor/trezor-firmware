@@ -1,16 +1,20 @@
 use crate::ui::{
     component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
+    constant::HEIGHT,
     display,
-    display::{Color, Font},
+    display::{Color, Font, Icon},
     geometry::{Point, Rect},
     model_tr::{
-        bootloader::theme::WHITE,
+        bootloader::theme::{ICON_INFO, WHITE},
         component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos},
         constant::WIDTH,
+        theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT},
     },
 };
 
 use super::ReturnToC;
+
+const ALERT_AREA_START: i16 = 39;
 
 #[derive(Copy, Clone)]
 pub enum ConfirmMsg {
@@ -46,7 +50,10 @@ impl<'a> Confirm<'a> {
         text: &'static str,
     ) -> Self {
         let controller = if info.is_some() {
-            ButtonController::new(ButtonLayout::cancel_armed_text("INSTALL", " i "))
+            ButtonController::new(ButtonLayout::cancel_armed_icon(
+                "INSTALL",
+                Icon::new(ICON_INFO),
+            ))
         } else {
             ButtonController::new(ButtonLayout::cancel_none_text(text))
         };
@@ -72,22 +79,33 @@ impl<'a> Component for Confirm<'a> {
 
         let (message_area, alert_area) = if self.alert.is_some() {
             (
-                Rect::new(Point::new(0, 12), Point::new(WIDTH, 39)),
-                Rect::new(Point::new(0, 39), Point::new(WIDTH, 54)),
+                Rect::new(
+                    Point::new(0, TITLE_AREA_HEIGHT),
+                    Point::new(WIDTH, ALERT_AREA_START),
+                ),
+                Rect::new(
+                    Point::new(0, ALERT_AREA_START),
+                    Point::new(WIDTH, HEIGHT - BUTTON_HEIGHT),
+                ),
             )
         } else {
             (
-                Rect::new(Point::new(0, 12), Point::new(WIDTH, 54)),
+                Rect::new(
+                    Point::new(0, TITLE_AREA_HEIGHT),
+                    Point::new(WIDTH, HEIGHT - BUTTON_HEIGHT),
+                ),
                 Rect::zero(),
             )
         };
 
         self.message.place(message_area);
         self.alert.place(alert_area);
-        self.info
-            .place(Rect::new(Point::new(0, 12), Point::new(WIDTH, 54)));
+        self.info.place(Rect::new(
+            Point::new(0, TITLE_AREA_HEIGHT),
+            Point::new(WIDTH, HEIGHT - BUTTON_HEIGHT),
+        ));
 
-        let button_area = bounds.split_bottom(12).1;
+        let button_area = bounds.split_bottom(BUTTON_HEIGHT).1;
         self.buttons.place(button_area);
         self.buttons_info.place(button_area);
 

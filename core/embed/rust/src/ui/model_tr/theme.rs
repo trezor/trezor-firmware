@@ -87,6 +87,7 @@ pub const BUTTON_CONTENT_HEIGHT: i16 = 7;
 pub const BUTTON_OUTLINE: i16 = 3;
 pub const BUTTON_ARMS: i16 = 2;
 pub const BUTTON_HEIGHT: i16 = BUTTON_CONTENT_HEIGHT + 2 * BUTTON_OUTLINE;
+pub const TITLE_AREA_HEIGHT: i16 = 12;
 
 // How many pixels should be between text and icons.
 pub const ELLIPSIS_ICON_MARGIN: i16 = 4;

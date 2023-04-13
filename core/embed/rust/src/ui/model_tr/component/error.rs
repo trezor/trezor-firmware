@@ -8,8 +8,12 @@ use crate::ui::{
 
 use crate::ui::model_tr::{
     theme,
-    theme::{BG, FG},
+    theme::{BG, FG, TITLE_AREA_HEIGHT},
 };
+
+const FOOTER_AREA_HEIGHT: i16 = 20;
+const MESSAGE_AREA_HEIGHT: i16 = 32;
+const DIVIDER_POSITION: i16 = 43;
 
 pub struct ErrorScreen<T> {
     bg: Pad,
@@ -48,18 +52,18 @@ impl<T: AsRef<str>> Component for ErrorScreen<T> {
 
         let text_width = self.title.inner().max_size().x;
 
-        if text_width > title_area.width() - 2 * 12 {
+        if text_width > title_area.width() - 2 * TITLE_AREA_HEIGHT {
             self.show_icons = false;
         }
 
         let message_area = Rect::new(
             title_area.bottom_left(),
-            title_area.bottom_right() + Offset::y(32),
+            title_area.bottom_right() + Offset::y(MESSAGE_AREA_HEIGHT),
         );
         self.message.place(message_area);
 
         let footer_area = Rect::new(
-            screen().bottom_left() + Offset::y(-20),
+            screen().bottom_left() + Offset::y(-FOOTER_AREA_HEIGHT),
             screen().bottom_right(),
         );
         self.footer.place(footer_area);
@@ -83,7 +87,7 @@ impl<T: AsRef<str>> Component for ErrorScreen<T> {
         self.message.paint();
         // divider line
         let bar = Rect::from_center_and_size(
-            Point::new(self.area.center().x, 43),
+            Point::new(self.area.center().x, DIVIDER_POSITION),
             Offset::new(self.area.width(), 1),
         );
         display::rect_fill(bar, FG);

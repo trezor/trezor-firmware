@@ -12,8 +12,8 @@ use crate::ui::{
 use crate::ui::model_tr::{
     bootloader::theme::BLD_FG,
     component::{ButtonController, ButtonControllerMsg::Triggered, ButtonLayout, ButtonPos},
-    constant::WIDTH,
-    theme::ICON_WARN_TITLE,
+    constant::{HEIGHT, WIDTH},
+    theme::{BUTTON_HEIGHT, ICON_WARN_TITLE, TITLE_AREA_HEIGHT},
 };
 
 #[repr(u32)]
@@ -62,13 +62,17 @@ impl<'a> Component for Intro<'a> {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bg.place(screen());
 
-        self.title
-            .place(Rect::new(Point::zero(), Point::new(WIDTH, 8)));
+        self.title.place(Rect::new(
+            Point::zero(),
+            Point::new(WIDTH, TITLE_AREA_HEIGHT),
+        ));
 
-        self.buttons.place(bounds.split_bottom(12).1);
+        self.buttons.place(bounds.split_bottom(BUTTON_HEIGHT).1);
 
-        self.text
-            .place(Rect::new(Point::new(0, 12), Point::new(WIDTH, 54)));
+        self.text.place(Rect::new(
+            Point::new(0, TITLE_AREA_HEIGHT),
+            Point::new(WIDTH, HEIGHT - BUTTON_HEIGHT),
+        ));
         bounds
     }
 
