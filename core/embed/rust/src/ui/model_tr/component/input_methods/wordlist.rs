@@ -58,8 +58,9 @@ impl ChoiceFactoryWordlist {
     }
 }
 
-impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryWordlist {
+impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryWordlist {
     type Action = WordlistAction;
+    type Item = ChoiceItem<T>;
 
     fn count(&self) -> usize {
         // Accounting for the DELETE option (+1)
@@ -70,7 +71,7 @@ impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryWordlist {
         }
     }
 
-    fn get(&self, choice_index: usize) -> (ChoiceItem<T>, Self::Action) {
+    fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         // Putting DELETE as the first option in both cases
         // (is a requirement for WORDS, doing it for LETTERS as well to unite it)
         if choice_index == DELETE_INDEX {
@@ -101,7 +102,7 @@ impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryWordlist {
 }
 
 /// Component for entering a mnemonic from a wordlist - BIP39 or SLIP39.
-pub struct WordlistEntry<T: StringType> {
+pub struct WordlistEntry<T: StringType + Clone> {
     choice_page: ChoicePage<ChoiceFactoryWordlist, T, WordlistAction>,
     chosen_letters: Child<ChangingTextLine<String<{ MAX_WORD_LENGTH + 1 }>>>,
     textbox: TextBox<MAX_WORD_LENGTH>,

@@ -4,7 +4,6 @@ use crate::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::Icon,
         geometry::Rect,
-        model_tr::layout::CancelConfirmMsg,
         util::char_to_string,
     },
 };
@@ -12,7 +11,8 @@ use crate::{
 use heapless::String;
 
 use super::super::{
-    theme, ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
+    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceFactory,
+    ChoiceItem, ChoicePage,
 };
 
 /// Defines the choices currently available on the screen
@@ -210,8 +210,9 @@ impl ChoiceFactoryPassphrase {
     }
 }
 
-impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryPassphrase {
+impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPassphrase {
     type Action = PassphraseAction;
+    type Item = ChoiceItem<T>;
 
     fn count(&self) -> usize {
         let length = get_category_length(&self.current_category);
@@ -221,7 +222,7 @@ impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryPassphrase {
             _ => length + 1,
         }
     }
-    fn get(&self, choice_index: usize) -> (ChoiceItem<T>, Self::Action) {
+    fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         match self.current_category {
             ChoiceCategory::Menu => self.get_menu_item(choice_index),
             _ => self.get_character_item(choice_index),
@@ -230,7 +231,7 @@ impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryPassphrase {
 }
 
 /// Component for entering a passphrase.
-pub struct PassphraseEntry<T: StringType> {
+pub struct PassphraseEntry<T: StringType + Clone> {
     choice_page: ChoicePage<ChoiceFactoryPassphrase, T, PassphraseAction>,
     passphrase_dots: Child<ChangingTextLine<String<MAX_PASSPHRASE_LENGTH>>>,
     show_plain_passphrase: bool,

@@ -1,7 +1,7 @@
 use crate::{
     strutil::StringType,
     ui::{
-        component::{base::Component, text::layout::LayoutFit, FormattedText, Paginate},
+        component::{base::Component, FormattedText, Paginate},
         geometry::Rect,
     },
 };
@@ -199,6 +199,9 @@ where
 }
 
 // DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+use crate::ui::component::text::layout::LayoutFit;
 
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Page<T>

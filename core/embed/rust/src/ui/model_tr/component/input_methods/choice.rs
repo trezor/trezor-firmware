@@ -6,20 +6,23 @@ use crate::{
     },
 };
 
-use super::{
-    super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos},
-    choice_item::ChoiceItem,
-};
+use super::super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
 
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
 const DEFAULT_Y_BASELINE: i16 = 20;
 
 pub trait Choice<T: StringType> {
+    // Only `paint_center` is required, the rest is optional
+    // and therefore has a default implementation.
     fn paint_center(&self, area: Rect, inverse: bool);
-    fn width_center(&self) -> i16;
+    fn width_center(&self) -> i16 {
+        0
+    }
 
-    fn paint_side(&self, area: Rect);
-    fn width_side(&self) -> i16;
+    fn paint_side(&self, _area: Rect) {}
+    fn width_side(&self) -> i16 {
+        0
+    }
 
     fn btn_layout(&self) -> ButtonLayout<T> {
         ButtonLayout::default_three_icons()
@@ -37,9 +40,10 @@ pub trait Choice<T: StringType> {
 /// This way, no more than one item is stored in memory at any time.
 pub trait ChoiceFactory<T: StringType> {
     type Action;
+    type Item: Choice<T>;
 
     fn count(&self) -> usize;
-    fn get(&self, index: usize) -> (ChoiceItem<T>, Self::Action);
+    fn get(&self, index: usize) -> (Self::Item, Self::Action);
 }
 
 /// General component displaying a set of items on the screen
@@ -223,7 +227,7 @@ where
     }
 
     /// Getting the choice on the current index
-    pub fn get_current_choice(&self) -> (ChoiceItem<T>, A) {
+    pub fn get_current_choice(&self) -> (<F as ChoiceFactory<T>>::Item, A) {
         self.choices.get(self.page_counter)
     }
 
@@ -436,6 +440,7 @@ impl<F, T, A> crate::trace::Trace for ChoicePage<F, T, A>
 where
     F: ChoiceFactory<T, Action = A>,
     T: StringType + Clone,
+    <F as ChoiceFactory<T>>::Item: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ChoicePage");

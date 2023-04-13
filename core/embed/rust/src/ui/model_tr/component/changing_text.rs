@@ -77,7 +77,7 @@ where
 
     fn paint_left(&self) {
         let baseline = Point::new(self.pad.area.x0, self.y_baseline());
-        common::display(baseline, &self.text, self.font);
+        common::display_left(baseline, &self.text, self.font);
     }
 
     fn paint_center(&self) {
@@ -108,7 +108,7 @@ where
         };
 
         let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
-        common::display(baseline, &text_to_display, self.font);
+        common::display_left(baseline, &text_to_display, self.font);
     }
 }
 

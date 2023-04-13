@@ -20,14 +20,15 @@ impl ChoiceFactoryNumberInput {
     }
 }
 
-impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryNumberInput {
+impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryNumberInput {
     type Action = u32;
+    type Item = ChoiceItem<T>;
 
     fn count(&self) -> usize {
         (self.max - self.min + 1) as usize
     }
 
-    fn get(&self, choice_index: usize) -> (ChoiceItem<T>, Self::Action) {
+    fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let num = self.min + choice_index as u32;
         let text: String<10> = String::from(num);
         let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
@@ -47,7 +48,7 @@ impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryNumberInput {
 
 /// Simple wrapper around `ChoicePage` that allows for
 /// inputting a list of values and receiving the chosen one.
-pub struct NumberInput<T: StringType> {
+pub struct NumberInput<T: StringType + Clone> {
     choice_page: ChoicePage<ChoiceFactoryNumberInput, T, u32>,
     min: u32,
 }

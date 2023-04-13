@@ -1,18 +1,21 @@
 mod button;
 mod button_controller;
 mod common;
+mod error;
 mod hold_to_confirm;
 mod input_methods;
 mod loader;
 mod result;
 mod welcome_screen;
 
-use super::{constant, theme};
+use super::{common_messages, constant, theme};
 pub use button::{
     Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonPos,
     ButtonStyle, ButtonStyleSheet,
 };
 pub use button_controller::{ButtonController, ButtonControllerMsg};
+pub use common_messages::CancelConfirmMsg;
+pub use error::ErrorScreen;
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 pub use input_methods::{
     choice::{Choice, ChoiceFactory, ChoicePage},
@@ -28,6 +31,7 @@ mod coinjoin_progress;
 mod flow;
 mod flow_pages;
 mod frame;
+#[cfg(feature = "micropython")]
 mod homescreen;
 mod page;
 mod progress;
@@ -45,6 +49,7 @@ pub use coinjoin_progress::CoinJoinProgress;
 pub use flow::Flow;
 pub use flow_pages::{FlowPages, Page};
 pub use frame::{Frame, ScrollableContent, ScrollableFrame};
+#[cfg(feature = "micropython")]
 pub use homescreen::{Homescreen, Lockscreen};
 pub use input_methods::{
     number_input::NumberInput,

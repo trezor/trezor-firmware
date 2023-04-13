@@ -92,6 +92,12 @@ uint32_t touch_is_detected(void) { return _touch_detected; }
 
 #include "button.h"
 
+static char last_left = 0, last_right = 0;
+
+char button_state_left(void) { return last_left; }
+
+char button_state_right(void) { return last_right; }
+
 uint32_t button_read(void) {
   SDL_Event event;
   SDL_PumpEvents();
@@ -103,8 +109,10 @@ uint32_t button_read(void) {
         }
         switch (event.key.keysym.sym) {
           case SDLK_LEFT:
+            last_left = 1;
             return BTN_EVT_DOWN | BTN_LEFT;
           case SDLK_RIGHT:
+            last_right = 1;
             return BTN_EVT_DOWN | BTN_RIGHT;
         }
         break;
@@ -114,8 +122,10 @@ uint32_t button_read(void) {
         }
         switch (event.key.keysym.sym) {
           case SDLK_LEFT:
+            last_left = 0;
             return BTN_EVT_UP | BTN_LEFT;
           case SDLK_RIGHT:
+            last_right = 0;
             return BTN_EVT_UP | BTN_RIGHT;
         }
         break;
@@ -123,5 +133,7 @@ uint32_t button_read(void) {
   }
   return 0;
 }
+
+void button_init(void) {}
 
 #endif

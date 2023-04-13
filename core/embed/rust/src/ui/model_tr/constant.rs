@@ -14,7 +14,9 @@ pub const MODEL_NAME: &str = "Trezor Model R";
 pub const fn size() -> Offset {
     Offset::new(WIDTH, HEIGHT)
 }
+pub const SIZE: Offset = size();
 
 pub const fn screen() -> Rect {
-    Rect::from_top_left_and_size(Point::zero(), size())
+    Rect::from_top_left_and_size(Point::zero(), SIZE)
 }
+pub const SCREEN: Rect = screen();

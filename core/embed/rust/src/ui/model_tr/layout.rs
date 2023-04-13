@@ -45,18 +45,13 @@ use crate::{
 
 use super::{
     component::{
-        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage,
+        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelConfirmMsg,
         CancelInfoConfirmMsg, CoinJoinProgress, Flow, FlowPages, Frame, Homescreen, Lockscreen,
         NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableContent, ScrollableFrame,
         ShareWords, ShowMore, SimpleChoice, WelcomeScreen, WordlistEntry, WordlistType,
     },
     constant, theme,
 };
-
-pub enum CancelConfirmMsg {
-    Cancelled,
-    Confirmed,
-}
 
 impl From<CancelConfirmMsg> for Obj {
     fn from(value: CancelConfirmMsg) -> Self {

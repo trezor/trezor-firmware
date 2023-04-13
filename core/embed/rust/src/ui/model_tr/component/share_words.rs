@@ -12,7 +12,7 @@ use crate::{
 
 use heapless::{String, Vec};
 
-use super::{common::display, scrollbar::SCROLLBAR_SPACE, theme, title::Title, ScrollBar};
+use super::{common::display_left, scrollbar::SCROLLBAR_SPACE, theme, title::Title, ScrollBar};
 
 const WORDS_PER_PAGE: usize = 3;
 const EXTRA_LINE_HEIGHT: i16 = 2;
@@ -140,8 +140,8 @@ where
             }
             let word = &self.share_words[index];
             let baseline = self.area.top_left() + Offset::new(NUMBER_X_OFFSET, y_offset);
-            display(baseline, &inttostr!(index as u8 + 1), NUMBER_FONT);
-            display(baseline + Offset::x(NUMBER_WORD_OFFSET), &word, WORD_FONT);
+            display_left(baseline, &inttostr!(index as u8 + 1), NUMBER_FONT);
+            display_left(baseline + Offset::x(NUMBER_WORD_OFFSET), &word, WORD_FONT);
         }
     }
 }

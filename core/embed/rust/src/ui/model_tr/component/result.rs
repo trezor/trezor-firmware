@@ -1,33 +1,31 @@
-use crate::{
-    strutil::StringType,
-    ui::{
-        component::{
-            text::paragraphs::{ParagraphVecShort, Paragraphs},
-            Child, Component, Event, EventCtx, Never, Pad,
-        },
-        constant::{screen, HEIGHT, WIDTH},
-        display::{Color, Icon},
-        geometry::{Offset, Point, Rect, CENTER},
-    },
+use crate::ui::{
+    component::{Child, Component, Event, EventCtx, Label, Never, Pad},
+    constant::{screen, HEIGHT, WIDTH},
+    display::{Color, Icon},
+    geometry::{Offset, Point, Rect, CENTER},
 };
 
-pub struct ResultScreen<T> {
+const MESSAGE_AREA_START: i16 = 26;
+const FOOTER_AREA_START: i16 = 40;
+const ICON_TOP: i16 = 12;
+
+pub struct ResultScreen<'a> {
     bg: Pad,
     small_pad: Pad,
     fg_color: Color,
     bg_color: Color,
     icon: Icon,
-    message_top: Child<Paragraphs<ParagraphVecShort<T>>>,
-    message_bottom: Child<Paragraphs<ParagraphVecShort<T>>>,
+    message_top: Child<Label<&'static str>>,
+    message_bottom: Child<Label<&'a str>>,
 }
 
-impl<T: StringType> ResultScreen<T> {
+impl<'a> ResultScreen<'a> {
     pub fn new(
         fg_color: Color,
         bg_color: Color,
         icon: Icon,
-        message_top: Paragraphs<ParagraphVecShort<T>>,
-        message_bottom: Paragraphs<ParagraphVecShort<T>>,
+        title: Label<&'static str>,
+        content: Label<&'a str>,
         complete_draw: bool,
     ) -> Self {
         let mut instance = Self {
@@ -36,8 +34,8 @@ impl<T: StringType> ResultScreen<T> {
             fg_color,
             bg_color,
             icon,
-            message_top: Child::new(message_top),
-            message_bottom: Child::new(message_bottom),
+            message_top: Child::new(title),
+            message_bottom: Child::new(content),
         };
 
         if complete_draw {
@@ -49,17 +47,18 @@ impl<T: StringType> ResultScreen<T> {
     }
 }
 
-impl<T: StringType> Component for ResultScreen<T> {
+impl<'a> Component for ResultScreen<'a> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.bg
-            .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, HEIGHT)));
+        self.bg.place(bounds);
 
-        self.message_top
-            .place(Rect::new(Point::new(0, 26), Point::new(WIDTH, 40)));
+        self.message_top.place(Rect::new(
+            Point::new(0, MESSAGE_AREA_START),
+            Point::new(WIDTH, FOOTER_AREA_START),
+        ));
 
-        let bottom_area = Rect::new(Point::new(0, 40), Point::new(WIDTH, HEIGHT));
+        let bottom_area = Rect::new(Point::new(0, FOOTER_AREA_START), Point::new(WIDTH, HEIGHT));
 
         self.small_pad.place(bottom_area);
         self.message_bottom.place(bottom_area);
@@ -76,7 +75,7 @@ impl<T: StringType> Component for ResultScreen<T> {
         self.small_pad.paint();
 
         self.icon.draw(
-            screen().top_center() + Offset::y(12),
+            screen().top_center() + Offset::y(ICON_TOP),
             CENTER,
             self.fg_color,
             self.bg_color,
