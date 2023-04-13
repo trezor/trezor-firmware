@@ -2,8 +2,8 @@ use crate::{
     micropython::buffer::StrBuffer,
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
-        display::{text_multiline, Font},
-        geometry::{Offset, Rect},
+        display::{text_multiline_split_words, Font},
+        geometry::{Alignment, Offset, Rect},
         model_tr::theme,
     },
 };
@@ -77,40 +77,42 @@ impl<const N: usize> ShareWords<N> {
             50,
             "Write all ",
             inttostr!(self.share_words.len() as u8),
-            "\nwords in order on\nrecovery seed card."
+            " words in order on recovery seed card."
         )
     }
 
     /// Display the first page with user information.
     fn paint_entry_page(&mut self) {
-        text_multiline(
+        text_multiline_split_words(
             self.area.split_top(15).1,
             &self.get_first_text(),
             Font::BOLD,
             theme::FG,
             theme::BG,
+            Alignment::Start,
         );
     }
 
     fn get_second_text(&self) -> String<50> {
-        build_string!(50, "Do NOT make\ndigital copies!")
+        build_string!(50, "Do NOT make digital copies!")
     }
 
     /// Display the second page with user information.
     fn paint_second_page(&mut self) {
-        text_multiline(
+        text_multiline_split_words(
             self.area.split_top(15).1,
             &self.get_second_text(),
             Font::MONO,
             theme::FG,
             theme::BG,
+            Alignment::Start,
         );
     }
 
     fn get_final_text(&self) -> String<50> {
         build_string!(
             50,
-            "I wrote down all\n",
+            "I wrote down all ",
             inttostr!(self.share_words.len() as u8),
             " words in order."
         )
@@ -118,12 +120,13 @@ impl<const N: usize> ShareWords<N> {
 
     /// Display the final page with user confirmation.
     fn paint_final_page(&mut self) {
-        text_multiline(
+        text_multiline_split_words(
             self.area.split_top(12).1,
             &self.get_final_text(),
             Font::MONO,
             theme::FG,
             theme::BG,
+            Alignment::Start,
         );
     }
 

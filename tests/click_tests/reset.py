@@ -99,9 +99,11 @@ def read_words(debug: "DebugLink", backup_type: messages.BackupType) -> list[str
         else:
             assert layout.text_content().startswith("RECOVERY SEED")
 
-    # Swiping through all the page and loading the words
-    for _ in range(layout.page_count() - 1):
-        words.extend(layout.seed_words())
+    # Swiping through all the pages and loading the words
+    for i in range(layout.page_count() - 1):
+        # In model R, first two pages are just informational
+        if not (debug.model == "R" and i < 2):
+            words.extend(layout.seed_words())
         layout = debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True)
         assert layout is not None
     if debug.model == "T":

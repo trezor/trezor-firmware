@@ -2,6 +2,7 @@ mod address_details;
 mod button;
 mod button_controller;
 mod changing_text;
+mod coinjoin_progress;
 mod common;
 mod flow;
 mod flow_pages;
@@ -34,6 +35,7 @@ pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 
 pub use button_controller::{ButtonController, ButtonControllerMsg};
 pub use changing_text::ChangingTextLine;
+pub use coinjoin_progress::CoinJoinProgress;
 pub use flow::{Flow, FlowMsg};
 pub use flow_pages::{FlowPages, Page};
 pub use frame::{Frame, ScrollableContent, ScrollableFrame};

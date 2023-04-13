@@ -7,9 +7,11 @@ pub mod toif;
 
 use heapless::String;
 
+use core::fmt::Write;
+
 use super::{
     constant,
-    geometry::{Offset, Point, Rect},
+    geometry::{Alignment, Offset, Point, Rect},
 };
 #[cfg(feature = "dma2d")]
 use crate::trezorhal::{
@@ -853,50 +855,86 @@ pub fn paint_point(point: &Point, color: Color) {
 }
 
 /// Draws longer multiline texts inside an area.
-/// Does not add any characters on the line boundaries.
+/// Splits lines on word boundaries/whitespace.
+/// When a word is too long to fit one line, splitting
+/// it on multiple lines with "-" at the line-ends.
 ///
 /// If it fits, returns the rest of the area.
 /// If it does not fit, returns `None`.
-pub fn text_multiline(
+pub fn text_multiline_split_words(
     area: Rect,
     text: &str,
     font: Font,
     fg_color: Color,
     bg_color: Color,
+    alignment: Alignment,
 ) -> Option<Rect> {
     let line_height = font.line_height();
-    let characters_overall = text.chars().count();
     let mut taken_from_top = 0;
-    let mut characters_drawn = 0;
+    let mut chars_processed = 0;
+
+    let mut text_iter = text.split_whitespace();
+    let mut word_from_prev_line = None;
+
     'lines: loop {
-        let baseline = area.top_left() + Offset::y(line_height + taken_from_top);
-        if !area.contains(baseline) {
+        let baseline_left = area.top_left() + Offset::y(line_height + taken_from_top);
+        if !area.contains(baseline_left) {
             // The whole area was consumed.
             return None;
         }
-        let mut line_text: String<50> = String::new();
-        'characters: loop {
-            if let Some(character) = text.chars().nth(characters_drawn) {
-                characters_drawn += 1;
-                if character == '\n' {
-                    // The line is forced to end.
-                    break 'characters;
-                }
-                unwrap!(line_text.push(character));
-            } else {
-                // No more characters to draw.
-                break 'characters;
+        let mut line_text: String<100> = String::new();
+
+        'words: while let Some(word) = word_from_prev_line.take().or_else(|| text_iter.next()) {
+            let prev_line_text_len = line_text.len();
+            if !line_text.is_empty() {
+                // Putting spaces in between words.
+                unwrap!(line_text.push(' '));
             }
-            if font.text_width(&line_text) > area.width() {
-                // Cannot fit on the line anymore.
-                line_text.pop();
-                characters_drawn -= 1;
-                break 'characters;
+            if write!(&mut line_text, "{}", word).is_err() {
+                // We have a word/line longer than 100 chars.
+                // Add just 50 characters, that is enough for this line.
+                unwrap!(write!(&mut line_text, "{}", &word[..50]));
+            }
+
+            if font.text_width(&line_text) <= area.width() {
+                chars_processed += word.chars().count() + 1;
+            } else {
+                // The word does not fit on the line anymore.
+                // Word can be longer than the whole line - in that case splitting it to more
+                // lines
+                if prev_line_text_len == 0 {
+                    for (idx, _) in word.char_indices() {
+                        if font.text_width(&word[..idx]) > area.width() {
+                            let split_idx = idx - 1;
+                            let chars_fitting_this_line = split_idx - 1; // accounting for the hyphen we will add
+                            line_text = String::from(&word[..chars_fitting_this_line]);
+                            unwrap!(line_text.push('-'));
+                            chars_processed += chars_fitting_this_line;
+                            word_from_prev_line = Some(&word[chars_fitting_this_line..]);
+                            break;
+                        }
+                    }
+                } else {
+                    line_text.truncate(prev_line_text_len);
+                    word_from_prev_line = Some(word);
+                }
+                break 'words;
             }
         }
-        text_left(baseline, &line_text, font, fg_color, bg_color);
+
+        match alignment {
+            Alignment::Start => text_left(baseline_left, &line_text, font, fg_color, bg_color),
+            Alignment::Center => {
+                let baseline_center = baseline_left + Offset::x(area.width() / 2);
+                text_center(baseline_center, &line_text, font, fg_color, bg_color)
+            }
+            Alignment::End => {
+                let baseline_right = baseline_left + Offset::x(area.width());
+                text_right(baseline_right, &line_text, font, fg_color, bg_color)
+            }
+        }
         taken_from_top += line_height;
-        if characters_drawn == characters_overall {
+        if chars_processed >= text.chars().count() {
             // No more lines to draw.
             break 'lines;
         }

@@ -341,10 +341,12 @@ def read_and_confirm_mnemonic_tr(
     mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
-    for _ in range(br.pages - 1):
+    for i in range(br.pages - 1):
         layout = debug.wait_layout()
-        words = layout.seed_words()
-        mnemonic.extend(words)
+        # First two pages have just instructions
+        if i > 1:
+            words = layout.seed_words()
+            mnemonic.extend(words)
         debug.press_right()
     debug.press_right()
 

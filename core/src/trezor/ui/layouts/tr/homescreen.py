@@ -114,10 +114,9 @@ class Busyscreen(HomescreenBase):
     def __init__(self, delay_ms: int) -> None:
         skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
-            # TODO: remove show_busyscreen in favor of show_progress_coinjoin
-            layout=trezorui2.show_busyscreen(
-                title="PLEASE WAIT",
-                description="Coinjoin in progress.\n\nDo not disconnect your Trezor.",
+            layout=trezorui2.show_progress_coinjoin(
+                title="Waiting for others",
+                indeterminate=True,
                 time_ms=delay_ms,
                 skip_first_paint=skip,
             )
