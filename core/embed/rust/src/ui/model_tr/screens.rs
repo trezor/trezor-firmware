@@ -1,18 +1,8 @@
 #[cfg(feature = "micropython")]
 use crate::micropython::buffer::StrBuffer;
-use crate::ui::{
-    component::{
-        text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
-        Component,
-    },
-    geometry::LinearPlacement,
-};
+use crate::ui::component::base::Component;
 
-use super::{
-    component::ResultScreen,
-    constant,
-    theme::{BLACK, ICON_FAIL, TEXT_BOLD, TEXT_NORMAL, WHITE},
-};
+use super::{component::ErrorScreen, constant};
 
 #[cfg(not(feature = "micropython"))]
 // SAFETY: Actually safe but see below
@@ -33,21 +23,7 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
     let msg = unsafe { get_str(msg) };
     let footer = unsafe { get_str(footer) };
 
-    let mut messages = ParagraphVecShort::new();
-
-    messages.add(Paragraph::new(&TEXT_BOLD, title).centered());
-    messages.add(Paragraph::new(&TEXT_NORMAL, msg).centered());
-    let m_top =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut messages = ParagraphVecShort::new();
-
-    messages.add(Paragraph::new(&TEXT_BOLD, footer).centered());
-
-    let m_bottom =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut frame = ResultScreen::new(WHITE, BLACK, ICON_FAIL, m_top, m_bottom, true);
+    let mut frame = ErrorScreen::new(title, msg, footer);
     frame.place(constant::screen());
     frame.paint();
 }

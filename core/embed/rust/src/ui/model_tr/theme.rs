@@ -44,7 +44,7 @@ pub fn textstyle_number_bold_or_mono(num: i32) -> &'static TextStyle {
 }
 
 // BLD icons
-pub const LOGO_EMPTY: &[u8] = include_res!("model_tr/res/trezor_empty.toif");
+include_icon!(LOGO_EMPTY, "model_tr/res/trezor_empty.toif");
 include_icon!(ICON_FAIL, "model_tr/res/fail.toif");
 
 // Firmware icons
@@ -58,6 +58,10 @@ include_icon!(ICON_ARROW_DOWN, "model_tr/res/arrow_down.toif"); // 10*6
 include_icon!(ICON_ARROW_BACK_UP, "model_tr/res/arrow_back_up.toif"); // 8*8
 include_icon!(ICON_BIN, "model_tr/res/bin.toif"); // 10*10
 include_icon!(ICON_CANCEL, "model_tr/res/cancel_no_outline.toif"); // 8*8
+include_icon!(
+    ICON_CANCEL_INVERTED,
+    "model_tr/res/cancel_no_outline_inverted.toif"
+); // 8*8
 include_icon!(ICON_DELETE, "model_tr/res/delete.toif"); // 10*7
 include_icon!(ICON_EYE, "model_tr/res/eye_round.toif"); // 12*7
 include_icon!(ICON_LOCK, "model_tr/res/lock.toif"); // 10*10
@@ -69,6 +73,7 @@ include_icon!(ICON_SUCCESS, "model_tr/res/success.toif");
 include_icon!(ICON_TICK, "model_tr/res/tick.toif"); // 8*6
 include_icon!(ICON_TICK_FAT, "model_tr/res/tick_fat.toif"); // 8*6
 include_icon!(ICON_WARNING, "model_tr/res/warning.toif"); // 12*12
+include_icon!(ICON_WARN_TITLE, "model_tr/res/bld_header_warn.toif");
 
 // checklist settings
 pub const CHECKLIST_SPACING: i16 = 5;
@@ -83,6 +88,7 @@ pub const BUTTON_CONTENT_HEIGHT: i16 = 7;
 pub const BUTTON_OUTLINE: i16 = 3;
 pub const BUTTON_ARMS: i16 = 2;
 pub const BUTTON_HEIGHT: i16 = BUTTON_CONTENT_HEIGHT + 2 * BUTTON_OUTLINE;
+pub const TITLE_AREA_HEIGHT: i16 = 12;
 
 // How many pixels should be between text and icons.
 pub const ELLIPSIS_ICON_MARGIN: i16 = 4;

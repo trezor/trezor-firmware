@@ -29,9 +29,9 @@ SOURCE_MOD = []
 
 if TREZOR_MODEL in ('1', 'R'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
-    FONT_DEMIBOLD=None
-    FONT_BOLD=None
-    FONT_MONO='Font_PixelOperatorMono_Regular_8'
+    FONT_DEMIBOLD='Font_PixelOperator_Regular_8'
+    FONT_BOLD='Font_PixelOperator_Bold_8'
+    FONT_MONO='Font_PixelOperator_Regular_8'
 if TREZOR_MODEL in ('T', ):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD=None
@@ -165,7 +165,7 @@ env.Replace(
         'BOOTLOADER',
         'TREZOR_EMULATOR',
         'HW_MODEL=' + MODEL_AS_NUMBER,
-        'HW_REVISION=0',
+        'HW_REVISION=' + ('6' if TREZOR_MODEL in ('R',) else '0'),
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'TREZOR_BOARD=\\"board-unix.h\\"',
         'PB_FIELD_16BIT',
@@ -225,7 +225,7 @@ def cargo_build():
 
     cargo_opts = [
         f'--target={RUST_TARGET}',
-        f'--target-dir=../../build/bootloader_emu/rust',
+        '--target-dir=../../build/bootloader_emu/rust',
         '--no-default-features',
         '--features ' + ','.join(features),
         '-Z build-std=core',
@@ -239,9 +239,9 @@ rust = env.Command(
     source='',
     action=cargo_build(), )
 
-env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
-env.Append(LINKFLAGS=f' -l{RUST_LIB}')
-env.Append(LINKFLAGS=f' -lm')
+env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
+env.Append(LINKFLAGS=f'-l{RUST_LIB}')
+env.Append(LINKFLAGS='-lm')
 
 #
 # Program objects

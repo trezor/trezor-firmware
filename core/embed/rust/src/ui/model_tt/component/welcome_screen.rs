@@ -1,5 +1,3 @@
-#[cfg(not(feature = "bootloader"))]
-use crate::ui::display;
 #[cfg(feature = "bootloader")]
 use crate::ui::model_tt::bootloader::theme::DEVICE_NAME;
 use crate::ui::{
@@ -14,6 +12,8 @@ const TEXT_BOTTOM_MARGIN: i16 = 24; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 48;
 #[cfg(not(feature = "bootloader"))]
 const MODEL_NAME_FONT: display::Font = display::Font::DEMIBOLD;
+#[cfg(not(feature = "bootloader"))]
+use crate::ui::display;
 
 pub struct WelcomeScreen {
     area: Rect,

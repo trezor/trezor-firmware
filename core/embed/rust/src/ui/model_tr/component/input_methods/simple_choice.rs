@@ -28,14 +28,15 @@ impl<T: StringType> ChoiceFactorySimple<T> {
     }
 }
 
-impl<T: StringType> ChoiceFactory<T> for ChoiceFactorySimple<T> {
+impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactorySimple<T> {
     type Action = usize;
+    type Item = ChoiceItem<T>;
 
     fn count(&self) -> usize {
         self.choices.len()
     }
 
-    fn get(&self, choice_index: usize) -> (ChoiceItem<T>, Self::Action) {
+    fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let text = &self.choices[choice_index];
         let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
 
@@ -58,7 +59,7 @@ impl<T: StringType> ChoiceFactory<T> for ChoiceFactorySimple<T> {
 /// inputting a list of values and receiving the chosen one.
 pub struct SimpleChoice<T>
 where
-    T: StringType,
+    T: StringType + Clone,
 {
     choice_page: ChoicePage<ChoiceFactorySimple<T>, T, usize>,
     pub return_index: bool,

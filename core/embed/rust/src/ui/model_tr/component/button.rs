@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{ShortString, StringType},
+    strutil::StringType,
     time::Duration,
     ui::{
         component::{Component, Event, EventCtx, Never},
@@ -124,7 +124,18 @@ where
             };
             let content_width = match &self.content {
                 ButtonContent::Text(text) => style.font.visible_text_width(text.as_ref()),
-                ButtonContent::Icon(icon) => icon.toif.width() - 1,
+                ButtonContent::Icon(icon, icon_pressed) => {
+                    let width = if self.state == State::Pressed {
+                        if let Some(icon_pressed) = icon_pressed {
+                            icon_pressed.toif.width()
+                        } else {
+                            icon.toif.width()
+                        }
+                    } else {
+                        icon.toif.width()
+                    };
+                    width - 1
+                }
             };
             content_width + 2 * outline
         };
@@ -241,7 +252,8 @@ where
         match &self.content {
             ButtonContent::Text(text) => {
                 display::text_left(
-                    self.get_text_baseline(style),
+                    self.get_text_baseline(style)
+                        - Offset::x(style.font.start_x_bearing(text.as_ref())),
                     text.as_ref(),
                     style.font,
                     text_color,
@@ -424,12 +436,12 @@ impl<T> ButtonDetails<T> {
 
     /// Down arrow to signal paginating forward. Takes half the screen's width
     pub fn down_arrow_icon_wide() -> Self {
-        Self::icon(theme::ICON_ARROW_DOWN).fixed_width(HALF_SCREEN_BUTTON_WIDTH)
+        Self::icon(theme::ICON_ARROW_DOWN).with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
     /// Up arrow to signal paginating back. Takes half the screen's width
     pub fn up_arrow_icon_wide() -> Self {
-        Self::icon(theme::ICON_ARROW_UP).fixed_width(HALF_SCREEN_BUTTON_WIDTH)
+        Self::icon(theme::ICON_ARROW_UP).with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
     /// Icon of a bin to signal deleting.
@@ -471,8 +483,8 @@ impl<T> ButtonDetails<T> {
         self
     }
 
-    /// Width of the button.
-    pub fn fixed_width(mut self, width: i16) -> Self {
+    /// Specifying the width of the button.
+    pub fn with_fixed_width(mut self, width: i16) -> Self {
         self.fixed_width = Some(width);
         self
     }
@@ -879,6 +891,9 @@ impl ButtonActions {
 }
 
 // DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+use crate::strutil::ShortString;
 
 #[cfg(feature = "ui_debug")]
 impl<T: StringType> crate::trace::Trace for Button<T> {

@@ -1,5 +1,6 @@
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
+pub mod common_messages;
 pub mod component;
 pub mod constant;
 #[cfg(feature = "micropython")]

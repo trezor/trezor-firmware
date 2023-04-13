@@ -5,12 +5,12 @@ use crate::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::Icon,
         geometry::Rect,
-        model_tr::layout::CancelConfirmMsg,
     },
 };
 
 use super::super::{
-    theme, ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
+    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceFactory,
+    ChoiceItem, ChoicePage,
 };
 use heapless::String;
 
@@ -44,10 +44,11 @@ const CHOICES: [(&str, PinAction, Option<Icon>); CHOICE_LENGTH] = [
 
 struct ChoiceFactoryPIN;
 
-impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryPIN {
+impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
     type Action = PinAction;
+    type Item = ChoiceItem<T>;
 
-    fn get(&self, choice_index: usize) -> (ChoiceItem<T>, Self::Action) {
+    fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let (choice_str, action, icon) = CHOICES[choice_index];
 
         let mut choice_item = ChoiceItem::new(choice_str, ButtonLayout::default_three_icons());
@@ -72,7 +73,7 @@ impl<T: StringType> ChoiceFactory<T> for ChoiceFactoryPIN {
 }
 
 /// Component for entering a PIN.
-pub struct PinEntry<T: StringType> {
+pub struct PinEntry<T: StringType + Clone> {
     choice_page: ChoicePage<ChoiceFactoryPIN, T, PinAction>,
     pin_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
     subprompt_line: Child<ChangingTextLine<T>>,

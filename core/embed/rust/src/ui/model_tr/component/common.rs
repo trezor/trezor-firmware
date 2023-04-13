@@ -6,7 +6,7 @@ use crate::ui::{
 use super::theme;
 
 /// Display white text on black background
-pub fn display<T: AsRef<str>>(baseline: Point, text: &T, font: Font) {
+pub fn display_left<T: AsRef<str>>(baseline: Point, text: &T, font: Font) {
     display::text_left(baseline, text.as_ref(), font, theme::FG, theme::BG);
 }
 
