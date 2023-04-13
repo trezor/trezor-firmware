@@ -258,10 +258,9 @@ where
 
 #[cfg(feature = "ui_debug")]
 impl<T: AsRef<str>> crate::trace::Trace for Homescreen<T> {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Homescreen");
-        d.field("label", &self.label.as_ref());
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Homescreen");
+        t.string("label", self.label.as_ref());
     }
 }
 
@@ -392,8 +391,7 @@ fn is_image_toif(buffer: &[u8]) -> bool {
 
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Lockscreen<T> {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Lockscreen");
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Lockscreen");
     }
 }

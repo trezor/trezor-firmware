@@ -108,10 +108,9 @@ impl<T> crate::trace::Trace for HoldToConfirm<T>
 where
     T: crate::trace::Trace,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("HoldToConfirm");
-        self.content.trace(d);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("HoldToConfirm");
+        t.child("content", &self.content);
     }
 }
 
@@ -181,8 +180,8 @@ impl Component for CancelHold {
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for CancelHold {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.string("CancelHold")
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("CancelHold");
     }
 }
 

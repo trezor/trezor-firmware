@@ -53,8 +53,7 @@ impl Component for Timeout {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Timeout {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Timeout");
-        t.int(self.time_ms as i64);
-        t.close();
+        t.component("Timeout");
+        t.int("time_ms", self.time_ms as i64);
     }
 }

@@ -147,8 +147,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
 #[cfg(test)]
 mod tests {
+    extern crate json;
+
     use crate::{
-        trace::Trace,
+        trace::tests::trace,
         ui::{
             component::Component,
             model_tr::{
@@ -159,12 +161,6 @@ mod tests {
     };
 
     use super::*;
-
-    fn trace(val: &impl Trace) -> String {
-        let mut t = Vec::new();
-        val.trace(&mut t);
-        String::from_utf8(t).unwrap()
-    }
 
     impl<T, U> ComponentMsgObj for Dialog<T, U>
     where

@@ -81,14 +81,9 @@ where
     U: crate::trace::Trace + AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Dialog");
-        t.field("content", &self.content);
-        if let Some(label) = &self.left_btn {
-            t.field("left", label);
-        }
-        if let Some(label) = &self.right_btn {
-            t.field("right", label);
-        }
-        t.close();
+        t.component("Dialog");
+        t.child("content", &self.content);
+        self.left_btn.as_ref().map(|b| t.child("left", b));
+        self.right_btn.as_ref().map(|b| t.child("right", b));
     }
 }

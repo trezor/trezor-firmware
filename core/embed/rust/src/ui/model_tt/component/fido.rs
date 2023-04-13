@@ -205,7 +205,6 @@ where
     F: Fn(usize) -> T,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("FidoPaginatedPage");
-        t.close();
+        t.component("FidoConfirm");
     }
 }

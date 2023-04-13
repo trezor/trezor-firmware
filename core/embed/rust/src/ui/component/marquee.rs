@@ -232,9 +232,8 @@ impl<T> crate::trace::Trace for Marquee<T>
 where
     T: AsRef<str>,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Marquee");
-        d.field("text", &self.text.as_ref());
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Marquee");
+        t.string("text", self.text.as_ref());
     }
 }

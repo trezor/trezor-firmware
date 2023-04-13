@@ -71,10 +71,9 @@ where
     T: Component,
     T: crate::trace::Trace,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("GridPlaced");
-        d.field("inner", &self.inner);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("GridPlaced");
+        t.child("inner", &self.inner);
     }
 }
 
@@ -115,10 +114,9 @@ where
     T: Component,
     T: crate::trace::Trace,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("FixedHeightBar");
-        d.field("inner", &self.inner);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("FixedHeightBar");
+        t.child("inner", &self.inner);
     }
 }
 
@@ -188,10 +186,9 @@ where
     T: Component,
     T: crate::trace::Trace,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Floating");
-        d.field("inner", &self.inner);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Floating");
+        t.child("inner", &self.inner);
     }
 }
 
@@ -277,13 +274,12 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for Split<T, U>
 where
-    T: Component + crate::trace::Trace,
-    U: Component + crate::trace::Trace,
+    T: crate::trace::Trace,
+    U: crate::trace::Trace,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Split");
-        d.field("first", &self.first);
-        d.field("second", &self.second);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Split");
+        t.child("first", &self.first);
+        t.child("second", &self.second);
     }
 }

@@ -193,8 +193,7 @@ pub struct LoaderStyle {
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Loader {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Loader");
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Loader");
     }
 }

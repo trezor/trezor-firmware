@@ -445,31 +445,32 @@ impl LayoutSink for TextRenderer {
 
 #[cfg(feature = "ui_debug")]
 pub mod trace {
-    use crate::ui::geometry::Point;
+    use crate::{trace::ListTracer, ui::geometry::Point};
 
     use super::*;
 
-    pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
+    /// `LayoutSink` for debugging purposes.
+    pub struct TraceSink<'a>(pub &'a mut dyn ListTracer);
 
-    impl<'a> LayoutSink for TraceSink<'a> {
+    impl LayoutSink for TraceSink<'_> {
         fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
-            self.0.string(text);
+            self.0.string(&text);
         }
 
         fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("-");
+            self.0.string(&"-");
         }
 
         fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("...");
+            self.0.string(&ELLIPSIS);
         }
 
         fn prev_page_ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("...");
+            self.0.string(&ELLIPSIS);
         }
 
         fn line_break(&mut self, _cursor: Point) {
-            self.0.string("\n");
+            self.0.string(&"\n");
         }
     }
 }

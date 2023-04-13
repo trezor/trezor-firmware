@@ -253,10 +253,3 @@ pub fn hexlify_bytes(obj: Obj, offset: usize, max_len: usize) -> Result<StrBuffe
     let result = StrBuffer::alloc_with(hex_len, move |buffer| hexlify(bin_slice, buffer))?;
     Ok(result.offset(hex_off))
 }
-
-#[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for StrBuffer {
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.as_ref().trace(t)
-    }
-}

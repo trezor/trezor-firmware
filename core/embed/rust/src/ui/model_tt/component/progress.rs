@@ -133,7 +133,6 @@ where
     T: ParagraphStrType,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Progress");
-        t.close();
+        t.component("Progress");
     }
 }

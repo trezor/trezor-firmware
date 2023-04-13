@@ -194,15 +194,14 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for AddressDetails<T>
 where
-    T: ParagraphStrType + crate::trace::Trace,
+    T: ParagraphStrType,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("AddressDetails");
+        t.component("AddressDetails");
         match self.current_page {
-            0 => self.qr_code.trace(t),
-            1 => self.details.trace(t),
-            _ => self.xpub_view.trace(t),
+            0 => t.child("qr_code", &self.qr_code),
+            1 => t.child("details", &self.details),
+            _ => t.child("xpub_view", &self.xpub_view),
         }
-        t.close();
     }
 }

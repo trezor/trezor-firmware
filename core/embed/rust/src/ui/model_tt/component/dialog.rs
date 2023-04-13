@@ -85,10 +85,9 @@ where
     U: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Dialog");
-        t.field("content", &self.content);
-        t.field("controls", &self.controls);
-        t.close();
+        t.component("Dialog");
+        t.child("content", &self.content);
+        t.child("controls", &self.controls);
     }
 }
 
@@ -208,10 +207,9 @@ where
     U: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("IconDialog");
-        t.field("content", &self.paragraphs);
-        t.field("image", &self.image);
-        t.field("controls", &self.controls);
-        t.close();
+        t.component("IconDialog");
+        t.child("image", &self.image);
+        t.child("content", &self.paragraphs);
+        t.child("controls", &self.controls);
     }
 }

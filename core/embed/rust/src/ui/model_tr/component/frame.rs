@@ -68,12 +68,11 @@ where
 impl<T, U> crate::trace::Trace for Frame<T, U>
 where
     T: crate::trace::Trace,
-    U: crate::trace::Trace + AsRef<str>,
+    U: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Frame");
-        t.field("title", &self.title);
-        t.field("content", &self.content);
-        t.close();
+        t.component("Frame");
+        t.string("title", self.title.as_ref());
+        t.child("content", &self.content);
     }
 }

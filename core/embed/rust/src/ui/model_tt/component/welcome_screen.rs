@@ -65,8 +65,7 @@ impl Component for WelcomeScreen {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for WelcomeScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("WelcomeScreen");
-        t.string(MODEL_NAME);
-        t.close();
+        t.component("WelcomeScreen");
+        t.string("model", MODEL_NAME);
     }
 }

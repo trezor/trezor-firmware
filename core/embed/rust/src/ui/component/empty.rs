@@ -20,7 +20,6 @@ impl Component for Empty {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Empty {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Empty");
-        t.close();
+        t.component("Empty");
     }
 }

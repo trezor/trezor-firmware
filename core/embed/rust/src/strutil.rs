@@ -9,3 +9,34 @@ pub fn hexlify(data: &[u8], buffer: &mut [u8]) {
         i += 2;
     }
 }
+
+pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {
+    let mut i = 0;
+    let mut num = num;
+    let negative = if num < 0 {
+        num = -num;
+        true
+    } else {
+        false
+    };
+
+    while num > 0 && i < buffer.len() {
+        buffer[i] = b'0' + ((num % 10) as u8);
+        num /= 10;
+        i += 1;
+    }
+    match i {
+        0 => Some("0"),
+        _ if num > 0 => None,
+        _ if negative && i == buffer.len() => None,
+        _ => {
+            if negative {
+                buffer[i] = b'-';
+                i += 1;
+            }
+            let result = &mut buffer[..i];
+            result.reverse();
+            Some(unsafe { core::str::from_utf8_unchecked(result) })
+        }
+    }
+}

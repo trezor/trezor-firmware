@@ -88,3 +88,6 @@ version = "1.0.69"
 [build-dependencies.glob]
 optional = true
 version = "0.3.0"
+
+[dev-dependencies]
+serde_json = "1.0.96"

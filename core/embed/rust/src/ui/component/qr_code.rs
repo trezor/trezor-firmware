@@ -150,8 +150,7 @@ impl Component for Qr {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Qr {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Qr");
-        t.field("text", &self.text.as_str());
-        t.close();
+        t.component("Qr");
+        t.string("text", self.text.as_ref());
     }
 }

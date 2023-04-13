@@ -13,6 +13,7 @@ mod error;
 // use trezorhal for its macros early
 #[macro_use]
 mod trezorhal;
+mod maybe_trace;
 #[cfg(feature = "micropython")]
 #[macro_use]
 mod micropython;

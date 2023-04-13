@@ -135,12 +135,11 @@ where
     F: Fn(u32) -> T,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("NumberInputDialog");
-        t.field("input", &self.input);
-        t.field("paragraphs", &self.paragraphs);
-        t.field("info_button", &self.info_button);
-        t.field("confirm_button", &self.confirm_button);
-        t.close();
+        t.component("NumberInputDialog");
+        t.child("input", &self.input);
+        t.child("paragraphs", &self.paragraphs);
+        t.child("info_button", &self.info_button);
+        t.child("confirm_button", &self.confirm_button);
     }
 }
 
@@ -238,8 +237,7 @@ impl Component for NumberInput {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for NumberInput {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("NumberInput");
-        t.field("value", &(self.value as usize));
-        t.close();
+        t.component("NumberInput");
+        t.int("value", self.value as i64);
     }
 }

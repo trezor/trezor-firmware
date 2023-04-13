@@ -48,7 +48,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<F> crate::trace::Trace for Painter<F> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.string("Painter")
+        t.component("Painter");
     }
 }
 
