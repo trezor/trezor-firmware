@@ -530,7 +530,7 @@ int bootloader_main(void) {
       ui_screen_boot_click();
     }
 
-    ui_fadeout();
+    ui_screen_boot_empty(false);
   }
 
   ensure_compatible_settings();

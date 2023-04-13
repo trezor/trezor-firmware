@@ -1,21 +1,16 @@
 use crate::ui::{
-    component::{
-        text::paragraphs::{ParagraphVecShort, Paragraphs},
-        Child, Component, Event, EventCtx, Pad,
+    component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
+    display,
+    display::{Color, Font},
+    geometry::{Point, Rect},
+    model_tr::{
+        bootloader::theme::WHITE,
+        component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos},
+        constant::WIDTH,
     },
-    constant::screen,
-    display::{Color, Icon},
-    geometry::{Point, Rect, CENTER},
 };
 
-use super::{
-    super::{
-        component::{Button, ButtonMsg::Clicked},
-        constant::{HEIGHT, WIDTH},
-        theme::WHITE,
-    },
-    ReturnToC,
-};
+use super::ReturnToC;
 
 #[derive(Copy, Clone)]
 pub enum ConfirmMsg {
@@ -29,93 +24,130 @@ impl ReturnToC for ConfirmMsg {
     }
 }
 
-pub struct Confirm {
+pub struct Confirm<'a> {
     bg: Pad,
     bg_color: Color,
-    icon: Option<Icon>,
-    message: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
-    left: Child<Button<&'static str>>,
-    right: Child<Button<&'static str>>,
-    confirm_left: bool,
+    label: &'static str,
+    message: Child<Label<&'a str>>,
+    buttons: ButtonController<&'static str>,
+    buttons_info: ButtonController<&'static str>,
+    alert: Option<Label<&'a str>>,
+    info: Option<Label<&'a str>>,
+    info_shown: bool,
 }
 
-impl Confirm {
+impl<'a> Confirm<'a> {
     pub fn new(
         bg_color: Color,
-        icon: Option<Icon>,
-        message: Paragraphs<ParagraphVecShort<&'static str>>,
-        left: Button<&'static str>,
-        right: Button<&'static str>,
-        confirm_left: bool,
+        label: &'static str,
+        message: Label<&'a str>,
+        alert: Option<Label<&'a str>>,
+        info: Option<Label<&'a str>>,
+        text: &'static str,
     ) -> Self {
-        let mut instance = Self {
-            bg: Pad::with_background(bg_color),
-            bg_color,
-            icon,
-            message: Child::new(message),
-            left: Child::new(left),
-            right: Child::new(right),
-            confirm_left,
+        let controller = if info.is_some() {
+            ButtonController::new(ButtonLayout::cancel_armed_text("INSTALL", " i "))
+        } else {
+            ButtonController::new(ButtonLayout::cancel_none_text(text))
         };
-        instance.bg.clear();
-        instance
+        Self {
+            bg: Pad::with_background(bg_color).with_clear(),
+            bg_color,
+            label,
+            message: Child::new(message),
+            alert,
+            info,
+            buttons: controller,
+            buttons_info: ButtonController::new(ButtonLayout::arrow_none_none()),
+            info_shown: false,
+        }
     }
 }
 
-impl Component for Confirm {
+impl<'a> Component for Confirm<'a> {
     type Msg = ConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.bg
-            .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, HEIGHT)));
-        self.message
-            .place(Rect::new(Point::new(10, 0), Point::new(118, 50)));
+        self.bg.place(bounds);
+
+        let (message_area, alert_area) = if self.alert.is_some() {
+            (
+                Rect::new(Point::new(0, 12), Point::new(WIDTH, 39)),
+                Rect::new(Point::new(0, 39), Point::new(WIDTH, 54)),
+            )
+        } else {
+            (
+                Rect::new(Point::new(0, 12), Point::new(WIDTH, 54)),
+                Rect::zero(),
+            )
+        };
+
+        self.message.place(message_area);
+        self.alert.place(alert_area);
+        self.info
+            .place(Rect::new(Point::new(0, 12), Point::new(WIDTH, 54)));
 
         let button_area = bounds.split_bottom(12).1;
-        self.left.place(button_area);
-        self.right.place(button_area);
+        self.buttons.place(button_area);
+        self.buttons_info.place(button_area);
 
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(Clicked) = self.left.event(ctx, event) {
-            return if self.confirm_left {
-                Some(Self::Msg::Confirm)
-            } else {
-                Some(Self::Msg::Cancel)
+        if self.info_shown {
+            if let Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) =
+                self.buttons.event(ctx, event)
+            {
+                self.info_shown = false;
+                self.message.request_complete_repaint(ctx);
+                self.buttons.request_complete_repaint(ctx);
+                self.bg.clear();
+                self.request_complete_repaint(ctx);
             };
-        };
-        if let Some(Clicked) = self.right.event(ctx, event) {
-            return if self.confirm_left {
-                Some(Self::Msg::Cancel)
-            } else {
-                Some(Self::Msg::Confirm)
-            };
-        };
-        None
+            None
+        } else if self.info.is_some() {
+            match self.buttons.event(ctx, event) {
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) => Some(ConfirmMsg::Cancel),
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Middle)) => {
+                    Some(ConfirmMsg::Confirm)
+                }
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Right)) => {
+                    self.info_shown = true;
+                    self.bg.clear();
+                    self.info.request_complete_repaint(ctx);
+                    self.buttons_info.request_complete_repaint(ctx);
+                    self.request_complete_repaint(ctx);
+                    None
+                }
+                _ => None,
+            }
+        } else {
+            match self.buttons.event(ctx, event) {
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) => Some(ConfirmMsg::Cancel),
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Right)) => Some(ConfirmMsg::Confirm),
+                _ => None,
+            }
+        }
     }
 
     fn paint(&mut self) {
         self.bg.paint();
 
-        if let Some(icon) = self.icon {
-            icon.draw(
-                Point::new(screen().center().x, 45),
-                CENTER,
-                WHITE,
-                self.bg_color,
-            );
-        }
+        display::text_top_left(Point::zero(), self.label, Font::BOLD, WHITE, self.bg_color);
 
-        self.message.paint();
-        self.left.paint();
-        self.right.paint();
+        if self.info_shown {
+            self.info.paint();
+            self.buttons_info.paint();
+        } else {
+            self.message.paint();
+            self.alert.paint();
+            self.buttons.paint();
+        }
     }
 
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.left.bounds(sink);
-        self.right.bounds(sink);
+        self.buttons.bounds(sink);
     }
 }

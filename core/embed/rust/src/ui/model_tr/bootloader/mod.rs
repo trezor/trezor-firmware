@@ -1,43 +1,44 @@
 use crate::{
-    trezorhal::io::io_button_read,
+    strutil::hexlify,
+    time::Duration,
+    trezorhal::{io::io_button_read, time},
     ui::{
         component::{Component, Never},
         display::{self, Font},
-        geometry::Point,
+        model_tr::constant,
     },
 };
+use heapless::String;
 
 mod confirm;
+mod connect;
 mod intro;
 mod menu;
 mod theme;
-mod title;
+mod welcome;
 
 use crate::ui::{
-    component::{
-        text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
-        Event, EventCtx,
-    },
-    constant::{screen, WIDTH},
-    display::{fade_backlight_duration, Color, Icon, TextOverlay},
+    component::{Event, EventCtx, Label, LineBreaking::BreakWordsNoHyphen},
+    constant::screen,
+    display::{Color, Icon},
     event::ButtonEvent,
-    geometry::{LinearPlacement, Offset, Rect, CENTER},
+    geometry::{Alignment, Alignment::Center, Offset, Rect, TOP_CENTER},
+    model_tr::{
+        bootloader::{
+            confirm::Confirm,
+            connect::Connect,
+            intro::Intro,
+            menu::Menu,
+            theme::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, LOGO_EMPTY},
+            welcome::Welcome,
+        },
+        component::{ResultScreen, WelcomeScreen},
+        theme::ICON_SUCCESS,
+    },
     util::{from_c_array, from_c_str},
 };
 
-use super::{
-    bootloader::{
-        confirm::Confirm,
-        intro::Intro,
-        menu::Menu,
-        theme::{bld_button_cancel, bld_button_default, BLD_BG, BLD_FG},
-    },
-    component::{Button, ButtonPos, ResultScreen},
-    constant,
-    theme::{BACKLIGHT_NORMAL, ICON_FAIL, ICON_SUCCESS, LOGO_EMPTY},
-};
-
-const SCREEN_ADJ: Rect = screen().split_top(64).0;
+pub type BootloaderString = String<128>;
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;
@@ -77,9 +78,9 @@ where
     F: Component,
     F::Msg: ReturnToC,
 {
-    frame.place(SCREEN_ADJ);
+    frame.place(screen());
     frame.paint();
-    fade_backlight_duration(BACKLIGHT_NORMAL, 500);
+    display::refresh();
 
     while button_eval().is_some() {}
 
@@ -94,6 +95,7 @@ where
             }
 
             frame.paint();
+            display::refresh();
         }
     }
 }
@@ -102,7 +104,7 @@ fn show<F>(frame: &mut F)
 where
     F: Component,
 {
-    frame.place(SCREEN_ADJ);
+    frame.place(screen());
     display::sync();
     frame.paint();
     display::refresh();
@@ -113,81 +115,80 @@ extern "C" fn screen_install_confirm(
     vendor_str: *const cty::c_char,
     vendor_str_len: u8,
     version: *const cty::c_char,
-    _fingerprint: *const cty::uint8_t,
-    downgrade: bool,
-    vendor: bool,
+    fingerprint: *const cty::uint8_t,
+    should_keep_seed: bool,
+    is_newvendor: bool,
+    version_cmp: cty::c_int,
 ) -> u32 {
     let text = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
     let version = unwrap!(unsafe { from_c_str(version) });
 
-    let icon: Option<Icon> = None;
-
-    let msg = if downgrade {
-        "Downgrade firmware by"
-    } else if vendor {
-        "Change vendor to"
-    } else {
-        "Update firmware by"
+    let mut fingerprint_buffer: [u8; 64] = [0; 64];
+    let fingerprint_str = unsafe {
+        let fingerprint_slice = core::slice::from_raw_parts(fingerprint as *const u8, 32);
+        hexlify(fingerprint_slice, &mut fingerprint_buffer);
+        core::str::from_utf8_unchecked(fingerprint_buffer.as_ref())
     };
 
-    let mut message = ParagraphVecShort::new();
+    let mut version_str: BootloaderString = String::new();
+    unwrap!(version_str.push_str("Firmware version "));
+    unwrap!(version_str.push_str(version));
+    unwrap!(version_str.push_str("\nby "));
+    unwrap!(version_str.push_str(text));
 
-    message.add(Paragraph::new(&theme::TEXT_NORMAL, msg).centered());
-    message.add(Paragraph::new(&theme::TEXT_NORMAL, text).centered());
-    message.add(Paragraph::new(&theme::TEXT_NORMAL, version).centered());
+    let title_str = if is_newvendor {
+        "CHANGE FW VENDOR"
+    } else if version_cmp > 0 {
+        "UPDATE FIRMWARE"
+    } else if version_cmp == 0 {
+        "REINSTALL FW"
+    } else {
+        "DOWNGRADE FW"
+    };
 
-    if vendor || downgrade {
-        message.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!").centered());
-    }
+    let message = Label::new(version_str.as_str(), Alignment::Start, theme::TEXT_NORMAL)
+        .vertically_aligned(Center);
+    let fingerprint = Label::new(
+        fingerprint_str,
+        Alignment::Start,
+        theme::TEXT_NORMAL.with_line_breaking(BreakWordsNoHyphen),
+    )
+    .vertically_aligned(Center);
 
-    // TODO: this relies on StrBuffer support for bootloader, decide what to do
-    let left = Button::with_text(ButtonPos::Left, "CANCEL", bld_button_cancel());
-    let right = Button::with_text(ButtonPos::Right, "INSTALL", bld_button_default());
+    let alert = (!should_keep_seed).then_some(Label::new(
+        "Seed will be erased!",
+        Alignment::Start,
+        theme::TEXT_NORMAL,
+    ));
 
     let mut frame = Confirm::new(
         BLD_BG,
-        icon,
-        Paragraphs::new(message).with_placement(LinearPlacement::vertical().align_at_center()),
-        left,
-        right,
-        false,
+        title_str,
+        message,
+        alert,
+        Some(fingerprint),
+        "INSTALL",
     );
-
     run(&mut frame)
 }
 
 #[no_mangle]
 extern "C" fn screen_wipe_confirm() -> u32 {
-    let icon: Option<Icon> = None; //Some(ERASE_BIG);
+    let alert = Label::new(
+        "Seed and firmware will be erased!",
+        Alignment::Start,
+        theme::TEXT_NORMAL,
+    )
+    .vertically_aligned(Center);
 
-    let mut messages = ParagraphVecShort::new();
-
-    messages.add(
-        Paragraph::new(
-            &theme::TEXT_NORMAL,
-            "Do you really want to wipe the device?",
-        )
-        .centered(),
-    );
-    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!").centered());
-
-    let message =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    // TODO: this relies on StrBuffer support for bootloader, decide what to do
-    let left = Button::with_text(ButtonPos::Left, "WIPE", bld_button_default());
-    let right = Button::with_text(ButtonPos::Right, "CANCEL", bld_button_cancel());
-
-    let mut frame = Confirm::new(BLD_BG, icon, message, left, right, true);
+    let mut frame = Confirm::new(BLD_BG, "FACTORY RESET", alert, None, None, "RESET");
 
     run(&mut frame)
 }
 
 #[no_mangle]
-extern "C" fn screen_menu(bld_version: *const cty::c_char) -> u32 {
-    let bld_version = unwrap!(unsafe { from_c_str(bld_version) });
-
-    run(&mut Menu::new(bld_version))
+extern "C" fn screen_menu(_bld_version: *const cty::c_char) -> u32 {
+    run(&mut Menu::new())
 }
 
 #[no_mangle]
@@ -201,97 +202,113 @@ extern "C" fn screen_intro(
     let version = unwrap!(unsafe { from_c_str(version) });
     let bld_version = unwrap!(unsafe { from_c_str(bld_version) });
 
-    run(&mut Intro::new(bld_version, vendor, version))
+    let mut title_str: BootloaderString = String::new();
+    unwrap!(title_str.push_str("BOOTLOADER "));
+    unwrap!(title_str.push_str(bld_version));
+
+    let mut version_str: BootloaderString = String::new();
+    unwrap!(version_str.push_str("Firmware version "));
+    unwrap!(version_str.push_str(version));
+    unwrap!(version_str.push_str("\nby "));
+    unwrap!(version_str.push_str(vendor));
+
+    let mut frame = Intro::new(title_str.as_str(), version_str.as_str());
+    run(&mut frame)
 }
 
 fn screen_progress(
     text: &str,
+    text2: &str,
     progress: u16,
     initialize: bool,
     fg_color: Color,
     bg_color: Color,
-    _icon: Option<(&[u8], Color)>,
+    icon: Option<(Icon, Color)>,
 ) {
     if initialize {
         display::rect_fill(constant::screen(), bg_color);
     }
 
-    let loader_area = Rect::new(Point::new(5, 24), Point::new(WIDTH - 5, 24 + 16));
+    let progress = if progress < 20 { 20 } else { progress };
 
-    let mut text = TextOverlay::new(text, Font::NORMAL);
-    text.place(loader_area.center() + Offset::y(Font::NORMAL.text_height() / 2));
-
-    let fill_to = (loader_area.width() as u32 * progress as u32) / 1000;
-
-    display::bar_with_text_and_fill(
-        loader_area,
-        Some(&text),
+    display::rect_rounded2_partial(
+        Rect::new(
+            screen().top_center() + Offset::new(-9, 3),
+            screen().top_center() + Offset::new(9, 18 + 3),
+        ),
         fg_color,
         bg_color,
-        0,
-        fill_to as _,
+        ((100_u32 * progress as u32) / 1000) as _,
+        icon,
     );
+    display::text_center(
+        screen().center() + Offset::y(8),
+        text,
+        Font::BOLD,
+        fg_color,
+        bg_color,
+    );
+    display::text_center(
+        screen().center() + Offset::y(20),
+        text2,
+        Font::BOLD,
+        fg_color,
+        bg_color,
+    );
+
     display::refresh();
 }
 
 #[no_mangle]
 extern "C" fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
     screen_progress(
-        "INSTALLING FIRMWARE",
+        "Installing",
+        "Firmware",
         progress,
         initialize,
         BLD_FG,
         BLD_BG,
-        None,
-    )
+        Some((Icon::new(ICON_SUCCESS), BLD_FG)),
+    );
 }
 
 #[no_mangle]
 extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
     screen_progress(
-        "WIPING DEVICE",
+        "Wiping",
+        "Trezor",
         progress,
         initialize,
-        theme::BLD_FG,
+        BLD_FG,
         BLD_BG,
-        None,
-    )
+        Some((Icon::new(ICON_SUCCESS), BLD_FG)),
+    );
 }
 
 #[no_mangle]
 extern "C" fn screen_connect() {
-    let mut messages = ParagraphVecShort::new();
-
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Waiting for host...").centered());
-
-    let mut frame =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
+    let mut frame = Connect::new("Waiting for host...");
     show(&mut frame);
 }
 
 #[no_mangle]
 extern "C" fn screen_wipe_success() {
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Device wiped").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "successfully.").centered());
+    let title = Label::new("Trezor Reset", Alignment::Center, theme::TEXT_BOLD)
+        .vertically_aligned(Alignment::Center);
 
-    let m_top =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "PLEASE RECONNECT").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "THE DEVICE").centered());
-
-    let m_bottom =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+    let content = Label::new(
+        "Reconnect\nthe device",
+        Alignment::Center,
+        theme::TEXT_NORMAL,
+    )
+    .vertically_aligned(Alignment::Center);
 
     let mut frame = ResultScreen::new(
         BLD_FG,
         BLD_BG,
-        Icon::new(ICON_SUCCESS),
-        m_top,
-        m_bottom,
+        Icon::new(ICON_SPINNER),
+        title,
+        content,
         true,
     );
     show(&mut frame);
@@ -299,119 +316,83 @@ extern "C" fn screen_wipe_success() {
 
 #[no_mangle]
 extern "C" fn screen_wipe_fail() {
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Device wipe was").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "not successful.").centered());
+    let title = Label::new("Reset failed", Alignment::Center, theme::TEXT_BOLD)
+        .vertically_aligned(Alignment::Center);
 
-    let m_top =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+    let content = Label::new(
+        "Reconnect\nthe device",
+        Alignment::Center,
+        theme::TEXT_NORMAL,
+    )
+    .vertically_aligned(Alignment::Center);
 
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "PLEASE RECONNECT").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "THE DEVICE").centered());
-
-    let m_bottom =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, Icon::new(ICON_FAIL), m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, Icon::new(ICON_ALERT), title, content, true);
     show(&mut frame);
 }
 
 #[no_mangle]
-extern "C" fn screen_boot_empty(_firmware_present: bool, _fading: bool) {
-    Icon::new(LOGO_EMPTY).draw(SCREEN_ADJ.center(), CENTER, BLD_FG, BLD_BG);
+extern "C" fn screen_boot_empty(_firmware_present: bool) {
+    display::rect_fill(constant::screen(), BLD_BG);
+    Icon::new(LOGO_EMPTY).draw(
+        screen().top_center() + Offset::y(11),
+        TOP_CENTER,
+        BLD_FG,
+        BLD_BG,
+    );
+    display::refresh();
+    if !_firmware_present {
+        time::sleep(Duration::from_millis(1000));
+    }
 }
 
 #[no_mangle]
 extern "C" fn screen_install_fail() {
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Firmware installation was").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "not successful.").centered());
-    let m_top =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+    let title = Label::new("Install failed", Alignment::Center, theme::TEXT_BOLD)
+        .vertically_aligned(Alignment::Center);
 
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "PLEASE RECONNECT").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "THE DEVICE").centered());
+    let content = Label::new(
+        "Reconnect\nthe device",
+        Alignment::Center,
+        theme::TEXT_NORMAL,
+    )
+    .vertically_aligned(Alignment::Center);
 
-    let m_bottom =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, Icon::new(ICON_FAIL), m_top, m_bottom, true);
-    show(&mut frame);
-}
-
-fn screen_install_success_bld(msg: &'static str, complete_draw: bool) {
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Firmware installed").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "successfully.").centered());
-
-    let m_top =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, msg).centered());
-
-    let m_bottom =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut frame = ResultScreen::new(
-        BLD_FG,
-        BLD_BG,
-        Icon::new(ICON_SUCCESS),
-        m_top,
-        m_bottom,
-        complete_draw,
-    );
-    show(&mut frame);
-}
-
-fn screen_install_success_initial(msg: &'static str, complete_draw: bool) {
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Firmware installed").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "successfully.").centered());
-
-    let m_top =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, msg).centered());
-
-    let m_bottom =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
-    let mut frame = ResultScreen::new(
-        BLD_FG,
-        BLD_BG,
-        Icon::new(ICON_SUCCESS),
-        m_top,
-        m_bottom,
-        complete_draw,
-    );
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, Icon::new(ICON_ALERT), title, content, true);
     show(&mut frame);
 }
 
 #[no_mangle]
 extern "C" fn screen_install_success(
     reboot_msg: *const cty::c_char,
-    initial_setup: bool,
+    _initial_setup: bool,
     complete_draw: bool,
 ) {
     let msg = unwrap!(unsafe { from_c_str(reboot_msg) });
-    if initial_setup {
-        screen_install_success_initial(msg, complete_draw)
-    } else {
-        screen_install_success_bld(msg, complete_draw)
-    }
+    let title = Label::new("Installed", Alignment::Center, theme::TEXT_BOLD)
+        .vertically_aligned(Alignment::Center);
+
+    let content = Label::new(msg, Alignment::Center, theme::TEXT_NORMAL)
+        .vertically_aligned(Alignment::Center);
+
+    let mut frame = ResultScreen::new(
+        BLD_FG,
+        BLD_BG,
+        Icon::new(ICON_SPINNER),
+        title,
+        content,
+        complete_draw,
+    );
+    show(&mut frame);
 }
 
 #[no_mangle]
 extern "C" fn screen_welcome() {
-    let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Get started with").centered());
-    messages.add(Paragraph::new(&theme::TEXT_BOLD, "your trezor at").centered());
-    messages.add(Paragraph::new(&theme::TEXT_BOLD, "trezor.io/start").centered());
-    let mut frame =
-        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+    let mut frame = Welcome::new();
+    show(&mut frame);
+}
+
+#[no_mangle]
+extern "C" fn screen_welcome_model() {
+    let mut frame = WelcomeScreen::new();
     show(&mut frame);
 }

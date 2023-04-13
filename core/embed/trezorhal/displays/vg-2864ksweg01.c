@@ -132,6 +132,21 @@ static inline void spi_send(const uint8_t *data, int len) {
   }
 }
 
+void display_handle_init(void) {
+  spi_handle.Instance = OLED_SPI;
+  spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
+  spi_handle.Init.CLKPhase = SPI_PHASE_1EDGE;
+  spi_handle.Init.CLKPolarity = SPI_POLARITY_LOW;
+  spi_handle.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  spi_handle.Init.CRCPolynomial = 7;
+  spi_handle.Init.DataSize = SPI_DATASIZE_8BIT;
+  spi_handle.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  spi_handle.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  spi_handle.Init.TIMode = SPI_TIMODE_DISABLE;
+  spi_handle.Init.Mode = SPI_MODE_MASTER;
+}
+
 void display_init(void) {
   OLED_DC_CLK_ENA();
   OLED_CS_CLK_ENA();
@@ -167,18 +182,7 @@ void display_init(void) {
   GPIO_InitStructure.Pin = OLED_SPI_MOSI_PIN;
   HAL_GPIO_Init(OLED_SPI_MOSI_PORT, &GPIO_InitStructure);
 
-  spi_handle.Instance = OLED_SPI;
-  spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
-  spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
-  spi_handle.Init.CLKPhase = SPI_PHASE_1EDGE;
-  spi_handle.Init.CLKPolarity = SPI_POLARITY_LOW;
-  spi_handle.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  spi_handle.Init.CRCPolynomial = 7;
-  spi_handle.Init.DataSize = SPI_DATASIZE_8BIT;
-  spi_handle.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  spi_handle.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  spi_handle.Init.TIMode = SPI_TIMODE_DISABLE;
-  spi_handle.Init.Mode = SPI_MODE_MASTER;
+  display_handle_init();
   if (HAL_OK != HAL_SPI_Init(&spi_handle)) {
     // TODO: error
     return;
@@ -230,7 +234,7 @@ void display_init(void) {
   display_refresh();
 }
 
-void display_reinit(void) { display_init(); }
+void display_reinit(void) { display_handle_init(); }
 
 static inline uint8_t reverse_byte(uint8_t b) {
   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;

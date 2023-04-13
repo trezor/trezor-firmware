@@ -72,6 +72,7 @@ pub const ICON_SUCCESS: &[u8] = include_res!("model_tr/res/success.toif");
 pub const ICON_TICK: &[u8] = include_res!("model_tr/res/tick.toif"); // 8*6
 pub const ICON_TICK_FAT: &[u8] = include_res!("model_tr/res/tick_fat.toif"); // 8*6
 pub const ICON_WARNING: &[u8] = include_res!("model_tr/res/warning.toif"); // 12*12
+pub const ICON_WARN_TITLE: &[u8] = include_res!("model_tr/res/bld_header_warn.toif");
 
 // checklist settings
 pub const CHECKLIST_SPACING: i16 = 5;
