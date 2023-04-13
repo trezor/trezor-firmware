@@ -264,8 +264,9 @@ async def handle_UnlockPath(ctx: wire.Context, msg: UnlockPath) -> protobuf.Mess
         await confirm_action(
             ctx,
             "confirm_coinjoin_access",
-            title="Coinjoin",
-            description="Do you want to access your coinjoin account?",
+            title="Access to coinjoin",
+            description="Do you want to allow access to your coinjoin account?",
+            verb="ALLOW",
         )
 
     wire_types = (MessageType.GetAddress, MessageType.GetPublicKey, MessageType.SignTx)
