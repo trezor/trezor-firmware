@@ -186,19 +186,13 @@ where
 impl<T, U> crate::trace::Trace for Frame<T, U>
 where
     T: crate::trace::Trace,
-    U: crate::trace::Trace + AsRef<str>,
+    U: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Frame");
-        t.field("title", &self.title);
-        if let Some(s) = &self.subtitle {
-            t.field("subtitle", s);
-        }
-        if let Some(b) = &self.button {
-            t.field("button", b);
-        }
-        t.field("content", &self.content);
-        t.close();
+        t.component("Frame");
+        t.child("title", &self.title);
+        self.subtitle.as_ref().map(|s| t.child("subtitle", s));
+        self.button.as_ref().map(|b| t.child("button", b));
     }
 }
 
@@ -279,12 +273,11 @@ where
 impl<T, U> crate::trace::Trace for NotificationFrame<T, U>
 where
     T: crate::trace::Trace,
-    U: crate::trace::Trace + AsRef<str>,
+    U: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("NotificationFrame");
-        t.field("title", &self.title);
-        t.field("content", &self.content);
-        t.close();
+        t.component("NotificationFrame");
+        t.string("title", self.title.as_ref());
+        t.child("content", &self.content);
     }
 }

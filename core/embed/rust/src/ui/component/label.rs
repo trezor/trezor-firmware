@@ -117,6 +117,7 @@ where
     T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.string(self.text.as_ref())
+        t.component("Label");
+        t.string("text", self.text.as_ref());
     }
 }

@@ -145,34 +145,21 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-pub mod trace {
-    use crate::ui::component::text::layout::trace::TraceSink;
-
-    use super::*;
-
-    pub struct TraceText<'a, F, T>(pub &'a FormattedText<F, T>);
-
-    impl<'a, F, T> crate::trace::Trace for TraceText<'a, F, T>
-    where
-        F: AsRef<str>,
-        T: AsRef<str>,
-    {
-        fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-            self.0.layout_content(&mut TraceSink(d));
-        }
-    }
-}
-
-#[cfg(feature = "ui_debug")]
 impl<F, T> crate::trace::Trace for FormattedText<F, T>
 where
     F: AsRef<str>,
     T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Text");
-        t.field("content", &trace::TraceText(self));
-        t.close();
+        use crate::ui::component::text::layout::trace::TraceSink;
+        use core::cell::Cell;
+        let fit: Cell<Option<LayoutFit>> = Cell::new(None);
+        t.component("FormattedText");
+        t.in_list("text", &mut |l| {
+            let result = self.layout_content(&mut TraceSink(l));
+            fit.set(Some(result));
+        });
+        t.bool("fits", matches!(fit.get(), Some(LayoutFit::Fitting { .. })));
     }
 }
 

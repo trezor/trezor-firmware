@@ -467,7 +467,6 @@ where
     T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("PinKeyboard");
-        t.close();
+        t.component("PinKeyboard");
     }
 }

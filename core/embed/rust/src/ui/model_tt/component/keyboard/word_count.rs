@@ -68,7 +68,6 @@ impl Component for SelectWordCount {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for SelectWordCount {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("SelectWordCount");
-        t.close();
+        t.component("SelectWordCount");
     }
 }

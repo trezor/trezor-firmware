@@ -155,15 +155,14 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Button<T>
 where
-    T: AsRef<str> + crate::trace::Trace,
+    T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Button");
+        t.component("Button");
         match &self.content {
-            ButtonContent::Text(text) => t.field("text", text),
-            ButtonContent::Icon(_) => t.symbol("icon"),
+            ButtonContent::Text(text) => t.string("text", text.as_ref()),
+            ButtonContent::Icon(_) => t.bool("icon", true),
         }
-        t.close();
     }
 }
 

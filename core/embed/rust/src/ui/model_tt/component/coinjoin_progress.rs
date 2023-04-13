@@ -1,12 +1,16 @@
 use core::mem;
 
-use crate::ui::{
-    component::{
-        base::Never, painter, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
+use crate::{
+    maybe_trace::MaybeTrace,
+    ui::{
+        component::{
+            base::Never, painter, Child, Component, ComponentExt, Empty, Event, EventCtx, Label,
+            Split,
+        },
+        display::loader::{loader_circular_uncompress, LoaderDimensions},
+        geometry::{Alignment, Insets, Rect},
+        util::animation_disabled,
     },
-    display::loader::{loader_circular_uncompress, LoaderDimensions},
-    geometry::{Alignment, Insets, Rect},
-    util::animation_disabled,
 };
 
 use super::{theme, Frame};
@@ -31,7 +35,10 @@ impl<T, U> CoinJoinProgress<T, U>
 where
     T: AsRef<str>,
 {
-    pub fn new(text: T, indeterminate: bool) -> CoinJoinProgress<T, impl Component<Msg = Never>>
+    pub fn new(
+        text: T,
+        indeterminate: bool,
+    ) -> CoinJoinProgress<T, impl Component<Msg = Never> + MaybeTrace>
     where
         T: AsRef<str>,
     {
@@ -121,11 +128,12 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for CoinJoinProgress<T, U>
 where
-    T: crate::trace::Trace,
-    U: Component,
+    T: AsRef<str>,
+    U: Component + crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("CoinJoinProgress");
-        t.close();
+        t.component("CoinJoinProgress");
+        t.child("label", &self.label);
+        t.child("content", &self.content);
     }
 }

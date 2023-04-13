@@ -1961,24 +1961,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
 #[cfg(test)]
 mod tests {
+    extern crate serde_json;
+
     use crate::{
-        trace::Trace,
-        ui::{
-            component::{Component, FormattedText},
-            geometry::Rect,
-            model_tt::constant,
-        },
+        trace::tests::trace,
+        ui::{geometry::Rect, model_tt::constant},
     };
 
     use super::*;
 
     const SCREEN: Rect = constant::screen().inset(theme::borders());
-
-    fn trace(val: &impl Trace) -> String {
-        let mut t = std::vec::Vec::new();
-        val.trace(&mut t);
-        String::from_utf8(t).unwrap()
-    }
 
     #[test]
     fn trace_example_layout() {
@@ -1994,9 +1986,31 @@ mod tests {
             buttons,
         );
         layout.place(SCREEN);
-        assert_eq!(
-            trace(&layout),
-            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some\nmore text. And parame-\nters! > controls:<FixedHeightBar inner:<Split first:<Button text:Left > second:<Button text:Right > > > >",
-        )
+
+        let expected = serde_json::json!({
+            "component": "Dialog",
+            "content": {
+                "component": "FormattedText",
+                "text": ["Testing text layout, with", "\n", "some text, and some", "\n",
+                "more text. And ", "parame", "-", "\n", "ters!"],
+                "fits": true,
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Split",
+                    "first": {
+                        "component": "Button",
+                        "text": "Left",
+                    },
+                    "second": {
+                        "component": "Button",
+                        "text": "Right",
+                    },
+                },
+            },
+        });
+
+        assert_eq!(trace(&layout), expected);
     }
 }

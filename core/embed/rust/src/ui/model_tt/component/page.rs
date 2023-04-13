@@ -311,12 +311,11 @@ where
     U: crate::trace::Trace + Component,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("SwipePage");
-        t.field("active_page", &self.scrollbar.active_page);
-        t.field("page_count", &self.scrollbar.page_count);
-        t.field("content", &self.content);
-        t.field("controls", &self.controls);
-        t.close();
+        t.component("SwipePage");
+        t.int("active_page", self.scrollbar.active_page as i64);
+        t.int("page_count", self.scrollbar.page_count as i64);
+        t.child("content", &self.content);
+        t.child("controls", &self.controls);
     }
 }
 
@@ -495,8 +494,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    extern crate serde_json;
+
     use crate::{
-        trace::Trace,
+        trace::tests::trace,
         ui::{
             component::{
                 text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
@@ -516,12 +517,6 @@ mod tests {
         fn skip_prefix(&self, chars: usize) -> Self {
             &self[chars..]
         }
-    }
-
-    fn trace(val: &impl Trace) -> String {
-        let mut t = Vec::new();
-        val.trace(&mut t);
-        String::from_utf8(t).unwrap()
     }
 
     fn swipe(component: &mut impl Component, points: &[(i16, i16)]) {
@@ -560,8 +555,18 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected =
-            "<SwipePage active_page:0 page_count:1 content:<Paragraphs > controls:<Empty > >";
+        let expected = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 0,
+            "page_count": 1,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [],
+            },
+            "controls": {
+                "component": "Empty",
+            },
+        });
 
         assert_eq!(trace(&page), expected);
         swipe_up(&mut page);
@@ -588,7 +593,21 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected = "<SwipePage active_page:0 page_count:1 content:<Paragraphs This is the first\nparagraph and it should\nfit on the screen\nentirely.\nSecond, bold, paragraph\nshould also fit on the\nscreen whole I think.\n> controls:<Empty > >";
+        let expected = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 0,
+            "page_count": 1,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    ["This is the first", "\n", "paragraph and it should", "\n", "fit on the screen", "\n", "entirely."],
+                    ["Second, bold, paragraph", "\n", "should also fit on the", "\n", "screen whole I think."],
+                ],
+            },
+            "controls": {
+                "component": "Empty",
+            },
+        });
 
         assert_eq!(trace(&page), expected);
         swipe_up(&mut page);
@@ -611,18 +630,61 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes on\nand on and on and on and\non and will definitely not\nfit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n> controls:<FixedHeightBar inner:<Button text:NO > > >";
-        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs There's just so much\nletters in it.\n> controls:<FixedHeightBar inner:<Button text:NO > > >";
+        let first_page = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 0,
+            "page_count": 2,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    [
+                        "This is somewhat long", "\n",
+                        "paragraph that goes on", "\n",
+                        "and on and on and on and", "\n",
+                        "on and will definitely not", "\n",
+                        "fit on just a single", "\n",
+                        "screen. You have to", "\n",
+                        "swipe a bit to see all the", "\n",
+                        "text it contains I guess.", "...",
+                    ],
+                ],
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Button",
+                    "text": "NO",
+                },
+            },
+        });
+        let second_page = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 1,
+            "page_count": 2,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    ["There's just so much", "\n", "letters in it."],
+                ],
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Button",
+                    "text": "NO",
+                },
+            },
+        });
 
-        assert_eq!(trace(&page), expected1);
+        assert_eq!(trace(&page), first_page);
         swipe_down(&mut page);
-        assert_eq!(trace(&page), expected1);
+        assert_eq!(trace(&page), first_page);
         swipe_up(&mut page);
-        assert_eq!(trace(&page), expected2);
+        assert_eq!(trace(&page), second_page);
         swipe_up(&mut page);
-        assert_eq!(trace(&page), expected2);
+        assert_eq!(trace(&page), second_page);
         swipe_down(&mut page);
-        assert_eq!(trace(&page), expected1);
+        assert_eq!(trace(&page), first_page);
     }
 
     #[test]
@@ -647,25 +709,101 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is using a\nbold font. It doesn't need\nto be all that long.\nAnd this one is u\nsing MONO. Monosp\nace is nice for n\numbers, they...\n> controls:<FixedHeightBar inner:<Button text:IDK > > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs ...have the same\nwidth and can be\nscanned quickly.\nEven if they span\nseveral pages or\nsomething.\nLet's add another one...\n> controls:<FixedHeightBar inner:<Button text:IDK > > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs for a good measure. This\none should overflow all\nthe way to the third page\nwith a bit of luck.\n> controls:<FixedHeightBar inner:<Button text:IDK > > >";
+        let first_page = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 0,
+            "page_count": 3,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    [
+                        "This paragraph is using a", "\n",
+                        "bold font. It doesn't need", "\n",
+                        "to be all that long.",
+                    ],
+                    [
+                        "And this one is u", "\n",
+                        "sing MONO. Monosp", "\n",
+                        "ace is nice for n", "\n",
+                        "umbers, they", "...",
+                    ],
+                ],
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Button",
+                    "text": "IDK",
+                },
+            },
+        });
+        let second_page = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 1,
+            "page_count": 3,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    [
+                        "...", "have the same", "\n",
+                        "width and can be", "\n",
+                        "scanned quickly.", "\n",
+                        "Even if they span", "\n",
+                        "several pages or", "\n",
+                        "something.",
+                    ],
+                    [
+                        "Let's add another one", "...",
+                    ],
+                ],
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Button",
+                    "text": "IDK",
+                },
+            },
+        });
+        let third_page = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 2,
+            "page_count": 3,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    [
+                        "for a good measure. This", "\n",
+                        "one should overflow all", "\n",
+                        "the way to the third page", "\n",
+                        "with a bit of luck.",
+                    ],
+                ],
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Button",
+                    "text": "IDK",
+                },
+            },
+        });
 
-        assert_eq!(trace(&page), expected1);
+        assert_eq!(trace(&page), first_page);
         swipe_down(&mut page);
-        assert_eq!(trace(&page), expected1);
+        assert_eq!(trace(&page), first_page);
         swipe_up(&mut page);
-        assert_eq!(trace(&page), expected2);
+        assert_eq!(trace(&page), second_page);
         swipe_up(&mut page);
-        assert_eq!(trace(&page), expected3);
+        assert_eq!(trace(&page), third_page);
         swipe_up(&mut page);
-        assert_eq!(trace(&page), expected3);
+        assert_eq!(trace(&page), third_page);
         swipe_down(&mut page);
-        assert_eq!(trace(&page), expected2);
+        assert_eq!(trace(&page), second_page);
         swipe_down(&mut page);
-        assert_eq!(trace(&page), expected1);
+        assert_eq!(trace(&page), first_page);
         swipe_down(&mut page);
-        assert_eq!(trace(&page), expected1);
+        assert_eq!(trace(&page), first_page);
     }
 
     #[test]
@@ -681,16 +819,70 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs Short one.\n> controls:<FixedHeightBar inner:<Empty > > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs Short two.\n> controls:<FixedHeightBar inner:<Empty > > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs Short three.\n> controls:<FixedHeightBar inner:<Empty > > >";
+        let first_page = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 0,
+            "page_count": 3,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    [
+                        "Short one.",
+                    ],
+                ],
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Empty",
+                },
+            },
+        });
+        let second_page = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 1,
+            "page_count": 3,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    [
+                        "Short two.",
+                    ],
+                ],
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Empty",
+                },
+            },
+        });
+        let third_page = serde_json::json!({
+            "component": "SwipePage",
+            "active_page": 2,
+            "page_count": 3,
+            "content": {
+                "component": "Paragraphs",
+                "paragraphs": [
+                    [
+                        "Short three.",
+                    ],
+                ],
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Empty",
+                },
+            },
+        });
 
-        assert_eq!(trace(&page), expected1);
+        assert_eq!(trace(&page), first_page);
         swipe_up(&mut page);
-        assert_eq!(trace(&page), expected2);
+        assert_eq!(trace(&page), second_page);
         swipe_up(&mut page);
-        assert_eq!(trace(&page), expected3);
+        assert_eq!(trace(&page), third_page);
         swipe_up(&mut page);
-        assert_eq!(trace(&page), expected3);
+        assert_eq!(trace(&page), third_page);
     }
 }

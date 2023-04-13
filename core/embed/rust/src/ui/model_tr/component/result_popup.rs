@@ -157,12 +157,11 @@ impl<S: ParagraphStrType> Component for ResultPopup<S> {
 
 #[cfg(feature = "ui_debug")]
 impl<S: ParagraphStrType> crate::trace::Trace for ResultPopup<S> {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("ResultPopup");
-        self.text.trace(d);
-        self.button.trace(d);
-        self.headline.trace(d);
-        self.result_anim.trace(d);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ResultPopup");
+        t.child("text", &self.text);
+        self.button.as_ref().map(|b| t.child("button", b));
+        self.headline.as_ref().map(|h| t.child("headline", h));
+        t.child("result_anim", &self.result_anim);
     }
 }

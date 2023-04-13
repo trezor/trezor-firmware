@@ -377,7 +377,6 @@ impl Component for Input {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PassphraseKeyboard {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("PassphraseKeyboard");
-        t.close();
+        t.component("PassphraseKeyboard");
     }
 }

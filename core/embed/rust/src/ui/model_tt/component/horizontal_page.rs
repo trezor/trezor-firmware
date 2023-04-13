@@ -138,10 +138,9 @@ where
     T: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("HorizontalPage");
-        t.field("active_page", &self.scrollbar.active_page);
-        t.field("page_count", &self.scrollbar.page_count);
-        t.field("content", &self.content);
-        t.close();
+        t.component("HorizontalPage");
+        t.int("active_page", self.scrollbar.active_page as i64);
+        t.int("page_count", self.scrollbar.page_count as i64);
+        t.child("content", &self.content);
     }
 }

@@ -193,7 +193,6 @@ pub enum MnemonicInputMsg {
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for MnemonicKeyboard<T, U> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("MnemonicKeyboard");
-        t.close();
+        t.component("MnemonicKeyboard");
     }
 }

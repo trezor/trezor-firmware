@@ -211,16 +211,14 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for (T, U)
 where
-    T: Component,
     T: crate::trace::Trace,
-    U: Component,
     U: crate::trace::Trace,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Tuple");
-        d.field("0", &self.0);
-        d.field("1", &self.1);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.in_list("children", &mut |l| {
+            l.child(&self.0);
+            l.child(&self.1);
+        });
     }
 }
 
@@ -257,25 +255,6 @@ where
         self.0.bounds(sink);
         self.1.bounds(sink);
         self.2.bounds(sink);
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl<T, U, V> crate::trace::Trace for (T, U, V)
-where
-    T: Component,
-    T: crate::trace::Trace,
-    U: Component,
-    U: crate::trace::Trace,
-    V: Component,
-    V: crate::trace::Trace,
-{
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Tuple");
-        d.field("0", &self.0);
-        d.field("1", &self.1);
-        d.field("2", &self.2);
-        d.close();
     }
 }
 

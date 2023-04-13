@@ -188,9 +188,15 @@ mod tests {
         let list = unsafe { Gc::as_mut(&mut gc_list) };
 
         for (i, value) in vec.iter().copied().enumerate() {
-            assert_eq!(value, list.get(i).unwrap().try_into().unwrap());
+            assert_eq!(
+                value,
+                TryInto::<u16>::try_into(list.get(i).unwrap()).unwrap()
+            );
             list.set(i, Obj::from(value + 1)).unwrap();
-            assert_eq!(value + 1, list.get(i).unwrap().try_into().unwrap());
+            assert_eq!(
+                value + 1,
+                TryInto::<u16>::try_into(list.get(i).unwrap()).unwrap()
+            );
         }
 
         let mut buf = IterBuf::new();
@@ -215,7 +221,7 @@ mod tests {
         let slice = unsafe { list.as_slice() };
         assert_eq!(slice.len(), vec.len());
         for i in 0..slice.len() {
-            assert_eq!(vec[i], slice[i].try_into().unwrap());
+            assert_eq!(vec[i], TryInto::<u16>::try_into(slice[i]).unwrap());
         }
     }
 
@@ -228,7 +234,7 @@ mod tests {
 
         let slice = unsafe { Gc::as_mut(&mut list).as_mut_slice() };
         assert_eq!(slice.len(), vec.len());
-        assert_eq!(vec[0], slice[0].try_into().unwrap());
+        assert_eq!(vec[0], TryInto::<u16>::try_into(slice[0]).unwrap());
 
         for i in 0..slice.len() {
             slice[i] = ((i + 10) as u16).into();

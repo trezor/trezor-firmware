@@ -238,17 +238,23 @@ pub mod trace {
 
     impl<T: ParagraphSource> crate::trace::Trace for Paragraphs<T> {
         fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-            t.open("Paragraphs");
-            Self::foreach_visible(
-                &self.source,
-                &self.visible,
-                self.offset,
-                &mut |layout, content| {
-                    layout.layout_text(content, &mut layout.initial_cursor(), &mut TraceSink(t));
-                    t.string("\n");
-                },
-            );
-            t.close();
+            t.string("component", "Paragraphs");
+            t.in_list("paragraphs", &mut |par_list| {
+                Self::foreach_visible(
+                    &self.source,
+                    &self.visible,
+                    self.offset,
+                    &mut |layout, content| {
+                        par_list.in_list(&mut |par| {
+                            layout.layout_text(
+                                content,
+                                &mut layout.initial_cursor(),
+                                &mut TraceSink(par),
+                            );
+                        });
+                    },
+                );
+            });
         }
     }
 }
@@ -606,10 +612,9 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T: ParagraphSource> crate::trace::Trace for Checklist<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Checklist");
-        t.field("current", &self.current);
-        t.field("items", &self.paragraphs);
-        t.close();
+        t.component("Checklist");
+        t.int("current", self.current as i64);
+        t.child("items", &self.paragraphs);
     }
 }
 

@@ -63,8 +63,7 @@ impl Component for Image {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Image {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Image");
-        t.close();
+        t.component("Image");
     }
 }
 
@@ -139,7 +138,6 @@ impl Component for BlendedImage {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for BlendedImage {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("BlendedImage");
-        t.close();
+        t.component("BlendedImage");
     }
 }

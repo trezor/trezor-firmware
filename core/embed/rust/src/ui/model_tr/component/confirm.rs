@@ -82,9 +82,8 @@ impl Component for HoldToConfirm {
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for HoldToConfirm {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("HoldToConfirm");
-        self.loader.trace(d);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("HoldToConfirm");
+        t.child("loader", &self.loader);
     }
 }
