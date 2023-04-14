@@ -34,6 +34,7 @@
 #include "blake2s.h"
 #include "common.h"
 #include "flash.h"
+#include "unit_variant.h"
 #include "usb.h"
 #include TREZOR_BOARD
 #include "model.h"
@@ -211,6 +212,32 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
                                  mod_trezorutils_firmware_vendor);
 
+/// def unit_color() -> int | None:
+///     """
+///     Returns the color of the unit.
+///     """
+STATIC mp_obj_t mod_trezorutils_unit_color(void) {
+  if (!unit_variant_present()) {
+    return mp_const_none;
+  }
+  return mp_obj_new_int(unit_variant_get_color());
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_color_obj,
+                                 mod_trezorutils_unit_color);
+
+/// def unit_btconly() -> bool | None:
+///     """
+///     Returns True if the unit is BTConly.
+///     """
+STATIC mp_obj_t mod_trezorutils_unit_btconly(void) {
+  if (!unit_variant_present()) {
+    return mp_const_none;
+  }
+  return unit_variant_get_btconly() ? mp_const_true : mp_const_false;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_btconly_obj,
+                                 mod_trezorutils_unit_btconly);
+
 /// def reboot_to_bootloader() -> None:
 ///     """
 ///     Reboots to bootloader.
@@ -248,6 +275,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
      MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
+    {MP_ROM_QSTR(MP_QSTR_unit_color),
+     MP_ROM_PTR(&mod_trezorutils_unit_color_obj)},
+    {MP_ROM_QSTR(MP_QSTR_unit_btconly),
+     MP_ROM_PTR(&mod_trezorutils_unit_btconly_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
      MP_ROM_PTR(&mod_trezorutils_revision_obj)},

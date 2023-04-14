@@ -56,6 +56,7 @@
 #include "bootui.h"
 #include "messages.h"
 #include "rust_ui.h"
+#include "unit_variant.h"
 
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
@@ -342,6 +343,8 @@ int bootloader_main(void) {
 #ifdef USE_RGB_LED
   rgb_led_init();
 #endif
+
+  unit_variant_init();
 
 #if PRODUCTION
   check_bootloader_version();

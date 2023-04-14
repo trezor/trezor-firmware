@@ -93,6 +93,10 @@ typedef struct _Features {
     char fw_vendor[256];
     bool has_internal_model;
     char internal_model[17];
+    bool has_unit_color;
+    uint32_t unit_color;
+    bool has_unit_btconly;
+    bool unit_btconly;
 } Features;
 
 typedef struct _FirmwareErase {
@@ -144,7 +148,7 @@ extern "C" {
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, ""}
+#define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0}
 #define Ping_init_default                        {false, ""}
 #define Success_init_default                     {false, ""}
 #define Failure_init_default                     {false, _FailureType_MIN, false, ""}
@@ -155,7 +159,7 @@ extern "C" {
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, ""}
+#define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0}
 #define Ping_init_zero                           {false, ""}
 #define Success_init_zero                        {false, ""}
 #define Failure_init_zero                        {false, _FailureType_MIN, false, ""}
@@ -186,6 +190,8 @@ extern "C" {
 #define Features_fw_patch_tag                    24
 #define Features_fw_vendor_tag                   25
 #define Features_internal_model_tag              44
+#define Features_unit_color_tag                  45
+#define Features_unit_btconly_tag                46
 #define FirmwareErase_length_tag                 1
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
@@ -222,7 +228,9 @@ X(a, STATIC,   OPTIONAL, UINT32,   fw_major,         22) \
 X(a, STATIC,   OPTIONAL, UINT32,   fw_minor,         23) \
 X(a, STATIC,   OPTIONAL, UINT32,   fw_patch,         24) \
 X(a, STATIC,   OPTIONAL, STRING,   fw_vendor,        25) \
-X(a, STATIC,   OPTIONAL, STRING,   internal_model,   44)
+X(a, STATIC,   OPTIONAL, STRING,   internal_model,   44) \
+X(a, STATIC,   OPTIONAL, UINT32,   unit_color,       45) \
+X(a, STATIC,   OPTIONAL, BOOL,     unit_btconly,     46)
 #define Features_CALLBACK NULL
 #define Features_DEFAULT NULL
 
@@ -299,7 +307,7 @@ extern const pb_msgdesc_t FirmwareUpload_msg;
 #define ButtonAck_size                           0
 #define ButtonRequest_size                       2
 #define Failure_size                             260
-#define Features_size                            477
+#define Features_size                            487
 #define FirmwareErase_size                       6
 #define FirmwareRequest_size                     12
 #define GetFeatures_size                         0

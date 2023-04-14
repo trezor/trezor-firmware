@@ -63,6 +63,7 @@
 #ifdef USE_SD_CARD
 #include "sdcard.h"
 #endif
+#include "unit_variant.h"
 
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
@@ -99,6 +100,8 @@ int main(void) {
 
 #if !defined TREZOR_MODEL_1
   parse_boardloader_capabilities();
+
+  unit_variant_init();
 
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
