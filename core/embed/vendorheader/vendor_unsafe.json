@@ -2,7 +2,7 @@
     "header_len": 4608,
     "text": "UNSAFE, DO NOT USE!",
     "expiry": 0,
-    "version": [0, 0],
+    "version": [0, 1],
     "sig_m": 2,
     "trust": {
         "show_vendor_string": true,

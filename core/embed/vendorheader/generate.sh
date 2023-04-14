@@ -1,6 +1,8 @@
 BUILDVH=../../tools/build_vendorheader
 BINCTL=../../tools/headertool.py
 
+cd $(dirname $0)
+
 # construct all vendor headers
 for fn in *.json; do
     name=$(echo $fn | sed 's/vendor_\(.*\)\.json/\1/')
