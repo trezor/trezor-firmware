@@ -28,6 +28,7 @@
 #include "flash.h"
 #include "image.h"
 #include "secbool.h"
+#include "unit_variant.h"
 #include "usb.h"
 #include "version.h"
 
@@ -304,6 +305,10 @@ static void send_msg_features(uint8_t iface_num,
     MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, vhdr->vstr, vhdr->vstr_len);
   } else {
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
+  }
+  if (unit_variant_present()) {
+    MSG_SEND_ASSIGN_VALUE(unit_color, unit_variant_get_color());
+    MSG_SEND_ASSIGN_VALUE(unit_btconly, unit_variant_get_btconly());
   }
   MSG_SEND(Features);
 }

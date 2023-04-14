@@ -61,6 +61,20 @@ def firmware_vendor() -> str:
 
 
 # extmod/modtrezorutils/modtrezorutils.c
+def unit_color() -> int | None:
+    """
+    Returns the color of the unit.
+    """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def unit_btconly() -> bool | None:
+    """
+    Returns True if the unit is BTConly.
+    """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
 def reboot_to_bootloader() -> None:
     """
     Reboots to bootloader.

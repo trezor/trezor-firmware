@@ -63,6 +63,8 @@ def get_features() -> Features:
         unlocked=config.is_unlocked(),
         busy=busy_expiry_ms() > 0,
         homescreen_format=HomescreenFormat.Jpeg240x240,
+        unit_color=utils.unit_color(),
+        unit_btconly=utils.unit_btconly(),
     )
 
     if utils.BITCOIN_ONLY:

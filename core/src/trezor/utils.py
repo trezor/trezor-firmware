@@ -16,6 +16,8 @@ from trezorutils import (  # noqa: F401
     halt,
     memcpy,
     reboot_to_bootloader,
+    unit_btconly,
+    unit_color,
 )
 from typing import TYPE_CHECKING
 

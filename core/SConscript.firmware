@@ -173,6 +173,7 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
+    'embed/lib/unit_variant.c',
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display.c',

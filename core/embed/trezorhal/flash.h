@@ -112,6 +112,7 @@ secbool __wur flash_write_word(uint8_t sector, uint32_t offset, uint32_t data);
 #define FLASH_OTP_BLOCK_BOOTLOADER_VERSION 1
 #define FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK 2
 #define FLASH_OTP_BLOCK_RANDOMNESS 3
+#define FLASH_OTP_BLOCK_DEVICE_VARIANT 4
 
 secbool __wur flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
                              uint8_t datalen);
