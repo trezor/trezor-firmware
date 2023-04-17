@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import subprocess
-from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t
+from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t, trezor_r_v6
 
 HERE = Path(__file__).parent.resolve()
 
@@ -21,7 +21,7 @@ def add_font(font_name, font, defines, sources):
 
 
 def configure_board(model, features_wanted, env, defines, sources):
-    model_r_version = 4
+    model_r_version = 6
 
     if model in ('1',):
         return trezor_1.configure(env, features_wanted, defines, sources)
@@ -30,8 +30,10 @@ def configure_board(model, features_wanted, env, defines, sources):
     elif model in ('R',):
         if model_r_version == 3:
             return trezor_r_v3.configure(env, features_wanted, defines, sources)
-        else:
+        elif model_r_version == 4:
             return trezor_r_v4.configure(env, features_wanted, defines, sources)
+        else:
+            return trezor_r_v6.configure(env, features_wanted, defines, sources)
     else:
         raise Exception("Unknown model")
 
