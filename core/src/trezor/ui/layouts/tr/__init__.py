@@ -77,18 +77,23 @@ class RustLayout(ui.Layout):
         def _press_left(self) -> Any:
             """Triggers left button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
+            self._paint()
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
 
         def _press_right(self) -> Any:
             """Triggers right button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
+            self._paint()
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
 
         def _press_middle(self) -> Any:
             """Triggers middle button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
+            self._paint()
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
+            self._paint()
             self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
+            self._paint()
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
 
         def _press_button(self, btn_to_press: DebugPhysicalButton) -> Any:
