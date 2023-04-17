@@ -321,7 +321,7 @@ pub fn loader_rust(
     icon: Option<(&[u8], Color, Offset)>,
 ) {
     let center = screen().center() + Offset::new(0, y_offset);
-    let r = Rect::from_center_and_size(center, Offset::uniform(LOADER_OUTER as i16 * 2));
+    let r = Rect::from_center_and_size(center, Offset::uniform(LOADER_OUTER * 2));
     let clamped = r.clamp(constant::screen());
     display::set_window(clamped);
 

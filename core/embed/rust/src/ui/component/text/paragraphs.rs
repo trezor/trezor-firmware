@@ -149,11 +149,11 @@ where
 
     /// Iterate over visible layouts (bounding box, style) together
     /// with corresponding string content. Should not get monomorphized.
-    fn foreach_visible<'a, 'b, S: ParagraphStrType>(
+    fn foreach_visible<'a, S: ParagraphStrType>(
         source: &'a dyn ParagraphSource<StrType = S>,
         visible: &'a [TextLayout],
         offset: PageOffset,
-        func: &'b mut dyn FnMut(&TextLayout, &str),
+        func: &mut dyn FnMut(&TextLayout, &str),
     ) {
         let mut vis_iter = visible.iter();
         let mut chr = offset.chr;

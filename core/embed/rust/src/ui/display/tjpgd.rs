@@ -301,7 +301,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                 if cls == 0 && d > 11 {
                     return Err(Error::InvalidData);
                 }
-                self.huffdata[num][cls][i as usize] = d;
+                self.huffdata[num][cls][i] = d;
             }
             if JD_FASTDECODE == 2 {
                 // Create fast huffman decode table
@@ -326,8 +326,8 @@ impl<'i, 'p> JDEC<'i, 'p> {
                     j = self.huffbits[num][cls][b as usize] as u32;
                     while j != 0 {
                         // Index of input pattern for the code
-                        ti = (self.huffcode[num][cls][i] << (((HUFF_BIT - 1) as u32) - b)) as u32
-                            & HUFF_MASK;
+                        ti =
+                            (self.huffcode[num][cls][i] << ((HUFF_BIT - 1) - b)) as u32 & HUFF_MASK;
 
                         if cls != 0 {
                             // b15..b8: code length, b7..b0: zero run and data length
@@ -447,7 +447,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
             hb_idx = HUFF_BIT; // Bit distribution table
             hc_idx = self.longofs[id][cls]; // Code word table
             hd_idx = self.longofs[id][cls]; // Data table
-            bl = (HUFF_BIT + 1) as u32;
+            bl = HUFF_BIT + 1;
         } else {
             // Incremental search for all codes
             bl = 1;
@@ -805,7 +805,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                     // If no AC element or scale ratio is 1/8, IDCT can be omitted and the block is
                     // filled with DC value
                     if z == 1 || JD_USE_SCALE != 0 && self.scale == 3 {
-                        d = (self.workbuf[0] / 256 + 128) as i32;
+                        d = self.workbuf[0] / 256 + 128;
                         if JD_FASTDECODE >= 1 {
                             for i in 0..64 {
                                 self.mcubuf[mcu_buf_idx + i] = d as i16;

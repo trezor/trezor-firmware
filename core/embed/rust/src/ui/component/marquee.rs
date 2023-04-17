@@ -218,7 +218,7 @@ where
             _ => {
                 let progress = self.progress(now);
                 if let Some(done) = progress {
-                    self.paint_anim(done as i16);
+                    self.paint_anim(done);
                 } else {
                     self.paint_anim(0);
                 }

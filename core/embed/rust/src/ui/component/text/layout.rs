@@ -175,9 +175,9 @@ impl TextLayout {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
     }
 
-    pub fn layout_ops<'o>(
+    pub fn layout_ops(
         mut self,
-        ops: &mut dyn Iterator<Item = Op<'o>>,
+        ops: &mut dyn Iterator<Item = Op<'_>>,
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
