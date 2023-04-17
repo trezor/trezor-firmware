@@ -359,9 +359,8 @@ pub(crate) fn position_buffer(
     } else {
         0
     };
-    dest_buffer[((start * buffer_bpp) / 8)..((start + width) * buffer_bpp) / 8].copy_from_slice(
-        &src_buffer[((x_sh * buffer_bpp) / 8) as usize..((x_sh as usize + width) * buffer_bpp) / 8],
-    );
+    dest_buffer[((start * buffer_bpp) / 8)..((start + width) * buffer_bpp) / 8]
+        .copy_from_slice(&src_buffer[((x_sh * buffer_bpp) / 8)..((x_sh + width) * buffer_bpp) / 8]);
 }
 
 /// Performs decompression of one line of pixels,
@@ -1031,11 +1030,11 @@ impl Font {
     }
 
     pub fn max_height(self) -> i16 {
-        display::text_max_height(self.into()) as i16
+        display::text_max_height(self.into())
     }
 
     pub fn baseline(self) -> i16 {
-        display::text_baseline(self.into()) as i16
+        display::text_baseline(self.into())
     }
 
     pub fn line_height(self) -> i16 {
