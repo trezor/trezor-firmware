@@ -20,8 +20,9 @@ from typing import TYPE_CHECKING, BinaryIO
 
 import click
 
-from .. import ble, exceptions
-from . import with_client
+from .. import ble, exceptions, tealblue
+from ..transport.ble import lookup_device, scan_device
+from . import with_ble, with_client
 
 if TYPE_CHECKING:
     from ..client import TrezorClient
@@ -60,3 +61,32 @@ def update(
         except exceptions.TrezorException as e:
             click.echo(f"Update failed: {e}")
             sys.exit(3)
+
+
+@cli.command()
+@with_ble
+def connect() -> None:
+    """Connect to the device via BLE."""
+    adapter = tealblue.TealBlue().find_adapter()
+
+    devices = lookup_device(adapter)
+
+    devices = [d for d in devices if d.connected]
+
+    if len(devices) == 0:
+        print("Scanning...")
+        devices = scan_device(adapter, devices)
+
+    if len(devices) == 0:
+        print("No BLE devices found")
+        return
+    else:
+        print("Found %d BLE device(s)" % len(devices))
+
+    for device in devices:
+        print(f"Device: {device.name}, {device.address}")
+
+    device = devices[0]
+    print(f"Connecting to {device.name}...")
+    device.connect()
+    print("Connected")
