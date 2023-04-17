@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include TREZOR_BOARD
 #include "display_interface.h"
@@ -24,11 +25,18 @@
 #include "st7789v.h"
 #include STM32_HAL_H
 
+#ifdef TREZOR_MODEL_T
+#include "displays/panels/LX154A2411.h"
+#include "displays/panels/LX154A2422.h"
+#include "displays/panels/tt_old1.h"
+#include "displays/panels/tt_old2.h"
+#endif
+
 // using const volatile instead of #define results in binaries that change
 // only in 1-byte when the flag changes.
 // using #define leads compiler to over-optimize the code leading to bigger
 // differencies in the resulting binaries.
-const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
+const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 1;
 
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
 #define DISPLAY_MEMORY_BASE 0x60000000
@@ -101,6 +109,25 @@ static uint32_t display_identify(void) {
   }
   id_set = 1;
   return id;
+}
+
+bool display_is_inverted() {
+  bool inv_on = false;
+  uint32_t id = display_identify();
+  if (id == DISPLAY_ID_ST7789V) {
+    volatile uint8_t c = 0;
+    CMD(0x09);                  // read display status
+    c = *DISPLAY_DATA_ADDRESS;  // don't care
+    c = *DISPLAY_DATA_ADDRESS;  // don't care
+    c = *DISPLAY_DATA_ADDRESS;  // don't care
+    c = *DISPLAY_DATA_ADDRESS;
+    if (c & 0x20) {
+      inv_on = true;
+    }
+    c = *DISPLAY_DATA_ADDRESS;  // don't care
+  }
+
+  return inv_on;
 }
 
 void display_reset_state() {}
@@ -240,263 +267,6 @@ int display_backlight(int val) {
   return DISPLAY_BACKLIGHT;
 }
 
-static void send_init_seq_GC9307(void) {
-  // Inter Register Enable1
-  CMD(0xFE);
-
-  // Inter Register Enable2
-  CMD(0xEF);
-
-  // TEON: Tearing Effect Line On; V-blanking only
-  CMD(0x35);
-  DATA(0x00);
-
-  // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits
-  // input)
-  CMD(0x3A);
-  DATA(0x55);
-
-  // Frame Rate
-  // CMD(0xE8); DATA(0x12); DATA(0x00);
-
-  // Power Control 2
-  CMD(0xC3);
-  DATA(0x27);
-
-  // Power Control 3
-  CMD(0xC4);
-  DATA(0x18);
-
-  // Power Control 4
-  CMD(0xC9);
-  DATA(0x1F);
-
-  CMD(0xC5);
-  DATA(0x0F);
-
-  CMD(0xC6);
-  DATA(0x00);
-
-  CMD(0xC7);
-  DATA(0x10);
-
-  CMD(0xC8);
-  DATA(0x01);
-
-  CMD(0xFF);
-  DATA(0x62);
-
-  CMD(0x99);
-  DATA(0x3E);
-
-  CMD(0x9D);
-  DATA(0x4B);
-
-  CMD(0x8E);
-  DATA(0x0F);
-
-  // SET_GAMMA1
-  CMD(0xF0);
-  DATA(0x8F);
-  DATA(0x1B);
-  DATA(0x05);
-  DATA(0x06);
-  DATA(0x07);
-  DATA(0x42);
-
-  // SET_GAMMA3
-  CMD(0xF2);
-  DATA(0x5C);
-  DATA(0x1F);
-  DATA(0x12);
-  DATA(0x10);
-  DATA(0x07);
-  DATA(0x43);
-
-  // SET_GAMMA2
-  CMD(0xF1);
-  DATA(0x59);
-  DATA(0xCF);
-  DATA(0xCF);
-  DATA(0x35);
-  DATA(0x37);
-  DATA(0x8F);
-
-  // SET_GAMMA4
-  CMD(0xF3);
-  DATA(0x58);
-  DATA(0xCF);
-  DATA(0xCF);
-  DATA(0x35);
-  DATA(0x37);
-  DATA(0x8F);
-}
-
-static void send_init_seq_ST7789V(uint8_t invert_colors) {
-  // most recent manual:
-  // https://www.newhavendisplay.com/appnotes/datasheets/LCDs/ST7789V.pdf
-  // TEON: Tearing Effect Line On; V-blanking only
-  CMD(0x35);
-  DATA(0x00);
-
-  // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits
-  // input)
-  CMD(0x3A);
-  DATA(0x55);
-
-  // CMD2EN: Commands in command table 2 can be executed when EXTC level is Low
-  CMD(0xDF);
-  DATA(0x5A);
-  DATA(0x69);
-  DATA(0x02);
-  DATA(0x01);
-
-  // LCMCTRL: LCM Control: XOR RGB setting
-  CMD(0xC0);
-  DATA(0x20);
-
-  // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is gate 80.;
-  // gate scan direction 319 -> 0
-  CMD(0xE4);
-  DATA(0x1D);
-  DATA(0x0A);
-  DATA(0x11);
-
-  // INVOFF (20h): Display Inversion Off
-  // INVON  (21h): Display Inversion On
-  CMD(0x20 | invert_colors);
-
-  // the above config is the most important and definitely necessary
-
-  // PWCTRL1: Power Control 1
-  CMD(0xD0);
-  DATA(0xA4);
-  DATA(0xA1);
-
-  // gamma curve 1
-  // CMD(0xE0); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10);
-  // DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19);
-  // DATA(0x18); DATA(0x20); DATA(0x25);
-
-  // gamma curve 2
-  // CMD(0xE1); DATA(0x70);
-  // DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48);
-  // DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20);
-  // DATA(0x25);
-}
-
-static void send_init_seq_ILI9341V(void) {
-  // most recent manual: https://www.newhavendisplay.com/app_notes/ILI9341.pdf
-  // TEON: Tearing Effect Line On; V-blanking only
-  CMD(0x35);
-  DATA(0x00);
-
-  // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits
-  // input)
-  CMD(0x3A);
-  DATA(0x55);
-
-  // Display Function Control: gate scan direction 319 -> 0
-  CMD(0xB6);
-  DATA(0x0A);
-  DATA(0xC2);
-  DATA(0x27);
-  DATA(0x00);
-
-  // Interface Control: XOR BGR as ST7789V does
-  CMD(0xF6);
-  DATA(0x09);
-  DATA(0x30);
-  DATA(0x00);
-
-  // the above config is the most important and definitely necessary
-
-  CMD(0xCF);
-  DATA(0x00);
-  DATA(0xC1);
-  DATA(0x30);
-
-  CMD(0xED);
-  DATA(0x64);
-  DATA(0x03);
-  DATA(0x12);
-  DATA(0x81);
-
-  CMD(0xE8);
-  DATA(0x85);
-  DATA(0x10);
-  DATA(0x7A);
-
-  CMD(0xF7);
-  DATA(0x20);
-
-  CMD(0xEA);
-  DATA(0x00);
-  DATA(0x00);
-
-  // power control VRH[5:0]
-  CMD(0xC0);
-  DATA(0x23);
-
-  // power control SAP[2:0] BT[3:0]
-  CMD(0xC1);
-  DATA(0x12);
-
-  // vcm control 1
-  CMD(0xC5);
-  DATA(0x60);
-  DATA(0x44);
-
-  // vcm control 2
-  CMD(0xC7);
-  DATA(0x8A);
-
-  // framerate
-  CMD(0xB1);
-  DATA(0x00);
-  DATA(0x18);
-
-  // 3 gamma func disable
-  CMD(0xF2);
-  DATA(0x00);
-
-  // gamma curve 1
-  CMD(0xE0);
-  DATA(0x0F);
-  DATA(0x2F);
-  DATA(0x2C);
-  DATA(0x0B);
-  DATA(0x0F);
-  DATA(0x09);
-  DATA(0x56);
-  DATA(0xD9);
-  DATA(0x4A);
-  DATA(0x0B);
-  DATA(0x14);
-  DATA(0x05);
-  DATA(0x0C);
-  DATA(0x06);
-  DATA(0x00);
-
-  // gamma curve 2
-  CMD(0xE1);
-  DATA(0x00);
-  DATA(0x10);
-  DATA(0x13);
-  DATA(0x04);
-  DATA(0x10);
-  DATA(0x06);
-  DATA(0x25);
-  DATA(0x26);
-  DATA(0x3B);
-  DATA(0x04);
-  DATA(0x0B);
-  DATA(0x0A);
-  DATA(0x33);
-  DATA(0x39);
-  DATA(0x0F);
-}
-
 void display_init_seq(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
   // wait 10 milliseconds. only needs to be low for 10 microseconds.
@@ -510,14 +280,22 @@ void display_init_seq(void) {
   HAL_Delay(120);
 
   // identify the controller we will communicate with
+#ifdef TREZOR_MODEL_T
   uint32_t id = display_identify();
   if (id == DISPLAY_ID_GC9307) {
-    send_init_seq_GC9307();
+    tt_old1_init_seq();
   } else if (id == DISPLAY_ID_ST7789V) {
-    send_init_seq_ST7789V(DISPLAY_ST7789V_INVERT_COLORS);
+    if (DISPLAY_ST7789V_INVERT_COLORS) {
+      lx154a2422_init_seq();
+    } else {
+      lx154a2411_init_seq();
+    }
   } else if (id == DISPLAY_ID_ILI9341V) {
-    send_init_seq_ILI9341V();
+    tt_old2_init_seq();
   }
+#else
+  DISPLAY_PANEL_INIT_SEQ();
+#endif
 
   display_unsleep();
 }
@@ -684,6 +462,14 @@ void display_reinit(void) {
   TIM1->CR2 |= TIM_CR2_CCPC;
   TIM1->CCR1 = pwm_period * prev_val / 255;
   TIM1->ARR = LED_PWM_TIM_PERIOD - 1;
+
+#ifdef TREZOR_MODEL_T
+  uint32_t id = display_identify();
+  if (id == DISPLAY_ID_ST7789V && display_is_inverted()) {
+    // newest TT display - set proper gamma
+    lx154a2422_gamma();
+  }
+#endif
 }
 
 void display_sync(void) {

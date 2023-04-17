@@ -18,6 +18,10 @@ def configure(
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [f"embed/trezorhal/displays/{display}"]
+    sources += [f'embed/trezorhal/displays/panels/tt_old1.c', ]
+    sources += [f'embed/trezorhal/displays/panels/tt_old2.c', ]
+    sources += [f'embed/trezorhal/displays/panels/LX154A2411.c', ]
+    sources += [f'embed/trezorhal/displays/panels/LX154A2422.c', ]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/i2c.c"]
