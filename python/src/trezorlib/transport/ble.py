@@ -15,9 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 import logging
 from queue import Queue
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
 from .. import tealblue
+from ..tealblue import Adapter, Characteristic
 from . import TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
@@ -31,7 +32,7 @@ NUS_CHARACTERISTIC_RX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
 NUS_CHARACTERISTIC_TX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
 
 
-def scan_device(adapter, devices):
+def scan_device(adapter: Adapter, devices: List[tealblue.Device]):
     with adapter.scan(2) as scanner:
         for device in scanner:
             if NUS_SERVICE_UUID in device.UUIDs:
@@ -41,7 +42,7 @@ def scan_device(adapter, devices):
     return devices
 
 
-def lookup_device(adapter):
+def lookup_device(adapter: Adapter):
     devices = []
     for device in adapter.devices():
         if NUS_SERVICE_UUID in device.UUIDs:
@@ -53,7 +54,7 @@ class BleTransport(ProtocolBasedTransport):
     ENABLED = True
     PATH_PREFIX = "ble"
 
-    def __init__(self, mac_addr: str, adapter) -> None:
+    def __init__(self, mac_addr: str, adapter: Adapter) -> None:
 
         self.tx = None
         self.rx = None
@@ -75,7 +76,7 @@ class BleTransport(ProtocolBasedTransport):
 
     def find_debug(self) -> "BleTransport":
         mac = self.device
-        return BleTransport(f"{mac}")
+        return BleTransport(f"{mac}", self.adapter)
 
     @classmethod
     def enumerate(
@@ -84,32 +85,30 @@ class BleTransport(ProtocolBasedTransport):
         adapter = tealblue.TealBlue().find_adapter()
         devices = lookup_device(adapter)
 
-        devices = [d for d in devices if d.connected]
-
-        if len(devices) == 0:
-            print("Scanning...")
-            devices = scan_device(adapter, devices)
-
-        print("Found %d devices" % len(devices))
-
         for device in devices:
             print(f"Device: {device.name}, {device.address}")
 
+        devices = [d for d in devices if d.connected]
+
         return [BleTransport(device.address, adapter) for device in devices]
 
-    # @classmethod
-    # def find_by_path(cls, path: str, prefix_search: bool = False) -> "BleTransport":
-    #     try:
-    #         path = path.replace(f"{cls.PATH_PREFIX}:", "")
-    #         return cls._try_path(path)
-    #     except TransportException:
-    #         if not prefix_search:
-    #             raise
-    #
-    #     if prefix_search:
-    #         return super().find_by_path(path, prefix_search)
-    #     else:
-    #         raise TransportException(f"No UDP device at {path}")
+    @classmethod
+    def _try_path(cls, path: str) -> "BleTransport":
+        devices = cls.enumerate(None)
+        devices = [d for d in devices if d.device == path]
+        if len(devices) == 0:
+            raise TransportException(f"No BLE device: {path}")
+        return devices[0]
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> "BleTransport":
+        if not prefix_search:
+            raise TransportException
+
+        if prefix_search:
+            return super().find_by_path(path, prefix_search)
+        else:
+            raise TransportException(f"No BLE device: {path}")
 
     def open(self) -> None:
 
@@ -133,7 +132,7 @@ class BleTransport(ProtocolBasedTransport):
         self.rx = service.characteristics[NUS_CHARACTERISTIC_RX]
         self.tx = service.characteristics[NUS_CHARACTERISTIC_TX]
 
-        def on_notify(characteristic, value):
+        def on_notify(characteristic: Characteristic, value: Any):
             self.received_data.put(bytes(value))
 
         self.tx.on_notify = on_notify

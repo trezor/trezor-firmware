@@ -1,4 +1,5 @@
-#!/usr/bin/python3
+# !/usr/bin/python3
+# pyright: off
 
 import queue
 import threading
@@ -41,7 +42,7 @@ class TealBlue:
                 continue
             properties = interfaces["org.bluez.Adapter1"]
             return Adapter(self, path, properties)
-        return None  # no adapter found
+        raise Exception("No adapter found")
 
     # copied from:
     # https://github.com/adafruit/Adafruit_Python_BluefruitLE/blob/master/Adafruit_BluefruitLE/bluez_dbus/provider.py

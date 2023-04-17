@@ -75,7 +75,7 @@ class Protocol:
     its messages.
     """
 
-    def __init__(self, handle: Handle, replen=REPLEN) -> None:
+    def __init__(self, handle: Handle, replen: int = REPLEN) -> None:
         self.handle = handle
         self.replen = replen
         self.session_counter = 0
