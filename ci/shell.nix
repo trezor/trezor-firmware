@@ -1,5 +1,6 @@
 { fullDeps ? false
 , hardwareTest ? false
+, devTools ? false
  }:
 
 let
@@ -8,11 +9,19 @@ let
     url = "https://github.com/oxalica/rust-overlay/archive/db7bf4a2dd295adeeaa809d36387098926a15487.tar.gz";
     sha256 = "0gk6kag09w8lyn9was8dpjgslxw5p81bx04379m9v6ky09kw482d";
   });
+  # define this variable and devTools if you want nrf{util,connect}
+  acceptJlink = builtins.getEnv "TREZOR_FIRMWARE_ACCEPT_JLINK_LICENSE" == "yes";
   # the last successful build of nixpkgs-unstable as of 2023-04-14
   nixpkgs = import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/c58e6fbf258df1572b535ac1868ec42faf7675dd.tar.gz";
     sha256 = "18pna0yinvdprhhcmhyanlgrmgf81nwpc0j2z9fy9mc8cqkx3937";
-  }) { overlays = [ rustOverlay ]; };
+  }) {
+    config = {
+      allowUnfree = acceptJlink;
+      segger-jlink.acceptLicense = acceptJlink;
+    };
+    overlays = [ rustOverlay ];
+  };
   # commit before python36 was removed
   oldPythonNixpkgs = import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/b9126f77f553974c90ab65520eff6655415fc5f4.tar.gz";
@@ -113,6 +122,13 @@ stdenvNoCC.mkDerivation ({
     uhubctl
     ffmpeg
     dejavu_fonts
+  ] ++ lib.optionals devTools [
+    gdb
+    openocd
+  ] ++ lib.optionals (devTools && acceptJlink) [
+    nrfutil
+    nrfconnect
+    nrf-command-line-tools
   ];
   LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
