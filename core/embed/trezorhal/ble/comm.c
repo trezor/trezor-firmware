@@ -28,7 +28,6 @@
 #include "state.h"
 
 #define SPI_QUEUE_SIZE 10
-#define UART_PACKET_SIZE 64
 
 static UART_HandleTypeDef urt;
 
@@ -48,9 +47,9 @@ volatile uint16_t overrun_count = 0;
 volatile uint16_t msg_cntr = 0;
 volatile uint16_t first_overrun_at = 0;
 
-static uint8_t int_comm_buffer[UART_PACKET_SIZE];
+static uint8_t int_comm_buffer[USB_DATA_SIZE];
 static uint16_t int_comm_msg_len = 0;
-static uint8_t int_event_buffer[UART_PACKET_SIZE];
+static uint8_t int_event_buffer[USB_DATA_SIZE];
 static uint16_t int_event_msg_len = 0;
 
 void ble_comm_init(void) {
@@ -193,7 +192,7 @@ void ble_uart_receive(void) {
 
       uint16_t act_len = (len_hi << 8) | len_lo;
 
-      if (act_len > UART_PACKET_SIZE + OVERHEAD_SIZE) {
+      if (act_len > UART_PACKET_SIZE) {
         flush_line();
         return;
       }
@@ -207,7 +206,7 @@ void ble_uart_receive(void) {
         data = int_comm_buffer;
         len = &int_comm_msg_len;
       } else {
-        memset(data, 0, UART_PACKET_SIZE);
+        memset(data, 0, USB_DATA_SIZE);
         *len = 0;
         flush_line();
         return;
@@ -217,7 +216,7 @@ void ble_uart_receive(void) {
           HAL_UART_Receive(&urt, data, act_len - OVERHEAD_SIZE, 5);
 
       if (result != HAL_OK) {
-        memset(data, 0, UART_PACKET_SIZE);
+        memset(data, 0, USB_DATA_SIZE);
         *len = 0;
         flush_line();
         return;
@@ -229,7 +228,7 @@ void ble_uart_receive(void) {
       if (eom == EOM) {
         *len = act_len - OVERHEAD_SIZE;
       } else {
-        memset(data, 0, UART_PACKET_SIZE);
+        memset(data, 0, USB_DATA_SIZE);
         *len = 0;
         flush_line();
       }
@@ -245,7 +244,7 @@ void ble_event_poll() {
 
   if (int_event_msg_len > 0) {
     process_poll(int_event_buffer, int_event_msg_len);
-    memset(int_event_buffer, 0, UART_PACKET_SIZE);
+    memset(int_event_buffer, 0, USB_DATA_SIZE);
     int_event_msg_len = 0;
   }
 
@@ -260,7 +259,7 @@ uint32_t ble_int_comm_receive(uint8_t *data, uint32_t len) {
   if (int_comm_msg_len > 0) {
     memcpy(data, int_comm_buffer,
            int_comm_msg_len > len ? len : int_comm_msg_len);
-    memset(int_comm_buffer, 0, UART_PACKET_SIZE);
+    memset(int_comm_buffer, 0, USB_DATA_SIZE);
     uint32_t res = int_comm_msg_len;
     int_comm_msg_len = 0;
     return res;
