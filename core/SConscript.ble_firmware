@@ -276,11 +276,19 @@ SOURCE_NRFHAL = [
 
 ]
 
+SOURCE_NANOPB = [
+    'vendor/nanopb/pb_common.c',
+    'vendor/nanopb/pb_decode.c',
+    'vendor/nanopb/pb_encode.c',
+]
+
 SOURCE_BLE_FIRMWARE = [
     'embed/ble_firmware/main.c',
     'embed/ble_firmware/ble_nus.c',
     'embed/ble_firmware/int_comm.c',
     'embed/ble_firmware/dis.c',
+    'embed/bootloader/protob/messages.pb.c',
+    'embed/lib/protob_helpers.c',
 ]
 
 if MMD:
@@ -348,7 +356,10 @@ env.Replace(
     LINKFLAGS='-Lembed/sdk/nrf52/modules/nrfx/mdk  -T embed/ble_firmware/memory.ld -Wl,--gc-sections --specs=nano.specs -Wl,-Map=build/ble_firmware/ble_firmware.map -Wl,--warn-common  -Wl,--print-memory-usage',
     CPPPATH=[
         'embed/ble_firmware',
+        'embed/bootloader/protob',
         'embed/sdk/nrf52',
+        'embed/lib',
+        'vendor/nanopb',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         'BLE_FIRMWARE',
@@ -365,6 +376,7 @@ obj_program = []
 obj_program += env.Object(source=SOURCE_BLE_FIRMWARE)
 obj_program += env.Object(source=SOURCE_NRFHAL_AS, COPT='-O0')
 obj_program += env.Object(source=SOURCE_NRFHAL)
+obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_MOD)
 
 env.Replace(

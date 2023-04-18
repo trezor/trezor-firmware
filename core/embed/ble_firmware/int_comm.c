@@ -3,8 +3,10 @@
 #include "app_error.h"
 #include "app_uart.h"
 #include "ble_nus.h"
+#include "messages.pb.h"
 #include "nrf_drv_spi.h"
 #include "nrf_log.h"
+#include "protob_helpers.h"
 #include "stdint.h"
 #include "trezorhal/ble/int_comm_defs.h"
 
@@ -62,6 +64,115 @@ void nus_init(uint16_t *p_conn_handle) {
   *p_conn_handle = BLE_CONN_HANDLE_INVALID;
 }
 
+void send_byte(uint8_t byte) {
+  uint32_t err_code;
+
+  do {
+    err_code = app_uart_put(byte);
+    if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_BUSY)) {
+      NRF_LOG_ERROR("Failed receiving NUS message. Error 0x%x. ", err_code);
+    }
+  } while (err_code == NRF_ERROR_BUSY);
+}
+
+void send_packet(uint8_t message_type, const uint8_t *tx_data, uint16_t len) {
+  uint16_t total_len = len + OVERHEAD_SIZE;
+  send_byte(message_type);
+  send_byte((total_len >> 8) & 0xFF);
+  send_byte(total_len & 0xFF);
+  for (uint32_t i = 0; i < len; i++) {
+    send_byte(tx_data[i]);
+  }
+  send_byte(EOM);
+}
+
+bool write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count) {
+  write_state *state = (write_state *)(stream->state);
+
+  size_t written = 0;
+  // while we have data left
+  while (written < count) {
+    size_t remaining = count - written;
+    // if all remaining data fit into our packet
+    if (state->packet_pos + remaining <= USB_PACKET_SIZE) {
+      // append data from buf to state->buf
+      memcpy(state->buf + state->packet_pos, buf + written, remaining);
+      // advance position
+      state->packet_pos += remaining;
+      // and return
+      return true;
+    } else {
+      // append data that fits
+      memcpy(state->buf + state->packet_pos, buf + written,
+             USB_PACKET_SIZE - state->packet_pos);
+      written += USB_PACKET_SIZE - state->packet_pos;
+
+      // send packet
+      send_packet(state->iface_num, state->buf, USB_PACKET_SIZE);
+
+      // prepare new packet
+      state->packet_index++;
+      memset(state->buf, 0, USB_PACKET_SIZE);
+      state->buf[0] = '?';
+      state->packet_pos = MSG_HEADER2_LEN;
+    }
+  }
+
+  return true;
+};
+
+void write_flush(write_state *state) {
+  // if packet is not filled up completely
+  if (state->packet_pos < USB_PACKET_SIZE) {
+    // pad it with zeroes
+    memset(state->buf + state->packet_pos, 0,
+           USB_PACKET_SIZE - state->packet_pos);
+  }
+  // send packet
+  send_packet(state->iface_num, state->buf, USB_PACKET_SIZE);
+}
+
+/* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
+static bool read(pb_istream_t *stream, uint8_t *buf, size_t count) {
+  read_state *state = (read_state *)(stream->state);
+
+  size_t read = 0;
+  // while we have data left
+  while (read < count) {
+    size_t remaining = count - read;
+    // if all remaining data fit into our packet
+    if (state->packet_pos + remaining <= state->packet_size) {
+      // append data from buf to state->buf
+      memcpy(buf + read, state->buf + state->packet_pos, remaining);
+      // advance position
+      state->packet_pos += remaining;
+      // and return
+      return true;
+    } else {
+      // append data that fits
+      memcpy(buf + read, state->buf + state->packet_pos,
+             state->packet_size - state->packet_pos);
+      read += state->packet_size - state->packet_pos;
+      // read next packet
+
+      while (!m_uart_rx_data_ready_internal)
+        ;
+      m_uart_rx_data_ready_internal = false;
+      memcpy(state->buf, m_uart_rx_data, USB_PACKET_SIZE);
+
+      // prepare next packet
+      state->packet_index++;
+      state->packet_pos = MSG_HEADER2_LEN;
+    }
+  }
+
+  return true;
+}
+
+static void read_flush(read_state *state) { (void)state; }
+
+#define MSG_SEND_NRF(msg) (MSG_SEND(msg, write, write_flush))
+
 void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
   switch (cmd) {
@@ -75,6 +186,42 @@ void process_command(uint8_t *data, uint16_t len) {
     default:
       break;
   }
+}
+
+secbool process_auth_key(uint8_t *data, uint32_t len, void *msg) {
+  recv_protob_msg(INTERNAL_MESSAGE, len, data, AuthKey_fields, msg, read,
+                  read_flush, USB_PACKET_SIZE);
+  return sectrue;
+}
+
+secbool process_success(uint8_t *data, uint32_t len, void *msg) {
+  recv_protob_msg(INTERNAL_MESSAGE, len, data, Success_fields, msg, read,
+                  read_flush, USB_PACKET_SIZE);
+  return sectrue;
+}
+
+void process_unexpected(uint8_t *data, uint32_t len) {}
+
+secbool await_response(uint16_t expected,
+                       secbool (*process)(uint8_t *data, uint32_t len,
+                                          void *msg),
+                       void *msg_recv) {
+  while (!m_uart_rx_data_ready_internal)
+    ;
+
+  m_uart_rx_data_ready_internal = false;
+
+  uint16_t id = 0;
+  uint32_t msg_size = 0;
+
+  msg_parse_header(m_uart_rx_data, &id, &msg_size);
+
+  if (id == expected) {
+    return process(m_uart_rx_data, msg_size, msg_recv);
+  } else {
+    process_unexpected(m_uart_rx_data, msg_size);
+  }
+  return secfalse;
 }
 
 /**@brief   Function for handling app_uart events.
@@ -165,28 +312,6 @@ void uart_event_handle(app_uart_evt_t *p_event) {
 }
 /**@snippet [Handling the data received over UART] */
 
-void send_byte(uint8_t byte) {
-  uint32_t err_code;
-
-  do {
-    err_code = app_uart_put(byte);
-    if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_BUSY)) {
-      NRF_LOG_ERROR("Failed receiving NUS message. Error 0x%x. ", err_code);
-    }
-  } while (err_code == NRF_ERROR_BUSY);
-}
-
-void send_packet(uint8_t message_type, const uint8_t *tx_data, uint16_t len) {
-  uint16_t total_len = len + OVERHEAD_SIZE;
-  send_byte(message_type);
-  send_byte((total_len >> 8) & 0xFF);
-  send_byte(total_len & 0xFF);
-  for (uint32_t i = 0; i < len; i++) {
-    send_byte(tx_data[i]);
-  }
-  send_byte(EOM);
-}
-
 /**@brief Function for handling the data from the Nordic UART Service.
  *
  * @details This function will process the data received from the Nordic UART
@@ -234,44 +359,61 @@ uint16_t get_message_type(const uint8_t *rx_data) {
   return (rx_data[3] << 8) | rx_data[4];
 }
 
-bool send_auth_key_request(uint8_t *p_key, uint8_t p_key_len) {
-  uint8_t tx_data[] = {
-      0x3F, 0x23, 0x23, 0x1F, 0x43, 0x00, 0x00, 0x00, 0x00,
-  };
-  send_packet(INTERNAL_MESSAGE, tx_data, sizeof(tx_data));
+#define AUTHKEY_LEN (6)
 
-  while (!m_uart_rx_data_ready_internal)
-    ;
+static bool read_authkey(pb_istream_t *stream, const pb_field_t *field,
+                         void **arg) {
+  uint8_t *key_buffer = (uint8_t *)(*arg);
 
-  if (get_message_type(m_uart_rx_data) != 8004) {
-    m_uart_rx_data_ready_internal = false;
+  if (stream->bytes_left > AUTHKEY_LEN) {
     return false;
   }
 
-  for (int i = 0; i < 6; i++) {
-    p_key[i] = m_uart_rx_data[i + 11];
+  memset(key_buffer, 0, AUTHKEY_LEN);
+
+  while (stream->bytes_left) {
+    // read data
+    if (!pb_read(stream, (pb_byte_t *)(key_buffer),
+                 (stream->bytes_left > AUTHKEY_LEN) ? AUTHKEY_LEN
+                                                    : stream->bytes_left)) {
+      return false;
+    }
   }
-  m_uart_rx_data_ready_internal = false;
+
+  return true;
+}
+
+bool send_auth_key_request(uint8_t *p_key, uint8_t p_key_len) {
+  uint8_t iface_num = INTERNAL_MESSAGE;
+  MSG_SEND_INIT(PairingRequest);
+  MSG_SEND_NRF(PairingRequest);
+
+  uint8_t buffer[AUTHKEY_LEN];
+  MSG_RECV_INIT(AuthKey);
+  MSG_RECV_CALLBACK(key, read_authkey, buffer);
+  secbool result = await_response(MessageType_MessageType_AuthKey,
+                                  process_auth_key, &msg_recv);
+
+  if (result != sectrue) {
+    return false;
+  }
+
+  memcpy(p_key, buffer, AUTHKEY_LEN > p_key_len ? p_key_len : AUTHKEY_LEN);
 
   return true;
 }
 
 bool send_repair_request(void) {
-  uint8_t tx_data[] = {
-      0x3F, 0x23, 0x23, 0x1F, 0x45, 0x00, 0x00, 0x00, 0x00,
-  };
-  send_packet(INTERNAL_MESSAGE, tx_data, sizeof(tx_data));
+  uint8_t iface_num = INTERNAL_MESSAGE;
+  MSG_SEND_INIT(RepairRequest);
+  MSG_SEND_NRF(RepairRequest);
 
-  while (!m_uart_rx_data_ready_internal)
-    ;
+  MSG_RECV_INIT(Success);
 
-  m_uart_rx_data_ready_internal = false;
+  secbool result = await_response(MessageType_MessageType_Success,
+                                  process_success, &msg_recv);
 
-  if (get_message_type(m_uart_rx_data) != 2) {
-    return false;
-  }
-
-  return true;
+  return result == sectrue;
 }
 
 void send_initialized(void) {

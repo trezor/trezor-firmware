@@ -38,6 +38,7 @@
 
 #include "bootui.h"
 #include "messages.h"
+#include "protob_helpers.h"
 #include "rust_ui.h"
 
 #include "memzero.h"
@@ -46,26 +47,6 @@
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"
 #endif
-
-#define MSG_HEADER1_LEN 9
-#define MSG_HEADER2_LEN 1
-
-secbool msg_parse_header(const uint8_t *buf, uint16_t *msg_id,
-                         uint32_t *msg_size) {
-  if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
-    return secfalse;
-  }
-  *msg_id = (buf[3] << 8) + buf[4];
-  *msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
-  return sectrue;
-}
-
-typedef struct {
-  uint8_t iface_num;
-  uint8_t packet_index;
-  uint8_t packet_pos;
-  uint8_t buf[USB_PACKET_SIZE];
-} write_state;
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count) {
@@ -136,51 +117,6 @@ static void _write_flush(write_state *state) {
 #endif
 }
 
-static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
-                         const pb_msgdesc_t *fields, const void *msg) {
-  // determine message size by serializing it into a dummy stream
-  pb_ostream_t sizestream = {.callback = NULL,
-                             .state = NULL,
-                             .max_size = SIZE_MAX,
-                             .bytes_written = 0,
-                             .errmsg = NULL};
-  if (false == pb_encode(&sizestream, fields, msg)) {
-    return secfalse;
-  }
-  const uint32_t msg_size = sizestream.bytes_written;
-
-  write_state state = {
-      .iface_num = iface_num,
-      .packet_index = 0,
-      .packet_pos = MSG_HEADER1_LEN,
-      .buf =
-          {
-              '?',
-              '#',
-              '#',
-              (msg_id >> 8) & 0xFF,
-              msg_id & 0xFF,
-              (msg_size >> 24) & 0xFF,
-              (msg_size >> 16) & 0xFF,
-              (msg_size >> 8) & 0xFF,
-              msg_size & 0xFF,
-          },
-  };
-
-  pb_ostream_t stream = {.callback = _write,
-                         .state = &state,
-                         .max_size = SIZE_MAX,
-                         .bytes_written = 0,
-                         .errmsg = NULL};
-
-  if (false == pb_encode(&stream, fields, msg)) {
-    return secfalse;
-  }
-
-  _write_flush(&state);
-  return secfalse;
-}
-
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _write_authkey(pb_ostream_t *stream, const pb_field_iter_t *field,
                            void *const *arg) {
@@ -189,50 +125,6 @@ static bool _write_authkey(pb_ostream_t *stream, const pb_field_iter_t *field,
 
   return pb_encode_string(stream, (uint8_t *)key, 6);
 }
-
-#define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
-#define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
-  { msg_send.FIELD = VALUE; }
-#define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) \
-  {                                         \
-    msg_send.has_##FIELD = true;            \
-    msg_send.FIELD = VALUE;                 \
-  }
-#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE)                    \
-  {                                                             \
-    msg_send.has_##FIELD = true;                                \
-    memzero(msg_send.FIELD, sizeof(msg_send.FIELD));            \
-    strncpy(msg_send.FIELD, VALUE, sizeof(msg_send.FIELD) - 1); \
-  }
-#define MSG_SEND_ASSIGN_STRING_LEN(FIELD, VALUE, LEN)                     \
-  {                                                                       \
-    msg_send.has_##FIELD = true;                                          \
-    memzero(msg_send.FIELD, sizeof(msg_send.FIELD));                      \
-    strncpy(msg_send.FIELD, VALUE, MIN(LEN, sizeof(msg_send.FIELD) - 1)); \
-  }
-#define MSG_SEND_ASSIGN_BYTES(FIELD, VALUE, LEN)                  \
-  {                                                               \
-    msg_send.has_##FIELD = true;                                  \
-    memzero(msg_send.FIELD.bytes, sizeof(msg_send.FIELD.bytes));  \
-    memcpy(msg_send.FIELD.bytes, VALUE,                           \
-           MIN(LEN, sizeof(msg_send.FIELD.bytes)));               \
-    msg_send.FIELD.size = MIN(LEN, sizeof(msg_send.FIELD.bytes)); \
-  }
-#define MSG_SEND_CALLBACK(FIELD, CALLBACK, ARGUMENT) \
-  {                                                  \
-    msg_send.FIELD.funcs.encode = &CALLBACK;         \
-    msg_send.FIELD.arg = (void *)ARGUMENT;           \
-  }
-#define MSG_SEND(TYPE) \
-  _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg_send)
-
-typedef struct {
-  uint8_t iface_num;
-  uint8_t packet_index;
-  uint8_t packet_pos;
-  uint16_t packet_size;
-  uint8_t *buf;
-} read_state;
 
 static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
   for (int retry = 0;; retry++) {
@@ -333,49 +225,17 @@ static bool _read(pb_istream_t *stream, uint8_t *buf, size_t count) {
 
 static void _read_flush(read_state *state) { (void)state; }
 
-static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
-                         const pb_msgdesc_t *fields, void *msg) {
-  uint16_t packet_size = USB_PACKET_SIZE;
-#ifdef USE_BLE
-  if (iface_num == BLE_EXT_IFACE_NUM) {
-    packet_size = BLE_PACKET_SIZE;
-  }
-#endif
-
-  read_state state = {.iface_num = iface_num,
-                      .packet_index = 0,
-                      .packet_pos = MSG_HEADER1_LEN,
-                      .packet_size = packet_size,
-                      .buf = buf};
-
-  pb_istream_t stream = {.callback = &_read,
-                         .state = &state,
-                         .bytes_left = msg_size,
-                         .errmsg = NULL};
-
-  if (false == pb_decode_noinit(&stream, fields, msg)) {
-    return secfalse;
-  }
-
-  _read_flush(&state);
-
-  return sectrue;
-}
-
-#define MSG_RECV_INIT(TYPE) TYPE msg_recv = TYPE##_init_default
-#define MSG_RECV_CALLBACK(FIELD, CALLBACK, ARGUMENT) \
-  {                                                  \
-    msg_recv.FIELD.funcs.decode = &CALLBACK;         \
-    msg_recv.FIELD.arg = (void *)ARGUMENT;           \
-  }
-#define MSG_RECV(TYPE) \
-  _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv)
+#define MSG_SEND_BLD(msg) (MSG_SEND(msg, _write, _write_flush))
+#define MSG_RECV_BLD(msg, iface_num) \
+  (MSG_RECV(                         \
+      msg, _read, _read_flush,       \
+      ((iface_num) == BLE_EXT_IFACE_NUM ? BLE_PACKET_SIZE : USB_PACKET_SIZE)))
 
 void send_user_abort(uint8_t iface_num, const char *msg) {
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ActionCancelled);
   MSG_SEND_ASSIGN_STRING(message, msg);
-  MSG_SEND(Failure);
+  MSG_SEND_BLD(Failure);
 }
 
 static void send_msg_features(uint8_t iface_num,
@@ -397,21 +257,21 @@ static void send_msg_features(uint8_t iface_num,
   } else {
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
   }
-  MSG_SEND(Features);
+  MSG_SEND_BLD(Features);
 }
 
 uint32_t process_msg_Pairing(uint8_t iface_num, uint32_t msg_size,
                              uint8_t *buf) {
   uint8_t buffer[6];
   MSG_RECV_INIT(PairingRequest);
-  MSG_RECV(PairingRequest);
+  MSG_RECV_BLD(PairingRequest, iface_num);
 
   uint32_t result = screen_pairing_confirm(buffer);
 
   if (result == INPUT_CONFIRM) {
     MSG_SEND_INIT(AuthKey);
     MSG_SEND_CALLBACK(key, _write_authkey, buffer);
-    MSG_SEND(AuthKey);
+    MSG_SEND_BLD(AuthKey);
   } else {
     send_user_abort(iface_num, "Pairing cancelled");
   }
@@ -422,11 +282,11 @@ uint32_t process_msg_Pairing(uint8_t iface_num, uint32_t msg_size,
 uint32_t process_msg_Repair(uint8_t iface_num, uint32_t msg_size,
                             uint8_t *buf) {
   MSG_RECV_INIT(RepairRequest);
-  MSG_RECV(RepairRequest);
+  MSG_RECV_BLD(RepairRequest, iface_num);
   uint32_t result = screen_repair_confirm();
   if (result == INPUT_CONFIRM) {
     MSG_SEND_INIT(Success);
-    MSG_SEND(Success);
+    MSG_SEND_BLD(Success);
   } else {
     send_user_abort(iface_num, "Pairing cancelled");
   }
@@ -437,7 +297,7 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
                             const vendor_header *const vhdr,
                             const image_header *const hdr) {
   MSG_RECV_INIT(Initialize);
-  MSG_RECV(Initialize);
+  MSG_RECV_BLD(Initialize, iface_num);
   send_msg_features(iface_num, vhdr, hdr);
 }
 
@@ -445,17 +305,17 @@ void process_msg_GetFeatures(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
                              const vendor_header *const vhdr,
                              const image_header *const hdr) {
   MSG_RECV_INIT(GetFeatures);
-  MSG_RECV(GetFeatures);
+  MSG_RECV_BLD(GetFeatures, iface_num);
   send_msg_features(iface_num, vhdr, hdr);
 }
 
 void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   MSG_RECV_INIT(Ping);
-  MSG_RECV(Ping);
+  MSG_RECV_BLD(Ping, iface_num);
 
   MSG_SEND_INIT(Success);
   MSG_SEND_ASSIGN_STRING(message, msg_recv.message);
-  MSG_SEND(Success);
+  MSG_SEND_BLD(Success);
 }
 
 static uint32_t firmware_remaining, firmware_block, chunk_requested;
@@ -467,7 +327,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
   chunk_requested = 0;
 
   MSG_RECV_INIT(FirmwareErase);
-  MSG_RECV(FirmwareErase);
+  MSG_RECV_BLD(FirmwareErase, iface_num);
 
   firmware_remaining = msg_recv.has_length ? msg_recv.length : 0;
   if ((firmware_remaining > 0) &&
@@ -480,13 +340,13 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
     MSG_SEND_INIT(FirmwareRequest);
     MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, 0);
     MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
-    MSG_SEND(FirmwareRequest);
+    MSG_SEND_BLD(FirmwareRequest);
   } else {
     // invalid firmware size
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Wrong firmware size");
-    MSG_SEND(Failure);
+    MSG_SEND_BLD(Failure);
   }
 }
 
@@ -598,13 +458,13 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                                uint8_t *buf) {
   MSG_RECV_INIT(FirmwareUpload);
   MSG_RECV_CALLBACK(payload, _read_payload, read_offset);
-  const secbool r = MSG_RECV(FirmwareUpload);
+  const secbool r = MSG_RECV_BLD(FirmwareUpload, iface_num);
 
   if (sectrue != r || chunk_size != (chunk_requested + read_offset)) {
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Invalid chunk size");
-    MSG_SEND(Failure);
+    MSG_SEND_BLD(Failure);
     return UPLOAD_ERR_INVALID_CHUNK_SIZE;
   }
 
@@ -619,7 +479,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid vendor header");
-        MSG_SEND(Failure);
+        MSG_SEND_BLD(Failure);
         return UPLOAD_ERR_INVALID_VENDOR_HEADER;
       }
 
@@ -627,7 +487,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid vendor header signature");
-        MSG_SEND(Failure);
+        MSG_SEND_BLD(Failure);
         return UPLOAD_ERR_INVALID_VENDOR_HEADER_SIG;
       }
 
@@ -640,7 +500,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid firmware header");
-        MSG_SEND(Failure);
+        MSG_SEND_BLD(Failure);
         return UPLOAD_ERR_INVALID_IMAGE_HEADER;
       }
 
@@ -648,7 +508,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Wrong firmware model");
-        MSG_SEND(Failure);
+        MSG_SEND_BLD(Failure);
         return UPLOAD_ERR_INVALID_IMAGE_MODEL;
       }
 
@@ -657,7 +517,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid firmware signature");
-        MSG_SEND(Failure);
+        MSG_SEND_BLD(Failure);
         return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
       }
 
@@ -730,7 +590,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       chunk_requested = chunk_limit - read_offset;
       MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, read_offset);
       MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
-      MSG_SEND(FirmwareRequest);
+      MSG_SEND_BLD(FirmwareRequest);
 
       firmware_remaining -= read_offset;
       return (int)firmware_remaining;
@@ -745,7 +605,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Firmware too big");
-    MSG_SEND(Failure);
+    MSG_SEND_BLD(Failure);
     return UPLOAD_ERR_FIRMWARE_TOO_BIG;
   }
 
@@ -757,14 +617,14 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       MSG_SEND_INIT(FirmwareRequest);
       MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, firmware_block * IMAGE_CHUNK_SIZE);
       MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
-      MSG_SEND(FirmwareRequest);
+      MSG_SEND_BLD(FirmwareRequest);
       return (int)firmware_remaining;
     }
 
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Invalid chunk hash");
-    MSG_SEND(Failure);
+    MSG_SEND_BLD(Failure);
     return UPLOAD_ERR_INVALID_CHUNK_HASH;
   }
 
@@ -791,10 +651,10 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
     MSG_SEND_INIT(FirmwareRequest);
     MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, firmware_block * IMAGE_CHUNK_SIZE);
     MSG_SEND_ASSIGN_REQUIRED_VALUE(length, chunk_requested);
-    MSG_SEND(FirmwareRequest);
+    MSG_SEND_BLD(FirmwareRequest);
   } else {
     MSG_SEND_INIT(Success);
-    MSG_SEND(Success);
+    MSG_SEND_BLD(Success);
   }
   return (int)firmware_remaining;
 }
@@ -831,11 +691,11 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
-    MSG_SEND(Failure);
+    MSG_SEND_BLD(Failure);
     return WIPE_ERR_CANNOT_ERASE;
   } else {
     MSG_SEND_INIT(Success);
-    MSG_SEND(Success);
+    MSG_SEND_BLD(Success);
     return WIPE_OK;
   }
 }
@@ -860,5 +720,5 @@ void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_UnexpectedMessage);
   MSG_SEND_ASSIGN_STRING(message, "Unexpected message");
-  MSG_SEND(Failure);
+  MSG_SEND_BLD(Failure);
 }

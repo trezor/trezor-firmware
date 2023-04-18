@@ -470,12 +470,12 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context) {
       uint8_t p_key[6] = {0};
 
       bool ok = send_auth_key_request(p_key, sizeof(p_key));
+      err_code =
+          sd_ble_gap_auth_key_reply(p_ble_evt->evt.gap_evt.conn_handle,
+                                    BLE_GAP_AUTH_KEY_TYPE_PASSKEY, p_key);
 
       if (ok) {
         NRF_LOG_INFO("Received data: %c", p_key);
-        err_code =
-            sd_ble_gap_auth_key_reply(p_ble_evt->evt.gap_evt.conn_handle,
-                                      BLE_GAP_AUTH_KEY_TYPE_PASSKEY, p_key);
       } else {
         NRF_LOG_INFO("Auth key request failed.");
       }

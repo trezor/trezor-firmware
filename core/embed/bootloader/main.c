@@ -59,6 +59,7 @@
 #include "bootui.h"
 #include "messages.h"
 #include "messages.pb.h"
+#include "protob_helpers.h"
 #include "rust_ui.h"
 
 const uint8_t BOOTLOADER_KEY_M = 2;
