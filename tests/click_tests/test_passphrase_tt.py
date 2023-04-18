@@ -127,26 +127,32 @@ def press_char(debug: "DebugLink", char: str) -> None:
         time.sleep(1.1)
     TT_COORDS_PREV = coords  # type: ignore
     for _ in range(amount):
-        time.sleep(0.05)
-        debug.click(coords)
+        time.sleep(0.1)
+        debug.click(coords, wait=True)
 
 
-def input_passphrase(debug: "DebugLink", passphrase: str) -> None:
+def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) -> None:
     """Input a passphrase with validation it got added"""
+    before = debug.read_layout().passphrase()
     for char in passphrase:
+        debug.wait_layout()
         press_char(debug, char)
+        debug.wait_layout()
+    if check:
+        after = debug.read_layout().passphrase()
+        assert after == before + passphrase
 
 
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     coords = buttons.pin_passphrase_grid(11)
-    debug.click(coords)
+    debug.click(coords, wait=True)
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
     coords = buttons.pin_passphrase_grid(9)
-    debug.click(coords)
+    debug.click(coords, wait=True)
 
 
 VECTORS = (  # passphrase, address
@@ -171,7 +177,8 @@ def test_passphrase_input(
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_input_over_50_chars(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(device_handler, DA_51_ADDRESS) as debug:  # type: ignore
-        input_passphrase(debug, DA_51)
+        input_passphrase(debug, DA_51, check=False)
+        assert debug.read_layout().passphrase() == DA_50
         enter_passphrase(debug)
 
 
@@ -183,6 +190,7 @@ def test_passphrase_delete(device_handler: "BackgroundDeviceHandler"):
         for _ in range(4):
             delete_char(debug)
             time.sleep(0.1)
+        debug.wait_layout()
 
         input_passphrase(debug, CommonPass.SHORT[8 - 4 :])
         enter_passphrase(debug)
@@ -213,8 +221,11 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             PassphraseCategory.SPECIAL,
         ):
             go_to_category(debug, category)
+        debug.wait_layout()
 
         enter_passphrase(debug)
+        coords = buttons.pin_passphrase_grid(11)
+        debug.click(coords)
 
 
 @pytest.mark.setup_client(passphrase=True)

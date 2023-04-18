@@ -288,7 +288,7 @@ struct PinDots {
     pad: Pad,
     style: TextStyle,
     digits: String<MAX_LENGTH>,
-    display_digits: bool,
+    pub display_digits: bool,
 }
 
 impl PinDots {
@@ -477,7 +477,7 @@ where
             }
         }
         t.kw_pair("digits_order", &digits_order);
-        // TODO: textbox does not get updated when the pin is changed
+        t.kw_pair("display_digits", &self.textbox.inner().display_digits);
         t.kw_pair("textbox", &self.textbox.inner().pin());
         t.close();
     }

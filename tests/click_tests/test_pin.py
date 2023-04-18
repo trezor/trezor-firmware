@@ -84,7 +84,8 @@ def prepare(
         device_handler.run(device.change_pin)  # type: ignore
         assert "enable PIN protection" in debug.wait_layout().text_content()
         if debug.model == "T":
-            go_next(debug, wait=True)
+            layout = go_next(debug, wait=True)
+            assert "access this device" in layout.text_content()
             go_next(debug)
         elif debug.model == "R":
             go_next(debug, wait=True)
@@ -96,11 +97,7 @@ def prepare(
         device_handler.run(device.change_pin)  # type: ignore
         debug.wait_layout()
         _input_see_confirm(debug, old_pin)
-        if debug.model == "T":
-            layout = debug.wait_layout()
-        else:
-            layout = debug.read_layout()
-        assert "change your PIN" in layout.text_content()
+        assert "change your PIN" in debug.read_layout().text_content()
         go_next(debug, wait=True)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
@@ -109,26 +106,19 @@ def prepare(
         if old_pin:
             debug.wait_layout()
             _input_see_confirm(debug, old_pin)
-            if debug.model == "T":
-                layout = debug.wait_layout()
-            else:
-                layout = debug.read_layout()
-        else:
-            layout = debug.wait_layout()
-        assert "enable wipe code" in layout.text_content()
+        assert "enable wipe code" in debug.wait_layout().text_content()
         if debug.model == "T":
-            go_next(debug, wait=True)
+            layout = go_next(debug, wait=True)
+            assert "erase all data" in layout.text_content()
             go_next(debug)
         elif debug.model == "R":
             go_next(debug, wait=True)
             debug.press_right_htc(1000)
         if old_pin:
-            if debug.model == "T":
-                debug.wait_layout()
+            debug.wait_layout()
             _input_see_confirm(debug, old_pin)
 
-    if not (debug.model == "R" and situation == Situation.PIN_CHANGE):
-        debug.wait_layout()
+    debug.wait_layout()
     _assert_pin_entry(debug)
     yield debug
     go_next(debug)
@@ -147,12 +137,11 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = True) -> None:
     before = debug.read_layout().pin()
 
     if debug.model == "T":
-        check = False  # TT's PIN does not get updated for some reason
         order = debug.read_layout().buttons.tt_pin_digits_order()
         for digit in pin:
             digit_index = order.index(digit)
             coords = buttons.pin_passphrase_index(digit_index)
-            debug.click(coords)
+            debug.click(coords, wait=True)
     elif debug.model == "R":
         for digit in pin:
             navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
@@ -165,7 +154,7 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = True) -> None:
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
     if debug.model == "T":
-        debug.click(buttons.TOP_ROW)
+        debug.click(buttons.TOP_ROW, wait=True)
     elif debug.model == "R":
         navigate_to_action_and_press(debug, "SHOW", TR_PIN_ACTIONS)
 
@@ -176,8 +165,7 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 
     for _ in range(digits_to_delete):
         if debug.model == "T":
-            check = False  # TT's PIN does not get updated for some reason
-            debug.click(buttons.pin_passphrase_grid(9))
+            debug.click(buttons.pin_passphrase_grid(9), wait=True)
         elif debug.model == "R":
             navigate_to_action_and_press(debug, "DELETE", TR_PIN_ACTIONS)
 
@@ -196,7 +184,7 @@ def _cancel_pin(debug: "DebugLink") -> None:
 def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""
     if debug.model == "T":
-        debug.click(buttons.pin_passphrase_grid(11))
+        debug.click(buttons.pin_passphrase_grid(11), wait=True)
     elif debug.model == "R":
         navigate_to_action_and_press(debug, "ENTER", TR_PIN_ACTIONS)
 
@@ -211,9 +199,6 @@ def _enter_two_times(
     debug: "DebugLink", pin1: str, pin2: str, reenter_screen: bool = True
 ) -> None:
     _input_see_confirm(debug, pin1)
-
-    if debug.model == "T":
-        debug.wait_layout()
 
     if reenter_screen:
         # Please re-enter
@@ -254,10 +239,9 @@ def test_pin_longer_than_max(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
         _input_pin(debug, PIN60, check=False)
 
-        if debug.model == "R":
-            # What is over 50 digits was not entered
-            # TODO: do some UI change when limit is reached?
-            assert debug.read_layout().pin() == PIN60[:50]
+        # What is over 50 digits was not entered
+        # TODO: do some UI change when limit is reached?
+        assert debug.read_layout().pin() == PIN60[:50]
 
         _see_pin(debug)
         _confirm_pin(debug)
@@ -267,8 +251,6 @@ def test_pin_longer_than_max(device_handler: "BackgroundDeviceHandler"):
 def test_pin_incorrect(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
         _input_see_confirm(debug, "1235")
-        if debug.model == "T":
-            debug.wait_layout()
         _input_see_confirm(debug, PIN4)
 
 
@@ -330,8 +312,9 @@ def test_wipe_code_same_as_pin(device_handler: "BackgroundDeviceHandler"):
 
         time.sleep(4)  # popup
 
-        debug.wait_layout()
-        _enter_two_times(debug, "2", "2")
+        # Need to re-sync after popup
+        debug.click((0, 0), wait=True)
+        _enter_two_times(debug, "2", "2", reenter_screen=False)
 
 
 @pytest.mark.setup_client()

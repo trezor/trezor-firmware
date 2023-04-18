@@ -14,3 +14,19 @@ if __debug__:
     layout_watcher = 0
 
     reset_internal_entropy: bytes = b""
+
+    class DebugEvents:
+        def __init__(self):
+            self.last_event = 0
+            self.last_result: int | None = None
+            self.awaited_event: int | None = None
+
+    debug_events = DebugEvents()
+
+    def reset_debug_events() -> None:
+        global debug_events
+
+        debug_events = DebugEvents()
+
+    new_layout = False
+    new_layout_timeout = False

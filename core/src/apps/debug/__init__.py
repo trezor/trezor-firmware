@@ -5,6 +5,7 @@ if not __debug__:
 
 if __debug__:
     from storage import debug as storage
+    from storage.debug import debug_events
 
     import trezorui2
 
@@ -44,6 +45,9 @@ if __debug__:
     input_signal = input_chan.take
     model_r_btn_signal = model_r_btn_chan.take
 
+    synthetic_event = loop.chan()
+    synthetic_event_signal = synthetic_event.take
+
     debuglink_decision_chan = loop.chan()
 
     layout_change_chan = loop.chan()
@@ -60,10 +64,11 @@ if __debug__:
             return True
         return False
 
-    def notify_layout_change(layout: Layout) -> None:
+    def notify_layout_change(layout: Layout, event_id: int | None = None) -> None:
         storage.current_content[:] = layout.read_content()
         if storage.watch_layout_changes or layout_change_chan.takers:
-            layout_change_chan.publish(storage.current_content)
+            payload = (event_id, storage.current_content)
+            layout_change_chan.publish(payload)
 
     async def _dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
         from trezor.enums import DebugButton
@@ -89,7 +94,34 @@ if __debug__:
             await _dispatch_debuglink_decision(msg)
 
     async def return_layout_change() -> None:
-        content = await layout_change_chan.take()
+        awaited_event_id = debug_events.awaited_event
+        last_result_id = debug_events.last_result
+
+        should_wait_first_paint = False
+        if awaited_event_id is not None and awaited_event_id == last_result_id:
+            content = storage.current_content[:]
+        else:
+            while True:
+                event_id, content = await layout_change_chan.take()
+                if storage.new_layout:
+                    should_wait_first_paint = True
+                    storage.new_layout = False
+                if event_id is None or awaited_event_id is None:
+                    break
+                if event_id > awaited_event_id:
+                    raise RuntimeError(
+                        f"Waiting for event that already happened - {event_id} > {awaited_event_id}"
+                    )
+                elif event_id == awaited_event_id:
+                    if should_wait_first_paint:
+                        should_wait_first_paint = False
+                        continue
+                    storage.awaited_event_id_result = None
+                    break
+
+        if awaited_event_id is not None:
+            debug_events.last_result = awaited_event_id
+
         assert DEBUG_CONTEXT is not None
         if storage.layout_watcher is LAYOUT_WATCHER_LAYOUT:
             await DEBUG_CONTEXT.write(DebugLinkLayout(lines=content))
@@ -103,18 +135,25 @@ if __debug__:
         from trezor import io
 
         await loop.sleep(duration_ms)
-        loop.synthetic_events.append((io.TOUCH, (io.TOUCH_END, x, y)))
+        synthetic_event.publish((io.TOUCH_END, x, y))
 
     async def button_hold(btn: int, duration_ms: int) -> None:
         from trezor import io
 
         await loop.sleep(duration_ms)
-        loop.synthetic_events.append((io.BUTTON, (io.BUTTON_RELEASED, btn)))
+        synthetic_event.publish((io.BUTTON, (io.BUTTON_RELEASED, btn)))
 
     async def dispatch_DebugLinkWatchLayout(
         ctx: wire.Context, msg: DebugLinkWatchLayout
     ) -> Success:
         from trezor import ui
+
+        # Modifying `watch_layout_changes` means we will probably
+        # be sending debug events from the host and will want to
+        # analyze the resulted layout.
+        # Resetting the debug events makes sure that the previous
+        # events/layouts are not mixed with the new ones.
+        storage.reset_debug_events()
 
         layout_change_chan.putters.clear()
         if msg.watch:
@@ -138,13 +177,14 @@ if __debug__:
 
         # TT click on specific coordinates, with possible hold
         if x is not None and y is not None and utils.MODEL in ("T",):
-            evt_down = io.TOUCH_START, x, y
-            evt_up = io.TOUCH_END, x, y
-            loop.synthetic_events.append((io.TOUCH, evt_down))
+            evt_down = (debug_events.last_event + 1, io.TOUCH_START), x, y
+            evt_up = (debug_events.last_event + 2, io.TOUCH_END), x, y
+            debug_events.last_event += 2
+            synthetic_event.publish(evt_down)
             if msg.hold_ms is not None:
                 loop.schedule(touch_hold(x, y, msg.hold_ms))
             else:
-                loop.synthetic_events.append((io.TOUCH, evt_up))
+                synthetic_event.publish(evt_up)
         # TR hold of a specific button
         elif (
             msg.physical_button is not None
@@ -157,13 +197,15 @@ if __debug__:
                 btn = io.BUTTON_RIGHT
             else:
                 raise wire.ProcessError("Unknown physical button")
-            loop.synthetic_events.append((io.BUTTON, (io.BUTTON_PRESSED, btn)))
+            synthetic_event.publish((io.BUTTON, (io.BUTTON_PRESSED, btn)))
             loop.schedule(button_hold(btn, msg.hold_ms))
         # Something more general
         else:
             debuglink_decision_chan.publish(msg)
 
         if msg.wait:
+            # We wait for all the previously sent events
+            debug_events.awaited_event = debug_events.last_event
             storage.layout_watcher = LAYOUT_WATCHER_LAYOUT
             loop.schedule(return_layout_change())
 
@@ -183,6 +225,8 @@ if __debug__:
             if not storage.watch_layout_changes:
                 raise wire.ProcessError("Layout is not watched")
             storage.layout_watcher = LAYOUT_WATCHER_STATE
+            # We wait for the last previously sent event to finish
+            debug_events.awaited_event = debug_events.last_event
             loop.schedule(return_layout_change())
             return None
         else:

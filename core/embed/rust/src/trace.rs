@@ -74,6 +74,15 @@ impl Trace for usize {
     }
 }
 
+impl Trace for bool {
+    fn trace(&self, t: &mut dyn Tracer) {
+        match self {
+            true => t.string("true"),
+            false => t.string("false"),
+        }
+    }
+}
+
 impl<T> Trace for Option<T>
 where
     T: Trace,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -40,18 +42,18 @@ def get_char_category(char: str) -> PassphraseCategory:
     return PassphraseCategory.SPECIAL
 
 
-def go_next(debug: "DebugLink", wait: bool = False) -> None:
+def go_next(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
     if debug.model == "T":
-        debug.click(buttons.OK, wait=wait)  # type: ignore
+        return debug.click(buttons.OK, wait=wait)  # type: ignore
     elif debug.model == "R":
-        debug.press_right(wait=wait)  # type: ignore
+        return debug.press_right(wait=wait)  # type: ignore
 
 
-def go_back(debug: "DebugLink", wait: bool = False) -> None:
+def go_back(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
     if debug.model == "T":
-        debug.click(buttons.CANCEL, wait=wait)  # type: ignore
+        return debug.click(buttons.CANCEL, wait=wait)  # type: ignore
     elif debug.model == "R":
-        debug.press_left(wait=wait)  # type: ignore
+        return debug.press_left(wait=wait)  # type: ignore
 
 
 def navigate_to_action_and_press(
@@ -59,7 +61,7 @@ def navigate_to_action_and_press(
     wanted_action: str,
     all_actions: list[str],
     is_carousel: bool = True,
-) -> None:
+) -> "LayoutContent":
     """Navigate to the button with certain action and press it"""
     # Orient
     if wanted_action not in all_actions:
@@ -80,7 +82,7 @@ def navigate_to_action_and_press(
         )
 
     # Press
-    debug.press_middle(wait=True)
+    return debug.press_middle(wait=True)
 
 
 def _move_one_closer(

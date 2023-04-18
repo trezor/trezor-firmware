@@ -129,15 +129,32 @@ class RustLayout(ui.Layout):
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         from trezor import workflow
 
+        if __debug__:
+            from apps.debug import notify_layout_change, synthetic_event_signal
+            from storage import debug as debug_storage
+
         touch = loop.wait(io.TOUCH)
         self._first_paint()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
-            event, x, y = yield touch
+            event_id: int | None = None
+            if __debug__:
+                # When using `yield` here, it misses some events
+                event, x, y = await loop.race(touch, synthetic_event_signal())
+                if isinstance(event, tuple):
+                    event_id, event = event
+            else:
+                event, x, y = yield touch
+
             workflow.idle_timer.touch()
             msg = None
             if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
                 msg = self.layout.touch_event(event, x, y)
+                if __debug__:
+                    notify_layout_change(self, event_id)
+                    if msg is not None:
+                        debug_storage.new_layout = True
+
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
