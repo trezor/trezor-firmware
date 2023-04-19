@@ -11,6 +11,12 @@ void set_initialized(bool initialized);
 
 bool ble_connected(void);
 
+void set_advertising(bool advertising);
+
 void set_connected(bool connected);
+
+void start_advertising(void);
+
+void stop_advertising(void);
 
 #endif

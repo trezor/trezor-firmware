@@ -1,5 +1,3 @@
-
-
 #ifndef __DIS__
 #define __DIS__
 
