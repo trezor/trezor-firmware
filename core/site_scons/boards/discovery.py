@@ -26,6 +26,7 @@ def configure(env, features_wanted, defines, sources):
         sources += ['embed/trezorhal/ble/dfu.c', ]
         sources += ['embed/trezorhal/ble/fwu.c', ]
         sources += ['embed/trezorhal/ble/state.c', ]
+        sources += ['embed/trezorhal/ble/messages.c', ]
         features_available.append("ble")
 
     if "dma2d" in features_wanted:

@@ -1,11 +1,15 @@
 
 #include "int_comm.h"
+#include "advertising.h"
 #include "app_error.h"
 #include "app_uart.h"
+#include "ble_advertising.h"
 #include "ble_nus.h"
+#include "connection.h"
 #include "messages.pb.h"
 #include "nrf_drv_spi.h"
 #include "nrf_log.h"
+#include "pm.h"
 #include "protob_helpers.h"
 #include "stdint.h"
 #include "trezorhal/ble/int_comm_defs.h"
@@ -19,7 +23,6 @@
 static uint8_t m_uart_rx_data[BLE_NUS_MAX_DATA_LEN];
 static uint8_t m_spi_tx_data[BLE_PACKET_SIZE];
 static bool m_uart_rx_data_ready_internal = false;
-static uint16_t *m_p_conn_handle = NULL;
 
 BLE_NUS_DEF(m_nus,
             NRF_SDH_BLE_TOTAL_LINK_COUNT); /**< BLE NUS service instance. */
@@ -48,8 +51,7 @@ void spi_init(void) {
   APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, spi_event_handler, NULL));
 }
 
-void nus_init(uint16_t *p_conn_handle) {
-  m_p_conn_handle = p_conn_handle;
+void nus_init() {
   uint32_t err_code;
 
   ble_nus_init_t nus_init;
@@ -60,8 +62,6 @@ void nus_init(uint16_t *p_conn_handle) {
 
   err_code = ble_nus_init(&m_nus, &nus_init);
   APP_ERROR_CHECK(err_code);
-
-  *p_conn_handle = BLE_CONN_HANDLE_INVALID;
 }
 
 void send_byte(uint8_t byte) {
@@ -177,11 +177,15 @@ void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
   switch (cmd) {
     case INTERNAL_CMD_SEND_STATE:
-      if (*m_p_conn_handle != BLE_CONN_HANDLE_INVALID) {
-        send_connected_event();
-      } else {
-        send_disconnected_event();
-      }
+      send_status_event();
+      break;
+    case INTERNAL_CMD_ADVERTISING_ON:
+      advertising_start(true);
+      send_status_event();
+      break;
+    case INTERNAL_CMD_ADVERTISING_OFF:
+      advertising_stop();
+      send_status_event();
       break;
     default:
       break;
@@ -289,7 +293,7 @@ void uart_event_handle(app_uart_evt_t *p_event) {
               do {
                 uint16_t length = (uint16_t)len - OVERHEAD_SIZE;
                 err_code = ble_nus_data_send(&m_nus, m_uart_rx_data, &length,
-                                             *m_p_conn_handle);
+                                             get_connection_handle());
                 if ((err_code != NRF_ERROR_INVALID_STATE) &&
                     (err_code != NRF_ERROR_RESOURCES) &&
                     (err_code != NRF_ERROR_NOT_FOUND)) {
@@ -341,16 +345,12 @@ void nus_data_handler(ble_nus_evt_t *p_evt) {
 }
 /**@snippet [Handling the data received over BLE] */
 
-void send_connected_event(void) {
+void send_status_event(void) {
   uint8_t tx_data[] = {
-      INTERNAL_EVENT_CONNECTED,
-  };
-  send_packet(INTERNAL_EVENT, tx_data, sizeof(tx_data));
-}
-
-void send_disconnected_event(void) {
-  uint8_t tx_data[] = {
-      INTERNAL_EVENT_DISCONNECTED,
+      INTERNAL_EVENT_STATUS,
+      (get_connection_handle() != BLE_CONN_HANDLE_INVALID) ? 1
+                                                           : 0,  // connected
+      is_advertising() ? 1 : 0,                                  // advertising
   };
   send_packet(INTERNAL_EVENT, tx_data, sizeof(tx_data));
 }
@@ -414,11 +414,4 @@ bool send_repair_request(void) {
                                   process_success, &msg_recv);
 
   return result == sectrue;
-}
-
-void send_initialized(void) {
-  uint8_t tx_data[] = {
-      INTERNAL_EVENT_INITIALIZED,
-  };
-  send_packet(INTERNAL_EVENT, tx_data, sizeof(tx_data));
 }

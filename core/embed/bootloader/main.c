@@ -51,6 +51,7 @@
 #endif
 #ifdef USE_BLE
 #include "ble/comm.h"
+#include "ble/state.h"
 #endif
 
 #include "usb.h"
@@ -123,11 +124,27 @@ static void usb_init_all(secbool usb21_landing) {
   usb_start();
 }
 
-static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
-                                         const image_header *const hdr) {
+void start_comm(secbool usb21_landing) {
   // if both are NULL, we don't have a firmware installed
   // let's show a webusb landing page in this case
-  usb_init_all((vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
+  usb_init_all(usb21_landing);
+#ifdef USE_BLE
+  start_advertising();
+#endif
+}
+
+void stop_comm(void) {
+  hal_delay(100);
+  usb_stop();
+  usb_deinit();
+#ifdef USE_BLE
+  stop_advertising();
+#endif
+}
+
+static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
+                                         const image_header *const hdr) {
+  start_comm((vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
 
   uint8_t buf_usb[USB_PACKET_SIZE];
 #ifdef USE_BLE
@@ -164,6 +181,8 @@ static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
         buf = ble_buf;
         break;
       }
+
+      ble_event_poll();
 #endif
     }
 
@@ -197,9 +216,7 @@ static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
           case MessageType_MessageType_PairingRequest:  // pairing request
             response = process_msg_Pairing(active_iface, msg_size, ble_buf);
             if (response != INPUT_CONFIRM) {
-              hal_delay(100);
-              usb_stop();
-              usb_deinit();
+              stop_comm();
               return RETURN;
             }
             screen_connect();
@@ -209,9 +226,7 @@ static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
           case MessageType_MessageType_RepairRequest:  // repairing request
             response = process_msg_Repair(active_iface, msg_size, ble_buf);
             if (response != INPUT_CONFIRM) {
-              hal_delay(100);
-              usb_stop();
-              usb_deinit();
+              stop_comm();
               return RETURN;
             }
             // screen_connect();
@@ -277,9 +292,7 @@ static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
             response = ui_screen_wipe_confirm();
             if (INPUT_CANCEL == response) {
               send_user_abort(active_iface, "Wipe cancelled");
-              hal_delay(100);
-              usb_stop();
-              usb_deinit();
+              stop_comm();
               return RETURN;
             }
             ui_screen_wipe();
@@ -287,13 +300,11 @@ static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
                 process_msg_WipeDevice(active_iface, msg_size, buf);
             if (upload_response < 0) {  // error
               screen_wipe_fail();
-              usb_stop();
-              usb_deinit();
+              stop_comm();
               return SHUTDOWN;
             } else {  // success
               screen_wipe_success();
-              usb_stop();
-              usb_deinit();
+              stop_comm();
               return SHUTDOWN;
             }
             break;
@@ -307,13 +318,10 @@ static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
                 upload_response !=
                     UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
               ui_screen_fail();
-              usb_stop();
-              usb_deinit();
+              stop_comm();
               return SHUTDOWN;
             } else if (upload_response == UPLOAD_ERR_USER_ABORT) {
-              hal_delay(100);
-              usb_stop();
-              usb_deinit();
+              stop_comm();
               return RETURN;
             } else if (upload_response == 0) {  // last chunk received
               ui_screen_install_progress_upload(1000);
@@ -324,8 +332,7 @@ static usb_result_t bootloader_comm_loop(const vendor_header *const vhdr,
               hal_delay(1000);
               ui_screen_done(1, secfalse);
               hal_delay(1000);
-              usb_stop();
-              usb_deinit();
+              stop_comm();
               ui_screen_boot_empty(true);
               return CONTINUE;
             }

@@ -287,6 +287,10 @@ SOURCE_BLE_FIRMWARE = [
     'embed/ble_firmware/ble_nus.c',
     'embed/ble_firmware/int_comm.c',
     'embed/ble_firmware/dis.c',
+    'embed/ble_firmware/pm.c',
+    'embed/ble_firmware/power.c',
+    'embed/ble_firmware/advertising.c',
+    'embed/ble_firmware/connection.c',
     'embed/bootloader/protob/messages.pb.c',
     'embed/lib/protob_helpers.c',
 ]

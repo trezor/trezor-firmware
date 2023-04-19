@@ -25,6 +25,7 @@
 #include "buffers.h"
 #include "dma.h"
 #include "int_comm_defs.h"
+#include "messages.h"
 #include "state.h"
 
 #define SPI_QUEUE_SIZE 10
@@ -152,18 +153,14 @@ void process_poll(uint8_t *data, uint32_t len) {
   uint8_t cmd = data[0];
 
   switch (cmd) {
-    case INTERNAL_EVENT_INITIALIZED: {
-      set_connected(false);
-      set_initialized(true);
-      break;
-    }
-    case INTERNAL_EVENT_CONNECTED: {
-      set_connected(true);
-      set_initialized(true);
-      break;
-    }
-    case INTERNAL_EVENT_DISCONNECTED: {
-      set_connected(false);
+      //    case INTERNAL_EVENT_INITIALIZED: {
+      //      set_connected(false);
+      //      set_initialized(true);
+      //      break;
+      //    }
+    case INTERNAL_EVENT_STATUS: {
+      set_connected(data[1]);
+      set_advertising(data[2]);
       set_initialized(true);
       break;
     }
@@ -249,8 +246,7 @@ void ble_event_poll() {
   }
 
   if (!ble_initialized()) {
-    uint8_t cmd = INTERNAL_CMD_SEND_STATE;
-    ble_int_comm_send(&cmd, sizeof(cmd), INTERNAL_EVENT);
+    send_state_request();
   }
 }
 
