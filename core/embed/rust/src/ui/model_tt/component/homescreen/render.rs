@@ -474,8 +474,8 @@ impl BlurringContext {
 
             // clamping handles left and right edges
             let ic = (i - BLUR_RADIUS).clamp(0, HOMESCREEN_IMAGE_WIDTH - 1) as usize;
-            let ic2 = (i + BLUR_SIZE as i16 - BLUR_RADIUS)
-                .clamp(0, HOMESCREEN_IMAGE_WIDTH - 1) as usize;
+            let ic2 =
+                (i + BLUR_SIZE as i16 - BLUR_RADIUS).clamp(0, HOMESCREEN_IMAGE_WIDTH - 1) as usize;
             update_accs_add(data, ic2, &mut acc_r, &mut acc_g, &mut acc_b);
             update_accs_sub(data, ic, &mut acc_r, &mut acc_g, &mut acc_b);
         }
