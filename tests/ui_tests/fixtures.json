@@ -1894,7 +1894,7 @@
 "TT_test_autolock.py::test_dryrun_enter_word_slowly": "d3f2dc99db5a3fea22c075a74f15e8cf6a1ca655be29042eb845f033851edf78",
 "TT_test_autolock.py::test_dryrun_locks_at_number_of_words": "b9a320b598b73d52a4d9e117e3c7c962ccaccb8a386f52a836add95be0f897b6",
 "TT_test_autolock.py::test_dryrun_locks_at_word_entry": "092e18ed76d31d6b608a6a4b8ca2d742d070903c2c0090ef3760d2b9ae70f238",
-"TT_test_lock.py::test_hold_to_lock": "d4ce48aa165c4b38b94ffe36715cf79d2af828657e414fadbe2447acf29da120",
+"TT_test_lock.py::test_hold_to_lock": "73bfeda4595c74c9c08b552651920beb903b59bb6f1b08fcb29399f92a6a6ade",
 "TT_test_passphrase_tt.py::test_passphrase_click_same_button_many_times": "1e8778a6aece69bdaa3fc5678e74bd282f7633f95c4f34e288472086950233c7",
 "TT_test_passphrase_tt.py::test_passphrase_delete": "14d66f44f33520849c082f1f26a1559cbc57959e782dd2357e6e5759f0030957",
 "TT_test_passphrase_tt.py::test_passphrase_delete_all": "684b4ce76c5fb620a2409c81e4c760620858564515cddf0ba380a5fc4525eca1",
@@ -1922,11 +1922,11 @@
 "TT_test_pin.py::test_wipe_code_setup": "7132ac8f27171c3c916047e0f93bfcf1703eafec3bdc5dc02c8e1184351f5bd2",
 "TT_test_recovery.py::test_recovery_bip39": "614e9204c01c379b4b88ba618addd50f22cf9f75492f2363cdca14acee1c883f",
 "TT_test_recovery.py::test_recovery_slip39_basic": "73e2c4e4c4cb75206a5b739e4196035a4a3eef83a434a880ac27a8c7b5a3a0e2",
-"TT_test_reset_bip39.py::test_reset_bip39": "400e77350c121989cabfa2ef12f0678e9e8fbf1cb4223ce40a5d2b754213edfc",
+"TT_test_reset_bip39.py::test_reset_bip39": "01547ca97308b6b3b54fab9c8f18d4d43a8ca0637a95f4de6e0690808342fe4c",
 "TT_test_reset_slip39_advanced.py::test_reset_slip39_advanced_16of16groups_16of16shares": "4ddcb8eeb9062e739926998abb0bbed918b63cf1065c61199194f99034d54968",
-"TT_test_reset_slip39_advanced.py::test_reset_slip39_advanced_2of2groups_2of2shares": "39ef6d9d132f5489a790521cdbcefcd98abb1c3e85f9e847b307550c0f26d509",
-"TT_test_reset_slip39_basic.py::test_reset_slip39_basic_16of16": "ffcfbf6e55bb843d891e5fff58897322b93ae75781ab9ae22516421d74caabaf",
-"TT_test_reset_slip39_basic.py::test_reset_slip39_basic_1of1": "44d3911713ce4ae594de0edbab8cff43086d88731a7c240982ea9f12d9a0d594"
+"TT_test_reset_slip39_advanced.py::test_reset_slip39_advanced_2of2groups_2of2shares": "37f5730dc1da45ef31792733a9272626ab070c8245d95b062df8695a6a9cf6c7",
+"TT_test_reset_slip39_basic.py::test_reset_slip39_basic_16of16": "1a1d30da89b002e082c03fca80c99d515fee1ff144ec01a24f8bcfd4cf831ec3",
+"TT_test_reset_slip39_basic.py::test_reset_slip39_basic_1of1": "ffc727ca4ec65738618ed20fcf0bd91c6d693d22575ab9a56c8c1bab1c66b3ec"
 },
 "device_tests": {
 "TT_binance-test_get_address.py::test_binance_get_address[m-44h-714h-0h-0-0-bnb1hgm0p7khfk85zpz-68e2cb5a": "483ff25f0ff24de80631dfb202ac681c38dfbf44c5905505281c2d0719a94fc6",
