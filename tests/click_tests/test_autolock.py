@@ -299,6 +299,9 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
 
     # unlock
     if debug.model == "T":
+        # Need to click two times to get the correct layout
+        # because of the lockscreen
+        layout = debug.click(buttons.OK, wait=True)
         layout = debug.click(buttons.OK, wait=True)
         assert "PinKeyboard" in layout.str_content
     elif debug.model == "R":

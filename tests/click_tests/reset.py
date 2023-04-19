@@ -80,7 +80,9 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
         debug.press_middle(wait=True)
 
 
-def read_words(debug: "DebugLink", backup_type: messages.BackupType) -> list[str]:
+def read_words(
+    debug: "DebugLink", backup_type: messages.BackupType, do_htc: bool = True
+) -> list[str]:
     words: list[str] = []
     layout = debug.read_layout()
 
@@ -109,9 +111,14 @@ def read_words(debug: "DebugLink", backup_type: messages.BackupType) -> list[str
     if debug.model == "T":
         words.extend(layout.seed_words())
 
-    # It is hold-to-confirm
+    # There is hold-to-confirm button
     if debug.model == "T":
-        debug.click(buttons.OK, hold_ms=1500, wait=True)
+        # It would take a very long time to test 16-of-16 with doing 1500 ms HTC after
+        # each word set
+        if do_htc:
+            debug.click(buttons.OK, hold_ms=1500, wait=True)
+        else:
+            debug.press_yes()
 
     return words
 

@@ -119,7 +119,7 @@ def _slip39_advanced_reset(
     for _ in range(group_count):
         for _ in range(share_count):
             # read words
-            words = reset.read_words(debug, messages.BackupType.Slip39_Advanced)
+            words = reset.read_words(debug, messages.BackupType.Slip39_Advanced, do_htc=False)
 
             # confirm words
             reset.confirm_words(debug, words)
