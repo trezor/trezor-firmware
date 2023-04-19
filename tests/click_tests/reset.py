@@ -110,8 +110,8 @@ def read_words(debug: "DebugLink", backup_type: messages.BackupType) -> list[str
         words.extend(layout.seed_words())
 
     # It is hold-to-confirm
-    # TODO: create debug.hold(ms)?
-    debug.press_yes()
+    if debug.model == "T":
+        debug.click(buttons.OK, hold_ms=1500, wait=True)
 
     return words
 

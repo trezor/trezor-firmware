@@ -70,7 +70,9 @@ if __debug__:
             payload = (event_id, storage.current_content)
             layout_change_chan.publish(payload)
 
-    async def _dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
+    async def _dispatch_debuglink_decision(
+        event_id: int | None, msg: DebugLinkDecision
+    ) -> None:
         from trezor.enums import DebugButton
         from trezor.ui import Result
 
@@ -84,43 +86,46 @@ if __debug__:
         if msg.physical_button is not None:
             await model_r_btn_chan.put(msg.physical_button)
         if msg.swipe is not None:
-            await swipe_chan.put(msg.swipe)
+            await swipe_chan.put((event_id, msg.swipe))
         if msg.input is not None:
             await input_chan.put(Result(msg.input))
 
     async def debuglink_decision_dispatcher() -> None:
         while True:
-            msg = await debuglink_decision_chan.take()
-            await _dispatch_debuglink_decision(msg)
+            event_id, msg = await debuglink_decision_chan.take()
+            await _dispatch_debuglink_decision(event_id, msg)
 
-    async def return_layout_change() -> None:
+    async def get_layout_change_content() -> list[str]:
         awaited_event_id = debug_events.awaited_event
         last_result_id = debug_events.last_result
 
-        should_wait_first_paint = False
         if awaited_event_id is not None and awaited_event_id == last_result_id:
-            content = storage.current_content[:]
-        else:
-            while True:
-                event_id, content = await layout_change_chan.take()
-                if storage.new_layout:
-                    should_wait_first_paint = True
-                    storage.new_layout = False
-                if event_id is None or awaited_event_id is None:
-                    break
-                if event_id > awaited_event_id:
-                    raise RuntimeError(
-                        f"Waiting for event that already happened - {event_id} > {awaited_event_id}"
-                    )
-                elif event_id == awaited_event_id:
-                    if should_wait_first_paint:
-                        should_wait_first_paint = False
-                        continue
-                    storage.awaited_event_id_result = None
-                    break
+            # We are awaiting the event that just happened - return current state
+            return storage.current_content[:]
+
+        while True:
+            event_id, content = await layout_change_chan.take()
+            if event_id is None or awaited_event_id is None:
+                # Not waiting for anything or event does not have ID
+                break
+            elif event_id == awaited_event_id:
+                # We found what we were waiting for
+                storage.awaited_event = None
+                break
+            elif event_id > awaited_event_id:
+                # Sanity check
+                raise RuntimeError(
+                    f"Waiting for event that already happened - {event_id} > {awaited_event_id}"
+                )
 
         if awaited_event_id is not None:
+            # Updating last result
             debug_events.last_result = awaited_event_id
+
+        return content
+
+    async def return_layout_change() -> None:
+        content = await get_layout_change_content()
 
         assert DEBUG_CONTEXT is not None
         if storage.layout_watcher is LAYOUT_WATCHER_LAYOUT:
@@ -131,11 +136,14 @@ if __debug__:
             await DEBUG_CONTEXT.write(DebugLinkState(layout_lines=content))
         storage.layout_watcher = LAYOUT_WATCHER_NONE
 
-    async def touch_hold(x: int, y: int, duration_ms: int) -> None:
+    async def touch_hold(
+        event_id: int | None, x: int, y: int, duration_ms: int
+    ) -> None:
         from trezor import io
 
         await loop.sleep(duration_ms)
-        synthetic_event.publish((io.TOUCH_END, x, y))
+        event = (event_id, io.TOUCH_END)
+        synthetic_event.publish((event, x, y))
 
     async def button_hold(btn: int, duration_ms: int) -> None:
         from trezor import io
@@ -175,14 +183,22 @@ if __debug__:
         x = msg.x  # local_cache_attribute
         y = msg.y  # local_cache_attribute
 
+        event_id = debug_events.last_event + 1
+        debug_events.last_event += 1
+
         # TT click on specific coordinates, with possible hold
         if x is not None and y is not None and utils.MODEL in ("T",):
-            evt_down = (debug_events.last_event + 1, io.TOUCH_START), x, y
-            evt_up = (debug_events.last_event + 2, io.TOUCH_END), x, y
-            debug_events.last_event += 2
+            # Getting IDs and incrementing the counter for next events
+            # Sending two events - click down and click up
+            first_evt_id = event_id
+            second_evt_id = debug_events.last_event + 1
+            debug_events.last_event += 1
+
+            evt_down = (first_evt_id, io.TOUCH_START), x, y
+            evt_up = (second_evt_id, io.TOUCH_END), x, y
             synthetic_event.publish(evt_down)
             if msg.hold_ms is not None:
-                loop.schedule(touch_hold(x, y, msg.hold_ms))
+                loop.schedule(touch_hold(second_evt_id, x, y, msg.hold_ms))
             else:
                 synthetic_event.publish(evt_up)
         # TR hold of a specific button
@@ -201,7 +217,8 @@ if __debug__:
             loop.schedule(button_hold(btn, msg.hold_ms))
         # Something more general
         else:
-            debuglink_decision_chan.publish(msg)
+            # Will get picked up by _dispatch_debuglink_decision eventually
+            debuglink_decision_chan.publish((event_id, msg))
 
         if msg.wait:
             # We wait for all the previously sent events

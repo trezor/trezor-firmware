@@ -28,5 +28,6 @@ if __debug__:
 
         debug_events = DebugEvents()
 
-    new_layout = False
-    new_layout_timeout = False
+    # Event resulted in the layout change, call
+    # notify_layout_change with this ID in first_paint of next layout.
+    new_layout_event_id: int | None = None

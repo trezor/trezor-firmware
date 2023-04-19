@@ -576,18 +576,20 @@ class DebugLink:
     # they will always return `LayoutContent` and we do not need to assert `is not None`.
 
     @overload
-    def click(self, click: Tuple[int, int]) -> None:
+    def click(self, click: Tuple[int, int], hold_ms: Optional[int] = None) -> None:
         ...
 
     @overload
-    def click(self, click: Tuple[int, int], wait: Literal[True]) -> LayoutContent:
+    def click(
+        self, click: Tuple[int, int], wait: Literal[True], hold_ms: Optional[int] = None
+    ) -> LayoutContent:
         ...
 
     def click(
-        self, click: Tuple[int, int], wait: bool = False
+        self, click: Tuple[int, int], wait: bool = False, hold_ms: Optional[int] = None
     ) -> Optional[LayoutContent]:
         x, y = click
-        return self.input(x=x, y=y, wait=wait)
+        return self.input(x=x, y=y, hold_ms=hold_ms, wait=wait)
 
     def press_yes(self, wait: bool = False) -> None:
         self.input(button=messages.DebugButton.YES, wait=wait)

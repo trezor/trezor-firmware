@@ -82,7 +82,7 @@ class RustLayout(ui.Layout):
             from trezor.enums import DebugSwipeDirection
 
             while True:
-                direction = await swipe_signal()
+                event_id, direction = await swipe_signal()
                 orig_x = orig_y = 120
                 off_x, off_y = {
                     DebugSwipeDirection.UP: (0, -30),
@@ -101,7 +101,7 @@ class RustLayout(ui.Layout):
                     if msg is not None:
                         raise ui.Result(msg)
 
-                notify_layout_change(self)
+                notify_layout_change(self, event_id)
 
     else:
 
@@ -116,12 +116,21 @@ class RustLayout(ui.Layout):
 
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
+            from storage import debug as debug_storage
 
             # notify about change and do not notify again until next await.
             # (handle_rendering might be called multiple times in a single await,
             # because of the endless loop in __iter__)
             self.should_notify_layout_change = False
-            notify_layout_change(self)
+
+            # Possibly there is an event ID that caused the layout change,
+            # so notifying with this ID.
+            event_id = None
+            if debug_storage.new_layout_event_id is not None:
+                event_id = debug_storage.new_layout_event_id
+                debug_storage.new_layout_event_id = None
+
+            notify_layout_change(self, event_id)
 
         # Turn the brightness on again.
         ui.backlight_fade(self.BACKLIGHT_LEVEL)
@@ -151,9 +160,12 @@ class RustLayout(ui.Layout):
             if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
                 msg = self.layout.touch_event(event, x, y)
                 if __debug__:
-                    notify_layout_change(self, event_id)
                     if msg is not None:
-                        debug_storage.new_layout = True
+                        # Going to new layout - notify about change there (in first paint)
+                        debug_storage.new_layout_event_id = event_id
+                    else:
+                        # Layout change happens in this layout
+                        notify_layout_change(self, event_id)
 
             if msg is not None:
                 raise ui.Result(msg)
