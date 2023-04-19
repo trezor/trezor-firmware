@@ -1752,7 +1752,7 @@
 "TT_test_debuglink.py::test_softlock_instability": "61fd0675369673bd7da1314b1c30435d7fc2ba14ab63252c443172b6d27f3457",
 "TT_test_firmware_hash.py::test_firmware_hash_emu": "2a63f0bd10ba99e223f571482d4af635653bb8a3bddc1d8400777ee5519bc605",
 "TT_test_firmware_hash.py::test_firmware_hash_hw": "80a6e289138a604cf351a29511cf6f85e2243591317894703152787e1351a1a3",
-"TT_test_msg_applysettings.py::test_apply_homescreen_jpeg": "a6c97a215f62ea048b2e5f37e8734b42882f45123753427e7136f8d57c9ad892",
+"TT_test_msg_applysettings.py::test_apply_homescreen_jpeg": "118a204cef5364279671bda429c116c91626606952d40bf606b1609793b34505",
 "TT_test_msg_applysettings.py::test_apply_homescreen_jpeg_progressive": "914efb0961a2182f1ffb1b71b4dc68fc59c000270d4e0d8be98550f435bb3a34",
 "TT_test_msg_applysettings.py::test_apply_homescreen_jpeg_wrong_size": "914efb0961a2182f1ffb1b71b4dc68fc59c000270d4e0d8be98550f435bb3a34",
 "TT_test_msg_applysettings.py::test_apply_homescreen_toif": "914efb0961a2182f1ffb1b71b4dc68fc59c000270d4e0d8be98550f435bb3a34",
