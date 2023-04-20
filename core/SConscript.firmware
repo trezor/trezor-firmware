@@ -185,7 +185,6 @@ SOURCE_MOD += [
 
 CPPDEFINES_MOD += [
     'TREZOR_UI2',
-    'USE_RUST_LOADER'
 ]
 
 if TREZOR_MODEL not in ('1', ):
