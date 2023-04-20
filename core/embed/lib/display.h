@@ -30,15 +30,6 @@
 #include "display_interface.h"
 #include "fonts/fonts.h"
 
-#define AVATAR_IMAGE_SIZE 144
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_1
-#define LOADER_ICON_SIZE 64
-#elif defined TREZOR_MODEL_R
-#define LOADER_ICON_SIZE 24
-#else
-#error Unknown Trezor model
-#endif
-
 typedef enum {
   TOIF_FULL_COLOR_BE = 0,  // big endian
   TOIF_GRAYSCALE_OH = 1,   // odd hi
@@ -68,13 +59,6 @@ bool display_toif_info(const uint8_t *buf, uint32_t len, uint16_t *out_w,
                        uint16_t *out_h, toif_format_t *out_format);
 void display_image(int x, int y, int w, int h, const void *data,
                    uint32_t datalen);
-void display_avatar(int x, int y, const void *data, uint32_t datalen,
-                    uint16_t fgcolor, uint16_t bgcolor);
-void display_icon(int x, int y, int w, int h, const void *data,
-                  uint32_t datalen, uint16_t fgcolor, uint16_t bgcolor);
-void display_loader(uint16_t progress, bool indeterminate, int yoffset,
-                    uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
-                    uint32_t iconlen, uint16_t iconfgcolor);
 
 #ifndef TREZOR_PRINT_DISABLE
 void display_print_color(uint16_t fgcolor, uint16_t bgcolor);
