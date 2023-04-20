@@ -4,10 +4,21 @@ use crate::{
         uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
     },
     ui::{
+        component::image::Image,
         constant,
         display::{get_color_table, get_offset, pixeldata, pixeldata_dirty, set_window},
         geometry::{Alignment2D, Offset, Point, Rect},
     },
+};
+
+use crate::ui::geometry::TOP_LEFT;
+#[cfg(feature = "dma2d")]
+use crate::{
+    trezorhal::{
+        buffers::BufferLine16bpp,
+        dma2d::{dma2d_setup_16bpp, dma2d_start, dma2d_wait_for_transfer},
+    },
+    ui::display::process_buffer,
 };
 
 use super::Color;
@@ -40,6 +51,93 @@ pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
                     pixeldata(colortable[(dest[0] >> 4) as usize]);
                 }
             } else if x % 2 == 0 {
+                //continue unzipping but dont write to display
+                unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
+            }
+        }
+    }
+
+    pixeldata_dirty();
+}
+
+#[no_mangle]
+extern "C" fn display_image(
+    x: cty::int16_t,
+    y: cty::int16_t,
+    data: *const cty::uint8_t,
+    data_len: cty::uint32_t,
+) {
+    let data_slice = unsafe { core::slice::from_raw_parts(data, data_len as usize) };
+    let image = Image::new(data_slice);
+    image.draw(Point::new(x, y), TOP_LEFT);
+}
+
+#[cfg(feature = "dma2d")]
+pub fn image(image: &Image, center: Point) {
+    let r = Rect::from_center_and_size(center, image.toif.size());
+    let area = r.translate(get_offset());
+    let clamped = area.clamp(constant::screen());
+
+    set_window(clamped);
+
+    let mut window = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx = image.toif.decompression_context(Some(&mut window));
+
+    let mut b1 = BufferLine16bpp::get_cleared();
+    let mut b2 = BufferLine16bpp::get_cleared();
+
+    let mut decompressed_lines = 0;
+    let clamp_x = if clamped.x0 > area.x0 {
+        area.x0 - clamped.x0
+    } else {
+        0
+    };
+
+    dma2d_setup_16bpp();
+
+    for y in clamped.y0..clamped.y1 {
+        let img_buffer_used = if y % 2 == 0 { &mut b1 } else { &mut b2 };
+
+        process_buffer(
+            y,
+            area,
+            Offset::x(clamp_x),
+            &mut ctx,
+            &mut img_buffer_used.buffer,
+            &mut decompressed_lines,
+            16,
+        );
+
+        dma2d_wait_for_transfer();
+        unsafe { dma2d_start(&img_buffer_used.buffer, clamped.width()) };
+    }
+
+    dma2d_wait_for_transfer();
+    pixeldata_dirty();
+}
+
+#[cfg(not(feature = "dma2d"))]
+pub fn image(image: &Image, center: Point) {
+    let r = Rect::from_center_and_size(center, image.toif.size());
+    let area = r.translate(get_offset());
+    let clamped = area.clamp(constant::screen());
+
+    set_window(clamped);
+
+    let mut dest = [0_u8; 2];
+
+    let mut window = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx = image.toif.decompression_context(Some(&mut window));
+
+    for py in area.y0..area.y1 {
+        for px in area.x0..area.x1 {
+            let p = Point::new(px, py);
+
+            if clamped.contains(p) {
+                unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
+                let c = Color::from_u16(u16::from_le_bytes(dest));
+                pixeldata(c);
+            } else {
                 //continue unzipping but dont write to display
                 unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
             }

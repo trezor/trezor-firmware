@@ -57,8 +57,6 @@ void display_bar_radius_buffer(int x, int y, int w, int h, uint8_t r,
 
 bool display_toif_info(const uint8_t *buf, uint32_t len, uint16_t *out_w,
                        uint16_t *out_h, toif_format_t *out_format);
-void display_image(int x, int y, int w, int h, const void *data,
-                   uint32_t datalen);
 
 #ifndef TREZOR_PRINT_DISABLE
 void display_print_color(uint16_t fgcolor, uint16_t bgcolor);

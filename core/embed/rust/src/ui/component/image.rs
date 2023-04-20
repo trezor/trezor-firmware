@@ -1,9 +1,12 @@
 use crate::{
-    trezorhal::display::{image, ToifFormat},
+    trezorhal::display::ToifFormat,
     ui::{
         component::{Component, Event, EventCtx, Never},
         display,
-        display::{toif::Toif, Color, Icon},
+        display::{
+            toif::{image, Toif},
+            Color, Icon,
+        },
         geometry::{Alignment2D, Offset, Point, Rect, CENTER},
     },
 };
@@ -28,7 +31,7 @@ impl Image {
     /// `alignment` argument.
     pub fn draw(&self, baseline: Point, alignment: Alignment2D) {
         let r = Rect::snap(baseline, self.toif.size(), alignment);
-        image(r.x0, r.y0, r.width(), r.height(), self.toif.zdata());
+        image(self, r.center());
     }
 }
 
