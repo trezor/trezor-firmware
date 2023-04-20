@@ -19,11 +19,9 @@
 
 #define _GNU_SOURCE
 
-#include "uzlib.h"
-
+#include "display.h"
 #include "buffers.h"
 #include "common.h"
-#include "display.h"
 
 #ifdef USE_DMA2D
 #include "dma2d.h"
@@ -182,23 +180,6 @@ void display_bar_radius_buffer(int x, int y, int w, int h, uint8_t r,
   }
 }
 
-#define UZLIB_WINDOW_SIZE (1 << 10)
-
-static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
-                          const void *src, uint32_t srcsize, void *dest,
-                          uint32_t destsize) {
-  memzero(decomp, sizeof(struct uzlib_uncomp));
-  if (window) {
-    memzero(window, UZLIB_WINDOW_SIZE);
-  }
-  memzero(dest, destsize);
-  decomp->source = (const uint8_t *)src;
-  decomp->source_limit = decomp->source + srcsize;
-  decomp->dest = (uint8_t *)dest;
-  decomp->dest_limit = decomp->dest + destsize;
-  uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
-}
-
 void display_text_render_buffer(const char *text, int textlen, int font,
                                 buffer_text_t *buffer, int text_offset) {
   // determine text length if not provided
@@ -261,84 +242,6 @@ void display_text_render_buffer(const char *text, int textlen, int font,
     x += adv;
   }
 }
-
-#ifndef USE_DMA2D
-void display_image(int x, int y, int w, int h, const void *data,
-                   uint32_t datalen) {
-#if defined TREZOR_MODEL_T
-  x += DISPLAY_OFFSET.x;
-  y += DISPLAY_OFFSET.y;
-  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-  clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
-  display_set_window(x0, y0, x1, y1);
-  x0 -= x;
-  x1 -= x;
-  y0 -= y;
-  y1 -= y;
-
-  struct uzlib_uncomp decomp = {0};
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
-  uint8_t decomp_out[2] = {0};
-  uzlib_prepare(&decomp, decomp_window, data, datalen, decomp_out,
-                sizeof(decomp_out));
-
-  PIXELDATA_DIRTY();
-  for (uint32_t pos = 0; pos < w * h; pos++) {
-    int st = uzlib_uncompress(&decomp);
-    if (st == TINF_DONE) break;  // all OK
-    if (st < 0) break;           // error
-    const int px = pos % w;
-    const int py = pos / w;
-    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
-      PIXELDATA((decomp_out[1] << 8) | decomp_out[0]);
-    }
-    decomp.dest = (uint8_t *)&decomp_out;
-  }
-#endif
-}
-#else
-void display_image(int x, int y, int w, int h, const void *data,
-                   uint32_t datalen) {
-  x += DISPLAY_OFFSET.x;
-  y += DISPLAY_OFFSET.y;
-  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-  clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
-  display_set_window(x0, y0, x1, y1);
-  x0 -= x;
-  x1 -= x;
-  y0 -= y;
-  y1 -= y;
-
-  struct uzlib_uncomp decomp = {0};
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
-
-  buffer_line_16bpp_t *b1 = buffers_get_line_16bpp(false);
-  if (b1 == NULL) return;
-  buffer_line_16bpp_t *b2 = buffers_get_line_16bpp(false);
-  if (b2 == NULL) {
-    buffers_free_line_16bpp(b1);
-    return;
-  };
-
-  uzlib_prepare(&decomp, decomp_window, data, datalen, b1, w * 2);
-
-  dma2d_setup_16bpp();
-
-  for (int32_t pos = 0; pos < h; pos++) {
-    int32_t pixels = w;
-    buffer_line_16bpp_t *next_buf = (pos % 2 == 1) ? b1 : b2;
-    decomp.dest = next_buf->buffer;
-    decomp.dest_limit = next_buf->buffer + w * 2;
-    int st = uzlib_uncompress(&decomp);
-    if (st < 0) break;  // error
-    dma2d_wait_for_transfer();
-    dma2d_start(next_buf->buffer, (uint8_t *)DISPLAY_DATA_ADDRESS, pixels);
-  }
-  dma2d_wait_for_transfer();
-  buffers_free_line_16bpp(b1);
-  buffers_free_line_16bpp(b2);
-}
-#endif
 
 // see docs/misc/toif.md for definition of the TOIF format
 bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,

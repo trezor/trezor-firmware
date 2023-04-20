@@ -289,7 +289,6 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_bar")
         .allowlist_function("display_bar_radius")
         .allowlist_function("display_bar_radius_buffer")
-        .allowlist_function("display_image")
         .allowlist_function("display_pixeldata")
         .allowlist_function("display_pixeldata_dirty")
         .allowlist_function("display_set_window")
@@ -321,6 +320,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("hal_ticks_ms")
         // dma2d
         .allowlist_function("dma2d_setup_4bpp")
+        .allowlist_function("dma2d_setup_16bpp")
         .allowlist_function("dma2d_setup_4bpp_over_4bpp")
         .allowlist_function("dma2d_setup_4bpp_over_16bpp")
         .allowlist_function("dma2d_start")

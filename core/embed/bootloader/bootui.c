@@ -82,8 +82,7 @@ void ui_screen_boot(const vendor_header *const vhdr,
   // check whether vendor image is 120x120
   if (memcmp(vimg, "TOIF\x78\x00\x78\x00", 4) == 0) {
     uint32_t datalen = *(uint32_t *)(vimg + 8);
-    display_image((DISPLAY_RESX - 120) / 2, image_top, 120, 120, vimg + 12,
-                  datalen);
+    display_image((DISPLAY_RESX - 120) / 2, image_top, vimg + 12, datalen);
   }
 
   if (show_string) {

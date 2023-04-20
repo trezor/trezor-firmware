@@ -103,19 +103,6 @@ pub fn bar_radius_buffer(x: i16, y: i16, w: i16, h: i16, radius: u8, buffer: &mu
     }
 }
 
-pub fn image(x: i16, y: i16, w: i16, h: i16, data: &[u8]) {
-    unsafe {
-        ffi::display_image(
-            x.into(),
-            y.into(),
-            w.into(),
-            h.into(),
-            data.as_ptr() as _,
-            data.len() as _,
-        )
-    }
-}
-
 #[inline(always)]
 #[cfg(all(feature = "model_tt", target_arch = "arm"))]
 pub fn pixeldata(c: u16) {

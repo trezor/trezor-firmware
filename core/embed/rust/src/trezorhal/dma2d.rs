@@ -4,6 +4,10 @@ pub fn dma2d_setup_4bpp(fg_color: u16, bg_color: u16) {
     unsafe { ffi::dma2d_setup_4bpp(fg_color, bg_color) }
 }
 
+pub fn dma2d_setup_16bpp() {
+    unsafe { ffi::dma2d_setup_16bpp() }
+}
+
 pub fn dma2d_setup_4bpp_over_4bpp(fg_color: u16, bg_color: u16, overlay_color: u16) {
     unsafe { ffi::dma2d_setup_4bpp_over_4bpp(fg_color, bg_color, overlay_color) }
 }
