@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{text::TextStyle, LineBreaking::BreakWordsNoHyphen},
-    constant::WIDTH,
+    constant::{HEIGHT, WIDTH},
     display::{Color, Font},
     geometry::{Offset, Point, Rect},
     model_tt::{
@@ -49,7 +49,7 @@ pub const CORNER_BUTTON_AREA: Rect = Rect::from_top_left_and_size(
     ),
     Offset::uniform(CORNER_BUTTON_SIZE),
 );
-pub const BUTTON_AREA_START: i16 = 184;
+pub const BUTTON_AREA_START: i16 = HEIGHT - 56;
 pub const BUTTON_HEIGHT: i16 = 50;
 
 // BLD icons
