@@ -3,7 +3,7 @@ use crate::{
     trezorhal::io::io_touch_read,
     ui::{
         component::{Component, Event, EventCtx, Label, Never},
-        constant::screen,
+        constant::{screen, HEIGHT},
         display::{self, Color, Font, Icon},
         event::TouchEvent,
         geometry::{Alignment, Point, TOP_CENTER},
@@ -275,7 +275,7 @@ fn screen_progress(
     }
 
     display::text_center(
-        Point::new(constant::WIDTH / 2, 195),
+        Point::new(constant::WIDTH / 2, HEIGHT - 45),
         text,
         Font::NORMAL,
         fg_color,
