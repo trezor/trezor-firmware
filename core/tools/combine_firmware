@@ -1,26 +1,73 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
+import datetime
+import io
 import sys
+from pathlib import Path
+
+import click
 
 
-def pairwise(iterable):
-    a = iter(iterable)
-    return zip(a, a)
+BOARDLOADER_START = 0x08000000
+BOARDLOADER_END = 0x0800C000
+BOOTLOADER_START = 0x08020000
+FIRMWARE_START = 0x08040000
 
 
-files = sys.argv[1:]
-files = list(pairwise(files))
+@click.command()
+@click.argument(
+    "boardloader",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+)
+@click.argument(
+    "bootloader",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+)
+@click.argument(
+    "firmware",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+)
+@click.argument(
+    "outfile",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    required=False,
+)
+def main(
+    boardloader: Path, bootloader: Path, firmware: Path, outfile: Path | None
+) -> None:
+    if outfile is None:
+        today = datetime.date.today().strftime(r"%Y-%m-%d")
+        outfile = Path(f"combined-{today}.bin")
 
-offset = int(files[0][0], 16)
+    offset = BOARDLOADER_START
+    out_bytes = io.BytesIO()
 
-out = bytearray()
+    # write boardloader
+    offset += out_bytes.write(boardloader.read_bytes())
+    if offset > BOARDLOADER_END:
+        raise Exception("Boardloader too big")
 
-for addr, fn in files:
-    addr = int(addr, 16) - offset
-    data = open(fn, "rb").read()
-    if len(out) < addr:
-        out += b"\x00" * (addr - len(out))
-    if len(out) != addr:
-        raise Exception("Alignment failed")
-    out += data
+    # zero-pad until next section:
+    offset += out_bytes.write(b"\x00" * (BOOTLOADER_START - offset))
+    assert offset == BOOTLOADER_START
 
-sys.stdout.buffer.write(out)
+    # write bootlaoder
+    offset += out_bytes.write(bootloader.read_bytes())
+    if offset > FIRMWARE_START:
+        raise Exception("Bootloader too big")
+
+    # zero-pad until next section:
+    offset += out_bytes.write(b"\x00" * (FIRMWARE_START - offset))
+    assert offset == FIRMWARE_START
+
+    # write firmware
+    offset += out_bytes.write(firmware.read_bytes())
+
+    # write out contents
+    click.echo(f"Writing {outfile} ({offset - BOARDLOADER_START} bytes)")
+    outfile.write_bytes(out_bytes.getvalue())
+
+
+if __name__ == "__main__":
+    main()
