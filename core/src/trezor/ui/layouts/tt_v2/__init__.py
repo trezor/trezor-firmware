@@ -56,15 +56,26 @@ class RustLayout(ui.Layout):
     if __debug__:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import confirm_signal, input_signal
-
             return (
                 self.handle_timers(),
                 self.handle_input_and_rendering(),
                 self.handle_swipe(),
-                confirm_signal(),
-                input_signal(),
+                self.handle_click_signal(),
+                self.handle_result_signal(),
             )
+
+        async def handle_result_signal(self) -> None:
+            """Enables sending arbitrary input - ui.Result.
+
+            Waits for `result_signal` and carries it out.
+            """
+            from apps.debug import result_signal
+            from storage import debug as debug_storage
+
+            while True:
+                event_id, result = await result_signal()
+                debug_storage.new_layout_event_id = event_id
+                raise ui.Result(result)
 
         def read_content(self) -> list[str]:
             result: list[str] = []
@@ -103,6 +114,45 @@ class RustLayout(ui.Layout):
 
                 notify_layout_change(self, event_id)
 
+        async def _click(
+            self,
+            event_id: int | None,
+            x: int,
+            y: int,
+            hold_ms: int | None,
+        ) -> Any:
+            from trezor import workflow
+            from apps.debug import notify_layout_change
+            from storage import debug as debug_storage
+
+            self.layout.touch_event(io.TOUCH_START, x, y)
+            self._paint()
+            if hold_ms is not None:
+                await loop.sleep(hold_ms)
+            msg = self.layout.touch_event(io.TOUCH_END, x, y)
+
+            if msg is not None:
+                debug_storage.new_layout_event_id = event_id
+                raise ui.Result(msg)
+
+            # So that these presses will keep trezor awake
+            # (it will not be locked after auto_lock_delay_ms)
+            workflow.idle_timer.touch()
+
+            self._paint()
+            notify_layout_change(self, event_id)
+
+        async def handle_click_signal(self) -> None:
+            """Enables clicking somewhere on the screen.
+
+            Waits for `click_signal` and carries it out.
+            """
+            from apps.debug import click_signal
+
+            while True:
+                event_id, x, y, hold_ms = await click_signal()
+                await self._click(event_id, x, y, hold_ms)
+
     else:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
@@ -138,35 +188,16 @@ class RustLayout(ui.Layout):
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         from trezor import workflow
 
-        if __debug__:
-            from apps.debug import notify_layout_change, synthetic_event_signal
-            from storage import debug as debug_storage
-
         touch = loop.wait(io.TOUCH)
         self._first_paint()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
-            event_id: int | None = None
-            if __debug__:
-                # When using `yield` here, it misses some events
-                event, x, y = await loop.race(touch, synthetic_event_signal())
-                if isinstance(event, tuple):
-                    event_id, event = event
-            else:
-                event, x, y = yield touch
+            event, x, y = yield touch
 
             workflow.idle_timer.touch()
             msg = None
             if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
                 msg = self.layout.touch_event(event, x, y)
-                if __debug__:
-                    if msg is not None:
-                        # Going to new layout - notify about change there (in first paint)
-                        debug_storage.new_layout_event_id = event_id
-                    else:
-                        # Layout change happens in this layout
-                        notify_layout_change(self, event_id)
-
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()

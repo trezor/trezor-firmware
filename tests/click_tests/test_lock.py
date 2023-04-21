@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import time
 from typing import TYPE_CHECKING
 
 import pytest
@@ -37,10 +36,9 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
 
     def hold(duration: int, wait: bool = True) -> None:
         if debug.model == "R":
-            debug.press_right_htc(hold_ms=duration)
+            debug.press_right_htc(hold_ms=duration, wait=wait)
         else:
             debug.input(x=13, y=37, hold_ms=duration, wait=wait)
-        time.sleep(duration / 1000 + 0.5)
 
     assert device_handler.features().unlocked is False
 

@@ -112,13 +112,15 @@ def read_words(
         words.extend(layout.seed_words())
 
     # There is hold-to-confirm button
-    if debug.model == "T":
+    if do_htc:
+        if debug.model == "T":
+            debug.click(buttons.OK, hold_ms=1500, wait=True)
+        elif debug.model == "R":
+            debug.press_right_htc(1000)
+    else:
         # It would take a very long time to test 16-of-16 with doing 1500 ms HTC after
         # each word set
-        if do_htc:
-            debug.click(buttons.OK, hold_ms=1500, wait=True)
-        else:
-            debug.press_yes()
+        debug.press_yes()
 
     return words
 

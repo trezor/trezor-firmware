@@ -1176,7 +1176,6 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
             assert "WORD" in self.layout().title()
             self.debug.input(word)
 
-        self.debug.wait_layout()
         self.debug.press_right()
         yield
         self.debug.press_yes()

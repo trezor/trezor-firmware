@@ -57,71 +57,95 @@ class RustLayout(ui.Layout):
         from trezor.enums import DebugPhysicalButton
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import confirm_signal, input_signal
-
             return (
                 self.handle_input_and_rendering(),
                 self.handle_timers(),
-                self.handle_swipe(),
-                self.handle_button_click(),
-                confirm_signal(),
-                input_signal(),
+                self.handle_swipe_signal(),
+                self.handle_button_signal(),
+                self.handle_result_signal(),
             )
+
+        async def handle_result_signal(self) -> None:
+            """Enables sending arbitrary input - ui.Result.
+
+            Waits for `result_signal` and carries it out.
+            """
+            from apps.debug import result_signal
+            from storage import debug as debug_storage
+
+            while True:
+                event_id, result = await result_signal()
+                # Layout change will be notified in _first_paint of the next layout
+                debug_storage.new_layout_event_id = event_id
+                raise ui.Result(result)
 
         def read_content(self) -> list[str]:
             """Gets the visible content of the screen."""
-            self._place_layout()
+            self._place_layout()  # TODO: is this necessary?
             raw = self._read_content_raw()
             return " ".join(raw).split("\n")
 
-        def _press_left(self) -> Any:
+        async def _press_left(self, hold_ms: int | None) -> Any:
             """Triggers left button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
             self._paint()
+            if hold_ms is not None:
+                await loop.sleep(hold_ms)
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
 
-        def _press_right(self) -> Any:
+        async def _press_right(self, hold_ms: int | None) -> Any:
             """Triggers right button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
             self._paint()
+            if hold_ms is not None:
+                await loop.sleep(hold_ms)
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
 
-        def _press_middle(self) -> Any:
+        async def _press_middle(self, hold_ms: int | None) -> Any:
             """Triggers middle button press."""
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
             self._paint()
             self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
             self._paint()
+            if hold_ms is not None:
+                await loop.sleep(hold_ms)
             self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
             self._paint()
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
 
-        def _press_button(self, btn_to_press: DebugPhysicalButton) -> Any:
+        async def _press_button(
+            self,
+            event_id: int | None,
+            btn_to_press: DebugPhysicalButton,
+            hold_ms: int | None,
+        ) -> Any:
             from trezor.enums import DebugPhysicalButton
             from trezor import workflow
             from apps.debug import notify_layout_change
+            from storage import debug as debug_storage
 
             if btn_to_press == DebugPhysicalButton.LEFT_BTN:
-                msg = self._press_left()
+                msg = await self._press_left(hold_ms)
             elif btn_to_press == DebugPhysicalButton.MIDDLE_BTN:
-                msg = self._press_middle()
+                msg = await self._press_middle(hold_ms)
             elif btn_to_press == DebugPhysicalButton.RIGHT_BTN:
-                msg = self._press_right()
+                msg = await self._press_right(hold_ms)
             else:
                 raise Exception(f"Unknown button: {btn_to_press}")
 
-            self.layout.paint()
             if msg is not None:
+                # Layout change will be notified in _first_paint of the next layout
+                debug_storage.new_layout_event_id = event_id
                 raise ui.Result(msg)
 
             # So that these presses will keep trezor awake
             # (it will not be locked after auto_lock_delay_ms)
             workflow.idle_timer.touch()
 
-            ui.refresh()  # so that a screenshot is taken
-            notify_layout_change(self)
+            self._paint()
+            notify_layout_change(self, event_id)
 
-        def _swipe(self, direction: int) -> None:
+        async def _swipe(self, event_id: int | None, direction: int) -> None:
             """Triggers swipe in the given direction.
 
             Only `UP` and `DOWN` directions are supported.
@@ -135,9 +159,9 @@ class RustLayout(ui.Layout):
             else:
                 raise Exception(f"Unsupported direction: {direction}")
 
-            self._press_button(btn_to_press)
+            await self._press_button(event_id, btn_to_press, None)
 
-        async def handle_swipe(self) -> None:
+        async def handle_swipe_signal(self) -> None:
             """Enables pagination through the current page/flow page.
 
             Waits for `swipe_signal` and carries it out.
@@ -145,19 +169,19 @@ class RustLayout(ui.Layout):
             from apps.debug import swipe_signal
 
             while True:
-                direction = await swipe_signal()
-                self._swipe(direction)
+                event_id, direction = await swipe_signal()
+                await self._swipe(event_id, direction)
 
-        async def handle_button_click(self) -> None:
+        async def handle_button_signal(self) -> None:
             """Enables clicking arbitrary of the three buttons.
 
-            Waits for `model_r_btn_signal` and carries it out.
+            Waits for `button_signal` and carries it out.
             """
-            from apps.debug import model_r_btn_signal
+            from apps.debug import button_signal
 
             while True:
-                btn = await model_r_btn_signal()
-                self._press_button(btn)
+                event_id, btn, hold_ms = await button_signal()
+                await self._press_button(event_id, btn, hold_ms)
 
     else:
 
@@ -172,12 +196,21 @@ class RustLayout(ui.Layout):
 
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
+            from storage import debug as debug_storage
 
             # notify about change and do not notify again until next await.
             # (handle_rendering might be called multiple times in a single await,
             # because of the endless loop in __iter__)
             self.should_notify_layout_change = False
-            notify_layout_change(self)
+
+            # Possibly there is an event ID that caused the layout change,
+            # so notifying with this ID.
+            event_id = None
+            if debug_storage.new_layout_event_id is not None:
+                event_id = debug_storage.new_layout_event_id
+                debug_storage.new_layout_event_id = None
+
+            notify_layout_change(self, event_id)
 
         # Turn the brightness on again.
         ui.backlight_fade(self.BACKLIGHT_LEVEL)

@@ -47,6 +47,8 @@ def go_next(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
         return debug.click(buttons.OK, wait=wait)  # type: ignore
     elif debug.model == "R":
         return debug.press_right(wait=wait)  # type: ignore
+    else:
+        raise ValueError(f"Unknown model {debug.model}")
 
 
 def go_back(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
@@ -54,6 +56,8 @@ def go_back(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
         return debug.click(buttons.CANCEL, wait=wait)  # type: ignore
     elif debug.model == "R":
         return debug.press_left(wait=wait)  # type: ignore
+    else:
+        raise ValueError(f"Unknown model {debug.model}")
 
 
 def navigate_to_action_and_press(

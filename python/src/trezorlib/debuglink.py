@@ -668,16 +668,13 @@ class DebugLink:
         )
 
     def press_right_htc(
-        self, hold_ms: int, extra_ms: int = 200
+        self, hold_ms: int, extra_ms: int = 200, wait: bool = True
     ) -> Optional[LayoutContent]:
-        hold_ms = hold_ms + extra_ms  # safety margin
-        result = self.input(
+        return self.input(
             physical_button=messages.DebugPhysicalButton.RIGHT_BTN,
-            hold_ms=hold_ms,
+            hold_ms=hold_ms + extra_ms,  # safety margin
+            wait=wait,
         )
-        # sleeping little longer for UI to update
-        time.sleep(hold_ms / 1000 + 0.1)
-        return result
 
     def stop(self) -> None:
         self._call(messages.DebugLinkStop(), nowait=True)

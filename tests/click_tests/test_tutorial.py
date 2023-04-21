@@ -36,6 +36,7 @@ def prepare_tutorial_and_cancel_after_it(
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
     device_handler.run(device.show_device_tutorial)
+    debug.wait_layout()
 
     yield debug
 
@@ -45,7 +46,7 @@ def prepare_tutorial_and_cancel_after_it(
 def go_through_tutorial(debug: "DebugLink") -> None:
     debug.press_right(wait=True)
     debug.press_right(wait=True)
-    debug.press_right_htc(hold_ms=1000)
+    debug.press_right_htc(hold_ms=1000, wait=True)
     debug.press_right(wait=True)
     debug.press_right(wait=True)
     layout = debug.press_middle(wait=True)

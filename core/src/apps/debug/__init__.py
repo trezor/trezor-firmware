@@ -11,7 +11,7 @@ if __debug__:
 
     from trezor import log, loop, utils, wire
     from trezor.ui import display
-    from trezor.enums import MessageType, DebugPhysicalButton
+    from trezor.enums import MessageType
     from trezor.messages import (
         DebugLinkLayout,
         Success,
@@ -33,20 +33,16 @@ if __debug__:
             DebugLinkWatchLayout,
         )
 
-    reset_current_words = loop.chan()
     reset_word_index = loop.chan()
 
-    confirm_chan = loop.chan()
     swipe_chan = loop.chan()
-    input_chan = loop.chan()
-    model_r_btn_chan = loop.chan()
-    confirm_signal = confirm_chan.take
+    result_chan = loop.chan()
+    button_chan = loop.chan()
+    click_chan = loop.chan()
     swipe_signal = swipe_chan.take
-    input_signal = input_chan.take
-    model_r_btn_signal = model_r_btn_chan.take
-
-    synthetic_event = loop.chan()
-    synthetic_event_signal = synthetic_event.take
+    result_signal = result_chan.take
+    button_signal = button_chan.take
+    click_signal = click_chan.take
 
     debuglink_decision_chan = loop.chan()
 
@@ -74,21 +70,18 @@ if __debug__:
         event_id: int | None, msg: DebugLinkDecision
     ) -> None:
         from trezor.enums import DebugButton
-        from trezor.ui import Result
 
         if msg.button is not None:
             if msg.button == DebugButton.NO:
-                await confirm_chan.put(Result(trezorui2.CANCELLED))
+                await result_chan.put((event_id, trezorui2.CANCELLED))
             elif msg.button == DebugButton.YES:
-                await confirm_chan.put(Result(trezorui2.CONFIRMED))
+                await result_chan.put((event_id, trezorui2.CONFIRMED))
             elif msg.button == DebugButton.INFO:
-                await confirm_chan.put(Result(trezorui2.INFO))
-        if msg.physical_button is not None:
-            await model_r_btn_chan.put(msg.physical_button)
+                await result_chan.put((event_id, trezorui2.INFO))
+        if msg.input is not None:
+            await result_chan.put((event_id, msg.input))
         if msg.swipe is not None:
             await swipe_chan.put((event_id, msg.swipe))
-        if msg.input is not None:
-            await input_chan.put(Result(msg.input))
 
     async def debuglink_decision_dispatcher() -> None:
         while True:
@@ -105,12 +98,12 @@ if __debug__:
 
         while True:
             event_id, content = await layout_change_chan.take()
-            if event_id is None or awaited_event_id is None:
+            if awaited_event_id is None or event_id is None:
                 # Not waiting for anything or event does not have ID
                 break
             elif event_id == awaited_event_id:
                 # We found what we were waiting for
-                storage.awaited_event = None
+                debug_events.awaited_event = None
                 break
             elif event_id > awaited_event_id:
                 # Sanity check
@@ -136,21 +129,6 @@ if __debug__:
             await DEBUG_CONTEXT.write(DebugLinkState(layout_lines=content))
         storage.layout_watcher = LAYOUT_WATCHER_NONE
 
-    async def touch_hold(
-        event_id: int | None, x: int, y: int, duration_ms: int
-    ) -> None:
-        from trezor import io
-
-        await loop.sleep(duration_ms)
-        event = (event_id, io.TOUCH_END)
-        synthetic_event.publish((event, x, y))
-
-    async def button_hold(btn: int, duration_ms: int) -> None:
-        from trezor import io
-
-        await loop.sleep(duration_ms)
-        synthetic_event.publish((io.BUTTON, (io.BUTTON_RELEASED, btn)))
-
     async def dispatch_DebugLinkWatchLayout(
         ctx: wire.Context, msg: DebugLinkWatchLayout
     ) -> Success:
@@ -161,7 +139,10 @@ if __debug__:
         # analyze the resulted layout.
         # Resetting the debug events makes sure that the previous
         # events/layouts are not mixed with the new ones.
-        storage.reset_debug_events()
+        # TODO: create a special flag for resetting this (DebugLinkWatchLayout.reset_debug_events)
+        # OR a custom message - DebugLinkResetDebugEvents
+        if not msg.watch:
+            storage.reset_debug_events()
 
         layout_change_chan.putters.clear()
         if msg.watch:
@@ -173,7 +154,7 @@ if __debug__:
     async def dispatch_DebugLinkDecision(
         ctx: wire.Context, msg: DebugLinkDecision
     ) -> None:
-        from trezor import io, workflow
+        from trezor import workflow
 
         workflow.idle_timer.touch()
 
@@ -183,42 +164,21 @@ if __debug__:
         x = msg.x  # local_cache_attribute
         y = msg.y  # local_cache_attribute
 
-        event_id = debug_events.last_event + 1
+        # Incrementing the counter for last events so we know what to await
         debug_events.last_event += 1
 
         # TT click on specific coordinates, with possible hold
         if x is not None and y is not None and utils.MODEL in ("T",):
-            # Getting IDs and incrementing the counter for next events
-            # Sending two events - click down and click up
-            first_evt_id = event_id
-            second_evt_id = debug_events.last_event + 1
-            debug_events.last_event += 1
-
-            evt_down = (first_evt_id, io.TOUCH_START), x, y
-            evt_up = (second_evt_id, io.TOUCH_END), x, y
-            synthetic_event.publish(evt_down)
-            if msg.hold_ms is not None:
-                loop.schedule(touch_hold(second_evt_id, x, y, msg.hold_ms))
-            else:
-                synthetic_event.publish(evt_up)
-        # TR hold of a specific button
-        elif (
-            msg.physical_button is not None
-            and msg.hold_ms is not None
-            and utils.MODEL in ("R",)
-        ):
-            if msg.physical_button == DebugPhysicalButton.LEFT_BTN:
-                btn = io.BUTTON_LEFT
-            elif msg.physical_button == DebugPhysicalButton.RIGHT_BTN:
-                btn = io.BUTTON_RIGHT
-            else:
-                raise wire.ProcessError("Unknown physical button")
-            synthetic_event.publish((io.BUTTON, (io.BUTTON_PRESSED, btn)))
-            loop.schedule(button_hold(btn, msg.hold_ms))
+            click_chan.publish((debug_events.last_event, x, y, msg.hold_ms))
+        # TR press specific button
+        elif msg.physical_button is not None and utils.MODEL in ("R",):
+            button_chan.publish(
+                (debug_events.last_event, msg.physical_button, msg.hold_ms)
+            )
         # Something more general
         else:
             # Will get picked up by _dispatch_debuglink_decision eventually
-            debuglink_decision_chan.publish((event_id, msg))
+            debuglink_decision_chan.publish((debug_events.last_event, msg))
 
         if msg.wait:
             # We wait for all the previously sent events
@@ -251,8 +211,6 @@ if __debug__:
 
         if msg.wait_word_pos:
             m.reset_word_pos = await reset_word_index.take()
-        if msg.wait_word_list:
-            m.reset_word = " ".join(await reset_current_words.take())
         return m
 
     async def dispatch_DebugLinkRecordScreen(

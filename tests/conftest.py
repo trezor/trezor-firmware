@@ -200,6 +200,9 @@ def client(
         request.session.shouldstop = "Failed to communicate with Trezor"
         pytest.fail("Failed to communicate with Trezor")
 
+    # Resetting all the debug events with this
+    _raw_client.debug.watch_layout(False)
+
     if test_ui:
         # we need to reseed before the wipe
         _raw_client.debug.reseed(0)

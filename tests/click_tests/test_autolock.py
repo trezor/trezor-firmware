@@ -73,11 +73,10 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     )
 
     if debug.model == "T":
-        debug.click(buttons.OK)
+        layout = debug.click(buttons.OK, wait=True)
     elif debug.model == "R":
-        debug.press_right()
+        layout = debug.press_right(wait=True)
 
-    layout = debug.wait_layout()
     assert "Homescreen" in layout.str_content
     assert device_handler.result() == "Settings applied"
 
@@ -301,12 +300,12 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     if debug.model == "T":
         # Need to click two times to get the correct layout
         # because of the lockscreen
-        layout = debug.click(buttons.OK, wait=True)
+        debug.click(buttons.OK, wait=True)
         layout = debug.click(buttons.OK, wait=True)
         assert "PinKeyboard" in layout.str_content
     elif debug.model == "R":
-        # Doing a short HTC to simulate a real click
-        debug.press_right_htc(hold_ms=100)
+        # Again needs two waits to get the correct layout
+        debug.press_right(wait=True)
         layout = debug.wait_layout()
         assert "PinEntry" in layout.str_content
     layout = debug.input(PIN4, wait=True)

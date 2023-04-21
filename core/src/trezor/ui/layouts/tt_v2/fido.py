@@ -26,15 +26,11 @@ if __debug__:
             )
 
         async def handle_debug_confirm(self) -> None:
-            from apps.debug import confirm_signal
+            from apps.debug import result_signal
 
-            try:
-                await confirm_signal()
-            except Result as r:
-                if r.value is not trezorui2.CONFIRMED:
-                    raise
-            else:
-                return
+            _event_id, result = await result_signal()
+            if result is not trezorui2.CONFIRMED:
+                raise Result(result)
 
             for event, x, y in (
                 (io.TOUCH_START, 220, 220),

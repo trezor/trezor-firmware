@@ -31,7 +31,11 @@ class HomescreenBase(RustLayout):
 
     # In __debug__ mode, ignore {confirm,swipe,input}_signal.
     def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-        return self.handle_timers(), self.handle_input_and_rendering()
+        return (
+            self.handle_timers(),
+            self.handle_input_and_rendering(),
+            self.handle_button_signal(),  # so we can receive debug events
+        )
 
 
 class Homescreen(HomescreenBase):
