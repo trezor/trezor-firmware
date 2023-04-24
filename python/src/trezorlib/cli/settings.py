@@ -14,7 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os
+import io
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional, cast
 
 import click
@@ -39,13 +40,13 @@ SAFETY_LEVELS = {
 }
 
 
-def image_to_t1(filename: str) -> bytes:
+def image_to_t1(filename: Path) -> bytes:
     if not PIL_AVAILABLE:
         raise click.ClickException(
             "Image library is missing. Please install via 'pip install Pillow'."
         )
 
-    if filename.endswith(".toif"):
+    if filename.suffix == ".toif":
         raise click.ClickException("TOIF images not supported on Trezor One")
 
     try:
@@ -60,10 +61,10 @@ def image_to_t1(filename: str) -> bytes:
     return image.tobytes("raw", "1")
 
 
-def image_to_toif_144x144(filename: str) -> bytes:
-    if filename.endswith(".toif"):
+def image_to_toif_144x144(filename: Path) -> bytes:
+    if filename.suffix == ".toif":
         try:
-            toif_image = toif.load(filename)
+            toif_image = toif.from_bytes(filename.read_bytes())
         except Exception as e:
             raise click.ClickException("TOIF file is corrupted") from e
 
@@ -90,38 +91,30 @@ def image_to_toif_144x144(filename: str) -> bytes:
     return toif_image.to_bytes()
 
 
-def image_to_jpeg_240x240(filename: str) -> bytes:
-    if not (filename.endswith(".jpg") or filename.endswith(".jpeg")):
-        raise click.ClickException("Please use a jpg image")
+def image_to_jpeg_240x240(filename: Path) -> bytes:
+    if filename.suffix in (".jpg", ".jpeg") and not PIL_AVAILABLE:
+        click.echo("Warning: Image library is missing, skipping image validation.")
+        return filename.read_bytes()
 
-    elif not PIL_AVAILABLE:
+    if not PIL_AVAILABLE:
         raise click.ClickException(
             "Image library is missing. Please install via 'pip install Pillow'."
         )
 
-    else:
-        try:
-            image = Image.open(filename)
-        except Exception as e:
-            raise click.ClickException("Failed to open image") from e
-
-    if "progressive" in image.info:
-        raise click.ClickException("Progressive JPEG is not supported")
+    try:
+        image = Image.open(filename)
+    except Exception as e:
+        raise click.ClickException("Failed to open image") from e
 
     if image.size != (240, 240):
         raise click.ClickException("Wrong size of image - should be 240x240")
 
-    image.close()
+    if image.mode != "RGB":
+        image = image.convert("RGB")
 
-    file_stats = os.stat(filename)
-
-    if file_stats.st_size > 16384:
-        raise click.ClickException("File is too big, please use maximum 16kB")
-
-    in_file = open(filename, "rb")
-    bytes = in_file.read()
-    in_file.close()
-    return bytes
+    buf = io.BytesIO()
+    image.save(buf, format="jpeg", progressive=False)
+    return buf.getvalue()
 
 
 def _should_remove(enable: Optional[bool], remove: bool) -> bool:
@@ -237,23 +230,24 @@ def homescreen(client: "TrezorClient", filename: str) -> str:
     if filename == "default":
         img = b""
     else:
-        # use Click's facility to validate the path for us
-        param = click.Path(dir_okay=False, readable=True, exists=True)
-        param.convert(filename, None, None)
+        path = Path(filename)
+        if not path.exists() or not path.is_file():
+            raise click.ClickException("Cannot open file")
+
         if client.features.model == "1":
-            img = image_to_t1(filename)
+            img = image_to_t1(path)
         else:
             if (
                 client.features.homescreen_format
                 == messages.HomescreenFormat.Jpeg240x240
             ):
-                img = image_to_jpeg_240x240(filename)
+                img = image_to_jpeg_240x240(path)
             elif (
                 client.features.homescreen_format
                 == messages.HomescreenFormat.Toif144x144
                 or client.features.homescreen_format is None
             ):
-                img = image_to_toif_144x144(filename)
+                img = image_to_toif_144x144(path)
             else:
                 raise click.ClickException(
                     "Unknown image format requested by the device."
