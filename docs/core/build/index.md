@@ -25,7 +25,7 @@ If you are building from an existing checkout, do not forget to refresh the subm
 
 ```sh
 git submodule update --init --recursive --force
-poetry install --remove-untracked
+poetry install --sync
 ```
 
 ## Poetry

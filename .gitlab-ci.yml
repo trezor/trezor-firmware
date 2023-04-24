@@ -32,7 +32,7 @@ stages:
 
 before_script:
   - . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh || true
-  - $NIX_SHELL --run "poetry install --remove-untracked"
+  - $NIX_SHELL --run "poetry install --sync"
   - export LEGACY_VERSION=$($NIX_SHELL --run "./tools/version.sh legacy/firmware/version.h")
   - export CORE_VERSION=$($NIX_SHELL --run "./tools/version.sh core/embed/firmware/version.h")
 
