@@ -1,1 +1,0 @@
-`trezorctl ethereum sign-tx`: renamed `--gas-limit` shortcut to `-G` to avoid collision with `-t/--token`

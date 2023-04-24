@@ -1,1 +1,0 @@
-trezorctl: Support prompt configuration for `encrypt-keyvalue` / `decrypt-keyvalue`.

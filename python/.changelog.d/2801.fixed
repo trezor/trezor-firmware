@@ -1,1 +1,0 @@
-Fixed behavior of `trezorctl fw` with unsigned Trezor One firmwares.

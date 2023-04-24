@@ -1,1 +1,0 @@
-When enabling passphrase force-on-device, do not also prompt to enable passphrase if it is already enabled.

@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.6] (2023-04-24)
+[0.13.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.5...python/v0.13.6
+
+### Added
+- Signed Ethereum network and token definitions from host  [#15]
+- Support SLIP-25 in get-descriptor.  [#2541]
+- trezorctl: Support prompt configuration for `encrypt-keyvalue` / `decrypt-keyvalue`.  [#2608]
+- Support for external reward addresses in Cardano CIP-36 registrations  [#2692]
+- Auto-convert image to Trezor's homescreen format.  [#2880]
+
+### Changed
+- `trezorctl firmware verify` changed order of checks - fingerprint is validated before signatures.  [#2745]
+
+### Fixed
+- Removed attempt to initialize the device after wipe in bootloader mode  [#2221]
+- Limit memory exhaustion in protobuf parser.  [#2439]
+- `trezorctl ethereum sign-tx`: renamed `--gas-limit` shortcut to `-G` to avoid collision with `-t/--token`  [#2535]
+- Fixed behavior of UDP transport search by path when full path is provided and prefix_search is True  [#2786]
+- Fixed behavior of `trezorctl fw` with unsigned Trezor One firmwares.  [#2801]
+- Improve typing information when `TrezorClient` has a more intelligent UI object.  [#2832]
+- When enabling passphrase force-on-device, do not also prompt to enable passphrase if it is already enabled.  [#2833]
+
+
 ## [0.13.5] (2022-12-28)
 [0.13.5]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.4...python/v0.13.5
 
@@ -601,6 +624,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [f#778]: https://github.com/trezor/trezor-firmware/pull/778
 [f#823]: https://github.com/trezor/trezor-firmware/pull/823
 [f#1082]: https://github.com/trezor/trezor-firmware/pull/1082
+[#15]: https://github.com/trezor/trezor-firmware/pull/15
 [#37]: https://github.com/trezor/trezor-firmware/pull/37
 [#38]: https://github.com/trezor/trezor-firmware/pull/38
 [#94]: https://github.com/trezor/python-trezor/pull/94
@@ -702,6 +726,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2159]: https://github.com/trezor/trezor-firmware/pull/2159
 [#2199]: https://github.com/trezor/trezor-firmware/pull/2199
 [#2219]: https://github.com/trezor/trezor-firmware/pull/2219
+[#2221]: https://github.com/trezor/trezor-firmware/pull/2221
 [#2230]: https://github.com/trezor/trezor-firmware/pull/2230
 [#2239]: https://github.com/trezor/trezor-firmware/pull/2239
 [#2284]: https://github.com/trezor/trezor-firmware/pull/2284
@@ -710,10 +735,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2364]: https://github.com/trezor/trezor-firmware/pull/2364
 [#2414]: https://github.com/trezor/trezor-firmware/pull/2414
 [#2433]: https://github.com/trezor/trezor-firmware/pull/2433
+[#2439]: https://github.com/trezor/trezor-firmware/pull/2439
 [#2445]: https://github.com/trezor/trezor-firmware/pull/2445
 [#2517]: https://github.com/trezor/trezor-firmware/pull/2517
+[#2535]: https://github.com/trezor/trezor-firmware/pull/2535
+[#2541]: https://github.com/trezor/trezor-firmware/pull/2541
 [#2542]: https://github.com/trezor/trezor-firmware/pull/2542
 [#2547]: https://github.com/trezor/trezor-firmware/pull/2547
 [#2561]: https://github.com/trezor/trezor-firmware/pull/2561
 [#2576]: https://github.com/trezor/trezor-firmware/pull/2576
+[#2608]: https://github.com/trezor/trezor-firmware/pull/2608
+[#2692]: https://github.com/trezor/trezor-firmware/pull/2692
 [#2701]: https://github.com/trezor/trezor-firmware/pull/2701
+[#2745]: https://github.com/trezor/trezor-firmware/pull/2745
+[#2786]: https://github.com/trezor/trezor-firmware/pull/2786
+[#2801]: https://github.com/trezor/trezor-firmware/pull/2801
+[#2832]: https://github.com/trezor/trezor-firmware/pull/2832
+[#2833]: https://github.com/trezor/trezor-firmware/pull/2833
+[#2880]: https://github.com/trezor/trezor-firmware/pull/2880
