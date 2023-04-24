@@ -319,8 +319,14 @@ passphrase = cast(AliasedGroup, passphrase_main)
 @with_client
 def passphrase_on(client: "TrezorClient", force_on_device: Optional[bool]) -> str:
     """Enable passphrase."""
+    if client.features.passphrase_protection is not True:
+        use_passphrase = True
+    else:
+        use_passphrase = None
     return device.apply_settings(
-        client, use_passphrase=True, passphrase_always_on_device=force_on_device
+        client,
+        use_passphrase=use_passphrase,
+        passphrase_always_on_device=force_on_device,
     )
 
 
