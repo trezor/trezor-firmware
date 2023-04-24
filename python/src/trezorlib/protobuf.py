@@ -35,6 +35,8 @@ from typing_extensions import Protocol, TypeGuard
 T = TypeVar("T", bound=type)
 MT = TypeVar("MT", bound="MessageType")
 
+MAX_FIELD_SIZE = 1024 * 1024  # 1 MB
+
 
 class Reader(Protocol):
     def readinto(self, __buf: bytearray) -> int:
@@ -335,6 +337,9 @@ def decode_length_delimited_field(
     field: Field, reader: Reader
 ) -> Union[bytes, str, MessageType]:
     value = load_uvarint(reader)
+    if value > MAX_FIELD_SIZE:
+        raise ValueError(f"Field {field.name} contents too large ({value} bytes)")
+
     if field.type == "bytes":
         buf = bytearray(value)
         reader.readinto(buf)
@@ -375,6 +380,8 @@ def load_message(reader: Reader, msg_type: Type[MT]) -> MT:
                 load_uvarint(reader)
             elif wtype == WIRE_TYPE_LENGTH:
                 ivalue = load_uvarint(reader)
+                if ivalue > MAX_FIELD_SIZE:
+                    raise ValueError(f"Unknown field {ftag} too large ({ivalue} bytes)")
                 reader.readinto(bytearray(ivalue))
             else:
                 raise ValueError
