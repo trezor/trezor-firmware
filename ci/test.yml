@@ -409,7 +409,8 @@ core hwi test:
   allow_failure: true
   script:
     - $NIX_SHELL --run "git clone https://github.com/bitcoin-core/HWI.git"
-    - $NIX_SHELL --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
+    # see "python test" for explanation of _PYTHON_SYSCONFIGDATA_NAME
+    - $NIX_SHELL --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -575,7 +576,8 @@ legacy hwi test:
   allow_failure: true
   script:
     - $NIX_SHELL --run "git clone https://github.com/bitcoin-core/HWI.git"
-    - $NIX_SHELL --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
+    # see "python test" for explanation of _PYTHON_SYSCONFIGDATA_NAME
+    - $NIX_SHELL --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
