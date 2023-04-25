@@ -7,10 +7,12 @@ import usb
 
 apps.base.boot()
 
+mutex = Mutex()
+
 if not utils.BITCOIN_ONLY and usb.ENABLE_IFACE_WEBAUTHN:
     import apps.webauthn
 
-    apps.webauthn.boot()
+    apps.webauthn.boot(mutex)
 
 if __debug__:
     import apps.debug
@@ -21,8 +23,6 @@ if __debug__:
 apps.base.set_homescreen()
 workflow.start_default()
 
-
-mutex = Mutex()
 
 mutex.add(usb.iface_wire.iface_num())
 mutex.add(usb.iface_debug.iface_num())
