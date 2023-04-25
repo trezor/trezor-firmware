@@ -97,6 +97,8 @@ VERSION_PATCH: int
 """Patch version."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
+USE_TOUCH: bool
+USE_BUTTON: bool
 USE_BACKLIGHT: bool
 """Whether the hardware supports backlight brightness control."""
 USE_OPTIGA: bool
