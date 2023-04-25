@@ -220,7 +220,7 @@ class RustLayout(ui.Layout):
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         from trezor import workflow
 
-        button = loop.wait(io.BUTTON)
+        button = loop.wait(io.INPUT)
         self._first_paint()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
