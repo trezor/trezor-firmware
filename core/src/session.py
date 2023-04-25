@@ -30,7 +30,7 @@ mutex.add(usb.iface_debug.iface_num())
 # initialize the wire codec
 wire.setup(usb.iface_wire, mutex=mutex)
 if __debug__:
-    wire.setup(usb.iface_debug, is_debug_session=True, mutex=mutex)
+    wire.setup(usb.iface_debug, is_debug_session=True)
 
 if utils.USE_BLE:
     import bluetooth
