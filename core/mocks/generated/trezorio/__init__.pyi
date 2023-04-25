@@ -193,11 +193,10 @@ class WebUSB:
 from . import fatfs, sdcard
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
-TOUCH: int  # interface id of the touch events
+INPUT: int  # interface id of unified input events
 TOUCH_START: int  # event id of touch start event
 TOUCH_MOVE: int  # event id of touch move event
 TOUCH_END: int  # event id of touch end event
-BUTTON: int  # interface id of button events
 BUTTON_PRESSED: int  # button down event
 BUTTON_RELEASED: int  # button up event
 BUTTON_LEFT: int  # button number of left button

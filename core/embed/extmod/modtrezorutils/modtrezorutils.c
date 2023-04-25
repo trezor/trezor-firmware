@@ -384,6 +384,8 @@ STATIC mp_obj_str_t mod_trezorutils_full_name_obj = {
 /// """Whether the hardware supports backlight brightness control."""
 /// USE_OPTIGA: bool
 /// """Whether the hardware supports Optiga secure element."""
+/// USE_TOUCH: bool
+/// USE_BUTTON: bool
 /// MODEL: str
 /// """Model name."""
 /// MODEL_FULL_NAME: str
@@ -426,6 +428,16 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_false},
+#endif
+#ifdef USE_TOUCH
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_false},
+#endif
+#ifdef USE_BUTTON
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_false},
 #endif
 #ifdef USE_BACKLIGHT
     {MP_ROM_QSTR(MP_QSTR_USE_BACKLIGHT), mp_const_true},

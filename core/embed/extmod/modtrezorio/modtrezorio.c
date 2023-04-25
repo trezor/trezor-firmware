@@ -62,12 +62,12 @@ bool usb_connected_previously = true;
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
 ///
-/// TOUCH: int  # interface id of the touch events
+/// INPUT: int  # interface id of unified input events
+///
 /// TOUCH_START: int  # event id of touch start event
 /// TOUCH_MOVE: int  # event id of touch move event
 /// TOUCH_END: int  # event id of touch end event
 
-/// BUTTON: int  # interface id of button events
 /// BUTTON_PRESSED: int  # button down event
 /// BUTTON_RELEASED: int  # button up event
 /// BUTTON_LEFT: int  # button number of left button
@@ -88,19 +88,20 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_fatfs), MP_ROM_PTR(&mod_trezorio_fatfs_module)},
     {MP_ROM_QSTR(MP_QSTR_sdcard), MP_ROM_PTR(&mod_trezorio_sdcard_module)},
 #endif
-
+    {MP_ROM_QSTR(MP_QSTR_INPUT), MP_ROM_INT(INPUT_IFACE)},
 #ifdef USE_TOUCH
-    {MP_ROM_QSTR(MP_QSTR_TOUCH), MP_ROM_INT(TOUCH_IFACE)},
-    {MP_ROM_QSTR(MP_QSTR_TOUCH_START), MP_ROM_INT((TOUCH_START >> 24) & 0xFFU)},
-    {MP_ROM_QSTR(MP_QSTR_TOUCH_MOVE), MP_ROM_INT((TOUCH_MOVE >> 24) & 0xFFU)},
-    {MP_ROM_QSTR(MP_QSTR_TOUCH_END), MP_ROM_INT((TOUCH_END >> 24) & 0xFFU)},
+    {MP_ROM_QSTR(MP_QSTR_TOUCH_START),
+     MP_ROM_INT(((TOUCH_START >> 24) & 0xFFU) | TOUCH_INPUT_FLAG)},
+    {MP_ROM_QSTR(MP_QSTR_TOUCH_MOVE),
+     MP_ROM_INT(((TOUCH_MOVE >> 24) & 0xFFU) | TOUCH_INPUT_FLAG)},
+    {MP_ROM_QSTR(MP_QSTR_TOUCH_END),
+     MP_ROM_INT(((TOUCH_END >> 24) & 0xFFU) | TOUCH_INPUT_FLAG)},
 #endif
 #ifdef USE_BUTTON
-    {MP_ROM_QSTR(MP_QSTR_BUTTON), MP_ROM_INT(BUTTON_IFACE)},
     {MP_ROM_QSTR(MP_QSTR_BUTTON_PRESSED),
-     MP_ROM_INT((BTN_EVT_DOWN >> 24) & 0x3U)},
+     MP_ROM_INT(((BTN_EVT_DOWN >> 24) & 0x3U) | BUTTON_INPUT_FLAG)},
     {MP_ROM_QSTR(MP_QSTR_BUTTON_RELEASED),
-     MP_ROM_INT((BTN_EVT_UP >> 24) & 0x3U)},
+     MP_ROM_INT(((BTN_EVT_UP >> 24) & 0x3U) | BUTTON_INPUT_FLAG)},
     {MP_ROM_QSTR(MP_QSTR_BUTTON_LEFT), MP_ROM_INT(BTN_LEFT)},
     {MP_ROM_QSTR(MP_QSTR_BUTTON_RIGHT), MP_ROM_INT(BTN_RIGHT)},
 #endif

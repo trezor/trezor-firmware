@@ -21,10 +21,4 @@
 
 #include "display-unix.h"
 
-#ifdef TREZOR_MODEL_R
-#define USE_BUTTON 1
-#elif TREZOR_MODEL_T
-#define USE_TOUCH 1
-#endif
-
 #endif  //_BOARD_UNIX_H
