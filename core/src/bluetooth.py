@@ -1,23 +1,22 @@
 from trezorio import ble
 
 
-class BleInterface:
-    def __init__(self, interface: int):
-        self.interface = interface
-        pass
-
+class BleInterfaceInternal:
     def iface_num(self) -> int:
-        return self.interface
+        return 16
 
     def write(self, msg: bytes) -> int:
-        if self.interface == 16:
-            return ble.write_int(self, msg)
-        if self.interface == 17:
-            return ble.write_ext(self, msg)
-        return 0
+        return ble.write_int(self, msg)
+
+
+class BleInterfaceExternal:
+    def iface_num(self) -> int:
+        return 17
+
+    def write(self, msg: bytes) -> int:
+        return ble.write_int(self, msg)
 
 
 # interface used for trezor wire protocol
-
-iface_ble_int = BleInterface(16)
-iface_ble_ext = BleInterface(17)
+iface_ble_int = BleInterfaceInternal()
+iface_ble_ext = BleInterfaceExternal()
