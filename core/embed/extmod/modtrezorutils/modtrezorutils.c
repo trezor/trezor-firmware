@@ -259,6 +259,8 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 /// VERSION_MINOR: int
 /// VERSION_PATCH: int
 /// USE_SD_CARD: bool
+/// USE_TOUCH: bool
+/// USE_BUTTON: bool
 /// MODEL: str
 /// INTERNAL_MODEL: str
 /// EMULATOR: bool
@@ -289,6 +291,16 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_false},
+#endif
+#ifdef USE_TOUCH
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_false},
+#endif
+#ifdef USE_BUTTON
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_false},
 #endif
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MODEL_NAME_QSTR)},
     {MP_ROM_QSTR(MP_QSTR_INTERNAL_MODEL),

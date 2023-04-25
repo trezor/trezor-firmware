@@ -233,7 +233,7 @@ class wait(Syscall):
     Example:
 
     >>> hid_report, = await loop.wait(0xABCD)  # await USB HID report
-    >>> event, x, y = await loop.wait(io.TOUCH)  # await touch event
+    >>> event, x, y = await loop.wait(io.INPUT)  # await input event
     """
 
     def __init__(self, msg_iface: int) -> None:
