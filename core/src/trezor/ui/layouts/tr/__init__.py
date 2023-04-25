@@ -36,7 +36,7 @@ class RustLayout(ui.Layout):
         return self.handle_input_and_rendering(), self.handle_timers()
 
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
-        button = loop.wait(io.BUTTON)
+        button = loop.wait(io.INPUT)
         ui.display.clear()
         self.layout.paint()
         ui.refresh()
@@ -46,7 +46,7 @@ class RustLayout(ui.Layout):
             workflow.idle_timer.touch()
             msg = None
             if event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
-                msg = self.layout.button_event(event, button_num)
+                msg = self.layout.button_event(event & 0xFF, button_num)
             if msg is not None:
                 raise ui.Result(msg)
             self.layout.paint()

@@ -232,6 +232,8 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 /// VERSION_PATCH: int
 /// USE_BLE: bool
 /// USE_SD_CARD: bool
+/// USE_TOUCH: bool
+/// USE_BUTTON: bool
 /// MODEL: str
 /// EMULATOR: bool
 /// BITCOIN_ONLY: bool
@@ -263,6 +265,17 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_BLE), mp_const_false},
 #endif
+#ifdef USE_TOUCH
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_false},
+#endif
+#ifdef USE_BUTTON
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_false},
+#endif
+
 #if defined TREZOR_MODEL_1
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_1)},
 #elif defined TREZOR_MODEL_T

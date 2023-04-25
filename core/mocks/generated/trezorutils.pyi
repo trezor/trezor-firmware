@@ -71,6 +71,8 @@ VERSION_MINOR: int
 VERSION_PATCH: int
 USE_BLE: bool
 USE_SD_CARD: bool
+USE_TOUCH: bool
+USE_BUTTON: bool
 MODEL: str
 EMULATOR: bool
 BITCOIN_ONLY: bool

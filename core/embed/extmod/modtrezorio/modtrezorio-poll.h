@@ -28,8 +28,9 @@
 
 #define BLE_EVENTS_IFACE (252)
 #define USB_DATA_IFACE (253)
-#define BUTTON_IFACE (254)
-#define TOUCH_IFACE (255)
+#define INPUT_IFACE (255)
+#define TOUCH_INPUT_FLAG (0x40000000)
+#define BUTTON_INPUT_FLAG (0x80000000)
 #define USB_RW_IFACE_MAX (15)  // 0-15 reserved for USB
 #define BLE_IFACE_INT (16)
 #define BLE_IFACE_EXT (17)
@@ -87,17 +88,35 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 #endif
 
       if (false) {
-      }
-#if defined USE_TOUCH
-      else if (iface == TOUCH_IFACE) {
-        const uint32_t evt = touch_read();
+      } else if (iface == INPUT_IFACE) {
+        uint32_t evt;
+#ifdef USE_BUTTON
+        evt = button_read();
+        if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {
+          mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+          uint32_t etype =
+              ((evt >> 24) & 0x3U) | BUTTON_INPUT_FLAG;  // button down/up
+          uint32_t en = evt & 0xFFFF;                    // button number
+          if (display_orientation(-1) == 180) {
+            en = (en == BTN_LEFT) ? BTN_RIGHT : BTN_LEFT;
+          }
+          tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
+          tuple->items[1] = MP_OBJ_NEW_SMALL_INT(en);
+          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+          ret->items[1] = MP_OBJ_FROM_PTR(tuple);
+          return mp_const_true;
+        }
+#endif
+#ifdef USE_TOUCH
+        evt = touch_read();
         if (evt) {
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
-          const uint32_t etype = (evt >> 24) & 0xFFU;  // event type
-          const uint32_t ex = (evt >> 12) & 0xFFFU;    // x position
-          const uint32_t ey = evt & 0xFFFU;            // y position
-          uint32_t exr;                                // rotated x position
-          uint32_t eyr;                                // rotated y position
+          const uint32_t etype =
+              ((evt >> 24) & 0xFFU) | TOUCH_INPUT_FLAG;  // event type
+          const uint32_t ex = (evt >> 12) & 0xFFFU;      // x position
+          const uint32_t ey = evt & 0xFFFU;              // y position
+          uint32_t exr;                                  // rotated x position
+          uint32_t eyr;                                  // rotated y position
           switch (display_orientation(-1)) {
             case 90:
               exr = ey;
@@ -123,6 +142,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           ret->items[1] = MP_OBJ_FROM_PTR(tuple);
           return mp_const_true;
         }
+#endif
       } else if (iface == USB_DATA_IFACE) {
         bool usb_connected = usb_configured() == sectrue ? true : false;
         if (usb_connected != usb_connected_previously) {
@@ -140,25 +160,6 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           ble_connected_previously = connected;
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
           ret->items[1] = connected ? mp_const_true : mp_const_false;
-          return mp_const_true;
-        }
-      }
-#endif
-#endif
-#if USE_BUTTON
-      else if (iface == BUTTON_IFACE) {
-        const uint32_t evt = button_read();
-        if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {
-          mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-          uint32_t etype = (evt >> 24) & 0x3U;  // button down/up
-          uint32_t en = evt & 0xFFFF;           // button number
-          if (display_orientation(-1) == 180) {
-            en = (en == BTN_LEFT) ? BTN_RIGHT : BTN_LEFT;
-          }
-          tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
-          tuple->items[1] = MP_OBJ_NEW_SMALL_INT(en);
-          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = MP_OBJ_FROM_PTR(tuple);
           return mp_const_true;
         }
       }

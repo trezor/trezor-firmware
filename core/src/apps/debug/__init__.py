@@ -121,7 +121,7 @@ if __debug__:
         from trezor import io
 
         await loop.sleep(duration_ms)
-        loop.synthetic_events.append((io.TOUCH, (io.TOUCH_END, x, y)))
+        loop.synthetic_events.append((io.INPUT, (io.TOUCH_END, x, y)))
 
     async def dispatch_DebugLinkWatchLayout(
         ctx: wire.Context, msg: DebugLinkWatchLayout
@@ -150,11 +150,11 @@ if __debug__:
         if x is not None and y is not None:
             evt_down = io.TOUCH_START, x, y
             evt_up = io.TOUCH_END, x, y
-            loop.synthetic_events.append((io.TOUCH, evt_down))
+            loop.synthetic_events.append((io.INPUT, evt_down))
             if msg.hold_ms is not None:
                 loop.schedule(touch_hold(x, y, msg.hold_ms))
             else:
-                loop.synthetic_events.append((io.TOUCH, evt_up))
+                loop.synthetic_events.append((io.INPUT, evt_up))
         else:
             debuglink_decision_chan.publish(msg)
 

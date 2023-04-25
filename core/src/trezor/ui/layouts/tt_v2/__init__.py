@@ -157,7 +157,7 @@ class RustLayout(ui.Layout):
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         from trezor import workflow
 
-        touch = loop.wait(io.TOUCH)
+        touch = loop.wait(io.INPUT)
         self._first_paint()
         # self.layout.bounds()
         while True:
@@ -166,7 +166,7 @@ class RustLayout(ui.Layout):
             workflow.idle_timer.touch()
             msg = None
             if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
-                msg = self.layout.touch_event(event, x, y)
+                msg = self.layout.touch_event(event & 0xFF, x, y)
             if msg is not None:
                 raise ui.Result(msg)
             self._paint()
