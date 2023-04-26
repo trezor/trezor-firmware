@@ -35,7 +35,6 @@ reads the message's header. When the message type is known the first handler is 
 
 """
 
-from micropython import const
 from typing import TYPE_CHECKING
 
 from storage.cache import InvalidSessionError
@@ -48,7 +47,6 @@ from trezor.wire.errors import ActionCancelled, DataError, Error
 # Import all errors into namespace, so that `wire.Error` is available from
 # other packages.
 from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
-
 
 if TYPE_CHECKING:
     from typing import (
@@ -92,9 +90,35 @@ if TYPE_CHECKING:
 experimental_enabled = False
 
 
-def setup(iface: WireInterface, is_debug_session: bool = False, mutex=None) -> None:
+class MessageHandler:
+    def __init__(self):
+        self._find_handler = None
+
+    def find_handler(self, iface: WireInterface, msg_type: int) -> Handler | None:
+        if self._find_handler is not None:
+            return self._find_handler(iface, msg_type)
+        return None
+
+    def register_find_handler(self, handler):
+        self._find_handler = handler
+
+
+common_find_handler = MessageHandler()
+
+
+def setup(
+    iface: WireInterface,
+    buffer: bytearray,
+    handler: MessageHandler,
+    is_debug_session: bool = False,
+    mutex=None,
+) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session, mutex))
+    loop.schedule(
+        handle_session(
+            iface, codec_v1.SESSION_ID, buffer, handler, is_debug_session, mutex
+        )
+    )
 
 
 def _wrap_protobuf_load(
@@ -132,14 +156,6 @@ class DummyContext:
 
 
 DUMMY_CONTEXT = DummyContext()
-
-_PROTOBUF_BUFFER_SIZE = const(8192)
-
-WIRE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
-
-if __debug__:
-    PROTOBUF_BUFFER_SIZE_DEBUG = 1024
-    WIRE_BUFFER_DEBUG = bytearray(PROTOBUF_BUFFER_SIZE_DEBUG)
 
 
 class Context:
@@ -278,7 +294,10 @@ class UnexpectedMessageError(Exception):
 
 
 async def _handle_single_message(
-    ctx: Context, msg: codec_v1.Message, use_workflow: bool
+    ctx: Context,
+    msg: codec_v1.Message,
+    find_handler: MessageHandler,
+    use_workflow: bool,
 ) -> codec_v1.Message | None:
     """Handle a message that was loaded from USB by the caller.
 
@@ -310,7 +329,9 @@ async def _handle_single_message(
     res_msg: protobuf.MessageType | None = None
 
     # We need to find a handler for this message type.  Should not raise.
-    handler = find_handler(ctx.iface, msg.type)  # pylint: disable=assignment-from-none
+    handler = find_handler.find_handler(
+        ctx.iface, msg.type
+    )  # pylint: disable=assignment-from-none
 
     if handler is None:
         # If no handler is found, we can skip decoding and directly
@@ -383,13 +404,13 @@ async def _handle_single_message(
 
 
 async def handle_session(
-    iface: WireInterface, session_id: int, is_debug_session: bool = False, mutex=None
+    iface: WireInterface,
+    session_id: int,
+    ctx_buffer: bytearray,
+    message_handler: MessageHandler,
+    is_debug_session: bool = False,
+    mutex=None,
 ) -> None:
-    if __debug__ and is_debug_session:
-        ctx_buffer = WIRE_BUFFER_DEBUG
-    else:
-        ctx_buffer = WIRE_BUFFER
-
     ctx = Context(iface, session_id, ctx_buffer)
     next_msg: codec_v1.Message | None = None
 
@@ -433,8 +454,9 @@ async def handle_session(
 
             try:
                 next_msg = await _handle_single_message(
-                    ctx, msg, use_workflow=not is_debug_session
+                    ctx, msg, message_handler, not is_debug_session
                 )
+
             except Exception as exc:
                 # Log and ignore. The session handler can only exit explicitly in the
                 # following finally block.
@@ -461,12 +483,6 @@ async def handle_session(
                 log.exception(__name__, exc)
 
 
-def _find_handler_placeholder(iface: WireInterface, msg_type: int) -> Handler | None:
-    """Placeholder handler lookup before a proper one is registered."""
-    return None
-
-
-find_handler = _find_handler_placeholder
 AVOID_RESTARTING_FOR: Container[int] = ()
 
 
