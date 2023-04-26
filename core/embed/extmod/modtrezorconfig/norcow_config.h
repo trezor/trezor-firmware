@@ -25,13 +25,14 @@
 #define NORCOW_HEADER_LEN 0
 #define NORCOW_SECTOR_COUNT 2
 
-#if defined STM32F427xx || defined STM32F429xx
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R || defined TREZOR_MODEL_DISC1
 #define NORCOW_SECTOR_SIZE (64 * 1024)
-#elif defined STM32F405xx
+#elif defined TREZOR_MODEL_1
 #define NORCOW_SECTOR_SIZE (16 * 1024)
 #else
-#error Unknown MCU
+#error Unknown Trezor model
 #endif
+
 
 #define NORCOW_SECTORS \
   { FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2 }
