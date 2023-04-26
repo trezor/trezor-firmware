@@ -14,7 +14,7 @@ class BleInterfaceExternal:
         return 17
 
     def write(self, msg: bytes) -> int:
-        return ble.write_int(self, msg)
+        return ble.write_ext(self, msg)
 
 
 # interface used for trezor wire protocol
