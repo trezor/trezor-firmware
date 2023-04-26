@@ -50,7 +50,7 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "rust-src" "clippy" "rustfmt" ];
   };
-  llvmPackages = nixpkgs.llvmPackages_13;
+  llvmPackages = nixpkgs.llvmPackages_14;
   # see pyright/README.md for update procedure
   pyright = nixpkgs.callPackage ./pyright {};
 in
