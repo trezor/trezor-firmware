@@ -59,7 +59,7 @@ def int_find_handler(
             return None
 
         async def wrapper(ctx: wire.Context, msg: wire.Msg) -> protobuf.MessageType:
-            await unlock_device(ctx)
+            await unlock_device(ctx, True)
             return await orig_handler(ctx, msg)
 
     return wrapper

@@ -319,7 +319,9 @@ def lock_device_if_unlocked() -> None:
         lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
 
 
-async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
+async def unlock_device(
+    ctx: wire.GenericContext = wire.DUMMY_CONTEXT, skip_button_request: bool = False
+) -> None:
     """Ensure the device is in unlocked state.
 
     If the storage is locked, attempt to unlock it. Reset the homescreen and the wire
@@ -329,7 +331,7 @@ async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
 
     if not config.is_unlocked():
         # verify_user_pin will raise if the PIN was invalid
-        await verify_user_pin(ctx)
+        await verify_user_pin(ctx, skip_button_request=skip_button_request)
 
     set_homescreen()
 

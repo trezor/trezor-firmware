@@ -98,6 +98,7 @@ async def verify_user_pin(
     allow_cancel: bool = True,
     retry: bool = True,
     cache_time_ms: int = 0,
+    skip_button_request: bool = False,
 ) -> None:
     # _get_last_unlock_time
     last_unlock = int.from_bytes(
@@ -116,7 +117,11 @@ async def verify_user_pin(
         from trezor.ui.layouts import request_pin_on_device
 
         pin = await request_pin_on_device(
-            ctx, prompt, config.get_pin_rem(), allow_cancel
+            ctx,
+            prompt,
+            config.get_pin_rem(),
+            allow_cancel,
+            skip_button_request=skip_button_request,
         )
         config.ensure_not_wipe_code(pin)
     else:
@@ -131,7 +136,12 @@ async def verify_user_pin(
 
     while retry:
         pin = await request_pin_on_device(  # type: ignore ["request_pin_on_device" is possibly unbound]
-            ctx, "Enter PIN", config.get_pin_rem(), allow_cancel, wrong_pin=True
+            ctx,
+            "Enter PIN",
+            config.get_pin_rem(),
+            allow_cancel,
+            wrong_pin=True,
+            skip_button_request=skip_button_request,
         )
         if config.unlock(pin, salt):
             _set_last_unlock_time()
