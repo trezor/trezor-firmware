@@ -37,6 +37,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_address;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_coinjoin;
+  MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;
   MP_QSTR_confirm_homescreen;
   MP_QSTR_confirm_joint_total;

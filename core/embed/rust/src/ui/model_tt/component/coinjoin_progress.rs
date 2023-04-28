@@ -60,7 +60,7 @@ where
         Self {
             value: 0,
             indeterminate,
-            content: Frame::left_aligned(
+            content: Frame::centered(
                 theme::label_title(),
                 "COINJOIN IN PROGRESS",
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),

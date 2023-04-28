@@ -278,6 +278,34 @@ async def confirm_action(
     )
 
 
+async def confirm_single(
+    ctx: GenericContext,
+    br_type: str,
+    title: str,
+    description: str,
+    description_param: str | None = None,
+    verb: str | None = None,
+) -> None:
+    if verb is not None:
+        verb = verb.upper()
+    description_param = description_param or ""
+    begin, _separator, end = description.partition("{}")
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_emphasized(
+                    title=title.upper(),
+                    items=(begin, (True, description_param), end),
+                    verb=verb,
+                )
+            ),
+            br_type,
+            ButtonRequestType.ProtectCall,
+        )
+    )
+
+
 async def confirm_reset_device(
     ctx: GenericContext, title: str, recovery: bool = False
 ) -> None:
