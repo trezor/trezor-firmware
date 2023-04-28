@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor import utils
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action, confirm_homescreen
+from trezor.ui.layouts import confirm_action, confirm_homescreen, confirm_single
 from trezor.wire import DataError
 
 import trezorui2
@@ -172,13 +172,13 @@ async def _require_confirm_change_homescreen(
 
 
 async def _require_confirm_change_label(ctx: GenericContext, label: str) -> None:
-    await confirm_action(
+    await confirm_single(
         ctx,
         "set_label",
         "Device name",
-        description="Do you want to change device name to {}?",
+        description="Change device name to {}?",
         description_param=label,
-        br_code=BRT_PROTECT_CALL,
+        verb="Change",
     )
 
 

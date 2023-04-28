@@ -23,6 +23,7 @@ use crate::{
             painter,
             placed::GridPlaced,
             text::{
+                op::OpTextLayout,
                 paragraphs::{
                     Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
                     Paragraphs, VecExt,
@@ -270,6 +271,15 @@ where
     }
 }
 
+impl<T> ComponentMsgObj for FormattedText<T>
+where
+    T: StringType + Clone,
+{
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!()
+    }
+}
+
 impl<T> ComponentMsgObj for Checklist<T>
 where
     T: ParagraphSource,
@@ -349,7 +359,7 @@ impl<T> ComponentMsgObj for (Timeout, T)
 where
     T: Component<Msg = ()>,
 {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
     }
 }
@@ -442,6 +452,47 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
                 SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
             ))?
         };
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let verb: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let mut iter_buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
+        let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+        for item in iter {
+            if item.is_str() {
+                ops = ops.text_normal(item.try_into()?)
+            } else {
+                let [emphasis, text]: [Obj; 2] = iter_into_array(item)?;
+                let text: StrBuffer = text.try_into()?;
+                if emphasis.try_into()? {
+                    ops = ops.text_demibold(text);
+                } else {
+                    ops = ops.text_normal(text);
+                }
+            }
+        }
+
+        let buttons = Button::<StrBuffer>::cancel_confirm_text(None, verb);
+        let obj = LayoutObj::new(Frame::left_aligned(
+            theme::label_title(),
+            title,
+            SwipePage::new(
+                FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center),
+                buttons,
+                theme::BG,
+            ),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1596,6 +1647,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
 
+    /// def confirm_emphasized(
+    ///     *,
+    ///     title: str,
+    ///     items: Iterable[str | tuple[bool, str]],
+    ///     verb: str | None = None,
+    /// ) -> object:
+    ///     """Confirm formatted text that has been pre-split in python. For tuples
+    ///     the first component is a bool indicating whether this part is emphasized."""
+    Qstr::MP_QSTR_confirm_emphasized => obj_fn_kw!(0, new_confirm_emphasized).as_obj(),
 
     /// def confirm_homescreen(
     ///     *,
@@ -1685,7 +1745,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_total(
     ///     *,
     ///     title: str,
-    ///     items: List[Tuple[str, str]],
+    ///     items: list[tuple[str, str]],
     ///     info_button: bool = False,
     /// ) -> object:
     ///     """Transaction summary. Always hold to confirm."""
@@ -1787,7 +1847,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     button: str,
     ///     info_button: str,
-    ///     items: Iterable[Tuple[int, str]],
+    ///     items: Iterable[tuple[int, str]],
     /// ) -> object:
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling."""
@@ -1797,7 +1857,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     button: str,
-    ///     items: Iterable[Tuple[int, str]],
+    ///     items: Iterable[tuple[int, str]],
     /// ) -> object:
     ///     """Confirm long content with the possibility to go back from any page.
     ///     Meant to be used with confirm_with_info."""

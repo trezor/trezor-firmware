@@ -363,6 +363,26 @@ async def confirm_action(
     )
 
 
+async def confirm_single(
+    ctx: GenericContext,
+    br_type: str,
+    title: str,
+    description: str,
+    description_param: str | None = None,
+    verb: str | None = None,
+) -> None:
+    description_param = description_param or ""
+    begin, _separator, end = description.partition("{}")
+    await confirm_action(
+        ctx,
+        br_type,
+        title,
+        description=begin + description_param + end,
+        verb=verb or "CONFIRM",
+        br_code=ButtonRequestType.ProtectCall,
+    )
+
+
 async def confirm_reset_device(
     ctx: GenericContext,
     title: str,
