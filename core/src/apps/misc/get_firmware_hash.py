@@ -11,7 +11,7 @@ _progress_obj: ProgressLayout | None = None
 async def get_firmware_hash(ctx: Context, msg: GetFirmwareHash) -> FirmwareHash:
     from trezor.messages import FirmwareHash
     from trezor.utils import firmware_hash
-    from trezor.ui.layouts import progress
+    from trezor.ui.layouts.progress import progress
     from trezor import wire, workflow
 
     workflow.close_others()
