@@ -5,14 +5,17 @@ use heapless::String;
 use crate::{
     trezorhal::slip39,
     ui::{
-        component::{Component, Event, EventCtx},
+        component::{
+            text::common::{TextBox, TextEdit},
+            Component, Event, EventCtx,
+        },
         display,
         display::toif::Icon,
         geometry::{Offset, Rect, CENTER},
         model_tt::{
             component::{
                 keyboard::{
-                    common::{paint_pending_marker, MultiTapKeyboard, TextBox, TextEdit},
+                    common::{paint_pending_marker, MultiTapKeyboard},
                     mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
                 },
                 Button, ButtonContent, ButtonMsg,
@@ -156,7 +159,7 @@ impl Component for Slip39Input {
                     .assert_if_debugging_ui("Text buffer is too small");
             }
         }
-        display::text(
+        display::text_left(
             text_baseline,
             text.as_str(),
             style.font,

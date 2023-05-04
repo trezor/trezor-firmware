@@ -191,8 +191,13 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Frame");
         t.child("title", &self.title);
-        self.subtitle.as_ref().map(|s| t.child("subtitle", s));
-        self.button.as_ref().map(|b| t.child("button", b));
+        t.child("content", &self.content);
+        if let Some(subtitle) = &self.subtitle {
+            t.child("subtitle", subtitle);
+        }
+        if let Some(button) = &self.button {
+            t.child("button", button);
+        }
     }
 }
 

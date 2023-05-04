@@ -6,6 +6,7 @@ use crate::{
         display,
         display::{Color, Font},
         geometry::Rect,
+        util::animation_disabled,
     },
 };
 
@@ -54,6 +55,11 @@ where
     }
 
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {
+        // Not starting if animations are disabled.
+        if animation_disabled() {
+            return;
+        }
+
         if let State::Initial = self.state {
             let text_width = self.font.text_width(self.text.as_ref());
             let max_offset = self.area.width() - text_width;
@@ -150,6 +156,11 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Not doing anything if animations are disabled.
+        if animation_disabled() {
+            return None;
+        }
+
         let now = Instant::now();
 
         if let Event::Timer(token) = event {

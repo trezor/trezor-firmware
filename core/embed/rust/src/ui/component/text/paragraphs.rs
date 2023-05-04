@@ -239,13 +239,13 @@ pub mod trace {
     impl<T: ParagraphSource> crate::trace::Trace for Paragraphs<T> {
         fn trace(&self, t: &mut dyn crate::trace::Tracer) {
             t.string("component", "Paragraphs");
-            t.in_list("paragraphs", &mut |par_list| {
+            t.in_list("paragraphs", &|par_list| {
                 Self::foreach_visible(
                     &self.source,
                     &self.visible,
                     self.offset,
                     &mut |layout, content| {
-                        par_list.in_list(&mut |par| {
+                        par_list.in_list(&|par| {
                             layout.layout_text(
                                 content,
                                 &mut layout.initial_cursor(),

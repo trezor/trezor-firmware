@@ -468,5 +468,16 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PinKeyboard");
+        // So that debuglink knows the locations of the buttons
+        let mut digits_order: String<10> = String::new();
+        for btn in self.digit_btns.iter() {
+            let btn_content = btn.inner().content();
+            if let ButtonContent::Text(text) = btn_content {
+                unwrap!(digits_order.push_str(text));
+            }
+        }
+        t.string("digits_order", &digits_order);
+        t.string("pin", self.textbox.inner().pin());
+        t.bool("display_digits", self.textbox.inner().display_digits);
     }
 }

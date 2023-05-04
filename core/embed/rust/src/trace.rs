@@ -112,7 +112,7 @@ impl<F: FnMut(&str)> JsonTracer<F> {
 
 impl<F: FnMut(&str)> ListTracer for JsonTracer<F> {
     fn child(&mut self, value: &dyn Trace) {
-        ListTracer::in_child(self, &mut |t| value.trace(t));
+        ListTracer::in_child(self, &|t| value.trace(t));
     }
 
     fn int(&mut self, i: i64) {
@@ -196,7 +196,6 @@ pub trait Trace {
 
 #[cfg(test)]
 pub mod tests {
-    extern crate serde_json;
     use serde_json::Value;
 
     use super::*;

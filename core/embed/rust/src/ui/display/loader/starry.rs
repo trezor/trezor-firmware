@@ -1,6 +1,6 @@
 use crate::ui::{
     constant::{screen, LOADER_OUTER},
-    display::{rect_fill, rect_fill_rounded, rect_fill_rounded1, Color, Icon},
+    display::{rect_fill, rect_fill_rounded, Color, Icon},
     geometry::{Offset, Point, Rect, CENTER},
 };
 use core::f32::consts::SQRT_2;
@@ -18,7 +18,7 @@ fn star_small(center: Point, fg: Color, _bg: Color) {
 
 fn star_medium(center: Point, fg: Color, bg: Color) {
     let r = Rect::from_center_and_size(center, Offset::uniform(SIZE_MEDIUM));
-    rect_fill_rounded1(r, fg, bg);
+    rect_fill_rounded(r, fg, bg, 1);
 }
 
 fn star_large(center: Point, fg: Color, bg: Color) {

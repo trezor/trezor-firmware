@@ -15,6 +15,9 @@ use crate::trezorhal::{
     },
     uzlib::UZLIB_WINDOW_SIZE,
 };
+#[cfg(feature = "dma2d")]
+use crate::ui::component::image::Image;
+
 #[cfg(not(feature = "dma2d"))]
 use crate::ui::geometry::TOP_LEFT;
 
@@ -23,12 +26,11 @@ use crate::{
     trezorhal::{buffers, display, time, uzlib::UzlibContext},
     ui::lerp::Lerp,
 };
-use core::slice;
 
-#[cfg(feature = "dma2d")]
-use crate::ui::component::image::Image;
+// Reexports
 pub use crate::ui::display::toif::Icon;
-#[cfg(any(feature = "model_tt", feature = "model_tr"))]
+pub use color::Color;
+pub use font::{Font, Glyph, GlyphMetrics};
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
 
 pub fn backlight() -> u16 {
@@ -58,6 +60,7 @@ pub fn fade_backlight_duration(target: u16, duration_ms: u32) {
     set_backlight(target as u16);
 }
 
+/// Fill a whole rectangle with a specific color.
 pub fn rect_fill(r: Rect, fg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
 }
@@ -69,30 +72,54 @@ pub fn rect_stroke(r: Rect, fg_color: Color) {
     display::bar(r.x0 + r.width() - 1, r.y0, 1, r.height(), fg_color.into());
 }
 
+/// Draw a rectangle with rounded corners.
 pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
-    assert!([2, 4, 8, 16].iter().any(|allowed| radius == *allowed));
-    display::bar_radius(
-        r.x0,
-        r.y0,
-        r.width(),
-        r.height(),
-        fg_color.into(),
-        bg_color.into(),
-        radius,
-    );
+    if radius == 1 {
+        rect_fill_rounded1(r, fg_color, bg_color);
+    } else {
+        assert!([2, 4, 8, 16].iter().any(|allowed| radius == *allowed));
+        display::bar_radius(
+            r.x0,
+            r.y0,
+            r.width(),
+            r.height(),
+            fg_color.into(),
+            bg_color.into(),
+            radius,
+        );
+    }
 }
 
-// Used on T1 only.
-pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
-    display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
-    let corners = [
-        r.top_left(),
-        r.top_right() - Offset::x(1),
-        r.bottom_right() - Offset::uniform(1),
-        r.bottom_left() - Offset::y(1),
-    ];
-    for p in corners.iter() {
-        display::bar(p.x, p.y, 1, 1, bg_color.into());
+/// Filling a rectangle with a rounding of 1 pixel - removing the corners.
+fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
+    rect_fill(r, fg_color);
+    rect_fill_corners(r, bg_color);
+}
+
+/// Creating a rectangular outline with a given radius/rounding.
+pub fn rect_outline_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
+    // Painting a bigger rectangle with FG and inner smaller with BG
+    // to create the outline.
+    let inner_r = r.shrink(1);
+    if radius == 1 {
+        rect_fill_rounded(r, fg_color, bg_color, 1);
+        rect_fill(inner_r, bg_color);
+        rect_fill_corners(inner_r, fg_color);
+    } else if radius == 2 {
+        rect_fill_rounded(r, fg_color, bg_color, 2);
+        rect_fill_rounded(inner_r, bg_color, fg_color, 1);
+    } else if radius == 4 {
+        rect_fill_rounded(r, fg_color, bg_color, 4);
+        rect_fill_rounded(inner_r, bg_color, fg_color, 2);
+        rect_fill_corners(inner_r, bg_color);
+    }
+}
+
+/// Filling all four corners of a rectangle with a given color.
+pub fn rect_fill_corners(r: Rect, fg_color: Color) {
+    for p in r.corner_points().iter() {
+        // This draws a 1x1 rectangle at the given point.
+        display::bar(p.x, p.y, 1, 1, fg_color.into());
     }
 }
 
@@ -114,7 +141,7 @@ impl<'a> TextOverlay<'a> {
             text,
             font,
             max_height: font.max_height(),
-            baseline: font.baseline(),
+            baseline: font.text_baseline(),
         }
     }
 
@@ -801,7 +828,8 @@ pub fn dotted_line(start: Point, width: i16, color: Color) {
     }
 }
 
-pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
+/// Display text left-aligned to a certain Point
+pub fn text_left(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     display::text(
         baseline.x,
         baseline.y,
@@ -812,6 +840,7 @@ pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: 
     );
 }
 
+/// Display text centered around a certain Point
 pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     let w = font.text_width(text);
     display::text(
@@ -824,6 +853,7 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
     );
 }
 
+/// Display text right-alligned to a certain Point
 pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     let w = font.text_width(text);
     display::text(

@@ -1,5 +1,5 @@
 #[cfg(feature = "ui_debug")]
-mod maybe_trace {
+mod maybe_trace_private {
     use crate::trace::Trace;
 
     pub trait MaybeTrace: Trace {}
@@ -7,9 +7,9 @@ mod maybe_trace {
 }
 
 #[cfg(not(feature = "ui_debug"))]
-mod maybe_trace {
+mod maybe_trace_private {
     pub trait MaybeTrace {}
     impl<T> MaybeTrace for T {}
 }
 
-pub use maybe_trace::MaybeTrace;
+pub use maybe_trace_private::MaybeTrace;

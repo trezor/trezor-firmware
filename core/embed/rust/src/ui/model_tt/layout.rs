@@ -1340,23 +1340,11 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title).unwrap().try_into().unwrap();
-        let description: StrBuffer = kwargs
-            .get(Qstr::MP_QSTR_description)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let button: StrBuffer = kwargs
-            .get(Qstr::MP_QSTR_button)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let dry_run: bool = kwargs
-            .get(Qstr::MP_QSTR_dry_run)
-            .unwrap()
-            .try_into()
-            .unwrap();
-        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false).unwrap();
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
+        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_DEMIBOLD, title).centered(),
@@ -1391,11 +1379,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let dry_run: bool = kwargs
-            .get(Qstr::MP_QSTR_dry_run)
-            .unwrap()
-            .try_into()
-            .unwrap();
+        let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
         let title = if dry_run {
             "SEED CHECK"
         } else {
@@ -1554,7 +1538,7 @@ extern "C" fn draw_welcome_screen() -> Obj {
     screen.place(constant::screen());
     display::sync();
     screen.paint();
-    display::set_backlight(150); // BACKLIGHT_NORMAL
+    display::set_backlight(theme::BACKLIGHT_NORMAL);
     Obj::const_none()
 }
 
@@ -1575,8 +1559,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
-    /// def jpeg_info(data: bytes) -> (width: int, height: int, mcu_height: int):
-    ///     """Get JPEG image dimensions."""
+    /// def jpeg_info(data: bytes) -> tuple[int, int, int]:
+    ///     """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
     Qstr::MP_QSTR_jpeg_info => obj_fn_1!(upy_jpeg_info).as_obj(),
 
     /// def jpeg_test(data: bytes) -> bool:
@@ -1662,7 +1646,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def show_spending_details(
     ///     *,
     ///     account: str,
-    ///     fee_rate: str | None = None,
+    ///     fee_rate: str | None,
     /// ) -> object:
     ///     """Show metadata when for outgoing transaction."""
     Qstr::MP_QSTR_show_spending_details => obj_fn_kw!(0, new_show_spending_details).as_obj(),
@@ -1671,8 +1655,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     value: str,
-    ///     description: str | None = None,
-    ///     subtitle: str | None = None,
+    ///     description: str | None,
+    ///     subtitle: str | None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     info_button: bool = False,
@@ -1773,8 +1757,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def show_simple(
     ///     *,
     ///     title: str | None,
-    ///     description: str,
-    ///     button: str | None = None,
+    ///     description: str = "",
+    ///     button: str = "",
     /// ) -> object:
     ///     """Simple dialog with text and one button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
@@ -1823,21 +1807,21 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     prompt: str,
     ///     max_len: int,
     /// ) -> str | object:
-    ///    """Passphrase input keyboard."""
+    ///     """Passphrase input keyboard."""
     Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
 
     /// def request_bip39(
     ///     *,
     ///     prompt: str,
     /// ) -> str:
-    ///    """BIP39 word input keyboard."""
+    ///     """BIP39 word input keyboard."""
     Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
 
     /// def request_slip39(
     ///     *,
     ///     prompt: str,
     /// ) -> str:
-    ///    """SLIP39 word input keyboard."""
+    ///     """SLIP39 word input keyboard."""
     Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
 
     /// def select_word(
@@ -1846,7 +1830,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str,
     ///     words: Iterable[str],
     /// ) -> int:
-    ///    """Select mnemonic word from three possibilities - seed check after backup. The
+    ///     """Select mnemonic word from three possibilities - seed check after backup. The
     ///    iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
 
@@ -1855,7 +1839,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     pages: Iterable[str],
     /// ) -> object:
-    ///    """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
+    ///     """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
     /// def request_number(
@@ -1866,7 +1850,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     max_count: int,
     ///     description: Callable[[int], str] | None = None,
     /// ) -> object:
-    ///    """Number input with + and - buttons, description, and info button."""
+    ///     """Number input with + and - buttons, description, and info button."""
     Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
 
     /// def show_checklist(
@@ -1876,8 +1860,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     active: int,
     ///     button: str,
     /// ) -> object:
-    ///    """Checklist of backup steps. Active index is highlighted, previous items have check
-    ///    mark nex to them."""
+    ///     """Checklist of backup steps. Active index is highlighted, previous items have check
+    ///    mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
     /// def confirm_recovery(
@@ -1886,41 +1870,41 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str,
     ///     button: str,
     ///     dry_run: bool,
-    ///     info_button: bool,
+    ///     info_button: bool = False,
     /// ) -> object:
-    ///    """Device recovery homescreen."""
+    ///     """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
 
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,
-    /// ) -> int | CANCELLED:
-    ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+    /// ) -> int | str:  # TT returns int
+    ///     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
     /// def show_group_share_success(
     ///     *,
     ///     lines: Iterable[str]
     /// ) -> int:
-    ///    """Shown after successfully finishing a group."""
+    ///     """Shown after successfully finishing a group."""
     Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
 
     /// def show_remaining_shares(
     ///     *,
     ///     pages: Iterable[tuple[str, str]],
     /// ) -> int:
-    ///    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
+    ///     """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
     Qstr::MP_QSTR_show_remaining_shares => obj_fn_kw!(0, new_show_remaining_shares).as_obj(),
 
     /// def show_progress(
     ///     *,
     ///     title: str,
     ///     indeterminate: bool = False,
-    ///     description: str | None = None,
+    ///     description: str = "",
     /// ) -> object:
-    ///    """Show progress loader. Please note that the number of lines reserved on screen for
+    ///     """Show progress loader. Please note that the number of lines reserved on screen for
     ///    description is determined at construction time. If you want multiline descriptions
-    ///    make sure the initial desciption has at least that amount of lines."""
+    ///    make sure the initial description has at least that amount of lines."""
     Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
 
     /// def show_progress_coinjoin(
@@ -1930,7 +1914,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     time_ms: int = 0,
     ///     skip_first_paint: bool = False,
     /// ) -> object:
-    ///    """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
+    ///     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
     ///    time_ms timeout is passed."""
     Qstr::MP_QSTR_show_progress_coinjoin => obj_fn_kw!(0, new_show_progress_coinjoin).as_obj(),
 
@@ -1961,7 +1945,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
 #[cfg(test)]
 mod tests {
-    extern crate serde_json;
+    use serde_json;
 
     use crate::{
         trace::tests::trace,

@@ -83,7 +83,11 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Dialog");
         t.child("content", &self.content);
-        self.left_btn.as_ref().map(|b| t.child("left", b));
-        self.right_btn.as_ref().map(|b| t.child("right", b));
+        if let Some(b) = self.left_btn.as_ref() {
+            t.child("left", b)
+        }
+        if let Some(b) = self.right_btn.as_ref() {
+            t.child("right", b)
+        }
     }
 }
