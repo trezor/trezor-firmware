@@ -17,14 +17,6 @@ MONO: int = Display.FONT_MONO
 WIDTH: int = Display.WIDTH
 HEIGHT: int = Display.HEIGHT
 
-if __debug__:
-    # common symbols to transfer swipes between debuglink and the UI
-    SWIPE_UP = const(0x01)
-    SWIPE_DOWN = const(0x02)
-    SWIPE_LEFT = const(0x04)
-    SWIPE_RIGHT = const(0x08)
-
-
 # channel used to cancel layouts, see `Cancelled` exception
 layout_chan = loop.chan()
 
@@ -172,8 +164,9 @@ class Component:
 
     if __debug__:
 
-        def read_content(self) -> list[str]:
-            return [self.__class__.__name__]
+        def read_content_into(self, content_store: list[str]) -> None:
+            content_store.clear()
+            content_store.append(self.__class__.__name__)
 
 
 class Result(Exception):

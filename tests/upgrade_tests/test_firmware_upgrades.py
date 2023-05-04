@@ -309,15 +309,11 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
 
         device_handler.run(device.recover, pin_protection=False)
 
-        # Flow is different for old UI and new UI
-        legacy_ui = emu.client.version < (2, 5, 4)
-
-        recovery.confirm_recovery(debug, legacy_ui=legacy_ui)
-        recovery.select_number_of_words(debug, legacy_ui=legacy_ui)
-        layout = recovery.enter_share(
-            debug, MNEMONIC_SLIP39_BASIC_20_3of6[0], legacy_ui=legacy_ui
-        )
-        assert "2 more shares" in layout.text_content()
+        recovery.confirm_recovery(debug)
+        recovery.select_number_of_words(debug)
+        layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
+        if not debug.legacy_ui and not debug.legacy_debug:
+            assert "2 more shares" in layout.text_content()
 
         device_id = emu.client.features.device_id
         storage = emu.get_storage()
