@@ -685,29 +685,6 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
-        let verb_cancel: StrBuffer = kwargs.get(Qstr::MP_QSTR_verb_cancel)?.try_into()?;
-        let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
-
-        let buttons = Button::cancel_confirm(
-            Button::with_text(verb_cancel),
-            Button::with_text("CONFIRM".into()).styled(theme::button_confirm()),
-            false,
-        );
-
-        let obj = LayoutObj::new(Frame::left_aligned(
-            theme::label_title(),
-            title,
-            Dialog::new(Qr::new(address, case_sensitive)?.with_border(4), buttons),
-        ))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
@@ -1670,16 +1647,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm TOS before device setup."""
     Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
-
-    /// def show_qr(
-    ///     *,
-    ///     title: str,
-    ///     address: str,
-    ///     verb_cancel: str,
-    ///     case_sensitive: bool,
-    /// ) -> object:
-    ///     """Show QR code."""
-    Qstr::MP_QSTR_show_qr => obj_fn_kw!(0, new_show_qr).as_obj(),
 
     /// def show_address_details(
     ///     *,

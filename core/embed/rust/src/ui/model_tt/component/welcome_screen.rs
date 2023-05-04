@@ -1,8 +1,10 @@
+#[cfg(not(feature = "bootloader"))]
+use crate::ui::display;
 #[cfg(feature = "bootloader")]
 use crate::ui::model_tt::bootloader::theme::DEVICE_NAME;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display::{self, Icon},
+    display::Icon,
     geometry::{self, Offset, Rect},
     model_tt::theme,
 };
@@ -10,6 +12,7 @@ use crate::ui::{
 const TEXT_BOTTOM_MARGIN: i16 = 24; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 48;
 const MODEL_NAME: &str = "Trezor Model T";
+#[cfg(not(feature = "bootloader"))]
 const MODEL_NAME_FONT: display::Font = display::Font::DEMIBOLD;
 
 pub struct WelcomeScreen {
