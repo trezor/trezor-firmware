@@ -13,35 +13,28 @@ def enter_word(
     for coords in buttons.type_word(typed_word, is_slip39=is_slip39):
         debug.click(coords)
 
-    # For BIP39 - double-click on CONFIRM WORD is needed in case the word
-    # is not already typed as a whole
-    if not is_slip39 and typed_word != word:
-        debug.click(buttons.CONFIRM_WORD)
     return debug.click(buttons.CONFIRM_WORD, wait=True)
 
 
 def confirm_recovery(debug: "DebugLink", legacy_ui: bool = False) -> None:
-    layout = debug.wait_layout()
-    if legacy_ui:
-        assert layout.text.startswith("Recovery mode")
-    else:
-        assert layout.get_title().startswith("WALLET RECOVERY")
+    if not legacy_ui:
+        layout = debug.wait_layout()
+        assert layout.title().startswith("WALLET RECOVERY")
     debug.click(buttons.OK, wait=True)
 
 
 def select_number_of_words(
     debug: "DebugLink", num_of_words: int = 20, legacy_ui: bool = False
 ) -> None:
-    layout = debug.read_layout()
-
     # select number of words
-    assert "Select number of words" in layout.get_content()
+    if not legacy_ui:
+        assert "select the number of words" in debug.read_layout().text_content()
     layout = debug.click(buttons.OK, wait=True)
     if legacy_ui:
-        assert layout.text == "WordSelector"
+        assert layout.json_str == "WordSelector"
     else:
         # Two title options
-        assert layout.get_title() in ("SEED CHECK", "WALLET RECOVERY")
+        assert layout.title() in ("SEED CHECK", "WALLET RECOVERY")
 
     # click the number
     word_option_offset = 6
@@ -51,7 +44,12 @@ def select_number_of_words(
     )  # raises if num of words is invalid
     coords = buttons.grid34(index % 3, index // 3)
     layout = debug.click(coords, wait=True)
-    assert "Enter any share" in layout.get_content()
+
+    if not legacy_ui:
+        if num_of_words in (20, 33):
+            assert "Enter any share" in layout.text_content()
+        else:
+            assert "enter your recovery seed" in layout.text_content()
 
 
 def enter_share(
@@ -60,9 +58,9 @@ def enter_share(
     layout = debug.click(buttons.OK, wait=True)
 
     if legacy_ui:
-        assert layout.text == "Slip39Keyboard"
+        assert layout.json_str == "Slip39Keyboard"
     else:
-        assert layout.text == "< MnemonicKeyboard >"
+        assert layout.main_component() == "MnemonicKeyboard"
 
     for word in share.split(" "):
         layout = enter_word(debug, word, is_slip39=True)
@@ -75,14 +73,26 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
     expected_text = "Enter any share"
     remaining = len(shares)
     for share in shares:
-        assert expected_text in layout.get_content()
+        assert expected_text in layout.text_content()
         layout = enter_share(debug, share)
         remaining -= 1
         expected_text = f"{remaining} more share"
 
-    assert "You have successfully recovered your wallet" in layout.get_content()
+    assert "You have finished recovering your wallet" in layout.text_content()
+
+
+def enter_seed(debug: "DebugLink", seed_words: list[str]) -> None:
+    assert "enter" in debug.read_layout().text_content()
+
+    layout = debug.click(buttons.OK, wait=True)
+    assert layout.main_component() == "MnemonicKeyboard"
+
+    for word in seed_words:
+        layout = enter_word(debug, word, is_slip39=False)
+
+    assert "You have finished recovering your wallet" in layout.text_content()
 
 
 def finalize(debug: "DebugLink") -> None:
     layout = debug.click(buttons.OK, wait=True)
-    assert layout.text.startswith("< Homescreen ")
+    assert layout.main_component() == "Homescreen"
