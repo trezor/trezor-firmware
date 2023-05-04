@@ -16,9 +16,6 @@ if TYPE_CHECKING:
     from typing import Sequence
     from trezor.wire import GenericContext
 
-if __debug__:
-    from apps import debug
-
 _NUM_OF_CHOICES = const(3)
 
 
@@ -57,10 +54,6 @@ async def _confirm_word(
     checked_index = share_words.index(checked_word) + offset
     # shuffle again so the confirmed word is not always the first choice
     random.shuffle(choices)
-
-    if __debug__:
-        debug.reset_word_index.publish(checked_index)
-
     # let the user pick a word
     selected_word: str = await select_word(
         ctx, choices, share_index, checked_index, count, group_index

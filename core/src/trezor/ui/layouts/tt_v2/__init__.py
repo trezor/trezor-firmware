@@ -32,14 +32,10 @@ if __debug__:
 
 class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
-    def __init__(self, layout: Any, is_backup: bool = False):
+    def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
-        self.is_backup = is_backup
-
-        if __debug__ and self.is_backup:
-            self.notify_backup()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -60,44 +56,49 @@ class RustLayout(ui.Layout):
     if __debug__:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import confirm_signal, input_signal
-
             return (
                 self.handle_timers(),
                 self.handle_input_and_rendering(),
                 self.handle_swipe(),
-                confirm_signal(),
-                input_signal(),
+                self.handle_click_signal(),
+                self.handle_result_signal(),
             )
 
-        def read_content(self) -> list[str]:
-            result: list[str] = []
+        async def handle_result_signal(self) -> None:
+            """Enables sending arbitrary input - ui.Result.
+
+            Waits for `result_signal` and carries it out.
+            """
+            from apps.debug import result_signal
+            from storage import debug as debug_storage
+
+            while True:
+                event_id, result = await result_signal()
+                debug_storage.new_layout_event_id = event_id
+                raise ui.Result(result)
+
+        def read_content_into(self, content_store: list[str]) -> None:
+            """Reads all the strings/tokens received from Rust into given list."""
 
             def callback(*args: Any) -> None:
                 for arg in args:
-                    result.append(str(arg))
+                    content_store.append(str(arg))
 
+            content_store.clear()
             self.layout.trace(callback)
-            result = " ".join(result).split("\n")
-            return result
 
         async def handle_swipe(self):
             from apps.debug import notify_layout_change, swipe_signal
-            from trezor.ui import (
-                SWIPE_UP,
-                SWIPE_DOWN,
-                SWIPE_LEFT,
-                SWIPE_RIGHT,
-            )
+            from trezor.enums import DebugSwipeDirection
 
             while True:
-                direction = await swipe_signal()
+                event_id, direction = await swipe_signal()
                 orig_x = orig_y = 120
                 off_x, off_y = {
-                    SWIPE_UP: (0, -30),
-                    SWIPE_DOWN: (0, 30),
-                    SWIPE_LEFT: (-30, 0),
-                    SWIPE_RIGHT: (30, 0),
+                    DebugSwipeDirection.UP: (0, -30),
+                    DebugSwipeDirection.DOWN: (0, 30),
+                    DebugSwipeDirection.LEFT: (-30, 0),
+                    DebugSwipeDirection.RIGHT: (30, 0),
                 }[direction]
 
                 for event, x, y in (
@@ -110,26 +111,46 @@ class RustLayout(ui.Layout):
                     if msg is not None:
                         raise ui.Result(msg)
 
-                if self.is_backup:
-                    self.notify_backup()
-                notify_layout_change(self)
+                notify_layout_change(self, event_id)
 
-        def notify_backup(self):
-            from apps.debug import reset_current_words
+        async def _click(
+            self,
+            event_id: int | None,
+            x: int,
+            y: int,
+            hold_ms: int | None,
+        ) -> Any:
+            from trezor import workflow
+            from apps.debug import notify_layout_change
+            from storage import debug as debug_storage
 
-            content = "\n".join(self.read_content())
-            start = "< Paragraphs "
-            end = ">"
-            start_pos = content.index(start)
-            end_pos = content.index(end, start_pos)
-            words: list[str] = []
-            for line in content[start_pos + len(start) : end_pos].split("\n"):
-                line = line.strip()
-                if not line:
-                    continue
-                space_pos = line.index(" ")
-                words.append(line[space_pos + 1 :])
-            reset_current_words.publish(words)
+            self.layout.touch_event(io.TOUCH_START, x, y)
+            self._paint()
+            if hold_ms is not None:
+                await loop.sleep(hold_ms)
+            msg = self.layout.touch_event(io.TOUCH_END, x, y)
+
+            if msg is not None:
+                debug_storage.new_layout_event_id = event_id
+                raise ui.Result(msg)
+
+            # So that these presses will keep trezor awake
+            # (it will not be locked after auto_lock_delay_ms)
+            workflow.idle_timer.touch()
+
+            self._paint()
+            notify_layout_change(self, event_id)
+
+        async def handle_click_signal(self) -> None:
+            """Enables clicking somewhere on the screen.
+
+            Waits for `click_signal` and carries it out.
+            """
+            from apps.debug import click_signal
+
+            while True:
+                event_id, x, y, hold_ms = await click_signal()
+                await self._click(event_id, x, y, hold_ms)
 
     else:
 
@@ -144,12 +165,21 @@ class RustLayout(ui.Layout):
 
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
+            from storage import debug as debug_storage
 
             # notify about change and do not notify again until next await.
             # (handle_rendering might be called multiple times in a single await,
             # because of the endless loop in __iter__)
             self.should_notify_layout_change = False
-            notify_layout_change(self)
+
+            # Possibly there is an event ID that caused the layout change,
+            # so notifying with this ID.
+            event_id = None
+            if debug_storage.new_layout_event_id is not None:
+                event_id = debug_storage.new_layout_event_id
+                debug_storage.new_layout_event_id = None
+
+            notify_layout_change(self, event_id)
 
         # Turn the brightness on again.
         ui.backlight_fade(self.BACKLIGHT_LEVEL)

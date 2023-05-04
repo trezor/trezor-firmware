@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import json
 import logging
 import re
 import textwrap
@@ -57,133 +58,217 @@ if TYPE_CHECKING:
         protobuf.MessageType, Type[protobuf.MessageType], "MessageFilter"
     ]
 
+    AnyDict = Dict[str, Any]
+
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
 LOG = logging.getLogger(__name__)
 
 
-class LayoutContent:
+class UnstructuredJSONReader:
+    """Contains data-parsing helpers for JSON data that have unknown structure."""
+
+    def __init__(self, json_str: str) -> None:
+        self.json_str = json_str
+        # We may not receive valid JSON, e.g. from an old model in upgrade tests
+        try:
+            self.dict: AnyDict = json.loads(json_str)
+        except json.JSONDecodeError:
+            self.dict = {}
+
+    def top_level_value(self, key: str) -> Any:
+        return self.dict[key]
+
+    def find_objects_with_key_and_value(self, key: str, value: Any) -> List["AnyDict"]:
+        def recursively_find(data: Any) -> Iterator[Any]:
+            if isinstance(data, dict):
+                if data.get(key) == value:
+                    yield data
+                for val in data.values():
+                    yield from recursively_find(val)
+            elif isinstance(data, list):
+                for item in data:
+                    yield from recursively_find(item)
+
+        return list(recursively_find(self.dict))
+
+    def find_values_by_key(
+        self, key: str, only_type: Union[type, None] = None
+    ) -> List[Any]:
+        def recursively_find(data: Any) -> Iterator[Any]:
+            if isinstance(data, dict):
+                if key in data:
+                    yield data[key]
+                for val in data.values():
+                    yield from recursively_find(val)
+            elif isinstance(data, list):
+                for item in data:
+                    yield from recursively_find(item)
+
+        values = list(recursively_find(self.dict))
+
+        if only_type is not None:
+            values = [v for v in values if isinstance(v, only_type)]
+
+        return values
+
+    def find_unique_value_by_key(
+        self, key: str, default: Any, only_type: Union[type, None] = None
+    ) -> Any:
+        values = self.find_values_by_key(key, only_type=only_type)
+        if not values:
+            return default
+        assert len(values) == 1
+        return values[0]
+
+
+class LayoutContent(UnstructuredJSONReader):
     """Stores content of a layout as returned from Trezor.
 
     Contains helper functions to extract specific parts of the layout.
     """
 
-    def __init__(self, lines: Sequence[str]) -> None:
-        self.lines = list(lines)
-        self.text = " ".join(self.lines)
+    def __init__(self, json_tokens: Sequence[str]) -> None:
+        json_str = "".join(json_tokens)
+        super().__init__(json_str)
 
-    def get_title(self) -> str:
-        """Get title of the layout.
+    def main_component(self) -> str:
+        """Getting the main component of the layout."""
+        return self.top_level_value("component")
 
-        Title is located between "title" and "content" identifiers.
-        Example: "< Frame title :  RECOVERY SHARE #1 content :  < SwipePage"
-          -> "RECOVERY SHARE #1"
+    def all_components(self) -> List[str]:
+        """Getting all components of the layout."""
+        return self.find_values_by_key("component", only_type=str)
+
+    def visible_screen(self) -> str:
+        """String representation of a current screen content.
+        Example:
+            SIGN TRANSACTION
+            --------------------
+            You are about to
+            sign 3 actions.
+            ********************
+            Icon:cancel [Cancel], --- [None], CONFIRM [Confirm]
         """
-        match = re.search(r"title : (.*?) content :", self.text)
-        if not match:
-            return ""
-        return match.group(1).strip()
+        title_separator = f"\n{20*'-'}\n"
+        btn_separator = f"\n{20*'*'}\n"
 
-    def get_content(self, tag_name: str = "Paragraphs", raw: bool = False) -> str:
-        """Get text of the main screen content of the layout."""
-        content = "".join(self._get_content_lines(tag_name, raw))
-        if not raw and content.endswith(" "):
-            # Stripping possible space at the end
-            content = content[:-1]
-        return content
+        visible = ""
+        if self.title():
+            visible += self.title()
+            visible += title_separator
+        visible += self.screen_content()
+        visible_buttons = self.button_contents()
+        if visible_buttons:
+            visible += btn_separator
+            visible += ", ".join(visible_buttons)
 
-    def get_button_texts(self) -> List[str]:
-        """Get text of all buttons in the layout.
+        return visible
 
-        Example button: "< Button text :  LADYBUG >"
-          -> ["LADYBUG"]
+    def title(self) -> str:
+        """Getting text that is displayed as a title."""
+        # There could be possibly subtitle as well
+        title_parts: List[str] = []
+
+        def _get_str_or_dict_text(key: str) -> str:
+            value = self.find_unique_value_by_key(key, "")
+            if isinstance(value, dict):
+                return value["text"]
+            return value
+
+        title = _get_str_or_dict_text("title")
+        if title:
+            title_parts.append(title)
+
+        subtitle = _get_str_or_dict_text("subtitle")
+        if subtitle:
+            title_parts.append(subtitle)
+
+        return "\n".join(title_parts)
+
+    def text_content(self) -> str:
+        """What is on the screen, in one long string, so content can be
+        asserted regardless of newlines.
         """
-        return re.findall(r"< Button text : +(.*?) >", self.text)
+        return self.screen_content().replace("\n", " ")
 
-    def get_seed_words(self) -> List[str]:
+    def screen_content(self) -> str:
+        """Getting text that is displayed in the main part of the screen.
+        Preserving the line breaks.
+        """
+        main_text_blocks: List[str] = []
+        paragraphs = self.raw_content_paragraphs()
+        if not paragraphs:
+            return self.main_component()
+        for par in paragraphs:
+            par_content = ""
+            for line_or_newline in par:
+                par_content += line_or_newline
+            par_content.replace("\n", " ")
+            main_text_blocks.append(par_content)
+        return "\n".join(main_text_blocks)
+
+    def raw_content_paragraphs(self) -> Union[List[List[str]], None]:
+        """Getting raw paragraphs as sent from Rust."""
+        return self.find_unique_value_by_key("paragraphs", default=None, only_type=list)
+
+    def button_contents(self) -> List[str]:
+        """Getting list of button contents."""
+        buttons: List[str] = []
+        button_objects = self.find_objects_with_key_and_value("component", "Button")
+        for button in button_objects:
+            if button.get("icon"):
+                buttons.append("ICON")
+            elif "text" in button:
+                buttons.append(button["text"])
+        return buttons
+
+    def seed_words(self) -> List[str]:
         """Get all the seed words on the screen in order.
 
-        Example content: "1. ladybug 2. acid 3. academic 4. afraid"
+        Example content: "1. ladybug\n2. acid\n3. academic\n4. afraid"
           -> ["ladybug", "acid", "academic", "afraid"]
         """
-        return re.findall(r"\d+\. (\w+)\b", self.get_content())
+        words: List[str] = []
+        for line in self.screen_content().split("\n"):
+            # Dot after index is optional (present on TT, not on TR)
+            match = re.match(r"^\d+\.? (\w+)$", line)
+            if match:
+                words.append(match.group(1))
+        return words
 
-    def get_page_count(self) -> int:
+    def pin(self) -> str:
+        """Get PIN from the layout."""
+        assert self.main_component() == "PinKeyboard"
+        return self.find_unique_value_by_key("pin", default="", only_type=str)
+
+    def passphrase(self) -> str:
+        """Get passphrase from the layout."""
+        assert self.main_component() == "PassphraseKeyboard"
+        return self.find_unique_value_by_key("passphrase", default="", only_type=str)
+
+    def page_count(self) -> int:
         """Get number of pages for the layout."""
-        return self._get_number("page_count")
+        return (
+            self.find_unique_value_by_key(
+                "scrollbar_page_count", default=0, only_type=int
+            )
+            or self.find_unique_value_by_key("page_count", default=0, only_type=int)
+            or 1
+        )
 
-    def get_active_page(self) -> int:
+    def active_page(self) -> int:
         """Get current page index of the layout."""
-        return self._get_number("active_page")
+        return self.find_unique_value_by_key("active_page", default=0, only_type=int)
 
-    def _get_number(self, key: str) -> int:
-        """Get number connected with a specific key."""
-        match = re.search(rf"{key} : +(\d+)", self.text)
-        if not match:
-            return 0
-        return int(match.group(1))
-
-    def _get_content_lines(
-        self, tag_name: str = "Paragraphs", raw: bool = False
-    ) -> List[str]:
-        """Get lines of the main screen content of the layout."""
-
-        # First line should have content after the tag, last line does not store content
-        tag = f"< {tag_name}"
-        for i in range(len(self.lines)):
-            if tag in self.lines[i]:
-                first_line = self.lines[i].split(tag)[1]
-                all_lines = [first_line] + self.lines[i + 1 : -1]
-                break
-        else:
-            all_lines = self.lines[1:-1]
-
-        if raw:
-            return all_lines
-        else:
-            return [_clean_line(line) for line in all_lines]
-
-
-def _clean_line(line: str) -> str:
-    """Cleaning the layout line for extra spaces, hyphens and ellipsis.
-
-    Line usually comes in the form of " <content> ", with trailing spaces
-    at both ends. It may end with a hyphen (" - ") or ellipsis (" ... ").
-
-    Hyphen means the word was split to the next line, ellipsis signals
-    the text continuing on the next page.
-    """
-    # Deleting space at the beginning
-    if line.startswith(" "):
-        line = line[1:]
-
-    # Deleting a hyphen at the end, together with the space
-    # before it, so it will be tightly connected with the next line
-    if line.endswith(" - "):
-        line = line[:-3]
-
-    # Deleting the ellipsis at the end (but preserving the space there)
-    if line.endswith(" ... "):
-        line = line[:-4]
-
-    return line
+    def tt_pin_digits_order(self) -> str:
+        """In what order the PIN buttons are shown on the screen. Only for TT."""
+        return self.top_level_value("digits_order")
 
 
 def multipage_content(layouts: List[LayoutContent]) -> str:
     """Get overall content from multiple-page layout."""
-    final_text = ""
-    for layout in layouts:
-        final_text += layout.get_content()
-        # When the raw content of the page ends with ellipsis,
-        # we need to add a space to separate it with the next page
-        if layout.get_content(raw=True).endswith("... "):
-            final_text += " "
-
-    # Stripping possible space at the end of last page
-    if final_text.endswith(" "):
-        final_text = final_text[:-1]
-
-    return final_text
+    return "".join(layout.text_content() for layout in layouts)
 
 
 class DebugLink:
@@ -194,6 +279,7 @@ class DebugLink:
 
         # To be set by TrezorClientDebugLink (is not known during creation time)
         self.model: Optional[str] = None
+        self.version: Tuple[int, int, int] = (0, 0, 0)
 
         # Where screenshots are being saved
         self.screenshot_recording_dir: Optional[str] = None
@@ -206,6 +292,16 @@ class DebugLink:
         # Optional file for saving text representation of the screen
         self.screen_text_file: Optional[Path] = None
         self.last_screen_content = ""
+
+    @property
+    def legacy_ui(self) -> bool:
+        """Differences between UI1 and UI2."""
+        return self.version < (2, 6, 0)
+
+    @property
+    def legacy_debug(self) -> bool:
+        """Differences in handling debug events and LayoutContent."""
+        return self.version < (2, 6, 1)
 
     def set_screen_text_file(self, file_path: Optional[Path]) -> None:
         if file_path is not None:
@@ -248,19 +344,33 @@ class DebugLink:
         return self._call(messages.DebugLinkGetState())
 
     def read_layout(self) -> LayoutContent:
-        return LayoutContent(self.state().layout_lines)
+        return LayoutContent(self.state().tokens or [])
 
-    def wait_layout(self) -> LayoutContent:
+    def wait_layout(self, wait_for_external_change: bool = False) -> LayoutContent:
+        # Next layout change will be caused by external event
+        # (e.g. device being auto-locked or as a result of device_handler.run(xxx))
+        # and not by our debug actions/decisions.
+        # Resetting the debug state so we wait for the next layout change
+        # (and do not return the current state).
+        if wait_for_external_change:
+            self.reset_debug_events()
+
         obj = self._call(messages.DebugLinkGetState(wait_layout=True))
         if isinstance(obj, messages.Failure):
             raise TrezorFailure(obj)
-        return LayoutContent(obj.layout_lines)
+        return LayoutContent(obj.tokens)
+
+    def reset_debug_events(self) -> None:
+        # Only supported on TT and above certain version
+        if self.model == "T" and not self.legacy_debug:
+            return self._call(messages.DebugLinkResetDebugEvents())
+        return None
 
     def synchronize_at(self, layout_text: str, timeout: float = 5) -> LayoutContent:
         now = time.monotonic()
         while True:
             layout = self.read_layout()
-            if layout_text in layout.text:
+            if layout_text in layout.json_str:
                 return layout
             if time.monotonic() - now > timeout:
                 raise RuntimeError("Timeout waiting for layout")
@@ -293,10 +403,6 @@ class DebugLink:
         state = self._call(messages.DebugLinkGetState(wait_word_list=True))
         return state.reset_word
 
-    def read_reset_word_pos(self) -> int:
-        state = self._call(messages.DebugLinkGetState(wait_word_pos=True))
-        return state.reset_word_pos
-
     def input(
         self,
         word: Optional[str] = None,
@@ -312,7 +418,9 @@ class DebugLink:
 
         args = sum(a is not None for a in (word, button, swipe, x))
         if args != 1:
-            raise ValueError("Invalid input - must use one of word, button, swipe")
+            raise ValueError(
+                "Invalid input - must use one of word, button, swipe, click(x,y)"
+            )
 
         decision = messages.DebugLinkDecision(
             button=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
@@ -320,7 +428,7 @@ class DebugLink:
 
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
-            return LayoutContent(ret.lines)
+            return LayoutContent(ret.tokens)
 
         # Getting the current screen after the (nowait) decision
         self.save_current_screen_if_relevant(wait=False)
@@ -336,22 +444,23 @@ class DebugLink:
             layout = self.wait_layout()
         else:
             layout = self.read_layout()
-        self.save_debug_screen(layout.lines)
+        self.save_debug_screen(layout.visible_screen())
 
-    def save_debug_screen(self, lines: List[str]) -> None:
+    def save_debug_screen(self, screen_content: str) -> None:
         if self.screen_text_file is None:
             return
 
-        content = "\n".join(lines)
+        if not self.screen_text_file.exists():
+            self.screen_text_file.write_bytes(b"")
 
         # Not writing the same screen twice
-        if content == self.last_screen_content:
+        if screen_content == self.last_screen_content:
             return
 
-        self.last_screen_content = content
+        self.last_screen_content = screen_content
 
         with open(self.screen_text_file, "a") as f:
-            f.write(content)
+            f.write(screen_content)
             f.write("\n" + 80 * "/" + "\n")
 
     # Type overloads make sure that when we supply `wait=True` into `click()`,
@@ -370,6 +479,14 @@ class DebugLink:
     ) -> Optional[LayoutContent]:
         x, y = click
         return self.input(x=x, y=y, wait=wait)
+
+    # Made into separate function as `hold_ms: Optional[int]` in `click`
+    # was causing problems with @overload
+    def click_hold(
+        self, click: Tuple[int, int], hold_ms: int
+    ) -> Optional[LayoutContent]:
+        x, y = click
+        return self.input(x=x, y=y, hold_ms=hold_ms, wait=True)
 
     def press_yes(self, wait: bool = False) -> None:
         self.input(button=messages.DebugButton.YES, wait=wait)
@@ -538,6 +655,7 @@ class DebugUI:
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
             else:
+                # Paginating (going as further as possible) and pressing Yes
                 if br.pages is not None:
                     for _ in range(br.pages - 1):
                         self.debuglink.swipe_up(wait=True)
@@ -688,7 +806,9 @@ class TrezorClientDebugLink(TrezorClient):
         super().__init__(transport, ui=self.ui)
 
         # So that we can choose right screenshotting logic (T1 vs TT)
+        # and know the supported debug capabilities
         self.debug.model = self.features.model
+        self.debug.version = self.version
 
     def reset_debug_features(self) -> None:
         """Prepare the debugging client for a new testcase.
