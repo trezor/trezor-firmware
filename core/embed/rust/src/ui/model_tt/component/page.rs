@@ -494,7 +494,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    extern crate serde_json;
+    use serde_json;
 
     use crate::{
         trace::tests::trace,

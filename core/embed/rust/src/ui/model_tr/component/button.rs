@@ -132,12 +132,12 @@ where
             ButtonContent::Text(text) => {
                 let background_color = style.text_color.negate();
                 if style.border_horiz {
-                    display::rect_fill_rounded1(self.area, background_color, theme::BG);
+                    display::rect_fill_rounded(self.area, background_color, theme::BG, 1);
                 } else {
                     display::rect_fill(self.area, background_color)
                 }
 
-                display::text(
+                display::text_left(
                     self.baseline,
                     text.as_ref(),
                     style.font,

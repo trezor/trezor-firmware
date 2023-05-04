@@ -215,7 +215,7 @@ where
     U: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.in_list("children", &mut |l| {
+        t.in_list("children", &|l| {
             l.child(&self.0);
             l.child(&self.1);
         });

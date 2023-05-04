@@ -155,7 +155,7 @@ where
         use core::cell::Cell;
         let fit: Cell<Option<LayoutFit>> = Cell::new(None);
         t.component("FormattedText");
-        t.in_list("text", &mut |l| {
+        t.in_list("text", &|l| {
             let result = self.layout_content(&mut TraceSink(l));
             fit.set(Some(result));
         });

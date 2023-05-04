@@ -160,8 +160,12 @@ impl<S: ParagraphStrType> crate::trace::Trace for ResultPopup<S> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ResultPopup");
         t.child("text", &self.text);
-        self.button.as_ref().map(|b| t.child("button", b));
-        self.headline.as_ref().map(|h| t.child("headline", h));
+        if let Some(b) = self.button.as_ref() {
+            t.child("button", b)
+        }
+        if let Some(h) = self.headline.as_ref() {
+            t.child("headline", h)
+        }
         t.child("result_anim", &self.result_anim);
     }
 }
