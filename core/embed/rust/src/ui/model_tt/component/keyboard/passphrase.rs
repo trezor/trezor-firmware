@@ -132,15 +132,40 @@ impl PassphraseKeyboard {
 
     /// When the input has reached max length, disable all the input buttons.
     fn update_input_btns_state(&mut self, ctx: &mut EventCtx) {
-        for btn in self.keys.iter_mut() {
+        let active_states = self.get_buttons_active_states();
+        for (key, btn) in self.keys.iter_mut().enumerate() {
             btn.mutate(ctx, |ctx, b| {
-                if self.input.inner().textbox.is_full() {
-                    b.disable(ctx);
-                } else {
+                if active_states[key] {
                     b.enable(ctx);
+                } else {
+                    b.disable(ctx);
                 }
             });
         }
+    }
+
+    /// Precomputing the active states not to overlap borrows in
+    /// `self.keys.iter_mut` loop.
+    fn get_buttons_active_states(&self) -> [bool; KEY_COUNT] {
+        let mut active_states: [bool; KEY_COUNT] = [false; KEY_COUNT];
+        for (key, state) in active_states.iter_mut().enumerate() {
+            *state = self.is_button_active(key);
+        }
+        active_states
+    }
+
+    /// We should disable the input when the passphrase has reached maximum
+    /// length and we are not cycling through the characters.
+    fn is_button_active(&self, key: usize) -> bool {
+        let textbox_not_full = !self.input.inner().textbox.is_full();
+        let key_is_pending = {
+            if let Some(pending) = self.input.inner().multi_tap.pending_key() {
+                pending == key
+            } else {
+                false
+            }
+        };
+        textbox_not_full || key_is_pending
     }
 
     pub fn passphrase(&self) -> &str {
@@ -234,19 +259,23 @@ impl Component for PassphraseKeyboard {
         // Process key button events in case we did not reach maximum passphrase length.
         // (All input buttons should be disallowed in that case, this is just a safety
         // measure.)
-        if !self.input.inner().textbox.is_full() {
-            for (key, btn) in self.keys.iter_mut().enumerate() {
-                if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                    // Key button was clicked. If this button is pending, let's cycle the pending
-                    // character in textbox. If not, let's just append the first character.
-                    let text = Self::key_text(btn.inner().content());
-                    self.input.mutate(ctx, |ctx, i| {
-                        let edit = i.multi_tap.click_key(ctx, key, text);
-                        i.textbox.apply(ctx, edit);
-                    });
-                    self.after_edit(ctx);
-                    return None;
-                }
+        // Also we need to allow for cycling through the last character.
+        let active_states = self.get_buttons_active_states();
+        for (key, btn) in self.keys.iter_mut().enumerate() {
+            if !active_states[key] {
+                // Button is not active
+                continue;
+            }
+            if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
+                // Key button was clicked. If this button is pending, let's cycle the pending
+                // character in textbox. If not, let's just append the first character.
+                let text = Self::key_text(btn.inner().content());
+                self.input.mutate(ctx, |ctx, i| {
+                    let edit = i.multi_tap.click_key(ctx, key, text);
+                    i.textbox.apply(ctx, edit);
+                });
+                self.after_edit(ctx);
+                return None;
             }
         }
         None
