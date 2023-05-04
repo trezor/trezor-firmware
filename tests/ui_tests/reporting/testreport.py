@@ -21,6 +21,7 @@ SCREEN_TEXT_FILE = TESTREPORT_PATH / "screen_text.txt"
 
 STYLE = (HERE / "testreport.css").read_text()
 SCRIPT = (HERE / "testreport.js").read_text()
+GIF_SCRIPT = (HERE / "create-gif.js").read_text()
 
 # These two html files are referencing each other
 ALL_SCREENS = "all_screens.html"
@@ -37,6 +38,7 @@ def document(
     style = t.style()
     style.add_raw_string(STYLE)
     script = t.script()
+    script.add_raw_string(GIF_SCRIPT)
     script.add_raw_string(SCRIPT)
     doc.head.add(style, script)
 

@@ -38,7 +38,7 @@ async function markState(state) {
                 "test": stem,
                 "hash": document.body.dataset.actualHash
             })
-         })
+        })
         window.localStorage.setItem(itemKeyFromOneTest(), 'ok')
     } else {
         window.localStorage.setItem(itemKeyFromOneTest(), state)
@@ -139,7 +139,6 @@ function onLoadTestCase() {
     }
 }
 
-
 function onLoad() {
     if (window.location.protocol === "file") return
 
@@ -147,9 +146,18 @@ function onLoad() {
         elem.classList.remove("script-hidden")
     }
 
+    // Comes from create-gif.js, which is loaded in the final HTML
+    // Do it only in case of individual tests (which have "UI comparison" written on page),
+    // not on the main `index.html` page nor on `differing_screens.html` or other screen pages.
+    if (document.body.textContent.includes("UI comparison")) {
+        createGif()
+    }
+
     if (document.body.dataset.index) {
         onLoadIndex()
     } else {
+        // TODO: this is triggering some exception in console:
+        // Uncaught DOMException: Permission denied to access property "document" on cross-origin object
         onLoadTestCase()
     }
 }

@@ -2,11 +2,13 @@
     color: blue;
 }
 
-tr.ok a, tr.ok a:visited {
+tr.ok a,
+tr.ok a:visited {
     color: grey;
 }
 
-tr.bad a, tr.bad a:visited {
+tr.bad a,
+tr.bad a:visited {
     color: darkred;
 }
 
@@ -61,7 +63,103 @@ tr.bad a, tr.bad a:visited {
     display: none;
 }
 
-.model-T1 img, .model-TR img {
+.model-T1 img,
+.model-TR img {
     image-rendering: pixelated;
     width: 256px;
+}
+
+/* GIF styling */
+
+/* Style the input field */
+#delayInput {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+/* Style the buttons */
+button.gifBtn {
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    /* Add a 10 px space to the right of the button */
+    margin-right: 10px;
+}
+
+/* Remove the margin-right from the last button */
+button.gifBtn:last-child {
+    margin-right: 0;
+}
+
+/* Apply a gray background to disabled buttons */
+button.gifBtn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+button.gifBtn:hover {
+    background-color: #3e8e41;
+}
+
+/* Style the slider */
+#slider {
+    width: 30%;
+    margin-top: 10px;
+}
+
+/* Style the progress bar */
+#slider::-webkit-slider-runnable-track {
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+#slider::-webkit-slider-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -7px;
+}
+
+#slider::-moz-range-track {
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+#slider::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    cursor: pointer;
+}
+
+#slider::-ms-track {
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+    border: none;
+    color: transparent;
+}
+
+#slider::-ms-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    cursor: pointer;
+    margin-top: 0;
 }
