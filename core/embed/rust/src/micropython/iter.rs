@@ -21,6 +21,7 @@ impl IterBuf {
     }
 }
 
+#[allow(dead_code)] // iter_buf is not really used but needs to be there for SAFETY reasons
 pub struct Iter<'a> {
     iter: Obj,
     iter_buf: &'a mut IterBuf,
@@ -44,14 +45,6 @@ impl<'a> Iter<'a> {
             finished: false,
             caught_exception: Obj::const_null(),
         })
-    }
-
-    pub fn error(&self) -> Option<Error> {
-        if self.caught_exception.is_null() {
-            None
-        } else {
-            Some(Error::CaughtException(self.caught_exception))
-        }
     }
 }
 

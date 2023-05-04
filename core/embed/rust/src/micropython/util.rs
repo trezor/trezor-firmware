@@ -21,6 +21,7 @@ pub unsafe fn try_or_raise<T>(func: impl FnOnce() -> Result<T, Error>) -> T {
 /// Extract kwargs from a C call and pass them into Rust. Raise exception if an
 /// error occurs. Should only called when returning from Rust to C. See
 /// `raise_exception` for details.
+#[allow(dead_code)]
 pub unsafe fn try_with_kwargs(
     kwargs: *const Map,
     func: impl FnOnce(&Map) -> Result<Obj, Error>,

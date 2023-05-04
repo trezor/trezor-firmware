@@ -1,5 +1,6 @@
 use super::ffi;
 
+#[allow(dead_code)]
 pub fn dma2d_setup_4bpp(fg_color: u16, bg_color: u16) {
     unsafe { ffi::dma2d_setup_4bpp(fg_color, bg_color) }
 }
