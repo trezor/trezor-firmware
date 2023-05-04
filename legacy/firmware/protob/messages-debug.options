@@ -9,7 +9,7 @@ DebugLinkState.mnemonic_secret          max_size:240
 DebugLinkState.reset_word               max_size:12
 DebugLinkState.reset_entropy            max_size:128
 DebugLinkState.recovery_fake_word       max_size:12
-DebugLinkState.layout_lines             type:FT_IGNORE
+DebugLinkState.tokens                   type:FT_IGNORE
 
 DebugLinkLog.bucket                     max_size:33
 DebugLinkLog.text                       max_size:256

@@ -2638,12 +2638,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class DebugLinkLayout(protobuf.MessageType):
-        lines: "list[str]"
+        tokens: "list[str]"
 
         def __init__(
             self,
             *,
-            lines: "list[str] | None" = None,
+            tokens: "list[str] | None" = None,
         ) -> None:
             pass
 
@@ -2712,12 +2712,12 @@ if TYPE_CHECKING:
         recovery_word_pos: "int | None"
         reset_word_pos: "int | None"
         mnemonic_type: "BackupType | None"
-        layout_lines: "list[str]"
+        tokens: "list[str]"
 
         def __init__(
             self,
             *,
-            layout_lines: "list[str] | None" = None,
+            tokens: "list[str] | None" = None,
             layout: "bytes | None" = None,
             pin: "str | None" = None,
             matrix: "str | None" = None,
@@ -2849,6 +2849,12 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkWatchLayout"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkResetDebugEvents(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkResetDebugEvents"]:
             return isinstance(msg, cls)
 
     class EosGetPublicKey(protobuf.MessageType):

@@ -120,6 +120,7 @@ class MessageType(IntEnum):
     DebugLinkRecordScreen = 9003
     DebugLinkEraseSdCard = 9005
     DebugLinkWatchLayout = 9006
+    DebugLinkResetDebugEvents = 9007
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -3744,15 +3745,15 @@ class DebugLinkDecision(protobuf.MessageType):
 class DebugLinkLayout(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9001
     FIELDS = {
-        1: protobuf.Field("lines", "string", repeated=True, required=False, default=None),
+        1: protobuf.Field("tokens", "string", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        lines: Optional[Sequence["str"]] = None,
+        tokens: Optional[Sequence["str"]] = None,
     ) -> None:
-        self.lines: Sequence["str"] = lines if lines is not None else []
+        self.tokens: Sequence["str"] = tokens if tokens is not None else []
 
 
 class DebugLinkReseedRandom(protobuf.MessageType):
@@ -3821,13 +3822,13 @@ class DebugLinkState(protobuf.MessageType):
         10: protobuf.Field("recovery_word_pos", "uint32", repeated=False, required=False, default=None),
         11: protobuf.Field("reset_word_pos", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("mnemonic_type", "BackupType", repeated=False, required=False, default=None),
-        13: protobuf.Field("layout_lines", "string", repeated=True, required=False, default=None),
+        13: protobuf.Field("tokens", "string", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        layout_lines: Optional[Sequence["str"]] = None,
+        tokens: Optional[Sequence["str"]] = None,
         layout: Optional["bytes"] = None,
         pin: Optional["str"] = None,
         matrix: Optional["str"] = None,
@@ -3841,7 +3842,7 @@ class DebugLinkState(protobuf.MessageType):
         reset_word_pos: Optional["int"] = None,
         mnemonic_type: Optional["BackupType"] = None,
     ) -> None:
-        self.layout_lines: Sequence["str"] = layout_lines if layout_lines is not None else []
+        self.tokens: Sequence["str"] = tokens if tokens is not None else []
         self.layout = layout
         self.pin = pin
         self.matrix = matrix
@@ -3971,6 +3972,10 @@ class DebugLinkWatchLayout(protobuf.MessageType):
         watch: Optional["bool"] = None,
     ) -> None:
         self.watch = watch
+
+
+class DebugLinkResetDebugEvents(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9007
 
 
 class EosGetPublicKey(protobuf.MessageType):

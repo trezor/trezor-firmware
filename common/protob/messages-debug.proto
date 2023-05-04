@@ -46,11 +46,11 @@ message DebugLinkDecision {
 }
 
 /**
- * Response: Device text layout
+ * Response: Device text layout as a list of tokens as returned by Rust
  * @end
  */
 message DebugLinkLayout {
-    repeated string lines = 1;
+    repeated string tokens = 1;
 }
 
 /**
@@ -100,7 +100,7 @@ message DebugLinkState {
     optional uint32 recovery_word_pos = 10;                 // index of mnemonic word the device is expecting during RecoveryDevice workflow
     optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
     optional management.BackupType mnemonic_type = 12;      // current mnemonic type (BIP-39/SLIP-39)
-    repeated string layout_lines = 13;                      // current layout text
+    repeated string tokens = 13;                            // current layout represented as a list of string tokens
 }
 
 /**
@@ -183,4 +183,13 @@ message DebugLinkEraseSdCard {
 message DebugLinkWatchLayout {
     optional bool watch = 1;  // if true, start watching layout.
                               // if false, stop.
+}
+
+
+/**
+ * Request: Remove all the previous debug event state
+ * @start
+ * @next Success
+ */
+message DebugLinkResetDebugEvents {
 }
