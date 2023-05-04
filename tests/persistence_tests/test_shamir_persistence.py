@@ -41,11 +41,11 @@ def test_abort(core_emulator: Emulator):
     assert features.recovery_mode is False
 
     device_handler.run(device.recover, pin_protection=False)
-    layout = debug.wait_layout()
-    assert layout.get_title() == "WALLET RECOVERY"
+
+    assert debug.wait_layout().title() == "WALLET RECOVERY"
 
     layout = debug.click(buttons.OK, wait=True)
-    assert "Select number of words" in layout.get_content()
+    assert "select the number of words" in layout.text_content()
 
     debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
@@ -53,14 +53,13 @@ def test_abort(core_emulator: Emulator):
     assert features.recovery_mode is True
 
     # no waiting for layout because layout doesn't change
-    layout = debug.read_layout()
-    assert "Select number of words" in layout.get_content()
+    assert "select the number of words" in debug.read_layout().text_content()
     layout = debug.click(buttons.CANCEL, wait=True)
 
-    assert layout.get_title() == "ABORT RECOVERY"
+    assert layout.title() == "ABORT RECOVERY"
     layout = debug.click(buttons.OK, wait=True)
 
-    assert layout.text.startswith("< Homescreen")
+    assert layout.main_component() == "Homescreen"
     features = device_handler.features()
     assert features.recovery_mode is False
 
@@ -75,6 +74,7 @@ def test_recovery_single_reset(core_emulator: Emulator):
     assert features.recovery_mode is False
 
     device_handler.run(device.recover, pin_protection=False)
+
     recovery.confirm_recovery(debug)
 
     recovery.select_number_of_words(debug)
@@ -112,6 +112,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
 
     # enter recovery mode
     device_handler.run(device.recover, pin_protection=False)
+
     recovery.confirm_recovery(debug)
 
     # restart to get into stand-alone recovery
@@ -126,11 +127,9 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     words = first_share.split(" ")
 
     # start entering first share
-    layout = debug.read_layout()
-    assert "Enter any share" in layout.text
+    assert "Enter any share" in debug.read_layout().text_content()
     debug.press_yes()
-    layout = debug.wait_layout()
-    assert layout.text == "< MnemonicKeyboard >"
+    assert debug.wait_layout().main_component() == "MnemonicKeyboard"
 
     # enter first word
     debug.input(words[0])
@@ -142,12 +141,12 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
 
     # try entering remaining 19 words
     for word in words[1:]:
-        assert layout.text == "< MnemonicKeyboard >"
+        assert layout.main_component() == "MnemonicKeyboard"
         debug.input(word)
         layout = debug.wait_layout()
 
     # check that we entered the first share successfully
-    assert "2 more shares" in layout.text
+    assert "2 more shares" in layout.text_content()
 
     # try entering the remaining shares
     for share in MNEMONIC_SLIP39_BASIC_20_3of6[1:3]:
@@ -169,13 +168,13 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
         expected_text = "Enter any share"
         remaining = len(shares)
         for share in shares:
-            assert expected_text in layout.text
+            assert expected_text in layout.text_content()
             layout = recovery.enter_share(debug, share)
             remaining -= 1
             expected_text = "You have entered"
             debug = _restart(device_handler, core_emulator)
 
-        assert "You have successfully recovered your wallet" in layout.get_content()
+        assert "You have finished recovering your wallet" in layout.text_content()
 
     device_handler = BackgroundDeviceHandler(core_emulator.client)
     debug = device_handler.debuglink()
@@ -186,6 +185,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
 
     # start device and recovery
     device_handler.run(device.recover, pin_protection=False)
+
     recovery.confirm_recovery(debug)
 
     # set number of words
@@ -202,8 +202,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     # enter shares and restart after each one
     enter_shares_with_restarts(debug)
     debug = device_handler.debuglink()
-    layout = debug.read_layout()
-    assert layout.text.startswith("< Homescreen")
+    assert debug.read_layout().main_component() == "Homescreen"
 
     features = device_handler.features()
     assert features.initialized is True
