@@ -50,13 +50,13 @@ async def change_pin(ctx: Context, msg: ChangePin) -> Success:
 
     if newpin:
         if curpin:
-            msg_screen = "You have successfully changed your PIN."
+            msg_screen = "PIN changed."
             msg_wire = "PIN changed"
         else:
-            msg_screen = "You have successfully enabled PIN protection."
+            msg_screen = "PIN protection enabled."
             msg_wire = "PIN enabled"
     else:
-        msg_screen = "You have successfully disabled PIN protection."
+        msg_screen = "PIN protection disabled."
         msg_wire = "PIN removed"
 
     await show_success(ctx, "success_pin", msg_screen)
@@ -64,15 +64,18 @@ async def change_pin(ctx: Context, msg: ChangePin) -> Success:
 
 
 def _require_confirm_change_pin(ctx: Context, msg: ChangePin) -> Awaitable[None]:
-    from trezor.ui.layouts import confirm_action
+    from trezor.ui.layouts import confirm_action, confirm_set_new_pin
 
     has_pin = config.has_pin()
+
+    br_type = "set_pin"
+    title = "PIN settings"
 
     if msg.remove and has_pin:  # removing pin
         return confirm_action(
             ctx,
-            "set_pin",
-            "PIN settings",
+            br_type,
+            title,
             description="Do you want to disable PIN protection?",
             verb="Disable",
         )
@@ -80,19 +83,22 @@ def _require_confirm_change_pin(ctx: Context, msg: ChangePin) -> Awaitable[None]
     if not msg.remove and has_pin:  # changing pin
         return confirm_action(
             ctx,
-            "set_pin",
-            "PIN settings",
+            br_type,
+            title,
             description="Do you want to change your PIN?",
             verb="Change",
         )
 
     if not msg.remove and not has_pin:  # setting new pin
-        return confirm_action(
+        return confirm_set_new_pin(
             ctx,
-            "set_pin",
-            "PIN settings",
-            description="Do you want to enable PIN protection?",
-            verb="Enable",
+            br_type,
+            title,
+            "Do you want to enable PIN protection?",
+            [
+                "PIN will be used to access this device.",
+                "PIN should be 4-50 digits long.",
+            ],
         )
 
     # removing non-existing PIN

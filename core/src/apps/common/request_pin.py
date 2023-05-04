@@ -56,21 +56,15 @@ async def request_pin(
 
 
 async def request_pin_confirm(ctx: Context, *args: Any, **kwargs: Any) -> str:
+    from trezor.ui.layouts import confirm_reenter_pin, pin_mismatch
+
     while True:
         pin1 = await request_pin(ctx, "Enter new PIN", *args, **kwargs)
+        await confirm_reenter_pin(ctx)
         pin2 = await request_pin(ctx, "Re-enter new PIN", *args, **kwargs)
         if pin1 == pin2:
             return pin1
-        await _pin_mismatch()
-
-
-async def _pin_mismatch() -> None:
-    from trezor.ui.layouts import show_popup
-
-    await show_popup(
-        "PIN mismatch",
-        "The PINs you entered do not match.\n\nPlease try again.",
-    )
+        await pin_mismatch(ctx)
 
 
 async def request_pin_and_sd_salt(
@@ -146,7 +140,7 @@ async def error_pin_invalid(ctx: Context) -> NoReturn:
     await show_error_and_raise(
         ctx,
         "warning_wrong_pin",
-        "The PIN you entered is invalid.",
+        "The PIN you have entered is not valid.",
         "Wrong PIN",  # header
         exc=wire.PinInvalid,
     )

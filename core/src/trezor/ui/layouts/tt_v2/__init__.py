@@ -437,7 +437,7 @@ async def show_address(
         # User pressed corner button or swiped left, go to address details.
         elif result is INFO:
 
-            def xpub_title(i: int):
+            def xpub_title(i: int) -> str:
                 result = f"MULTISIG XPUB #{i + 1}\n"
                 result += "(YOURS)" if i == multisig_index else "(COSIGNER)"
                 return result
@@ -1020,7 +1020,6 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
-    # TODO: include fee_rate_amount
     await raise_if_not_confirmed(
         interact(
             ctx,
@@ -1029,6 +1028,7 @@ async def confirm_modify_fee(
                     sign=sign,
                     user_fee_change=user_fee_change,
                     total_fee_new=total_fee_new,
+                    fee_rate_amount=fee_rate_amount,
                 )
             ),
             "modify_fee",
@@ -1173,6 +1173,89 @@ async def request_pin_on_device(
         raise PinCancelled
     assert isinstance(result, str)
     return result
+
+
+async def confirm_reenter_pin(
+    ctx: GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+    is_wipe_code: bool = False,
+) -> None:
+    title = "CHECK WIPE CODE" if is_wipe_code else "CHECK PIN"
+    return await confirm_action(
+        ctx,
+        br_type,
+        title,
+        action="Please re-enter to confirm.",
+        verb="BEGIN",
+        br_code=br_code,
+    )
+
+
+async def pin_mismatch(
+    ctx: GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+    is_wipe_code: bool = False,
+) -> None:
+    title = "WIPE CODE MISMATCH" if is_wipe_code else "PIN MISMATCH"
+    description = "wipe codes" if is_wipe_code else "PINs"
+    return await confirm_action(
+        ctx,
+        br_type,
+        title,
+        action=f"The {description} you entered do not match.\n\nPlease try again.",
+        verb="TRY AGAIN",
+        verb_cancel=None,
+        br_code=br_code,
+    )
+
+
+async def wipe_code_same_as_pin(
+    ctx: GenericContext,
+    br_type: str = "set_wipe_code",
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "INVALID WIPE CODE",
+        action="The wipe code must be different from your PIN.\n\nPlease try again.",
+        verb="TRY AGAIN",
+        verb_cancel=None,
+        br_code=br_code,
+    )
+
+
+async def confirm_set_new_pin(
+    ctx: GenericContext,
+    br_type: str,
+    title: str,
+    description: str,
+    information: list[str],
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    await confirm_action(
+        ctx,
+        br_type,
+        title,
+        description=description,
+        verb="ENABLE",
+        br_code=br_code,
+    )
+
+    if "wipe_code" in br_type:
+        title = "WIPE CODE INFO"
+    else:
+        title = "PIN INFORMATION"
+
+    return await confirm_action(
+        ctx,
+        br_type,
+        title=title,
+        description="\n\n".join(information),
+        br_code=br_code,
+    )
 
 
 class RustProgress:
