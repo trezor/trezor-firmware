@@ -2,8 +2,14 @@
 
 # script used to generate /embed/extmod/modtrezorui/font_*_*.c
 
+from __future__ import annotations
+
+from pathlib import Path
 
 import freetype
+
+HERE = Path(__file__).parent
+FONTS_DIR = HERE / "fonts"
 
 MIN_GLYPH = ord(" ")
 MAX_GLYPH = ord("~")
@@ -11,7 +17,7 @@ MAX_GLYPH = ord("~")
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
 
-def process_bitmap_buffer(buf, bpp):
+def process_bitmap_buffer(buf: list[int], bpp: int) -> list[int]:
     res = buf[:]
     if bpp == 1:
         for _ in range(8 - len(res) % 8):
@@ -52,17 +58,25 @@ def process_bitmap_buffer(buf, bpp):
     return res
 
 
-def drop_left_columns(buf, width, drop):
-    res = []
+def drop_left_columns(buf: list[int], width: int, drop: int) -> list[int]:
+    res: list[int] = []
     for i in range(len(buf)):
         if i % width >= drop:
             res.append(buf[i])
     return res
 
 
-def process_face(name, style, size, bpp=4, shaveX=0, ext="ttf"):
+def process_face(
+    name: str,
+    style: str,
+    size: int,
+    bpp: int = 4,
+    shaveX: int = 0,
+    ext: str = "ttf",
+) -> None:
     print("Processing ... %s %s %s" % (name, style, size))
-    face = freetype.Face("fonts/%s-%s.%s" % (name, style, ext))
+    file_name = FONTS_DIR / f"{name}-{style}.{ext}"
+    face = freetype.Face(str(file_name))
     face.set_pixel_sizes(0, size)
     fontname = "%s_%s_%d" % (name.lower(), style.lower(), size)
     font_ymin = 0
@@ -72,7 +86,9 @@ def process_face(name, style, size, bpp=4, shaveX=0, ext="ttf"):
         f.write("#include <stdint.h>\n\n")
         f.write("// clang-format off\n\n")
         f.write("// - the first two bytes are width and height of the glyph\n")
-        f.write("// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n")
+        f.write(
+            "// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n"
+        )
         f.write("// - the rest is packed %d-bit glyph data\n\n" % bpp)
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
@@ -111,7 +127,7 @@ def process_face(name, style, size, bpp=4, shaveX=0, ext="ttf"):
             bearingY = metrics.horiBearingY // 64
             assert advance >= 0 and advance <= 255
             assert bearingX >= 0 and bearingX <= 255
-            if bearingY < 0: # HACK
+            if bearingY < 0:  # HACK
                 print("normalizing bearingY %d for '%s'" % (bearingY, c))
                 bearingY = 0
             assert bearingY >= 0 and bearingY <= 255
@@ -124,7 +140,10 @@ def process_face(name, style, size, bpp=4, shaveX=0, ext="ttf"):
                 width -= remove_left
                 assert advance > remove_left
                 advance -= remove_left
-                print('Glyph "%c": removed %d pixel columns from the left' % (c, remove_left))
+                print(
+                    'Glyph "%c": removed %d pixel columns from the left'
+                    % (c, remove_left)
+                )
             print(
                 'Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes, metrics: %d, %d, %d)'
                 % (
@@ -159,7 +178,6 @@ def process_face(name, style, size, bpp=4, shaveX=0, ext="ttf"):
                 )
                 nonprintable += " };\n"
 
-
             yMin = bearingY - rows
             yMax = yMin + rows
             font_ymin = min(font_ymin, yMin)
@@ -182,7 +200,10 @@ def process_face(name, style, size, bpp=4, shaveX=0, ext="ttf"):
         f.write("#endif\n")
 
         f.write("#define Font_%s_%s_%d_HEIGHT %d\n" % (name, style, size, size))
-        f.write("#define Font_%s_%s_%d_MAX_HEIGHT %d\n" % (name, style, size, font_ymax - font_ymin))
+        f.write(
+            "#define Font_%s_%s_%d_MAX_HEIGHT %d\n"
+            % (name, style, size, font_ymax - font_ymin)
+        )
         f.write("#define Font_%s_%s_%d_BASELINE %d\n" % (name, style, size, -font_ymin))
         f.write(
             "extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n"
