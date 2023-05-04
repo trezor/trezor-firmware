@@ -65,10 +65,12 @@ pub struct TextStyle {
     pub hyphen_color: Color,
     /// Foreground color used for drawing the ellipsis.
     pub ellipsis_color: Color,
-    /// Optional icon shown as ellipsis.
-    pub ellipsis_icon: Option<Icon>,
-    /// Optional icon to signal content continues from previous page.
-    pub prev_page_ellipsis_icon: Option<Icon>,
+
+    /// Optional icon shown as ellipsis, including its margin from text.
+    pub ellipsis_icon: Option<(Icon, i16)>,
+    /// Optional icon to signal content continues from previous page,
+    /// including text margin.
+    pub prev_page_ellipsis_icon: Option<(Icon, i16)>,
 
     /// Specifies which line-breaking strategy to use.
     pub line_breaking: LineBreaking,
@@ -108,28 +110,28 @@ impl TextStyle {
     }
 
     /// Adding optional icon shown instead of "..." ellipsis.
-    pub const fn with_ellipsis_icon(mut self, icon: Icon) -> Self {
-        self.ellipsis_icon = Some(icon);
+    pub const fn with_ellipsis_icon(mut self, icon: Icon, margin: i16) -> Self {
+        self.ellipsis_icon = Some((icon, margin));
         self
     }
 
     /// Adding optional icon signalling content continues from previous page.
-    pub const fn with_prev_page_icon(mut self, icon: Icon) -> Self {
-        self.prev_page_ellipsis_icon = Some(icon);
+    pub const fn with_prev_page_icon(mut self, icon: Icon, margin: i16) -> Self {
+        self.prev_page_ellipsis_icon = Some((icon, margin));
         self
     }
 
     fn ellipsis_width(&self) -> i16 {
-        if let Some(icon) = self.ellipsis_icon {
-            icon.toif.width()
+        if let Some((icon, margin)) = self.ellipsis_icon {
+            icon.toif.width() + margin
         } else {
             self.text_font.text_width(ELLIPSIS)
         }
     }
 
     fn prev_page_ellipsis_width(&self) -> i16 {
-        if let Some(icon) = self.prev_page_ellipsis_icon {
-            icon.toif.width()
+        if let Some((icon, margin)) = self.prev_page_ellipsis_icon {
+            icon.toif.width() + margin
         } else {
             self.text_font.text_width(ELLIPSIS)
         }
@@ -435,7 +437,7 @@ impl LayoutSink for TextRenderer {
 
     fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
         if let Some((icon, margin)) = layout.style.ellipsis_icon {
-            let bottom_left = cursor + Offset::new(margin, 1);
+            let bottom_left = cursor + Offset::x(margin);
             icon.draw(
                 bottom_left,
                 BOTTOM_LEFT,
