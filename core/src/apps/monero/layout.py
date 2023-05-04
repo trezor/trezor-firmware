@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import (  # noqa: F401
-    confirm_action,
-    confirm_metadata,
+from trezor.ui.layouts import confirm_action, confirm_metadata  # noqa: F401
+from trezor.ui.layouts.progress import (  # noqa: F401
     monero_keyimage_sync_progress,
     monero_live_refresh_progress,
     monero_transaction_progress_inner,
