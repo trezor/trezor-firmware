@@ -26,8 +26,8 @@ _WELCOME_SCREEN_MS = 1200  # how long do we want to show welcome screen (minimum
 
 def enforce_welcome_screen_duration() -> None:
     """Make sure we will show the welcome screen for appropriate amount of time."""
-    # Not wasting the time in debug builds (saves time during emulator debugging)
-    if __debug__:
+    # Not wasting the time in emulator debug builds (debugging and development)
+    if __debug__ and utils.EMULATOR:
         return
     while utime.ticks_ms() - welcome_screen_start_ms < _WELCOME_SCREEN_MS:
         utime.sleep_ms(100)
