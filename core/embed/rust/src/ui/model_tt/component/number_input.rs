@@ -1,13 +1,15 @@
-use crate::ui::{
-    component::{
-        base::ComponentExt,
-        paginated::Paginate,
-        text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
-        Child, Component, Event, EventCtx, Pad,
+use crate::{
+    strutil,
+    ui::{
+        component::{
+            base::ComponentExt,
+            paginated::Paginate,
+            text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
+            Child, Component, Event, EventCtx, Pad,
+        },
+        display::{self, Font},
+        geometry::{Grid, Insets, Offset, Rect},
     },
-    display::{self, Font},
-    geometry::{Grid, Insets, Offset, Rect},
-    util,
 };
 
 use super::{theme, Button, ButtonMsg};
@@ -210,7 +212,7 @@ impl Component for NumberInput {
 
     fn paint(&mut self) {
         let mut buf = [0u8; 10];
-        if let Some(text) = util::u32_to_str(self.value, &mut buf) {
+        if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
             let digit_font = Font::DEMIBOLD;
             let y_offset = digit_font.text_height() / 2 + Button::<&str>::BASELINE_OFFSET;
             display::rect_fill(self.area, theme::BG);
