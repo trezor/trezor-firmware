@@ -23,6 +23,11 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import H_, parse_path
 
+from ...input_flows import (
+    InputFlowLockTimeBlockHeight,
+    InputFlowLockTimeDatetime,
+    InputFlowSignTxHighFee,
+)
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -655,27 +660,13 @@ def test_fee_high_hardfail(client: Client):
         client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
     with client:
-        finished = False
-
-        def input_flow():
-            nonlocal finished
-            for expected in (
-                B.ConfirmOutput,
-                B.ConfirmOutput,
-                B.FeeOverThreshold,
-                B.SignTx,
-            ):
-                br = yield
-                assert br.code == expected
-                client.debug.press_yes()
-            finished = True
-
-        client.set_input_flow(input_flow)
+        IF = InputFlowSignTxHighFee(client)
+        client.set_input_flow(IF.get())
 
         _, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes=TX_CACHE_TESTNET
         )
-        assert finished
+        assert IF.finished
 
     # Transaction does not exist on the blockchain, not using assert_tx_matches()
     assert (
@@ -1471,28 +1462,9 @@ def test_lock_time_blockheight(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm locktime
-        layout = client.debug.wait_layout()
-        assert "blockheight" in layout.text
-        assert "499999999" in layout.text
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.press_yes()
-        yield  # confirm transaction
-        client.debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
-        client.watch_layout(True)
+        IF = InputFlowLockTimeBlockHeight(client, "499999999")
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             client,
@@ -1508,7 +1480,7 @@ def test_lock_time_blockheight(client: Client):
 @pytest.mark.parametrize(
     "lock_time_str", ("1985-11-05 00:53:20", "2048-08-16 22:14:00")
 )
-def test_lock_time_datetime(client: Client, lock_time_str):
+def test_lock_time_datetime(client: Client, lock_time_str: str):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
@@ -1525,30 +1497,13 @@ def test_lock_time_datetime(client: Client, lock_time_str):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm locktime
-        layout = client.debug.wait_layout()
-        assert lock_time_str in layout.text
-
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.press_yes()
-
     lock_time_naive = datetime.strptime(lock_time_str, "%Y-%m-%d %H:%M:%S")
     lock_time_utc = lock_time_naive.replace(tzinfo=timezone.utc)
     lock_time_timestamp = int(lock_time_utc.timestamp())
 
     with client:
-        client.set_input_flow(input_flow)
-        client.watch_layout(True)
+        IF = InputFlowLockTimeDatetime(client, lock_time_str)
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             client,
@@ -1591,7 +1546,7 @@ def test_information(client: Client):
         client.debug.press_info()
 
         layout = client.debug.wait_layout()
-        content = layout.get_content().lower()
+        content = layout.text_content().lower()
         assert "sending from" in content
         assert "legacy #6" in content
         assert "fee rate" in content
@@ -1647,7 +1602,7 @@ def test_information_mixed(client: Client):
         client.debug.press_info()
 
         layout = client.debug.wait_layout()
-        content = layout.get_content().lower()
+        content = layout.text_content().lower()
         assert "sending from" in content
         assert "multiple accounts" in content
         assert "fee rate" in content
