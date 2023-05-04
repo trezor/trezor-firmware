@@ -24,11 +24,20 @@ async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValu
     encrypt = msg.encrypt
     decrypt = not msg.encrypt
     if (encrypt and msg.ask_on_encrypt) or (decrypt and msg.ask_on_decrypt):
-        if encrypt:
-            title = "Encrypt value"
+        # Special case for Trezor Suite, which asks for setting up labels
+        if msg.key == "Enable labeling?":
+            title = "SUITE LABELING"
+            verb = "ENABLE"
         else:
-            title = "Decrypt value"
-        await confirm_action(ctx, "cipher_key_value", title, description=msg.key)
+            if encrypt:
+                title = "Encrypt value"
+            else:
+                title = "Decrypt value"
+            verb = "CONFIRM"
+
+        await confirm_action(
+            ctx, "cipher_key_value", title, description=msg.key, verb=verb
+        )
 
     node = keychain.derive(msg.address_n)
 
