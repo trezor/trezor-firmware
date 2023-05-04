@@ -42,8 +42,8 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/model_tt/layout.rs
-def jpeg_info(data: bytes) -> (width: int, height: int, mcu_height: int):
-    """Get JPEG image dimensions."""
+def jpeg_info(data: bytes) -> tuple[int, int, int]:
+    """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -122,17 +122,6 @@ def confirm_reset_device(
 
 
 # rust/src/ui/model_tt/layout.rs
-def show_qr(
-    *,
-    title: str,
-    address: str,
-    verb_cancel: str,
-    case_sensitive: bool,
-) -> object:
-    """Show QR code."""
-
-
-# rust/src/ui/model_tt/layout.rs
 def show_address_details(
     *,
     address: str,
@@ -148,7 +137,7 @@ def show_address_details(
 def show_spending_details(
     *,
     account: str,
-    fee_rate: str | None = None,
+    fee_rate: str | None,
 ) -> object:
     """Show metadata when for outgoing transaction."""
 
@@ -158,8 +147,8 @@ def confirm_value(
     *,
     title: str,
     value: str,
-    description: str | None = None,
-    subtitle: str | None = None,
+    description: str | None,
+    subtitle: str | None,
     verb: str | None = None,
     verb_cancel: str | None = None,
     info_button: bool = False,
@@ -195,6 +184,7 @@ def confirm_modify_fee(
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
+    fee_rate_amount: str | None,
 ) -> object:
     """Decrease or increase transaction fee."""
 
@@ -269,8 +259,8 @@ def show_mismatch() -> object:
 def show_simple(
     *,
     title: str | None,
-    description: str,
-    button: str | None = None,
+    description: str = "",
+    button: str = "",
 ) -> object:
     """Simple dialog with text and one button."""
 
@@ -324,7 +314,7 @@ def request_passphrase(
     prompt: str,
     max_len: int,
 ) -> str | object:
-   """Passphrase input keyboard."""
+    """Passphrase input keyboard."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -332,7 +322,7 @@ def request_bip39(
     *,
     prompt: str,
 ) -> str:
-   """BIP39 word input keyboard."""
+    """BIP39 word input keyboard."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -340,7 +330,7 @@ def request_slip39(
     *,
     prompt: str,
 ) -> str:
-   """SLIP39 word input keyboard."""
+    """SLIP39 word input keyboard."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -350,7 +340,7 @@ def select_word(
     description: str,
     words: Iterable[str],
 ) -> int:
-   """Select mnemonic word from three possibilities - seed check after backup. The
+    """Select mnemonic word from three possibilities - seed check after backup. The
    iterable must be of exact size. Returns index in range `0..3`."""
 
 
@@ -360,7 +350,7 @@ def show_share_words(
     title: str,
     pages: Iterable[str],
 ) -> object:
-   """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
+    """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -372,7 +362,7 @@ def request_number(
     max_count: int,
     description: Callable[[int], str] | None = None,
 ) -> object:
-   """Number input with + and - buttons, description, and info button."""
+    """Number input with + and - buttons, description, and info button."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -383,8 +373,8 @@ def show_checklist(
     active: int,
     button: str,
 ) -> object:
-   """Checklist of backup steps. Active index is highlighted, previous items have check
-   mark nex to them."""
+    """Checklist of backup steps. Active index is highlighted, previous items have check
+   mark next to them."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -394,17 +384,17 @@ def confirm_recovery(
     description: str,
     button: str,
     dry_run: bool,
-    info_button: bool,
+    info_button: bool = False,
 ) -> object:
-   """Device recovery homescreen."""
+    """Device recovery homescreen."""
 
 
 # rust/src/ui/model_tt/layout.rs
 def select_word_count(
     *,
     dry_run: bool,
-) -> int | CANCELLED:
-   """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+) -> int | str:  # TT returns int
+    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -412,7 +402,7 @@ def show_group_share_success(
     *,
     lines: Iterable[str]
 ) -> int:
-   """Shown after successfully finishing a group."""
+    """Shown after successfully finishing a group."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -420,7 +410,7 @@ def show_remaining_shares(
     *,
     pages: Iterable[tuple[str, str]],
 ) -> int:
-   """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
+    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -428,11 +418,11 @@ def show_progress(
     *,
     title: str,
     indeterminate: bool = False,
-    description: str | None = None,
+    description: str = "",
 ) -> object:
-   """Show progress loader. Please note that the number of lines reserved on screen for
+    """Show progress loader. Please note that the number of lines reserved on screen for
    description is determined at construction time. If you want multiline descriptions
-   make sure the initial desciption has at least that amount of lines."""
+   make sure the initial description has at least that amount of lines."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -443,7 +433,7 @@ def show_progress_coinjoin(
     time_ms: int = 0,
     skip_first_paint: bool = False,
 ) -> object:
-   """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
+    """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
    time_ms timeout is passed."""
 
 
