@@ -92,7 +92,7 @@ hardware core monero test:
   needs:
     - core fw regular debug build
   variables:
-    TESTOPTS: --trezor_path webusb
+    TESTOPTS: --trezor-path webusb
   script:
     - cd ci/hardware_tests
     - set -a
