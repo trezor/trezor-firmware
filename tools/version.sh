@@ -4,4 +4,4 @@ if [ -z "$1" ]; then
    exit 1
 fi
 
-echo "VERSION_MAJOR.VERSION_MINOR.VERSION_PATCH" | cpp -include $1 -nostdinc -P | tr -d " "
+echo "VERSION_MAJOR.VERSION_MINOR.VERSION_PATCH" | cpp -include $1 -nostdinc -P - | tr -d " "

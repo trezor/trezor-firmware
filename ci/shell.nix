@@ -74,7 +74,6 @@ stdenvNoCC.mkDerivation ({
     check
     curl  # for connect tests
     editorconfig-checker
-    gcc11
     gcc-arm-embedded
     git
     gitAndTools.git-subrepo
@@ -95,6 +94,7 @@ stdenvNoCC.mkDerivation ({
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
     autoPatchelfHook
+    gcc11
     procps
     valgrind
   ] ++ lib.optionals (stdenv.isDarwin) [
