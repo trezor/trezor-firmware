@@ -1,6 +1,7 @@
 mod button;
 mod button_controller;
 mod common;
+mod error;
 mod hold_to_confirm;
 mod input_methods;
 mod loader;
@@ -21,6 +22,7 @@ pub use input_methods::{
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use result::ResultScreen;
 pub use welcome_screen::WelcomeScreen;
+pub use error::ErrorScreen;
 
 #[cfg(feature = "micropython")]
 mod address_details;
