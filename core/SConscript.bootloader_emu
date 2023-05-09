@@ -74,11 +74,11 @@ CPPPATH_MOD += [
 ]
 
 SOURCE_MOD += [
-    'embed/extmod/modtrezorui/buffers.c',
-    'embed/extmod/modtrezorui/colors.c',
-    'embed/extmod/modtrezorui/display.c',
-    'embed/extmod/modtrezorui/fonts/fonts.c',
-    'embed/extmod/modtrezorui/fonts/font_bitmap.c',
+    'embed/lib/buffers.c',
+    'embed/lib/colors.c',
+    'embed/lib/display.c',
+    'embed/lib/fonts/fonts.c',
+    'embed/lib/fonts/font_bitmap.c',
     'embed/extmod/modtrezorcrypto/rand.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -155,6 +155,7 @@ env.Replace(
         'embed/bootloader',
         'embed/bootloader/nanopb',
         'embed/bootloader/protob',
+        'embed/lib',
         'embed/unix',
         'embed/extmod/modtrezorui',
         'vendor/nanopb',
@@ -211,6 +212,12 @@ def cargo_build():
         features = ["model_tr"]
     else:
         features = ["model_tt"]
+
+    if TREZOR_MODEL in ('T',):
+        features.append('touch')
+    if TREZOR_MODEL in ('R', '1'):
+        features.append('button')
+
     features.append("bitcoin_only")
     features.append("ui")
     features.append("bootloader")
