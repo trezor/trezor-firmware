@@ -102,17 +102,17 @@ async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
     from apps.common.request_pin import request_pin
     from trezor.ui.layouts import (
         confirm_reenter_pin,
-        pin_mismatch,
-        wipe_code_same_as_pin,
+        pin_mismatch_popup,
+        wipe_code_same_as_pin_popup,
     )
 
     while True:
         code1 = await request_pin(ctx, "Enter new wipe code")
         if code1 == pin:
-            await wipe_code_same_as_pin(ctx)
+            await wipe_code_same_as_pin_popup(ctx)
             continue
         await confirm_reenter_pin(ctx, br_type="set_wipe_code", is_wipe_code=True)
         code2 = await request_pin(ctx, "Re-enter wipe code")
         if code1 == code2:
             return code1
-        await pin_mismatch(ctx, br_type="set_wipe_code", is_wipe_code=True)
+        await pin_mismatch_popup(ctx, is_wipe_code=True)

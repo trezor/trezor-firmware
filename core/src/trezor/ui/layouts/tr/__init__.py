@@ -280,7 +280,7 @@ async def show_error_and_raise(
     raise NotImplementedError
 
 
-async def show_popup(
+async def show_error_popup(
     title: str,
     description: str,
     subtitle: str | None = None,

@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, device, messages
 from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.exceptions import TrezorFailure
 
 from ..input_flows import InputFlowNewCodeMismatch
 
@@ -97,7 +97,7 @@ def test_set_remove_wipe_code(client: Client):
 
 
 def test_set_wipe_code_mismatch(client: Client):
-    with client, pytest.raises(Cancelled):
+    with client, pytest.raises(TrezorFailure):
         IF = InputFlowNewCodeMismatch(client, WIPE_CODE4, WIPE_CODE6)
         client.set_input_flow(IF.get())
 
