@@ -41,7 +41,7 @@ impl<'a> Intro<'a> {
             bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(
                 Label::new(title, Alignment::Center, TEXT_NORMAL)
-                    .vertically_aligned(Alignment::Start),
+                    .vertically_aligned(Alignment::Center),
             ),
             buttons: ButtonController::new(ButtonLayout::text_none_text("INSTALL FW", "MENU"))
                 .into_child(),
