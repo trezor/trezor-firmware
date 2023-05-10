@@ -266,7 +266,20 @@ impl TextLayout {
 
             cursor.x += match self.align {
                 Alignment::Start => 0,
-                Alignment::Center => (remaining_width - span.advance.x) / 2,
+                Alignment::Center => {
+                    let start_bearing_x = self.style.text_font.start_x_bearing(&remaining_text[..span.length]);
+                    let mut visible_width = self.style.text_font.visible_text_width(&remaining_text[..span.length]);
+
+                    if span.advance.y> 0 && span.insert_hyphen_before_line_break {
+                        let hyphen_width = self.style.text_font.visible_text_width("-");
+                        let hyphen_bearing_x = self.style.text_font.start_x_bearing("-");
+                        visible_width = span.advance.x - start_bearing_x + hyphen_width + hyphen_bearing_x;
+                    }
+                    if  cursor.x != init_cursor.x {
+
+                    }
+                    ((remaining_width - visible_width) / 2) - start_bearing_x
+                },
                 Alignment::End => remaining_width - span.advance.x,
             };
 
