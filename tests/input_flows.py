@@ -133,6 +133,10 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         yield from input_two_different_pins()
 
         yield  # PIN mismatch
+        self.debug.press_yes()  # try again
+
+        yield  # PIN entry again
+
         self.debug.press_no()  # cancel
 
 
@@ -158,7 +162,6 @@ class InputFlowCodeChangeFail(InputFlowBase):
         yield  # enter new pin again (but different)
         self.debug.input(self.new_pin_2)
 
-        # So the mismatch screen is visible
         yield  # PIN mismatch
         self.debug.press_yes()  # try again
 

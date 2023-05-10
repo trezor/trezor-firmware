@@ -487,8 +487,8 @@ async def show_error_and_raise(
         ctx,
         RustLayout(
             trezorui2.show_error(
-                title=content,
-                description=subheader or "",
+                title=subheader or "",
+                description=content,
                 button=button.upper(),
                 allow_cancel=False,
             )
@@ -1098,21 +1098,27 @@ async def confirm_signverify(
     )
 
 
-async def show_popup(
+async def show_error_popup(
     title: str,
     description: str,
     subtitle: str | None = None,
     description_param: str = "",
-    timeout_ms: int = 3000,
+    *,
+    button: str = "",
+    timeout_ms: int = 0,
 ) -> None:
+    if not button and not timeout_ms:
+        raise ValueError("Either button or timeout_ms must be set")
+
     if subtitle:
         title += f"\n{subtitle}"
     await RustLayout(
         trezorui2.show_error(
             title=title,
             description=description.format(description_param),
-            button="",
+            button=button,
             time_ms=timeout_ms,
+            allow_cancel=False,
         )
     )
 
@@ -1192,38 +1198,26 @@ async def confirm_reenter_pin(
     )
 
 
-async def pin_mismatch(
+async def pin_mismatch_popup(
     ctx: GenericContext,
-    br_type: str = "set_pin",
-    br_code: ButtonRequestType = BR_TYPE_OTHER,
     is_wipe_code: bool = False,
 ) -> None:
-    title = "WIPE CODE MISMATCH" if is_wipe_code else "PIN MISMATCH"
+    await button_request(ctx, "pin_mismatch", code=BR_TYPE_OTHER)
+    title = "Wipe code mismatch" if is_wipe_code else "PIN mismatch"
     description = "wipe codes" if is_wipe_code else "PINs"
-    return await confirm_action(
-        ctx,
-        br_type,
+    return await show_error_popup(
         title,
-        action=f"The {description} you entered do not match.\n\nPlease try again.",
-        verb="TRY AGAIN",
-        verb_cancel=None,
-        br_code=br_code,
+        f"The {description} you entered do not match.",
+        button="TRY AGAIN",
     )
 
 
-async def wipe_code_same_as_pin(
-    ctx: GenericContext,
-    br_type: str = "set_wipe_code",
-    br_code: ButtonRequestType = BR_TYPE_OTHER,
-) -> None:
-    return await confirm_action(
-        ctx,
-        br_type,
-        "INVALID WIPE CODE",
-        action="The wipe code must be different from your PIN.\n\nPlease try again.",
-        verb="TRY AGAIN",
-        verb_cancel=None,
-        br_code=br_code,
+async def wipe_code_same_as_pin_popup(ctx: GenericContext) -> None:
+    await button_request(ctx, "wipe_code_same_as_pin", code=BR_TYPE_OTHER)
+    return await show_error_popup(
+        "Invalid wipe code",
+        "The wipe code must be different from your PIN.",
+        button="TRY AGAIN",
     )
 
 

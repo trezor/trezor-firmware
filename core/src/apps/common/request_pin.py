@@ -56,7 +56,7 @@ async def request_pin(
 
 
 async def request_pin_confirm(ctx: Context, *args: Any, **kwargs: Any) -> str:
-    from trezor.ui.layouts import confirm_reenter_pin, pin_mismatch
+    from trezor.ui.layouts import confirm_reenter_pin, pin_mismatch_popup
 
     while True:
         pin1 = await request_pin(ctx, "Enter new PIN", *args, **kwargs)
@@ -64,7 +64,7 @@ async def request_pin_confirm(ctx: Context, *args: Any, **kwargs: Any) -> str:
         pin2 = await request_pin(ctx, "Re-enter new PIN", *args, **kwargs)
         if pin1 == pin2:
             return pin1
-        await pin_mismatch(ctx)
+        await pin_mismatch_popup(ctx)
 
 
 async def request_pin_and_sd_salt(

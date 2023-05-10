@@ -122,7 +122,7 @@ def test_set_failed(client: Client):
     # Check that there's no PIN protection
     _check_no_pin(client)
 
-    with client, pytest.raises(Cancelled):
+    with client, pytest.raises(TrezorFailure):
         IF = InputFlowNewCodeMismatch(client, PIN4, PIN60)
         client.set_input_flow(IF.get())
 

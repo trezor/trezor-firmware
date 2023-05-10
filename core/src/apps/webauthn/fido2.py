@@ -8,7 +8,7 @@ import storage.device as storage_device
 from trezor import config, io, log, loop, utils, wire, workflow
 from trezor.crypto import hashlib
 from trezor.crypto.curve import nist256p1
-from trezor.ui.layouts import show_popup
+from trezor.ui.layouts import show_error_popup
 
 from apps.base import set_homescreen
 from apps.common import cbor
@@ -611,14 +611,14 @@ async def _confirm_fido(title: str, credential: Credential) -> bool:
 
 async def _confirm_bogus_app(title: str) -> None:
     if _last_auth_valid:
-        await show_popup(
+        await show_error_popup(
             title,
             "This device is already registered with this application.",
             "Already registered.",
             timeout_ms=_POPUP_TIMEOUT_MS,
         )
     else:
-        await show_popup(
+        await show_error_popup(
             title,
             "This device is not registered with this application.",
             "Not registered.",
@@ -834,12 +834,12 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_popup(
+        await show_error_popup(
             "FIDO2 Register",
             "This device is already registered with {}.",
             "Already registered.",
             self._cred.rp_id,  # description_param
-            _POPUP_TIMEOUT_MS,
+            timeout_ms=_POPUP_TIMEOUT_MS,
         )
 
 
@@ -917,7 +917,7 @@ class Fido2ConfirmNoPin(State):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_popup(
+        await show_error_popup(
             "FIDO2 Verify User",
             "Please enable PIN protection.",
             "Unable to verify user.",
@@ -940,12 +940,12 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_popup(
+        await show_error_popup(
             "FIDO2 Authenticate",
             "This device is not registered with\n{}.",
             "Not registered.",
             self._creds[0].app_name(),  # description_param
-            _POPUP_TIMEOUT_MS,
+            timeout_ms=_POPUP_TIMEOUT_MS,
         )
 
 
