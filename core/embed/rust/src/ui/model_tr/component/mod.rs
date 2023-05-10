@@ -14,6 +14,7 @@ pub use button::{
     ButtonPos, ButtonStyle, ButtonStyleSheet,
 };
 pub use button_controller::{ButtonController, ButtonControllerMsg};
+pub use error::ErrorScreen;
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 pub use input_methods::{
     choice::{Choice, ChoiceFactory, ChoicePage, ChoicePageMsg},
@@ -22,7 +23,6 @@ pub use input_methods::{
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use result::ResultScreen;
 pub use welcome_screen::WelcomeScreen;
-pub use error::ErrorScreen;
 
 #[cfg(feature = "micropython")]
 mod address_details;
