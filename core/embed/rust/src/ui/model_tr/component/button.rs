@@ -238,7 +238,8 @@ where
         match &self.content {
             ButtonContent::Text(text) => {
                 display::text_left(
-                    self.get_text_baseline(style),
+                    self.get_text_baseline(&style)
+                        - Offset::x(style.font.start_x_bearing(text.as_ref())),
                     text.as_ref(),
                     style.font,
                     text_color,
