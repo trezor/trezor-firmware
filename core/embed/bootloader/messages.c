@@ -293,7 +293,11 @@ static void send_msg_features(uint8_t iface_num,
   MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, VERSION_MINOR);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, VERSION_PATCH);
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
+#if defined TREZOR_MODEL_T
   MSG_SEND_ASSIGN_STRING(model, "T");
+#elif defined TREZOR_MODEL_R
+  MSG_SEND_ASSIGN_STRING(model, "R");
+#endif
   if (vhdr && hdr) {
     MSG_SEND_ASSIGN_VALUE(firmware_present, true);
     MSG_SEND_ASSIGN_VALUE(fw_major, (hdr->version & 0xFF));
