@@ -65,10 +65,10 @@ where
         &self.content
     }
 
-    fn style(&self) -> ButtonStyle {
+    fn style(&self) -> &ButtonStyle {
         match self.state {
-            State::Released => self.styles.normal,
-            State::Pressed => self.styles.active,
+            State::Released => &self.styles.normal,
+            State::Pressed => &self.styles.active,
         }
     }
 
@@ -242,7 +242,7 @@ where
         match &self.content {
             ButtonContent::Text(text) => {
                 display::text_left(
-                    self.get_text_baseline(&style),
+                    self.get_text_baseline(style),
                     text.as_ref(),
                     style.font,
                     text_color,
@@ -296,7 +296,6 @@ pub struct ButtonStyleSheet {
     pub active: ButtonStyle,
 }
 
-#[derive(Clone, Copy)]
 pub struct ButtonStyle {
     pub font: Font,
     pub text_color: Color,
