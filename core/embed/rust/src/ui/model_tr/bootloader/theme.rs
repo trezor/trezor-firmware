@@ -1,6 +1,7 @@
 use crate::ui::{
     component::text::TextStyle,
     display::{Color, Font},
+    geometry::Offset,
 };
 
 use super::super::{
@@ -12,11 +13,11 @@ pub const BLD_BG: Color = BLACK;
 pub const BLD_FG: Color = WHITE;
 
 pub fn bld_button_default() -> ButtonStyleSheet {
-    ButtonStyleSheet::new(BG, FG, false, false, None, None)
+    ButtonStyleSheet::new(BG, FG, false, false, None, Offset::zero())
 }
 
 pub fn bld_button_cancel() -> ButtonStyleSheet {
-    ButtonStyleSheet::new(FG, BG, false, false, None, None)
+    ButtonStyleSheet::new(FG, BG, false, false, None, Offset::zero())
 }
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);

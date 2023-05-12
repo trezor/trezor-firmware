@@ -148,11 +148,7 @@ where
         };
 
         // Allowing for possible offset of the area from current style
-        if let Some(offset) = style.offset {
-            area.translate(offset)
-        } else {
-            area
-        }
+        area.translate(style.offset)
     }
 
     /// Determine baseline point for the text.
@@ -302,7 +298,7 @@ pub struct ButtonStyle {
     pub with_outline: bool,
     pub with_arms: bool,
     pub fixed_width: Option<i16>,
-    pub offset: Option<Offset>,
+    pub offset: Offset,
 }
 
 impl ButtonStyleSheet {
@@ -312,7 +308,7 @@ impl ButtonStyleSheet {
         with_outline: bool,
         with_arms: bool,
         fixed_width: Option<i16>,
-        offset: Option<Offset>,
+        offset: Offset,
     ) -> Self {
         Self {
             normal: ButtonStyle {
@@ -339,7 +335,7 @@ impl ButtonStyleSheet {
         with_outline: bool,
         with_arms: bool,
         fixed_width: Option<i16>,
-        offset: Option<Offset>,
+        offset: Offset,
     ) -> Self {
         Self::new(
             theme::FG,
@@ -361,7 +357,7 @@ pub struct ButtonDetails<T> {
     pub with_outline: bool,
     pub with_arms: bool,
     pub fixed_width: Option<i16>,
-    pub offset: Option<Offset>,
+    pub offset: Offset,
 }
 
 impl<T> ButtonDetails<T> {
@@ -374,7 +370,7 @@ impl<T> ButtonDetails<T> {
             with_outline: true,
             with_arms: false,
             fixed_width: None,
-            offset: None,
+            offset: Offset::zero(),
         }
     }
 
@@ -387,7 +383,7 @@ impl<T> ButtonDetails<T> {
             with_outline: true,
             with_arms: false,
             fixed_width: None,
-            offset: None,
+            offset: Offset::zero(),
         }
     }
 
@@ -450,7 +446,7 @@ impl<T> ButtonDetails<T> {
     /// Buttons are by default placed exactly in the corners (left/right)
     /// or in the center in case of center button. The offset can change it.
     pub fn with_offset(mut self, offset: Offset) -> Self {
-        self.offset = Some(offset);
+        self.offset = offset;
         self
     }
 
