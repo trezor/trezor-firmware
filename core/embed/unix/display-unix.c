@@ -121,6 +121,7 @@ static void prepare_gamma_lut(float gamma) {
   }
 }
 
+#if defined TREZOR_MODEL_T
 static void gamma_correct_buffer_to_display(void) {
   // Gamma correct all the pixels in BUFFER_TO_DISPLAY.
   pixel_color *pixels = (pixel_color *)BUFFER_TO_DISPLAY->pixels;
@@ -131,6 +132,7 @@ static void gamma_correct_buffer_to_display(void) {
     }
   }
 }
+#endif
 
 float display_gamma(float gamma) {
   float prev_gamma = DISPLAY_GAMMA;
@@ -261,14 +263,10 @@ void display_init(void) {
 #include "background_T.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 #include "background_1.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
-#elif defined TREZOR_MODEL_R
-#include "background_R.h"
-  BACKGROUND = IMG_LoadTexture_RW(
-      RENDERER, SDL_RWFromMem(background_R_jpg, background_R_jpg_len), 0);
 #endif
 #endif
   if (BACKGROUND) {

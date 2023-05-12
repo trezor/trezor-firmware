@@ -71,6 +71,7 @@ class MessageType(IntEnum):
     FirmwareHash = 89
     UnlockPath = 93
     UnlockedPathRequest = 94
+    ShowDeviceTutorial = 95
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -491,6 +492,12 @@ class DebugButton(IntEnum):
     NO = 0
     YES = 1
     INFO = 2
+
+
+class DebugPhysicalButton(IntEnum):
+    LEFT_BTN = 0
+    MIDDLE_BTN = 1
+    RIGHT_BTN = 2
 
 
 class EthereumDefinitionType(IntEnum):
@@ -3710,6 +3717,10 @@ class UnlockedPathRequest(protobuf.MessageType):
         self.mac = mac
 
 
+class ShowDeviceTutorial(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 95
+
+
 class DebugLinkDecision(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 100
     FIELDS = {
@@ -3720,6 +3731,7 @@ class DebugLinkDecision(protobuf.MessageType):
         5: protobuf.Field("y", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("wait", "bool", repeated=False, required=False, default=None),
         7: protobuf.Field("hold_ms", "uint32", repeated=False, required=False, default=None),
+        8: protobuf.Field("physical_button", "DebugPhysicalButton", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3732,6 +3744,7 @@ class DebugLinkDecision(protobuf.MessageType):
         y: Optional["int"] = None,
         wait: Optional["bool"] = None,
         hold_ms: Optional["int"] = None,
+        physical_button: Optional["DebugPhysicalButton"] = None,
     ) -> None:
         self.button = button
         self.swipe = swipe
@@ -3740,6 +3753,7 @@ class DebugLinkDecision(protobuf.MessageType):
         self.y = y
         self.wait = wait
         self.hold_ms = hold_ms
+        self.physical_button = physical_button
 
 
 class DebugLinkLayout(protobuf.MessageType):

@@ -9,7 +9,7 @@ if __debug__:
 
     import trezorui2
 
-    from trezor import log, loop, wire
+    from trezor import log, loop, utils, wire
     from trezor.ui import display
     from trezor.enums import MessageType
     from trezor.messages import (
@@ -176,8 +176,13 @@ if __debug__:
         debug_events.last_event += 1
 
         # TT click on specific coordinates, with possible hold
-        if x is not None and y is not None:
+        if x is not None and y is not None and utils.MODEL in ("T",):
             click_chan.publish((debug_events.last_event, x, y, msg.hold_ms))
+        # TR press specific button
+        elif msg.physical_button is not None and utils.MODEL in ("R",):
+            button_chan.publish(
+                (debug_events.last_event, msg.physical_button, msg.hold_ms)
+            )
         else:
             # Will get picked up by _dispatch_debuglink_decision eventually
             debuglink_decision_chan.publish((debug_events.last_event, msg))

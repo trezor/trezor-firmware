@@ -78,7 +78,7 @@ where
 {
     frame.place(SCREEN_ADJ);
     frame.paint();
-    fade_backlight_duration(BACKLIGHT_NORMAL as _, 500);
+    fade_backlight_duration(BACKLIGHT_NORMAL, 500);
 
     while button_eval().is_some() {}
 
@@ -139,6 +139,7 @@ extern "C" fn screen_install_confirm(
         message.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!").centered());
     }
 
+    // TODO: this relies on StrBuffer support for bootloader, decide what to do
     let left = Button::with_text(ButtonPos::Left, "CANCEL", bld_button_cancel());
     let right = Button::with_text(ButtonPos::Right, "INSTALL", bld_button_default());
 
@@ -172,6 +173,7 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     let message =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
+    // TODO: this relies on StrBuffer support for bootloader, decide what to do
     let left = Button::with_text(ButtonPos::Left, "WIPE", bld_button_default());
     let right = Button::with_text(ButtonPos::Right, "CANCEL", bld_button_cancel());
 
@@ -220,11 +222,16 @@ fn screen_progress(
 
     let fill_to = (loader_area.width() as u32 * progress as u32) / 1000;
 
-    display::bar_with_text_and_fill(loader_area, Some(text), fg_color, bg_color, 0, fill_to as _);
+    display::bar_with_text_and_fill(
+        loader_area,
+        Some(&text),
+        fg_color,
+        bg_color,
+        0,
+        fill_to as _,
+    );
     display::refresh();
 }
-
-const INITIAL_INSTALL_LOADER_COLOR: Color = Color::rgb(0x4A, 0x90, 0xE2);
 
 #[no_mangle]
 extern "C" fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {

@@ -191,6 +191,14 @@ impl LayoutObj {
         unsafe { Gc::as_mut(&mut inner.root) }.obj_paint()
     }
 
+    /// Place but do not paint.
+    /// Called before getting debug information about current screen.
+    fn obj_place(&self) {
+        let mut inner = self.inner.borrow_mut();
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
+    }
+
     /// Run a tracing pass over the component tree. Passed `callback` is called
     /// with each piece of tracing information. Panics in case the callback
     /// raises an exception.
@@ -248,6 +256,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
+                Qstr::MP_QSTR_place => obj_fn_1!(ui_layout_place).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
                 Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
@@ -428,6 +437,15 @@ extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
             panic!("cannot raise messages during RequestPaint");
         };
         Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_place(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_place();
+        Ok(Obj::const_true())
     };
     unsafe { util::try_or_raise(block) }
 }

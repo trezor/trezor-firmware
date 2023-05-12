@@ -54,6 +54,10 @@ where
         }
     }
 
+    pub fn set_text(&mut self, text: T) {
+        self.text = text;
+    }
+
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {
         // Not starting if animations are disabled.
         if animation_disabled() {

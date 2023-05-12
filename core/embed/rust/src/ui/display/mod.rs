@@ -5,9 +5,11 @@ pub mod loader;
 pub mod tjpgd;
 pub mod toif;
 
+use heapless::Vec;
+
 use super::{
     constant,
-    geometry::{Offset, Point, Rect},
+    geometry::{Alignment, Offset, Point, Rect},
 };
 #[cfg(feature = "dma2d")]
 use crate::trezorhal::{
@@ -26,7 +28,13 @@ use crate::ui::geometry::TOP_LEFT;
 use crate::{
     time::Duration,
     trezorhal::{buffers, display, time, uzlib::UzlibContext},
-    ui::lerp::Lerp,
+    ui::{
+        component::text::{
+            layout::{Op, TextLayout, TextRenderer},
+            TextStyle,
+        },
+        lerp::Lerp,
+    },
 };
 
 // Reexports
@@ -126,16 +134,16 @@ pub fn rect_fill_corners(r: Rect, fg_color: Color) {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct TextOverlay<'a> {
+pub struct TextOverlay<T> {
     area: Rect,
-    text: &'a str,
+    text: T,
     font: Font,
     max_height: i16,
     baseline: i16,
 }
 
-impl<'a> TextOverlay<'a> {
-    pub fn new(text: &'a str, font: Font) -> Self {
+impl<T: AsRef<str>> TextOverlay<T> {
+    pub fn new(text: T, font: Font) -> Self {
         let area = Rect::zero();
 
         Self {
@@ -147,8 +155,17 @@ impl<'a> TextOverlay<'a> {
         }
     }
 
+    pub fn set_text(&mut self, text: T) {
+        self.text = text;
+    }
+
+    pub fn get_text(&self) -> &T {
+        &self.text
+    }
+
+    // baseline relative to the underlying render area
     pub fn place(&mut self, baseline: Point) {
-        let text_width = self.font.text_width(self.text);
+        let text_width = self.font.text_width(self.text.as_ref());
         let text_height = self.font.text_height();
 
         let text_area_start = baseline + Offset::new(-(text_width / 2), -text_height);
@@ -167,7 +184,12 @@ impl<'a> TextOverlay<'a> {
 
         let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
-        for g in self.text.bytes().filter_map(|c| self.font.get_glyph(c)) {
+        for g in self
+            .text
+            .as_ref()
+            .bytes()
+            .filter_map(|c| self.font.get_glyph(c))
+        {
             let top = self.max_height - self.baseline - g.bearing_y;
             let char_area = Rect::new(
                 Point::new(tot_adv + g.bearing_x, top),
@@ -755,9 +777,9 @@ fn rect_rounded2_get_pixel(
 /// Optionally draws a text inside the rectangle and adjusts its color to match
 /// the fill. The coordinates of the text are specified in the TextOverlay
 /// struct.
-pub fn bar_with_text_and_fill(
+pub fn bar_with_text_and_fill<T: AsRef<str>>(
     area: Rect,
-    overlay: Option<TextOverlay>,
+    overlay: Option<&TextOverlay<T>>,
     fg_color: Color,
     bg_color: Color,
     fill_from: i16,
@@ -830,6 +852,37 @@ pub fn dotted_line(start: Point, width: i16, color: Color) {
     }
 }
 
+/// Draws longer multiline texts inside an area.
+/// Splits lines on word boundaries/whitespace.
+/// When a word is too long to fit one line, splitting
+/// it on multiple lines with "-" at the line-ends.
+///
+/// If it fits, returns the rest of the area.
+/// If it does not fit, returns `None`.
+pub fn text_multiline_split_words(
+    area: Rect,
+    text: &str,
+    font: Font,
+    fg_color: Color,
+    bg_color: Color,
+    alignment: Alignment,
+) -> Option<Rect> {
+    let text_style = TextStyle::new(font, fg_color, bg_color, fg_color, fg_color);
+    let text_layout = TextLayout::new(text_style)
+        .with_bounds(area)
+        .with_align(alignment);
+    let mut cursor = area.top_left() + Offset::y(font.line_height());
+    let mut ops: Vec<Op, 1> = Vec::new();
+    unwrap!(ops.push(Op::Text(text)));
+    text_layout.layout_ops(&mut ops.into_iter(), &mut cursor, &mut TextRenderer);
+    let drawn_height = cursor.y - area.top_left().y;
+    if drawn_height >= area.height() {
+        None
+    } else {
+        Some(area.split_top(drawn_height).1)
+    }
+}
+
 /// Display text left-aligned to a certain Point
 pub fn text_left(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     display::text(
@@ -855,7 +908,7 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
     );
 }
 
-/// Display text right-alligned to a certain Point
+/// Display text right-aligned to a certain Point
 pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     let w = font.text_width(text);
     display::text(
@@ -869,7 +922,6 @@ pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_c
 }
 
 pub fn text_top_left(position: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
-    // let w = font.text_width(text);
     let h = font.text_height();
     display::text(
         position.x,
@@ -879,6 +931,29 @@ pub fn text_top_left(position: Point, text: &str, font: Font, fg_color: Color, b
         fg_color.into(),
         bg_color.into(),
     );
+}
+
+/// Fill background before drawing text.
+/// Useful when drawing text on something already existing (like homescreen).
+pub fn fill_background_for_text(
+    baseline: Point,
+    text: &str,
+    font: Font,
+    color: Color,
+    alignment: Alignment,
+    pixel_margin: i16,
+) {
+    let width = font.text_width(text);
+    let baseline_x = match alignment {
+        Alignment::Start => baseline.x,
+        Alignment::Center => baseline.x - width / 2,
+        Alignment::End => baseline.x - width,
+    };
+    let left_bottom_point = Point::new(baseline_x, baseline.y);
+    let rect =
+        Rect::from_bottom_left_and_size(left_bottom_point, Offset::new(width, font.text_height()))
+            .expand(pixel_margin);
+    rect_fill(rect, color);
 }
 
 #[inline(always)]

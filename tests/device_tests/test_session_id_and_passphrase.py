@@ -313,6 +313,7 @@ def test_passphrase_always_on_device(client: Client):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 @pytest.mark.setup_client(passphrase="")
 def test_passphrase_on_device_not_possible_on_t1(client: Client):
     # This setting makes no sense on T1.
@@ -395,11 +396,18 @@ def test_hide_passphrase_from_host(client: Client):
         def input_flow():
             yield
             layout = client.debug.wait_layout()
-            assert (
-                "Passphrase provided by host will be used but will not be displayed due to the device settings."
-                in layout.text_content()
-            )
-            client.debug.press_yes()
+            if client.debug.model == "T":
+                assert (
+                    "Passphrase provided by host will be used but will not be displayed due to the device settings."
+                    in layout.text_content()
+                )
+                client.debug.press_yes()
+            elif client.debug.model == "R":
+                client.debug.press_right()
+                layout = client.debug.wait_layout()
+                assert "will not be displayed" in layout.text_content()
+                client.debug.press_right()
+                client.debug.press_yes()
 
         client.watch_layout()
         client.set_input_flow(input_flow)

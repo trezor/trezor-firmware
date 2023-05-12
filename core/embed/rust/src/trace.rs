@@ -1,5 +1,11 @@
 use crate::strutil::format_i64;
 
+// TODO: try to move these things into TR's code
+#[cfg(feature = "model_tr")]
+use crate::ui::model_tr::component::ButtonPos;
+#[cfg(feature = "model_tr")]
+use heapless::String;
+
 pub trait Tracer {
     fn child(&mut self, key: &str, value: &dyn Trace);
     fn int(&mut self, key: &str, i: i64);
@@ -192,6 +198,18 @@ impl<F: FnMut(&str)> Tracer for JsonTracer<F> {
 /// interface.
 pub trait Trace {
     fn trace(&self, t: &mut dyn Tracer);
+    /// Describes what happens when a certain button is triggered.
+    #[cfg(feature = "model_tr")]
+    fn get_btn_action(&self, _pos: ButtonPos) -> String<25> {
+        "Default".into()
+    }
+    /// Report actions for all three buttons in easy-to-parse format.
+    #[cfg(feature = "model_tr")]
+    fn report_btn_actions(&self, t: &mut dyn Tracer) {
+        t.string("left_action", &self.get_btn_action(ButtonPos::Left));
+        t.string("middle_action", &self.get_btn_action(ButtonPos::Middle));
+        t.string("right_action", &self.get_btn_action(ButtonPos::Right));
+    }
 }
 
 #[cfg(test)]

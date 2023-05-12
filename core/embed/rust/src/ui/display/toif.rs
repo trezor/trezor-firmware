@@ -26,7 +26,11 @@ use super::Color;
 const TOIF_HEADER_LENGTH: usize = 12;
 
 pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
-    let r = Rect::from_center_and_size(center, icon.toif.size());
+    icon_from_toif(&icon.toif, center, fg_color, bg_color);
+}
+
+pub fn icon_from_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color) {
+    let r = Rect::from_center_and_size(center, toif.size());
     let area = r.translate(get_offset());
     let clamped = area.clamp(constant::screen());
     let colortable = get_color_table(fg_color, bg_color);
@@ -36,7 +40,7 @@ pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
     let mut dest = [0_u8; 1];
 
     let mut window = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx = icon.toif.decompression_context(Some(&mut window));
+    let mut ctx = toif.decompression_context(Some(&mut window));
 
     for py in area.y0..area.y1 {
         for px in area.x0..area.x1 {

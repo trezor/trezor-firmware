@@ -17,8 +17,6 @@ async def _request_sd_salt(
     Is model-specific, because some models (like TR/T2B1) do not even
     have SD card support (and we do not want to include SD-card connected code).
     """
-    from trezor import utils
-
     if not utils.USE_SD_CARD:
         return None
     else:

@@ -343,7 +343,7 @@ impl TextLayout {
     }
 
     /// Overall height of the content, including paddings.
-    fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i16 {
+    pub fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i16 {
         self.padding_top
             + self.style.text_font.text_height()
             + (end_cursor.y - init_cursor.y)
@@ -557,7 +557,7 @@ struct Span {
 }
 
 impl Span {
-    fn fit_horizontally(
+    pub fn fit_horizontally(
         text: &str,
         max_width: i16,
         text_font: impl GlyphMetrics,

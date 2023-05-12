@@ -63,6 +63,7 @@ if TYPE_CHECKING:
         FirmwareHash = 89
         UnlockPath = 93
         UnlockedPathRequest = 94
+        ShowDeviceTutorial = 95
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81
@@ -455,6 +456,11 @@ if TYPE_CHECKING:
         NO = 0
         YES = 1
         INFO = 2
+
+    class DebugPhysicalButton(IntEnum):
+        LEFT_BTN = 0
+        MIDDLE_BTN = 1
+        RIGHT_BTN = 2
 
     class EthereumDefinitionType(IntEnum):
         NETWORK = 0

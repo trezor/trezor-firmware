@@ -241,6 +241,21 @@ impl Rect {
         }
     }
 
+    pub const fn from_top_right_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x - size.x, p0.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
+    pub const fn from_bottom_left_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x, p0.y - size.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
+    pub const fn from_bottom_right_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x - size.x, p0.y - size.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
     pub const fn from_center_and_size(p: Point, size: Offset) -> Self {
         let x0 = p.x - size.x / 2;
         let y0 = p.y - size.y / 2;
@@ -306,6 +321,14 @@ impl Rect {
         self.bottom_left().center(self.bottom_right())
     }
 
+    pub const fn left_center(&self) -> Point {
+        self.bottom_left().center(self.top_left())
+    }
+
+    pub const fn right_center(&self) -> Point {
+        self.bottom_right().center(self.top_right())
+    }
+
     /// Whether a `Point` is inside the `Rect`.
     pub const fn contains(&self, point: Point) -> bool {
         point.x >= self.x0 && point.x < self.x1 && point.y >= self.y0 && point.y < self.y1
@@ -339,6 +362,11 @@ impl Rect {
             x1: self.x1 + insets.right,
             y1: self.y1 + insets.bottom,
         }
+    }
+
+    /// Move all the sides further from the center by the same distance.
+    pub const fn expand(&self, size: i16) -> Self {
+        self.outset(Insets::uniform(size))
     }
 
     /// Move all the sides closer to the center by the same distance.
@@ -384,6 +412,16 @@ impl Rect {
     /// Split `Rect` into left and right, given the right one's `width`.
     pub const fn split_right(self, width: i16) -> (Self, Self) {
         self.split_left(self.width() - width)
+    }
+
+    /// Split `Rect` into left, center and right, given the center one's
+    /// `width`. Center element is symmetric, left and right have the same
+    /// size.
+    pub const fn split_center(self, width: i16) -> (Self, Self, Self) {
+        let left_right_width = (self.width() - width) / 2;
+        let (left, center_right) = self.split_left(left_right_width);
+        let (center, right) = center_right.split_left(width);
+        (left, center, right)
     }
 
     pub const fn clamp(self, limit: Rect) -> Self {

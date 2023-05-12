@@ -111,7 +111,7 @@ async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
         if code1 == pin:
             await wipe_code_same_as_pin_popup(ctx)
             continue
-        await confirm_reenter_pin(ctx, br_type="set_wipe_code", is_wipe_code=True)
+        await confirm_reenter_pin(ctx, is_wipe_code=True)
         code2 = await request_pin(ctx, "Re-enter wipe code")
         if code1 == code2:
             return code1

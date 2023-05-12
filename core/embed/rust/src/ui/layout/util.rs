@@ -19,14 +19,15 @@ use crate::{
 use cstr_core::cstr;
 use heapless::Vec;
 
-#[cfg(feature = "jpeg")]
-use crate::{
-    micropython::{
-        buffer::get_buffer,
-        ffi::{mp_obj_new_int, mp_obj_new_tuple},
-    },
-    ui::display::tjpgd::{jpeg_info, jpeg_test},
+#[cfg(any(feature = "toif", feature = "jpeg"))]
+use crate::micropython::{
+    buffer::get_buffer,
+    ffi::{mp_obj_new_int, mp_obj_new_tuple},
 };
+#[cfg(feature = "jpeg")]
+use crate::ui::display::tjpgd::{jpeg_info, jpeg_test};
+#[cfg(feature = "toif")]
+use crate::ui::display::toif::Toif;
 
 pub fn iter_into_objs<const N: usize>(iterable: Obj) -> Result<[Obj; N], Error> {
     let err = Error::ValueError(cstr!("Invalid iterable length"));
@@ -44,13 +45,22 @@ where
     T: TryFrom<Obj, Error = Error>,
 {
     let err = Error::ValueError(cstr!("Invalid iterable length"));
+    let vec: Vec<T, N> = iter_into_vec(iterable)?;
+    // Returns error if array.len() != N
+    vec.into_array().map_err(|_| err)
+}
+
+pub fn iter_into_vec<T, const N: usize>(iterable: Obj) -> Result<Vec<T, N>, Error>
+where
+    T: TryFrom<Obj, Error = Error>,
+{
+    let err = Error::ValueError(cstr!("Invalid iterable length"));
     let mut vec = Vec::<T, N>::new();
     let mut iter_buf = IterBuf::new();
     for item in Iter::try_from_obj_with_buf(iterable, &mut iter_buf)? {
         vec.push(item.try_into()?).map_err(|_| err)?;
     }
-    // Returns error if array.len() != N
-    vec.into_array().map_err(|_| err)
+    Ok(vec)
 }
 
 /// Maximum number of characters that can be displayed on screen at once. Used
@@ -227,6 +237,35 @@ pub extern "C" fn upy_jpeg_info(data: Obj) -> Obj {
                         mp_obj_new_int(info.1 as _),
                     ];
                     mp_obj_new_tuple(3, values.as_ptr())
+                };
+
+                Ok(obj)
+            } else {
+                Err(Error::ValueError(cstr!("Invalid image format.")))
+            }
+        } else {
+            Err(Error::ValueError(cstr!("Buffer error.")))
+        }
+    };
+
+    unsafe { try_or_raise(block) }
+}
+
+#[cfg(feature = "toif")]
+pub extern "C" fn upy_toif_info(data: Obj) -> Obj {
+    let block = || {
+        let buffer = unsafe { get_buffer(data) };
+
+        if let Ok(buffer) = buffer {
+            let toif = Toif::new(buffer);
+
+            if let Some(toif) = toif {
+                let obj = unsafe {
+                    let values = [
+                        mp_obj_new_int(toif.width() as _),
+                        mp_obj_new_int(toif.height() as _),
+                    ];
+                    mp_obj_new_tuple(2, values.as_ptr())
                 };
 
                 Ok(obj)

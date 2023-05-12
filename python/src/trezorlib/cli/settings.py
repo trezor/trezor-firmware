@@ -39,6 +39,8 @@ SAFETY_LEVELS = {
     "prompt": messages.SafetyCheckLevel.PromptTemporarily,
 }
 
+T1_TR_IMAGE_SIZE = (128, 64)
+
 
 def image_to_t1(filename: Path) -> bytes:
     if not PIL_AVAILABLE:
@@ -54,11 +56,54 @@ def image_to_t1(filename: Path) -> bytes:
     except Exception as e:
         raise click.ClickException("Failed to load image") from e
 
-    if image.size != (128, 64):
-        raise click.ClickException("Wrong size of the image - should be 128x64")
+    if image.size != T1_TR_IMAGE_SIZE:
+        if click.confirm(
+            f"Image is not 128x64, but {image.size}. Do you want to resize it automatically?",
+            default=True,
+        ):
+            image = image.resize(T1_TR_IMAGE_SIZE, Image.ANTIALIAS)
+        else:
+            raise click.ClickException("Wrong size of the image - should be 128x64")
 
     image = image.convert("1")
     return image.tobytes("raw", "1")
+
+
+def image_to_tr(filename: Path) -> bytes:
+    if not PIL_AVAILABLE:
+        raise click.ClickException(
+            "Image library is missing. Please install via 'pip install Pillow'."
+        )
+
+    try:
+        image = Image.open(filename)
+    except Exception as e:
+        raise click.ClickException("Failed to load image") from e
+
+    if image.size != T1_TR_IMAGE_SIZE:
+        if click.confirm(
+            f"Image is not 128x64, but {image.size}. Do you want to resize it automatically?",
+            default=True,
+        ):
+            image = image.resize(T1_TR_IMAGE_SIZE, Image.ANTIALIAS)
+        else:
+            raise click.ClickException("Wrong size of the image - should be 128x64")
+
+    image = image.convert("1")  # black-and-white
+    toif_image = toif.from_image(image)
+    return toif_image.to_bytes()
+
+
+def image_to_tt(client: "TrezorClient", path: Path) -> bytes:
+    if client.features.homescreen_format == messages.HomescreenFormat.Jpeg240x240:
+        return image_to_jpeg_240x240(path)
+    elif client.features.homescreen_format in (
+        messages.HomescreenFormat.Toif144x144,
+        None,
+    ):
+        return image_to_toif_144x144(path)
+    else:
+        raise click.ClickException("Unknown image format requested by the device.")
 
 
 def image_to_toif_144x144(filename: Path) -> bytes:
@@ -236,22 +281,12 @@ def homescreen(client: "TrezorClient", filename: str) -> str:
 
         if client.features.model == "1":
             img = image_to_t1(path)
+        elif client.features.model == "R":
+            img = image_to_tr(path)
+        elif client.features.model == "T":
+            img = image_to_tt(client, path)
         else:
-            if (
-                client.features.homescreen_format
-                == messages.HomescreenFormat.Jpeg240x240
-            ):
-                img = image_to_jpeg_240x240(path)
-            elif (
-                client.features.homescreen_format
-                == messages.HomescreenFormat.Toif144x144
-                or client.features.homescreen_format is None
-            ):
-                img = image_to_toif_144x144(path)
-            else:
-                raise click.ClickException(
-                    "Unknown image format requested by the device."
-                )
+            raise click.ClickException("Unknown device model")
 
     return device.apply_settings(client, homescreen=img)
 

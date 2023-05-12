@@ -17,6 +17,25 @@ impl Wordlist {
         Self(unsafe { &ffi::SLIP39_WORDLIST })
     }
 
+    /// Returns all possible letters that form a valid word together with some
+    /// prefix. Alphabetically sorted.
+    pub fn get_available_letters(&self, prefix: &str) -> impl Iterator<Item = char> {
+        // TODO: consider returning -> Vec<char, 26>?
+        // Fill a "set" of all unique characters, not sorted yet
+        let mut suffixes: heapless::Vec<char, 26> = heapless::Vec::new();
+        for word in self.iter() {
+            if word.starts_with(prefix) && word.len() > prefix.len() {
+                let following_char = unwrap!(word.chars().nth(prefix.len()));
+                if !suffixes.contains(&following_char) {
+                    unwrap!(suffixes.push(following_char));
+                }
+            }
+        }
+
+        suffixes.sort_unstable();
+        suffixes.into_iter()
+    }
+
     /// Only leaves words that have a specified prefix. Throw away others.
     pub fn filter_prefix(&self, prefix: &str) -> Self {
         let mut start = 0usize;
@@ -157,5 +176,24 @@ mod tests {
             .iter()
             .collect::<Vec<_>>();
         assert_eq!(result, expected_result);
+    }
+        #[test]
+    fn test_get_available_letters() {
+        let expected_result = vec!['a', 'i', 'l', 'o', 's', 'u'];
+        let result = Wordlist::bip39()
+            .get_available_letters("ab")
+            .collect::<Vec<_>>();
+        assert_eq!(result, expected_result);
+
+        let expected_result = vec!['a', 'e', 'i', 'o', 'u'];
+        let result = Wordlist::bip39()
+            .get_available_letters("str")
+            .collect::<Vec<_>>();
+        assert_eq!(result, expected_result);
+
+        let result = Wordlist::bip39()
+            .get_available_letters("zoo")
+            .collect::<Vec<_>>();
+        assert_eq!(result.len(), 0);
     }
 }

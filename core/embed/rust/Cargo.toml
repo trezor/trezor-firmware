@@ -9,7 +9,7 @@ build = "build.rs"
 default = ["model_tt"]
 bitcoin_only = []
 model_tt = ["jpeg"]
-model_tr = []
+model_tr = ["toif"]
 micropython = []
 protobuf = ["micropython"]
 ui = []
@@ -21,13 +21,23 @@ button = []
 touch = []
 clippy = []
 jpeg = []
-disp_i8080_8bit_dw = []  # write pixels directly to peripheral
-disp_i8080_16bit_dw = []  # write pixels directly to peripheral
+toif = []
+disp_i8080_8bit_dw = [] # write pixels directly to peripheral
+disp_i8080_16bit_dw = [] # write pixels directly to peripheral
 debug = ["ui_debug"]
 sbu = []
 sd_card = []
 rgb_led = []
-test = ["cc", "glob", "micropython", "protobuf", "ui", "ui_debug", "dma2d", "touch"]
+test = [
+    "cc",
+    "glob",
+    "micropython",
+    "protobuf",
+    "ui",
+    "ui_debug",
+    "dma2d",
+    "touch",
+]
 
 [lib]
 crate-type = ["staticlib"]

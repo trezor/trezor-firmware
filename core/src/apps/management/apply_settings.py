@@ -4,6 +4,8 @@ from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, confirm_homescreen
 from trezor.wire import DataError
 
+import trezorui2
+
 if TYPE_CHECKING:
     from trezor.messages import ApplySettings, Success
     from trezor.wire import Context, GenericContext
@@ -14,8 +16,8 @@ BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
 
 def _validate_homescreen(homescreen: bytes) -> None:
-    import trezorui2
     import storage.device as storage_device
+    from trezor import utils
 
     if homescreen == b"":
         return
@@ -25,6 +27,22 @@ def _validate_homescreen(homescreen: bytes) -> None:
             f"Homescreen is too large, maximum size is {storage_device.HOMESCREEN_MAXSIZE} bytes"
         )
 
+    if utils.MODEL == "R":
+        _validate_homescreen_tr(homescreen)
+    else:
+        _validate_homescreen_tt(homescreen)
+
+
+def _validate_homescreen_tr(homescreen: bytes) -> None:
+    try:
+        w, h = trezorui2.toif_info(homescreen)
+    except ValueError:
+        raise DataError("Invalid homescreen")
+    if w != 128 or h != 64:
+        raise DataError("Homescreen must be 128x64 pixel large")
+
+
+def _validate_homescreen_tt(homescreen: bytes) -> None:
     try:
         w, h, mcu_height = trezorui2.jpeg_info(homescreen)
     except ValueError:
