@@ -35,11 +35,13 @@ def _validate_homescreen(homescreen: bytes) -> None:
 
 def _validate_homescreen_tr(homescreen: bytes) -> None:
     try:
-        w, h = trezorui2.toif_info(homescreen)
+        w, h, is_grayscale = trezorui2.toif_info(homescreen)
     except ValueError:
         raise DataError("Invalid homescreen")
     if w != 128 or h != 64:
         raise DataError("Homescreen must be 128x64 pixel large")
+    if not is_grayscale:
+        raise DataError("Homescreen must be grayscale")
 
 
 def _validate_homescreen_tt(homescreen: bytes) -> None:

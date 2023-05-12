@@ -1241,8 +1241,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
-    /// def toif_info(data: bytes) -> tuple[int, int]:
-    ///     """Get TOIF image dimensions (width: int, height: int)."""
+    /// def toif_info(data: bytes) -> tuple[int, int, bool]:
+    ///     """Get TOIF image dimensions and format (width: int, height: int, is_grayscale: bool)."""
     Qstr::MP_QSTR_toif_info => obj_fn_1!(upy_toif_info).as_obj(),
 
     /// def confirm_action(

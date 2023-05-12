@@ -10,8 +10,8 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/model_tr/layout.rs
-def toif_info(data: bytes) -> tuple[int, int]:
-    """Get TOIF image dimensions (width: int, height: int)."""
+def toif_info(data: bytes) -> tuple[int, int, bool]:
+    """Get TOIF image dimensions and format (width: int, height: int, is_grayscale: bool)."""
 
 
 # rust/src/ui/model_tr/layout.rs

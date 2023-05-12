@@ -181,6 +181,13 @@ impl<'i> Toif<'i> {
         }
     }
 
+    pub const fn is_grayscale(&self) -> bool {
+        matches!(
+            self.format(),
+            ToifFormat::GrayScaleOH | ToifFormat::GrayScaleEH
+        )
+    }
+
     pub const fn width(&self) -> i16 {
         u16::from_le_bytes([self.data[4], self.data[5]]) as i16
     }
