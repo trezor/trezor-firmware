@@ -4,9 +4,10 @@ use crate::{
         component::{base::Never, Component, Event, EventCtx},
         display::{text_multiline_split_words, Font},
         geometry::{Alignment, Rect},
-        model_tr::theme,
     },
 };
+
+use super::theme;
 
 const HEADER: &str = "COINJOIN IN PROGRESS";
 const FOOTER: &str = "Don't disconnect your Trezor";

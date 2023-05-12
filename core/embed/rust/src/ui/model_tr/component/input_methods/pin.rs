@@ -5,12 +5,11 @@ use crate::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::Icon,
         geometry::Rect,
-        model_tr::theme,
     },
 };
 
 use super::super::{
-    ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
+    theme, ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
     ChoicePageMsg,
 };
 use heapless::String;

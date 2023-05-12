@@ -4,13 +4,12 @@ use crate::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::Icon,
         geometry::Rect,
-        model_tr::theme,
         util::char_to_string,
     },
 };
 
 use super::super::{
-    ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg,
+    theme, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg,
 };
 use crate::micropython::buffer::StrBuffer;
 use heapless::{String, Vec};

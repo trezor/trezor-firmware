@@ -5,10 +5,11 @@ use crate::{
         component::{Component, Event, EventCtx},
         display::{self, Color, Font},
         geometry::{Offset, Rect},
-        model_tr::theme,
         util::animation_disabled,
     },
 };
+
+use super::theme;
 
 pub enum LoaderMsg {
     GrownCompletely,

@@ -2,8 +2,9 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::{self, Font},
     geometry::{Point, Rect},
-    model_tr::bootloader::theme::{BLD_BG, BLD_FG},
 };
+
+use super::theme::{BLD_BG, BLD_FG};
 
 pub struct Title {
     version: &'static str,

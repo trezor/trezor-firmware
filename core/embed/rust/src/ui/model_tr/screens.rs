@@ -7,11 +7,12 @@ use crate::ui::{
     },
     display::Icon,
     geometry::LinearPlacement,
-    model_tr::{
-        component::ResultScreen,
-        constant,
-        theme::{BLACK, ICON_FAIL, TEXT_BOLD, TEXT_NORMAL, WHITE},
-    },
+};
+
+use super::{
+    component::ResultScreen,
+    constant,
+    theme::{BLACK, ICON_FAIL, TEXT_BOLD, TEXT_NORMAL, WHITE},
 };
 
 #[cfg(not(feature = "micropython"))]

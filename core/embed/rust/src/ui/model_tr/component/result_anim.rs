@@ -6,9 +6,10 @@ use crate::{
         display,
         display::toif::Icon,
         geometry::Rect,
-        model_tr::theme,
     },
 };
+
+use super::super::theme;
 
 pub enum ResultAnimMsg {
     FullyGrown,

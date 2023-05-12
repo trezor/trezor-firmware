@@ -11,11 +11,13 @@ use crate::{
         },
         event::USBEvent,
         geometry::{self, Alignment, Offset, Point, Rect},
-        model_tr::constant,
     },
 };
 
-use super::{common::display_center, theme, ButtonController, ButtonControllerMsg, ButtonLayout};
+use super::{
+    super::constant, common::display_center, theme, ButtonController, ButtonControllerMsg,
+    ButtonLayout,
+};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();

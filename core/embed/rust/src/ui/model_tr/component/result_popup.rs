@@ -9,14 +9,13 @@ use crate::{
         constant::screen,
         display::toif::Icon,
         geometry::{Alignment, Insets, LinearPlacement, Rect},
-        model_tr::{
-            component::{ButtonPos, ResultAnim, ResultAnimMsg},
-            theme,
-        },
     },
 };
 
-use super::{ButtonController, ButtonControllerMsg, ButtonLayout};
+use super::{
+    super::theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, ResultAnim,
+    ResultAnimMsg,
+};
 
 pub enum ResultPopupMsg {
     Confirmed,

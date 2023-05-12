@@ -2,8 +2,9 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::{self, Icon},
     geometry::{self, Offset, Rect},
-    model_tr::theme,
 };
+
+use super::super::theme;
 
 const TEXT_BOTTOM_MARGIN: i16 = 2; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 11;

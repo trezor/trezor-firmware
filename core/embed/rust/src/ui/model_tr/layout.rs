@@ -38,7 +38,6 @@ use crate::{
                 upy_toif_info, ConfirmBlob,
             },
         },
-        model_tr::component::{ScrollableContent, ScrollableFrame},
     },
 };
 
@@ -47,9 +46,9 @@ use super::{
         AddressDetails, AddressDetailsMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage,
         CancelInfoConfirmMsg, CoinJoinProgress, Flow, FlowMsg, FlowPages, Frame, Homescreen,
         HomescreenMsg, Lockscreen, NoBtnDialog, NoBtnDialogMsg, NumberInput, NumberInputMsg, Page,
-        PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress, ShareWords, ShowMore,
-        SimpleChoice, SimpleChoiceMsg, WelcomeScreen, WordlistEntry, WordlistEntryMsg,
-        WordlistType,
+        PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, Progress, ScrollableContent,
+        ScrollableFrame, ShareWords, ShowMore, SimpleChoice, SimpleChoiceMsg, WelcomeScreen,
+        WordlistEntry, WordlistEntryMsg, WordlistType,
     },
     constant, theme,
 };

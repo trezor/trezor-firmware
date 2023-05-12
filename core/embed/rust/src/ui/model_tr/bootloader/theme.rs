@@ -1,10 +1,11 @@
 use crate::ui::{
     component::text::TextStyle,
     display::{Color, Font},
-    model_tr::{
-        component::ButtonStyleSheet,
-        theme::{BG, BLACK, FG, WHITE},
-    },
+};
+
+use super::super::{
+    component::ButtonStyleSheet,
+    theme::{BG, BLACK, FG, WHITE},
 };
 
 pub const BLD_BG: Color = BLACK;

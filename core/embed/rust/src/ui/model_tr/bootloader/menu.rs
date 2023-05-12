@@ -1,10 +1,11 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Never, Pad},
     geometry::{Point, Rect},
-    model_tr::{
-        bootloader::{theme::BLD_BG, title::Title},
-        constant::{HEIGHT, WIDTH},
-    },
+};
+
+use super::super::{
+    bootloader::{theme::BLD_BG, title::Title},
+    constant::{HEIGHT, WIDTH},
 };
 
 pub struct Menu {

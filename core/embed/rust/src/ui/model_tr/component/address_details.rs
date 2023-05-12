@@ -9,11 +9,12 @@ use crate::{
             Child, Component, Event, EventCtx, Pad, Paginate, Qr,
         },
         geometry::Rect,
-        model_tr::theme,
     },
 };
 
-use super::{ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, Frame};
+use super::{
+    theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, Frame,
+};
 
 const MAX_XPUBS: usize = 16;
 const QR_BORDER: i16 = 3;

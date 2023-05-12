@@ -3,13 +3,12 @@ use crate::{
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad},
         geometry::Rect,
-        model_tr::component::{scrollbar::SCROLLBAR_SPACE, title::Title},
     },
 };
 
 use super::{
-    theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, FlowPages,
-    Page, ScrollBar,
+    scrollbar::SCROLLBAR_SPACE, theme, title::Title, ButtonAction, ButtonController,
+    ButtonControllerMsg, ButtonLayout, ButtonPos, FlowPages, Page, ScrollBar,
 };
 
 /// To be returned directly from Flow.

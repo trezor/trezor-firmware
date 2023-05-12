@@ -10,7 +10,6 @@ use crate::{
         },
         display::{Font, Icon},
         geometry::{Alignment, Offset, Rect},
-        model_tr::theme,
         util::ResultExt,
     },
 };
@@ -19,7 +18,7 @@ use heapless::Vec;
 
 use super::{
     flow_pages_helpers::{Op, ToDisplay},
-    ButtonActions, ButtonDetails, ButtonLayout,
+    theme, ButtonActions, ButtonDetails, ButtonLayout,
 };
 
 /// Holding specific workflows that are created in `layout.rs`.

@@ -5,9 +5,10 @@ use crate::{
         component::{Component, Event, EventCtx, Marquee, Never},
         display,
         geometry::{Offset, Rect},
-        model_tr::theme,
     },
 };
+
+use super::super::theme;
 
 pub struct Title {
     area: Rect,

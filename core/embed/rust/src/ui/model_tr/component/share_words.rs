@@ -1,20 +1,15 @@
 use crate::{
     micropython::buffer::StrBuffer,
     ui::{
-        component::{Component, Event, EventCtx, Never, Paginate},
+        component::{Child, Component, Event, EventCtx, Never, Paginate},
         display::{text_multiline_split_words, Font},
         geometry::{Alignment, Offset, Rect},
-        model_tr::theme,
     },
 };
 
-use crate::ui::{
-    component::Child,
-    model_tr::component::{scrollbar::SCROLLBAR_SPACE, title::Title, ScrollBar},
-};
 use heapless::{String, Vec};
 
-use super::common::display;
+use super::{common::display, scrollbar::SCROLLBAR_SPACE, theme, title::Title, ScrollBar};
 
 const WORDS_PER_PAGE: usize = 3;
 const EXTRA_LINE_HEIGHT: i16 = 2;

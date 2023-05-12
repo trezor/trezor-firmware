@@ -4,12 +4,10 @@ use crate::{
         component::{Component, Event, EventCtx},
         event::ButtonEvent,
         geometry::Rect,
-        model_tr::{
-            component::{loader::Loader, ButtonPos, LoaderMsg, LoaderStyleSheet},
-            theme,
-        },
     },
 };
+
+use super::{loader::Loader, theme, ButtonPos, LoaderMsg, LoaderStyleSheet};
 
 pub enum HoldToConfirmMsg {
     Confirmed,

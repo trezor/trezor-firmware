@@ -4,19 +4,15 @@ use crate::ui::{
         Child, Component, Event, EventCtx, Pad,
     },
     geometry::{LinearPlacement, Point, Rect},
-    model_tr::{
-        bootloader::{
-            theme::{BLD_BG, TEXT_NORMAL},
-            title::Title,
-            ReturnToC,
-        },
-        component::ButtonMsg::Clicked,
-    },
 };
 
-use crate::ui::model_tr::{
-    bootloader::theme::bld_button_default,
-    component::{Button, ButtonPos},
+use super::super::{
+    bootloader::{
+        theme::{bld_button_default, BLD_BG, TEXT_NORMAL},
+        title::Title,
+        ReturnToC,
+    },
+    component::{Button, ButtonMsg::Clicked, ButtonPos},
     constant::{HEIGHT, WIDTH},
 };
 

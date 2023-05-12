@@ -2,10 +2,12 @@ use crate::ui::{
     component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
     display::Color,
     geometry::{Insets, Rect},
-    model_tr::constant,
 };
 
-use super::{theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos};
+use super::{
+    super::constant, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout,
+    ButtonPos,
+};
 
 pub struct ButtonPage<T> {
     page_count: usize,
@@ -218,9 +220,10 @@ where
 
 // DEBUG-ONLY SECTION BELOW
 
+use super::frame::ScrollableContent;
 #[cfg(feature = "ui_debug")]
 use super::ButtonAction;
-use crate::{micropython::buffer::StrBuffer, ui::model_tr::component::frame::ScrollableContent};
+use crate::micropython::buffer::StrBuffer;
 #[cfg(feature = "ui_debug")]
 use heapless::String;
 

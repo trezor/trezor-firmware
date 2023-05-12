@@ -2,8 +2,9 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     display,
     geometry::{Offset, Point, Rect},
-    model_tr::theme,
 };
+
+use super::super::theme;
 
 use heapless::Vec;
 

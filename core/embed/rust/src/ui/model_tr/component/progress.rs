@@ -12,12 +12,11 @@ use crate::{
         },
         display::{self, Font},
         geometry::Rect,
-        model_tr::constant,
         util::animation_disabled,
     },
 };
 
-use super::theme;
+use super::super::{constant, theme};
 
 pub struct Progress {
     title: Child<Label<StrBuffer>>,

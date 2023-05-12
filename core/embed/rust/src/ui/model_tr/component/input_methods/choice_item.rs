@@ -1,13 +1,12 @@
 use crate::ui::{
     display::{rect_fill, rect_fill_corners, rect_outline_rounded, Font, Icon},
     geometry::{Offset, Rect, BOTTOM_LEFT, BOTTOM_RIGHT},
-    model_tr::theme,
 };
 use heapless::String;
 
 use super::super::{
     common::{display, display_inverse, display_right},
-    ButtonDetails, ButtonLayout, Choice,
+    theme, ButtonDetails, ButtonLayout, Choice,
 };
 
 const ICON_RIGHT_PADDING: i16 = 2;

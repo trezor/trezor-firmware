@@ -4,7 +4,6 @@ use crate::{
         component::{Component, Never},
         display::{self, Font},
         geometry::Point,
-        model_tr::constant,
     },
 };
 
@@ -23,17 +22,19 @@ use crate::ui::{
     display::{fade_backlight_duration, Color, Icon, TextOverlay},
     event::ButtonEvent,
     geometry::{LinearPlacement, Offset, Rect, CENTER},
-    model_tr::{
-        bootloader::{
-            confirm::Confirm,
-            intro::Intro,
-            menu::Menu,
-            theme::{bld_button_cancel, bld_button_default, BLD_BG, BLD_FG},
-        },
-        component::{Button, ButtonPos, ResultScreen},
-        theme::{BACKLIGHT_NORMAL, ICON_FAIL, ICON_SUCCESS, LOGO_EMPTY},
-    },
     util::{from_c_array, from_c_str},
+};
+
+use super::{
+    bootloader::{
+        confirm::Confirm,
+        intro::Intro,
+        menu::Menu,
+        theme::{bld_button_cancel, bld_button_default, BLD_BG, BLD_FG},
+    },
+    component::{Button, ButtonPos, ResultScreen},
+    constant,
+    theme::{BACKLIGHT_NORMAL, ICON_FAIL, ICON_SUCCESS, LOGO_EMPTY},
 };
 
 const SCREEN_ADJ: Rect = screen().split_top(64).0;

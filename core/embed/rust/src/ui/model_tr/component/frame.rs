@@ -4,12 +4,10 @@ use crate::{
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx},
         geometry::{Insets, Rect},
-        model_tr::{
-            component::{scrollbar::SCROLLBAR_SPACE, title::Title},
-            constant,
-        },
     },
 };
+
+use super::{super::constant, scrollbar::SCROLLBAR_SPACE, title::Title};
 
 /// Component for holding another component and displaying a title.
 pub struct Frame<T> {

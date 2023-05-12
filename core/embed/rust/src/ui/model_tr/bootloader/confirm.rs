@@ -6,14 +6,16 @@ use crate::ui::{
     constant::screen,
     display::{Color, Icon},
     geometry::{Point, Rect, CENTER},
-    model_tr::{
+};
+
+use super::{
+    super::{
         component::{Button, ButtonMsg::Clicked},
         constant::{HEIGHT, WIDTH},
         theme::WHITE,
     },
+    ReturnToC,
 };
-
-use super::ReturnToC;
 
 #[derive(Copy, Clone)]
 pub enum ConfirmMsg {
