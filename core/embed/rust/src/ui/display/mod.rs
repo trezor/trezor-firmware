@@ -5,8 +5,6 @@ pub mod loader;
 pub mod tjpgd;
 pub mod toif;
 
-use heapless::Vec;
-
 use super::{
     constant,
     geometry::{Alignment, Offset, Point, Rect},
@@ -30,7 +28,7 @@ use crate::{
     trezorhal::{buffers, display, time, uzlib::UzlibContext},
     ui::{
         component::text::{
-            layout::{Op, TextLayout, TextRenderer},
+            layout::{LayoutFit, TextLayout},
             TextStyle,
         },
         lerp::Lerp,
@@ -871,15 +869,10 @@ pub fn text_multiline_split_words(
     let text_layout = TextLayout::new(text_style)
         .with_bounds(area)
         .with_align(alignment);
-    let mut cursor = area.top_left() + Offset::y(font.line_height());
-    let mut ops: Vec<Op, 1> = Vec::new();
-    unwrap!(ops.push(Op::Text(text)));
-    text_layout.layout_ops(&mut ops.into_iter(), &mut cursor, &mut TextRenderer);
-    let drawn_height = cursor.y - area.top_left().y;
-    if drawn_height >= area.height() {
-        None
-    } else {
-        Some(area.split_top(drawn_height).1)
+    let layout_fit = text_layout.render_text(text);
+    match layout_fit {
+        LayoutFit::Fitting { height, .. } => Some(area.split_top(height).1),
+        LayoutFit::OutOfBounds { .. } => None,
     }
 }
 

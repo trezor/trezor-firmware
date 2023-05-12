@@ -175,8 +175,8 @@ impl TextLayout {
     }
 
     /// Draw as much text as possible on the current screen.
-    pub fn render_text(&self, text: &str) {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
+    pub fn render_text(&self, text: &str) -> LayoutFit {
+        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer)
     }
 
     pub fn layout_ops(
