@@ -17,43 +17,43 @@ import "messages-management.proto";
  * @next DebugLinkLayout
  */
 message DebugLinkDecision {
-  optional DebugButton button = 1;         // button press
-  optional DebugSwipeDirection swipe = 2;  // swipe direction
-  optional string input = 3;               // keyboard input
-  /**
-   * Structure representing swipe direction
-   */
-  enum DebugSwipeDirection {
-    UP = 0;
-    DOWN = 1;
-    LEFT = 2;
-    RIGHT = 3;
-  }
+    optional DebugButton button = 1;  // button press
+    optional DebugSwipeDirection swipe = 2;  // swipe direction
+    optional string input = 3;  // keyboard input
+    /**
+    * Structure representing swipe direction
+    */
+    enum DebugSwipeDirection {
+        UP = 0;
+        DOWN = 1;
+        LEFT = 2;
+        RIGHT = 3;
+    }
 
-  /**
-   * Structure representing button presses
-   */
-  enum DebugButton {
-    NO = 0;
-    YES = 1;
-    INFO = 2;
-  }
+    /**
+    * Structure representing button presses
+    */
+    enum DebugButton {
+        NO = 0;
+        YES = 1;
+        INFO = 2;
+    }
 
-  /**
-   * Structure representing model R button presses
-   */
-  // TODO: probably delete the middle_btn as it is not a physical one
-  enum DebugPhysicalButton {
-    LEFT_BTN = 0;
-    MIDDLE_BTN = 1;
-    RIGHT_BTN = 2;
-  }
+    /**
+    * Structure representing model R button presses
+    */
+    // TODO: probably delete the middle_btn as it is not a physical one
+    enum DebugPhysicalButton {
+        LEFT_BTN = 0;
+        MIDDLE_BTN = 1;
+        RIGHT_BTN = 2;
+    }
 
-  optional uint32 x = 4;                             // touch X coordinate
-  optional uint32 y = 5;                             // touch Y coordinate
-  optional bool wait = 6;                            // wait for layout change
-  optional uint32 hold_ms = 7;                       // touch hold duration
-  optional DebugPhysicalButton physical_button = 8;  // physical button press
+    optional uint32 x = 4;                             // touch X coordinate
+    optional uint32 y = 5;                             // touch Y coordinate
+    optional bool wait = 6;                            // wait for layout change
+    optional uint32 hold_ms = 7;                       // touch hold duration
+    optional DebugPhysicalButton physical_button = 8;  // physical button press
 }
 
 /**
@@ -61,7 +61,7 @@ message DebugLinkDecision {
  * @end
  */
 message DebugLinkLayout {
-  repeated string tokens = 1;
+    repeated string tokens = 1;
 }
 
 /**
@@ -70,7 +70,7 @@ message DebugLinkLayout {
  * @next Success
  */
 message DebugLinkReseedRandom {
-  optional uint32 value = 1;
+    optional uint32 value = 1;
 }
 
 /**
@@ -79,10 +79,8 @@ message DebugLinkReseedRandom {
  * @next Success
  */
 message DebugLinkRecordScreen {
-  optional string target_directory = 1;  // empty or missing to stop recording
-  optional uint32 refresh_index = 2
-      [default =
-           0];  // which index to give the screenshots (after emulator restarts)
+    optional string target_directory = 1;           // empty or missing to stop recording
+    optional uint32 refresh_index = 2 [default=0];  // which index to give the screenshots (after emulator restarts)
 }
 
 /**
@@ -91,11 +89,9 @@ message DebugLinkRecordScreen {
  * @next DebugLinkState
  */
 message DebugLinkGetState {
-  optional bool wait_word_list =
-      1;  // Trezor T only - wait until mnemonic words are shown
-  optional bool wait_word_pos =
-      2;  // Trezor T only - wait until reset word position is requested
-  optional bool wait_layout = 3;  // wait until current layout changes
+    optional bool wait_word_list = 1;  // Trezor T only - wait until mnemonic words are shown
+    optional bool wait_word_pos = 2;   // Trezor T only - wait until reset word position is requested
+    optional bool wait_layout = 3;     // wait until current layout changes
 }
 
 /**
@@ -103,44 +99,36 @@ message DebugLinkGetState {
  * @end
  */
 message DebugLinkState {
-  optional bytes layout = 1;   // raw buffer of display
-  optional string pin = 2;     // current PIN, blank if PIN is not set/enabled
-  optional string matrix = 3;  // current PIN matrix
-  optional bytes mnemonic_secret = 4;   // current mnemonic secret
-  optional common.HDNodeType node = 5;  // current BIP-32 node
-  optional bool passphrase_protection =
-      6;  // is node/mnemonic encrypted using passphrase?
-  optional string reset_word =
-      7;  // word on device display during ResetDevice workflow
-  optional bytes reset_entropy =
-      8;  // current entropy during ResetDevice workflow
-  optional string recovery_fake_word =
-      9;  // (fake) word on display during RecoveryDevice workflow
-  optional uint32 recovery_word_pos =
-      10;  // index of mnemonic word the device is expecting during
-           // RecoveryDevice workflow
-  optional uint32 reset_word_pos = 11;  // index of mnemonic word the device is
-                                        // expecting during ResetDevice workflow
-  optional management.BackupType mnemonic_type =
-      12;  // current mnemonic type (BIP-39/SLIP-39)
-  repeated string tokens =
-      13;  // current layout represented as a list of string tokens
+    optional bytes layout = 1;                              // raw buffer of display
+    optional string pin = 2;                                // current PIN, blank if PIN is not set/enabled
+    optional string matrix = 3;                             // current PIN matrix
+    optional bytes mnemonic_secret = 4;                     // current mnemonic secret
+    optional common.HDNodeType node = 5; // current BIP-32 node
+    optional bool passphrase_protection = 6;                // is node/mnemonic encrypted using passphrase?
+    optional string reset_word = 7;                         // word on device display during ResetDevice workflow
+    optional bytes reset_entropy = 8;                       // current entropy during ResetDevice workflow
+    optional string recovery_fake_word = 9;                 // (fake) word on display during RecoveryDevice workflow
+    optional uint32 recovery_word_pos = 10;                 // index of mnemonic word the device is expecting during RecoveryDevice workflow
+    optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
+    optional management.BackupType mnemonic_type = 12;      // current mnemonic type (BIP-39/SLIP-39)
+    repeated string tokens = 13;                            // current layout represented as a list of string tokens
 }
 
 /**
  * Request: Ask device to restart
  * @start
  */
-message DebugLinkStop {}
+message DebugLinkStop {
+}
 
 /**
  * Response: Device wants host to log event
  * @ignore
  */
 message DebugLinkLog {
-  optional uint32 level = 1;
-  optional string bucket = 2;
-  optional string text = 3;
+    optional uint32 level = 1;
+    optional string bucket = 2;
+    optional string text = 3;
 }
 
 /**
@@ -149,8 +137,8 @@ message DebugLinkLog {
  * @next DebugLinkMemory
  */
 message DebugLinkMemoryRead {
-  optional uint32 address = 1;
-  optional uint32 length = 2;
+    optional uint32 address = 1;
+    optional uint32 length = 2;
 }
 
 /**
@@ -158,7 +146,7 @@ message DebugLinkMemoryRead {
  * @end
  */
 message DebugLinkMemory {
-  optional bytes memory = 1;
+    optional bytes memory = 1;
 }
 
 /**
@@ -169,9 +157,9 @@ message DebugLinkMemory {
  * @next Failure
  */
 message DebugLinkMemoryWrite {
-  optional uint32 address = 1;
-  optional bytes memory = 2;
-  optional bool flash = 3;
+    optional uint32 address = 1;
+    optional bytes memory = 2;
+    optional bool flash = 3;
 }
 
 /**
@@ -182,8 +170,9 @@ message DebugLinkMemoryWrite {
  * @next Failure
  */
 message DebugLinkFlashErase {
-  optional uint32 sector = 1;
+    optional uint32 sector = 1;
 }
+
 
 /**
  * Request: Erase the SD card
@@ -192,9 +181,10 @@ message DebugLinkFlashErase {
  * @next Failure
  */
 message DebugLinkEraseSdCard {
-  optional bool format = 1;  // if true, the card will be formatted to FAT32.
-                             // if false, it will be all 0xFF bytes.
+    optional bool format = 1;  // if true, the card will be formatted to FAT32.
+                               // if false, it will be all 0xFF bytes.
 }
+
 
 /**
  * Request: Start or stop tracking layout changes
@@ -202,13 +192,15 @@ message DebugLinkEraseSdCard {
  * @next Success
  */
 message DebugLinkWatchLayout {
-  optional bool watch = 1;  // if true, start watching layout.
-                            // if false, stop.
+    optional bool watch = 1;  // if true, start watching layout.
+                              // if false, stop.
 }
+
 
 /**
  * Request: Remove all the previous debug event state
  * @start
  * @next Success
  */
-message DebugLinkResetDebugEvents {}
+message DebugLinkResetDebugEvents {
+}
