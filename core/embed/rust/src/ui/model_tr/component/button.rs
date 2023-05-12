@@ -111,7 +111,7 @@ where
         let style = self.style();
 
         // Button width may be forced. Otherwise calculate it.
-        let button_width = if let Some(width) = style.force_width {
+        let button_width = if let Some(width) = style.fixed_width {
             width
         } else {
             let outline = if style.with_outline {
@@ -301,7 +301,7 @@ pub struct ButtonStyle {
     pub text_color: Color,
     pub with_outline: bool,
     pub with_arms: bool,
-    pub force_width: Option<i16>,
+    pub fixed_width: Option<i16>,
     pub offset: Option<Offset>,
 }
 
@@ -311,7 +311,7 @@ impl ButtonStyleSheet {
         active_color: Color,
         with_outline: bool,
         with_arms: bool,
-        force_width: Option<i16>,
+        fixed_width: Option<i16>,
         offset: Option<Offset>,
     ) -> Self {
         Self {
@@ -320,7 +320,7 @@ impl ButtonStyleSheet {
                 text_color: normal_color,
                 with_outline,
                 with_arms,
-                force_width,
+                fixed_width,
                 offset,
             },
             active: ButtonStyle {
@@ -328,7 +328,7 @@ impl ButtonStyleSheet {
                 text_color: active_color,
                 with_outline,
                 with_arms,
-                force_width,
+                fixed_width,
                 offset,
             },
         }
@@ -338,7 +338,7 @@ impl ButtonStyleSheet {
     pub fn default(
         with_outline: bool,
         with_arms: bool,
-        force_width: Option<i16>,
+        fixed_width: Option<i16>,
         offset: Option<Offset>,
     ) -> Self {
         Self::new(
@@ -346,7 +346,7 @@ impl ButtonStyleSheet {
             theme::BG,
             with_outline,
             with_arms,
-            force_width,
+            fixed_width,
             offset,
         )
     }
@@ -360,7 +360,7 @@ pub struct ButtonDetails<T> {
     pub duration: Option<Duration>,
     pub with_outline: bool,
     pub with_arms: bool,
-    pub force_width: Option<i16>,
+    pub fixed_width: Option<i16>,
     pub offset: Option<Offset>,
 }
 
@@ -373,7 +373,7 @@ impl<T> ButtonDetails<T> {
             duration: None,
             with_outline: true,
             with_arms: false,
-            force_width: None,
+            fixed_width: None,
             offset: None,
         }
     }
@@ -386,7 +386,7 @@ impl<T> ButtonDetails<T> {
             duration: None,
             with_outline: true,
             with_arms: false,
-            force_width: None,
+            fixed_width: None,
             offset: None,
         }
     }
@@ -427,12 +427,12 @@ impl<T> ButtonDetails<T> {
 
     /// Down arrow to signal paginating forward. Takes half the screen's width
     pub fn down_arrow_icon_wide() -> Self {
-        Self::icon(Icon::new(theme::ICON_ARROW_DOWN)).force_width(HALF_SCREEN_BUTTON_WIDTH)
+        Self::icon(Icon::new(theme::ICON_ARROW_DOWN)).fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
     /// Up arrow to signal paginating back. Takes half the screen's width
     pub fn up_arrow_icon_wide() -> Self {
-        Self::icon(Icon::new(theme::ICON_ARROW_UP)).force_width(HALF_SCREEN_BUTTON_WIDTH)
+        Self::icon(Icon::new(theme::ICON_ARROW_UP)).fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
     /// Icon of a bin to signal deleting.
@@ -475,8 +475,8 @@ impl<T> ButtonDetails<T> {
     }
 
     /// Width of the button.
-    pub fn force_width(mut self, width: i16) -> Self {
-        self.force_width = Some(width);
+    pub fn fixed_width(mut self, width: i16) -> Self {
+        self.fixed_width = Some(width);
         self
     }
 
@@ -485,7 +485,7 @@ impl<T> ButtonDetails<T> {
         ButtonStyleSheet::default(
             self.with_outline,
             self.with_arms,
-            self.force_width,
+            self.fixed_width,
             self.offset,
         )
     }
