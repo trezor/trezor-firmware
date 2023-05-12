@@ -118,7 +118,6 @@ class Approver:
         self,
         txo: TxOutput,
         script_pubkey: bytes,
-        index: int | None = None,
         orig_txo: TxOutput | None = None,
     ) -> None:
         await self._add_output(txo, script_pubkey)
@@ -185,12 +184,11 @@ class BasicApprover(Approver):
         self,
         txo: TxOutput,
         script_pubkey: bytes,
-        index: int | None = None,
         orig_txo: TxOutput | None = None,
     ) -> None:
         from trezor.enums import OutputScriptType
 
-        await super().add_external_output(txo, script_pubkey, index, orig_txo)
+        await super().add_external_output(txo, script_pubkey, orig_txo)
 
         if orig_txo:
             if txo.amount < orig_txo.amount:
