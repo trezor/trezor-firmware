@@ -13,6 +13,7 @@ use crate::{
 use super::theme;
 
 const HALF_SCREEN_BUTTON_WIDTH: i16 = constant::WIDTH / 2 - 1;
+const DEFAULT_DURATION_MS: u32 = 1000;
 
 #[derive(Eq, PartialEq)]
 pub enum ButtonMsg {
@@ -464,7 +465,7 @@ impl<T> ButtonDetails<T> {
 
     /// Default duration of the hold-to-confirm - 1 second.
     pub fn with_default_duration(mut self) -> Self {
-        self.duration = Some(Duration::from_millis(1000));
+        self.duration = Some(Duration::from_millis(DEFAULT_DURATION_MS));
         self
     }
 
