@@ -91,7 +91,12 @@ async def show_dry_run_result(
     from trezor.ui.layouts import show_success
 
     if result:
-        text = "You have finished verifying your recovery seed"
+        if is_slip39:
+            text = "The entered recovery shares are valid and match what is currently in the device."
+        else:
+            text = (
+                "The entered recovery seed is valid and matches the one in the device."
+            )
         await show_success(ctx, "success_dry_recovery", text, button="Continue")
     else:
         if is_slip39:

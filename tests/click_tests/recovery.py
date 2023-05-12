@@ -26,7 +26,7 @@ def confirm_recovery(debug: "DebugLink") -> None:
 def select_number_of_words(debug: "DebugLink", num_of_words: int = 20) -> None:
     # select number of words
     if not debug.legacy_ui and not debug.legacy_debug:
-        assert "select the number of words" in debug.read_layout().text_content()
+        assert "number of words" in debug.read_layout().text_content()
     layout = debug.click(buttons.OK, wait=True)
     if debug.legacy_ui:
         assert layout.json_str == "WordSelector"
@@ -49,7 +49,7 @@ def select_number_of_words(debug: "DebugLink", num_of_words: int = 20) -> None:
         if num_of_words in (20, 33):
             assert "Enter any share" in layout.text_content()
         else:
-            assert "enter your recovery seed" in layout.text_content()
+            assert "Enter recovery seed" in layout.text_content()
 
 
 def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
@@ -82,7 +82,7 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
 
 
 def enter_seed(debug: "DebugLink", seed_words: list[str]) -> None:
-    assert "enter" in debug.read_layout().text_content()
+    assert "Enter" in debug.read_layout().text_content()
 
     layout = debug.click(buttons.OK, wait=True)
     assert layout.main_component() == "MnemonicKeyboard"

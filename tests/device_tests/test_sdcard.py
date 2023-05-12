@@ -86,10 +86,6 @@ def test_sd_protect_unlock(client: Client):
         assert layout().main_component() == "PinKeyboard"
         client.debug.input("1234")
 
-        yield  # re-enter to confirm
-        assert "re-enter to confirm" in layout().text_content()
-        client.debug.press_yes()
-
         yield  # enter new PIN again
         assert layout().main_component() == "PinKeyboard"
         client.debug.input("1234")

@@ -65,11 +65,7 @@ async def _continue_recovery_process(ctx: GenericContext) -> Success:
         if is_first_step:
             # If we are starting recovery, ask for word count first...
             # _request_word_count
-            await layout.homescreen_dialog(
-                ctx,
-                "Continue",
-                "First select the number of words in your recovery seed",
-            )
+            await layout.homescreen_dialog(ctx, "Select", "Select number of words")
             # ask for the number of words
             word_count = await layout.request_word_count(ctx, dry_run)
             # ...and only then show the starting screen with word count.
@@ -196,11 +192,11 @@ async def _request_share_first_screen(ctx: GenericContext, word_count: int) -> N
             await _request_share_next_screen(ctx)
         else:
             await layout.homescreen_dialog(
-                ctx, "Continue", "Enter any share", f"({word_count} words)"
+                ctx, "Enter share", "Enter any share", f"({word_count} words)"
             )
     else:  # BIP-39
         await layout.homescreen_dialog(
-            ctx, "Continue", "Now enter your recovery seed", f"({word_count} words)"
+            ctx, "Enter seed", "Enter recovery seed", f"({word_count} words)"
         )
 
 
@@ -216,13 +212,13 @@ async def _request_share_next_screen(ctx: GenericContext) -> None:
     if group_count > 1:
         await layout.homescreen_dialog(
             ctx,
-            "Continue",
+            "Enter",
             "More shares needed",
             info_func=_show_remaining_groups_and_shares,
         )
     else:
         text = strings.format_plural("{count} more {plural}", remaining[0], "share")
-        await layout.homescreen_dialog(ctx, "Continue", text, "needed to enter")
+        await layout.homescreen_dialog(ctx, "Enter share", text, "needed to enter")
 
 
 async def _show_remaining_groups_and_shares(ctx: GenericContext) -> None:

@@ -139,7 +139,6 @@ def test_change_pin_t2(client: Client):
                 messages.ButtonRequest,
                 _pin_request(client),
                 _pin_request(client),
-                messages.ButtonRequest,
                 _pin_request(client),
                 messages.ButtonRequest,
                 messages.Success,
