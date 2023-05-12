@@ -177,7 +177,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(result, expected_result);
     }
-        #[test]
+    #[test]
     fn test_get_available_letters() {
         let expected_result = vec!['a', 'i', 'l', 'o', 's', 'u'];
         let result = Wordlist::bip39()
