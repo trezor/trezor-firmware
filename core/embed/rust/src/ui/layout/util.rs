@@ -19,15 +19,15 @@ use crate::{
 use cstr_core::cstr;
 use heapless::Vec;
 
-#[cfg(any(feature = "toif", feature = "jpeg"))]
-use crate::micropython::{
-    buffer::get_buffer,
-    ffi::{mp_obj_new_int, mp_obj_new_tuple},
-};
 #[cfg(feature = "jpeg")]
 use crate::ui::display::tjpgd::{jpeg_info, jpeg_test};
-#[cfg(feature = "toif")]
-use crate::ui::display::toif::Toif;
+use crate::{
+    micropython::{
+        buffer::get_buffer,
+        ffi::{mp_obj_new_int, mp_obj_new_tuple},
+    },
+    ui::display::toif::Toif,
+};
 
 pub fn iter_into_objs<const N: usize>(iterable: Obj) -> Result<[Obj; N], Error> {
     let err = Error::ValueError(cstr!("Invalid iterable length"));
@@ -251,7 +251,6 @@ pub extern "C" fn upy_jpeg_info(data: Obj) -> Obj {
     unsafe { try_or_raise(block) }
 }
 
-#[cfg(feature = "toif")]
 pub extern "C" fn upy_toif_info(data: Obj) -> Obj {
     let block = || {
         let buffer = unsafe { get_buffer(data) };
