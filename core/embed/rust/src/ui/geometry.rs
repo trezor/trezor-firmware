@@ -416,7 +416,8 @@ impl Rect {
 
     /// Split `Rect` into left, center and right, given the center one's
     /// `width`. Center element is symmetric, left and right have the same
-    /// size.
+    /// size. In case left and right cannot be the same size, right is 1px
+    /// wider.
     pub const fn split_center(self, width: i16) -> (Self, Self, Self) {
         let left_right_width = (self.width() - width) / 2;
         let (left, center_right) = self.split_left(left_right_width);
