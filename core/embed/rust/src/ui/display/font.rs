@@ -9,11 +9,20 @@ use core::slice;
 
 use super::{get_color_table, get_offset, pixeldata, set_window, Color};
 
+/// Representation of a single glyph.
+/// Visual representation under this link (when not expired):
+/// https://user-images.githubusercontent.com/596073/203567987-385d0593-bee0-4aaa-bb3f-3b43315cd00b.png
 pub struct Glyph {
+    /// Width of the glyph itself, without bearings
     pub width: i16,
+    /// Total glyph height
     pub height: i16,
+    /// Total width of the glyph when printed (including bearings/margins on
+    /// both sides)
     pub adv: i16,
+    /// Left side bearing (margin)
     pub bearing_x: i16,
+    /// How high the top of the glyph is above the baseline
     pub bearing_y: i16,
     data: &'static [u8],
 }
@@ -50,6 +59,16 @@ impl Glyph {
                 data: slice::from_raw_parts(data.offset(5), data_bytes as usize),
             }
         }
+    }
+
+    /// What is the margin on the left side of the glyph
+    pub fn left_side_margin(&self) -> i16 {
+        self.bearing_x
+    }
+
+    /// What is the margin on the right side of the glyph
+    pub fn right_side_margin(&self) -> i16 {
+        self.adv - self.width - self.bearing_x
     }
 
     pub fn print(&self, pos: Point, colortable: [Color; 16]) -> i16 {
@@ -127,6 +146,38 @@ impl From<Font> for i32 {
 impl Font {
     pub fn text_width(self, text: &str) -> i16 {
         display::text_width(text, self.into())
+    }
+
+    /// Width of the text that is visible.
+    /// Not including the spaces before the first and after the last character.
+    pub fn visible_text_width(self, text: &str) -> i16 {
+        if text.is_empty() {
+            // No text, no width.
+            return 0;
+        }
+
+        let first_char = unwrap!(text.chars().next());
+        let first_char_glyph = unwrap!(self.get_glyph(first_char as u8));
+
+        let last_char = unwrap!(text.chars().last());
+        let last_char_glyph = unwrap!(self.get_glyph(last_char as u8));
+
+        // Strip leftmost and rightmost spaces/bearings/margins.
+        self.text_width(text)
+            - first_char_glyph.left_side_margin()
+            - last_char_glyph.right_side_margin()
+    }
+
+    /// Returning the x-bearing (offset) of the first character.
+    /// Useful to enforce that the text is positioned correctly (e.g. centered).
+    pub fn start_x_bearing(self, text: &str) -> i16 {
+        if text.is_empty() {
+            return 0;
+        }
+
+        let first_char = unwrap!(text.chars().next());
+        let first_char_glyph = unwrap!(self.get_glyph(first_char as u8));
+        first_char_glyph.bearing_x
     }
 
     pub fn char_width(self, ch: char) -> i16 {

@@ -242,6 +242,12 @@ def reboot_to_bootloader(client: "TrezorClient") -> "MessageType":
     return client.call(messages.RebootToBootloader())
 
 
+@session
+@expect(messages.Success, field="message", ret_type=str)
+def show_device_tutorial(client: "TrezorClient") -> "MessageType":
+    return client.call(messages.ShowDeviceTutorial())
+
+
 @expect(messages.Success, field="message", ret_type=str)
 @session
 def set_busy(client: "TrezorClient", expiry_ms: Optional[int]) -> "MessageType":

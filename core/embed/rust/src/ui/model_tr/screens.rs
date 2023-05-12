@@ -5,13 +5,13 @@ use crate::ui::{
         text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
         Component,
     },
-    display::Icon,
     geometry::LinearPlacement,
-    model_tr::{
-        component::ResultScreen,
-        constant,
-        theme::{BLACK, ICON_FAIL, TEXT_BOLD, TEXT_NORMAL, WHITE},
-    },
+};
+
+use super::{
+    component::ResultScreen,
+    constant,
+    theme::{BLACK, ICON_FAIL, TEXT_BOLD, TEXT_NORMAL, WHITE},
 };
 
 #[cfg(not(feature = "micropython"))]
@@ -47,7 +47,7 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(WHITE, BLACK, Icon::new(ICON_FAIL), m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(WHITE, BLACK, ICON_FAIL, m_top, m_bottom, true);
     frame.place(constant::screen());
     frame.paint();
 }

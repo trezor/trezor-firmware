@@ -14,6 +14,7 @@ use crate::{
         qstr::Qstr,
         util,
     },
+    strutil::StringType,
     ui::{
         component::{
             base::ComponentExt,
@@ -23,14 +24,14 @@ use crate::{
             placed::GridPlaced,
             text::{
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecLong,
-                    ParagraphVecShort, Paragraphs, VecExt,
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
+                    Paragraphs, VecExt,
                 },
                 TextStyle,
             },
             Border, Component, Empty, FormattedText, Never, Qr, Timeout, TimeoutMsg,
         },
-        display::{self, tjpgd::jpeg_info, toif::Icon},
+        display::{self, tjpgd::jpeg_info},
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -102,7 +103,7 @@ impl TryFrom<SelectWordCountMsg> for Obj {
 impl<F, T, U> ComponentMsgObj for FidoConfirm<F, T, U>
 where
     F: Fn(usize) -> T,
-    T: ParagraphStrType + From<&'static str>,
+    T: StringType,
     U: Component<Msg = CancelConfirmMsg>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
@@ -129,7 +130,7 @@ where
 
 impl<T, U> ComponentMsgObj for IconDialog<T, U>
 where
-    T: ParagraphStrType,
+    T: StringType,
     U: Component,
     <U as Component>::Msg: TryInto<Obj, Error = Error>,
 {
@@ -277,7 +278,7 @@ where
 
 impl<T, F> ComponentMsgObj for NumberInputDialog<T, F>
 where
-    T: ParagraphStrType,
+    T: StringType,
     F: Fn(u32) -> T,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
@@ -300,7 +301,7 @@ where
 
 impl<T> ComponentMsgObj for Progress<T>
 where
-    T: ParagraphStrType,
+    T: StringType,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
@@ -329,16 +330,18 @@ where
     }
 }
 
-impl<T, S> ComponentMsgObj for (GridPlaced<Paragraphs<T>>, GridPlaced<FormattedText<S, S>>)
+impl<T, S> ComponentMsgObj for (GridPlaced<Paragraphs<T>>, GridPlaced<FormattedText<S>>)
 where
     T: ParagraphSource,
-    S: AsRef<str>,
+    S: StringType + Clone,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
     }
 }
 
+// Clippy/compiler complains about conflicting implementations
+#[cfg(not(feature = "clippy"))]
 impl<T> ComponentMsgObj for (Timeout, T)
 where
     T: Component<Msg = TimeoutMsg>,
@@ -372,7 +375,7 @@ where
 
 impl<T> ComponentMsgObj for AddressDetails<T>
 where
-    T: ParagraphStrType + Clone,
+    T: StringType + Clone,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
@@ -671,7 +674,7 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
             Paragraph::new(&theme::TEXT_DEMIBOLD, StrBuffer::from("trezor.io/tos")),
         ]);
         let buttons = Button::cancel_confirm(
-            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
+            Button::with_icon(theme::ICON_CANCEL),
             Button::with_text(button).styled(theme::button_confirm()),
             true,
         );
@@ -819,7 +822,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         ]);
 
         let buttons = Button::cancel_confirm(
-            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
+            Button::with_icon(theme::ICON_CANCEL),
             Button::with_text("CONFIRM").styled(theme::button_confirm()),
             true,
         );
@@ -903,7 +906,7 @@ fn new_show_modal(
                 icon,
                 title,
                 Button::cancel_confirm(
-                    Button::with_icon(Icon::new(theme::ICON_CANCEL)),
+                    Button::with_icon(theme::ICON_CANCEL),
                     Button::with_text(button).styled(button_style),
                     false,
                 ),
@@ -932,8 +935,8 @@ fn new_show_modal(
 extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            Icon::new(theme::IMAGE_BG_CIRCLE),
-            Icon::new(theme::IMAGE_FG_ERROR),
+            theme::IMAGE_BG_CIRCLE,
+            theme::IMAGE_FG_ERROR,
             theme::ERROR_COLOR,
             theme::FG,
             theme::BG,
@@ -961,7 +964,7 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
         };
 
         let controls = Button::cancel_confirm(
-            Button::with_icon(Icon::new(theme::ICON_CANCEL)),
+            Button::with_icon(theme::ICON_CANCEL),
             Button::with_text("CONFIRM").styled(theme::button_confirm()),
             true,
         );
@@ -977,8 +980,8 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            Icon::new(theme::IMAGE_BG_OCTAGON),
-            Icon::new(theme::IMAGE_FG_WARN),
+            theme::IMAGE_BG_OCTAGON,
+            theme::IMAGE_FG_WARN,
             theme::WARN_COLOR,
             theme::FG,
             theme::BG,
@@ -991,8 +994,8 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            Icon::new(theme::IMAGE_BG_CIRCLE),
-            Icon::new(theme::IMAGE_FG_SUCCESS),
+            theme::IMAGE_BG_CIRCLE,
+            theme::IMAGE_FG_SUCCESS,
             theme::SUCCESS_COLOR,
             theme::FG,
             theme::BG,
@@ -1005,8 +1008,8 @@ extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let icon = BlendedImage::new(
-            Icon::new(theme::IMAGE_BG_CIRCLE),
-            Icon::new(theme::IMAGE_FG_INFO),
+            theme::IMAGE_BG_CIRCLE,
+            theme::IMAGE_FG_INFO,
             theme::INFO_COLOR,
             theme::FG,
             theme::BG,
@@ -1024,8 +1027,8 @@ extern "C" fn new_show_mismatch() -> Obj {
         let button = "QUIT";
 
         let icon = BlendedImage::new(
-            Icon::new(theme::IMAGE_BG_OCTAGON),
-            Icon::new(theme::IMAGE_FG_WARN),
+            theme::IMAGE_BG_OCTAGON,
+            theme::IMAGE_FG_WARN,
             theme::WARN_COLOR,
             theme::FG,
             theme::BG,
@@ -1035,7 +1038,7 @@ extern "C" fn new_show_mismatch() -> Obj {
                 icon,
                 title,
                 Button::cancel_confirm(
-                    Button::with_icon(Icon::new(theme::ICON_BACK)),
+                    Button::with_icon(theme::ICON_BACK),
                     Button::with_text(button).styled(theme::button_reset()),
                     true,
                 ),
@@ -1325,8 +1328,8 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
             title,
             Dialog::new(
                 Checklist::from_paragraphs(
-                    Icon::new(theme::ICON_LIST_CURRENT),
-                    Icon::new(theme::ICON_LIST_CHECK),
+                    theme::ICON_LIST_CURRENT,
+                    theme::ICON_LIST_CHECK,
                     active,
                     paragraphs
                         .into_paragraphs()
@@ -1507,7 +1510,10 @@ extern "C" fn new_show_progress_coinjoin(n_args: usize, args: *const Obj, kwargs
 
 extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let label: StrBuffer = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
+        let label: StrBuffer = kwargs
+            .get(Qstr::MP_QSTR_label)?
+            .try_into_option()?
+            .unwrap_or_else(|| constant::MODEL_NAME.into());
         let notification: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
@@ -1526,7 +1532,10 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let label: StrBuffer = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
+        let label: StrBuffer = kwargs
+            .get(Qstr::MP_QSTR_label)?
+            .try_into_option()?
+            .unwrap_or_else(|| constant::MODEL_NAME.into());
         let bootscreen: bool = kwargs.get(Qstr::MP_QSTR_bootscreen)?.try_into()?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
@@ -1928,7 +1937,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def show_homescreen(
     ///     *,
-    ///     label: str,
+    ///     label: str | None,
     ///     hold: bool,
     ///     notification: str | None,
     ///     notification_level: int = 0,
@@ -1939,7 +1948,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def show_lockscreen(
     ///     *,
-    ///     label: str,
+    ///     label: str | None,
     ///     bootscreen: bool,
     ///     skip_first_paint: bool,
     /// ) -> CANCELLED:
@@ -1957,7 +1966,7 @@ mod tests {
 
     use crate::{
         trace::tests::trace,
-        ui::{geometry::Rect, model_tt::constant},
+        ui::{component::text::op::OpTextLayout, geometry::Rect, model_tt::constant},
     };
 
     use super::*;
@@ -1968,15 +1977,12 @@ mod tests {
     fn trace_example_layout() {
         let buttons =
             Button::cancel_confirm(Button::with_text("Left"), Button::with_text("Right"), false);
-        let mut layout = Dialog::new(
-            FormattedText::new(
-                theme::TEXT_NORMAL,
-                theme::FORMATTED,
-                "Testing text layout, with some text, and some more text. And {param}",
-            )
-            .with("param", "parameters!"),
-            buttons,
-        );
+
+        let ops = OpTextLayout::new(theme::TEXT_NORMAL)
+            .text_normal("Testing text layout, with some text, and some more text. And ")
+            .text_bold("parameters!");
+        let formatted = FormattedText::new(ops);
+        let mut layout = Dialog::new(formatted, buttons);
         layout.place(SCREEN);
 
         let expected = serde_json::json!({

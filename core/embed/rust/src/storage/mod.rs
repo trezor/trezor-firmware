@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::trezorhal::storage::{get, get_length};
+use crate::trezorhal::storage::{get, get_length, StorageResult};
 
 pub const HOMESCREEN_MAX_SIZE: usize = 16384;
 
@@ -36,26 +36,13 @@ const INITIALIZED: u16 = FLAG_PUBLIC | APP_DEVICE | 0x0013;
 const SAFETY_CHECK_LEVEL: u16 = APP_DEVICE | 0x0014;
 const EXPERIMENTAL_FEATURES: u16 = APP_DEVICE | 0x0015;
 
-pub fn get_avatar_len() -> Result<usize, ()> {
-    let avatar_len_res = get_length(HOMESCREEN);
-    if let Ok(len) = avatar_len_res {
-        Ok(len)
-    } else {
-        Err(())
-    }
+pub fn get_avatar_len() -> StorageResult<usize> {
+    get_length(HOMESCREEN)
 }
 
-pub fn get_avatar(buffer: &mut [u8]) -> Result<usize, ()> {
-    let avatar_len_res = get_length(HOMESCREEN);
-
-    if let Ok(len) = avatar_len_res {
-        if len <= buffer.len() {
-            unwrap!(get(HOMESCREEN, buffer));
-            Ok(len)
-        } else {
-            Err(())
-        }
-    } else {
-        Err(())
-    }
+pub fn load_avatar(dest: &mut [u8]) -> StorageResult<()> {
+    let dest_len = dest.len();
+    let result = get(HOMESCREEN, dest)?;
+    ensure!(dest_len == result.len(), "Internal error in load_avatar");
+    Ok(())
 }

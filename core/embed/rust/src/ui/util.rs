@@ -1,8 +1,11 @@
-use crate::ui::{
-    component::text::TextStyle,
-    display,
-    display::toif::Icon,
-    geometry::{Offset, Point, CENTER},
+use crate::{
+    strutil::ShortString,
+    ui::{
+        component::text::TextStyle,
+        display,
+        display::toif::Icon,
+        geometry::{Offset, Point, CENTER},
+    },
 };
 
 use cstr_core::CStr;
@@ -18,6 +21,8 @@ impl<T, E> ResultExt for Result<T, E> {
     fn assert_if_debugging_ui(self, #[allow(unused)] message: &str) {
         #[cfg(feature = "ui_debug")]
         if self.is_err() {
+            print!("Panic from assert_if_debugging_ui: ");
+            println!(message);
             panic!("{}", message);
         }
     }
@@ -122,17 +127,24 @@ pub fn icon_text_center(
     );
 }
 
+/// Convert char to a ShortString.
+pub fn char_to_string(ch: char) -> ShortString {
+    let mut s = String::new();
+    unwrap!(s.push(ch));
+    s
+}
+
 /// Returns text to be fit on one line of a given length.
 /// When the text is too long to fit, it is truncated with ellipsis
 /// on the left side.
-// Hardcoding 50 as the length of the returned String - there should
-// not be any lines as long as this.
+/// Hardcoding 50 (via ShortString) as the length of the returned String -
+/// there should not be any lines as long as this.
 pub fn long_line_content_with_ellipsis(
     text: &str,
     ellipsis: &str,
     text_font: Font,
     available_width: i16,
-) -> String<50> {
+) -> ShortString {
     if text_font.text_width(text) <= available_width {
         String::from(text) // whole text can fit
     } else {
@@ -145,6 +157,13 @@ pub fn long_line_content_with_ellipsis(
 
         build_string!(50, ellipsis, &text[text.len() - chars_from_right..])
     }
+}
+
+#[macro_export]
+macro_rules! include_icon {
+    ($name:ident, $path:expr) => {
+        pub const $name: Icon = Icon::debug_named(include_res!($path), stringify!($name));
+    };
 }
 
 #[cfg(test)]

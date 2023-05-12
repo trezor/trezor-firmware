@@ -9,6 +9,7 @@ pub mod event;
 pub mod geometry;
 pub mod lerp;
 pub mod screens;
+#[macro_use]
 pub mod util;
 
 #[cfg(feature = "micropython")]

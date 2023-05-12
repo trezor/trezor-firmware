@@ -1,7 +1,6 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Never, Pad},
     constant::screen,
-    display::Icon,
     geometry::{Alignment::Center, Point, Rect, TOP_CENTER},
 };
 
@@ -73,7 +72,7 @@ impl<T: AsRef<str>> Component for ErrorScreen<'_, T> {
     fn paint(&mut self) {
         self.bg.paint();
 
-        let icon = Icon::new(ICON_WARNING40);
+        let icon = ICON_WARNING40;
         icon.draw(
             Point::new(screen().center().x, ICON_TOP),
             TOP_CENTER,

@@ -42,6 +42,7 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
     with client:

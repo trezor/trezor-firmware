@@ -23,7 +23,7 @@ import pytest
 from trezorlib import device, exceptions
 
 from .. import buttons
-from .common import go_back, go_next
+from .common import go_back, go_next, navigate_to_action_and_press
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
@@ -84,7 +84,13 @@ def prepare(
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
         assert "enable PIN protection" in debug.wait_layout().text_content()
-        go_next(debug)
+        if debug.model == "T":
+            go_next(debug)
+        elif debug.model == "R":
+            go_next(debug, wait=True)
+            go_next(debug, wait=True)
+            go_next(debug, wait=True)
+            debug.press_right_htc(1000)
     elif situation == Situation.PIN_CHANGE:
         # Change PIN
         device_handler.run(device.change_pin)  # type: ignore
@@ -98,7 +104,12 @@ def prepare(
         if old_pin:
             _input_see_confirm(debug, old_pin)
         assert "enable wipe code" in debug.wait_layout().text_content()
-        go_next(debug)
+        layout = go_next(debug, wait=True)
+        if debug.model == "T":
+            assert "erase all data" in layout.text_content()
+            go_next(debug)
+        elif debug.model == "R":
+            debug.press_right_htc(1000)
         if old_pin:
             debug.wait_layout()
             _input_see_confirm(debug, old_pin)
@@ -116,13 +127,18 @@ def _assert_pin_entry(debug: "DebugLink") -> None:
 
 def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
     """Input the PIN"""
-    before = debug.read_layout().pin()
+    if check:
+        before = debug.read_layout().pin()
 
-    digits_order = debug.read_layout().tt_pin_digits_order()
-    for digit in pin:
-        digit_index = digits_order.index(digit)
-        coords = buttons.pin_passphrase_index(digit_index)
-        debug.click(coords, wait=True)
+    if debug.model == "T":
+        digits_order = debug.read_layout().tt_pin_digits_order()
+        for digit in pin:
+            digit_index = digits_order.index(digit)
+            coords = buttons.pin_passphrase_index(digit_index)
+            debug.click(coords, wait=True)
+    elif debug.model == "R":
+        for digit in pin:
+            navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
 
     if check:
         after = debug.read_layout().pin()
@@ -131,7 +147,10 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
 
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
-    debug.click(buttons.TOP_ROW, wait=True)
+    if debug.model == "T":
+        debug.click(buttons.TOP_ROW, wait=True)
+    elif debug.model == "R":
+        navigate_to_action_and_press(debug, "SHOW", TR_PIN_ACTIONS)
 
 
 def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -> None:
@@ -140,7 +159,10 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
         before = debug.read_layout().pin()
 
     for _ in range(digits_to_delete):
-        debug.click(buttons.pin_passphrase_grid(9), wait=True)
+        if debug.model == "T":
+            debug.click(buttons.pin_passphrase_grid(9), wait=True)
+        elif debug.model == "R":
+            navigate_to_action_and_press(debug, "DELETE", TR_PIN_ACTIONS)
 
     if check:
         after = debug.read_layout().pin()
@@ -150,12 +172,16 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 def _cancel_pin(debug: "DebugLink") -> None:
     """Navigate to "CANCEL" and press it"""
     # It is the same button as DELETE
+    # TODO: implement cancel PIN for TR?
     _delete_pin(debug, 1, check=False)
 
 
 def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""
-    debug.click(buttons.pin_passphrase_grid(11), wait=True)
+    if debug.model == "T":
+        debug.click(buttons.pin_passphrase_grid(11), wait=True)
+    elif debug.model == "R":
+        navigate_to_action_and_press(debug, "ENTER", TR_PIN_ACTIONS)
 
 
 def _input_see_confirm(debug: "DebugLink", pin: str) -> None:
@@ -166,6 +192,11 @@ def _input_see_confirm(debug: "DebugLink", pin: str) -> None:
 
 def _enter_two_times(debug: "DebugLink", pin1: str, pin2: str) -> None:
     _input_see_confirm(debug, pin1)
+
+    if debug.model == "R":
+        # Please re-enter
+        go_next(debug, wait=True)
+
     _input_see_confirm(debug, pin2)
 
 
@@ -210,10 +241,10 @@ def test_pin_longer_than_max(device_handler: "BackgroundDeviceHandler"):
 def test_pin_incorrect(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
         _input_see_confirm(debug, "1235")
-        # debug.wait_layout()
         _input_see_confirm(debug, PIN4)
 
 
+@pytest.mark.skip_tr("TODO: will we support cancelling on TR?")
 @pytest.mark.setup_client(pin=PIN4)
 def test_pin_cancel(device_handler: "BackgroundDeviceHandler"):
     with PIN_CANCELLED, prepare(device_handler) as debug:
@@ -235,7 +266,10 @@ def test_pin_setup_mismatch(device_handler: "BackgroundDeviceHandler"):
     with PIN_CANCELLED, prepare(device_handler, Situation.PIN_SETUP) as debug:
         _enter_two_times(debug, "1", "2")
         go_next(debug)
-        _cancel_pin(debug)
+        if debug.model == "T":
+            _cancel_pin(debug)
+        elif debug.model == "R":
+            debug.press_no()
 
 
 @pytest.mark.setup_client(pin="1")
@@ -248,6 +282,17 @@ def test_pin_change(device_handler: "BackgroundDeviceHandler"):
 def test_wipe_code_setup(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler, Situation.WIPE_CODE_SETUP, old_pin="1") as debug:
         _enter_two_times(debug, "2", "2")
+
+
+# @pytest.mark.setup_client(pin="1")
+# @pytest.mark.timeout(15)
+# @pytest.mark.xfail(reason="It will disconnect from the emulator")
+# def test_wipe_code_setup_and_trigger(device_handler: "BackgroundDeviceHandler"):
+#     with prepare(device_handler, Situation.WIPE_CODE_SETUP, old_pin="1") as debug:
+#         _enter_two_times(debug, "2", "2")
+#     device_handler.client.lock()
+#     with prepare(device_handler) as debug:
+#         _input_see_confirm(debug, "2")
 
 
 @pytest.mark.setup_client(pin="1")

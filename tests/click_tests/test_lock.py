@@ -32,11 +32,14 @@ PIN4 = "1234"
 def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
 
-    short_duration = 1000
-    lock_duration = 3500
+    short_duration = 1000 if debug.model == "T" else 500
+    lock_duration = 3500 if debug.model == "T" else 1200
 
     def hold(duration: int, wait: bool = True) -> None:
-        debug.input(x=13, y=37, hold_ms=duration, wait=wait)
+        if debug.model == "R":
+            debug.press_right_htc(hold_ms=duration)
+        else:
+            debug.input(x=13, y=37, hold_ms=duration, wait=wait)
 
     assert device_handler.features().unlocked is False
 
@@ -60,7 +63,12 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     assert device_handler.features().unlocked is False
 
     # unlock by touching
-    layout = debug.click(buttons.INFO, wait=True)
+    if debug.model == "R":
+        # Doing a short HTC to simulate a click
+        debug.press_right_htc(hold_ms=100)
+        layout = debug.wait_layout()
+    else:
+        layout = debug.click(buttons.INFO, wait=True)
     assert layout.main_component() == "PinKeyboard"
     debug.input("1234", wait=True)
 

@@ -10,7 +10,6 @@ use crate::{
             Component, Event, EventCtx,
         },
         display,
-        display::toif::Icon,
         geometry::{Offset, Rect, CENTER},
         model_tt::{
             component::{
@@ -230,7 +229,7 @@ impl Slip39Input {
             self.button.enable(ctx);
             self.button.set_stylesheet(ctx, theme::button_pin_confirm());
             self.button
-                .set_content(ctx, ButtonContent::Icon(Icon::new(theme::ICON_LIST_CHECK)));
+                .set_content(ctx, ButtonContent::Icon(theme::ICON_LIST_CHECK));
         } else {
             // Disabled button.
             self.button.disable(ctx);

@@ -25,8 +25,12 @@ use super::Color;
 
 const TOIF_HEADER_LENGTH: usize = 12;
 
-pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
-    let r = Rect::from_center_and_size(center, icon.toif.size());
+pub fn render_icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
+    render_toif(&icon.toif, center, fg_color, bg_color);
+}
+
+pub fn render_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color) {
+    let r = Rect::from_center_and_size(center, toif.size());
     let area = r.translate(get_offset());
     let clamped = area.clamp(constant::screen());
     let colortable = get_color_table(fg_color, bg_color);
@@ -36,7 +40,7 @@ pub fn icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color) {
     let mut dest = [0_u8; 1];
 
     let mut window = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx = icon.toif.decompression_context(Some(&mut window));
+    let mut ctx = toif.decompression_context(Some(&mut window));
 
     for py in area.y0..area.y1 {
         for px in area.x0..area.x1 {
@@ -177,6 +181,13 @@ impl<'i> Toif<'i> {
         }
     }
 
+    pub const fn is_grayscale(&self) -> bool {
+        matches!(
+            self.format(),
+            ToifFormat::GrayScaleOH | ToifFormat::GrayScaleEH
+        )
+    }
+
     pub const fn width(&self) -> i16 {
         u16::from_le_bytes([self.data[4], self.data[5]]) as i16
     }
@@ -204,11 +215,20 @@ impl<'i> Toif<'i> {
     ) -> UzlibContext {
         UzlibContext::new(self.zdata(), window)
     }
+
+    /// Display the data with baseline Point, aligned according to the
+    /// `alignment` argument.
+    pub fn draw(&self, baseline: Point, alignment: Alignment2D, fg_color: Color, bg_color: Color) {
+        let r = Rect::snap(baseline, self.size(), alignment);
+        render_toif(self, r.center(), fg_color, bg_color);
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Icon {
     pub toif: Toif<'static>,
+    #[cfg(feature = "ui_debug")]
+    pub name: &'static str,
 }
 
 impl Icon {
@@ -218,13 +238,27 @@ impl Icon {
             None => panic!("Invalid image."),
         };
         assert!(matches!(toif.format(), ToifFormat::GrayScaleEH));
-        Self { toif }
+        Self {
+            toif,
+            #[cfg(feature = "ui_debug")]
+            name: "<unnamed>",
+        }
+    }
+
+    /// Create a named icon.
+    /// The name is only stored in debug builds.
+    pub const fn debug_named(data: &'static [u8], name: &'static str) -> Self {
+        Self {
+            #[cfg(feature = "ui_debug")]
+            name,
+            ..Self::new(data)
+        }
     }
 
     /// Display the icon with baseline Point, aligned according to the
     /// `alignment` argument.
     pub fn draw(&self, baseline: Point, alignment: Alignment2D, fg_color: Color, bg_color: Color) {
         let r = Rect::snap(baseline, self.toif.size(), alignment);
-        icon(self, r.center(), fg_color, bg_color);
+        render_icon(self, r.center(), fg_color, bg_color);
     }
 }

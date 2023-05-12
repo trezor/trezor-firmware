@@ -3,7 +3,6 @@ use crate::ui::{
         base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
     },
     display,
-    display::toif::Icon,
     geometry::{Grid, Offset, Rect},
     model_tt::component::{
         button::{Button, ButtonContent, ButtonMsg},
@@ -48,12 +47,12 @@ impl PassphraseKeyboard {
         Self {
             page_swipe: Swipe::horizontal(),
             input: Input::new().into_child(),
-            confirm: Button::with_icon(Icon::new(theme::ICON_CONFIRM))
+            confirm: Button::with_icon(theme::ICON_CONFIRM)
                 .styled(theme::button_confirm())
                 .into_child(),
             back: Button::with_icon_blend(
-                Icon::new(theme::IMAGE_BG_BACK_BTN),
-                Icon::new(theme::ICON_BACK),
+                theme::IMAGE_BG_BACK_BTN,
+                theme::ICON_BACK,
                 Offset::new(30, 12),
             )
             .styled(theme::button_reset())
@@ -80,7 +79,7 @@ impl PassphraseKeyboard {
 
     fn key_content(text: &'static str) -> ButtonContent<&'static str> {
         match text {
-            " " => ButtonContent::Icon(Icon::new(theme::ICON_SPACE)),
+            " " => ButtonContent::Icon(theme::ICON_SPACE),
             t => ButtonContent::Text(t),
         }
     }

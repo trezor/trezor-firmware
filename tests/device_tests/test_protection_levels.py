@@ -111,6 +111,7 @@ def test_apply_settings(client: Client):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_change_pin_t1(client: Client):
     _assert_protection(client)
     with client:
@@ -209,6 +210,7 @@ def test_wipe_device(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_reset_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
@@ -238,6 +240,7 @@ def test_reset_device(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_recovery_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
@@ -292,6 +295,7 @@ def test_sign_message(client: Client):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_verify_message_t1(client: Client):
     _assert_protection(client)
     with client:

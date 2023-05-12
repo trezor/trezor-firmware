@@ -2,11 +2,10 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
+    strutil::StringType,
     ui::{
         component::{
-            text::paragraphs::{
-                Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecShort, Paragraphs, VecExt,
-            },
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             Component, Event, EventCtx, Paginate, Qr,
         },
         geometry::Rect,
@@ -28,7 +27,7 @@ pub struct AddressDetails<T> {
 
 impl<T> AddressDetails<T>
 where
-    T: ParagraphStrType,
+    T: StringType,
 {
     pub fn new(
         qr_address: T,
@@ -124,7 +123,7 @@ where
 
 impl<T> Paginate for AddressDetails<T>
 where
-    T: ParagraphStrType + Clone,
+    T: StringType + Clone,
 {
     fn page_count(&mut self) -> usize {
         let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
@@ -143,7 +142,7 @@ where
 
 impl<T> Component for AddressDetails<T>
 where
-    T: ParagraphStrType + Clone,
+    T: StringType + Clone,
 {
     type Msg = ();
 
@@ -194,7 +193,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for AddressDetails<T>
 where
-    T: ParagraphStrType,
+    T: StringType,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("AddressDetails");

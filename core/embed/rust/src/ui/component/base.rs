@@ -17,6 +17,8 @@ use crate::ui::event::ButtonEvent;
 use crate::ui::event::TouchEvent;
 use crate::ui::event::USBEvent;
 
+use super::Paginate;
+
 /// Type used by components that do not return any messages.
 ///
 /// Alternative to the yet-unstable `!`-type.
@@ -150,6 +152,16 @@ where
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.component.bounds(sink)
+    }
+}
+
+impl<T: Paginate> Paginate for Child<T> {
+    fn page_count(&mut self) -> usize {
+        self.component.page_count()
+    }
+
+    fn change_page(&mut self, active_page: usize) {
+        self.component.change_page(active_page);
     }
 }
 

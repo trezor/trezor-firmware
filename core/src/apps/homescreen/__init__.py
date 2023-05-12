@@ -17,11 +17,12 @@ async def homescreen() -> None:
     if storage.device.is_initialized():
         label = storage.device.get_label()
     else:
-        label = "Go to trezor.io/start"
+        label = "Trezor"
 
     notification = None
     notification_is_error = False
     if is_set_any_session(MessageType.AuthorizeCoinJoin):
+        # TODO: is too long for TR
         notification = "COINJOIN AUTHORIZED"
     elif storage.device.is_initialized() and storage.device.no_backup():
         notification = "SEEDLESS"
@@ -30,10 +31,11 @@ async def homescreen() -> None:
         notification = "BACKUP FAILED"
         notification_is_error = True
     elif storage.device.is_initialized() and storage.device.needs_backup():
-        notification = "NEEDS BACKUP"
+        notification = "BACKUP NEEDED"
     elif storage.device.is_initialized() and not config.has_pin():
         notification = "PIN NOT SET"
     elif storage.device.get_experimental_features():
+        # TODO: is too long for TR
         notification = "EXPERIMENTAL MODE"
 
     await Homescreen(

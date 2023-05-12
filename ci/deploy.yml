@@ -238,6 +238,7 @@ ui tests fixtures deploy:
     - core device test
     - core persistence test
     - legacy device test
+    - core device R test
   script:
     - echo "Deploying to $DEPLOY_PATH"
     - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"

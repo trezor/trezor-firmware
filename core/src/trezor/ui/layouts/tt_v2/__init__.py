@@ -1181,6 +1181,14 @@ async def request_pin_on_device(
     return result
 
 
+async def confirm_reenter_pin(
+    ctx: GenericContext,
+    is_wipe_code: bool = False,
+) -> None:
+    """Not supported for TT."""
+    pass
+
+
 async def pin_mismatch_popup(
     ctx: GenericContext,
     is_wipe_code: bool = False,
@@ -1220,3 +1228,25 @@ async def confirm_set_new_pin(
         verb="ENABLE",
         br_code=br_code,
     )
+
+
+async def mnemonic_word_entering(ctx: GenericContext) -> None:
+    """Not supported for TT."""
+    pass
+
+
+def validate_homescreen_model_specific(homescreen: bytes) -> None:
+    from trezor.wire import DataError
+
+    try:
+        w, h, mcu_height = trezorui2.jpeg_info(homescreen)
+    except ValueError:
+        raise DataError("Invalid homescreen")
+    if w != 240 or h != 240:
+        raise DataError("Homescreen must be 240x240 pixel large")
+    if mcu_height > 16:
+        raise DataError("Unsupported jpeg type")
+    try:
+        trezorui2.jpeg_test(homescreen)
+    except ValueError:
+        raise DataError("Invalid homescreen")

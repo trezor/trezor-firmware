@@ -1,6 +1,5 @@
 use crate::ui::{
     component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
-    display::toif::Icon,
     geometry::{Grid, Offset, Rect, CENTER},
     model_tt::{
         component::{Button, ButtonMsg},
@@ -39,8 +38,8 @@ where
             back: Child::new(Maybe::hidden(
                 theme::BG,
                 Button::with_icon_blend(
-                    Icon::new(theme::IMAGE_BG_BACK_BTN_TALL),
-                    Icon::new(theme::ICON_BACK),
+                    theme::IMAGE_BG_BACK_BTN_TALL,
+                    theme::ICON_BACK,
                     Offset::new(30, 17),
                 )
                 .styled(theme::button_reset())

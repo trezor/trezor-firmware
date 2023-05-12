@@ -9,7 +9,7 @@ use crate::{
             base::ComponentExt, text::TextStyle, Child, Component, Event, EventCtx, Label, Maybe,
             Never, Pad, TimerToken,
         },
-        display::{self, toif::Icon, Font},
+        display::{self, Font},
         event::TouchEvent,
         geometry::{Grid, Insets, Offset, Rect, CENTER, TOP_LEFT},
         model_tt::component::{
@@ -69,8 +69,8 @@ where
     ) -> Self {
         // Control buttons.
         let erase_btn = Button::with_icon_blend(
-            Icon::new(theme::IMAGE_BG_BACK_BTN),
-            Icon::new(theme::ICON_BACK),
+            theme::IMAGE_BG_BACK_BTN,
+            theme::ICON_BACK,
             Offset::new(30, 12),
         )
         .styled(theme::button_reset())
@@ -78,8 +78,7 @@ where
         .initially_enabled(false);
         let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 
-        let cancel_btn =
-            Button::with_icon(Icon::new(theme::ICON_CANCEL)).styled(theme::button_cancel());
+        let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
         let cancel_btn =
             Maybe::new(Pad::with_background(theme::BG), cancel_btn, allow_cancel).into_child();
 
@@ -95,7 +94,7 @@ where
             textbox_pad: Pad::with_background(theme::label_default().background_color),
             erase_btn,
             cancel_btn,
-            confirm_btn: Button::with_icon(Icon::new(theme::ICON_CONFIRM))
+            confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
                 .styled(theme::button_confirm())
                 .initially_enabled(false)
                 .into_child(),
@@ -383,7 +382,7 @@ impl PinDots {
 
         // Small leftmost dot.
         if digits > dots_visible + 1 {
-            Icon::new(theme::DOT_SMALL).draw(
+            theme::DOT_SMALL.draw(
                 cursor - Offset::x(2 * step),
                 TOP_LEFT,
                 self.style.text_color,
@@ -393,7 +392,7 @@ impl PinDots {
 
         // Greyed out dot.
         if digits > dots_visible {
-            Icon::new(theme::DOT_ACTIVE).draw(
+            theme::DOT_ACTIVE.draw(
                 cursor - Offset::x(step),
                 TOP_LEFT,
                 theme::GREY_LIGHT,
@@ -403,7 +402,7 @@ impl PinDots {
 
         // Draw a dot for each PIN digit.
         for _ in 0..dots_visible {
-            Icon::new(theme::DOT_ACTIVE).draw(
+            theme::DOT_ACTIVE.draw(
                 cursor,
                 TOP_LEFT,
                 self.style.text_color,

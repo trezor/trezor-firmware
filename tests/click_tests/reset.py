@@ -11,15 +11,24 @@ if TYPE_CHECKING:
 
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
-    assert debug.wait_layout().title().startswith("WALLET CREATION")
-    debug.click(buttons.OK, wait=True)
+    layout = debug.wait_layout()
+    if debug.model == "T":
+        assert layout.title().startswith("WALLET CREATION")
+        debug.click(buttons.OK, wait=True)
+    elif debug.model == "R":
+        assert layout.title() == "WALLET CREATION"
+        debug.press_right(wait=True)
+        debug.press_right(wait=True)
 
 
 def confirm_read(debug: "DebugLink", title: str, hold: bool = False) -> None:
     layout = debug.read_layout()
     if title == "Caution":
-        # TODO: could look into button texts
-        assert "OK, I UNDERSTAND" in layout.json_str
+        if debug.model == "T":
+            # TODO: could look into button texts
+            assert "OK, I UNDERSTAND" in layout.json_str
+        elif debug.model == "R":
+            assert "use your backup to recover" in layout.text_content()
     elif title == "Success":
         # TODO: improve this
         assert any(
@@ -37,14 +46,38 @@ def confirm_read(debug: "DebugLink", title: str, hold: bool = False) -> None:
     else:
         assert title.upper() in layout.title()
 
-    debug.click(buttons.OK, wait=True)
+    if debug.model == "T":
+        debug.click(buttons.OK, wait=True)
+    elif debug.model == "R":
+        if layout.page_count() > 1:
+            debug.press_right(wait=True)
+        if hold:
+            # TODO: create debug.hold_right()?
+            debug.press_yes()
+        else:
+            debug.press_right()
+        debug.wait_layout()
 
 
 def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> None:
-    assert "NumberInputDialog" in debug.read_layout().all_components()
-    for _ in range(diff):
-        debug.click(button)
-    debug.click(buttons.OK, wait=True)
+    if debug.model == "T":
+        assert "NumberInputDialog" in debug.read_layout().all_components()
+        for _ in range(diff):
+            debug.click(button)
+        debug.click(buttons.OK, wait=True)
+    elif debug.model == "R":
+        layout = debug.read_layout()
+        if layout.title() in ("NUMBER OF SHARES", "THRESHOLD"):
+            # Special info screens
+            layout = debug.press_right(wait=True)
+        assert "NumberInput" in layout.all_components()
+        if button == buttons.RESET_MINUS:
+            for _ in range(diff):
+                debug.press_left(wait=True)
+        else:
+            for _ in range(diff):
+                debug.press_right(wait=True)
+        debug.press_middle(wait=True)
 
 
 def read_words(
@@ -53,23 +86,37 @@ def read_words(
     words: list[str] = []
     layout = debug.read_layout()
 
-    if backup_type == messages.BackupType.Slip39_Advanced:
-        assert layout.title().startswith("GROUP")
-    elif backup_type == messages.BackupType.Slip39_Basic:
-        assert layout.title().startswith("RECOVERY SHARE #")
-    else:
-        assert layout.title() == "RECOVERY SEED"
+    if debug.model == "T":
+        if backup_type == messages.BackupType.Slip39_Advanced:
+            assert layout.title().startswith("GROUP")
+        elif backup_type == messages.BackupType.Slip39_Basic:
+            assert layout.title().startswith("RECOVERY SHARE #")
+        else:
+            assert layout.title() == "RECOVERY SEED"
+    elif debug.model == "R":
+        if backup_type == messages.BackupType.Slip39_Advanced:
+            assert "SHARE" in layout.text_content()
+        elif backup_type == messages.BackupType.Slip39_Basic:
+            assert layout.text_content().startswith("SHARE #")
+        else:
+            assert layout.text_content().startswith("RECOVERY SEED")
 
-    # Swiping through all the page and loading the words
-    for _ in range(layout.page_count() - 1):
-        words.extend(layout.seed_words())
+    # Swiping through all the pages and loading the words
+    for i in range(layout.page_count() - 1):
+        # In model R, first two pages are just informational
+        if not (debug.model == "R" and i < 2):
+            words.extend(layout.seed_words())
         layout = debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True)
         assert layout is not None
-    words.extend(layout.seed_words())
+    if debug.model == "T":
+        words.extend(layout.seed_words())
 
     # There is hold-to-confirm button
     if do_htc:
-        debug.click_hold(buttons.OK, hold_ms=1500)
+        if debug.model == "T":
+            debug.click_hold(buttons.OK, hold_ms=1500)
+        elif debug.model == "R":
+            debug.press_right_htc(1200)
     else:
         # It would take a very long time to test 16-of-16 with doing 1500 ms HTC after
         # each word set
@@ -80,16 +127,30 @@ def read_words(
 
 def confirm_words(debug: "DebugLink", words: list[str]) -> None:
     layout = debug.wait_layout()
-    assert "Select word" in layout.text_content()
-    for _ in range(3):
-        # "Select word 3 of 20"
-        #              ^
-        word_pos = int(layout.text_content().split()[2])
-        # Unifying both the buttons and words to lowercase
-        btn_texts = [text.lower() for text in layout.button_contents()]
-        wanted_word = words[word_pos - 1].lower()
-        button_pos = btn_texts.index(wanted_word)
-        layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
+    if debug.model == "T":
+        assert "Select word" in layout.text_content()
+        for _ in range(3):
+            # "Select word 3 of 20"
+            #              ^
+            word_pos = int(layout.text_content().split()[2])
+            # Unifying both the buttons and words to lowercase
+            btn_texts = [text.lower() for text in layout.button_contents()]
+            wanted_word = words[word_pos - 1].lower()
+            button_pos = btn_texts.index(wanted_word)
+            layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
+    elif debug.model == "R":
+        assert "Select correct word" in layout.text_content()
+        layout = debug.press_right(wait=True)
+        for _ in range(3):
+            # "SELECT 2ND WORD"
+            #         ^
+            word_pos = int(layout.title().split()[1][:-2])
+            wanted_word = words[word_pos - 1].lower()
+
+            while not layout.get_middle_choice() == wanted_word:
+                layout = debug.press_right(wait=True)
+
+            layout = debug.press_middle(wait=True)
 
 
 def validate_mnemonics(mnemonics: list[str], expected_ems: bytes) -> None:
