@@ -28,6 +28,7 @@ from .. import buttons, common
 from ..device_tests.bitcoin.payment_req import make_coinjoin_request
 from ..tx_cache import TxCache
 from . import recovery
+from .common import go_next
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
@@ -65,7 +66,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
         f"auto-lock your device after {delay_ms // 1000} seconds"
         in debug.wait_layout().text_content()
     )
-    layout = debug.click(buttons.OK, wait=True)
+    layout = go_next(debug, wait=True)
     assert layout.main_component() == "Homescreen"
     assert device_handler.result() == "Settings applied"
 
@@ -98,9 +99,15 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         in debug.wait_layout().text_content().replace(" ", "")
     )
 
-    debug.click(buttons.OK, wait=True)
-    layout = debug.click(buttons.OK, wait=True)
-    assert "Total amount: 0.0039 BTC" in layout.text_content()
+    if debug.model == "T":
+        debug.click(buttons.OK, wait=True)
+        layout = debug.click(buttons.OK, wait=True)
+        assert "Total amount: 0.0039 BTC" in layout.text_content()
+    elif debug.model == "R":
+        debug.press_right(wait=True)
+        debug.press_right(wait=True)
+        layout = debug.press_right(wait=True)
+        assert "TOTAL AMOUNT 0.0039 BTC" in layout.text_content()
 
     # wait for autolock to kick in
     time.sleep(10.1)
@@ -138,10 +145,14 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         in debug.wait_layout().text_content().replace(" ", "")
     )
 
-    debug.click(buttons.OK, wait=True)
-
-    layout = debug.click(buttons.OK, wait=True)
-    assert "Total amount: 0.0039 BTC" in layout.text_content()
+    if debug.model == "T":
+        debug.click(buttons.OK, wait=True)
+        layout = debug.click(buttons.OK, wait=True)
+        assert "Total amount: 0.0039 BTC" in layout.text_content()
+    elif debug.model == "R":
+        debug.press_right(wait=True)
+        layout = debug.press_right(wait=True)
+        assert "TOTAL AMOUNT 0.0039 BTC" in layout.text_content()
 
     def sleepy_filter(msg: MessageType) -> MessageType:
         time.sleep(10.1)
@@ -151,7 +162,10 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     with device_handler.client:
         device_handler.client.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
-        debug.click(buttons.OK)
+        if debug.model == "T":
+            debug.click(buttons.OK)
+        elif debug.model == "R":
+            debug.press_right_htc(1200)
 
         signatures, tx = device_handler.result()
         assert len(signatures) == 1
@@ -168,18 +182,34 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     # get address
     device_handler.run(common.get_test_address)  # type: ignore
 
-    assert debug.wait_layout().main_component() == "PassphraseKeyboard"
+    assert "PassphraseKeyboard" in debug.wait_layout().all_components()
+
+    if debug.model == "R":
+        # Going into the first character category (abc)
+        debug.press_middle()
 
     # enter passphrase - slowly
     # keep clicking for long enough to trigger the autolock if it incorrectly ignored key presses
     for _ in range(math.ceil(11 / 1.5)):
-        # click at "j"
-        debug.click(CENTER_BUTTON)
+        if debug.model == "T":
+            # click at "j"
+            debug.click(CENTER_BUTTON)
+        elif debug.model == "R":
+            # press "a"
+            debug.press_middle()
         time.sleep(1.5)
 
     # Confirm the passphrase
-    debug.click(buttons.OK, wait=True)
-    assert device_handler.result() == "mnF4yRWJXmzRB6EuBzuVigqeqTqirQupxJ"
+    if debug.model == "T":
+        debug.click(buttons.OK, wait=True)
+        assert device_handler.result() == "mnF4yRWJXmzRB6EuBzuVigqeqTqirQupxJ"
+    elif debug.model == "R":
+        debug.press_left()  # go to BACK
+        debug.press_middle()  # PRESS back
+        debug.press_left()  # go to ENTER
+        debug.press_middle()  # press ENTER
+        debug.wait_layout()
+        assert device_handler.result() == "mfar3NVufmeGNamk1sCpmCiSLPoFJ9JQDa"
 
 
 @pytest.mark.setup_client(pin=PIN4, passphrase=True)
@@ -190,12 +220,19 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     # get address
     device_handler.run(common.get_test_address)  # type: ignore
 
-    assert debug.wait_layout().main_component() == "PassphraseKeyboard"
+    assert "PassphraseKeyboard" in debug.wait_layout().all_components()
+
+    if debug.model == "R":
+        # Going into the first character category (abc)
+        debug.press_middle()
 
     # enter passphrase - slowly
     # autolock must activate even if we pressed some buttons
     for _ in range(math.ceil(6 / 1.5)):
-        debug.click(CENTER_BUTTON)
+        if debug.model == "T":
+            debug.click(CENTER_BUTTON)
+        elif debug.model == "R":
+            debug.press_middle()
         time.sleep(1.5)
 
     # wait for autolock to kick in
@@ -210,7 +247,7 @@ def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
         "Do you really want to check the recovery seed?"
         in debug.wait_layout().text_content()
     )
-    layout = debug.click(buttons.OK, wait=True)
+    layout = go_next(debug, wait=True)
     assert layout.main_component() == "PinKeyboard"
 
     layout = debug.input(PIN4, wait=True)
@@ -226,7 +263,10 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     device_handler.run(device.recover, dry_run=True)  # type: ignore
 
     layout = unlock_dry_run(debug)
-    assert "number of words " in layout.text_content()
+    assert "number of words" in layout.text_content()
+
+    if debug.model == "R":
+        debug.press_right(wait=True)
 
     # wait for autolock to trigger
     time.sleep(10.1)
@@ -235,10 +275,9 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
         device_handler.result()
 
     # unlock
-    debug.wait_layout(
-        wait_for_external_change=True
-    )  # lockscreen triggered automatically
-    layout = debug.click(buttons.OK, wait=True)
+    # lockscreen triggered automatically
+    debug.wait_layout(wait_for_external_change=True)
+    layout = go_next(debug, wait=True)
     assert layout.main_component() == "PinKeyboard"
     layout = debug.input(PIN4, wait=True)
     assert layout is not None
@@ -259,8 +298,15 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    layout = debug.click(buttons.OK, wait=True)
-    assert layout.main_component() == "MnemonicKeyboard"
+    if debug.model == "T":
+        layout = debug.click(buttons.OK, wait=True)
+        assert layout.main_component() == "MnemonicKeyboard"
+    elif debug.model == "R":
+        layout = debug.press_right(wait=True)
+        assert "WORD ENTERING" in layout.title()
+        layout = debug.press_right(wait=True)
+        assert "Slip39Entry" in layout.all_components()
+
     # make sure keyboard locks
     time.sleep(10.1)
     assert debug.wait_layout().main_component() == "Lockscreen"
@@ -280,16 +326,30 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    layout = debug.click(buttons.OK, wait=True)
-    assert layout.main_component() == "MnemonicKeyboard"
+    if debug.model == "T":
+        layout = debug.click(buttons.OK, wait=True)
+        assert layout.main_component() == "MnemonicKeyboard"
 
-    # type the word OCEAN slowly
-    for coords in buttons.type_word("ocea", is_slip39=True):
-        time.sleep(9)
-        debug.click(coords)
-    layout = debug.click(buttons.CONFIRM_WORD, wait=True)
-    # should not have locked, even though we took 9 seconds to type each letter
-    assert layout.main_component() == "MnemonicKeyboard"
+        # type the word OCEAN slowly
+        for coords in buttons.type_word("ocea", is_slip39=True):
+            time.sleep(9)
+            debug.click(coords)
+        layout = debug.click(buttons.CONFIRM_WORD, wait=True)
+        # should not have locked, even though we took 9 seconds to type each letter
+        assert layout.main_component() == "MnemonicKeyboard"
+    elif debug.model == "R":
+        layout = debug.press_right(wait=True)
+        assert "WORD ENTERING" in layout.title()
+        layout = debug.press_right(wait=True)
+        assert "Slip39Entry" in layout.all_components()
+
+        # type the word `ACADEMIC` slowly (A, C, and the whole word confirmation)
+        for _ in range(3):
+            time.sleep(9)
+            debug.press_middle()
+        layout = debug.wait_layout()
+        # should not have locked, even though we took 9 seconds to type each letter
+        assert "Slip39Entry" in layout.all_components()
 
     device_handler.kill_task()
 

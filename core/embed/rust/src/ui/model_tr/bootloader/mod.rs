@@ -4,7 +4,6 @@ use crate::{
         component::{Component, Never},
         display::{self, Font},
         geometry::Point,
-        model_tr::constant,
     },
 };
 
@@ -20,21 +19,22 @@ use crate::ui::{
         Event, EventCtx,
     },
     constant::{screen, WIDTH},
-    display::{fade_backlight_duration, Color, Icon, TextOverlay},
+    display::{Color, Icon, TextOverlay},
     event::ButtonEvent,
     geometry::{LinearPlacement, Offset, Rect, CENTER},
-    model_tr::{
-        bootloader::{
-            confirm::Confirm,
-            intro::Intro,
-            menu::Menu,
-            theme::{bld_button_cancel, bld_button_default, BLD_BG, BLD_FG},
-        },
-        component::{Button, ButtonPos, ResultScreen},
-        theme::{BACKLIGHT_NORMAL, ICON_FAIL, ICON_SUCCESS, LOGO_EMPTY},
-    },
     util::{from_c_array, from_c_str},
 };
+
+use super::{
+    component::{Button, ButtonPos, ResultScreen},
+    constant,
+    theme::{ICON_FAIL, ICON_SUCCESS, LOGO_EMPTY},
+};
+
+use confirm::Confirm;
+use intro::Intro;
+use menu::Menu;
+use theme::{bld_button_cancel, bld_button_default, BLD_BG, BLD_FG};
 
 const SCREEN_ADJ: Rect = screen().split_top(64).0;
 
@@ -78,7 +78,6 @@ where
 {
     frame.place(SCREEN_ADJ);
     frame.paint();
-    fade_backlight_duration(BACKLIGHT_NORMAL as _, 500);
 
     while button_eval().is_some() {}
 
@@ -139,6 +138,7 @@ extern "C" fn screen_install_confirm(
         message.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!").centered());
     }
 
+    // TODO: this relies on StrBuffer support for bootloader, decide what to do
     let left = Button::with_text(ButtonPos::Left, "CANCEL", bld_button_cancel());
     let right = Button::with_text(ButtonPos::Right, "INSTALL", bld_button_default());
 
@@ -172,6 +172,7 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     let message =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
+    // TODO: this relies on StrBuffer support for bootloader, decide what to do
     let left = Button::with_text(ButtonPos::Left, "WIPE", bld_button_default());
     let right = Button::with_text(ButtonPos::Right, "CANCEL", bld_button_cancel());
 
@@ -220,11 +221,16 @@ fn screen_progress(
 
     let fill_to = (loader_area.width() as u32 * progress as u32) / 1000;
 
-    display::bar_with_text_and_fill(loader_area, Some(text), fg_color, bg_color, 0, fill_to as _);
+    display::bar_with_text_and_fill(
+        loader_area,
+        Some(&text),
+        fg_color,
+        bg_color,
+        0,
+        fill_to as _,
+    );
     display::refresh();
 }
-
-const INITIAL_INSTALL_LOADER_COLOR: Color = Color::rgb(0x4A, 0x90, 0xE2);
 
 #[no_mangle]
 extern "C" fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
@@ -278,14 +284,7 @@ extern "C" fn screen_wipe_success() {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(
-        BLD_FG,
-        BLD_BG,
-        Icon::new(ICON_SUCCESS),
-        m_top,
-        m_bottom,
-        true,
-    );
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SUCCESS, m_top, m_bottom, true);
     show(&mut frame);
 }
 
@@ -305,7 +304,7 @@ extern "C" fn screen_wipe_fail() {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, Icon::new(ICON_FAIL), m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_FAIL, m_top, m_bottom, true);
     show(&mut frame);
 }
 
@@ -329,7 +328,7 @@ extern "C" fn screen_install_fail() {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, Icon::new(ICON_FAIL), m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_FAIL, m_top, m_bottom, true);
     show(&mut frame);
 }
 
@@ -347,14 +346,7 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(
-        BLD_FG,
-        BLD_BG,
-        Icon::new(ICON_SUCCESS),
-        m_top,
-        m_bottom,
-        complete_draw,
-    );
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SUCCESS, m_top, m_bottom, complete_draw);
     show(&mut frame);
 }
 
@@ -372,14 +364,7 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(
-        BLD_FG,
-        BLD_BG,
-        Icon::new(ICON_SUCCESS),
-        m_top,
-        m_bottom,
-        complete_draw,
-    );
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SUCCESS, m_top, m_bottom, complete_draw);
     show(&mut frame);
 }
 

@@ -11,6 +11,8 @@ use crate::{
 };
 
 const MILLIS_PER_LETTER_M: u32 = 300;
+const ANIMATION_DURATION_MS: u32 = 2000;
+const PAUSE_DURATION_MS: u32 = 1000;
 
 enum State {
     Initial,
@@ -49,9 +51,13 @@ where
             font,
             fg,
             bg,
-            duration: Duration::from_millis(2000),
-            pause: Duration::from_millis(1000),
+            duration: Duration::from_millis(ANIMATION_DURATION_MS),
+            pause: Duration::from_millis(PAUSE_DURATION_MS),
         }
+    }
+
+    pub fn set_text(&mut self, text: T) {
+        self.text = text;
     }
 
     pub fn start(&mut self, ctx: &mut EventCtx, now: Instant) {

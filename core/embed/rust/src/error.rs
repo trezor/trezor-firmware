@@ -26,6 +26,13 @@ pub enum Error {
     ValueErrorParam(&'static CStr, Obj),
 }
 
+#[macro_export]
+macro_rules! value_error {
+    ($msg:expr) => {
+        Error::ValueError(cstr!($msg))
+    };
+}
+
 #[cfg(feature = "micropython")]
 impl Error {
     /// Create an exception instance matching the error code. The result of this

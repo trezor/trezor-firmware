@@ -293,6 +293,13 @@ def reboot_to_bootloader(obj: "TrezorConnection") -> str:
 
 
 @cli.command()
+@with_client
+def tutorial(client: "TrezorClient") -> str:
+    """Show on-device tutorial."""
+    return device.show_device_tutorial(client)
+
+
+@cli.command()
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @click.option(
     "-e",

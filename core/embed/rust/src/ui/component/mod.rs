@@ -32,4 +32,4 @@ pub use text::{
     formatted::FormattedText,
     layout::{LineBreaking, PageBreaking, TextLayout},
 };
-pub use timeout::{Timeout, TimeoutMsg};
+pub use timeout::Timeout;

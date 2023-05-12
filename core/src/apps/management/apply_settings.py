@@ -1,8 +1,11 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, confirm_homescreen
 from trezor.wire import DataError
+
+import trezorui2
 
 if TYPE_CHECKING:
     from trezor.messages import ApplySettings, Success
@@ -12,9 +15,36 @@ if TYPE_CHECKING:
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
+if utils.MODEL == "R":
+
+    def _validate_homescreen_model_specific(homescreen: bytes) -> None:
+        try:
+            w, h, is_grayscale = trezorui2.toif_info(homescreen)
+        except ValueError:
+            raise DataError("Invalid homescreen")
+        if w != 128 or h != 64:
+            raise DataError("Homescreen must be 128x64 pixel large")
+        if not is_grayscale:
+            raise DataError("Homescreen must be grayscale")
+
+else:
+
+    def _validate_homescreen_model_specific(homescreen: bytes) -> None:
+        try:
+            w, h, mcu_height = trezorui2.jpeg_info(homescreen)
+        except ValueError:
+            raise DataError("Invalid homescreen")
+        if w != 240 or h != 240:
+            raise DataError("Homescreen must be 240x240 pixel large")
+        if mcu_height > 16:
+            raise DataError("Unsupported jpeg type")
+        try:
+            trezorui2.jpeg_test(homescreen)
+        except ValueError:
+            raise DataError("Invalid homescreen")
+
 
 def _validate_homescreen(homescreen: bytes) -> None:
-    import trezorui2
     import storage.device as storage_device
 
     if homescreen == b"":
@@ -25,18 +55,7 @@ def _validate_homescreen(homescreen: bytes) -> None:
             f"Homescreen is too large, maximum size is {storage_device.HOMESCREEN_MAXSIZE} bytes"
         )
 
-    try:
-        w, h, mcu_height = trezorui2.jpeg_info(homescreen)
-    except ValueError:
-        raise DataError("Invalid homescreen")
-    if w != 240 or h != 240:
-        raise DataError("Homescreen must be 240x240 pixel large")
-    if mcu_height > 16:
-        raise DataError("Unsupported jpeg type")
-    try:
-        trezorui2.jpeg_test(homescreen)
-    except ValueError:
-        raise DataError("Invalid homescreen")
+    _validate_homescreen_model_specific(homescreen)
 
 
 async def apply_settings(ctx: Context, msg: ApplySettings) -> Success:

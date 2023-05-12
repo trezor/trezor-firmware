@@ -73,6 +73,21 @@ where
             .fit_text(self.text.as_ref())
             .height()
     }
+
+    pub fn text_area(&self) -> Rect {
+        // XXX only works on single-line labels
+        assert!(self.layout.bounds.height() <= self.font().text_max_height());
+        let available_width = self.layout.bounds.width();
+        let width = self.font().text_width(self.text.as_ref());
+        let height = self.font().text_height();
+        let cursor = self.layout.initial_cursor();
+        let baseline = match self.alignment() {
+            Alignment::Start => cursor,
+            Alignment::Center => cursor + Offset::x(available_width / 2) - Offset::x(width / 2),
+            Alignment::End => cursor + Offset::x(available_width) - Offset::x(width),
+        };
+        Rect::from_bottom_left_and_size(baseline, Offset::new(width, height))
+    }
 }
 
 impl<T> Component for Label<T>

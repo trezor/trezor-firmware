@@ -3,7 +3,6 @@ use crate::{
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
         display,
-        display::toif::Icon,
         geometry::{Offset, Rect, CENTER},
         model_tt::{
             component::{
@@ -218,14 +217,14 @@ impl Bip39Input {
                 self.button.enable(ctx);
                 self.button.set_stylesheet(ctx, theme::button_pin_confirm());
                 self.button
-                    .set_content(ctx, ButtonContent::Icon(Icon::new(theme::ICON_LIST_CHECK)));
+                    .set_content(ctx, ButtonContent::Icon(theme::ICON_LIST_CHECK));
             } else {
                 // Auto-complete button.
                 self.button.enable(ctx);
                 self.button
                     .set_stylesheet(ctx, theme::button_pin_autocomplete());
                 self.button
-                    .set_content(ctx, ButtonContent::Icon(Icon::new(theme::ICON_CLICK)));
+                    .set_content(ctx, ButtonContent::Icon(theme::ICON_CLICK));
             }
         } else {
             // Disabled button.

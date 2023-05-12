@@ -2,11 +2,12 @@ use core::mem;
 
 use crate::{
     error::Error,
+    strutil::StringType,
     ui::{
         component::{
             base::ComponentExt,
             paginated::Paginate,
-            text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
+            text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
         display::{self, Font},
@@ -30,7 +31,7 @@ pub struct Progress<T> {
 
 impl<T> Progress<T>
 where
-    T: ParagraphStrType,
+    T: StringType,
 {
     const AREA: Rect = constant::screen().inset(theme::borders());
 
@@ -57,7 +58,7 @@ where
 
 impl<T> Component for Progress<T>
 where
-    T: ParagraphStrType,
+    T: StringType,
 {
     type Msg = Never;
 
@@ -130,7 +131,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Progress<T>
 where
-    T: ParagraphStrType,
+    T: StringType,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Progress");

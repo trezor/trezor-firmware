@@ -11,10 +11,6 @@ pub struct Timeout {
     timer: Option<TimerToken>,
 }
 
-pub enum TimeoutMsg {
-    TimedOut,
-}
-
 impl Timeout {
     pub fn new(time_ms: u32) -> Self {
         Self {
@@ -25,7 +21,7 @@ impl Timeout {
 }
 
 impl Component for Timeout {
-    type Msg = TimeoutMsg;
+    type Msg = ();
 
     fn place(&mut self, _bounds: Rect) -> Rect {
         Rect::zero()
@@ -41,7 +37,7 @@ impl Component for Timeout {
             // Fire.
             Event::Timer(token) if Some(token) == self.timer => {
                 self.timer = None;
-                Some(TimeoutMsg::TimedOut)
+                Some(())
             }
             _ => None,
         }

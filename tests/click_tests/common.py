@@ -43,8 +43,98 @@ def get_char_category(char: str) -> PassphraseCategory:
 
 
 def go_next(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
-    return debug.click(buttons.OK, wait=wait)  # type: ignore
+    if debug.model == "T":
+        return debug.click(buttons.OK, wait=wait)  # type: ignore
+    elif debug.model == "R":
+        return debug.press_right(wait=wait)  # type: ignore
+    else:
+        raise RuntimeError("Unknown model")
 
 
 def go_back(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
-    return debug.click(buttons.CANCEL, wait=wait)  # type: ignore
+    if debug.model == "T":
+        return debug.click(buttons.CANCEL, wait=wait)  # type: ignore
+    elif debug.model == "R":
+        return debug.press_left(wait=wait)  # type: ignore
+    else:
+        raise RuntimeError("Unknown model")
+
+
+def navigate_to_action_and_press(
+    debug: "DebugLink",
+    wanted_action: str,
+    all_actions: list[str],
+    is_carousel: bool = True,
+) -> None:
+    """Navigate to the button with certain action and press it"""
+    # Orient
+    try:
+        _get_action_index(wanted_action, all_actions)
+    except ValueError:
+        raise ValueError(f"Action {wanted_action} is not supported in {all_actions}")
+
+    def current_action() -> str:
+        return layout.get_middle_choice()
+
+    def current_is_wanted(wanted_action: str) -> bool:
+        # Allowing for possible multiple actions on one button
+        return (
+            current_action() == wanted_action
+            or current_action() in wanted_action.split("|")
+        )
+
+    # Navigate
+    layout = debug.read_layout()
+    while not current_is_wanted(wanted_action):
+        layout = _move_one_closer(
+            debug=debug,
+            wanted_action=wanted_action,
+            current_action=current_action(),
+            all_actions=all_actions,
+            is_carousel=is_carousel,
+        )
+
+    # Press
+    debug.press_middle(wait=True)
+
+
+def _get_action_index(wanted_action: str, all_actions: list[str]) -> int:
+    """Get index of the action in the list of all actions"""
+    if wanted_action in all_actions:
+        return all_actions.index(wanted_action)
+    else:
+        # It may happen that one action item can mean multiple actions
+        # (e.g. "CANCEL|DELETE" in the passphrase layout - both actions are on the same button)
+        for index, action in enumerate(all_actions):
+            subactions = action.split("|")
+            if wanted_action in subactions:
+                return index
+
+    raise ValueError(f"Action {wanted_action} is not supported in {all_actions}")
+
+
+def _move_one_closer(
+    debug: "DebugLink",
+    wanted_action: str,
+    current_action: str,
+    all_actions: list[str],
+    is_carousel: bool,
+) -> "LayoutContent":
+    """Pressing either left or right regarding to the current situation"""
+    index_diff = _get_action_index(wanted_action, all_actions) - _get_action_index(
+        current_action, all_actions
+    )
+    if not is_carousel:
+        # Simply move according to the index in a closed list
+        if index_diff > 0:
+            return debug.press_right(wait=True)
+        else:
+            return debug.press_left(wait=True)
+    else:
+        # Carousel can move in a circle - over the edges
+        # Always move the shortest way
+        action_half = len(all_actions) // 2
+        if index_diff > action_half or -action_half < index_diff < 0:
+            return debug.press_left(wait=True)
+        else:
+            return debug.press_right(wait=True)

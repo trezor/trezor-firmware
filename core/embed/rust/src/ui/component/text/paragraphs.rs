@@ -1,9 +1,12 @@
 use heapless::Vec;
 
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Paginate},
-    display::toif::Icon,
-    geometry::{Alignment, Insets, LinearPlacement, Offset, Point, Rect, TOP_LEFT},
+use crate::{
+    strutil::StringType,
+    ui::{
+        component::{Component, Event, EventCtx, Never, Paginate},
+        display::toif::Icon,
+        geometry::{Alignment, Insets, LinearPlacement, Offset, Point, Rect, TOP_LEFT},
+    },
 };
 
 use super::layout::{LayoutFit, TextLayout, TextStyle};
@@ -24,28 +27,9 @@ pub const PARAGRAPH_BOTTOM_SPACE: i16 = 5;
 pub type ParagraphVecLong<T> = Vec<Paragraph<T>, 32>;
 pub type ParagraphVecShort<T> = Vec<Paragraph<T>, 8>;
 
-/// Trait for internal representation of strings, which need to support
-/// converting to short-lived &str reference as well as creating a new string by
-/// skipping some number of bytes. Exists so that we can support `StrBuffer` as
-/// well as `&'static str`.
-///
-/// NOTE: do not implement this trait for `&'static str` in firmware. We always
-/// use StrBuffer because using multiple internal representations results in
-/// multiple copies of the code in flash memory.
-pub trait ParagraphStrType: AsRef<str> {
-    fn skip_prefix(&self, bytes: usize) -> Self;
-}
-
-#[cfg(feature = "bootloader")]
-impl ParagraphStrType for &str {
-    fn skip_prefix(&self, chars: usize) -> Self {
-        &self[chars..]
-    }
-}
-
 pub trait ParagraphSource {
     /// Determines the output type produced.
-    type StrType: ParagraphStrType;
+    type StrType: StringType;
 
     /// Return text and associated style for given paragraph index and character
     /// offset within the paragraph.
@@ -115,7 +99,7 @@ where
 
     /// Helper for `change_offset` which should not get monomorphized as it
     /// doesn't refer to T or Self.
-    fn dyn_change_offset<S: ParagraphStrType>(
+    fn dyn_change_offset<S: StringType>(
         mut area: Rect,
         mut offset: PageOffset,
         source: &dyn ParagraphSource<StrType = S>,
@@ -149,7 +133,7 @@ where
 
     /// Iterate over visible layouts (bounding box, style) together
     /// with corresponding string content. Should not get monomorphized.
-    fn foreach_visible<'a, S: ParagraphStrType>(
+    fn foreach_visible<'a, S: StringType>(
         source: &'a dyn ParagraphSource<StrType = S>,
         visible: &'a [TextLayout],
         offset: PageOffset,
@@ -366,7 +350,7 @@ impl PageOffset {
     ///
     /// If the returned remaining area is not None then it holds that
     /// `next_offset.par == self.par + 1`.
-    fn advance<S: ParagraphStrType>(
+    fn advance<S: StringType>(
         mut self,
         area: Rect,
         source: &dyn ParagraphSource<StrType = S>,
@@ -432,7 +416,7 @@ impl PageOffset {
         )
     }
 
-    fn should_place_pair_on_next_page<S: ParagraphStrType>(
+    fn should_place_pair_on_next_page<S: StringType>(
         this_paragraph: &Paragraph<S>,
         next_paragraph: &Paragraph<S>,
         area: Rect,
@@ -483,7 +467,7 @@ struct PageBreakIterator<'a, T> {
 }
 
 impl<T: ParagraphSource> PageBreakIterator<'_, T> {
-    fn dyn_next<S: ParagraphStrType>(
+    fn dyn_next<S: StringType>(
         mut area: Rect,
         paragraphs: &dyn ParagraphSource<StrType = S>,
         mut offset: PageOffset,
@@ -629,6 +613,17 @@ where
     }
 }
 
+impl<T> Paginate for Checklist<T>
+where
+    T: ParagraphSource,
+{
+    fn page_count(&mut self) -> usize {
+        1
+    }
+
+    fn change_page(&mut self, _to_page: usize) {}
+}
+
 #[cfg(feature = "ui_debug")]
 impl<T: ParagraphSource> crate::trace::Trace for Checklist<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
@@ -658,7 +653,7 @@ where
     }
 }
 
-impl<T: ParagraphStrType, const N: usize> ParagraphSource for Vec<Paragraph<T>, N> {
+impl<T: StringType, const N: usize> ParagraphSource for Vec<Paragraph<T>, N> {
     type StrType = T;
 
     fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
@@ -671,7 +666,7 @@ impl<T: ParagraphStrType, const N: usize> ParagraphSource for Vec<Paragraph<T>, 
     }
 }
 
-impl<T: ParagraphStrType, const N: usize> ParagraphSource for [Paragraph<T>; N] {
+impl<T: StringType, const N: usize> ParagraphSource for [Paragraph<T>; N] {
     type StrType = T;
 
     fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
@@ -684,7 +679,7 @@ impl<T: ParagraphStrType, const N: usize> ParagraphSource for [Paragraph<T>; N] 
     }
 }
 
-impl<T: ParagraphStrType> ParagraphSource for Paragraph<T> {
+impl<T: StringType> ParagraphSource for Paragraph<T> {
     type StrType = T;
 
     fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {

@@ -1,6 +1,10 @@
 use core::{convert::TryFrom, ops::Deref, ptr, slice, str};
 
-use crate::{error::Error, micropython::obj::Obj, strutil::hexlify};
+use crate::{
+    error::Error,
+    micropython::obj::Obj,
+    strutil::{hexlify, SkipPrefix},
+};
 
 use super::ffi;
 
@@ -20,7 +24,7 @@ use super::ffi;
 /// The `off` field represents offset from the `ptr` and allows us to do
 /// substring slices while keeping the head pointer as required by GC.
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct StrBuffer {
     ptr: *const u8,
     len: u16,
@@ -89,8 +93,10 @@ impl StrBuffer {
             unsafe { slice::from_raw_parts(self.ptr.add(self.off.into()), self.len.into()) }
         }
     }
+}
 
-    pub fn offset(&self, skip_bytes: usize) -> Self {
+impl SkipPrefix for StrBuffer {
+    fn skip_prefix(&self, skip_bytes: usize) -> Self {
         let off: u16 = unwrap!(skip_bytes.try_into());
         assert!(off <= self.len);
         assert!(self.as_ref().is_char_boundary(skip_bytes));
@@ -251,5 +257,5 @@ pub fn hexlify_bytes(obj: Obj, offset: usize, max_len: usize) -> Result<StrBuffe
     let max_len = max_len & !1;
     let hex_len = (bin_slice.len() * 2).min(max_len);
     let result = StrBuffer::alloc_with(hex_len, move |buffer| hexlify(bin_slice, buffer))?;
-    Ok(result.offset(hex_off))
+    Ok(result.skip_prefix(hex_off))
 }
