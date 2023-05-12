@@ -84,8 +84,6 @@ def prepare(
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
         assert "enable PIN protection" in debug.wait_layout().text_content()
-        layout = go_next(debug, wait=True)
-        assert "access this device" in layout.text_content()
         go_next(debug)
     elif situation == Situation.PIN_CHANGE:
         # Change PIN
@@ -100,8 +98,6 @@ def prepare(
         if old_pin:
             _input_see_confirm(debug, old_pin)
         assert "enable wipe code" in debug.wait_layout().text_content()
-        layout = go_next(debug, wait=True)
-        assert "erase all data" in layout.text_content()
         go_next(debug)
         if old_pin:
             debug.wait_layout()
@@ -170,8 +166,6 @@ def _input_see_confirm(debug: "DebugLink", pin: str) -> None:
 
 def _enter_two_times(debug: "DebugLink", pin1: str, pin2: str) -> None:
     _input_see_confirm(debug, pin1)
-    # Please re-enter
-    debug.click(buttons.OK, wait=True)
     _input_see_confirm(debug, pin2)
 
 

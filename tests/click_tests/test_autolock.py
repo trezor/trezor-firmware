@@ -226,7 +226,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     device_handler.run(device.recover, dry_run=True)  # type: ignore
 
     layout = unlock_dry_run(debug)
-    assert "select the number of words " in layout.text_content()
+    assert "number of words " in layout.text_content()
 
     # wait for autolock to trigger
     time.sleep(10.1)
@@ -244,7 +244,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     assert layout is not None
 
     # we are back at homescreen
-    assert "select the number of words" in layout.text_content()
+    assert "number of words" in layout.text_content()
 
 
 @pytest.mark.setup_client(pin=PIN4)

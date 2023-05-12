@@ -17,8 +17,6 @@ async def _request_sd_salt(
     Is model-specific, because some models (like TR/T2B1) do not even
     have SD card support (and we do not want to include SD-card connected code).
     """
-    from trezor import utils
-
     if not utils.USE_SD_CARD:
         return None
     else:
@@ -56,11 +54,10 @@ async def request_pin(
 
 
 async def request_pin_confirm(ctx: Context, *args: Any, **kwargs: Any) -> str:
-    from trezor.ui.layouts import confirm_reenter_pin, pin_mismatch_popup
+    from trezor.ui.layouts import pin_mismatch_popup
 
     while True:
         pin1 = await request_pin(ctx, "Enter new PIN", *args, **kwargs)
-        await confirm_reenter_pin(ctx)
         pin2 = await request_pin(ctx, "Re-enter new PIN", *args, **kwargs)
         if pin1 == pin2:
             return pin1

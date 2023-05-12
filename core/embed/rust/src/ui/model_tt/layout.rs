@@ -839,7 +839,8 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
         let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
         let user_fee_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_user_fee_change)?.try_into()?;
         let total_fee_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_fee_new)?.try_into()?;
-        let fee_rate_amount: Option<StrBuffer> = kwargs
+        // TODO: use this, most probably in "i" icon
+        let _fee_rate_amount: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_fee_rate_amount)?
             .try_into_option()?;
 
@@ -849,22 +850,12 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             _ => ("Your fee did not change.", StrBuffer::empty()),
         };
 
-        let mut paragraphs_vec = ParagraphVecShort::new();
-        paragraphs_vec
-            .add(Paragraph::new(&theme::TEXT_NORMAL, description.into()))
-            .add(Paragraph::new(&theme::TEXT_MONO, change))
-            .add(Paragraph::new(
-                &theme::TEXT_NORMAL,
-                "Transaction fee:".into(),
-            ))
-            .add(Paragraph::new(&theme::TEXT_MONO, total_fee_new));
-
-        if let Some(fee_rate_amount) = fee_rate_amount {
-            paragraphs_vec
-                .add(Paragraph::new(&theme::TEXT_NORMAL, "Fee rate:".into()))
-                .add(Paragraph::new(&theme::TEXT_MONO, fee_rate_amount));
-        }
-        let paragraphs = paragraphs_vec.into_paragraphs();
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, description.into()),
+            Paragraph::new(&theme::TEXT_MONO, change),
+            Paragraph::new(&theme::TEXT_NORMAL, "\nTransaction fee:".into()),
+            Paragraph::new(&theme::TEXT_MONO, total_fee_new),
+        ]);
 
         let obj = LayoutObj::new(Frame::left_aligned(
             theme::label_title(),

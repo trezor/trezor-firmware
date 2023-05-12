@@ -45,7 +45,7 @@ def test_abort(core_emulator: Emulator):
     assert debug.wait_layout().title() == "WALLET RECOVERY"
 
     layout = debug.click(buttons.OK, wait=True)
-    assert "select the number of words" in layout.text_content()
+    assert "number of words" in layout.text_content()
 
     debug = _restart(device_handler, core_emulator)
     features = device_handler.features()
@@ -53,7 +53,7 @@ def test_abort(core_emulator: Emulator):
     assert features.recovery_mode is True
 
     # no waiting for layout because layout doesn't change
-    assert "select the number of words" in debug.read_layout().text_content()
+    assert "number of words" in debug.read_layout().text_content()
     layout = debug.click(buttons.CANCEL, wait=True)
 
     assert layout.title() == "ABORT RECOVERY"

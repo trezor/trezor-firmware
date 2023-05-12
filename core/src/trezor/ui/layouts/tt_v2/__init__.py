@@ -1181,23 +1181,6 @@ async def request_pin_on_device(
     return result
 
 
-async def confirm_reenter_pin(
-    ctx: GenericContext,
-    br_type: str = "set_pin",
-    br_code: ButtonRequestType = BR_TYPE_OTHER,
-    is_wipe_code: bool = False,
-) -> None:
-    title = "CHECK WIPE CODE" if is_wipe_code else "CHECK PIN"
-    return await confirm_action(
-        ctx,
-        br_type,
-        title,
-        action="Please re-enter to confirm.",
-        verb="BEGIN",
-        br_code=br_code,
-    )
-
-
 async def pin_mismatch_popup(
     ctx: GenericContext,
     is_wipe_code: bool = False,
@@ -1226,7 +1209,7 @@ async def confirm_set_new_pin(
     br_type: str,
     title: str,
     description: str,
-    information: list[str],
+    information: list[str],  # unused on TT
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     await confirm_action(
@@ -1235,18 +1218,5 @@ async def confirm_set_new_pin(
         title,
         description=description,
         verb="ENABLE",
-        br_code=br_code,
-    )
-
-    if "wipe_code" in br_type:
-        title = "WIPE CODE INFO"
-    else:
-        title = "PIN INFORMATION"
-
-    return await confirm_action(
-        ctx,
-        br_type,
-        title=title,
-        description="\n\n".join(information),
         br_code=br_code,
     )
