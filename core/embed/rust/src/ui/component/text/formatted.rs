@@ -1,133 +1,103 @@
-use core::{
-    iter::{Enumerate, Peekable},
-    slice,
+use crate::{
+    strutil::StringType,
+    ui::{
+        component::{Component, Event, EventCtx, Never, Paginate},
+        geometry::Rect,
+    },
 };
 
-use heapless::LinearMap;
-
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    display::{Color, Font},
-    geometry::Rect,
+use super::{
+    layout::{LayoutFit, LayoutSink, TextNoOp, TextRenderer},
+    op::OpTextLayout,
 };
 
-use super::layout::{
-    LayoutFit, LayoutSink, LineBreaking, Op, PageBreaking, TextLayout, TextRenderer, TextStyle,
-};
-
-pub const MAX_ARGUMENTS: usize = 6;
-
-pub struct FormattedText<F, T> {
-    layout: TextLayout,
-    fonts: FormattedFonts,
-    format: F,
-    args: LinearMap<&'static str, T, MAX_ARGUMENTS>,
+#[derive(Clone)]
+pub struct FormattedText<T: StringType + Clone> {
+    op_layout: OpTextLayout<T>,
     char_offset: usize,
 }
 
-pub struct FormattedFonts {
-    /// Font used to format `{normal}`.
-    pub normal: Font,
-    /// Font used to format `{demibold}`.
-    pub demibold: Font,
-    /// Font used to format `{bold}`.
-    pub bold: Font,
-    /// Font used to format `{mono}`.
-    pub mono: Font,
-}
-
-impl<F, T> FormattedText<F, T> {
-    pub fn new(style: TextStyle, fonts: FormattedFonts, format: F) -> Self {
+impl<T: StringType + Clone> FormattedText<T> {
+    pub fn new(op_layout: OpTextLayout<T>) -> Self {
         Self {
-            format,
-            fonts,
-            layout: TextLayout::new(style),
-            args: LinearMap::new(),
+            op_layout,
             char_offset: 0,
         }
     }
 
-    pub fn with(mut self, key: &'static str, value: T) -> Self {
-        if self.args.insert(key, value).is_err() {
-            #[cfg(feature = "ui_debug")]
-            panic!("text args map is full");
-        }
-        self
+    fn layout_content(&mut self, sink: &mut dyn LayoutSink) -> LayoutFit {
+        self.op_layout.layout_content(self.char_offset, sink)
     }
+}
 
-    pub fn with_format(mut self, format: F) -> Self {
-        self.format = format;
-        self
-    }
+// Pagination
+impl<T: StringType + Clone> Paginate for FormattedText<T> {
+    fn page_count(&mut self) -> usize {
+        let mut page_count = 1; // There's always at least one page.
+        let mut char_offset = 0;
 
-    pub fn with_text_font(mut self, text_font: Font) -> Self {
-        self.layout.style.text_font = text_font;
-        self
-    }
-
-    pub fn with_text_color(mut self, text_color: Color) -> Self {
-        self.layout.style.text_color = text_color;
-        self
-    }
-
-    pub fn with_line_breaking(mut self, line_breaking: LineBreaking) -> Self {
-        self.layout.style.line_breaking = line_breaking;
-        self
-    }
-
-    pub fn with_page_breaking(mut self, page_breaking: PageBreaking) -> Self {
-        self.layout.style.page_breaking = page_breaking;
-        self
-    }
-
-    pub fn set_char_offset(&mut self, char_offset: usize) {
+        // Make sure we're starting from the beginning.
         self.char_offset = char_offset;
+
+        // Looping through the content and counting pages
+        // until we finally fit.
+        loop {
+            let fit = self.layout_content(&mut TextNoOp);
+            match fit {
+                LayoutFit::Fitting { .. } => {
+                    break; // TODO: We should consider if there's more content
+                           // to render.
+                }
+                LayoutFit::OutOfBounds {
+                    processed_chars, ..
+                } => {
+                    page_count += 1;
+                    char_offset += processed_chars;
+                    self.char_offset = char_offset;
+                }
+            }
+        }
+
+        // Reset the char offset back to the beginning.
+        self.char_offset = 0;
+
+        page_count
     }
 
-    pub fn char_offset(&mut self) -> usize {
-        self.char_offset
-    }
+    fn change_page(&mut self, to_page: usize) {
+        let mut active_page = 0;
+        let mut char_offset = 0;
 
-    pub fn layout_mut(&mut self) -> &mut TextLayout {
-        &mut self.layout
+        // Make sure we're starting from the beginning.
+        self.char_offset = char_offset;
+
+        // Looping through the content until we arrive at
+        // the wanted page.
+        while active_page < to_page {
+            let fit = self.layout_content(&mut TextNoOp);
+            match fit {
+                LayoutFit::Fitting { .. } => {
+                    break; // TODO: We should consider if there's more content
+                           // to render.
+                }
+                LayoutFit::OutOfBounds {
+                    processed_chars, ..
+                } => {
+                    active_page += 1;
+                    char_offset += processed_chars;
+                    self.char_offset = char_offset;
+                }
+            }
+        }
     }
 }
 
-impl<F, T> FormattedText<F, T>
-where
-    F: AsRef<str>,
-    T: AsRef<str>,
-{
-    pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        let mut cursor = self.layout.initial_cursor();
-        let mut ops = Op::skip_n_text_bytes(
-            Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
-                Token::Literal(literal) => Some(Op::Text(literal)),
-                Token::Argument("mono") => Some(Op::Font(self.fonts.mono)),
-                Token::Argument("bold") => Some(Op::Font(self.fonts.bold)),
-                Token::Argument("normal") => Some(Op::Font(self.fonts.normal)),
-                Token::Argument("demibold") => Some(Op::Font(self.fonts.demibold)),
-                Token::Argument(argument) => self
-                    .args
-                    .get(argument)
-                    .map(|value| Op::Text(value.as_ref())),
-            }),
-            self.char_offset,
-        );
-        self.layout.layout_ops(&mut ops, &mut cursor, sink)
-    }
-}
-
-impl<F, T> Component for FormattedText<F, T>
-where
-    F: AsRef<str>,
-    T: AsRef<str>,
-{
+impl<T: StringType + Clone> Component for FormattedText<T> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.layout.bounds = bounds;
-        self.layout.bounds
+        self.op_layout.place(bounds);
+        bounds
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -140,133 +110,37 @@ where
 
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.layout.bounds)
+        sink(self.op_layout.layout.bounds)
+    }
+}
+
+// DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+impl<T: StringType + Clone> FormattedText<T> {
+    /// Is the same as layout_content, but does not use `&mut self`
+    /// to be compatible with `trace`.
+    /// Therefore it has to do the `clone` of `op_layout`.
+    pub fn layout_content_debug(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
+        // TODO: how to solve it "properly", without the `clone`?
+        // (changing `trace` to `&mut self` had some other isses...)
+        self.op_layout
+            .clone()
+            .layout_content(self.char_offset, sink)
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl<F, T> crate::trace::Trace for FormattedText<F, T>
-where
-    F: AsRef<str>,
-    T: AsRef<str>,
-{
+impl<T: StringType + Clone> crate::trace::Trace for FormattedText<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         use crate::ui::component::text::layout::trace::TraceSink;
         use core::cell::Cell;
         let fit: Cell<Option<LayoutFit>> = Cell::new(None);
         t.component("FormattedText");
         t.in_list("text", &|l| {
-            let result = self.layout_content(&mut TraceSink(l));
+            let result = self.layout_content_debug(&mut TraceSink(l));
             fit.set(Some(result));
         });
         t.bool("fits", matches!(fit.get(), Some(LayoutFit::Fitting { .. })));
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Token<'a> {
-    /// Process literal text content.
-    Literal(&'a str),
-    /// Process argument with specified descriptor.
-    Argument(&'a str),
-}
-
-/// Processes a format string into an iterator of `Token`s.
-///
-/// # Example
-///
-/// ```
-/// let parser = Tokenizer::new("Nice to meet {you}, where you been?");
-/// assert!(matches!(parser.next(), Some(Token::Literal("Nice to meet "))));
-/// assert!(matches!(parser.next(), Some(Token::Argument("you"))));
-/// assert!(matches!(parser.next(), Some(Token::Literal(", where you been?"))));
-/// ```
-pub struct Tokenizer<'a> {
-    input: &'a str,
-    inner: Peekable<Enumerate<slice::Iter<'a, u8>>>,
-}
-
-impl<'a> Tokenizer<'a> {
-    /// Create a new tokenizer for bytes of a formatting string `input`,
-    /// returning an iterator.
-    pub fn new(input: &'a str) -> Self {
-        assert!(input.is_ascii());
-        Self {
-            input,
-            inner: input.as_bytes().iter().enumerate().peekable(),
-        }
-    }
-}
-
-impl<'a> Iterator for Tokenizer<'a> {
-    type Item = Token<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        const ASCII_OPEN_BRACE: u8 = b'{';
-        const ASCII_CLOSED_BRACE: u8 = b'}';
-
-        match self.inner.next() {
-            // Argument token is starting. Read until we find '}', then parse the content between
-            // the braces and return the token. If we encounter the end of string before the closing
-            // brace, quit.
-            Some((open, &ASCII_OPEN_BRACE)) => loop {
-                match self.inner.next() {
-                    Some((close, &ASCII_CLOSED_BRACE)) => {
-                        break Some(Token::Argument(&self.input[open + 1..close]));
-                    }
-                    None => {
-                        break None;
-                    }
-                    _ => {}
-                }
-            },
-            // Literal token is starting. Read until we find '{' or the end of string, and return
-            // the token. Use `peek()` for matching the opening brace, se we can keep it
-            // in the iterator for the above code.
-            Some((start, _)) => loop {
-                match self.inner.peek() {
-                    Some(&(open, &ASCII_OPEN_BRACE)) => {
-                        break Some(Token::Literal(&self.input[start..open]));
-                    }
-                    None => {
-                        break Some(Token::Literal(&self.input[start..]));
-                    }
-                    _ => {
-                        self.inner.next();
-                    }
-                }
-            },
-            None => None,
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn tokenizer_yields_expected_tokens() {
-        assert!(Tokenizer::new("").eq([]));
-        assert!(Tokenizer::new("x").eq([Token::Literal("x")]));
-        assert!(Tokenizer::new("x\0y").eq([Token::Literal("x\0y")]));
-        assert!(Tokenizer::new("{").eq([]));
-        assert!(Tokenizer::new("x{").eq([Token::Literal("x")]));
-        assert!(Tokenizer::new("x{y").eq([Token::Literal("x")]));
-        assert!(Tokenizer::new("{}").eq([Token::Argument("")]));
-        assert!(Tokenizer::new("x{}y{").eq([
-            Token::Literal("x"),
-            Token::Argument(""),
-            Token::Literal("y"),
-        ]));
-        assert!(Tokenizer::new("{\0}").eq([Token::Argument("\0"),]));
-        assert!(Tokenizer::new("{{y}").eq([Token::Argument("{y"),]));
-        assert!(Tokenizer::new("{{{{xyz").eq([]));
-        assert!(Tokenizer::new("x{}{{}}}}").eq([
-            Token::Literal("x"),
-            Token::Argument(""),
-            Token::Argument("{"),
-            Token::Literal("}}}"),
-        ]));
     }
 }

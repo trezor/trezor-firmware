@@ -1,10 +1,10 @@
 use crate::{
-    strutil,
+    strutil::{self, StringType},
     ui::{
         component::{
             base::ComponentExt,
             paginated::Paginate,
-            text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
+            text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Pad,
         },
         display::{self, Font},
@@ -35,7 +35,7 @@ where
 impl<T, F> NumberInputDialog<T, F>
 where
     F: Fn(u32) -> T,
-    T: ParagraphStrType,
+    T: StringType,
 {
     pub fn new(min: u32, max: u32, init_value: u32, description_func: F) -> Self {
         let text = description_func(init_value);
@@ -71,7 +71,7 @@ where
 
 impl<T, F> Component for NumberInputDialog<T, F>
 where
-    T: ParagraphStrType,
+    T: StringType,
     F: Fn(u32) -> T,
 {
     type Msg = NumberInputDialogMsg;
@@ -133,7 +133,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T, F> crate::trace::Trace for NumberInputDialog<T, F>
 where
-    T: ParagraphStrType,
+    T: StringType,
     F: Fn(u32) -> T,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

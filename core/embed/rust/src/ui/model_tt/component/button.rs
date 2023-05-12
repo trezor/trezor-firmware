@@ -421,18 +421,18 @@ impl<T> Button<T> {
         let left = if let Some(verb) = left {
             left_is_small = verb.as_ref().len() <= 4;
             if verb.as_ref() == "^" {
-                Button::with_icon(Icon::new(theme::ICON_UP))
+                Button::with_icon(theme::ICON_UP)
             } else {
                 Button::with_text(verb)
             }
         } else {
             left_is_small = right.is_some();
-            Button::with_icon(Icon::new(theme::ICON_CANCEL))
+            Button::with_icon(theme::ICON_CANCEL)
         };
         let right = if let Some(verb) = right {
             Button::with_text(verb).styled(theme::button_confirm())
         } else {
-            Button::with_icon(Icon::new(theme::ICON_CONFIRM)).styled(theme::button_confirm())
+            Button::with_icon(theme::ICON_CONFIRM).styled(theme::button_confirm())
         };
         Self::cancel_confirm(left, right, left_is_small)
     }
@@ -457,7 +457,7 @@ impl<T> Button<T> {
         let top = Button::with_text(info)
             .styled(theme::button_moreinfo())
             .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info));
-        let left = Button::with_icon(Icon::new(theme::ICON_CANCEL)).map(|msg| {
+        let left = Button::with_icon(theme::ICON_CANCEL).map(|msg| {
             (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
         });
         let total_height = theme::BUTTON_HEIGHT + theme::BUTTON_SPACING + theme::INFO_BUTTON_HEIGHT;

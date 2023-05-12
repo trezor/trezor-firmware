@@ -1,3 +1,35 @@
+use heapless::String;
+
+/// Trait for slicing off string prefix by a specified number of bytes.
+/// See `StringType` for deeper explanation.
+pub trait SkipPrefix {
+    fn skip_prefix(&self, bytes: usize) -> Self;
+}
+
+// XXX only implemented in bootloader, as we don't want &str to satisfy
+// StringType in the main firmware. This is because we want to avoid duplication
+// of every StringType-parametrized component.
+#[cfg(feature = "bootloader")]
+impl SkipPrefix for &str {
+    fn skip_prefix(&self, chars: usize) -> Self {
+        &self[chars..]
+    }
+}
+
+/// Trait for internal representation of strings.
+/// Exists so that we can support `StrBuffer` as well as `&str` in the UI
+/// components. Implies the following operations:
+/// - dereference into a short-lived `&str` reference (AsRef<str>)
+/// - create a new string by skipping some number of bytes (SkipPrefix) - used
+///   when rendering continuations of long strings
+/// - create a new string from a string literal (From<&'static str>)
+pub trait StringType: AsRef<str> + From<&'static str> + SkipPrefix {}
+
+impl<T> StringType for T where T: AsRef<str> + From<&'static str> + SkipPrefix {}
+
+/// Unified-length String type, long enough for most simple use-cases.
+pub type ShortString = String<50>;
+
 pub fn hexlify(data: &[u8], buffer: &mut [u8]) {
     const HEX_LOWER: [u8; 16] = *b"0123456789abcdef";
     let mut i: usize = 0;

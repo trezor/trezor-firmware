@@ -1181,6 +1181,14 @@ async def request_pin_on_device(
     return result
 
 
+async def confirm_reenter_pin(
+    ctx: GenericContext,
+    is_wipe_code: bool = False,
+) -> None:
+    """Not supported for TT."""
+    pass
+
+
 async def pin_mismatch_popup(
     ctx: GenericContext,
     is_wipe_code: bool = False,
@@ -1220,3 +1228,8 @@ async def confirm_set_new_pin(
         verb="ENABLE",
         br_code=br_code,
     )
+
+
+async def mnemonic_word_entering(ctx: GenericContext) -> None:
+    """Not supported for TT."""
+    pass

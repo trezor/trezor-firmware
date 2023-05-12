@@ -9,8 +9,14 @@ pub enum PhysicalButton {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ButtonEvent {
+    /// Button pressed down.
+    /// ▼ * | * ▼
     ButtonPressed(PhysicalButton),
+    /// Button released up.
+    /// ▲ * | * ▲
     ButtonReleased(PhysicalButton),
+    HoldStarted,
+    HoldEnded,
 }
 
 impl ButtonEvent {

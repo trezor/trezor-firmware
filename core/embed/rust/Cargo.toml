@@ -21,13 +21,23 @@ button = []
 touch = []
 clippy = []
 jpeg = []
-disp_i8080_8bit_dw = []  # write pixels directly to peripheral
-disp_i8080_16bit_dw = []  # write pixels directly to peripheral
+disp_i8080_8bit_dw = [] # write pixels directly to peripheral
+disp_i8080_16bit_dw = [] # write pixels directly to peripheral
 debug = ["ui_debug"]
 sbu = []
 sd_card = []
 rgb_led = []
-test = ["cc", "glob", "micropython", "protobuf", "ui", "ui_debug", "dma2d", "touch"]
+test = [
+    "button",
+    "cc",
+    "glob",
+    "micropython",
+    "protobuf",
+    "ui",
+    "ui_debug",
+    "dma2d",
+    "touch",
+]
 
 [lib]
 crate-type = ["staticlib"]

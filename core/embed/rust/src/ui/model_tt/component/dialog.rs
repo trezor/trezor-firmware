@@ -1,16 +1,16 @@
-use crate::ui::{
-    component::{
-        image::BlendedImage,
-        text::{
-            paragraphs::{
-                Paragraph, ParagraphSource, ParagraphStrType, ParagraphVecShort, Paragraphs, VecExt,
+use crate::{
+    strutil::StringType,
+    ui::{
+        component::{
+            image::BlendedImage,
+            text::{
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
+                TextStyle,
             },
-            TextStyle,
+            Child, Component, Event, EventCtx, Never,
         },
-        Child, Component, Event, EventCtx, Never,
+        geometry::{Insets, LinearPlacement, Rect},
     },
-    display::toif::Icon,
-    geometry::{Insets, LinearPlacement, Rect},
 };
 
 use super::theme;
@@ -99,7 +99,7 @@ pub struct IconDialog<T, U> {
 
 impl<T, U> IconDialog<T, U>
 where
-    T: ParagraphStrType,
+    T: StringType,
     U: Component,
 {
     pub fn new(icon: BlendedImage, title: T, controls: U) -> Self {
@@ -136,8 +136,8 @@ where
         let [l0, l1, l2, l3] = lines;
         Self {
             image: Child::new(BlendedImage::new(
-                Icon::new(theme::IMAGE_BG_CIRCLE),
-                Icon::new(theme::IMAGE_FG_SUCCESS),
+                theme::IMAGE_BG_CIRCLE,
+                theme::IMAGE_FG_SUCCESS,
                 theme::SUCCESS_COLOR,
                 theme::FG,
                 theme::BG,
@@ -161,7 +161,7 @@ where
 
 impl<T, U> Component for IconDialog<T, U>
 where
-    T: ParagraphStrType,
+    T: StringType,
     U: Component,
 {
     type Msg = DialogMsg<Never, U::Msg>;
@@ -203,7 +203,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for IconDialog<T, U>
 where
-    T: ParagraphStrType,
+    T: StringType,
     U: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

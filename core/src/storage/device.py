@@ -196,7 +196,7 @@ def get_passphrase_always_on_device() -> bool:
     from trezor import utils
 
     # Some models do not support passphrase input on device
-    if utils.MODEL in ("1", "R"):
+    if utils.MODEL in ("1",):
         return False
     return common.get_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
 

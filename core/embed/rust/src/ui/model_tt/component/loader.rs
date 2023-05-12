@@ -12,6 +12,9 @@ use crate::{
 
 use super::theme;
 
+const GROWING_DURATION_MS: u32 = 1000;
+const SHRINKING_DURATION_MS: u32 = 500;
+
 pub enum LoaderMsg {
     GrownCompletely,
     ShrunkCompletely,
@@ -38,8 +41,8 @@ impl Loader {
         Self {
             offset_y: 0,
             state: State::Initial,
-            growing_duration: Duration::from_millis(1000),
-            shrinking_duration: Duration::from_millis(500),
+            growing_duration: Duration::from_millis(GROWING_DURATION_MS),
+            shrinking_duration: Duration::from_millis(SHRINKING_DURATION_MS),
             styles: theme::loader_default(),
         }
     }

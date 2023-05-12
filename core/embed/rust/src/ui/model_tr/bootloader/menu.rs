@@ -1,24 +1,12 @@
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Pad},
+    component::{Child, Component, Event, EventCtx, Never, Pad},
     geometry::{Point, Rect},
-    model_tr::{
-        bootloader::{theme::BLD_BG, title::Title, ReturnToC},
-        constant::{HEIGHT, WIDTH},
-    },
 };
 
-#[repr(u32)]
-#[derive(Copy, Clone)]
-pub enum MenuMsg {
-    Close = 1,
-    Reboot = 2,
-    FactoryReset = 3,
-}
-impl ReturnToC for MenuMsg {
-    fn return_to_c(self) -> u32 {
-        self as u32
-    }
-}
+use super::super::{
+    bootloader::{theme::BLD_BG, title::Title},
+    constant::{HEIGHT, WIDTH},
+};
 
 pub struct Menu {
     bg: Pad,
@@ -37,7 +25,7 @@ impl Menu {
 }
 
 impl Component for Menu {
-    type Msg = MenuMsg;
+    type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bg

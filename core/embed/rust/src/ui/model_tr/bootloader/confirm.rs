@@ -6,14 +6,16 @@ use crate::ui::{
     constant::screen,
     display::{Color, Icon},
     geometry::{Point, Rect, CENTER},
-    model_tr::{
-        component::{Button, ButtonMsg::Clicked},
+};
+
+use super::{
+    super::{
+        component::Button,
         constant::{HEIGHT, WIDTH},
         theme::WHITE,
     },
+    ReturnToC,
 };
-
-use super::ReturnToC;
 
 #[derive(Copy, Clone)]
 pub enum ConfirmMsg {
@@ -76,21 +78,22 @@ impl Component for Confirm {
         bounds
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(Clicked) = self.left.event(ctx, event) {
-            return if self.confirm_left {
-                Some(Self::Msg::Confirm)
-            } else {
-                Some(Self::Msg::Cancel)
-            };
-        };
-        if let Some(Clicked) = self.right.event(ctx, event) {
-            return if self.confirm_left {
-                Some(Self::Msg::Cancel)
-            } else {
-                Some(Self::Msg::Confirm)
-            };
-        };
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        // TODO: to be fixed in bootloader branch
+        // if let Some(Clicked) = self.left.event(ctx, event) {
+        //     return if self.confirm_left {
+        //         Some(Self::Msg::Confirm)
+        //     } else {
+        //         Some(Self::Msg::Cancel)
+        //     };
+        // };
+        // if let Some(Clicked) = self.right.event(ctx, event) {
+        //     return if self.confirm_left {
+        //         Some(Self::Msg::Cancel)
+        //     } else {
+        //         Some(Self::Msg::Confirm)
+        //     };
+        // };
         None
     }
 
@@ -111,6 +114,7 @@ impl Component for Confirm {
         self.right.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.left.bounds(sink);
         self.right.bounds(sink);

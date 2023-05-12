@@ -121,6 +121,7 @@ static void prepare_gamma_lut(float gamma) {
   }
 }
 
+#if defined TREZOR_MODEL_T
 static void gamma_correct_buffer_to_display(void) {
   // Gamma correct all the pixels in BUFFER_TO_DISPLAY.
   pixel_color *pixels = (pixel_color *)BUFFER_TO_DISPLAY->pixels;
@@ -131,6 +132,7 @@ static void gamma_correct_buffer_to_display(void) {
     }
   }
 }
+#endif
 
 float display_gamma(float gamma) {
   float prev_gamma = DISPLAY_GAMMA;
@@ -261,14 +263,10 @@ void display_init(void) {
 #include "background_T.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 #include "background_1.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
-#elif defined TREZOR_MODEL_R
-#include "background_R.h"
-  BACKGROUND = IMG_LoadTexture_RW(
-      RENDERER, SDL_RWFromMem(background_R_jpg, background_R_jpg_len), 0);
 #endif
 #endif
   if (BACKGROUND) {
@@ -281,7 +279,14 @@ void display_init(void) {
     sdl_touch_offset_x = EMULATOR_BORDER;
     sdl_touch_offset_y = EMULATOR_BORDER;
   }
+#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+  // T1 and TR do not have backlight capabilities in hardware, so
+  // setting its value here for emulator to avoid
+  // calling any `set_backlight` functions
+  DISPLAY_BACKLIGHT = 255;
+#else
   DISPLAY_BACKLIGHT = 0;
+#endif
 #ifdef TREZOR_EMULATOR_RASPI
   DISPLAY_ORIENTATION = 270;
   SDL_ShowCursor(SDL_DISABLE);
@@ -359,7 +364,7 @@ int display_orientation(int degrees) {
 int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
 
 int display_backlight(int val) {
-#if defined TREZOR_MODEL_1
+#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   val = 255;
 #endif
   if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {

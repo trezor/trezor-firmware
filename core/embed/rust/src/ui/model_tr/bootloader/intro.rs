@@ -4,18 +4,14 @@ use crate::ui::{
         Child, Component, Event, EventCtx, Pad,
     },
     geometry::{LinearPlacement, Point, Rect},
-    model_tr::{
-        bootloader::{
-            theme::{BLD_BG, TEXT_NORMAL},
-            title::Title,
-            ReturnToC,
-        },
-        component::ButtonMsg::Clicked,
-    },
 };
 
-use crate::ui::model_tr::{
-    bootloader::theme::bld_button_default,
+use super::super::{
+    bootloader::{
+        theme::{bld_button_default, BLD_BG, TEXT_NORMAL},
+        title::Title,
+        ReturnToC,
+    },
     component::{Button, ButtonPos},
     constant::{HEIGHT, WIDTH},
 };
@@ -89,13 +85,14 @@ impl Component for Intro {
         bounds
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(Clicked) = self.menu.event(ctx, event) {
-            return Some(Self::Msg::Menu);
-        };
-        if let Some(Clicked) = self.host.event(ctx, event) {
-            return Some(Self::Msg::Host);
-        };
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        // TODO: to be fixed in bootloader branch
+        // if let Some(Clicked) = self.menu.event(ctx, event) {
+        //     return Some(Self::Msg::Menu);
+        // };
+        // if let Some(Clicked) = self.host.event(ctx, event) {
+        //     return Some(Self::Msg::Host);
+        // };
         None
     }
 
@@ -107,6 +104,7 @@ impl Component for Intro {
         self.menu.paint();
     }
 
+    #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.title.bounds(sink);
         self.text.bounds(sink);

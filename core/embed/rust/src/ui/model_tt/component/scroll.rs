@@ -78,9 +78,9 @@ impl Component for ScrollBar {
     fn paint(&mut self) {
         fn dotsize(distance: usize, nhidden: usize) -> Icon {
             match (nhidden.saturating_sub(distance)).min(2 - distance) {
-                0 => Icon::new(theme::DOT_INACTIVE),
-                1 => Icon::new(theme::DOT_INACTIVE_HALF),
-                _ => Icon::new(theme::DOT_INACTIVE_QUARTER),
+                0 => theme::DOT_INACTIVE,
+                1 => theme::DOT_INACTIVE_HALF,
+                _ => theme::DOT_INACTIVE_QUARTER,
             }
         }
 
@@ -100,7 +100,7 @@ impl Component for ScrollBar {
             );
         for i in first_shown..(last_shown + 1) {
             let icon = if i == self.active_page {
-                Icon::new(theme::DOT_ACTIVE)
+                theme::DOT_ACTIVE
             } else if i <= first_shown + 1 {
                 let before_first_shown = first_shown;
                 dotsize(i - first_shown, before_first_shown)
@@ -108,7 +108,7 @@ impl Component for ScrollBar {
                 let after_last_shown = self.page_count - 1 - last_shown;
                 dotsize(last_shown - i, after_last_shown)
             } else {
-                Icon::new(theme::DOT_INACTIVE)
+                theme::DOT_INACTIVE
             };
             icon.draw(cursor, CENTER, theme::FG, theme::BG);
             cursor = cursor + Offset::on_axis(self.layout.axis, Self::DOT_INTERVAL);

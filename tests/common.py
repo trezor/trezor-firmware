@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, Optional
@@ -134,6 +135,22 @@ def recovery_enter_shares(
     groups: bool = False,
     click_info: bool = False,
 ) -> Generator[None, "ButtonRequest", None]:
+    if debug.model == "T":
+        yield from recovery_enter_shares_tt(
+            debug, shares, groups=groups, click_info=click_info
+        )
+    elif debug.model == "R":
+        yield from recovery_enter_shares_tr(debug, shares, groups=groups)
+    else:
+        raise ValueError(f"Unknown model: {debug.model}")
+
+
+def recovery_enter_shares_tt(
+    debug: "DebugLink",
+    shares: list[str],
+    groups: bool = False,
+    click_info: bool = False,
+) -> Generator[None, "ButtonRequest", None]:
     """Perform the recovery flow for a set of Shamir shares.
 
     For use in an input flow function.
@@ -184,6 +201,62 @@ def recovery_enter_shares(
         debug.press_yes()
 
 
+def recovery_enter_shares_tr(
+    debug: "DebugLink",
+    shares: list[str],
+    groups: bool = False,
+) -> Generator[None, "ButtonRequest", None]:
+    """Perform the recovery flow for a set of Shamir shares.
+
+    For use in an input flow function.
+    Example:
+
+    def input_flow():
+        yield  # start recovery
+        client.debug.press_yes()
+        yield from recovery_enter_shares(client.debug, SOME_SHARES)
+    """
+    word_count = len(shares[0].split(" "))
+
+    # Homescreen - proceed to word number selection
+    yield
+    debug.press_yes()
+    # Input word number
+    br = yield
+    assert br.code == ButtonRequestType.MnemonicWordCount
+    debug.input(str(word_count))
+    # Homescreen - proceed to share entry
+    yield
+    debug.press_yes()
+
+    # Enter shares
+    for share in shares:
+        br = yield
+        assert br.code == ButtonRequestType.RecoveryHomepage
+
+        # Word entering
+        yield
+        debug.press_yes()
+
+        # Enter mnemonic words
+        for word in share.split(" "):
+            debug.input(word)
+
+        if groups:
+            # Confirm share entered
+            yield
+            debug.press_yes()
+
+        # Homescreen - continue
+        # or Homescreen - confirm success
+        yield
+
+        # Finishing with current share
+        debug.press_yes()
+
+    yield
+
+
 def click_through(
     debug: "DebugLink", screens: int, code: Optional[ButtonRequestType] = None
 ) -> Generator[None, "ButtonRequest", None]:
@@ -207,6 +280,20 @@ def click_through(
 
 
 def read_and_confirm_mnemonic(
+    debug: "DebugLink", choose_wrong: bool = False
+) -> Generator[None, "ButtonRequest", Optional[str]]:
+    # TODO: these are very similar, reuse some code
+    if debug.model == "T":
+        mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
+    elif debug.model == "R":
+        mnemonic = yield from read_and_confirm_mnemonic_tr(debug, choose_wrong)
+    else:
+        raise ValueError(f"Unknown model: {debug.model}")
+
+    return mnemonic
+
+
+def read_and_confirm_mnemonic_tt(
     debug: "DebugLink", choose_wrong: bool = False
 ) -> Generator[None, "ButtonRequest", Optional[str]]:
     """Read a given number of mnemonic words from Trezor T screen and correctly
@@ -236,8 +323,41 @@ def read_and_confirm_mnemonic(
     debug.press_yes()
 
     # check share
-    for i in range(3):
+    for _ in range(3):
         word_pos = int(debug.wait_layout().text_content().split()[2])
+        index = word_pos - 1
+        if choose_wrong:
+            debug.input(mnemonic[(index + 1) % len(mnemonic)])
+            return None
+        else:
+            debug.input(mnemonic[index])
+
+    return " ".join(mnemonic)
+
+
+def read_and_confirm_mnemonic_tr(
+    debug: "DebugLink", choose_wrong: bool = False
+) -> Generator[None, "ButtonRequest", Optional[str]]:
+    mnemonic: list[str] = []
+    br = yield
+    assert br.pages is not None
+    for i in range(br.pages - 1):
+        layout = debug.wait_layout()
+        # First two pages have just instructions
+        if i > 1:
+            words = layout.seed_words()
+            mnemonic.extend(words)
+        debug.press_right()
+    debug.press_yes()
+
+    yield  # Select correct words...
+    debug.press_right()
+
+    # check share
+    for _ in range(3):
+        word_pos_match = re.search(r"\d+", debug.wait_layout().title())
+        assert word_pos_match is not None
+        word_pos = int(word_pos_match.group(0))
         index = word_pos - 1
         if choose_wrong:
             debug.input(mnemonic[(index + 1) % len(mnemonic)])

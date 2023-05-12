@@ -175,51 +175,8 @@ impl TextLayout {
     }
 
     /// Draw as much text as possible on the current screen.
-    pub fn render_text(&self, text: &str) {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
-    }
-
-    pub fn layout_ops(
-        mut self,
-        ops: &mut dyn Iterator<Item = Op<'_>>,
-        cursor: &mut Point,
-        sink: &mut dyn LayoutSink,
-    ) -> LayoutFit {
-        let init_cursor = *cursor;
-        let mut total_processed_chars = 0;
-
-        for op in ops {
-            match op {
-                Op::Color(color) => {
-                    self.style.text_color = color;
-                }
-                Op::Font(font) => {
-                    self.style.text_font = font;
-                }
-                Op::Text(text) => match self.layout_text(text, cursor, sink) {
-                    LayoutFit::Fitting {
-                        processed_chars, ..
-                    } => {
-                        total_processed_chars += processed_chars;
-                    }
-                    LayoutFit::OutOfBounds {
-                        processed_chars, ..
-                    } => {
-                        total_processed_chars += processed_chars;
-
-                        return LayoutFit::OutOfBounds {
-                            processed_chars: total_processed_chars,
-                            height: self.layout_height(init_cursor, *cursor),
-                        };
-                    }
-                },
-            }
-        }
-
-        LayoutFit::Fitting {
-            processed_chars: total_processed_chars,
-            height: self.layout_height(init_cursor, *cursor),
-        }
+    pub fn render_text(&self, text: &str) -> LayoutFit {
+        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer)
     }
 
     /// Loop through the `text` and try to fit it on the current screen,
@@ -343,7 +300,7 @@ impl TextLayout {
     }
 
     /// Overall height of the content, including paddings.
-    fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i16 {
+    pub fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i16 {
         self.padding_top
             + self.style.text_font.text_height()
             + (end_cursor.y - init_cursor.y)
@@ -507,38 +464,6 @@ pub mod trace {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Op<'a> {
-    /// Render text with current color and font.
-    Text(&'a str),
-    /// Set current text color.
-    Color(Color),
-    /// Set currently used font.
-    Font(Font),
-}
-
-impl<'a> Op<'a> {
-    pub fn skip_n_text_bytes(
-        ops: impl Iterator<Item = Op<'a>>,
-        skip_bytes: usize,
-    ) -> impl Iterator<Item = Op<'a>> {
-        let mut skipped = 0;
-
-        ops.filter_map(move |op| match op {
-            Op::Text(text) if skipped < skip_bytes => {
-                skipped = skipped.saturating_add(text.len());
-                if skipped > skip_bytes {
-                    let leave_bytes = skipped - skip_bytes;
-                    Some(Op::Text(&text[text.len() - leave_bytes..]))
-                } else {
-                    None
-                }
-            }
-            op_to_pass_through => Some(op_to_pass_through),
-        })
-    }
-}
-
 /// Carries info about the content that was processed
 /// on the current line.
 #[derive(Debug, PartialEq, Eq)]
@@ -557,7 +482,7 @@ struct Span {
 }
 
 impl Span {
-    fn fit_horizontally(
+    pub fn fit_horizontally(
         text: &str,
         max_width: i16,
         text_font: impl GlyphMetrics,

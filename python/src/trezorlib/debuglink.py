@@ -72,7 +72,7 @@ class UnstructuredJSONReader:
         self.json_str = json_str
         # We may not receive valid JSON, e.g. from an old model in upgrade tests
         try:
-            self.dict: AnyDict = json.loads(json_str)
+            self.dict: "AnyDict" = json.loads(json_str)
         except json.JSONDecodeError:
             self.dict = {}
 
@@ -92,8 +92,17 @@ class UnstructuredJSONReader:
 
         return list(recursively_find(self.dict))
 
+    def find_unique_object_with_key_and_value(
+        self, key: str, value: Any
+    ) -> Optional["AnyDict"]:
+        objects = self.find_objects_with_key_and_value(key, value)
+        if not objects:
+            return None
+        assert len(objects) == 1
+        return objects[0]
+
     def find_values_by_key(
-        self, key: str, only_type: Union[type, None] = None
+        self, key: str, only_type: Optional[type] = None
     ) -> List[Any]:
         def recursively_find(data: Any) -> Iterator[Any]:
             if isinstance(data, dict):
@@ -113,7 +122,7 @@ class UnstructuredJSONReader:
         return values
 
     def find_unique_value_by_key(
-        self, key: str, default: Any, only_type: Union[type, None] = None
+        self, key: str, default: Any, only_type: Optional[type] = None
     ) -> Any:
         values = self.find_values_by_key(key, only_type=only_type)
         if not values:
@@ -123,10 +132,7 @@ class UnstructuredJSONReader:
 
 
 class LayoutContent(UnstructuredJSONReader):
-    """Stores content of a layout as returned from Trezor.
-
-    Contains helper functions to extract specific parts of the layout.
-    """
+    """Contains helper functions to extract specific parts of the layout."""
 
     def __init__(self, json_tokens: Sequence[str]) -> None:
         json_str = "".join(json_tokens)
@@ -148,7 +154,7 @@ class LayoutContent(UnstructuredJSONReader):
             You are about to
             sign 3 actions.
             ********************
-            Icon:cancel [Cancel], --- [None], CONFIRM [Confirm]
+            ICON_CANCEL, -, CONFIRM
         """
         title_separator = f"\n{20*'-'}\n"
         btn_separator = f"\n{20*'*'}\n"
@@ -188,31 +194,72 @@ class LayoutContent(UnstructuredJSONReader):
 
     def text_content(self) -> str:
         """What is on the screen, in one long string, so content can be
-        asserted regardless of newlines.
+        asserted regardless of newlines. Also getting rid of possible ellipsis.
         """
-        return self.screen_content().replace("\n", " ")
+        content = self.screen_content().replace("\n", " ")
+        if content.endswith("..."):
+            content = content[:-3]
+        if content.startswith("..."):
+            content = content[3:]
+        return content
 
     def screen_content(self) -> str:
         """Getting text that is displayed in the main part of the screen.
         Preserving the line breaks.
         """
-        main_text_blocks: List[str] = []
+        # Look for paragraphs first (will match most of the time for TT)
         paragraphs = self.raw_content_paragraphs()
-        if not paragraphs:
-            return self.main_component()
-        for par in paragraphs:
-            par_content = ""
-            for line_or_newline in par:
-                par_content += line_or_newline
-            par_content.replace("\n", " ")
-            main_text_blocks.append(par_content)
-        return "\n".join(main_text_blocks)
+        if paragraphs:
+            main_text_blocks: List[str] = []
+            for par in paragraphs:
+                par_content = ""
+                for line_or_newline in par:
+                    par_content += line_or_newline
+                par_content.replace("\n", " ")
+                main_text_blocks.append(par_content)
+            return "\n".join(main_text_blocks)
 
-    def raw_content_paragraphs(self) -> Union[List[List[str]], None]:
+        # Formatted text
+        formatted_text = self.find_unique_object_with_key_and_value(
+            "component", "FormattedText"
+        )
+        if formatted_text:
+            text_lines = formatted_text["text"]
+            return "".join(text_lines)
+
+        # Check the choice_page - mainly for TR
+        choice_page = self.find_unique_object_with_key_and_value(
+            "component", "ChoicePage"
+        )
+        if choice_page:
+            left = choice_page.get("prev_choice", {}).get("content", "")
+            middle = choice_page.get("current_choice", {}).get("content", "")
+            right = choice_page.get("next_choice", {}).get("content", "")
+            return " ".join(choice for choice in (left, middle, right) if choice)
+
+        # Screen content - in TR share words
+        screen_content = self.find_unique_value_by_key(
+            "screen_content", default="", only_type=str
+        )
+        if screen_content:
+            return screen_content
+
+        # Flow page - for TR
+        flow_page = self.find_unique_value_by_key(
+            "flow_page", default={}, only_type=dict
+        )
+        if flow_page:
+            text_lines = flow_page["text"]
+            return "".join(text_lines)
+
+        # Default when not finding anything
+        return self.main_component()
+
+    def raw_content_paragraphs(self) -> Optional[List[List[str]]]:
         """Getting raw paragraphs as sent from Rust."""
         return self.find_unique_value_by_key("paragraphs", default=None, only_type=list)
 
-    def button_contents(self) -> List[str]:
+    def tt_check_seed_button_contents(self) -> List[str]:
         """Getting list of button contents."""
         buttons: List[str] = []
         button_objects = self.find_objects_with_key_and_value("component", "Button")
@@ -222,6 +269,28 @@ class LayoutContent(UnstructuredJSONReader):
             elif "text" in button:
                 buttons.append(button["text"])
         return buttons
+
+    def button_contents(self) -> List[str]:
+        """Getting list of button contents."""
+        buttons = self.find_unique_value_by_key("buttons", default={}, only_type=dict)
+
+        def get_button_content(btn_key: str) -> str:
+            button_obj = buttons.get(btn_key, {})
+            if button_obj.get("component") == "Button":
+                if "icon" in button_obj:
+                    return button_obj["icon"]
+                elif "text" in button_obj:
+                    return button_obj["text"]
+            elif button_obj.get("component") == "HoldToConfirm":
+                text = button_obj.get("loader", {}).get("text", "")
+                duration = button_obj.get("loader", {}).get("duration", "")
+                return f"{text} ({duration}ms)"
+
+            # default value
+            return "-"
+
+        button_keys = ("left_btn", "middle_btn", "right_btn")
+        return [get_button_content(btn_key) for btn_key in button_keys]
 
     def seed_words(self) -> List[str]:
         """Get all the seed words on the screen in order.
@@ -244,7 +313,7 @@ class LayoutContent(UnstructuredJSONReader):
 
     def passphrase(self) -> str:
         """Get passphrase from the layout."""
-        assert self.main_component() == "PassphraseKeyboard"
+        assert "PassphraseKeyboard" in self.all_components()
         return self.find_unique_value_by_key("passphrase", default="", only_type=str)
 
     def page_count(self) -> int:
@@ -264,6 +333,22 @@ class LayoutContent(UnstructuredJSONReader):
     def tt_pin_digits_order(self) -> str:
         """In what order the PIN buttons are shown on the screen. Only for TT."""
         return self.top_level_value("digits_order")
+
+    def get_middle_choice(self) -> str:
+        """What is the choice being selected right now."""
+        return self.choice_items()[1]
+
+    def choice_items(self) -> Tuple[str, str, str]:
+        """Getting actions for all three possible buttons."""
+        choice_obj = self.find_unique_value_by_key(
+            "choice_page", default={}, only_type=dict
+        )
+        if not choice_obj:
+            raise RuntimeError("No choice_page object in trace")
+        choice_keys = ("prev_choice", "current_choice", "next_choice")
+        return tuple(
+            choice_obj.get(choice, {}).get("content", "") for choice in choice_keys
+        )
 
 
 def multipage_content(layouts: List[LayoutContent]) -> str:
@@ -362,7 +447,7 @@ class DebugLink:
 
     def reset_debug_events(self) -> None:
         # Only supported on TT and above certain version
-        if self.model == "T" and not self.legacy_debug:
+        if self.model in ("T", "R") and not self.legacy_debug:
             return self._call(messages.DebugLinkResetDebugEvents())
         return None
 
@@ -407,6 +492,7 @@ class DebugLink:
         self,
         word: Optional[str] = None,
         button: Optional[messages.DebugButton] = None,
+        physical_button: Optional[messages.DebugPhysicalButton] = None,
         swipe: Optional[messages.DebugSwipeDirection] = None,
         x: Optional[int] = None,
         y: Optional[int] = None,
@@ -416,14 +502,21 @@ class DebugLink:
         if not self.allow_interactions:
             return None
 
-        args = sum(a is not None for a in (word, button, swipe, x))
+        args = sum(a is not None for a in (word, button, physical_button, swipe, x))
         if args != 1:
             raise ValueError(
-                "Invalid input - must use one of word, button, swipe, click(x,y)"
+                "Invalid input - must use one of word, button, physical_button, swipe, click(x,y)"
             )
 
         decision = messages.DebugLinkDecision(
-            button=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
+            button=button,
+            physical_button=physical_button,
+            swipe=swipe,
+            input=word,
+            x=x,
+            y=y,
+            wait=wait,
+            hold_ms=hold_ms,
         )
 
         ret = self._call(decision, nowait=not wait)
@@ -463,8 +556,8 @@ class DebugLink:
             f.write(screen_content)
             f.write("\n" + 80 * "/" + "\n")
 
-    # Type overloads make sure that when we supply `wait=True` into `click()`,
-    # it will always return `LayoutContent` and we do not need to assert `is not None`.
+    # Type overloads below make sure that when we supply `wait=True` into functions,
+    # they will always return `LayoutContent` and we do not need to assert `is not None`.
 
     @overload
     def click(self, click: Tuple[int, int]) -> None:
@@ -525,6 +618,57 @@ class DebugLink:
     def swipe_left(self, wait: bool = False) -> Union[LayoutContent, None]:
         return self.input(swipe=messages.DebugSwipeDirection.LEFT, wait=wait)
 
+    @overload
+    def press_left(self) -> None:
+        ...
+
+    @overload
+    def press_left(self, wait: Literal[True]) -> LayoutContent:
+        ...
+
+    def press_left(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(
+            physical_button=messages.DebugPhysicalButton.LEFT_BTN, wait=wait
+        )
+
+    @overload
+    def press_middle(self) -> None:
+        ...
+
+    @overload
+    def press_middle(self, wait: Literal[True]) -> LayoutContent:
+        ...
+
+    def press_middle(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(
+            physical_button=messages.DebugPhysicalButton.MIDDLE_BTN, wait=wait
+        )
+
+    @overload
+    def press_right(self) -> None:
+        ...
+
+    @overload
+    def press_right(self, wait: Literal[True]) -> LayoutContent:
+        ...
+
+    def press_right(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(
+            physical_button=messages.DebugPhysicalButton.RIGHT_BTN, wait=wait
+        )
+
+    def press_right_htc(
+        self, hold_ms: int, extra_ms: int = 200
+    ) -> Optional[LayoutContent]:
+        hold_ms = hold_ms + extra_ms  # safety margin
+        result = self.input(
+            physical_button=messages.DebugPhysicalButton.RIGHT_BTN,
+            hold_ms=hold_ms,
+        )
+        # sleeping little longer for UI to update
+        time.sleep(hold_ms / 1000 + 0.1)
+        return result
+
     def stop(self) -> None:
         self._call(messages.DebugLinkStop(), nowait=True)
 
@@ -535,8 +679,8 @@ class DebugLink:
         self, directory: str, refresh_index: Optional[int] = None
     ) -> None:
         self.screenshot_recording_dir = directory
-        # Different recording logic between TT and T1
-        if self.model == "T":
+        # Different recording logic between core and legacy
+        if self.model in ("T", "R"):
             self._call(
                 messages.DebugLinkRecordScreen(
                     target_directory=directory, refresh_index=refresh_index
@@ -550,7 +694,7 @@ class DebugLink:
     def stop_recording(self) -> None:
         self.screenshot_recording_dir = None
         # Different recording logic between TT and T1
-        if self.model == "T":
+        if self.model in ("T", "R"):
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
         else:
             self.t1_take_screenshots = False

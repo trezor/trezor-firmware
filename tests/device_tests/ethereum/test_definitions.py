@@ -198,7 +198,9 @@ METHODS = (
     _call_getaddress,
     _call_signmessage,
     pytest.param(_call_sign_typed_data, marks=pytest.mark.skip_t1),
-    pytest.param(_call_sign_typed_data_hash, marks=pytest.mark.skip_t2),
+    pytest.param(
+        _call_sign_typed_data_hash, marks=[pytest.mark.skip_t2, pytest.mark.skip_tr]
+    ),
 )
 
 

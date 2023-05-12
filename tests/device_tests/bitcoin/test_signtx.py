@@ -1516,6 +1516,7 @@ def test_lock_time_datetime(client: Client, lock_time_str: str):
 
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
+@pytest.mark.skip_tr(reason="Not implemented yet")
 def test_information(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
@@ -1568,6 +1569,7 @@ def test_information(client: Client):
 
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
+@pytest.mark.skip_tr(reason="Not implemented yet")
 def test_information_mixed(client: Client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
@@ -1624,6 +1626,7 @@ def test_information_mixed(client: Client):
 
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
+@pytest.mark.skip_tr(reason="Not implemented yet")
 def test_information_cancel(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 

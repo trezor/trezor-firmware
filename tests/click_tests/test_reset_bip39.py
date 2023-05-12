@@ -22,6 +22,7 @@ from trezorlib import device, messages
 
 from ..common import WITH_MOCK_URANDOM
 from . import reset
+from .common import go_next
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
@@ -64,7 +65,7 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_read(debug, "Success")
 
     # Your backup is done
-    debug.press_yes()
+    go_next(debug)
 
     # TODO: some validation of the generated secret?
 

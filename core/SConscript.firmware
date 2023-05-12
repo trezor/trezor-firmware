@@ -29,9 +29,9 @@ SOURCE_MOD = []
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = True
 
-if TREZOR_MODEL in ('1', 'R'):
-    FONT_NORMAL='Font_PixelOperator_Regular_8'
-    FONT_DEMIBOLD=None
+if TREZOR_MODEL in ('R',):
+    FONT_NORMAL='Font_Unifont_Regular_16'
+    FONT_DEMIBOLD='Font_Unifont_Bold_16'
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
 if TREZOR_MODEL in ('T', ):
@@ -571,11 +571,13 @@ if FROZEN:
     SOURCE_PY_DIR = 'src/'
 
     SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'trezor/sdcard.py',
+        ] if TREZOR_MODEL not in ('T',) else []
+    ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/common/*.py'))
 
     # UI layouts - common files and then model-specific. Exclude FIDO when BTC-only.
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/*.py',
@@ -589,14 +591,22 @@ if FROZEN:
                 SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/fido.py',
             ] if not EVERYTHING else []
         ))
-    elif TREZOR_MODEL in ('1', 'R'):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/__init__.py'))
+    elif TREZOR_MODEL in ('R'):
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/*.py',
+            exclude=[
+                SOURCE_PY_DIR + 'trezor/ui/layouts/tr/fido.py',
+            ] if not EVERYTHING else []
+        ))
     else:
         raise ValueError('Unknown Trezor model')
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'storage/sd_salt.py',
+        ] if TREZOR_MODEL not in ('T',) else []
+    ))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/__init__.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/*.py',
@@ -616,8 +626,11 @@ if FROZEN:
     )
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/common/sdcard.py',
+        ] if TREZOR_MODEL not in ('T',) else []
+    ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',

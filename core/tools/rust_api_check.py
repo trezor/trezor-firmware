@@ -95,7 +95,7 @@ def _get_all_qstr_code_types(file: Path) -> dict[str, dict[str, str]]:
             # There could be a default value
             default = None
             if "unwrap_or_else" in one_line:
-                default_match = re.search(r"unwrap_or_else\(\|_\|\s+(.*?)\)", one_line)
+                default_match = re.search(r"unwrap_or_else\(\|_?\|\s+(.*?)\)", one_line)
                 if default_match:
                     default = default_match.group(1)
                 else:

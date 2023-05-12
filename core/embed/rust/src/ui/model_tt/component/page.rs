@@ -38,13 +38,12 @@ impl ButtonPrevCancels {
     }
 
     fn icon(&self, is_first_page: bool) -> Icon {
-        let data = match self {
+        match self {
             ButtonPrevCancels::Never => theme::ICON_UP,
             ButtonPrevCancels::FirstPage if is_first_page => theme::ICON_CANCEL,
             ButtonPrevCancels::FirstPage => theme::ICON_UP,
             ButtonPrevCancels::AnyPage => theme::ICON_BACK,
-        };
-        Icon::new(data)
+        }
     }
 }
 
@@ -79,8 +78,8 @@ where
             scrollbar: ScrollBar::vertical(),
             swipe: Swipe::new(),
             pad: Pad::with_background(background),
-            button_prev: Button::with_icon(Icon::new(theme::ICON_UP)).initially_enabled(false),
-            button_next: Button::with_icon(Icon::new(theme::ICON_DOWN)),
+            button_prev: Button::with_icon(theme::ICON_UP).initially_enabled(false),
+            button_next: Button::with_icon(theme::ICON_DOWN),
             button_prev_cancels: ButtonPrevCancels::Never,
             is_go_back: None,
             swipe_left: false,
@@ -91,13 +90,13 @@ where
 
     pub fn with_back_button(mut self) -> Self {
         self.button_prev_cancels = ButtonPrevCancels::AnyPage;
-        self.button_prev = Button::with_icon(Icon::new(theme::ICON_BACK)).initially_enabled(true);
+        self.button_prev = Button::with_icon(theme::ICON_BACK).initially_enabled(true);
         self
     }
 
     pub fn with_cancel_on_first_page(mut self) -> Self {
         self.button_prev_cancels = ButtonPrevCancels::FirstPage;
-        self.button_prev = Button::with_icon(Icon::new(theme::ICON_CANCEL)).initially_enabled(true);
+        self.button_prev = Button::with_icon(theme::ICON_CANCEL).initially_enabled(true);
         self
     }
 
@@ -497,10 +496,11 @@ mod tests {
     use serde_json;
 
     use crate::{
+        strutil::SkipPrefix,
         trace::tests::trace,
         ui::{
             component::{
-                text::paragraphs::{Paragraph, ParagraphStrType, Paragraphs},
+                text::paragraphs::{Paragraph, Paragraphs},
                 Empty,
             },
             event::TouchEvent,
@@ -513,7 +513,7 @@ mod tests {
 
     const SCREEN: Rect = constant::screen().inset(theme::borders());
 
-    impl ParagraphStrType for &'static str {
+    impl SkipPrefix for &str {
         fn skip_prefix(&self, chars: usize) -> Self {
             &self[chars..]
         }

@@ -6,7 +6,7 @@
 // - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // - the rest is packed 1-bit glyph data
 
-/*   */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_32[] = { 0, 0, 8, 0, 0 };
+/*   */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_32[] = { 0, 0, 7, 0, 0 };  // width hand-changed from 8 to 7 to have 9px space between words
 /* ! */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_33[] = { 1, 7, 7, 2, 7, 250 };
 /* " */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_34[] = { 3, 3, 7, 1, 7, 182, 128 };
 /* # */ static const uint8_t Font_PixelOperatorMono_Regular_8_glyph_35[] = { 6, 6, 7, 0, 6, 75, 244, 146, 253, 32 };

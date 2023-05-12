@@ -2,7 +2,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            text::{formatted::FormattedFonts, LineBreaking, PageBreaking, TextStyle},
+            text::{LineBreaking, PageBreaking, TextStyle},
             FixedHeightBar,
         },
         display::{Color, Font, Icon},
@@ -53,62 +53,65 @@ pub const QR_SIDE_MAX: u32 = 140;
 
 // UI icons (greyscale).
 // Button icons.
-pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/x24.toif");
-pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/check24.toif");
-pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
-pub const ICON_BACK: &[u8] = include_res!("model_tt/res/caret-left24.toif");
-pub const ICON_FORWARD: &[u8] = include_res!("model_tt/res/caret-right24.toif");
-pub const ICON_UP: &[u8] = include_res!("model_tt/res/caret-up24.toif");
-pub const ICON_DOWN: &[u8] = include_res!("model_tt/res/caret-down24.toif");
-pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/finger24.toif");
+include_icon!(ICON_CANCEL, "model_tt/res/x24.toif");
+include_icon!(ICON_CONFIRM, "model_tt/res/check24.toif");
+include_icon!(ICON_SPACE, "model_tt/res/space.toif");
+include_icon!(ICON_BACK, "model_tt/res/caret-left24.toif");
+include_icon!(ICON_FORWARD, "model_tt/res/caret-right24.toif");
+include_icon!(ICON_UP, "model_tt/res/caret-up24.toif");
+include_icon!(ICON_DOWN, "model_tt/res/caret-down24.toif");
+include_icon!(ICON_CLICK, "model_tt/res/finger24.toif");
 
-pub const ICON_CORNER_CANCEL: &[u8] = include_res!("model_tt/res/x32.toif");
-pub const ICON_CORNER_INFO: &[u8] = include_res!("model_tt/res/info32.toif");
+include_icon!(ICON_CORNER_CANCEL, "model_tt/res/x32.toif");
+include_icon!(ICON_CORNER_INFO, "model_tt/res/info32.toif");
 
 // Checklist symbols.
-pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/arrow-right16.toif");
-pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check16.toif");
+include_icon!(ICON_LIST_CURRENT, "model_tt/res/arrow-right16.toif");
+include_icon!(ICON_LIST_CHECK, "model_tt/res/check16.toif");
 
 // Homescreen notifications.
-pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warning16.toif");
-pub const ICON_WARNING40: &[u8] = include_res!("model_tt/res/warning40.toif");
-pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock16.toif");
-pub const ICON_COINJOIN: &[u8] = include_res!("model_tt/res/coinjoin16.toif");
-pub const ICON_MAGIC: &[u8] = include_res!("model_tt/res/magic.toif");
+include_icon!(ICON_WARN, "model_tt/res/warning16.toif");
+include_icon!(ICON_WARNING40, "model_tt/res/warning40.toif");
+include_icon!(ICON_LOCK, "model_tt/res/lock16.toif");
+include_icon!(ICON_COINJOIN, "model_tt/res/coinjoin16.toif");
+include_icon!(ICON_MAGIC, "model_tt/res/magic.toif");
 
 // Text arrows.
-pub const ICON_PAGE_NEXT: &[u8] = include_res!("model_tt/res/page-next.toif");
-pub const ICON_PAGE_PREV: &[u8] = include_res!("model_tt/res/page-prev.toif");
+include_icon!(ICON_PAGE_NEXT, "model_tt/res/page-next.toif");
+include_icon!(ICON_PAGE_PREV, "model_tt/res/page-prev.toif");
 
 // Large, three-color icons.
 pub const WARN_COLOR: Color = YELLOW;
 pub const INFO_COLOR: Color = BLUE;
 pub const SUCCESS_COLOR: Color = GREEN;
 pub const ERROR_COLOR: Color = RED;
-pub const IMAGE_FG_WARN: &[u8] = include_res!("model_tt/res/fg-warning48.toif");
-pub const IMAGE_FG_SUCCESS: &[u8] = include_res!("model_tt/res/fg-check48.toif");
-pub const IMAGE_FG_ERROR: &[u8] = include_res!("model_tt/res/fg-error48.toif");
-pub const IMAGE_FG_INFO: &[u8] = include_res!("model_tt/res/fg-info48.toif");
-pub const IMAGE_FG_USER: &[u8] = include_res!("model_tt/res/fg-user48.toif");
-pub const IMAGE_BG_CIRCLE: &[u8] = include_res!("model_tt/res/circle48.toif");
-pub const IMAGE_BG_OCTAGON: &[u8] = include_res!("model_tt/res/octagon48.toif");
+include_icon!(IMAGE_FG_WARN, "model_tt/res/fg-warning48.toif");
+include_icon!(IMAGE_FG_SUCCESS, "model_tt/res/fg-check48.toif");
+include_icon!(IMAGE_FG_ERROR, "model_tt/res/fg-error48.toif");
+include_icon!(IMAGE_FG_INFO, "model_tt/res/fg-info48.toif");
+include_icon!(IMAGE_FG_USER, "model_tt/res/fg-user48.toif");
+include_icon!(IMAGE_BG_CIRCLE, "model_tt/res/circle48.toif");
+include_icon!(IMAGE_BG_OCTAGON, "model_tt/res/octagon48.toif");
 
 // Non-square button backgrounds.
-pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/bg-back40.toif");
-pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/bg-back52.toif");
+include_icon!(IMAGE_BG_BACK_BTN, "model_tt/res/bg-back40.toif");
+include_icon!(IMAGE_BG_BACK_BTN_TALL, "model_tt/res/bg-back52.toif");
 
 // Welcome screen.
-pub const ICON_LOGO: &[u8] = include_res!("model_tt/res/lock_full.toif");
+include_icon!(ICON_LOGO, "model_tt/res/lock_full.toif");
 
 // Default homescreen
 pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");
 
 // Scrollbar/PIN dots.
-pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
-pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");
-pub const DOT_INACTIVE_HALF: &[u8] = include_res!("model_tt/res/scroll-inactive-half.toif");
-pub const DOT_INACTIVE_QUARTER: &[u8] = include_res!("model_tt/res/scroll-inactive-quarter.toif");
-pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
+include_icon!(DOT_ACTIVE, "model_tt/res/scroll-active.toif");
+include_icon!(DOT_INACTIVE, "model_tt/res/scroll-inactive.toif");
+include_icon!(DOT_INACTIVE_HALF, "model_tt/res/scroll-inactive-half.toif");
+include_icon!(
+    DOT_INACTIVE_QUARTER,
+    "model_tt/res/scroll-inactive-quarter.toif"
+);
+include_icon!(DOT_SMALL, "model_tt/res/scroll-small.toif");
 
 pub const fn label_default() -> TextStyle {
     TEXT_NORMAL
@@ -507,8 +510,8 @@ pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, GREY_LIGHT, 
 pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
-    .with_ellipsis_icon(Icon::new(ICON_PAGE_NEXT), 0)
-    .with_prev_page_icon(Icon::new(ICON_PAGE_PREV), 0);
+    .with_ellipsis_icon(ICON_PAGE_NEXT, 0)
+    .with_prev_page_icon(ICON_PAGE_PREV, 0);
 
 /// Convert Python-side numeric id to a `TextStyle`.
 pub fn textstyle_number(num: i32) -> &'static TextStyle {
@@ -529,13 +532,6 @@ pub const TEXT_CHECKLIST_SELECTED: TextStyle =
     TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_CHECKLIST_DONE: TextStyle =
     TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
-
-pub const FORMATTED: FormattedFonts = FormattedFonts {
-    normal: Font::NORMAL,
-    demibold: Font::DEMIBOLD,
-    bold: Font::BOLD,
-    mono: Font::MONO,
-};
 
 pub const CONTENT_BORDER: i16 = 0;
 pub const BUTTON_HEIGHT: i16 = 50;

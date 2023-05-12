@@ -1,12 +1,12 @@
-use crate::ui::{
-    component::{
-        text::{paragraphs::ParagraphStrType, TextStyle},
-        Child, Component, Event, EventCtx, Label, Never, Pad,
+use crate::{
+    strutil::StringType,
+    ui::{
+        component::{text::TextStyle, Child, Component, Event, EventCtx, Label, Never, Pad},
+        constant::screen,
+        display::{self, Color, Font, Icon},
+        geometry::{Alignment::Center, Insets, Offset, Point, Rect, CENTER},
+        model_tt::theme::FG,
     },
-    constant::screen,
-    display::{self, Color, Font, Icon},
-    geometry::{Alignment::Center, Insets, Offset, Point, Rect, CENTER},
-    model_tt::theme::FG,
 };
 
 use crate::ui::model_tt::{
@@ -104,7 +104,7 @@ pub struct ResultScreen<'a, T> {
     footer: Child<ResultFooter<'a, T>>,
 }
 
-impl<'a, T: ParagraphStrType> ResultScreen<'a, T> {
+impl<'a, T: StringType> ResultScreen<'a, T> {
     pub fn new(
         style: &'a ResultStyle,
         icon: Icon,
@@ -130,7 +130,7 @@ impl<'a, T: ParagraphStrType> ResultScreen<'a, T> {
     }
 }
 
-impl<T: ParagraphStrType> Component for ResultScreen<'_, T> {
+impl<T: StringType> Component for ResultScreen<'_, T> {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {

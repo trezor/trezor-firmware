@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
+from trezor.ui.layouts import confirm_action
 from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
     show_group_share_success,
@@ -17,8 +18,6 @@ if TYPE_CHECKING:
 
 
 async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
-    from trezor.ui.layouts import confirm_action
-
     if dry_run:
         await confirm_action(
             ctx,
@@ -45,8 +44,11 @@ async def request_mnemonic(
     from . import word_validity
     from trezor.ui.layouts.common import button_request
     from trezor.ui.layouts.recovery import request_word
+    from trezor.ui.layouts import mnemonic_word_entering
 
-    await button_request(ctx, "mnemonic", ButtonRequestType.MnemonicInput)
+    await mnemonic_word_entering(ctx)
+
+    await button_request(ctx, "mnemonic", code=ButtonRequestType.MnemonicInput)
 
     words: list[str] = []
     for i in range(word_count):

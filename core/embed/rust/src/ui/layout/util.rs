@@ -8,9 +8,11 @@ use crate::{
         obj::Obj,
         util::try_or_raise,
     },
+    storage::{get_avatar_len, load_avatar},
+    strutil::SkipPrefix,
     ui::{
         component::text::{
-            paragraphs::{Paragraph, ParagraphSource, ParagraphStrType},
+            paragraphs::{Paragraph, ParagraphSource},
             TextStyle,
         },
         util::set_animation_disabled,
@@ -20,37 +22,32 @@ use cstr_core::cstr;
 use heapless::Vec;
 
 #[cfg(feature = "jpeg")]
-use crate::{
-    micropython::{
-        buffer::get_buffer,
-        ffi::{mp_obj_new_int, mp_obj_new_tuple},
-    },
-    ui::display::tjpgd::{jpeg_info, jpeg_test},
-};
+use crate::ui::display::tjpgd::{jpeg_info, jpeg_test};
+use crate::{micropython::buffer::get_buffer, ui::display::toif::Toif};
 
-pub fn iter_into_objs<const N: usize>(iterable: Obj) -> Result<[Obj; N], Error> {
-    let err = Error::ValueError(cstr!("Invalid iterable length"));
-    let mut vec = Vec::<Obj, N>::new();
-    let mut iter_buf = IterBuf::new();
-    for item in Iter::try_from_obj_with_buf(iterable, &mut iter_buf)? {
-        vec.push(item).map_err(|_| err)?;
-    }
+pub fn iter_into_array<T, E, const N: usize>(iterable: Obj) -> Result<[T; N], Error>
+where
+    T: TryFrom<Obj, Error = E>,
+    Error: From<E>,
+{
+    let vec: Vec<T, N> = iter_into_vec(iterable)?;
     // Returns error if array.len() != N
-    vec.into_array().map_err(|_| err)
+    vec.into_array()
+        .map_err(|_| value_error!("Invalid iterable length"))
 }
 
-pub fn iter_into_array<T, const N: usize>(iterable: Obj) -> Result<[T; N], Error>
+pub fn iter_into_vec<T, E, const N: usize>(iterable: Obj) -> Result<Vec<T, N>, Error>
 where
-    T: TryFrom<Obj, Error = Error>,
+    T: TryFrom<Obj, Error = E>,
+    Error: From<E>,
 {
-    let err = Error::ValueError(cstr!("Invalid iterable length"));
     let mut vec = Vec::<T, N>::new();
     let mut iter_buf = IterBuf::new();
     for item in Iter::try_from_obj_with_buf(iterable, &mut iter_buf)? {
-        vec.push(item.try_into()?).map_err(|_| err)?;
+        vec.push(item.try_into()?)
+            .map_err(|_| value_error!("Invalid iterable length"))?;
     }
-    // Returns error if array.len() != N
-    vec.into_array().map_err(|_| err)
+    Ok(vec)
 }
 
 /// Maximum number of characters that can be displayed on screen at once. Used
@@ -143,7 +140,7 @@ impl ParagraphSource for PropsList {
     fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
         let block = move || {
             let entry = self.items.get(index / 2)?;
-            let [key, value, value_is_mono]: [Obj; 3] = iter_into_objs(entry)?;
+            let [key, value, value_is_mono]: [Obj; 3] = iter_into_array(entry)?;
             let value_is_mono: bool = bool::try_from(value_is_mono)?;
             let obj: Obj;
             let style: &TextStyle;
@@ -197,12 +194,6 @@ impl ParagraphSource for PropsList {
     }
 }
 
-impl ParagraphStrType for StrBuffer {
-    fn skip_prefix(&self, chars: usize) -> Self {
-        self.offset(chars)
-    }
-}
-
 pub extern "C" fn upy_disable_animation(disable: Obj) -> Obj {
     let block = || {
         set_animation_disabled(disable.try_into()?);
@@ -214,27 +205,32 @@ pub extern "C" fn upy_disable_animation(disable: Obj) -> Obj {
 #[cfg(feature = "jpeg")]
 pub extern "C" fn upy_jpeg_info(data: Obj) -> Obj {
     let block = || {
-        let buffer = unsafe { get_buffer(data) };
+        let buffer = unsafe { get_buffer(data) }?;
 
-        if let Ok(buffer) = buffer {
-            let info = jpeg_info(buffer);
-
-            if let Some(info) = info {
-                let obj = unsafe {
-                    let values = [
-                        mp_obj_new_int(info.0.x as _),
-                        mp_obj_new_int(info.0.y as _),
-                        mp_obj_new_int(info.1 as _),
-                    ];
-                    mp_obj_new_tuple(3, values.as_ptr())
-                };
-
-                Ok(obj)
-            } else {
-                Err(Error::ValueError(cstr!("Invalid image format.")))
-            }
+        if let Some(info) = jpeg_info(buffer) {
+            let w = info.0.x as u16;
+            let h = info.0.y as u16;
+            let mcu_h = info.1 as u16;
+            (w.into(), h.into(), mcu_h.into()).try_into()
         } else {
-            Err(Error::ValueError(cstr!("Buffer error.")))
+            Err(value_error!("Invalid image format."))
+        }
+    };
+
+    unsafe { try_or_raise(block) }
+}
+
+pub extern "C" fn upy_toif_info(data: Obj) -> Obj {
+    let block = || {
+        let buffer = unsafe { get_buffer(data) }?;
+
+        if let Some(toif) = Toif::new(buffer) {
+            let w = toif.width() as u16;
+            let h = toif.height() as u16;
+            let is_grayscale = toif.is_grayscale();
+            (w.into(), h.into(), is_grayscale.into()).try_into()
+        } else {
+            Err(value_error!("Invalid image format."))
         }
     };
 
@@ -244,11 +240,18 @@ pub extern "C" fn upy_jpeg_info(data: Obj) -> Obj {
 #[cfg(feature = "jpeg")]
 pub extern "C" fn upy_jpeg_test(data: Obj) -> Obj {
     let block = || {
-        let buffer =
-            unsafe { get_buffer(data) }.map_err(|_| Error::ValueError(cstr!("Buffer error.")))?;
+        let buffer = unsafe { get_buffer(data) }?;
         let result = jpeg_test(buffer);
         Ok(result.into())
     };
 
     unsafe { try_or_raise(block) }
+}
+
+pub fn get_user_custom_image() -> Result<Gc<[u8]>, Error> {
+    let len = get_avatar_len()?;
+    let mut data = Gc::<[u8]>::new_slice(len)?;
+    // SAFETY: buffer is freshly allocated so nobody else has it.
+    load_avatar(unsafe { Gc::<[u8]>::as_mut(&mut data) })?;
+    Ok(data)
 }

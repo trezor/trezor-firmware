@@ -80,17 +80,11 @@ where
     }
 
     pub fn with_cancel_button(self) -> Self {
-        self.with_button(
-            Icon::new(theme::ICON_CORNER_CANCEL),
-            CancelInfoConfirmMsg::Cancelled,
-        )
+        self.with_button(theme::ICON_CORNER_CANCEL, CancelInfoConfirmMsg::Cancelled)
     }
 
     pub fn with_info_button(self) -> Self {
-        self.with_button(
-            Icon::new(theme::ICON_CORNER_INFO),
-            CancelInfoConfirmMsg::Info,
-        )
+        self.with_button(theme::ICON_CORNER_INFO, CancelInfoConfirmMsg::Info)
     }
 
     pub fn inner(&self) -> &T {

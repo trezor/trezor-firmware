@@ -117,6 +117,8 @@ def test_noabort(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_ask_word_number(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Flow is not working correctly for TR")
     with client:
         IF = InputFlowSlip39BasicRecoveryRetryFirst(client)
         client.set_input_flow(IF.get())

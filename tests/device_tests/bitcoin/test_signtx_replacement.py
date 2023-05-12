@@ -115,7 +115,7 @@ def test_p2pkh_fee_bump(client: Client):
         orig_index=1,
     )
 
-    new_model = client.features.model in ("T",)
+    new_model = client.features.model in ("T", "R")
 
     with client:
         client.set_expected_responses(

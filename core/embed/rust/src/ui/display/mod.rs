@@ -126,16 +126,16 @@ pub fn rect_fill_corners(r: Rect, fg_color: Color) {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct TextOverlay<'a> {
+pub struct TextOverlay<T> {
     area: Rect,
-    text: &'a str,
+    text: T,
     font: Font,
     max_height: i16,
     baseline: i16,
 }
 
-impl<'a> TextOverlay<'a> {
-    pub fn new(text: &'a str, font: Font) -> Self {
+impl<T: AsRef<str>> TextOverlay<T> {
+    pub fn new(text: T, font: Font) -> Self {
         let area = Rect::zero();
 
         Self {
@@ -147,8 +147,17 @@ impl<'a> TextOverlay<'a> {
         }
     }
 
+    pub fn set_text(&mut self, text: T) {
+        self.text = text;
+    }
+
+    pub fn get_text(&self) -> &T {
+        &self.text
+    }
+
+    // baseline relative to the underlying render area
     pub fn place(&mut self, baseline: Point) {
-        let text_width = self.font.text_width(self.text);
+        let text_width = self.font.text_width(self.text.as_ref());
         let text_height = self.font.text_height();
 
         let text_area_start = baseline + Offset::new(-(text_width / 2), -text_height);
@@ -167,7 +176,12 @@ impl<'a> TextOverlay<'a> {
 
         let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
-        for g in self.text.bytes().filter_map(|c| self.font.get_glyph(c)) {
+        for g in self
+            .text
+            .as_ref()
+            .bytes()
+            .filter_map(|c| self.font.get_glyph(c))
+        {
             let top = self.max_height - self.baseline - g.bearing_y;
             let char_area = Rect::new(
                 Point::new(tot_adv + g.bearing_x, top),
@@ -755,9 +769,9 @@ fn rect_rounded2_get_pixel(
 /// Optionally draws a text inside the rectangle and adjusts its color to match
 /// the fill. The coordinates of the text are specified in the TextOverlay
 /// struct.
-pub fn bar_with_text_and_fill(
+pub fn bar_with_text_and_fill<T: AsRef<str>>(
     area: Rect,
-    overlay: Option<TextOverlay>,
+    overlay: Option<&TextOverlay<T>>,
     fg_color: Color,
     bg_color: Color,
     fill_from: i16,
@@ -855,7 +869,7 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
     );
 }
 
-/// Display text right-alligned to a certain Point
+/// Display text right-aligned to a certain Point
 pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     let w = font.text_width(text);
     display::text(
@@ -869,7 +883,6 @@ pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_c
 }
 
 pub fn text_top_left(position: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
-    // let w = font.text_width(text);
     let h = font.text_height();
     display::text(
         position.x,

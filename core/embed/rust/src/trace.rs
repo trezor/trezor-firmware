@@ -5,6 +5,7 @@ pub trait Tracer {
     fn int(&mut self, key: &str, i: i64);
     fn string(&mut self, key: &str, s: &str);
     fn bool(&mut self, key: &str, b: bool);
+    fn null(&mut self, key: &str);
 
     fn in_child(&mut self, key: &str, block: &dyn Fn(&mut dyn Tracer));
     fn in_list(&mut self, key: &str, block: &dyn Fn(&mut dyn ListTracer));
@@ -167,6 +168,11 @@ impl<F: FnMut(&str)> Tracer for JsonTracer<F> {
     fn bool(&mut self, key: &str, b: bool) {
         self.key(key);
         (self.write_fn)(if b { "true" } else { "false" });
+    }
+
+    fn null(&mut self, key: &str) {
+        self.key(key);
+        (self.write_fn)("null");
     }
 
     fn in_child(&mut self, key: &str, block: &dyn Fn(&mut dyn Tracer)) {

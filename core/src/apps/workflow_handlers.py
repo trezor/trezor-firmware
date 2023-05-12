@@ -47,10 +47,13 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.management.change_pin"
     if msg_type == MessageType.ChangeWipeCode:
         return "apps.management.change_wipe_code"
-    elif msg_type == MessageType.GetNonce:
+    if msg_type == MessageType.GetNonce:
         return "apps.management.get_nonce"
-    elif msg_type == MessageType.RebootToBootloader:
+    if msg_type == MessageType.RebootToBootloader:
         return "apps.management.reboot_to_bootloader"
+
+    if utils.MODEL in ("R",) and msg_type == MessageType.ShowDeviceTutorial:
+        return "apps.management.show_tutorial"
 
     if utils.USE_SD_CARD and msg_type == MessageType.SdProtect:
         return "apps.management.sd_protect"

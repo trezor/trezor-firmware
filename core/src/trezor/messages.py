@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
+    from trezor.enums import DebugPhysicalButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import EthereumDataType  # noqa: F401
@@ -2611,6 +2612,12 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["UnlockedPathRequest"]:
             return isinstance(msg, cls)
 
+    class ShowDeviceTutorial(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ShowDeviceTutorial"]:
+            return isinstance(msg, cls)
+
     class DebugLinkDecision(protobuf.MessageType):
         button: "DebugButton | None"
         swipe: "DebugSwipeDirection | None"
@@ -2619,6 +2626,7 @@ if TYPE_CHECKING:
         y: "int | None"
         wait: "bool | None"
         hold_ms: "int | None"
+        physical_button: "DebugPhysicalButton | None"
 
         def __init__(
             self,
@@ -2630,6 +2638,7 @@ if TYPE_CHECKING:
             y: "int | None" = None,
             wait: "bool | None" = None,
             hold_ms: "int | None" = None,
+            physical_button: "DebugPhysicalButton | None" = None,
         ) -> None:
             pass
 

@@ -356,6 +356,8 @@ def input_flow_scroll_down(client: Client, cancel: bool = False):
 
 
 def input_flow_go_back(client: Client, cancel: bool = False):
+    if client.features.model == "R":
+        pytest.skip("Go back not supported for model R")
     return InputFlowEthereumSignTxGoBack(client, cancel).get()
 
 

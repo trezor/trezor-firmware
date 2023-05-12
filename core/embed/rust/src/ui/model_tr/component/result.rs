@@ -1,11 +1,14 @@
-use crate::ui::{
-    component::{
-        text::paragraphs::{ParagraphStrType, ParagraphVecShort, Paragraphs},
-        Child, Component, Event, EventCtx, Never, Pad,
+use crate::{
+    strutil::StringType,
+    ui::{
+        component::{
+            text::paragraphs::{ParagraphVecShort, Paragraphs},
+            Child, Component, Event, EventCtx, Never, Pad,
+        },
+        constant::{screen, HEIGHT, WIDTH},
+        display::{Color, Icon},
+        geometry::{Offset, Point, Rect, CENTER},
     },
-    constant::{screen, HEIGHT, WIDTH},
-    display::{Color, Icon},
-    geometry::{Offset, Point, Rect, CENTER},
 };
 
 pub struct ResultScreen<T> {
@@ -18,7 +21,7 @@ pub struct ResultScreen<T> {
     message_bottom: Child<Paragraphs<ParagraphVecShort<T>>>,
 }
 
-impl<T: ParagraphStrType> ResultScreen<T> {
+impl<T: StringType> ResultScreen<T> {
     pub fn new(
         fg_color: Color,
         bg_color: Color,
@@ -46,7 +49,7 @@ impl<T: ParagraphStrType> ResultScreen<T> {
     }
 }
 
-impl<T: ParagraphStrType> Component for ResultScreen<T> {
+impl<T: StringType> Component for ResultScreen<T> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
