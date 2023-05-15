@@ -76,7 +76,11 @@ where
         if let Some(text) = btn_details.text.clone() {
             Button::with_text(pos, text, btn_details.style())
         } else if let Some(icon) = btn_details.icon {
-            Button::with_icon(pos, icon, btn_details.style())
+            if let Some(pressed) = btn_details.pressed_icon {
+                Button::with_icon_and_pressed(pos, icon, pressed, btn_details.style())
+            } else {
+                Button::with_icon(pos, icon, btn_details.style())
+            }
         } else {
             panic!("ButtonContainer: no text or icon provided");
         }
@@ -473,8 +477,11 @@ where
                 ButtonContent::Text(text) => {
                     t.string("text", text.as_ref());
                 }
-                ButtonContent::Icon(_cursor) => {
+                ButtonContent::Icon(_cursor, None) => {
                     t.bool("icon", true);
+                }
+                ButtonContent::Icon(_cursor, Some(_)) => {
+                    t.bool("icon (with pressed state)", true);
                 }
             }
         } else if let ButtonType::HoldToConfirm(htc) = &self.button_type {

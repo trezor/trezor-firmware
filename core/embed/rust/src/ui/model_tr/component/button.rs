@@ -58,7 +58,16 @@ where
     }
 
     pub fn with_icon(pos: ButtonPos, image: Icon, styles: ButtonStyleSheet) -> Self {
-        Self::new(pos, ButtonContent::Icon(image), styles)
+        Self::new(pos, ButtonContent::Icon(image, None), styles)
+    }
+
+    pub fn with_icon_and_pressed(
+        pos: ButtonPos,
+        image: Icon,
+        pressed: Icon,
+        styles: ButtonStyleSheet,
+    ) -> Self {
+        Self::new(pos, ButtonContent::Icon(image, Some(pressed)), styles)
     }
 
     pub fn content(&self) -> &ButtonContent<T> {
@@ -74,7 +83,7 @@ where
 
     /// Changing the icon content of the button.
     pub fn set_icon(&mut self, image: Icon) {
-        self.content = ButtonContent::Icon(image);
+        self.content = ButtonContent::Icon(image, None);
     }
 
     /// Changing the text content of the button.
@@ -121,7 +130,18 @@ where
             };
             let content_width = match &self.content {
                 ButtonContent::Text(text) => style.font.visible_text_width(text.as_ref()),
-                ButtonContent::Icon(icon) => icon.toif.width() - 1,
+                ButtonContent::Icon(icon, icon_pressed) => {
+                    let width = if self.state == State::Pressed {
+                        if let Some(icon_pressed) = icon_pressed {
+                            icon_pressed.toif.width()
+                        } else {
+                            icon.toif.width()
+                        }
+                    } else {
+                        icon.toif.width()
+                    };
+                    width - 1
+                }
             };
             content_width + 2 * outline
         };
@@ -131,11 +151,19 @@ where
         // drawing the icon in active (black on white) state
         let button_height = match &self.content {
             ButtonContent::Text(_) => theme::BUTTON_HEIGHT,
-            ButtonContent::Icon(icon) => {
+            ButtonContent::Icon(icon, icon_pressed) => {
                 if style.with_outline {
                     theme::BUTTON_HEIGHT
                 } else {
-                    icon.toif.height()
+                    if self.state == State::Pressed {
+                        if let Some(icon_pressed) = icon_pressed {
+                            icon_pressed.toif.height()
+                        } else {
+                            icon.toif.height()
+                        }
+                    } else {
+                        icon.toif.height()
+                    }
                 }
             }
         };
@@ -246,7 +274,22 @@ where
                     background_color,
                 );
             }
-            ButtonContent::Icon(icon) => {
+            ButtonContent::Icon(icon, pressed) => {
+                let mut fg_color = text_color;
+                let mut bg_color = background_color;
+                let icon = if self.state == State::Pressed {
+                    // Inverse colors for pressed state
+                    if let Some(pressed) = pressed {
+                        fg_color = background_color;
+                        bg_color = text_color;
+                        pressed
+                    } else {
+                        icon
+                    }
+                } else {
+                    icon
+                };
+
                 if style.with_outline {
                     // Accounting for the 8*8 icon with empty left column and bottom row
                     // (which fits the outline nicely and symmetrically)
@@ -255,21 +298,13 @@ where
                 } else {
                     // Positioning the icon in the corresponding corner/center
                     match self.pos {
-                        ButtonPos::Left => icon.draw(
-                            area.bottom_left(),
-                            BOTTOM_LEFT,
-                            text_color,
-                            background_color,
-                        ),
-                        ButtonPos::Right => icon.draw(
-                            area.bottom_right(),
-                            BOTTOM_RIGHT,
-                            text_color,
-                            background_color,
-                        ),
-                        ButtonPos::Middle => {
-                            icon.draw(area.center(), CENTER, text_color, background_color)
+                        ButtonPos::Left => {
+                            icon.draw(area.bottom_left(), BOTTOM_LEFT, fg_color, bg_color)
                         }
+                        ButtonPos::Right => {
+                            icon.draw(area.bottom_right(), BOTTOM_RIGHT, fg_color, bg_color)
+                        }
+                        ButtonPos::Middle => icon.draw(area.center(), CENTER, bg_color, bg_color),
                     }
                 }
             }
@@ -285,7 +320,7 @@ enum State {
 
 pub enum ButtonContent<T> {
     Text(T),
-    Icon(Icon),
+    Icon(Icon, Option<Icon>),
 }
 
 pub struct ButtonStyleSheet {
@@ -354,6 +389,7 @@ impl ButtonStyleSheet {
 pub struct ButtonDetails<T> {
     pub text: Option<T>,
     pub icon: Option<Icon>,
+    pub pressed_icon: Option<Icon>,
     pub duration: Option<Duration>,
     pub with_outline: bool,
     pub with_arms: bool,
@@ -367,6 +403,7 @@ impl<T> ButtonDetails<T> {
         Self {
             text: Some(text),
             icon: None,
+            pressed_icon: None,
             duration: None,
             with_outline: true,
             with_arms: false,
@@ -380,6 +417,7 @@ impl<T> ButtonDetails<T> {
         Self {
             text: None,
             icon: Some(icon),
+            pressed_icon: None,
             duration: None,
             with_outline: true,
             with_arms: false,
@@ -398,6 +436,7 @@ impl<T> ButtonDetails<T> {
         Self::icon(Icon::new(theme::ICON_CANCEL))
             .with_no_outline()
             .with_offset(Offset::new(2, -2))
+            .with_pressed_icon(Icon::new(theme::ICON_CANCEL_INVERTED))
     }
 
     /// Left arrow to signal going back. No outline.
@@ -462,6 +501,12 @@ impl<T> ButtonDetails<T> {
     /// Default duration of the hold-to-confirm - 1 second.
     pub fn with_default_duration(mut self) -> Self {
         self.duration = Some(Duration::from_millis(DEFAULT_DURATION_MS));
+        self
+    }
+
+    /// Second icon for the pressed state
+    pub fn with_pressed_icon(mut self, icon: Icon) -> Self {
+        self.pressed_icon = Some(icon);
         self
     }
 
@@ -563,11 +608,15 @@ where
     }
 
     /// Left cancel, armed text and icon.
-    pub fn cancel_armed_icon(middle: T, right: Icon) -> Self {
+    pub fn cancel_armed_icon(middle: T, right: (Icon, Option<Icon>)) -> Self {
+        let mut right_btn = ButtonDetails::icon(right.0).with_no_outline();
+        if let Some(pressed) = right.1 {
+            right_btn = right_btn.with_pressed_icon(pressed);
+        }
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(middle)),
-            Some(ButtonDetails::icon(right).with_no_outline()),
+            Some(right_btn),
         )
     }
 
@@ -908,7 +957,8 @@ where
         t.component("Button");
         match &self.content {
             ButtonContent::Text(text) => t.string("text", text.as_ref()),
-            ButtonContent::Icon(_) => t.bool("icon", true),
+            ButtonContent::Icon(_, None) => t.bool("icon", true),
+            ButtonContent::Icon(_, Some(_)) => t.bool("icon (with pressed state)", true),
         }
     }
 }
