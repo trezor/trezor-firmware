@@ -164,7 +164,7 @@ env.Replace(
         'BOOTLOADER',
         'TREZOR_EMULATOR',
         'HW_MODEL=' + MODEL_AS_NUMBER,
-        'HW_REVISION=' + ('4' if TREZOR_MODEL in ('R',) else '0'),
+        'HW_REVISION=' + ('6' if TREZOR_MODEL in ('R',) else '0'),
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'TREZOR_BOARD=\\"board-unix.h\\"',
         'PB_FIELD_16BIT',
