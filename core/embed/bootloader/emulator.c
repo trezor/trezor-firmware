@@ -72,7 +72,7 @@ __attribute__((noreturn)) void jump_to(void *addr) {
                             "STORAGE WAS ERASED");
   } else {
     printf("storage was retained\n");
-    screen_install_success("STORAGE WAS RETAINED", true, true);
+    screen_emulator_result("STORAGE WAS RETAINED");
   }
   display_backlight(180);
   display_refresh();

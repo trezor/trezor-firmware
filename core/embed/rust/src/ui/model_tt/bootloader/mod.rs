@@ -371,7 +371,7 @@ extern "C" fn screen_install_fail() {
     show(&mut frame, true);
 }
 
-fn screen_install_success_bld(msg: &'static str, complete_draw: bool) {
+fn screen_install_success_bld(msg: &str, complete_draw: bool) {
     let mut frame = ResultScreen::new(
         &RESULT_FW_INSTALL,
         Icon::new(CHECK40),
@@ -382,7 +382,7 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) {
     show(&mut frame, complete_draw);
 }
 
-fn screen_install_success_initial(msg: &'static str, complete_draw: bool) {
+fn screen_install_success_initial(msg: &str, complete_draw: bool) {
     let mut frame = ResultScreen::new(
         &RESULT_INITIAL,
         Icon::new(CHECK40),
@@ -395,15 +395,23 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) {
 
 #[no_mangle]
 extern "C" fn screen_install_success(
-    reboot_msg: *const cty::c_char,
+    restart_seconds: u8,
     initial_setup: bool,
     complete_draw: bool,
 ) {
-    let msg = unwrap!(unsafe { from_c_str(reboot_msg) });
-    if initial_setup {
-        screen_install_success_initial(msg, complete_draw)
+    let mut msg: String<24> = String::new();
+
+    if restart_seconds >= 1 {
+        unwrap!(msg.push_str("RESTARTING IN "));
+        unwrap!(msg.push_str(inttostr!(restart_seconds)));
     } else {
-        screen_install_success_bld(msg, complete_draw)
+        unwrap!(msg.push_str(RECONNECT_MESSAGE));
+    }
+
+    if initial_setup {
+        screen_install_success_initial(msg.as_str(), complete_draw)
+    } else {
+        screen_install_success_bld(msg.as_str(), complete_draw)
     }
     display::refresh();
 }
@@ -418,4 +426,19 @@ extern "C" fn screen_welcome_model() {
 extern "C" fn screen_welcome() {
     let mut frame = Welcome::new();
     show(&mut frame, true);
+}
+
+#[cfg(feature = "bootloader")]
+#[no_mangle]
+extern "C" fn screen_emulator_result(reboot_msg: *const cty::c_char) {
+    let msg = unwrap!(unsafe { from_c_str(reboot_msg) });
+
+    let mut frame = ResultScreen::new(
+        &RESULT_FW_INSTALL,
+        Icon::new(CHECK40),
+        "Jumped to firmware",
+        msg,
+        true,
+    );
+    show(&mut frame, false);
 }

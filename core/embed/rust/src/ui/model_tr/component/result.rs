@@ -9,23 +9,23 @@ const MESSAGE_AREA_START: i16 = 26;
 const FOOTER_AREA_START: i16 = 40;
 const ICON_TOP: i16 = 12;
 
-pub struct ResultScreen {
+pub struct ResultScreen<'a> {
     bg: Pad,
     small_pad: Pad,
     fg_color: Color,
     bg_color: Color,
     icon: Icon,
     message_top: Child<Label<&'static str>>,
-    message_bottom: Child<Label<&'static str>>,
+    message_bottom: Child<Label<&'a str>>,
 }
 
-impl ResultScreen {
+impl<'a> ResultScreen<'a> {
     pub fn new(
         fg_color: Color,
         bg_color: Color,
         icon: Icon,
         title: Label<&'static str>,
-        content: Label<&'static str>,
+        content: Label<&'a str>,
         complete_draw: bool,
     ) -> Self {
         let mut instance = Self {
@@ -47,7 +47,7 @@ impl ResultScreen {
     }
 }
 
-impl Component for ResultScreen {
+impl<'a> Component for ResultScreen<'a> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {

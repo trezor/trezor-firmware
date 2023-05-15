@@ -166,7 +166,7 @@ extern "C" fn screen_install_confirm(
         title_str,
         message,
         alert,
-        Some(fingerprint),
+        Some(("FW FINGERPRINT", fingerprint)),
         "INSTALL",
     );
     run(&mut frame)
@@ -263,7 +263,7 @@ fn screen_progress(
 extern "C" fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
     screen_progress(
         "Installing",
-        "Firmware",
+        "firmware",
         progress,
         initialize,
         BLD_FG,
@@ -275,7 +275,7 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, _initial_
 #[no_mangle]
 extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
     screen_progress(
-        "Wiping",
+        "Resetting",
         "Trezor",
         progress,
         initialize,
@@ -320,7 +320,7 @@ extern "C" fn screen_wipe_fail() {
         .vertically_aligned(Alignment::Center);
 
     let content = Label::new(
-        "Reconnect\nthe device",
+        "Please reconnect\nthe device",
         Alignment::Center,
         theme::TEXT_NORMAL,
     )
@@ -351,7 +351,7 @@ extern "C" fn screen_install_fail() {
         .vertically_aligned(Alignment::Center);
 
     let content = Label::new(
-        "Reconnect\nthe device",
+        "Please reconnect\nthe device",
         Alignment::Center,
         theme::TEXT_NORMAL,
     )
@@ -363,15 +363,23 @@ extern "C" fn screen_install_fail() {
 
 #[no_mangle]
 extern "C" fn screen_install_success(
-    reboot_msg: *const cty::c_char,
+    restart_seconds: u8,
     _initial_setup: bool,
     complete_draw: bool,
 ) {
-    let msg = unwrap!(unsafe { from_c_str(reboot_msg) });
-    let title = Label::new("Installed", Alignment::Center, theme::TEXT_BOLD)
+    let mut msg: String<24> = String::new();
+
+    if restart_seconds >= 1 {
+        unwrap!(msg.push_str("Restarting in "));
+        unwrap!(msg.push_str(inttostr!(restart_seconds)));
+    } else {
+        unwrap!(msg.push_str("Please reconnect\nthe device"));
+    }
+
+    let title = Label::new("Firmware installed", Alignment::Center, theme::TEXT_BOLD)
         .vertically_aligned(Alignment::Center);
 
-    let content = Label::new(msg, Alignment::Center, theme::TEXT_NORMAL)
+    let content = Label::new(msg.as_str(), Alignment::Center, theme::TEXT_NORMAL)
         .vertically_aligned(Alignment::Center);
 
     let mut frame = ResultScreen::new(
@@ -394,5 +402,27 @@ extern "C" fn screen_welcome() {
 #[no_mangle]
 extern "C" fn screen_welcome_model() {
     let mut frame = WelcomeScreen::new();
+    show(&mut frame);
+}
+
+#[cfg(feature = "bootloader")]
+#[no_mangle]
+extern "C" fn screen_emulator_result(reboot_msg: *const cty::c_char) {
+    let msg = unwrap!(unsafe { from_c_str(reboot_msg) });
+
+    let title = Label::new("Jumped to firmware", Alignment::Center, theme::TEXT_BOLD)
+        .vertically_aligned(Alignment::Center);
+
+    let content = Label::new(msg, Alignment::Center, theme::TEXT_NORMAL)
+        .vertically_aligned(Alignment::Center);
+
+    let mut frame = ResultScreen::new(
+        BLD_FG,
+        BLD_BG,
+        Icon::new(ICON_SPINNER),
+        title,
+        content,
+        true,
+    );
     show(&mut frame);
 }

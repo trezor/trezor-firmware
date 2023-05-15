@@ -19,11 +19,15 @@ void screen_fatal_error_rust(const char* title, const char* msg,
                              const char* footer);
 void screen_wipe_success(void);
 void screen_wipe_fail(void);
-uint32_t screen_install_success(const char* reboot_msg, bool initial_setup,
+uint32_t screen_install_success(uint8_t restart_seconds, bool initial_setup,
                                 bool complete_draw);
 uint32_t screen_install_fail(void);
 void screen_welcome_model(void);
 void screen_welcome(void);
 void screen_boot_empty(bool fading);
+
+#if defined TREZOR_EMULATOR && defined BOOTLOADER
+void screen_emulator_result(const char* reboot_msg);
+#endif
 
 void display_image(int16_t x, int16_t y, const uint8_t* data, uint32_t datalen);

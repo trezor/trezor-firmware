@@ -36,7 +36,8 @@ pub struct Confirm<'a> {
     buttons: ButtonController<&'static str>,
     buttons_info: ButtonController<&'static str>,
     alert: Option<Label<&'a str>>,
-    info: Option<Label<&'a str>>,
+    info_title: Option<&'static str>,
+    info_text: Option<Label<&'a str>>,
     info_shown: bool,
 }
 
@@ -46,7 +47,7 @@ impl<'a> Confirm<'a> {
         label: &'static str,
         message: Label<&'a str>,
         alert: Option<Label<&'a str>>,
-        info: Option<Label<&'a str>>,
+        info: Option<(&'static str, Label<&'a str>)>,
         text: &'static str,
     ) -> Self {
         let controller = if info.is_some() {
@@ -57,17 +58,25 @@ impl<'a> Confirm<'a> {
         } else {
             ButtonController::new(ButtonLayout::cancel_none_text(text))
         };
-        Self {
+        let mut instance = Self {
             bg: Pad::with_background(bg_color).with_clear(),
             bg_color,
             label,
             message: Child::new(message),
             alert,
-            info,
+            info_title: None,
+            info_text: None,
             buttons: controller,
             buttons_info: ButtonController::new(ButtonLayout::arrow_none_none()),
             info_shown: false,
-        }
+        };
+
+        if let Some(info) = info {
+            instance.info_title = Some(info.0);
+            instance.info_text = Some(info.1);
+        };
+
+        instance
     }
 }
 
@@ -100,7 +109,7 @@ impl<'a> Component for Confirm<'a> {
 
         self.message.place(message_area);
         self.alert.place(alert_area);
-        self.info.place(Rect::new(
+        self.info_text.place(Rect::new(
             Point::new(0, TITLE_AREA_HEIGHT),
             Point::new(WIDTH, HEIGHT - BUTTON_HEIGHT),
         ));
@@ -124,7 +133,7 @@ impl<'a> Component for Confirm<'a> {
                 self.request_complete_repaint(ctx);
             };
             None
-        } else if self.info.is_some() {
+        } else if self.info_text.is_some() {
             match self.buttons.event(ctx, event) {
                 Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) => Some(ConfirmMsg::Cancel),
                 Some(ButtonControllerMsg::Triggered(ButtonPos::Middle)) => {
@@ -133,7 +142,7 @@ impl<'a> Component for Confirm<'a> {
                 Some(ButtonControllerMsg::Triggered(ButtonPos::Right)) => {
                     self.info_shown = true;
                     self.bg.clear();
-                    self.info.request_complete_repaint(ctx);
+                    self.info_text.request_complete_repaint(ctx);
                     self.buttons_info.request_complete_repaint(ctx);
                     self.request_complete_repaint(ctx);
                     None
@@ -152,12 +161,18 @@ impl<'a> Component for Confirm<'a> {
     fn paint(&mut self) {
         self.bg.paint();
 
-        display::text_top_left(Point::zero(), self.label, Font::BOLD, WHITE, self.bg_color);
-
         if self.info_shown {
-            self.info.paint();
+            display::text_top_left(
+                Point::zero(),
+                unwrap!(self.info_title),
+                Font::BOLD,
+                WHITE,
+                self.bg_color,
+            );
+            self.info_text.paint();
             self.buttons_info.paint();
         } else {
+            display::text_top_left(Point::zero(), self.label, Font::BOLD, WHITE, self.bg_color);
             self.message.paint();
             self.alert.paint();
             self.buttons.paint();

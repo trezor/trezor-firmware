@@ -215,17 +215,7 @@ void ui_screen_wipe_progress(int pos, int len) {
 
 // done UI
 void ui_screen_done(uint8_t restart_seconds, secbool full_redraw) {
-  const char *str;
-  char count_str[24];
-  if (restart_seconds >= 1) {
-    mini_snprintf(count_str, sizeof(count_str), "RESTARTING IN %d",
-                  restart_seconds);
-    str = count_str;
-  } else {
-    str = "RECONNECT THE DEVICE";
-  }
-
-  screen_install_success(str, initial_setup, full_redraw);
+  screen_install_success(restart_seconds, initial_setup, full_redraw);
 }
 
 void ui_screen_boot_empty(bool fading) { screen_boot_empty(fading); }

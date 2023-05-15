@@ -75,9 +75,9 @@ pub struct MenuChoiceFactory;
 
 impl MenuChoiceFactory {
     const CHOICES: [(&'static str, &'static str, &'static [u8]); CHOICE_LENGTH] = [
-        ("Factory", "Reset", ICON_TRASH),
+        ("Factory", "reset", ICON_TRASH),
         ("Reboot", "Trezor", ICON_REDO),
-        ("Exit", "Menu", ICON_EXIT),
+        ("Exit", "menu", ICON_EXIT),
     ];
 
     pub fn new() -> Self {
