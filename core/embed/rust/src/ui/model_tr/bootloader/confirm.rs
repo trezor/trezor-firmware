@@ -5,7 +5,7 @@ use crate::ui::{
     display::{Color, Font, Icon},
     geometry::{Point, Rect},
     model_tr::{
-        bootloader::theme::{ICON_INFO, WHITE},
+        bootloader::theme::{ICON_INFO, ICON_INFO_INVERTED, WHITE},
         component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos},
         constant::WIDTH,
         theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT},
@@ -53,7 +53,7 @@ impl<'a> Confirm<'a> {
         let controller = if info.is_some() {
             ButtonController::new(ButtonLayout::cancel_armed_icon(
                 "INSTALL",
-                Icon::new(ICON_INFO),
+                (Icon::new(ICON_INFO), Some(Icon::new(ICON_INFO_INVERTED))),
             ))
         } else {
             ButtonController::new(ButtonLayout::cancel_none_text(text))
@@ -124,7 +124,7 @@ impl<'a> Component for Confirm<'a> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.info_shown {
             if let Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) =
-                self.buttons.event(ctx, event)
+                self.buttons_info.event(ctx, event)
             {
                 self.info_shown = false;
                 self.message.request_complete_repaint(ctx);

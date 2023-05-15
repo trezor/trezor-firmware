@@ -61,6 +61,8 @@ pub const ICON_ARROW_DOWN: &[u8] = include_res!("model_tr/res/arrow_down.toif");
 pub const ICON_ARROW_BACK_UP: &[u8] = include_res!("model_tr/res/arrow_back_up.toif"); // 8*8
 pub const ICON_BIN: &[u8] = include_res!("model_tr/res/bin.toif"); // 10*10
 pub const ICON_CANCEL: &[u8] = include_res!("model_tr/res/cancel_no_outline.toif"); // 8*8
+pub const ICON_CANCEL_INVERTED: &[u8] =
+    include_res!("model_tr/res/cancel_no_outline_inverted.toif"); // 8*8
 pub const ICON_DELETE: &[u8] = include_res!("model_tr/res/delete.toif"); // 10*7
 pub const ICON_EYE: &[u8] = include_res!("model_tr/res/eye_round.toif"); // 12*7
 pub const ICON_LOCK: &[u8] = include_res!("model_tr/res/lock.toif"); // 10*10

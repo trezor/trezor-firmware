@@ -15,6 +15,7 @@ pub const ICON_SPINNER: &[u8] = include_res!("model_tr/res/spinner.toif");
 pub const ICON_REDO: &[u8] = include_res!("model_tr/res/redo.toif");
 pub const ICON_EXIT: &[u8] = include_res!("model_tr/res/exit.toif");
 pub const ICON_INFO: &[u8] = include_res!("model_tr/res/info.toif");
+pub const ICON_INFO_INVERTED: &[u8] = include_res!("model_tr/res/info_inverted.toif");
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
