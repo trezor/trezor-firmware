@@ -24,8 +24,10 @@
 #include "common.h"
 #include "flash.h"
 
+static const uint32_t FLASH_START = 0x08000000;
+static const uint32_t FLASH_END = 0x08200000;
 static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
-    [0] = 0x08000000,   // - 0x08003FFF |  16 KiB
+    [0] = FLASH_START,  // - 0x08003FFF |  16 KiB
     [1] = 0x08004000,   // - 0x08007FFF |  16 KiB
     [2] = 0x08008000,   // - 0x0800BFFF |  16 KiB
     [3] = 0x0800C000,   // - 0x0800FFFF |  16 KiB
@@ -49,11 +51,10 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [21] = 0x081A0000,  // - 0x081BFFFF | 128 KiB
     [22] = 0x081C0000,  // - 0x081DFFFF | 128 KiB
     [23] = 0x081E0000,  // - 0x081FFFFF | 128 KiB
-    [24] = 0x08200000,  // last element - not a valid sector
+    [24] = FLASH_END,   // last element - not a valid sector
 };
 
-const uint32_t FLASH_SIZE =
-    FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT] - FLASH_SECTOR_TABLE[0];
+const uint32_t FLASH_SIZE = FLASH_END - FLASH_START;
 uint8_t *FLASH_BUFFER = NULL;
 
 secbool flash_unlock(void) { return sectrue; }
