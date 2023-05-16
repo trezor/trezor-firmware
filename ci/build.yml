@@ -304,6 +304,7 @@ crypto build:
   needs: []
   variables:
     ADDRESS_SANITIZER: "1"
+    CC: gcc
   only:
     changes:
       - .gitlab-ci.yml
