@@ -301,7 +301,7 @@ class LayoutContent(UnstructuredJSONReader):
         words: List[str] = []
         for line in self.screen_content().split("\n"):
             # Dot after index is optional (present on TT, not on TR)
-            match = re.match(r"^\d+\.? (\w+)$", line)
+            match = re.match(r"^\s*\d+\.? (\w+)$", line)
             if match:
                 words.append(match.group(1))
         return words

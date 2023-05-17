@@ -20,15 +20,19 @@ CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> list[str]:
     pages: list[str] = []
     current = ""
+    fill = 2
 
     for i, word in enumerate(share_words):
         if i % per_page == 0:
             if i != 0:
                 pages.append(current)
             current = ""
+
+            lastnum = i + per_page + 1
+            fill = 1 if lastnum < 10 else 2
         else:
             current += "\n"
-        current += f"{i + 1}. {word}"
+        current += f"{i + 1:>{fill}}. {word}"
 
     if current:
         pages.append(current)
@@ -48,21 +52,6 @@ async def show_share_words(
         title = f"RECOVERY SHARE #{share_index + 1}"
     else:
         title = f"GROUP {group_index + 1} - SHARE {share_index + 1}"
-
-    # result = await interact(
-    #     ctx,
-    #     RustLayout(
-    #         trezorui2.show_simple(
-    #             title=title,
-    #             description=f"Write down these {len(share_words)} words in the exact order:",
-    #             button="SHOW WORDS",
-    #         ),
-    #     ),
-    #     "confirm_backup_words",
-    #     ButtonRequestType.ResetDevice,
-    # )
-    # if result != CONFIRMED:
-    #     raise ActionCancelled
 
     pages = _split_share_into_pages(share_words)
 
