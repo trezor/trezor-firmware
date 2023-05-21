@@ -1139,6 +1139,64 @@ def by_name(name: str) -> CoinInfo:
                 False,  # overwintered
                 None,  # confidential_assets
             )
+        if name == "PIVX":
+            return CoinInfo(
+                name,  # coin_name
+                "PIVX",  # coin_shortcut
+                8,  # decimals
+                30,  # address_type
+                13,  # address_type_p2sh
+                8100000000,  # maxfee_kb
+                "DarkNet Signed Message:\n",  # signed_message_header
+                0x022d2533,  # xpub_magic
+                None,  # xpub_magic_segwit_p2sh
+                None,  # xpub_magic_segwit_native
+                None,  # xpub_magic_multisig_segwit_p2sh
+                None,  # xpub_magic_multisig_segwit_native
+                None,  # bech32_prefix
+                None,  # cashaddr_prefix
+                119,  # slip44
+                False,  # segwit
+                False,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
+        if name == "PIVX Testnet":
+            return CoinInfo(
+                name,  # coin_name
+                "tPIVX",  # coin_shortcut
+                8,  # decimals
+                139,  # address_type
+                19,  # address_type_p2sh
+                100000,  # maxfee_kb
+                "DarkNet Signed Message:\n",  # signed_message_header
+                0x3a8061a0,   # xpub_magic
+                None,  # xpub_magic_segwit_p2sh
+                None,  # xpub_magic_segwit_native
+                None,  # xpub_magic_multisig_segwit_p2sh
+                None,  # xpub_magic_multisig_segwit_native
+                None,  # bech32_prefix
+                None,  # cashaddr_prefix
+                1,  # slip44
+                False,  # segwit
+                False,  # taproot
+                None,  # fork_id
+                False,  # force_bip143
+                False,  # decred
+                False,  # negative_fee
+                'secp256k1',  # curve_name
+                False,  # extra_data
+                False,  # timestamp
+                False,  # overwintered
+                None,  # confidential_assets
+            )
         if name == "Primecoin":
             return CoinInfo(
                 name,  # coin_name

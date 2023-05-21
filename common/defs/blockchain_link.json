@@ -119,7 +119,8 @@
   "bitcoin:PIVX": {
     "type": "blockbook",
     "url": [
-      "https://blockbook.pivx.link"
+      "https://explorer.duddino.com/",
+      "https://explorer.rockdev.org/"
     ]
   },
   "bitcoin:PPC": {
@@ -214,7 +215,7 @@
   "bitcoin:tPIVX": {
     "type": "blockbook",
     "url": [
-      "https://blockbook-testnet.pivx.link"
+      "https://testnet.rockdev.org/"
     ]
   },
   "bitcoin:tPPC": {

@@ -500,6 +500,28 @@
                 }
             ]
         },
+        "bitcoin:PIVX": {
+            "links": {
+                "Github": "https://github.com/PIVX-Project/PIVX",
+                "Homepage": "https://pivx.org"
+            },
+            "marketcap_usd": 20004512,
+            "name": "PIVX",
+            "shortcut": "PIVX",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "SPMT",
+                    "url": "https://github.com/PIVX-Project/PIVX-SPMT/"
+                },
+                {
+                    "name": "MPW",
+                    "url": "https://mypivxwallet.org/"
+                }
+            ]
+        },
         "bitcoin:PPC": {
             "links": {
                 "Github": "https://github.com/peercoin/peercoin",

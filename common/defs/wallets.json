@@ -74,6 +74,10 @@
     "bitcoin:PART": {
         "Particl Core": "https://github.com/particl/particl-core/releases"
     },
+    "bitcoin:PIVX": {
+        "SPMT": "https://github.com/PIVX-Project/PIVX-SPMT/",
+        "MPW": "https://mypivxwallet.org/"
+    },
     "bitcoin:QTUM": {
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
     },
