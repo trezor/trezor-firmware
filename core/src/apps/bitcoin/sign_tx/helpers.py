@@ -92,12 +92,12 @@ class UiConfirmPaymentRequest(UiConfirm):
 
 
 class UiConfirmReplacement(UiConfirm):
-    def __init__(self, description: str, txid: bytes):
-        self.description = description
+    def __init__(self, title: str, txid: bytes):
+        self.title = title
         self.txid = txid
 
     def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
-        return layout.confirm_replacement(ctx, self.description, self.txid)
+        return layout.confirm_replacement(ctx, self.title, self.txid)
 
 
 class UiConfirmModifyOutput(UiConfirm):
@@ -122,12 +122,14 @@ class UiConfirmModifyOutput(UiConfirm):
 class UiConfirmModifyFee(UiConfirm):
     def __init__(
         self,
+        title: str,
         user_fee_change: int,
         total_fee_new: int,
         fee_rate: float,
         coin: CoinInfo,
         amount_unit: AmountUnit,
     ):
+        self.title = title
         self.user_fee_change = user_fee_change
         self.total_fee_new = total_fee_new
         self.fee_rate = fee_rate
@@ -137,6 +139,7 @@ class UiConfirmModifyFee(UiConfirm):
     def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
         return layout.confirm_modify_fee(
             ctx,
+            self.title,
             self.user_fee_change,
             self.total_fee_new,
             self.fee_rate,
@@ -255,10 +258,10 @@ def confirm_modify_output(txo: TxOutput, orig_txo: TxOutput, coin: CoinInfo, amo
     return (yield UiConfirmModifyOutput(txo, orig_txo, coin, amount_unit))
 
 
-def confirm_modify_fee(user_fee_change: int, total_fee_new: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
+def confirm_modify_fee(title: str, user_fee_change: int, total_fee_new: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (
         yield UiConfirmModifyFee(
-            user_fee_change, total_fee_new, fee_rate, coin, amount_unit
+            title, user_fee_change, total_fee_new, fee_rate, coin, amount_unit
         )
     )
 

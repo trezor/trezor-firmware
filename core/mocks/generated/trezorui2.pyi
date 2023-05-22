@@ -469,8 +469,10 @@ def show_address_details(
 # rust/src/ui/model_tt/layout.rs
 def show_spending_details(
     *,
-    account: str,
+    title: str = "INFORMATION",
+    account: str | None,
     fee_rate: str | None,
+    fee_rate_title: str = "Fee rate:",
 ) -> object:
     """Show metadata when for outgoing transaction."""
 
@@ -503,7 +505,6 @@ def confirm_total(
 # rust/src/ui/model_tt/layout.rs
 def confirm_modify_output(
     *,
-    address: str,
     sign: int,
     amount_change: str,
     amount_new: str,
@@ -514,10 +515,10 @@ def confirm_modify_output(
 # rust/src/ui/model_tt/layout.rs
 def confirm_modify_fee(
     *,
+    title: str,
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
-    fee_rate_amount: str | None,
 ) -> object:
     """Decrease or increase transaction fee."""
 

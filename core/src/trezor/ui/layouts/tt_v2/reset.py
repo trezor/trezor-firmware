@@ -28,6 +28,7 @@ def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> li
                 pages.append(current)
             current = ""
 
+            # Align numbers to the right.
             lastnum = i + per_page + 1
             fill = 1 if lastnum < 10 else 2
         else:

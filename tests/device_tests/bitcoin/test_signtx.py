@@ -93,7 +93,15 @@ TXHASH_25fee5 = bytes.fromhex(
 TXHASH_1f326f = bytes.fromhex(
     "1f326f65768d55ef146efbb345bd87abe84ac7185726d0457a026fc347a26ef3"
 )
-
+TXHASH_334cd7 = bytes.fromhex(
+    "334cd7ad982b3b15d07dd1c84e939e95efb0803071648048a7f289492e7b4c8a"
+)
+TXHASH_5e7667 = bytes.fromhex(
+    "5e7667690076ae4737e2f872005de6f6b57592f32108ed9b301eeece6de24ad6"
+)
+TXHASH_efaa41 = bytes.fromhex(
+    "efaa41ff3e67edf508846c1a1ed56894cfd32725c590300108f40c9edc1aac35"
+)
 
 CORNER_BUTTON = (215, 25)
 
@@ -1670,4 +1678,68 @@ def test_information_cancel(client: Client):
             [inp1],
             [out1],
             prev_txes=TX_CACHE_MAINNET,
+        )
+
+
+@pytest.mark.skip_t1(reason="Cannot test layouts on T1")
+@pytest.mark.skip_tr(reason="Input flow different on TR")
+def test_information_replacement(client: Client):
+    # Use the change output and an external output to bump the fee.
+    # Originally fee was 3780, now 108060 (94280 from change and 10000 from external).
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/49h/1h/0h/0/4"),
+        amount=100_000,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        prev_hash=TXHASH_5e7667,
+        prev_index=1,
+        orig_hash=TXHASH_334cd7,
+        orig_index=0,
+    )
+
+    inp2 = messages.TxInputType(
+        address_n=parse_path("m/49h/1h/0h/0/3"),
+        amount=998_060,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        prev_hash=TXHASH_efaa41,
+        prev_index=0,
+        orig_hash=TXHASH_334cd7,
+        orig_index=1,
+    )
+
+    out1 = messages.TxOutputType(
+        # Actually m/49'/1'/0'/0/5.
+        address="2MvUUSiQZDSqyeSdofKX9KrSCio1nANPDTe",
+        amount=990_000,
+        orig_hash=TXHASH_334cd7,
+        orig_index=0,
+    )
+
+    def input_flow():
+        yield  # confirm txid
+        client.debug.press_yes()
+        yield  # confirm address
+        client.debug.press_yes()
+        # go back to address
+        client.debug.press_no()
+        # confirm address
+        client.debug.press_yes()
+        yield  # confirm amount
+        client.debug.press_yes()
+
+        yield  # transaction summary, press info
+        client.debug.press_info(wait=True)
+        client.debug.click(CORNER_BUTTON, wait=True)
+        client.debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow)
+        client.watch_layout(True)
+
+        btc.sign_tx(
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1],
+            prev_txes=TX_CACHE_TESTNET,
         )
