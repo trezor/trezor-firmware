@@ -175,12 +175,12 @@ async def confirm_payment_request(
     )
 
 
-async def confirm_replacement(ctx: Context, description: str, txid: bytes) -> None:
+async def confirm_replacement(ctx: Context, title: str, txid: bytes) -> None:
     from ubinascii import hexlify
 
     await layouts.confirm_replacement(
         ctx,
-        description,
+        title,
         hexlify(txid).decode(),
     )
 
@@ -206,6 +206,7 @@ async def confirm_modify_output(
 
 async def confirm_modify_fee(
     ctx: Context,
+    title: str,
     user_fee_change: int,
     total_fee_new: int,
     fee_rate: float,
@@ -214,6 +215,7 @@ async def confirm_modify_fee(
 ) -> None:
     await layouts.confirm_modify_fee(
         ctx,
+        title,
         user_fee_change,
         format_coin_amount(abs(user_fee_change), coin, amount_unit),
         format_coin_amount(total_fee_new, coin, amount_unit),

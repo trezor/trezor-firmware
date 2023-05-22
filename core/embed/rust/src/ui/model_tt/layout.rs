@@ -715,25 +715,29 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
 
 extern "C" fn new_show_spending_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let account: StrBuffer = kwargs.get(Qstr::MP_QSTR_account)?.try_into()?;
+        let title: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_title, "INFORMATION".into())?;
+        let account: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
         let fee_rate: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_fee_rate)?.try_into_option()?;
+        let fee_rate_title: StrBuffer =
+            kwargs.get_or(Qstr::MP_QSTR_fee_rate_title, "Fee rate:".into())?;
 
         let mut paragraphs = ParagraphVecShort::new();
-        paragraphs.add(Paragraph::new(
-            &theme::TEXT_NORMAL,
-            "Sending from account:".into(),
-        ));
-        paragraphs.add(Paragraph::new(&theme::TEXT_MONO, account));
-
+        if let Some(a) = account {
+            paragraphs.add(Paragraph::new(
+                &theme::TEXT_NORMAL,
+                "Sending from account:".into(),
+            ));
+            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, a));
+        }
         if let Some(f) = fee_rate {
-            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, "Fee rate:".into()));
+            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, fee_rate_title));
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, f));
         }
 
         let obj = LayoutObj::new(
             Frame::left_aligned(
                 theme::label_title(),
-                "INFORMATION",
+                title,
                 SwipePage::new(paragraphs.into_paragraphs(), Empty, theme::BG).with_swipe_right(),
             )
             .with_cancel_button(),
@@ -750,7 +754,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let value: Obj = kwargs.get(Qstr::MP_QSTR_value)?;
-        let info_button: bool = unwrap!(kwargs.get_or(Qstr::MP_QSTR_info_button, false));
+        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
         let verb: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_verb)
@@ -774,7 +778,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false).unwrap();
+        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -802,7 +806,6 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
 extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
         let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
         let amount_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_change)?.try_into()?;
         let amount_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_new)?.try_into()?;
@@ -814,24 +817,17 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         };
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, "Address:".into()),
-            Paragraph::new(&theme::TEXT_MONO, address).break_after(),
             Paragraph::new(&theme::TEXT_NORMAL, description.into()),
             Paragraph::new(&theme::TEXT_MONO, amount_change),
             Paragraph::new(&theme::TEXT_NORMAL, "New amount:".into()),
             Paragraph::new(&theme::TEXT_MONO, amount_new),
         ]);
 
-        let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
-            Button::with_text("CONFIRM").styled(theme::button_confirm()),
-            true,
-        );
-
+        let buttons = Button::cancel_confirm_text(Some("^"), Some("CONTINUE"));
         let obj = LayoutObj::new(Frame::left_aligned(
             theme::label_title(),
             "MODIFY AMOUNT",
-            SwipePage::new(paragraphs, buttons, theme::BG).with_cancel_on_first_page(),
+            SwipePage::new(paragraphs, buttons, theme::BG),
         ))?;
         Ok(obj.into())
     };
@@ -840,32 +836,36 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
 
 extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
         let user_fee_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_user_fee_change)?.try_into()?;
         let total_fee_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_fee_new)?.try_into()?;
-        // TODO: use this, most probably in "i" icon
-        let _fee_rate_amount: Option<StrBuffer> = kwargs
-            .get(Qstr::MP_QSTR_fee_rate_amount)?
-            .try_into_option()?;
 
-        let (description, change) = match sign {
-            s if s < 0 => ("Decrease your fee by:", user_fee_change),
-            s if s > 0 => ("Increase your fee by:", user_fee_change),
-            _ => ("Your fee did not change.", StrBuffer::empty()),
+        let (description, change, total_label) = match sign {
+            s if s < 0 => ("Decrease fee by:", user_fee_change, "New transaction fee:"),
+            s if s > 0 => ("Increase fee by:", user_fee_change, "New transaction fee:"),
+            _ => (
+                "Fee did not change.\r",
+                StrBuffer::empty(),
+                "Transaction fee:",
+            ),
         };
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_NORMAL, description.into()),
             Paragraph::new(&theme::TEXT_MONO, change),
-            Paragraph::new(&theme::TEXT_NORMAL, "\nTransaction fee:".into()),
+            Paragraph::new(&theme::TEXT_NORMAL, total_label.into()),
             Paragraph::new(&theme::TEXT_MONO, total_fee_new),
         ]);
 
-        let obj = LayoutObj::new(Frame::left_aligned(
-            theme::label_title(),
-            "MODIFY FEE",
-            SwipeHoldPage::new(paragraphs, theme::BG),
-        ))?;
+        let obj = LayoutObj::new(
+            Frame::left_aligned(
+                theme::label_title(),
+                title,
+                SwipeHoldPage::new(paragraphs, theme::BG).with_swipe_left(),
+            )
+            .with_info_button(),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1660,8 +1660,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def show_spending_details(
     ///     *,
-    ///     account: str,
+    ///     title: str = "INFORMATION",
+    ///     account: str | None,
     ///     fee_rate: str | None,
+    ///     fee_rate_title: str = "Fee rate:",
     /// ) -> object:
     ///     """Show metadata when for outgoing transaction."""
     Qstr::MP_QSTR_show_spending_details => obj_fn_kw!(0, new_show_spending_details).as_obj(),
@@ -1691,7 +1693,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def confirm_modify_output(
     ///     *,
-    ///     address: str,
     ///     sign: int,
     ///     amount_change: str,
     ///     amount_new: str,
@@ -1701,10 +1702,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def confirm_modify_fee(
     ///     *,
+    ///     title: str,
     ///     sign: int,
     ///     user_fee_change: str,
     ///     total_fee_new: str,
-    ///     fee_rate_amount: str | None,
     /// ) -> object:
     ///     """Decrease or increase transaction fee."""
     Qstr::MP_QSTR_confirm_modify_fee => obj_fn_kw!(0, new_confirm_modify_fee).as_obj(),

@@ -600,7 +600,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
         orig_index=0,
     )
 
-    t1 = client.features.model == "1"
+    tr = client.features.model == "R"
     with client:
         client.set_expected_responses(
             [
@@ -613,7 +613,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
                 request_output(0),
                 request_orig_output(0, TXHASH_334cd7),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (t1, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (not tr, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_orig_output(1, TXHASH_334cd7),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),

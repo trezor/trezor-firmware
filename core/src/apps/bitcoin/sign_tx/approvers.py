@@ -245,19 +245,23 @@ class BasicApprover(Approver):
         if not orig_txs:
             return
 
+        title = self._replacement_title(tx_info, orig_txs)
+        for orig in orig_txs:
+            await helpers.confirm_replacement(title, orig.orig_hash)
+
+    def _replacement_title(
+        self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
+    ) -> str:
         if self.is_payjoin():
-            description = "PayJoin"
+            return "PayJoin"
         elif tx_info.rbf_disabled() and any(
             not orig.rbf_disabled() for orig in orig_txs
         ):
-            description = "Finalize transaction"
+            return "Finalize transaction"
         elif len(orig_txs) > 1:
-            description = "Meld transactions"
+            return "Meld transactions"
         else:
-            description = "Update transaction"
-
-        for orig in orig_txs:
-            await helpers.confirm_replacement(description, orig.orig_hash)
+            return "Update transaction"
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
         from trezor.wire import NotEnoughFunds
@@ -322,18 +326,20 @@ class BasicApprover(Approver):
                     )
 
             if not self.is_payjoin():
+                title = self._replacement_title(tx_info, orig_txs)
                 # Not a PayJoin: Show the actual fee difference, since any difference in the fee is
                 # coming entirely from the user's own funds and from decreases of external outputs.
                 # We consider the decreases as belonging to the user.
                 await helpers.confirm_modify_fee(
-                    fee - orig_fee, fee, fee_rate, coin, amount_unit
+                    title, fee - orig_fee, fee, fee_rate, coin, amount_unit
                 )
             elif spending > orig_spending:
+                title = self._replacement_title(tx_info, orig_txs)
                 # PayJoin and user is spending more: Show the increase in the user's contribution
                 # to the fee, ignoring any contribution from external inputs. Decreasing of
                 # external outputs is not allowed in PayJoin, so there is no need to handle those.
                 await helpers.confirm_modify_fee(
-                    spending - orig_spending, fee, fee_rate, coin, amount_unit
+                    title, spending - orig_spending, fee, fee_rate, coin, amount_unit
                 )
             else:
                 # PayJoin and user is not spending more: When new external inputs are involved and
