@@ -1,0 +1,9 @@
+[package]
+name = "trezor-tjpgdec"
+description = "Tiny JPEG Decompressor"
+version = "0.1.0"
+edition = "2021"
+authors = ["Trezor Company"]
+readme = "README.md"
+license = "GPL-3.0-only"
+repository = "https://github.com/trezor/trezor-firmware/"

@@ -55,12 +55,16 @@ codegen-units = 1
 split-debuginfo = "off"
 debug = 2
 
+[profile.release.package.trezor-tjpgdec]
+opt-level = 3
+
 [profile.test]
 split-debuginfo = "off"
 debug = 2
 
 [dependencies]
 qrcodegen = { version = "1.8.0", path = "../../vendor/QR-Code-generator/rust-no-heap" }
+trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 
 # Runtime dependencies
 
