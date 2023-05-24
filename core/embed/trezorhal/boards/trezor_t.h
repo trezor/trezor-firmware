@@ -12,6 +12,13 @@
 #define USE_BACKLIGHT 1
 #define USE_DISP_I8080_8BIT_DW 1
 
+#include "displays/panels/lx154a2422.h"
+#include "displays/st7789v.h"
+#define DISPLAY_IDENTIFY 1
+#define DISPLAY_TE_PORT GPIOD
+#define DISPLAY_TE_PIN GPIO_PIN_12
+#define TRANSFORM_TOUCH_COORDS lx154a2422_transform_touch_coords
+
 #define BACKLIGHT_PWM_FREQ 50000
 #define BACKLIGHT_PWM_TIM TIM1
 #define BACKLIGHT_PWM_TIM_CLK_EN __HAL_RCC_TIM1_CLK_ENABLE
@@ -37,7 +44,16 @@
 #define I2C_INSTANCE_1_RESET_FLG RCC_APB1RSTR_I2C1RST
 
 #define TOUCH_I2C_NUM 0
+#define TOUCH_RST_PORT GPIOC
+#define TOUCH_RST_PIN GPIO_PIN_5
+#define TOUCH_INT_PORT GPIOC
+#define TOUCH_INT_PIN GPIO_PIN_4
+#define TOUCH_ON_PORT GPIOB
+#define TOUCH_ON_PIN GPIO_PIN_10
 
-#include "displays/st7789v.h"
+#define SD_DETECT_PORT GPIOC
+#define SD_DETECT_PIN GPIO_PIN_13
+#define SD_ENABLE_PORT GPIOC
+#define SD_ENABLE_PIN GPIO_PIN_0
 
 #endif  //_TREZOR_T_H

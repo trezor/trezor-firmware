@@ -38,7 +38,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_Unifont_Regular_16'
-elif TREZOR_MODEL in ('T', 'DISC1'):
+elif TREZOR_MODEL in ('T', 'T3W1', 'DISC1'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -379,7 +379,7 @@ env = Environment(ENV=os.environ, CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODU
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 
-if TREZOR_MODEL in ('T', 'DISC1'):
+if TREZOR_MODEL in ('T', 'T3W1', 'DISC1'):
     LAYOUT = 'LAYOUT_TTV2'
 elif TREZOR_MODEL in ('1', 'R'):
     LAYOUT = 'LAYOUT_TR'
@@ -813,7 +813,7 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 
-if TREZOR_MODEL in ('T', 'R', 'DISC1'):
+if TREZOR_MODEL in ('T', 'R', 'T3W1', 'DISC1'):
     action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
