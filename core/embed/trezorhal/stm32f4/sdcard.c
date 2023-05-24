@@ -44,6 +44,7 @@
  */
 
 #include STM32_HAL_H
+#include TREZOR_BOARD
 
 #include <string.h>
 
@@ -68,7 +69,7 @@ void DMA2_Stream3_IRQHandler(void) {
 }
 
 static inline void sdcard_default_pin_state(void) {
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);     // SD_ON/PC0
+  HAL_GPIO_WritePin(SD_ENABLE_PORT, SD_ENABLE_PIN, GPIO_PIN_SET);  // SD_ON
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);   // SD_DAT0/PC8
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);   // SD_DAT1/PC9
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);  // SD_DAT2/PC10
@@ -82,8 +83,8 @@ static inline void sdcard_default_pin_state(void) {
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = GPIO_PIN_0;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = SD_ENABLE_PIN;
+  HAL_GPIO_Init(SD_ENABLE_PORT, &GPIO_InitStructure);
 
   // configure SD GPIO
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
@@ -99,12 +100,13 @@ static inline void sdcard_default_pin_state(void) {
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
   GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = GPIO_PIN_13;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = SD_DETECT_PIN;
+  HAL_GPIO_Init(SD_DETECT_PORT, &GPIO_InitStructure);
 }
 
 static inline void sdcard_active_pin_state(void) {
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET);  // SD_ON/PC0
+  HAL_GPIO_WritePin(SD_ENABLE_PORT, SD_ENABLE_PIN,
+                    GPIO_PIN_RESET);  // SD_ON/PC0
   HAL_Delay(10);  // we need to wait until the circuit fully kicks-in
 
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -210,7 +212,8 @@ void sdcard_power_off(void) {
 }
 
 secbool sdcard_is_present(void) {
-  return sectrue * (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));
+  return sectrue *
+         (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SD_DETECT_PORT, SD_DETECT_PIN));
 }
 
 uint64_t sdcard_get_capacity_in_bytes(void) {
