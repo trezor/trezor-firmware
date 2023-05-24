@@ -42,7 +42,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_Unifont_Regular_16'
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'T3W1'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -384,7 +384,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
 ]
-if TREZOR_MODEL in ('T', 'R'):
+if TREZOR_MODEL in ('T', 'R', 'T3W1'):
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sbu.c',
     ]
@@ -421,7 +421,7 @@ else:
 env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
 
 
-if TREZOR_MODEL in ('T',):
+if TREZOR_MODEL in ('T', 'T3W1'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
 elif TREZOR_MODEL in ('1', 'R'):
@@ -430,7 +430,7 @@ elif TREZOR_MODEL in ('1', 'R'):
 else:
     raise ValueError('Unknown Trezor model')
 
-if TREZOR_MODEL in ('T',):
+if TREZOR_MODEL in ('T', 'T3W1'):
     SDCARD = True
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sdcard.c',
@@ -486,7 +486,7 @@ if ARGUMENTS.get('TREZOR_MEMPERF', '0') == '1':
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
-if TREZOR_MODEL in ('T', 'R'):
+if TREZOR_MODEL in ('T', 'R', 'T3W1'):
     CPU_MODEL   = 'STM32F427xx'
 elif TREZOR_MODEL in ('DISC1', ):
     CPU_MODEL   = 'STM32F429xx'
@@ -789,7 +789,7 @@ def cargo_build():
     if DMA2D:
         features.append('dma2d')
 
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T', 'T3W1'):
         features.append('touch')
         features.append('sd_card')
     if TREZOR_MODEL in ('R', '1'):
