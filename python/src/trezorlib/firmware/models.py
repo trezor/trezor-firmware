@@ -27,6 +27,7 @@ class Model(Enum):
     T = b"T2T1"
     R = b"T2B1"
     DISC1 = b"D001"
+    T3W1 = b"T3W1"
 
     @classmethod
     def from_hw_model(cls, hw_model: t.Union["Self", bytes]) -> "Self":
@@ -201,15 +202,42 @@ TREZOR_R = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
+
+TREZOR_T3W1 = ModelKeys(
+    production=False,
+    boardloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d",
+            "2152f8d19b791d24453242e15f2eab6cb7cffa7b6a5ed30097960e069881db12",
+            "22fc297792f0b6ffc0bfcfdb7edb0c0aa14e025a365ec0e342e86e3829cb74b6",
+        )
+    ],
+    boardloader_sigs_needed=2,
+    bootloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "d759793bbc13a2819a827c76adb6fba8a49aee007f49f2d0992d99b825ad2c48",
+            "6355691c178a8ff91007a7478afb955ef7352c63e7b25703984cf78b26e21a56",
+            "ee93a4f66f8d16b819bb9beb9ffccdfcdc1412e87fee6a324c2a99a1e0e67148",
+        )
+    ],
+    bootloader_sigs_needed=2,
+    firmware_keys=(),
+    firmware_sigs_needed=-1,
+)
+
 TREZOR_R_DEV = TREZOR_T_DEV
 DISC1 = TREZOR_T_DEV
 DISC1_DEV = TREZOR_T_DEV
+TREZOR_T3W1_DEV = TREZOR_T_DEV
 
 MODEL_MAP = {
     Model.ONE: TREZOR_ONE_V3,
     Model.T: TREZOR_T,
     Model.R: TREZOR_R,
     Model.DISC1: DISC1,
+    Model.T3W1: TREZOR_T3W1,
 }
 
 MODEL_MAP_DEV = {
@@ -217,4 +245,5 @@ MODEL_MAP_DEV = {
     Model.T: TREZOR_T_DEV,
     Model.R: TREZOR_R_DEV,
     Model.DISC1: DISC1_DEV,
+    Model.T3W1: TREZOR_T3W1_DEV,
 }
