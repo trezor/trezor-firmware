@@ -4,6 +4,13 @@
 #include STM32_HAL_H
 #include TREZOR_BOARD
 
+typedef struct {
+  uint16_t x;
+  uint16_t y;
+} buffer_offset_t;
+
+#include TREZOR_BOARD
+
 // ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
 #define MAX_DISPLAY_RESX 240
 #define MAX_DISPLAY_RESY 320

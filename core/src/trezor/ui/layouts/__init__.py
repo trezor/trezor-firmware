@@ -6,7 +6,7 @@ from .common import *  # noqa: F401,F403
 #       layout type signatures across models
 if utils.MODEL in ("1", "R"):
     from .tr import *  # noqa: F401,F403
-elif utils.MODEL in ("T", "DISC1"):
+elif utils.MODEL in ("T", "T3W1", "DISC1"):
     from .tt_v2 import *  # noqa: F401,F403
 else:
     raise ValueError("Unknown Trezor model")

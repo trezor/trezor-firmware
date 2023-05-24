@@ -78,13 +78,11 @@ void _i2c_ensure_pin(GPIO_TypeDef *port, uint16_t GPIO_Pin,
 // https://www.st.com/content/ccc/resource/technical/document/errata_sheet/7f/05/b0/bc/34/2f/4c/21/CD00288116.pdf/files/CD00288116.pdf/jcr:content/translations/en.CD00288116.pdf
 
 void i2c_cycle(void) {
-  // PIN6 is SCL, PIN7 is SDA
-
   // 1. Disable I2C peripheral
   _i2c_deinit();
 
   // 2. Configure SCL/SDA as GPIO OUTPUT Open Drain
-  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;

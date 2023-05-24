@@ -1,0 +1,42 @@
+#ifndef _TREZOR_T3W1_H
+#define _TREZOR_T3W1_H
+
+#define DISPLAY_RESX 240
+#define DISPLAY_RESY 320
+
+#define USE_SD_CARD 1
+#define USE_I2C 1
+#define USE_TOUCH 1
+#define USE_SBU 1
+#define USE_DISP_I8080_16BIT_DW 1
+
+#define DISPLAY_PANEL_INIT_SEQ lhs200kb_if21_init_seq
+#define DISPLAY_PANEL_ROTATE lhs200kb_if21_rotate
+#define TRANSFORM_TOUCH_COORDS lhs200kb_if21_transform_touch_coords
+
+#include "displays/panels/LHS200KB-IF21.h"
+#include "displays/st7789v.h"
+
+#define I2C_CLK_ENA __HAL_RCC_I2C2_CLK_ENABLE
+#define I2C_CLK_DIS __HAL_RCC_I2C2_CLK_DISABLE
+#define I2C_FORCE_RESET __HAL_RCC_I2C2_FORCE_RESET
+#define I2C_RELEASE_RESET __HAL_RCC_I2C2_RELEASE_RESET
+#define I2C_INSTANCE I2C2
+#define I2C_AF GPIO_AF4_I2C2
+#define I2C_PORT GPIOB
+#define I2C_SCL_PIN GPIO_PIN_10
+#define I2C_SDA_PIN GPIO_PIN_11
+
+#define TOUCH_RST_PORT GPIOC
+#define TOUCH_RST_PIN GPIO_PIN_5
+#define TOUCH_INT_PORT GPIOC
+#define TOUCH_INT_PIN GPIO_PIN_4
+#define TOUCH_ON_PORT GPIOB
+#define TOUCH_ON_PIN GPIO_PIN_8
+
+#define SD_DETECT_PORT GPIOB
+#define SD_DETECT_PIN GPIO_PIN_0
+#define SD_ENABLE_PORT GPIOE
+#define SD_ENABLE_PIN GPIO_PIN_1
+
+#endif  //_TREZOR_T3W1_H

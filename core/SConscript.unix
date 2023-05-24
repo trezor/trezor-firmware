@@ -42,7 +42,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_Unifont_Regular_16'
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'T3W1'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -367,7 +367,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
 ]
-if TREZOR_MODEL in ('T', 'R'):
+if TREZOR_MODEL in ('T', 'R', 'T3W1'):
     SOURCE_UNIX += [
         'embed/unix/sbu.c',
         'embed/unix/sdcard.c',
@@ -582,7 +582,7 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/ui/layouts/fido.py',
         ] if not EVERYTHING else []
     ))
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T', 'T3W1'):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/*.py',
             exclude=[
                 SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/fido.py',
@@ -633,7 +633,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL not in ('T',) else [])
+        ] if TREZOR_MODEL not in ('T', 'T3W1') else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -726,7 +726,7 @@ RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
     # T1 does not have its own Rust feature, it shares it with TR
-    model_feature = 'model_tr' if TREZOR_MODEL == '1' else f'model_t{TREZOR_MODEL.lower()}'
+    model_feature = 'model_tr' if TREZOR_MODEL == '1' else 'model_tt'
     features = ['micropython', 'protobuf', model_feature]
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
@@ -736,7 +736,7 @@ def cargo_build():
     if DMA2D:
         features.append('dma2d')
 
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T', 'T3W1'):
         features.append('touch')
         features.append('sd_card')
     if TREZOR_MODEL in ('R', '1'):

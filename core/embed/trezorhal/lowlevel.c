@@ -150,6 +150,7 @@ void periph_init(void) {
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
 
   // enable the PVD (programmable voltage detector).
   // select the "2.7V" threshold (level 5).
