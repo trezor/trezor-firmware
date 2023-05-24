@@ -72,15 +72,25 @@ DISC1 = TrezorModel(
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
+T3W1 = TrezorModel(
+    name="T3W1",
+    internal_name="T3W1",
+    minimum_version=(2, 1, 0),
+    vendors=VENDORS,
+    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    default_mapping=mapping.DEFAULT_MAPPING,
+)
+
 # ==== model based names ====
 
 TREZOR_ONE = T1B1
 TREZOR_T = T2T1
 TREZOR_R = T2B1
 TREZOR_SAFE3 = T2B1
+TREZOR_T3W1 = T3W1
 TREZOR_DISC1 = DISC1
 
-TREZORS = {T1B1, T2T1, T2B1, DISC1}
+TREZORS = {T1B1, T2T1, T2B1, T3W1, DISC1}
 
 
 def by_name(name: Optional[str]) -> Optional[TrezorModel]:

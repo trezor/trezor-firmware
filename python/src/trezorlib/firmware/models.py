@@ -29,6 +29,7 @@ class Model(Enum):
     T1B1 = b"T1B1"
     T2T1 = b"T2T1"
     T2B1 = b"T2B1"
+    T3W1 = b"T3W1"
     D001 = b"D001"
 
     # legacy aliases
@@ -230,6 +231,7 @@ MODEL_MAP = {
     Model.T1B1: LEGACY_V3,
     Model.T2T1: T2T1,
     Model.T2B1: T2B1,
+    Model.T3W1: TREZOR_CORE_DEV,
     Model.D001: TREZOR_CORE_DEV,
 }
 
@@ -237,6 +239,7 @@ MODEL_MAP_DEV = {
     Model.T1B1: LEGACY_V3_DEV,
     Model.T2T1: TREZOR_CORE_DEV,
     Model.T2B1: TREZOR_CORE_DEV,
+    Model.T3W1: TREZOR_CORE_DEV,
     Model.D001: TREZOR_CORE_DEV,
 }
 
@@ -244,6 +247,7 @@ MODEL_HASH_PARAMS_MAP = {
     Model.T1B1: LEGACY_HASH_PARAMS,
     Model.T2T1: T2T1_HASH_PARAMS,
     Model.T2B1: T2T1_HASH_PARAMS,
+    Model.T3W1: T2T1_HASH_PARAMS,
     Model.D001: T2T1_HASH_PARAMS,
 }
 

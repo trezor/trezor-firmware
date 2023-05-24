@@ -4,6 +4,8 @@ import subprocess
 import zlib
 from pathlib import Path
 
+import subprocess
+
 from boards import (
     discovery,
     trezor_1,

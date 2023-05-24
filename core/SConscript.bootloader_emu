@@ -254,7 +254,7 @@ def cargo_build():
     else:
         features = ["model_tt"]
 
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T', 'T3W1'):
         features.append('touch')
         features.append('backlight')
     if TREZOR_MODEL in ('R', '1'):
