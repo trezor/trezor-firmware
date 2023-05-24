@@ -20,6 +20,9 @@
 #ifndef TREZORHAL_BUTTON_H
 #define TREZORHAL_BUTTON_H
 
+#include TREZOR_BOARD
+
+#include <stdbool.h>
 #include <stdint.h>
 
 #define BTN_EVT_DOWN (1U << 24)
@@ -27,10 +30,19 @@
 
 #define BTN_LEFT 0
 #define BTN_RIGHT 1
+#define BTN_POWER 2
 
 void button_init(void);
 uint32_t button_read(void);
-char button_state_left(void);
-char button_state_right(void);
+
+#ifdef BTN_LEFT_CLK_ENA
+bool button_state_left(void);
+#endif
+#ifdef BTN_RIGHT_CLK_ENA
+bool button_state_right(void);
+#endif
+#ifdef BTN_POWER_CLK_ENA
+bool button_state_power(void);
+#endif
 
 #endif
