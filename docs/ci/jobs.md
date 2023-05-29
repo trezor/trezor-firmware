@@ -114,27 +114,27 @@ it is just a single binary file that you can execute directly.
 ### [crypto build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L364)
 Build of our cryptographic library, which is then incorporated into the other builds.
 
-### [legacy fw regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L393)
+### [legacy fw regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L394)
 
-### [legacy fw regular debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L409)
+### [legacy fw regular debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L410)
 
-### [legacy fw btconly build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L426)
+### [legacy fw btconly build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L427)
 
-### [legacy fw btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L445)
+### [legacy fw btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L446)
 
-### [legacy emu regular debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L466)
+### [legacy emu regular debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L467)
 Regular version (not only Bitcoin) of above.
 **Are you looking for a Trezor One emulator? This is most likely it.**
 
-### [legacy emu regular debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L481)
+### [legacy emu regular debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L482)
 
-### [legacy emu regular debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L499)
+### [legacy emu regular debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L500)
 
-### [legacy emu btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L525)
+### [legacy emu btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L526)
 Build of Legacy into UNIX emulator. Use keyboard arrows to emulate button presses.
 Bitcoin-only version.
 
-### [legacy emu btconly debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L542)
+### [legacy emu btconly debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L543)
 
 ---
 ## TEST stage - [test.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml)
