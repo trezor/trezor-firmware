@@ -134,7 +134,9 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             #              ^
             word_pos = int(layout.text_content().split()[2])
             # Unifying both the buttons and words to lowercase
-            btn_texts = [text.lower() for text in layout.button_contents()]
+            btn_texts = [
+                text.lower() for text in layout.tt_check_seed_button_contents()
+            ]
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
             layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)

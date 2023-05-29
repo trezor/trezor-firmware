@@ -51,8 +51,11 @@ def confirm_recovery(debug: "DebugLink") -> None:
         debug.press_right()
 
 
-def select_number_of_words(debug: "DebugLink", num_of_words: int = 20) -> None:
-    debug.wait_layout()
+def select_number_of_words(
+    debug: "DebugLink", num_of_words: int = 20, wait: bool = True
+) -> None:
+    if wait:
+        debug.wait_layout()
     if debug.model == "T":
         # select number of words
         if not debug.legacy_ui and not debug.legacy_debug:

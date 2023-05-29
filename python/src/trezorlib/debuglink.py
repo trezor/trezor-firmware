@@ -259,6 +259,17 @@ class LayoutContent(UnstructuredJSONReader):
         """Getting raw paragraphs as sent from Rust."""
         return self.find_unique_value_by_key("paragraphs", default=None, only_type=list)
 
+    def tt_check_seed_button_contents(self) -> List[str]:
+        """Getting list of button contents."""
+        buttons: List[str] = []
+        button_objects = self.find_objects_with_key_and_value("component", "Button")
+        for button in button_objects:
+            if button.get("icon"):
+                buttons.append("ICON")
+            elif "text" in button:
+                buttons.append(button["text"])
+        return buttons
+
     def button_contents(self) -> List[str]:
         """Getting list of button contents."""
         buttons = self.find_unique_value_by_key("buttons", default={}, only_type=dict)

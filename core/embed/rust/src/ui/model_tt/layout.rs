@@ -1990,7 +1990,7 @@ mod tests {
             "content": {
                 "component": "FormattedText",
                 "text": ["Testing text layout, with", "\n", "some text, and some", "\n",
-                "more text. And ", "parame", "-", "\n", "ters!"],
+                "more text. And ", "paramet", "-", "\n", "ers!"],
                 "fits": true,
             },
             "controls": {

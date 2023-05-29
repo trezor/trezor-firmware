@@ -104,11 +104,8 @@ def prepare(
         if old_pin:
             _input_see_confirm(debug, old_pin)
         assert "enable wipe code" in debug.wait_layout().text_content()
-        layout = go_next(debug, wait=True)
-        if debug.model == "T":
-            assert "erase all data" in layout.text_content()
-            go_next(debug)
-        elif debug.model == "R":
+        go_next(debug, wait=True)
+        if debug.model == "R":
             debug.press_right_htc(1000)
         if old_pin:
             debug.wait_layout()

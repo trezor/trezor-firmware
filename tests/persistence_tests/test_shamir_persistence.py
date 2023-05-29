@@ -84,7 +84,7 @@ def test_recovery_single_reset(core_emulator: Emulator):
     assert features.recovery_mode is True
 
     # we need to enter the number of words again, that's a feature
-    recovery.select_number_of_words(debug)
+    recovery.select_number_of_words(debug, wait=False)
     recovery.enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
     recovery.finalize(debug)
 
@@ -121,7 +121,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     assert features.recovery_mode is True
 
     # enter number of words
-    recovery.select_number_of_words(debug)
+    recovery.select_number_of_words(debug, wait=False)
 
     first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0]
     words = first_share.split(" ")
@@ -197,7 +197,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     assert features.recovery_mode is True
 
     # enter the number of words again, that's a feature!
-    recovery.select_number_of_words(debug)
+    recovery.select_number_of_words(debug, wait=False)
 
     # enter shares and restart after each one
     enter_shares_with_restarts(debug)
