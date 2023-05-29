@@ -86,6 +86,10 @@ class InputFlowSetupDevicePINWIpeCode(InputFlowBase):
         yield  # do you want to set/change the wipe code?
         self.debug.press_yes()
 
+        if self.debug.model == "R":
+            yield from swipe_if_necessary(self.debug)  # wipe code info
+            self.debug.press_yes()
+
         yield  # enter current pin
         self.debug.input(self.pin)
         yield  # enter new wipe code
@@ -111,9 +115,16 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         yield  # do you want to set/change the pin/wipe code?
         self.debug.press_yes()
 
+        if self.debug.model == "R":
+            yield from swipe_if_necessary(self.debug)  # code info
+            self.debug.press_yes()
+
         def input_two_different_pins():
             yield  # enter new PIN/wipe_code
             self.debug.input(self.first_code)
+            if self.debug.model == "R":
+                yield  # Please re-enter PIN to confirm
+                self.debug.press_yes()
             yield  # enter new PIN/wipe_code again (but different)
             self.debug.input(self.second_code)
 
@@ -149,6 +160,11 @@ class InputFlowCodeChangeFail(InputFlowBase):
 
         yield  # enter new pin
         self.debug.input(self.new_pin_1)
+
+        if self.debug.model == "R":
+            yield  # Please re-enter PIN to confirm
+            self.debug.press_yes()
+
         yield  # enter new pin again (but different)
         self.debug.input(self.new_pin_2)
 
@@ -774,6 +790,10 @@ class InputFlowBip39ResetPIN(InputFlowBase):
         yield  # Enter new PIN
         self.debug.input("654")
 
+        if self.debug.model == "R":
+            yield  # Re-enter PIN
+            self.debug.press_yes()
+
         yield  # Confirm PIN
         self.debug.input("654")
 
@@ -1157,7 +1177,7 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
         self.debug.press_yes()
 
         yield
-        assert "select the number of words" in self.layout().text_content()
+        assert "number of words" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
@@ -1170,7 +1190,7 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
         self.debug.input(str(len(self.mnemonic)))
 
         yield
-        assert "enter your recovery seed" in self.layout().text_content()
+        assert "Enter recovery seed" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
@@ -1213,7 +1233,7 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         self.debug.press_right()
 
         yield
-        assert "select the number of words" in self.layout().text_content()
+        assert "number of words" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
@@ -1223,7 +1243,7 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         self.debug.press_middle()
 
         yield
-        assert "enter your recovery seed" in self.layout().text_content()
+        assert "Enter recovery seed" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
@@ -1241,7 +1261,7 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         self.debug.press_right()
 
         yield  # retry screen
-        assert "select the number of words" in self.layout().text_content()
+        assert "number of words" in self.layout().text_content()
         self.debug.press_left()
 
         yield
@@ -1319,7 +1339,7 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
         self.debug.input("654")
 
         yield
-        assert "select the number of words" in self.layout().text_content()
+        assert "number of words" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
@@ -1328,7 +1348,7 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
         self.debug.input(str(len(self.mnemonic)))
 
         yield
-        assert "enter your recovery seed" in self.layout().text_content()
+        assert "Enter recovery seed" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
@@ -1508,6 +1528,9 @@ def slip39_recovery_possible_pin(
     if pin is not None:
         yield  # Enter PIN
         debug.input(pin)
+        if debug.model == "R":
+            yield  # Reenter PIN
+            debug.press_yes()
         yield  # Enter PIN again
         debug.input(pin)
 

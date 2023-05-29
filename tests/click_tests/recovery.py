@@ -75,7 +75,7 @@ def select_number_of_words(debug: "DebugLink", num_of_words: int = 20) -> None:
         coords = buttons.grid34(index % 3, index // 3)
         layout = debug.click(coords, wait=True)
     elif debug.model == "R":
-        assert "select the number of words" in debug.read_layout().text_content()
+        assert "number of words" in debug.read_layout().text_content()
         layout = debug.press_right(wait=True)
 
         assert layout.title() == "NUMBER OF WORDS"

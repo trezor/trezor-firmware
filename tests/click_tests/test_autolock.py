@@ -263,7 +263,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     device_handler.run(device.recover, dry_run=True)  # type: ignore
 
     layout = unlock_dry_run(debug)
-    assert "number of words " in layout.text_content()
+    assert "number of words" in layout.text_content()
 
     if debug.model == "R":
         debug.press_right(wait=True)
