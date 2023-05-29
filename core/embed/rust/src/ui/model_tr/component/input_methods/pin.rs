@@ -27,9 +27,12 @@ enum PinAction {
 }
 
 const MAX_PIN_LENGTH: usize = 50;
+/// After how many digits the user will be brought to the "ENTER" choice.
+const NUM_DIGITS_SWITCH_TO_ENTER: usize = 4;
 
 const CHOICE_LENGTH: usize = 13;
 const NUMBER_START_INDEX: usize = 3;
+const ENTER_INDEX: usize = 2;
 const CHOICES: [(&str, PinAction, Option<Icon>); CHOICE_LENGTH] = [
     ("DELETE", PinAction::Delete, Some(theme::ICON_DELETE)),
     ("SHOW", PinAction::Show, Some(theme::ICON_EYE)),
@@ -203,15 +206,19 @@ where
             Some(PinAction::Enter) => Some(PinEntryMsg::Confirmed),
             Some(PinAction::Digit(ch)) if !self.is_full() => {
                 self.textbox.append(ctx, ch);
-                // Choosing random digit to be shown next, but different
-                // from the current choice.
-                let new_page_counter = random::uniform_between_except(
-                    NUMBER_START_INDEX as u32,
-                    (CHOICE_LENGTH - 1) as u32,
-                    self.choice_page.page_index() as u32,
-                );
-                self.choice_page
-                    .set_page_counter(ctx, new_page_counter as usize);
+                let new_page_counter = if self.textbox.len() == NUM_DIGITS_SWITCH_TO_ENTER {
+                    // When user has reached certain amount of digits, offering "ENTER" to them
+                    ENTER_INDEX
+                } else {
+                    // Choosing random digit to be shown next, but different
+                    // from the current choice.
+                    random::uniform_between_except(
+                        NUMBER_START_INDEX as u32,
+                        (CHOICE_LENGTH - 1) as u32,
+                        self.choice_page.page_index() as u32,
+                    ) as usize
+                };
+                self.choice_page.set_page_counter(ctx, new_page_counter);
                 self.update(ctx);
                 None
             }
