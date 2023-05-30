@@ -381,7 +381,7 @@ def sign_tx(
     the connection with WEB3_PROVIDER_URI environment variable.
     """
     try:
-        import rlp
+        import simpler_rlp
     except ImportError:
         _print_eth_dependencies_and_die()
 
@@ -510,7 +510,7 @@ def sign_tx(
             data_bytes,
             *sig,
         ]
-    transaction = rlp.encode(transaction_items)
+    transaction = simpler_rlp.encode(transaction_items)
 
     if eip2718_type is not None:
         eip2718_prefix = f"{eip2718_type:02x}"
