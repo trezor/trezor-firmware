@@ -46,17 +46,17 @@ def find_version():
 
 
 setup(
-    name="trezor",
+    name="eulith-trezor",
     version=find_version(),
-    author="Trezor",
-    author_email="info@trezor.io",
+    author="Trezor & Eulith",
+    author_email="admin@eulith.com",
     license="LGPLv3",
-    description="Python library for communicating with Trezor Hardware Wallet",
+    description="Python library for communicating with Trezor Hardware Wallet (with modifications from Eulith)",
     long_description=(CWD / "README.md").read_text()
     + "\n\n"
     + (CWD / "CHANGELOG.md").read_text(),
     long_description_content_type="text/markdown",
-    url="https://github.com/trezor/trezor-firmware/tree/master/python",
+    url="https://github.com/kristian1108/trezor-firmware",
     package_data={"trezorlib": ["py.typed"]},
     packages=find_packages("src"),
     package_dir={"": "src"},
