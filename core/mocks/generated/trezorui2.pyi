@@ -150,6 +150,7 @@ def tutorial() -> object:
 # rust/src/ui/model_tr/layout.rs
 def confirm_modify_fee(
     *,
+    title: str,  # ignored
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
@@ -505,6 +506,7 @@ def confirm_total(
 # rust/src/ui/model_tt/layout.rs
 def confirm_modify_output(
     *,
+    address: str,  # ignored
     sign: int,
     amount_change: str,
     amount_new: str,
@@ -519,6 +521,7 @@ def confirm_modify_fee(
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
+    fee_rate_amount: str | None,  # ignored
 ) -> object:
     """Decrease or increase transaction fee."""
 

@@ -1013,6 +1013,7 @@ async def confirm_modify_output(
         result = await ctx.wait(
             RustLayout(
                 trezorui2.confirm_modify_output(
+                    address=address,
                     sign=sign,
                     amount_change=amount_change,
                     amount_new=amount_new,
@@ -1062,6 +1063,7 @@ async def confirm_modify_fee(
             sign=sign,
             user_fee_change=user_fee_change,
             total_fee_new=total_fee_new,
+            fee_rate_amount=fee_rate_amount,
         )
     )
     info_layout = RustLayout(

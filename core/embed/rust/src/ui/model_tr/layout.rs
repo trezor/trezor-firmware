@@ -1414,6 +1414,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def confirm_modify_fee(
     ///     *,
+    ///     title: str,  # ignored
     ///     sign: int,
     ///     user_fee_change: str,
     ///     total_fee_new: str,
