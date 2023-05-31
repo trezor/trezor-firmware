@@ -264,6 +264,7 @@ class LegacySignedImage(SignableImageProto, Protocol):
 
 
 class CosiSignatureHeaderProto(Protocol):
+    hw_model: t.Union[fw_models.Model, bytes]
     signature: bytes
     sigmask: int
 
@@ -279,6 +280,11 @@ class CosiSignedMixin:
 
     def get_header(self) -> CosiSignatureHeaderProto:
         raise NotImplementedError
+
+    def get_model_keys(self, dev_keys: bool) -> fw_models.ModelKeys:
+        hw_model = self.get_header().hw_model
+        model = fw_models.Model.from_hw_model(hw_model)
+        return model.model_keys(dev_keys)
 
 
 class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
@@ -318,10 +324,7 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
         return self._format(terse=False)
 
     def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
-        if not dev_keys:
-            return fw_models.TREZOR_T.bootloader_keys
-        else:
-            return fw_models.TREZOR_T_DEV.bootloader_keys
+        return self.get_model_keys(dev_keys).bootloader_keys
 
 
 class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
@@ -361,18 +364,6 @@ class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
 class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
     NAME: t.ClassVar[str] = "bootloader"
     DEV_KEYS = _make_dev_keys(b"\x41", b"\x42")
-
-    def get_model(self) -> fw_models.Model:
-        if isinstance(self.header.hw_model, fw_models.Model):
-            return self.header.hw_model
-        return fw_models.Model.T
-
-    def get_model_keys(self, dev_keys: bool) -> fw_models.ModelKeys:
-        model = self.get_model()
-        if dev_keys:
-            return fw_models.MODEL_MAP_DEV[model]
-        else:
-            return fw_models.MODEL_MAP[model]
 
     def get_header(self) -> CosiSignatureHeaderProto:
         return self.header

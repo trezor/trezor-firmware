@@ -48,7 +48,7 @@ class FirmwareHeader(Struct):
     code_length: int
     version: t.Tuple[int, int, int, int]
     fix_version: t.Tuple[int, int, int, int]
-    hw_model: Model
+    hw_model: t.Union[Model, bytes]
     hw_revision: int
     monotonic: int
     hashes: t.List[bytes]

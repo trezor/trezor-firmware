@@ -27,6 +27,10 @@ def build_vendorheader(specfile, image, outfile):
     spec["image"] = toif.ToifStruct.parse(image.read())
     spec["sigmask"] = 0
     spec["signature"] = b"\x00" * 64
+    if spec["hw_model"] is None:
+        spec["hw_model"] = b"\x00\x00\x00\x00"
+    else:
+        spec["hw_model"] = spec["hw_model"].encode("ascii")
 
     min_length = minimum_header_len(spec)
     if "header_len" not in spec:

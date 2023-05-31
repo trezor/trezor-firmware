@@ -1,6 +1,7 @@
 {
     "header_len": 4608,
     "text": "UNSAFE, DO NOT USE!",
+    "hw_model": null,
     "expiry": 0,
     "version": [0, 1],
     "sig_m": 2,

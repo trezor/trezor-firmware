@@ -18,11 +18,29 @@ import typing as t
 from dataclasses import dataclass
 from enum import Enum
 
+if t.TYPE_CHECKING:
+    from typing_extensions import Self
+
 
 class Model(Enum):
     ONE = b"T1B1"
     T = b"T2T1"
     R = b"T2B1"
+
+    @classmethod
+    def from_hw_model(cls, hw_model: t.Union["Self", bytes]) -> "Self":
+        if isinstance(hw_model, cls):
+            return hw_model
+        if hw_model == b"\x00\x00\x00\x00":
+            return cls.T
+        raise ValueError(f"Unknown hardware model: {hw_model}")
+
+    def model_keys(self, dev_keys: bool = False) -> "ModelKeys":
+        if dev_keys:
+            model_map = MODEL_MAP_DEV
+        else:
+            model_map = MODEL_MAP
+        return model_map[self]
 
 
 @dataclass
