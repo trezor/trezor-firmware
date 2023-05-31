@@ -1,0 +1,19 @@
+{
+    "header_len": 4608,
+    "text": "SatoshiLabs",
+    "hw_model": "T2B1",
+    "expiry": 0,
+    "version": [0, 0],
+    "sig_m": 2,
+    "trust": {
+        "show_vendor_string": false,
+        "require_user_click": false,
+        "red_background": false,
+        "delay": 0
+    },
+    "pubkeys": [
+        "bf4e6f004fcb32cec683f22c88c1a86c1518c6de8ac97002d84a63bea3e375dd",
+        "d2def691c1e9d809d8190cf7af935c10688f68983479b4ee9abac19104878ec1",
+        "07c85134946bf89fa19bdc2c5e5ff9ce01296508ee0863d0ff6d63331d1a2516"
+    ]
+}

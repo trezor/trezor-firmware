@@ -794,15 +794,17 @@ cmake_gen = env.Command(
 
 
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
+BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
 if BOOTLOADER_QA:
-    VENDORHEADER = 'embed/vendorheader/vendorheader_qa_DO_NOT_SIGN_signed_dev.bin'
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_qa_DO_NOT_SIGN_signed_dev.bin'
     BOOTLOADER_SUFFIX = MODEL_IDENTIFIER + '_qa'
 elif PRODUCTION:
-    VENDORHEADER = 'embed/vendorheader/vendorheader_satoshilabs_signed_prod.bin'
-    BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_satoshilabs_signed_prod.bin'
+elif TREZOR_MODEL == 'R':
+    # XXX workaround for currently missing prod-signed vendorheader for T2B1
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_dev.bin'
 else:
-    VENDORHEADER = 'embed/vendorheader/vendorheader_unsafe_signed_prod.bin'
-    BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_prod.bin'
 
 obj_program.extend(
     env.Command(
