@@ -1033,6 +1033,7 @@ async def confirm_modify_output(
 
 async def confirm_modify_fee(
     ctx: GenericContext,
+    title: str,
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
@@ -1043,6 +1044,7 @@ async def confirm_modify_fee(
             ctx,
             RustLayout(
                 trezorui2.confirm_modify_fee(
+                    title=title,
                     sign=sign,
                     user_fee_change=user_fee_change,
                     total_fee_new=total_fee_new,
