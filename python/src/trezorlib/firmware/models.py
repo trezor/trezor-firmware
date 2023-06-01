@@ -176,13 +176,40 @@ TREZOR_T_DEV = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
+TREZOR_R = ModelKeys(
+    production=True,
+    boardloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "549a45557008d5518a9a151dc6a3568cf73830a7fe419f2626d9f30d024b2bec",
+            "c16c7027f8a3962607bf24cdec2e3cd2344e1f6071e8260b3dda52b1a5107cb7",
+            "87180f933178b2832bee2d7046c7f4b98300ca7d7fb2e4567169c8730a1c4020",
+        )
+    ],
+    boardloader_sigs_needed=2,
+    bootloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "549a45557008d5518a9a151dc6a3568cf73830a7fe419f2626d9f30d024b2bec",
+            "c16c7027f8a3962607bf24cdec2e3cd2344e1f6071e8260b3dda52b1a5107cb7",
+            "87180f933178b2832bee2d7046c7f4b98300ca7d7fb2e4567169c8730a1c4020",
+        )
+    ],
+    bootloader_sigs_needed=2,
+    firmware_keys=(),
+    firmware_sigs_needed=-1,
+)
+
+TREZOR_R_DEV = TREZOR_T_DEV
 
 MODEL_MAP = {
     Model.ONE: TREZOR_ONE_V3,
     Model.T: TREZOR_T,
+    Model.R: TREZOR_R,
 }
 
 MODEL_MAP_DEV = {
     Model.ONE: TREZOR_ONE_V3_DEV,
     Model.T: TREZOR_T_DEV,
+    Model.R: TREZOR_R_DEV,
 }
