@@ -3160,6 +3160,7 @@ class Features(protobuf.MessageType):
         41: protobuf.Field("busy", "bool", repeated=False, required=False, default=None),
         42: protobuf.Field("homescreen_format", "HomescreenFormat", repeated=False, required=False, default=None),
         43: protobuf.Field("hide_passphrase_from_host", "bool", repeated=False, required=False, default=None),
+        44: protobuf.Field("internal_model", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3206,6 +3207,7 @@ class Features(protobuf.MessageType):
         busy: Optional["bool"] = None,
         homescreen_format: Optional["HomescreenFormat"] = None,
         hide_passphrase_from_host: Optional["bool"] = None,
+        internal_model: Optional["str"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3248,6 +3250,7 @@ class Features(protobuf.MessageType):
         self.busy = busy
         self.homescreen_format = homescreen_format
         self.hide_passphrase_from_host = hide_passphrase_from_host
+        self.internal_model = internal_model
 
 
 class LockDevice(protobuf.MessageType):

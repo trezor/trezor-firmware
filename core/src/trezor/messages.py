@@ -2109,6 +2109,7 @@ if TYPE_CHECKING:
         busy: "bool | None"
         homescreen_format: "HomescreenFormat | None"
         hide_passphrase_from_host: "bool | None"
+        internal_model: "str | None"
 
         def __init__(
             self,
@@ -2153,6 +2154,7 @@ if TYPE_CHECKING:
             busy: "bool | None" = None,
             homescreen_format: "HomescreenFormat | None" = None,
             hide_passphrase_from_host: "bool | None" = None,
+            internal_model: "str | None" = None,
         ) -> None:
             pass
 

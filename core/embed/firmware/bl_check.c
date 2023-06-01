@@ -24,6 +24,7 @@
 #include "common.h"
 #include "flash.h"
 #include "image.h"
+#include "model.h"
 
 // symbols from bootloader.bin => bootloader.o
 extern const void _binary_embed_firmware_bootloader_bin_start;
@@ -78,28 +79,19 @@ static secbool known_bootloader(const uint8_t *hash, int len) {
 #define BOOTLOADER_T2T1_FF {0xe0, 0xd5, 0x96, 0x9f, 0x30, 0xab, 0xfd, 0x8a, 0x7e, 0xb7, 0x63, 0xce, 0x03, 0x67, 0x4a, 0xb4, 0x3e, 0x39, 0x18, 0xab, 0x22, 0x9a, 0x3b, 0xac, 0x2a, 0x9e, 0xa7, 0xe4, 0xd3, 0x81, 0x76, 0x00}
 // --- END GENERATED BOOTLOADER SECTION ---
 
-#if defined TREZOR_MODEL_T
-  #if BOOTLOADER_QA
-    // QA bootloaders for T2T1
-    #define BOOTLOADER_00 BOOTLOADER_T2T1_QA_00
-    #define BOOTLOADER_FF BOOTLOADER_T2T1_QA_FF
-  #else
-    // normal bootloaders for T2T1
-    #define BOOTLOADER_00 BOOTLOADER_T2T1_00
-    #define BOOTLOADER_FF BOOTLOADER_T2T1_FF
-  #endif
-#elif defined TREZOR_MODEL_R
-  #if BOOTLOADER_QA
-    // QA bootloaders for T2B1
-    #define BOOTLOADER_00 BOOTLOADER_T2B1_QA_00
-    #define BOOTLOADER_FF BOOTLOADER_T2B1_QA_FF
-  #else
-    // normal bootloaders for T2B1
-    #define BOOTLOADER_00 BOOTLOADER_T2B1_00
-    #define BOOTLOADER_FF BOOTLOADER_T2B1_FF
-  #endif
+
+#define CONCAT_NAME_HELPER(prefix, name, suffix) prefix##name##suffix
+#define CONCAT_NAME(name, var) CONCAT_NAME_HELPER(BOOTLOADER_, name, var)
+
+
+#if BOOTLOADER_QA
+// QA bootloaders
+    #define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_00)
+    #define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_FF)
 #else
-  #error "Cannot select bootloader hashes for unknown model."
+// normal bootloaders
+#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _00)
+#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _FF)
 #endif
 // clang-format on
 

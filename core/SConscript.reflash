@@ -142,6 +142,7 @@ env.Replace(
     CPPPATH=[
         'embed/reflash',
         'embed/lib',
+        'embed/models',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',

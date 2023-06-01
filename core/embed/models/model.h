@@ -1,0 +1,14 @@
+#ifndef MODELS_MODEL_H_
+#define MODELS_MODEL_H_
+
+#if defined TREZOR_MODEL_1
+#include "model_T1B1.h"
+#elif defined TREZOR_MODEL_T
+#include "model_T2T1.h"
+#elif defined TREZOR_MODEL_R
+#include "model_T2B1.h"
+#else
+#error Unknown Trezor model
+#endif
+
+#endif

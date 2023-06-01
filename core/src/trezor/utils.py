@@ -3,6 +3,7 @@ import sys
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
+    INTERNAL_MODEL,
     MODEL,
     SCM_REVISION,
     USE_SD_CARD,

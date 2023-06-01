@@ -123,6 +123,7 @@ message Features {
     optional bool busy = 41;                    // is the device busy, showing "Do not disconnect"?
     optional HomescreenFormat homescreen_format = 42;   // format of the homescreen, 1 = TOIf 144x144, 2 = jpg 240x240
     optional bool hide_passphrase_from_host = 43;   // should we hide the passphrase when it comes from host?
+    optional string internal_model = 44;        // internal model name
 }
 
 /**

@@ -474,6 +474,7 @@ env.Replace(
         'embed/rust',
         'embed/firmware',
         'embed/lib',
+        'embed/models',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython',

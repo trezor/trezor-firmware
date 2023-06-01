@@ -56,22 +56,22 @@ void parse_boardloader_capabilities() {
     }
 
     switch (tag) {
-      case CAPABILITY:
+      case TAG_CAPABILITY:
         // not used yet, just advance pointer
         break;
-      case MODEL_NAME:
+      case TAG_MODEL_NAME:
         if (length != sizeof(uint32_t)) {
           break;
         }
         memcpy((uint8_t *)&board_name, pos, sizeof(uint32_t));
         break;
-      case BOARDLOADER_VERSION:
+      case TAG_BOARDLOADER_VERSION:
         if (length != sizeof(boardloader_version)) {
           break;
         }
         memcpy(&boardloader_version, pos, length);
         break;
-      case TERMINATOR:
+      case TAG_TERMINATOR:
         return;
       default:
         break;
