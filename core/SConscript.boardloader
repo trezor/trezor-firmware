@@ -142,6 +142,7 @@ env.Replace(
     CPPPATH=[
         'embed/boardloader',
         'embed/lib',
+        'embed/models',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/stmhal',

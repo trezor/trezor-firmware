@@ -156,6 +156,7 @@ env.Replace(
         'embed/bootloader/nanopb',
         'embed/bootloader/protob',
         'embed/lib',
+        'embed/models',
         'embed/unix',
         'embed/extmod/modtrezorui',
         'vendor/nanopb',

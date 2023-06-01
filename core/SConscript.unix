@@ -443,6 +443,7 @@ env.Replace(
         '.',
         'embed/rust',
         'embed/lib',
+        'embed/models',
         'embed/unix',
         'embed/extmod/modtrezorui',
         'vendor/micropython',

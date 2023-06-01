@@ -56,6 +56,7 @@ def get_features() -> Features:
         patch_version=utils.VERSION_PATCH,
         revision=utils.SCM_REVISION,
         model=utils.MODEL,
+        internal_model=utils.INTERNAL_MODEL,
         device_id=storage_device.get_device_id(),
         label=storage_device.get_label(),
         pin_protection=config.has_pin(),

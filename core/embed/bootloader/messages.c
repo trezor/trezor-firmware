@@ -36,6 +36,7 @@
 #include "rust_ui.h"
 
 #include "memzero.h"
+#include "model.h"
 
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"
@@ -293,7 +294,8 @@ static void send_msg_features(uint8_t iface_num,
   MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, VERSION_MINOR);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, VERSION_PATCH);
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
-  MSG_SEND_ASSIGN_STRING(model, "T");
+  MSG_SEND_ASSIGN_STRING(model, MODEL_NAME);
+  MSG_SEND_ASSIGN_STRING(internal_model, MODEL_INTERNAL_NAME);
   if (vhdr && hdr) {
     MSG_SEND_ASSIGN_VALUE(firmware_present, true);
     MSG_SEND_ASSIGN_VALUE(fw_major, (hdr->version & 0xFF));

@@ -36,6 +36,7 @@
 #include "flash.h"
 #include "usb.h"
 #include TREZOR_BOARD
+#include "model.h"
 
 #ifndef TREZOR_EMULATOR
 #include "image.h"
@@ -232,6 +233,7 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 /// VERSION_PATCH: int
 /// USE_SD_CARD: bool
 /// MODEL: str
+/// INTERNAL_MODEL: str
 /// EMULATOR: bool
 /// BITCOIN_ONLY: bool
 
@@ -257,15 +259,9 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_false},
 #endif
-#if defined TREZOR_MODEL_1
-    {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_1)},
-#elif defined TREZOR_MODEL_T
-    {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_T)},
-#elif defined TREZOR_MODEL_R
-    {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_R)},
-#else
-#error Unknown Trezor model
-#endif
+    {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MODEL_NAME_QSTR)},
+    {MP_ROM_QSTR(MP_QSTR_INTERNAL_MODEL),
+     MP_ROM_QSTR(MODEL_INTERNAL_NAME_QSTR)},
 #ifdef TREZOR_EMULATOR
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_true},
     MEMINFO_DICT_ENTRIES

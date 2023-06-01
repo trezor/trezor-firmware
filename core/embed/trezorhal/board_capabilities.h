@@ -40,10 +40,10 @@ Last tag must be terminator or all space used.
 #define CAPABILITIES_HEADER "TRZC"
 
 enum CapabilityTag {
-  TERMINATOR = 0x00,
-  CAPABILITY = 0x01,
-  MODEL_NAME = 0x02,
-  BOARDLOADER_VERSION = 0x03
+  TAG_TERMINATOR = 0x00,
+  TAG_CAPABILITY = 0x01,
+  TAG_MODEL_NAME = 0x02,
+  TAG_BOARDLOADER_VERSION = 0x03
 };
 
 struct __attribute__((packed)) BoardloaderVersion {
