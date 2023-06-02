@@ -97,14 +97,7 @@ where
     fn paint_warning_icons_in_top_corners(&self) {
         let warning_icon = theme::ICON_WARNING;
         warning_icon.draw(AREA.top_left(), geometry::TOP_LEFT, theme::FG, theme::BG);
-        // Needs x+1 Offset to compensate for empty right column (icon needs to be
-        // even-wide)
-        warning_icon.draw(
-            AREA.top_right() + Offset::x(1),
-            geometry::TOP_RIGHT,
-            theme::FG,
-            theme::BG,
-        );
+        warning_icon.draw(AREA.top_right(), geometry::TOP_RIGHT, theme::FG, theme::BG);
     }
 
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {

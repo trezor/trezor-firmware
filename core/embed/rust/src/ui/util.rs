@@ -160,9 +160,20 @@ pub fn long_line_content_with_ellipsis(
 }
 
 #[macro_export]
+/// Create the `Icon` constant with given name and path.
+/// Possibly users can supply `true` as a third argument and this
+/// will signify that the icon has empty right column.
 macro_rules! include_icon {
+    ($name:ident, $path:expr, empty_right_col = $empty:expr) => {
+        pub const $name: Icon = if $empty {
+            Icon::debug_named(include_res!($path), stringify!($name)).with_empty_right_column()
+        } else {
+            Icon::debug_named(include_res!($path), stringify!($name))
+        };
+    };
+    // No empty right column by default.
     ($name:ident, $path:expr) => {
-        pub const $name: Icon = Icon::debug_named(include_res!($path), stringify!($name));
+        include_icon!($name, $path, empty_right_col = false);
     };
 }
 
