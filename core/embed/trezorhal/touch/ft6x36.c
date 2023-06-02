@@ -98,9 +98,15 @@ void touch_set_mode(void) {
   // set register 0xA4 G_MODE to interrupt trigger mode (0x01). basically, CTPM
   // generates a pulse when new data is available
   uint8_t touch_panel_config[] = {0xA4, 0x01};
-  ensure(sectrue * (HAL_OK == i2c_transmit(TOUCH_ADDRESS, touch_panel_config,
-                                           sizeof(touch_panel_config), 10)),
-         "Touch screen panel was not loaded properly.");
+  for (int i = 0; i < 3; i++) {
+    if (HAL_OK == i2c_transmit(TOUCH_ADDRESS, touch_panel_config,
+                               sizeof(touch_panel_config), 10)) {
+      return;
+    }
+    i2c_cycle();
+  }
+
+  ensure(secfalse, "Touch screen panel was not loaded properly.");
 }
 
 void touch_power_on(void) {
@@ -135,9 +141,15 @@ void touch_init(void) {
 void touch_sensitivity(uint8_t value) {
   // set panel threshold (TH_GROUP) - default value is 0x12
   uint8_t touch_panel_threshold[] = {0x80, value};
-  ensure(sectrue * (HAL_OK == i2c_transmit(TOUCH_ADDRESS, touch_panel_threshold,
-                                           sizeof(touch_panel_threshold), 10)),
-         NULL);
+  for (int i = 0; i < 3; i++) {
+    if (HAL_OK == i2c_transmit(TOUCH_ADDRESS, touch_panel_threshold,
+                               sizeof(touch_panel_threshold), 10)) {
+      return;
+    }
+    i2c_cycle();
+  }
+
+  ensure(secfalse, "Touch screen panel was not loaded properly.");
 }
 
 uint32_t touch_is_detected(void) {
