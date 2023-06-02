@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.7] (2023-06-02)
+[0.13.7]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.6...python/v0.13.7
+
+### Added
+- Recognize signing keys for T2B1.
+- Add possibility to call tutorial flow  [#2795]
+- Add ability to change homescreen for Model R  [#2967]
+- Recognize hw model field in vendor headers.  [#3048]
+
+
 ## [0.13.6] (2023-04-24)
 [0.13.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.5...python/v0.13.6
 
@@ -749,7 +759,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2701]: https://github.com/trezor/trezor-firmware/pull/2701
 [#2745]: https://github.com/trezor/trezor-firmware/pull/2745
 [#2786]: https://github.com/trezor/trezor-firmware/pull/2786
+[#2795]: https://github.com/trezor/trezor-firmware/pull/2795
 [#2801]: https://github.com/trezor/trezor-firmware/pull/2801
 [#2832]: https://github.com/trezor/trezor-firmware/pull/2832
 [#2833]: https://github.com/trezor/trezor-firmware/pull/2833
 [#2880]: https://github.com/trezor/trezor-firmware/pull/2880
+[#2967]: https://github.com/trezor/trezor-firmware/pull/2967
+[#3048]: https://github.com/trezor/trezor-firmware/pull/3048

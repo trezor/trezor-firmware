@@ -216,6 +216,7 @@ Device management commands - setup, recover seed, wipe, etc.
     self-test             Perform a factory self-test.
     set-busy              Show a "Do not disconnect" dialog.
     setup                 Perform device setup and generate new seed.
+    tutorial              Show on-device tutorial.
     wipe                  Reset device to factory defaults and remove all private data.
 
 EOS commands.
