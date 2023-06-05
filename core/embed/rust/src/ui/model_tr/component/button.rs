@@ -124,18 +124,7 @@ where
             };
             let content_width = match &self.content {
                 ButtonContent::Text(text) => style.font.visible_text_width(text.as_ref()),
-                ButtonContent::Icon(icon, icon_pressed) => {
-                    let width = if self.state == State::Pressed {
-                        if let Some(icon_pressed) = icon_pressed {
-                            icon_pressed.toif.width()
-                        } else {
-                            icon.toif.width()
-                        }
-                    } else {
-                        icon.toif.width()
-                    };
-                    width - 1
-                }
+                ButtonContent::Icon(icon) => icon.toif.width(),
             };
             content_width + 2 * outline
         };
@@ -225,7 +214,7 @@ where
             // Baselines are adjusted to give space between text and icon.
             // 2 px because 1px might lead to odd coordinate which can't be render
             theme::ICON_ARM_LEFT.draw(
-                area.left_center() + Offset::x(-2),
+                area.left_center() - Offset::x(2),
                 TOP_RIGHT,
                 text_color,
                 background_color,
