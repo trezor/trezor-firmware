@@ -317,10 +317,10 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             if !reverse {
                 paragraphs
                     .add(Paragraph::new(&theme::TEXT_BOLD, action))
-                    .add(Paragraph::new(&theme::TEXT_MONO, description));
+                    .add(Paragraph::new(&theme::TEXT_NORMAL, description));
             } else {
                 paragraphs
-                    .add(Paragraph::new(&theme::TEXT_MONO, description))
+                    .add(Paragraph::new(&theme::TEXT_NORMAL, description))
                     .add(Paragraph::new(&theme::TEXT_BOLD, action));
             }
             paragraphs.into_paragraphs()
@@ -350,7 +350,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             extra: extra.unwrap_or_else(StrBuffer::empty),
             data: data.try_into()?,
             description_font: &theme::TEXT_BOLD,
-            extra_font: &theme::TEXT_MONO,
+            extra_font: &theme::TEXT_NORMAL,
             data_font: &theme::TEXT_MONO_DATA,
         }
         .into_paragraphs();
@@ -409,11 +409,11 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
-        let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_MONO)
-            .text_mono("By continuing you agree to Trezor Company's terms and conditions.".into())
+        let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
+            .text_normal("By continuing you agree to Trezor Company's terms and conditions.".into())
             .newline()
             .newline()
-            .text_mono("More info at".into())
+            .text_normal("More info at".into())
             .newline()
             .text_bold("trezor.io/tos".into());
         let formatted = FormattedText::new(ops);
@@ -514,7 +514,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_BOLD, "Address:".into()),
             Paragraph::new(&theme::TEXT_MONO, address).break_after(),
-            Paragraph::new(&theme::TEXT_MONO, description.into()),
+            Paragraph::new(&theme::TEXT_NORMAL, description.into()),
             Paragraph::new(&theme::TEXT_MONO, amount_change),
             Paragraph::new(&theme::TEXT_BOLD, "New amount:".into()),
             Paragraph::new(&theme::TEXT_MONO, amount_new),
@@ -648,12 +648,12 @@ fn tutorial_screen(
     btn_layout: ButtonLayout<StrBuffer>,
     btn_actions: ButtonActions,
 ) -> Page<StrBuffer> {
-    let mut ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_MONO);
+    let mut ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL);
     // Add title if present
     if !title.is_empty() {
         ops = ops.text_bold(title.into()).newline().newline_half()
     }
-    ops = ops.text_mono(text.into());
+    ops = ops.text_normal(text.into());
 
     let formatted = FormattedText::new(ops);
     Page::new(btn_layout, btn_actions, formatted)
@@ -713,9 +713,9 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 },
                 // This page is special
                 5 => {
-                    let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_MONO)
+                    let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
                         .newline()
-                        .text_mono("Tutorial complete.".into())
+                        .text_normal("Tutorial complete.".into())
                         .newline()
                         .newline()
                         .alignment(Alignment::Center)
@@ -829,9 +829,9 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
                 )
             };
 
-            let ops = OpTextLayout::new(theme::TEXT_MONO)
+            let ops = OpTextLayout::new(theme::TEXT_NORMAL)
                 .newline()
-                .text_mono(app_name.clone())
+                .text_normal(app_name.clone())
                 .newline()
                 .text_bold(account);
             let formatted = FormattedText::new(ops);
@@ -860,7 +860,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 
         let content = Frame::new(
             title,
-            Paragraphs::new([Paragraph::new(&theme::TEXT_MONO, description)]),
+            Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
         );
         let obj = if time_ms == 0 {
             // No timer, used when we only want to draw the dialog once and
@@ -884,11 +884,11 @@ extern "C" fn new_show_mismatch() -> Obj {
 
             let btn_layout = ButtonLayout::arrow_none_text("QUIT".into());
             let btn_actions = ButtonActions::cancel_none_confirm();
-            let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_MONO)
+            let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
                 .text_bold("ADDRESS MISMATCH?".into())
                 .newline()
                 .newline_half()
-                .text_mono("Please contact Trezor support at".into())
+                .text_normal("Please contact Trezor support at".into())
                 .newline()
                 .text_bold("trezor.io/support".into());
             let formatted = FormattedText::new(ops);
@@ -1079,9 +1079,9 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
         for (i, item) in iter.enumerate() {
             let style = match i.cmp(&active) {
-                Ordering::Less => &theme::TEXT_MONO,
+                Ordering::Less => &theme::TEXT_NORMAL,
                 Ordering::Equal => &theme::TEXT_BOLD,
-                Ordering::Greater => &theme::TEXT_MONO,
+                Ordering::Greater => &theme::TEXT_NORMAL,
             };
             let text: StrBuffer = item.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
@@ -1116,7 +1116,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
 
-        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_MONO, description)]);
+        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
 
         let title = if dry_run {
             "SEED CHECK"

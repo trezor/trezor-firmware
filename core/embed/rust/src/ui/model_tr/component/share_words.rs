@@ -19,7 +19,7 @@ const EXTRA_LINE_HEIGHT: i16 = 2;
 const NUMBER_X_OFFSET: i16 = 5;
 const NUMBER_WORD_OFFSET: i16 = 20;
 const NUMBER_FONT: Font = Font::DEMIBOLD;
-const WORD_FONT: Font = Font::NORMAL;
+const WORD_FONT: Font = Font::BIG;
 const INFO_TOP_OFFSET: i16 = 15;
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 
