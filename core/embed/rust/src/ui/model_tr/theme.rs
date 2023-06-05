@@ -43,10 +43,6 @@ pub fn textstyle_number_bold_or_mono(num: i32) -> &'static TextStyle {
     }
 }
 
-// BLD icons
-include_icon!(LOGO_EMPTY, "model_tr/res/trezor_empty.toif");
-include_icon!(ICON_FAIL, "model_tr/res/fail.toif");
-
 // Firmware icons
 include_icon!(ICON_ARM_LEFT, "model_tr/res/arm_left.toif"); // 6*10
 include_icon!(ICON_ARM_RIGHT, "model_tr/res/arm_right.toif"); // 6*10
@@ -71,6 +67,7 @@ include_icon!(
     empty_right_col = true
 ); // 8*8
 include_icon!(ICON_DELETE, "model_tr/res/delete.toif"); // 10*7
+include_icon!(ICON_DEVICE_NAME, "model_tr/res/device_name.toif");
 include_icon!(ICON_EYE, "model_tr/res/eye_round.toif"); // 12*7
 include_icon!(ICON_LOCK, "model_tr/res/lock.toif"); // 10*10
 include_icon!(ICON_LOGO, "model_tr/res/logo_22_33.toif"); // 22*33
