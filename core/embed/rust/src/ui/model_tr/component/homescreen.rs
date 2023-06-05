@@ -45,7 +45,7 @@ where
     pub fn new(label: T, notification: Option<(T, u8)>) -> Self {
         let invisible_btn_layout = ButtonLayout::htc_none_htc("".into(), "".into());
         Self {
-            label: Label::centered(label, theme::TEXT_NORMAL),
+            label: Label::centered(label, theme::TEXT_BIG),
             notification,
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
         }
@@ -158,8 +158,8 @@ where
             "Click to Unlock"
         };
         Lockscreen {
-            label: Child::new(Label::centered(label, theme::TEXT_NORMAL)),
-            instruction: Child::new(Label::centered(instruction_str.into(), theme::TEXT_MONO)),
+            label: Child::new(Label::centered(label, theme::TEXT_BIG)),
+            instruction: Child::new(Label::centered(instruction_str.into(), theme::TEXT_NORMAL)),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
         }
     }

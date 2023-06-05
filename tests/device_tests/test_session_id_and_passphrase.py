@@ -403,9 +403,9 @@ def test_hide_passphrase_from_host(client: Client):
                 )
                 client.debug.press_yes()
             elif client.debug.model == "R":
-                client.debug.press_right()
                 layout = client.debug.wait_layout()
                 assert "will not be displayed" in layout.text_content()
+                client.debug.press_right()
                 client.debug.press_right()
                 client.debug.press_yes()
 

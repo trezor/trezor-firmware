@@ -48,10 +48,8 @@ where
             value: 0,
             loader_y_offset: 0,
             indeterminate,
-            description: Paragraphs::new(
-                Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
-            )
-            .into_child(),
+            description: Paragraphs::new(Paragraph::new(&theme::TEXT_BIG, description).centered())
+                .into_child(),
             description_pad: Pad::with_background(theme::BG),
             update_description,
         }
@@ -75,8 +73,7 @@ where
             .filter(|c| *c == '\n')
             .count() as i16;
         let (title, rest) = Self::AREA.split_top(self.title.inner().max_size().y);
-        let (loader, description) =
-            rest.split_bottom(Font::NORMAL.line_height() * description_lines);
+        let (loader, description) = rest.split_bottom(Font::BIG.line_height() * description_lines);
         self.title.place(title);
         self.loader_y_offset = loader.center().y - constant::screen().center().y;
         self.description.place(description);

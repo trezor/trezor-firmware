@@ -13,12 +13,16 @@ pub const FG: Color = WHITE; // Default foreground (text & icon) color.
 pub const BG: Color = BLACK; // Default background color.
 
 // Font constants.
-pub const FONT_BUTTON: Font = Font::MONO;
+pub const FONT_BUTTON: Font = Font::NORMAL;
 pub const FONT_HEADER: Font = Font::BOLD;
-pub const FONT_CHOICE_ITEMS: Font = Font::NORMAL;
+pub const FONT_CHOICE_ITEMS: Font = Font::BIG;
 
 // Text constants.
-pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, FG, FG);
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, FG, FG)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
+    .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
+    .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);
+pub const TEXT_BIG: TextStyle = TextStyle::new(Font::BIG, FG, BG, FG, FG);
 pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, FG, FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)

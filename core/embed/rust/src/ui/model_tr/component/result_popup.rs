@@ -50,7 +50,7 @@ where
         headline: Option<&'static str>,
         button_text: Option<&'static str>,
     ) -> Self {
-        let p1 = Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text))
+        let p1 = Paragraphs::new(Paragraph::new(&theme::TEXT_BIG, text))
             .with_placement(LinearPlacement::vertical().align_at_center());
 
         let buttons = button_text.map(|text| {

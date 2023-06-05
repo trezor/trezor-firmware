@@ -26,11 +26,11 @@ FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 
 if TREZOR_MODEL in ('R',):
-    FONT_NORMAL='Font_Unifont_Regular_16'
+    FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD='Font_Unifont_Bold_16'
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
-    FONT_BIG=None
+    FONT_BIG='Font_Unifont_Regular_16'
 elif TREZOR_MODEL in ('T', ):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
