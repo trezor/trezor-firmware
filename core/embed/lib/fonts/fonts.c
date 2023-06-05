@@ -69,6 +69,10 @@ int font_height(int font) {
     case FONT_MONO:
       return FONT_MONO_HEIGHT;
 #endif
+#ifdef TREZOR_FONT_BIG_ENABLE
+    case FONT_BIG:
+      return FONT_BIG_HEIGHT;
+#endif
   }
   return 0;
 }
@@ -91,6 +95,10 @@ int font_max_height(int font) {
     case FONT_MONO:
       return FONT_MONO_MAX_HEIGHT;
 #endif
+#ifdef TREZOR_FONT_BIG_ENABLE
+    case FONT_BIG:
+      return FONT_BIG_MAX_HEIGHT;
+#endif
   }
   return 0;
 }
@@ -112,6 +120,10 @@ int font_baseline(int font) {
 #ifdef TREZOR_FONT_MONO_ENABLE
     case FONT_MONO:
       return FONT_MONO_BASELINE;
+#endif
+#ifdef TREZOR_FONT_BIG_ENABLE
+    case FONT_BIG:
+      return FONT_BIG_BASELINE;
 #endif
   }
   return 0;
@@ -139,6 +151,10 @@ const uint8_t *font_get_glyph(int font, uint8_t c) {
 #ifdef TREZOR_FONT_MONO_ENABLE
       case FONT_MONO:
         return FONT_MONO_DATA[c - ' '];
+#endif
+#ifdef TREZOR_FONT_BIG_ENABLE
+      case FONT_BIG:
+        return FONT_BIG_DATA[c - ' '];
 #endif
     }
     return 0;

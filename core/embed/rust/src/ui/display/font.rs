@@ -129,6 +129,7 @@ pub enum Font {
     NORMAL = 1,
     BOLD = 2,
     MONO = 3,
+    BIG = 4,
     DEMIBOLD = 5,
 }
 
