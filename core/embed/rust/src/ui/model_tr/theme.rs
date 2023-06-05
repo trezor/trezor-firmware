@@ -50,29 +50,45 @@ include_icon!(ICON_FAIL, "model_tr/res/fail.toif");
 // Firmware icons
 include_icon!(ICON_ARM_LEFT, "model_tr/res/arm_left.toif"); // 6*10
 include_icon!(ICON_ARM_RIGHT, "model_tr/res/arm_right.toif"); // 6*10
-include_icon!(ICON_ARROW_LEFT, "model_tr/res/arrow_left.toif"); // 6*10
-include_icon!(ICON_ARROW_RIGHT, "model_tr/res/arrow_right.toif"); // 6*10
+include_icon!(
+    ICON_ARROW_LEFT,
+    "model_tr/res/arrow_left.toif",
+    empty_right_col = true
+); // 6*10
+include_icon!(
+    ICON_ARROW_RIGHT,
+    "model_tr/res/arrow_right.toif",
+    empty_right_col = true
+); // 6*10
 include_icon!(ICON_ARROW_RIGHT_FAT, "model_tr/res/arrow_right_fat.toif"); // 4*8
 include_icon!(ICON_ARROW_UP, "model_tr/res/arrow_up.toif"); // 10*6
 include_icon!(ICON_ARROW_DOWN, "model_tr/res/arrow_down.toif"); // 10*6
 include_icon!(ICON_ARROW_BACK_UP, "model_tr/res/arrow_back_up.toif"); // 8*8
 include_icon!(ICON_BIN, "model_tr/res/bin.toif"); // 10*10
-include_icon!(ICON_CANCEL, "model_tr/res/cancel_no_outline.toif"); // 8*8
 include_icon!(
-    ICON_CANCEL_INVERTED,
-    "model_tr/res/cancel_no_outline_inverted.toif"
+    ICON_CANCEL,
+    "model_tr/res/cancel_no_outline.toif",
+    empty_right_col = true
 ); // 8*8
 include_icon!(ICON_DELETE, "model_tr/res/delete.toif"); // 10*7
 include_icon!(ICON_EYE, "model_tr/res/eye_round.toif"); // 12*7
 include_icon!(ICON_LOCK, "model_tr/res/lock.toif"); // 10*10
 include_icon!(ICON_LOGO, "model_tr/res/logo_22_33.toif"); // 22*33
-include_icon!(ICON_NEXT_PAGE, "model_tr/res/next_page.toif"); // 10*8
+include_icon!(
+    ICON_NEXT_PAGE,
+    "model_tr/res/next_page.toif",
+    empty_right_col = true
+); // 10*8
 include_icon!(ICON_PREV_PAGE, "model_tr/res/prev_page.toif"); // 8*10
 include_icon!(ICON_SPACE, "model_tr/res/space.toif"); // 12*3
 include_icon!(ICON_SUCCESS, "model_tr/res/success.toif");
 include_icon!(ICON_TICK, "model_tr/res/tick.toif"); // 8*6
 include_icon!(ICON_TICK_FAT, "model_tr/res/tick_fat.toif"); // 8*6
-include_icon!(ICON_WARNING, "model_tr/res/warning.toif"); // 12*12
+include_icon!(
+    ICON_WARNING,
+    "model_tr/res/warning.toif",
+    empty_right_col = true
+); // 12*12
 include_icon!(ICON_WARN_TITLE, "model_tr/res/bld_header_warn.toif");
 
 // checklist settings
