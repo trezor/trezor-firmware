@@ -31,7 +31,7 @@
 #endif
 #include "memzero.h"
 
-extern void main_clean_exit();
+extern void main_clean_exit(int);
 extern float display_gamma(float);
 
 void __attribute__((noreturn)) trezor_shutdown(void) {

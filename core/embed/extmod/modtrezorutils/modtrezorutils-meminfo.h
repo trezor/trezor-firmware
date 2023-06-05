@@ -343,6 +343,7 @@ void dump_closure(FILE *out, const mp_obj_closure_t *closure) {
     size += find_allocated_size(closure->closed[i]);
     assert(mp_obj_is_type(closure->closed[i], &mp_type_cell));
   }
+  (void)size;
   print_type(out, "closure", NULL, closure, false);
 
   fprintf(out, ",\n\"function\": \"%p\"", closure->fun);
