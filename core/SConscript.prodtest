@@ -20,11 +20,13 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO=None
-if TREZOR_MODEL in ('T', ):
+    FONT_BIG=None
+elif TREZOR_MODEL in ('T', ):
     FONT_NORMAL=None
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_Roboto_Bold_20'
     FONT_MONO=None
+    FONT_BIG=None
 
 # modtrezorcrypto
 CPPPATH_MOD += [
@@ -105,6 +107,7 @@ tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
