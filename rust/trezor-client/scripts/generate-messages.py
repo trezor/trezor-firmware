@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+
+# Generates the `trezor_message_impl!` macro calls for the `src/messages.rs` file.
+
+from os import path
+
+# Path to the `messages.proto` file
+PATH = path.abspath(path.join(__file__, "../../../../common/protob/messages.proto"))
+# Prefix of the enum variants
+PREFIX = "MessageType_"
+# Mapping of block name to feature name
+FEATURES = {
+    # no features
+    "Management": "default",
+    "Bootloader": "default",
+    "Crypto": "default",
+    "Debug": "default",
+    #
+    "Bitcoin": "bitcoin",
+    "Ethereum": "ethereum",
+    #
+    "Binance": "binance",
+    "Cardano": "cardano",
+    "EOS": "eos",
+    "Monero": "monero",
+    "NEM": "nem",
+    "Ripple": "ripple",
+    "Stellar": "stellar",
+    "Tezos": "tezos",
+    "WebAuthn": "webauthn",
+}
+MACRO = "trezor_message_impl"
+INDENT = "\t"
+
+
+def main():
+    blocks = get_blocks()
+    features = {}
+    defaults = []
+    for block, variants in blocks.items():
+        f = FEATURES.get(block)
+        if not f or f == "default":
+            defaults.extend(variants)
+        else:
+            vs = features.get(f)
+            if vs:
+                vs.extend(variants)
+            else:
+                features[f] = variants
+
+    items = list(features.items())
+    items.sort()
+
+    out = write_block(defaults)
+    for feature, variants in items:
+        if variants and feature:
+            out += "\n"
+            out += write_block(variants, feature)
+    print(out)
+
+
+# Parse feature blocks based on comments in the `messages.proto` file
+def get_blocks() -> dict[str, list[str]]:
+    blocks = {}
+    current_block = ""
+    with open(PATH, "r") as file:
+        in_enum = False
+        in_block_comment = False
+        for line in file:
+            line = line.strip()
+
+            if "/*" in line:
+                in_block_comment = True
+            if "*/" in line:
+                in_block_comment = False
+            if in_block_comment:
+                continue
+
+            if line.startswith("enum MessageType {"):
+                in_enum = True
+                continue
+            if in_enum:
+                if line == "}":
+                    break
+                if line.startswith("//"):
+                    comment = line.removeprefix("//").strip()
+                    if comment[0].isupper() and len(comment.split(" ")) == 1:
+                        current_block = comment
+                        blocks[current_block] = []
+                elif line.startswith(PREFIX):
+                    blocks[current_block].append(line.split(" ")[0])
+    return blocks
+
+
+# Writes a macro block
+def write_block(variants: list[str], feature: str = "") -> str:
+    s = ""
+    if feature:
+        s += f'#[cfg(feature = "{feature}")]\n'
+    s += f"{MACRO}! {{\n"
+    for variant in variants:
+        s += f"{INDENT}{variant.removeprefix(PREFIX)} => {variant},\n"
+    s += "}\n"
+    return s
+
+
+if __name__ == "__main__":
+    main()
