@@ -42,6 +42,10 @@ const CHOICES: [(&str, PinAction, Option<Icon>); CHOICE_LENGTH] = [
     ("9", PinAction::Digit('9'), None),
 ];
 
+fn get_random_digit_position() -> usize {
+    random::uniform_between(NUMBER_START_INDEX as u32, (CHOICE_LENGTH - 1) as u32) as usize
+}
+
 struct ChoiceFactoryPIN;
 
 impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
@@ -90,9 +94,9 @@ where
         let choices = ChoiceFactoryPIN;
 
         Self {
-            // Starting at the digit 0
+            // Starting at a random digit.
             choice_page: ChoicePage::new(choices)
-                .with_initial_page_counter(NUMBER_START_INDEX)
+                .with_initial_page_counter(get_random_digit_position())
                 .with_carousel(true),
             pin_line: Child::new(ChangingTextLine::center_bold(String::from(prompt.as_ref()))),
             subprompt_line: Child::new(ChangingTextLine::center_mono(subprompt)),
@@ -120,10 +124,13 @@ where
         } else if self.show_real_pin {
             String::from(self.pin())
         } else {
+            // Showing asterisks and the last digit.
             let mut dots: String<MAX_PIN_LENGTH> = String::new();
-            for _ in 0..self.textbox.len() {
-                unwrap!(dots.push_str("*"));
+            for _ in 0..self.textbox.len() - 1 {
+                unwrap!(dots.push('*'));
             }
+            let last_char = unwrap!(self.textbox.content().chars().last());
+            unwrap!(dots.push(last_char));
             dots
         };
 
@@ -191,15 +198,9 @@ where
             Some(PinAction::Enter) => Some(CancelConfirmMsg::Confirmed),
             Some(PinAction::Digit(ch)) if !self.is_full() => {
                 self.textbox.append(ctx, ch);
-                // Choosing random digit to be shown next, but different
-                // from the current choice.
-                let new_page_counter = random::uniform_between_except(
-                    NUMBER_START_INDEX as u32,
-                    (CHOICE_LENGTH - 1) as u32,
-                    self.choice_page.page_index() as u32,
-                );
+                // Choosing random digit to be shown next
                 self.choice_page
-                    .set_page_counter(ctx, new_page_counter as usize);
+                    .set_page_counter(ctx, get_random_digit_position());
                 self.update(ctx);
                 None
             }
