@@ -185,7 +185,7 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     assert "PassphraseKeyboard" in debug.wait_layout().all_components()
 
     if debug.model == "R":
-        # Going into the first character category (abc)
+        # Going into the selected character category
         debug.press_middle()
 
     # enter passphrase - slowly
@@ -195,21 +195,20 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
             # click at "j"
             debug.click(CENTER_BUTTON)
         elif debug.model == "R":
-            # press "a"
-            debug.press_middle()
+            # just go right
+            # NOTE: because of passphrase randomization it would be a pain to input
+            # a specific passphrase, which is not in scope for this test.
+            debug.press_right()
         time.sleep(1.5)
 
-    # Confirm the passphrase
+    # Send the passphrase to the client (TT has it clicked already, TR needs to input it)
     if debug.model == "T":
         debug.click(buttons.OK, wait=True)
-        assert device_handler.result() == "mnF4yRWJXmzRB6EuBzuVigqeqTqirQupxJ"
     elif debug.model == "R":
-        debug.press_left()  # go to BACK
-        debug.press_middle()  # PRESS back
-        debug.press_left()  # go to ENTER
-        debug.press_middle()  # press ENTER
-        debug.wait_layout()
-        assert device_handler.result() == "mfar3NVufmeGNamk1sCpmCiSLPoFJ9JQDa"
+        debug.input("j" * 8, wait=True)
+
+    # address corresponding to "jjjjjjjj" passphrase
+    assert device_handler.result() == "mnF4yRWJXmzRB6EuBzuVigqeqTqirQupxJ"
 
 
 @pytest.mark.setup_client(pin=PIN4, passphrase=True)
@@ -223,7 +222,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     assert "PassphraseKeyboard" in debug.wait_layout().all_components()
 
     if debug.model == "R":
-        # Going into the first character category (abc)
+        # Going into the selected character category
         debug.press_middle()
 
     # enter passphrase - slowly
