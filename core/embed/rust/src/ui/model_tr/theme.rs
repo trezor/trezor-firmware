@@ -63,7 +63,7 @@ include_icon!(ICON_ARROW_BACK_UP, "model_tr/res/arrow_back_up.toif"); // 8*8
 include_icon!(ICON_BIN, "model_tr/res/bin.toif"); // 10*10
 include_icon!(
     ICON_CANCEL,
-    "model_tr/res/cancel_no_outline.toif",
+    "model_tr/res/cancel.toif",
     empty_right_col = true
 ); // 8*8
 include_icon!(ICON_DELETE, "model_tr/res/delete.toif"); // 10*7
