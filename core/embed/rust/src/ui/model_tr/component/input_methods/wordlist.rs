@@ -1,6 +1,6 @@
 use crate::{
     strutil::StringType,
-    trezorhal::wordlist::Wordlist,
+    trezorhal::{random, wordlist::Wordlist},
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         geometry::Rect,
@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::super::{theme, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage};
-use heapless::String;
+use heapless::{String, Vec};
 
 enum WordlistAction {
     Letter(char),
@@ -18,7 +18,6 @@ enum WordlistAction {
 }
 
 const MAX_WORD_LENGTH: usize = 10;
-const MAX_LETTERS_LENGTH: usize = 26;
 
 /// Offer words when there will be fewer of them than this
 const OFFER_WORDS_THRESHOLD: usize = 10;
@@ -31,6 +30,11 @@ const INITIAL_PAGE_COUNTER: usize = DELETE_INDEX + 1;
 
 const PROMPT: &str = "_";
 
+/// Choosing random choice index, disregarding DELETE option
+fn get_random_position(num_choices: usize) -> usize {
+    random::uniform_between(INITIAL_PAGE_COUNTER as u32, (num_choices - 1) as u32) as usize
+}
+
 /// Type of the wordlist, deciding the list of words to be used
 #[derive(Clone, Copy)]
 pub enum WordlistType {
@@ -41,6 +45,8 @@ pub enum WordlistType {
 struct ChoiceFactoryWordlist {
     wordlist: Wordlist,
     offer_words: bool,
+    /// We want to randomize the order in which we show the words
+    word_random_order: Vec<usize, OFFER_WORDS_THRESHOLD>,
 }
 
 impl ChoiceFactoryWordlist {
@@ -51,9 +57,21 @@ impl ChoiceFactoryWordlist {
         }
         .filter_prefix(prefix);
         let offer_words = wordlist.len() < OFFER_WORDS_THRESHOLD;
+        let word_random_order: Vec<usize, OFFER_WORDS_THRESHOLD> = if offer_words {
+            // Filling slice with numbers 0..wordlist.len() and shuffling them
+            let slice = &mut [0; OFFER_WORDS_THRESHOLD][..wordlist.len()];
+            for (i, item) in slice.iter_mut().enumerate() {
+                *item = i;
+            }
+            random::shuffle(slice);
+            slice.iter().copied().collect()
+        } else {
+            Vec::new()
+        };
         Self {
             wordlist,
             offer_words,
+            word_random_order,
         }
     }
 }
@@ -82,7 +100,9 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryWordlist {
             );
         }
         if self.offer_words {
-            let word = self.wordlist.get(choice_index - 1).unwrap_or_default();
+            // Taking a random (but always the same) word on this position
+            let index = self.word_random_order[choice_index - 1];
+            let word = self.wordlist.get(index).unwrap_or_default();
             (
                 ChoiceItem::new(word, ButtonLayout::default_three_icons()),
                 WordlistAction::Word(word),
@@ -116,12 +136,13 @@ where
 {
     pub fn new(wordlist_type: WordlistType) -> Self {
         let choices = ChoiceFactoryWordlist::new(wordlist_type, "");
+        let choices_count = <ChoiceFactoryWordlist as ChoiceFactory<T>>::count(&choices);
         Self {
-            // Starting at second page because of DELETE option
+            // Starting at random letter position
             choice_page: ChoicePage::new(choices)
                 .with_incomplete(true)
                 .with_carousel(true)
-                .with_initial_page_counter(INITIAL_PAGE_COUNTER),
+                .with_initial_page_counter(get_random_position(choices_count)),
             chosen_letters: Child::new(ChangingTextLine::center_mono(String::from(PROMPT))),
             textbox: TextBox::empty(),
             offer_words: false,
@@ -140,14 +161,18 @@ where
         self.update_chosen_letters(ctx);
         let new_choices = self.get_current_choices();
         self.offer_words = new_choices.offer_words;
+        // Starting at the random position in case of letters and at the beginning in
+        // case of words
+        let new_page_counter = if self.offer_words {
+            INITIAL_PAGE_COUNTER
+        } else {
+            let choices_count = <ChoiceFactoryWordlist as ChoiceFactory<T>>::count(&new_choices);
+            get_random_position(choices_count)
+        };
         // Not using carousel in case of words, as that looks weird in case
         // there is only one word to choose from.
-        self.choice_page.reset(
-            ctx,
-            new_choices,
-            Some(INITIAL_PAGE_COUNTER),
-            !self.offer_words,
-        );
+        self.choice_page
+            .reset(ctx, new_choices, Some(new_page_counter), !self.offer_words);
         ctx.request_paint();
     }
 
