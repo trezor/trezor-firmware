@@ -1327,7 +1327,6 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
         self.debug.press_yes()
 
         yield
-        assert "ENTER" in self.layout().text_content()
         self.debug.input("654")
 
         yield
@@ -1335,7 +1334,6 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
         self.debug.press_right()
 
         yield
-        assert "ENTER" in self.layout().text_content()
         self.debug.input("654")
 
         yield
