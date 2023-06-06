@@ -12,7 +12,7 @@ pub fn shuffle<T>(slice: &mut [T]) {
 
 /// Returns a random number in the range [min, max].
 pub fn uniform_between(min: u32, max: u32) -> u32 {
-    assert!(max > min);
+    assert!(max >= min);
     uniform(max - min + 1) + min
 }
 
