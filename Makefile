@@ -86,11 +86,13 @@ defs_check: ## check validity of coin definitions and protobuf files
 ruststyle:
 	@echo [RUSTFMT]
 	@cd core/embed/rust ; cargo fmt
+	@cd rust/trezor-client ; cargo fmt
 
 ruststyle_check:
 	rustfmt --version
 	@echo [RUSTFMT]
 	@cd core/embed/rust ; cargo fmt -- --check
+	@cd rust/trezor-client ; cargo fmt -- --check
 
 python_support_check:
 	./tests/test_python_support.py
