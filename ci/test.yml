@@ -674,6 +674,15 @@ python support test:
   script:
     - $NIX_SHELL --run "poetry run make python_support_check | ts -s"
 
+# Rust
+
+rust test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  script:
+    - $NIX_SHELL --run "poetry run core/emu.py --headless -q --temporary-profile --slip0014 --command cargo test --manifest-path rust/trezor-client/Cargo.toml | ts -s"
 
 # Storage
 
