@@ -7,6 +7,8 @@
 #include "model_T2T1.h"
 #elif defined TREZOR_MODEL_R
 #include "model_T2B1.h"
+#elif defined TREZOR_MODEL_T3W1
+#include "model_T3W1.h"
 #elif defined TREZOR_MODEL_DISC1
 #include "model_D001.h"
 #else

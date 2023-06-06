@@ -576,7 +576,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/sdcard.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if "sd_card" not in FEATURES_AVAILABLE else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))

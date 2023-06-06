@@ -140,7 +140,7 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
-if TREZOR_MODEL in ('T', 'R'):
+if TREZOR_MODEL in ('T', 'R', 'T3W1'):
     CPU_MODEL   = 'STM32F427xx'
 elif TREZOR_MODEL in ('DISC1', ):
     CPU_MODEL   = 'STM32F429xx'

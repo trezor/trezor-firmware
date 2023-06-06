@@ -176,7 +176,7 @@ if __debug__:
         debug_events.last_event += 1
 
         # TT click on specific coordinates, with possible hold
-        if x is not None and y is not None and utils.MODEL in ("T", "DISC1"):
+        if x is not None and y is not None and utils.MODEL in ("T", "T3W1", "DISC1"):
             click_chan.publish((debug_events.last_event, x, y, msg.hold_ms))
         # TR press specific button
         elif msg.physical_button is not None and utils.MODEL in ("R",):
