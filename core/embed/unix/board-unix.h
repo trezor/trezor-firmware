@@ -26,5 +26,4 @@
 
 #include "display-unix.h"
 
-
 #endif  //_BOARD_UNIX_H
