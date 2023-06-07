@@ -75,6 +75,9 @@ trezor-pylint-plugin = {path = "./tools/trezor-pylint-plugin", develop = true}
 trezor-core-tools = {path = "./core/tools", develop = true}
 flake8-annotations = "^3.1.1"
 
+# ble
+dbus-next = "*"
+
 [tool.poetry.dev-dependencies]
 scan-build = "*"
 towncrier = "^23.6.0"
