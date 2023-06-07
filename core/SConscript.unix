@@ -526,6 +526,7 @@ env.Replace(
         'embed/unix',
         'embed/trezorhal',
         'embed/trezorhal/unix',
+        'embed/trezorhal/unix/ble',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
         'vendor/micropython/ports/unix',

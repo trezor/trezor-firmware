@@ -155,7 +155,6 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       }
-#endif
 #ifdef USE_BLE
       else if (iface == BLE_EVENTS_IFACE) {
         ble_event_poll();

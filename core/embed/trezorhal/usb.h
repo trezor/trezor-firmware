@@ -144,5 +144,6 @@ void usb_deinit(void);
 void usb_start(void);
 void usb_stop(void);
 secbool usb_configured(void);
+secbool usb_configured_now(void);
 
 #endif

@@ -20,7 +20,7 @@ if TREZOR_MODEL in ('1', ):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga"]
+FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "ble"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -38,9 +38,9 @@ if TREZOR_MODEL in ('R', ):
     FONT_BIG=None
 elif TREZOR_MODEL in ('T', 'T3W1', 'DISC1'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
-    FONT_DEMIBOLD=None
+    FONT_DEMIBOLD='Font_TTHoves_Regular_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
-    FONT_MONO=None
+    FONT_MONO='Font_TTHoves_Regular_21'
     FONT_BIG=None
 
 # modtrezorcrypto
@@ -87,6 +87,7 @@ SOURCE_MOD += [
     'embed/lib/fonts/fonts.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/image.c',
+    'embed/lib/protob_helpers.c',
     'embed/extmod/modtrezorcrypto/rand.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -150,7 +151,6 @@ env.Replace(
     CPPPATH=[
         'embed/rust',
         'embed/bootloader',
-        'embed/bootloader/nanopb',
         'embed/bootloader/protob',
         'embed/lib',
         'embed/models',

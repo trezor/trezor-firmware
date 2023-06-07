@@ -23,7 +23,11 @@ typedef enum _MessageType {
     MessageType_MessageType_ButtonRequest = 26,
     MessageType_MessageType_ButtonAck = 27,
     MessageType_MessageType_GetFeatures = 55,
-    MessageType_MessageType_UnlockBootloader = 96
+    MessageType_MessageType_UnlockBootloader = 96,
+    MessageType_MessageType_PairingRequest = 8003,
+    MessageType_MessageType_AuthKey = 8004,
+    MessageType_MessageType_RepairRequest = 8005,
+    MessageType_MessageType_ComparisonRequest = 8008
 } MessageType;
 
 typedef enum _FailureType {
@@ -38,9 +42,17 @@ typedef enum _ButtonRequestType {
 } ButtonRequestType;
 
 /* Struct definitions */
+typedef struct _AuthKey {
+    pb_callback_t key;
+} AuthKey;
+
 typedef struct _ButtonAck {
     char dummy_field;
 } ButtonAck;
+
+typedef struct _ComparisonRequest {
+    pb_callback_t key;
+} ComparisonRequest;
 
 typedef struct _GetFeatures {
     char dummy_field;
@@ -49,6 +61,14 @@ typedef struct _GetFeatures {
 typedef struct _Initialize {
     char dummy_field;
 } Initialize;
+
+typedef struct _PairingRequest {
+    char dummy_field;
+} PairingRequest;
+
+typedef struct _RepairRequest {
+    char dummy_field;
+} RepairRequest;
 
 typedef struct _UnlockBootloader {
     char dummy_field;
@@ -137,8 +157,8 @@ typedef struct _Success {
 
 /* Helper constants for enums */
 #define _MessageType_MIN MessageType_MessageType_Initialize
-#define _MessageType_MAX MessageType_MessageType_UnlockBootloader
-#define _MessageType_ARRAYSIZE ((MessageType)(MessageType_MessageType_UnlockBootloader+1))
+#define _MessageType_MAX MessageType_MessageType_ComparisonRequest
+#define _MessageType_ARRAYSIZE ((MessageType)(MessageType_MessageType_ComparisonRequest+1))
 
 #define _FailureType_MIN FailureType_Failure_UnexpectedMessage
 #define _FailureType_MAX FailureType_Failure_ProcessError
@@ -166,6 +186,10 @@ extern "C" {
 #define FirmwareRequest_init_default             {0, 0}
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define UnlockBootloader_init_default            {0}
+#define PairingRequest_init_default              {0}
+#define AuthKey_init_default                     {{{NULL}, NULL}}
+#define RepairRequest_init_default               {0}
+#define ComparisonRequest_init_default           {{{NULL}, NULL}}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
 #define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0}
@@ -178,8 +202,14 @@ extern "C" {
 #define FirmwareRequest_init_zero                {0, 0}
 #define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}}
 #define UnlockBootloader_init_zero               {0}
+#define PairingRequest_init_zero                 {0}
+#define AuthKey_init_zero                        {{{NULL}, NULL}}
+#define RepairRequest_init_zero                  {0}
+#define ComparisonRequest_init_zero              {{{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
+#define AuthKey_key_tag                          1
+#define ComparisonRequest_key_tag                1
 #define ButtonRequest_code_tag                   1
 #define Failure_code_tag                         1
 #define Failure_message_tag                      2
@@ -294,6 +324,26 @@ X(a, STATIC,   OPTIONAL, BYTES,    hash,              2)
 #define UnlockBootloader_CALLBACK NULL
 #define UnlockBootloader_DEFAULT NULL
 
+#define PairingRequest_FIELDLIST(X, a) \
+
+#define PairingRequest_CALLBACK NULL
+#define PairingRequest_DEFAULT NULL
+
+#define AuthKey_FIELDLIST(X, a) \
+X(a, CALLBACK, REQUIRED, BYTES,    key,               1)
+#define AuthKey_CALLBACK pb_default_field_callback
+#define AuthKey_DEFAULT NULL
+
+#define RepairRequest_FIELDLIST(X, a) \
+
+#define RepairRequest_CALLBACK NULL
+#define RepairRequest_DEFAULT NULL
+
+#define ComparisonRequest_FIELDLIST(X, a) \
+X(a, CALLBACK, REQUIRED, BYTES,    key,               1)
+#define ComparisonRequest_CALLBACK pb_default_field_callback
+#define ComparisonRequest_DEFAULT NULL
+
 extern const pb_msgdesc_t Initialize_msg;
 extern const pb_msgdesc_t GetFeatures_msg;
 extern const pb_msgdesc_t Features_msg;
@@ -306,6 +356,10 @@ extern const pb_msgdesc_t FirmwareErase_msg;
 extern const pb_msgdesc_t FirmwareRequest_msg;
 extern const pb_msgdesc_t FirmwareUpload_msg;
 extern const pb_msgdesc_t UnlockBootloader_msg;
+extern const pb_msgdesc_t PairingRequest_msg;
+extern const pb_msgdesc_t AuthKey_msg;
+extern const pb_msgdesc_t RepairRequest_msg;
+extern const pb_msgdesc_t ComparisonRequest_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define Initialize_fields &Initialize_msg
@@ -320,9 +374,15 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 #define FirmwareRequest_fields &FirmwareRequest_msg
 #define FirmwareUpload_fields &FirmwareUpload_msg
 #define UnlockBootloader_fields &UnlockBootloader_msg
+#define PairingRequest_fields &PairingRequest_msg
+#define AuthKey_fields &AuthKey_msg
+#define RepairRequest_fields &RepairRequest_msg
+#define ComparisonRequest_fields &ComparisonRequest_msg
 
 /* Maximum encoded size of messages (where known) */
 /* FirmwareUpload_size depends on runtime parameters */
+/* AuthKey_size depends on runtime parameters */
+/* ComparisonRequest_size depends on runtime parameters */
 #define ButtonAck_size                           0
 #define ButtonRequest_size                       2
 #define Failure_size                             260
@@ -331,7 +391,9 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 #define FirmwareRequest_size                     12
 #define GetFeatures_size                         0
 #define Initialize_size                          0
+#define PairingRequest_size                      0
 #define Ping_size                                258
+#define RepairRequest_size                       0
 #define Success_size                             258
 #define UnlockBootloader_size                    0
 

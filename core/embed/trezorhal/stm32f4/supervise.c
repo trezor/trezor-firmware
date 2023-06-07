@@ -5,6 +5,10 @@
 #include "../mpu.h"
 #include "common.h"
 #include "supervise.h"
+#include TREZOR_BOARD
+#ifdef USE_BLE
+#include "ble/ble.h"
+#endif
 
 #ifdef ARM_USER_MODE
 
@@ -72,6 +76,10 @@ void SVC_C_Handler(uint32_t *stack) {
         ;
       break;
     case SVC_REBOOT_TO_BOOTLOADER:
+#ifdef USE_BLE
+      ble_stop_all_comm();
+      // TODO: make sure that no answer is pending from NRF
+#endif
       ensure_compatible_settings();
 
       __asm__ volatile("msr control, %0" ::"r"(0x0));
