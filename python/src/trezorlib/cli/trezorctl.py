@@ -33,6 +33,7 @@ from . import (
     TrezorConnection,
     benchmark,
     binance,
+    ble,
     btc,
     cardano,
     crypto,
@@ -88,6 +89,7 @@ COMMAND_ALIASES = {
     "upgrade-firmware": firmware.update,
     "firmware-upgrade": firmware.update,
     "firmware-update": firmware.update,
+    "ble-update": ble.update,
 }
 
 
@@ -418,6 +420,7 @@ cli.add_command(tezos.cli)
 cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
 cli.add_command(benchmark.cli)
+cli.add_command(ble.cli)
 
 #
 # Main
