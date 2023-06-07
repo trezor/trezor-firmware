@@ -82,6 +82,15 @@ class MessageType(IntEnum):
     FirmwareUpload = 7
     FirmwareRequest = 8
     SelfTest = 32
+    UploadBLEFirmwareInit = 8000
+    UploadBLEFirmwareNextChunk = 8001
+    UploadBLEFirmwareChunk = 8002
+    PairingRequest = 8003
+    AuthKey = 8004
+    RepairRequest = 8005
+    EraseBonds = 8006
+    Disconnect = 8007
+    ComparisonRequest = 8008
     GetPublicKey = 11
     PublicKey = 12
     SignTx = 15
@@ -277,6 +286,7 @@ class FailureType(IntEnum):
     PinMismatch = 12
     WipeCodeMismatch = 13
     InvalidSession = 14
+    DeviceIsBusy = 15
     FirmwareError = 99
 
 
@@ -2048,6 +2058,95 @@ class TxAckPrevExtraDataWrapper(protobuf.MessageType):
         extra_data_chunk: "bytes",
     ) -> None:
         self.extra_data_chunk = extra_data_chunk
+
+
+class UploadBLEFirmwareInit(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8000
+    FIELDS = {
+        1: protobuf.Field("init_data", "bytes", repeated=False, required=True),
+        2: protobuf.Field("binsize", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        init_data: "bytes",
+        binsize: "int",
+    ) -> None:
+        self.init_data = init_data
+        self.binsize = binsize
+
+
+class UploadBLEFirmwareNextChunk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8001
+    FIELDS = {
+        1: protobuf.Field("offset", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        offset: "int",
+    ) -> None:
+        self.offset = offset
+
+
+class UploadBLEFirmwareChunk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8002
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
+
+
+class EraseBonds(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8006
+
+
+class Disconnect(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8007
+
+
+class PairingRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8003
+
+
+class AuthKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8004
+    FIELDS = {
+        1: protobuf.Field("key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: "bytes",
+    ) -> None:
+        self.key = key
+
+
+class RepairRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8005
+
+
+class ComparisonRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8008
+    FIELDS = {
+        1: protobuf.Field("key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: "bytes",
+    ) -> None:
+        self.key = key
 
 
 class FirmwareErase(protobuf.MessageType):
