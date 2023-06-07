@@ -64,6 +64,8 @@ class WebUsbHandle:
             self.handle.claimInterface(self.interface)
         except usb1.USBErrorAccess as e:
             raise DeviceIsBusy(self.device) from e
+        except usb1.USBErrorBusy as e:
+            raise DeviceIsBusy(self.device) from e
 
     def close(self) -> None:
         if self.handle is not None:

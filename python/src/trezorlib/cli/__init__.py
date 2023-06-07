@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 import click
 
-from .. import exceptions, transport
+from .. import exceptions, messages, transport
 from ..client import TrezorClient
 from ..ui import ClickUI, ScriptUI
 
@@ -110,6 +110,12 @@ class TrezorConnection:
         except transport.DeviceIsBusy:
             click.echo("Device is in use by another process.")
             sys.exit(1)
+        except exceptions.TrezorFailure as e:
+            if e.code is messages.FailureType.DeviceIsBusy:
+                click.echo(str(e))
+                sys.exit(1)
+            else:
+                raise e
         except Exception:
             click.echo("Failed to find a Trezor device.")
             if self.path is not None:
