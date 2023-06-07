@@ -99,6 +99,25 @@ def get_version(file: str) -> str:
         return f"{major}.{minor}.{patch}"
 
 
+def get_version_int(file):
+    major = 0
+    minor = 0
+    patch = 0
+
+    file = PROJECT_ROOT / file
+    with open(file, 'r') as f:
+        for line in f:
+            if line.startswith('#define VERSION_MAJOR '):
+                major = int(line.split('VERSION_MAJOR')[1].strip())
+            if line.startswith('#define VERSION_MINOR '):
+                minor = int(line.split('VERSION_MINOR')[1].strip())
+            if line.startswith('#define VERSION_PATCH '):
+                patch = int(line.split('VERSION_PATCH')[1].strip())
+        if major > 99 or minor > 99 or patch > 99:
+            raise Exception("Version number too large")
+        return major * 10000 + minor * 100 + patch
+
+
 def get_git_revision_hash() -> str:
     return subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
 
