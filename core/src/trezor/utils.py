@@ -6,6 +6,7 @@ from trezorutils import (  # noqa: F401
     INTERNAL_MODEL,
     MODEL,
     SCM_REVISION,
+    USE_BLE,
     USE_BUTTON,
     USE_SD_CARD,
     USE_TOUCH,

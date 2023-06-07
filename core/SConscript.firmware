@@ -18,7 +18,7 @@ FEATURE_FLAGS = {
     "SYSTEM_VIEW": False,
 }
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "ble", "dma2d"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -348,6 +348,7 @@ SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sdram.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fmc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c',
@@ -476,6 +477,7 @@ env.Replace(
         'embed/firmware',
         'embed/lib',
         'embed/models',
+        'embed/firmware/ble',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython',

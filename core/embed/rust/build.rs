@@ -339,6 +339,8 @@ fn generate_trezorhal_bindings() {
         .no_copy("buffer_jpeg_t")
         .no_copy("buffer_jpeg_work_t")
         .no_copy("buffer_blurring_t")
+        // ble
+        .allowlist_function("ble_connected")
         //usb
         .allowlist_function("usb_configured")
         // touch

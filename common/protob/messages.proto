@@ -137,6 +137,17 @@ enum MessageType {
     MessageType_FirmwareRequest = 8 [(bitcoin_only) = true, (wire_out) = true, (wire_bootloader) = true];
     MessageType_SelfTest = 32 [(bitcoin_only) = true, (wire_in) = true, (wire_bootloader) = true];
 
+    // BLE
+    MessageType_UploadBLEFirmwareInit = 8000 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_UploadBLEFirmwareNextChunk = 8001 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_UploadBLEFirmwareChunk = 8002 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_PairingRequest = 8003 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_AuthKey = 8004 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_RepairRequest = 8005 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_EraseBonds = 8006 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_Disconnect = 8007 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_ComparisonRequest = 8008 [(bitcoin_only) = true, (wire_in) = true];
+
     // Bitcoin
     MessageType_GetPublicKey = 11 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_PublicKey = 12 [(bitcoin_only) = true, (wire_out) = true];

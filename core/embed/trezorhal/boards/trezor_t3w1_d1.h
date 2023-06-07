@@ -11,6 +11,7 @@
 #define USE_SBU 1
 #define USE_RGB_COLORS 1
 #define USE_DISP_I8080_16BIT_DW 1
+#define USE_BLE 1
 
 #define DISPLAY_PANEL_INIT_SEQ lhs200kb_if21_init_seq
 #define DISPLAY_PANEL_ROTATE lhs200kb_if21_rotate

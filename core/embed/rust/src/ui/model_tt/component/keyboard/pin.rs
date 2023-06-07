@@ -19,9 +19,10 @@ use crate::{
     },
 };
 
+#[derive(Copy, Clone, ToPrimitive)]
 pub enum PinKeyboardMsg {
-    Confirmed,
-    Cancelled,
+    Cancelled = 1,
+    Confirmed = 2,
 }
 
 const MAX_LENGTH: usize = 50;

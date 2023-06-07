@@ -352,6 +352,8 @@ SOURCE_MICROPYTHON = [
 
 SOURCE_UNIX = [
     'embed/unix/common.c',
+    'embed/unix/ble/comm.c',
+    'embed/unix/ble/dfu.c',
     'embed/unix/display-unix.c',
     'embed/unix/flash.c',
     'embed/unix/main.c',
@@ -469,6 +471,7 @@ env.Replace(
         'embed/lib',
         'embed/models',
         'embed/unix',
+        'embed/unix/ble',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
         'vendor/micropython/ports/unix',

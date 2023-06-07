@@ -74,18 +74,50 @@ struct _dma_descr_t {
 
 // Parameters to dma_init() for SDIO tx and rx.
 static const DMA_InitTypeDef dma_init_struct_sdio = {
-    .Channel             = 0,
-    .Direction           = 0,
-    .PeriphInc           = DMA_PINC_DISABLE,
-    .MemInc              = DMA_MINC_ENABLE,
-    .PeriphDataAlignment = DMA_PDATAALIGN_WORD,
-    .MemDataAlignment    = DMA_MDATAALIGN_WORD,
-    .Mode                = DMA_PFCTRL,
-    .Priority            = DMA_PRIORITY_VERY_HIGH,
-    .FIFOMode            = DMA_FIFOMODE_ENABLE,
-    .FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL,
-    .MemBurst            = DMA_MBURST_INC4,
-    .PeriphBurst         = DMA_PBURST_INC4,
+        .Channel             = 0,
+        .Direction           = 0,
+        .PeriphInc           = DMA_PINC_DISABLE,
+        .MemInc              = DMA_MINC_ENABLE,
+        .PeriphDataAlignment = DMA_PDATAALIGN_WORD,
+        .MemDataAlignment    = DMA_MDATAALIGN_WORD,
+        .Mode                = DMA_PFCTRL,
+        .Priority            = DMA_PRIORITY_VERY_HIGH,
+        .FIFOMode            = DMA_FIFOMODE_ENABLE,
+        .FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL,
+        .MemBurst            = DMA_MBURST_INC4,
+        .PeriphBurst         = DMA_PBURST_INC4,
+};
+
+// Parameters to dma_init() for SPI 1 RX
+static const DMA_InitTypeDef dma_init_struct_spi1= {
+        .Channel             = 0,
+        .Direction           = 0,
+        .PeriphInc           = DMA_PINC_DISABLE,
+        .MemInc              = DMA_MINC_ENABLE,
+        .PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+        .MemDataAlignment    = DMA_MDATAALIGN_BYTE,
+        .Mode                = DMA_NORMAL,
+        .Priority            = DMA_PRIORITY_VERY_HIGH,
+        .FIFOMode            = DMA_FIFOMODE_DISABLE,
+        .FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL,
+        .MemBurst            = DMA_MBURST_SINGLE,
+        .PeriphBurst         = DMA_PBURST_SINGLE,
+};
+
+// Parameters to dma_init() for SPI 2 RX
+static const DMA_InitTypeDef dma_init_struct_spi2 = {
+        .Channel             = 0,
+        .Direction           = 0,
+        .PeriphInc           = DMA_PINC_DISABLE,
+        .MemInc              = DMA_MINC_ENABLE,
+        .PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+        .MemDataAlignment    = DMA_MDATAALIGN_BYTE,
+        .Mode                = DMA_NORMAL,
+        .Priority            = DMA_PRIORITY_VERY_HIGH,
+        .FIFOMode            = DMA_FIFOMODE_DISABLE,
+        .FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL,
+        .MemBurst            = DMA_MBURST_SINGLE,
+        .PeriphBurst         = DMA_PBURST_SINGLE,
 };
 
 #define NCONTROLLERS            (2)
@@ -98,6 +130,8 @@ static const DMA_InitTypeDef dma_init_struct_sdio = {
 #define DMA2_ENABLE_MASK (0xff00) // Bits in dma_enable_mask corresponding to DMA2
 
 const dma_descr_t dma_SDIO_0 = { DMA2_Stream3, DMA_CHANNEL_4, dma_id_11,  &dma_init_struct_sdio };
+const dma_descr_t dma_SPI_1_RX = { DMA2_Stream0, DMA_CHANNEL_3, dma_id_8,  &dma_init_struct_spi1 };
+const dma_descr_t dma_SPI_2_RX = { DMA1_Stream3, DMA_CHANNEL_0, dma_id_3,  &dma_init_struct_spi2 };
 
 static const uint8_t dma_irqn[NSTREAM] = {
     DMA1_Stream0_IRQn,
@@ -222,6 +256,7 @@ void dma_init(DMA_HandleTypeDef *dma, const dma_descr_t *dma_descr, uint32_t dir
         dma_handle[dma_id] = dma;
 
         dma_enable_clock(dma_id);
+        svc_disableIRQ(dma_irqn[dma_id]);
 
         // if this stream was previously configured for this channel/request and direction then we
         // can skip most of the initialisation

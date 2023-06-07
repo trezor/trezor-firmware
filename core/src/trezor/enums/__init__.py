@@ -73,6 +73,15 @@ if TYPE_CHECKING:
         FirmwareUpload = 7
         FirmwareRequest = 8
         SelfTest = 32
+        UploadBLEFirmwareInit = 8000
+        UploadBLEFirmwareNextChunk = 8001
+        UploadBLEFirmwareChunk = 8002
+        PairingRequest = 8003
+        AuthKey = 8004
+        RepairRequest = 8005
+        EraseBonds = 8006
+        Disconnect = 8007
+        ComparisonRequest = 8008
         GetPublicKey = 11
         PublicKey = 12
         SignTx = 15
@@ -267,6 +276,7 @@ if TYPE_CHECKING:
         PinMismatch = 12
         WipeCodeMismatch = 13
         InvalidSession = 14
+        DeviceIsBusy = 15
         FirmwareError = 99
 
     class ButtonRequestType(IntEnum):

@@ -33,6 +33,8 @@
 typedef struct _dma_descr_t dma_descr_t;
 
 extern const dma_descr_t dma_SDIO_0;
+extern const dma_descr_t dma_SPI_1_RX;
+extern const dma_descr_t dma_SPI_2_RX;
 
 void dma_init(DMA_HandleTypeDef *dma, const dma_descr_t *dma_descr, uint32_t dir, void *data);
 void dma_init_handle(DMA_HandleTypeDef *dma, const dma_descr_t *dma_descr, uint32_t dir, void *data);

@@ -24,8 +24,10 @@
 #include "image.h"
 #include "secbool.h"
 
+#define USB_IFACE_NUM 0
+#define BLE_INT_IFACE_NUM 16
+#define BLE_EXT_IFACE_NUM 17
 #define USB_TIMEOUT 500
-#define USB_PACKET_SIZE 64
 
 #define FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT 2
 
@@ -67,5 +69,12 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf);
 void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf);
 
 secbool bootloader_WipeDevice(void);
+
+uint32_t process_msg_ComparisonRequest(uint8_t iface_num, uint32_t msg_size,
+                                       uint8_t *buf);
+uint32_t process_msg_Pairing(uint8_t iface_num, uint32_t msg_size,
+                             uint8_t *buf);
+
+uint32_t process_msg_Repair(uint8_t iface_num, uint32_t msg_size, uint8_t *buf);
 
 #endif

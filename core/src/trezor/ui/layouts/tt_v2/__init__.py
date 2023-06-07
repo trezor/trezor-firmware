@@ -241,7 +241,7 @@ async def raise_if_not_confirmed(a: Awaitable[T], exc: Any = ActionCancelled) ->
 
 async def confirm_action(
     ctx: GenericContext,
-    br_type: str,
+    br_type: str | None,
     title: str,
     action: str | None = None,
     description: str | None = None,
@@ -1202,10 +1202,12 @@ async def request_pin_on_device(
     attempts_remaining: int | None,
     allow_cancel: bool,
     wrong_pin: bool = False,
+    skip_button_request: bool = False,
 ) -> str:
     from trezor.wire import PinCancelled
 
-    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
+    if not skip_button_request:
+        await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
     if attempts_remaining is None:
         subprompt = ""

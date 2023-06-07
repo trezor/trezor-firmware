@@ -34,13 +34,16 @@ async def button_request(
 async def interact(
     ctx: wire.GenericContext,
     layout: LayoutType,
-    br_type: str,
+    br_type: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
-    if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-        # We know for certain how many pages the layout will have
-        await button_request(ctx, br_type, br_code, pages=layout.page_count())  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-        return await ctx.wait(layout)
+    if br_type is not None:
+        if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+            # We know for certain how many pages the layout will have
+            await button_request(ctx, br_type, br_code, pages=layout.page_count())  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+            return await ctx.wait(layout)
+        else:
+            await button_request(ctx, br_type, br_code)
+            return await ctx.wait(layout)
     else:
-        await button_request(ctx, br_type, br_code)
         return await ctx.wait(layout)
