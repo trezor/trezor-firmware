@@ -19,7 +19,7 @@ FEATURE_FLAGS = {
     "SYSTEM_VIEW": False,
 }
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb", "optiga", "ble"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -436,6 +436,7 @@ env.Replace(
         'embed/firmware',
         'embed/lib',
         'embed/models',
+        'embed/firmware/ble',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython',

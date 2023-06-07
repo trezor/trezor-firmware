@@ -56,7 +56,15 @@ def configure(
         sources += ["embed/extmod/modtrezorio/ffunicode.c"]
         features_available.append("sd_card")
 
-    if "sd_card" in features_wanted:
+    if "ble" in features_wanted:
+        sources += ["embed/trezorhal/stm32f4/ble.c"]
+        sources += ["embed/lib/ble/dfu.c"]
+        sources += ["embed/lib/ble/fwu.c"]
+        sources += ["embed/lib/ble/state.c"]
+        sources += ["embed/lib/ble/messages.c"]
+        features_available.append("ble")
+
+    if "ble" in features_wanted or "sd_card" in features_wanted:
         sources += [
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
         ]

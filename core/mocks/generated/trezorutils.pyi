@@ -95,6 +95,7 @@ VERSION_MINOR: int
 """Minor version."""
 VERSION_PATCH: int
 """Patch version."""
+USE_BLE: bool
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
 USE_BACKLIGHT: bool

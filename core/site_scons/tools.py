@@ -3,8 +3,6 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-import subprocess
-
 from boards import (
     discovery,
     trezor_1,
@@ -59,7 +57,7 @@ def configure_board(
         elif model_r_version == 10:
             return trezor_r_v10.configure(env, features_wanted, defines, sources, paths)
         raise Exception("Unknown model_r_version")
-    elif model in ('T3W1',):
+    elif model in ("T3W1",):
         return trezor_t3w1_d1.configure(env, features_wanted, defines, sources, paths)
     elif model in ("DISC1",):
         return discovery.configure(env, features_wanted, defines, sources, paths)
@@ -104,14 +102,14 @@ def get_version_int(file):
     patch = 0
 
     file = PROJECT_ROOT / file
-    with open(file, 'r') as f:
+    with open(file, "r") as f:
         for line in f:
-            if line.startswith('#define VERSION_MAJOR '):
-                major = int(line.split('VERSION_MAJOR')[1].strip())
-            if line.startswith('#define VERSION_MINOR '):
-                minor = int(line.split('VERSION_MINOR')[1].strip())
-            if line.startswith('#define VERSION_PATCH '):
-                patch = int(line.split('VERSION_PATCH')[1].strip())
+            if line.startswith("#define VERSION_MAJOR "):
+                major = int(line.split("VERSION_MAJOR")[1].strip())
+            if line.startswith("#define VERSION_MINOR "):
+                minor = int(line.split("VERSION_MINOR")[1].strip())
+            if line.startswith("#define VERSION_PATCH "):
+                patch = int(line.split("VERSION_PATCH")[1].strip())
         if major > 99 or minor > 99 or patch > 99:
             raise Exception("Version number too large")
         return major * 10000 + minor * 100 + patch
