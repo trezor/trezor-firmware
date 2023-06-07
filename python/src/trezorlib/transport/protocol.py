@@ -71,8 +71,9 @@ class Protocol:
     its messages.
     """
 
-    def __init__(self, handle: Handle) -> None:
+    def __init__(self, handle: Handle, replen: int = REPLEN) -> None:
         self.handle = handle
+        self.replen = replen
         self.session_counter = 0
 
     # XXX we might be able to remove this now that TrezorClient does session handling
@@ -129,10 +130,10 @@ class ProtocolV1(Protocol):
 
         while buffer:
             # Report ID, data padded to 63 bytes
-            chunk = b"?" + buffer[: REPLEN - 1]
-            chunk = chunk.ljust(REPLEN, b"\x00")
+            chunk = b"?" + buffer[: self.replen - 1]
+            chunk = chunk.ljust(self.replen, b"\x00")
             self.handle.write_chunk(chunk)
-            buffer = buffer[63:]
+            buffer = buffer[self.replen - 1 :]
 
     def read(self) -> MessagePayload:
         buffer = bytearray()

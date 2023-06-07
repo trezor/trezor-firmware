@@ -78,6 +78,9 @@ trezor-core-tools = {path = "./core/tools", develop = true}
 flake8-annotations = "^3.1.1"
 pyelftools = "^0.32"
 
+# ble
+dbus-next = "*"
+
 [tool.poetry.dev-dependencies]
 scan-build = "*"
 towncrier = "^23.6.0"

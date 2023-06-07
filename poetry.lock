@@ -375,6 +375,17 @@ test = ["certifi", "cryptography-vectors (==43.0.1)", "pretend", "pytest (>=6.2.
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "dbus-next"
+version = "0.2.3"
+description = "A zero-dependency DBus library for Python with asyncio support"
+optional = false
+python-versions = ">=3.6.0"
+files = [
+    {file = "dbus_next-0.2.3-py3-none-any.whl", hash = "sha256:58948f9aff9db08316734c0be2a120f6dc502124d9642f55e90ac82ffb16a18b"},
+    {file = "dbus_next-0.2.3.tar.gz", hash = "sha256:f4eae26909332ada528c0a3549dda8d4f088f9b365153952a408e28023a626a5"},
+]
+
+[[package]]
 name = "demjson3"
 version = "3.0.5"
 description = "encoder, decoder, and lint/validator for JSON (JavaScript Object Notation) compliant with RFC 7159"
