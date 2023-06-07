@@ -11,3 +11,5 @@ mypy_report
 /CMakeLists.txt
 /cmake-build-debug/
 tools/gdb_scripts/*.log
+/embed/ble_bootloader/jlink.jdebug.user
+/embed/ble_firmware/jlink.jdebug.user

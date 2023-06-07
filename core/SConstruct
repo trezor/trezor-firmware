@@ -1,5 +1,7 @@
 # pylint: disable=E0602
 
+SConscript('SConscript.ble_bootloader', variant_dir='build/ble_bootloader', duplicate=False)
+SConscript('SConscript.ble_firmware', variant_dir='build/ble_firmware', duplicate=False)
 SConscript('SConscript.boardloader', variant_dir='build/boardloader', duplicate=False)
 SConscript('SConscript.bootloader', variant_dir='build/bootloader', duplicate=False)
 SConscript('SConscript.bootloader_ci', variant_dir='build/bootloader_ci', duplicate=False)

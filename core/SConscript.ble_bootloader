@@ -1,0 +1,349 @@
+# pylint: disable=E0602
+
+import os
+import tools
+
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+
+if TREZOR_MODEL in ('1', ):
+    # skip boardloader build
+    env = Environment()
+    def build_ble_bootloader(target,source,env):
+        print(f'BLE BOOTLOADER: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='ble_bootloader.bin',
+                 source=None,
+                 action=build_ble_bootloader
+             )
+    Return()
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = []
+SOURCE_MOD = []
+
+CCFLAGS_MOD += '-Wno-sequence-point '
+
+
+if int(ARGUMENTS.get('PRODUCTION', 0)) == 0:
+    # Build for monitor debug mode and RTT.
+    DEBUG = True
+else:
+    DEBUG = False
+
+
+
+# C flags common to all targets
+CPPDEFINES_MOD += [
+    'CONFIG_GPIO_AS_PINRESET',
+    'FLOAT_ABI_HARD',
+    'NRF52833_XXAA',
+    ('NRF_DFU_SETTINGS_VERSION','2'),
+    'MBR_PRESENT',
+    'SVC_INTERFACE_CALL_AS_NORMAL_FUNCTION',
+    ('__HEAP_SIZE','0'),
+    '__STARTUP_CLEAR_BSS',
+    ('__START', 'main'),
+
+    ('uECC_ENABLE_VLI_API', '0'),
+    ('uECC_OPTIMIZATION_LEVEL', '3'),
+    ('uECC_SQUARE_FUNC', '0'),
+    ('uECC_SUPPORT_COMPRESSED_POINT', '0'),
+    ('uECC_VLI_NATIVE_LITTLE_ENDIAN', '1'),
+
+
+    'ED25519_NO_PRECOMP',
+]
+
+
+
+
+CPPPATH_MOD += [
+]
+CPPDEFINES_MOD += [
+]
+SOURCE_MOD += [
+
+]
+
+CPPPATH_MOD += [
+    'embed/sdk/nrf52/modules/nrfx/drivers/include',
+    'embed/sdk/nrf52/components/libraries/memobj',
+    'embed/sdk/nrf52/components/libraries/crc32',
+    'embed/sdk/nrf52/components/libraries/experimental_section_vars',
+    'embed/sdk/nrf52/components/libraries/mem_manager',
+    'embed/sdk/nrf52/components/libraries/fstorage',
+    'embed/sdk/nrf52/components/libraries/util',
+    'embed/sdk/nrf52/modules/nrfx',
+    'embed/sdk/nrf52/external/nrf_oberon/include',
+    'embed/sdk/nrf52/components/libraries/atomic',
+    'embed/sdk/nrf52/integration/nrfx',
+    'embed/sdk/nrf52/components/libraries/crypto/backend/cc310_bl',
+    'embed/sdk/nrf52/components/drivers_nrf/nrf_soc_nosd',
+    'embed/sdk/nrf52/components/libraries/log/src',
+    'embed/sdk/nrf52/components/libraries/bootloader/serial_dfu',
+    'embed/sdk/nrf52/external/segger_rtt',
+    'embed/sdk/nrf52/components/libraries/delay',
+    'embed/sdk/nrf52/integration/nrfx/legacy',
+    'embed/sdk/nrf52/modules/nrfx/hal',
+    'embed/sdk/nrf52/components/libraries/log',
+    'embed/sdk/nrf52/components/libraries/strerror',
+    'embed/sdk/nrf52/components/libraries/bootloader',
+    'embed/sdk/nrf52/components/softdevice/mbr/headers',
+    'embed/sdk/nrf52/components/libraries/scheduler',
+    'embed/sdk/nrf52/components/libraries/slip',
+    'embed/sdk/nrf52/external/fprintf',
+    'embed/sdk/nrf52/components/toolchain/cmsis/include',
+    'embed/sdk/nrf52/components/libraries/balloc',
+    'embed/sdk/nrf52/components/libraries/stack_info',
+    'embed/sdk/nrf52/modules/nrfx/mdk',
+    'embed/sdk/nrf52/components/libraries/queue',
+    'embed/sdk/nrf52/components/libraries/mutex',
+    'embed/sdk/nrf52/components/libraries/ringbuf',
+
+
+    'embed/trezorhal/boards',
+    'embed/lib',
+
+    'vendor/trezor-crypto',
+    'vendor/nanopb',
+]
+SOURCE_MOD += [
+]
+
+
+SOURCE_NRFHAL_AS = [
+  'embed/sdk/nrf52/modules/nrfx/mdk/gcc_startup_nrf52833.S',
+]
+
+
+
+SOURCE_NRFHAL = [
+  'embed/sdk/nrf52/components/libraries/log/src/nrf_log_frontend.c',
+  'embed/sdk/nrf52/components/libraries/log/src/nrf_log_str_formatter.c',
+  'embed/sdk/nrf52/modules/nrfx/mdk/system_nrf52833.c',
+  'embed/sdk/nrf52/components/libraries/util/app_error_weak.c',
+  'embed/sdk/nrf52/components/libraries/scheduler/app_scheduler.c',
+  'embed/sdk/nrf52/components/libraries/util/app_util_platform.c',
+  'embed/sdk/nrf52/components/libraries/crc32/crc32.c',
+  'embed/sdk/nrf52/components/libraries/mem_manager/mem_manager.c',
+  'embed/sdk/nrf52/components/libraries/util/nrf_assert.c',
+  'embed/sdk/nrf52/components/libraries/atomic/nrf_atomic.c',
+  'embed/sdk/nrf52/components/libraries/balloc/nrf_balloc.c',
+  'embed/sdk/nrf52/external/fprintf/nrf_fprintf.c',
+  'embed/sdk/nrf52/external/fprintf/nrf_fprintf_format.c',
+  'embed/sdk/nrf52/components/libraries/fstorage/nrf_fstorage.c',
+  'embed/sdk/nrf52/components/libraries/fstorage/nrf_fstorage_nvmc.c',
+  'embed/sdk/nrf52/components/libraries/memobj/nrf_memobj.c',
+  'embed/sdk/nrf52/components/libraries/queue/nrf_queue.c',
+  'embed/sdk/nrf52/components/libraries/ringbuf/nrf_ringbuf.c',
+  'embed/sdk/nrf52/components/libraries/strerror/nrf_strerror.c',
+  'embed/sdk/nrf52/components/libraries/slip/slip.c',
+  'embed/sdk/nrf52/integration/nrfx/legacy/nrf_drv_uart.c',
+  'embed/sdk/nrf52/components/drivers_nrf/nrf_soc_nosd/nrf_nvic.c',
+  'embed/sdk/nrf52/modules/nrfx/hal/nrf_nvmc.c',
+  'embed/sdk/nrf52/components/drivers_nrf/nrf_soc_nosd/nrf_soc.c',
+  'embed/sdk/nrf52/modules/nrfx/soc/nrfx_atomic.c',
+  'embed/sdk/nrf52/modules/nrfx/drivers/src/prs/nrfx_prs.c',
+  'embed/sdk/nrf52/modules/nrfx/drivers/src/nrfx_uart.c',
+  'embed/sdk/nrf52/modules/nrfx/drivers/src/nrfx_uarte.c',
+  'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_app_start.c',
+  'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_app_start_final.c',
+  'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_dfu_timers.c',
+  'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_fw_activation.c',
+  'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_info.c',
+  'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_wdt.c',
+  'embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial.c',
+]
+
+SOURCE_BLE_BOOTLOADER = [
+    'embed/ble_bootloader/main.c',
+    'embed/ble_bootloader/dfu_public_key.c',
+    # originally embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial_uart.c',
+    'embed/ble_bootloader/nrf_dfu_serial_uart.c',
+    'embed/ble_bootloader/nrf_bootloader.c',
+    # ejected from embed/sdk/nrf52/components/libraries/bootloader/dfu
+    'embed/ble_bootloader/dfu/nrf_dfu_validation.c',
+    'embed/ble_bootloader/dfu/dfu-cc.pb.c',
+    'embed/ble_bootloader/dfu/nrf_dfu.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_flash.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_handling_error.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_mbr.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_req_handler.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_settings.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_transport.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_utils.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_ver_validation.c',
+
+    'vendor/trezor-crypto/blake2s.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.c',
+    'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
+    'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/sha2.c',
+
+    'vendor/nanopb/pb_common.c',
+    'vendor/nanopb/pb_decode.c',
+    'vendor/nanopb/pb_encode.c',
+]
+
+if DEBUG:
+    CPPDEFINES_MOD += [
+        'DEBUG',
+        'DEBUG_NRF',
+        'NRF_DFU_DEBUG_VERSION',
+        'MMD'
+    ]
+    SOURCE_BLE_BOOTLOADER += [
+        'embed/segger/SEGGER_MMD/JLINK_MONITOR.c',
+        'embed/segger/SEGGER_MMD/JLINK_MONITOR_ISR_SES.S'
+    ]
+
+    SOURCE_NRFHAL += [
+      'embed/sdk/nrf52/components/libraries/log/src/nrf_log_backend_rtt.c',
+      'embed/sdk/nrf52/components/libraries/log/src/nrf_log_backend_serial.c',
+      'embed/sdk/nrf52/components/libraries/log/src/nrf_log_backend_uart.c',
+      'embed/sdk/nrf52/components/libraries/log/src/nrf_log_default_backends.c',
+      'embed/sdk/nrf52/external/segger_rtt/SEGGER_RTT.c',
+      'embed/sdk/nrf52/external/segger_rtt/SEGGER_RTT_Syscalls_GCC.c',
+      'embed/sdk/nrf52/external/segger_rtt/SEGGER_RTT_printf.c',
+      ]
+
+
+    CPPPATH_MOD += [
+        'embed/segger/SEGGER_MMD'
+    ]
+
+
+
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+
+
+env.Replace(
+    CP='cp',
+    AS='arm-none-eabi-as',
+    AR='arm-none-eabi-ar',
+    CC='arm-none-eabi-gcc',
+    LINK='arm-none-eabi-gcc',
+    SIZE='arm-none-eabi-size',
+    STRIP='arm-none-eabi-strip',
+    OBJCOPY='arm-none-eabi-objcopy',
+    PYTHON='python',
+    MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py', )
+
+env.Replace(
+    TREZOR_MODEL=TREZOR_MODEL, )
+
+CPU_ASFLAGS = '-mthumb -mabi=aapcs -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
+CPU_CCFLAGS = '-mthumb -mabi=aapcs -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 '
+
+
+
+
+env.Replace(
+    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
+    CCFLAGS='$COPT '
+    '-g3 '
+    '-nostdlib '
+    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -Wno-unused-function '
+    '-fdata-sections -ffunction-sections '
+    '-fno-strict-aliasing '
+    '-fno-builtin '
+    '-fshort-enums '
+    + CPU_CCFLAGS + CCFLAGS_MOD,
+    LINKFLAGS='-Lembed/sdk/nrf52/modules/nrfx/mdk  -T embed/ble_bootloader/memory.ld -Wl,--gc-sections --specs=nano.specs -Wl,-Map=build/ble_bootloader/ble_bootloader.map -Wl,--warn-common  -Wl,--print-memory-usage',
+    CPPPATH=[
+        'embed/ble_bootloader',
+        'embed/ble_bootloader/dfu',
+        'embed/sdk/nrf52',
+    ] + CPPPATH_MOD,
+    CPPDEFINES=[
+        'BLE_BOOTLOADER',
+        'TREZOR_MODEL_'+TREZOR_MODEL,
+    ] + CPPDEFINES_MOD,
+    ASFLAGS=CPU_ASFLAGS,
+    ASPPFLAGS='$CFLAGS $CCFLAGS', )
+
+#
+# Program objects
+#
+
+obj_program = []
+obj_program += env.Object(source=SOURCE_BLE_BOOTLOADER)
+obj_program += env.Object(source=SOURCE_NRFHAL_AS, COPT='-O0')
+obj_program += env.Object(source=SOURCE_NRFHAL)
+obj_program += env.Object(source=SOURCE_MOD)
+
+env.Replace(
+    ALLSOURCES=SOURCE_NRFHAL_AS + SOURCE_MOD + SOURCE_BLE_BOOTLOADER + SOURCE_NRFHAL,
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
+
+cmake_gen = env.Command(
+    target='CMakeLists.txt',
+    source='',
+    action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
+)
+
+
+LIB_FILES = [
+]
+
+program_elf = env.Command(
+    target='ble_bootloader.elf',
+    source=obj_program,
+    action=
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES ' + ' '.join(LIB_FILES) + ' -lc -lnosys -lm',
+)
+
+
+
+BINARY_NAME = f"build/ble_bootloader/ble_bootloader-{tools.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME += "-" + tools.get_version('embed/ble_bootloader/version.h')
+BINARY_NAME += "-" + tools.get_git_revision_short_hash()
+BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
+BINARY_NAME += ".bin"
+
+if CMAKELISTS != 0:
+    env.Depends(program_elf, cmake_gen)
+
+
+
+program_hex = env.Command(
+    target='ble_bootloader.hex',
+    source=program_elf,
+    action='$OBJCOPY -O ihex $SOURCE $TARGET',
+)
+
+program_bin = env.Command(
+    target='ble_bootloader.bin',
+    source=program_elf,
+    action=[
+        '$OBJCOPY -O binary $SOURCE $TARGET',
+        '$CP $TARGET ' + BINARY_NAME,
+    ],
+)
+
+
+bootloader_pkg = env.Command(
+    target='ble_bootloader.zip',
+    source=program_hex,
+    action=[
+        f'python ../../pc-nrfutil/nordicsemi/  pkg generate --hw-version 52 --sd-req=0x100 --key-file ./embed/ble_bootloader/priv.pem $TARGET --bootloader $SOURCE --bootloader-version {tools.get_version_int("embed/ble_bootloader/version.h")}'
+    ],
+)
+
+
+
+program_settings = env.Command(
+    target='settings.hex',
+    source=None,
+    action='$CP ./embed/ble_bootloader/settings.hex $TARGET',
+)
+
+env.Depends(program_bin, program_hex)
+env.Depends(program_bin, bootloader_pkg)
+env.Depends(program_bin, program_settings)
