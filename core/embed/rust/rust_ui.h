@@ -15,7 +15,7 @@ uint32_t screen_intro(const char* bld_version_str, const char* vendor_str,
                       uint8_t vendor_str_len, const char* version_str,
                       bool fw_ok);
 uint32_t screen_menu(secbool firmware_present);
-void screen_connect(bool initial_setup);
+void screen_connect(bool initial_setup, uint8_t iface);
 void screen_fatal_error_rust(const char* title, const char* msg,
                              const char* footer);
 void screen_wipe_success(void);
@@ -28,6 +28,11 @@ void screen_welcome(void);
 void screen_boot_empty(bool fading);
 uint32_t screen_unlock_bootloader_confirm(void);
 void screen_unlock_bootloader_success(void);
+
+uint32_t screen_pairing_confirm(uint8_t* buffer);
+uint32_t screen_comparison_confirm(uint8_t* code, uint8_t code_len);
+uint32_t screen_repair_confirm(void);
+
 void display_image(int16_t x, int16_t y, const uint8_t* data, uint32_t datalen);
 void display_icon(int16_t x, int16_t y, const uint8_t* data, uint32_t datalen,
                   uint16_t fg_color, uint16_t bg_color);

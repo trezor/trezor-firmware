@@ -368,6 +368,7 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
+    'embed/trezorhal/unix/ble.c',
     'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/display-unix.c',
     'embed/trezorhal/unix/flash.c',
@@ -378,6 +379,10 @@ SOURCE_UNIX = [
     'embed/unix/main.c',
     'embed/unix/main_main.c',
     'embed/unix/profile.c',
+    'embed/lib/ble/state.c',
+    'embed/lib/ble/fwu.c',
+    'embed/lib/ble/messages.c',
+    'embed/lib/ble/dfu.c',
     'vendor/micropython/shared/runtime/gchelper_generic.c',
     'vendor/micropython/ports/unix/alloc.c',
     'vendor/micropython/ports/unix/gccollect.c',
@@ -510,6 +515,7 @@ env.Replace(
         'embed/unix',
         'embed/trezorhal',
         'embed/trezorhal/unix',
+        'embed/trezorhal/unix/ble',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
         'vendor/micropython/ports/unix',
@@ -796,6 +802,7 @@ def cargo_build():
         features.append('touch')
         features.append('button')
         features.append('sd_card')
+        features.append('ble')
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
 

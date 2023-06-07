@@ -41,6 +41,7 @@ void ui_screen_boot_click(void);
 void ui_click(void);
 
 void ui_screen_welcome(void);
+void ui_screen_connect(void);
 
 uint32_t ui_screen_intro(const vendor_header* const vhdr,
                          const image_header* const hdr, bool fw_ok);
@@ -67,6 +68,7 @@ void ui_screen_install_restricted(void);
 void ui_fadein(void);
 void ui_fadeout(void);
 void ui_set_initial_setup(bool initial);
+void ui_set_interface(uint8_t iface_num);
 
 void ui_screen_boot_empty(bool fading);
 

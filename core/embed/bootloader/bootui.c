@@ -69,9 +69,14 @@ static void format_ver(const char *format, uint32_t version, char *buffer,
 // boot UI
 
 static uint16_t boot_background;
+static uint8_t iface;
 static bool initial_setup = true;
 
 void ui_set_initial_setup(bool initial) { initial_setup = initial; }
+
+void ui_set_interface(uint8_t iface_num) { iface = iface_num; }
+
+void ui_screen_connect(void) { screen_connect(initial_setup, iface); }
 
 void ui_screen_boot(const vendor_header *const vhdr,
                     const image_header *const hdr) {

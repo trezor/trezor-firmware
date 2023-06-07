@@ -11,7 +11,7 @@ use crate::{
             bootloader::{connect::Connect, welcome::Welcome},
             component::{
                 bl_confirm::{Confirm, ConfirmTitle},
-                Button, ResultScreen, WelcomeScreen,
+                Button, PinKeyboard, ResultScreen, WelcomeScreen,
             },
             constant,
             theme::{
@@ -28,6 +28,7 @@ use crate::{
         util::{from_c_array, from_c_str},
     },
 };
+use core::slice;
 use heapless::String;
 use num_traits::ToPrimitive;
 
@@ -36,7 +37,13 @@ pub mod intro;
 pub mod menu;
 pub mod welcome;
 
-use crate::{trezorhal::secbool::secbool, ui::model_tt::theme::BLACK};
+use crate::{
+    trezorhal::secbool::secbool,
+    ui::{
+        geometry::Alignment,
+        model_tt::theme::{bootloader::text_title, BLACK},
+    },
+};
 use intro::Intro;
 use menu::Menu;
 
@@ -71,13 +78,16 @@ fn fadeout() {
     display::fade_backlight_duration(BACKLIGHT_DIM, 150);
 }
 
-fn run<F>(frame: &mut F) -> u32
+fn run<F>(frame: &mut F, clear: bool) -> u32
 where
     F: Component,
     F::Msg: ReturnToC,
 {
     frame.place(constant::screen());
     fadeout();
+    if clear {
+        display::rect_fill(screen(), BLACK);
+    }
     display::sync();
     frame.paint();
     display::refresh();
@@ -187,7 +197,7 @@ extern "C" fn screen_install_confirm(
         frame = frame.with_alert(alert);
     }
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 #[no_mangle]
@@ -206,12 +216,12 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     let mut frame =
         Confirm::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg).with_alert(alert);
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 #[no_mangle]
 extern "C" fn screen_menu(firmware_present: secbool) -> u32 {
-    run(&mut Menu::new(firmware_present))
+    run(&mut Menu::new(firmware_present), false)
 }
 
 #[no_mangle]
@@ -238,7 +248,7 @@ extern "C" fn screen_intro(
 
     let mut frame = Intro::new(title_str.as_str(), version_str.as_str(), fw_ok);
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 fn screen_progress(
@@ -297,9 +307,14 @@ extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
 }
 
 #[no_mangle]
-extern "C" fn screen_connect(initial_setup: bool) {
+extern "C" fn screen_connect(initial_setup: bool, iface: u8) {
     let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-    let mut frame = Connect::new("Waiting for host...", bg);
+
+    let mut frame = if iface == 0 {
+        Connect::new("Waiting for host...(USB)", bg)
+    } else {
+        Connect::new("Waiting for host...(BLE)", bg)
+    };
     show(&mut frame, true);
 }
 
@@ -426,4 +441,57 @@ extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
         WHITE,
         Color::from_u16(bg_color),
     );
+}
+
+#[no_mangle]
+extern "C" fn screen_pairing_confirm(buffer: *const cty::uint8_t) -> u32 {
+    let pin_slice = unsafe { slice::from_raw_parts_mut(buffer as *mut u8, 6) };
+
+    let mut pin = PinKeyboard::new("Enter passkey", "", None, true);
+    let res = run(&mut pin, true);
+
+    if res == 2 {
+        let pin = pin.pin().as_bytes();
+        if pin.len() == 6 {
+            pin_slice.copy_from_slice(&pin[0..6]);
+        }
+    }
+
+    res
+}
+
+#[no_mangle]
+extern "C" fn screen_comparison_confirm(code: *const cty::uint8_t, code_len: u8) -> u32 {
+    let code = unwrap!(unsafe { from_c_array(code, code_len as usize) });
+
+    let right = Button::with_text("YES").styled(button_confirm());
+    let left = Button::with_text("CANCEL").styled(button_bld());
+    let title = Label::new(
+        "DO THE NUMBERS MATCH?",
+        Alignment::Start,
+        text_title(BLD_BG),
+    )
+    .vertically_centered();
+
+    let mut frame = Confirm::new(
+        BLD_BG,
+        left,
+        right,
+        ConfirmTitle::Text(title),
+        Label::new(code, Alignment::Center, TEXT_NORMAL),
+    );
+
+    run(&mut frame, true)
+}
+
+#[no_mangle]
+extern "C" fn screen_repair_confirm() -> u32 {
+    let msg = Label::new("Allow repair?", Alignment::Center, TEXT_NORMAL);
+    let right = Button::with_text("ALLOW").styled(button_confirm());
+    let left = Button::with_text("DENY").styled(button_bld());
+    let title = Label::new("REPAIR", Alignment::Start, text_title(BLD_BG)).vertically_centered();
+
+    let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg);
+
+    run(&mut frame, true)
 }

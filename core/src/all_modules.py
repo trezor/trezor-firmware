@@ -33,10 +33,14 @@ from trezor import utils
 
 all_modules
 import all_modules
+bluetooth
+import bluetooth
 boot
 import boot
 main
 import main
+mutex
+import mutex
 session
 import session
 typing
@@ -321,6 +325,18 @@ apps.management.backup_device
 import apps.management.backup_device
 apps.management.backup_types
 import apps.management.backup_types
+apps.management.ble.comparison_request
+import apps.management.ble.comparison_request
+apps.management.ble.disconnect
+import apps.management.ble.disconnect
+apps.management.ble.erase_bonds
+import apps.management.ble.erase_bonds
+apps.management.ble.pairing_request
+import apps.management.ble.pairing_request
+apps.management.ble.repair_request
+import apps.management.ble.repair_request
+apps.management.ble.upload_ble_firmware_init
+import apps.management.ble.upload_ble_firmware_init
 apps.management.change_pin
 import apps.management.change_pin
 apps.management.change_wipe_code

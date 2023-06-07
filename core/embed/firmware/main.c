@@ -76,6 +76,11 @@
 #include "optiga_transport.h"
 #include "secret.h"
 #endif
+#ifdef USE_BLE
+#include "ble/dfu.h"
+#include "ble/state.h"
+#include "ble_hal.h"
+#endif
 #include "unit_variant.h"
 
 #ifdef SYSTEM_VIEW
@@ -85,7 +90,9 @@
 #include "rng.h"
 #include "supervise.h"
 #ifdef USE_SECP256K1_ZKP
+#include "ble/messages.h"
 #include "zkp_context.h"
+
 #endif
 
 // from util.s
@@ -176,6 +183,13 @@ int main(void) {
     optiga_sec_chan_handshake(secret, sizeof(secret));
   }
   memzero(secret, sizeof(secret));
+#endif
+
+#ifdef USE_BLE
+  dfu_init();
+  ble_comm_init();
+  send_state_request();
+  wait_for_answer();
 #endif
 
 #if !defined TREZOR_MODEL_1

@@ -187,6 +187,14 @@ secbool usb_configured(void) {
   return secfalse;
 }
 
+secbool usb_configured_now(void) {
+  const USBD_HandleTypeDef *pdev = &usb_dev_handle;
+  if (pdev->dev_state == USBD_STATE_CONFIGURED) {
+    return sectrue;
+  }
+  return secfalse;
+}
+
 /*
  * Utility functions for USB interfaces
  */
