@@ -16,12 +16,17 @@
 
 import functools
 import sys
+import threading
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 import click
+import dbus
+import dbus.mainloop.glib
+import dbus.service
+from gi.repository import GLib
 
-from .. import exceptions, transport
+from .. import exceptions, messages, transport
 from ..client import TrezorClient
 from ..ui import ClickUI, ScriptUI
 
@@ -103,6 +108,12 @@ class TrezorConnection:
         except transport.DeviceIsBusy:
             click.echo("Device is in use by another process.")
             sys.exit(1)
+        except exceptions.TrezorFailure as e:
+            if e.code is messages.FailureType.DeviceIsBusy:
+                click.echo(str(e))
+                sys.exit(1)
+            else:
+                raise e
         except Exception:
             click.echo("Failed to find a Trezor device.")
             if self.path is not None:
@@ -134,24 +145,93 @@ def with_client(func: "Callable[Concatenate[TrezorClient, P], R]") -> "Callable[
     def trezorctl_command_with_client(
         obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
     ) -> "R":
-        with obj.client_context() as client:
-            session_was_resumed = obj.session_id == client.session_id
-            if not session_was_resumed and obj.session_id is not None:
-                # tried to resume but failed
-                click.echo("Warning: failed to resume session.", err=True)
 
+        loop = GLib.MainLoop()
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+        def callback_wrapper(
+            r: List[Optional["R"]], exc: List[Optional[Exception]]
+        ) -> None:
             try:
-                return func(client, *args, **kwargs)
-            finally:
-                if not session_was_resumed:
+                with obj.client_context() as client:
+                    session_was_resumed = obj.session_id == client.session_id
+                    if not session_was_resumed and obj.session_id is not None:
+                        # tried to resume but failed
+                        click.echo("Warning: failed to resume session.", err=True)
+
                     try:
-                        client.end_session()
-                    except Exception:
-                        pass
+                        r.append(func(client, *args, **kwargs))
+                    except Exception as e:
+                        exc[0] = e
+                    finally:
+                        if not session_was_resumed:
+                            try:
+                                client.end_session()
+                            except Exception:
+                                pass
+            except Exception as e:
+                exc[0] = e
+            finally:
+                loop.quit()
+
+        result: List["R"] = []
+        exc: List[Optional[Exception]] = [None]
+        threading.Thread(
+            target=callback_wrapper, daemon=True, args=(result, exc)
+        ).start()
+        loop.run()
+
+        if exc[0] is not None:
+            raise exc[0]
+
+        if len(result) == 0:
+            raise click.ClickException("Command did not return a result.")
+
+        return result[0]
 
     # the return type of @click.pass_obj is improperly specified and pyright doesn't
     # understand that it converts f(obj, *args, **kwargs) to f(*args, **kwargs)
     return trezorctl_command_with_client  # type: ignore [cannot be assigned to return type]
+
+
+def with_ble(func: "Callable[P, R]") -> "Callable[P, R]":
+    """Wrap a Click command in `with obj.client_context() as client`.
+
+    Sessions are handled transparently. The user is warned when session did not resume
+    cleanly. The session is closed after the command completes - unless the session
+    was resumed, in which case it should remain open.
+    """
+
+    @functools.wraps(func)
+    def trezorctl_command(*args: "P.args", **kwargs: "P.kwargs") -> "R":
+
+        loop = GLib.MainLoop()
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+        def callback_wrapper(r: List[Optional["R"]], exc: List[Optional[Exception]]):
+            try:
+                r.append(func(*args, **kwargs))
+            except Exception as e:
+                exc[0] = e
+            finally:
+                loop.quit()
+
+        result: List["R"] = []
+        exc: List[Optional[Exception]] = [None]
+        threading.Thread(
+            target=callback_wrapper, daemon=True, args=(result, exc)
+        ).start()
+        loop.run()
+
+        if exc[0] is not None:
+            raise exc[0]
+
+        if len(result) == 0:
+            raise click.ClickException("Command did not return a result.")
+
+        return result[0]
+
+    return trezorctl_command
 
 
 class AliasedGroup(click.Group):

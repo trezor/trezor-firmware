@@ -32,6 +32,7 @@ from . import (
     AliasedGroup,
     TrezorConnection,
     binance,
+    ble,
     btc,
     cardano,
     cosi,
@@ -48,6 +49,7 @@ from . import (
     settings,
     stellar,
     tezos,
+    with_ble,
     with_client,
 )
 
@@ -86,6 +88,7 @@ COMMAND_ALIASES = {
     "upgrade-firmware": firmware.update,
     "firmware-upgrade": firmware.update,
     "firmware-update": firmware.update,
+    "ble-update": ble.update,
 }
 
 
@@ -279,6 +282,7 @@ def format_device_name(features: messages.Features) -> str:
 
 
 @cli.command(name="list")
+@with_ble
 @click.option("-n", "no_resolve", is_flag=True, help="Do not resolve Trezor names")
 def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
     """List connected Trezor devices."""
@@ -415,6 +419,7 @@ cli.add_command(tezos.cli)
 
 cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
+cli.add_command(ble.cli)
 
 #
 # Main
