@@ -23,6 +23,7 @@
 
 #include STM32_HAL_H
 
+#include "button.h"
 #include "common.h"
 #include "display.h"
 #include "flash.h"
@@ -38,7 +39,17 @@
 
 #include "memzero.h"
 
+#ifdef TREZOR_MODEL_T
+#define MODEL_IDENTIFIER "TREZOR2-"
+#elif TREZOR_MODEL_R
+#define MODEL_IDENTIFIER "T2B1-"
+#endif
+
 enum { VCP_IFACE = 0x00 };
+
+static secbool startswith(const char *s, const char *prefix) {
+  return sectrue * (0 == strncmp(s, prefix, strlen(prefix)));
+}
 
 static void vcp_intr(void) {
   display_clear();
@@ -179,6 +190,104 @@ static void test_display(const char *colors) {
   vcp_printf("OK");
 }
 
+#ifdef USE_BUTTON
+
+static secbool test_btn_press(uint32_t deadline, uint32_t btn) {
+  while (button_read() != (btn | BTN_EVT_DOWN)) {
+    if (HAL_GetTick() > deadline) {
+      vcp_printf("ERROR TIMEOUT");
+      return secfalse;
+    }
+  }
+  while (button_read() != (btn | BTN_EVT_UP)) {
+    if (HAL_GetTick() > deadline) {
+      vcp_printf("ERROR TIMEOUT");
+      return secfalse;
+    }
+  }
+
+  return sectrue;
+}
+
+static secbool test_btn_all(uint32_t deadline) {
+  bool left_pressed = 0;
+  bool right_pressed = 0;
+  while (true) {
+    uint32_t buttons = button_read();
+    if (buttons == (BTN_LEFT | BTN_EVT_DOWN)) {
+      left_pressed = 1;
+    }
+    if (buttons == (BTN_RIGHT | BTN_EVT_DOWN)) {
+      right_pressed = 1;
+    }
+    if (buttons == (BTN_LEFT | BTN_EVT_UP)) {
+      left_pressed = 0;
+    }
+    if (buttons == (BTN_RIGHT | BTN_EVT_UP)) {
+      right_pressed = 0;
+    }
+    if (left_pressed && right_pressed) {
+      break;
+    }
+    if (HAL_GetTick() > deadline) {
+      vcp_printf("ERROR TIMEOUT");
+      return secfalse;
+    }
+  }
+
+  while (true) {
+    uint32_t buttons = button_read();
+    if (buttons == (BTN_LEFT | BTN_EVT_DOWN)) {
+      left_pressed = 1;
+    }
+    if (buttons == (BTN_RIGHT | BTN_EVT_DOWN)) {
+      right_pressed = 1;
+    }
+    if (buttons == (BTN_LEFT | BTN_EVT_UP)) {
+      left_pressed = 0;
+    }
+    if (buttons == (BTN_RIGHT | BTN_EVT_UP)) {
+      right_pressed = 0;
+    }
+    if (!left_pressed && !right_pressed) {
+      break;
+    }
+    if (HAL_GetTick() > deadline) {
+      vcp_printf("ERROR TIMEOUT");
+      return secfalse;
+    }
+  }
+  return sectrue;
+}
+
+static void test_button(const char *args) {
+  int timeout = 0;
+
+  if (startswith(args, "LEFT ")) {
+    timeout = args[5] - '0';
+    uint32_t deadline = HAL_GetTick() + timeout * 1000;
+    secbool r = test_btn_press(deadline, BTN_LEFT);
+    if (r == sectrue) vcp_printf("OK");
+  }
+
+  if (startswith(args, "RIGHT ")) {
+    timeout = args[6] - '0';
+    uint32_t deadline = HAL_GetTick() + timeout * 1000;
+    secbool r = test_btn_press(deadline, BTN_RIGHT);
+    if (r == sectrue) vcp_printf("OK");
+  }
+
+  if (startswith(args, "BOTH ")) {
+    timeout = args[5] - '0';
+    uint32_t deadline = HAL_GetTick() + timeout * 1000;
+    secbool r = test_btn_all(deadline);
+    if (r == sectrue) vcp_printf("OK");
+  }
+}
+
+#endif
+
+#ifdef USE_TOUCH
 static secbool touch_click_timeout(uint32_t *touch, uint32_t timeout_ms) {
   uint32_t deadline = HAL_GetTick() + timeout_ms;
   uint32_t r = 0;
@@ -260,6 +369,7 @@ static void test_sensitivity(const char *args) {
 
   touch_power_off();
 }
+#endif
 
 static void test_pwm(const char *args) {
   int v = atoi(args);
@@ -269,6 +379,7 @@ static void test_pwm(const char *args) {
   vcp_printf("OK");
 }
 
+#ifdef USE_SD_CARD
 static void test_sd(void) {
 #define BLOCK_SIZE (32 * 1024)
   static uint32_t buf1[BLOCK_SIZE / sizeof(uint32_t)];
@@ -309,6 +420,7 @@ static void test_sd(void) {
 power_off:
   sdcard_power_off();
 }
+#endif
 
 static void test_wipe(void) {
   // erase start of the firmware (metadata) -> invalidate FW
@@ -326,12 +438,14 @@ static void test_wipe(void) {
   vcp_printf("OK");
 }
 
+#ifdef USE_SBU
 static void test_sbu(const char *args) {
   secbool sbu1 = sectrue * (args[0] == '1');
   secbool sbu2 = sectrue * (args[1] == '1');
   sbu_set(sbu1, sbu2);
   vcp_printf("OK");
 }
+#endif
 
 static void test_otp_read(void) {
   uint8_t data[32];
@@ -365,8 +479,40 @@ static void test_otp_write(const char *args) {
   vcp_printf("OK");
 }
 
-static secbool startswith(const char *s, const char *prefix) {
-  return sectrue * (0 == strncmp(s, prefix, strlen(prefix)));
+static void test_otp_write_device_variant(const char *args) {
+  volatile char data[32];
+  memzero((char *)data, sizeof(data));
+  data[0] = 1;
+
+  int arg_start = 0;
+  int arg_num = 1;
+  int arg_len = 0;
+  int n = 0;
+  while (args[n] != 0) {
+    if (args[n] == ' ') {
+      if (arg_len != 0) {
+        if (arg_num < 32) {
+          data[arg_num] = (uint8_t)atoi(&args[arg_start]);
+        }
+        arg_num++;
+      }
+      arg_start = n + 1;
+      arg_len = 0;
+    } else {
+      arg_len++;
+    }
+    n++;
+  }
+
+  if (arg_len != 0 && arg_num < 32) {
+    data[arg_num] = (uint8_t)atoi(&args[arg_start]);
+  }
+
+  ensure(flash_otp_write(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0,
+                         (const uint8_t *)data, sizeof(data)),
+         NULL);
+  ensure(flash_otp_lock(FLASH_OTP_BLOCK_DEVICE_VARIANT), NULL);
+  vcp_printf("OK");
 }
 
 #define BACKLIGHT_NORMAL 150
@@ -374,10 +520,19 @@ static secbool startswith(const char *s, const char *prefix) {
 int main(void) {
   display_orientation(0);
   random_delays_init();
+#ifdef USE_SD_CARD
   sdcard_init();
+#endif
+#ifdef USE_BUTTON
+  button_init();
+#endif
+#ifdef USE_TOUCH
   i2c_init();
   touch_init();
+#endif
+#ifdef USE_SBU
   sbu_init();
+#endif
   usb_init_all();
 
   display_reinit();
@@ -387,7 +542,7 @@ int main(void) {
   char dom[32];
   // format: TREZOR2-YYMMDD
   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
-      0 == memcmp(dom, "TREZOR2-", 8) && dom[31] == 0) {
+      sectrue == startswith(dom, MODEL_IDENTIFIER) && dom[31] == 0) {
     display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, 4);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, dom + 8, -1,
                         FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
@@ -408,27 +563,36 @@ int main(void) {
 
     } else if (startswith(line, "DISP ")) {
       test_display(line + 5);
-
+#ifdef USE_BUTTON
+    } else if (startswith(line, "BUTTON ")) {
+      test_button(line + 7);
+#endif
+#ifdef USE_TOUCH
     } else if (startswith(line, "TOUCH ")) {
       test_touch(line + 6);
 
     } else if (startswith(line, "SENS ")) {
       test_sensitivity(line + 5);
-
+#endif
     } else if (startswith(line, "PWM ")) {
       test_pwm(line + 4);
-
+#ifdef USE_SD_CARD
     } else if (startswith(line, "SD")) {
       test_sd();
-
+#endif
+#ifdef USE_SBU
     } else if (startswith(line, "SBU ")) {
       test_sbu(line + 4);
+#endif
 
     } else if (startswith(line, "OTP READ")) {
       test_otp_read();
 
     } else if (startswith(line, "OTP WRITE ")) {
       test_otp_write(line + 10);
+
+    } else if (startswith(line, "VARIANT ")) {
+      test_otp_write_device_variant(line + 8);
 
     } else if (startswith(line, "WIPE")) {
       test_wipe();
