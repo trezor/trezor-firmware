@@ -123,7 +123,6 @@ static uint32_t nrf_sw_backend_hash_sha256_finalize(void   * const p_context,
 
 }
 
-
 const nrf_crypto_hash_info_t g_nrf_crypto_hash_sha256_info =
 {
     .init_fn        = nrf_sw_backend_hash_sha256_init,

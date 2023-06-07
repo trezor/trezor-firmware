@@ -14,17 +14,19 @@ use crate::{
                 theme::{
                     button_bld, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
                     BLD_FG, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32, FIRE40,
-                    TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+                    TEXT_NORMAL, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40,
+                    WELCOME_COLOR, X24,
                 },
                 welcome::Welcome,
             },
-            component::{Button, ResultScreen, WelcomeScreen},
+            component::{Button, PinKeyboard, ResultScreen, WelcomeScreen},
             constant,
             theme::{BACKLIGHT_DIM, BACKLIGHT_NORMAL, FG, WHITE},
         },
         util::{from_c_array, from_c_str},
     },
 };
+use core::slice;
 use heapless::String;
 use num_traits::ToPrimitive;
 
@@ -39,6 +41,7 @@ use crate::ui::model_tt::theme::BLACK;
 use confirm::Confirm;
 use intro::Intro;
 use menu::Menu;
+use crate::ui::geometry::Alignment;
 
 use self::theme::{RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE};
 
@@ -73,13 +76,16 @@ fn fadeout() {
     display::fade_backlight_duration(BACKLIGHT_DIM, 150);
 }
 
-fn run<F>(frame: &mut F) -> u32
+fn run<F>(frame: &mut F, clear: bool) -> u32
 where
     F: Component,
     F::Msg: ReturnToC,
 {
     frame.place(constant::screen());
     fadeout();
+    if clear {
+        display::rect_fill(screen(), BLACK);
+    }
     display::sync();
     frame.paint();
     fadein();
@@ -190,7 +196,7 @@ extern "C" fn screen_install_confirm(
         Some(("FW FINGERPRINT", fingerprint_str)),
     );
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 #[no_mangle]
@@ -216,12 +222,12 @@ extern "C" fn screen_wipe_confirm() -> u32 {
         None,
     );
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 #[no_mangle]
 extern "C" fn screen_menu() -> u32 {
-    run(&mut Menu::new())
+    run(&mut Menu::new(), false)
 }
 
 #[no_mangle]
@@ -247,7 +253,7 @@ extern "C" fn screen_intro(
 
     let mut frame = Intro::new(title_str.as_str(), version_str.as_str());
 
-    run(&mut frame)
+    run(&mut frame, false)
 }
 
 fn screen_progress(
@@ -421,4 +427,66 @@ extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
         WHITE,
         Color::from_u16(bg_color),
     );
+}
+
+#[no_mangle]
+extern "C" fn screen_pairing_confirm(buffer: *const cty::uint8_t) -> u32 {
+    let pin_slice = unsafe { slice::from_raw_parts_mut(buffer as *mut u8, 6) };
+
+    let mut pin = PinKeyboard::new("Enter passkey", "", None, true);
+    let res = run(&mut pin, true);
+
+    if res == 2 {
+        let pin = pin.pin().as_bytes();
+        if pin.len() == 6 {
+            pin_slice.copy_from_slice(&pin[0..6]);
+        }
+    }
+
+    res
+}
+
+#[no_mangle]
+extern "C" fn screen_comparison_confirm(code: *const cty::uint8_t, code_len: u8) -> u32 {
+    let code = unwrap!(unsafe { from_c_array(code, code_len as usize) });
+
+
+    let right = Button::with_text("YES").styled(button_confirm());
+    let left = Button::with_text("CANCEL").styled(button_bld());
+    let title = Label::new("DO THE NUMBERS MATCH?", Alignment::Start, theme::TEXT_BOLD)
+        .vertically_centered();
+
+    let mut frame = Confirm::new(
+        BLD_BG,
+        left,
+        right,
+        ConfirmTitle::Text(title),
+        Label::new(code, Alignment::Center, TEXT_NORMAL),
+        None,
+        None,
+    );
+
+    run(&mut frame, true)
+}
+
+
+#[no_mangle]
+extern "C" fn screen_repair_confirm() -> u32 {
+    let msg = Label::new("Allow repair?", Alignment::Center, TEXT_NORMAL);
+    let right = Button::with_text("ALLOW").styled(button_confirm());
+    let left = Button::with_text("DENY").styled(button_bld());
+    let title = Label::new("REPAIR", Alignment::Start, theme::TEXT_BOLD)
+        .vertically_centered();
+
+    let mut frame = Confirm::new(
+        BLD_BG,
+        left,
+        right,
+        ConfirmTitle::Text(title),
+        msg,
+        None,
+        None,
+    );
+
+    run(&mut frame, true)
 }

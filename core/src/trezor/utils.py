@@ -8,6 +8,7 @@ from trezorutils import (  # noqa: F401
     MODEL,
     SCM_REVISION,
     USE_BACKLIGHT,
+    USE_BLE,
     USE_BUTTON,
     USE_SD_CARD,
     USE_TOUCH,

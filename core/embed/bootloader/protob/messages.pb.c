@@ -42,6 +42,18 @@ PB_BIND(FirmwareUpload, FirmwareUpload, AUTO)
 PB_BIND(UnlockBootloader, UnlockBootloader, AUTO)
 
 
+PB_BIND(PairingRequest, PairingRequest, AUTO)
+
+
+PB_BIND(AuthKey, AuthKey, AUTO)
+
+
+PB_BIND(RepairRequest, RepairRequest, AUTO)
+
+
+PB_BIND(ComparisonRequest, ComparisonRequest, AUTO)
+
+
 
 
 

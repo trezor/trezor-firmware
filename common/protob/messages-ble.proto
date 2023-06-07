@@ -1,0 +1,101 @@
+syntax = "proto2";
+package hw.trezor.messages.ble;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageBLE";
+
+option (include_in_bitcoin_only) = true;
+
+import "messages.proto";
+
+
+/**
+ * Request: initializes upload of a new ble firmware im
+ * @start
+ * @next UploadBLEFirmwareNextChunk
+ * @next Failure
+ */
+message UploadBLEFirmwareInit {
+    required bytes init_data = 1;
+    required uint32 binsize = 2;
+}
+
+
+/**
+ * Response: Requests next chunk of a new ble firmware im
+ * @next UploadBLEFirmwareChunk
+ */
+message UploadBLEFirmwareNextChunk {
+    required uint32 offset = 1;
+}
+
+/**
+ * Request: sends next chunk of a new ble firmware im
+ * @next UploadBLEFirmwareNextChunk
+ * @next Success
+ * @next Failure
+ */
+message UploadBLEFirmwareChunk {
+    required bytes data = 1;
+}
+
+
+/**
+ * Request: erases all BLE bonds
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message EraseBonds {
+}
+
+
+/**
+ * Request: disconnect
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message Disconnect {
+}
+
+
+
+/**
+ * Request: initiates new pairing request
+ * @start
+ * @next AuthKey
+ * @next Failure
+ */
+message PairingRequest {
+}
+
+/**
+ * Request: confirms pairing request with auth key entered on the device
+ * @end
+ */
+message AuthKey {
+    required bytes key = 1;
+}
+
+
+/**
+ * Request: initiates repairing request
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message RepairRequest {
+}
+
+
+/**
+ * Request: initiates new pairing request with numeric comparison
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message ComparisonRequest {
+    required bytes key = 1;
+}
