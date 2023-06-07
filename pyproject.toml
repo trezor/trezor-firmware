@@ -74,6 +74,9 @@ toiftool = {path = "./python/tools/toiftool", develop = true, python = ">=3.8"}
 trezor-pylint-plugin = {path = "./tools/trezor-pylint-plugin", develop = true}
 trezor-core-tools = {path = "./core/tools", develop = true}
 
+# ble
+dbus-next = "*"
+
 [tool.poetry.dev-dependencies]
 scan-build = "*"
 towncrier = "^23.6.0"
