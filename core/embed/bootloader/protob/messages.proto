@@ -18,6 +18,10 @@ enum MessageType {
     MessageType_ButtonAck = 27;
     MessageType_GetFeatures = 55;
     MessageType_UnlockBootloader = 96;
+    MessageType_PairingRequest = 8003;
+    MessageType_AuthKey = 8004;
+    MessageType_RepairRequest = 8005;
+    MessageType_ComparisonRequest = 8008;
 }
 
 /**
@@ -153,4 +157,44 @@ message FirmwareUpload {
  * @next Failure
  */
 message UnlockBootloader {
+}
+
+
+/**
+ * Request: initiates new pairing request
+ * @start
+ * @next AuthKey
+ * @next Failure
+ */
+message PairingRequest {
+}
+
+/**
+ * Request: confirms pairing request with auth key entered on the device
+ * @end
+ */
+message AuthKey {
+    required bytes key = 1;
+}
+
+
+/**
+ * Request: initiates repairing request
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message RepairRequest {
+}
+
+
+
+/**
+ * Request: initiates new pairing request with numeric comparison
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message ComparisonRequest {
+    required bytes key = 1;
 }

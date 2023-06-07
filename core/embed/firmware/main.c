@@ -73,6 +73,11 @@
 #ifdef USE_OPTIGA
 #include "optiga_transport.h"
 #endif
+#ifdef USE_BLE
+#include "ble.h"
+#include "ble/dfu.h"
+#include "ble/state.h"
+#endif
 #include "unit_variant.h"
 
 #ifdef SYSTEM_VIEW
@@ -162,6 +167,11 @@ int main(void) {
 
 #ifdef USE_OPTIGA
   optiga_init();
+#endif
+
+#ifdef USE_BLE
+  dfu_init();
+  ble_comm_init();
 #endif
 
 #if !defined TREZOR_MODEL_1
@@ -260,6 +270,10 @@ void SVC_C_Handler(uint32_t *stack) {
         ;
       break;
     case SVC_REBOOT_TO_BOOTLOADER:
+#ifdef USE_BLE
+      stop_advertising();
+      // TODO: make sure that no answer is pending from NRF
+#endif
       ensure_compatible_settings();
       mpu_config_bootloader();
       __asm__ volatile("msr control, %0" ::"r"(0x0));

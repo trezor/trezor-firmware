@@ -261,6 +261,7 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 /// VERSION_MAJOR: int
 /// VERSION_MINOR: int
 /// VERSION_PATCH: int
+/// USE_BLE: bool
 /// USE_SD_CARD: bool
 /// USE_BACKLIGHT: bool
 /// USE_TOUCH: bool
@@ -296,6 +297,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_false},
+#endif
+#ifdef USE_BLE
+    {MP_ROM_QSTR(MP_QSTR_USE_BLE), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_BLE), mp_const_false},
 #endif
 #ifdef USE_TOUCH
     {MP_ROM_QSTR(MP_QSTR_USE_TOUCH), mp_const_true},

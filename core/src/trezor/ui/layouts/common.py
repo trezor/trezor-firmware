@@ -30,12 +30,13 @@ async def button_request(
 
 async def interact(
     layout: LayoutType,
-    br_type: str,
+    br_type: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
-    pages = None
-    if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-        # We know for certain how many pages the layout will have
-        pages = layout.page_count()  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-    await button_request(br_type, br_code, pages)
+    if br_type is not None:
+        pages = None
+        if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+            # We know for certain how many pages the layout will have
+            pages = layout.page_count()  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+        await button_request(br_type, br_code, pages)
     return await context.wait(layout)
