@@ -49,7 +49,6 @@ from trezor.wire.errors import ActionCancelled, DataError, Error
 # other packages.
 from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
 
-
 if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Any, Callable, Container, Coroutine, TypeVar
@@ -65,9 +64,35 @@ if TYPE_CHECKING:
 EXPERIMENTAL_ENABLED = False
 
 
-def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
+class MessageHandler:
+    def __init__(self):
+        self._find_handler = None
+
+    def find_handler(self, iface: WireInterface, msg_type: int) -> Handler | None:
+        if self._find_handler is not None:
+            return self._find_handler(iface, msg_type)
+        return None
+
+    def register_find_handler(self, handler):
+        self._find_handler = handler
+
+
+common_find_handler = MessageHandler()
+
+
+def setup(
+    iface: WireInterface,
+    buffer: bytearray,
+    handler: MessageHandler,
+    is_debug_session: bool = False,
+    mutex=None,
+) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session))
+    loop.schedule(
+        handle_session(
+            iface, codec_v1.SESSION_ID, buffer, handler, is_debug_session, mutex
+        )
+    )
 
 
 def wrap_protobuf_load(
@@ -100,7 +125,10 @@ if __debug__:
 
 
 async def _handle_single_message(
-    ctx: context.Context, msg: codec_v1.Message, use_workflow: bool
+    ctx: context.Context,
+    msg: codec_v1.Message,
+    find_handler: MessageHandler,
+    use_workflow: bool,
 ) -> codec_v1.Message | None:
     """Handle a message that was loaded from USB by the caller.
 
@@ -132,7 +160,9 @@ async def _handle_single_message(
     res_msg: protobuf.MessageType | None = None
 
     # We need to find a handler for this message type.  Should not raise.
-    handler = find_handler(ctx.iface, msg.type)  # pylint: disable=assignment-from-none
+    handler = find_handler.find_handler(
+        ctx.iface, msg.type
+    )  # pylint: disable=assignment-from-none
 
     if handler is None:
         # If no handler is found, we can skip decoding and directly
@@ -205,13 +235,13 @@ async def _handle_single_message(
 
 
 async def handle_session(
-    iface: WireInterface, session_id: int, is_debug_session: bool = False
+    iface: WireInterface,
+    session_id: int,
+    ctx_buffer: bytearray,
+    message_handler: MessageHandler,
+    is_debug_session: bool = False,
+    mutex=None,
 ) -> None:
-    if __debug__ and is_debug_session:
-        ctx_buffer = WIRE_BUFFER_DEBUG
-    else:
-        ctx_buffer = WIRE_BUFFER
-
     ctx = context.Context(iface, session_id, ctx_buffer)
     next_msg: codec_v1.Message | None = None
 
@@ -230,6 +260,18 @@ async def handle_session(
                 # wait for a new one coming from the wire.
                 try:
                     msg = await ctx.read_from_wire()
+                    if mutex is not None:
+                        if mutex.get_busy(iface.iface_num()):
+                            await ctx.write(
+                                Failure(
+                                    code=FailureType.DeviceIsBusy,
+                                    message="Device is busy",
+                                )
+                            )
+                            continue
+                        else:
+                            mutex.set_busy(iface.iface_num())
+
                 except codec_v1.CodecError as exc:
                     if __debug__:
                         log.exception(__name__, exc)
@@ -243,8 +285,9 @@ async def handle_session(
 
             try:
                 next_msg = await _handle_single_message(
-                    ctx, msg, use_workflow=not is_debug_session
+                    ctx, msg, message_handler, not is_debug_session
                 )
+
             except Exception as exc:
                 # Log and ignore. The session handler can only exit explicitly in the
                 # following finally block.
@@ -271,12 +314,6 @@ async def handle_session(
                 log.exception(__name__, exc)
 
 
-def _find_handler_placeholder(iface: WireInterface, msg_type: int) -> Handler | None:
-    """Placeholder handler lookup before a proper one is registered."""
-    return None
-
-
-find_handler = _find_handler_placeholder
 AVOID_RESTARTING_FOR: Container[int] = ()
 
 

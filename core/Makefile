@@ -395,6 +395,9 @@ upload: ## upload firmware using trezorctl
 upload_prodtest: ## upload prodtest using trezorctl
 	trezorctl firmware_update -s -f $(PRODTEST_BUILD_DIR)/prodtest.bin
 
+upload_ble: ## upload ble firmware using trezorctl
+	trezorctl ble update $(BLE_FIRMWARE_BUILD_DIR)/ble_firmware.zip
+
 coverage:  ## generate coverage report
 	./tools/coverage-report
 

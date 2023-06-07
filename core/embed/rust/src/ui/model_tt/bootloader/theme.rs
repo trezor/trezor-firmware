@@ -231,6 +231,8 @@ pub fn button_bld() -> ButtonStyleSheet {
     }
 }
 
+pub const TEXT_NORMAL_BLACK: TextStyle = TextStyle::new(Font::NORMAL, WHITE, BLACK, WHITE, WHITE);
+
 pub const TEXT_TITLE: TextStyle = TextStyle::new(
     Font::BOLD,
     BLD_TITLE_COLOR,

@@ -76,6 +76,11 @@
 #include "optiga_transport.h"
 #include "secret.h"
 #endif
+#ifdef USE_BLE
+#include "ble.h"
+#include "ble/dfu.h"
+#include "ble/state.h"
+#endif
 #include "unit_variant.h"
 
 #ifdef SYSTEM_VIEW
@@ -85,7 +90,9 @@
 #include "rng.h"
 #include "supervise.h"
 #ifdef USE_SECP256K1_ZKP
+#include "ble/messages.h"
 #include "zkp_context.h"
+
 #endif
 
 // from util.s
@@ -176,6 +183,14 @@ int main(void) {
     optiga_sec_chan_handshake(secret, sizeof(secret));
   }
   memzero(secret, sizeof(secret));
+#endif
+
+#ifdef USE_BLE
+  dfu_init();
+  ble_comm_init();
+  send_state_request();
+  wait_for_answer();
+  ble_start();
 #endif
 
 #if !defined TREZOR_MODEL_1
@@ -284,6 +299,11 @@ void SVC_C_Handler(uint32_t *stack) {
       clear_firmware_header = false;
       // break is omitted here because we want to continue to reboot below
     case SVC_REBOOT_TO_BOOTLOADER:
+#ifdef USE_BLE
+      stop_advertising();
+      ble_stop();
+      // TODO: make sure that no answer is pending from NRF
+#endif
       // if not going from copy image header & reboot, clean preventively this
       // part of CCMRAM
       if (clear_firmware_header) {

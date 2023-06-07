@@ -15,6 +15,7 @@
 #define USE_SBU 1
 #define USE_RGB_COLORS 1
 #define USE_BACKLIGHT 1
+#define USE_BLE 1
 #endif
 
 #ifdef TREZOR_MODEL_1

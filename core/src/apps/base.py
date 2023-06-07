@@ -333,7 +333,7 @@ def set_homescreen() -> None:
 def lock_device(interrupt_workflow: bool = True) -> None:
     if config.has_pin():
         config.lock()
-        wire.find_handler = get_pinlocked_handler
+        wire.common_find_handler.register_find_handler(get_pinlocked_handler)
         set_homescreen()
         if interrupt_workflow:
             workflow.close_others()
@@ -344,7 +344,7 @@ def lock_device_if_unlocked() -> None:
         lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
 
 
-async def unlock_device() -> None:
+async def unlock_device(skip_button_request: bool = False) -> None:
     """Ensure the device is in unlocked state.
 
     If the storage is locked, attempt to unlock it. Reset the homescreen and the wire
@@ -354,10 +354,13 @@ async def unlock_device() -> None:
 
     if not config.is_unlocked():
         # verify_user_pin will raise if the PIN was invalid
-        await verify_user_pin()
+        await verify_user_pin(skip_button_request=skip_button_request)
 
     set_homescreen()
-    wire.find_handler = workflow_handlers.find_registered_handler
+
+    wire.common_find_handler.register_find_handler(
+        workflow_handlers.find_registered_handler
+    )
 
 
 def get_pinlocked_handler(
@@ -413,7 +416,10 @@ def boot() -> None:
         workflow_handlers.register(msg_type, handler)  # type: ignore [cannot be assigned to type]
 
     reload_settings_from_storage()
+
     if config.is_unlocked():
-        wire.find_handler = workflow_handlers.find_registered_handler
+        wire.common_find_handler.register_find_handler(
+            workflow_handlers.find_registered_handler
+        )
     else:
-        wire.find_handler = get_pinlocked_handler
+        wire.common_find_handler.register_find_handler(get_pinlocked_handler)
