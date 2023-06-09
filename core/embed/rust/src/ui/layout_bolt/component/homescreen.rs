@@ -3,25 +3,34 @@ use crate::{
     strutil::TString,
     time::{Duration, Instant},
     translations::TR,
-    trezorhal::usb::usb_configured,
+    trezorhal::{
+        ble,
+        ble::{connected, pairing_mode},
+        usb::usb_configured,
+    },
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Pad, Timer},
+        component::{text::TextStyle, Component, Event, EventCtx, Label, Pad, Timer},
+        constant::{HEIGHT, WIDTH},
         display::{
             image::{ImageInfo, ToifFormat},
             toif::Icon,
             Color, Font,
         },
-        event::TouchEvent,
+        event::{BLEEvent, ButtonEvent, PhysicalButton, TouchEvent},
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
-        layout_bolt::{constant, theme::IMAGE_HOMESCREEN},
+        layout_bolt::{
+            component::{
+                bl_confirm::{Confirm, ConfirmMsg, ConfirmTitle},
+                Button, Loader, LoaderMsg,
+            },
+            constant, theme,
+            theme::IMAGE_HOMESCREEN,
+        },
         shape::{self, Renderer},
     },
 };
-
-use crate::ui::constant::{HEIGHT, WIDTH};
-
-use super::{theme, Loader, LoaderMsg};
+use crate::trezorhal::rgb_led::set_color;
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
@@ -61,6 +70,8 @@ pub struct Homescreen {
     pad: Pad,
     paint_notification_only: bool,
     delay: Timer,
+    pairing: bool,
+    pairing_dialog: Option<Confirm<'static>>,
 }
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -83,11 +94,14 @@ impl Homescreen {
             pad: Pad::with_background(theme::BG),
             paint_notification_only: false,
             delay: Timer::new(),
+            pairing: false,
+            pairing_dialog: None,
         }
     }
 
     fn level_to_style(level: u8) -> (Color, Icon) {
         match level {
+            4 => (theme::BLUE, theme::ICON_MAGIC),
             3 => (theme::YELLOW, theme::ICON_COINJOIN),
             2 => (theme::VIOLET, theme::ICON_MAGIC),
             1 => (theme::YELLOW, theme::ICON_WARN),
@@ -96,6 +110,15 @@ impl Homescreen {
     }
 
     fn get_notification(&self) -> Option<HomescreenNotification> {
+        if connected() {
+            let (color, icon) = Self::level_to_style(4);
+            return Some(HomescreenNotification {
+                text: "BLE connected".into(),
+                icon,
+                color,
+            });
+        }
+
         if !usb_configured() {
             let (color, icon) = Self::level_to_style(0);
             Some(HomescreenNotification {
@@ -134,6 +157,58 @@ impl Homescreen {
             self.paint_notification_only = true;
             ctx.request_paint();
         }
+    }
+
+    fn event_ble(&mut self, ctx: &mut EventCtx, event: Event) {
+        match event {
+            Event::BLE(BLEEvent::Connected) | Event::BLE(BLEEvent::Disconnected) => {
+                self.paint_notification_only = true;
+                ctx.request_paint();
+                set_color(0);
+            }
+            Event::BLE(BLEEvent::PairingCanceled) => {
+                self.pairing = false;
+                self.pairing_dialog = None;
+                set_color(0);
+                ctx.request_paint();
+            }
+            Event::BLE(BLEEvent::PairingRequest(data)) => {
+                self.pairing = true;
+
+                let code = core::str::from_utf8(data).unwrap();
+
+                let mut pd = Confirm::new(
+                    theme::BG,
+                    Button::with_text("Cancel".into()),
+                    Button::with_text("Confirm".into()),
+                    ConfirmTitle::Text(Label::new(
+                        "Pairing Request".into(),
+                        Alignment::Start,
+                        theme::TEXT_BOLD,
+                    )),
+                    Label::new(
+                        "Pairing request received from another device. Confirm to pair.".into(),
+                        Alignment::Center,
+                        theme::TEXT_NORMAL,
+                    ),
+                )
+                .with_alert(Label::new(
+                    code.into(),
+                    Alignment::Center,
+                    theme::TEXT_NORMAL,
+                ));
+
+                pd.place(AREA);
+
+                self.pairing_dialog = Some(pd);
+                ctx.request_paint();
+            }
+            _ => {}
+        }
+    }
+
+    fn pairing(&self) -> bool {
+        self.pairing
     }
 
     fn event_hold(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
@@ -186,22 +261,59 @@ impl Component for Homescreen {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.pad.place(AREA);
         self.loader.place(AREA.translate(LOADER_OFFSET));
+        self.pairing_dialog.place(AREA);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
+        Self::event_ble(self, ctx, event);
         if self.hold_to_lock {
-            Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
+            if Self::event_hold(self, ctx, event) {
+                return Some(HomescreenMsg::Dismissed);
+            }
+        }
+
+        if self.pairing() {
+            if let Some(msg) = self.pairing_dialog.event(ctx, event) {
+                match msg {
+                    ConfirmMsg::Cancel => {
+                        ble::reject_pairing();
+                        self.pairing = false;
+                        ctx.request_paint();
+                        set_color(0);
+                    }
+                    ConfirmMsg::Confirm => {
+                        ble::allow_pairing();
+                        self.pairing = false;
+                        ctx.request_paint();
+                        set_color(0);
+                    }
+                }
+            }
+        }
+
+
+        if let Event::Attach(_) = event {
+            set_color(0);
+        }
+
+        if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
+            set_color(0xff);
+            pairing_mode();
+            None
+            //Some(HomescreenMsg::Dismissed)
         } else {
             None
         }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.pad.render(target);
+                self.pad.render(target);
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
+        } else if self.pairing() {
+            self.pairing_dialog.render(target);
         } else {
             match ImageInfo::parse(self.image) {
                 ImageInfo::Jpeg(_) => {
