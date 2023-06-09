@@ -20,6 +20,8 @@ def configure(env, features_wanted, defines, sources):
         sources += ['embed/trezorhal/touch/touch.c', ]
         sources += ['embed/trezorhal/touch/ft6x36.c', ]
         features_available.append("touch")
+        sources += ['embed/trezorhal/button.c']
+        features_available.append("button")
 
     if "sd_card" in features_wanted:
         sources += ['embed/trezorhal/sdcard.c', ]
