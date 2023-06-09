@@ -22,11 +22,13 @@ use crate::{
     },
 };
 
+use super::{theme, Loader, LoaderMsg};
 use crate::{
-    trezorhal::{buffers::BufferJpegWork, uzlib::UZLIB_WINDOW_SIZE},
+    trezorhal::{ble::start_advertising, buffers::BufferJpegWork, uzlib::UZLIB_WINDOW_SIZE},
     ui::{
         constant::HEIGHT,
         display::tjpgd::BufferInput,
+        event::{ButtonEvent, PhysicalButton},
         model_tt::component::homescreen::render::{
             HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
         },
@@ -36,8 +38,6 @@ use render::{
     homescreen, homescreen_blurred, HomescreenNotification, HomescreenText,
     HOMESCREEN_IMAGE_HEIGHT, HOMESCREEN_IMAGE_WIDTH,
 };
-
-use super::{theme, Loader, LoaderMsg};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
@@ -203,7 +203,15 @@ impl Component for Homescreen {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
         if self.hold_to_lock {
-            Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
+            if Self::event_hold(self, ctx, event) {
+                return Some(HomescreenMsg::Dismissed);
+            }
+        }
+
+        if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
+            start_advertising(false);
+            None
+            //Some(HomescreenMsg::Dismissed)
         } else {
             None
         }
