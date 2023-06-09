@@ -2,7 +2,7 @@ mod render;
 
 use crate::{
     time::{Duration, Instant},
-    trezorhal::usb::usb_configured,
+    trezorhal::{ble::start_advertising, usb::usb_configured},
     ui::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
         display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
@@ -21,6 +21,8 @@ use crate::{
             tjpgd::{jpeg_test, BufferInput},
             toif::Toif,
         },
+        display::{tjpgd::BufferInput, toif::Toif},
+        event::{ButtonEvent, PhysicalButton},
         model_tt::component::homescreen::render::{
             HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
         },
@@ -185,10 +187,19 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
         if self.hold_to_lock {
-            Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
+            if Self::event_hold(self, ctx, event) {
+                return Some(HomescreenMsg::Dismissed)
+            }
+        }
+
+        if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
+            start_advertising(false);
+            None
+            //Some(HomescreenMsg::Dismissed)
         } else {
             None
         }
+
     }
 
     fn paint(&mut self) {
