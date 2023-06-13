@@ -1,5 +1,6 @@
 use crate::{
     strutil::StringType,
+    trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::Icon,
@@ -111,17 +112,6 @@ fn get_char(current_category: &ChoiceCategory, index: usize) -> char {
     unwrap!(group.chars().nth(index))
 }
 
-/// Return category from menu based on page index.
-fn get_category_from_menu(page_index: usize) -> ChoiceCategory {
-    match page_index {
-        LOWERCASE_INDEX => ChoiceCategory::LowercaseLetter,
-        UPPERCASE_INDEX => ChoiceCategory::UppercaseLetter,
-        DIGITS_INDEX => ChoiceCategory::Digit,
-        SPECIAL_INDEX => ChoiceCategory::SpecialSymbol,
-        _ => unreachable!(),
-    }
-}
-
 /// How many choices are available for a specified category.
 /// (does not count the extra MENU choice for characters)
 fn get_category_length(current_category: &ChoiceCategory) -> usize {
@@ -134,6 +124,12 @@ fn get_category_length(current_category: &ChoiceCategory) -> usize {
     }
 }
 
+/// Random position/index in the given category
+fn random_category_position(category: &ChoiceCategory) -> usize {
+    let category_length = get_category_length(category) as u32;
+    random::uniform_between(0, category_length - 1) as usize
+}
+
 /// Whether this index is the MENU index - the last one in the list.
 fn is_menu_choice(current_category: &ChoiceCategory, page_index: usize) -> bool {
     if let ChoiceCategory::Menu = current_category {
@@ -141,6 +137,11 @@ fn is_menu_choice(current_category: &ChoiceCategory, page_index: usize) -> bool 
     }
     let category_length = get_category_length(current_category);
     page_index == category_length
+}
+
+/// Choose random character category to be pre-selected
+fn random_menu_position() -> usize {
+    random::uniform_between(LOWERCASE_INDEX as u32, SPECIAL_INDEX as u32) as usize
 }
 
 struct ChoiceFactoryPassphrase {
@@ -237,7 +238,6 @@ pub struct PassphraseEntry<T: StringType + Clone> {
     show_plain_passphrase: bool,
     textbox: TextBox<MAX_PASSPHRASE_LENGTH>,
     current_category: ChoiceCategory,
-    menu_position: usize, // position in the menu so we can return back
 }
 
 impl<T> PassphraseEntry<T>
@@ -248,12 +248,11 @@ where
         Self {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
                 .with_carousel(true)
-                .with_initial_page_counter(LOWERCASE_INDEX),
+                .with_initial_page_counter(random_menu_position()),
             passphrase_dots: Child::new(ChangingTextLine::center_mono(String::new())),
             show_plain_passphrase: false,
             textbox: TextBox::empty(),
             current_category: ChoiceCategory::Menu,
-            menu_position: 0,
         }
     }
 
@@ -284,15 +283,19 @@ where
     /// Displaying the MENU
     fn show_menu_page(&mut self, ctx: &mut EventCtx) {
         let menu_choices = ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, self.is_empty());
-        // Going back to the last MENU position before showing the MENU
         self.choice_page
-            .reset(ctx, menu_choices, Some(self.menu_position), true);
+            .reset(ctx, menu_choices, Some(random_menu_position()), true);
     }
 
     /// Displaying the character category
     fn show_category_page(&mut self, ctx: &mut EventCtx) {
         let category_choices = ChoiceFactoryPassphrase::new(self.current_category, self.is_empty());
-        self.choice_page.reset(ctx, category_choices, Some(0), true);
+        self.choice_page.reset(
+            ctx,
+            category_choices,
+            Some(random_category_position(&self.current_category)),
+            true,
+        );
     }
 
     pub fn passphrase(&self) -> &str {
@@ -305,6 +308,12 @@ where
 
     fn is_full(&self) -> bool {
         self.textbox.is_full()
+    }
+
+    /// Randomly choose an index in the current category
+    fn randomize_category_position(&mut self, ctx: &mut EventCtx) {
+        self.choice_page
+            .set_page_counter(ctx, random_category_position(&self.current_category));
     }
 }
 
@@ -339,7 +348,6 @@ where
                         self.update_passphrase_dots(ctx);
                         if self.is_empty() {
                             // Allowing for DELETE/CANCEL change
-                            self.menu_position = CANCEL_DELETE_INDEX;
                             self.show_menu_page(ctx);
                         }
                         ctx.request_paint();
@@ -354,7 +362,6 @@ where
                     ctx.request_paint();
                 }
                 PassphraseAction::Category(category) => {
-                    self.menu_position = self.choice_page.page_index();
                     self.current_category = category;
                     self.show_category_page(ctx);
                     ctx.request_paint();
@@ -367,6 +374,7 @@ where
                 PassphraseAction::Character(ch) if !self.is_full() => {
                     self.append_char(ctx, ch);
                     self.update_passphrase_dots(ctx);
+                    self.randomize_category_position(ctx);
                     ctx.request_paint();
                 }
                 _ => {}
