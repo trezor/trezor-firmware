@@ -800,9 +800,6 @@ BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
 if BOOTLOADER_QA:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_qa_DO_NOT_SIGN_signed_dev.bin'
     BOOTLOADER_SUFFIX = MODEL_IDENTIFIER + '_qa'
-elif TREZOR_MODEL == 'R':
-    # XXX workaround for currently missing vendorheaders for T2B1
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_dev.bin'
 elif PRODUCTION:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_satoshilabs_signed_prod.bin'
 else:
