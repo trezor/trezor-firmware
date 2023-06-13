@@ -2,14 +2,13 @@ use crate::{
     strutil::StringType,
     ui::{
         component::{Child, Component, Event, EventCtx, Pad},
-        geometry::{Offset, Rect},
+        geometry::{Insets, Offset, Rect},
     },
 };
 
 use super::super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
 
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
-const DEFAULT_Y_BASELINE: i16 = 20;
 
 pub trait Choice<T: StringType> {
     // Only `paint_center` is required, the rest is optional
@@ -68,8 +67,6 @@ where
     pad: Pad,
     buttons: Child<ButtonController<T>>,
     page_counter: usize,
-    /// How many pixels from top should we render the items.
-    y_baseline: i16,
     /// How many pixels are between the items.
     items_distance: i16,
     /// Whether the choice page is "infinite" (carousel).
@@ -97,7 +94,6 @@ where
             pad: Pad::with_background(theme::BG),
             buttons: Child::new(ButtonController::new(initial_btn_layout)),
             page_counter: 0,
-            y_baseline: DEFAULT_Y_BASELINE,
             items_distance: DEFAULT_ITEMS_DISTANCE,
             is_carousel: false,
             show_incomplete: false,
@@ -130,12 +126,6 @@ where
     /// Show only the currently selected item, nothing left/right.
     pub fn with_only_one_item(mut self, only_one_item: bool) -> Self {
         self.show_only_one_item = only_one_item;
-        self
-    }
-
-    /// Adjust the horizontal baseline from the top of placement.
-    pub fn with_y_baseline(mut self, y_baseline: i16) -> Self {
-        self.y_baseline = y_baseline;
         self
     }
 
@@ -174,10 +164,19 @@ where
     /// Display current, previous and next choices according to
     /// the current ChoiceItem.
     fn paint_choices(&mut self) {
-        let available_area = self.pad.area.split_top(self.y_baseline).0;
+        // Getting the row area for the choices - so that displaying
+        // items in the used font will show them in the middle vertically.
+        let area_height_half = self.pad.area.height() / 2;
+        let font_size_half = theme::FONT_CHOICE_ITEMS.text_height() / 2;
+        let center_row_area = self
+            .pad
+            .area
+            .split_top(area_height_half)
+            .0
+            .outset(Insets::bottom(font_size_half));
 
         // Drawing the current item in the middle.
-        self.show_current_choice(available_area);
+        self.show_current_choice(center_row_area);
 
         // Not drawing the rest when not wanted
         if self.show_only_one_item {
@@ -186,7 +185,7 @@ where
 
         // Getting the remaining left and right areas.
         let center_width = self.get_current_choice().0.width_center();
-        let (left_area, _center_area, right_area) = available_area.split_center(center_width);
+        let (left_area, _center_area, right_area) = center_row_area.split_center(center_width);
 
         // Possibly drawing on the left side.
         if self.has_previous_choice() || self.is_carousel {
