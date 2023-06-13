@@ -74,7 +74,7 @@ vulture = "^2.6"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
-towncrier = "^21.9.0"
+towncrier = "^23.6.0"
 #freetype-py = "^2.3.0"
 
 [build-system]
