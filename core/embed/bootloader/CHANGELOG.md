@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.1 [June 2023]
+
+Internal only release for Model R prototypes.
+
+### Added
+- Added production public keys for T2B1.  [#3048]
+- Added UI for T2B1.
+
+### Fixed
+- Fix installation of images smaller than 128kB.  [#2941]
+
+
 ## 2.1.0 [April 2023]
 
 ### Added
@@ -63,3 +75,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2623]: https://github.com/trezor/trezor-firmware/pull/2623
 [#2879]: https://github.com/trezor/trezor-firmware/pull/2879
 [#2896]: https://github.com/trezor/trezor-firmware/pull/2896
+[#2941]: https://github.com/trezor/trezor-firmware/pull/2941
+[#3048]: https://github.com/trezor/trezor-firmware/pull/3048
