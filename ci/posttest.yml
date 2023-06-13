@@ -37,8 +37,10 @@ unix ui changes:
   <<: *gitlab_caching
   needs:
     - core click test
+    - core click R test
     - core persistence test
     - core device test
+    - core device R test
     - legacy device test
   script:
     - $NIX_SHELL --run "poetry run python -m tests.ui_tests.reporting master-diff"
