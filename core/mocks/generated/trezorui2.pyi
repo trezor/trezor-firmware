@@ -162,7 +162,7 @@ def confirm_modify_fee(
 # rust/src/ui/model_tr/layout.rs
 def confirm_fido(
     *,
-    title: str,  # unused on TR
+    title: str,
     app_name: str,
     icon_name: str | None,  # unused on TR
     accounts: list[str | None],

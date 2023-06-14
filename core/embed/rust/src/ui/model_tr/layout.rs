@@ -788,17 +788,12 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
 
 extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let app_name: StrBuffer = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
         let accounts: Gc<List> = kwargs.get(Qstr::MP_QSTR_accounts)?.try_into()?;
 
         // Cache the page count so that we can move `accounts` into the closure.
         let page_count = accounts.len();
-
-        let title: StrBuffer = if page_count > 1 {
-            "IMPORT".into()
-        } else {
-            "IMPORT CREDENTIAL".into()
-        };
 
         // Closure to lazy-load the information on given page index.
         // Done like this to allow arbitrarily many pages without
@@ -1420,7 +1415,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def confirm_fido(
     ///     *,
-    ///     title: str,  # unused on TR
+    ///     title: str,
     ///     app_name: str,
     ///     icon_name: str | None,  # unused on TR
     ///     accounts: list[str | None],
