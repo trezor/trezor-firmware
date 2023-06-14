@@ -396,7 +396,12 @@
             "t1_enabled": "yes",
             "t2_enabled": "yes",
             "type": "coin",
-            "wallet": []
+            "wallet": [
+                {
+                    "name": "AtomicDEX",
+                    "url": "https://app.atomicdex.io/"
+                }
+            ]
         },
         "bitcoin:KOTO": {
             "links": {
