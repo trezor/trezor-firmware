@@ -373,19 +373,12 @@ async def confirm_reset_device(
     else:
         button = "CREATE WALLET"
 
-    # Title sent from general code would be too long
-    # TODO: support two lines title for TR
-    if recovery:
-        title = "WALLET RECOVERY"
-    else:
-        title = "WALLET CREATION"
-
     await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
                 trezorui2.confirm_reset_device(
-                    title=title,
+                    title=title.upper(),
                     button=button,
                 )
             ),

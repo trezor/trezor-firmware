@@ -82,15 +82,15 @@ where
     fn get_first_text(&self) -> String<100> {
         build_string!(
             100,
-            "Write all ",
+            "Write down all ",
             inttostr!(self.share_words.len() as u8),
-            " words in order on recovery seed card."
+            " words in order."
         )
     }
 
     /// Display the first page with user information.
     fn paint_entry_page(&mut self) {
-        self.render_text_on_screen(&self.get_first_text(), Font::BOLD);
+        self.render_text_on_screen(&self.get_first_text(), Font::MONO);
     }
 
     fn get_second_text(&self) -> String<100> {

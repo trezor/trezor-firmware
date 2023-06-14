@@ -6,7 +6,7 @@ from trezor.wire import ActionCancelled
 import trezorui2
 
 from ..common import interact
-from . import RustLayout, confirm_action
+from . import RustLayout, confirm_action, raise_if_not_confirmed
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 
@@ -22,19 +22,20 @@ async def show_share_words(
     share_index: int | None = None,
     group_index: int | None = None,
 ) -> None:
-    from . import get_bool
+    # Showing words, asking for write down confirmation and preparing for check
 
     if share_index is None:
         title = "RECOVERY SEED"
+        check_title = "CHECK BACKUP"
     elif group_index is None:
         title = f"SHARE #{share_index + 1}"
+        check_title = f"CHECK SHARE #{share_index + 1}"
     else:
         title = f"G{group_index + 1} - SHARE {share_index + 1}"
+        check_title = f"GROUP {group_index + 1} - SHARE {share_index + 1}"
 
-    # Showing words, asking for write down confirmation and preparing for check
-    # until user accepts everything.
-    while True:
-        result = await interact(
+    await raise_if_not_confirmed(
+        interact(
             ctx,
             RustLayout(
                 trezorui2.show_share_words(  # type: ignore [Argument missing for parameter "pages"]
@@ -45,28 +46,17 @@ async def show_share_words(
             "backup_words",
             ButtonRequestType.ResetDevice,
         )
-        if result is not CONFIRMED:
-            raise ActionCancelled
+    )
 
-        if share_index is None:
-            check_title = "CHECK BACKUP"
-        elif group_index is None:
-            check_title = f"CHECK SHARE #{share_index + 1}"
-        else:
-            check_title = f"GROUP {group_index + 1} - SHARE {share_index + 1}"
-
-        if await get_bool(
-            ctx,
-            "backup_words",
-            check_title,
-            None,
-            "Select correct word for each position.",
-            verb_cancel="SEE AGAIN",
-            verb="BEGIN",
-            br_code=ButtonRequestType.ResetDevice,
-        ):
-            # All went well, we can break the loop.
-            break
+    await confirm_action(
+        ctx,
+        "backup_words",
+        check_title,
+        description="Select the correct word for each position.",
+        verb="CONTINUE",
+        verb_cancel=None,
+        br_code=ButtonRequestType.ResetDevice,
+    )
 
 
 async def select_word(
@@ -173,8 +163,8 @@ async def slip39_prompt_threshold(
         ctx,
         "slip39_prompt_threshold",
         "Threshold",
-        description="= number of shares needed for recovery",
-        verb="BEGIN",
+        description="= minimum number of unique words used for recovery.",
+        verb="CONTINUE",
         verb_cancel=None,
     )
 
@@ -187,7 +177,7 @@ async def slip39_prompt_threshold(
     if group_id is not None:
         title = f"THRESHOLD - GROUP {group_id + 1}"
     else:
-        title = "SET THRESHOLD"
+        title = "THRESHOLD"
 
     return await _prompt_number(
         ctx,
@@ -206,8 +196,8 @@ async def slip39_prompt_number_of_shares(
         ctx,
         "slip39_shares",
         "Number of shares",
-        description="= total number of unique word lists used for wallet backup",
-        verb="BEGIN",
+        description="= total number of unique word lists used for wallet backup.",
+        verb="CONTINUE",
         verb_cancel=None,
     )
 

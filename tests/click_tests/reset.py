@@ -12,11 +12,10 @@ if TYPE_CHECKING:
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
     layout = debug.wait_layout()
+    assert layout.title().startswith("CREATE WALLET")
     if debug.model == "T":
-        assert layout.title().startswith("WALLET CREATION")
         debug.click(buttons.OK, wait=True)
     elif debug.model == "R":
-        assert layout.title() == "WALLET CREATION"
         debug.press_right(wait=True)
         debug.press_right(wait=True)
 
@@ -141,7 +140,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             button_pos = btn_texts.index(wanted_word)
             layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
     elif debug.model == "R":
-        assert "Select correct word" in layout.text_content()
+        assert "Select the correct word" in layout.text_content()
         layout = debug.press_right(wait=True)
         for _ in range(3):
             # "SELECT 2ND WORD"

@@ -412,6 +412,7 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_MONO)
             .text_mono("By continuing you agree to Trezor Company's terms and conditions.".into())
             .newline()
+            .newline()
             .text_mono("More info at".into())
             .newline()
             .text_bold("trezor.io/tos".into());
