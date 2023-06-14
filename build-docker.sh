@@ -274,7 +274,7 @@ for TREZOR_MODEL in ${MODELS[@]}; do
       set -e -o pipefail
       cd /reproducible-build/trezor-firmware/core
       $GIT_CLEAN_REPO
-      poetry run make clean vendor build_bootloader build_firmware
+      poetry run make clean vendor build_boardloader build_bootloader build_firmware
       for item in bootloader firmware; do
         poetry run ../python/tools/firmware-fingerprint.py \
                     -o build/\$item/\$item.bin.fingerprint \
