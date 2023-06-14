@@ -20,7 +20,8 @@ async def confirm_fido(
 ) -> int:
     """Webauthn confirmation for one or more credentials."""
     confirm = RustLayout(
-        trezorui2.confirm_fido(  # type: ignore [Arguments missing]
+        trezorui2.confirm_fido(  # type: ignore [Argument missing for parameter "icon_name"]
+            title=header.upper(),
             app_name=app_name,
             accounts=accounts,
         )
