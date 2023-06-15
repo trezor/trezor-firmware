@@ -35,7 +35,9 @@ use crate::{
 pub use crate::ui::display::toif::Icon;
 pub use color::Color;
 pub use font::{Font, Glyph, GlyphMetrics};
-pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
+pub use loader::{
+    loader, loader_indeterminate, loader_small_indeterminate, LOADER_MAX, LOADER_MIN,
+};
 
 pub fn backlight() -> u16 {
     display::backlight(-1) as u16
