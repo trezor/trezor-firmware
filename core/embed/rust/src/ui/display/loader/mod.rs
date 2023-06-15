@@ -1,5 +1,6 @@
 mod circular;
 mod rectangular;
+mod small;
 mod starry;
 
 use crate::ui::display::{Color, Icon};
@@ -15,6 +16,8 @@ pub use crate::ui::display::loader::circular::{loader_circular_uncompress, Loade
 use crate::ui::display::loader::rectangular::loader_rectangular as determinate;
 #[cfg(not(feature = "model_tt"))]
 use crate::ui::display::loader::starry::loader_starry_indeterminate as indeterminate;
+
+pub use small::loader_small_indeterminate;
 
 pub const LOADER_MIN: u16 = 0;
 pub const LOADER_MAX: u16 = 1000;
