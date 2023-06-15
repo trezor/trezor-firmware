@@ -958,11 +958,14 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
         let max_rounds: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
         let max_feerate: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
 
+        // Decreasing bottom padding between paragraphs to fit one screen
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, "Max rounds".into()),
+            Paragraph::new(&theme::TEXT_BOLD, "Max rounds".into()).with_bottom_padding(2),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
-            Paragraph::new(&theme::TEXT_BOLD, "Max mining fee".into()).no_break(),
-            Paragraph::new(&theme::TEXT_MONO, max_feerate),
+            Paragraph::new(&theme::TEXT_BOLD, "Max mining fee".into())
+                .with_bottom_padding(2)
+                .no_break(),
+            Paragraph::new(&theme::TEXT_MONO, max_feerate).with_bottom_padding(2),
         ]);
 
         content_in_button_page(

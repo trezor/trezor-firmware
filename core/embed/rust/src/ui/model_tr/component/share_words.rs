@@ -2,8 +2,7 @@ use crate::{
     strutil::StringType,
     ui::{
         component::{
-            text::util::text_multiline_split_words, Child, Component, Event, EventCtx, Never,
-            Paginate,
+            text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
         },
         display::Font,
         geometry::{Alignment, Offset, Rect},
@@ -118,7 +117,7 @@ where
 
     /// Shows text in the main screen area.
     fn render_text_on_screen(&self, text: &str, font: Font) {
-        text_multiline_split_words(
+        text_multiline(
             self.area.split_top(INFO_TOP_OFFSET).1,
             text,
             font,

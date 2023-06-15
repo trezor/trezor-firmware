@@ -49,11 +49,9 @@ def bitcoin_progress(description: str) -> ProgressLayout:
 
 
 def coinjoin_progress(message: str) -> ProgressLayout:
-    # TODO: create show_progress_coinjoin for TR
-    return progress("Coinjoin", message)
-    # return RustProgress(
-    #     layout=trezorui2.show_progress_coinjoin(title=message, indeterminate=False)
-    # )
+    return RustProgress(
+        layout=trezorui2.show_progress_coinjoin(title=message, indeterminate=False)
+    )
 
 
 def pin_progress(message: str, description: str) -> ProgressLayout:
