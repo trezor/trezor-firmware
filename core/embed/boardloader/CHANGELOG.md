@@ -4,3 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.0 [June 2023]
+
+Internal only release for Model R prototypes.
+
+### Added
+- Add basic Trezor Model R hardware support  [#2243]
+- Boardloader capabilities structure  [#2324]
+- Using hardware acceleration (dma2d) for rendering  [#2414]
+- Check image model when replacing bootloader  [#2623]
+- Added production public keys for T2B1.  [#3048]
+
+### Changed
+- CPU Frequency increased to 180 MHz  [#2587]
+- Fixed display blinking by increasing backlight PWM frequency  [#2595]
+
+### Security
+- Avoid accidental build with broken stack protector  [#1642]
+
+
+[#1642]: https://github.com/trezor/trezor-firmware/pull/1642
+[#2243]: https://github.com/trezor/trezor-firmware/pull/2243
+[#2324]: https://github.com/trezor/trezor-firmware/pull/2324
+[#2414]: https://github.com/trezor/trezor-firmware/pull/2414
+[#2587]: https://github.com/trezor/trezor-firmware/pull/2587
+[#2595]: https://github.com/trezor/trezor-firmware/pull/2595
+[#2623]: https://github.com/trezor/trezor-firmware/pull/2623
+[#3048]: https://github.com/trezor/trezor-firmware/pull/3048
