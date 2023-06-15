@@ -2,31 +2,36 @@ use crate::{
     strutil::StringType,
     ui::{
         component::{
-            base::Never, text::util::text_multiline_split_words, Component, Event, EventCtx,
+            base::Never,
+            text::util::{text_multiline, text_multiline_bottom},
+            Component, Event, EventCtx,
         },
         display::Font,
-        geometry::{Alignment, Rect},
+        geometry::{Alignment, Insets, Rect},
     },
 };
 
 use super::theme;
 
 const HEADER: &str = "COINJOIN IN PROGRESS";
-const FOOTER: &str = "Don't disconnect your Trezor";
+const FOOTER: &str = "Do not disconnect your Trezor!";
+const FOOTER_TEXT_MARGIN: i16 = 8;
 
 pub struct CoinJoinProgress<T> {
     text: T,
     area: Rect,
+    indeterminate: bool,
 }
 
 impl<T> CoinJoinProgress<T>
 where
     T: StringType,
 {
-    pub fn new(text: T, _indeterminate: bool) -> Self {
+    pub fn new(text: T, indeterminate: bool) -> Self {
         Self {
             text,
             area: Rect::zero(),
+            indeterminate,
         }
     }
 }
@@ -47,33 +52,34 @@ where
     }
 
     fn paint(&mut self) {
-        // Trying to paint all three parts into the area, stopping if any of them
-        // doesn't fit.
-        let mut possible_rest = text_multiline_split_words(
+        // TOP
+        if self.indeterminate {
+            text_multiline(
+                self.area,
+                HEADER,
+                Font::BOLD,
+                theme::FG,
+                theme::BG,
+                Alignment::Center,
+            );
+        }
+
+        // CENTER
+
+        // BOTTOM
+        let top_rest = text_multiline_bottom(
             self.area,
-            HEADER,
+            FOOTER,
             Font::BOLD,
             theme::FG,
             theme::BG,
             Alignment::Center,
         );
-        if let Some(rest) = possible_rest {
-            possible_rest = text_multiline_split_words(
-                rest,
+        if let Some(rest) = top_rest {
+            text_multiline_bottom(
+                rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
                 self.text.as_ref(),
-                Font::MONO,
-                theme::FG,
-                theme::BG,
-                Alignment::Center,
-            );
-        } else {
-            return;
-        }
-        if let Some(rest) = possible_rest {
-            text_multiline_split_words(
-                rest,
-                FOOTER,
-                Font::BOLD,
+                Font::NORMAL,
                 theme::FG,
                 theme::BG,
                 Alignment::Center,

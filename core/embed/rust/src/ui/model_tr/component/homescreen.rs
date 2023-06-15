@@ -3,7 +3,7 @@ use crate::{
     trezorhal::usb::usb_configured,
     ui::{
         component::{Child, Component, Event, EventCtx, Label},
-        display::{rect_fill, toif::Toif, Font},
+        display::{rect_fill, toif::Toif, Font, Icon},
         event::USBEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
@@ -25,6 +25,8 @@ const LOGO_ICON_TOP_MARGIN: i16 = 12;
 const LOCK_ICON_TOP_MARGIN: i16 = 12;
 const NOTIFICATION_HEIGHT: i16 = 12;
 const LABEL_OUTSET: i16 = 3;
+const NOTIFICATION_FONT: Font = Font::NORMAL;
+const NOTIFICATION_ICON: Icon = theme::ICON_WARNING;
 
 pub struct Homescreen<T>
 where
@@ -66,16 +68,32 @@ where
     }
 
     fn paint_notification(&self) {
-        let baseline = TOP_CENTER + Offset::y(Font::MONO.line_height());
+        let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
         if !usb_configured() {
             self.fill_notification_background();
             // TODO: fill warning icons here as well?
-            display_center(baseline, &"NO USB CONNECTION", Font::MONO);
+            display_center(baseline, &"NO USB CONNECTION", NOTIFICATION_FONT);
         } else if let Some((notification, _level)) = &self.notification {
             self.fill_notification_background();
-            // TODO: what if the notification text is so long it collides with icons?
-            self.paint_warning_icons_in_top_corners();
-            display_center(baseline, &notification.as_ref(), Font::MONO);
+            display_center(baseline, &notification.as_ref(), NOTIFICATION_FONT);
+            // Painting warning icons in top corners when the text is short enough not to
+            // collide with them
+            let icon_width = NOTIFICATION_ICON.toif.width();
+            let text_width = NOTIFICATION_FONT.text_width(notification.as_ref());
+            if AREA.width() >= text_width + (icon_width + 1) * 2 {
+                NOTIFICATION_ICON.draw(
+                    AREA.top_left(),
+                    Alignment2D::TOP_LEFT,
+                    theme::FG,
+                    theme::BG,
+                );
+                NOTIFICATION_ICON.draw(
+                    AREA.top_right(),
+                    Alignment2D::TOP_RIGHT,
+                    theme::FG,
+                    theme::BG,
+                );
+            }
         }
     }
 

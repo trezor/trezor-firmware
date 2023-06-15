@@ -15,7 +15,7 @@ use super::{
 ///
 /// If it fits, returns the rest of the area.
 /// If it does not fit, returns `None`.
-pub fn text_multiline_split_words(
+pub fn text_multiline(
     area: Rect,
     text: &str,
     font: Font,
@@ -31,5 +31,35 @@ pub fn text_multiline_split_words(
     match layout_fit {
         LayoutFit::Fitting { height, .. } => Some(area.split_top(height).1),
         LayoutFit::OutOfBounds { .. } => None,
+    }
+}
+
+/// Same as `text_multiline` above, but aligns the text to the bottom of the
+/// area.
+pub fn text_multiline_bottom(
+    area: Rect,
+    text: &str,
+    font: Font,
+    fg_color: Color,
+    bg_color: Color,
+    alignment: Alignment,
+) -> Option<Rect> {
+    let text_style = TextStyle::new(font, fg_color, bg_color, fg_color, fg_color);
+    let mut text_layout = TextLayout::new(text_style)
+        .with_bounds(area)
+        .with_align(alignment);
+    // When text fits the area, displaying it in the bottom part.
+    // When not, render it "normally".
+    match text_layout.fit_text(text) {
+        LayoutFit::Fitting { height, .. } => {
+            let (top, bottom) = area.split_bottom(height);
+            text_layout = text_layout.with_bounds(bottom);
+            text_layout.render_text(text);
+            Some(top)
+        }
+        LayoutFit::OutOfBounds { .. } => {
+            text_layout.render_text(text);
+            None
+        }
     }
 }
