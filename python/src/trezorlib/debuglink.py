@@ -227,11 +227,11 @@ class DebugLink:
         self.t1_screenshot_counter = 0
 
     def open(self) -> None:
-        """Begin a debug session."""
+        """Open a debuglink connection."""
         self.transport.begin_session()
 
     def close(self) -> None:
-        """End a debug session."""
+        """Close a debuglink connection."""
         self.transport.end_session()
 
     def _call(self, msg: protobuf.MessageType, nowait: bool = False) -> Any:
@@ -745,7 +745,7 @@ class TrezorClientDebugLink(TrezorClient):
     for various callbacks, created in order
     to automatically pass unit tests.
 
-    This mixing should be used only for purposes
+    This class should be used only for purposes
     of unit testing, because it will fail to work
     without special DebugLink interface provided
     by the device.
@@ -1089,6 +1089,8 @@ load_device_by_mnemonic = load_device
 @expect(messages.Success, field="message", ret_type=str)
 def self_test(client: "TrezorClient") -> protobuf.MessageType:
     """Perform self-test on the device.
+
+    Only works on debug firmware of Trezor One.
 
     Args:
         client: TrezorClient instance

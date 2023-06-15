@@ -89,6 +89,10 @@ def set_counter(client: "TrezorClient", u2f_counter: int) -> "MessageType":
 def get_next_counter(client: "TrezorClient") -> "MessageType":
     """Get the next U2F counter value.
 
+    This is a get-and-increment operation. Subsequent calls to this function will
+    return an ever increasing value. It is not possible to get the current value
+    without incrementing it.
+
     Args:
         client: TrezorClient instance
 

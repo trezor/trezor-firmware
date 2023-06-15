@@ -165,7 +165,7 @@ def get_public_node(
 def get_address(*args: Any, **kwargs: Any) -> "MessageType":
     """Ask device for address corresponding to given path.
 
-    Calls `get_authenticated_address` with all the given arguments.
+    See `get_authenticated_address` for possible parameters and their meaning.
 
     Returns:
         str: address
@@ -195,7 +195,7 @@ def get_authenticated_address(
         multisig: multisig configuration
         script_type: script type to use (non-segwit, segwit, etc.)
         ignore_xpub_magic: ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
-        unlock_path: BIP-32 path to unlock the device
+        unlock_path: protected BIP-32 path to be unlocked
         unlock_path_mac: MAC returned by UnlockedPathRequest
 
     Returns:
@@ -228,7 +228,7 @@ def get_ownership_id(
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> "MessageType":
-    """Ask device for ownership identifier corresponding to scriptPubKey for given path.
+    """Ask device for a SLIP-19 ownership identifier corresponding to scriptPubKey for given path.
 
     Args:
         client: TrezorClient instance
@@ -261,7 +261,7 @@ def get_ownership_proof(
     commitment_data: Optional[bytes] = None,
     preauthorized: bool = False,
 ) -> Tuple[bytes, bytes]:
-    """Ask device for a proof of ownership corresponding to given path.
+    """Ask device for a SLIP-19 proof of ownership corresponding to given path.
 
     Args:
         client: TrezorClient instance
@@ -272,7 +272,7 @@ def get_ownership_proof(
         user_confirmation: show a confirmation dialog and set the "user confirmation" bit in the proof
         ownership_ids: list of ownership identifiers in case of multisig
         commitment_data: additional data to which the proof should commit
-        preauthorized: whether to preauthorize the proof
+        preauthorized: `True` to skip user prompt if the operation is preauthorized via `authorize_coinjoin`
 
     Returns:
         ownership_proof
@@ -310,7 +310,7 @@ def sign_message(
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     no_script_type: bool = False,
 ) -> "MessageType":
-    """Ask device to sign message.
+    """Ask device to sign a message.
 
     Args:
         client: TrezorClient instance
@@ -391,9 +391,9 @@ def sign_tx(
         details: additional transaction details
         prev_txes: dictionary of previous transactions
         payment_reqs: list of payment requests
-        preauthorized: whether to preauthorize the transaction
-        unlock_path: path to unlock the device
-        unlock_path_mac: MAC of the unlock path
+        preauthorized: `True` to automatically confirm if the transaction is preauthorized via `authorize_coinjoin`
+        unlock_path: protected BIP-32 path to be unlocked
+        unlock_path_mac: MAC returned by UnlockedPathRequest
 
     Returns:
         list of signatures
@@ -555,7 +555,7 @@ def authorize_coinjoin(
     coin_name: str,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> "MessageType":
-    """Ask device to prompt the user to authorize a CoinJoin transaction.
+    """Authorize a CoinJoin transaction.
 
     Args:
         client: TrezorClient instance

@@ -172,7 +172,7 @@ def get_public_node(
     Args:
         client: initialized TrezorClient
         n: BIP32 path
-        show_display: show address on device before sending the result
+        show_display: show public key on device before sending the result
 
     Returns:
         EthereumPublicKey message
@@ -326,7 +326,7 @@ def sign_tx_eip1559(
 def sign_message(
     client: "TrezorClient", n: "Address", message: AnyStr
 ) -> "MessageType":
-    """Sign Ethereum message.
+    """Sign a message by an Ethereum address.
 
     Args:
         client: initialized TrezorClient
@@ -351,7 +351,9 @@ def sign_typed_data(
     *,
     metamask_v4_compat: bool = True,
 ) -> "MessageType":
-    """Sign Ethereum typed data.
+    """Sign EIP-712 Ethereum typed data.
+
+    Not available on Trezor One.
 
     Args:
         client: initialized TrezorClient
@@ -430,7 +432,7 @@ def sign_typed_data(
 def verify_message(
     client: "TrezorClient", address: str, signature: bytes, message: AnyStr
 ) -> bool:
-    """Verify Ethereum message.
+    """Verify a message signed by an Ethereum address.
 
     Args:
         client: initialized TrezorClient
@@ -461,7 +463,10 @@ def sign_typed_data_hash(
     domain_hash: bytes,
     message_hash: Optional[bytes],
 ) -> "MessageType":
-    """Sign Ethereum typed data hash.
+    """Sign EIP-712 typed data hash.
+
+    Only available on Trezor One that cannot run the full EIP-712 `sign_typed_data`
+    workflow.
 
     Args:
         client: initialized TrezorClient

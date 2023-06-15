@@ -100,8 +100,8 @@ class TrezorClient:
         Args:
             transport: Transport instance
             ui: UI instance
-            session_id: Optional session ID to use
-            derive_cardano: Whether to derive Cardano
+            session_id: attempt to resume session with the given ID
+            derive_cardano: enable the Cardano app, if available
             model: Optional model of the device
             _init_device: Whether to initialize the device (more below)
 
@@ -114,8 +114,8 @@ class TrezorClient:
         - passphrase request (ask the user to enter a passphrase) See `trezorlib.ui` for
           details.
 
-        You can supply a `session_id` you might have saved in the previous session. If
-        you do, the user might not need to enter their passphrase again.
+        See `TrezorClient.init_device` for details about `session_id` and
+        `derive_cardano`.
 
         You can provide Trezor model information. If not provided, it is detected from
         the model name reported at initialization time.
@@ -142,30 +142,34 @@ class TrezorClient:
             self.init_device(session_id=session_id, derive_cardano=derive_cardano)
 
     def open(self) -> None:
-        """Open a session with the device."""
+        """Open a connection with the device."""
         if self.session_counter == 0:
             self.transport.begin_session()
         self.session_counter += 1
 
     def close(self) -> None:
-        """Close the session with the device."""
+        """Close the connection with the device."""
         self.session_counter = max(self.session_counter - 1, 0)
         if self.session_counter == 0:
             # TODO call EndSession here?
             self.transport.end_session()
 
     def cancel(self) -> None:
-        """Send a Cancel message to the device. Aborting the current operation."""
+        """Send a Cancel message to the device, aborting the current operation."""
         self._raw_write(messages.Cancel())
 
     def call_raw(self, msg: "MessageType") -> "MessageType":
-        """Send a protobuf message to the device and return the response."""
+        """Send a protobuf message to the device and return the immediate response.
+
+        Bypasses handling of auxilliary flows like `ButtonRequest`, `PinRequest`,
+        `PassphraseRequest`.
+        """
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         self._raw_write(msg)
         return self._raw_read()
 
     def _raw_write(self, msg: "MessageType") -> None:
-        """Log and send a protobuf message to the device."""
+        """Send a protobuf message to the device."""
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         LOG.debug(
             f"sending message: {msg.__class__.__name__}",
@@ -179,7 +183,7 @@ class TrezorClient:
         self.transport.write(msg_type, msg_bytes)
 
     def _raw_read(self) -> "MessageType":
-        """Read, log  and return a response message from the device."""
+        """Read and return a response message from the device."""
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         msg_type, msg_bytes = self.transport.read()
         LOG.log(
@@ -194,7 +198,7 @@ class TrezorClient:
         return msg
 
     def _callback_pin(self, msg: messages.PinMatrixRequest) -> "MessageType":
-        """Obtain PIN from the user and send it to the device."""
+        """Obtain PIN from the UI implementation and send it to the device."""
         try:
             pin = self.ui.get_pin(msg.type)
         except exceptions.Cancelled:
@@ -218,7 +222,7 @@ class TrezorClient:
             return resp
 
     def _callback_passphrase(self, msg: messages.PassphraseRequest) -> "MessageType":
-        """Obtain passphrase from user and send it into the device."""
+        """Obtain passphrase from the UI implementation and send it into the device."""
         available_on_device = Capability.PassphraseEntry in self.features.capabilities
 
         def send_passphrase(
@@ -277,6 +281,9 @@ class TrezorClient:
     @session
     def call(self, msg: "MessageType") -> "MessageType":
         """Send a protobuf message to the device and return the response.
+
+        Automatically handles auxilliary flows like `ButtonRequest` etc. While `call()`
+        is running, there can be any number of callbacks into the UI implementation.
 
         Args:
             msg: protobuf message to send
@@ -354,7 +361,7 @@ class TrezorClient:
         """Initialize the device and return a session ID.
 
         Args:
-            session_id: Session ID to use. If not provided, the current session ID will be reused.
+            session_id: Attempt to resume a session with this ID.
             new_session: If True, a new session ID will be generated and returned.
             derive_cardano: If True, the Cardano app will be initialized.
 
@@ -372,6 +379,13 @@ class TrezorClient:
         If neither `new_session` nor `session_id` is specified, the current session ID
         will be reused. If no session ID was cached, a new session ID will be allocated
         and returned.
+
+        If `derive_cardano` is True, and the device supports it, the Cardano master
+        secrets will be derived. This is required for using Cardano derivations other
+        than `LEDGER` -- attempting to call Cardano functions in a session without
+        `derive_cardano` will result in an error.
+
+        Enabling `derive_cardano` can increase session startup time by up to 5 seconds.
 
         # Version notes:
 
