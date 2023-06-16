@@ -12,6 +12,7 @@ include_icon!(LOGO_EMPTY, "model_tr/res/logo_22_33_empty.toif");
 include_icon!(ICON_TRASH, "model_tr/res/trash.toif");
 include_icon!(ICON_ALERT, "model_tr/res/alert.toif");
 include_icon!(ICON_SPINNER, "model_tr/res/spinner.toif");
+include_icon!(ICON_SUCCESS, "model_tr/res/success.toif");
 include_icon!(ICON_REDO, "model_tr/res/redo.toif");
 include_icon!(ICON_EXIT, "model_tr/res/exit.toif");
 
