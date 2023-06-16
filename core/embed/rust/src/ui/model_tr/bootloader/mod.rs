@@ -13,10 +13,7 @@ use crate::{
 };
 use heapless::String;
 
-use super::{
-    component::{ResultScreen, WelcomeScreen},
-    theme::ICON_SUCCESS,
-};
+use super::component::{ResultScreen, WelcomeScreen};
 
 mod confirm;
 mod connect;
@@ -29,7 +26,7 @@ use confirm::Confirm;
 use connect::Connect;
 use intro::Intro;
 use menu::Menu;
-use theme::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, LOGO_EMPTY};
+use theme::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS, LOGO_EMPTY};
 use welcome::Welcome;
 
 pub type BootloaderString = String<128>;
