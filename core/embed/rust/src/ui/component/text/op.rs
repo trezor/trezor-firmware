@@ -46,14 +46,19 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
 
     /// Send the layout's content into a sink.
     pub fn layout_content(&mut self, skip_bytes: usize, sink: &mut dyn LayoutSink) -> LayoutFit {
-        self.layout_ops(skip_bytes, sink)
+        self.layout_ops(skip_bytes, Offset::zero(), sink)
     }
 
     /// Perform some operations defined on `Op` for a list of those `Op`s
     /// - e.g. changing the color, changing the font or rendering the text.
-    fn layout_ops(&mut self, skip_bytes: usize, sink: &mut dyn LayoutSink) -> LayoutFit {
+    pub fn layout_ops(
+        &mut self,
+        skip_bytes: usize,
+        offset: Offset,
+        sink: &mut dyn LayoutSink,
+    ) -> LayoutFit {
         // TODO: make sure it is called when we have the current font (not sooner)
-        let mut cursor = &mut self.layout.initial_cursor();
+        let mut cursor = &mut (self.layout.initial_cursor() + offset);
         let init_cursor = *cursor;
         let mut total_processed_chars = 0;
 
@@ -218,6 +223,10 @@ impl<T: StringType + Clone> OpTextLayout<T> {
 
     pub fn text_bold(self, text: T) -> Self {
         self.font(Font::BOLD).text(text)
+    }
+
+    pub fn text_demibold(self, text: T) -> Self {
+        self.font(Font::DEMIBOLD).text(text)
     }
 }
 
