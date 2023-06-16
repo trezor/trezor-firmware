@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
-    geometry::{Alignment, Alignment2D, Axis, Grid, GridCellSpan, Insets, Offset, Rect, TOP_RIGHT},
+    geometry::{Alignment, Alignment2D, Axis, Grid, GridCellSpan, Insets, Offset, Rect},
 };
 
 pub struct GridPlaced<T> {
@@ -140,7 +140,7 @@ impl<T> Floating<T> {
     pub const fn top_right(side: i16, border: i16, inner: T) -> Self {
         let size = Offset::uniform(side);
         let border = Offset::uniform(border);
-        Self::new(size, border, TOP_RIGHT, inner)
+        Self::new(size, border, Alignment2D::TOP_RIGHT, inner)
     }
 }
 

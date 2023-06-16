@@ -21,7 +21,7 @@ use crate::trezorhal::{
 use crate::ui::component::image::Image;
 
 #[cfg(not(feature = "dma2d"))]
-use crate::ui::geometry::TOP_LEFT;
+use crate::ui::geometry::Alignment2D;
 
 use crate::{
     time::Duration,
@@ -725,8 +725,13 @@ pub fn icon_over_icon(
         Point::from(offset_bg)
     };
 
-    icon_bg.draw(pos_bg, TOP_LEFT, color_icon_bg, bg_color);
-    icon_fg.draw(pos_bg + offset_fg, TOP_LEFT, color_icon_fg, color_icon_bg);
+    icon_bg.draw(pos_bg, Alignment2D::TOP_LEFT, color_icon_bg, bg_color);
+    icon_fg.draw(
+        pos_bg + offset_fg,
+        Alignment2D::TOP_LEFT,
+        color_icon_fg,
+        color_icon_bg,
+    );
 }
 
 /// Gets a color of a pixel on `p` coordinates of rounded rectangle with corner

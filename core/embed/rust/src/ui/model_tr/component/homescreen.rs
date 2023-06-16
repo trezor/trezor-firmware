@@ -5,7 +5,7 @@ use crate::{
         component::{Child, Component, Event, EventCtx, Label},
         display::{rect_fill, toif::Toif, Font},
         event::USBEvent,
-        geometry::{self, Insets, Offset, Point, Rect},
+        geometry::{Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
     },
 };
@@ -54,11 +54,11 @@ where
     fn paint_homescreen_image(&self) {
         if let Ok(user_custom_image) = get_user_custom_image() {
             let toif_data = unwrap!(Toif::new(user_custom_image.as_ref()));
-            toif_data.draw(TOP_CENTER, geometry::TOP_CENTER, theme::FG, theme::BG);
+            toif_data.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
         } else {
             theme::ICON_LOGO.draw(
                 TOP_CENTER + Offset::y(LOGO_ICON_TOP_MARGIN),
-                geometry::TOP_CENTER,
+                Alignment2D::TOP_CENTER,
                 theme::FG,
                 theme::BG,
             );
@@ -96,8 +96,13 @@ where
 
     fn paint_warning_icons_in_top_corners(&self) {
         let warning_icon = theme::ICON_WARNING;
-        warning_icon.draw(AREA.top_left(), geometry::TOP_LEFT, theme::FG, theme::BG);
-        warning_icon.draw(AREA.top_right(), geometry::TOP_RIGHT, theme::FG, theme::BG);
+        warning_icon.draw(AREA.top_left(), Alignment2D::TOP_LEFT, theme::FG, theme::BG);
+        warning_icon.draw(
+            AREA.top_right(),
+            Alignment2D::TOP_RIGHT,
+            theme::FG,
+            theme::BG,
+        );
     }
 
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {
@@ -188,7 +193,7 @@ where
     fn paint(&mut self) {
         theme::ICON_LOCK.draw(
             TOP_CENTER + Offset::y(LOCK_ICON_TOP_MARGIN),
-            geometry::TOP_CENTER,
+            Alignment2D::TOP_CENTER,
             theme::FG,
             theme::BG,
         );

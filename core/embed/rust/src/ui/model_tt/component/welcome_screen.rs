@@ -1,12 +1,11 @@
-#[cfg(feature = "bootloader")]
-use crate::ui::model_tt::bootloader::theme::DEVICE_NAME;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     constant::MODEL_NAME,
-    display::Icon,
-    geometry::{self, Offset, Rect},
+    geometry::{Alignment2D, Offset, Rect},
     model_tt::theme,
 };
+#[cfg(feature = "bootloader")]
+use crate::ui::{display::Icon, model_tt::bootloader::theme::DEVICE_NAME};
 
 const TEXT_BOTTOM_MARGIN: i16 = 24; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 48;
@@ -40,7 +39,7 @@ impl Component for WelcomeScreen {
     fn paint(&mut self) {
         theme::ICON_LOGO.draw(
             self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-            geometry::TOP_CENTER,
+            Alignment2D::TOP_CENTER,
             theme::FG,
             theme::BG,
         );
@@ -55,7 +54,7 @@ impl Component for WelcomeScreen {
         #[cfg(feature = "bootloader")]
         Icon::new(DEVICE_NAME).draw(
             self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN) + Offset::y(1),
-            geometry::BOTTOM_CENTER,
+            Alignment2D::BOTTOM_CENTER,
             theme::FG,
             theme::BG,
         );

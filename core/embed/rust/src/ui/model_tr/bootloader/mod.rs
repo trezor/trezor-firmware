@@ -7,7 +7,7 @@ use crate::{
         constant::SCREEN,
         display::{self, Color, Font, Icon},
         event::ButtonEvent,
-        geometry::{Alignment, Alignment::Center, Offset, Rect, TOP_CENTER},
+        geometry::{Alignment, Alignment::Center, Alignment2D, Offset, Rect},
         util::{from_c_array, from_c_str},
     },
 };
@@ -316,7 +316,7 @@ extern "C" fn screen_boot_empty(_firmware_present: bool) {
     display::rect_fill(SCREEN, BLD_BG);
     LOGO_EMPTY.draw(
         SCREEN.top_center() + Offset::y(11),
-        TOP_CENTER,
+        Alignment2D::TOP_CENTER,
         BLD_FG,
         BLD_BG,
     );

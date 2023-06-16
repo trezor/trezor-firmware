@@ -5,7 +5,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
         display::toif::Icon,
-        geometry::{Alignment, Insets, LinearPlacement, Offset, Point, Rect, TOP_LEFT},
+        geometry::{Alignment, Alignment2D, Insets, LinearPlacement, Offset, Point, Rect},
     },
 };
 
@@ -570,7 +570,7 @@ impl<T> Checklist<T> {
         let top_left = Point::new(self.area.x0, layout.bounds.y0);
         icon.draw(
             top_left + offset,
-            TOP_LEFT,
+            Alignment2D::TOP_LEFT,
             layout.style.text_color,
             layout.style.background_color,
         );

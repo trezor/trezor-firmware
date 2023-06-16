@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Never, Pad},
     constant::{screen, HEIGHT, WIDTH},
     display::{Color, Icon},
-    geometry::{Offset, Point, Rect, CENTER},
+    geometry::{Alignment2D, Offset, Point, Rect},
 };
 
 const MESSAGE_AREA_START: i16 = 26;
@@ -76,7 +76,7 @@ impl<'a> Component for ResultScreen<'a> {
 
         self.icon.draw(
             screen().top_center() + Offset::y(ICON_TOP),
-            CENTER,
+            Alignment2D::CENTER,
             self.fg_color,
             self.bg_color,
         );

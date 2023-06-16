@@ -11,7 +11,6 @@ use crate::{
     },
 };
 
-use crate::ui::geometry::TOP_LEFT;
 #[cfg(feature = "dma2d")]
 use crate::{
     trezorhal::{
@@ -73,7 +72,7 @@ extern "C" fn display_image(
 ) {
     let data_slice = unsafe { core::slice::from_raw_parts(data, data_len as usize) };
     let image = Image::new(data_slice);
-    image.draw(Point::new(x, y), TOP_LEFT);
+    image.draw(Point::new(x, y), Alignment2D::TOP_LEFT);
 }
 
 #[cfg(feature = "dma2d")]

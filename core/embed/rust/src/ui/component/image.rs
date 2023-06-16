@@ -7,7 +7,7 @@ use crate::{
             toif::{image, Toif},
             Color, Icon,
         },
-        geometry::{Alignment2D, Offset, Point, Rect, CENTER},
+        geometry::{Alignment2D, Offset, Point, Rect},
     },
 };
 
@@ -48,7 +48,7 @@ impl Component for Image {
     }
 
     fn paint(&mut self) {
-        self.draw(self.area.center(), CENTER);
+        self.draw(self.area.center(), Alignment2D::CENTER);
     }
 
     #[cfg(feature = "ui_bounds")]
@@ -110,9 +110,16 @@ impl Component for BlendedImage {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.bg_top_left = self.bg.toif.size().snap(bounds.center(), CENTER);
-
-        let ft_top_left = self.fg.toif.size().snap(bounds.center(), CENTER);
+        self.bg_top_left = self
+            .bg
+            .toif
+            .size()
+            .snap(bounds.center(), Alignment2D::CENTER);
+        let ft_top_left = self
+            .fg
+            .toif
+            .size()
+            .snap(bounds.center(), Alignment2D::CENTER);
         self.fg_offset = ft_top_left - self.bg_top_left;
 
         Rect::from_top_left_and_size(self.bg_top_left, self.bg.toif.size())

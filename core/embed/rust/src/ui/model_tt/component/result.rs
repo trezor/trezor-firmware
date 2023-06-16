@@ -4,7 +4,7 @@ use crate::{
         component::{text::TextStyle, Child, Component, Event, EventCtx, Label, Never, Pad},
         constant::screen,
         display::{self, Color, Font, Icon},
-        geometry::{Alignment::Center, Insets, Offset, Point, Rect, CENTER},
+        geometry::{Alignment::Center, Alignment2D, Insets, Offset, Point, Rect},
         model_tt::theme::FG,
     },
 };
@@ -157,7 +157,7 @@ impl<T: StringType> Component for ResultScreen<'_, T> {
 
         self.icon.draw(
             Point::new(screen().center().x, ICON_CENTER_Y),
-            CENTER,
+            Alignment2D::CENTER,
             self.style.fg_color,
             self.style.bg_color,
         );

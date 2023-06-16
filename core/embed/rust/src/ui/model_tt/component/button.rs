@@ -6,7 +6,7 @@ use crate::{
         },
         display::{self, toif::Icon, Color, Font},
         event::TouchEvent,
-        geometry::{Insets, Offset, Point, Rect, CENTER},
+        geometry::{Alignment2D, Insets, Offset, Point, Rect},
     },
 };
 
@@ -211,7 +211,7 @@ impl<T> Button<T> {
             ButtonContent::Icon(icon) => {
                 icon.draw(
                     self.area.center(),
-                    CENTER,
+                    Alignment2D::CENTER,
                     style.text_color,
                     style.button_color,
                 );
@@ -585,8 +585,12 @@ impl IconText {
         }
 
         if use_icon {
-            self.icon
-                .draw(icon_pos, CENTER, style.text_color, style.button_color);
+            self.icon.draw(
+                icon_pos,
+                Alignment2D::CENTER,
+                style.text_color,
+                style.button_color,
+            );
         }
     }
 }

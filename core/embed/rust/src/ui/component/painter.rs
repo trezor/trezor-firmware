@@ -3,7 +3,7 @@ use crate::ui::geometry::Offset;
 use crate::ui::{
     component::{image::Image, Component, Event, EventCtx, Never},
     display,
-    geometry::{Rect, CENTER},
+    geometry::{Alignment2D, Rect},
 };
 
 pub struct Painter<F> {
@@ -53,7 +53,7 @@ impl<F> crate::trace::Trace for Painter<F> {
 }
 
 pub fn image_painter(image: Image) -> Painter<impl FnMut(Rect)> {
-    let f = move |area: Rect| image.draw(area.center(), CENTER);
+    let f = move |area: Rect| image.draw(area.center(), Alignment2D::CENTER);
     Painter::new(f)
 }
 

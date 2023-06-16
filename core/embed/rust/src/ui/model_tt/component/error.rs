@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Never, Pad},
     constant::screen,
-    geometry::{Alignment::Center, Point, Rect, TOP_CENTER},
+    geometry::{Alignment::Center, Alignment2D, Point, Rect},
 };
 
 use crate::ui::model_tt::{
@@ -75,7 +75,7 @@ impl<T: AsRef<str>> Component for ErrorScreen<'_, T> {
         let icon = ICON_WARNING40;
         icon.draw(
             Point::new(screen().center().x, ICON_TOP),
-            TOP_CENTER,
+            Alignment2D::TOP_CENTER,
             WHITE,
             FATAL_ERROR_COLOR,
         );
