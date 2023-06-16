@@ -106,9 +106,10 @@ pub const CHECKLIST_CURRENT_OFFSET: Offset = Offset::x(3);
 // with empty LEFT column and BOTTOM row.
 pub const BUTTON_CONTENT_HEIGHT: i16 = 7;
 pub const BUTTON_OUTLINE: i16 = 3;
-pub const BUTTON_ARMS: i16 = 2;
 pub const BUTTON_HEIGHT: i16 = BUTTON_CONTENT_HEIGHT + 2 * BUTTON_OUTLINE;
+pub const BUTTON_ICON_WIDTH: i16 = BUTTON_HEIGHT;
 pub const TITLE_AREA_HEIGHT: i16 = 12;
+pub const ARMS_MARGIN: i16 = 2;
 
 // How many pixels should be between text and icons.
 pub const ELLIPSIS_ICON_MARGIN: i16 = 4;

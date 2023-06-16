@@ -5,7 +5,7 @@ use crate::{
         component::{Component, Event, EventCtx, Never},
         constant,
         display::{self, Color, Font, Icon},
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment2D, Offset, Point, Rect},
     },
 };
 
@@ -115,49 +115,40 @@ where
         let button_width = if let Some(width) = style.fixed_width {
             width
         } else {
-            let outline = if style.with_outline {
-                theme::BUTTON_OUTLINE
-            } else {
-                0
-            };
-            let content_width = match &self.content {
-                ButtonContent::Text(text) => style.font.visible_text_width(text.as_ref()),
-                ButtonContent::Icon(icon) => icon.toif.width(),
-            };
-            content_width + 2 * outline
-        };
-
-        // Button height may be adjusted for the icon without outline
-        // Done to avoid highlighting bigger area than necessary when
-        // drawing the icon in active (black on white) state
-        let button_height = match &self.content {
-            ButtonContent::Text(_) => theme::BUTTON_HEIGHT,
-            ButtonContent::Icon(icon) => {
-                if style.with_outline {
-                    theme::BUTTON_HEIGHT
-                } else {
-                    icon.toif.height()
+            match &self.content {
+                ButtonContent::Text(text) => {
+                    let text_width = style.font.visible_text_width(text.as_ref());
+                    if style.with_outline {
+                        text_width + 2 * theme::BUTTON_OUTLINE
+                    } else if style.with_arms {
+                        text_width + 2 * theme::ARMS_MARGIN
+                    } else {
+                        text_width
+                    }
+                }
+                ButtonContent::Icon(icon) => {
+                    // When Icon does not have outline, hardcode its width
+                    if style.with_outline {
+                        icon.toif.width() + 2 * theme::BUTTON_OUTLINE
+                    } else {
+                        theme::BUTTON_ICON_WIDTH
+                    }
                 }
             }
         };
 
-        let button_bounds = self.bounds.split_bottom(button_height).1;
-        let area = match self.pos {
+        let button_bounds = self.bounds.split_bottom(theme::BUTTON_HEIGHT).1;
+        match self.pos {
             ButtonPos::Left => button_bounds.split_left(button_width).0,
             ButtonPos::Right => button_bounds.split_right(button_width).1,
             ButtonPos::Middle => button_bounds.split_center(button_width).1,
-        };
-
-        // Allowing for possible offset of the area from current style
-        area.translate(style.offset)
+        }
     }
 
     /// Determine baseline point for the text.
     fn get_text_baseline(&self, style: &ButtonStyle) -> Point {
         // Arms and outline require the text to be elevated.
-        let offset_y = if style.with_arms {
-            theme::BUTTON_ARMS
-        } else if style.with_outline {
+        let offset_y = if style.with_outline || style.with_arms {
             theme::BUTTON_OUTLINE
         } else {
             0
@@ -165,6 +156,8 @@ where
 
         let offset_x = if style.with_outline {
             theme::BUTTON_OUTLINE
+        } else if style.with_arms {
+            theme::ARMS_MARGIN
         } else {
             0
         };
@@ -191,51 +184,41 @@ where
 
     fn paint(&mut self) {
         let style = self.style();
-        let text_color = style.text_color;
-        let background_color = text_color.negate();
-        let mut area = self.get_current_area();
+        let fg_color = style.text_color;
+        let bg_color = fg_color.negate();
+        let area = self.get_current_area();
+        let inversed_colors = bg_color != theme::BG;
 
-        // Optionally display "arms" at both sides of content, or create
-        // a nice rounded outline around it.
-        // By default just fill the content background.
-        if style.with_arms {
-            const ARM_WIDTH: i16 = 15;
-            area = area.translate(Offset::y(1));
-
-            // Prepare space for both the arms and content with BG color.
-            // Arms are icons 10*6 pixels.
-            let area_to_fill = area.outset(Insets::sides(ARM_WIDTH));
-            display::rect_fill(area_to_fill, background_color);
-            display::rect_fill_corners(area_to_fill, theme::BG);
-
-            // Paint both arms.
-            // Baselines are adjusted to give space between text and icon.
-            // 2 px because 1px might lead to odd coordinate which can't be render
-            theme::ICON_ARM_LEFT.draw(
-                area.left_center() - Offset::x(2),
-                Alignment2D::TOP_RIGHT,
-                text_color,
-                background_color,
-            );
-            theme::ICON_ARM_RIGHT.draw(
-                area.right_center() + Offset::x(2),
-                Alignment2D::TOP_LEFT,
-                text_color,
-                background_color,
-            );
+        // Filling the background (with 2-pixel rounding when applicable)
+        if inversed_colors {
+            display::rect_outline_rounded(area, bg_color, fg_color, 2);
+            display::rect_fill(area.shrink(1), bg_color);
         } else if style.with_outline {
-            if background_color == theme::BG {
-                display::rect_outline_rounded(area, text_color, background_color, 2);
-            } else {
-                // With inverse colors having just radius of one, `rect_outline_rounded`
-                // is not suitable for inverse colors.
-                display::rect_fill(area, background_color);
-                display::rect_fill_corners(area, theme::BG);
-            }
+            display::rect_outline_rounded(area, fg_color, bg_color, 2);
         } else {
-            display::rect_fill(area, background_color);
+            display::rect_fill(area, bg_color);
         }
 
+        // Optionally display "arms" at both sides of content - always in FG and BG
+        // colors (they are not inverted).
+        if style.with_arms {
+            // Putting them one pixel down to touch the bottom.
+            let arms_area = area.translate(Offset::y(1));
+            theme::ICON_ARM_LEFT.draw(
+                arms_area.left_center(),
+                Alignment2D::TOP_RIGHT,
+                theme::FG,
+                theme::BG,
+            );
+            theme::ICON_ARM_RIGHT.draw(
+                arms_area.right_center(),
+                Alignment2D::TOP_LEFT,
+                theme::FG,
+                theme::BG,
+            );
+        }
+
+        // Painting the content
         match &self.content {
             ButtonContent::Text(text) => {
                 display::text_left(
@@ -243,37 +226,33 @@ where
                         - Offset::x(style.font.start_x_bearing(text.as_ref())),
                     text.as_ref(),
                     style.font,
-                    text_color,
-                    background_color,
+                    fg_color,
+                    bg_color,
                 );
             }
             ButtonContent::Icon(icon) => {
+                // Allowing for possible offset of the area from current style
+                let icon_area = area.translate(style.offset);
                 if style.with_outline {
-                    // Accounting for the 8*8 icon with empty left column and bottom row
-                    // (which fits the outline nicely and symmetrically)
-                    let center = area.center() + Offset::uniform(1);
-                    icon.draw(center, Alignment2D::CENTER, text_color, background_color);
+                    icon.draw(icon_area.center(), Alignment2D::CENTER, fg_color, bg_color);
                 } else {
                     // Positioning the icon in the corresponding corner/center
                     match self.pos {
                         ButtonPos::Left => icon.draw(
-                            area.bottom_left(),
+                            icon_area.bottom_left(),
                             Alignment2D::BOTTOM_LEFT,
-                            text_color,
-                            background_color,
+                            fg_color,
+                            bg_color,
                         ),
                         ButtonPos::Right => icon.draw(
-                            area.bottom_right(),
+                            icon_area.bottom_right(),
                             Alignment2D::BOTTOM_RIGHT,
-                            text_color,
-                            background_color,
+                            fg_color,
+                            bg_color,
                         ),
-                        ButtonPos::Middle => icon.draw(
-                            area.center(),
-                            Alignment2D::CENTER,
-                            text_color,
-                            background_color,
-                        ),
+                        ButtonPos::Middle => {
+                            icon.draw(icon_area.center(), Alignment2D::CENTER, fg_color, bg_color)
+                        }
                     }
                 }
             }
@@ -383,7 +362,7 @@ impl<T> ButtonDetails<T> {
         Self {
             content: ButtonContent::Icon(icon),
             duration: None,
-            with_outline: true,
+            with_outline: false,
             with_arms: false,
             fixed_width: None,
             offset: Offset::zero(),
@@ -397,51 +376,42 @@ impl<T> ButtonDetails<T> {
 
     /// Cross-style-icon cancel button with no outline.
     pub fn cancel_icon() -> Self {
-        Self::icon(theme::ICON_CANCEL)
-            .with_no_outline()
-            .with_offset(Offset::new(2, -2))
+        Self::icon(theme::ICON_CANCEL).with_offset(Offset::new(3, -3))
     }
 
     /// Left arrow to signal going back. No outline.
     pub fn left_arrow_icon() -> Self {
-        Self::icon(theme::ICON_ARROW_LEFT)
-            .with_no_outline()
-            .with_offset(Offset::new(1, -1))
+        Self::icon(theme::ICON_ARROW_LEFT).with_offset(Offset::new(4, -3))
     }
 
     /// Right arrow to signal going forward. No outline.
     pub fn right_arrow_icon() -> Self {
-        Self::icon(theme::ICON_ARROW_RIGHT)
-            .with_no_outline()
-            .with_offset(Offset::new(-1, -1))
+        Self::icon(theme::ICON_ARROW_RIGHT).with_offset(Offset::new(-4, -3))
     }
 
     /// Up arrow to signal paginating back. No outline. Offsetted little right
     /// to not be on the boundary.
     pub fn up_arrow_icon() -> Self {
-        Self::icon(theme::ICON_ARROW_UP)
-            .with_no_outline()
-            .with_offset(Offset::new(2, -3))
+        Self::icon(theme::ICON_ARROW_UP).with_offset(Offset::new(2, -3))
     }
 
     /// Down arrow to signal paginating forward. Takes half the screen's width
     pub fn down_arrow_icon_wide() -> Self {
-        Self::icon(theme::ICON_ARROW_DOWN).with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
+        Self::icon(theme::ICON_ARROW_DOWN)
+            .with_outline(true)
+            .with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
     /// Up arrow to signal paginating back. Takes half the screen's width
     pub fn up_arrow_icon_wide() -> Self {
-        Self::icon(theme::ICON_ARROW_UP).with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
+        Self::icon(theme::ICON_ARROW_UP)
+            .with_outline(true)
+            .with_fixed_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
-    /// Icon of a bin to signal deleting.
-    pub fn bin_icon() -> Self {
-        Self::icon(theme::ICON_BIN).with_no_outline()
-    }
-
-    /// No outline around the button.
-    pub fn with_no_outline(mut self) -> Self {
-        self.with_outline = false;
+    /// Possible outline around the button.
+    pub fn with_outline(mut self, outline: bool) -> Self {
+        self.with_outline = outline;
         self
     }
 
