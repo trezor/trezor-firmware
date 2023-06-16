@@ -49,7 +49,7 @@ def go_through_tutorial(debug: "DebugLink") -> None:
     debug.press_right(wait=True)
     debug.press_right(wait=True)
     layout = debug.press_middle(wait=True)
-    assert "Tutorial complete" in layout.text_content()
+    assert layout.title() == "TUTORIAL COMPLETE"
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -66,8 +66,6 @@ def test_tutorial_finish(device_handler: "BackgroundDeviceHandler"):
 def test_tutorial_skip(device_handler: "BackgroundDeviceHandler"):
     with prepare_tutorial_and_cancel_after_it(device_handler) as debug:
         # SKIP
-        # debug.press_left()
-        # debug.press_right()
         debug.press_left(wait=True)
         debug.press_right(wait=True)
 

@@ -101,6 +101,11 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
                     // Try to fit text on the current page and if they do not fit,
                     // return the appropriate OutOfBounds message
 
+                    // Inserting the ellipsis at the very beginning of the text if needed
+                    // (just once for the first Op::Text on the non-first page).
+                    self.layout.continues_from_prev_page =
+                        skip_bytes > 0 && total_processed_chars == 0;
+
                     let fit = self.layout.layout_text(text.as_ref(), cursor, sink);
 
                     match fit {

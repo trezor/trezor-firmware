@@ -31,8 +31,7 @@ use crate::{
             },
             ComponentExt, FormattedText, LineBreaking, Timeout,
         },
-        display::{self},
-        geometry::Alignment,
+        display, geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
@@ -641,22 +640,16 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
 }
 
 /// General pattern of most tutorial screens.
-/// (title, text, btn_layout, btn_actions)
+/// (title, text, btn_layout, btn_actions, text_y_offset)
 fn tutorial_screen(
     title: &'static str,
     text: &'static str,
     btn_layout: ButtonLayout<StrBuffer>,
     btn_actions: ButtonActions,
 ) -> Page<StrBuffer> {
-    let mut ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL);
-    // Add title if present
-    if !title.is_empty() {
-        ops = ops.text_bold(title.into()).newline().newline_half()
-    }
-    ops = ops.text_normal(text.into());
-
-    let formatted = FormattedText::new(ops);
-    Page::new(btn_layout, btn_actions, formatted)
+    let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL).text_normal(text.into());
+    let formatted = FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center);
+    Page::new(btn_layout, btn_actions, formatted).with_title(title.into())
 }
 
 extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -674,15 +667,15 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 0 => {
                     tutorial_screen(
                         "HELLO",
-                        "Welcome to Trezor.\nPress right to continue.",
-                        ButtonLayout::text_none_arrow("SKIP".into()),
+                        "Welcome to Trezor. Press right to continue.",
+                        ButtonLayout::cancel_none_arrow(),
                         ButtonActions::last_none_next(),
                     )
                 },
                 1 => {
                     tutorial_screen(
                         "",
-                        "Use Trezor by clicking left and right buttons.\n\nContinue right.",
+                        "Use Trezor by\nclicking the left and right buttons.\n\rContinue right.",
                         ButtonLayout::arrow_none_arrow(),
                         ButtonActions::prev_none_next(),
                     )
@@ -690,7 +683,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 2 => {
                     tutorial_screen(
                         "HOLD TO CONFIRM",
-                        "Press and hold right to approve important operations.",
+                        "Press and hold the right button to\napprove important operations.",
                         ButtonLayout::arrow_none_htc("HOLD TO CONFIRM".into()),
                         ButtonActions::prev_none_next(),
                     )
@@ -698,7 +691,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 3 => {
                     tutorial_screen(
                         "SCREEN SCROLL",
-                        "Press right to scroll down to read all content when text\ndoesn't fit on one screen. Press left to scroll up.",
+                        "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.",
                         ButtonLayout::arrow_none_text("CONTINUE".into()),
                         ButtonActions::prev_none_next(),
                     )
@@ -706,33 +699,24 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 4 => {
                     tutorial_screen(
                         "CONFIRM",
-                        "Press both left and right at the same time to confirm.",
+                        "Press both left and right at the same\ntime to confirm.",
                         ButtonLayout::none_armed_none("CONFIRM".into()),
                         ButtonActions::prev_next_none(),
                     )
                 },
-                // This page is special
                 5 => {
-                    let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
-                        .newline()
-                        .text_normal("Tutorial complete.".into())
-                        .newline()
-                        .newline()
-                        .alignment(Alignment::Center)
-                        .text_bold("You're ready to\nuse Trezor.".into());
-                    let formatted = FormattedText::new(ops);
-
-                    Page::new(
-                        ButtonLayout::text_none_text("AGAIN".into(), "FINISH".into()),
+                    tutorial_screen(
+                        "TUTORIAL COMPLETE",
+                        "You're ready to\nuse Trezor.",
+                        ButtonLayout::text_none_text("AGAIN".into(), "CONTINUE".into()),
                         ButtonActions::beginning_none_confirm(),
-                        formatted,
                     )
                 },
                 6 => {
                     tutorial_screen(
                         "SKIP TUTORIAL",
-                        "Are you sure you want to skip the tutorial?",
-                        ButtonLayout::cancel_none_text("SKIP".into()),
+                        "Are you sure you\nwant to skip the tutorial?",
+                        ButtonLayout::arrow_none_text("SKIP".into()),
                         ButtonActions::beginning_none_cancel(),
                     )
                 },
@@ -742,7 +726,11 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 
         let pages = FlowPages::new(get_page, PAGE_COUNT);
 
-        let obj = LayoutObj::new(Flow::new(pages))?;
+        let obj = LayoutObj::new(
+            Flow::new(pages)
+                .with_scrollbar(false)
+                .with_common_title("HELLO".into()),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
