@@ -4,7 +4,7 @@ use crate::{
         component::text::TextStyle,
         display,
         display::toif::Icon,
-        geometry::{Offset, Point, CENTER},
+        geometry::{Alignment2D, Offset, Point},
     },
 };
 
@@ -121,7 +121,7 @@ pub fn icon_text_center(
     );
     icon.draw(
         icon_center,
-        CENTER,
+        Alignment2D::CENTER,
         style.text_color,
         style.background_color,
     );

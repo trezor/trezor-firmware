@@ -6,7 +6,7 @@ use crate::{
         constant::{screen, HEIGHT},
         display::{self, Color, Font, Icon},
         event::TouchEvent,
-        geometry::{Alignment, Point, TOP_CENTER},
+        geometry::{Alignment, Alignment2D, Point},
         model_tt::{
             bootloader::{
                 confirm::ConfirmTitle,
@@ -350,7 +350,12 @@ extern "C" fn screen_boot_empty(fading: bool) {
 
     display::rect_fill(constant::screen(), bg);
     let icon = Icon::new(LOGO_EMPTY);
-    icon.draw(Point::new(screen().center().x, 48), TOP_CENTER, fg, bg);
+    icon.draw(
+        Point::new(screen().center().x, 48),
+        Alignment2D::TOP_CENTER,
+        fg,
+        bg,
+    );
 
     if fading {
         fadein();

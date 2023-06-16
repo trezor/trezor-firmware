@@ -5,9 +5,7 @@ use crate::{
         component::{Component, Event, EventCtx, Never},
         constant,
         display::{self, Color, Font, Icon},
-        geometry::{
-            Insets, Offset, Point, Rect, BOTTOM_LEFT, BOTTOM_RIGHT, CENTER, TOP_LEFT, TOP_RIGHT,
-        },
+        geometry::{Alignment2D, Insets, Offset, Point, Rect},
     },
 };
 
@@ -215,13 +213,13 @@ where
             // 2 px because 1px might lead to odd coordinate which can't be render
             theme::ICON_ARM_LEFT.draw(
                 area.left_center() - Offset::x(2),
-                TOP_RIGHT,
+                Alignment2D::TOP_RIGHT,
                 text_color,
                 background_color,
             );
             theme::ICON_ARM_RIGHT.draw(
                 area.right_center() + Offset::x(2),
-                TOP_LEFT,
+                Alignment2D::TOP_LEFT,
                 text_color,
                 background_color,
             );
@@ -254,25 +252,28 @@ where
                     // Accounting for the 8*8 icon with empty left column and bottom row
                     // (which fits the outline nicely and symmetrically)
                     let center = area.center() + Offset::uniform(1);
-                    icon.draw(center, CENTER, text_color, background_color);
+                    icon.draw(center, Alignment2D::CENTER, text_color, background_color);
                 } else {
                     // Positioning the icon in the corresponding corner/center
                     match self.pos {
                         ButtonPos::Left => icon.draw(
                             area.bottom_left(),
-                            BOTTOM_LEFT,
+                            Alignment2D::BOTTOM_LEFT,
                             text_color,
                             background_color,
                         ),
                         ButtonPos::Right => icon.draw(
                             area.bottom_right(),
-                            BOTTOM_RIGHT,
+                            Alignment2D::BOTTOM_RIGHT,
                             text_color,
                             background_color,
                         ),
-                        ButtonPos::Middle => {
-                            icon.draw(area.center(), CENTER, text_color, background_color)
-                        }
+                        ButtonPos::Middle => icon.draw(
+                            area.center(),
+                            Alignment2D::CENTER,
+                            text_color,
+                            background_color,
+                        ),
                     }
                 }
             }

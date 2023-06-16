@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    geometry::{self, Offset, Rect},
+    geometry::{Alignment2D, Offset, Rect},
 };
 
 use super::super::theme;
@@ -32,13 +32,13 @@ impl Component for WelcomeScreen {
     fn paint(&mut self) {
         theme::ICON_DEVICE_NAME.draw(
             self.area.bottom_center(),
-            geometry::BOTTOM_CENTER,
+            Alignment2D::BOTTOM_CENTER,
             theme::FG,
             theme::BG,
         );
         theme::ICON_LOGO.draw(
             self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-            geometry::TOP_CENTER,
+            Alignment2D::TOP_CENTER,
             theme::FG,
             theme::BG,
         );

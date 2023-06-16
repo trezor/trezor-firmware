@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
-    geometry::{Grid, Offset, Rect, CENTER},
+    geometry::{Alignment2D, Grid, Offset, Rect},
     model_tt::{
         component::{Button, ButtonMsg},
         theme,
@@ -104,7 +104,7 @@ where
 
         let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
         let prompt_size = self.prompt.inner().inner().max_size();
-        let prompt_area = Rect::snap(prompt_center, prompt_size, CENTER);
+        let prompt_area = Rect::snap(prompt_center, prompt_size, Alignment2D::CENTER);
 
         self.prompt.place(prompt_area);
         self.back.place(back_area);

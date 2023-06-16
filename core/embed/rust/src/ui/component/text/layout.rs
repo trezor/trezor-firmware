@@ -1,7 +1,7 @@
 use crate::ui::{
     display,
     display::{toif::Icon, Color, Font, GlyphMetrics},
-    geometry::{Alignment, Dimensions, Offset, Point, Rect, BOTTOM_LEFT},
+    geometry::{Alignment, Alignment2D, Dimensions, Offset, Point, Rect},
 };
 
 const ELLIPSIS: &str = "...";
@@ -397,7 +397,7 @@ impl LayoutSink for TextRenderer {
             let bottom_left = cursor + Offset::x(margin);
             icon.draw(
                 bottom_left,
-                BOTTOM_LEFT,
+                Alignment2D::BOTTOM_LEFT,
                 layout.style.ellipsis_color,
                 layout.style.background_color,
             );
@@ -416,7 +416,7 @@ impl LayoutSink for TextRenderer {
         if let Some((icon, _margin)) = layout.style.prev_page_ellipsis_icon {
             icon.draw(
                 cursor,
-                BOTTOM_LEFT,
+                Alignment2D::BOTTOM_LEFT,
                 layout.style.ellipsis_color,
                 layout.style.background_color,
             );

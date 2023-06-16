@@ -11,7 +11,7 @@ use crate::{
         },
         display::{self, Font},
         event::TouchEvent,
-        geometry::{Grid, Insets, Offset, Rect, CENTER, TOP_LEFT},
+        geometry::{Alignment2D, Grid, Insets, Offset, Rect},
         model_tt::component::{
             button::{Button, ButtonContent, ButtonMsg, ButtonMsg::Clicked},
             theme,
@@ -369,7 +369,7 @@ impl PinDots {
     }
 
     fn paint_dots(&self, area: Rect) {
-        let mut cursor = self.size().snap(area.center(), CENTER);
+        let mut cursor = self.size().snap(area.center(), Alignment2D::CENTER);
 
         let digits = self.digits.len();
         let dots_visible = digits.min(MAX_VISIBLE_DOTS);
@@ -384,7 +384,7 @@ impl PinDots {
         if digits > dots_visible + 1 {
             theme::DOT_SMALL.draw(
                 cursor - Offset::x(2 * step),
-                TOP_LEFT,
+                Alignment2D::TOP_LEFT,
                 self.style.text_color,
                 self.style.background_color,
             );
@@ -394,7 +394,7 @@ impl PinDots {
         if digits > dots_visible {
             theme::DOT_ACTIVE.draw(
                 cursor - Offset::x(step),
-                TOP_LEFT,
+                Alignment2D::TOP_LEFT,
                 theme::GREY_LIGHT,
                 self.style.background_color,
             );
@@ -404,7 +404,7 @@ impl PinDots {
         for _ in 0..dots_visible {
             theme::DOT_ACTIVE.draw(
                 cursor,
-                TOP_LEFT,
+                Alignment2D::TOP_LEFT,
                 self.style.text_color,
                 self.style.background_color,
             );

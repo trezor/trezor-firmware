@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
     display::{self, Font, Icon},
-    geometry::{Offset, Rect, TOP_CENTER},
+    geometry::{Alignment2D, Offset, Rect},
     model_tt::{
         bootloader::theme::{START_URL, WELCOME_COLOR},
         theme::{BLACK, GREY_MEDIUM, WHITE},
@@ -51,7 +51,7 @@ impl Component for Welcome {
         );
         Icon::new(START_URL).draw(
             screen().top_center() + Offset::y(135),
-            TOP_CENTER,
+            Alignment2D::TOP_CENTER,
             WHITE,
             BLACK,
         );

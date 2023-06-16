@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::toif::Icon,
-    geometry::{LinearPlacement, Offset, Rect, CENTER},
+    geometry::{Alignment2D, LinearPlacement, Offset, Rect},
 };
 
 use super::theme;
@@ -110,7 +110,7 @@ impl Component for ScrollBar {
             } else {
                 theme::DOT_INACTIVE
             };
-            icon.draw(cursor, CENTER, theme::FG, theme::BG);
+            icon.draw(cursor, Alignment2D::CENTER, theme::FG, theme::BG);
             cursor = cursor + Offset::on_axis(self.layout.axis, Self::DOT_INTERVAL);
         }
     }

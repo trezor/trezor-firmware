@@ -2,7 +2,7 @@ use crate::{
     strutil::{ShortString, StringType},
     ui::{
         display::{self, rect_fill, rect_fill_corners, rect_outline_rounded, Font, Icon},
-        geometry::{Offset, Rect, BOTTOM_LEFT},
+        geometry::{Alignment2D, Offset, Rect},
     },
 };
 
@@ -160,7 +160,12 @@ fn paint_text_icon(
     if let Some(icon) = icon {
         let height_diff = font.text_height() - icon.toif.height();
         let vertical_offset = Offset::y(-height_diff / 2);
-        icon.draw(baseline + vertical_offset, BOTTOM_LEFT, fg_color, bg_color);
+        icon.draw(
+            baseline + vertical_offset,
+            Alignment2D::BOTTOM_LEFT,
+            fg_color,
+            bg_color,
+        );
         baseline = baseline + Offset::x(icon.toif.width() + ICON_RIGHT_PADDING);
     }
 

@@ -10,7 +10,7 @@ use crate::{
             Component, Event, EventCtx,
         },
         display,
-        geometry::{Offset, Rect, CENTER},
+        geometry::{Alignment2D, Offset, Rect},
         model_tt::{
             component::{
                 keyboard::{
@@ -176,7 +176,12 @@ impl Component for Slip39Input {
             // Icon is painted in the right-center point, of expected size 16x16 pixels, and
             // 16px from the right edge.
             let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
-            icon.draw(icon_center, CENTER, style.text_color, style.button_color);
+            icon.draw(
+                icon_center,
+                Alignment2D::CENTER,
+                style.text_color,
+                style.button_color,
+            );
         }
     }
 

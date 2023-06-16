@@ -1,7 +1,7 @@
 use crate::ui::{
     constant::{screen, LOADER_OUTER},
     display::{rect_fill, rect_fill_rounded, Color, Icon},
-    geometry::{Offset, Point, Rect, CENTER},
+    geometry::{Alignment2D, Offset, Point, Rect},
 };
 use core::f32::consts::SQRT_2;
 
@@ -62,6 +62,6 @@ pub fn loader_starry_indeterminate(
     }
 
     if let Some((icon, color)) = icon {
-        icon.draw(area.center(), CENTER, color, bg_color);
+        icon.draw(area.center(), Alignment2D::CENTER, color, bg_color);
     }
 }

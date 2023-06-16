@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Never, Pad},
     constant::screen,
     display,
-    geometry::{Alignment::Center, Offset, Point, Rect, TOP_LEFT, TOP_RIGHT},
+    geometry::{Alignment::Center, Alignment2D, Offset, Point, Rect},
 };
 
 use super::super::{
@@ -79,8 +79,8 @@ impl<T: AsRef<str>> Component for ErrorScreen<T> {
         self.bg.paint();
 
         if self.show_icons {
-            theme::ICON_WARN_TITLE.draw(screen().top_left(), TOP_LEFT, FG, BG);
-            theme::ICON_WARN_TITLE.draw(screen().top_right(), TOP_RIGHT, FG, BG);
+            theme::ICON_WARN_TITLE.draw(screen().top_left(), Alignment2D::TOP_LEFT, FG, BG);
+            theme::ICON_WARN_TITLE.draw(screen().top_right(), Alignment2D::TOP_RIGHT, FG, BG);
         }
         self.title.paint();
         self.message.paint();

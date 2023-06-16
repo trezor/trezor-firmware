@@ -3,7 +3,7 @@ use crate::ui::{
     constant,
     constant::screen,
     display::{Color, Icon},
-    geometry::{Alignment, Insets, Offset, Point, Rect, TOP_CENTER},
+    geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
     model_tt::{
         bootloader::theme::{
             button_bld_menu, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING, CORNER_BUTTON_AREA,
@@ -212,7 +212,7 @@ impl<'a> Component for Confirm<'a> {
             ConfirmTitle::Icon(icon) => {
                 icon.draw(
                     Point::new(screen().center().x, ICON_TOP),
-                    TOP_CENTER,
+                    Alignment2D::TOP_CENTER,
                     WHITE,
                     self.bg_color,
                 );
