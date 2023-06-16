@@ -29,6 +29,7 @@ where
     buttons: Child<ButtonController<T>>,
     page_counter: usize,
     return_confirmed_index: bool,
+    show_scrollbar: bool,
 }
 
 impl<F, T> Flow<F, T>
@@ -52,6 +53,7 @@ where
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
             page_counter: 0,
             return_confirmed_index: false,
+            show_scrollbar: true,
         }
     }
 
@@ -65,6 +67,12 @@ where
     /// Causing the Flow to return the index of the page that was confirmed.
     pub fn with_return_confirmed_index(mut self) -> Self {
         self.return_confirmed_index = true;
+        self
+    }
+
+    /// Show scrollbar or not.
+    pub fn with_scrollbar(mut self, show_scrollbar: bool) -> Self {
+        self.show_scrollbar = show_scrollbar;
         self
     }
 
@@ -203,8 +211,11 @@ where
         // (scrollbar will be active - counting pages - even when not placed and
         // painted)
         if self.title.is_some() {
-            let (title_area, scrollbar_area) =
-                title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
+            let (title_area, scrollbar_area) = if self.show_scrollbar {
+                title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE)
+            } else {
+                (title_area, Rect::zero())
+            };
 
             self.title.place(title_area);
             self.title_area = title_area;
@@ -265,9 +276,11 @@ where
 
     fn paint(&mut self) {
         self.pad.paint();
-        // Scrollbars are painted only with a title
+        // Scrollbars are painted only with a title and when requested
         if self.title.is_some() {
-            self.scrollbar.paint();
+            if self.show_scrollbar {
+                self.scrollbar.paint();
+            }
             self.title.paint();
         }
         self.buttons.paint();
