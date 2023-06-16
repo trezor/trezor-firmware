@@ -2,7 +2,7 @@ use crate::{
     strutil::StringType,
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
-        geometry::Rect,
+        geometry::{Alignment, Offset, Rect},
     },
 };
 
@@ -14,19 +14,42 @@ use super::{
 #[derive(Clone)]
 pub struct FormattedText<T: StringType + Clone> {
     op_layout: OpTextLayout<T>,
+    vertical: Alignment,
     char_offset: usize,
+    y_offset: i16,
 }
 
 impl<T: StringType + Clone> FormattedText<T> {
     pub fn new(op_layout: OpTextLayout<T>) -> Self {
         Self {
             op_layout,
+            vertical: Alignment::Start,
             char_offset: 0,
+            y_offset: 0,
         }
     }
 
+    pub fn vertically_aligned(mut self, align: Alignment) -> Self {
+        self.vertical = align;
+        self
+    }
+
     fn layout_content(&mut self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        self.op_layout.layout_content(self.char_offset, sink)
+        self.op_layout
+            .layout_ops(self.char_offset, Offset::y(self.y_offset), sink)
+    }
+
+    fn align_vertically(&mut self, content_height: i16) {
+        let bounds_height = self.op_layout.layout.bounds.height();
+        if content_height >= bounds_height {
+            self.y_offset = 0;
+            return;
+        }
+        self.y_offset = match self.vertical {
+            Alignment::Start => 0,
+            Alignment::Center => (bounds_height - content_height) / 2,
+            Alignment::End => bounds_height - content_height,
+        }
     }
 }
 
@@ -73,8 +96,8 @@ impl<T: StringType + Clone> Paginate for FormattedText<T> {
 
         // Looping through the content until we arrive at
         // the wanted page.
+        let mut fit = self.layout_content(&mut TextNoOp);
         while active_page < to_page {
-            let fit = self.layout_content(&mut TextNoOp);
             match fit {
                 LayoutFit::Fitting { .. } => {
                     break; // TODO: We should consider if there's more content
@@ -86,9 +109,11 @@ impl<T: StringType + Clone> Paginate for FormattedText<T> {
                     active_page += 1;
                     char_offset += processed_chars;
                     self.char_offset = char_offset;
+                    fit = self.layout_content(&mut TextNoOp);
                 }
             }
         }
+        self.align_vertically(fit.height());
     }
 }
 
@@ -97,6 +122,8 @@ impl<T: StringType + Clone> Component for FormattedText<T> {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.op_layout.place(bounds);
+        let height = self.layout_content(&mut TextNoOp).height();
+        self.align_vertically(height);
         bounds
     }
 
