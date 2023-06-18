@@ -23,11 +23,7 @@ Last tested with firmware v2.4.2.
 ## Features
 
 -   `bitcoin` and `ethereum`: client implementation and full support;
--   `cardano`, `lisk`, `monero`, `nem`, `ontology`, `ripple`, `stellar`, `tezos`, and`tron`: only protobuf bindings.
-
-## Future
-
-At the moment, not looking into expanding more than what's necessary to maintain compatability/usability with ethers-rs.
+-   `cardano`, `monero`, `nem`, `ripple`, `stellar` and `tezos`: only protobuf bindings.
 
 ## Credits
 
