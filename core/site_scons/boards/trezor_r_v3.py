@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from . import get_hw_model_as_number
 
 
