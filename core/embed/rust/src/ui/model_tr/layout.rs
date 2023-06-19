@@ -368,7 +368,13 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 
             if let Some(key) = key {
                 if value.is_some() {
-                    paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key).no_break());
+                    // Decreasing the margin between key and value (default is 5 px, we use 2 px)
+                    // (this enables 4 lines - 2 key:value pairs - on the same screen)
+                    paragraphs.add(
+                        Paragraph::new(&theme::TEXT_BOLD, key)
+                            .no_break()
+                            .with_bottom_padding(2),
+                    );
                 } else {
                     paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key));
                 }
