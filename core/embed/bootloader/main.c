@@ -235,7 +235,7 @@ static comm_result_t bootloader_usb_loop(const vendor_header *const vhdr,
 #ifdef USE_BLE
 static comm_result_t bootloader_ble_loop(const vendor_header *const vhdr,
                                          const image_header *const hdr) {
-  start_advertising();
+  start_advertising(true);
 
   uint8_t buf[BLE_PACKET_SIZE];
 
