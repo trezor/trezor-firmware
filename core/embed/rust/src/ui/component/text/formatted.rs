@@ -57,10 +57,13 @@ impl<T: StringType + Clone> FormattedText<T> {
 impl<T: StringType + Clone> Paginate for FormattedText<T> {
     fn page_count(&mut self) -> usize {
         let mut page_count = 1; // There's always at least one page.
-        let mut char_offset = 0;
 
-        // Make sure we're starting from the beginning.
-        self.char_offset = char_offset;
+        // Make sure we're starting page counting from the very beginning
+        // (but remembering the offsets not to change them).
+        let initial_y_offset = self.y_offset;
+        let initial_char_offset = self.char_offset;
+        self.char_offset = 0;
+        self.y_offset = 0;
 
         // Looping through the content and counting pages
         // until we finally fit.
@@ -68,31 +71,30 @@ impl<T: StringType + Clone> Paginate for FormattedText<T> {
             let fit = self.layout_content(&mut TextNoOp);
             match fit {
                 LayoutFit::Fitting { .. } => {
-                    break; // TODO: We should consider if there's more content
-                           // to render.
+                    break;
                 }
                 LayoutFit::OutOfBounds {
                     processed_chars, ..
                 } => {
                     page_count += 1;
-                    char_offset += processed_chars;
-                    self.char_offset = char_offset;
+                    self.char_offset += processed_chars;
                 }
             }
         }
 
-        // Reset the char offset back to the beginning.
-        self.char_offset = 0;
+        // Setting the offsets back to the initial values.
+        self.char_offset = initial_char_offset;
+        self.y_offset = initial_y_offset;
 
         page_count
     }
 
     fn change_page(&mut self, to_page: usize) {
         let mut active_page = 0;
-        let mut char_offset = 0;
 
         // Make sure we're starting from the beginning.
-        self.char_offset = char_offset;
+        self.char_offset = 0;
+        self.y_offset = 0;
 
         // Looping through the content until we arrive at
         // the wanted page.
@@ -100,19 +102,18 @@ impl<T: StringType + Clone> Paginate for FormattedText<T> {
         while active_page < to_page {
             match fit {
                 LayoutFit::Fitting { .. } => {
-                    break; // TODO: We should consider if there's more content
-                           // to render.
+                    break;
                 }
                 LayoutFit::OutOfBounds {
                     processed_chars, ..
                 } => {
                     active_page += 1;
-                    char_offset += processed_chars;
-                    self.char_offset = char_offset;
+                    self.char_offset += processed_chars;
                     fit = self.layout_content(&mut TextNoOp);
                 }
             }
         }
+        // Setting appropriate self.y_offset
         self.align_vertically(fit.height());
     }
 }
