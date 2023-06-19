@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from . import get_hw_model_as_number
 
 
@@ -38,9 +40,11 @@ def configure(
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D"]
         sources += ["embed/trezorhal/dma2d.c"]
-        sources += ["vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"]
+        sources += [
+            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
+        ]
         features_available.append("dma2d")
 
-    env.get('ENV')['TREZOR_BOARD'] = board
+    env.get("ENV")["TREZOR_BOARD"] = board
 
     return features_available
