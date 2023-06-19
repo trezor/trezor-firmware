@@ -154,7 +154,7 @@ int main(void) {
 #ifdef USE_BLE
   dfu_init();
   ble_comm_init();
-  start_advertising();
+  start_advertising(true);
 #endif
 
 #if !defined TREZOR_MODEL_1

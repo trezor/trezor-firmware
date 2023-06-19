@@ -176,7 +176,7 @@ void process_command(uint8_t *data, uint16_t len) {
       send_status_event();
       break;
     case INTERNAL_CMD_ADVERTISING_ON:
-      advertising_start(true);
+      advertising_start(data[1] != 0);
       send_status_event();
       break;
     case INTERNAL_CMD_ADVERTISING_OFF:

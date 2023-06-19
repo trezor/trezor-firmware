@@ -2,7 +2,7 @@ mod render;
 
 use crate::{
     time::{Duration, Instant},
-    trezorhal::{ble::ble_connected, usb::usb_configured},
+    trezorhal::{ble::ble_connected, ble::start_advertising, usb::usb_configured},
     ui::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
         display::{self, tjpgd::jpeg_info, toif::Icon, Color, Font},
@@ -195,7 +195,9 @@ where
         }
 
         if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
-            Some(HomescreenMsg::Dismissed)
+            start_advertising(false);
+            None
+            //Some(HomescreenMsg::Dismissed)
         } else {
             None
         }

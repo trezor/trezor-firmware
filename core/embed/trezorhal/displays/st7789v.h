@@ -2,7 +2,6 @@
 #define _ST7789V_H
 
 #include STM32_HAL_H
-#include TREZOR_BOARD
 
 typedef struct {
   uint16_t x;

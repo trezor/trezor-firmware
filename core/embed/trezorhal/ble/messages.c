@@ -10,9 +10,11 @@ void send_state_request(void) {
   ble_int_comm_send(&cmd, sizeof(cmd), INTERNAL_EVENT);
 }
 
-void send_advertising_on(void) {
-  uint8_t cmd = INTERNAL_CMD_ADVERTISING_ON;
-  ble_int_comm_send(&cmd, sizeof(cmd), INTERNAL_EVENT);
+void send_advertising_on(bool whitelist) {
+  uint8_t data[2];
+  data[0] = INTERNAL_CMD_ADVERTISING_ON;
+  data[1] = whitelist ? 1 : 0;
+  ble_int_comm_send(data, sizeof(data), INTERNAL_EVENT);
 }
 
 void send_advertising_off(void) {

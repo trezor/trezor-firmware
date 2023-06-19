@@ -15,7 +15,7 @@ void set_advertising(bool advertising);
 
 void set_connected(bool connected);
 
-void start_advertising(void);
+void start_advertising(bool whitelist);
 
 void stop_advertising(void);
 
