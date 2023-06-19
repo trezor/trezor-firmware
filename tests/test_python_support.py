@@ -28,6 +28,7 @@ dirs_to_check = [
     "tools",
     "common",
     "core/tools",
+    "core/site_scons",
 ]
 
 signs_of_issues = [
