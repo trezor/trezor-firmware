@@ -32,7 +32,6 @@
 #include "memzero.h"
 
 extern void main_clean_exit(int);
-extern float display_gamma(float);
 
 void __attribute__((noreturn)) trezor_shutdown(void) {
   printf("SHUTDOWN\n");
@@ -165,9 +164,6 @@ uint32_t hal_ticks_ms() {
 }
 
 static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
-#if defined TREZOR_MODEL_T
-  float gamma = display_gamma(0);
-#endif
   switch (event->type) {
     case SDL_QUIT:
       trezor_shutdown();
@@ -183,22 +179,6 @@ static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
         case SDLK_p:
           display_save("emu");
           return 0;
-#if defined TREZOR_MODEL_T
-        // Left and right arrows controlling display gamma
-        // Only for TT (in button models, arrows do different things)
-        case SDLK_LEFT:
-          gamma = fmaxf(0.0001f, gamma - 0.05f);
-          printf("DISPLAY_GAMMA: %0.2f\n", gamma);
-          display_gamma(gamma);
-          display_refresh();
-          return 0;
-        case SDLK_RIGHT:
-          gamma = fminf(8.0f, gamma + 0.05f);
-          printf("DISPLAY_GAMMA: %0.2f\n", gamma);
-          display_gamma(gamma);
-          display_refresh();
-          return 0;
-#endif
       }
       break;
   }
