@@ -93,7 +93,7 @@ impl<'a> Confirm<'a> {
         if showing_info_screen {
             ButtonLayout::arrow_none_none()
         } else if has_info_screen {
-            ButtonLayout::cancel_armed_text(button_text, "i")
+            ButtonLayout::cancel_armed_info(button_text)
         } else {
             ButtonLayout::cancel_none_text(button_text)
         }

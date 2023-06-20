@@ -28,7 +28,7 @@ where
     U: StringType + Clone,
 {
     pub fn new(content: T) -> Self {
-        let btn_layout = ButtonLayout::cancel_armed_text("CONFIRM".into(), "i".into());
+        let btn_layout = ButtonLayout::cancel_armed_info("CONFIRM".into());
         Self {
             content: Child::new(content),
             buttons: Child::new(ButtonController::new(btn_layout)),
