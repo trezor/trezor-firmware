@@ -58,7 +58,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
 
     device_handler.run(device.apply_settings, auto_lock_delay_ms=delay_ms)  # type: ignore
 
-    assert debug.wait_layout().main_component() == "PinKeyboard"
+    assert "PinKeyboard" in debug.wait_layout().all_components()
 
     debug.input("1234")
 
@@ -246,7 +246,7 @@ def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
         in debug.wait_layout().text_content()
     )
     layout = go_next(debug, wait=True)
-    assert layout.main_component() == "PinKeyboard"
+    assert "PinKeyboard" in layout.all_components()
 
     layout = debug.input(PIN4, wait=True)
     assert layout is not None
@@ -276,7 +276,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     # lockscreen triggered automatically
     debug.wait_layout(wait_for_external_change=True)
     layout = go_next(debug, wait=True)
-    assert layout.main_component() == "PinKeyboard"
+    assert "PinKeyboard" in layout.all_components()
     layout = debug.input(PIN4, wait=True)
     assert layout is not None
 

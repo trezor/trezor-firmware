@@ -308,7 +308,7 @@ class LayoutContent(UnstructuredJSONReader):
 
     def pin(self) -> str:
         """Get PIN from the layout."""
-        assert self.main_component() == "PinKeyboard"
+        assert "PinKeyboard" in self.all_components()
         return self.find_unique_value_by_key("pin", default="", only_type=str)
 
     def passphrase(self) -> str:

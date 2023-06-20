@@ -46,7 +46,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     # unlock with message
     device_handler.run(common.get_test_address)
 
-    assert debug.wait_layout().main_component() == "PinKeyboard"
+    assert "PinKeyboard" in debug.wait_layout().all_components()
     debug.input("1234", wait=True)
     assert device_handler.result()
 
@@ -69,7 +69,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
         layout = debug.wait_layout()
     else:
         layout = debug.click(buttons.INFO, wait=True)
-    assert layout.main_component() == "PinKeyboard"
+    assert "PinKeyboard" in layout.all_components()
     debug.input("1234", wait=True)
 
     assert device_handler.features().unlocked is True

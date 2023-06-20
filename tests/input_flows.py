@@ -1413,11 +1413,11 @@ def bip39_recovery_possible_pin(
     # PIN when requested
     if pin is not None:
         yield
-        assert debug.wait_layout().main_component() == "PinKeyboard"
+        assert "PinKeyboard" in debug.wait_layout().all_components()
         debug.input(pin)
 
         yield
-        assert debug.wait_layout().main_component() == "PinKeyboard"
+        assert "PinKeyboard" in debug.wait_layout().all_components()
         debug.input(pin)
 
     yield
@@ -1464,7 +1464,7 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
         self.debug.input("654")
 
         yield
-        assert "re-enter to confirm" in self.layout().text_content()
+        assert "re-enter PIN" in self.layout().text_content()
         self.debug.press_right()
 
         yield
