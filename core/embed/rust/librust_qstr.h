@@ -16,10 +16,12 @@ static void _librust_qstrs(void) {
   MP_QSTR___dict__;
   MP_QSTR___name__;
   MP_QSTR_account;
+  MP_QSTR_account_label;
   MP_QSTR_accounts;
   MP_QSTR_action;
   MP_QSTR_active;
   MP_QSTR_address;
+  MP_QSTR_address_label;
   MP_QSTR_address_title;
   MP_QSTR_allow_cancel;
   MP_QSTR_amount;

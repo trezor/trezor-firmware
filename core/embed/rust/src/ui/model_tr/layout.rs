@@ -522,6 +522,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
 extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        let address_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_label)?.try_into()?;
         let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
         let address_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_title)?.try_into()?;
         let address_title_clone = address_title.clone();
@@ -532,23 +533,27 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
             match page_index {
                 0 => {
                     // RECIPIENT + address
-                    let btn_layout = ButtonLayout::cancel_none_text("CONFIRM".into());
+                    let btn_layout = ButtonLayout::cancel_none_text("CONTINUE".into());
                     let btn_actions = ButtonActions::cancel_none_next();
-                    // Not putting hyphens in the address
-                    let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .line_breaking(LineBreaking::BreakWordsNoHyphen)
-                        .text_mono(address.clone());
-                    let formatted = FormattedText::new(ops);
+                    // Not putting hyphens in the address.
+                    // Potentially adding address label in different font.
+                    let mut ops = OpTextLayout::new(theme::TEXT_MONO)
+                        .line_breaking(LineBreaking::BreakWordsNoHyphen);
+                    if !address_label.is_empty() {
+                        ops = ops.text_normal(address_label.clone()).newline();
+                    }
+                    ops = ops.text_mono(address.clone());
+                    let formatted =
+                        FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center);
                     Page::new(btn_layout, btn_actions, formatted).with_title(address_title.clone())
                 }
                 1 => {
                     // AMOUNT + amount
                     let btn_layout = ButtonLayout::up_arrow_none_text("CONFIRM".into());
                     let btn_actions = ButtonActions::prev_none_confirm();
-                    let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .newline()
-                        .text_mono(amount.clone());
-                    let formatted = FormattedText::new(ops);
+                    let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount.clone());
+                    let formatted =
+                        FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center);
                     Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.clone())
                 }
                 _ => unreachable!(),
@@ -569,34 +574,75 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let fee_rate_amount: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_fee_rate_amount)?
             .try_into_option()?;
+        let account_label: Option<StrBuffer> =
+            kwargs.get(Qstr::MP_QSTR_account_label)?.try_into_option()?;
         let total_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
         let fee_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
 
         let get_page = move |page_index| {
-            // Total amount + fee
-            assert!(page_index == 0);
+            match page_index {
+                0 => {
+                    // Total amount + fee
+                    let btn_layout = ButtonLayout::cancel_armed_info("CONFIRM".into());
+                    let btn_actions = ButtonActions::cancel_confirm_next();
 
-            let btn_layout = ButtonLayout::cancel_none_htc("HOLD TO CONFIRM".into());
-            let btn_actions = ButtonActions::cancel_none_confirm();
+                    let ops = OpTextLayout::new(theme::TEXT_MONO)
+                        .text_bold(total_label.clone())
+                        .newline()
+                        .text_mono(total_amount.clone())
+                        .newline()
+                        .newline()
+                        .text_bold(fee_label.clone())
+                        .newline()
+                        .text_mono(fee_amount.clone());
 
-            let mut ops = OpTextLayout::new(theme::TEXT_MONO)
-                .text_bold(total_label.clone())
-                .newline()
-                .text_mono(total_amount.clone())
-                .newline()
-                .text_bold(fee_label.clone())
-                .newline()
-                .text_mono(fee_amount.clone());
+                    let formatted = FormattedText::new(ops);
+                    Page::new(btn_layout, btn_actions, formatted)
+                }
+                1 => {
+                    // Fee rate info
+                    let btn_layout = ButtonLayout::arrow_none_arrow();
+                    let btn_actions = ButtonActions::prev_none_next();
 
-            // Fee rate amount might not be there
-            if let Some(fee_rate_amount) = fee_rate_amount.clone() {
-                ops = ops.newline().text_mono(fee_rate_amount)
+                    let fee_rate_amount = fee_rate_amount.clone().unwrap_or_default();
+
+                    let ops = OpTextLayout::new(theme::TEXT_MONO)
+                        .text_bold("FEE INFORMATION".into())
+                        .newline()
+                        .newline()
+                        .newline_half()
+                        .text_bold("Fee rate:".into())
+                        .newline()
+                        .text_mono(fee_rate_amount);
+
+                    let formatted = FormattedText::new(ops);
+                    Page::new(btn_layout, btn_actions, formatted)
+                }
+                2 => {
+                    // Wallet and account info
+                    let btn_layout = ButtonLayout::arrow_none_none();
+                    let btn_actions = ButtonActions::prev_none_none();
+
+                    let account_label = account_label.clone().unwrap_or_default();
+
+                    // TODO: include wallet info when available
+
+                    let ops = OpTextLayout::new(theme::TEXT_MONO)
+                        .text_bold("SENDING FROM".into())
+                        .newline()
+                        .newline()
+                        .newline_half()
+                        .text_bold("Account:".into())
+                        .newline()
+                        .text_mono(account_label);
+
+                    let formatted = FormattedText::new(ops);
+                    Page::new(btn_layout, btn_actions, formatted)
+                }
+                _ => unreachable!(),
             }
-
-            let formatted = FormattedText::new(ops);
-            Page::new(btn_layout, btn_actions, formatted)
         };
-        let pages = FlowPages::new(get_page, 1);
+        let pages = FlowPages::new(get_page, 3);
 
         let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
@@ -612,7 +658,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
-            let btn_layout = ButtonLayout::cancel_armed_text("CONFIRM".into(), "i".into());
+            let btn_layout = ButtonLayout::cancel_armed_info("CONFIRM".into());
             let btn_actions = ButtonActions::cancel_confirm_info();
             let ops = OpTextLayout::new(theme::TEXT_MONO)
                 .line_breaking(LineBreaking::BreakWordsNoHyphen)
@@ -1354,6 +1400,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_output(
     ///     *,
     ///     address: str,
+    ///     address_label: str,
     ///     amount: str,
     ///     address_title: str,
     ///     amount_title: str,
@@ -1366,6 +1413,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     total_amount: str,
     ///     fee_amount: str,
     ///     fee_rate_amount: str | None,
+    ///     account_label: str | None,
     ///     total_label: str,
     ///     fee_label: str,
     /// ) -> object:
