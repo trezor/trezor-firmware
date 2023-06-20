@@ -33,6 +33,7 @@ pub mod ui;
 pub mod strutil;
 
 #[cfg(feature = "debug")]
+#[cfg(not(test))]
 #[panic_handler]
 /// More detailed panic handling. The difference against
 /// default `panic` below is that this "debug" version

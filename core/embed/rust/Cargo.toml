@@ -30,11 +30,11 @@ rgb_led = []
 test = [
     "button",
     "cc",
+    "debug",
     "glob",
     "micropython",
     "protobuf",
     "ui",
-    "ui_debug",
     "dma2d",
     "touch",
 ]
