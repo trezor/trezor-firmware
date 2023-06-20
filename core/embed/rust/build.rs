@@ -222,6 +222,8 @@ fn generate_micropython_bindings() {
         // module
         .allowlist_type("mp_obj_module_t")
         .allowlist_var("mp_type_module")
+        // qstr
+        .allowlist_function("qstr_data")
         // `ffi::mp_map_t` type is not allowed to be `Clone` or `Copy` because we tie it
         // to the data lifetimes with the `MapRef` type, see `src/micropython/map.rs`.
         // TODO: We should disable `Clone` and `Copy` for all types and only allow-list

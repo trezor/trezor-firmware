@@ -441,4 +441,21 @@ impl Obj {
         let is_type_str = unsafe { ffi::mp_type_str.is_type_of(self) };
         is_type_str || self.is_qstr()
     }
+
+    pub fn type_<'a>(self) -> Option<&'a super::typ::Type> {
+        if self.is_ptr() {
+            // SAFETY:
+            // Safe for pointers, for as long as MicroPython behaves sanely.
+            // We assume that:
+            // * The pointer is a valid MicroPython object, which has `ObjBase`
+            //   as its first element.
+            // * The type pointer points to a valid type object.
+            // * The pointee has a 'static lifetime, i.e., either is
+            //   ROM-based, or GC allocated.
+            let base = self.as_ptr() as *const ObjBase;
+            unsafe { (*base).type_.as_ref() }
+        } else {
+            None
+        }
+    }
 }
