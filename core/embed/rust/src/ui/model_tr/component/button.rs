@@ -154,13 +154,22 @@ where
             0
         };
 
-        let offset_x = if style.with_outline {
+        // Moving text to the right.
+        let mut offset_x = if style.with_outline {
             theme::BUTTON_OUTLINE
         } else if style.with_arms {
             theme::ARMS_MARGIN
         } else {
             0
         };
+
+        // Centering the text in case of fixed width.
+        if let ButtonContent::Text(text) = &self.content {
+            if let Some(fixed_width) = style.fixed_width {
+                let diff = fixed_width - style.font.visible_text_width(text.as_ref());
+                offset_x = diff / 2;
+            }
+        }
 
         self.get_current_area().bottom_left() + Offset::new(offset_x, -offset_y)
     }
@@ -522,12 +531,12 @@ where
         )
     }
 
-    /// Left cancel, armed text and right text.
-    pub fn cancel_armed_text(middle: T, right: T) -> Self {
+    /// Left cancel, armed text and right info icon/text.
+    pub fn cancel_armed_info(middle: T) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(middle)),
-            Some(ButtonDetails::text(right)),
+            Some(ButtonDetails::text("i".into()).with_fixed_width(theme::BUTTON_ICON_WIDTH)),
         )
     }
 
