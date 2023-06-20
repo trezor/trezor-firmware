@@ -2,15 +2,7 @@ use core::convert::{TryFrom, TryInto};
 
 use crate::{
     error::Error,
-    micropython::{
-        buffer,
-        gc::Gc,
-        iter::{Iter, IterBuf},
-        list::List,
-        obj::Obj,
-        qstr::Qstr,
-        util,
-    },
+    micropython::{buffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, qstr::Qstr, util},
 };
 
 use super::{
@@ -80,9 +72,7 @@ impl Encoder {
             };
 
             if field.is_repeated() {
-                let mut iter_buf = IterBuf::new();
-                let iter = Iter::try_from_obj_with_buf(field_value, &mut iter_buf)?;
-                for iter_value in iter {
+                for iter_value in IterBuf::new().try_iterate(field_value)? {
                     stream.write_uvarint(field_key)?;
                     self.encode_field(stream, field, iter_value)?;
                 }
@@ -126,8 +116,7 @@ impl Encoder {
 
                     // Serialize the total length of the buffer.
                     let mut len = 0;
-                    let iter = Iter::try_from_obj_with_buf(value, &mut iter_buf)?;
-                    for value in iter {
+                    for value in iter_buf.try_iterate(value)? {
                         // SAFETY: buffer is dropped immediately.
                         let buffer = unsafe { buffer::get_buffer(value) }?;
                         len += buffer.len();
@@ -135,8 +124,7 @@ impl Encoder {
                     stream.write_uvarint(len as u64)?;
 
                     // Serialize the buffers one-by-one.
-                    let iter = Iter::try_from_obj_with_buf(value, &mut iter_buf)?;
-                    for value in iter {
+                    for value in iter_buf.try_iterate(value)? {
                         // SAFETY: buffer is dropped immediately.
                         let buffer = unsafe { buffer::get_buffer(value) }?;
                         stream.write(buffer)?;

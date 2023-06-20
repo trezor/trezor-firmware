@@ -3,7 +3,7 @@ use crate::{
     micropython::{
         buffer::{hexlify_bytes, StrBuffer},
         gc::Gc,
-        iter::{Iter, IterBuf},
+        iter::IterBuf,
         list::List,
         obj::Obj,
         util::try_or_raise,
@@ -42,8 +42,7 @@ where
     Error: From<E>,
 {
     let mut vec = Vec::<T, N>::new();
-    let mut iter_buf = IterBuf::new();
-    for item in Iter::try_from_obj_with_buf(iterable, &mut iter_buf)? {
+    for item in IterBuf::new().try_iterate(iterable)? {
         vec.push(item.try_into()?)
             .map_err(|_| value_error!("Invalid iterable length"))?;
     }

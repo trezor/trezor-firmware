@@ -6,15 +6,8 @@ use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
-        buffer::StrBuffer,
-        gc::Gc,
-        iter::{Iter, IterBuf},
-        list::List,
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
+        buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
+        qstr::Qstr, util,
     },
     strutil::StringType,
     ui::{
@@ -368,9 +361,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 
         let mut paragraphs = ParagraphVecLong::new();
 
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
-        for para in iter {
+        for para in IterBuf::new().try_iterate(items)? {
             let [key, value, is_data]: [Obj; 3] = iter_into_array(para)?;
             let key = key.try_into_option::<StrBuffer>()?;
             let value = value.try_into_option::<StrBuffer>()?;
@@ -431,12 +422,10 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
         let path: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
 
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(xpubs, &mut iter_buf)?;
 
         let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
 
-        for i in iter {
+        for i in IterBuf::new().try_iterate(xpubs)? {
             let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
@@ -909,9 +898,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
 
         let mut paragraphs = ParagraphVecShort::new();
 
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
-        for para in iter {
+        for para in IterBuf::new().try_iterate(items)? {
             let [font, text]: [Obj; 2] = iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number_bold_or_mono(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
@@ -1074,10 +1061,8 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
-        let mut iter_buf = IterBuf::new();
         let mut paragraphs = ParagraphVecLong::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
-        for (i, item) in iter.enumerate() {
+        for (i, item) in IterBuf::new().try_iterate(items)?.enumerate() {
             let style = match i.cmp(&active) {
                 Ordering::Less => &theme::TEXT_NORMAL,
                 Ordering::Equal => &theme::TEXT_BOLD,
