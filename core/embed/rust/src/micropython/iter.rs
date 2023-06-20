@@ -6,6 +6,8 @@ use super::{ffi, runtime::catch_exception};
 
 pub struct IterBuf {
     iter_buf: ffi::mp_obj_iter_buf_t,
+    error_checking: bool,
+    caught_exception: Obj,
 }
 
 impl IterBuf {
@@ -17,20 +19,41 @@ impl IterBuf {
                 },
                 buf: [Obj::const_null(), Obj::const_null(), Obj::const_null()],
             },
+            error_checking: false,
+            caught_exception: Obj::const_null(),
+        }
+    }
+
+    pub fn new_fallible() -> Self {
+        let mut new = Self::new();
+        new.error_checking = true;
+        new
+    }
+
+    pub fn try_iterate(&mut self, o: Obj) -> Result<Iter, Error> {
+        Iter::try_from_obj_with_buf(o, self)
+    }
+
+    pub fn error(&self) -> Option<Obj> {
+        if !self.error_checking || self.caught_exception.is_null() {
+            None
+        } else {
+            Some(self.caught_exception)
         }
     }
 }
 
-#[allow(dead_code)] // iter_buf is not really used but needs to be there for SAFETY reasons
 pub struct Iter<'a> {
     iter: Obj,
+    // SAFETY:
+    // In the typical case, `iter` is literally a pointer to `iter_buf`. We need to hold
+    // an exclusive reference to `iter_buf` to avoid problems.
     iter_buf: &'a mut IterBuf,
     finished: bool,
-    caught_exception: Obj,
 }
 
 impl<'a> Iter<'a> {
-    pub fn try_from_obj_with_buf(o: Obj, iter_buf: &'a mut IterBuf) -> Result<Self, Error> {
+    fn try_from_obj_with_buf(o: Obj, iter_buf: &'a mut IterBuf) -> Result<Self, Error> {
         // SAFETY:
         //  - In the common case, `ffi::mp_getiter` does not heap-allocate, but instead
         //    uses memory from the passed `iter_buf`. We maintain this invariant by
@@ -43,7 +66,6 @@ impl<'a> Iter<'a> {
             iter,
             iter_buf,
             finished: false,
-            caught_exception: Obj::const_null(),
         })
     }
 }
@@ -61,8 +83,8 @@ impl<'a> Iterator for Iter<'a> {
         // EXCEPTION: Can raise from the underlying iterator.
         let item = catch_exception(|| unsafe { ffi::mp_iternext(self.iter) });
         match item {
-            Err(Error::CaughtException(exc)) => {
-                self.caught_exception = exc;
+            Err(Error::CaughtException(exc)) if self.iter_buf.error_checking => {
+                self.iter_buf.caught_exception = exc;
                 None
             }
             Err(_) => panic!("unexpected error"),

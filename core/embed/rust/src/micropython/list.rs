@@ -144,10 +144,7 @@ impl TryFrom<Obj> for Gc<List> {
 
 #[cfg(test)]
 mod tests {
-    use crate::micropython::{
-        iter::{Iter, IterBuf},
-        testutil::mpy_init,
-    };
+    use crate::micropython::{iter::IterBuf, testutil::mpy_init};
 
     use super::*;
     use heapless::Vec;
@@ -160,10 +157,10 @@ mod tests {
         let vec: Vec<u8, 10> = (0..5).collect();
         let list: Obj = List::from_iter(vec.iter().copied()).unwrap().into();
 
-        let mut buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(list, &mut buf).unwrap();
         // collect the elements into a Vec of maximum length 10, through an iterator
-        let retrieved_vec: Vec<u8, 10> = iter
+        let retrieved_vec: Vec<u8, 10> = IterBuf::new()
+            .try_iterate(list)
+            .unwrap()
             .map(TryInto::try_into)
             .collect::<Result<Vec<u8, 10>, Error>>()
             .unwrap();
@@ -199,9 +196,9 @@ mod tests {
             );
         }
 
-        let mut buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(gc_list.into(), &mut buf).unwrap();
-        let retrieved_vec: Vec<u16, 17> = iter
+        let retrieved_vec: Vec<u16, 17> = IterBuf::new()
+            .try_iterate(gc_list.into())
+            .unwrap()
             .map(TryInto::try_into)
             .collect::<Result<Vec<u16, 17>, Error>>()
             .unwrap();
@@ -240,9 +237,9 @@ mod tests {
             slice[i] = ((i + 10) as u16).into();
         }
 
-        let mut buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(list.into(), &mut buf).unwrap();
-        let retrieved_vec: Vec<u16, 5> = iter
+        let retrieved_vec: Vec<u16, 5> = IterBuf::new()
+            .try_iterate(list.into())
+            .unwrap()
             .map(TryInto::try_into)
             .collect::<Result<Vec<u16, 5>, Error>>()
             .unwrap();

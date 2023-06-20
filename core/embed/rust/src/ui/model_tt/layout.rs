@@ -6,7 +6,7 @@ use crate::{
     micropython::{
         buffer::{get_buffer, StrBuffer},
         gc::Gc,
-        iter::{Iter, IterBuf},
+        iter::IterBuf,
         list::List,
         map::Map,
         module::Module,
@@ -466,10 +466,8 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             .try_into_option()?;
 
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-        for item in iter {
+        for item in IterBuf::new().try_iterate(items)? {
             if item.is_str() {
                 ops = ops.text_normal(item.try_into()?)
             } else {
@@ -748,12 +746,10 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
         let path: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
 
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(xpubs, &mut iter_buf)?;
 
         let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
 
-        for i in iter {
+        for i in IterBuf::new().try_iterate(xpubs)? {
             let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
@@ -833,9 +829,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
         let mut paragraphs = ParagraphVecShort::new();
 
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
-        for pair in iter {
+        for pair in IterBuf::new().try_iterate(items)? {
             let [label, value]: [StrBuffer; 2] = iter_into_array(pair)?;
             paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label));
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
@@ -1159,9 +1153,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
 
         let mut paragraphs = ParagraphVecShort::new();
 
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
-        for para in iter {
+        for para in IterBuf::new().try_iterate(items)? {
             let [font, text]: [Obj; 2] = iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
@@ -1191,9 +1183,7 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let mut paragraphs = ParagraphVecLong::new();
 
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
-        for para in iter {
+        for para in IterBuf::new().try_iterate(items)? {
             let [font, text]: [Obj; 2] = iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
@@ -1308,9 +1298,7 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
         let pages: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
 
         let mut paragraphs = ParagraphVecLong::new();
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(pages, &mut iter_buf)?;
-        for page in iter {
+        for page in IterBuf::new().try_iterate(pages)? {
             let text: StrBuffer = page.try_into()?;
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, text).break_after());
         }
@@ -1360,10 +1348,8 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
-        let mut iter_buf = IterBuf::new();
         let mut paragraphs = ParagraphVecLong::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
-        for (i, item) in iter.enumerate() {
+        for (i, item) in IterBuf::new().try_iterate(items)?.enumerate() {
             let style = match i.cmp(&active) {
                 Ordering::Less => &theme::TEXT_CHECKLIST_DONE,
                 Ordering::Equal => &theme::TEXT_CHECKLIST_SELECTED,
@@ -1489,9 +1475,7 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
         let pages_iterable: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
 
         let mut paragraphs = ParagraphVecLong::new();
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(pages_iterable, &mut iter_buf)?;
-        for page in iter {
+        for page in IterBuf::new().try_iterate(pages_iterable)? {
             let [title, description]: [StrBuffer; 2] = iter_into_array(page)?;
             paragraphs
                 .add(Paragraph::new(&theme::TEXT_DEMIBOLD, title))
