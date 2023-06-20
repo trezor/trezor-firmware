@@ -58,7 +58,7 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
         // TODO: make sure it is called when we have the current font (not sooner)
-        let mut cursor = &mut (self.layout.initial_cursor() + offset);
+        let cursor = &mut (self.layout.initial_cursor() + offset);
         let init_cursor = *cursor;
         let mut total_processed_chars = 0;
 
