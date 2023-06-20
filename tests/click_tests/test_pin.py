@@ -83,19 +83,19 @@ def prepare(
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
-        assert "enable PIN protection" in debug.wait_layout().text_content()
+        assert "Turn on" in debug.wait_layout().text_content()
         if debug.model == "T":
             go_next(debug)
         elif debug.model == "R":
             go_next(debug, wait=True)
             go_next(debug, wait=True)
             go_next(debug, wait=True)
-            debug.press_right_htc(1000)
+            go_next(debug, wait=True)
     elif situation == Situation.PIN_CHANGE:
         # Change PIN
         device_handler.run(device.change_pin)  # type: ignore
         _input_see_confirm(debug, old_pin)
-        assert "change your PIN" in debug.read_layout().text_content()
+        assert "Change PIN" in debug.read_layout().text_content()
         go_next(debug, wait=True)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
@@ -103,10 +103,12 @@ def prepare(
         device_handler.run(device.change_wipe_code)  # type: ignore
         if old_pin:
             _input_see_confirm(debug, old_pin)
-        assert "enable wipe code" in debug.wait_layout().text_content()
+        assert "Turn on" in debug.wait_layout().text_content()
         go_next(debug, wait=True)
         if debug.model == "R":
-            debug.press_right_htc(1000)
+            go_next(debug, wait=True)
+            go_next(debug, wait=True)
+            go_next(debug, wait=True)
         if old_pin:
             debug.wait_layout()
             _input_see_confirm(debug, old_pin)
@@ -119,7 +121,7 @@ def prepare(
 
 
 def _assert_pin_entry(debug: "DebugLink") -> None:
-    assert debug.read_layout().main_component() == "PinKeyboard"
+    assert "PinKeyboard" in debug.read_layout().all_components()
 
 
 def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
@@ -262,10 +264,11 @@ def test_pin_setup(device_handler: "BackgroundDeviceHandler"):
 def test_pin_setup_mismatch(device_handler: "BackgroundDeviceHandler"):
     with PIN_CANCELLED, prepare(device_handler, Situation.PIN_SETUP) as debug:
         _enter_two_times(debug, "1", "2")
-        go_next(debug)
         if debug.model == "T":
+            go_next(debug)
             _cancel_pin(debug)
         elif debug.model == "R":
+            debug.press_middle()
             debug.press_no()
 
 

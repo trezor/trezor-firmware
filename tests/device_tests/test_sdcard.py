@@ -53,7 +53,7 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_enable_sd_protect():
         yield  # Enter PIN to unlock device
-        assert layout().main_component() == "PinKeyboard"
+        assert "PinKeyboard" in layout().all_components()
         client.debug.input("1234")
 
         yield  # do you really want to enable SD protection
@@ -61,7 +61,7 @@ def test_sd_protect_unlock(client: Client):
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert layout().main_component() == "PinKeyboard"
+        assert "PinKeyboard" in layout().all_components()
         client.debug.input("1234")
 
         yield  # you have successfully enabled SD protection
@@ -79,15 +79,15 @@ def test_sd_protect_unlock(client: Client):
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert layout().main_component() == "PinKeyboard"
+        assert "PinKeyboard" in layout().all_components()
         client.debug.input("1234")
 
         yield  # enter new PIN
-        assert layout().main_component() == "PinKeyboard"
+        assert "PinKeyboard" in layout().all_components()
         client.debug.input("1234")
 
         yield  # enter new PIN again
-        assert layout().main_component() == "PinKeyboard"
+        assert "PinKeyboard" in layout().all_components()
         client.debug.input("1234")
 
         yield  # Pin change successful
@@ -107,7 +107,7 @@ def test_sd_protect_unlock(client: Client):
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert layout().main_component() == "PinKeyboard"
+        assert "PinKeyboard" in layout().all_components()
         client.debug.input("1234")
 
         yield  # SD card problem

@@ -23,6 +23,7 @@ enum PinAction {
 }
 
 const MAX_PIN_LENGTH: usize = 50;
+const EMPTY_PIN_STR: &str = "_";
 
 const CHOICE_LENGTH: usize = 13;
 const NUMBER_START_INDEX: usize = 3;
@@ -80,9 +81,9 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
 pub struct PinEntry<T: StringType + Clone> {
     choice_page: ChoicePage<ChoiceFactoryPIN, T, PinAction>,
     pin_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
-    subprompt_line: Child<ChangingTextLine<T>>,
-    prompt: T,
+    subprompt: T,
     show_real_pin: bool,
+    show_last_digit: bool,
     textbox: TextBox<MAX_PIN_LENGTH>,
 }
 
@@ -90,60 +91,61 @@ impl<T> PinEntry<T>
 where
     T: StringType + Clone,
 {
-    pub fn new(prompt: T, subprompt: T) -> Self {
-        let choices = ChoiceFactoryPIN;
+    pub fn new(subprompt: T) -> Self {
+        let pin_line_content = if !subprompt.as_ref().is_empty() {
+            String::from(subprompt.as_ref())
+        } else {
+            String::from(EMPTY_PIN_STR)
+        };
 
         Self {
             // Starting at a random digit.
-            choice_page: ChoicePage::new(choices)
+            choice_page: ChoicePage::new(ChoiceFactoryPIN)
                 .with_initial_page_counter(get_random_digit_position())
                 .with_carousel(true),
-            pin_line: Child::new(ChangingTextLine::center_bold(String::from(prompt.as_ref()))),
-            subprompt_line: Child::new(ChangingTextLine::center_mono(subprompt)),
-            prompt,
+            pin_line: Child::new(
+                ChangingTextLine::center_bold(pin_line_content).without_ellipsis(),
+            ),
+            subprompt,
             show_real_pin: false,
+            show_last_digit: false,
             textbox: TextBox::empty(),
         }
     }
 
     /// Performs overall update of the screen.
     fn update(&mut self, ctx: &mut EventCtx) {
-        self.update_header_info(ctx);
+        self.update_pin_line(ctx);
         ctx.request_paint();
     }
 
-    /// Update the header information - (sub)prompt and visible PIN.
-    /// If PIN is empty, showing prompt in `pin_line` and sub-prompt in the
-    /// `subprompt_line`. Otherwise disabling the `subprompt_line` and showing
-    /// the PIN - either in real numbers or masked in asterisks.
-    fn update_header_info(&mut self, ctx: &mut EventCtx) {
-        let show_prompts = self.is_empty();
-
-        let text = if show_prompts {
-            String::from(self.prompt.as_ref())
+    /// Show updated content in the changing line.
+    /// Many possibilities, according to the PIN state.
+    fn update_pin_line(&mut self, ctx: &mut EventCtx) {
+        let pin_line_text = if self.is_empty() && !self.subprompt.as_ref().is_empty() {
+            String::from(self.subprompt.as_ref())
+        } else if self.is_empty() {
+            String::from(EMPTY_PIN_STR)
         } else if self.show_real_pin {
             String::from(self.pin())
         } else {
-            // Showing asterisks and the last digit.
+            // Showing asterisks and possibly the last digit.
             let mut dots: String<MAX_PIN_LENGTH> = String::new();
             for _ in 0..self.textbox.len() - 1 {
                 unwrap!(dots.push('*'));
             }
-            let last_char = unwrap!(self.textbox.content().chars().last());
+            let last_char = if self.show_last_digit {
+                unwrap!(self.textbox.content().chars().last())
+            } else {
+                '*'
+            };
             unwrap!(dots.push(last_char));
             dots
         };
 
-        // Force repaint of the whole header.
-        // Putting the current text into the PIN line.
         self.pin_line.mutate(ctx, |ctx, pin_line| {
-            pin_line.update_text(text);
+            pin_line.update_text(pin_line_text);
             pin_line.request_complete_repaint(ctx);
-        });
-        // Showing subprompt only conditionally.
-        self.subprompt_line.mutate(ctx, |ctx, subprompt_line| {
-            subprompt_line.show_or_not(show_prompts);
-            subprompt_line.request_complete_repaint(ctx);
         });
     }
 
@@ -168,19 +170,21 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let pin_height = self.pin_line.inner().needed_height();
-        let subtitle_height = self.subprompt_line.inner().needed_height();
-        let (title_area, subtitle_and_choice_area) = bounds.split_top(pin_height);
-        let (subtitle_area, choice_area) = subtitle_and_choice_area.split_top(subtitle_height);
-        self.pin_line.place(title_area);
-        self.subprompt_line.place(subtitle_area);
+        let (pin_area, choice_area) = bounds.split_top(pin_height);
+        self.pin_line.place(pin_area);
         self.choice_page.place(choice_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Any event when showing real PIN should hide it
+        // Same with showing last digit
         if self.show_real_pin {
             self.show_real_pin = false;
+            self.update(ctx)
+        }
+        if self.show_last_digit {
+            self.show_last_digit = false;
             self.update(ctx)
         }
 
@@ -201,6 +205,7 @@ where
                 // Choosing random digit to be shown next
                 self.choice_page
                     .set_page_counter(ctx, get_random_digit_position());
+                self.show_last_digit = true;
                 self.update(ctx);
                 None
             }
@@ -210,7 +215,6 @@ where
 
     fn paint(&mut self) {
         self.pin_line.paint();
-        self.subprompt_line.paint();
         self.choice_page.paint();
     }
 }
@@ -224,11 +228,7 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PinKeyboard");
-        t.string("prompt", self.prompt.as_ref());
-        let subprompt = self.subprompt_line.inner().get_text();
-        if !subprompt.as_ref().is_empty() {
-            t.string("subprompt", subprompt.as_ref());
-        }
+        t.string("subprompt", self.subprompt.as_ref());
         t.string("pin", self.textbox.content());
         t.child("choice_page", &self.choice_page);
     }

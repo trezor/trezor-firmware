@@ -150,6 +150,16 @@ def tutorial() -> object:
 
 
 # rust/src/ui/model_tr/layout.rs
+def show_error(
+    *,
+    title: str,
+    description: str,
+    button: str,
+) -> object:
+    """Show a popup with text centered both vertically and horizontally. With just a middle button."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_modify_fee(
     *,
     title: str,  # ignored
@@ -172,6 +182,16 @@ def confirm_fido(
     """FIDO confirmation.
     Returns page index in case of confirmation and CANCELLED otherwise.
     """
+
+
+# rust/src/ui/model_tr/layout.rs
+def multiple_pages_texts(
+    *,
+    title: str,
+    verb: str,
+    items: list[str],
+) -> object:
+    """Show multiple texts, each on its own page."""
 
 
 # rust/src/ui/model_tr/layout.rs

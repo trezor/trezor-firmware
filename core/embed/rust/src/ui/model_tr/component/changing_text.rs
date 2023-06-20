@@ -16,6 +16,8 @@ pub struct ChangingTextLine<T> {
     font: Font,
     /// Whether to show the text. Can be disabled.
     show_content: bool,
+    /// What to show in front of the text if it doesn't fit.
+    ellipsis: &'static str,
     alignment: Alignment,
 }
 
@@ -29,6 +31,7 @@ where
             text,
             font,
             show_content: true,
+            ellipsis: "...",
             alignment,
         }
     }
@@ -39,6 +42,12 @@ where
 
     pub fn center_bold(text: T) -> Self {
         Self::new(text, Font::BOLD, Alignment::Center)
+    }
+
+    /// Not showing ellipsis at the beginning of longer texts.
+    pub fn without_ellipsis(mut self) -> Self {
+        self.ellipsis = "";
+        self
     }
 
     /// Update the text to be displayed in the line.
@@ -93,7 +102,7 @@ where
     fn paint_long_content_with_ellipsis(&self) {
         let text_to_display = long_line_content_with_ellipsis(
             self.text.as_ref(),
-            "...",
+            self.ellipsis,
             self.font,
             self.pad.area.width(),
         );

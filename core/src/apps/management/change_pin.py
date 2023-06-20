@@ -53,10 +53,10 @@ async def change_pin(ctx: Context, msg: ChangePin) -> Success:
             msg_screen = "PIN changed."
             msg_wire = "PIN changed"
         else:
-            msg_screen = "PIN protection enabled."
+            msg_screen = "PIN protection\nturned on."
             msg_wire = "PIN enabled"
     else:
-        msg_screen = "PIN protection disabled."
+        msg_screen = "PIN protection\nturned off."
         msg_wire = "PIN removed"
 
     await show_success(ctx, "success_pin", msg_screen)
@@ -68,37 +68,33 @@ def _require_confirm_change_pin(ctx: Context, msg: ChangePin) -> Awaitable[None]
 
     has_pin = config.has_pin()
 
-    br_type = "set_pin"
     title = "PIN settings"
 
     if msg.remove and has_pin:  # removing pin
         return confirm_action(
             ctx,
-            br_type,
+            "disable_pin",
             title,
-            description="Do you want to disable PIN protection?",
-            verb="Disable",
+            description="Are you sure you want to turn off PIN protection?",
+            verb="Turn off",
         )
 
     if not msg.remove and has_pin:  # changing pin
         return confirm_action(
             ctx,
-            br_type,
+            "change_pin",
             title,
-            description="Do you want to change your PIN?",
+            description="Change PIN?",
             verb="Change",
         )
 
     if not msg.remove and not has_pin:  # setting new pin
         return confirm_set_new_pin(
             ctx,
-            br_type,
+            "set_pin",
             title,
-            "Do you want to enable PIN protection?",
-            [
-                "PIN will be used to access this device.",
-                "PIN should be 4-50 digits long.",
-            ],
+            "PIN\nprotection",
+            "PIN will be required to access this device.",
         )
 
     # removing non-existing PIN

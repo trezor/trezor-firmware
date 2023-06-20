@@ -82,6 +82,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_len;
   MP_QSTR_max_rounds;
   MP_QSTR_min_count;
+  MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;
   MP_QSTR_notification_level;
   MP_QSTR_page_count;

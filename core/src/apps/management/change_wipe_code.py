@@ -70,8 +70,8 @@ def _require_confirm_action(
             ctx,
             "disable_wipe_code",
             title,
-            description="Do you want to disable wipe code protection?",
-            verb="Disable",
+            description="Turn off wipe code protection?",
+            verb="Turn off",
         )
 
     if not msg.remove and has_wipe_code:
@@ -79,7 +79,7 @@ def _require_confirm_action(
             ctx,
             "change_wipe_code",
             title,
-            description="Do you want to change the wipe code?",
+            description="Change wipe code?",
             verb="Change",
         )
 
@@ -88,10 +88,8 @@ def _require_confirm_action(
             ctx,
             "set_wipe_code",
             title,
-            "Do you want to enable wipe code?",
-            [
-                "Wipe code can be used to erase all data from this device.",
-            ],
+            "wipe code protection",
+            "Wipe code can be used to erase all data from this device.",
         )
 
     # Removing non-existing wipe code.

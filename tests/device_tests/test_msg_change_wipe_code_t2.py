@@ -63,7 +63,7 @@ def test_set_remove_wipe_code(client: Client):
     assert client.features.wipe_code_protection is False
 
     with client:
-        br_amount = 5 if client.debug.model == "T" else 7
+        br_amount = 5 if client.debug.model == "T" else 6
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_amount
             + [messages.Success, messages.Features]
@@ -118,7 +118,7 @@ def test_set_wipe_code_to_pin(client: Client):
     _ensure_unlocked(client, PIN4)
 
     with client:
-        br_amount = 7 if client.debug.model == "T" else 9
+        br_amount = 7 if client.debug.model == "T" else 8
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_amount
             + [messages.Success, messages.Features]
@@ -134,7 +134,7 @@ def test_set_wipe_code_to_pin(client: Client):
 def test_set_pin_to_wipe_code(client: Client):
     # Set wipe code.
     with client:
-        br_amount = 4 if client.debug.model == "T" else 6
+        br_amount = 4 if client.debug.model == "T" else 5
         client.set_expected_responses(
             [messages.ButtonRequest()] * br_amount
             + [messages.Success, messages.Features]

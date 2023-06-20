@@ -1287,17 +1287,37 @@ async def confirm_set_new_pin(
     br_type: str,
     title: str,
     description: str,
-    information: list[str],  # unused on TT
+    information: str,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
-    await confirm_action(
-        ctx,
-        br_type,
-        title,
-        description=description,
-        verb="ENABLE",
-        br_code=br_code,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_emphasized(
+                    title=title.upper(),
+                    items=(
+                        "Turn on ",
+                        (True, description),
+                        "?\n\n",
+                        information,
+                    ),
+                    verb="TURN ON",
+                )
+            ),
+            br_type,
+            br_code,
+        )
     )
+
+    # await confirm_action(
+    #     ctx,
+    #     br_type,
+    #     title,
+    #     description=description,
+    #     verb="TURN ON",
+    #     br_code=br_code,
+    # )
 
 
 async def mnemonic_word_entering(ctx: GenericContext) -> None:

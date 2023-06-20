@@ -1207,7 +1207,7 @@ async def request_pin_on_device(
 
     dialog = RustLayout(
         trezorui2.request_pin(
-            prompt=prompt,
+            prompt=prompt.upper(),
             subprompt=subprompt,
             allow_cancel=allow_cancel,
             wrong_pin=wrong_pin,
@@ -1227,13 +1227,60 @@ async def confirm_reenter_pin(
 ) -> None:
     br_type = "reenter_wipe_code" if is_wipe_code else "reenter_pin"
     title = "CHECK WIPE CODE" if is_wipe_code else "CHECK PIN"
+    description = "wipe code" if is_wipe_code else "PIN"
     return await confirm_action(
         ctx,
         br_type,
         title,
-        action="Please re-enter to confirm.",
-        verb="BEGIN",
+        description=f"Please re-enter {description} to confirm.",
+        verb="CONTINUE",
         br_code=BR_TYPE_OTHER,
+    )
+
+
+async def show_error(
+    ctx: GenericContext,
+    br_type: str,
+    title: str,
+    description: str,
+    button: str,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    await interact(
+        ctx,
+        RustLayout(
+            trezorui2.show_error(
+                title=title,
+                description=description,
+                button=button,
+            )
+        ),
+        br_type,
+        br_code,
+    )
+
+
+async def confirm_multiple_pages_texts(
+    ctx: GenericContext,
+    br_type: str,
+    title: str,
+    items: list[str],
+    verb: str,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.multiple_pages_texts(
+                    title=title,
+                    verb=verb,
+                    items=items,
+                )
+            ),
+            br_type,
+            br_code,
+        )
     )
 
 
@@ -1241,23 +1288,19 @@ async def pin_mismatch_popup(
     ctx: GenericContext,
     is_wipe_code: bool = False,
 ) -> None:
-    title = "WIPE CODE MISMATCH" if is_wipe_code else "PIN MISMATCH"
     description = "wipe codes" if is_wipe_code else "PINs"
-    return await confirm_action(
+    br_code = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
+    return await show_error(
         ctx,
-        "pin_mismatch",
-        title,
-        description=f"The {description} you entered do not match.\nPlease try again.",
-        verb="TRY AGAIN",
-        verb_cancel=None,
-        br_code=BR_TYPE_OTHER,
+        br_code,
+        f"Entered {description} do not match!",
+        "Please check again.",
+        "CHECK AGAIN",
+        BR_TYPE_OTHER,
     )
 
 
-async def wipe_code_same_as_pin_popup(
-    ctx: GenericContext,
-    is_wipe_code: bool = False,
-) -> None:
+async def wipe_code_same_as_pin_popup(ctx: GenericContext) -> None:
     return await confirm_action(
         ctx,
         "wipe_code_same_as_pin",
@@ -1274,36 +1317,35 @@ async def confirm_set_new_pin(
     br_type: str,
     title: str,
     description: str,
-    information: list[str],
+    information: str,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
-    await confirm_action(
+    question = f"Turn on {description}?"
+    await confirm_multiple_pages_texts(
         ctx,
         br_type,
-        title,
-        description=description,
-        verb="ENABLE",
-        br_code=br_code,
+        title.upper(),
+        [question, information],
+        "TURN ON",
+        br_code,
     )
 
-    # Additional information for the user to know about PIN/WIPE CODE
-
+    # Not showing extra info for wipe code
     if "wipe_code" in br_type:
-        verb = "HODL TO BEGIN"  # Easter egg from @Hannsek
-    else:
-        information.append(
-            "Position of individual numbers will change between entries for enhanced security."
-        )
-        verb = "HOLD TO BEGIN"
+        return
 
-    return await confirm_action(
+    # Additional information for the user to know about PIN
+    next_info = [
+        "PIN should be 4-50 digits long.",
+        "Position of the cursor will change between entries for enhanced security.",
+    ]
+    await confirm_multiple_pages_texts(
         ctx,
         br_type,
-        "",
-        description="\n\r".join(information),
-        verb=verb,
-        hold=True,
-        br_code=br_code,
+        title.upper(),
+        next_info,
+        "CONTINUE",
+        br_code,
     )
 
 
