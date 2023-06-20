@@ -618,6 +618,15 @@ where
     }
 
     /// Cancel cross on left and right arrow facing down.
+    pub fn up_arrow_none_arrow_wide() -> Self {
+        Self::new(
+            Some(ButtonDetails::up_arrow_icon()),
+            None,
+            Some(ButtonDetails::down_arrow_icon_wide()),
+        )
+    }
+
+    /// Cancel cross on left and right arrow facing down.
     pub fn cancel_none_arrow_down() -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
@@ -756,6 +765,11 @@ impl ButtonActions {
         )
     }
 
+    /// Only confirming with middle
+    pub fn none_confirm_none() -> Self {
+        Self::new(None, Some(ButtonAction::Confirm), None)
+    }
+
     /// Going to last page with left, to the next page with right
     pub fn last_none_next() -> Self {
         Self::new(
@@ -797,6 +811,11 @@ impl ButtonActions {
     /// Only going to the next page with right
     pub fn none_none_next() -> Self {
         Self::new(None, None, Some(ButtonAction::NextPage))
+    }
+
+    /// Only going to the next page with middle
+    pub fn none_next_none() -> Self {
+        Self::new(None, Some(ButtonAction::NextPage), None)
     }
 
     /// Only going to the prev page with left

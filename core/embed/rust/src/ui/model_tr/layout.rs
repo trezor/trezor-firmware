@@ -24,7 +24,8 @@ use crate::{
             },
             ComponentExt, FormattedText, LineBreaking, Timeout,
         },
-        display, geometry,
+        display,
+        geometry::{self, Alignment},
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
@@ -740,7 +741,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                         "CONFIRM",
                         "Press both left and right at the same\ntime to confirm.",
                         ButtonLayout::none_armed_none("CONFIRM".into()),
-                        ButtonActions::prev_next_none(),
+                        ButtonActions::none_next_none(),
                     )
                 },
                 5 => {
@@ -770,6 +771,33 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 .with_scrollbar(false)
                 .with_common_title("HELLO".into()),
         )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+
+        let get_page = move |page_index| {
+            assert!(page_index == 0);
+
+            let btn_layout = ButtonLayout::none_armed_none(button.clone());
+            let btn_actions = ButtonActions::none_confirm_none();
+            let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
+                .alignment(Alignment::Center)
+                .text_bold(title.clone())
+                .newline()
+                .text_normal(description.clone());
+            let formatted = FormattedText::new(ops).vertically_aligned(Alignment::Center);
+            Page::new(btn_layout, btn_actions, formatted)
+        };
+        let pages = FlowPages::new(get_page, 1);
+
+        let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -810,6 +838,61 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             Some("".into()),
             false,
         )
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_multiple_pages_texts(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let verb: StrBuffer = kwargs.get(Qstr::MP_QSTR_verb)?.try_into()?;
+        let items: Gc<List> = kwargs.get(Qstr::MP_QSTR_items)?.try_into()?;
+
+        // Cache the page count so that we can move `items` into the closure.
+        let page_count = items.len();
+
+        // Closure to lazy-load the information on given page index.
+        // Done like this to allow arbitrarily many pages without
+        // the need of any allocation here in Rust.
+        let get_page = move |page_index| {
+            let item_obj = unwrap!(items.get(page_index));
+            let text = unwrap!(item_obj.try_into());
+
+            let (btn_layout, btn_actions) = if page_count == 1 {
+                // There is only one page
+                (
+                    ButtonLayout::cancel_none_text(verb.clone()),
+                    ButtonActions::cancel_none_confirm(),
+                )
+            } else if page_index == 0 {
+                // First page
+                (
+                    ButtonLayout::cancel_none_arrow_wide(),
+                    ButtonActions::cancel_none_next(),
+                )
+            } else if page_index == page_count - 1 {
+                // Last page
+                (
+                    ButtonLayout::up_arrow_none_text(verb.clone()),
+                    ButtonActions::prev_none_confirm(),
+                )
+            } else {
+                // Page in the middle
+                (
+                    ButtonLayout::up_arrow_none_arrow_wide(),
+                    ButtonActions::prev_none_next(),
+                )
+            };
+
+            let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(text);
+            let formatted = FormattedText::new(ops).vertically_aligned(Alignment::Center);
+
+            Page::new(btn_layout, btn_actions, formatted)
+        };
+
+        let pages = FlowPages::new(get_page, page_count);
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
+        Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -999,7 +1082,9 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
 
-        let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
+        let obj =
+            LayoutObj::new(Frame::new(prompt, PinEntry::new(subprompt)).with_title_centered())?;
+
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1442,6 +1527,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, tutorial).as_obj(),
 
+    /// def show_error(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     button: str,
+    /// ) -> object:
+    ///     """Show a popup with text centered both vertically and horizontally. With just a middle button."""
+    Qstr::MP_QSTR_show_error => obj_fn_kw!(0, new_show_error).as_obj(),
+
     /// def confirm_modify_fee(
     ///     *,
     ///     title: str,  # ignored
@@ -1465,6 +1559,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     Returns page index in case of confirmation and CANCELLED otherwise.
     ///     """
     Qstr::MP_QSTR_confirm_fido => obj_fn_kw!(0, new_confirm_fido).as_obj(),
+
+    /// def multiple_pages_texts(
+    ///     *,
+    ///     title: str,
+    ///     verb: str,
+    ///     items: list[str],
+    /// ) -> object:
+    ///     """Show multiple texts, each on its own page."""
+    Qstr::MP_QSTR_multiple_pages_texts => obj_fn_kw!(0, new_multiple_pages_texts).as_obj(),
 
     /// def show_info(
     ///     *,

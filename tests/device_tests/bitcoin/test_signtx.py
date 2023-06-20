@@ -1278,7 +1278,7 @@ def test_prevtx_forbidden_fields(client: Client, field, value):
     "field, value",
     (("expiry", 9), ("timestamp", 42), ("version_group_id", 69), ("branch_id", 13)),
 )
-def test_signtx_forbidden_fields(client: Client, field, value):
+def test_signtx_forbidden_fields(client: Client, field: str, value: int):
     inp0 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/0"),  # 1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL
         prev_hash=TXHASH_157041,
@@ -1357,7 +1357,9 @@ def test_incorrect_input_script_type(client: Client, script_type):
         messages.OutputScriptType.PAYTOSCRIPTHASH,
     ),
 )
-def test_incorrect_output_script_type(client: Client, script_type):
+def test_incorrect_output_script_type(
+    client: Client, script_type: messages.OutputScriptType
+):
     address_n = parse_path("m/44h/1h/0h/0/0")  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
     attacker_multisig_public_key = bytes.fromhex(
         "030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
@@ -1407,7 +1409,7 @@ def test_incorrect_output_script_type(client: Client, script_type):
     "lock_time, sequence",
     ((499_999_999, 0xFFFFFFFE), (500_000_000, 0xFFFFFFFE), (1, 0xFFFFFFFF)),
 )
-def test_lock_time(client: Client, lock_time, sequence):
+def test_lock_time(client: Client, lock_time: int, sequence: int):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
@@ -1548,7 +1550,6 @@ def test_information(client: Client):
     with client:
         IF = InputFlowSignTxInformation(client)
         client.set_input_flow(IF.get())
-        client.watch_layout(True)
 
         btc.sign_tx(
             client,
@@ -1584,7 +1585,6 @@ def test_information_mixed(client: Client):
     with client:
         IF = InputFlowSignTxInformationMixed(client)
         client.set_input_flow(IF.get())
-        client.watch_layout(True)
 
         btc.sign_tx(
             client,
@@ -1616,7 +1616,6 @@ def test_information_cancel(client: Client):
     with client, pytest.raises(Cancelled):
         IF = InputFlowSignTxInformationCancel(client)
         client.set_input_flow(IF.get())
-        client.watch_layout(True)
 
         btc.sign_tx(
             client,
@@ -1663,7 +1662,6 @@ def test_information_replacement(client: Client):
     with client:
         IF = InputFlowSignTxInformationReplacement(client)
         client.set_input_flow(IF.get())
-        client.watch_layout(True)
 
         btc.sign_tx(
             client,
