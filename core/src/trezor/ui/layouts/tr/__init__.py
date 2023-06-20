@@ -693,15 +693,13 @@ async def confirm_output(
     )
     amount_title = "AMOUNT" if output_index is None else f"AMOUNT #{output_index + 1}"
 
-    # TODO: implement `hold` to be consistent with `TT`?
-    # TODO: incorporate label? - label = f" ({address_label})" if address_label else ""
-
     await raise_if_not_confirmed(
         interact(
             ctx,
             RustLayout(
                 trezorui2.confirm_output(
                     address=address,
+                    address_label=address_label or "",
                     address_title=address_title,
                     amount_title=amount_title,
                     amount=amount,
@@ -944,13 +942,11 @@ async def confirm_total(
     fee_rate_amount: str | None = None,
     title: str = "SENDING",
     total_label: str = "TOTAL AMOUNT",
-    fee_label: str = "INCLUDING FEE",
+    fee_label: str = "Including fee:",
     account_label: str | None = None,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
-    # TODO: incorporate account_label
-    # f"From {account_label}\r\n{total_label}" if account_label else total_label,
     await raise_if_not_confirmed(
         interact(
             ctx,
@@ -960,8 +956,9 @@ async def confirm_total(
                     total_amount=total_amount,  # type: ignore [No parameter named]
                     fee_amount=fee_amount,  # type: ignore [No parameter named]
                     fee_rate_amount=fee_rate_amount,  # type: ignore [No parameter named]
+                    account_label=account_label,  # type: ignore [No parameter named]
                     total_label=total_label.upper(),  # type: ignore [No parameter named]
-                    fee_label=fee_label.upper(),  # type: ignore [No parameter named]
+                    fee_label=fee_label,  # type: ignore [No parameter named]
                 )
             ),
             br_type,

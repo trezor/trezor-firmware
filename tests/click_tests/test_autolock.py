@@ -105,7 +105,6 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         assert "Total amount: 0.0039 BTC" in layout.text_content()
     elif debug.model == "R":
         debug.press_right(wait=True)
-        debug.press_right(wait=True)
         layout = debug.press_right(wait=True)
         assert "TOTAL AMOUNT 0.0039 BTC" in layout.text_content()
 
@@ -165,7 +164,7 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         if debug.model == "T":
             debug.click(buttons.OK)
         elif debug.model == "R":
-            debug.press_right_htc(1200)
+            debug.press_middle()
 
         signatures, tx = device_handler.result()
         assert len(signatures) == 1

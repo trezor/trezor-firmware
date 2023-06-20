@@ -123,6 +123,7 @@ def confirm_modify_output(
 def confirm_output(
     *,
     address: str,
+    address_label: str,
     amount: str,
     address_title: str,
     amount_title: str,
@@ -136,6 +137,7 @@ def confirm_total(
     total_amount: str,
     fee_amount: str,
     fee_rate_amount: str | None,
+    account_label: str | None,
     total_label: str,
     fee_label: str,
 ) -> object:

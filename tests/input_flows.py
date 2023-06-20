@@ -446,6 +446,140 @@ class InputFlowSignTxHighFee(InputFlowBase):
         yield from self.go_through_all_screens(screens)
 
 
+def sign_tx_go_to_info(client: Client) -> Generator[None, None, str]:
+    yield  # confirm output
+    client.debug.wait_layout()
+    client.debug.press_yes()
+    yield  # confirm output
+    client.debug.wait_layout()
+    client.debug.press_yes()
+
+    yield  # confirm transaction
+    client.debug.wait_layout()
+    client.debug.press_info()
+
+    layout = client.debug.wait_layout()
+    content = layout.text_content().lower()
+
+    client.debug.click(buttons.CORNER_BUTTON, wait=True)
+
+    return content
+
+
+def sign_tx_go_to_info_tr(
+    client: Client,
+) -> Generator[None, None, str]:
+    yield  # confirm output
+    client.debug.wait_layout()
+    client.debug.press_right()  # CONTINUE
+    client.debug.wait_layout()
+    client.debug.press_right()  # CONFIRM
+
+    screen_texts: list[str] = []
+
+    yield  # confirm total
+    layout = client.debug.press_right(wait=True)
+    screen_texts.append(layout.text_content())
+
+    layout = client.debug.press_right(wait=True)
+    screen_texts.append(layout.text_content())
+
+    client.debug.press_left()
+    client.debug.press_left()
+
+    return "\n".join(screen_texts)
+
+
+class InputFlowSignTxInformation(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def assert_content(self, content: str) -> None:
+        assert "sending from" in content
+        assert "legacy #6" in content
+        assert "fee rate" in content
+        assert "71.56 sat" in content
+
+    def input_flow_tt(self) -> GeneratorType:
+        content = yield from sign_tx_go_to_info(self.client)
+        self.assert_content(content)
+        self.client.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        content = yield from sign_tx_go_to_info_tr(self.client)
+        self.assert_content(content.lower())
+        self.client.debug.press_yes()
+
+
+class InputFlowSignTxInformationMixed(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def assert_content(self, content: str) -> None:
+        assert "sending from" in content
+        assert "multiple accounts" in content
+        assert "fee rate" in content
+        assert "18.33 sat" in content
+
+    def input_flow_tt(self) -> GeneratorType:
+        content = yield from sign_tx_go_to_info(self.client)
+        self.assert_content(content)
+        self.client.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        content = yield from sign_tx_go_to_info_tr(self.client)
+        self.assert_content(content.lower())
+        self.client.debug.press_yes()
+
+
+class InputFlowSignTxInformationCancel(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_tt(self) -> GeneratorType:
+        yield from sign_tx_go_to_info(self.client)
+        self.client.debug.press_no()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield from sign_tx_go_to_info_tr(self.client)
+        self.client.debug.press_left()
+
+
+class InputFlowSignTxInformationReplacement(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_tt(self) -> GeneratorType:
+        yield  # confirm txid
+        self.client.debug.press_yes()
+        yield  # confirm address
+        self.client.debug.press_yes()
+        # go back to address
+        self.client.debug.press_no()
+        # confirm address
+        self.client.debug.press_yes()
+        yield  # confirm amount
+        self.client.debug.press_yes()
+
+        yield  # transaction summary, press info
+        self.client.debug.press_info(wait=True)
+        self.client.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.client.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # confirm txid
+        self.client.debug.press_right()
+        self.client.debug.press_right()
+        yield  # confirm address
+        self.client.debug.press_right()
+        self.client.debug.press_right()
+        self.client.debug.press_right()
+        yield  # confirm amount
+        self.client.debug.press_right()
+        self.client.debug.press_right()
+        self.client.debug.press_right()
+
+
 def lock_time_input_flow_tt(
     debug: DebugLink,
     layout_assert_func: Callable[[DebugLink], None],

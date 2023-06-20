@@ -27,6 +27,10 @@ from ...input_flows import (
     InputFlowLockTimeBlockHeight,
     InputFlowLockTimeDatetime,
     InputFlowSignTxHighFee,
+    InputFlowSignTxInformation,
+    InputFlowSignTxInformationCancel,
+    InputFlowSignTxInformationMixed,
+    InputFlowSignTxInformationReplacement,
 )
 from ...tx_cache import TxCache
 from .signtx import (
@@ -1524,7 +1528,6 @@ def test_lock_time_datetime(client: Client, lock_time_str: str):
 
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
-@pytest.mark.skip_tr(reason="Not implemented yet")
 def test_information(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
@@ -1542,29 +1545,9 @@ def test_information(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.wait_layout()
-        client.debug.press_info()
-
-        layout = client.debug.wait_layout()
-        content = layout.text_content().lower()
-        assert "sending from" in content
-        assert "legacy #6" in content
-        assert "fee rate" in content
-        assert "71.56 sat" in content
-        client.debug.click(CORNER_BUTTON, wait=True)
-        client.debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSignTxInformation(client)
+        client.set_input_flow(IF.get())
         client.watch_layout(True)
 
         btc.sign_tx(
@@ -1577,7 +1560,6 @@ def test_information(client: Client):
 
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
-@pytest.mark.skip_tr(reason="Not implemented yet")
 def test_information_mixed(client: Client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
@@ -1599,29 +1581,9 @@ def test_information_mixed(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.wait_layout()
-        client.debug.press_info()
-
-        layout = client.debug.wait_layout()
-        content = layout.text_content().lower()
-        assert "sending from" in content
-        assert "multiple accounts" in content
-        assert "fee rate" in content
-        assert "18.33 sat" in content
-        client.debug.click(CORNER_BUTTON, wait=True)
-        client.debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSignTxInformationMixed(client)
+        client.set_input_flow(IF.get())
         client.watch_layout(True)
 
         btc.sign_tx(
@@ -1634,7 +1596,6 @@ def test_information_mixed(client: Client):
 
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
-@pytest.mark.skip_tr(reason="Not implemented yet")
 def test_information_cancel(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
@@ -1652,24 +1613,9 @@ def test_information_cancel(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow():
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-        yield  # confirm output
-        client.debug.wait_layout()
-        client.debug.press_yes()
-
-        yield  # confirm transaction
-        client.debug.wait_layout()
-        client.debug.press_info()
-
-        client.debug.wait_layout()
-        client.debug.click(CORNER_BUTTON, wait=True)
-        client.debug.press_no()
-
     with client, pytest.raises(Cancelled):
-        client.set_input_flow(input_flow)
+        IF = InputFlowSignTxInformationCancel(client)
+        client.set_input_flow(IF.get())
         client.watch_layout(True)
 
         btc.sign_tx(
@@ -1682,7 +1628,6 @@ def test_information_cancel(client: Client):
 
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
-@pytest.mark.skip_tr(reason="Input flow different on TR")
 def test_information_replacement(client: Client):
     # Use the change output and an external output to bump the fee.
     # Originally fee was 3780, now 108060 (94280 from change and 10000 from external).
@@ -1715,25 +1660,9 @@ def test_information_replacement(client: Client):
         orig_index=0,
     )
 
-    def input_flow():
-        yield  # confirm txid
-        client.debug.press_yes()
-        yield  # confirm address
-        client.debug.press_yes()
-        # go back to address
-        client.debug.press_no()
-        # confirm address
-        client.debug.press_yes()
-        yield  # confirm amount
-        client.debug.press_yes()
-
-        yield  # transaction summary, press info
-        client.debug.press_info(wait=True)
-        client.debug.click(CORNER_BUTTON, wait=True)
-        client.debug.press_yes()
-
     with client:
-        client.set_input_flow(input_flow)
+        IF = InputFlowSignTxInformationReplacement(client)
+        client.set_input_flow(IF.get())
         client.watch_layout(True)
 
         btc.sign_tx(
