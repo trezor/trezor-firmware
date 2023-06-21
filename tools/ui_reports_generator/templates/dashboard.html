@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard</title>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>UI diff dashboard</h1>
+    <h3>Last Update: {{ last_update }}</h3>
+    <form action="/update" method="get">
+        <button type="submit">Update</button>
+    </form>
+    <p id="confirmation-message" style="display: none;color: red">Please wait a moment, the page will refresh. Updates
+        are allowed only every 30 seconds.</p>
+    <script>
+        document.querySelector('form').addEventListener('submit', function () {
+            document.getElementById('confirmation-message').style.display = 'block';
+        });
+    </script>
+    <hr>
+    {% for branch in branches %}
+    <p><b>PR:</b> <a href="{{ branch['pr_link'] }}" target="_blank">{{ branch["pull_request_name"] }}</a></p>
+    <p><b>Branch:</b> {{ branch["name"] }}</p>
+    <p><b>Last commit:</b> {{ branch["last_commit_datetime"] }}</p>
+    <table>
+        <tr>
+            <th>Test</th>
+            <th>Diff screens</th>
+        </tr>
+        {% for job in branch["job_infos"].values() %}
+        <tr style="{% if job.diff_screens > 0 %}background-color: red;{% endif %}">
+            <td><a href="{{ job['link'] }}" target="_blank">{{ job["name"] }}</a></td>
+            <td>{{ job["diff_screens"] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <hr>
+    {% endfor %}
+</body>
+
+</html>
