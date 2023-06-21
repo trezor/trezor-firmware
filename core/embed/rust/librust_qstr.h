@@ -111,6 +111,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_info;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
+  MP_QSTR_show_passphrase;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_remaining_shares;
