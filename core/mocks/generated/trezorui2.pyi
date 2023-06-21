@@ -185,6 +185,11 @@ def show_info(
 
 
 # rust/src/ui/model_tr/layout.rs
+def show_passphrase() -> object:
+    """Show passphrase on host dialog."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def show_mismatch() -> object:
     """Warning modal, receiving address mismatch."""
 

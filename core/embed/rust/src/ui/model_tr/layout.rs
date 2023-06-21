@@ -904,6 +904,17 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_passphrase() -> Obj {
+    let block = move || {
+        let text: StrBuffer = "Please enter your passphrase.".into();
+        let paragraph = Paragraph::new(&theme::TEXT_NORMAL, text).centered();
+        let content = Paragraphs::new([paragraph]);
+        let obj = LayoutObj::new(content)?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 extern "C" fn new_show_mismatch() -> Obj {
     let block = move || {
         let get_page = move |page_index| {
@@ -1463,6 +1474,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Info modal."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
+
+    /// def show_passphrase() -> object:
+    ///     """Show passphrase on host dialog."""
+    Qstr::MP_QSTR_show_passphrase => obj_fn_0!(new_show_passphrase).as_obj(),
 
     /// def show_mismatch() -> object:
     ///     """Warning modal, receiving address mismatch."""
