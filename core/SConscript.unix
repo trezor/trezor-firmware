@@ -7,7 +7,7 @@ import tools
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-DMA2D =  TREZOR_MODEL in ('T', )
+DMA2D =  TREZOR_MODEL in ('T', 'T3W1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
 if TREZOR_MODEL in ('DISC1', ):
@@ -174,7 +174,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL in ('T',):
+if TREZOR_MODEL in ('T', 'T3W1'):
     SOURCE_MOD += [
         'embed/extmod/modtrezorio/ff.c',
         'embed/extmod/modtrezorio/ffunicode.c',
@@ -205,6 +205,10 @@ if TREZOR_MODEL in ('1', ):
 elif TREZOR_MODEL in ('T', ):
     SOURCE_MOD += [
         'embed/models/model_T2T1_layout.c',
+    ]
+elif TREZOR_MODEL in ('T3W1', ):
+    SOURCE_MOD += [
+        'embed/models/model_T3W1_layout.c',
     ]
 elif TREZOR_MODEL in ('R', ):
     SOURCE_MOD += [
@@ -745,7 +749,7 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight=TREZOR_MODEL in ('T',),
+        backlight=TREZOR_MODEL in ('T', 'T3W1'),
         optiga=TREZOR_MODEL in ('R',),
         ui_layout=UI_LAYOUT,
         )
@@ -792,8 +796,12 @@ def cargo_build():
     if DMA2D:
         features.append('dma2d')
 
-    if TREZOR_MODEL in ('T', 'T3W1'):
+    if TREZOR_MODEL in ('T'):
         features.append('touch')
+        features.append('sd_card')
+    if TREZOR_MODEL in ('T3W1'):
+        features.append('touch')
+        features.append('button')
         features.append('sd_card')
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
