@@ -241,18 +241,32 @@ class Layout(Component):
         returns, the others are closed and `create_tasks` is called again.
 
         Usually overridden to add another tasks to the list."""
-        return self.handle_input(), self.handle_rendering()
+        tasks = (self.handle_rendering(),)
+        if utils.USE_BUTTON:
+            tasks = tasks + (self.handle_button(),)
+        if utils.USE_TOUCH:
+            tasks = tasks + (self.handle_touch(),)
+        return tasks
 
-    def handle_input(self) -> Generator:
+    def handle_touch(self) -> Generator:
         """Task that is waiting for the user input."""
-        input_ = loop.wait(io.INPUT)
+        touch = loop.wait(io.TOUCH)
         while True:
             # Using `yield` instead of `await` to avoid allocations.
-            event, x, y = yield input_
+            event, x, y = yield touch
             workflow.idle_timer.touch()
             self.dispatch(event, x, y)
-            # We dispatch a render event right after the input.  Quick and dirty
+            # We dispatch a render event right after the touch.  Quick and dirty
             # way to get the lowest input-to-render latency.
+            self.dispatch(RENDER, 0, 0)
+
+    def handle_button(self) -> Generator:
+        """Task that is waiting for the user input."""
+        button = loop.wait(io.BUTTON)
+        while True:
+            event, button_num = yield button
+            workflow.idle_timer.touch()
+            self.dispatch(event, button_num, 0)
             self.dispatch(RENDER, 0, 0)
 
     def _before_render(self) -> None:

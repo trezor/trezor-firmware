@@ -58,7 +58,7 @@ class RustLayout(ui.Layout):
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             return (
-                self.handle_input_and_rendering(),
+                self.handle_button(),
                 self.handle_timers(),
                 self.handle_swipe_signal(),
                 self.handle_button_signal(),
@@ -190,7 +190,7 @@ class RustLayout(ui.Layout):
     else:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return self.handle_timers(), self.handle_input_and_rendering()
+            return self.handle_timers(), self.handle_button()
 
     def _first_paint(self) -> None:
         # Clear the screen of any leftovers.
@@ -215,10 +215,10 @@ class RustLayout(ui.Layout):
 
             notify_layout_change(self, event_id)
 
-    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
+    def handle_button(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         from trezor import workflow
 
-        button = loop.wait(io.INPUT)
+        button = loop.wait(io.BUTTON)
         self._first_paint()
         while True:
             # Using `yield` instead of `await` to avoid allocations.

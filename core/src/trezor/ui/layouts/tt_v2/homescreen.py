@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
-from trezor import ui
+from trezor import ui, utils
 
 import trezorui2
 
@@ -32,11 +32,15 @@ class HomescreenBase(RustLayout):
     if __debug__:
         # In __debug__ mode, ignore {confirm,swipe,input}_signal.
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return (
+            tasks = (
                 self.handle_timers(),
-                self.handle_input_and_rendering(),
                 self.handle_click_signal(),  # so we can receive debug events
             )
+            if utils.USE_TOUCH:
+                tasks = tasks + (self.handle_touch(),)
+            if utils.USE_BUTTON:
+                tasks = tasks + (self.handle_button(),)
+            return tasks
 
 
 class Homescreen(HomescreenBase):

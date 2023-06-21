@@ -62,23 +62,23 @@ def test_touch(v):
     d.refresh()
     r = [0, 0]
     # flush all events
-    while io.poll([io.INPUT], r, 10000):
+    while io.poll([io.TOUCH], r, 10000):
         pass
     # wait for event
     touch = False
     while True:
         if not touch:
-            if io.poll([io.INPUT], r, 10000) and r[0] == io.INPUT and r[1][0] == io.TOUCH_START:
+            if io.poll([io.TOUCH], r, 10000) and r[0] == io.TOUCH and r[1][0] == io.TOUCH_START:
                 touch = True
         else:
-            if io.poll([io.INPUT], r, 10000) and r[0] == io.INPUT and r[1][0] == io.TOUCH_END:
+            if io.poll([io.TOUCH], r, 10000) and r[0] == io.TOUCH and r[1][0] == io.TOUCH_END:
                 print(f'OK {r[1][1]} {r[1][2]}')
                 break
         if utime.ticks_us() > deadline:
             print('ERROR TIMEOUT')
             break
     # flush all events
-    while io.poll([io.INPUT], r, 10000):
+    while io.poll([io.TOUCH], r, 10000):
         pass
     d.clear()
     d.refresh()

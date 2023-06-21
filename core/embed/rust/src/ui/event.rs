@@ -26,7 +26,7 @@ impl ButtonEvent {
             1 => PhysicalButton::Right,
             _ => return Err(error::Error::OutOfRange),
         };
-        let result = match event & 0xFF {
+        let result = match event {
             1 => Self::ButtonPressed(button),
             2 => Self::ButtonReleased(button),
             _ => return Err(error::Error::OutOfRange),
@@ -50,7 +50,7 @@ pub enum TouchEvent {
 impl TouchEvent {
     pub fn new(event: u32, x: u32, y: u32) -> Result<Self, error::Error> {
         let point = Point::new(x.try_into()?, y.try_into()?);
-        let result = match event & 0xFF {
+        let result = match event {
             1 => Self::TouchStart(point),
             2 => Self::TouchMove(point),
             4 => Self::TouchEnd(point),

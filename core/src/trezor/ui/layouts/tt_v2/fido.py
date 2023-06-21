@@ -18,12 +18,18 @@ if __debug__:
 
     class _RustFidoLayoutImpl(RustLayout):
         def create_tasks(self) -> tuple[AwaitableTask, ...]:
-            return (
+            from trezor import utils
+
+            tasks = (
                 self.handle_timers(),
-                self.handle_input_and_rendering(),
                 self.handle_swipe(),
                 self.handle_debug_confirm(),
             )
+            if utils.USE_TOUCH:
+                tasks = tasks + (self.handle_touch(),)
+            if utils.USE_BUTTON:
+                tasks = tasks + (self.handle_button(),)
+            return tasks
 
         async def handle_debug_confirm(self) -> None:
             from apps.debug import result_signal
