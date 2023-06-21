@@ -35,7 +35,8 @@
 #define FLASH_FILE profile_flash_path()
 #endif
 
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R || \
+    defined TREZOR_MODEL_T3W1
 #define FLASH_SECTOR_COUNT 24
 #elif defined TREZOR_MODEL_1
 #define FLASH_SECTOR_COUNT 12
@@ -56,7 +57,8 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [9] = 0x080A0000,   // - 0x080BFFFF | 128 KiB
     [10] = 0x080C0000,  // - 0x080DFFFF | 128 KiB
     [11] = 0x080E0000,  // - 0x080FFFFF | 128 KiB
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R || \
+    defined TREZOR_MODEL_T3W1
     [12] = 0x08100000,  // - 0x08103FFF |  16 KiB
     [13] = 0x08104000,  // - 0x08107FFF |  16 KiB
     [14] = 0x08108000,  // - 0x0810BFFF |  16 KiB
