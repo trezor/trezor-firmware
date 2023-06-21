@@ -1197,7 +1197,7 @@ def request_passphrase_on_host() -> None:
     draw_simple(
         trezorui2.show_simple(
             title=None,
-            description="Please type your passphrase on the connected host.",
+            description="Please enter your passphrase.",
         )
     )
 

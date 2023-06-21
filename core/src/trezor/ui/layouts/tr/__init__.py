@@ -1157,12 +1157,7 @@ async def show_error_popup(
 
 
 def request_passphrase_on_host() -> None:
-    draw_simple(
-        trezorui2.show_info(
-            title="HIDDEN WALLET",
-            description="Please type your passphrase on the connected host.",
-        )
-    )
+    draw_simple(trezorui2.show_passphrase())
 
 
 async def request_passphrase_on_device(ctx: GenericContext, max_len: int) -> str:
