@@ -119,19 +119,17 @@ class Component:
         self.repaint = True
 
     def dispatch(self, event: int, x: int, y: int) -> None:
-        from trezor.utils import USE_TOUCH, USE_BUTTON
-
         if event is RENDER:
             self.on_render()
-        elif USE_BUTTON and event is io.BUTTON_PRESSED:
+        elif utils.USE_BUTTON and event is io.BUTTON_PRESSED:
             self.on_button_pressed(x)
-        elif USE_BUTTON and event is io.BUTTON_RELEASED:
+        elif utils.USE_BUTTON and event is io.BUTTON_RELEASED:
             self.on_button_released(x)
-        elif USE_TOUCH and event is io.TOUCH_START:
+        elif utils.USE_TOUCH and event is io.TOUCH_START:
             self.on_touch_start(x, y)
-        elif USE_TOUCH and event is io.TOUCH_MOVE:
+        elif utils.USE_TOUCH and event is io.TOUCH_MOVE:
             self.on_touch_move(x, y)
-        elif USE_TOUCH and event is io.TOUCH_END:
+        elif utils.USE_TOUCH and event is io.TOUCH_END:
             self.on_touch_end(x, y)
         elif event is REPAINT:
             self.repaint = True

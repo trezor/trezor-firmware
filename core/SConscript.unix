@@ -7,7 +7,6 @@ import tools
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-DMA2D =  TREZOR_MODEL in ('T', )
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
 if TREZOR_MODEL in ('DISC1', ):
@@ -24,6 +23,13 @@ if TREZOR_MODEL in ('DISC1', ):
 FEATURE_FLAGS = {
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
 }
+
+if TREZOR_MODEL in ('1', ):
+    FEATURES_AVAILABLE = ['button']
+elif TREZOR_MODEL in ('R', ):
+    FEATURES_AVAILABLE = ['button', 'sbu']
+elif TREZOR_MODEL in ('T', ):
+    FEATURES_AVAILABLE = ['touch', 'sbu', 'sd_card', 'dma2d']
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -173,7 +179,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL in ('T',):
+if 'sd_card' in FEATURES_AVAILABLE:
     SOURCE_MOD += [
         'embed/extmod/modtrezorio/ff.c',
         'embed/extmod/modtrezorio/ffunicode.c',
@@ -367,13 +373,18 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
 ]
-if TREZOR_MODEL in ('T', 'R'):
+
+if 'sbu' in FEATURES_AVAILABLE:
     SOURCE_UNIX += [
         'embed/unix/sbu.c',
+    ]
+
+if 'sd_card' in FEATURES_AVAILABLE:
+    SOURCE_UNIX += [
         'embed/unix/sdcard.c',
     ]
 
-if DMA2D:
+if 'dma2d' in FEATURES_AVAILABLE:
     CPPDEFINES_MOD += [
         'USE_DMA2D',
     ]
@@ -571,7 +582,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/sdcard.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if 'sd_card' in FEATURES_AVAILABLE else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
@@ -602,7 +613,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
         exclude=[
             SOURCE_PY_DIR + 'storage/sd_salt.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if 'sd_card' in FEATURES_AVAILABLE else []
     ))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/__init__.py'))
@@ -626,15 +637,15 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/common/sdcard.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if 'sd_card' in FEATURES_AVAILABLE else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL not in ('T',) else [])
-    )
+        ] if 'sd_card' in FEATURES_AVAILABLE else []
+    ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))
@@ -690,7 +701,13 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
 
-    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
+    source_mpy = env.FrozenModule(
+        source=SOURCE_PY,
+        source_dir=SOURCE_PY_DIR,
+        bitcoin_only=BITCOIN_ONLY,
+        use_button='button' in FEATURES_AVAILABLE,
+        use_touch='touch' in FEATURES_AVAILABLE,
+    )
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
@@ -733,14 +750,8 @@ def cargo_build():
     features.append('ui')
     if PYOPT == '0':
         features.append('debug')
-    if DMA2D:
-        features.append('dma2d')
 
-    if TREZOR_MODEL in ('T',):
-        features.append('touch')
-        features.append('sd_card')
-    if TREZOR_MODEL in ('R', '1'):
-        features.append('button')
+    features.extend(FEATURES_AVAILABLE)
 
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 

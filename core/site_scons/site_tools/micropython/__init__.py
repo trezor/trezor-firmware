@@ -31,9 +31,13 @@ def generate(env):
         # replace "utils.BITCOIN_ONLY" with literal constant (True/False)
         # so the compiler can optimize out the things we don't want
         btc_only = env['bitcoin_only'] == '1'
+        touch = env['use_touch']
+        button = env['use_button']
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = " ".join([
             rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
+            rf"-e 's/utils\.USE_BUTTON/{button}/g'",
+            rf"-e 's/utils\.USE_TOUCH/{touch}/g'",
             r"-e 's/if TYPE_CHECKING/if False/'",
             r"-e 's/import typing/# \0/'",
             r"-e '/from typing import (/,/^\s*)/ {s/^/# /}'",
