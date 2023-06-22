@@ -46,6 +46,9 @@
 #ifdef USE_BUTTON
 #include "button.h"
 #endif
+#ifdef USE_CONSUMPTION_MASK
+#include "consumption_mask.h"
+#endif
 #ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
@@ -340,6 +343,11 @@ int bootloader_main(void) {
 #ifdef USE_BUTTON
   button_init();
 #endif
+
+#ifdef USE_CONSUMPTION_MASK
+  consumption_mask_init();
+#endif
+
 #ifdef USE_RGB_LED
   rgb_led_init();
 #endif
