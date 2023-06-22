@@ -28,18 +28,32 @@
     </script>
     <hr>
     {% for branch in branches %}
-    <p><b>PR:</b> <a href="{{ branch['pr_link'] }}" target="_blank">{{ branch["pull_request_name"] }}</a></p>
-    <p><b>Branch:</b> {{ branch["name"] }}</p>
-    <p><b>Last commit:</b> {{ branch["last_commit_datetime"] }}</p>
+    <p><b>PR:</b> <a href="{{ branch.pull_request_link }}" target="_blank">{{ branch.pull_request_name }}</a></p>
+    <p><b>Branch:</b> <a href="{{ branch.branch_link }}" target="_blank">{{ branch.name }}</a></p>
+    <p><b>Last commit:</b> {{ branch.last_commit_datetime }}</p>
     <table>
         <tr>
             <th>Test</th>
+            <th>Status</th>
             <th>Diff screens</th>
         </tr>
-        {% for job in branch["job_infos"].values() %}
-        <tr style="{% if job.diff_screens > 0 %}background-color: red;{% endif %}">
-            <td><a href="{{ job['link'] }}" target="_blank">{{ job["name"] }}</a></td>
-            <td>{{ job["diff_screens"] }}</td>
+        {% for job in branch.job_infos.values() %}
+        <tr>
+            <td><a href="{{ job.link }}" target="_blank">{{ job.name }}</a></td>
+            <td style="
+                {% if job.status == 'Running...' %}
+                background-color: orange;
+                {% elif job.status == 'Skipped' %}
+                    background-color: red;
+                {% endif %}">
+                {{ job.status }}
+            </td>
+            <td style="
+                {% if job.diff_screens > 0 %}
+                    background-color: red;
+                {% endif %}">
+                {{ job.diff_screens }}
+            </td>
         </tr>
         {% endfor %}
     </table>

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -12,7 +11,7 @@ from starlette.responses import RedirectResponse
 
 from cli import do_update_pulls
 from common_all import get_logger
-from github import load_cache_file
+from github import load_branches_cache, load_metadata_cache
 from gitlab import get_latest_infos_for_branch
 
 HERE = Path(__file__).parent
@@ -42,22 +41,22 @@ async def get_branch_info(branch_name: str):
 async def get_dashboard(request: Request):
     try:
         logger.info("get_dashboard")
-        cached_info = load_cache_file()
-        last_update = cached_info["metadata"]["last_update"]
-        branches_dict = cached_info["branches"]
+        branches_info = load_branches_cache()
+        metadata = load_metadata_cache()
+        last_update = metadata["last_update"]
         branches_list = sorted(
-            branches_dict.values(),
-            key=lambda branch_info: branch_info["pull_request_number"],
+            branches_info.values(),
+            key=lambda branch_info: branch_info.last_commit_timestamp,
             reverse=True,
         )
-        branches_list = [branch for branch in branches_list if branch["job_infos"]]
-        for branch in branches_list:
-            branch[
-                "pr_link"
-            ] = f"https://github.com/trezor/trezor-firmware/pull/{branch['pull_request_number']}"
+        branches_with_ui = [branch for branch in branches_list if branch.job_infos]
         return templates.TemplateResponse(  # type: ignore
             "dashboard.html",
-            {"request": request, "branches": branches_list, "last_update": last_update},
+            {
+                "request": request,
+                "branches": branches_with_ui,
+                "last_update": last_update,
+            },
         )
     except Exception as e:
         logger.exception(f"Error: {e}")
@@ -67,10 +66,14 @@ async def get_dashboard(request: Request):
 @app.get("/update")
 async def update_dashboard():
     logger.info("update_dashboard")
-    global LAST_UPDATE_TS
-    if time.time() - LAST_UPDATE_TS > UPDATE_ALLOWED_EVERY_S:
-        do_update_pulls()
-        LAST_UPDATE_TS = time.time()
-    else:
-        time.sleep(5)
-    return RedirectResponse(url="/dashboard")
+    try:
+        global LAST_UPDATE_TS
+        if time.time() - LAST_UPDATE_TS > UPDATE_ALLOWED_EVERY_S:
+            do_update_pulls()
+            LAST_UPDATE_TS = time.time()  # type: ignore
+        else:
+            time.sleep(5)
+        return RedirectResponse(url="/dashboard")
+    except Exception as e:
+        logger.exception(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

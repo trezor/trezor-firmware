@@ -26,16 +26,25 @@ def update_branch_cache(link: str, amount: int) -> None:
 
 
 @lru_cache(maxsize=32)
-def get_gitlab_branches(page: int) -> list[AnyDict]:
+def get_gitlab_branches_cached(page: int) -> list[AnyDict]:
     return requests.get(BRANCHES_API_TEMPLATE.format(page)).json()["pipelines"]
+
+
+def get_newest_gitlab_branches() -> list[AnyDict]:
+    return requests.get(BRANCHES_API_TEMPLATE.format(1)).json()["pipelines"]
 
 
 def get_branch_obj(branch_name: str) -> AnyDict:
     # Trying first 10 pages of branches
     for page in range(1, 11):
-        if page > 1:
+        if page == 1:
+            # First page should be always updated,
+            # rest can be cached
+            branches = get_newest_gitlab_branches()
+        else:
+            branches = get_gitlab_branches_cached(page)
             print(f"Checking page {page} / 10")
-        for branch_obj in get_gitlab_branches(page):
+        for branch_obj in branches:
             if branch_obj["ref"]["name"] == branch_name:
                 return branch_obj
     raise ValueError(f"Branch {branch_name} not found")
@@ -81,22 +90,26 @@ def yield_pipeline_jobs(pipeline_iid: int) -> Iterator[AnyDict]:
                 yield job
 
 
+def get_diff_screens_from_text(html_text: str) -> int:
+    row_identifier = 'bgcolor="red"'
+    return html_text.count(row_identifier)
+
+
 def get_status_from_link(job: AnyDict, link: str) -> tuple[str, int]:
     if job["status"]["label"] == "skipped":
-        return "SKIPPED", 0
+        return "Skipped", 0
 
     if link in BRANCH_CACHE:
-        return "OK", BRANCH_CACHE[link]
+        return "Finished", BRANCH_CACHE[link]
 
     res = requests.get(link)
     status = res.status_code
     if status == 200:
-        row_identifier = 'bgcolor="red"'
-        diff_screens = res.text.count(row_identifier)
+        diff_screens = get_diff_screens_from_text(res.text)
         update_branch_cache(link, diff_screens)
-        return "OK", diff_screens
+        return "Finished", diff_screens
     else:
-        return "NOT YET AVAILABLE", 0
+        return "Running...", 0
 
 
 def get_job_info(job: AnyDict, link: str, find_status: bool = True) -> JobInfo:
