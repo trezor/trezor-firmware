@@ -48,6 +48,9 @@
 #ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
+#ifdef USE_CONSUMPTION_MASK
+#include "consumption_mask.h"
+#endif
 #ifdef USE_DMA2D
 #include "dma2d.h"
 #endif
@@ -132,6 +135,10 @@ int main(void) {
 
 #ifdef USE_RGB_LED
   rgb_led_init();
+#endif
+
+#ifdef USE_CONSUMPTION_MASK
+  consumption_mask_init();
 #endif
 
 #ifdef USE_I2C

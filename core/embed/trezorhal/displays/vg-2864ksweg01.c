@@ -23,6 +23,10 @@
 #include "display_interface.h"
 #include STM32_HAL_H
 
+#ifdef USE_CONSUMPTION_MASK
+#include "consumption_mask.h"
+#endif
+
 #define OLED_BUFSIZE (DISPLAY_RESX * DISPLAY_RESY / 8)
 #define OLED_OFFSET(x, y) (OLED_BUFSIZE - 1 - (x) - ((y) / 8) * DISPLAY_RESX)
 #define OLED_MASK(x, y) (1 << (7 - (y) % 8))
@@ -265,6 +269,11 @@ void display_refresh(void) {
 
   HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
   spi_send(s, 3);
+
+#if defined USE_CONSUMPTION_MASK && !defined BOARDLOADER
+  consumption_mask_randomize();
+#endif
+
   HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);  // SPI deselect
 
   HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_SET);    // set to DATA

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import subprocess
-from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t, trezor_r_v6, discovery
+from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t, trezor_r_v6, trezor_r_v10, discovery
 
 HERE = Path(__file__).parent.resolve()
 
@@ -31,7 +31,7 @@ def configure_board(
     defines: list[str | tuple[str, str]],
     sources: list[str],
 ):
-    model_r_version = 6
+    model_r_version = 10
 
     if model in ("1",):
         return trezor_1.configure(env, features_wanted, defines, sources)
@@ -42,8 +42,10 @@ def configure_board(
             return trezor_r_v3.configure(env, features_wanted, defines, sources)
         elif model_r_version == 4:
             return trezor_r_v4.configure(env, features_wanted, defines, sources)
-        else:
+        elif  model_r_version == 6:
             return trezor_r_v6.configure(env, features_wanted, defines, sources)
+        elif model_r_version == 10:
+            return trezor_r_v10.configure(env, features_wanted, defines, sources)
     elif model in ('DISC1',):
         return discovery.configure(env, features_wanted, defines, sources)
     else:
