@@ -27,8 +27,8 @@
 #include "rust_ui.h"
 #endif
 #include "flash.h"
+#include "platform.h"
 #include "rand.h"
-#include "stm32.h"
 #include "supervise.h"
 
 #include "mini_printf.h"

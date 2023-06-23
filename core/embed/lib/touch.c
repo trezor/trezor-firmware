@@ -1,4 +1,5 @@
 
+#ifdef USE_TOUCH
 #include "touch.h"
 
 uint32_t touch_click(void) {
@@ -18,3 +19,4 @@ uint32_t touch_click(void) {
   // return last touch coordinate
   return r;
 }
+#endif

@@ -32,7 +32,7 @@
 #include "compiler_traits.h"
 #include "mini_printf.h"
 #include "mpu.h"
-#include "stm32.h"
+#include "platform.h"
 #endif
 #ifdef USE_DMA2D
 #include "dma2d.h"
@@ -41,7 +41,7 @@
 #include "i2c.h"
 #endif
 #ifdef USE_TOUCH
-#include "touch/touch.h"
+#include "touch.h"
 #endif
 #ifdef USE_BUTTON
 #include "button.h"

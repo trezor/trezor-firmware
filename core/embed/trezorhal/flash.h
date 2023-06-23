@@ -92,6 +92,8 @@ extern const uint8_t FIRMWARE_SECTORS[FIRMWARE_SECTORS_COUNT];
 
 void flash_init(void);
 
+uint32_t flash_wait_and_clear_status_flags(void);
+
 secbool __wur flash_unlock_write(void);
 secbool __wur flash_lock_write(void);
 

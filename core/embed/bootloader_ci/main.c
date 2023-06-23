@@ -30,7 +30,7 @@
 #include "rng.h"
 #include "secbool.h"
 #ifdef USE_TOUCH
-#include "touch/touch.h"
+#include "touch.h"
 #endif
 #include "usb.h"
 #include "version.h"

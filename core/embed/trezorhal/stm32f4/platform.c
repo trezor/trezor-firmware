@@ -19,7 +19,7 @@
 
 #include STM32_HAL_H
 
-#include "stm32.h"
+#include "platform.h"
 #include "rng.h"
 
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0,
