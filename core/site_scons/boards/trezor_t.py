@@ -26,6 +26,8 @@ def configure(
     sources += [f'embed/trezorhal/displays/panels/lx154a2411.c', ]
     sources += [f'embed/trezorhal/displays/panels/lx154a2422.c', ]
 
+    features_available.append("backlight")
+
     if "input" in features_wanted:
         sources += ["embed/trezorhal/i2c.c"]
         sources += ["embed/trezorhal/touch/touch.c"]

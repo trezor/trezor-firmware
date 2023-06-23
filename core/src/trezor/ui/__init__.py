@@ -66,29 +66,31 @@ async def _alert(count: int) -> None:
 
 
 def alert(count: int = 3) -> None:
-    global _alert_in_progress
-    if _alert_in_progress:
-        return
+    if utils.USE_BACKLIGHT:
+        global _alert_in_progress
+        if _alert_in_progress:
+            return
 
-    _alert_in_progress = True
-    loop.schedule(_alert(count))
+        _alert_in_progress = True
+        loop.schedule(_alert(count))
 
 
 def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
-    if __debug__:
-        if utils.DISABLE_ANIMATION:
+    if utils.USE_BACKLIGHT:
+        if __debug__:
+            if utils.DISABLE_ANIMATION:
+                display.backlight(val)
+                return
+        current = display.backlight()
+        if current < 0:
             display.backlight(val)
             return
-    current = display.backlight()
-    if current < 0:
+        elif current > val:
+            step = -step
+        for i in range(current, val, step):
+            display.backlight(i)
+            utime.sleep_us(delay)
         display.backlight(val)
-        return
-    elif current > val:
-        step = -step
-    for i in range(current, val, step):
-        display.backlight(i)
-        utime.sleep_us(delay)
-    display.backlight(val)
 
 
 # Component events.  Should be different from `io.TOUCH_*` events.

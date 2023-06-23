@@ -39,15 +39,18 @@ pub fn backlight() -> u16 {
     display::backlight(-1) as u16
 }
 
+#[cfg(feature = "backlight")]
 pub fn set_backlight(val: u16) {
     display::backlight(val as i32);
 }
 
+#[cfg(feature = "backlight")]
 pub fn fade_backlight(target: u16) {
     const FADE_DURATION_MS: u32 = 50;
     fade_backlight_duration(target, FADE_DURATION_MS);
 }
 
+#[cfg(feature = "backlight")]
 pub fn fade_backlight_duration(target: u16, duration_ms: u32) {
     let target = target as i32;
     let duration_ms = duration_ms as i32;
@@ -61,6 +64,15 @@ pub fn fade_backlight_duration(target: u16, duration_ms: u32) {
     //account for imprecise rounding
     set_backlight(target as u16);
 }
+
+#[cfg(not(feature = "backlight"))]
+pub fn set_backlight(_: u16) {}
+
+#[cfg(not(feature = "backlight"))]
+pub fn fade_backlight(_: u16) {}
+
+#[cfg(not(feature = "backlight"))]
+pub fn fade_backlight_duration(_: u16, _: u32) {}
 
 /// Fill a whole rectangle with a specific color.
 pub fn rect_fill(r: Rect, fg_color: Color) {
