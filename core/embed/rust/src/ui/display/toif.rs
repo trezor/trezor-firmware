@@ -269,10 +269,10 @@ impl Icon {
 
     /// Create a named icon.
     /// The name is only stored in debug builds.
-    pub const fn debug_named(data: &'static [u8], name: &'static str) -> Self {
+    pub const fn debug_named(data: &'static [u8], _name: &'static str) -> Self {
         Self {
             #[cfg(feature = "ui_debug")]
-            name,
+            name: _name,
             ..Self::new(data)
         }
     }

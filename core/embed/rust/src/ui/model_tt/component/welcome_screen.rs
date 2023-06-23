@@ -1,6 +1,5 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    constant::MODEL_NAME,
     geometry::{Alignment2D, Offset, Rect},
     model_tt::theme,
 };
@@ -12,7 +11,7 @@ const ICON_TOP_MARGIN: i16 = 48;
 #[cfg(not(feature = "bootloader"))]
 const MODEL_NAME_FONT: display::Font = display::Font::DEMIBOLD;
 #[cfg(not(feature = "bootloader"))]
-use crate::ui::display;
+use crate::ui::{constant::MODEL_NAME, display};
 
 pub struct WelcomeScreen {
     area: Rect,
@@ -65,6 +64,7 @@ impl Component for WelcomeScreen {
 impl crate::trace::Trace for WelcomeScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("WelcomeScreen");
+        #[cfg(not(feature = "bootloader"))]
         t.string("model", MODEL_NAME);
     }
 }
