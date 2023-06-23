@@ -27,6 +27,7 @@ debug = ["ui_debug"]
 sbu = []
 sd_card = []
 rgb_led = []
+backlight = []
 test = [
     "button",
     "cc",
@@ -37,6 +38,7 @@ test = [
     "ui",
     "dma2d",
     "touch",
+    "backlight"
 ]
 
 [lib]

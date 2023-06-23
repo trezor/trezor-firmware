@@ -695,7 +695,12 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
 
-    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
+    source_mpy = env.FrozenModule(
+        source=SOURCE_PY,
+        source_dir=SOURCE_PY_DIR,
+        bitcoin_only=BITCOIN_ONLY,
+        backlight='backlight' in FEATURES_AVAILABLE
+        )
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
