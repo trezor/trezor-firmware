@@ -10,7 +10,7 @@
 #include "rgb_led.h"
 #include "secbool.h"
 #include "storage.h"
-#include "touch/touch.h"
+#include "touch.h"
 #include "usb.h"
 
 #include "bip39.h"

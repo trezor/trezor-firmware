@@ -1,1 +1,0 @@
-../trezorhal/flash.h

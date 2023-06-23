@@ -28,6 +28,7 @@ sbu = []
 sd_card = []
 rgb_led = []
 backlight = []
+usb = []
 test = [
     "button",
     "cc",

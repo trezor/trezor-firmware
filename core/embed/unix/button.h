@@ -1,1 +1,0 @@
-../trezorhal/button.h

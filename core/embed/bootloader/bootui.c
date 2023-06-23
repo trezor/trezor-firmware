@@ -110,7 +110,7 @@ void ui_screen_boot_wait(int wait_seconds) {
 }
 
 #if defined USE_TOUCH
-#include "touch/touch.h"
+#include "touch.h"
 
 void ui_click(void) {
   // flush touch events if any

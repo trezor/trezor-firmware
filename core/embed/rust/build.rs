@@ -21,7 +21,7 @@ fn model() -> String {
 
 fn board() -> String {
     if !is_firmware() {
-        return String::from("board-unix.h");
+        return String::from("boards/board-unix.h");
     }
 
     match env::var("TREZOR_BOARD") {
@@ -76,6 +76,7 @@ fn prepare_bindings() -> bindgen::Builder {
         "-I../../vendor/micropython",
         "-I../../vendor/micropython/lib/uzlib",
         "-I../lib",
+        "-I../trezorhal",
         "-DSTM32F427xx",
         format!("-DTREZOR_MODEL_{}", model()).as_str(),
         format!("-DTREZOR_BOARD=\"{}\"", board()).as_str(),
@@ -86,7 +87,7 @@ fn prepare_bindings() -> bindgen::Builder {
         bindings = bindings.clang_args(&[
             "-nostdinc",
             "-I../firmware",
-            "-I../trezorhal",
+            "-I../trezorhal/stm32f4",
             "-I../../build/firmware",
             "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
             "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
@@ -117,6 +118,7 @@ fn prepare_bindings() -> bindgen::Builder {
     } else {
         bindings = bindings.clang_args(&[
             "-I../unix",
+            "-I../trezorhal/unix",
             "-I../../build/unix",
             "-I../../vendor/micropython/ports/unix",
             "-DTREZOR_EMULATOR",

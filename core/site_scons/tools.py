@@ -30,24 +30,25 @@ def configure_board(
     env: dict,  # type: ignore
     defines: list[str | tuple[str, str]],
     sources: list[str],
+    paths: list[str],
 ):
     model_r_version = 10
 
     if model in ("1",):
-        return trezor_1.configure(env, features_wanted, defines, sources)
+        return trezor_1.configure(env, features_wanted, defines, sources, paths)
     elif model in ("T",):
-        return trezor_t.configure(env, features_wanted, defines, sources)
+        return trezor_t.configure(env, features_wanted, defines, sources, paths)
     elif model in ("R",):
         if model_r_version == 3:
-            return trezor_r_v3.configure(env, features_wanted, defines, sources)
+            return trezor_r_v3.configure(env, features_wanted, defines, sources, paths)
         elif model_r_version == 4:
-            return trezor_r_v4.configure(env, features_wanted, defines, sources)
+            return trezor_r_v4.configure(env, features_wanted, defines, sources, paths)
         elif  model_r_version == 6:
-            return trezor_r_v6.configure(env, features_wanted, defines, sources)
+            return trezor_r_v6.configure(env, features_wanted, defines, sources, paths)
         elif model_r_version == 10:
-            return trezor_r_v10.configure(env, features_wanted, defines, sources)
+            return trezor_r_v10.configure(env, features_wanted, defines, sources, paths)
     elif model in ('DISC1',):
-        return discovery.configure(env, features_wanted, defines, sources)
+        return discovery.configure(env, features_wanted, defines, sources, paths)
     else:
         raise Exception("Unknown model")
 

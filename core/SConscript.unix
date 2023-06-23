@@ -351,16 +351,16 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
-    'embed/unix/common.c',
-    'embed/unix/display-unix.c',
-    'embed/unix/flash.c',
+    'embed/trezorhal/unix/common.c',
+    'embed/trezorhal/unix/display-unix.c',
+    'embed/trezorhal/unix/flash.c',
+    'embed/trezorhal/unix/random_delays.c',
+    'embed/trezorhal/unix/rng.c',
+    'embed/trezorhal/unix/usb.c',
+    'embed/trezorhal/unix/touch/touch.c',
     'embed/unix/main.c',
     'embed/unix/main_main.c',
     'embed/unix/profile.c',
-    'embed/unix/random_delays.c',
-    'embed/unix/rng.c',
-    'embed/unix/touch/touch.c',
-    'embed/unix/usb.c',
     'vendor/micropython/shared/runtime/gchelper_generic.c',
     'vendor/micropython/ports/unix/alloc.c',
     'vendor/micropython/ports/unix/gccollect.c',
@@ -369,8 +369,8 @@ SOURCE_UNIX = [
 ]
 if TREZOR_MODEL in ('T', 'R'):
     SOURCE_UNIX += [
-        'embed/unix/sbu.c',
-        'embed/unix/sdcard.c',
+        'embed/trezorhal/unix/sbu.c',
+        'embed/trezorhal/unix/sdcard.c',
     ]
 
 if DMA2D:
@@ -469,6 +469,8 @@ env.Replace(
         'embed/lib',
         'embed/models',
         'embed/unix',
+        'embed/trezorhal',
+        'embed/trezorhal/unix',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
         'vendor/micropython/ports/unix',
@@ -478,7 +480,7 @@ env.Replace(
         CPU_MODEL,
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
-        'TREZOR_BOARD=\\"board-unix.h\\"',
+        'TREZOR_BOARD=\\"boards/board-unix.h\\"',
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )

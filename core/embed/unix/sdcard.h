@@ -1,1 +1,0 @@
-../trezorhal/sdcard.h

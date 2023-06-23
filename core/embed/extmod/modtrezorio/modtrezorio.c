@@ -29,7 +29,7 @@
 
 #include TREZOR_BOARD
 #include "button.h"
-#include "touch/touch.h"
+#include "touch.h"
 #include "usb.h"
 
 // Whether USB data pins were connected on last check (USB configured)
