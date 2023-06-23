@@ -20,6 +20,7 @@ def configure(
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [f"embed/trezorhal/displays/{display}"]
+    sources += [f"embed/trezorhal/backlight_pwm.c"]
     sources += [f'embed/trezorhal/displays/panels/tf15411a.c', ]
     sources += [f'embed/trezorhal/displays/panels/154a.c', ]
     sources += [f'embed/trezorhal/displays/panels/lx154a2411.c', ]

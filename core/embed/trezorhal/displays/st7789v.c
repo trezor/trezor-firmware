@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include TREZOR_BOARD
+#include "backlight_pwm.h"
 #include "display_interface.h"
 #include "memzero.h"
 #include "st7789v.h"
@@ -52,10 +53,6 @@ __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS =
 __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
     (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE |
                                 (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN));
-#define LED_PWM_TIM_PERIOD \
-  (255)  // little less than 4kHz with PSC = (SystemCoreClock / 1000000) - 1)
-#define LED_PWM_SLOW_TIM_PERIOD \
-  (10000)  // about 10Hz (with PSC = (SystemCoreClock / 1000000) - 1)
 
 // section "9.1.3 RDDID (04h): Read Display ID"
 // of ST7789V datasheet
@@ -69,9 +66,7 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 // of ILI9341V datasheet
 #define DISPLAY_ID_ILI9341V 0x009341U
 
-static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
-static int pwm_period = LED_PWM_TIM_PERIOD;
 
 void display_pixeldata(uint16_t c) { PIXELDATA(c); }
 
@@ -259,13 +254,7 @@ int display_orientation(int degrees) {
 
 int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
 
-int display_backlight(int val) {
-  if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {
-    DISPLAY_BACKLIGHT = val;
-    TIM1->CCR1 = pwm_period * val / 255;
-  }
-  return DISPLAY_BACKLIGHT;
-}
+int display_backlight(int val) { return backlight_pwm_set(val); }
 
 void display_init_seq(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
@@ -350,46 +339,11 @@ void display_init(void) {
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_TIM1_CLK_ENABLE();
   __HAL_RCC_FMC_CLK_ENABLE();
 
+  backlight_pwm_init();
+
   GPIO_InitTypeDef GPIO_InitStructure;
-
-  // LCD_PWM/PA7 (backlight control)
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
-  GPIO_InitStructure.Pin = GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  // enable PWM timer
-  TIM_HandleTypeDef TIM1_Handle;
-  TIM1_Handle.Instance = TIM1;
-  TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
-  // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration,
-  // we want 1 MHz
-  TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
-  TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
-  TIM1_Handle.Init.RepetitionCounter = 0;
-  HAL_TIM_PWM_Init(&TIM1_Handle);
-  pwm_period = LED_PWM_TIM_PERIOD;
-
-  TIM_OC_InitTypeDef TIM_OC_InitStructure;
-  TIM_OC_InitStructure.Pulse = 0;
-  TIM_OC_InitStructure.OCMode = TIM_OCMODE_PWM2;
-  TIM_OC_InitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
-  TIM_OC_InitStructure.OCFastMode = TIM_OCFAST_DISABLE;
-  TIM_OC_InitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-  TIM_OC_InitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
-  TIM_OC_InitStructure.OCNIdleState = TIM_OCNIDLESTATE_SET;
-  HAL_TIM_PWM_ConfigChannel(&TIM1_Handle, &TIM_OC_InitStructure, TIM_CHANNEL_1);
-
-  display_backlight(0);
-
-  HAL_TIM_PWM_Start(&TIM1_Handle, TIM_CHANNEL_1);
-  HAL_TIMEx_PWMN_Start(&TIM1_Handle, TIM_CHANNEL_1);
 
   // LCD_RST/PC14
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
@@ -450,18 +404,9 @@ void display_reinit(void) {
   // important for model T as this is not set in boardloader
   display_set_little_endian();
 
-  uint32_t prev_arr = TIM1->ARR;
-  uint32_t prev_ccr1 = TIM1->CCR1;
-
-  uint8_t prev_val = (prev_ccr1 * 255) / prev_arr;
-  DISPLAY_BACKLIGHT = prev_val;
   DISPLAY_ORIENTATION = 0;
 
-  pwm_period = LED_PWM_TIM_PERIOD;
-  TIM1->CR1 |= TIM_CR1_ARPE;
-  TIM1->CR2 |= TIM_CR2_CCPC;
-  TIM1->CCR1 = pwm_period * prev_val / 255;
-  TIM1->ARR = LED_PWM_TIM_PERIOD - 1;
+  backlight_pwm_reinit();
 
 #ifdef TREZOR_MODEL_T
   uint32_t id = display_identify();
@@ -487,19 +432,6 @@ void display_sync(void) {
 }
 
 void display_refresh(void) {}
-
-void display_set_slow_pwm(void) {
-  uint32_t prev_arr = TIM1->ARR;
-  uint32_t prev_ccr1 = TIM1->CCR1;
-
-  uint8_t prev_val = (prev_ccr1 * 255) / prev_arr;
-
-  pwm_period = LED_PWM_SLOW_TIM_PERIOD;
-  TIM1->CR1 |= TIM_CR1_ARPE;
-  TIM1->CR2 |= TIM_CR2_CCPC;
-  TIM1->ARR = LED_PWM_SLOW_TIM_PERIOD - 1;
-  TIM1->CCR1 = pwm_period * prev_val / 255;
-}
 
 void display_set_little_endian(void) {
   uint32_t id = display_identify();
