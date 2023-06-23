@@ -34,6 +34,10 @@
 #include "mini_printf.h"
 #include "stm32f4xx_ll_utils.h"
 
+#ifdef TREZOR_MODEL_T
+#include "backlight_pwm.h"
+#endif
+
 #ifdef RGB16
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
 #else
@@ -206,7 +210,7 @@ void ensure_compatible_settings(void) {
   display_set_big_endian();
   display_orientation(0);
   set_core_clock(CLOCK_168_MHZ);
-  display_set_slow_pwm();
+  backlight_pwm_set_slow();
 #endif
 }
 
