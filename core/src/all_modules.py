@@ -193,6 +193,8 @@ trezor.wire
 import trezor.wire
 trezor.wire.codec_v1
 import trezor.wire.codec_v1
+trezor.wire.context
+import trezor.wire.context
 trezor.wire.errors
 import trezor.wire.errors
 trezor.workflow
