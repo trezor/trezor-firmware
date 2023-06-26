@@ -413,9 +413,43 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
             .text_normal("More info at".into())
             .newline()
             .text_bold("trezor.io/tos".into());
-        let formatted = FormattedText::new(ops);
+        let formatted = FormattedText::new(ops).vertically_centered();
 
-        content_in_button_page(title, formatted, button, None, false)
+        content_in_button_page(title, formatted, button, Some("".into()), false)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_backup(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], _kwargs: &Map| {
+        let get_page = move |page_index| match page_index {
+            0 => {
+                let btn_layout = ButtonLayout::text_none_arrow_wide("SKIP".into());
+                let btn_actions = ButtonActions::cancel_none_next();
+                let ops = OpTextLayout::new(theme::TEXT_NORMAL)
+                    .text_normal("New wallet created.".into())
+                    .newline()
+                    .newline()
+                    .text_normal("It should be backed up now!".into());
+                let formatted = FormattedText::new(ops).vertically_centered();
+                Page::new(btn_layout, btn_actions, formatted).with_title("SUCCESS".into())
+            }
+            1 => {
+                let btn_layout = ButtonLayout::up_arrow_none_text("BACK UP".into());
+                let btn_actions = ButtonActions::prev_none_confirm();
+                let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(
+                    "You can use your backup to recover your wallet at any time.".into(),
+                );
+                let formatted = FormattedText::new(ops).vertically_centered();
+                Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
+                    .with_title("BACK UP WALLET".into())
+            }
+            _ => unreachable!(),
+        };
+        let pages = FlowPages::new(get_page, 2);
+
+        let obj = LayoutObj::new(Flow::new(pages))?;
+        Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -532,7 +566,6 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
         let address_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_label)?.try_into()?;
         let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
         let address_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_title)?.try_into()?;
-        let address_title_clone = address_title.clone();
         let amount_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
 
         let get_page = move |page_index| {
@@ -566,7 +599,7 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
         };
         let pages = FlowPages::new(get_page, 2);
 
-        let obj = LayoutObj::new(Flow::new(pages).with_common_title(address_title_clone))?;
+        let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -669,11 +702,11 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
                 .line_breaking(LineBreaking::BreakWordsNoHyphen)
                 .text_mono(address.clone());
             let formatted = FormattedText::new(ops);
-            Page::new(btn_layout, btn_actions, formatted)
+            Page::new(btn_layout, btn_actions, formatted).with_title(title.clone())
         };
         let pages = FlowPages::new(get_page, 1);
 
-        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
+        let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -688,7 +721,7 @@ fn tutorial_screen(
     btn_actions: ButtonActions,
 ) -> Page<StrBuffer> {
     let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL).text_normal(text.into());
-    let formatted = FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center);
+    let formatted = FormattedText::new(ops).vertically_centered();
     Page::new(btn_layout, btn_actions, formatted).with_title(title.into())
 }
 
@@ -766,11 +799,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 
         let pages = FlowPages::new(get_page, PAGE_COUNT);
 
-        let obj = LayoutObj::new(
-            Flow::new(pages)
-                .with_scrollbar(false)
-                .with_common_title("HELLO".into()),
-        )?;
+        let obj = LayoutObj::new(Flow::new(pages).with_scrollbar(false))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1156,16 +1185,17 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
 
 extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
         let share_words: Vec<StrBuffer, 33> = iter_into_vec(share_words_obj)?;
 
+        let cancel_btn = Some(ButtonDetails::up_arrow_icon());
         let confirm_btn = Some(
             ButtonDetails::<StrBuffer>::text("HOLD TO CONFIRM".into()).with_default_duration(),
         );
 
         let obj = LayoutObj::new(
-            ButtonPage::new(ShareWords::new(title, share_words), theme::BG)
+            ButtonPage::new(ShareWords::new(share_words), theme::BG)
+                .with_cancel_btn(cancel_btn)
                 .with_confirm_btn(confirm_btn),
         )?;
         Ok(obj.into())
@@ -1460,6 +1490,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm TOS before device setup."""
     Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
 
+    /// def confirm_backup() -> object:
+    ///     """Strongly recommend user to do backup."""
+    Qstr::MP_QSTR_confirm_backup => obj_fn_kw!(0, new_confirm_backup).as_obj(),
+
     /// def show_address_details(
     ///     *,
     ///     address: str,
@@ -1649,7 +1683,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def show_share_words(
     ///     *,
-    ///     title: str,
     ///     share_words: Iterable[str],
     /// ) -> object:
     ///     """Shows a backup seed."""

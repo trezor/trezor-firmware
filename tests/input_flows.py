@@ -2027,5 +2027,4 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield  # Skip Backup
         self.debug.press_no()
         yield  # Confirm skip backup
-        self.debug.press_right()
         self.debug.press_no()

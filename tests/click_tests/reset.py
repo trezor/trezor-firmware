@@ -20,14 +20,10 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
         debug.press_right(wait=True)
 
 
-def confirm_read(debug: "DebugLink", title: str, hold: bool = False) -> None:
+def confirm_read(debug: "DebugLink", title: str, middle_r: bool = False) -> None:
     layout = debug.read_layout()
     if title == "Caution":
-        if debug.model == "T":
-            # TODO: could look into button texts
-            assert "OK, I UNDERSTAND" in layout.json_str
-        elif debug.model == "R":
-            assert "use your backup to recover" in layout.text_content()
+        assert "Never make a digital copy" in layout.text_content()
     elif title == "Success":
         # TODO: improve this
         assert any(
@@ -36,7 +32,7 @@ def confirm_read(debug: "DebugLink", title: str, hold: bool = False) -> None:
                 "success",
                 "finished",
                 "done",
-                "has been created",
+                "created",
                 "Keep it safe",
             )
         )
@@ -50,12 +46,10 @@ def confirm_read(debug: "DebugLink", title: str, hold: bool = False) -> None:
     elif debug.model == "R":
         if layout.page_count() > 1:
             debug.press_right(wait=True)
-        if hold:
-            # TODO: create debug.hold_right()?
-            debug.press_yes()
+        if middle_r:
+            debug.press_middle(wait=True)
         else:
-            debug.press_right()
-        debug.wait_layout()
+            debug.press_right(wait=True)
 
 
 def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> None:
@@ -94,18 +88,19 @@ def read_words(
             assert layout.title() == "RECOVERY SEED"
     elif debug.model == "R":
         if backup_type == messages.BackupType.Slip39_Advanced:
-            assert "SHARE" in layout.text_content()
+            assert "SHARE" in layout.title()
         elif backup_type == messages.BackupType.Slip39_Basic:
-            assert layout.text_content().startswith("SHARE #")
+            assert layout.title().startswith("SHARE #")
         else:
-            assert layout.text_content().startswith("RECOVERY SEED")
+            assert layout.title() == "STANDARD BACKUP"
+
+        assert "Write down" in layout.text_content()
+        layout = debug.press_right(wait=True)
 
     # Swiping through all the pages and loading the words
-    for i in range(layout.page_count() - 1):
-        # In model R, first two pages are just informational
-        if not (debug.model == "R" and i < 2):
-            words.extend(layout.seed_words())
-        layout = debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True)
+    for _ in range(layout.page_count() - 1):
+        words.extend(layout.seed_words())
+        layout = debug.swipe_up(wait=True)
         assert layout is not None
     if debug.model == "T":
         words.extend(layout.seed_words())

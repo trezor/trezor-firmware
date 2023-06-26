@@ -132,12 +132,12 @@ async def _show_confirmation_success(
 
 
 async def _show_confirmation_failure() -> None:
-    from trezor.ui.layouts.recovery import show_recovery_warning
+    from trezor.ui.layouts.reset import show_reset_warning
 
-    await show_recovery_warning(
+    await show_reset_warning(
         "warning_backup_check",
-        "Please check again.",
-        "That is the wrong word.",
+        "Please check again",
+        "Wrong word selected!",
         "Check again",
         ButtonRequestType.ResetDevice,
     )
@@ -171,7 +171,7 @@ async def bip39_show_and_confirm_mnemonic(mnemonic: str) -> None:
 
         # make the user confirm some words from the mnemonic
         if await _share_words_confirmed(None, words):
-            break  # this share is confirmed, go to next one
+            break  # mnemonic is confirmed, go next
 
 
 # SLIP39

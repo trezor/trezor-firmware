@@ -400,26 +400,25 @@ async def confirm_reset_device(
     )
 
 
-# TODO cleanup @ redesign
 async def confirm_backup() -> bool:
-    if await get_bool(
-        "backup_device",
-        "SUCCESS",
-        description="New wallet has been created.\nIt should be backed up now!",
-        verb="BACK UP",
-        verb_cancel="SKIP",
-        br_code=ButtonRequestType.ResetDevice,
-    ):
+    br_type = "backup_device"
+    br_code = ButtonRequestType.ResetDevice
+
+    result = await interact(
+        RustLayout(trezorui2.confirm_backup()),
+        br_type,
+        br_code,
+    )
+    if result is CONFIRMED:
         return True
 
     return await get_bool(
-        "backup_device",
-        "WARNING",
-        "Are you sure you want to skip the backup?\n",
-        "You can back up your Trezor once, at any time.",
+        br_type,
+        "SKIP BACKUP",
+        description="Are you sure you want to skip the backup?",
         verb="BACK UP",
         verb_cancel="SKIP",
-        br_code=ButtonRequestType.ResetDevice,
+        br_code=br_code,
     )
 
 

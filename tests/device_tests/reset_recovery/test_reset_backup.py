@@ -107,7 +107,7 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_skip_backup_manual(client: Client, backup_type, backup_flow):
+def test_skip_backup_manual(client: Client, backup_type: BackupType, backup_flow):
     with WITH_MOCK_URANDOM, client:
         IF = InputFlowResetSkipBackup(client)
         client.set_input_flow(IF.get())
