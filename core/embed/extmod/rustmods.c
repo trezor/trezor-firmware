@@ -17,12 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "librust.h"
 #include "py/runtime.h"
 
 #if MICROPY_PY_TREZORUI2
-
-#include "librust.h"
-
 MP_REGISTER_MODULE(MP_QSTR_trezorui2, mp_module_trezorui2);
+#endif
 
-#endif  // MICROPY_PY_TREZORUI2
+#if MICROPY_PY_TREZORPROTO
+MP_REGISTER_MODULE(MP_QSTR_trezorproto, mp_module_trezorproto);
+#endif

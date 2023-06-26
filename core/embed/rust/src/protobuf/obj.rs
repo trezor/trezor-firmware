@@ -7,6 +7,7 @@ use crate::{
         ffi,
         gc::Gc,
         map::Map,
+        module::Module,
         obj::{Obj, ObjBase},
         qstr::Qstr,
         typ::Type,
@@ -15,8 +16,9 @@ use crate::{
 };
 
 use super::{
-    decode::Decoder,
+    decode::{protobuf_decode, Decoder},
     defs::{find_name_by_msg_offset, get_msg, MsgDef},
+    encode::{protobuf_encode, protobuf_len},
 };
 
 #[repr(C)]
@@ -289,3 +291,72 @@ pub extern "C" fn protobuf_debug_msg_type() -> &'static Type {
 pub extern "C" fn protobuf_debug_msg_def_type() -> &'static Type {
     MsgDefObj::obj_type()
 }
+
+pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
+    let block = || {
+        let name = Qstr::try_from(name)?;
+        let def = MsgDef::for_name(name.to_u16()).ok_or_else(|| Error::KeyError(name.into()))?;
+        let obj = MsgDefObj::alloc(def)?.into();
+        Ok(obj)
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+pub extern "C" fn protobuf_type_for_wire(wire_id: Obj) -> Obj {
+    let block = || {
+        let wire_id = u16::try_from(wire_id)?;
+        let def = MsgDef::for_wire_id(wire_id).ok_or_else(|| Error::KeyError(wire_id.into()))?;
+        let obj = MsgDefObj::alloc(def)?.into();
+        Ok(obj)
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[no_mangle]
+pub static mp_module_trezorproto: Module = obj_module! {
+    /// from typing_extensions import Self
+    ///
+    /// # XXX
+    /// # Note that MessageType "subclasses" are not true subclasses, but instead instances
+    /// # of the built-in metaclass MsgDef. MessageType instances are in fact instances of
+    /// # the built-in type Msg. That is why isinstance checks do not work, and instead the
+    /// # MessageTypeSubclass.is_type_of() method must be used.
+    ///
+    /// class MessageType:
+    ///     MESSAGE_NAME: ClassVar[str] = "MessageType"
+    ///     MESSAGE_WIRE_TYPE: ClassVar[int | None] = None
+    ///
+    ///     @classmethod
+    ///     def is_type_of(cls: type[Self], msg: "MessageType") -> TypeGuard[Self]:
+    ///         """Identify if the provided message belongs to this type."""
+    ///
+    /// mock:global
+    /// T = TypeVar("T", bound=MessageType)
+
+    Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorproto.to_obj(),
+
+    /// def type_for_name(name: str) -> type[MessageType]:
+    ///     """Find the message definition for the given protobuf name."""
+    Qstr::MP_QSTR_type_for_name => obj_fn_1!(protobuf_type_for_name).as_obj(),
+
+    /// def type_for_wire(wire_id: int) -> type[MessageType]:
+    ///     """Find the message definition for the given wire type (numeric identifier)."""
+    Qstr::MP_QSTR_type_for_wire => obj_fn_1!(protobuf_type_for_wire).as_obj(),
+
+    /// def decode(
+    ///     buffer: bytes,
+    ///     msg_type: type[T],
+    ///     enable_experimental: bool,
+    /// ) -> T:
+    ///     """Decode data in the buffer into the specified message type."""
+    Qstr::MP_QSTR_decode => obj_fn_3!(protobuf_decode).as_obj(),
+
+    /// def encoded_length(msg: MessageType) -> int:
+    ///     """Calculate length of encoding of the specified message."""
+    Qstr::MP_QSTR_encoded_length => obj_fn_1!(protobuf_len).as_obj(),
+
+    /// def encode(buffer: bytearray, msg: MessageType) -> int:
+    ///     """Encode the message into the specified buffer. Return length of
+    ///     encoding."""
+    Qstr::MP_QSTR_encode => obj_fn_2!(protobuf_encode).as_obj()
+};

@@ -206,8 +206,7 @@ SOURCE_MOD += [
 
 # rust mods
 SOURCE_MOD += [
-    'embed/extmod/rustmods/modtrezorproto.c',
-    'embed/extmod/rustmods/modtrezorui2.c',
+    'embed/extmod/rustmods.c',
 ]
 
 # modutime
