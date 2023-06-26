@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Pad},
     constant::{screen, WIDTH},
     display::Icon,
-    geometry::{Alignment, Insets, Point, Rect},
+    geometry::{Insets, Point, Rect},
     model_tt::{
         bootloader::theme::{
             button_bld, button_bld_menu, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
@@ -39,10 +39,7 @@ impl Menu {
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
-            title: Child::new(
-                Label::new("BOOTLOADER", Alignment::Start, TEXT_TITLE)
-                    .vertically_aligned(Alignment::Center),
-            ),
+            title: Child::new(Label::left_aligned("BOOTLOADER", TEXT_TITLE).vertically_centered()),
             close: Child::new(
                 Button::with_icon(Icon::new(X32))
                     .styled(button_bld_menu())

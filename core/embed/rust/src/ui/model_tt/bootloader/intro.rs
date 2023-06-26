@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Pad},
     constant::screen,
     display::Icon,
-    geometry::{Alignment, Insets, Point, Rect},
+    geometry::{Insets, Point, Rect},
     model_tt::{
         bootloader::theme::{
             button_bld, button_bld_menu, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
@@ -32,20 +32,14 @@ impl<'a> Intro<'a> {
     pub fn new(title: &'a str, content: &'a str) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
-            title: Child::new(
-                Label::new(title, Alignment::Start, TEXT_TITLE)
-                    .vertically_aligned(Alignment::Center),
-            ),
+            title: Child::new(Label::left_aligned(title, TEXT_TITLE).vertically_centered()),
             menu: Child::new(
                 Button::with_icon(Icon::new(MENU32))
                     .styled(button_bld_menu())
                     .with_expanded_touch_area(Insets::uniform(13)),
             ),
             host: Child::new(Button::with_text("INSTALL FIRMWARE").styled(button_bld())),
-            text: Child::new(
-                Label::new(content, Alignment::Start, TEXT_NORMAL)
-                    .vertically_aligned(Alignment::Center),
-            ),
+            text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
         }
     }
 }

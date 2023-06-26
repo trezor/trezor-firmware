@@ -8,7 +8,7 @@ use crate::{
             Split,
         },
         display::loader::{loader_circular_uncompress, LoaderDimensions},
-        geometry::{Alignment, Insets, Rect},
+        geometry::{Insets, Rect},
         util::animation_disabled,
     },
 };
@@ -43,8 +43,7 @@ where
         T: AsRef<str>,
     {
         let style = theme::label_coinjoin_progress();
-        let label = Label::centered("DO NOT DISCONNECT YOUR TREZOR!", style)
-            .vertically_aligned(Alignment::Center);
+        let label = Label::centered("DO NOT DISCONNECT YOUR TREZOR!", style).vertically_centered();
         let bg = painter::rect_painter(style.background_color, theme::BG);
         let inner = (bg, label);
         CoinJoinProgress::with_background(text, inner, indeterminate)
