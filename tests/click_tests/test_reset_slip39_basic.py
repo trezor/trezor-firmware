@@ -85,8 +85,8 @@ def test_reset_slip39_basic(
     # confirm checklist
     reset.confirm_read(debug, "Checklist")
 
-    # confirm backup warning (hold-to-confirm on TR)
-    reset.confirm_read(debug, "Caution", hold=True)
+    # confirm backup warning
+    reset.confirm_read(debug, "Caution", middle_r=True)
 
     all_words: list[str] = []
     for _ in range(num_of_shares):

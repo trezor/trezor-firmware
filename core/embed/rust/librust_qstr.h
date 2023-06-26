@@ -35,8 +35,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_button;
   MP_QSTR_button_event;
   MP_QSTR_case_sensitive;
+  MP_QSTR_center;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
+  MP_QSTR_confirm_backup;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
@@ -88,6 +90,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pages;
   MP_QSTR_paint;
   MP_QSTR_path;
+  MP_QSTR_popup_middle_button;
   MP_QSTR_progress_event;
   MP_QSTR_prompt;
   MP_QSTR_request_bip39;
@@ -137,6 +140,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_value;
   MP_QSTR_verb;
   MP_QSTR_verb_cancel;
+  MP_QSTR_warning;
   MP_QSTR_words;
   MP_QSTR_wrong_pin;
   MP_QSTR_xpubs;

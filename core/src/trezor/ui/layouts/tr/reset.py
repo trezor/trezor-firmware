@@ -6,7 +6,8 @@ from trezor.wire import ActionCancelled
 import trezorui2
 
 from ..common import interact
-from . import RustLayout, confirm_action, raise_if_not_confirmed
+from . import RustLayout, confirm_action, popup_middle_button
+
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 
@@ -23,9 +24,11 @@ async def show_share_words(
     group_index: int | None = None,
 ) -> None:
     # Showing words, asking for write down confirmation and preparing for check
+    br_type = "backup_words"
+    br_code = ButtonRequestType.ResetDevice
 
     if share_index is None:
-        title = "RECOVERY SEED"
+        title = "STANDARD BACKUP"
         check_title = "CHECK BACKUP"
     elif group_index is None:
         title = f"SHARE #{share_index + 1}"
@@ -34,28 +37,40 @@ async def show_share_words(
         title = f"G{group_index + 1} - SHARE {share_index + 1}"
         check_title = f"GROUP {group_index + 1} - SHARE {share_index + 1}"
 
-    await raise_if_not_confirmed(
-        interact(
+    # We want the option to go back from words to the previous screen
+    # (by sending CANCELLED)
+    while True:
+        await confirm_action(
+            ctx,
+            br_type,
+            title,
+            description=f"Write down all {len(share_words)} words in order.",
+            verb="SHOW WORDS",
+            verb_cancel=None,
+            br_code=br_code,
+        )
+
+        result = await interact(
             ctx,
             RustLayout(
-                trezorui2.show_share_words(  # type: ignore [Argument missing for parameter "pages"]
-                    title=title,
+                trezorui2.show_share_words(  # type: ignore [Arguments missing for parameters]
                     share_words=share_words,  # type: ignore [No parameter named "share_words"]
                 )
             ),
-            "backup_words",
-            ButtonRequestType.ResetDevice,
+            br_type,
+            br_code,
         )
-    )
+        if result is CONFIRMED:
+            break
 
     await confirm_action(
         ctx,
-        "backup_words",
+        br_type,
         check_title,
         description="Select the correct word for each position.",
         verb="CONTINUE",
         verb_cancel=None,
-        br_code=ButtonRequestType.ResetDevice,
+        br_code=br_code,
     )
 
 
@@ -253,13 +268,12 @@ async def slip39_advanced_prompt_group_threshold(
 
 
 async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
-    await confirm_action(
+    await popup_middle_button(
         ctx,
         "backup_warning",
-        "SHAMIR BACKUP" if slip39 else "WALLET BACKUP",
-        description="You can use your backup to recover your wallet at any time.",
-        verb="HOLD TO BEGIN",
-        hold=True,
+        "OK, I UNDERSTAND",
+        "REMEMBER",
+        "Never make a digital copy of your backup or upload it online!",
         br_code=ButtonRequestType.ResetDevice,
     )
 
@@ -273,4 +287,24 @@ async def show_success_backup(ctx: GenericContext) -> None:
         verb="CONTINUE",
         verb_cancel=None,
         br_code=ButtonRequestType.Success,
+    )
+
+
+async def show_reset_warning(
+    ctx: GenericContext,
+    br_type: str,
+    content: str,
+    subheader: str | None = None,
+    button: str = "TRY AGAIN",
+    br_code: ButtonRequestType = ButtonRequestType.Warning,
+) -> None:
+    await popup_middle_button(
+        ctx,
+        br_type,
+        button.upper(),
+        title="",
+        description=content,
+        warning=subheader or "",
+        center=True,
+        br_code=br_code,
     )

@@ -97,14 +97,15 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
                     };
                 }
                 // Drawing text
-                Op::Text(text) => {
+                Op::Text((text, is_complete)) => {
                     // Try to fit text on the current page and if they do not fit,
                     // return the appropriate OutOfBounds message
 
                     // Inserting the ellipsis at the very beginning of the text if needed
                     // (just once for the first Op::Text on the non-first page).
+                    // Also just for incomplete texts that were separated.
                     self.layout.continues_from_prev_page =
-                        skip_bytes > 0 && total_processed_chars == 0;
+                        skip_bytes > 0 && total_processed_chars == 0 && !is_complete;
 
                     let fit = self.layout.layout_text(text.as_ref(), cursor, sink);
 
@@ -146,15 +147,17 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
         let mut skipped = 0;
         ops_iter.filter_map(move |op| {
             match op {
-                Op::Text(text) if skipped < skip_bytes => {
+                Op::Text((text, _is_complete)) if skipped < skip_bytes => {
                     let skip_text_bytes_if_fits_partially = skip_bytes - skipped;
                     skipped = skipped.saturating_add(text.as_ref().len());
                     if skipped > skip_bytes {
                         // Fits partially
                         // Skipping some bytes at the beginning, leaving rest
-                        Some(Op::Text(
+                        // Signifying that the text is not complete
+                        Some(Op::Text((
                             text.skip_prefix(skip_text_bytes_if_fits_partially),
-                        ))
+                            false,
+                        )))
                     } else {
                         // Does not fit at all
                         None
@@ -184,15 +187,15 @@ impl<T: StringType + Clone> OpTextLayout<T> {
     }
 
     pub fn text(self, text: T) -> Self {
-        self.with_new_item(Op::Text(text))
+        self.with_new_item(Op::Text((text, true)))
     }
 
     pub fn newline(self) -> Self {
-        self.with_new_item(Op::Text("\n".into()))
+        self.text("\n".into())
     }
 
     pub fn newline_half(self) -> Self {
-        self.with_new_item(Op::Text("\r".into()))
+        self.text("\r".into())
     }
 
     pub fn next_page(self) -> Self {
@@ -238,7 +241,9 @@ impl<T: StringType + Clone> OpTextLayout<T> {
 #[derive(Clone)]
 pub enum Op<T: StringType> {
     /// Render text with current color and font.
-    Text(T),
+    /// Bool signifies whether the text is complete or not
+    /// (so we know whether to show ellipsis or not).
+    Text((T, bool)),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.

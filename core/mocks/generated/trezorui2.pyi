@@ -76,6 +76,11 @@ def confirm_reset_device(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_backup() -> object:
+    """Strongly recommend user to do backup."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def show_address_details(
     *,
     address: str,
@@ -147,6 +152,18 @@ def confirm_total(
 # rust/src/ui/model_tr/layout.rs
 def tutorial() -> object:
     """Show user how to interact with the device."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def popup_middle_button(
+    *,
+    button: str,
+    title: str = "",
+    warning: str = "",
+    description: str = "",
+    center: bool = False,
+) -> object:
+    """Show a popup with just a middle button."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -260,7 +277,6 @@ def select_word(
 # rust/src/ui/model_tr/layout.rs
 def show_share_words(
     *,
-    title: str,
     share_words: Iterable[str],
 ) -> object:
     """Shows a backup seed."""

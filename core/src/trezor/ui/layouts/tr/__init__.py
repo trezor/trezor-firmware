@@ -410,28 +410,27 @@ async def confirm_reset_device(
     )
 
 
-# TODO cleanup @ redesign
 async def confirm_backup(ctx: GenericContext) -> bool:
-    if await get_bool(
+    br_type = "backup_device"
+    br_code = ButtonRequestType.ResetDevice
+
+    result = await interact(
         ctx,
-        "backup_device",
-        "SUCCESS",
-        description="New wallet has been created.\nIt should be backed up now!",
-        verb="BACK UP",
-        verb_cancel="SKIP",
-        br_code=ButtonRequestType.ResetDevice,
-    ):
+        RustLayout(trezorui2.confirm_backup()),
+        br_type,
+        br_code,
+    )
+    if result is CONFIRMED:
         return True
 
     return await get_bool(
         ctx,
-        "backup_device",
-        "WARNING",
-        "Are you sure you want to skip the backup?\n",
-        "You can back up your Trezor once, at any time.",
+        br_type,
+        "SKIP BACKUP",
+        description="Are you sure you want to skip the backup?",
         verb="BACK UP",
         verb_cancel="SKIP",
-        br_code=ButtonRequestType.ResetDevice,
+        br_code=br_code,
     )
 
 
@@ -1234,6 +1233,32 @@ async def confirm_reenter_pin(
         action="Please re-enter to confirm.",
         verb="BEGIN",
         br_code=BR_TYPE_OTHER,
+    )
+
+
+async def popup_middle_button(
+    ctx: GenericContext,
+    br_type: str,
+    button: str,
+    title: str = "",
+    description: str = "",
+    warning: str = "",
+    center: bool = False,
+    br_code: ButtonRequestType = BR_TYPE_OTHER,
+) -> None:
+    await interact(
+        ctx,
+        RustLayout(
+            trezorui2.popup_middle_button(
+                button=button,
+                title=title,
+                warning=warning,
+                description=description,
+                center=center,
+            )
+        ),
+        br_type,
+        br_code,
     )
 
 

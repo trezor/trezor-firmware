@@ -339,14 +339,14 @@ def read_and_confirm_mnemonic_tr(
     debug: "DebugLink", choose_wrong: bool = False
 ) -> Generator[None, "ButtonRequest", Optional[str]]:
     mnemonic: list[str] = []
+    yield  # write down all 12 words in order
+    debug.press_yes()
     br = yield
     assert br.pages is not None
-    for i in range(br.pages - 1):
+    for _ in range(br.pages - 1):
         layout = debug.wait_layout()
-        # First two pages have just instructions
-        if i > 1:
-            words = layout.seed_words()
-            mnemonic.extend(words)
+        words = layout.seed_words()
+        mnemonic.extend(words)
         debug.press_right()
     debug.press_yes()
 
