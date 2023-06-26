@@ -12,7 +12,6 @@ use super::{
     zigzag,
 };
 
-#[no_mangle]
 pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
     let block = || {
         let obj = Gc::<MsgObj>::try_from(obj)?;
@@ -23,7 +22,6 @@ pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-#[no_mangle]
 pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
     let block = || {
         let obj = Gc::<MsgObj>::try_from(obj)?;

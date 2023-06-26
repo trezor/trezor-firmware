@@ -15,29 +15,6 @@ use super::{
     zigzag,
 };
 
-#[no_mangle]
-pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
-    let block = || {
-        let name = Qstr::try_from(name)?;
-        let def = MsgDef::for_name(name.to_u16()).ok_or_else(|| Error::KeyError(name.into()))?;
-        let obj = MsgDefObj::alloc(def)?.into();
-        Ok(obj)
-    };
-    unsafe { util::try_or_raise(block) }
-}
-
-#[no_mangle]
-pub extern "C" fn protobuf_type_for_wire(wire_id: Obj) -> Obj {
-    let block = || {
-        let wire_id = u16::try_from(wire_id)?;
-        let def = MsgDef::for_wire_id(wire_id).ok_or_else(|| Error::KeyError(wire_id.into()))?;
-        let obj = MsgDefObj::alloc(def)?.into();
-        Ok(obj)
-    };
-    unsafe { util::try_or_raise(block) }
-}
-
-#[no_mangle]
 pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
     let block = || {
         let def = Gc::<MsgDefObj>::try_from(msg_def)?;
