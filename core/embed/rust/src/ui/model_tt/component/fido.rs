@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{image::Image, Child, Component, Event, EventCtx, Label},
     display,
-    geometry::{Alignment, Insets, Rect},
+    geometry::{Insets, Rect},
     model_tt::component::{
         fido_icons::get_fido_icon_data,
         swipe::{Swipe, SwipeDirection},
@@ -60,8 +60,8 @@ where
         page_swipe.allow_left = scrollbar.has_next_page();
 
         Self {
-            app_name: Label::new(app_name, Alignment::Center, theme::TEXT_DEMIBOLD),
-            account_name: Label::new("".into(), Alignment::Center, theme::TEXT_DEMIBOLD),
+            app_name: Label::centered(app_name, theme::TEXT_DEMIBOLD),
+            account_name: Label::centered("".into(), theme::TEXT_DEMIBOLD),
             page_swipe,
             icon: Child::new(Image::new(icon_data)),
             get_account,

@@ -36,8 +36,8 @@ where
         Self::new(text, Alignment::Center, style)
     }
 
-    pub fn vertically_aligned(mut self, align: Alignment) -> Self {
-        self.vertical = align;
+    pub fn vertically_centered(mut self) -> Self {
+        self.vertical = Alignment::Center;
         self
     }
 

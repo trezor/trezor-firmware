@@ -6,7 +6,7 @@ use crate::{
         constant::{screen, HEIGHT},
         display::{self, Color, Font, Icon},
         event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Point},
+        geometry::{Alignment2D, Point},
         model_tt::{
             bootloader::{
                 confirm::ConfirmTitle,
@@ -162,12 +162,10 @@ extern "C" fn screen_install_confirm(
     } else {
         "DOWNGRADE FW"
     };
-    let title = Label::new(title_str, Alignment::Start, theme::TEXT_BOLD)
-        .vertically_aligned(Alignment::Center);
-    let msg = Label::new(version_str.as_ref(), Alignment::Start, theme::TEXT_NORMAL);
-    let alert = (!should_keep_seed).then_some(Label::new(
+    let title = Label::left_aligned(title_str, theme::TEXT_BOLD).vertically_centered();
+    let msg = Label::left_aligned(version_str.as_ref(), theme::TEXT_NORMAL);
+    let alert = (!should_keep_seed).then_some(Label::left_aligned(
         "SEED WILL BE ERASED!",
-        Alignment::Start,
         theme::TEXT_BOLD,
     ));
 
@@ -198,16 +196,11 @@ extern "C" fn screen_install_confirm(
 extern "C" fn screen_wipe_confirm() -> u32 {
     let icon = Icon::new(FIRE40);
 
-    let msg = Label::new(
+    let msg = Label::centered(
         "Are you sure you want to factory reset the device?",
-        Alignment::Center,
         TEXT_WIPE_NORMAL,
     );
-    let alert = Label::new(
-        "SEED AND FIRMWARE\nWILL BE ERASED!",
-        Alignment::Center,
-        TEXT_WIPE_BOLD,
-    );
+    let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!", TEXT_WIPE_BOLD);
 
     let right = Button::with_text("RESET").styled(button_wipe_confirm());
     let left = Button::with_text("CANCEL").styled(button_wipe_cancel());
