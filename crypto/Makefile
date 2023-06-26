@@ -83,6 +83,7 @@ CFLAGS += -DUSE_MONERO=1
 CFLAGS += -DUSE_NEM=1
 CFLAGS += -DUSE_CARDANO=1
 CFLAGS += -DUSE_INSECURE_PRNG=1
+CFLAGS += -DAES_128
 CFLAGS += $(shell pkg-config --cflags openssl)
 
 # disable certain optimizations and features when small footprint is required
@@ -97,7 +98,7 @@ SRCS  += ripemd160.c
 SRCS  += sha2.c
 SRCS  += sha3.c
 SRCS  += hasher.c
-SRCS  += aes/aescrypt.c aes/aeskey.c aes/aestab.c aes/aes_modes.c
+SRCS  += aes/aesccm.c aes/aescrypt.c aes/aeskey.c aes/aestab.c aes/aes_modes.c
 SRCS  += ed25519-donna/curve25519-donna-32bit.c ed25519-donna/curve25519-donna-helpers.c ed25519-donna/modm-donna-32bit.c
 SRCS  += ed25519-donna/ed25519-donna-basepoint-table.c ed25519-donna/ed25519-donna-32bit-tables.c ed25519-donna/ed25519-donna-impl-base.c
 SRCS  += ed25519-donna/ed25519.c ed25519-donna/curve25519-donna-scalarmult-base.c ed25519-donna/ed25519-sha3.c ed25519-donna/ed25519-keccak.c
