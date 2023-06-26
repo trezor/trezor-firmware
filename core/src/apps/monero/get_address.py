@@ -4,15 +4,12 @@ from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import MoneroGetAddress, MoneroAddress
-    from trezor.wire import Context
 
     from apps.common.keychain import Keychain
 
 
 @auto_keychain(__name__)
-async def get_address(
-    ctx: Context, msg: MoneroGetAddress, keychain: Keychain
-) -> MoneroAddress:
+async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddress:
     from trezor import wire
     from trezor.messages import MoneroAddress
     from trezor.ui.layouts import show_address
@@ -26,7 +23,7 @@ async def get_address(
     minor = msg.minor  # local_cache_attribute
     payment_id = msg.payment_id  # local_cache_attribute
 
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
     addr = creds.address
@@ -69,7 +66,6 @@ async def get_address(
 
     if msg.show_display:
         await show_address(
-            ctx,
             addr,
             address_qr="monero:" + addr,
             path=paths.address_n_to_str(msg.address_n),

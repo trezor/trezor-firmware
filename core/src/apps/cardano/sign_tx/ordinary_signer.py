@@ -34,7 +34,6 @@ class OrdinarySigner(Signer):
         # super() omitted intentionally
         is_network_id_verifiable = self._is_network_id_verifiable()
         await layout.confirm_tx(
-            self.ctx,
             msg.fee,
             msg.network_id,
             msg.protocol_magic,
@@ -92,10 +91,10 @@ class OrdinarySigner(Signer):
         is_minting = SCHEMA_MINT.match(witness_path)
 
         if is_minting:
-            await layout.confirm_witness_request(self.ctx, witness_path)
+            await layout.confirm_witness_request(witness_path)
         elif not is_payment and not is_staking:
             await self._fail_or_warn_path(witness_path, WITNESS_PATH_NAME)
         else:
             await self._show_if_showing_details(
-                layout.confirm_witness_request(self.ctx, witness_path)
+                layout.confirm_witness_request(witness_path)
             )

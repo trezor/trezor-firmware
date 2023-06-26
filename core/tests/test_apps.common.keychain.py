@@ -74,9 +74,7 @@ class TestKeychain(unittest.TestCase):
         cache.set(cache.APP_COMMON_SEED, seed)
 
         schema = PathSchema.parse("m/44'/1'", 0)
-        keychain = await_result(
-            get_keychain(wire.DUMMY_CONTEXT, "secp256k1", [schema])
-        )
+        keychain = await_result(get_keychain("secp256k1", [schema]))
 
         # valid path:
         self.assertIsNotNone(keychain.derive([H_(44), H_(1)]))
@@ -103,24 +101,24 @@ class TestKeychain(unittest.TestCase):
                 self.assertRaises(wire.DataError, keychain.derive, path)
 
         @with_slip44_keychain(PATTERN_SEP5, slip44_id=slip44_id)
-        async def func_id_only(ctx, msg, keychain):
+        async def func_id_only(msg, keychain):
             check_valid_paths(keychain, valid_path, testnet_path)
             check_invalid_paths(keychain, invalid_path)
 
         @with_slip44_keychain(PATTERN_SEP5, slip44_id=slip44_id, allow_testnet=False)
-        async def func_disallow_testnet(ctx, msg, keychain):
+        async def func_disallow_testnet(msg, keychain):
             check_valid_paths(keychain, valid_path)
             check_invalid_paths(keychain, testnet_path, invalid_path)
 
         @with_slip44_keychain(PATTERN_SEP5, slip44_id=slip44_id, curve="ed25519")
-        async def func_with_curve(ctx, msg, keychain):
+        async def func_with_curve(msg, keychain):
             self.assertEqual(keychain.curve, "ed25519")
             check_valid_paths(keychain, valid_path, testnet_path)
             check_invalid_paths(keychain, invalid_path)
 
-        await_result(func_id_only(wire.DUMMY_CONTEXT, None))
-        await_result(func_disallow_testnet(wire.DUMMY_CONTEXT, None))
-        await_result(func_with_curve(wire.DUMMY_CONTEXT, None))
+        await_result(func_id_only(None))
+        await_result(func_disallow_testnet(None))
+        await_result(func_with_curve(None))
 
     def test_lru_cache(self):
         class Deletable:

@@ -10,7 +10,6 @@ from .passphrase import get as get_passphrase
 
 if TYPE_CHECKING:
     from .paths import Bip32Path, Slip21Path
-    from trezor.wire import Context
     from trezor.crypto import bip32
 
 
@@ -50,7 +49,7 @@ if not utils.BITCOIN_ONLY:
     # We want to derive both the normal seed and the Cardano seed together, AND
     # expose a method for Cardano to do the same
 
-    async def derive_and_store_roots(ctx: Context) -> None:
+    async def derive_and_store_roots() -> None:
         from trezor import wire
 
         if not storage_device.is_initialized():
@@ -64,7 +63,7 @@ if not utils.BITCOIN_ONLY:
         if not need_seed and not need_cardano_secret:
             return
 
-        passphrase = await get_passphrase(ctx)
+        passphrase = await get_passphrase()
 
         if need_seed:
             common_seed = mnemonic.get_seed(passphrase)
@@ -76,8 +75,8 @@ if not utils.BITCOIN_ONLY:
             derive_and_store_secrets(passphrase)
 
     @storage_cache.stored_async(storage_cache.APP_COMMON_SEED)
-    async def get_seed(ctx: Context) -> bytes:
-        await derive_and_store_roots(ctx)
+    async def get_seed() -> bytes:
+        await derive_and_store_roots()
         common_seed = storage_cache.get(storage_cache.APP_COMMON_SEED)
         assert common_seed is not None
         return common_seed
@@ -87,8 +86,8 @@ else:
     # We use the simple version of `get_seed` that never needs to derive anything else.
 
     @storage_cache.stored_async(storage_cache.APP_COMMON_SEED)
-    async def get_seed(ctx: Context) -> bytes:
-        passphrase = await get_passphrase(ctx)
+    async def get_seed() -> bytes:
+        passphrase = await get_passphrase()
         return mnemonic.get_seed(passphrase)
 
 

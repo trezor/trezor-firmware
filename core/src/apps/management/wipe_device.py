@@ -1,11 +1,10 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.wire import GenericContext
     from trezor.messages import WipeDevice, Success
 
 
-async def wipe_device(ctx: GenericContext, msg: WipeDevice) -> Success:
+async def wipe_device(msg: WipeDevice) -> Success:
     import storage
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
@@ -14,7 +13,6 @@ async def wipe_device(ctx: GenericContext, msg: WipeDevice) -> Success:
     from apps.base import reload_settings_from_storage
 
     await confirm_action(
-        ctx,
         "confirm_wipe",
         "Wipe device",
         "All data will be erased.",

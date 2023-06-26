@@ -39,7 +39,7 @@ class TestMoneroProto(unittest.TestCase):
         mst = ubinascii.unhexlify(
             b"ca3bbe08a178a4508c3992a47ba775799e7626a365ed136e803fe5f2df2ce01c"
         )
-        st = State(None)
+        st = State()
         st.last_step = st.STEP_SIGN
         st.opening_key = mst
         st.current_input_index = 3

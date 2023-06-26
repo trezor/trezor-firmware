@@ -10,7 +10,6 @@ from .keychain import with_keychain_from_chain_id
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from trezor.messages import EthereumSignTx, EthereumTxAck, EthereumTokenInfo
-    from trezor.wire import Context
 
     from .definitions import Definitions
     from .keychain import MsgInSignTx
@@ -24,7 +23,6 @@ MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
 
 @with_keychain_from_chain_id
 async def sign_tx(
-    ctx: Context,
     msg: EthereumSignTx,
     keychain: Keychain,
     defs: Definitions,
@@ -45,19 +43,18 @@ async def sign_tx(
         raise DataError("Fee overflow")
     check_common_fields(msg)
 
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(ctx, msg, defs)
+    token, address_bytes, recipient, value = await handle_erc20(msg, defs)
 
     data_total = msg.data_length
 
-    await require_confirm_tx(ctx, recipient, value, defs.network, token)
+    await require_confirm_tx(recipient, value, defs.network, token)
     if token is None and msg.data_length > 0:
-        await require_confirm_data(ctx, msg.data_initial_chunk, data_total)
+        await require_confirm_data(msg.data_initial_chunk, data_total)
 
     await require_confirm_fee(
-        ctx,
         value,
         int.from_bytes(msg.gas_price, "big"),
         int.from_bytes(msg.gas_limit, "big"),
@@ -87,7 +84,7 @@ async def sign_tx(
         sha.extend(data)
 
     while data_left > 0:
-        resp = await send_request_chunk(ctx, data_left)
+        resp = await send_request_chunk(data_left)
         data_left -= len(resp.data_chunk)
         sha.extend(resp.data_chunk)
 
@@ -103,7 +100,6 @@ async def sign_tx(
 
 
 async def handle_erc20(
-    ctx: Context,
     msg: MsgInSignTx,
     definitions: Definitions,
 ) -> tuple[EthereumTokenInfo | None, bytes, bytes, int]:
@@ -127,7 +123,7 @@ async def handle_erc20(
         value = int.from_bytes(data_initial_chunk[36:68], "big")
 
         if token is tokens.UNKNOWN_TOKEN:
-            await require_confirm_unknown_token(ctx, address_bytes)
+            await require_confirm_unknown_token(address_bytes)
 
     return token, address_bytes, recipient, value
 
@@ -157,13 +153,14 @@ def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def send_request_chunk(ctx: Context, data_left: int) -> EthereumTxAck:
+async def send_request_chunk(data_left: int) -> EthereumTxAck:
     from trezor.messages import EthereumTxAck
+    from trezor.wire.context import call
 
     # TODO: layoutProgress ?
     req = EthereumTxRequest()
     req.data_length = min(data_left, 1024)
-    return await ctx.call(req, EthereumTxAck)
+    return await call(req, EthereumTxAck)
 
 
 def _sign_digest(

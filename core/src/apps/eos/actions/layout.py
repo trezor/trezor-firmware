@@ -7,7 +7,6 @@ from ..helpers import eos_asset_to_string, eos_name_to_string
 
 if TYPE_CHECKING:
     from typing import Iterable
-    from trezor.wire import Context
     from trezor.messages import (
         EosActionBuyRam,
         EosActionBuyRamBytes,
@@ -35,13 +34,11 @@ is_last = False
 # Because icon and br_code are almost always the same
 # (and also calling with positional arguments takes less space)
 async def _confirm_properties(
-    ctx: Context,
     br_type: str,
     title: str,
     props: Iterable[PropertyType],
 ) -> None:
     await confirm_properties(
-        ctx,
         br_type,
         title,
         props,
@@ -50,9 +47,8 @@ async def _confirm_properties(
     )
 
 
-async def confirm_action_buyram(ctx: Context, msg: EosActionBuyRam) -> None:
+async def confirm_action_buyram(msg: EosActionBuyRam) -> None:
     await _confirm_properties(
-        ctx,
         "confirm_buyram",
         "Buy RAM",
         (
@@ -63,9 +59,8 @@ async def confirm_action_buyram(ctx: Context, msg: EosActionBuyRam) -> None:
     )
 
 
-async def confirm_action_buyrambytes(ctx: Context, msg: EosActionBuyRamBytes) -> None:
+async def confirm_action_buyrambytes(msg: EosActionBuyRamBytes) -> None:
     await _confirm_properties(
-        ctx,
         "confirm_buyrambytes",
         "Buy RAM",
         (
@@ -76,7 +71,7 @@ async def confirm_action_buyrambytes(ctx: Context, msg: EosActionBuyRamBytes) ->
     )
 
 
-async def confirm_action_delegate(ctx: Context, msg: EosActionDelegate) -> None:
+async def confirm_action_delegate(msg: EosActionDelegate) -> None:
     props = [
         ("Sender:", eos_name_to_string(msg.sender)),
         ("Receiver:", eos_name_to_string(msg.receiver)),
@@ -91,16 +86,14 @@ async def confirm_action_delegate(ctx: Context, msg: EosActionDelegate) -> None:
         append(("Transfer:", "No"))
 
     await _confirm_properties(
-        ctx,
         "confirm_delegate",
         "Delegate",
         props,
     )
 
 
-async def confirm_action_sellram(ctx: Context, msg: EosActionSellRam) -> None:
+async def confirm_action_sellram(msg: EosActionSellRam) -> None:
     await _confirm_properties(
-        ctx,
         "confirm_sellram",
         "Sell RAM",
         (
@@ -110,9 +103,8 @@ async def confirm_action_sellram(ctx: Context, msg: EosActionSellRam) -> None:
     )
 
 
-async def confirm_action_undelegate(ctx: Context, msg: EosActionUndelegate) -> None:
+async def confirm_action_undelegate(msg: EosActionUndelegate) -> None:
     await _confirm_properties(
-        ctx,
         "confirm_undelegate",
         "Undelegate",
         (
@@ -124,22 +116,20 @@ async def confirm_action_undelegate(ctx: Context, msg: EosActionUndelegate) -> N
     )
 
 
-async def confirm_action_refund(ctx: Context, msg: EosActionRefund) -> None:
+async def confirm_action_refund(msg: EosActionRefund) -> None:
     await _confirm_properties(
-        ctx,
         "confirm_refund",
         "Refund",
         (("Owner:", eos_name_to_string(msg.owner)),),
     )
 
 
-async def confirm_action_voteproducer(ctx: Context, msg: EosActionVoteProducer) -> None:
+async def confirm_action_voteproducer(msg: EosActionVoteProducer) -> None:
     producers = msg.producers  # local_cache_attribute
 
     if msg.proxy and not producers:
         # PROXY
         await _confirm_properties(
-            ctx,
             "confirm_voteproducer",
             "Vote for proxy",
             (
@@ -151,7 +141,6 @@ async def confirm_action_voteproducer(ctx: Context, msg: EosActionVoteProducer) 
     elif producers:
         # PRODUCERS
         await _confirm_properties(
-            ctx,
             "confirm_voteproducer",
             "Vote for producers",
             (
@@ -163,16 +152,13 @@ async def confirm_action_voteproducer(ctx: Context, msg: EosActionVoteProducer) 
     else:
         # Cancel vote
         await _confirm_properties(
-            ctx,
             "confirm_voteproducer",
             "Cancel vote",
             (("Voter:", eos_name_to_string(msg.voter)),),
         )
 
 
-async def confirm_action_transfer(
-    ctx: Context, msg: EosActionTransfer, account: str
-) -> None:
+async def confirm_action_transfer(msg: EosActionTransfer, account: str) -> None:
     props = [
         ("From:", eos_name_to_string(msg.sender)),
         ("To:", eos_name_to_string(msg.receiver)),
@@ -182,14 +168,13 @@ async def confirm_action_transfer(
     if msg.memo is not None:
         props.append(("Memo", msg.memo[:512]))
     await _confirm_properties(
-        ctx,
         "confirm_transfer",
         "Transfer",
         props,
     )
 
 
-async def confirm_action_updateauth(ctx: Context, msg: EosActionUpdateAuth) -> None:
+async def confirm_action_updateauth(msg: EosActionUpdateAuth) -> None:
     props: list[PropertyType] = [
         ("Account:", eos_name_to_string(msg.account)),
         ("Permission:", eos_name_to_string(msg.permission)),
@@ -197,16 +182,14 @@ async def confirm_action_updateauth(ctx: Context, msg: EosActionUpdateAuth) -> N
     ]
     props.extend(authorization_fields(msg.auth))
     await _confirm_properties(
-        ctx,
         "confirm_updateauth",
         "Update Auth",
         props,
     )
 
 
-async def confirm_action_deleteauth(ctx: Context, msg: EosActionDeleteAuth) -> None:
+async def confirm_action_deleteauth(msg: EosActionDeleteAuth) -> None:
     await _confirm_properties(
-        ctx,
         "confirm_deleteauth",
         "Delete Auth",
         (
@@ -216,9 +199,8 @@ async def confirm_action_deleteauth(ctx: Context, msg: EosActionDeleteAuth) -> N
     )
 
 
-async def confirm_action_linkauth(ctx: Context, msg: EosActionLinkAuth) -> None:
+async def confirm_action_linkauth(msg: EosActionLinkAuth) -> None:
     await _confirm_properties(
-        ctx,
         "confirm_linkauth",
         "Link Auth",
         (
@@ -230,9 +212,8 @@ async def confirm_action_linkauth(ctx: Context, msg: EosActionLinkAuth) -> None:
     )
 
 
-async def confirm_action_unlinkauth(ctx: Context, msg: EosActionUnlinkAuth) -> None:
+async def confirm_action_unlinkauth(msg: EosActionUnlinkAuth) -> None:
     await _confirm_properties(
-        ctx,
         "confirm_unlinkauth",
         "Unlink Auth",
         (
@@ -243,7 +224,7 @@ async def confirm_action_unlinkauth(ctx: Context, msg: EosActionUnlinkAuth) -> N
     )
 
 
-async def confirm_action_newaccount(ctx: Context, msg: EosActionNewAccount) -> None:
+async def confirm_action_newaccount(msg: EosActionNewAccount) -> None:
     props: list[PropertyType] = [
         ("Creator:", eos_name_to_string(msg.creator)),
         ("Name:", eos_name_to_string(msg.name)),
@@ -251,18 +232,14 @@ async def confirm_action_newaccount(ctx: Context, msg: EosActionNewAccount) -> N
     props.extend(authorization_fields(msg.owner))
     props.extend(authorization_fields(msg.active))
     await _confirm_properties(
-        ctx,
         "confirm_newaccount",
         "New Account",
         props,
     )
 
 
-async def confirm_action_unknown(
-    ctx: Context, action: EosActionCommon, checksum: bytes
-) -> None:
+async def confirm_action_unknown(action: EosActionCommon, checksum: bytes) -> None:
     await confirm_properties(
-        ctx,
         "confirm_unknown",
         "Arbitrary data",
         (

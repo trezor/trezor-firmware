@@ -14,11 +14,9 @@ if TYPE_CHECKING:
         NEMTransactionCommon,
         NEMTransfer,
     )
-    from trezor.wire import Context
 
 
 async def ask_transfer(
-    ctx: Context,
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     encrypted: bool,
@@ -29,7 +27,6 @@ async def ask_transfer(
     if transfer.payload:
         # require_confirm_payload
         await confirm_text(
-            ctx,
             "confirm_payload",
             "Confirm payload",
             bytes(transfer.payload).decode(),
@@ -38,20 +35,19 @@ async def ask_transfer(
         )
 
     for mosaic in transfer.mosaics:
-        await _ask_transfer_mosaic(ctx, common, transfer, mosaic)
+        await _ask_transfer_mosaic(common, transfer, mosaic)
 
     # require_confirm_transfer
     await confirm_output(
-        ctx,
         transfer.recipient,
         f"{format_amount(_get_xem_amount(transfer), NEM_MAX_DIVISIBILITY)} XEM",
     )
 
-    await require_confirm_final(ctx, common.fee)
+    await require_confirm_final(common.fee)
 
 
 async def _ask_transfer_mosaic(
-    ctx: Context, common: NEMTransactionCommon, transfer: NEMTransfer, mosaic: NEMMosaic
+    common: NEMTransactionCommon, transfer: NEMTransfer, mosaic: NEMMosaic
 ) -> None:
     from trezor.enums import NEMMosaicLevy
     from trezor.ui.layouts import confirm_action, confirm_properties
@@ -66,7 +62,6 @@ async def _ask_transfer_mosaic(
 
     if definition:
         await confirm_properties(
-            ctx,
             "confirm_mosaic",
             "Confirm mosaic",
             (
@@ -93,7 +88,6 @@ async def _ask_transfer_mosaic(
             )
 
             await confirm_properties(
-                ctx,
                 "confirm_mosaic_levy",
                 "Confirm mosaic",
                 (("Confirm mosaic\nlevy fee of", levy_msg),),
@@ -101,7 +95,6 @@ async def _ask_transfer_mosaic(
 
     else:
         await confirm_action(
-            ctx,
             "confirm_mosaic_unknown",
             "Confirm mosaic",
             "Unknown mosaic!",
@@ -110,7 +103,6 @@ async def _ask_transfer_mosaic(
         )
 
         await confirm_properties(
-            ctx,
             "confirm_mosaic_transfer",
             "Confirm mosaic",
             (
@@ -133,7 +125,7 @@ def _get_xem_amount(transfer: NEMTransfer) -> int:
 
 
 async def ask_importance_transfer(
-    ctx: Context, common: NEMTransactionCommon, imp: NEMImportanceTransfer
+    common: NEMTransactionCommon, imp: NEMImportanceTransfer
 ) -> None:
     from trezor.enums import NEMImportanceTransferMode
     from ..layout import require_confirm_text
@@ -142,5 +134,5 @@ async def ask_importance_transfer(
         m = "Activate"
     else:
         m = "Deactivate"
-    await require_confirm_text(ctx, m + " remote harvesting?")
-    await require_confirm_final(ctx, common.fee)
+    await require_confirm_text(m + " remote harvesting?")
+    await require_confirm_final(common.fee)

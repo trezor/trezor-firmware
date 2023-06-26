@@ -22,11 +22,9 @@ if TYPE_CHECKING:
         EthereumStructMember,
         EthereumTokenInfo,
     )
-    from trezor.wire import Context
 
 
 def require_confirm_tx(
-    ctx: Context,
     to_bytes: bytes,
     value: int,
     network: EthereumNetworkInfo,
@@ -40,7 +38,6 @@ def require_confirm_tx(
     else:
         to_str = "new contract?"
     return confirm_output(
-        ctx,
         to_str,
         format_ethereum_amount(value, token, network),
         br_code=ButtonRequestType.SignTx,
@@ -48,7 +45,6 @@ def require_confirm_tx(
 
 
 async def require_confirm_fee(
-    ctx: Context,
     spending: int,
     gas_price: int,
     gas_limit: int,
@@ -56,13 +52,11 @@ async def require_confirm_fee(
     token: EthereumTokenInfo | None,
 ) -> None:
     await confirm_amount(
-        ctx,
         title="Confirm fee",
         description="Gas price:",
         amount=format_ethereum_amount(gas_price, None, network),
     )
     await confirm_total(
-        ctx,
         total_amount=format_ethereum_amount(spending, token, network),
         fee_amount=format_ethereum_amount(gas_price * gas_limit, None, network),
         total_label="Amount sent:",
@@ -71,7 +65,6 @@ async def require_confirm_fee(
 
 
 async def require_confirm_eip1559_fee(
-    ctx: Context,
     spending: int,
     max_priority_fee: int,
     max_gas_fee: int,
@@ -80,19 +73,16 @@ async def require_confirm_eip1559_fee(
     token: EthereumTokenInfo | None,
 ) -> None:
     await confirm_amount(
-        ctx,
         "Confirm fee",
         format_ethereum_amount(max_gas_fee, None, network),
         "Maximum fee per gas",
     )
     await confirm_amount(
-        ctx,
         "Confirm fee",
         format_ethereum_amount(max_priority_fee, None, network),
         "Priority fee per gas",
     )
     await confirm_total(
-        ctx,
         format_ethereum_amount(spending, token, network),
         format_ethereum_amount(max_gas_fee * gas_limit, None, network),
         total_label="Amount sent:",
@@ -100,15 +90,12 @@ async def require_confirm_eip1559_fee(
     )
 
 
-def require_confirm_unknown_token(
-    ctx: Context, address_bytes: bytes
-) -> Awaitable[None]:
+def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:
     from ubinascii import hexlify
     from trezor.ui.layouts import confirm_address
 
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
     return confirm_address(
-        ctx,
         "Unknown token",
         contract_address_hex,
         "Contract:",
@@ -117,22 +104,20 @@ def require_confirm_unknown_token(
     )
 
 
-def require_confirm_address(ctx: Context, address_bytes: bytes) -> Awaitable[None]:
+def require_confirm_address(address_bytes: bytes) -> Awaitable[None]:
     from ubinascii import hexlify
     from trezor.ui.layouts import confirm_address
 
     address_hex = "0x" + hexlify(address_bytes).decode()
     return confirm_address(
-        ctx,
         "Signing address",
         address_hex,
         br_code=ButtonRequestType.SignTx,
     )
 
 
-def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitable[None]:
+def require_confirm_data(data: bytes, data_total: int) -> Awaitable[None]:
     return confirm_blob(
-        ctx,
         "confirm_data",
         "Confirm data",
         data,
@@ -142,11 +127,10 @@ def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitabl
     )
 
 
-async def confirm_typed_data_final(ctx: Context) -> None:
+async def confirm_typed_data_final() -> None:
     from trezor.ui.layouts import confirm_action
 
     await confirm_action(
-        ctx,
         "confirm_typed_data_final",
         "Confirm typed data",
         "Really sign EIP-712 typed data?",
@@ -155,9 +139,8 @@ async def confirm_typed_data_final(ctx: Context) -> None:
     )
 
 
-def confirm_empty_typed_message(ctx: Context) -> Awaitable[None]:
+def confirm_empty_typed_message() -> Awaitable[None]:
     return confirm_text(
-        ctx,
         "confirm_empty_typed_message",
         "Confirm message",
         "",
@@ -165,7 +148,7 @@ def confirm_empty_typed_message(ctx: Context) -> Awaitable[None]:
     )
 
 
-async def should_show_domain(ctx: Context, name: bytes, version: bytes) -> bool:
+async def should_show_domain(name: bytes, version: bytes) -> bool:
     domain_name = decode_typed_data(name, "string")
     domain_version = decode_typed_data(version, "string")
 
@@ -175,7 +158,6 @@ async def should_show_domain(ctx: Context, name: bytes, version: bytes) -> bool:
         (ui.DEMIBOLD, domain_version),
     )
     return await should_show_more(
-        ctx,
         "Confirm domain",
         para,
         "Show full domain",
@@ -184,7 +166,6 @@ async def should_show_domain(ctx: Context, name: bytes, version: bytes) -> bool:
 
 
 async def should_show_struct(
-    ctx: Context,
     description: str,
     data_members: list[EthereumStructMember],
     title: str = "Confirm struct",
@@ -199,7 +180,6 @@ async def should_show_struct(
         (ui.NORMAL, ", ".join(field.name for field in data_members)),
     )
     return await should_show_more(
-        ctx,
         title,
         para,
         button_text,
@@ -208,14 +188,12 @@ async def should_show_struct(
 
 
 async def should_show_array(
-    ctx: Context,
     parent_objects: Iterable[str],
     data_type: str,
     size: int,
 ) -> bool:
     para = ((ui.NORMAL, format_plural("Array of {count} {plural}", size, data_type)),)
     return await should_show_more(
-        ctx,
         limit_str(".".join(parent_objects)),
         para,
         "Show full array",
@@ -224,7 +202,6 @@ async def should_show_array(
 
 
 async def confirm_typed_value(
-    ctx: Context,
     name: str,
     value: bytes,
     parent_objects: list[str],
@@ -247,7 +224,6 @@ async def confirm_typed_value(
 
     if field.data_type in (EthereumDataType.ADDRESS, EthereumDataType.BYTES):
         await confirm_blob(
-            ctx,
             "confirm_typed_value",
             title,
             data,
@@ -256,7 +232,6 @@ async def confirm_typed_value(
         )
     else:
         await confirm_text(
-            ctx,
             "confirm_typed_value",
             title,
             data,

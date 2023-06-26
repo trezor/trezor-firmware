@@ -8,7 +8,6 @@ from apps.common.paths import PathSchema, unharden
 
 if TYPE_CHECKING:
     from trezor.messages import CosiCommit
-    from trezor.wire import Context
 
 # This module implements the cosigner part of the CoSi collective signatures
 # as described in https://dedis.cs.yale.edu/dissent/papers/witness.pdf
@@ -55,16 +54,17 @@ def _decode_path(address_n: list[int]) -> str | None:
     return None
 
 
-async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
+async def cosi_commit(msg: CosiCommit) -> CosiSignature:
     import storage.cache as storage_cache
     from trezor.crypto import cosi
     from trezor.crypto.curve import ed25519
     from trezor.ui.layouts import confirm_blob, confirm_text
+    from trezor.wire.context import call
     from apps.common import paths
     from apps.common.keychain import get_keychain
 
-    keychain = await get_keychain(ctx, "ed25519", [SCHEMA_SLIP18, SCHEMA_SLIP26])
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    keychain = await get_keychain("ed25519", [SCHEMA_SLIP18, SCHEMA_SLIP26])
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     seckey = node.private_key()
@@ -78,7 +78,7 @@ async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
     if commitment is None:
         raise RuntimeError
 
-    sign_msg = await ctx.call(
+    sign_msg = await call(
         CosiCommitment(commitment=commitment, pubkey=pubkey), CosiSign
     )
 
@@ -87,14 +87,12 @@ async def cosi_commit(ctx: Context, msg: CosiCommit) -> CosiSignature:
 
     path_description = _decode_path(sign_msg.address_n)
     await confirm_text(
-        ctx,
         "cosi_confirm_key",
         "COSI KEYS",
         paths.address_n_to_str(sign_msg.address_n),
         path_description,
     )
     await confirm_blob(
-        ctx,
         "cosi_sign",
         "COSI DATA",
         sign_msg.data,

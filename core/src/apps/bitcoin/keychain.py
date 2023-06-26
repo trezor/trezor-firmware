@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from typing_extensions import Protocol
 
     from trezor.protobuf import MessageType
-    from trezor.wire import Context
 
     from trezor.messages import (
         GetAddress,
@@ -265,7 +264,6 @@ def _get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
 
 
 async def _get_keychain_for_coin(
-    ctx: Context,
     coin: coininfo.CoinInfo,
     unlock_schemas: Iterable[PathSchema] = (),
 ) -> Keychain:
@@ -273,7 +271,7 @@ async def _get_keychain_for_coin(
 
     schemas = _get_schemas_for_coin(coin, unlock_schemas)
     slip21_namespaces = [[b"SLIP-0019"], [b"SLIP-0024"]]
-    keychain = await get_keychain(ctx, coin.curve_name, schemas, slip21_namespaces)
+    keychain = await get_keychain(coin.curve_name, schemas, slip21_namespaces)
     return keychain
 
 
@@ -318,19 +316,18 @@ def _get_unlock_schemas(
 
 def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(
-        ctx: Context,
         msg: MsgIn,
         auth_msg: MessageType | None = None,
     ) -> MsgOut:
         coin = _get_coin_by_name(msg.coin_name)
         unlock_schemas = _get_unlock_schemas(msg, auth_msg, coin)
-        keychain = await _get_keychain_for_coin(ctx, coin, unlock_schemas)
+        keychain = await _get_keychain_for_coin(coin, unlock_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
-            return await func(ctx, msg, keychain, coin, auth_obj)
+            return await func(msg, keychain, coin, auth_obj)
         else:
             with keychain:
-                return await func(ctx, msg, keychain, coin)
+                return await func(msg, keychain, coin)
 
     return wrapper
 

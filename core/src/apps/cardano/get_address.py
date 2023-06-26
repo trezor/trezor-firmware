@@ -3,13 +3,12 @@ from typing import TYPE_CHECKING
 from . import seed
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
     from trezor.messages import CardanoGetAddress, CardanoAddress
 
 
 @seed.with_keychain
 async def get_address(
-    ctx: Context, msg: CardanoGetAddress, keychain: seed.Keychain
+    msg: CardanoGetAddress, keychain: seed.Keychain
 ) -> CardanoAddress:
     from trezor.messages import CardanoAddress
     from trezor import log, wire
@@ -36,10 +35,9 @@ async def get_address(
         # _display_address
         if should_show_credentials(address_parameters):
             await show_credentials(
-                ctx,
                 Credential.payment_credential(address_parameters),
                 Credential.stake_credential(address_parameters),
             )
-        await show_cardano_address(ctx, address_parameters, address, msg.protocol_magic)
+        await show_cardano_address(address_parameters, address, msg.protocol_magic)
 
     return CardanoAddress(address=address)

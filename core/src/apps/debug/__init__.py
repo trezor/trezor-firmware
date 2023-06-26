@@ -11,6 +11,7 @@ if __debug__:
 
     from trezor import log, loop, utils, wire
     from trezor.ui import display
+    from trezor.wire import context
     from trezor.enums import MessageType
     from trezor.messages import (
         DebugLinkLayout,
@@ -47,7 +48,7 @@ if __debug__:
 
     layout_change_chan = loop.chan()
 
-    DEBUG_CONTEXT: wire.Context | None = None
+    DEBUG_CONTEXT: context.Context | None = None
 
     LAYOUT_WATCHER_NONE = 0
     LAYOUT_WATCHER_STATE = 1
@@ -139,9 +140,7 @@ if __debug__:
             await DEBUG_CONTEXT.write(DebugLinkState(tokens=content_tokens))
         storage.layout_watcher = LAYOUT_WATCHER_NONE
 
-    async def dispatch_DebugLinkWatchLayout(
-        ctx: wire.Context, msg: DebugLinkWatchLayout
-    ) -> Success:
+    async def dispatch_DebugLinkWatchLayout(msg: DebugLinkWatchLayout) -> Success:
         from trezor import ui
 
         layout_change_chan.putters.clear()
@@ -152,16 +151,14 @@ if __debug__:
         return Success()
 
     async def dispatch_DebugLinkResetDebugEvents(
-        ctx: wire.Context, msg: DebugLinkResetDebugEvents
+        msg: DebugLinkResetDebugEvents,
     ) -> Success:
         # Resetting the debug events makes sure that the previous
         # events/layouts are not mixed with the new ones.
         storage.reset_debug_events()
         return Success()
 
-    async def dispatch_DebugLinkDecision(
-        ctx: wire.Context, msg: DebugLinkDecision
-    ) -> None:
+    async def dispatch_DebugLinkDecision(msg: DebugLinkDecision) -> None:
         from trezor import workflow
 
         workflow.idle_timer.touch()
@@ -194,7 +191,7 @@ if __debug__:
             loop.schedule(return_layout_change())
 
     async def dispatch_DebugLinkGetState(
-        ctx: wire.Context, msg: DebugLinkGetState
+        msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
         from trezor.messages import DebugLinkState
         from apps.common import mnemonic, passphrase
@@ -218,9 +215,7 @@ if __debug__:
 
         return m
 
-    async def dispatch_DebugLinkRecordScreen(
-        ctx: wire.Context, msg: DebugLinkRecordScreen
-    ) -> Success:
+    async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:
         if msg.target_directory:
             # In case emulator is restarted but we still want to record screenshots
             # into the same directory as before, we need to increment the refresh index,
@@ -235,18 +230,14 @@ if __debug__:
 
         return Success()
 
-    async def dispatch_DebugLinkReseedRandom(
-        ctx: wire.Context, msg: DebugLinkReseedRandom
-    ) -> Success:
+    async def dispatch_DebugLinkReseedRandom(msg: DebugLinkReseedRandom) -> Success:
         if msg.value is not None:
             from trezor.crypto import random
 
             random.reseed(msg.value)
         return Success()
 
-    async def dispatch_DebugLinkEraseSdCard(
-        ctx: wire.Context, msg: DebugLinkEraseSdCard
-    ) -> Success:
+    async def dispatch_DebugLinkEraseSdCard(msg: DebugLinkEraseSdCard) -> Success:
         from trezor import io
 
         sdcard = io.sdcard  # local_cache_attribute
@@ -271,8 +262,8 @@ if __debug__:
     def boot() -> None:
         register = workflow_handlers.register  # local_cache_attribute
 
-        register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkDecision) -> Coroutine[Any, Any, None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
-        register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkGetState) -> Coroutine[Any, Any, DebugLinkState | None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
+        register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore [Argument of type "(msg: DebugLinkDecision) -> Coroutine[Any, Any, None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
+        register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore [Argument of type "(msg: DebugLinkGetState) -> Coroutine[Any, Any, DebugLinkState | None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
         register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
         register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)
         register(MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard)

@@ -1,13 +1,12 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor import wire
     from trezor.utils import Writer, HashWriter
     from trezor.messages import EosTxActionAck
 
 
 async def process_action(
-    ctx: wire.Context, sha: HashWriter, action: EosTxActionAck, is_last: bool
+    sha: HashWriter, action: EosTxActionAck, is_last: bool
 ) -> None:
     from .. import helpers, writers
     from . import layout
@@ -26,71 +25,70 @@ async def process_action(
     if account == "eosio":
         if name == "buyram":
             assert action.buy_ram is not None  # _check_action
-            await layout.confirm_action_buyram(ctx, action.buy_ram)
+            await layout.confirm_action_buyram(action.buy_ram)
             writers.write_action_buyram(w, action.buy_ram)
         elif name == "buyrambytes":
             assert action.buy_ram_bytes is not None  # _check_action
-            await layout.confirm_action_buyrambytes(ctx, action.buy_ram_bytes)
+            await layout.confirm_action_buyrambytes(action.buy_ram_bytes)
             writers.write_action_buyrambytes(w, action.buy_ram_bytes)
         elif name == "sellram":
             assert action.sell_ram is not None  # _check_action
-            await layout.confirm_action_sellram(ctx, action.sell_ram)
+            await layout.confirm_action_sellram(action.sell_ram)
             writers.write_action_sellram(w, action.sell_ram)
         elif name == "delegatebw":
             assert action.delegate is not None  # _check_action
-            await layout.confirm_action_delegate(ctx, action.delegate)
+            await layout.confirm_action_delegate(action.delegate)
             writers.write_action_delegate(w, action.delegate)
         elif name == "undelegatebw":
             assert action.undelegate is not None  # _check_action
-            await layout.confirm_action_undelegate(ctx, action.undelegate)
+            await layout.confirm_action_undelegate(action.undelegate)
             writers.write_action_undelegate(w, action.undelegate)
         elif name == "refund":
             assert action.refund is not None  # _check_action
-            await layout.confirm_action_refund(ctx, action.refund)
+            await layout.confirm_action_refund(action.refund)
             writers.write_action_refund(w, action.refund)
         elif name == "voteproducer":
             assert action.vote_producer is not None  # _check_action
-            await layout.confirm_action_voteproducer(ctx, action.vote_producer)
+            await layout.confirm_action_voteproducer(action.vote_producer)
             writers.write_action_voteproducer(w, action.vote_producer)
         elif name == "updateauth":
             assert action.update_auth is not None  # _check_action
-            await layout.confirm_action_updateauth(ctx, action.update_auth)
+            await layout.confirm_action_updateauth(action.update_auth)
             writers.write_action_updateauth(w, action.update_auth)
         elif name == "deleteauth":
             assert action.delete_auth is not None  # _check_action
-            await layout.confirm_action_deleteauth(ctx, action.delete_auth)
+            await layout.confirm_action_deleteauth(action.delete_auth)
             writers.write_action_deleteauth(w, action.delete_auth)
         elif name == "linkauth":
             assert action.link_auth is not None  # _check_action
-            await layout.confirm_action_linkauth(ctx, action.link_auth)
+            await layout.confirm_action_linkauth(action.link_auth)
             writers.write_action_linkauth(w, action.link_auth)
         elif name == "unlinkauth":
             assert action.unlink_auth is not None  # _check_action
-            await layout.confirm_action_unlinkauth(ctx, action.unlink_auth)
+            await layout.confirm_action_unlinkauth(action.unlink_auth)
             writers.write_action_unlinkauth(w, action.unlink_auth)
         elif name == "newaccount":
             assert action.new_account is not None  # _check_action
-            await layout.confirm_action_newaccount(ctx, action.new_account)
+            await layout.confirm_action_newaccount(action.new_account)
             writers.write_action_newaccount(w, action.new_account)
         else:
             raise ValueError("Unrecognized action type for eosio")
     elif name == "transfer":
         assert action.transfer is not None  # _check_action
-        await layout.confirm_action_transfer(ctx, action.transfer, account)
+        await layout.confirm_action_transfer(action.transfer, account)
         writers.write_action_transfer(w, action.transfer)
     else:
-        await _process_unknown_action(ctx, w, action)
+        await _process_unknown_action(w, action)
 
     writers.write_action_common(sha, action.common)
     writers.write_bytes_prefixed(sha, w)
 
 
-async def _process_unknown_action(
-    ctx: wire.Context, w: Writer, action: EosTxActionAck
-) -> None:
+async def _process_unknown_action(w: Writer, action: EosTxActionAck) -> None:
     from trezor.crypto.hashlib import sha256
     from trezor.utils import HashWriter
     from trezor.messages import EosTxActionAck, EosTxActionRequest
+    from trezor.wire.context import call
     from .. import writers
     from . import layout
 
@@ -106,9 +104,7 @@ async def _process_unknown_action(
     bytes_left = unknown.data_size - len(data_chunk)
 
     while bytes_left != 0:
-        action = await ctx.call(
-            EosTxActionRequest(data_size=bytes_left), EosTxActionAck
-        )
+        action = await call(EosTxActionRequest(data_size=bytes_left), EosTxActionAck)
 
         if unknown is None:
             raise ValueError("Bad response. Unknown struct expected.")
@@ -120,7 +116,7 @@ async def _process_unknown_action(
         if bytes_left < 0:
             raise ValueError("Bad response. Buffer overflow.")
 
-    await layout.confirm_action_unknown(ctx, action.common, checksum.get_digest())
+    await layout.confirm_action_unknown(action.common, checksum.get_digest())
 
 
 def _check_action(action: EosTxActionAck, name: str, account: str) -> bool:

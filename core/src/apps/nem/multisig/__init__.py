@@ -8,11 +8,10 @@ if TYPE_CHECKING:
         NEMSignTx,
         NEMTransactionCommon,
     )
-    from trezor.wire import Context
 
 
-async def ask(ctx: Context, msg: NEMSignTx) -> None:
-    await layout.ask_multisig(ctx, msg)
+async def ask(msg: NEMSignTx) -> None:
+    await layout.ask_multisig(msg)
 
 
 def initiate(public_key: bytes, common: NEMTransactionCommon, inner_tx: bytes) -> bytes:
@@ -26,13 +25,12 @@ def cosign(
 
 
 async def aggregate_modification(
-    ctx: Context,
     public_key: bytes,
     common: NEMTransactionCommon,
     aggr: NEMAggregateModification,
     multisig: bool,
 ) -> bytes:
-    await layout.ask_aggregate_modification(ctx, common, aggr, multisig)
+    await layout.ask_aggregate_modification(common, aggr, multisig)
     w = serialize.serialize_aggregate_modification(common, aggr, public_key)
 
     for m in aggr.modifications:

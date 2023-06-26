@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
+from trezor.wire.context import wait as ctx_wait
 
 import trezorui2
 
@@ -11,7 +12,6 @@ from . import RustLayout
 if TYPE_CHECKING:
     from typing import Callable, Sequence
     from trezor.enums import BackupType
-    from trezor.wire import GenericContext
 
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
@@ -42,7 +42,6 @@ def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> li
 
 
 async def show_share_words(
-    ctx: GenericContext,
     share_words: Sequence[str],
     share_index: int | None = None,
     group_index: int | None = None,
@@ -57,7 +56,6 @@ async def show_share_words(
     pages = _split_share_into_pages(share_words)
 
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.show_share_words(
                 title=title,
@@ -72,7 +70,6 @@ async def show_share_words(
 
 
 async def select_word(
-    ctx: GenericContext,
     words: Sequence[str],
     share_index: int | None,
     checked_index: int,
@@ -93,7 +90,7 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    result = await ctx.wait(
+    result = await ctx_wait(
         RustLayout(
             trezorui2.select_word(
                 title=title,
@@ -108,9 +105,7 @@ async def select_word(
     return words[result]
 
 
-async def slip39_show_checklist(
-    ctx: GenericContext, step: int, backup_type: BackupType
-) -> None:
+async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
     from trezor.enums import BackupType
 
     assert backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
@@ -130,7 +125,6 @@ async def slip39_show_checklist(
     )
 
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.show_checklist(
                 title="BACKUP CHECKLIST",
@@ -147,7 +141,6 @@ async def slip39_show_checklist(
 
 
 async def _prompt_number(
-    ctx: GenericContext,
     title: str,
     description: Callable[[int], str],
     info: Callable[[int], str],
@@ -168,7 +161,6 @@ async def _prompt_number(
 
     while True:
         result = await interact(
-            ctx,
             num_input,
             br_name,
             ButtonRequestType.ResetDevice,
@@ -184,7 +176,7 @@ async def _prompt_number(
             assert isinstance(value, int)
             return value
 
-        await ctx.wait(
+        await ctx_wait(
             RustLayout(
                 trezorui2.show_simple(
                     title=None, description=info(value), button="OK, I UNDERSTAND"
@@ -195,7 +187,7 @@ async def _prompt_number(
 
 
 async def slip39_prompt_threshold(
-    ctx: GenericContext, num_of_shares: int, group_id: int | None = None
+    num_of_shares: int, group_id: int | None = None
 ) -> int:
     count = num_of_shares // 2 + 1
     # min value of share threshold is 2 unless the number of shares is 1
@@ -238,7 +230,6 @@ async def slip39_prompt_threshold(
         return text
 
     return await _prompt_number(
-        ctx,
         "SET THRESHOLD",
         description,
         info,
@@ -249,9 +240,7 @@ async def slip39_prompt_threshold(
     )
 
 
-async def slip39_prompt_number_of_shares(
-    ctx: GenericContext, group_id: int | None = None
-) -> int:
+async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
     count = 5
     min_count = 1
     max_count = 16
@@ -271,7 +260,6 @@ async def slip39_prompt_number_of_shares(
         info = f"Each recovery share is a sequence of 20 words. Next you will choose the threshold number of shares needed to form Group {group_id + 1}."
 
     return await _prompt_number(
-        ctx,
         "SET NUMBER OF SHARES",
         description,
         lambda i: info,
@@ -282,7 +270,7 @@ async def slip39_prompt_number_of_shares(
     )
 
 
-async def slip39_advanced_prompt_number_of_groups(ctx: GenericContext) -> int:
+async def slip39_advanced_prompt_number_of_groups() -> int:
     count = 5
     min_count = 2
     max_count = 16
@@ -290,7 +278,6 @@ async def slip39_advanced_prompt_number_of_groups(ctx: GenericContext) -> int:
     info = "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds."
 
     return await _prompt_number(
-        ctx,
         "SET NUMBER OF GROUPS",
         lambda i: description,
         lambda i: info,
@@ -301,9 +288,7 @@ async def slip39_advanced_prompt_number_of_groups(ctx: GenericContext) -> int:
     )
 
 
-async def slip39_advanced_prompt_group_threshold(
-    ctx: GenericContext, num_of_groups: int
-) -> int:
+async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
     count = num_of_groups // 2 + 1
     min_count = 1
     max_count = num_of_groups
@@ -311,7 +296,6 @@ async def slip39_advanced_prompt_group_threshold(
     info = "The group threshold specifies the number of groups required to recover your wallet."
 
     return await _prompt_number(
-        ctx,
         "SET GROUP THRESHOLD",
         lambda i: description,
         lambda i: info,
@@ -322,7 +306,7 @@ async def slip39_advanced_prompt_group_threshold(
     )
 
 
-async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
+async def show_warning_backup(slip39: bool) -> None:
     if slip39:
         description = (
             "Never make a digital copy of your shares and never upload them online."
@@ -332,7 +316,6 @@ async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
             "Never make a digital copy of your seed and never upload it online."
         )
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.show_info(
                 title=description,
@@ -347,8 +330,8 @@ async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
         raise ActionCancelled
 
 
-async def show_success_backup(ctx: GenericContext) -> None:
+async def show_success_backup() -> None:
     from . import show_success
 
     text = "Use your backup when you need to recover your wallet."
-    await show_success(ctx, "success_backup", text, "Your backup is done.")
+    await show_success("success_backup", text, "Your backup is done.")

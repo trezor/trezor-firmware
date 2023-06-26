@@ -12,8 +12,6 @@ if TYPE_CHECKING:
 
     from apps.common.keychain import Keychain
 
-    from trezor.wire import Context
-
     from trezor.messages import (
         EthereumGetAddress,
         EthereumSignMessage,
@@ -36,7 +34,7 @@ if TYPE_CHECKING:
     )
 
     HandlerAddressN = Callable[
-        [Context, MsgInAddressN, Keychain, definitions.Definitions],
+        [MsgInAddressN, Keychain, definitions.Definitions],
         Awaitable[MsgOut],
     ]
 
@@ -48,7 +46,7 @@ if TYPE_CHECKING:
     )
 
     HandlerChainId = Callable[
-        [Context, MsgInSignTx, Keychain, definitions.Definitions],
+        [MsgInSignTx, Keychain, definitions.Definitions],
         Awaitable[MsgOut],
     ]
 
@@ -122,13 +120,13 @@ def with_keychain_from_path(
     def decorator(
         func: HandlerAddressN[MsgInAddressN, MsgOut]
     ) -> Handler[MsgInAddressN, MsgOut]:
-        async def wrapper(ctx: Context, msg: MsgInAddressN) -> MsgOut:
+        async def wrapper(msg: MsgInAddressN) -> MsgOut:
             slip44 = _slip44_from_address_n(msg.address_n)
             defs = _defs_from_message(msg, slip44=slip44)
             schemas = _schemas_from_network(patterns, defs.network)
-            keychain = await get_keychain(ctx, CURVE, schemas)
+            keychain = await get_keychain(CURVE, schemas)
             with keychain:
-                return await func(ctx, msg, keychain, defs)
+                return await func(msg, keychain, defs)
 
         return wrapper
 
@@ -139,11 +137,11 @@ def with_keychain_from_chain_id(
     func: HandlerChainId[MsgInSignTx, MsgOut]
 ) -> Handler[MsgInSignTx, MsgOut]:
     # this is only for SignTx, and only PATTERN_ADDRESS is allowed
-    async def wrapper(ctx: Context, msg: MsgInSignTx) -> MsgOut:
+    async def wrapper(msg: MsgInSignTx) -> MsgOut:
         defs = _defs_from_message(msg, chain_id=msg.chain_id)
         schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
-        keychain = await get_keychain(ctx, CURVE, schemas)
+        keychain = await get_keychain(CURVE, schemas)
         with keychain:
-            return await func(ctx, msg, keychain, defs)
+            return await func(msg, keychain, defs)
 
     return wrapper

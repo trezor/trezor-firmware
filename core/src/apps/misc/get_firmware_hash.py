@@ -2,13 +2,12 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import GetFirmwareHash, FirmwareHash
-    from trezor.wire import Context
     from trezor.ui.layouts.common import ProgressLayout
 
 _progress_obj: ProgressLayout | None = None
 
 
-async def get_firmware_hash(ctx: Context, msg: GetFirmwareHash) -> FirmwareHash:
+async def get_firmware_hash(msg: GetFirmwareHash) -> FirmwareHash:
     from trezor.messages import FirmwareHash
     from trezor.utils import firmware_hash
     from trezor.ui.layouts.progress import progress

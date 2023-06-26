@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     )
     MsgIn = TypeVar("MsgIn", bound=CardanoMessages)
 
-    HandlerWithKeychain = Callable[[wire.Context, MsgIn, "Keychain"], Awaitable[MsgOut]]
+    HandlerWithKeychain = Callable[[MsgIn, "Keychain"], Awaitable[MsgOut]]
 
 
 class Keychain:
@@ -136,9 +136,7 @@ def derive_and_store_secrets(passphrase: str) -> None:
     cache.set(cache.APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
 
 
-async def _get_keychain_bip39(
-    ctx: wire.Context, derivation_type: CardanoDerivationType
-) -> Keychain:
+async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychain:
     from apps.common.seed import derive_and_store_roots
     from trezor.enums import CardanoDerivationType
 
@@ -146,7 +144,7 @@ async def _get_keychain_bip39(
         raise wire.NotInitialized("Device is not initialized")
 
     if derivation_type == CardanoDerivationType.LEDGER:
-        seed = await get_seed(ctx)
+        seed = await get_seed()
         return Keychain(cardano.from_seed_ledger(seed))
 
     if not cache.get(cache.APP_COMMON_DERIVE_CARDANO):
@@ -160,7 +158,7 @@ async def _get_keychain_bip39(
     # _get_secret
     secret = cache.get(cache_entry)
     if secret is None:
-        await derive_and_store_roots(ctx)
+        await derive_and_store_roots()
         secret = cache.get(cache_entry)
         assert secret is not None
 
@@ -168,20 +166,18 @@ async def _get_keychain_bip39(
     return Keychain(root)
 
 
-async def _get_keychain(
-    ctx: wire.Context, derivation_type: CardanoDerivationType
-) -> Keychain:
+async def _get_keychain(derivation_type: CardanoDerivationType) -> Keychain:
     if mnemonic.is_bip39():
-        return await _get_keychain_bip39(ctx, derivation_type)
+        return await _get_keychain_bip39(derivation_type)
     else:
         # derive the root node via SLIP-0023 https://github.com/satoshilabs/slips/blob/master/slip-0022.md
-        seed = await get_seed(ctx)
+        seed = await get_seed()
         return Keychain(cardano.from_seed_slip23(seed))
 
 
 def with_keychain(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
-    async def wrapper(ctx: wire.Context, msg: MsgIn) -> MsgOut:
-        keychain = await _get_keychain(ctx, msg.derivation_type)
-        return await func(ctx, msg, keychain)
+    async def wrapper(msg: MsgIn) -> MsgOut:
+        keychain = await _get_keychain(msg.derivation_type)
+        return await func(msg, keychain)
 
     return wrapper

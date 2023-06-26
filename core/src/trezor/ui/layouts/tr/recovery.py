@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Callable, Iterable
 
 from trezor.enums import ButtonRequestType
 
@@ -7,15 +7,10 @@ import trezorui2
 from ..common import button_request, interact
 from . import RustLayout, raise_if_not_confirmed, show_warning
 
-if TYPE_CHECKING:
-    from trezor.wire import GenericContext
-    from typing import Iterable, Callable
 
-
-async def request_word_count(ctx: GenericContext, dry_run: bool) -> int:
-    await button_request(ctx, "word_count", code=ButtonRequestType.MnemonicWordCount)
+async def request_word_count(dry_run: bool) -> int:
+    await button_request("word_count", code=ButtonRequestType.MnemonicWordCount)
     count = await interact(
-        ctx,
         RustLayout(trezorui2.select_word_count(dry_run=dry_run)),
         "word_count",
         ButtonRequestType.MnemonicWordCount,
@@ -24,9 +19,9 @@ async def request_word_count(ctx: GenericContext, dry_run: bool) -> int:
     return int(count)
 
 
-async def request_word(
-    ctx: GenericContext, word_index: int, word_count: int, is_slip39: bool
-) -> str:
+async def request_word(word_index: int, word_count: int, is_slip39: bool) -> str:
+    from trezor.wire.context import wait
+
     prompt = f"WORD {word_index + 1} OF {word_count}"
 
     if is_slip39:
@@ -34,12 +29,11 @@ async def request_word(
     else:
         word_choice = RustLayout(trezorui2.request_bip39(prompt=prompt))
 
-    word: str = await ctx.wait(word_choice)
+    word: str = await wait(word_choice)
     return word
 
 
 async def show_remaining_shares(
-    ctx: GenericContext,
     groups: Iterable[tuple[int, tuple[str, ...]]],  # remaining + list 3 words
     shares_remaining: list[int],
     group_threshold: int,
@@ -47,12 +41,9 @@ async def show_remaining_shares(
     raise NotImplementedError
 
 
-async def show_group_share_success(
-    ctx: GenericContext, share_index: int, group_index: int
-) -> None:
+async def show_group_share_success(share_index: int, group_index: int) -> None:
     await raise_if_not_confirmed(
         interact(
-            ctx,
             RustLayout(
                 trezorui2.show_group_share_success(
                     lines=[
@@ -70,7 +61,6 @@ async def show_group_share_success(
 
 
 async def continue_recovery(
-    ctx: GenericContext,
     button_label: str,
     text: str,
     subtext: str | None,
@@ -95,7 +85,6 @@ async def continue_recovery(
         )
     )
     result = await interact(
-        ctx,
         homepage,
         "recovery",
         ButtonRequestType.RecoveryHomepage,
@@ -104,11 +93,10 @@ async def continue_recovery(
 
 
 async def show_recovery_warning(
-    ctx: GenericContext,
     br_type: str,
     content: str,
     subheader: str | None = None,
     button: str = "TRY AGAIN",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
-    await show_warning(ctx, br_type, content, subheader, button, br_code)
+    await show_warning(br_type, content, subheader, button, br_code)
