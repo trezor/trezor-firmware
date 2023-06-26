@@ -5,18 +5,22 @@ use crate::{
     strutil::StringType,
     ui::{
         component::{
-            base::ComponentExt,
             paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
+        constant,
         display::{self, Font},
         geometry::Rect,
         util::animation_disabled,
     },
 };
 
-use super::super::{constant, theme};
+use super::super::theme;
+
+const BOTTOM_DESCRIPTION_MARGIN: i16 = 10;
+const LOADER_Y_OFFSET_TITLE: i16 = -10;
+const LOADER_Y_OFFSET_NO_TITLE: i16 = -20;
 
 pub struct Progress<T>
 where
@@ -44,12 +48,13 @@ where
         update_description: fn(&str) -> Result<T, Error>,
     ) -> Self {
         Self {
-            title: Label::centered(title, theme::TEXT_BOLD).into_child(),
+            title: Child::new(Label::centered(title, theme::TEXT_BOLD)),
             value: 0,
             loader_y_offset: 0,
             indeterminate,
-            description: Paragraphs::new(Paragraph::new(&theme::TEXT_BIG, description).centered())
-                .into_child(),
+            description: Child::new(Paragraphs::new(
+                Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
+            )),
             description_pad: Pad::with_background(theme::BG),
             update_description,
         }
@@ -72,10 +77,19 @@ where
             .chars()
             .filter(|c| *c == '\n')
             .count() as i16;
-        let (title, rest) = Self::AREA.split_top(self.title.inner().max_size().y);
-        let (loader, description) = rest.split_bottom(Font::BIG.line_height() * description_lines);
+
+        let (title, rest, loader_y_offset) = if self.title.inner().text().as_ref().is_empty() {
+            (Rect::zero(), Self::AREA, LOADER_Y_OFFSET_NO_TITLE)
+        } else {
+            let (title, rest) = Self::AREA.split_top(self.title.inner().max_size().y);
+            (title, rest, LOADER_Y_OFFSET_TITLE)
+        };
+
+        let (_loader, description) = rest.split_bottom(
+            BOTTOM_DESCRIPTION_MARGIN + Font::NORMAL.line_height() * description_lines,
+        );
         self.title.place(title);
-        self.loader_y_offset = loader.center().y - constant::screen().center().y;
+        self.loader_y_offset = loader_y_offset;
         self.description.place(description);
         self.description_pad.place(description);
         Self::AREA
@@ -88,7 +102,11 @@ where
                     ctx.request_paint();
                 }
                 self.description.mutate(ctx, |ctx, para| {
-                    if para.inner_mut().content().as_ref() != new_description {
+                    // NOTE: not doing any change for empty new descriptions
+                    // (currently, there is no use-case for deleting the description)
+                    if !new_description.is_empty()
+                        && para.inner_mut().content().as_ref() != new_description
+                    {
                         let new_description = unwrap!((self.update_description)(new_description));
                         para.inner_mut().update(new_description);
                         para.change_page(0); // Recompute bounding box.
@@ -112,7 +130,13 @@ where
                 None,
             );
         } else {
-            display::loader(self.value, self.loader_y_offset, theme::FG, theme::BG, None);
+            display::loader(
+                self.value,
+                self.loader_y_offset,
+                theme::FG,
+                theme::BG,
+                Some((theme::ICON_TICK_FAT, theme::FG)),
+            );
         }
         self.description_pad.paint();
         self.description.paint();

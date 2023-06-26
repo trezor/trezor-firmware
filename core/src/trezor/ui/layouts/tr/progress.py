@@ -44,29 +44,29 @@ def progress(
     )
 
 
-def bitcoin_progress(message: str) -> ProgressLayout:
-    return progress(message)
+def bitcoin_progress(description: str) -> ProgressLayout:
+    return progress("", description)
 
 
 def coinjoin_progress(message: str) -> ProgressLayout:
     # TODO: create show_progress_coinjoin for TR
-    return progress(message, description="Coinjoin")
+    return progress("Coinjoin", message)
     # return RustProgress(
     #     layout=trezorui2.show_progress_coinjoin(title=message, indeterminate=False)
     # )
 
 
 def pin_progress(message: str, description: str) -> ProgressLayout:
-    return progress(message, description=description)
+    return progress(message, description)
 
 
 def monero_keyimage_sync_progress() -> ProgressLayout:
-    return progress("SYNCING")
+    return progress("", "Syncing...")
 
 
 def monero_live_refresh_progress() -> ProgressLayout:
-    return progress("REFRESHING", indeterminate=True)
+    return progress("", "Refreshing...", indeterminate=True)
 
 
 def monero_transaction_progress_inner() -> ProgressLayout:
-    return progress("SIGNING TRANSACTION")
+    return progress("", "Signing transaction...")
