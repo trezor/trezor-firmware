@@ -7,7 +7,7 @@ from trezor.wire.context import wait as ctx_wait
 import trezorui2
 
 from ..common import interact
-from . import RustLayout
+from . import RustLayout, raise_if_not_confirmed
 
 if TYPE_CHECKING:
     from typing import Callable, Sequence
@@ -335,3 +335,26 @@ async def show_success_backup() -> None:
 
     text = "Use your backup when you need to recover your wallet."
     await show_success("success_backup", text, "Your backup is done.")
+
+
+async def show_reset_warning(
+    br_type: str,
+    content: str,
+    subheader: str | None = None,
+    button: str = "TRY AGAIN",
+    br_code: ButtonRequestType = ButtonRequestType.Warning,
+) -> None:
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(
+                trezorui2.show_warning(
+                    title=subheader or "",
+                    description=content,
+                    button=button.upper(),
+                    allow_cancel=False,
+                )
+            ),
+            br_type,
+            br_code,
+        )
+    )

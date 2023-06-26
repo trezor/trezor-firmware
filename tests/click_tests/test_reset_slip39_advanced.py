@@ -105,8 +105,8 @@ def test_reset_slip39_advanced(
         else:
             raise RuntimeError("not a supported combination")
 
-    # confirm backup warning (hold-to-confirm on TR)
-    reset.confirm_read(debug, "Caution", hold=True)
+    # confirm backup warning
+    reset.confirm_read(debug, "Caution", middle_r=True)
 
     all_words: list[str] = []
     for _ in range(group_count):

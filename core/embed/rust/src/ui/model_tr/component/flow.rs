@@ -39,10 +39,11 @@ where
 {
     pub fn new(pages: FlowPages<F, T>) -> Self {
         let current_page = pages.get(0);
+        let title = current_page.title().map(Title::new);
         Self {
             pages,
             current_page,
-            title: None,
+            title,
             content_area: Rect::zero(),
             title_area: Rect::zero(),
             scrollbar: Child::new(ScrollBar::to_be_filled_later()),
@@ -85,11 +86,11 @@ where
     /// position.
     fn change_current_page(&mut self, ctx: &mut EventCtx) {
         self.current_page = self.pages.get(self.page_counter);
-        if self.title.is_some() {
-            if let Some(title) = self.current_page.title() {
-                self.title = Some(Title::new(title));
-                self.title.place(self.title_area);
-            }
+        if let Some(title) = self.current_page.title() {
+            self.title = Some(Title::new(title));
+            self.title.place(self.title_area);
+        } else {
+            self.title = None;
         }
         let scrollbar_active_index = self
             .pages

@@ -581,20 +581,20 @@ class DebugLink:
         x, y = click
         return self.input(x=x, y=y, hold_ms=hold_ms, wait=True)
 
-    def press_yes(self, wait: bool = False) -> None:
-        self.input(button=messages.DebugButton.YES, wait=wait)
+    def press_yes(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(button=messages.DebugButton.YES, wait=wait)
 
-    def press_no(self, wait: bool = False) -> None:
-        self.input(button=messages.DebugButton.NO, wait=wait)
+    def press_no(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(button=messages.DebugButton.NO, wait=wait)
 
-    def press_info(self, wait: bool = False) -> None:
-        self.input(button=messages.DebugButton.INFO, wait=wait)
+    def press_info(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(button=messages.DebugButton.INFO, wait=wait)
 
-    def swipe_up(self, wait: bool = False) -> None:
-        self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
+    def swipe_up(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
 
-    def swipe_down(self, wait: bool = False) -> None:
-        self.input(swipe=messages.DebugSwipeDirection.DOWN, wait=wait)
+    def swipe_down(self, wait: bool = False) -> Optional[LayoutContent]:
+        return self.input(swipe=messages.DebugSwipeDirection.DOWN, wait=wait)
 
     @overload
     def swipe_right(self) -> None:

@@ -25,9 +25,7 @@ where
     cancel_btn_details: Option<ButtonDetails<U>>,
     /// Right button of the last screen
     confirm_btn_details: Option<ButtonDetails<U>>,
-    /// Left button of the last page
-    last_back_btn_details: Option<ButtonDetails<U>>,
-    /// Left button of every screen in the middle
+    /// Left button of every screen
     back_btn_details: Option<ButtonDetails<U>>,
     /// Right button of every screen apart the last one
     next_btn_details: Option<ButtonDetails<U>>,
@@ -47,8 +45,7 @@ where
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
-            back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
-            last_back_btn_details: Some(ButtonDetails::up_arrow_icon()),
+            back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
@@ -122,18 +119,15 @@ where
     }
 
     fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout<U> {
-        let btn_left = self.get_left_button_details(!has_prev, !has_next);
+        let btn_left = self.get_left_button_details(!has_prev);
         let btn_right = self.get_right_button_details(has_next);
         ButtonLayout::new(btn_left, None, btn_right)
     }
 
-    /// Get the left button details, depending whether the page is first, last,
-    /// or in the middle.
-    fn get_left_button_details(&self, is_first: bool, is_last: bool) -> Option<ButtonDetails<U>> {
+    /// Get the left button details, depending whether the page is first or not.
+    fn get_left_button_details(&self, is_first: bool) -> Option<ButtonDetails<U>> {
         if is_first {
             self.cancel_btn_details.clone()
-        } else if is_last {
-            self.last_back_btn_details.clone()
         } else {
             self.back_btn_details.clone()
         }

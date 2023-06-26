@@ -52,8 +52,8 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     # confirm back up
     reset.confirm_read(debug, "Success")
 
-    # confirm backup warning (hold-to-confirm on TR)
-    reset.confirm_read(debug, "Caution", hold=True)
+    # confirm backup warning
+    reset.confirm_read(debug, "Caution", middle_r=True)
 
     # read words
     words = reset.read_words(debug, messages.BackupType.Bip39)

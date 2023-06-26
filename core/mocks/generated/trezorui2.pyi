@@ -76,6 +76,11 @@ def confirm_reset_device(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_backup() -> object:
+    """Strongly recommend user to do backup."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def show_address_details(
     *,
     address: str,
@@ -285,7 +290,6 @@ def select_word(
 # rust/src/ui/model_tr/layout.rs
 def show_share_words(
     *,
-    title: str,
     share_words: Iterable[str],
 ) -> object:
     """Shows a backup seed."""

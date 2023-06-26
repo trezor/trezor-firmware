@@ -567,6 +567,15 @@ where
         )
     }
 
+    /// Left text and WIDE right arrow.
+    pub fn text_none_arrow_wide(text: T) -> Self {
+        Self::new(
+            Some(ButtonDetails::text(text)),
+            None,
+            Some(ButtonDetails::down_arrow_icon_wide()),
+        )
+    }
+
     /// Only right text.
     pub fn none_none_text(text: T) -> Self {
         Self::new(None, None, Some(ButtonDetails::text(text)))
