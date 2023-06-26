@@ -29,8 +29,8 @@ impl<T: StringType + Clone> FormattedText<T> {
         }
     }
 
-    pub fn vertically_aligned(mut self, align: Alignment) -> Self {
-        self.vertical = align;
+    pub fn vertically_centered(mut self) -> Self {
+        self.vertical = Alignment::Center;
         self
     }
 

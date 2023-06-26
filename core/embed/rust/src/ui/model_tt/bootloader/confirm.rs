@@ -3,7 +3,7 @@ use crate::ui::{
     constant,
     constant::screen,
     display::{Color, Icon},
-    geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
+    geometry::{Alignment2D, Insets, Offset, Point, Rect},
     model_tt::{
         bootloader::theme::{
             button_bld_menu, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING, CORNER_BUTTON_AREA,
@@ -69,19 +69,13 @@ impl<'a> Confirm<'a> {
             content_pad: Pad::with_background(bg_color),
             bg_color,
             title,
-            message: Child::new(message.vertically_aligned(Alignment::Center)),
-            alert: alert.map(|alert| Child::new(alert.vertically_aligned(Alignment::Center))),
+            message: Child::new(message.vertically_centered()),
+            alert: alert.map(|alert| Child::new(alert.vertically_centered())),
             left_button: Child::new(left_button),
             right_button: Child::new(right_button),
             info: info.map(|(title, text)| ConfirmInfo {
-                title: Child::new(
-                    Label::new(title, Alignment::Start, TEXT_TITLE)
-                        .vertically_aligned(Alignment::Center),
-                ),
-                text: Child::new(
-                    Label::new(text, Alignment::Start, TEXT_FINGERPRINT)
-                        .vertically_aligned(Alignment::Center),
-                ),
+                title: Child::new(Label::left_aligned(title, TEXT_TITLE).vertically_centered()),
+                text: Child::new(Label::left_aligned(text, TEXT_FINGERPRINT).vertically_centered()),
                 info_button: Child::new(
                     Button::with_icon(Icon::new(INFO32))
                         .styled(button_bld_menu())

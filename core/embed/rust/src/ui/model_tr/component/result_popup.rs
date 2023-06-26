@@ -8,7 +8,7 @@ use crate::{
         },
         constant::screen,
         display::toif::Icon,
-        geometry::{Alignment, Insets, LinearPlacement, Rect},
+        geometry::{Insets, LinearPlacement, Rect},
     },
 };
 
@@ -65,7 +65,7 @@ where
             area: Rect::zero(),
             pad,
             result_anim: Child::new(ResultAnim::new(icon)),
-            headline: headline.map(|a| Label::new(a, Alignment::Center, theme::TEXT_BOLD)),
+            headline: headline.map(|a| Label::centered(a, theme::TEXT_BOLD)),
             text: Child::new(p1),
             buttons,
             autoclose: false,

@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Never, Pad},
     constant::screen,
     display,
-    geometry::{Alignment::Center, Alignment2D, Offset, Point, Rect},
+    geometry::{Alignment2D, Offset, Point, Rect},
 };
 
 use super::super::{
@@ -25,9 +25,9 @@ pub struct ErrorScreen<T> {
 
 impl<T: AsRef<str>> ErrorScreen<T> {
     pub fn new(title: T, message: T, footer: T) -> Self {
-        let title = Label::new(title, Center, theme::TEXT_BOLD);
-        let message = Label::new(message, Center, theme::TEXT_NORMAL).vertically_aligned(Center);
-        let footer = Label::new(footer, Center, theme::TEXT_NORMAL).vertically_aligned(Center);
+        let title = Label::centered(title, theme::TEXT_BOLD);
+        let message = Label::centered(message, theme::TEXT_NORMAL).vertically_centered();
+        let footer = Label::centered(footer, theme::TEXT_NORMAL).vertically_centered();
 
         Self {
             bg: Pad::with_background(BG).with_clear(),

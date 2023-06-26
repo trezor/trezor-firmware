@@ -4,7 +4,7 @@ use crate::{
         component::{text::TextStyle, Child, Component, Event, EventCtx, Label, Never, Pad},
         constant::screen,
         display::{self, Color, Font, Icon},
-        geometry::{Alignment::Center, Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment2D, Insets, Offset, Point, Rect},
         model_tt::theme::FG,
     },
 };
@@ -51,7 +51,7 @@ impl<'a, T: AsRef<str>> ResultFooter<'a, T> {
     pub fn new(text: T, style: &'a ResultStyle) -> Self {
         Self {
             style,
-            text: Label::new(text, Center, style.title_style()).vertically_aligned(Center),
+            text: Label::centered(text, style.title_style()).vertically_centered(),
             area: Rect::zero(),
         }
     }
@@ -117,7 +117,7 @@ impl<'a, T: StringType> ResultScreen<'a, T> {
             footer_pad: Pad::with_background(style.bg_color),
             style,
             icon,
-            message: Child::new(Label::new(message, Center, style.message_style())),
+            message: Child::new(Label::centered(message, style.message_style())),
             footer: Child::new(ResultFooter::new(footer, style)),
         };
 

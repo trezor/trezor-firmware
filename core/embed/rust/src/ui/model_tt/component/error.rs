@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Never, Pad},
     constant::screen,
-    geometry::{Alignment::Center, Alignment2D, Point, Rect},
+    geometry::{Alignment2D, Point, Rect},
 };
 
 use crate::ui::model_tt::{
@@ -28,8 +28,8 @@ pub struct ErrorScreen<'a, T> {
 
 impl<T: AsRef<str>> ErrorScreen<'_, T> {
     pub fn new(title: T, message: T, footer: T) -> Self {
-        let title = Label::new(title, Center, STYLE.title_style());
-        let message = Label::new(message, Center, STYLE.message_style());
+        let title = Label::centered(title, STYLE.title_style());
+        let message = Label::centered(message, STYLE.message_style());
         let footer = ResultFooter::new(footer, STYLE);
 
         Self {

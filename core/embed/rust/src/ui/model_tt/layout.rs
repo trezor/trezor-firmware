@@ -486,7 +486,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             theme::label_title(),
             title,
             SwipePage::new(
-                FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center),
+                FormattedText::new(ops).vertically_centered(),
                 buttons,
                 theme::BG,
             ),

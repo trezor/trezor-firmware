@@ -543,8 +543,7 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
                         ops = ops.text_normal(address_label.clone()).newline();
                     }
                     ops = ops.text_mono(address.clone());
-                    let formatted =
-                        FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center);
+                    let formatted = FormattedText::new(ops).vertically_centered();
                     Page::new(btn_layout, btn_actions, formatted).with_title(address_title.clone())
                 }
                 1 => {
@@ -552,8 +551,7 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
                     let btn_layout = ButtonLayout::up_arrow_none_text("CONFIRM".into());
                     let btn_actions = ButtonActions::prev_none_confirm();
                     let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount.clone());
-                    let formatted =
-                        FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center);
+                    let formatted = FormattedText::new(ops).vertically_centered();
                     Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.clone())
                 }
                 _ => unreachable!(),

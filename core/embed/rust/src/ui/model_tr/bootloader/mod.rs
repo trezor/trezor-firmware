@@ -7,7 +7,7 @@ use crate::{
         constant::SCREEN,
         display::{self, Color, Font, Icon},
         event::ButtonEvent,
-        geometry::{Alignment, Alignment::Center, Alignment2D, Offset, Rect},
+        geometry::{Alignment2D, Offset, Rect},
         util::{from_c_array, from_c_str},
     },
 };
@@ -137,18 +137,16 @@ extern "C" fn screen_install_confirm(
         "DOWNGRADE FW"
     };
 
-    let message = Label::new(version_str.as_str(), Alignment::Start, theme::TEXT_NORMAL)
-        .vertically_aligned(Center);
-    let fingerprint = Label::new(
+    let message =
+        Label::left_aligned(version_str.as_str(), theme::TEXT_NORMAL).vertically_centered();
+    let fingerprint = Label::left_aligned(
         fingerprint_str,
-        Alignment::Start,
         theme::TEXT_NORMAL.with_line_breaking(BreakWordsNoHyphen),
     )
-    .vertically_aligned(Center);
+    .vertically_centered();
 
-    let alert = (!should_keep_seed).then_some(Label::new(
+    let alert = (!should_keep_seed).then_some(Label::left_aligned(
         "Seed will be erased!",
-        Alignment::Start,
         theme::TEXT_NORMAL,
     ));
 
@@ -159,12 +157,8 @@ extern "C" fn screen_install_confirm(
 
 #[no_mangle]
 extern "C" fn screen_wipe_confirm() -> u32 {
-    let message = Label::new(
-        "Seed and firmware will be erased!",
-        Alignment::Start,
-        theme::TEXT_NORMAL,
-    )
-    .vertically_aligned(Center);
+    let message = Label::left_aligned("Seed and firmware will be erased!", theme::TEXT_NORMAL)
+        .vertically_centered();
 
     let mut frame = Confirm::new(BLD_BG, "FACTORY RESET", message, None, "RESET");
 
@@ -278,15 +272,10 @@ extern "C" fn screen_connect() {
 
 #[no_mangle]
 extern "C" fn screen_wipe_success() {
-    let title = Label::new("Trezor Reset", Alignment::Center, theme::TEXT_BOLD)
-        .vertically_aligned(Alignment::Center);
+    let title = Label::centered("Trezor Reset", theme::TEXT_BOLD).vertically_centered();
 
-    let content = Label::new(
-        "Reconnect\nthe device",
-        Alignment::Center,
-        theme::TEXT_NORMAL,
-    )
-    .vertically_aligned(Alignment::Center);
+    let content =
+        Label::centered("Reconnect\nthe device", theme::TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
     show(&mut frame);
@@ -294,15 +283,10 @@ extern "C" fn screen_wipe_success() {
 
 #[no_mangle]
 extern "C" fn screen_wipe_fail() {
-    let title = Label::new("Reset failed", Alignment::Center, theme::TEXT_BOLD)
-        .vertically_aligned(Alignment::Center);
+    let title = Label::centered("Reset failed", theme::TEXT_BOLD).vertically_centered();
 
-    let content = Label::new(
-        "Please reconnect\nthe device",
-        Alignment::Center,
-        theme::TEXT_NORMAL,
-    )
-    .vertically_aligned(Alignment::Center);
+    let content =
+        Label::centered("Please reconnect\nthe device", theme::TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
     show(&mut frame);
@@ -325,15 +309,10 @@ extern "C" fn screen_boot_empty(_firmware_present: bool) {
 
 #[no_mangle]
 extern "C" fn screen_install_fail() {
-    let title = Label::new("Install failed", Alignment::Center, theme::TEXT_BOLD)
-        .vertically_aligned(Alignment::Center);
+    let title = Label::centered("Install failed", theme::TEXT_BOLD).vertically_centered();
 
-    let content = Label::new(
-        "Please reconnect\nthe device",
-        Alignment::Center,
-        theme::TEXT_NORMAL,
-    )
-    .vertically_aligned(Alignment::Center);
+    let content =
+        Label::centered("Please reconnect\nthe device", theme::TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
     show(&mut frame);
@@ -347,11 +326,9 @@ extern "C" fn screen_install_success(
 ) {
     let msg = unwrap!(unsafe { from_c_str(reboot_msg) });
 
-    let title = Label::new("Firmware installed", Alignment::Center, theme::TEXT_BOLD)
-        .vertically_aligned(Alignment::Center);
+    let title = Label::centered("Firmware installed", theme::TEXT_BOLD).vertically_centered();
 
-    let content = Label::new(msg, Alignment::Center, theme::TEXT_NORMAL)
-        .vertically_aligned(Alignment::Center);
+    let content = Label::centered(msg, theme::TEXT_NORMAL).vertically_centered();
 
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, complete_draw);
     show(&mut frame);

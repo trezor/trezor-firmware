@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Pad},
-    geometry::{Alignment, Alignment2D, Rect},
+    geometry::{Alignment2D, Rect},
 };
 
 use super::{
@@ -38,18 +38,12 @@ impl<'a> Intro<'a> {
     pub fn new(title: &'a str, content: &'a str) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
-            title: Child::new(
-                Label::new(title, Alignment::Center, TEXT_NORMAL)
-                    .vertically_aligned(Alignment::Center),
-            ),
+            title: Child::new(Label::centered(title, TEXT_NORMAL).vertically_centered()),
             buttons: Child::new(ButtonController::new(ButtonLayout::text_none_text(
                 LEFT_BUTTON_TEXT,
                 RIGHT_BUTTON_TEXT,
             ))),
-            text: Child::new(
-                Label::new(content, Alignment::Start, TEXT_NORMAL)
-                    .vertically_aligned(Alignment::Center),
-            ),
+            text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
         }
     }
 }
