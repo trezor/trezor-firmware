@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from trezor.messages import AuthorizeCoinJoin, Success
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
-    from trezor.wire import Context
 
 _MAX_COORDINATOR_LEN = const(36)
 _MAX_ROUNDS = const(500)
@@ -17,7 +16,7 @@ _MAX_COORDINATOR_FEE_RATE = 5 * pow(10, FEE_RATE_DECIMALS)  # 5 %
 
 @with_keychain
 async def authorize_coinjoin(
-    ctx: Context, msg: AuthorizeCoinJoin, keychain: Keychain, coin: CoinInfo
+    msg: AuthorizeCoinJoin, keychain: Keychain, coin: CoinInfo
 ) -> Success:
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
@@ -64,11 +63,10 @@ async def authorize_coinjoin(
         msg.max_fee_per_kvbyte / 1000, coin, include_shortcut=True
     )
 
-    await confirm_coinjoin(ctx, msg.max_rounds, max_fee_per_vbyte)
+    await confirm_coinjoin(msg.max_rounds, max_fee_per_vbyte)
 
     validation_path = msg.address_n + [0] * BIP32_WALLET_DEPTH
     await validate_path(
-        ctx,
         keychain,
         validation_path,
         address_n[0] == SLIP25_PURPOSE,
@@ -79,7 +77,6 @@ async def authorize_coinjoin(
 
     if msg.max_fee_per_kvbyte > coin.maxfee_kb:
         await confirm_metadata(
-            ctx,
             "fee_over_threshold",
             "High mining fee",
             "The mining fee of\n{}\nis unexpectedly high.",

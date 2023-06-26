@@ -37,7 +37,7 @@ async def init_transaction(
     mem_trace = state.mem_trace  # local_cache_attribute
     outputs = tsx_data.outputs  # local_cache_attribute
 
-    await paths.validate_path(state.ctx, keychain, address_n)
+    await paths.validate_path(keychain, address_n)
 
     state.creds = misc.get_creds(keychain, address_n, network_type)
     state.client_version = tsx_data.client_version or 0
@@ -57,7 +57,6 @@ async def init_transaction(
 
     # Ask for confirmation
     await layout.require_confirm_transaction(
-        state.ctx,
         state,
         tsx_data,
         state.creds.network_type,

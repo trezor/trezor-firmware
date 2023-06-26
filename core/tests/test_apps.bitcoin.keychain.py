@@ -15,7 +15,7 @@ class TestBitcoinKeychain(unittest.TestCase):
 
     def test_bitcoin(self):
         coin = _get_coin_by_name("Bitcoin")
-        keychain = await_result(_get_keychain_for_coin(wire.DUMMY_CONTEXT, coin))
+        keychain = await_result(_get_keychain_for_coin(coin))
         self.assertEqual(coin.coin_name, "Bitcoin")
 
         valid_addresses = (
@@ -46,7 +46,7 @@ class TestBitcoinKeychain(unittest.TestCase):
 
     def test_testnet(self):
         coin = _get_coin_by_name("Testnet")
-        keychain = await_result(_get_keychain_for_coin(wire.DUMMY_CONTEXT, coin))
+        keychain = await_result(_get_keychain_for_coin(coin))
         self.assertEqual(coin.coin_name, "Testnet")
 
         valid_addresses = (
@@ -77,7 +77,7 @@ class TestBitcoinKeychain(unittest.TestCase):
 
     def test_unspecified(self):
         coin = _get_coin_by_name(None)
-        keychain = await_result(_get_keychain_for_coin(wire.DUMMY_CONTEXT, coin))
+        keychain = await_result(_get_keychain_for_coin(coin))
         self.assertEqual(coin.coin_name, "Bitcoin")
         keychain.derive([H_(44), H_(0), H_(0), 0, 0])
 
@@ -95,7 +95,7 @@ class TestAltcoinKeychains(unittest.TestCase):
 
     def test_bcash(self):
         coin = _get_coin_by_name("Bcash")
-        keychain = await_result(_get_keychain_for_coin(wire.DUMMY_CONTEXT, coin))
+        keychain = await_result(_get_keychain_for_coin(coin))
         self.assertEqual(coin.coin_name, "Bcash")
 
         self.assertFalse(coin.segwit)
@@ -132,7 +132,7 @@ class TestAltcoinKeychains(unittest.TestCase):
 
     def test_litecoin(self):
         coin = _get_coin_by_name("Litecoin")
-        keychain = await_result(_get_keychain_for_coin(wire.DUMMY_CONTEXT, coin))
+        keychain = await_result(_get_keychain_for_coin(coin))
         self.assertEqual(coin.coin_name, "Litecoin")
 
         self.assertTrue(coin.segwit)

@@ -11,7 +11,6 @@ if not utils.BITCOIN_ONLY:
 if TYPE_CHECKING:
     from typing import Protocol
 
-    from trezor.wire import Context
     from trezor.messages import (
         SignTx,
         TxAckInput,
@@ -54,7 +53,6 @@ if TYPE_CHECKING:
 
 @with_keychain
 async def sign_tx(
-    ctx: Context,
     msg: SignTx,
     keychain: Keychain,
     coin: CoinInfo,
@@ -62,6 +60,7 @@ async def sign_tx(
 ) -> TxRequest:
     from trezor.enums import RequestType
     from trezor.messages import TxRequest
+    from trezor.wire.context import call
 
     from ..common import BITCOIN_NAMES
     from . import approvers, bitcoin, helpers, progress
@@ -93,9 +92,9 @@ async def sign_tx(
             assert TxRequest.is_type_of(req)
             if req.request_type == RequestType.TXFINISHED:
                 return req
-            res = await ctx.call(req, request_class)
+            res = await call(req, request_class)
         elif isinstance(req, helpers.UiConfirm):
-            res = await req.confirm_dialog(ctx)
+            res = await req.confirm_dialog()
             progress.progress.report_init()
         else:
             raise TypeError("Invalid signing instruction")

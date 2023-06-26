@@ -2,13 +2,12 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import GetECDHSessionKey, ECDHSessionKey
-    from trezor.wire import Context
 
 # This module implements the SLIP-0017 Elliptic Curve Diffie-Hellman algorithm, using a
 # deterministic hierarchy, see https://github.com/satoshilabs/slips/blob/master/slip-0017.md.
 
 
-async def get_ecdh_session_key(ctx: Context, msg: GetECDHSessionKey) -> ECDHSessionKey:
+async def get_ecdh_session_key(msg: GetECDHSessionKey) -> ECDHSessionKey:
     from trezor.ui.layouts import confirm_address
     from .sign_identity import (
         get_identity_path,
@@ -24,13 +23,12 @@ async def get_ecdh_session_key(ctx: Context, msg: GetECDHSessionKey) -> ECDHSess
     peer_public_key = msg.peer_public_key  # local_cache_attribute
     curve_name = msg.ecdsa_curve_name or "secp256k1"
 
-    keychain = await get_keychain(ctx, curve_name, [AlwaysMatchingSchema])
+    keychain = await get_keychain(curve_name, [AlwaysMatchingSchema])
     identity = serialize_identity(msg_identity)
 
     # require_confirm_ecdh_session_key
     proto = msg_identity.proto.upper() if msg_identity.proto else "identity"
     await confirm_address(
-        ctx,
         f"Decrypt {proto}",
         serialize_identity_without_proto(msg_identity),
         None,

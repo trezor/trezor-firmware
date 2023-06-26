@@ -597,7 +597,7 @@ def _confirm_fido_choose(title: str, credentials: list[Credential]) -> Awaitable
     app = knownapps.by_rp_id_hash(repr_credential.rp_id_hash)
     icon_name = None if app is None else app.icon_name
     return confirm_fido(
-        None, title, app_name, icon_name, [c.account_name() for c in credentials]
+        title, app_name, icon_name, [c.account_name() for c in credentials]
     )
 
 
@@ -643,7 +643,7 @@ class State:
     def timeout_ms(self) -> int:
         raise NotImplementedError
 
-    async def confirm_dialog(self) -> bool | "State":
+    async def confirm_dialog(self) -> "bool | State":
         raise NotImplementedError
 
     async def on_confirm(self) -> None:
@@ -762,7 +762,7 @@ class Fido2Unlock(Fido2State):
         self.resp: Cmd | None = None
         self.dialog_mgr = dialog_mgr
 
-    async def confirm_dialog(self) -> bool | "State":
+    async def confirm_dialog(self) -> "bool | State":
         if not await verify_user(KeepaliveCallback(self.cid, self.iface)):
             return False
 

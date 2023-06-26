@@ -4,13 +4,12 @@ from ubinascii import hexlify
 from . import seed
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
     from trezor.messages import CardanoGetPublicKey, CardanoPublicKey
 
 
 @seed.with_keychain
 async def get_public_key(
-    ctx: Context, msg: CardanoGetPublicKey, keychain: seed.Keychain
+    msg: CardanoGetPublicKey, keychain: seed.Keychain
 ) -> CardanoPublicKey:
     from trezor import log, wire
     from trezor.ui.layouts import show_pubkey
@@ -20,7 +19,6 @@ async def get_public_key(
     address_n = msg.address_n  # local_cache_attribute
 
     await paths.validate_path(
-        ctx,
         keychain,
         address_n,
         # path must match the PUBKEY schema
@@ -35,7 +33,7 @@ async def get_public_key(
         raise wire.ProcessError("Deriving public key failed")
 
     if msg.show_display:
-        await show_pubkey(ctx, hexlify(key.node.public_key).decode())
+        await show_pubkey(hexlify(key.node.public_key).decode())
     return key
 
 

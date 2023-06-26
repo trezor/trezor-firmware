@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
     from apps.monero.xmr.crypto import Point, Scalar
     from apps.monero.xmr.credentials import AccountCreds
     from trezor.messages import MoneroTransactionDestinationEntry
@@ -19,20 +18,16 @@ class State:
     STEP_ALL_OUT = 500
     STEP_SIGN = 600
 
-    def __init__(self, ctx: Context) -> None:
+    def __init__(self) -> None:
         from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
         from apps.monero.xmr.mlsag_hasher import PreMlsagHasher
         from apps.monero.xmr import crypto
 
-        self.ctx = ctx
-
-        """
-        Account credentials
-        type: AccountCreds
-        - view private/public key
-        - spend private/public key
-        - and its corresponding address
-        """
+        # Account credentials
+        # type: AccountCreds
+        # - view private/public key
+        # - spend private/public key
+        # - and its corresponding address
         self.creds: AccountCreds | None = None
 
         # HMAC/encryption keys used to protect offloaded data

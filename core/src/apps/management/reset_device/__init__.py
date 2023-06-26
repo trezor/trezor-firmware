@@ -13,7 +13,6 @@ if __debug__:
 
 if TYPE_CHECKING:
     from trezor.messages import ResetDevice
-    from trezor.wire import Context
     from trezor.messages import Success
 
 
@@ -23,7 +22,7 @@ BAK_T_SLIP39_ADVANCED = BackupType.Slip39_Advanced  # global_import_cache
 _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
 
 
-async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
+async def reset_device(msg: ResetDevice) -> Success:
     from trezor import config, utils
     from apps.common.request_pin import request_pin_confirm
     from trezor.ui.layouts import (
@@ -33,6 +32,7 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
     from trezor.crypto import bip39, random
     from trezor.messages import Success, EntropyAck, EntropyRequest
     from trezor.pin import render_empty_loader
+    from trezor.wire.context import call
 
     backup_type = msg.backup_type  # local_cache_attribute
 
@@ -49,7 +49,7 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
         title = f"Create wallet{delimiter}(Super Shamir)"
     else:
         title = "Create wallet"
-    await confirm_reset_device(ctx, title)
+    await confirm_reset_device(title)
 
     # Rendering empty loader so users do not feel a freezing screen
     render_empty_loader("PROCESSING", "")
@@ -59,7 +59,7 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
 
     # request and set new PIN
     if msg.pin_protection:
-        newpin = await request_pin_confirm(ctx)
+        newpin = await request_pin_confirm()
         if not config.change_pin("", newpin, None, None):
             raise ProcessError("Failed to set PIN")
 
@@ -68,10 +68,10 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
     if __debug__:
         storage.debug.reset_internal_entropy = int_entropy
     if msg.display_random:
-        await layout.show_internal_entropy(ctx, int_entropy)
+        await layout.show_internal_entropy(int_entropy)
 
     # request external entropy and compute the master secret
-    entropy_ack = await ctx.call(EntropyRequest(), EntropyAck)
+    entropy_ack = await call(EntropyRequest(), EntropyAck)
     ext_entropy = entropy_ack.entropy
     # For SLIP-39 this is the Encrypted Master Secret
     secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
@@ -94,11 +94,11 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
 
     # If doing backup, ask the user to confirm.
     if perform_backup:
-        perform_backup = await confirm_backup(ctx)
+        perform_backup = await confirm_backup()
 
     # generate and display backup information for the master secret
     if perform_backup:
-        await backup_seed(ctx, backup_type, secret)
+        await backup_seed(backup_type, secret)
 
     # write settings and master secret into storage
     if msg.label is not None:
@@ -113,19 +113,19 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
 
     # if we backed up the wallet, show success message
     if perform_backup:
-        await layout.show_backup_success(ctx)
+        await layout.show_backup_success()
 
     return Success(message="Initialized")
 
 
-async def _backup_slip39_basic(ctx: Context, encrypted_master_secret: bytes) -> None:
+async def _backup_slip39_basic(encrypted_master_secret: bytes) -> None:
     # get number of shares
-    await layout.slip39_show_checklist(ctx, 0, BAK_T_SLIP39_BASIC)
-    shares_count = await layout.slip39_prompt_number_of_shares(ctx)
+    await layout.slip39_show_checklist(0, BAK_T_SLIP39_BASIC)
+    shares_count = await layout.slip39_prompt_number_of_shares()
 
     # get threshold
-    await layout.slip39_show_checklist(ctx, 1, BAK_T_SLIP39_BASIC)
-    threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
+    await layout.slip39_show_checklist(1, BAK_T_SLIP39_BASIC)
+    threshold = await layout.slip39_prompt_threshold(shares_count)
 
     identifier = storage_device.get_slip39_identifier()
     iteration_exponent = storage_device.get_slip39_iteration_exponent()
@@ -142,27 +142,25 @@ async def _backup_slip39_basic(ctx: Context, encrypted_master_secret: bytes) -> 
     )[0]
 
     # show and confirm individual shares
-    await layout.slip39_show_checklist(ctx, 2, BAK_T_SLIP39_BASIC)
-    await layout.slip39_basic_show_and_confirm_shares(ctx, mnemonics)
+    await layout.slip39_show_checklist(2, BAK_T_SLIP39_BASIC)
+    await layout.slip39_basic_show_and_confirm_shares(mnemonics)
 
 
-async def _backup_slip39_advanced(ctx: Context, encrypted_master_secret: bytes) -> None:
+async def _backup_slip39_advanced(encrypted_master_secret: bytes) -> None:
     # get number of groups
-    await layout.slip39_show_checklist(ctx, 0, BAK_T_SLIP39_ADVANCED)
-    groups_count = await layout.slip39_advanced_prompt_number_of_groups(ctx)
+    await layout.slip39_show_checklist(0, BAK_T_SLIP39_ADVANCED)
+    groups_count = await layout.slip39_advanced_prompt_number_of_groups()
 
     # get group threshold
-    await layout.slip39_show_checklist(ctx, 1, BAK_T_SLIP39_ADVANCED)
-    group_threshold = await layout.slip39_advanced_prompt_group_threshold(
-        ctx, groups_count
-    )
+    await layout.slip39_show_checklist(1, BAK_T_SLIP39_ADVANCED)
+    group_threshold = await layout.slip39_advanced_prompt_group_threshold(groups_count)
 
     # get shares and thresholds
-    await layout.slip39_show_checklist(ctx, 2, BAK_T_SLIP39_ADVANCED)
+    await layout.slip39_show_checklist(2, BAK_T_SLIP39_ADVANCED)
     groups = []
     for i in range(groups_count):
-        share_count = await layout.slip39_prompt_number_of_shares(ctx, i)
-        share_threshold = await layout.slip39_prompt_threshold(ctx, share_count, i)
+        share_count = await layout.slip39_prompt_number_of_shares(i)
+        share_threshold = await layout.slip39_prompt_threshold(share_count, i)
         groups.append((share_threshold, share_count))
 
     identifier = storage_device.get_slip39_identifier()
@@ -180,7 +178,7 @@ async def _backup_slip39_advanced(ctx: Context, encrypted_master_secret: bytes) 
     )
 
     # show and confirm individual shares
-    await layout.slip39_advanced_show_and_confirm_shares(ctx, mnemonics)
+    await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
 
 
 def _validate_reset_device(msg: ResetDevice) -> None:
@@ -222,12 +220,10 @@ def _compute_secret_from_entropy(
     return secret
 
 
-async def backup_seed(
-    ctx: Context, backup_type: BackupType, mnemonic_secret: bytes
-) -> None:
+async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
     if backup_type == BAK_T_SLIP39_BASIC:
-        await _backup_slip39_basic(ctx, mnemonic_secret)
+        await _backup_slip39_basic(mnemonic_secret)
     elif backup_type == BAK_T_SLIP39_ADVANCED:
-        await _backup_slip39_advanced(ctx, mnemonic_secret)
+        await _backup_slip39_advanced(mnemonic_secret)
     else:
-        await layout.bip39_show_and_confirm_mnemonic(ctx, mnemonic_secret.decode())
+        await layout.bip39_show_and_confirm_mnemonic(mnemonic_secret.decode())

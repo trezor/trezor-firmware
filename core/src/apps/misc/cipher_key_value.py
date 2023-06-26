@@ -2,13 +2,12 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import CipherKeyValue, CipheredKeyValue
-    from trezor.wire import Context
 
 # This module implements the SLIP-0011 symmetric encryption of key-value pairs using a
 # deterministic hierarchy, see https://github.com/satoshilabs/slips/blob/master/slip-0011.md.
 
 
-async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValue:
+async def cipher_key_value(msg: CipherKeyValue) -> CipheredKeyValue:
     from trezor.wire import DataError
     from trezor.messages import CipheredKeyValue
     from trezor.crypto import aes, hmac
@@ -16,7 +15,7 @@ async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValu
     from apps.common.paths import AlwaysMatchingSchema
     from trezor.ui.layouts import confirm_action
 
-    keychain = await get_keychain(ctx, "secp256k1", [AlwaysMatchingSchema])
+    keychain = await get_keychain("secp256k1", [AlwaysMatchingSchema])
 
     if len(msg.value) % 16 > 0:
         raise DataError("Value length must be a multiple of 16")
@@ -35,9 +34,7 @@ async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValu
                 title = "Decrypt value"
             verb = "CONFIRM"
 
-        await confirm_action(
-            ctx, "cipher_key_value", title, description=msg.key, verb=verb
-        )
+        await confirm_action("cipher_key_value", title, description=msg.key, verb=verb)
 
     node = keychain.derive(msg.address_n)
 

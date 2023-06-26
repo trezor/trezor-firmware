@@ -4,7 +4,6 @@ from .keychain import with_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import GetAddress, HDNodeType, Address
-    from trezor import wire
     from apps.common.keychain import Keychain
     from apps.common.coininfo import CoinInfo
 
@@ -30,9 +29,7 @@ def _get_xpubs(
 
 
 @with_keychain
-async def get_address(
-    ctx: wire.Context, msg: GetAddress, keychain: Keychain, coin: CoinInfo
-) -> Address:
+async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Address:
     from trezor.enums import InputScriptType
     from trezor.messages import Address
     from trezor.ui.layouts import show_address
@@ -51,7 +48,6 @@ async def get_address(
     if msg.show_display:
         # skip soft-validation for silent calls
         await validate_path(
-            ctx,
             keychain,
             address_n,
             validate_path_against_script_type(coin, msg),
@@ -104,7 +100,6 @@ async def get_address(
             multisig_index = multisig_pubkey_index(multisig, node.public_key())
 
             await show_address(
-                ctx,
                 address_short,
                 case_sensitive=address_case_sensitive,
                 path=path,
@@ -121,7 +116,6 @@ async def get_address(
             else:
                 account = f"{coin.coin_shortcut} {account_name}"
             await show_address(
-                ctx,
                 address_short,
                 address_qr=address,
                 case_sensitive=address_case_sensitive,

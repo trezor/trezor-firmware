@@ -80,7 +80,7 @@ class TestEthereumKeychain(unittest.TestCase):
         slip44 = _slip44_from_address_n(address_n)
         network = make_network(slip44=slip44)
         schemas = _schemas_from_network(PATTERNS_ADDRESS, network)
-        return await_result(get_keychain(wire.DUMMY_CONTEXT, CURVE, schemas))
+        return await_result(get_keychain(CURVE, schemas))
 
     def test_from_address_n(self):
         # valid keychain m/44'/60'/0'
@@ -102,19 +102,19 @@ class TestEthereumKeychain(unittest.TestCase):
     def test_with_keychain_from_path_short(self):
         # check that the keychain will not die when the address_n is too short
         @with_keychain_from_path(*PATTERNS_ADDRESS)
-        async def handler(ctx, msg, keychain, defs):
+        async def handler(msg, keychain, defs):
             # in this case the network is unknown so the keychain should allow access
             # to Ethereum and testnet paths
             self._check_keychain(keychain, 60)
             self._check_keychain(keychain, 1)
             self.assertIs(defs.network, UNKNOWN_NETWORK)
 
-        await_result(handler(wire.DUMMY_CONTEXT, EthereumGetAddress(address_n=[])))
-        await_result(handler(wire.DUMMY_CONTEXT, EthereumGetAddress(address_n=[0])))
+        await_result(handler(EthereumGetAddress(address_n=[])))
+        await_result(handler(EthereumGetAddress(address_n=[0])))
 
     def test_with_keychain_from_path_builtins(self):
         @with_keychain_from_path(*PATTERNS_ADDRESS)
-        async def handler(ctx, msg, keychain, defs):
+        async def handler(msg, keychain, defs):
             slip44 = msg.address_n[1] & ~HARDENED
             self._check_keychain(keychain, slip44)
             self.assertEqual(defs.network.slip44, slip44)
@@ -129,14 +129,11 @@ class TestEthereumKeychain(unittest.TestCase):
         )
 
         for address_n in vectors:
-            await_result(
-                handler(wire.DUMMY_CONTEXT, EthereumGetAddress(address_n=address_n))
-            )
+            await_result(handler(EthereumGetAddress(address_n=address_n)))
 
         with self.assertRaises(wire.DataError):
             await_result(
                 handler(  # unknown network
-                    wire.DUMMY_CONTEXT,
                     EthereumGetAddress(
                         address_n=[44 | HARDENED, 0 | HARDENED, 0 | HARDENED]
                     ),
@@ -147,7 +144,7 @@ class TestEthereumKeychain(unittest.TestCase):
         FORBIDDEN_SYMBOL = "forbidden name"
 
         @with_keychain_from_path(*PATTERNS_ADDRESS)
-        async def handler(ctx, msg, keychain, defs):
+        async def handler(msg, keychain, defs):
             slip44 = msg.address_n[1] & ~HARDENED
             self._check_keychain(keychain, slip44)
             self.assertEqual(defs.network.slip44, slip44)
@@ -165,7 +162,6 @@ class TestEthereumKeychain(unittest.TestCase):
         for slip44, encoded_network in vectors_valid:
             await_result(
                 handler(
-                    wire.DUMMY_CONTEXT,
                     EthereumGetAddress(
                         address_n=[44 | HARDENED, slip44 | HARDENED, 0 | HARDENED],
                         encoded_network=encoded_network,
@@ -184,7 +180,6 @@ class TestEthereumKeychain(unittest.TestCase):
             with self.assertRaises(wire.DataError):
                 await_result(
                     handler(
-                        wire.DUMMY_CONTEXT,
                         EthereumGetAddress(
                             address_n=[44 | HARDENED, slip44 | HARDENED, 0 | HARDENED],
                             encoded_network=encoded_network,
@@ -194,7 +189,7 @@ class TestEthereumKeychain(unittest.TestCase):
 
     def test_with_keychain_from_chain_id_builtin(self):
         @with_keychain_from_chain_id
-        async def handler_chain_id(ctx, msg, keychain, defs):
+        async def handler_chain_id(msg, keychain, defs):
             slip44_id = msg.address_n[1] & ~HARDENED
             # standard tests
             self._check_keychain(keychain, slip44_id)
@@ -217,7 +212,6 @@ class TestEthereumKeychain(unittest.TestCase):
         for chain_id, address_n in vectors:
             await_result(  # Ethereum
                 handler_chain_id(
-                    wire.DUMMY_CONTEXT,
                     EthereumSignTx(
                         address_n=address_n,
                         chain_id=chain_id,
@@ -230,7 +224,6 @@ class TestEthereumKeychain(unittest.TestCase):
         with self.assertRaises(wire.DataError):
             await_result(  # chain_id and network mismatch
                 handler_chain_id(
-                    wire.DUMMY_CONTEXT,
                     EthereumSignTx(
                         address_n=[44 | HARDENED, 61 | HARDENED, 0 | HARDENED],
                         chain_id=2,
@@ -244,7 +237,7 @@ class TestEthereumKeychain(unittest.TestCase):
         FORBIDDEN_SYMBOL = "forbidden name"
 
         @with_keychain_from_chain_id
-        async def handler_chain_id(ctx, msg, keychain, defs):
+        async def handler_chain_id(msg, keychain, defs):
             slip44_id = msg.address_n[1] & ~HARDENED
             # standard tests
             self._check_keychain(keychain, slip44_id)
@@ -285,7 +278,6 @@ class TestEthereumKeychain(unittest.TestCase):
         for chain_id, address_n, encoded_network in vectors_valid:
             await_result(
                 handler_chain_id(
-                    wire.DUMMY_CONTEXT,
                     EthereumSignTx(
                         address_n=address_n,
                         chain_id=chain_id,
@@ -319,7 +311,6 @@ class TestEthereumKeychain(unittest.TestCase):
             with self.assertRaises(wire.DataError):
                 await_result(
                     handler_chain_id(
-                        wire.DUMMY_CONTEXT,
                         EthereumSignTx(
                             address_n=address_n,
                             chain_id=chain_id,

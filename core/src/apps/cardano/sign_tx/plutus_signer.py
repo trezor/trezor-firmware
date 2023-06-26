@@ -22,12 +22,12 @@ class PlutusSigner(Signer):
 
         # These items should be present if a Plutus script is to be executed.
         if self.msg.script_data_hash is None:
-            await layout.warn_no_script_data_hash(self.ctx)
+            await layout.warn_no_script_data_hash()
         if self.msg.collateral_inputs_count == 0:
-            await layout.warn_no_collateral_inputs(self.ctx)
+            await layout.warn_no_collateral_inputs()
 
         if self.msg.total_collateral is None:
-            await layout.warn_unknown_total_collateral(self.ctx)
+            await layout.warn_unknown_total_collateral()
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         msg = self.msg  # local_cache_attribute
@@ -38,7 +38,6 @@ class PlutusSigner(Signer):
         # tedious to check one by one on the Trezor screen).
         is_network_id_verifiable = self._is_network_id_verifiable()
         await layout.confirm_tx(
-            self.ctx,
             msg.fee,
             msg.network_id,
             msg.protocol_magic,
@@ -52,7 +51,7 @@ class PlutusSigner(Signer):
     async def _show_input(self, input: messages.CardanoTxInput) -> None:
         # super() omitted intentionally
         # The inputs are not interchangeable (because of datums), so we must show them.
-        await self._show_if_showing_details(layout.confirm_input(self.ctx, input))
+        await self._show_if_showing_details(layout.confirm_input(input))
 
     async def _show_output_credentials(
         self, address_parameters: messages.CardanoAddressParametersType
@@ -64,7 +63,6 @@ class PlutusSigner(Signer):
         # evaluation. We at least hide the staking path if it matches the payment path.
         show_both_credentials = should_show_credentials(address_parameters)
         await layout.show_device_owned_output_credentials(
-            self.ctx,
             Credential.payment_credential(address_parameters),
             Credential.stake_credential(address_parameters),
             show_both_credentials,

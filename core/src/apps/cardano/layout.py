@@ -25,7 +25,6 @@ from .helpers.utils import (
 if TYPE_CHECKING:
     from typing import Literal
 
-    from trezor.wire import Context
     from trezor import messages
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
     from trezor.ui.layouts import PropertyType
@@ -79,7 +78,6 @@ def format_coin_amount(amount: int, network_id: int) -> str:
 
 
 async def show_native_script(
-    ctx: Context,
     script: messages.CardanoNativeScript,
     indices: list[int] | None = None,
 ) -> None:
@@ -140,7 +138,6 @@ async def show_native_script(
         append((f"Contains {len(scripts)} nested scripts.", None))
 
     await confirm_properties(
-        ctx,
         "verify_script",
         "Verify script",
         props,
@@ -148,11 +145,10 @@ async def show_native_script(
     )
 
     for i, sub_script in enumerate(scripts):
-        await show_native_script(ctx, sub_script, indices + [i + 1])
+        await show_native_script(sub_script, indices + [i + 1])
 
 
 async def show_script_hash(
-    ctx: Context,
     script_hash: bytes,
     display_format: CardanoNativeScriptHashDisplayFormat,
 ) -> None:
@@ -165,7 +161,6 @@ async def show_script_hash(
 
     if display_format == CardanoNativeScriptHashDisplayFormat.BECH32:
         await confirm_properties(
-            ctx,
             "verify_script",
             "Verify script",
             (("Script hash:", bech32.encode(bech32.HRP_SCRIPT_HASH, script_hash)),),
@@ -173,7 +168,6 @@ async def show_script_hash(
         )
     elif display_format == CardanoNativeScriptHashDisplayFormat.POLICY_ID:
         await layouts.confirm_blob(
-            ctx,
             "verify_script",
             "Verify script",
             script_hash,
@@ -182,9 +176,8 @@ async def show_script_hash(
         )
 
 
-async def show_tx_init(ctx: Context, title: str) -> bool:
+async def show_tx_init(title: str) -> bool:
     should_show_details = await layouts.should_show_more(
-        ctx,
         "Confirm transaction",
         (
             (
@@ -200,9 +193,8 @@ async def show_tx_init(ctx: Context, title: str) -> bool:
     return should_show_details
 
 
-async def confirm_input(ctx: Context, input: messages.CardanoTxInput) -> None:
+async def confirm_input(input: messages.CardanoTxInput) -> None:
     await confirm_properties(
-        ctx,
         "confirm_input",
         "Confirm transaction",
         (
@@ -214,7 +206,6 @@ async def confirm_input(ctx: Context, input: messages.CardanoTxInput) -> None:
 
 
 async def confirm_sending(
-    ctx: Context,
     ada_amount: int,
     to: str,
     output_type: Literal["address", "change", "collateral-return"],
@@ -230,7 +221,6 @@ async def confirm_sending(
         raise RuntimeError  # should be unreachable
 
     await layouts.confirm_output(
-        ctx,
         to,
         format_coin_amount(ada_amount, network_id),
         title,
@@ -238,13 +228,10 @@ async def confirm_sending(
     )
 
 
-async def confirm_sending_token(
-    ctx: Context, policy_id: bytes, token: messages.CardanoToken
-) -> None:
+async def confirm_sending_token(policy_id: bytes, token: messages.CardanoToken) -> None:
     assert token.amount is not None  # _validate_token
 
     await confirm_properties(
-        ctx,
         "confirm_token",
         "Confirm transaction",
         (
@@ -261,9 +248,8 @@ async def confirm_sending_token(
     )
 
 
-async def confirm_datum_hash(ctx: Context, datum_hash: bytes) -> None:
+async def confirm_datum_hash(datum_hash: bytes) -> None:
     await confirm_properties(
-        ctx,
         "confirm_datum_hash",
         "Confirm transaction",
         (
@@ -276,11 +262,8 @@ async def confirm_datum_hash(ctx: Context, datum_hash: bytes) -> None:
     )
 
 
-async def confirm_inline_datum(
-    ctx: Context, first_chunk: bytes, inline_datum_size: int
-) -> None:
+async def confirm_inline_datum(first_chunk: bytes, inline_datum_size: int) -> None:
     await _confirm_data_chunk(
-        ctx,
         "confirm_inline_datum",
         "Inline datum",
         first_chunk,
@@ -289,10 +272,9 @@ async def confirm_inline_datum(
 
 
 async def confirm_reference_script(
-    ctx: Context, first_chunk: bytes, reference_script_size: int
+    first_chunk: bytes, reference_script_size: int
 ) -> None:
     await _confirm_data_chunk(
-        ctx,
         "confirm_reference_script",
         "Reference script",
         first_chunk,
@@ -301,7 +283,7 @@ async def confirm_reference_script(
 
 
 async def _confirm_data_chunk(
-    ctx: Context, br_type: str, title: str, first_chunk: bytes, data_size: int
+    br_type: str, title: str, first_chunk: bytes, data_size: int
 ) -> None:
     MAX_DISPLAYED_SIZE = 56
     displayed_bytes = first_chunk[:MAX_DISPLAYED_SIZE]
@@ -315,7 +297,6 @@ async def _confirm_data_chunk(
     if data_size > MAX_DISPLAYED_SIZE:
         props.append(("...", None))
     await confirm_properties(
-        ctx,
         br_type,
         title="Confirm transaction",
         props=props,
@@ -324,39 +305,35 @@ async def _confirm_data_chunk(
 
 
 async def show_credentials(
-    ctx: Context,
     payment_credential: Credential,
     stake_credential: Credential,
 ) -> None:
     intro_text = "Address"
-    await _show_credential(ctx, payment_credential, intro_text, purpose="address")
-    await _show_credential(ctx, stake_credential, intro_text, purpose="address")
+    await _show_credential(payment_credential, intro_text, purpose="address")
+    await _show_credential(stake_credential, intro_text, purpose="address")
 
 
 async def show_change_output_credentials(
-    ctx: Context,
     payment_credential: Credential,
     stake_credential: Credential,
 ) -> None:
     intro_text = "The following address is a change address. Its"
-    await _show_credential(ctx, payment_credential, intro_text, purpose="output")
-    await _show_credential(ctx, stake_credential, intro_text, purpose="output")
+    await _show_credential(payment_credential, intro_text, purpose="output")
+    await _show_credential(stake_credential, intro_text, purpose="output")
 
 
 async def show_device_owned_output_credentials(
-    ctx: Context,
     payment_credential: Credential,
     stake_credential: Credential,
     show_both_credentials: bool,
 ) -> None:
     intro_text = "The following address is owned by this device. Its"
-    await _show_credential(ctx, payment_credential, intro_text, purpose="output")
+    await _show_credential(payment_credential, intro_text, purpose="output")
     if show_both_credentials:
-        await _show_credential(ctx, stake_credential, intro_text, purpose="output")
+        await _show_credential(stake_credential, intro_text, purpose="output")
 
 
 async def show_cvote_registration_payment_credentials(
-    ctx: Context,
     payment_credential: Credential,
     stake_credential: Credential,
     show_both_credentials: bool,
@@ -366,12 +343,11 @@ async def show_cvote_registration_payment_credentials(
         "The vote key registration payment address is owned by this device. Its"
     )
     await _show_credential(
-        ctx, payment_credential, intro_text, purpose="cvote_reg_payment_address"
+        payment_credential, intro_text, purpose="cvote_reg_payment_address"
     )
     if show_both_credentials or show_payment_warning:
         extra_text = CVOTE_REWARD_ELIGIBILITY_WARNING if show_payment_warning else None
         await _show_credential(
-            ctx,
             stake_credential,
             intro_text,
             purpose="cvote_reg_payment_address",
@@ -380,7 +356,6 @@ async def show_cvote_registration_payment_credentials(
 
 
 async def _show_credential(
-    ctx: Context,
     credential: Credential,
     intro_text: str,
     purpose: Literal["address", "output", "cvote_reg_payment_address"],
@@ -428,7 +403,6 @@ async def _show_credential(
 
     if len(props) > 0:
         await confirm_properties(
-            ctx,
             "confirm_credential",
             title,
             props,
@@ -436,20 +410,17 @@ async def _show_credential(
         )
 
 
-async def warn_path(ctx: Context, path: list[int], title: str) -> None:
-    await layouts.confirm_path_warning(ctx, address_n_to_str(path), path_type=title)
+async def warn_path(path: list[int], title: str) -> None:
+    await layouts.confirm_path_warning(address_n_to_str(path), path_type=title)
 
 
-async def warn_tx_output_contains_tokens(
-    ctx: Context, is_collateral_return: bool = False
-) -> None:
+async def warn_tx_output_contains_tokens(is_collateral_return: bool = False) -> None:
     content = (
         "The collateral return output contains tokens."
         if is_collateral_return
         else "The following transaction output contains tokens."
     )
     await confirm_metadata(
-        ctx,
         "confirm_tokens",
         "Confirm transaction",
         content,
@@ -457,9 +428,8 @@ async def warn_tx_output_contains_tokens(
     )
 
 
-async def warn_tx_contains_mint(ctx: Context) -> None:
+async def warn_tx_contains_mint() -> None:
     await confirm_metadata(
-        ctx,
         "confirm_tokens",
         "Confirm transaction",
         "The transaction contains minting or burning of tokens.",
@@ -467,9 +437,8 @@ async def warn_tx_contains_mint(ctx: Context) -> None:
     )
 
 
-async def warn_tx_output_no_datum(ctx: Context) -> None:
+async def warn_tx_output_no_datum() -> None:
     await confirm_metadata(
-        ctx,
         "confirm_no_datum_hash",
         "Confirm transaction",
         "The following transaction output contains a script address, but does not contain a datum.",
@@ -477,9 +446,8 @@ async def warn_tx_output_no_datum(ctx: Context) -> None:
     )
 
 
-async def warn_no_script_data_hash(ctx: Context) -> None:
+async def warn_no_script_data_hash() -> None:
     await confirm_metadata(
-        ctx,
         "confirm_no_script_data_hash",
         "Confirm transaction",
         "The transaction contains no script data hash. Plutus script will not be able to run.",
@@ -487,9 +455,8 @@ async def warn_no_script_data_hash(ctx: Context) -> None:
     )
 
 
-async def warn_no_collateral_inputs(ctx: Context) -> None:
+async def warn_no_collateral_inputs() -> None:
     await confirm_metadata(
-        ctx,
         "confirm_no_collateral_inputs",
         "Confirm transaction",
         "The transaction contains no collateral inputs. Plutus script will not be able to run.",
@@ -497,9 +464,8 @@ async def warn_no_collateral_inputs(ctx: Context) -> None:
     )
 
 
-async def warn_unknown_total_collateral(ctx: Context) -> None:
+async def warn_unknown_total_collateral() -> None:
     await layouts.show_warning(
-        ctx,
         "confirm_unknown_total_collateral",
         "Unknown collateral amount.",
         "Check all items carefully.",
@@ -508,7 +474,6 @@ async def warn_unknown_total_collateral(ctx: Context) -> None:
 
 
 async def confirm_witness_request(
-    ctx: Context,
     witness_path: list[int],
 ) -> None:
     from . import seed
@@ -521,7 +486,6 @@ async def confirm_witness_request(
         path_title = "path"
 
     await layouts.confirm_text(
-        ctx,
         "confirm_total",
         "Confirm transaction",
         address_n_to_str(witness_path),
@@ -531,7 +495,6 @@ async def confirm_witness_request(
 
 
 async def confirm_tx(
-    ctx: Context,
     fee: int,
     network_id: int,
     protocol_magic: int,
@@ -559,7 +522,6 @@ async def confirm_tx(
         append(("Transaction ID:", tx_hash))
 
     await confirm_properties(
-        ctx,
         "confirm_total",
         "Confirm transaction",
         props,
@@ -568,9 +530,7 @@ async def confirm_tx(
     )
 
 
-async def confirm_certificate(
-    ctx: Context, certificate: messages.CardanoTxCertificate
-) -> None:
+async def confirm_certificate(certificate: messages.CardanoTxCertificate) -> None:
     # stake pool registration requires custom confirmation logic not covered
     # in this call
     assert certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
@@ -587,7 +547,6 @@ async def confirm_certificate(
         props.append(("to pool:", format_stake_pool_id(certificate.pool)))
 
     await confirm_properties(
-        ctx,
         "confirm_certificate",
         "Confirm transaction",
         props,
@@ -596,7 +555,6 @@ async def confirm_certificate(
 
 
 async def confirm_stake_pool_parameters(
-    ctx: Context,
     pool_parameters: messages.CardanoPoolParametersType,
     network_id: int,
 ) -> None:
@@ -605,7 +563,6 @@ async def confirm_stake_pool_parameters(
     )
     percentage_formatted = str(float(margin_percentage)).rstrip("0").rstrip(".")
     await confirm_properties(
-        ctx,
         "confirm_pool_registration",
         "Confirm transaction",
         (
@@ -626,7 +583,6 @@ async def confirm_stake_pool_parameters(
 
 
 async def confirm_stake_pool_owner(
-    ctx: Context,
     keychain: Keychain,
     owner: messages.CardanoPoolOwner,
     protocol_magic: int,
@@ -669,7 +625,6 @@ async def confirm_stake_pool_owner(
         )
 
     await confirm_properties(
-        ctx,
         "confirm_pool_owners",
         "Confirm transaction",
         props,
@@ -678,12 +633,10 @@ async def confirm_stake_pool_owner(
 
 
 async def confirm_stake_pool_metadata(
-    ctx: Context,
     metadata: messages.CardanoPoolMetadataType | None,
 ) -> None:
     if metadata is None:
         await confirm_properties(
-            ctx,
             "confirm_pool_metadata",
             "Confirm transaction",
             (("Pool has no metadata (anonymous pool)", None),),
@@ -692,7 +645,6 @@ async def confirm_stake_pool_metadata(
         return
 
     await confirm_properties(
-        ctx,
         "confirm_pool_metadata",
         "Confirm transaction",
         (
@@ -704,13 +656,11 @@ async def confirm_stake_pool_metadata(
 
 
 async def confirm_stake_pool_registration_final(
-    ctx: Context,
     protocol_magic: int,
     ttl: int | None,
     validity_interval_start: int | None,
 ) -> None:
     await confirm_properties(
-        ctx,
         "confirm_pool_final",
         "Confirm transaction",
         (
@@ -725,7 +675,6 @@ async def confirm_stake_pool_registration_final(
 
 
 async def confirm_withdrawal(
-    ctx: Context,
     withdrawal: messages.CardanoTxWithdrawal,
     address_bytes: bytes,
     network_id: int,
@@ -746,7 +695,6 @@ async def confirm_withdrawal(
     props.append(("Amount:", format_coin_amount(withdrawal.amount, network_id)))
 
     await confirm_properties(
-        ctx,
         "confirm_withdrawal",
         "Confirm transaction",
         props,
@@ -774,7 +722,6 @@ def _format_stake_credential(
 
 
 async def confirm_cvote_registration_delegation(
-    ctx: Context,
     public_key: str,
     weight: int,
 ) -> None:
@@ -786,7 +733,6 @@ async def confirm_cvote_registration_delegation(
         props.append(("Weight:", str(weight)))
 
     await confirm_properties(
-        ctx,
         "confirm_cvote_registration_delegation",
         title="Confirm transaction",
         props=props,
@@ -795,7 +741,6 @@ async def confirm_cvote_registration_delegation(
 
 
 async def confirm_cvote_registration_payment_address(
-    ctx: Context,
     payment_address: str,
     should_show_payment_warning: bool,
 ) -> None:
@@ -806,7 +751,6 @@ async def confirm_cvote_registration_payment_address(
     if should_show_payment_warning:
         props.append((CVOTE_REWARD_ELIGIBILITY_WARNING, None))
     await confirm_properties(
-        ctx,
         "confirm_cvote_registration_payment_address",
         title="Confirm transaction",
         props=props,
@@ -815,7 +759,6 @@ async def confirm_cvote_registration_payment_address(
 
 
 async def confirm_cvote_registration(
-    ctx: Context,
     vote_public_key: str | None,
     staking_path: list[int],
     nonce: int,
@@ -842,7 +785,6 @@ async def confirm_cvote_registration(
         )
 
     await confirm_properties(
-        ctx,
         "confirm_cvote_registration",
         title="Confirm transaction",
         props=props,
@@ -850,9 +792,8 @@ async def confirm_cvote_registration(
     )
 
 
-async def show_auxiliary_data_hash(ctx: Context, auxiliary_data_hash: bytes) -> None:
+async def show_auxiliary_data_hash(auxiliary_data_hash: bytes) -> None:
     await confirm_properties(
-        ctx,
         "confirm_auxiliary_data",
         "Confirm transaction",
         (("Auxiliary data hash:", auxiliary_data_hash),),
@@ -860,12 +801,9 @@ async def show_auxiliary_data_hash(ctx: Context, auxiliary_data_hash: bytes) -> 
     )
 
 
-async def confirm_token_minting(
-    ctx: Context, policy_id: bytes, token: messages.CardanoToken
-) -> None:
+async def confirm_token_minting(policy_id: bytes, token: messages.CardanoToken) -> None:
     assert token.mint_amount is not None  # _validate_token
     await confirm_properties(
-        ctx,
         "confirm_mint",
         "Confirm transaction",
         (
@@ -885,9 +823,8 @@ async def confirm_token_minting(
     )
 
 
-async def warn_tx_network_unverifiable(ctx: Context) -> None:
+async def warn_tx_network_unverifiable() -> None:
     await confirm_metadata(
-        ctx,
         "warning_no_outputs",
         "Warning",
         "Transaction has no outputs, network cannot be verified.",
@@ -895,9 +832,8 @@ async def warn_tx_network_unverifiable(ctx: Context) -> None:
     )
 
 
-async def confirm_script_data_hash(ctx: Context, script_data_hash: bytes) -> None:
+async def confirm_script_data_hash(script_data_hash: bytes) -> None:
     await confirm_properties(
-        ctx,
         "confirm_script_data_hash",
         "Confirm transaction",
         (
@@ -911,10 +847,9 @@ async def confirm_script_data_hash(ctx: Context, script_data_hash: bytes) -> Non
 
 
 async def confirm_collateral_input(
-    ctx: Context, collateral_input: messages.CardanoTxCollateralInput
+    collateral_input: messages.CardanoTxCollateralInput,
 ) -> None:
     await confirm_properties(
-        ctx,
         "confirm_collateral_input",
         "Confirm transaction",
         (
@@ -926,10 +861,9 @@ async def confirm_collateral_input(
 
 
 async def confirm_reference_input(
-    ctx: Context, reference_input: messages.CardanoTxReferenceInput
+    reference_input: messages.CardanoTxReferenceInput,
 ) -> None:
     await confirm_properties(
-        ctx,
         "confirm_reference_input",
         "Confirm transaction",
         (
@@ -941,7 +875,7 @@ async def confirm_reference_input(
 
 
 async def confirm_required_signer(
-    ctx: Context, required_signer: messages.CardanoTxRequiredSigner
+    required_signer: messages.CardanoTxRequiredSigner,
 ) -> None:
     assert (
         required_signer.key_hash is not None or required_signer.key_path
@@ -953,7 +887,6 @@ async def confirm_required_signer(
     )
 
     await confirm_properties(
-        ctx,
         "confirm_required_signer",
         "Confirm transaction",
         (("Required signer", formatted_signer),),
@@ -962,7 +895,6 @@ async def confirm_required_signer(
 
 
 async def show_cardano_address(
-    ctx: Context,
     address_parameters: messages.CardanoAddressParametersType,
     address: str,
     protocol_magic: int,
@@ -989,7 +921,6 @@ async def show_cardano_address(
             path = address_n_to_str(address_parameters.address_n_staking)
 
     await layouts.show_address(
-        ctx,
         address,
         path=path,
         account=account,

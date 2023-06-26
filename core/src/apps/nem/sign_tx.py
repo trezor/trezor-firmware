@@ -7,11 +7,10 @@ from . import CURVE, PATTERNS, SLIP44_ID
 if TYPE_CHECKING:
     from trezor.messages import NEMSignTx, NEMSignedTx
     from apps.common.keychain import Keychain
-    from trezor.wire import Context
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def sign_tx(ctx: Context, msg: NEMSignTx, keychain: Keychain) -> NEMSignedTx:
+async def sign_tx(msg: NEMSignTx, keychain: Keychain) -> NEMSignedTx:
     from trezor.wire import DataError
     from trezor.crypto.curve import ed25519
     from trezor.messages import NEMSignedTx
@@ -28,7 +27,6 @@ async def sign_tx(ctx: Context, msg: NEMSignTx, keychain: Keychain) -> NEMSigned
     transaction = msg.transaction  # local_cache_attribute
 
     await validate_path(
-        ctx,
         keychain,
         transaction.address_n,
         check_path(transaction.address_n, transaction.network),
@@ -41,22 +39,21 @@ async def sign_tx(ctx: Context, msg: NEMSignTx, keychain: Keychain) -> NEMSigned
             raise DataError("No signer provided")
         public_key = msg_multisig.signer
         common = msg_multisig
-        await multisig.ask(ctx, msg)
+        await multisig.ask(msg)
     else:
         public_key = seed.remove_ed25519_prefix(node.public_key())
         common = transaction
 
     if msg.transfer:
-        tx = await transfer.transfer(ctx, public_key, common, msg.transfer, node)
+        tx = await transfer.transfer(public_key, common, msg.transfer, node)
     elif msg.provision_namespace:
-        tx = await namespace.namespace(ctx, public_key, common, msg.provision_namespace)
+        tx = await namespace.namespace(public_key, common, msg.provision_namespace)
     elif msg.mosaic_creation:
-        tx = await mosaic.mosaic_creation(ctx, public_key, common, msg.mosaic_creation)
+        tx = await mosaic.mosaic_creation(public_key, common, msg.mosaic_creation)
     elif msg.supply_change:
-        tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
+        tx = await mosaic.supply_change(public_key, common, msg.supply_change)
     elif msg.aggregate_modification:
         tx = await multisig.aggregate_modification(
-            ctx,
             public_key,
             common,
             msg.aggregate_modification,
@@ -64,7 +61,7 @@ async def sign_tx(ctx: Context, msg: NEMSignTx, keychain: Keychain) -> NEMSigned
         )
     elif msg.importance_transfer:
         tx = await transfer.importance_transfer(
-            ctx, public_key, common, msg.importance_transfer
+            public_key, common, msg.importance_transfer
         )
     else:
         raise DataError("No transaction provided")

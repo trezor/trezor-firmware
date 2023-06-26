@@ -44,7 +44,7 @@ if __debug__:
 
         return Failure(**kwargs)
 
-    async def diag(ctx, msg, **kwargs) -> Failure:
+    async def diag(msg, **kwargs) -> Failure:
         ins = msg.ins  # local_cache_attribute
         debug = log.debug  # local_cache_attribute
 

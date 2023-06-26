@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.enums import EthereumDataType
 from trezor.wire import DataError
+from trezor.wire.context import call
 
 from .helpers import get_type_name
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
@@ -9,7 +10,6 @@ from .layout import should_show_struct
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
-    from trezor.wire import Context
     from trezor.utils import HashWriter
     from .definitions import Definitions
 
@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
 @with_keychain_from_path(*PATTERNS_ADDRESS)
 async def sign_typed_data(
-    ctx: Context,
     msg: EthereumSignTypedData,
     keychain: Keychain,
     defs: Definitions,
@@ -34,16 +33,16 @@ async def sign_typed_data(
     from .layout import require_confirm_address
     from trezor.messages import EthereumTypedDataSignature
 
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     address_bytes: bytes = node.ethereum_pubkeyhash()
 
     # Display address so user can validate it
-    await require_confirm_address(ctx, address_bytes)
+    await require_confirm_address(address_bytes)
 
     data_hash = await _generate_typed_data_hash(
-        ctx, msg.primary_type, msg.metamask_v4_compat
+        msg.primary_type, msg.metamask_v4_compat
     )
 
     signature = secp256k1.sign(
@@ -57,7 +56,7 @@ async def sign_typed_data(
 
 
 async def _generate_typed_data_hash(
-    ctx: Context, primary_type: str, metamask_v4_compat: bool = True
+    primary_type: str, metamask_v4_compat: bool = True
 ) -> bytes:
     """
     Generate typed data hash according to EIP-712 specification
@@ -72,14 +71,13 @@ async def _generate_typed_data_hash(
     )
 
     typed_data_envelope = TypedDataEnvelope(
-        ctx,
         primary_type,
         metamask_v4_compat,
     )
     await typed_data_envelope.collect_types()
 
-    name, version = await _get_name_and_version_for_domain(ctx, typed_data_envelope)
-    show_domain = await should_show_domain(ctx, name, version)
+    name, version = await _get_name_and_version_for_domain(typed_data_envelope)
+    show_domain = await should_show_domain(name, version)
     domain_separator = await typed_data_envelope.hash_struct(
         "EIP712Domain",
         [0],
@@ -91,11 +89,10 @@ async def _generate_typed_data_hash(
     # In this case, we ignore the "message" part and only use the "domain" part
     # https://ethereum-magicians.org/t/eip-712-standards-clarification-primarytype-as-domaintype/3286
     if primary_type == "EIP712Domain":
-        await confirm_empty_typed_message(ctx)
+        await confirm_empty_typed_message()
         message_hash = b""
     else:
         show_message = await should_show_struct(
-            ctx,
             primary_type,
             typed_data_envelope.types[primary_type].members,
             "Confirm message",
@@ -108,7 +105,7 @@ async def _generate_typed_data_hash(
             [primary_type],
         )
 
-    await confirm_typed_data_final(ctx)
+    await confirm_typed_data_final()
 
     return keccak256(b"\x19\x01" + domain_separator + message_hash)
 
@@ -131,11 +128,9 @@ class TypedDataEnvelope:
 
     def __init__(
         self,
-        ctx: Context,
         primary_type: str,
         metamask_v4_compat: bool,
     ) -> None:
-        self.ctx = ctx
         self.primary_type = primary_type
         self.metamask_v4_compat = metamask_v4_compat
         self.types: dict[str, EthereumTypedDataStructAck] = {}
@@ -153,7 +148,7 @@ class TypedDataEnvelope:
         )
 
         req = EthereumTypedDataStructRequest(name=type_name)
-        current_type = await self.ctx.call(req, EthereumTypedDataStructAck)
+        current_type = await call(req, EthereumTypedDataStructAck)
         self.types[type_name] = current_type
         for member in current_type.members:
             member_type = member.type
@@ -254,8 +249,6 @@ class TypedDataEnvelope:
         """
         from .layout import confirm_typed_value, should_show_array
 
-        ctx = self.ctx  # local_cache_attribute
-
         type_members = self.types[primary_type].members
         member_value_path = member_path + [0]
         current_parent_objects = parent_objects + [""]
@@ -272,7 +265,6 @@ class TypedDataEnvelope:
 
                 if show_data:
                     show_struct = await should_show_struct(
-                        ctx,
                         struct_name,  # description
                         self.types[struct_name].members,  # data_members
                         ".".join(current_parent_objects),  # title
@@ -290,7 +282,7 @@ class TypedDataEnvelope:
             elif field_type.data_type == EthereumDataType.ARRAY:
                 # Getting the length of the array first, if not fixed
                 if field_type.size is None:
-                    array_size = await _get_array_size(ctx, member_value_path)
+                    array_size = await _get_array_size(member_value_path)
                 else:
                     array_size = field_type.size
 
@@ -300,7 +292,6 @@ class TypedDataEnvelope:
 
                 if show_data:
                     show_array = await should_show_array(
-                        ctx,
                         current_parent_objects,
                         get_type_name(entry_type),
                         array_size,
@@ -338,11 +329,10 @@ class TypedDataEnvelope:
                                 current_parent_objects,
                             )
                     else:
-                        value = await get_value(ctx, entry_type, el_member_path)
+                        value = await get_value(entry_type, el_member_path)
                         encode_field(arr_w, entry_type, value)
                         if show_array:
                             await confirm_typed_value(
-                                ctx,
                                 field_name,
                                 value,
                                 parent_objects,
@@ -351,11 +341,10 @@ class TypedDataEnvelope:
                             )
                 w.extend(arr_w.get_digest())
             else:
-                value = await get_value(ctx, field_type, member_value_path)
+                value = await get_value(field_type, member_value_path)
                 encode_field(w, field_type, value)
                 if show_data:
                     await confirm_typed_value(
-                        ctx,
                         field_name,
                         value,
                         parent_objects,
@@ -503,18 +492,17 @@ def validate_field_type(field: EthereumFieldType) -> None:
             raise DataError("Unexpected size in str/bool/addr")
 
 
-async def _get_array_size(ctx: Context, member_path: list[int]) -> int:
+async def _get_array_size(member_path: list[int]) -> int:
     """Get the length of an array at specific `member_path` from the client."""
     from trezor.messages import EthereumFieldType
 
     # Field type for getting the array length from client, so we can check the return value
     ARRAY_LENGTH_TYPE = EthereumFieldType(data_type=EthereumDataType.UINT, size=2)
-    length_value = await get_value(ctx, ARRAY_LENGTH_TYPE, member_path)
+    length_value = await get_value(ARRAY_LENGTH_TYPE, member_path)
     return int.from_bytes(length_value, "big")
 
 
 async def get_value(
-    ctx: Context,
     field: EthereumFieldType,
     member_value_path: list[int],
 ) -> bytes:
@@ -524,7 +512,7 @@ async def get_value(
     req = EthereumTypedDataValueRequest(
         member_path=member_value_path,
     )
-    res = await ctx.call(req, EthereumTypedDataValueAck)
+    res = await call(req, EthereumTypedDataValueAck)
     value = res.value
 
     _validate_value(field=field, value=value)
@@ -533,7 +521,7 @@ async def get_value(
 
 
 async def _get_name_and_version_for_domain(
-    ctx: Context, typed_data_envelope: TypedDataEnvelope
+    typed_data_envelope: TypedDataEnvelope,
 ) -> tuple[bytes, bytes]:
     domain_name = b"unknown"
     domain_version = b"unknown"
@@ -543,8 +531,8 @@ async def _get_name_and_version_for_domain(
     for member_index, member in enumerate(domain_members):
         member_value_path[-1] = member_index
         if member.name == "name":
-            domain_name = await get_value(ctx, member.type, member_value_path)
+            domain_name = await get_value(member.type, member_value_path)
         elif member.name == "version":
-            domain_version = await get_value(ctx, member.type, member_value_path)
+            domain_version = await get_value(member.type, member_value_path)
 
     return domain_name, domain_version

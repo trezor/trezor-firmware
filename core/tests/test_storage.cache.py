@@ -4,7 +4,6 @@ from mock_storage import mock_storage
 from storage import cache
 from trezor.messages import Initialize
 from trezor.messages import EndSession
-from trezor.wire import DUMMY_CONTEXT
 
 from apps.base import handle_Initialize, handle_EndSession
 
@@ -190,7 +189,7 @@ class TestStorageCache(unittest.TestCase):
     def test_Initialize(self):
         def call_Initialize(**kwargs):
             msg = Initialize(**kwargs)
-            return await_result(handle_Initialize(DUMMY_CONTEXT, msg))
+            return await_result(handle_Initialize(msg))
 
         # calling Initialize without an ID allocates a new one
         session_id = cache.start_session()
@@ -224,7 +223,7 @@ class TestStorageCache(unittest.TestCase):
         session_id = cache.start_session()
         self.assertTrue(is_session_started())
         self.assertIsNone(cache.get(KEY))
-        await_result(handle_EndSession(DUMMY_CONTEXT, EndSession()))
+        await_result(handle_EndSession(EndSession()))
         self.assertFalse(is_session_started())
         self.assertRaises(cache.InvalidSessionError, cache.get, KEY)
 

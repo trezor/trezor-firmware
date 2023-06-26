@@ -4,7 +4,6 @@ from .keychain import with_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import SignMessage, MessageSignature
-    from trezor.wire import Context
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -12,7 +11,7 @@ if TYPE_CHECKING:
 
 @with_keychain
 async def sign_message(
-    ctx: Context, msg: SignMessage, keychain: Keychain, coin: CoinInfo
+    msg: SignMessage, keychain: Keychain, coin: CoinInfo
 ) -> MessageSignature:
     from trezor import wire
     from trezor.crypto.curve import secp256k1
@@ -31,13 +30,12 @@ async def sign_message(
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
 
     await validate_path(
-        ctx, keychain, address_n, validate_path_against_script_type(coin, msg)
+        keychain, address_n, validate_path_against_script_type(coin, msg)
     )
 
     node = keychain.derive(address_n)
     address = get_address(script_type, coin, node)
     await confirm_signverify(
-        ctx,
         coin.coin_shortcut,
         decode_message(message),
         address_short(coin, address),

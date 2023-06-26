@@ -1,5 +1,5 @@
 from micropython import const
-from typing import TYPE_CHECKING
+from typing import Sequence
 
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_success
@@ -12,18 +12,13 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_show_checklist,
 )
 
-if TYPE_CHECKING:
-    from typing import Sequence
-    from trezor.wire import GenericContext
-
 _NUM_OF_CHOICES = const(3)
 
 
-async def show_internal_entropy(ctx: GenericContext, entropy: bytes) -> None:
+async def show_internal_entropy(entropy: bytes) -> None:
     from trezor.ui.layouts import confirm_blob
 
     await confirm_blob(
-        ctx,
         "entropy",
         "Internal entropy",
         entropy,
@@ -32,7 +27,6 @@ async def show_internal_entropy(ctx: GenericContext, entropy: bytes) -> None:
 
 
 async def _confirm_word(
-    ctx: GenericContext,
     share_index: int | None,
     share_words: Sequence[str],
     offset: int,
@@ -56,14 +50,13 @@ async def _confirm_word(
     random.shuffle(choices)
     # let the user pick a word
     selected_word: str = await select_word(
-        ctx, choices, share_index, checked_index, count, group_index
+        choices, share_index, checked_index, count, group_index
     )
     # confirm it is the correct one
     return selected_word == checked_word
 
 
 async def _share_words_confirmed(
-    ctx: GenericContext,
     share_index: int | None,
     share_words: Sequence[str],
     num_of_shares: int | None = None,
@@ -77,22 +70,20 @@ async def _share_words_confirmed(
     """
     # TODO: confirm_action("Select the words bla bla")
 
-    if await _do_confirm_share_words(ctx, share_index, share_words, group_index):
+    if await _do_confirm_share_words(share_index, share_words, group_index):
         await _show_confirmation_success(
-            ctx,
             share_index,
             num_of_shares,
             group_index,
         )
         return True
     else:
-        await _show_confirmation_failure(ctx)
+        await _show_confirmation_failure()
 
     return False
 
 
 async def _do_confirm_share_words(
-    ctx: GenericContext,
     share_index: int | None,
     share_words: Sequence[str],
     group_index: int | None = None,
@@ -106,7 +97,7 @@ async def _do_confirm_share_words(
     offset = 0
     count = len(share_words)
     for part in utils.chunks(share_words, third):
-        if not await _confirm_word(ctx, share_index, part, offset, count, group_index):
+        if not await _confirm_word(share_index, part, offset, count, group_index):
             return False
         offset += len(part)
 
@@ -114,7 +105,6 @@ async def _do_confirm_share_words(
 
 
 async def _show_confirmation_success(
-    ctx: GenericContext,
     share_index: int | None = None,
     num_of_shares: int | None = None,
     group_index: int | None = None,
@@ -138,14 +128,13 @@ async def _show_confirmation_success(
             subheader = f"Group {group_index + 1} - Share {share_index + 1} checked successfully."
             text = "Continue with the next share."
 
-    return await show_success(ctx, "success_recovery", text, subheader)
+    return await show_success("success_recovery", text, subheader)
 
 
-async def _show_confirmation_failure(ctx: GenericContext) -> None:
+async def _show_confirmation_failure() -> None:
     from trezor.ui.layouts.recovery import show_recovery_warning
 
     await show_recovery_warning(
-        ctx,
         "warning_backup_check",
         "Please check again.",
         "That is the wrong word.",
@@ -154,34 +143,34 @@ async def _show_confirmation_failure(ctx: GenericContext) -> None:
     )
 
 
-async def show_backup_warning(ctx: GenericContext, slip39: bool = False) -> None:
+async def show_backup_warning(slip39: bool = False) -> None:
     from trezor.ui.layouts.reset import show_warning_backup
 
-    await show_warning_backup(ctx, slip39)
+    await show_warning_backup(slip39)
 
 
-async def show_backup_success(ctx: GenericContext) -> None:
+async def show_backup_success() -> None:
     from trezor.ui.layouts.reset import show_success_backup
 
-    await show_success_backup(ctx)
+    await show_success_backup()
 
 
 # BIP39
 # ===
 
 
-async def bip39_show_and_confirm_mnemonic(ctx: GenericContext, mnemonic: str) -> None:
+async def bip39_show_and_confirm_mnemonic(mnemonic: str) -> None:
     # warn user about mnemonic safety
-    await show_backup_warning(ctx)
+    await show_backup_warning()
 
     words = mnemonic.split()
 
     while True:
         # display paginated mnemonic on the screen
-        await show_share_words(ctx, words)
+        await show_share_words(words)
 
         # make the user confirm some words from the mnemonic
-        if await _share_words_confirmed(ctx, None, words):
+        if await _share_words_confirmed(None, words):
             break  # this share is confirmed, go to next one
 
 
@@ -189,38 +178,36 @@ async def bip39_show_and_confirm_mnemonic(ctx: GenericContext, mnemonic: str) ->
 # ===
 
 
-async def slip39_basic_show_and_confirm_shares(
-    ctx: GenericContext, shares: Sequence[str]
-) -> None:
+async def slip39_basic_show_and_confirm_shares(shares: Sequence[str]) -> None:
     # warn user about mnemonic safety
-    await show_backup_warning(ctx, True)
+    await show_backup_warning(True)
 
     for index, share in enumerate(shares):
         share_words = share.split(" ")
         while True:
             # display paginated share on the screen
-            await show_share_words(ctx, share_words, index)
+            await show_share_words(share_words, index)
 
             # make the user confirm words from the share
-            if await _share_words_confirmed(ctx, index, share_words, len(shares)):
+            if await _share_words_confirmed(index, share_words, len(shares)):
                 break  # this share is confirmed, go to next one
 
 
 async def slip39_advanced_show_and_confirm_shares(
-    ctx: GenericContext, shares: Sequence[Sequence[str]]
+    shares: Sequence[Sequence[str]],
 ) -> None:
     # warn user about mnemonic safety
-    await show_backup_warning(ctx, True)
+    await show_backup_warning(True)
 
     for group_index, group in enumerate(shares):
         for share_index, share in enumerate(group):
             share_words = share.split(" ")
             while True:
                 # display paginated share on the screen
-                await show_share_words(ctx, share_words, share_index, group_index)
+                await show_share_words(share_words, share_index, group_index)
 
                 # make the user confirm words from the share
                 if await _share_words_confirmed(
-                    ctx, share_index, share_words, len(group), group_index
+                    share_index, share_words, len(group), group_index
                 ):
                     break  # this share is confirmed, go to next one

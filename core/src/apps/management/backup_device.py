@@ -2,10 +2,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import BackupDevice, Success
-    from trezor.wire import Context
 
 
-async def backup_device(ctx: Context, msg: BackupDevice) -> Success:
+async def backup_device(msg: BackupDevice) -> Success:
     import storage.device as storage_device
     from trezor import wire
     from trezor.messages import Success
@@ -26,10 +25,10 @@ async def backup_device(ctx: Context, msg: BackupDevice) -> Success:
     storage_device.set_unfinished_backup(True)
     storage_device.set_backed_up()
 
-    await backup_seed(ctx, mnemonic_type, mnemonic_secret)
+    await backup_seed(mnemonic_type, mnemonic_secret)
 
     storage_device.set_unfinished_backup(False)
 
-    await layout.show_backup_success(ctx)
+    await layout.show_backup_success()
 
     return Success(message="Seed successfully backed up")

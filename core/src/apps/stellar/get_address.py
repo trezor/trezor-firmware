@@ -4,20 +4,17 @@ from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import StellarGetAddress, StellarAddress
-    from trezor.wire import Context
     from apps.common.keychain import Keychain
 
 
 @auto_keychain(__name__)
-async def get_address(
-    ctx: Context, msg: StellarGetAddress, keychain: Keychain
-) -> StellarAddress:
+async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddress:
     from apps.common import paths, seed
     from trezor.messages import StellarAddress
     from trezor.ui.layouts import show_address
     from . import helpers
 
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
@@ -25,6 +22,6 @@ async def get_address(
 
     if msg.show_display:
         path = paths.address_n_to_str(msg.address_n)
-        await show_address(ctx, address, case_sensitive=False, path=path)
+        await show_address(address, case_sensitive=False, path=path)
 
     return StellarAddress(address=address)
