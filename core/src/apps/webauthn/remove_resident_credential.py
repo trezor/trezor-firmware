@@ -2,12 +2,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import WebAuthnRemoveResidentCredential, Success
-    from trezor.wire import Context
 
 
-async def remove_resident_credential(
-    ctx: Context, msg: WebAuthnRemoveResidentCredential
-) -> Success:
+async def remove_resident_credential(msg: WebAuthnRemoveResidentCredential) -> Success:
     import storage.device
     import storage.resident_credentials
     from trezor import wire
@@ -25,7 +22,6 @@ async def remove_resident_credential(
         raise wire.ProcessError("Invalid credential index.")
 
     await confirm_fido(
-        ctx,
         "Remove credential",
         cred.app_name(),
         cred.icon_name(),

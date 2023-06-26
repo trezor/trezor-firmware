@@ -9,11 +9,10 @@ if TYPE_CHECKING:
         NEMMosaicSupplyChange,
         NEMTransactionCommon,
     )
-    from trezor.wire import Context
 
 
 async def ask_mosaic_creation(
-    ctx: Context, common: NEMTransactionCommon, creation: NEMMosaicCreation
+    common: NEMTransactionCommon, creation: NEMMosaicCreation
 ) -> None:
     from ..layout import require_confirm_fee
 
@@ -21,15 +20,15 @@ async def ask_mosaic_creation(
         ("Create mosaic", creation.definition.mosaic),
         ("under namespace", creation.definition.namespace),
     ]
-    await require_confirm_content(ctx, "Create mosaic", creation_message)
-    await _require_confirm_properties(ctx, creation.definition)
-    await require_confirm_fee(ctx, "Confirm creation fee", creation.fee)
+    await require_confirm_content("Create mosaic", creation_message)
+    await _require_confirm_properties(creation.definition)
+    await require_confirm_fee("Confirm creation fee", creation.fee)
 
-    await require_confirm_final(ctx, common.fee)
+    await require_confirm_final(common.fee)
 
 
 async def ask_supply_change(
-    ctx: Context, common: NEMTransactionCommon, change: NEMMosaicSupplyChange
+    common: NEMTransactionCommon, change: NEMMosaicSupplyChange
 ) -> None:
     from trezor.enums import NEMSupplyChangeType
     from ..layout import require_confirm_text
@@ -38,21 +37,19 @@ async def ask_supply_change(
         ("Modify supply for", change.mosaic),
         ("under namespace", change.namespace),
     ]
-    await require_confirm_content(ctx, "Supply change", supply_message)
+    await require_confirm_content("Supply change", supply_message)
     if change.type == NEMSupplyChangeType.SupplyChange_Decrease:
         action = "Decrease"
     elif change.type == NEMSupplyChangeType.SupplyChange_Increase:
         action = "Increase"
     else:
         raise ValueError("Invalid supply change type")
-    await require_confirm_text(ctx, f"{action} supply by {change.delta} whole units?")
+    await require_confirm_text(f"{action} supply by {change.delta} whole units?")
 
-    await require_confirm_final(ctx, common.fee)
+    await require_confirm_final(common.fee)
 
 
-async def _require_confirm_properties(
-    ctx: Context, definition: NEMMosaicDefinition
-) -> None:
+async def _require_confirm_properties(definition: NEMMosaicDefinition) -> None:
     from trezor.enums import NEMMosaicLevy
     from trezor.ui.layouts import confirm_properties
 
@@ -97,7 +94,6 @@ async def _require_confirm_properties(
         append(("Levy type:", levy_type))
 
     await confirm_properties(
-        ctx,
         "confirm_properties",
         "Confirm properties",
         properties,

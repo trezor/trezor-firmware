@@ -2,10 +2,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import SetU2FCounter, Success
-    from trezor.wire import Context
 
 
-async def set_u2f_counter(ctx: Context, msg: SetU2FCounter) -> Success:
+async def set_u2f_counter(msg: SetU2FCounter) -> Success:
     import storage.device as storage_device
     from trezor import wire
     from trezor.enums import ButtonRequestType
@@ -18,7 +17,6 @@ async def set_u2f_counter(ctx: Context, msg: SetU2FCounter) -> Success:
         raise wire.ProcessError("No value provided")
 
     await confirm_action(
-        ctx,
         "set_u2f_counter",
         "Set U2F counter",
         description="Do you really want to set the U2F counter to {}?",

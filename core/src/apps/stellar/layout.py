@@ -7,21 +7,18 @@ from trezor.enums import ButtonRequestType
 from . import consts
 
 if TYPE_CHECKING:
-    from trezor.wire import Context
     from trezor.enums import StellarMemoType
 
     from trezor.messages import StellarAsset
 
 
 async def require_confirm_init(
-    ctx: Context,
     address: str,
     network_passphrase: str,
     accounts_match: bool,
 ) -> None:
     description = "Initialize signing with" + " your account" if accounts_match else ""
     await layouts.confirm_address(
-        ctx,
         "Confirm Stellar",
         address,
         description,
@@ -38,7 +35,6 @@ async def require_confirm_init(
 
     if network:
         await layouts.confirm_metadata(
-            ctx,
             "confirm_init_network",
             "Confirm network",
             "Transaction is on {}",
@@ -47,9 +43,8 @@ async def require_confirm_init(
         )
 
 
-async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None:
+async def require_confirm_timebounds(start: int, end: int) -> None:
     await layouts.confirm_properties(
-        ctx,
         "confirm_timebounds",
         "Confirm timebounds",
         (
@@ -65,9 +60,7 @@ async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None
     )
 
 
-async def require_confirm_memo(
-    ctx: Context, memo_type: StellarMemoType, memo_text: str
-) -> None:
+async def require_confirm_memo(memo_type: StellarMemoType, memo_text: str) -> None:
     from trezor.enums import StellarMemoType
 
     if memo_type == StellarMemoType.TEXT:
@@ -80,7 +73,6 @@ async def require_confirm_memo(
         description = "Memo (RETURN)"
     else:
         return await layouts.confirm_action(
-            ctx,
             "confirm_memo",
             "Confirm memo",
             "No memo set!",
@@ -89,7 +81,6 @@ async def require_confirm_memo(
         )
 
     await layouts.confirm_blob(
-        ctx,
         "confirm_memo",
         "Confirm memo",
         memo_text,
@@ -97,10 +88,9 @@ async def require_confirm_memo(
     )
 
 
-async def require_confirm_final(ctx: Context, fee: int, num_operations: int) -> None:
+async def require_confirm_final(fee: int, num_operations: int) -> None:
     op_str = strings.format_plural("{count} {plural}", num_operations, "operation")
     await layouts.confirm_metadata(
-        ctx,
         "confirm_final",
         "Final confirm",
         "Sign this transaction made up of " + op_str + " and pay {}\nfor fee?",

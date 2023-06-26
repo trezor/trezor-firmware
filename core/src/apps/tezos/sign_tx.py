@@ -17,7 +17,6 @@ from .helpers import (  # symbols used more than once
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
-    from trezor.wire import Context
     from trezor.messages import (
         TezosSignTx,
         TezosContractID,
@@ -31,7 +30,7 @@ if TYPE_CHECKING:
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSignedTx:
+async def sign_tx(msg: TezosSignTx, keychain: Keychain) -> TezosSignedTx:
     from trezor.crypto import hashlib
     from trezor.crypto.curve import ed25519
     from apps.common.paths import validate_path
@@ -39,7 +38,7 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
     from trezor.enums import TezosBallotType
     from . import layout
 
-    await validate_path(ctx, keychain, msg.address_n)
+    await validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     transaction = msg.transaction  # local_cache_attribute
@@ -57,37 +56,37 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
             # operation to delegate from a smart contract with manager.tz
             if parameters_manager.set_delegate is not None:
                 delegate = _get_address_by_tag(parameters_manager.set_delegate)
-                await layout.require_confirm_delegation_baker(ctx, delegate)
-                await layout.require_confirm_set_delegate(ctx, fee)
+                await layout.require_confirm_delegation_baker(delegate)
+                await layout.require_confirm_set_delegate(fee)
 
             # operation to remove delegate from the smart contract with manager.tz
             elif parameters_manager.cancel_delegate is not None:
                 address = _get_address_from_contract(transaction.destination)
-                await layout.require_confirm_delegation_manager_withdraw(ctx, address)
-                await layout.require_confirm_manager_remove_delegate(ctx, fee)
+                await layout.require_confirm_delegation_manager_withdraw(address)
+                await layout.require_confirm_manager_remove_delegate(fee)
 
             # operation to transfer tokens from a smart contract to an implicit account or a smart contract
             elif transfer is not None:
                 to = _get_address_from_contract(transfer.destination)
-                await layout.require_confirm_tx(ctx, to, transfer.amount)
-                await layout.require_confirm_fee(ctx, transfer.amount, fee)
+                await layout.require_confirm_tx(to, transfer.amount)
+                await layout.require_confirm_fee(transfer.amount, fee)
         else:
             # transactions from an implicit account
             to = _get_address_from_contract(transaction.destination)
-            await layout.require_confirm_tx(ctx, to, transaction.amount)
-            await layout.require_confirm_fee(ctx, transaction.amount, fee)
+            await layout.require_confirm_tx(to, transaction.amount)
+            await layout.require_confirm_fee(transaction.amount, fee)
 
     elif origination is not None:
         source = _get_address_by_tag(origination.source)
-        await layout.require_confirm_origination(ctx, source)
+        await layout.require_confirm_origination(source)
 
         # if we are immediately delegating contract
         if origination.delegate is not None:
             delegate = _get_address_by_tag(origination.delegate)
-            await layout.require_confirm_delegation_baker(ctx, delegate)
+            await layout.require_confirm_delegation_baker(delegate)
 
         await layout.require_confirm_origination_fee(
-            ctx, origination.balance, origination.fee
+            origination.balance, origination.fee
         )
 
     elif delegation is not None:
@@ -98,11 +97,11 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
             delegate_address = _get_address_by_tag(delegation.delegate)
 
         if delegate_address is not None and source != delegate_address:
-            await layout.require_confirm_delegation_baker(ctx, delegate_address)
-            await layout.require_confirm_set_delegate(ctx, delegation.fee)
+            await layout.require_confirm_delegation_baker(delegate_address)
+            await layout.require_confirm_set_delegate(delegation.fee)
         # if account registers itself as a delegate
         else:
-            await layout.require_confirm_register_delegate(ctx, source, delegation.fee)
+            await layout.require_confirm_register_delegate(source, delegation.fee)
 
     elif msg.proposal is not None:
         proposed_protocols = [
@@ -110,7 +109,7 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
             base58_encode_check(p, "P")
             for p in msg.proposal.proposals
         ]
-        await layout.require_confirm_proposals(ctx, proposed_protocols)
+        await layout.require_confirm_proposals(proposed_protocols)
 
     elif msg.ballot is not None:
         # _get_protocol_hash
@@ -126,7 +125,7 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
         else:
             raise RuntimeError  # unrecognized enum value
 
-        await layout.require_confirm_ballot(ctx, proposed_protocol, submitted_ballot)
+        await layout.require_confirm_ballot(proposed_protocol, submitted_ballot)
 
     else:
         raise DataError("Invalid operation")

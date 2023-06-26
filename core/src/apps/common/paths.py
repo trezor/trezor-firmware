@@ -15,7 +15,6 @@ if TYPE_CHECKING:
         TypeVar,
     )
     from typing_extensions import Protocol
-    from trezor import wire
 
     Bip32Path = Sequence[int]
     Slip21Path = Sequence[bytes]
@@ -342,20 +341,19 @@ PATTERN_CASA = "m/45'/coin_type/account/change/address_index"
 
 
 async def validate_path(
-    ctx: wire.Context,
     keychain: KeychainValidatorType,
     path: Bip32Path,
     *additional_checks: bool,
 ) -> None:
     keychain.verify_path(path)
     if not keychain.is_in_keychain(path) or not all(additional_checks):
-        await show_path_warning(ctx, path)
+        await show_path_warning(path)
 
 
-async def show_path_warning(ctx: wire.Context, path: Bip32Path) -> None:
+async def show_path_warning(path: Bip32Path) -> None:
     from trezor.ui.layouts import confirm_path_warning
 
-    await confirm_path_warning(ctx, address_n_to_str(path))
+    await confirm_path_warning(address_n_to_str(path))
 
 
 def is_hardened(i: int) -> bool:

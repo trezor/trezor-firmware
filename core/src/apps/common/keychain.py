@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from typing_extensions import Protocol
 
     from trezor.protobuf import MessageType
-    from trezor.wire import Context
     from .seed import Slip21Node
 
     T = TypeVar("T")
@@ -36,8 +35,8 @@ if TYPE_CHECKING:
     MsgIn = TypeVar("MsgIn", bound=MessageType)
     MsgOut = TypeVar("MsgOut", bound=MessageType)
 
-    Handler = Callable[[Context, MsgIn], Awaitable[MsgOut]]
-    HandlerWithKeychain = Callable[[Context, MsgIn, "Keychain"], Awaitable[MsgOut]]
+    Handler = Callable[[MsgIn], Awaitable[MsgOut]]
+    HandlerWithKeychain = Callable[[MsgIn, "Keychain"], Awaitable[MsgOut]]
 
     class Deletable(Protocol):
         def __del__(self) -> None:
@@ -176,14 +175,13 @@ class Keychain:
 
 
 async def get_keychain(
-    ctx: Context,
     curve: str,
     schemas: Iterable[paths.PathSchemaType],
     slip21_namespaces: Iterable[paths.Slip21Path] = (),
 ) -> Keychain:
     from .seed import get_seed
 
-    seed = await get_seed(ctx)
+    seed = await get_seed()
     keychain = Keychain(seed, curve, schemas, slip21_namespaces)
     return keychain
 
@@ -205,10 +203,10 @@ def with_slip44_keychain(
     schemas = [s.copy() for s in schemas]
 
     def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
-        async def wrapper(ctx: Context, msg: MsgIn) -> MsgOut:
-            keychain = await get_keychain(ctx, curve, schemas)
+        async def wrapper(msg: MsgIn) -> MsgOut:
+            keychain = await get_keychain(curve, schemas)
             with keychain:
-                return await func(ctx, msg, keychain)
+                return await func(msg, keychain)
 
         return wrapper
 

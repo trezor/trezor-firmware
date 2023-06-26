@@ -3,11 +3,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import GetPublicKey, PublicKey
     from trezor.protobuf import MessageType
-    from trezor.wire import Context
 
 
 async def get_public_key(
-    ctx: Context, msg: GetPublicKey, auth_msg: MessageType | None = None
+    msg: GetPublicKey, auth_msg: MessageType | None = None
 ) -> PublicKey:
     from trezor import wire
     from trezor.enums import InputScriptType
@@ -33,7 +32,7 @@ async def get_public_key(
         if auth_msg.address_n != address_n[: len(auth_msg.address_n)]:
             raise FORBIDDEN_KEY_PATH
 
-    keychain = await get_keychain(ctx, curve_name, [paths.AlwaysMatchingSchema])
+    keychain = await get_keychain(curve_name, [paths.AlwaysMatchingSchema])
 
     node = keychain.derive(address_n)
 
@@ -82,7 +81,7 @@ async def get_public_key(
     if msg.show_display:
         from trezor.ui.layouts import show_xpub
 
-        await show_xpub(ctx, node_xpub, "XPUB")
+        await show_xpub(node_xpub, "XPUB")
 
     return PublicKey(
         node=node_type,

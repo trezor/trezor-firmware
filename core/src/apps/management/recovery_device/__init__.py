@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import RecoveryDevice
-    from trezor.wire import Context
     from trezor.messages import Success
 
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
@@ -11,7 +10,7 @@ if TYPE_CHECKING:
 DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
 
 
-async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
+async def recovery_device(msg: RecoveryDevice) -> Success:
     """
     Recover BIP39/SLIP39 seed into empty device.
     Recovery is also possible with replugged Trezor. We call this process Persistence.
@@ -52,15 +51,14 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
     # --------------------------------------------------------
 
     if storage_recovery.is_in_progress():
-        return await recovery_process(ctx)
+        return await recovery_process()
 
     # --------------------------------------------------------
     # _continue_dialog
     if not dry_run:
-        await confirm_reset_device(ctx, "Wallet recovery", recovery=True)
+        await confirm_reset_device("Wallet recovery", recovery=True)
     else:
         await confirm_action(
-            ctx,
             "confirm_seedcheck",
             "Seed check",
             description="Do you really want to check the recovery seed?",
@@ -75,14 +73,14 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
 
     # for dry run pin needs to be entered
     if dry_run:
-        curpin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
+        curpin, salt = await request_pin_and_sd_salt("Enter PIN")
         if not config.check_pin(curpin, salt):
-            await error_pin_invalid(ctx)
+            await error_pin_invalid()
 
     if not dry_run:
         # set up pin if requested
         if msg.pin_protection:
-            newpin = await request_pin_confirm(ctx, allow_cancel=False)
+            newpin = await request_pin_confirm(allow_cancel=False)
             config.change_pin("", newpin, None, None)
 
         storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
@@ -95,4 +93,4 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
     storage_recovery.set_dry_run(bool(dry_run))
 
     workflow.set_default(recovery_homescreen)
-    return await recovery_process(ctx)
+    return await recovery_process()

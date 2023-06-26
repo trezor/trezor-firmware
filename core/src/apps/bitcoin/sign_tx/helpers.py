@@ -11,7 +11,6 @@ from . import layout
 if TYPE_CHECKING:
     from typing import Any, Awaitable
     from trezor.enums import AmountUnit
-    from trezor.wire import Context
 
     from trezor.messages import (
         PrevInput,
@@ -31,7 +30,7 @@ if TYPE_CHECKING:
 
 
 class UiConfirm:
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         raise NotImplementedError
 
     __eq__ = utils.obj_eq
@@ -50,9 +49,8 @@ class UiConfirmOutput(UiConfirm):
         self.amount_unit = amount_unit
         self.output_index = output_index
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_output(
-            ctx,
             self.output,
             self.coin,
             self.amount_unit,
@@ -66,9 +64,9 @@ class UiConfirmDecredSSTXSubmission(UiConfirm):
         self.coin = coin
         self.amount_unit = amount_unit
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_decred_sstx_submission(
-            ctx, self.output, self.coin, self.amount_unit
+            self.output, self.coin, self.amount_unit
         )
 
 
@@ -83,9 +81,9 @@ class UiConfirmPaymentRequest(UiConfirm):
         self.amount_unit = amount_unit
         self.coin = coin
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_payment_request(
-            ctx, self.payment_req, self.coin, self.amount_unit
+            self.payment_req, self.coin, self.amount_unit
         )
 
     __eq__ = utils.obj_eq
@@ -96,8 +94,8 @@ class UiConfirmReplacement(UiConfirm):
         self.title = title
         self.txid = txid
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
-        return layout.confirm_replacement(ctx, self.title, self.txid)
+    def confirm_dialog(self) -> Awaitable[Any]:
+        return layout.confirm_replacement(self.title, self.txid)
 
 
 class UiConfirmModifyOutput(UiConfirm):
@@ -113,9 +111,9 @@ class UiConfirmModifyOutput(UiConfirm):
         self.coin = coin
         self.amount_unit = amount_unit
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_modify_output(
-            ctx, self.txo, self.orig_txo, self.coin, self.amount_unit
+            self.txo, self.orig_txo, self.coin, self.amount_unit
         )
 
 
@@ -136,9 +134,8 @@ class UiConfirmModifyFee(UiConfirm):
         self.coin = coin
         self.amount_unit = amount_unit
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_modify_fee(
-            ctx,
             self.title,
             self.user_fee_change,
             self.total_fee_new,
@@ -165,9 +162,8 @@ class UiConfirmTotal(UiConfirm):
         self.amount_unit = amount_unit
         self.address_n = address_n
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_total(
-            ctx,
             self.spending,
             self.fee,
             self.fee_rate,
@@ -186,9 +182,9 @@ class UiConfirmJointTotal(UiConfirm):
         self.coin = coin
         self.amount_unit = amount_unit
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_joint_total(
-            ctx, self.spending, self.total, self.coin, self.amount_unit
+            self.spending, self.total, self.coin, self.amount_unit
         )
 
 
@@ -198,33 +194,31 @@ class UiConfirmFeeOverThreshold(UiConfirm):
         self.coin = coin
         self.amount_unit = amount_unit
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
-        return layout.confirm_feeoverthreshold(
-            ctx, self.fee, self.coin, self.amount_unit
-        )
+    def confirm_dialog(self) -> Awaitable[Any]:
+        return layout.confirm_feeoverthreshold(self.fee, self.coin, self.amount_unit)
 
 
 class UiConfirmChangeCountOverThreshold(UiConfirm):
     def __init__(self, change_count: int):
         self.change_count = change_count
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
-        return layout.confirm_change_count_over_threshold(ctx, self.change_count)
+    def confirm_dialog(self) -> Awaitable[Any]:
+        return layout.confirm_change_count_over_threshold(self.change_count)
 
 
 class UiConfirmUnverifiedExternalInput(UiConfirm):
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
-        return layout.confirm_unverified_external_input(ctx)
+    def confirm_dialog(self) -> Awaitable[Any]:
+        return layout.confirm_unverified_external_input()
 
 
 class UiConfirmForeignAddress(UiConfirm):
     def __init__(self, address_n: list):
         self.address_n = address_n
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         from apps.common import paths
 
-        return paths.show_path_warning(ctx, self.address_n)
+        return paths.show_path_warning(self.address_n)
 
 
 class UiConfirmNonDefaultLocktime(UiConfirm):
@@ -232,9 +226,9 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
         self.lock_time = lock_time
         self.lock_time_disabled = lock_time_disabled
 
-    def confirm_dialog(self, ctx: Context) -> Awaitable[Any]:
+    def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_nondefault_locktime(
-            ctx, self.lock_time, self.lock_time_disabled
+            self.lock_time, self.lock_time_disabled
         )
 
 

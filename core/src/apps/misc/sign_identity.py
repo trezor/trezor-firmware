@@ -6,14 +6,13 @@ from apps.common import coininfo
 
 if TYPE_CHECKING:
     from trezor.messages import IdentityType, SignIdentity, SignedIdentity
-    from trezor.wire import Context
     from apps.common.paths import Bip32Path
 
 # This module implements the SLIP-0013 authentication using a deterministic hierarchy, see
 # https://github.com/satoshilabs/slips/blob/master/slip-0013.md.
 
 
-async def sign_identity(ctx: Context, msg: SignIdentity) -> SignedIdentity:
+async def sign_identity(msg: SignIdentity) -> SignedIdentity:
     from trezor.messages import SignedIdentity
     from trezor.ui.layouts import confirm_sign_identity
     from apps.common.keychain import get_keychain
@@ -25,13 +24,13 @@ async def sign_identity(ctx: Context, msg: SignIdentity) -> SignedIdentity:
     challenge_hidden = msg.challenge_hidden  # local_cache_attribute
     curve_name = msg.ecdsa_curve_name or "secp256k1"
 
-    keychain = await get_keychain(ctx, curve_name, [AlwaysMatchingSchema])
+    keychain = await get_keychain(curve_name, [AlwaysMatchingSchema])
     identity = serialize_identity(msg_identity)
 
     # require_confirm_sign_identity
     proto = msg_identity_proto.upper() if msg_identity_proto else "identity"
     await confirm_sign_identity(
-        ctx, proto, serialize_identity_without_proto(msg_identity), challenge_visual
+        proto, serialize_identity_without_proto(msg_identity), challenge_visual
     )
     # END require_confirm_sign_identity
 

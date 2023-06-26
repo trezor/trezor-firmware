@@ -2,10 +2,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import EthereumGetPublicKey, EthereumPublicKey
-    from trezor.wire import Context
 
 
-async def get_public_key(ctx: Context, msg: EthereumGetPublicKey) -> EthereumPublicKey:
+async def get_public_key(msg: EthereumGetPublicKey) -> EthereumPublicKey:
     from ubinascii import hexlify
     from trezor.messages import EthereumPublicKey, GetPublicKey
     from trezor.ui.layouts import show_pubkey
@@ -13,9 +12,9 @@ async def get_public_key(ctx: Context, msg: EthereumGetPublicKey) -> EthereumPub
 
     # we use the Bitcoin format for Ethereum xpubs
     btc_pubkey_msg = GetPublicKey(address_n=msg.address_n)
-    resp = await bitcoin_get_public_key.get_public_key(ctx, btc_pubkey_msg)
+    resp = await bitcoin_get_public_key.get_public_key(btc_pubkey_msg)
 
     if msg.show_display:
-        await show_pubkey(ctx, hexlify(resp.node.public_key).decode())
+        await show_pubkey(hexlify(resp.node.public_key).decode())
 
     return EthereumPublicKey(node=resp.node, xpub=resp.xpub)

@@ -13,10 +13,9 @@ if TYPE_CHECKING:
         BinanceOrderMsg,
         BinanceTransferMsg,
     )
-    from trezor.wire import Context
 
 
-async def require_confirm_transfer(ctx: Context, msg: BinanceTransferMsg) -> None:
+async def require_confirm_transfer(msg: BinanceTransferMsg) -> None:
     items: list[tuple[str, str, str]] = []
 
     def make_input_output_pages(msg: BinanceInputOutput, direction: str) -> None:
@@ -35,19 +34,16 @@ async def require_confirm_transfer(ctx: Context, msg: BinanceTransferMsg) -> Non
     for txoutput in msg.outputs:
         make_input_output_pages(txoutput, "Confirm output")
 
-    await _confirm_transfer(ctx, items)
+    await _confirm_transfer(items)
 
 
-async def _confirm_transfer(
-    ctx: Context, inputs_outputs: Sequence[tuple[str, str, str]]
-) -> None:
+async def _confirm_transfer(inputs_outputs: Sequence[tuple[str, str, str]]) -> None:
     from trezor.ui.layouts import confirm_output
 
     for index, (title, amount, address) in enumerate(inputs_outputs):
         # Having hold=True on the last item
         hold = index == len(inputs_outputs) - 1
         await confirm_output(
-            ctx,
             address,
             amount,
             title,
@@ -55,9 +51,8 @@ async def _confirm_transfer(
         )
 
 
-async def require_confirm_cancel(ctx: Context, msg: BinanceCancelMsg) -> None:
+async def require_confirm_cancel(msg: BinanceCancelMsg) -> None:
     await confirm_properties(
-        ctx,
         "confirm_cancel",
         "Confirm cancel",
         (
@@ -70,7 +65,7 @@ async def require_confirm_cancel(ctx: Context, msg: BinanceCancelMsg) -> None:
     )
 
 
-async def require_confirm_order(ctx: Context, msg: BinanceOrderMsg) -> None:
+async def require_confirm_order(msg: BinanceOrderMsg) -> None:
     from trezor.enums import BinanceOrderSide
 
     if msg.side == BinanceOrderSide.BUY:
@@ -81,7 +76,6 @@ async def require_confirm_order(ctx: Context, msg: BinanceOrderMsg) -> None:
         side = "Unknown"
 
     await confirm_properties(
-        ctx,
         "confirm_order",
         "Confirm order",
         (

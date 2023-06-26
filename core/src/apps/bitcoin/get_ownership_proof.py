@@ -4,7 +4,6 @@ from .keychain import with_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import GetOwnershipProof, OwnershipProof
-    from trezor.wire import Context
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
     from .authorization import CoinJoinAuthorization
@@ -12,7 +11,6 @@ if TYPE_CHECKING:
 
 @with_keychain
 async def get_ownership_proof(
-    ctx: Context,
     msg: GetOwnershipProof,
     keychain: Keychain,
     coin: CoinInfo,
@@ -37,7 +35,6 @@ async def get_ownership_proof(
             raise ProcessError("Unauthorized operation")
     else:
         await validate_path(
-            ctx,
             keychain,
             msg.address_n,
             validate_path_against_script_type(coin, msg),
@@ -71,14 +68,12 @@ async def get_ownership_proof(
     # In order to set the "user confirmation" bit in the proof, the user must actually confirm.
     if msg.user_confirmation and not authorization:
         await confirm_action(
-            ctx,
             "confirm_ownership_proof",
             "Proof of ownership",
             description="Do you want to create a proof of ownership?",
         )
         if msg.commitment_data:
             await confirm_blob(
-                ctx,
                 "confirm_ownership_proof",
                 "Proof of ownership",
                 msg.commitment_data,

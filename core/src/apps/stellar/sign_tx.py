@@ -4,15 +4,12 @@ from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import StellarSignTx, StellarSignedTx
-    from trezor.wire import Context
 
     from apps.common.keychain import Keychain
 
 
 @auto_keychain(__name__)
-async def sign_tx(
-    ctx: Context, msg: StellarSignTx, keychain: Keychain
-) -> StellarSignedTx:
+async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     from ubinascii import hexlify
     from trezor.messages import StellarSignedTx
     from trezor.crypto.curve import ed25519
@@ -20,12 +17,13 @@ async def sign_tx(
     from trezor.enums import StellarMemoType
     from trezor.crypto.hashlib import sha256
     from trezor.wire import DataError, ProcessError
+    from trezor.wire.context import call_any
     from trezor.messages import StellarTxOpRequest
     from .operations import process_operation
     from . import helpers
     from . import consts, layout, writers
 
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
@@ -52,16 +50,14 @@ async def sign_tx(
 
     # confirm init
     await layout.require_confirm_init(
-        ctx, msg.source_account, msg.network_passphrase, accounts_match
+        msg.source_account, msg.network_passphrase, accounts_match
     )
 
     # ---------------------------------
     # TIMEBOUNDS
     # ---------------------------------
     # confirm dialog
-    await layout.require_confirm_timebounds(
-        ctx, msg.timebounds_start, msg.timebounds_end
-    )
+    await layout.require_confirm_timebounds(msg.timebounds_start, msg.timebounds_end)
 
     # timebounds are sent as uint32s since that's all we can display, but they must be hashed as 64bit
     writers.write_bool(w, True)
@@ -96,15 +92,15 @@ async def sign_tx(
         memo_confirm_text = hexlify(msg.memo_hash).decode()
     else:
         raise ProcessError("Stellar invalid memo type")
-    await layout.require_confirm_memo(ctx, memo_type, memo_confirm_text)
+    await layout.require_confirm_memo(memo_type, memo_confirm_text)
 
     # ---------------------------------
     # OPERATION
     # ---------------------------------
     writers.write_uint32(w, num_operations)
     for _ in range(num_operations):
-        op = await ctx.call_any(StellarTxOpRequest(), *consts.op_codes.keys())
-        await process_operation(ctx, w, op)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+        op = await call_any(StellarTxOpRequest(), *consts.op_codes.keys())
+        await process_operation(w, op)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
 
     # ---------------------------------
     # FINAL
@@ -112,7 +108,7 @@ async def sign_tx(
     # 4 null bytes representing a (currently unused) empty union
     writers.write_uint32(w, 0)
     # final confirm
-    await layout.require_confirm_final(ctx, msg.fee, num_operations)
+    await layout.require_confirm_final(msg.fee, num_operations)
 
     # sign
     digest = sha256(w).digest()

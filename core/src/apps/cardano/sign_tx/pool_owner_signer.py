@@ -45,7 +45,6 @@ class PoolOwnerSigner(Signer):
 
         # super() omitted intentionally
         await layout.confirm_stake_pool_registration_final(
-            self.ctx,
             self.msg.protocol_magic,
             self.msg.ttl,
             self.msg.validity_interval_start,

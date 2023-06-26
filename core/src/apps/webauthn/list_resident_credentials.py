@@ -2,11 +2,10 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import WebAuthnListResidentCredentials, WebAuthnCredentials
-    from trezor.wire import Context
 
 
 async def list_resident_credentials(
-    ctx: Context, msg: WebAuthnListResidentCredentials
+    msg: WebAuthnListResidentCredentials,
 ) -> WebAuthnCredentials:
     from trezor.messages import WebAuthnCredential, WebAuthnCredentials
     from trezor.ui.layouts import confirm_action
@@ -14,7 +13,6 @@ async def list_resident_credentials(
     from . import resident_credentials
 
     await confirm_action(
-        ctx,
         "credentials_list",
         "List credentials",
         description="Do you want to export information about the resident credentials stored on this device?",

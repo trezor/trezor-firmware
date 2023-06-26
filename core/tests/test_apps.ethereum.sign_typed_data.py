@@ -1,6 +1,7 @@
 from common import *
 
 from trezor import wire
+from trezor.wire import context
 from trezor.messages import EthereumTypedDataStructAck as ETDSA
 from trezor.messages import EthereumStructMember as ESM
 from trezor.messages import EthereumFieldType as EFT
@@ -24,22 +25,25 @@ if not utils.BITCOIN_ONLY:
 
 class MockContext:
     """Simulating the client sending us data values."""
+
     def __init__(self, message_contents: list):
         # TODO: it could be worth (for better readability and quicker modification)
         # to accept a whole EIP712 JSON object and create the list internally
         self.message_contents = message_contents
+        self.next_response = b""
 
-    async def call(self, request, _resp_type) -> bytes:
+    async def write(self, request) -> None:
         entry = self.message_contents
         for index in request.member_path:
             entry = entry[index]
 
         if isinstance(entry, list):
-            value = len(entry).to_bytes(2, "big")
+            self.next_response = len(entry).to_bytes(2, "big")
         else:
-            value = entry
+            self.next_response = entry
 
-        return EthereumTypedDataValueAck(value=value)
+    async def read(self, _resp_types, _resp_type):
+        return EthereumTypedDataValueAck(value=self.next_response)
 
 
 # Helper functions from trezorctl to build expected type data structures
@@ -223,7 +227,7 @@ MESSAGE_VALUES_COMPLEX = [
             [
                 b"Carl",
                 b"Denis",
-            ]
+            ],
         ],
         [
             b"Bob",
@@ -240,20 +244,15 @@ MESSAGE_VALUES_COMPLEX = [
             [
                 b"Emil",
                 b"Franz",
-            ]
+            ],
         ],
-        [
-            b"Hello, Bob!",
-            b"How are you?",
-            b"Hope you're fine"
-        ]
+        [b"Hello, Bob!", b"How are you?", b"Hope you're fine"],
     ]
 ]
 
 # Object for testing functionality not needing context
 # (Each test needs to assign EMPTY_ENVELOPE.types as needed)
 EMPTY_ENVELOPE = TypedDataEnvelope(
-    ctx=None,
     primary_type="test",
     metamask_v4_compat=True,
 )
@@ -269,6 +268,7 @@ EMPTY_ENVELOPE = TypedDataEnvelope(
 # should ignore extra unspecified message properties
 # should throw an error when an atomic property is set to null
 # Missing custom type properties are omitted in V3, but encoded as 0 (bytes32) in V4
+
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEthereumSignTypedData(unittest.TestCase):
@@ -321,7 +321,7 @@ class TestEthereumSignTypedData(unittest.TestCase):
                             # 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB
                             b"\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb\xbb",
                         ],
-                        b"Hello, Bob!"
+                        b"Hello, Bob!",
                     ],
                 ],
                 TYPES_BASIC,
@@ -344,20 +344,21 @@ class TestEthereumSignTypedData(unittest.TestCase):
         )
 
         for primary_type, data, types, expected in VECTORS:
-            ctx = MockContext(data)
             typed_data_envelope = TypedDataEnvelope(
-                ctx=ctx,
                 primary_type=primary_type,
                 metamask_v4_compat=True,
             )
             typed_data_envelope.types = types
 
             res = await_result(
-                typed_data_envelope.hash_struct(
-                    primary_type=primary_type,
-                    member_path=[0],
-                    show_data=False,
-                    parent_objects=[primary_type],
+                context.with_context(
+                    MockContext(data),
+                    typed_data_envelope.hash_struct(
+                        primary_type=primary_type,
+                        member_path=[0],
+                        show_data=False,
+                        parent_objects=[primary_type],
+                    ),
                 )
             )
             self.assertEqual(res, expected)
@@ -384,9 +385,7 @@ class TestEthereumSignTypedData(unittest.TestCase):
             ),
         )
         for primary_type, data, types, expected in VECTORS:
-            ctx = MockContext(data)
             typed_data_envelope = TypedDataEnvelope(
-                ctx=ctx,
                 primary_type=primary_type,
                 metamask_v4_compat=True,
             )
@@ -394,12 +393,15 @@ class TestEthereumSignTypedData(unittest.TestCase):
 
             w = bytearray()
             await_result(
-                typed_data_envelope.get_and_encode_data(
-                    w=w,
-                    primary_type=primary_type,
-                    member_path=[0],
-                    show_data=False,
-                    parent_objects=[primary_type],
+                context.with_context(
+                    MockContext(data),
+                    typed_data_envelope.get_and_encode_data(
+                        w=w,
+                        primary_type=primary_type,
+                        member_path=[0],
+                        show_data=False,
+                        parent_objects=[primary_type],
+                    ),
                 )
             )
             self.assertEqual(w, expected)
@@ -471,40 +473,24 @@ class TestEthereumSignTypedData(unittest.TestCase):
                 ("ghi", "string"),
             ],
         }
-        types_dependency_only_as_array = get_type_definitions(types_dependency_only_as_array)
+        types_dependency_only_as_array = get_type_definitions(
+            types_dependency_only_as_array
+        )
 
         VECTORS = (  # primary_type, expected, types
-            (
-                "EIP712Domain",
-                {"EIP712Domain"},
-                TYPES_BASIC
-            ),
-            (
-                "Person",
-                {"Person"},
-                TYPES_BASIC
-            ),
-            (
-                "Mail",
-                {"Mail", "Person"},
-                TYPES_BASIC
-            ),
-            (
-                "MAIN",
-                {"MAIN", "SECONDARY", "TERNARY"},
-                types_dependency_only_as_array
-            ),
-            (
-                "UnexistingType",
-                set(),
-                TYPES_BASIC
-            ),
+            ("EIP712Domain", {"EIP712Domain"}, TYPES_BASIC),
+            ("Person", {"Person"}, TYPES_BASIC),
+            ("Mail", {"Mail", "Person"}, TYPES_BASIC),
+            ("MAIN", {"MAIN", "SECONDARY", "TERNARY"}, types_dependency_only_as_array),
+            ("UnexistingType", set(), TYPES_BASIC),
         )
 
         for primary_type, expected, types in VECTORS:
             res = set()
             EMPTY_ENVELOPE.types = types
-            EMPTY_ENVELOPE.find_typed_dependencies(primary_type=primary_type, results=res)
+            EMPTY_ENVELOPE.find_typed_dependencies(
+                primary_type=primary_type, results=res
+            )
             self.assertEqual(res, expected)
 
     def test_encode_field(self):
@@ -672,11 +658,8 @@ class TestEthereumSignTypedData(unittest.TestCase):
                     entry_type=EFT(
                         data_type=EDT.ARRAY,
                         size=None,
-                        entry_type=EFT(
-                            data_type=EDT.BYTES,
-                            size=16
-                        ),
-                    )
+                        entry_type=EFT(data_type=EDT.BYTES, size=16),
+                    ),
                 ),
                 "bytes16[][]",
             ),

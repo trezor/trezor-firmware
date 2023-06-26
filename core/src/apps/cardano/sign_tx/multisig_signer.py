@@ -33,7 +33,6 @@ class MultisigSigner(Signer):
         # super() omitted intentionally
         is_network_id_verifiable = self._is_network_id_verifiable()
         await layout.confirm_tx(
-            self.ctx,
             msg.fee,
             msg.network_id,
             msg.protocol_magic,

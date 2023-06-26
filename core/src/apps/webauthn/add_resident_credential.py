@@ -2,12 +2,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import WebAuthnAddResidentCredential, Success
-    from trezor.wire import Context
 
 
-async def add_resident_credential(
-    ctx: Context, msg: WebAuthnAddResidentCredential
-) -> Success:
+async def add_resident_credential(msg: WebAuthnAddResidentCredential) -> Success:
     import storage.device as storage_device
     from trezor import wire
     from trezor.ui.layouts import show_error_and_raise
@@ -25,13 +22,11 @@ async def add_resident_credential(
         cred = Fido2Credential.from_cred_id(bytes(msg.credential_id), None)
     except Exception:
         await show_error_and_raise(
-            ctx,
             "warning_credential",
             "The credential you are trying to import does\nnot belong to this authenticator.",
         )
 
     await confirm_fido(
-        ctx,
         "Import credential",
         cred.app_name(),
         cred.icon_name(),

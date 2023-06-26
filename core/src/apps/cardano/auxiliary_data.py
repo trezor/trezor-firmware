@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     SignedCVoteRegistrationPayload = tuple[CVoteRegistrationPayload, bytes]
 
     from trezor import messages
-    from trezor.wire import Context
 
     from . import seed
 
@@ -115,7 +114,6 @@ def _get_voting_purpose_to_serialize(
 
 
 async def show(
-    ctx: Context,
     keychain: seed.Keychain,
     auxiliary_data_hash: bytes,
     parameters: messages.CardanoCVoteRegistrationParametersType | None,
@@ -125,7 +123,6 @@ async def show(
 ) -> None:
     if parameters:
         await _show_cvote_registration(
-            ctx,
             keychain,
             parameters,
             protocol_magic,
@@ -134,7 +131,7 @@ async def show(
         )
 
     if should_show_details:
-        await layout.show_auxiliary_data_hash(ctx, auxiliary_data_hash)
+        await layout.show_auxiliary_data_hash(auxiliary_data_hash)
 
 
 def _should_show_payment_warning(address_type: CardanoAddressType) -> bool:
@@ -146,7 +143,6 @@ def _should_show_payment_warning(address_type: CardanoAddressType) -> bool:
 
 
 async def _show_cvote_registration(
-    ctx: Context,
     keychain: seed.Keychain,
     parameters: messages.CardanoCVoteRegistrationParametersType,
     protocol_magic: int,
@@ -161,7 +157,7 @@ async def _show_cvote_registration(
             bech32.HRP_CVOTE_PUBLIC_KEY, delegation.vote_public_key
         )
         await layout.confirm_cvote_registration_delegation(
-            ctx, encoded_public_key, delegation.weight
+            encoded_public_key, delegation.weight
         )
 
     if parameters.payment_address:
@@ -169,7 +165,7 @@ async def _show_cvote_registration(
             addresses.get_type(addresses.get_bytes_unsafe(parameters.payment_address))
         )
         await layout.confirm_cvote_registration_payment_address(
-            ctx, parameters.payment_address, show_payment_warning
+            parameters.payment_address, show_payment_warning
         )
     else:
         address_parameters = parameters.payment_address_parameters
@@ -179,7 +175,6 @@ async def _show_cvote_registration(
             address_parameters.address_type
         )
         await layout.show_cvote_registration_payment_credentials(
-            ctx,
             Credential.payment_credential(address_parameters),
             Credential.stake_credential(address_parameters),
             show_both_credentials,
@@ -197,7 +192,6 @@ async def _show_cvote_registration(
     )
 
     await layout.confirm_cvote_registration(
-        ctx,
         encoded_public_key,
         parameters.staking_path,
         parameters.nonce,

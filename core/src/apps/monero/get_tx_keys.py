@@ -24,12 +24,11 @@ _GET_TX_KEY_REASON_TX_DERIVATION = const(1)
 if TYPE_CHECKING:
     from trezor.messages import MoneroGetTxKeyRequest, MoneroGetTxKeyAck
     from apps.common.keychain import Keychain
-    from trezor.wire import Context
 
 
 @auto_keychain(__name__)
 async def get_tx_keys(
-    ctx: Context, msg: MoneroGetTxKeyRequest, keychain: Keychain
+    msg: MoneroGetTxKeyRequest, keychain: Keychain
 ) -> MoneroGetTxKeyAck:
     from trezor import utils, wire
     from trezor.messages import MoneroGetTxKeyAck
@@ -38,10 +37,10 @@ async def get_tx_keys(
     from apps.monero import layout, misc
     from apps.monero.xmr import chacha_poly, crypto, crypto_helpers
 
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     do_deriv = msg.reason == _GET_TX_KEY_REASON_TX_DERIVATION
-    await layout.require_confirm_tx_key(ctx, export_key=not do_deriv)
+    await layout.require_confirm_tx_key(export_key=not do_deriv)
 
     creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 

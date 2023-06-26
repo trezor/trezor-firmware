@@ -9,7 +9,6 @@ from .. import backup_types
 from . import layout, recover
 
 if TYPE_CHECKING:
-    from trezor.wire import GenericContext
     from trezor.enums import BackupType
 
 
@@ -21,18 +20,16 @@ async def recovery_homescreen() -> None:
         workflow.set_default(homescreen)
         return
 
-    # recovery process does not communicate on the wire
-    ctx = wire.DUMMY_CONTEXT
-    await recovery_process(ctx)
+    await recovery_process()
 
 
-async def recovery_process(ctx: GenericContext) -> Success:
+async def recovery_process() -> Success:
     from trezor.enums import MessageType
     import storage
 
     wire.AVOID_RESTARTING_FOR = (MessageType.Initialize, MessageType.GetFeatures)
     try:
-        return await _continue_recovery_process(ctx)
+        return await _continue_recovery_process()
     except recover.RecoveryAborted:
         dry_run = storage_recovery.is_dry_run()
         if dry_run:
@@ -42,7 +39,7 @@ async def recovery_process(ctx: GenericContext) -> Success:
         raise wire.ActionCancelled
 
 
-async def _continue_recovery_process(ctx: GenericContext) -> Success:
+async def _continue_recovery_process() -> Success:
     from trezor.errors import MnemonicError
 
     # gather the current recovery state from storage
@@ -58,48 +55,46 @@ async def _continue_recovery_process(ctx: GenericContext) -> Success:
     if not is_first_step:
         assert word_count is not None
         # If we continue recovery, show starting screen with word count immediately.
-        await _request_share_first_screen(ctx, word_count)
+        await _request_share_first_screen(word_count)
 
     secret = None
     while secret is None:
         if is_first_step:
             # If we are starting recovery, ask for word count first...
             # _request_word_count
-            await layout.homescreen_dialog(ctx, "Select", "Select number of words")
+            await layout.homescreen_dialog("Select", "Select number of words")
             # ask for the number of words
-            word_count = await layout.request_word_count(ctx, dry_run)
+            word_count = await layout.request_word_count(dry_run)
             # ...and only then show the starting screen with word count.
-            await _request_share_first_screen(ctx, word_count)
+            await _request_share_first_screen(word_count)
         assert word_count is not None
 
         # ask for mnemonic words one by one
-        words = await layout.request_mnemonic(ctx, word_count, backup_type)
+        words = await layout.request_mnemonic(word_count, backup_type)
 
         # if they were invalid or some checks failed we continue and request them again
         if not words:
             continue
 
         try:
-            secret, backup_type = await _process_words(ctx, words)
+            secret, backup_type = await _process_words(words)
             # If _process_words succeeded, we now have both backup_type (from
             # its result) and word_count (from _request_word_count earlier), which means
             # that the first step is complete.
             is_first_step = False
         except MnemonicError:
-            await layout.show_invalid_mnemonic(ctx, word_count)
+            await layout.show_invalid_mnemonic(word_count)
 
     assert backup_type is not None
     if dry_run:
-        result = await _finish_recovery_dry_run(ctx, secret, backup_type)
+        result = await _finish_recovery_dry_run(secret, backup_type)
     else:
-        result = await _finish_recovery(ctx, secret, backup_type)
+        result = await _finish_recovery(secret, backup_type)
 
     return result
 
 
-async def _finish_recovery_dry_run(
-    ctx: GenericContext, secret: bytes, backup_type: BackupType
-) -> Success:
+async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Success:
     from trezor.crypto.hashlib import sha256
     from trezor import utils
     from apps.common import mnemonic
@@ -126,7 +121,7 @@ async def _finish_recovery_dry_run(
 
     storage_recovery.end_progress()
 
-    await layout.show_dry_run_result(ctx, result, is_slip39)
+    await layout.show_dry_run_result(result, is_slip39)
 
     if result:
         return Success(message="The seed is valid and matches the one in the device")
@@ -134,9 +129,7 @@ async def _finish_recovery_dry_run(
         raise wire.ProcessError("The seed does not match the one in the device")
 
 
-async def _finish_recovery(
-    ctx: GenericContext, secret: bytes, backup_type: BackupType
-) -> Success:
+async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
     from trezor.ui.layouts import show_success
     from trezor.enums import BackupType
 
@@ -157,15 +150,11 @@ async def _finish_recovery(
 
     storage_recovery.end_progress()
 
-    await show_success(
-        ctx, "success_recovery", "You have finished recovering your wallet."
-    )
+    await show_success("success_recovery", "You have finished recovering your wallet.")
     return Success(message="Device recovered")
 
 
-async def _process_words(
-    ctx: GenericContext, words: str
-) -> tuple[bytes | None, BackupType]:
+async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
@@ -179,28 +168,28 @@ async def _process_words(
     if secret is None:  # SLIP-39
         assert share is not None
         if share.group_count and share.group_count > 1:
-            await layout.show_group_share_success(ctx, share.index, share.group_index)
-        await _request_share_next_screen(ctx)
+            await layout.show_group_share_success(share.index, share.group_index)
+        await _request_share_next_screen()
 
     return secret, backup_type
 
 
-async def _request_share_first_screen(ctx: GenericContext, word_count: int) -> None:
+async def _request_share_first_screen(word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
         remaining = storage_recovery.fetch_slip39_remaining_shares()
         if remaining:
-            await _request_share_next_screen(ctx)
+            await _request_share_next_screen()
         else:
             await layout.homescreen_dialog(
-                ctx, "Enter share", "Enter any share", f"({word_count} words)"
+                "Enter share", "Enter any share", f"({word_count} words)"
             )
     else:  # BIP-39
         await layout.homescreen_dialog(
-            ctx, "Enter seed", "Enter recovery seed", f"({word_count} words)"
+            "Enter seed", "Enter recovery seed", f"({word_count} words)"
         )
 
 
-async def _request_share_next_screen(ctx: GenericContext) -> None:
+async def _request_share_next_screen() -> None:
     from trezor import strings
 
     remaining = storage_recovery.fetch_slip39_remaining_shares()
@@ -211,17 +200,16 @@ async def _request_share_next_screen(ctx: GenericContext) -> None:
 
     if group_count > 1:
         await layout.homescreen_dialog(
-            ctx,
             "Enter",
             "More shares needed",
             info_func=_show_remaining_groups_and_shares,
         )
     else:
         text = strings.format_plural("{count} more {plural}", remaining[0], "share")
-        await layout.homescreen_dialog(ctx, "Enter share", text, "needed to enter")
+        await layout.homescreen_dialog("Enter share", text, "needed to enter")
 
 
-async def _show_remaining_groups_and_shares(ctx: GenericContext) -> None:
+async def _show_remaining_groups_and_shares() -> None:
     """
     Show info dialog for Slip39 Advanced - what shares are to be entered.
     """
@@ -254,5 +242,5 @@ async def _show_remaining_groups_and_shares(ctx: GenericContext) -> None:
 
     assert share  # share needs to be set
     return await layout.show_remaining_shares(
-        ctx, groups, shares_remaining, share.group_threshold
+        groups, shares_remaining, share.group_threshold
     )
