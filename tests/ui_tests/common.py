@@ -37,7 +37,7 @@ FixturesType = t.NewType("FixturesType", "dict[str, dict[str, dict[str, str]]]")
 FIXTURES: FixturesType = FixturesType({})
 
 
-def get_fixtures() -> FixturesType:
+def get_current_fixtures() -> FixturesType:
     global FIXTURES
     if not FIXTURES and FIXTURES_FILE.exists():
         FIXTURES = FixturesType(json.loads(FIXTURES_FILE.read_text()))
@@ -60,7 +60,7 @@ def prepare_fixtures(
     missing_tests: set[TestCase] = set()
 
     # merge with previous fixtures
-    fixtures = deepcopy(get_fixtures())
+    fixtures = deepcopy(get_current_fixtures())
     for (model, group), new_content in grouped_tests.items():
         # for every model/group, update the data with the new content
         current_content = fixtures.setdefault(model, {}).setdefault(group, {})
@@ -163,6 +163,20 @@ def _get_test_name_and_group(node_id: str) -> tuple[str, str]:
     return shortened_name, group_name
 
 
+def get_screen_path(test_name: str) -> Path | None:
+    path = SCREENS_DIR / test_name / "actual"
+    if path.exists():
+        return path
+    path = SCREENS_DIR / test_name / "recorded"
+    if path.exists():
+        print(
+            f"WARNING: no actual screens for {test_name}, recording may be outdated: {path}"
+        )
+        return path
+    print(f"WARNING: missing screens for {test_name}. Did the test run?")
+    return None
+
+
 def screens_diff(
     expected_hashes: list[str], actual_hashes: list[str]
 ) -> t.Iterator[tuple[str | None, str | None]]:
@@ -258,7 +272,7 @@ class TestResult:
     def __post_init__(self) -> None:
         if self.expected_hash is None:
             self.expected_hash = (
-                get_fixtures()
+                get_current_fixtures()
                 .get(self.test.model, {})
                 .get(self.test.group, {})
                 .get(self.test.fixtures_name)

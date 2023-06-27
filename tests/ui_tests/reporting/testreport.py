@@ -10,48 +10,17 @@ import dominate.tags as t
 from dominate.tags import a, div, h1, h2, hr, i, p, span, strong, table, td, th, tr
 from dominate.util import text
 
-from ..common import UI_TESTS_DIR, TestCase, TestResult
+from ..common import FixturesType, TestCase, TestResult
 from . import download, html
+from .common import REPORTS_PATH, document, generate_master_diff_report, get_diff
 
-HERE = Path(__file__).resolve().parent
-REPORTS_PATH = UI_TESTS_DIR / "reports"
 TESTREPORT_PATH = REPORTS_PATH / "test"
 IMAGES_PATH = TESTREPORT_PATH / "images"
 SCREEN_TEXT_FILE = TESTREPORT_PATH / "screen_text.txt"
 
-STYLE = (HERE / "testreport.css").read_text()
-SCRIPT = (HERE / "testreport.js").read_text()
-GIF_SCRIPT = (HERE / "create-gif.js").read_text()
-
 # These two html files are referencing each other
 ALL_SCREENS = "all_screens.html"
 ALL_UNIQUE_SCREENS = "all_unique_screens.html"
-
-
-def document(
-    title: str,
-    actual_hash: str | None = None,
-    index: bool = False,
-    model: str | None = None,
-) -> dominate.document:
-    doc = dominate.document(title=title)
-    style = t.style()
-    style.add_raw_string(STYLE)
-    script = t.script()
-    script.add_raw_string(GIF_SCRIPT)
-    script.add_raw_string(SCRIPT)
-    doc.head.add(style, script)
-
-    if actual_hash is not None:
-        doc.body["data-actual-hash"] = actual_hash
-
-    if index:
-        doc.body["data-index"] = True
-
-    if model:
-        doc.body["class"] = f"model-{model}"
-
-    return doc
 
 
 def _header(test_name: str, expected_hash: str | None, actual_hash: str) -> None:
@@ -85,6 +54,7 @@ def setup(main_runner: bool) -> None:
         (TESTREPORT_PATH / "failed").mkdir()
         (TESTREPORT_PATH / "passed").mkdir()
         (TESTREPORT_PATH / "new").mkdir()
+        (TESTREPORT_PATH / "diff").mkdir()
         IMAGES_PATH.mkdir(parents=True)
 
     html.set_image_dir(IMAGES_PATH)
@@ -282,15 +252,60 @@ def differing_screens() -> None:
     html.write(TESTREPORT_PATH, doc, "differing_screens.html")
 
 
-def generate_reports(do_screen_text: bool = False) -> None:
+def _get_current_results() -> FixturesType:
+    current: FixturesType = {}  # type: ignore
+    for res in TestResult.recent_results():
+        model = res.test.model
+        group = res.test.group
+        fixtures_name = res.test.fixtures_name
+        actual_hash = res.actual_hash
+        if model not in current:
+            current[model] = {}
+        if group not in current[model]:
+            current[model][group] = {}
+        current[model][group][fixtures_name] = actual_hash
+    return current
+
+
+def master_diff() -> None:
+    """Creating an HTML page showing all screens differing from master."""
+    current = _get_current_results()
+    _removed_tests, _added_tests, diff_tests = get_diff(current)
+    generate_master_diff_report(diff_tests, TESTREPORT_PATH)
+
+
+def master_index() -> Path:
+    """Shows all the differing tests from master."""
+    diff = list((TESTREPORT_PATH / "diff").iterdir())
+
+    title = "UI changes from master"
+    doc = document(title=title)
+
+    with doc:
+        h1(title)
+        hr()
+
+        h2("Differs:", style="color: grey;")
+        i("UI fixtures that have been modified:")
+        html.report_links(diff, TESTREPORT_PATH)
+
+    return html.write(TESTREPORT_PATH, doc, "master_index.html")
+
+
+def generate_reports(
+    do_screen_text: bool = False, do_master_diff: bool = False
+) -> None:
     """Generate HTML reports for the test."""
     html.set_image_dir(IMAGES_PATH)
     index()
     all_screens()
     all_unique_screens()
+    differing_screens()
     if do_screen_text:
         screen_text_report()
-    differing_screens()
+    if do_master_diff:
+        master_diff()
+        master_index()
 
 
 def _copy_deduplicated(test: TestCase) -> None:

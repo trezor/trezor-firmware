@@ -168,11 +168,12 @@ def sessionfinish(
     test_ui: str,
     check_missing: bool,
     record_text_layout: bool,
+    do_master_diff: bool,
 ) -> pytest.ExitCode:
     if not _should_write_ui_report(exitstatus):
         return exitstatus
 
-    testreport.generate_reports(record_text_layout)
+    testreport.generate_reports(record_text_layout, do_master_diff)
     if test_ui == "test" and check_missing and list_missing():
         common.write_fixtures(
             TestResult.recent_results(),
