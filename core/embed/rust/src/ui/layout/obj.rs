@@ -249,7 +249,7 @@ impl LayoutObj {
 
     fn obj_type() -> &'static Type {
         static TYPE: Type = obj_type! {
-            name: Qstr::MP_QSTR_Layout,
+            name: Qstr::MP_QSTR_LayoutObj,
             locals: &obj_dict!(obj_map! {
                 Qstr::MP_QSTR_attach_timer_fn => obj_fn_2!(ui_layout_attach_timer_fn).as_obj(),
                 Qstr::MP_QSTR_touch_event => obj_fn_var!(4, 4, ui_layout_touch_event).as_obj(),
