@@ -9,7 +9,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
   MP_QSTR_INFO;
-  MP_QSTR_Layout;
+  MP_QSTR_LayoutObj;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_WIRE_TYPE;
   MP_QSTR_Msg;
