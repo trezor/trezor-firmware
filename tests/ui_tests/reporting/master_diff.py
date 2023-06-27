@@ -4,90 +4,15 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
 
-from dominate.tags import a, br, h1, h2, hr, i, p, table, td, th, tr
+from dominate.tags import br, h1, h2, hr, i, p, table, th, tr
 
-from ..common import (
-    SCREENS_DIR,
-    FixturesType,
-    get_fixtures,
-    screens_and_hashes,
-    screens_diff,
-)
+from ..common import get_current_fixtures, get_screen_path, screens_and_hashes
 from . import download, html
-from .testreport import REPORTS_PATH, document
+from .common import REPORTS_PATH, document, generate_master_diff_report, get_diff
 
 MASTERDIFF_PATH = REPORTS_PATH / "master_diff"
 IMAGES_PATH = MASTERDIFF_PATH / "images"
-
-
-def _preprocess_master_compat(master_fixtures: dict[str, Any]) -> FixturesType:
-    if all(isinstance(v, str) for v in master_fixtures.values()):
-        # old format, convert to new format
-        new_fixtures = {}
-        for key, val in master_fixtures.items():
-            model, _test = key.split("_", maxsplit=1)
-            groups_by_model = new_fixtures.setdefault(model, {})
-            default_group = groups_by_model.setdefault("device_tests", {})
-            default_group[key] = val
-        return FixturesType(new_fixtures)
-    else:
-        return FixturesType(master_fixtures)
-
-
-def get_diff() -> tuple[dict[str, str], dict[str, str], dict[str, tuple[str, str]]]:
-    master = _preprocess_master_compat(download.fetch_fixtures_master())
-    current = get_fixtures()
-
-    removed = {}
-    added = {}
-    diff = {}
-
-    for model in master.keys() | current.keys():
-        master_groups = master.get(model, {})
-        current_groups = current.get(model, {})
-        for group in master_groups.keys() | current_groups.keys():
-            master_tests = master_groups.get(group, {})
-            current_tests = current_groups.get(group, {})
-
-            def testname(test: str) -> str:
-                assert test.startswith(model + "_")
-                test = test[len(model) + 1 :]
-                return f"{model}-{group}-{test}"
-
-            # removed items
-            removed_here = {
-                testname(test): master_tests[test]
-                for test in (master_tests.keys() - current_tests.keys())
-            }
-            # added items
-            added_here = {
-                testname(test): current_tests[test]
-                for test in (current_tests.keys() - master_tests.keys())
-            }
-            # create the diff from items in both branches
-            diff_here = {}
-            for master_test, master_hash in master_tests.items():
-                full_test_name = testname(master_test)
-                if full_test_name in removed_here:
-                    continue
-                if current_tests.get(master_test) == master_hash:
-                    continue
-                diff_here[full_test_name] = (
-                    master_tests[master_test],
-                    current_tests[master_test],
-                )
-
-            removed.update(removed_here)
-            added.update(added_here)
-            diff.update(diff_here)
-            print(f"{model} {group}")
-            print(f"  removed: {len(removed_here)}")
-            print(f"  added: {len(added_here)}")
-            print(f"  diff: {len(diff_here)}")
-
-    return removed, added, diff
 
 
 def removed(screens_path: Path, test_name: str) -> Path:
@@ -138,35 +63,6 @@ def added(screens_path: Path, test_name: str) -> Path:
     return html.write(MASTERDIFF_PATH / "added", doc, test_name + ".html")
 
 
-def create_testcase_html_diff_file(
-    zipped_screens: list[tuple[str | None, str | None]],
-    test_name: str,
-    master_hash: str,
-    current_hash: str,
-) -> Path:
-    doc = document(title=test_name, model=test_name[:2])
-    with doc:
-        h1(test_name)
-        p("This UI test differs from master.", style="color: grey; font-weight: bold;")
-        with table():
-            with tr():
-                td("Master:")
-                td(master_hash, style="color: red;")
-            with tr():
-                td("Current:")
-                td(current_hash, style="color: green;")
-        hr()
-
-        with table(border=1, width=600):
-            with tr():
-                th("Master")
-                th("Current branch")
-
-            html.diff_table(zipped_screens, MASTERDIFF_PATH / "diff")
-
-    return html.write(MASTERDIFF_PATH / "diff", doc, test_name + ".html")
-
-
 def index() -> Path:
     removed = list((MASTERDIFF_PATH / "removed").iterdir())
     added = list((MASTERDIFF_PATH / "added").iterdir())
@@ -176,7 +72,7 @@ def index() -> Path:
     doc = document(title=title)
 
     with doc:
-        h1("UI changes from master")
+        h1(title)
         hr()
 
         h2("Removed:", style="color: red;")
@@ -208,22 +104,9 @@ def create_dirs() -> None:
     IMAGES_PATH.mkdir(exist_ok=True)
 
 
-def _get_screen_path(test_name: str) -> Path | None:
-    path = SCREENS_DIR / test_name / "actual"
-    if path.exists():
-        return path
-    path = SCREENS_DIR / test_name / "recorded"
-    if path.exists():
-        print(
-            f"WARNING: no actual screens for {test_name}, recording may be outdated: {path}"
-        )
-        return path
-    print(f"WARNING: missing screens for {test_name}. Did the test run?")
-    return None
-
-
 def create_reports() -> None:
-    removed_tests, added_tests, diff_tests = get_diff()
+    current = get_current_fixtures()
+    removed_tests, added_tests, diff_tests = get_diff(current, print_to_console=True)
 
     @contextmanager
     def tmpdir():
@@ -240,76 +123,12 @@ def create_reports() -> None:
             removed(temp_dir, test_name)
 
     for test_name, test_hash in added_tests.items():
-        screen_path = _get_screen_path(test_name)
+        screen_path = get_screen_path(test_name)
         if not screen_path:
             continue
         added(screen_path, test_name)
 
-    # Holding unique screen differences, connected with a certain testcase
-    # Used for diff report
-    unique_differing_screens: dict[tuple[str | None, str | None], str] = {}
-
-    for test_name, (master_hash, current_hash) in diff_tests.items():
-        with tmpdir() as master_root:
-            master_screens_path = master_root / "downloaded"
-            master_screens_path.mkdir()
-            try:
-                download.fetch_recorded(master_hash, master_screens_path)
-            except RuntimeError as e:
-                print("WARNING:", e)
-
-            current_screens_path = _get_screen_path(test_name)
-            if not current_screens_path:
-                current_screens_path = master_root / "empty_current_screens"
-                current_screens_path.mkdir()
-
-            # Saving all the images to a common directory
-            # They will be referenced from the HTML files
-            master_screens, master_hashes = screens_and_hashes(master_screens_path)
-            current_screens, current_hashes = screens_and_hashes(current_screens_path)
-            html.store_images(master_screens, master_hashes)
-            html.store_images(current_screens, current_hashes)
-
-            # List of tuples of master and current screens
-            # Useful for both testcase HTML report and the differing screen report
-            zipped_screens = list(screens_diff(master_hashes, current_hashes))
-
-            # Create testcase HTML report
-            create_testcase_html_diff_file(
-                zipped_screens,
-                test_name,
-                master_hash,
-                current_hash,
-            )
-
-            # Save differing screens for differing screens report
-            for master, current in zipped_screens:
-                if master != current:
-                    unique_differing_screens[(master, current)] = test_name
-
-    differing_screens_report(unique_differing_screens)
-
-
-def differing_screens_report(
-    unique_differing_screens: dict[tuple[str | None, str | None], str]
-) -> None:
-    doc = document(title="Master differing screens")
-    with doc:
-        with table(border=1, width=600):
-            with tr():
-                th("Expected")
-                th("Actual")
-                th("Testcase (link)")
-
-            for (master, current), testcase in unique_differing_screens.items():
-                with tr(bgcolor="red"):
-                    html.image_column(master, MASTERDIFF_PATH)
-                    html.image_column(current, MASTERDIFF_PATH)
-                    with td():
-                        with a(href=f"diff/{testcase}.html"):
-                            i(testcase)
-
-    html.write(MASTERDIFF_PATH, doc, "differing_screens.html")
+    generate_master_diff_report(diff_tests, MASTERDIFF_PATH)
 
 
 def main() -> None:

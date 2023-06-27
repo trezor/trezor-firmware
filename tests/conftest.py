@@ -290,6 +290,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
             test_ui,  # type: ignore
             bool(session.config.getoption("ui_check_missing")),
             bool(session.config.getoption("record_text_layout")),
+            bool(session.config.getoption("do_master_diff")),
         )
 
 
@@ -342,7 +343,14 @@ def pytest_addoption(parser: "Parser") -> None:
         action="store_true",
         default=False,
         help="Saving debugging traces for each screen change. "
-        "Will generate a report with text from all test-cases. ",
+        "Will generate a report with text from all test-cases.",
+    )
+    parser.addoption(
+        "--do-master-diff",
+        action="store_true",
+        default=False,
+        help="Generating a master-diff report. "
+        "This shows all unique differing screens compared to master.",
     )
 
 

@@ -3,3 +3,4 @@
 *.zip
 *.txt
 fixtures.suggestion.json
+reporting/master_cache
