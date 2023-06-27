@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-def stm32f4_common_files(defines, sources, paths):
+def stm32f4_common_files(env, defines, sources, paths):
     defines += [
         ('STM32_HAL_H', '"<stm32f4xx.h>"'),
         ]
@@ -49,4 +49,12 @@ def stm32f4_common_files(defines, sources, paths):
         'embed/trezorhal/stm32f4/util.s',
         'embed/trezorhal/stm32f4/vectortable.s',
     ]
+
+    env.get("ENV")["RUST_INCLUDES"] = \
+        "-I../trezorhal/stm32f4;" \
+        "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc;"\
+        "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include;"\
+        "-DSTM32_HAL_H=<stm32f4xx.h>"
+
+
 

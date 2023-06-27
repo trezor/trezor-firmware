@@ -481,6 +481,7 @@ env.Replace(
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'TREZOR_BOARD=\\"boards/board-unix.h\\"',
+        'MCU_TYPE='+CPU_MODEL,
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
