@@ -20,9 +20,9 @@ from typing import TYPE_CHECKING, BinaryIO
 
 import click
 
-from .. import ble, exceptions, tealblue
-from ..transport.ble import lookup_device, scan_device
-from . import with_ble, with_client
+from .. import ble, exceptions
+from ..transport.ble import BleProxy
+from . import with_client
 
 if TYPE_CHECKING:
     from ..client import TrezorClient
@@ -64,32 +64,28 @@ def update(
 
 
 @cli.command()
-@with_ble
 def connect() -> None:
     """Connect to the device via BLE."""
-    adapter = tealblue.TealBlue().find_adapter()
-
-    devices = lookup_device(adapter)
-
-    devices = [d for d in devices if d.connected]
+    ble = BleProxy()
+    devices = [d for d in ble.lookup() if d.connected]
 
     if len(devices) == 0:
-        print("Scanning...")
-        devices = scan_device(adapter, devices)
+        click.echo("Scanning...")
+        devices = ble.scan()
 
     if len(devices) == 0:
-        print("No BLE devices found")
+        click.echo("No BLE devices found")
         return
     else:
-        print("Found %d BLE device(s)" % len(devices))
+        click.echo("Found %d BLE device(s)" % len(devices))
 
     for device in devices:
-        print(f"Device: {device.name}, {device.address}")
+        click.echo(f"Device: {device.name}, {device.address}")
 
     device = devices[0]
-    print(f"Connecting to {device.name}...")
-    device.connect()
-    print("Connected")
+    click.echo(f"Connecting to {device.name}...")
+    ble.connect(device.address)
+    click.echo("Connected")
 
 
 @cli.command()

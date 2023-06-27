@@ -8,6 +8,4 @@ typing_extensions>=3.10
 dataclasses ; python_version<'3.7'
 simple-rlp>=0.1.2 ; python_version>='3.7'
 construct-classes>=0.1.2
-dbus-python>=1.3.2
-pygobject>=3.44.1
-nrfutil>=5.0.0
+dbus-next>=0.2.3
