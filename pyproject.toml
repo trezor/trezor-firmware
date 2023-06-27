@@ -73,9 +73,7 @@ yamllint = "^1.25.0"
 vulture = "^2.6"
 
 # ble
-dbus-python = "*"
-PyGObject = "*"
-nrfutil = "*"
+dbus-next = "*"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
