@@ -17,13 +17,15 @@ def configure(
     board = "trezor_r_v4.h"
     display = "vg-2864ksweg01.c"
 
-    stm32f4_common_files(defines, sources, paths)
+    mcu = "STM32F427xx"
+
+    stm32f4_common_files(env, defines, sources, paths)
 
     env.get("ENV")['CPU_ASFLAGS'] = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     env.get("ENV")['CPU_CCFLAGS'] = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     env.get("ENV")['RUST_TARGET'] = 'thumbv7em-none-eabihf'
 
-    defines += ["STM32F427xx"]
+    defines += [mcu]
     defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
@@ -49,5 +51,6 @@ def configure(
         features_available.append("usb")
 
     env.get("ENV")["TREZOR_BOARD"] = board
+    env.get("ENV")["MCU_TYPE"] = mcu
 
     return features_available

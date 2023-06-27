@@ -12,6 +12,13 @@ fn main() {
     link_core_objects();
 }
 
+fn mcu_type() -> String {
+    match env::var("MCU_TYPE") {
+        Ok(mcu) => mcu,
+        Err(_) => String::from("STM32F427xx"),
+    }
+}
+
 fn model() -> String {
     match env::var("TREZOR_MODEL") {
         Ok(model) => model,
@@ -77,24 +84,28 @@ fn prepare_bindings() -> bindgen::Builder {
         "-I../../vendor/micropython/lib/uzlib",
         "-I../lib",
         "-I../trezorhal",
-        "-DSTM32F427xx",
+        format!("-D{}", mcu_type()).as_str(),
         format!("-DTREZOR_MODEL_{}", model()).as_str(),
         format!("-DTREZOR_BOARD=\"{}\"", board()).as_str(),
     ]);
 
     // Pass in correct include paths and defines.
     if is_firmware() {
-        bindings = bindings.clang_args(&[
-            "-nostdinc",
-            "-I../firmware",
-            "-I../trezorhal/stm32f4",
-            "-I../../build/firmware",
-            "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
-            "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
-            "-I../../vendor/micropython/lib/cmsis/inc",
-            "-DUSE_HAL_DRIVER",
-            "-DSTM32_HAL_H=<stm32f4xx.h>",
-        ]);
+        let mut clang_args: Vec<&str> = Vec::new();
+
+        let includes = env::var("RUST_INCLUDES").unwrap();
+        let args = includes.split(";");
+
+        for arg in args {
+            clang_args.push(arg);
+        }
+        clang_args.push("-nostdinc");
+        clang_args.push("-I../firmware");
+        clang_args.push("-I../../build/firmware");
+        clang_args.push("-I../../vendor/micropython/lib/cmsis/inc");
+        clang_args.push("-DUSE_HAL_DRIVER");
+        bindings = bindings.clang_args(&clang_args);
+
         // Append gcc-arm-none-eabi's include paths.
         let cc_output = Command::new("arm-none-eabi-gcc")
             .arg("-E")
