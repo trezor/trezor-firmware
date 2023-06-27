@@ -940,7 +940,7 @@ async def confirm_total(
     fee_amount: str,
     fee_rate_amount: str | None = None,
     title: str = "SENDING",
-    total_label: str = "TOTAL AMOUNT",
+    total_label: str = "Total amount",
     fee_label: str = "Including fee:",
     account_label: str | None = None,
     br_type: str = "confirm_total",
