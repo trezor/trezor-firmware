@@ -49,7 +49,6 @@ from . import (
     settings,
     stellar,
     tezos,
-    with_ble,
     with_client,
 )
 
@@ -282,7 +281,6 @@ def format_device_name(features: messages.Features) -> str:
 
 
 @cli.command(name="list")
-@with_ble
 @click.option("-n", "no_resolve", is_flag=True, help="Do not resolve Trezor names")
 def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
     """List connected Trezor devices."""
