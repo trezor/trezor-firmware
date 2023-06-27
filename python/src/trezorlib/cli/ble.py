@@ -88,27 +88,31 @@ def connect() -> None:
     click.echo("Connected")
 
 
+@with_client
+def disconnect_device(client: "TrezorClient") -> None:
+    """Disconnect from device side."""
+    try:
+        ble.disconnect(client)
+    except exceptions.Cancelled:
+        click.echo("Disconnect aborted on device.")
+    except exceptions.TrezorException as e:
+        click.echo(f"Disconnect failed: {e}")
+        sys.exit(3)
+
 @cli.command()
 @click.option("--device", is_flag=True, help="Disconnect from device side.")
-@with_client
-def disconnect(client: "TrezorClient", device: bool) -> None:
+def disconnect(device: bool) -> None:
 
     if device:
-        ble.disconnect(client)
+        disconnect_device()
     else:
-        """Connect to the device via BLE."""
-        adapter = tealblue.TealBlue().find_adapter()
-
-        devices = lookup_device(adapter)
-
-        devices = [d for d in devices if d.connected]
-
+        ble_proxy = BleProxy()
+        devices = [d for d in ble_proxy.lookup() if d.connected]
         if len(devices) == 0:
-            print("No device is connected")
-
-        for d in devices:
-            d.disconnect()
-            print(f"Device {d.name}, {d.address}, disconnected.")
+            click.echo("No BLE devices found")
+            return
+        ble_proxy.connect(devices[0].address)
+        ble_proxy.disconnect()
 
 
 @cli.command()
