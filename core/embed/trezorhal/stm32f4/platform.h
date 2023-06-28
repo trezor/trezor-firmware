@@ -23,6 +23,7 @@
 #include STM32_HAL_H
 #include <stdint.h>
 
+#define SENSITIVE
 #define FLASH_BYTE_ACCESS 1
 
 typedef enum {

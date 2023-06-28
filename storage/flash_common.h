@@ -1,6 +1,7 @@
 #ifndef FLASH_COMMON_H
 #define FLASH_COMMON_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "secbool.h"
 
@@ -12,6 +13,7 @@ typedef struct {
 typedef struct {
   flash_subarea_t subarea[4];
   uint8_t num_subareas;
+  bool secure_area;
 } flash_area_t;
 
 void flash_init(void);
@@ -41,5 +43,8 @@ secbool __wur flash_area_write_word(const flash_area_t *area, uint32_t offset,
 #endif
 secbool __wur flash_area_write_quadword(const flash_area_t *area,
                                         uint32_t offset, const uint32_t *data);
+
+secbool __wur flash_area_write_burst(const flash_area_t *area, uint32_t offset,
+                                     const uint32_t *data);
 
 #endif

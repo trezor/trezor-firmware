@@ -89,8 +89,12 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_common.c',
 ]
+
+if TREZOR_MODEL in ('1', 'T', 'R', 'DISC1'):
+    SOURCE_MOD += [
+        'vendor/trezor-storage/flash_common_f4.c',
+    ]
 
 if TREZOR_MODEL in ('1', ):
     SOURCE_MOD += [
@@ -139,6 +143,8 @@ if TREZOR_MODEL in ('R', ):
 SOURCE_UNIX = [
     'embed/unix/profile.c',
 ]
+
+
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
