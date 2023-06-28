@@ -28,7 +28,8 @@ void set_core_clock(int) {}
 
 int bootloader_main(void);
 
-bool sector_is_empty(const flash_area_t *area) {
+// assuming storage is single subarea
+bool storage_empty(const flash_area_t *area) {
   const uint8_t *storage = flash_area_get_address(area, 0, 0);
   size_t storage_size = flash_area_get_size(area);
   for (size_t i = 0; i < storage_size; i++) {
@@ -117,7 +118,7 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
   FIRMWARE_START = (uint8_t *)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
   // simulate non-empty storage so that we know whether it was erased or not
-  if (sector_is_empty(&STORAGE_AREAS[0])) {
+  if (storage_empty(&STORAGE_AREAS[0])) {
     secbool ret = flash_area_write_word(&STORAGE_AREAS[0], 16, 0x12345678);
     (void)ret;
   }
@@ -197,7 +198,7 @@ void mpu_config_off(void) {}
 
 __attribute__((noreturn)) void jump_to(void *addr) {
   bool storage_is_erased =
-      sector_is_empty(&STORAGE_AREAS[0]) && sector_is_empty(&STORAGE_AREAS[1]);
+      storage_empty(&STORAGE_AREAS[0]) && storage_empty(&STORAGE_AREAS[1]);
 
   if (storage_is_erased) {
     printf("STORAGE WAS ERASED\n");

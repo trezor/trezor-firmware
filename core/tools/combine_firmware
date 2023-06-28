@@ -9,12 +9,6 @@ from pathlib import Path
 import click
 
 
-BOARDLOADER_START = 0x08000000
-BOARDLOADER_END = 0x0800C000
-BOOTLOADER_START = 0x08020000
-FIRMWARE_START = 0x08040000
-
-
 @click.command()
 @click.argument(
     "boardloader",
@@ -33,39 +27,75 @@ FIRMWARE_START = 0x08040000
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     required=False,
 )
+@click.argument(
+    "boardloader_start",
+    type=click.STRING,
+    required=False,
+    default="0x08000000",
+)
+@click.argument(
+    "boardloader_end",
+    type=click.STRING,
+    required=False,
+    default="0x0800C000",
+)
+@click.argument(
+    "bootloader_start",
+    type=click.STRING,
+    required=False,
+    default="0x08020000",
+)
+@click.argument(
+    "firmware_start",
+    type=click.STRING,
+    required=False,
+    default="0x08040000",
+)
 def main(
-    boardloader: Path, bootloader: Path, firmware: Path, outfile: Path | None
+        boardloader: Path,
+        bootloader: Path,
+        firmware: Path,
+        outfile: Path | None,
+        boardloader_start: str,
+        boardloader_end: str,
+        bootloader_start: str,
+        firmware_start: str,
 ) -> None:
+    boardloader_start = int(boardloader_start, 0)
+    boardloader_end = int(boardloader_end, 0)
+    bootloader_start = int(bootloader_start, 0)
+    firmware_start = int(firmware_start, 0)
+
     if outfile is None:
         today = datetime.date.today().strftime(r"%Y-%m-%d")
         outfile = Path(f"combined-{today}.bin")
 
-    offset = BOARDLOADER_START
+    offset = boardloader_start
     out_bytes = io.BytesIO()
 
     # write boardloader
     offset += out_bytes.write(boardloader.read_bytes())
-    if offset > BOARDLOADER_END:
+    if offset > boardloader_end:
         raise Exception("Boardloader too big")
 
     # zero-pad until next section:
-    offset += out_bytes.write(b"\x00" * (BOOTLOADER_START - offset))
-    assert offset == BOOTLOADER_START
+    offset += out_bytes.write(b"\x00" * (bootloader_start - offset))
+    assert offset == bootloader_start
 
     # write bootlaoder
     offset += out_bytes.write(bootloader.read_bytes())
-    if offset > FIRMWARE_START:
+    if offset > firmware_start:
         raise Exception("Bootloader too big")
 
     # zero-pad until next section:
-    offset += out_bytes.write(b"\x00" * (FIRMWARE_START - offset))
-    assert offset == FIRMWARE_START
+    offset += out_bytes.write(b"\x00" * (firmware_start - offset))
+    assert offset == firmware_start
 
     # write firmware
     offset += out_bytes.write(firmware.read_bytes())
 
     # write out contents
-    click.echo(f"Writing {outfile} ({offset - BOARDLOADER_START} bytes)")
+    click.echo(f"Writing {outfile} ({offset - boardloader_start} bytes)")
     outfile.write_bytes(out_bytes.getvalue())
 
 

@@ -10,6 +10,7 @@ MEMORY {
 }
 
 main_stack_base = ORIGIN(SRAM) + LENGTH(SRAM); /* 8-byte aligned full descending stack */
+_sstack = ORIGIN(SRAM);
 _estack = main_stack_base;
 
 /* used by the startup code to populate variables used by the C code */
