@@ -30,12 +30,14 @@ class Model(Enum):
     T2T1 = b"T2T1"
     T2B1 = b"T2B1"
     D001 = b"D001"
+    D002 = b"D002"
 
     # legacy aliases
     ONE = T1B1
     T = T2T1
     R = T2B1
     DISC1 = D001
+    DISC2 = D002
 
     @classmethod
     def from_hw_model(cls, hw_model: t.Union["Self", bytes]) -> "Self":
@@ -226,11 +228,18 @@ T2T1_HASH_PARAMS = FirmwareHashParameters(
     padding_byte=None,
 )
 
+D002_HASH_PARAMS = FirmwareHashParameters(
+    hash_function=hashlib.blake2s,
+    chunk_size=1024 * 256,
+    padding_byte=None,
+)
+
 MODEL_MAP = {
     Model.T1B1: LEGACY_V3,
     Model.T2T1: T2T1,
     Model.T2B1: T2B1,
     Model.D001: TREZOR_CORE_DEV,
+    Model.D002: TREZOR_CORE_DEV,
 }
 
 MODEL_MAP_DEV = {
@@ -238,6 +247,7 @@ MODEL_MAP_DEV = {
     Model.T2T1: TREZOR_CORE_DEV,
     Model.T2B1: TREZOR_CORE_DEV,
     Model.D001: TREZOR_CORE_DEV,
+    Model.D002: TREZOR_CORE_DEV,
 }
 
 MODEL_HASH_PARAMS_MAP = {
@@ -245,6 +255,7 @@ MODEL_HASH_PARAMS_MAP = {
     Model.T2T1: T2T1_HASH_PARAMS,
     Model.T2B1: T2T1_HASH_PARAMS,
     Model.D001: T2T1_HASH_PARAMS,
+    Model.D002: D002_HASH_PARAMS,
 }
 
 # aliases
@@ -263,3 +274,5 @@ DISC1 = TREZOR_CORE_DEV
 DISC1_DEV = TREZOR_CORE_DEV
 D001 = TREZOR_CORE_DEV
 D001_DEV = TREZOR_CORE_DEV
+D002 = TREZOR_CORE_DEV
+D002_DEV = TREZOR_CORE_DEV
