@@ -14,7 +14,7 @@ _ROUND_ID_LEN = 32
 
 class TestAuthorization(unittest.TestCase):
 
-    coin = coins.by_name('Bitcoin')
+    coin = coins.by_name("Bitcoin")
 
     def setUp(self):
         self.msg_auth = AuthorizeCoinJoin(
@@ -37,7 +37,8 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com"
+            + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -49,7 +50,8 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com"
+            + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -61,7 +63,8 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"\x0fwww.example.org" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.org"
+            + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -72,7 +75,8 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"\x0ewww.example.com" + int.to_bytes(1, _ROUND_ID_LEN - 1, "big"),
+            commitment_data=b"\x0ewww.example.com"
+            + int.to_bytes(1, _ROUND_ID_LEN - 1, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -82,7 +86,8 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"\x10www.example.com" + int.to_bytes(1, _ROUND_ID_LEN + 1, "big"),
+            commitment_data=b"\x10www.example.com"
+            + int.to_bytes(1, _ROUND_ID_LEN + 1, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -94,14 +99,20 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com"
+            + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertTrue(self.authorization.check_get_ownership_proof(msg))
 
     def test_approve_sign_tx(self):
 
-        msg = SignTx(outputs_count=10, inputs_count=21, coin_name=self.coin.coin_name, lock_time=0)
+        msg = SignTx(
+            outputs_count=10,
+            inputs_count=21,
+            coin_name=self.coin.coin_name,
+            lock_time=0,
+        )
 
         self.assertTrue(self.authorization.approve_sign_tx(msg))
         self.assertTrue(self.authorization.approve_sign_tx(msg))
@@ -109,5 +120,5 @@ class TestAuthorization(unittest.TestCase):
         self.assertFalse(self.authorization.approve_sign_tx(msg))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

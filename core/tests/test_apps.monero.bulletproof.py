@@ -7,7 +7,6 @@ if not utils.BITCOIN_ONLY:
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestMoneroBulletproof(unittest.TestCase):
-
     def test_square_multiply(self):
         for x in [2, 3, 16, 17, 31, 32]:
             ss = crypto.random_scalar()
@@ -17,10 +16,14 @@ class TestMoneroBulletproof(unittest.TestCase):
                 crypto.sc_mul_into(s1, s1, ss)
 
             bp._sc_square_mult(s2, ss, x)
-            self.assertEqual(crypto.encodeint_into(None, s1), crypto.encodeint_into(None, s2))
+            self.assertEqual(
+                crypto.encodeint_into(None, s1), crypto.encodeint_into(None, s2)
+            )
 
     def test_dvct_skips(self):
-        z_sq = unhexlify(b'e0408b528e9d35ccb8386b87f39b85c724740644f4db412483a8852cdb3ceb00')
+        z_sq = unhexlify(
+            b"e0408b528e9d35ccb8386b87f39b85c724740644f4db412483a8852cdb3ceb00"
+        )
         d_vct0 = bp.VctD(64, 8, z_sq, raw=True)
         d_vct1 = bp.VctD(64, 8, z_sq, raw=True)
         tmp = crypto.Scalar()
@@ -28,75 +31,123 @@ class TestMoneroBulletproof(unittest.TestCase):
         # Linear scan vs jump
         for i in range(65):
             tmp = d_vct0[i]
-        self.assertEqual(crypto.encodeint_into(None, tmp), crypto.encodeint_into(None, d_vct1[64]))
+        self.assertEqual(
+            crypto.encodeint_into(None, tmp), crypto.encodeint_into(None, d_vct1[64])
+        )
 
         # Jumping around
         _ = d_vct0[128]
-        self.assertEqual(crypto.encodeint_into(None, d_vct0[64]), crypto.encodeint_into(None, d_vct1[64]))
+        self.assertEqual(
+            crypto.encodeint_into(None, d_vct0[64]),
+            crypto.encodeint_into(None, d_vct1[64]),
+        )
 
         # Sync on the same jump
-        self.assertEqual(crypto.encodeint_into(None, d_vct0[65]), crypto.encodeint_into(None, d_vct1[65]))
-        self.assertEqual(crypto.encodeint_into(None, d_vct0[65]), crypto.encodeint_into(None, d_vct1[65]))
+        self.assertEqual(
+            crypto.encodeint_into(None, d_vct0[65]),
+            crypto.encodeint_into(None, d_vct1[65]),
+        )
+        self.assertEqual(
+            crypto.encodeint_into(None, d_vct0[65]),
+            crypto.encodeint_into(None, d_vct1[65]),
+        )
 
         # Jump vs linear again, move_one vs move_more
         for i in range(1, 10):
             tmp = d_vct0[65 + i]
-        self.assertEqual(crypto.encodeint_into(None, tmp), crypto.encodeint_into(None, d_vct1[74]))
+        self.assertEqual(
+            crypto.encodeint_into(None, tmp), crypto.encodeint_into(None, d_vct1[74])
+        )
 
         _ = d_vct0[85]
         _ = d_vct1[89]  # different jump sizes, internal state management test
-        self.assertEqual(crypto.encodeint_into(None, d_vct0[95]), crypto.encodeint_into(None, d_vct1[95]))
+        self.assertEqual(
+            crypto.encodeint_into(None, d_vct0[95]),
+            crypto.encodeint_into(None, d_vct1[95]),
+        )
 
         _ = d_vct0[319]  # move_one mults by z_sq then; enforce z component updates
-        self.assertEqual(crypto.encodeint_into(None, d_vct0[320]), crypto.encodeint_into(None, d_vct1[320]))
+        self.assertEqual(
+            crypto.encodeint_into(None, d_vct0[320]),
+            crypto.encodeint_into(None, d_vct1[320]),
+        )
 
         tmp = crypto.sc_copy(None, d_vct0[64])  # another jump back and forth
         _ = d_vct0[127]
-        self.assertEqual(crypto.encodeint_into(None, d_vct0[64]), crypto.encodeint_into(None, tmp))
+        self.assertEqual(
+            crypto.encodeint_into(None, d_vct0[64]), crypto.encodeint_into(None, tmp)
+        )
 
         _ = d_vct0[0]
         _ = d_vct1[0]
         _ = d_vct0[64]
-        self.assertEqual(crypto.encodeint_into(None, d_vct0[5]), crypto.encodeint_into(None, d_vct1[5]))
+        self.assertEqual(
+            crypto.encodeint_into(None, d_vct0[5]),
+            crypto.encodeint_into(None, d_vct1[5]),
+        )
 
     def test_pow_back_skips(self):
         MN = 128
-        y = unhexlify('60421950bee0aab949e63336db1eb9532dba6b4599c5cd9fb1dbde909114100e')
+        y = unhexlify(
+            "60421950bee0aab949e63336db1eb9532dba6b4599c5cd9fb1dbde909114100e"
+        )
         y_sc = crypto.decodeint_into(None, y)
         yinv = bp._invert(None, y)
 
         y_to_MN_1 = bp._sc_square_mult(None, y_sc, MN - 1)
         ymax = crypto.sc_mul_into(None, y_to_MN_1, y_sc)  ## y**MN
         ymax2 = bp._sc_square_mult(None, y_sc, MN)
-        self.assertEqual(crypto.encodeint_into(None, ymax), crypto.encodeint_into(None, ymax2))
+        self.assertEqual(
+            crypto.encodeint_into(None, ymax), crypto.encodeint_into(None, ymax2)
+        )
 
         size = MN + 1
         ypow_back = bp.KeyVPowersBackwards(size, y, x_inv=yinv, x_max=ymax, raw=True)
-        self.assertEqual(crypto.encodeint_into(None, ymax), crypto.encodeint_into(None, ypow_back[MN]))
+        self.assertEqual(
+            crypto.encodeint_into(None, ymax),
+            crypto.encodeint_into(None, ypow_back[MN]),
+        )
 
         for i in range(10):
             _ = ypow_back[MN - i]
 
-        self.assertEqual(crypto.encodeint_into(None, ypow_back[MN - 9]),
-                         crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 9)))
-        self.assertEqual(crypto.encodeint_into(None, ypow_back[MN - 19]),
-                         crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 19)))
-        self.assertEqual(crypto.encodeint_into(None, ypow_back[MN - 65]),
-                         crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 65)))
-        self.assertEqual(crypto.encodeint_into(None, ypow_back[MN - 14]),
-                         crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 14)))
+        self.assertEqual(
+            crypto.encodeint_into(None, ypow_back[MN - 9]),
+            crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 9)),
+        )
+        self.assertEqual(
+            crypto.encodeint_into(None, ypow_back[MN - 19]),
+            crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 19)),
+        )
+        self.assertEqual(
+            crypto.encodeint_into(None, ypow_back[MN - 65]),
+            crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 65)),
+        )
+        self.assertEqual(
+            crypto.encodeint_into(None, ypow_back[MN - 14]),
+            crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 14)),
+        )
 
         tmp = crypto.sc_copy(None, ypow_back[MN - 64])  # another jump back and forth
         _ = ypow_back[MN - 127]
-        self.assertEqual(crypto.encodeint_into(None, ypow_back[MN - 64]), crypto.encodeint_into(None, tmp))
-        self.assertEqual(crypto.encodeint_into(None, ypow_back[MN - 64]),
-                         crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 64)))
+        self.assertEqual(
+            crypto.encodeint_into(None, ypow_back[MN - 64]),
+            crypto.encodeint_into(None, tmp),
+        )
+        self.assertEqual(
+            crypto.encodeint_into(None, ypow_back[MN - 64]),
+            crypto.encodeint_into(None, bp._sc_square_mult(None, y_sc, MN - 64)),
+        )
 
     def test_bpp_bprime(self):
         N, M = 64, 4
-        MN = N*M
-        y = unhexlify(b'60421950bee0aab949e63336db1eb9532dba6b4599c5cd9fb1dbde909114100e')
-        z = unhexlify(b'e0408b528e9d35ccb8386b87f39b85c724740644f4db412483a8852cdb3ceb00')
+        MN = N * M
+        y = unhexlify(
+            b"60421950bee0aab949e63336db1eb9532dba6b4599c5cd9fb1dbde909114100e"
+        )
+        z = unhexlify(
+            b"e0408b528e9d35ccb8386b87f39b85c724740644f4db412483a8852cdb3ceb00"
+        )
         zc = crypto.decodeint_into(None, z)
         z_sq = bp._sc_mul(None, z, z)
         sv = [1234, 8789, 4455, 6697]
@@ -231,8 +282,8 @@ class TestMoneroBulletproof(unittest.TestCase):
 
     def test_prove_plus_16(self):
         bpi = bp.BulletProofPlusBuilder()
-        sv = [crypto.Scalar(i*123 + 45) for i in range(16)]
-        gamma = [crypto.Scalar(i*456 * 17) for i in range(16)]
+        sv = [crypto.Scalar(i * 123 + 45) for i in range(16)]
+        gamma = [crypto.Scalar(i * 456 * 17) for i in range(16)]
         proof = bpi.prove_batch(sv, gamma)
         bpi.verify_batch([proof])
 
@@ -240,18 +291,38 @@ class TestMoneroBulletproof(unittest.TestCase):
         scalars = [0, 1, 2, 3, 4, 99]
         point_base = [0, 2, 4, 7, 12, 18]
         scalar_sc = [crypto.Scalar(x) for x in scalars]
-        points = [crypto.scalarmult_base_into(None, crypto.Scalar(x)) for x in point_base]
+        points = [
+            crypto.scalarmult_base_into(None, crypto.Scalar(x)) for x in point_base
+        ]
 
-        muex = bp.MultiExp(scalars=[crypto.encodeint(x) for x in scalar_sc],
-                           point_fnc=lambda i, d: crypto.encodepoint(points[i]))
+        muex = bp.MultiExp(
+            scalars=[crypto.encodeint(x) for x in scalar_sc],
+            point_fnc=lambda i, d: crypto.encodepoint(points[i]),
+        )
 
         self.assertEqual(len(muex), len(scalars))
         res = bp.multiexp(None, muex)
         res2 = bp.vector_exponent_custom(
-            A=bp.KeyVEval(3, lambda i, d: crypto.encodepoint_into(crypto.scalarmult_base_into(None, crypto.Scalar(point_base[i])), d)),
-            B=bp.KeyVEval(3, lambda i, d: crypto.encodepoint_into(crypto.scalarmult_base_into(None, crypto.Scalar(point_base[3+i])), d)),
-            a=bp.KeyVEval(3, lambda i, d: crypto.encodeint_into(crypto.Scalar(scalars[i]), d),),
-            b=bp.KeyVEval(3, lambda i, d: crypto.encodeint_into(crypto.Scalar(scalars[i+3]), d)),
+            A=bp.KeyVEval(
+                3,
+                lambda i, d: crypto.encodepoint_into(
+                    crypto.scalarmult_base_into(None, crypto.Scalar(point_base[i])), d
+                ),
+            ),
+            B=bp.KeyVEval(
+                3,
+                lambda i, d: crypto.encodepoint_into(
+                    crypto.scalarmult_base_into(None, crypto.Scalar(point_base[3 + i])),
+                    d,
+                ),
+            ),
+            a=bp.KeyVEval(
+                3,
+                lambda i, d: crypto.encodeint_into(crypto.Scalar(scalars[i]), d),
+            ),
+            b=bp.KeyVEval(
+                3, lambda i, d: crypto.encodeint_into(crypto.Scalar(scalars[i + 3]), d)
+            ),
         )
         self.assertEqual(res, res2)
 

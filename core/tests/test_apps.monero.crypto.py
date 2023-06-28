@@ -15,11 +15,15 @@ class TestMoneroCrypto(unittest.TestCase):
         point = unhexlify(
             b"2486224797d05cae3cba4be043be2db0df381f3f19cfa113f86ab38e3d8d2bd0"
         )
-        self.assertEqual(point, crypto_helpers.encodepoint(crypto_helpers.decodepoint(point)))
+        self.assertEqual(
+            point, crypto_helpers.encodepoint(crypto_helpers.decodepoint(point))
+        )
         self.assertTrue(
             crypto.point_eq(
                 crypto_helpers.decodepoint(point),
-                crypto_helpers.decodepoint(crypto_helpers.encodepoint(crypto_helpers.decodepoint(point))),
+                crypto_helpers.decodepoint(
+                    crypto_helpers.encodepoint(crypto_helpers.decodepoint(point))
+                ),
             )
         )
 
@@ -61,7 +65,9 @@ class TestMoneroCrypto(unittest.TestCase):
             b"adcd1f5881f46f254900a03c654e71950a88a0236fa0a3a946c9b8daed6ef43d"
         )
 
-        res = crypto.scalarmult_into(None, crypto_helpers.decodepoint(pub), crypto_helpers.decodeint(priv))
+        res = crypto.scalarmult_into(
+            None, crypto_helpers.decodepoint(pub), crypto_helpers.decodeint(priv)
+        )
         self.assertEqual(exp, crypto_helpers.encodepoint(res))
         self.assertTrue(crypto.point_eq(crypto_helpers.decodepoint(exp), res))
 
@@ -111,7 +117,9 @@ class TestMoneroCrypto(unittest.TestCase):
             b"25d08763414c379aa9cf989cdcb3cadd36bd5193b500107d6bf5f921f18e470e"
         )
 
-        sc_int = crypto_helpers.derivation_to_scalar(crypto_helpers.decodepoint(derivation), 0)
+        sc_int = crypto_helpers.derivation_to_scalar(
+            crypto_helpers.decodepoint(derivation), 0
+        )
         self.assertEqual(scalar, crypto_helpers.encodeint(sc_int))
 
     def test_generate_key_derivation(self):
@@ -131,7 +139,9 @@ class TestMoneroCrypto(unittest.TestCase):
 
         self.assertEqual(
             deriv_exp,
-            crypto_helpers.encodepoint(crypto_helpers.generate_key_derivation(key_pub, key_priv)),
+            crypto_helpers.encodepoint(
+                crypto_helpers.generate_key_derivation(key_pub, key_priv)
+            ),
         )
 
     def test_h(self):
@@ -158,13 +168,20 @@ class TestMoneroCrypto(unittest.TestCase):
         addr_exp = "4LL9oSLmtpccfufTMvppY6JwXNouMBzSkbLYfpAV5Usx3skxNgYeYTRj5UzqtReoS44qo9mtmXCqY45DJ852K5Jv2bYXZKKQePHES9khPK"
         addr = tcry.xmr_base58_addr_encode_check(
             19,
-            unhexlify(b"eda9fe8dfcdd25d5430ea64229d04f6b41b2e5a1587c29cd499a63eb79d117113076a02b73d130fb904c9e91075fcd16f735c6850dfadb125eb826d96a113f098a125052fe6f3877"))
+            unhexlify(
+                b"eda9fe8dfcdd25d5430ea64229d04f6b41b2e5a1587c29cd499a63eb79d117113076a02b73d130fb904c9e91075fcd16f735c6850dfadb125eb826d96a113f098a125052fe6f3877"
+            ),
+        )
 
         addr2 = encode_addr(
             bytes([19]),
-            unhexlify(b"eda9fe8dfcdd25d5430ea64229d04f6b41b2e5a1587c29cd499a63eb79d11711"),
-            unhexlify(b"3076a02b73d130fb904c9e91075fcd16f735c6850dfadb125eb826d96a113f09"),
-            unhexlify(b"8a125052fe6f3877")
+            unhexlify(
+                b"eda9fe8dfcdd25d5430ea64229d04f6b41b2e5a1587c29cd499a63eb79d11711"
+            ),
+            unhexlify(
+                b"3076a02b73d130fb904c9e91075fcd16f735c6850dfadb125eb826d96a113f09"
+            ),
+            unhexlify(b"8a125052fe6f3877"),
         )
 
         self.assertEqual(addr, addr_exp)
@@ -215,7 +232,9 @@ class TestMoneroCrypto(unittest.TestCase):
                 b"259ef2aba8feb473cf39058a0fe30b9ff6d245b42b6826687ebd6b63128aff64"
             )
         )
-        res = crypto_helpers.encodepoint(monero.derive_subaddress_public_key(out_key, deriv, 5))
+        res = crypto_helpers.encodepoint(
+            monero.derive_subaddress_public_key(out_key, deriv, 5)
+        )
         self.assertEqual(
             res,
             unhexlify(
@@ -257,13 +276,27 @@ class TestMoneroCrypto(unittest.TestCase):
         from apps.monero.signing.step_06_set_output import _derive_view_tags
 
         test_vectors = [
-            (b'0fc47054f355ced4d67de73bfa12e4c78ff19089548fffa7d07a674741860f97', 0, b'\x76'),
-            (b'fe7770c4b076e95ddb8026affcfab39d31c7c4a2266e0e25e343bc4badc907d0', 15, b'\xeb'),
-            (b'ea9337d0ddf480abdc4fc56a0cb223702729cb230ae7b9de50243ad25ce90e8d', 13, b'\x42'),
+            (
+                b"0fc47054f355ced4d67de73bfa12e4c78ff19089548fffa7d07a674741860f97",
+                0,
+                b"\x76",
+            ),
+            (
+                b"fe7770c4b076e95ddb8026affcfab39d31c7c4a2266e0e25e343bc4badc907d0",
+                15,
+                b"\xeb",
+            ),
+            (
+                b"ea9337d0ddf480abdc4fc56a0cb223702729cb230ae7b9de50243ad25ce90e8d",
+                13,
+                b"\x42",
+            ),
         ]
 
         for key, idx, exp in test_vectors:
-            self.assertEqual(_derive_view_tags(crypto_helpers.decodepoint(unhexlify(key)), idx), exp)
+            self.assertEqual(
+                _derive_view_tags(crypto_helpers.decodepoint(unhexlify(key)), idx), exp
+            )
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from trezor import io, sdcard
 
 fatfs = io.fatfs
 
+
 class TestTrezorSdcard(unittest.TestCase):
     def test_power(self):
         # sdcard.capacity() will return 0 if the card is not powered,

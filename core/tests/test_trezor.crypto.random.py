@@ -4,7 +4,6 @@ from trezor.crypto import random
 
 
 class TestCryptoRandom(unittest.TestCase):
-
     def test_uniform(self):
         c = {}
         for i in range(15):
@@ -27,13 +26,13 @@ class TestCryptoRandom(unittest.TestCase):
     def test_bytes_uniform(self):
         for _ in range(100):
             c = {}
-            for h in '0123456789abcdef':
+            for h in "0123456789abcdef":
                 c[h] = 0
             for _ in range(8):
                 b = random.bytes(1000)
                 for h in hexlify(b):
                     c[chr(h)] += 1
-            for h in '0123456789abcdef':
+            for h in "0123456789abcdef":
                 self.assertAlmostEqual(c[h], 1000, delta=200)
 
     def test_shuffle(self):
@@ -44,5 +43,5 @@ class TestCryptoRandom(unittest.TestCase):
             self.assertEqual(sorted(lst), list(range(l)))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
