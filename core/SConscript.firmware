@@ -54,7 +54,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
     'vendor/trezor-storage/norcow.c',
     'vendor/trezor-storage/storage.c',
-    'vendor/trezor-storage/flash_common.c',
 ]
 
 # modtrezorcrypto
@@ -336,16 +335,6 @@ SOURCE_MICROPYTHON_SPEED = [
     'vendor/micropython/py/vm.c',
 ]
 
-SOURCE_FIRMWARE = [
-    'embed/firmware/bl_check.c',
-    'embed/firmware/delay.c',
-    'embed/firmware/header.S',
-    'embed/firmware/main.c',
-    'embed/firmware/mphalport.c',
-    'embed/firmware/nlrthumb.c',
-    'embed/firmware/startup.S',
-]
-
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
 
 if FEATURE_FLAGS["RDI"]:
@@ -379,6 +368,18 @@ SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 env = Environment(ENV=os.environ, CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY}")
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+
+SOURCE_FIRMWARE = [
+    'embed/firmware/bl_check.c',
+    'embed/firmware/delay.c',
+    'embed/firmware/header.S',
+    'embed/firmware/main.c',
+    'embed/firmware/mphalport.c',
+    'embed/firmware/nlrthumb.c',
+    f'embed/firmware/startup_{FILE_SUFFIX}.S',
+]
 
 
 if TREZOR_MODEL in ('T', 'DISC1'):
@@ -822,23 +823,31 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 
-if TREZOR_MODEL in ('T', 'R', 'DISC1'):
+
+if TREZOR_MODEL in ('1',):
     action_bin=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
-        '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
-        '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
-        '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
-        '$CP $TARGET ' + BINARY_NAME,
-    ]
-elif TREZOR_MODEL in ('1',):
-    action_bin=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',
         '$CP $TARGET ' + BINARY_NAME,
     ]
 else:
-    raise ValueError('Unknown Trezor model')
+    if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
+        action_bin=[
+            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
+            '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
+            '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
+            '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+            '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
+            '$CP $TARGET ' + BINARY_NAME,
+        ]
+    elif 'STM32U5A9xx' in CPPDEFINES_HAL:
+        action_bin=[
+            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive $SOURCE ${TARGET}',
+            '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+            '$CP $TARGET ' + BINARY_NAME,
+            ]
+    else:
+        raise Exception("Unknown MCU")
 
 program_bin = env.Command(
     target='firmware.bin',

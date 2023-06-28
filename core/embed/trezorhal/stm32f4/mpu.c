@@ -33,6 +33,10 @@ void mpu_config_off(void) {
   HAL_MPU_Disable();
 }
 
+void mpu_config_boardloader(void) {
+  // nothing to be done
+}
+
 void mpu_config_bootloader(void) {
   // Disable MPU
   HAL_MPU_Disable();

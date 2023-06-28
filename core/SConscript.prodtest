@@ -87,20 +87,7 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_common.c',
 ]
-
-SOURCE_PRODTEST = [
-    'embed/prodtest/startup.s',
-    'embed/prodtest/header.S',
-    'embed/prodtest/main.c',
-    'embed/prodtest/prodtest_common.c',
-]
-
-if TREZOR_MODEL in ('R',):
-    SOURCE_PRODTEST += [
-        'embed/prodtest/optiga_prodtest.c',
-    ]
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
@@ -112,6 +99,21 @@ tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+
+
+SOURCE_PRODTEST = [
+    f'embed/prodtest/startup_{FILE_SUFFIX}.s',
+    'embed/prodtest/header.S',
+    'embed/prodtest/main.c',
+    'embed/prodtest/prodtest_common.c',
+]
+
+if 'optiga' in FEATURES_AVAILABLE:
+    SOURCE_PRODTEST += [
+        'embed/prodtest/optiga_prodtest.c',
+    ]
 
 env.Replace(
     CP='cp',
@@ -139,7 +141,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/prodtest/memory.ld -Wl,--gc-sections -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
+    LINKFLAGS=f'-T embed/prodtest/memory_{FILE_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
     CPPPATH=[
         'embed/prodtest',
         'embed/lib',
@@ -221,7 +223,7 @@ program_bin = env.Command(
     target='prodtest.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )

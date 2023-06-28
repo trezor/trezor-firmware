@@ -63,17 +63,19 @@ SOURCE_MOD += [
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
-    'vendor/trezor-storage/flash_common.c',
-]
-
-SOURCE_BOARDLOADER = [
-    'embed/boardloader/startup.s',
-    'embed/boardloader/main.c',
 ]
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')), CONSTRAINTS=["limited_util_s"])
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+
+SOURCE_BOARDLOADER = [
+    f"embed/boardloader/startup_{FILE_SUFFIX}.s",
+    'embed/boardloader/main.c',
+]
+
 
 env.Replace(
     CP='cp',
@@ -101,7 +103,7 @@ env.Replace(
     '-fstack-protector-all '
     + env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage',
+    LINKFLAGS=f"-T embed/boardloader/memory_{FILE_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage",
     CPPPATH=[
         'embed/boardloader',
         'embed/lib',
@@ -158,7 +160,7 @@ program_bin = env.Command(
     target='boardloader.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .vector_table -j .text -j .data -j .rodata -j .capabilities -j .sensitive $SOURCE $TARGET',
         '$CP $TARGET ' + BINARY_NAME,
     ],
 )

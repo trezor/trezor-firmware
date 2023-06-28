@@ -34,21 +34,29 @@ PYTEST_TIMEOUT ?= 400
 OPENOCD_INTERFACE ?= stlink
 # OpenOCD transport default. Alternative: jtag
 OPENOCD_TRANSPORT ?= hla_swd
-OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f4x.cfg
-OPENOCD_T1 = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f2x.cfg
 
+ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T R DISC1))
+OPENOCD_TARGET = target/stm32f4x.cfg
 BOARDLOADER_START   = 0x08000000
+BOARDLOADER_END     = 0x0800C000
 BOOTLOADER_START    = 0x08020000
-FIRMWARE_P1_START   = 0x08040000
+FIRMWARE_START   	= 0x08040000
 FIRMWARE_P2_START   = 0x08120000
 PRODTEST_START      = 0x08040000
-FIRMWARE_T1_START   = 0x08010000
-
 BOARDLOADER_MAXSIZE = 49152
 BOOTLOADER_MAXSIZE  = 131072
 FIRMWARE_P1_MAXSIZE = 786432
 FIRMWARE_P2_MAXSIZE = 917504
 FIRMWARE_MAXSIZE    = 1703936
+else ifeq ($(TREZOR_MODEL), 1)
+OPENOCD_TARGET = target/stm32uf2.cfg
+FIRMWARE_START   	= 0x08010000
+else
+$(error Unknown TREZOR_MODEL: $(TREZOR_MODEL))
+endif
+
+
+OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f $(OPENOCD_TARGET)
 
 CFLAGS += -DSCM_REVISION='\"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')\"'
 
@@ -271,10 +279,12 @@ flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenO
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(PRODTEST_START); exit"
 
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(FIRMWARE_P1_START); flash write_image erase $<.p2 $(FIRMWARE_P2_START); exit"
+ifdef FIRMWARE_P2_START
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(FIRMWARE_START); flash write_image erase $<.p2 $(FIRMWARE_P2_START); exit"
 
-flash_firmware_t1: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash T1 core port on T1 using OpenOCD
-	$(OPENOCD_T1) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_T1_START); exit"
+else
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
+endif
 
 flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
@@ -346,7 +356,11 @@ combine: ## combine boardloader + bootloader + prodtest into one combined image
 		$(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		$(BOOTLOADER_BUILD_DIR)/bootloader.bin \
 		$(PRODTEST_BUILD_DIR)/prodtest.bin \
-		$(PRODTEST_BUILD_DIR)/combined.bin
+		$(PRODTEST_BUILD_DIR)/combined.bin \
+		$(BOARDLOADER_START) \
+		$(BOARDLOADER_END) \
+		$(BOOTLOADER_START) \
+		$(PRODTEST_START)
 
 upload: ## upload firmware using trezorctl
 	trezorctl firmware_update -s -f $(FIRMWARE_BUILD_DIR)/firmware.bin
