@@ -582,7 +582,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                             &should_keep_seed, &is_newvendor);
       }
 
-#ifdef USE_OPTIGA
+#if defined USE_OPTIGA && !defined STM32U5
       if (sectrue != secret_wiped() && ((vhdr.vtrust & VTRUST_SECRET) != 0)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
@@ -611,6 +611,9 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       // if firmware is not upgrade, erase storage
       if (sectrue != should_keep_seed) {
+#ifdef STM32U5
+        secret_bhk_regenerate();
+#endif
         ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
                NULL);
       }
@@ -671,11 +674,11 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
   const uint32_t *const src = (const uint32_t *const)CHUNK_BUFFER_PTR;
 
-  for (int i = 0; i < chunk_size / (sizeof(uint32_t) * 4); i++) {
-    ensure(flash_area_write_quadword(
+  for (int i = 0; i < chunk_size / (sizeof(uint32_t) * 8 * 4); i++) {
+    ensure(flash_area_write_burst(
                &FIRMWARE_AREA,
-               firmware_block * IMAGE_CHUNK_SIZE + i * 4 * sizeof(uint32_t),
-               &src[4 * i]),
+               firmware_block * IMAGE_CHUNK_SIZE + i * 8 * 4 * sizeof(uint32_t),
+               &src[8 * 4 * i]),
            NULL);
   }
 
@@ -743,7 +746,7 @@ void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   MSG_SEND(Failure);
 }
 
-#ifdef USE_OPTIGA
+#if defined USE_OPTIGA && !defined STM32U5
 void process_msg_UnlockBootloader(uint8_t iface_num, uint32_t msg_size,
                                   uint8_t *buf) {
   secret_erase();

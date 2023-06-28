@@ -47,6 +47,7 @@
 #include "model.h"
 #include "mpu.h"
 #include "random_delays.h"
+#include "secure_aes.h"
 
 #include TREZOR_BOARD
 
@@ -74,9 +75,12 @@
 #ifdef USE_OPTIGA
 #include "optiga_commands.h"
 #include "optiga_transport.h"
-#include "secret.h"
 #endif
 #include "unit_variant.h"
+
+#if defined USE_OPTIGA | defined STM32U5
+#include "secret.h"
+#endif
 
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
@@ -118,8 +122,7 @@ int main(void) {
 
 #ifdef USE_OPTIGA
   uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok =
-      secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+  secbool secret_ok = secret_optiga_extract(secret);
 #endif
 
 #if PRODUCTION || BOOTLOADER_QA
@@ -143,6 +146,10 @@ int main(void) {
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
+#endif
+
+#ifdef STM32U5
+  secure_aes_init();
 #endif
 
 #ifdef USE_BUTTON
@@ -225,25 +232,6 @@ void __attribute__((noreturn)) nlr_jump_fail(void *val) {
   error_shutdown("INTERNAL ERROR", "(UE)");
 }
 
-// interrupt handlers
-
-void NMI_Handler(void) {
-  // Clock Security System triggered NMI
-  if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
-    error_shutdown("INTERNAL ERROR", "(CS)");
-  }
-}
-
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }
-
-void MemManage_Handler_MM(void) { error_shutdown("INTERNAL ERROR", "(MM)"); }
-
-void MemManage_Handler_SO(void) { error_shutdown("INTERNAL ERROR", "(SO)"); }
-
-void BusFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(BF)"); }
-
-void UsageFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(UF)"); }
-
 __attribute__((noreturn)) void reboot_to_bootloader() {
   mpu_config_bootloader();
   jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE,
@@ -294,11 +282,19 @@ void SVC_C_Handler(uint32_t *stack) {
 
       __asm__ volatile("msr control, %0" ::"r"(0x0));
       __asm__ volatile("isb");
+
+#ifdef STM32U5
+      _stay_in_bootloader_flag_addr = STAY_IN_BOOTLOADER_FLAG;
+      __disable_irq();
+      delete_secrets();
+      NVIC_SystemReset();
+#else
       // See stack layout in
       // https://developer.arm.com/documentation/ka004005/latest We are changing
       // return address in PC to land into reboot to avoid any bug with ROP and
       // raising privileges.
       stack[6] = (uintptr_t)reboot_to_bootloader;
+#endif
       return;
     case SVC_GET_SYSTICK_VAL: {
       systick_val_copy = SysTick->VAL;

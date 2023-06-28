@@ -134,3 +134,17 @@ secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
   }
   return sectrue;
 }
+
+secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
+                               const uint32_t *data) {
+  if (offset % (8 * 16) != 0) {
+    return secfalse;
+  }
+  for (int i = 0; i < (8 * 4); i++) {
+    if (sectrue !=
+        flash_area_write_word(area, offset + i * sizeof(uint32_t), data[i])) {
+      return secfalse;
+    }
+  }
+  return sectrue;
+}

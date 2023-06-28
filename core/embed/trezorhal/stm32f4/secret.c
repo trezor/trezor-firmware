@@ -72,3 +72,7 @@ secbool secret_wiped(void) {
 void secret_erase(void) {
   ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
 }
+
+secbool secret_optiga_extract(uint8_t* dest) {
+  return secret_read(dest, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+}

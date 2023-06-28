@@ -27,6 +27,7 @@ void flash_lock_option_bytes(void);
 void flash_unlock_option_bytes(void);
 uint32_t flash_set_option_bytes(void);
 secbool flash_configure_option_bytes(void);
+secbool flash_configure_sec_area_ob(void);
 void periph_init(void);
 secbool reset_flags_check(void);
 void reset_flags_reset(void);

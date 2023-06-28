@@ -9,6 +9,8 @@ MEMORY {
 }
 
 main_stack_base = ORIGIN(CCMRAM) + SIZEOF(.stack) ; /* 8-byte aligned full descending stack */
+_sstack = ORIGIN(CCMRAM);
+_estack = main_stack_base;
 
 /* used by the startup code to populate variables used by the C code */
 data_lma = LOADADDR(.data);

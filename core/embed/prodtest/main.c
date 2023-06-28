@@ -690,5 +690,3 @@ __attribute__((naked)) void SVC_Handler(void) {
       " b SVC_C_Handler \n"  // Off to C land
   );
 }
-
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(HF)"); }

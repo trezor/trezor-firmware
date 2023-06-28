@@ -57,6 +57,7 @@
 extern uint8_t firmware_header_start;
 extern uint8_t ccmram_start;
 extern uint8_t ccmram_end;
+extern uint32_t _stay_in_bootloader_flag_addr;
 
 void __attribute__((noreturn)) trezor_shutdown(void);
 

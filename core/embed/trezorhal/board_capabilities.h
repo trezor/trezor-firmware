@@ -35,7 +35,6 @@ Last tag must be terminator or all space used.
 
 #include <stdint.h>
 
-#define BOARD_CAPABILITIES_ADDR 0x0800BF00
 #define BOARD_CAPABILITIES_SIZE 256
 #define CAPABILITIES_HEADER "TRZC"
 
