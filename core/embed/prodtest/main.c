@@ -669,5 +669,3 @@ int main(void) {
 
   return 0;
 }
-
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(HF)"); }

@@ -47,6 +47,7 @@
 #include "model.h"
 #include "mpu.h"
 #include "random_delays.h"
+#include "secure_aes.h"
 #include "rust_ui.h"
 
 #include TREZOR_BOARD
@@ -75,8 +76,11 @@
 #ifdef USE_OPTIGA
 #include "optiga_commands.h"
 #include "optiga_transport.h"
+#endif
+#if defined USE_OPTIGA | defined STM32U5
 #include "secret.h"
 #endif
+
 #include "unit_variant.h"
 
 #ifdef SYSTEM_VIEW
@@ -97,6 +101,10 @@ int main(void) {
 
 #ifdef RDI
   rdi_start();
+#endif
+
+#ifdef STM32U5
+  check_oem_keys();
 #endif
 
   // reinitialize HAL for Trezor One
@@ -125,8 +133,7 @@ int main(void) {
 
 #ifdef USE_OPTIGA
   uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok =
-      secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+  secbool secret_ok = secret_optiga_extract(secret);
 #endif
 
 #if PRODUCTION || BOOTLOADER_QA
@@ -146,6 +153,10 @@ int main(void) {
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
+#endif
+
+#ifdef STM32U5
+  secure_aes_init();
 #endif
 
 #ifdef USE_BUTTON
@@ -230,25 +241,6 @@ int main(void) {
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
   error_shutdown("INTERNAL ERROR", "(UE)");
 }
-
-// interrupt handlers
-
-void NMI_Handler(void) {
-  // Clock Security System triggered NMI
-  if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
-    error_shutdown("INTERNAL ERROR", "(CS)");
-  }
-}
-
-void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }
-
-void MemManage_Handler_MM(void) { error_shutdown("INTERNAL ERROR", "(MM)"); }
-
-void MemManage_Handler_SO(void) { error_shutdown("INTERNAL ERROR", "(SO)"); }
-
-void BusFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(BF)"); }
-
-void UsageFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(UF)"); }
 
 // MicroPython builtin stubs
 

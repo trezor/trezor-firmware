@@ -11,13 +11,13 @@
 // Saves extra parameters for the bootloader
 static void _copy_boot_args(const void *args, size_t args_size) {
   // symbols imported from the linker script
-  extern uint8_t boot_args_start;
+  extern uint8_t g_boot_args;
   extern uint8_t boot_args_end;
 
-  uint8_t *p = &boot_args_start;
+  uint8_t *p = &g_boot_args;
 
   if (args != NULL && args_size > 0) {
-    size_t max_size = &boot_args_end - &boot_args_start;
+    size_t max_size = &boot_args_end - &g_boot_args;
     size_t copy_size = MIN(args_size, max_size);
     memcpy(p, args, copy_size);
     p += args_size;
@@ -28,6 +28,16 @@ static void _copy_boot_args(const void *args, size_t args_size) {
   }
 }
 
+#ifdef STM32U5
+extern uint32_t g_boot_flag;
+__attribute__((noreturn)) static void _reboot_to_bootloader(
+    boot_command_t boot_command) {
+  g_boot_flag = boot_command;
+  __disable_irq();
+  delete_secrets();
+  NVIC_SystemReset();
+}
+#else
 __attribute__((noreturn)) static void _reboot_to_bootloader(
     boot_command_t boot_command) {
   mpu_config_bootloader();
@@ -35,6 +45,7 @@ __attribute__((noreturn)) static void _reboot_to_bootloader(
   for (;;)
     ;
 }
+#endif
 
 void svc_reboot_to_bootloader(boot_command_t boot_command, const void *args,
                               size_t args_size) {
