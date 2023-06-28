@@ -38,7 +38,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_Unifont_Regular_16'
-elif TREZOR_MODEL in ('T', 'DISC1'):
+elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -382,7 +382,7 @@ SOURCE_FIRMWARE = [
 ]
 
 
-if TREZOR_MODEL in ('T', 'DISC1'):
+if TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
 elif TREZOR_MODEL in ('1', 'R'):
@@ -789,7 +789,7 @@ if TREZOR_MODEL not in ('1',):
             ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
             ' $SOURCE $TARGET', ))
 
-if TREZOR_MODEL not in ('DISC1', ):
+if TREZOR_MODEL not in ('DISC1', 'DISC2'):
     obj_program.extend(
         env.Command(
             target='embed/firmware/bootloaders/bootloader.o',

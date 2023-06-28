@@ -5,6 +5,7 @@ from pathlib import Path
 
 from boards import (
     discovery,
+    discovery2,
     trezor_1,
     trezor_r_v3,
     trezor_r_v4,
@@ -58,6 +59,8 @@ def configure_board(
         raise Exception("Unknown model_r_version")
     elif model in ("DISC1",):
         return discovery.configure(env, features_wanted, defines, sources, paths)
+    elif model in ("DISC2",):
+        return discovery2.configure(env, features_wanted, defines, sources, paths)
     raise Exception("Unknown model")
 
 
@@ -70,6 +73,8 @@ def get_model_identifier(model: str) -> str:
         return "T2B1"
     elif model == "DISC1":
         return "D001"
+    elif model == "DISC2":
+        return "D002"
     else:
         raise Exception("Unknown model")
 
