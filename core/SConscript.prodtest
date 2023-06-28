@@ -8,7 +8,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 
-if TREZOR_MODEL in ('DISC1', ):
+if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip prodtest build
     env = Environment()
     def build_prodtest(target,source,env):
