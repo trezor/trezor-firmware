@@ -10,7 +10,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 DMA2D =  TREZOR_MODEL in ('T', )
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-if TREZOR_MODEL in ('DISC1', ):
+if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip unix build
     env = Environment()
     def build_unix(target,source,env):
@@ -42,7 +42,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_Unifont_Regular_16'
-elif TREZOR_MODEL in ('T', ):
+elif TREZOR_MODEL in ('T', 'DISC2'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -489,6 +489,8 @@ if TREZOR_MODEL in ('T', 'R'):
     CPU_MODEL   = 'STM32F427xx'
 elif TREZOR_MODEL in ('DISC1', ):
     CPU_MODEL   = 'STM32F429xx'
+elif TREZOR_MODEL in ('DISC2', ):
+    CPU_MODEL   = 'STM32U5A9xx'
 elif TREZOR_MODEL in ('1',):
     CPU_MODEL   = 'STM32F405xx'
 else:

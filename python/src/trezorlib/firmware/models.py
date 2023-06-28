@@ -27,6 +27,7 @@ class Model(Enum):
     T = b"T2T1"
     R = b"T2B1"
     DISC1 = b"D001"
+    DISC2 = b"D002"
 
     @classmethod
     def from_hw_model(cls, hw_model: t.Union["Self", bytes]) -> "Self":
@@ -204,12 +205,15 @@ TREZOR_R = ModelKeys(
 TREZOR_R_DEV = TREZOR_T_DEV
 DISC1 = TREZOR_T_DEV
 DISC1_DEV = TREZOR_T_DEV
+DISC2 = TREZOR_T_DEV
+DISC2_DEV = TREZOR_T_DEV
 
 MODEL_MAP = {
     Model.ONE: TREZOR_ONE_V3,
     Model.T: TREZOR_T,
     Model.R: TREZOR_R,
     Model.DISC1: DISC1,
+    Model.DISC2: DISC2,
 }
 
 MODEL_MAP_DEV = {
@@ -217,4 +221,5 @@ MODEL_MAP_DEV = {
     Model.T: TREZOR_T_DEV,
     Model.R: TREZOR_R_DEV,
     Model.DISC1: DISC1_DEV,
+    Model.DISC2: DISC2_DEV,
 }
