@@ -6,7 +6,7 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-if TREZOR_MODEL in ('1', 'DISC1'):
+if TREZOR_MODEL in ('1', 'DISC1', 'DISC2'):
     # skip bootloader_ci build
     env = Environment()
     def build_bootloader_ci(target,source,env):
