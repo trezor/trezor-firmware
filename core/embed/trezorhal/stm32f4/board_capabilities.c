@@ -20,6 +20,7 @@
 #include "board_capabilities.h"
 #include <string.h>
 #include "common.h"
+#include "model.h"
 
 #define handle_fault(msg) \
   (__fatal_error("Fault detected", msg, __FILE__, __LINE__, __func__))
