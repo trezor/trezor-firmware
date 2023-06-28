@@ -456,26 +456,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             sequence=0xFFFFFFFF,
             multisig=None,
         )
-        ptx1 = PrevTx(
-            version=1, lock_time=0, inputs_count=1, outputs_count=2, extra_data_len=0
-        )
-        pinp1 = PrevInput(
-            script_sig=unhexlify("160014d16b8c0680c61fc6ed2e407455715055e41052f5"),
-            prev_hash=unhexlify(
-                "20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337"
-            ),
-            prev_index=0,
-            sequence=4294967295,
-        )
-        pout1 = PrevOutput(
-            script_pubkey=unhexlify("00140099a7ecbd938ed1839f5f6bf6d50933c6db9d5c"),
-            amount=12300000,
-        )
-        pout2 = PrevOutput(
-            script_pubkey=unhexlify("a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"),
-            amount=111145789,
-        )
-
         out1 = TxOutput(
             address="TB1Q694CCP5QCC0UDMFWGP692U2S2HJPQ5H407URTU",  # Error: should be lower case
             script_type=OutputScriptType.PAYTOADDRESS,

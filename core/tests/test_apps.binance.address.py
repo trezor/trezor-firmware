@@ -1,5 +1,4 @@
 from common import *
-from apps.common.paths import HARDENED
 
 from trezor.crypto.curve import secp256k1
 

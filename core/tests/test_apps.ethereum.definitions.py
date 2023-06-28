@@ -2,7 +2,6 @@ from common import *
 
 import typing as t
 import unittest
-from ubinascii import hexlify  # noqa: F401
 
 from trezor import utils, wire
 
@@ -12,15 +11,10 @@ if not utils.BITCOIN_ONLY:
     from apps.ethereum import networks, tokens
     from apps.ethereum.definitions import decode_definition, Definitions
     from ethereum_common import *
-    from trezor import protobuf
     from trezor.enums import EthereumDefinitionType
     from trezor.messages import (
-        EthereumDefinitions,
         EthereumNetworkInfo,
         EthereumTokenInfo,
-        EthereumSignTx,
-        EthereumSignTxEIP1559,
-        EthereumSignTypedData,
     )
 
     TETHER_ADDRESS = b"\xda\xc1\x7f\x95\x8d\x2e\xe5\x23\xa2\x20\x62\x06\x99\x45\x97\xc1\x3d\x83\x1e\xc7"

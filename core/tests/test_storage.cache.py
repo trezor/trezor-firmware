@@ -113,7 +113,7 @@ class TestStorageCache(unittest.TestCase):
         self.assertIsNone(cache.get(KEY))
 
         cache.set(KEY, b"hello")
-        session_id2 = cache.start_session()
+        cache.start_session()
         self.assertIsNone(cache.get(KEY))
         cache.set(KEY, b"hello")
         self.assertEqual(cache.get(KEY), b"hello")
@@ -219,7 +219,7 @@ class TestStorageCache(unittest.TestCase):
 
     def test_EndSession(self):
         self.assertRaises(cache.InvalidSessionError, cache.get, KEY)
-        session_id = cache.start_session()
+        cache.start_session()
         self.assertTrue(is_session_started())
         self.assertIsNone(cache.get(KEY))
         await_result(handle_EndSession(EndSession()))

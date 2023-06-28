@@ -1,4 +1,4 @@
-if False:
+if False:  # noqa
     from typing import Any
 
 

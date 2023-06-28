@@ -287,45 +287,6 @@ class TestMoneroBulletproof(unittest.TestCase):
         proof = bpi.prove_batch(sv, gamma)
         bpi.verify_batch([proof])
 
-    def ctest_multiexp(self):
-        scalars = [0, 1, 2, 3, 4, 99]
-        point_base = [0, 2, 4, 7, 12, 18]
-        scalar_sc = [crypto.Scalar(x) for x in scalars]
-        points = [
-            crypto.scalarmult_base_into(None, crypto.Scalar(x)) for x in point_base
-        ]
-
-        muex = bp.MultiExp(
-            scalars=[crypto.encodeint(x) for x in scalar_sc],
-            point_fnc=lambda i, d: crypto.encodepoint(points[i]),
-        )
-
-        self.assertEqual(len(muex), len(scalars))
-        res = bp.multiexp(None, muex)
-        res2 = bp.vector_exponent_custom(
-            A=bp.KeyVEval(
-                3,
-                lambda i, d: crypto.encodepoint_into(
-                    crypto.scalarmult_base_into(None, crypto.Scalar(point_base[i])), d
-                ),
-            ),
-            B=bp.KeyVEval(
-                3,
-                lambda i, d: crypto.encodepoint_into(
-                    crypto.scalarmult_base_into(None, crypto.Scalar(point_base[3 + i])),
-                    d,
-                ),
-            ),
-            a=bp.KeyVEval(
-                3,
-                lambda i, d: crypto.encodeint_into(crypto.Scalar(scalars[i]), d),
-            ),
-            b=bp.KeyVEval(
-                3, lambda i, d: crypto.encodeint_into(crypto.Scalar(scalars[i + 3]), d)
-            ),
-        )
-        self.assertEqual(res, res2)
-
 
 if __name__ == "__main__":
     unittest.main()

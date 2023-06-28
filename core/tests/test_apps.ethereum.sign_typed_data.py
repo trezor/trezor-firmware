@@ -540,16 +540,13 @@ class TestEthereumSignTypedData(unittest.TestCase):
         )
 
         for field, value, expected in VECTORS:
-            # metamask_v4_compat should not have any effect on the
-            # result for items outside of arrays
-            for metamask_v4_compat in [True, False]:
-                w = bytearray()
-                encode_field(
-                    w=w,
-                    field=field,
-                    value=value,
-                )
-                self.assertEqual(w, expected)
+            w = bytearray()
+            encode_field(
+                w=w,
+                field=field,
+                value=value,
+            )
+            self.assertEqual(w, expected)
 
     def test_validate_value(self):
         VECTORS_VALID_INVALID = (  # field, valid_values, invalid_values

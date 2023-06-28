@@ -18,13 +18,6 @@ def H_(x: int) -> int:
     return x | HARDENED
 
 
-def UH_(x: int) -> int:
-    """
-    Shortcut function that "un-hardens" a number in a BIP44 path.
-    """
-    return x & ~(HARDENED)
-
-
 def await_result(task: Awaitable) -> Any:
     value = None
     while True:

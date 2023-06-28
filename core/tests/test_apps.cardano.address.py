@@ -366,13 +366,6 @@ class TestCardanoAddress(unittest.TestCase):
                     "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"
                 ),
             ),
-            "BASE_OWN_STAKING_KEY_HASH": CardanoAddressParametersType(
-                address_type=CardanoAddressType.BASE,
-                address_n=[1852 | HARDENED, 1815 | HARDENED, 4 | HARDENED, 0, 0],
-                staking_key_hash=unhexlify(
-                    "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"
-                ),
-            ),
             # staking key hash not owned - derived with "all all..." mnenomnic
             "BASE_FOREIGN_STAKING_KEY_HASH_ACCOUNT_4": CardanoAddressParametersType(
                 address_type=CardanoAddressType.BASE,
