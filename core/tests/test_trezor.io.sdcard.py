@@ -1,7 +1,6 @@
 from common import *
 
-from trezor import io
-
+from trezor import io, utils
 
 
 class TestTrezorIoSdcard(unittest.TestCase):
@@ -44,4 +43,5 @@ class TestTrezorIoSdcard(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    if utils.USE_SD_CARD:
+        unittest.main()

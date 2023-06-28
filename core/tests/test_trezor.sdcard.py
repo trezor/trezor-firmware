@@ -1,9 +1,9 @@
 from common import *
 
-from trezor import io, sdcard
+from trezor import io, sdcard, utils
 
-
-fatfs = io.fatfs
+if utils.USE_SD_CARD:
+    fatfs = io.fatfs
 
 
 class TestTrezorSdcard(unittest.TestCase):
@@ -89,4 +89,5 @@ class TestTrezorSdcard(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    if utils.USE_SD_CARD:
+        unittest.main()
