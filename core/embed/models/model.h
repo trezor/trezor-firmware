@@ -11,6 +11,8 @@
 #include "model_T2B1.h"
 #elif defined TREZOR_MODEL_DISC1
 #include "model_D001.h"
+#elif defined TREZOR_MODEL_DISC2
+#include "model_D002.h"
 #else
 #error Unknown Trezor model
 #endif

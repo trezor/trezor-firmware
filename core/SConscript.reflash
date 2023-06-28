@@ -6,7 +6,7 @@ import tools
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 
-if TREZOR_MODEL in ('DISC1', ):
+if TREZOR_MODEL in ('DISC1', 'DISC2'):
     # skip reflash build
     env = Environment()
     def build_reflash(target,source,env):
