@@ -26,13 +26,13 @@ class MockStorage:
         self.namespace[app].pop(key, None)
 
     def __enter__(self):
-        for patch in self.patches:
-            patch.__enter__()
+        for self_patch in self.patches:
+            self_patch.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        for patch in self.patches:
-            patch.__exit__(exc_type, exc_value, tb)
+        for self_patch in self.patches:
+            self_patch.__exit__(exc_type, exc_value, tb)
 
 
 def mock_storage(func):

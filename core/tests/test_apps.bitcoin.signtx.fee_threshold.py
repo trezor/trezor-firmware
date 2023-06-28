@@ -1,6 +1,6 @@
 from common import *
 
-from trezor.crypto import bip32, bip39
+from trezor.crypto import bip39
 from trezor.enums import AmountUnit, OutputScriptType
 from trezor.enums.RequestType import TXINPUT, TXMETA, TXOUTPUT
 from trezor.messages import (

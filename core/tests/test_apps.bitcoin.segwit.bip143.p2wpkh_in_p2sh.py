@@ -73,10 +73,6 @@ class TestSegwitBip143(unittest.TestCase):
         )
 
     def test_bip143_outputs(self):
-        seed = bip39.seed(
-            "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
-            "",
-        )
         coin = coins.by_name(self.tx.coin_name)
         sig_hasher = BitcoinSigHasher()
 

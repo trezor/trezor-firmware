@@ -335,7 +335,7 @@ class TestMoneroClsag(unittest.TestCase):
             sD = crypto.scalarmult_base_into(None, crypto.random_scalar())
             self.verify_clsag(msg, scalars, sc1, sI, sD, ring2, Cp)
 
-    def test_clsag_invalid_P(self):
+    def test_clsag_invalid_P_dest(self):
         res = self.gen_clsag_sig(ring_size=11, index=5)
         msg, scalars, sc1, sI, sD, ring2, Cp = res
         with self.assertRaises(ValueError):
@@ -344,7 +344,7 @@ class TestMoneroClsag(unittest.TestCase):
             )
             self.verify_clsag(msg, scalars, sc1, sI, sD, ring2, Cp)
 
-    def test_clsag_invalid_P(self):
+    def test_clsag_invalid_P_commitment(self):
         res = self.gen_clsag_sig(ring_size=11, index=5)
         msg, scalars, sc1, sI, sD, ring2, Cp = res
         with self.assertRaises(ValueError):
