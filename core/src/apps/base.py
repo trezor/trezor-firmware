@@ -293,6 +293,7 @@ async def handle_CancelAuthorization(
     from apps.common import authorization
 
     authorization.clear()
+    workflow.close_others()
     return Success(message="Authorization cancelled")
 
 
