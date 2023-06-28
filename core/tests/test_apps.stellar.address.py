@@ -1,5 +1,7 @@
 from common import *
+
 from trezor.wire import ProcessError
+
 
 if not utils.BITCOIN_ONLY:
     from apps.stellar.helpers import address_from_public_key, public_key_from_address

@@ -1,3 +1,5 @@
+from common import *
+
 # Copyright (c) 2017, 2020 Pieter Wuille
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,7 +23,6 @@
 
 """Reference tests for segwit adresses"""
 
-from common import *
 from trezor.crypto import bech32
 
 

@@ -1,11 +1,10 @@
 from common import *
-from mock_storage import mock_storage
 
 from storage import cache
-from trezor.messages import Initialize
-from trezor.messages import EndSession
+from trezor.messages import EndSession, Initialize
 
-from apps.base import handle_Initialize, handle_EndSession
+from apps.base import handle_EndSession, handle_Initialize
+from mock_storage import mock_storage
 
 KEY = 0
 

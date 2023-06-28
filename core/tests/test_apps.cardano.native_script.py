@@ -1,8 +1,10 @@
 from common import *
+
 from trezor import wire
 from trezor.crypto import cardano
 from trezor.enums import CardanoNativeScriptType
 from trezor.messages import CardanoNativeScript
+
 
 if not utils.BITCOIN_ONLY:
     from apps.cardano.seed import Keychain

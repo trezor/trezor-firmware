@@ -3,8 +3,9 @@ from common import *
 import unittest
 
 from storage import cache
-from trezor import wire, utils
+from trezor import utils, wire
 from trezor.crypto import bip39
+
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
 

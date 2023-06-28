@@ -1,5 +1,7 @@
 from common import *
+
 from trezor.crypto import hashlib
+
 
 if not utils.BITCOIN_ONLY:
     from trezor.messages import NEMAggregateModification

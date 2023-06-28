@@ -1,3 +1,5 @@
+from common import *
+
 # Copyright (c) 2017 Pieter Wuille
 # Copyright (c) 2018 Pavol Rusnak
 #
@@ -22,7 +24,6 @@
 
 """Reference tests for cashaddr adresses"""
 
-from common import *
 from trezor.crypto import base58, cashaddr
 
 

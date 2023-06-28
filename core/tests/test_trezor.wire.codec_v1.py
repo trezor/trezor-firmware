@@ -1,6 +1,7 @@
 from common import *
-from ubinascii import unhexlify
+
 import ustruct
+from ubinascii import unhexlify
 
 from trezor import io
 from trezor.loop import wait

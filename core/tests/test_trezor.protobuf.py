@@ -2,10 +2,10 @@ from common import *
 
 from trezor import protobuf
 from trezor.messages import (
-    WebAuthnCredential,
+    DebugLinkMemoryRead,
     Failure,
     SignMessage,
-    DebugLinkMemoryRead,
+    WebAuthnCredential,
 )
 
 
