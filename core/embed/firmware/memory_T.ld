@@ -26,6 +26,7 @@ ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
 boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
+g_boot_args = boot_args_start;
 
 /* used by the startup code to wipe memory */
 sram_start = ORIGIN(SRAM);

@@ -382,7 +382,7 @@ fn generate_trezorhal_bindings() {
 
 fn is_firmware() -> bool {
     let target = env::var("TARGET").unwrap();
-    target.starts_with("thumbv7")
+    target.starts_with("thumbv7") || target.starts_with("thumbv8")
 }
 
 #[cfg(feature = "test")]

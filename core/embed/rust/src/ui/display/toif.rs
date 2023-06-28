@@ -10,6 +10,8 @@ use crate::{
         geometry::{Alignment2D, Offset, Point, Rect},
     },
 };
+
+#[cfg(feature = "framebuffer")]
 use core::cmp::max;
 
 #[cfg(feature = "dma2d")]

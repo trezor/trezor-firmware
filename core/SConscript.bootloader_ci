@@ -66,7 +66,6 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/memzero.c',
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/sha2.c',
-    'vendor/trezor-storage/flash_common.c',
 ]
 
 # modtrezorui
@@ -92,16 +91,6 @@ SOURCE_NANOPB = [
     'vendor/nanopb/pb_encode.c',
 ]
 
-SOURCE_BOOTLOADER = [
-    'embed/bootloader_ci/startup.s',
-    'embed/bootloader_ci/header.S',
-    'embed/bootloader_ci/bootui.c',
-    'embed/bootloader_ci/main.c',
-    'embed/bootloader_ci/messages.c',
-    'embed/bootloader_ci/protob/messages.pb.c',
-]
-
-
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
@@ -112,6 +101,18 @@ tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+LINKER_SCRIPT_SUFFIX= env.get('ENV')['LINKER_SCRIPT']
+
+SOURCE_BOOTLOADER = [
+    f'embed/bootloader_ci/startup_{FILE_SUFFIX}.s',
+    'embed/bootloader_ci/header.S',
+    'embed/bootloader_ci/bootui.c',
+    'embed/bootloader_ci/main.c',
+    'embed/bootloader_ci/messages.c',
+    'embed/bootloader_ci/protob/messages.pb.c',
+]
 
 env.Replace(
     CP='cp',
@@ -139,7 +140,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/bootloader_ci/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader_ci/bootloader.map -Wl,--warn-common',
+    LINKFLAGS=f'-T embed/bootloader_ci/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/bootloader_ci/bootloader.map -Wl,--warn-common',
     CPPPATH=[
         'embed/bootloader_ci',
         'embed/bootloader_ci/nanopb',
@@ -207,7 +208,7 @@ program_bin = env.Command(
     target='bootloader.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )
