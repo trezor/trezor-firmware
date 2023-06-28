@@ -1,8 +1,8 @@
 from common import *
 
+from trezor import config
 from trezor.crypto import random
 
-from trezor import config
 
 PINAPP = 0x00
 PINKEY = 0x00

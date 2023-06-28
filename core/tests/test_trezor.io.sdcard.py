@@ -3,6 +3,7 @@ from common import *
 from trezor import io
 
 
+
 class TestTrezorIoSdcard(unittest.TestCase):
     def test_start(self):
         self.assertTrue(io.sdcard.is_present())

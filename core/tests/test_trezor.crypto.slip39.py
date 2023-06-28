@@ -1,5 +1,7 @@
 from common import *
-from trezor.crypto import slip39, random
+
+from trezor.crypto import random, slip39
+
 from slip39_vectors import vectors
 
 

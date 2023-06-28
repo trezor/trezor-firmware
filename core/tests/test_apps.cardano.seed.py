@@ -1,4 +1,5 @@
 from common import *
+
 from trezor.crypto import cardano
 
 from apps.common.paths import HARDENED

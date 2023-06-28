@@ -1,5 +1,7 @@
 from common import *
+
 from trezor.crypto import base32
+
 
 
 class TestCryptoBase32(unittest.TestCase):

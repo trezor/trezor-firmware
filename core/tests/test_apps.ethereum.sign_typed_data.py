@@ -2,11 +2,13 @@ from common import *
 
 from trezor import wire
 from trezor.wire import context
-from trezor.messages import EthereumTypedDataStructAck as ETDSA
-from trezor.messages import EthereumStructMember as ESM
-from trezor.messages import EthereumFieldType as EFT
-from trezor.messages import EthereumTypedDataValueAck
 from trezor.enums import EthereumDataType as EDT
+from trezor.messages import (
+    EthereumFieldType as EFT,
+    EthereumStructMember as ESM,
+    EthereumTypedDataStructAck as ETDSA,
+    EthereumTypedDataValueAck,
+)
 
 
 if not utils.BITCOIN_ONLY:

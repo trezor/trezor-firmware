@@ -1,6 +1,6 @@
-from mock import patch
-
 import storage.common
+
+from mock import patch
 
 
 class MockStorage:

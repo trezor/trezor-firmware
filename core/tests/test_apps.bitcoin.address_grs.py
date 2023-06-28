@@ -1,9 +1,10 @@
 from common import *
 
-from apps.bitcoin.common import *
-from apps.bitcoin.addresses import *
-from apps.common import coins
 from trezor.crypto import bip32, bip39
+
+from apps.bitcoin.addresses import *
+from apps.bitcoin.common import *
+from apps.common import coins
 
 
 def node_derive(root, path):

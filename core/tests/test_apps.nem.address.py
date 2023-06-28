@@ -1,4 +1,5 @@
 from common import *
+
 from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:

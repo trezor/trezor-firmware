@@ -1,7 +1,8 @@
 from common import *
+
 from trezor import wire
 from trezor.enums import CardanoCertificateType
-from trezor.messages import CardanoTxCertificate, CardanoPoolParametersType
+from trezor.messages import CardanoPoolParametersType, CardanoTxCertificate
 
 from apps.common.paths import HARDENED
 

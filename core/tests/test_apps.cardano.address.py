@@ -1,9 +1,9 @@
 from common import *
+
 from trezor import wire
 from trezor.crypto import cardano, slip39
 from trezor.enums import CardanoAddressType
-from trezor.messages import CardanoAddressParametersType
-from trezor.messages import CardanoBlockchainPointerType
+from trezor.messages import CardanoAddressParametersType, CardanoBlockchainPointerType
 
 from apps.common import seed
 from apps.common.paths import HARDENED

@@ -3,6 +3,7 @@ from common import *
 from trezor.crypto import bip32, bip39
 from trezor.crypto.curve import secp256k1
 
+
 if not utils.BITCOIN_ONLY:
     from apps.eos.helpers import public_key_to_wif
 

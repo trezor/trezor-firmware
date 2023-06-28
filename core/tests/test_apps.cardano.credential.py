@@ -1,10 +1,10 @@
 from common import *
 
-from apps.cardano.helpers.credential import Credential
-from apps.common.paths import HARDENED
 from trezor.enums import CardanoAddressType
 from trezor.messages import CardanoAddressParametersType, CardanoBlockchainPointerType
 
+from apps.cardano.helpers.credential import Credential
+from apps.common.paths import HARDENED
 
 CERTIFICATE_POINTER = CardanoBlockchainPointerType(
     block_index=24157,

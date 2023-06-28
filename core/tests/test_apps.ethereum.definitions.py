@@ -1,8 +1,11 @@
 from common import *
-import unittest
+
 import typing as t
-from trezor import utils, wire
+import unittest
 from ubinascii import hexlify  # noqa: F401
+
+from trezor import utils, wire
+
 
 if not utils.BITCOIN_ONLY:
 
