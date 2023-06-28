@@ -4,7 +4,6 @@ from storage import device
 
 
 class TestConfig(unittest.TestCase):
-
     def test_counter(self):
         config.init()
         config.wipe()
@@ -17,5 +16,5 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(device.next_u2f_counter(), 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

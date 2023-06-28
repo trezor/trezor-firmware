@@ -89,7 +89,15 @@ class TestTezosEncoding(unittest.TestCase):
 
     def test_tezos_encode_natural(self):
         inputs = [200000000000, 2000000, 159066, 200, 60000, 157000000, 0]
-        outputs = ["0080c0ee8ed20b", "008092f401", "009ab513", "008803", "00a0a907", "008085dd9501", "0000"]
+        outputs = [
+            "0080c0ee8ed20b",
+            "008092f401",
+            "009ab513",
+            "008803",
+            "00a0a907",
+            "008085dd9501",
+            "0000",
+        ]
 
         for i, o in zip(inputs, outputs):
             w = bytearray()

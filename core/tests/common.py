@@ -10,6 +10,7 @@ from typing import Any, Awaitable
 from trezor import utils  # noqa: F401
 from apps.common.paths import HARDENED
 
+
 def H_(x: int) -> int:
     """
     Shortcut function that "hardens" a number in a BIP44 path.

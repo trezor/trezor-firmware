@@ -51,7 +51,7 @@ class TestPathSchemas(unittest.TestCase):
         ensure(
             all(is_equal(a, b) for a, b in zip(schema_a.schema, schema_b.schema))
             and is_equal(schema_a.trailing_components, schema_b.trailing_components),
-            f"Schemas differ:\nA = {repr(schema_a)}\nB = {repr(schema_b)}"
+            f"Schemas differ:\nA = {repr(schema_a)}\nB = {repr(schema_b)}",
         )
 
     def test_always_never_matching(self):

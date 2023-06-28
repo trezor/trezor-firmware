@@ -142,32 +142,32 @@ class TestZcashZip243(unittest.TestCase):
         },
         # "Test vector 3" from https://github.com/zcash/zips/blob/master/zip-0243.rst
         {
-            "expiry": 0x0004b048,
+            "expiry": 0x0004B048,
             "inputs": [
                 {
-                    "amount": 0x02faf080,
+                    "amount": 0x02FAF080,
                     "prevout": [
                         "d9042195d9a1b65b2f1f79d68ceb1a5ea6459c9651a6ad4dc1f465824785c6a8",
                         1,
                     ],
                     "script_type": InputScriptType.SPENDADDRESS,
                     "pubkey": "03c6d9cc725bb7e19c026df03bf693ee1171371a8eaf25f04b7a58f6befabcd38c",
-                    "sequence": 0xfffffffe,
+                    "sequence": 0xFFFFFFFE,
                 }
             ],
-            "lock_time": 0x0004b029,
+            "lock_time": 0x0004B029,
             "outputs": [
                 {
                     "script_pubkey": "76a9148132712c3ff19f3a151234616777420a6d7ef22688ac",
-                    "amount": 0x02625a00,
+                    "amount": 0x02625A00,
                 },
                 {
                     "script_pubkey": "76a9145453e4698f02a38abdaa521cd1ff2dee6fac187188ac",
-                    "amount": 0x0098958b,
+                    "amount": 0x0098958B,
                 },
             ],
             "version": 4,
-            "version_group_id": 0x892f2085,
+            "version_group_id": 0x892F2085,
             "branch_id": 0x76B809BB,
             "prevouts_hash": b"fae31b8dec7b0b77e2c8d6b6eb0e7e4e55abc6574c26dd44464d9408a8e33f11",
             "sequence_hash": b"6c80d37f12d89b6f17ff198723e7db1247c4811d1a695d74d930f99e98418790",
@@ -195,25 +195,41 @@ class TestZcashZip243(unittest.TestCase):
 
             for i in v["inputs"]:
                 txi = TxInput(
-                    amount = i["amount"],
-                    prev_hash = unhexlify(i["prevout"][0]),
-                    prev_index = i["prevout"][1],
-                    script_type = i["script_type"],
-                    sequence = i["sequence"],
+                    amount=i["amount"],
+                    prev_hash=unhexlify(i["prevout"][0]),
+                    prev_index=i["prevout"][1],
+                    script_type=i["script_type"],
+                    sequence=i["sequence"],
                 )
                 zip243.add_input(txi, b"")
 
             for o in v["outputs"]:
                 txo = PrevOutput(
-                    amount = o["amount"],
-                    script_pubkey = unhexlify(o["script_pubkey"]),
+                    amount=o["amount"],
+                    script_pubkey=unhexlify(o["script_pubkey"]),
                 )
                 zip243.add_output(txo, txo.script_pubkey)
 
-            self.assertEqual(hexlify(get_tx_hash(zip243.h_prevouts)), v["prevouts_hash"])
-            self.assertEqual(hexlify(get_tx_hash(zip243.h_sequence)), v["sequence_hash"])
+            self.assertEqual(
+                hexlify(get_tx_hash(zip243.h_prevouts)), v["prevouts_hash"]
+            )
+            self.assertEqual(
+                hexlify(get_tx_hash(zip243.h_sequence)), v["sequence_hash"]
+            )
             self.assertEqual(hexlify(get_tx_hash(zip243.h_outputs)), v["outputs_hash"])
-            self.assertEqual(hexlify(zip243.hash143(txi, [unhexlify(i["pubkey"])], 1, tx, coin, SigHashType.SIGHASH_ALL)), v["preimage_hash"])
+            self.assertEqual(
+                hexlify(
+                    zip243.hash143(
+                        txi,
+                        [unhexlify(i["pubkey"])],
+                        1,
+                        tx,
+                        coin,
+                        SigHashType.SIGHASH_ALL,
+                    )
+                ),
+                v["preimage_hash"],
+            )
 
 
 if __name__ == "__main__":

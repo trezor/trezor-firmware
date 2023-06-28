@@ -34,17 +34,17 @@ sbu = io.SBU()
 def test_display(colors):
     d.clear()
     m = {
-        'R': 0xF800,
-        'G': 0x07E0,
-        'B': 0x001F,
-        'W': 0xFFFF,
+        "R": 0xF800,
+        "G": 0x07E0,
+        "B": 0x001F,
+        "W": 0xFFFF,
     }
     w = 240 // len(colors)
     for i, c in enumerate(colors):
         c = m.get(c, 0x0000)
         d.bar(i * w, 0, i * w + w, 240, c)
     d.refresh()
-    print('OK')
+    print("OK")
 
 
 def test_touch(v):
@@ -68,14 +68,22 @@ def test_touch(v):
     touch = False
     while True:
         if not touch:
-            if io.poll([io.TOUCH], r, 10000) and r[0] == io.TOUCH and r[1][0] == io.TOUCH_START:
+            if (
+                io.poll([io.TOUCH], r, 10000)
+                and r[0] == io.TOUCH
+                and r[1][0] == io.TOUCH_START
+            ):
                 touch = True
         else:
-            if io.poll([io.TOUCH], r, 10000) and r[0] == io.TOUCH and r[1][0] == io.TOUCH_END:
-                print(f'OK {r[1][1]} {r[1][2]}')
+            if (
+                io.poll([io.TOUCH], r, 10000)
+                and r[0] == io.TOUCH
+                and r[1][0] == io.TOUCH_END
+            ):
+                print(f"OK {r[1][1]} {r[1][2]}")
                 break
         if utime.ticks_us() > deadline:
-            print('ERROR TIMEOUT')
+            print("ERROR TIMEOUT")
             break
     # flush all events
     while io.poll([io.TOUCH], r, 10000):
@@ -87,7 +95,7 @@ def test_touch(v):
 def test_pwm(v):
     d.backlight(int(v))
     d.refresh()
-    print('OK')
+    print("OK")
 
 
 def test_sd():
@@ -97,52 +105,52 @@ def test_sd():
         try:
             sd.read(0, buf1)
         except OSError:
-            print('ERROR READING DATA')
+            print("ERROR READING DATA")
             sd.power(False)
             return
         try:
             sd.write(0, buf1)
         except OSError:
-            print('ERROR WRITING DATA')
+            print("ERROR WRITING DATA")
             sd.power(False)
             return
         buf2 = bytearray(8 * 1024)
         try:
             sd.read(0, buf2)
         except OSError:
-            print('ERROR READING DATA')
+            print("ERROR READING DATA")
             sd.power(False)
             return
         if buf1 == buf2:
-            print('OK')
+            print("OK")
         else:
-            print('ERROR DATA MISMATCH')
+            print("ERROR DATA MISMATCH")
         sd.power(False)
     else:
-        print('ERROR NOCARD')
+        print("ERROR NOCARD")
 
 
 def test_sbu(v):
-    sbu1 = (v[0] == '1')
-    sbu2 = (v[1] == '1')
+    sbu1 = v[0] == "1"
+    sbu2 = v[1] == "1"
     sbu.set(sbu1, sbu2)
-    print('OK')
+    print("OK")
 
 
 def test_otp_read():
     data = bytearray(32)
     otp.read(0, 0, data)
-    data = bytes(data).rstrip(b'\x00\xff').decode()
-    print('OK', data)
+    data = bytes(data).rstrip(b"\x00\xff").decode()
+    print("OK", data)
 
 
 def test_otp_write(v):
     if len(v) < 32:
-        v = v + '\x00' * (32 - len(v))
+        v = v + "\x00" * (32 - len(v))
     data = v[:32].encode()
     otp.write(0, 0, data)
     otp.lock(0)
-    print('OK')
+    print("OK")
 
 
 d.clear()
@@ -152,32 +160,32 @@ while True:
     try:
         line = input()
 
-        if line == 'PING':
-            print('OK')
+        if line == "PING":
+            print("OK")
 
-        elif line.startswith('DISP '):
+        elif line.startswith("DISP "):
             test_display(line[5:])
 
-        elif line.startswith('TOUCH '):
+        elif line.startswith("TOUCH "):
             test_touch(line[6:])
 
-        elif line.startswith('PWM '):
+        elif line.startswith("PWM "):
             test_pwm(line[4:])
 
-        elif line == 'SD':
+        elif line == "SD":
             test_sd()
 
-        elif line.startswith('SBU '):
+        elif line.startswith("SBU "):
             test_sbu(line[4:])
 
-        elif line.startswith('OTP READ'):
+        elif line.startswith("OTP READ"):
             test_otp_read()
 
-        elif line.startswith('OTP WRITE '):
+        elif line.startswith("OTP WRITE "):
             test_otp_write(line[10:])
 
         else:
-            print('UNKNOWN')
+            print("UNKNOWN")
 
     except Exception as ex:
-        print('ERROR', ex)
+        print("ERROR", ex)

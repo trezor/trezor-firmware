@@ -164,8 +164,11 @@ def _create_msg(
     )
 
     aggregate_modification = NEMAggregateModification(
-        modifications=[NEMCosignatoryModification(type=5, public_key=b"abc") for _ in range(modifications)],
-        relative_change=relative_change
+        modifications=[
+            NEMCosignatoryModification(type=5, public_key=b"abc")
+            for _ in range(modifications)
+        ],
+        relative_change=relative_change,
     )
 
     return NEMSignTx(

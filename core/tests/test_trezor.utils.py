@@ -4,7 +4,6 @@ from trezor import utils
 
 
 class TestUtils(unittest.TestCase):
-
     def test_chunks(self):
         c = list(utils.chunks(range(100), 7))
         for i in range(15):
@@ -25,25 +24,44 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(utils.truncate_utf8("ab\u0123", 3), "ab")  # b'ab\xc4\xa3'
         self.assertEqual(utils.truncate_utf8("ab\u1234", 3), "ab")  # b'ab\xe1\x88\xb4'
         self.assertEqual(utils.truncate_utf8("abc\u0123", 3), "abc")  # b'abc\xc4\xa3'
-        self.assertEqual(utils.truncate_utf8("abc\u1234", 3), "abc")  # b'abc\xe1\x88\xb4'
-        self.assertEqual(utils.truncate_utf8("\u1234\u5678", 0), "")  # b'\xe1\x88\xb4\xe5\x99\xb8
-        self.assertEqual(utils.truncate_utf8("\u1234\u5678", 1), "")  # b'\xe1\x88\xb4\xe5\x99\xb8
-        self.assertEqual(utils.truncate_utf8("\u1234\u5678", 2), "")  # b'\xe1\x88\xb4\xe5\x99\xb8
-        self.assertEqual(utils.truncate_utf8("\u1234\u5678", 3), "\u1234")  # b'\xe1\x88\xb4\xe5\x99\xb8
-        self.assertEqual(utils.truncate_utf8("\u1234\u5678", 4), "\u1234")  # b'\xe1\x88\xb4\xe5\x99\xb8
-        self.assertEqual(utils.truncate_utf8("\u1234\u5678", 5), "\u1234")  # b'\xe1\x88\xb4\xe5\x99\xb8
-        self.assertEqual(utils.truncate_utf8("\u1234\u5678", 6), "\u1234\u5678")  # b'\xe1\x88\xb4\xe5\x99\xb8
-        self.assertEqual(utils.truncate_utf8("\u1234\u5678", 7), "\u1234\u5678")  # b'\xe1\x88\xb4\xe5\x99\xb8
+        self.assertEqual(
+            utils.truncate_utf8("abc\u1234", 3), "abc"
+        )  # b'abc\xe1\x88\xb4'
+        self.assertEqual(
+            utils.truncate_utf8("\u1234\u5678", 0), ""
+        )  # b'\xe1\x88\xb4\xe5\x99\xb8
+        self.assertEqual(
+            utils.truncate_utf8("\u1234\u5678", 1), ""
+        )  # b'\xe1\x88\xb4\xe5\x99\xb8
+        self.assertEqual(
+            utils.truncate_utf8("\u1234\u5678", 2), ""
+        )  # b'\xe1\x88\xb4\xe5\x99\xb8
+        self.assertEqual(
+            utils.truncate_utf8("\u1234\u5678", 3), "\u1234"
+        )  # b'\xe1\x88\xb4\xe5\x99\xb8
+        self.assertEqual(
+            utils.truncate_utf8("\u1234\u5678", 4), "\u1234"
+        )  # b'\xe1\x88\xb4\xe5\x99\xb8
+        self.assertEqual(
+            utils.truncate_utf8("\u1234\u5678", 5), "\u1234"
+        )  # b'\xe1\x88\xb4\xe5\x99\xb8
+        self.assertEqual(
+            utils.truncate_utf8("\u1234\u5678", 6), "\u1234\u5678"
+        )  # b'\xe1\x88\xb4\xe5\x99\xb8
+        self.assertEqual(
+            utils.truncate_utf8("\u1234\u5678", 7), "\u1234\u5678"
+        )  # b'\xe1\x88\xb4\xe5\x99\xb8
 
     def test_firmware_hash(self):
         self.assertEqual(
             utils.firmware_hash(),
-            b'\xd2\xdb\x90\xa7jV6\xa7\x00N\xc3\xb4\x8eq\xa9U\xe0\xcb\xb2\xcbZo\xd7\xae\x9f\xbe\xf8F\xbc\x16l\x8c',
+            b"\xd2\xdb\x90\xa7jV6\xa7\x00N\xc3\xb4\x8eq\xa9U\xe0\xcb\xb2\xcbZo\xd7\xae\x9f\xbe\xf8F\xbc\x16l\x8c",
         )
         self.assertEqual(
             utils.firmware_hash(b"0123456789abcdef"),
             b"\xa0\x93@\x98\xa6\x80\xdb\x07m\xdf~\xe2'E\xf1\x19\xd8\xfd\xa4`\x10H\xf0_\xdbf\xa6N\xdd\xc0\xcf\xed",
         )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

@@ -17,7 +17,6 @@ def random_entry():
 
 
 class TestConfig(unittest.TestCase):
-
     def test_init(self):
         config.init()
         config.init()
@@ -26,13 +25,13 @@ class TestConfig(unittest.TestCase):
     def test_wipe(self):
         config.init()
         config.wipe()
-        self.assertEqual(config.unlock('', None), True)
-        config.set(1, 1, b'hello')
-        config.set(1, 2, b'world')
+        self.assertEqual(config.unlock("", None), True)
+        config.set(1, 1, b"hello")
+        config.set(1, 2, b"world")
         v0 = config.get(1, 1)
         v1 = config.get(1, 2)
-        self.assertEqual(v0, b'hello')
-        self.assertEqual(v1, b'world')
+        self.assertEqual(v0, b"hello")
+        self.assertEqual(v1, b"world")
         config.wipe()
         v0 = config.get(1, 1)
         v1 = config.get(1, 2)
@@ -43,7 +42,7 @@ class TestConfig(unittest.TestCase):
         for _ in range(128):
             config.init()
             config.wipe()
-            self.assertEqual(config.unlock('', None), True)
+            self.assertEqual(config.unlock("", None), True)
             appid, key = random_entry()
             value = random.bytes(16)
             config.set(appid, key, value)
@@ -57,7 +56,7 @@ class TestConfig(unittest.TestCase):
     def test_public(self):
         config.init()
         config.wipe()
-        self.assertEqual(config.unlock('', None), True)
+        self.assertEqual(config.unlock("", None), True)
 
         appid, key = random_entry()
 
@@ -83,26 +82,32 @@ class TestConfig(unittest.TestCase):
     def test_change_pin(self):
         config.init()
         config.wipe()
-        self.assertTrue(config.unlock('', None))
-        config.set(1, 1, b'value')
-        PINS = ('123', '123', 'Trezor T', '3141592653589793238462643383279502884197', '')
-        old_pin = ''
+        self.assertTrue(config.unlock("", None))
+        config.set(1, 1, b"value")
+        PINS = (
+            "123",
+            "123",
+            "Trezor T",
+            "3141592653589793238462643383279502884197",
+            "",
+        )
+        old_pin = ""
         for new_pin in PINS:
             self.assertTrue(config.unlock(old_pin, None))
 
             # The APP namespace which is reserved for storage related values is inaccessible even
             # when unlocked.
             with self.assertRaises(ValueError):
-                config.set(PINAPP, PINKEY, b'value')
+                config.set(PINAPP, PINKEY, b"value")
 
             self.assertTrue(config.change_pin(old_pin, new_pin, None, None))
 
             # Old PIN cannot be used to change the current PIN.
             if old_pin != new_pin:
-                self.assertFalse(config.change_pin(old_pin, '666', None, None))
+                self.assertFalse(config.change_pin(old_pin, "666", None, None))
 
             # Storage remains unlocked.
-            self.assertEqual(config.get(1, 1), b'value')
+            self.assertEqual(config.get(1, 1), b"value")
 
             # The APP namespace which is reserved for storage related values is inaccessible even
             # when unlocked.
@@ -115,11 +120,11 @@ class TestConfig(unittest.TestCase):
                 self.assertFalse(config.unlock(old_pin, None))
                 self.assertEqual(config.get(1, 1), None)
                 with self.assertRaises(RuntimeError):
-                    config.set(1, 1, b'new value')
+                    config.set(1, 1, b"new value")
 
             # New PIN unlocks the storage.
             self.assertTrue(config.unlock(new_pin, None))
-            self.assertEqual(config.get(1, 1), b'value')
+            self.assertEqual(config.get(1, 1), b"value")
 
             # Lock the storage.
             config.init()
@@ -132,37 +137,37 @@ class TestConfig(unittest.TestCase):
         # Enable PIN and SD salt.
         config.init()
         config.wipe()
-        self.assertTrue(config.unlock('', None))
-        config.set(1, 1, b'value')
-        self.assertFalse(config.change_pin('', '', salt1, None))
-        self.assertTrue(config.change_pin('', '000', None, salt1))
-        self.assertEqual(config.get(1, 1), b'value')
+        self.assertTrue(config.unlock("", None))
+        config.set(1, 1, b"value")
+        self.assertFalse(config.change_pin("", "", salt1, None))
+        self.assertTrue(config.change_pin("", "000", None, salt1))
+        self.assertEqual(config.get(1, 1), b"value")
 
         # Disable PIN and change SD salt.
         config.init()
-        self.assertFalse(config.unlock('000', None))
+        self.assertFalse(config.unlock("000", None))
         self.assertIsNone(config.get(1, 1))
-        self.assertTrue(config.unlock('000', salt1))
-        self.assertTrue(config.change_pin('000', '', salt1, salt2))
-        self.assertEqual(config.get(1, 1), b'value')
+        self.assertTrue(config.unlock("000", salt1))
+        self.assertTrue(config.change_pin("000", "", salt1, salt2))
+        self.assertEqual(config.get(1, 1), b"value")
 
         # Disable SD salt.
         config.init()
-        self.assertFalse(config.unlock('000', salt2))
+        self.assertFalse(config.unlock("000", salt2))
         self.assertIsNone(config.get(1, 1))
-        self.assertTrue(config.unlock('', salt2))
-        self.assertTrue(config.change_pin('', '', salt2, None))
-        self.assertEqual(config.get(1, 1), b'value')
+        self.assertTrue(config.unlock("", salt2))
+        self.assertTrue(config.change_pin("", "", salt2, None))
+        self.assertEqual(config.get(1, 1), b"value")
 
         # Check that PIN and SD salt are disabled.
         config.init()
-        self.assertTrue(config.unlock('', None))
-        self.assertEqual(config.get(1, 1), b'value')
+        self.assertTrue(config.unlock("", None))
+        self.assertEqual(config.get(1, 1), b"value")
 
     def test_set_get(self):
         config.init()
         config.wipe()
-        self.assertEqual(config.unlock('', None), True)
+        self.assertEqual(config.unlock("", None), True)
         for _ in range(32):
             appid, key = random_entry()
             value = random.bytes(128)
@@ -178,13 +183,13 @@ class TestConfig(unittest.TestCase):
         # Test get/set for APP out ouf range.
 
         with self.assertRaises(ValueError):
-            config.set(0, 1, b'test')
+            config.set(0, 1, b"test")
 
         with self.assertRaises(ValueError):
             config.get(0, 1)
 
         with self.assertRaises(ValueError):
-            config.set(192, 1, b'test')
+            config.set(192, 1, b"test")
 
         with self.assertRaises(ValueError):
             config.get(192, 1)
@@ -209,7 +214,7 @@ class TestConfig(unittest.TestCase):
 
         # Test increment with storage unlocked.
 
-        self.assertEqual(config.unlock('', None), True)
+        self.assertEqual(config.unlock("", None), True)
 
         for i in range(200, 300):
             self.assertEqual(config.next_counter(1, 2, True), i + 1)
@@ -235,7 +240,7 @@ class TestConfig(unittest.TestCase):
     def test_compact(self):
         config.init()
         config.wipe()
-        self.assertEqual(config.unlock('', None), True)
+        self.assertEqual(config.unlock("", None), True)
         appid, key = 1, 1
         for _ in range(259):
             value = random.bytes(259)
@@ -246,12 +251,12 @@ class TestConfig(unittest.TestCase):
     def test_get_default(self):
         config.init()
         config.wipe()
-        self.assertEqual(config.unlock('', None), True)
+        self.assertEqual(config.unlock("", None), True)
         for _ in range(128):
             appid, key = random_entry()
             value = config.get(appid, key)
             self.assertEqual(value, None)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

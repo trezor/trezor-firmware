@@ -8,7 +8,6 @@ class SkipTest(Exception):
 
 
 class AssertRaisesContext:
-
     def __init__(self, exc):
         self.expected = exc
         self.value = None
@@ -29,14 +28,14 @@ class TestCase:
     def __init__(self) -> None:
         self.__equality_functions = {}
 
-    def fail(self, msg=''):
+    def fail(self, msg=""):
         ensure(False, msg)
 
     def addTypeEqualityFunc(self, typeobj, function):
         ensure(callable(function))
         self.__equality_functions[typeobj.__name__] = function
 
-    def assertEqual(self, x, y, msg=''):
+    def assertEqual(self, x, y, msg=""):
         if not msg:
             msg = f"{repr(x)} vs (expected) {repr(y)}"
 
@@ -47,12 +46,12 @@ class TestCase:
         else:
             ensure(x == y, msg)
 
-    def assertNotEqual(self, x, y, msg=''):
+    def assertNotEqual(self, x, y, msg=""):
         if not msg:
             msg = f"{repr(x)} not expected to be equal {repr(y)}"
         ensure(x != y, msg)
 
-    def assertAlmostEqual(self, x, y, places=None, msg='', delta=None):
+    def assertAlmostEqual(self, x, y, places=None, msg="", delta=None):
         if x == y:
             return
         if delta is not None and places is not None:
@@ -62,18 +61,18 @@ class TestCase:
             if abs(x - y) <= delta:
                 return
             if not msg:
-                msg = f'{repr(x)} != {repr(y)} within {repr(delta)} delta'
+                msg = f"{repr(x)} != {repr(y)} within {repr(delta)} delta"
         else:
             if places is None:
                 places = 7
             if round(abs(y - x), places) == 0:
                 return
             if not msg:
-                msg = f'{repr(x)} != {repr(y)} within {repr(places)} places'
+                msg = f"{repr(x)} != {repr(y)} within {repr(places)} places"
 
         ensure(False, msg)
 
-    def assertNotAlmostEqual(self, x, y, places=None, msg='', delta=None):
+    def assertNotAlmostEqual(self, x, y, places=None, msg="", delta=None):
         if delta is not None and places is not None:
             raise TypeError("specify delta or places not both")
 
@@ -81,53 +80,53 @@ class TestCase:
             if not (x == y) and abs(x - y) > delta:
                 return
             if not msg:
-                msg = f'{repr(x)} == {repr(y)} within {repr(delta)} delta'
+                msg = f"{repr(x)} == {repr(y)} within {repr(delta)} delta"
         else:
             if places is None:
                 places = 7
             if not (x == y) and round(abs(y - x), places) != 0:
                 return
             if not msg:
-                msg = f'{repr(x)} == {repr(y)} within {repr(places)} places'
+                msg = f"{repr(x)} == {repr(y)} within {repr(places)} places"
 
         ensure(False, msg)
 
-    def assertIs(self, x, y, msg=''):
+    def assertIs(self, x, y, msg=""):
         if not msg:
             msg = f"{repr(x)} is not {repr(y)}"
         ensure(x is y, msg)
 
-    def assertIsNot(self, x, y, msg=''):
+    def assertIsNot(self, x, y, msg=""):
         if not msg:
             msg = f"{repr(x)} is {repr(y)}"
         ensure(x is not y, msg)
 
-    def assertIsNone(self, x, msg=''):
+    def assertIsNone(self, x, msg=""):
         if not msg:
             msg = f"{repr(x)} is not None"
         ensure(x is None, msg)
 
-    def assertIsNotNone(self, x, msg=''):
+    def assertIsNotNone(self, x, msg=""):
         if not msg:
             msg = f"{repr(x)} is None"
         ensure(x is not None, msg)
 
-    def assertTrue(self, x, msg=''):
+    def assertTrue(self, x, msg=""):
         if not msg:
             msg = f"Expected {repr(x)} to be True"
         ensure(x, msg)
 
-    def assertFalse(self, x, msg=''):
+    def assertFalse(self, x, msg=""):
         if not msg:
             msg = f"Expected {repr(x)} to be False"
         ensure(not x, msg)
 
-    def assertIn(self, x, y, msg=''):
+    def assertIn(self, x, y, msg=""):
         if not msg:
             msg = f"Expected {repr(x)} to be in {repr(y)}"
         ensure(x in y, msg)
 
-    def assertIsInstance(self, x, y, msg=''):
+    def assertIsInstance(self, x, y, msg=""):
         ensure(isinstance(x, y), msg)
 
     def assertRaises(self, exc, func=None, *args, **kwargs):
@@ -142,7 +141,7 @@ class TestCase:
         else:
             ensure(False, f"{repr(exc)} not raised")
 
-    def assertListEqual(self, x, y, msg=''):
+    def assertListEqual(self, x, y, msg=""):
         if len(x) != len(y):
             if not msg:
                 msg = "List lengths not equal"
@@ -160,34 +159,26 @@ class TestCase:
                 syscall = task.send(prev_result)
                 self.assertObjectEqual(syscall, expected)
 
-    def assertObjectEqual(self, a, b, msg=''):
+    def assertObjectEqual(self, a, b, msg=""):
         self.assertIsInstance(a, b.__class__, msg)
         self.assertEqual(a.__dict__, b.__dict__, msg)
 
     def assertDictEqual(self, x, y):
         self.assertEqual(
-            len(x),
-            len(y),
-            f"Dict lengths not equal - {len(x)} vs {len(y)}"
+            len(x), len(y), f"Dict lengths not equal - {len(x)} vs {len(y)}"
         )
 
         for key in x:
-            self.assertIn(
-                key,
-                y,
-                f"Key {key} not found in second dict."
-            )
+            self.assertIn(key, y, f"Key {key} not found in second dict.")
             self.assertEqual(
-                x[key],
-                y[key],
-                f"At key {key} expected {x[key]}, found {y[key]}"
+                x[key], y[key], f"At key {key} expected {x[key]}, found {y[key]}"
             )
 
     def assertMessageEqual(self, x, y):
         self.assertEqual(
             x.MESSAGE_NAME,
             y.MESSAGE_NAME,
-            f"Expected {x.MESSAGE_NAME}, found {y.MESSAGE_NAME}"
+            f"Expected {x.MESSAGE_NAME}, found {y.MESSAGE_NAME}",
         )
         self.assertDictEqual(x.__dict__, y.__dict__)
 
@@ -197,7 +188,9 @@ def skip(msg):
         # We just replace original fun with _inner
         def _inner(self):
             raise SkipTest(msg)
+
         return _inner
+
     return _decor
 
 
@@ -208,7 +201,6 @@ def skipUnless(cond, msg):
 
 
 class TestSuite:
-
     def __init__(self):
         self.tests = []
 
@@ -217,7 +209,6 @@ class TestSuite:
 
 
 class TestRunner:
-
     def run(self, suite):
         res = TestResult()
         for c in suite.tests:
@@ -226,7 +217,6 @@ class TestRunner:
 
 
 class TestResult:
-
     def __init__(self):
         self.errorsNum = 0
         self.failuresNum = 0
@@ -244,10 +234,10 @@ def run_class(c, test_result):
     o = c()
     set_up = getattr(o, "setUp", lambda: None)
     tear_down = getattr(o, "tearDown", lambda: None)
-    print('class', c.__qualname__)
+    print("class", c.__qualname__)
     for name in dir(o):
         if name.startswith("test"):
-            print(' ', name, end=' ...')
+            print(" ", name, end=" ...")
             m = getattr(o, name)
             try:
                 try:
@@ -255,7 +245,9 @@ def run_class(c, test_result):
                     test_result.testsRun += 1
                     retval = m()
                     if isinstance(retval, generator_type):
-                        raise RuntimeError(f"{name} must not be a generator (it is async, uses yield or await).")
+                        raise RuntimeError(
+                            f"{name} must not be a generator (it is async, uses yield or await)."
+                        )
                     elif retval is not None:
                         raise RuntimeError(f"{name} should not return a result.")
                 finally:
@@ -278,7 +270,11 @@ def main(module="__main__"):
     def test_cases(m):
         for tn in dir(m):
             c = getattr(m, tn)
-            if isinstance(c, object) and isinstance(c, type) and issubclass(c, TestCase):
+            if (
+                isinstance(c, object)
+                and isinstance(c, type)
+                and issubclass(c, TestCase)
+            ):
                 yield c
 
     m = __import__(module)

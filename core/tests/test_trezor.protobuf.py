@@ -1,7 +1,12 @@
 from common import *
 
 from trezor import protobuf
-from trezor.messages import WebAuthnCredential, Failure, SignMessage, DebugLinkMemoryRead
+from trezor.messages import (
+    WebAuthnCredential,
+    Failure,
+    SignMessage,
+    DebugLinkMemoryRead,
+)
 
 
 def load_uvarint32(data: bytes) -> int:
@@ -49,7 +54,9 @@ def dump_message(msg: protobuf.MessageType) -> bytearray:
     return buffer
 
 
-def load_message(msg_type: Type[protobuf.MessageType], buffer: bytes) -> protobuf.MessageType:
+def load_message(
+    msg_type: Type[protobuf.MessageType], buffer: bytes
+) -> protobuf.MessageType:
     return protobuf.decode(buffer, msg_type, False)
 
 
@@ -108,7 +115,6 @@ class TestProtobuf(unittest.TestCase):
 
         self.assertEqual(nmsg.message, b"hello")
         self.assertEqual(nmsg.coin_name, "Bitcoin")
-
 
 
 if __name__ == "__main__":

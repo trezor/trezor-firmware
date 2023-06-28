@@ -117,7 +117,9 @@ class TestMoneroClsag(unittest.TestCase):
             ring.append(tk)
 
         index = index if index is not None else random.uniform(len(ring))
-        ring.insert(index, TmpKey(crypto_helpers.encodepoint(P), crypto_helpers.encodepoint(C)))
+        ring.insert(
+            index, TmpKey(crypto_helpers.encodepoint(P), crypto_helpers.encodepoint(C))
+        )
         ring2 = list(ring)
         mg_buffer = []
 
@@ -137,7 +139,13 @@ class TestMoneroClsag(unittest.TestCase):
         )
 
         clsag.generate_clsag_simple(
-            msg, ring, CtKey(priv, msk), alpha, Cp, index, mg_buffer,
+            msg,
+            ring,
+            CtKey(priv, msk),
+            alpha,
+            Cp,
+            index,
+            mg_buffer,
         )
 
         sD = crypto_helpers.decodepoint(mg_buffer[-1])
@@ -156,7 +164,9 @@ class TestMoneroClsag(unittest.TestCase):
         sD = crypto_helpers.decodepoint(ubinascii.unhexlify(clsag["sD"]))
         sc1 = crypto_helpers.decodeint(ubinascii.unhexlify(clsag["sc1"]))
         Cout = crypto_helpers.decodepoint(ubinascii.unhexlify(clsag["cout"]))
-        scalars = [crypto_helpers.decodeint(ubinascii.unhexlify(x)) for x in clsag["ss"]]
+        scalars = [
+            crypto_helpers.decodeint(ubinascii.unhexlify(x)) for x in clsag["ss"]
+        ]
         ring = []
         for e in clsag["ring"]:
             ring.append(TmpKey(ubinascii.unhexlify(e[0]), ubinascii.unhexlify(e[1])))

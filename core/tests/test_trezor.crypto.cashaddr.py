@@ -35,26 +35,43 @@ VALID_CHECKSUM = [
 ]
 
 VALID_ADDRESS = [
-    ("1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu", "bitcoincash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a"),
-    ("1KXrWXciRDZUpQwQmuM1DbwsKDLYAYsVLR", "bitcoincash:qr95sy3j9xwd2ap32xkykttr4cvcu7as4y0qverfuy"),
-    ("16w1D5WRVKJuZUsSRzdLp9w3YGcgoxDXb", "bitcoincash:qqq3728yw0y47sqn6l2na30mcw6zm78dzqre909m2r"),
-    ("3CWFddi6m4ndiGyKqzYvsFYagqDLPVMTzC", "bitcoincash:ppm2qsznhks23z7629mms6s4cwef74vcwvn0h829pq"),
-    ("3LDsS579y7sruadqu11beEJoTjdFiFCdX4", "bitcoincash:pr95sy3j9xwd2ap32xkykttr4cvcu7as4yc93ky28e"),
-    ("31nwvkZwyPdgzjBJZXfDmSWsC4ZLKpYyUw", "bitcoincash:pqq3728yw0y47sqn6l2na30mcw6zm78dzq5ucqzc37")
+    (
+        "1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu",
+        "bitcoincash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a",
+    ),
+    (
+        "1KXrWXciRDZUpQwQmuM1DbwsKDLYAYsVLR",
+        "bitcoincash:qr95sy3j9xwd2ap32xkykttr4cvcu7as4y0qverfuy",
+    ),
+    (
+        "16w1D5WRVKJuZUsSRzdLp9w3YGcgoxDXb",
+        "bitcoincash:qqq3728yw0y47sqn6l2na30mcw6zm78dzqre909m2r",
+    ),
+    (
+        "3CWFddi6m4ndiGyKqzYvsFYagqDLPVMTzC",
+        "bitcoincash:ppm2qsznhks23z7629mms6s4cwef74vcwvn0h829pq",
+    ),
+    (
+        "3LDsS579y7sruadqu11beEJoTjdFiFCdX4",
+        "bitcoincash:pr95sy3j9xwd2ap32xkykttr4cvcu7as4yc93ky28e",
+    ),
+    (
+        "31nwvkZwyPdgzjBJZXfDmSWsC4ZLKpYyUw",
+        "bitcoincash:pqq3728yw0y47sqn6l2na30mcw6zm78dzq5ucqzc37",
+    ),
 ]
 
 
 class TestCryptoCashAddr(unittest.TestCase):
-
     def test_valid_checksum(self):
         for test in VALID_CHECKSUM:
-            prefix, addr = test.split(':')
+            prefix, addr = test.split(":")
             cashaddr.decode(prefix, addr)
 
     def test_invalid_checksum(self):
         for test in VALID_CHECKSUM:
-            test += 'xxx'
-            prefix, addr = test.split(':')
+            test += "xxx"
+            prefix, addr = test.split(":")
             with self.assertRaises(ValueError):
                 cashaddr.decode(prefix, addr)
 
@@ -65,11 +82,11 @@ class TestCryptoCashAddr(unittest.TestCase):
             version = data[0]
             if version == 5:
                 version = 8
-            enc = cashaddr.encode('bitcoincash', version, data[1:])
+            enc = cashaddr.encode("bitcoincash", version, data[1:])
             self.assertEqual(ca, enc)
         # cashaddr -> base58
         for b58, ca in VALID_ADDRESS:
-            prefix, addr = ca.split(':')
+            prefix, addr = ca.split(":")
             version, data = cashaddr.decode(prefix, addr)
             if version == 8:
                 version = 5
