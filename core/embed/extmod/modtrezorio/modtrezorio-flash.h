@@ -82,10 +82,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FlashOTP_read_obj, 4, 4,
 ///     Lock OTP flash block
 ///     """
 STATIC mp_obj_t mod_trezorio_FlashOTP_lock(mp_obj_t self, mp_obj_t block) {
-  uint8_t b = trezor_obj_get_uint8(block);
-  if (sectrue != flash_otp_lock(b)) {
-    mp_raise_ValueError("lock failed");
-  }
+  // uint8_t b = trezor_obj_get_uint8(block);
+  //  if (sectrue != flash_otp_lock(b)) {
+  //    mp_raise_ValueError("lock failed");
+  //  }
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FlashOTP_lock_obj,
