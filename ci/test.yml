@@ -20,6 +20,15 @@ core unit python test:
   script:
     - $NIX_SHELL --run "poetry run make -C core test | ts -s"
 
+# Python unit tests, checking core functionality. For model R.
+core unit python R test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix regular R build
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test | ts -s"
+
 # Rust unit tests.
 core unit rust test:
   stage: test

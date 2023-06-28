@@ -205,6 +205,21 @@ core unix regular build:
       - core/build/unix  # most of it needed by test_rust
     expire_in: 1 week
 
+# Non-frozen emulator build for model R.
+core unix regular R build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  variables:
+    TREZOR_MODEL: "R"
+  script:
+    - $NIX_SHELL --run "poetry run make -C core build_unix"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - core/build/unix  # most of it needed by test_rust
+    expire_in: 1 week
+
 core unix regular asan build:
   stage: build
   <<: *gitlab_caching
