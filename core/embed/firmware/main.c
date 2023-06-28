@@ -229,9 +229,15 @@ void __attribute__((noreturn)) nlr_jump_fail(void *val) {
 
 void NMI_Handler(void) {
   // Clock Security System triggered NMI
+#ifdef STM32U5A9xx
+  if ((RCC->CIFR & RCC_CIFR_CSSF) != 0) {
+    error_shutdown("INTERNAL ERROR", "(CS)");
+  }
+#else
   if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
     error_shutdown("INTERNAL ERROR", "(CS)");
   }
+#endif
 }
 
 void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }

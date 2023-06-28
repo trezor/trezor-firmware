@@ -63,13 +63,6 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_common.c',
-]
-
-SOURCE_REFLASH = [
-    'embed/reflash/startup.s',
-    'embed/reflash/header.S',
-    'embed/reflash/main.c',
 ]
 
 # fonts
@@ -82,6 +75,14 @@ tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')), CONSTRAINTS=["limited_util_s"])
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+
+SOURCE_REFLASH = [
+    'embed/reflash/startup_{FILE_SUFFIX}.s',
+    'embed/reflash/header.S',
+    'embed/reflash/main.c',
+]
 
 env.Replace(
     CP='cp',
@@ -109,7 +110,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/reflash/memory.ld -Wl,--gc-sections -Wl,-Map=build/reflash/reflash.map -Wl,--warn-common',
+    LINKFLAGS='-T embed/reflash/memory_{FILE_SUFFIX}.ld.ld -Wl,--gc-sections -Wl,-Map=build/reflash/reflash.map -Wl,--warn-common',
     CPPPATH=[
         'embed/reflash',
         'embed/lib',

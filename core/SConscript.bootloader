@@ -91,22 +91,12 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_common.c',
 ]
 
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
     'vendor/nanopb/pb_decode.c',
     'vendor/nanopb/pb_encode.c',
-]
-
-SOURCE_BOOTLOADER = [
-    'embed/bootloader/startup.s',
-    'embed/bootloader/header.S',
-    'embed/bootloader/bootui.c',
-    'embed/bootloader/main.c',
-    'embed/bootloader/messages.c',
-    'embed/bootloader/protob/messages.pb.c',
 ]
 
 # fonts
@@ -119,6 +109,18 @@ tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 env = Environment(ENV=os.environ, CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)}")
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+
+SOURCE_BOOTLOADER = [
+    f'embed/bootloader/startup_{FILE_SUFFIX}.s',
+    'embed/bootloader/header.S',
+    'embed/bootloader/bootui.c',
+    'embed/bootloader/main.c',
+    'embed/bootloader/messages.c',
+    'embed/bootloader/protob/messages.pb.c',
+]
+
 
 env.Replace(
     CP='cp',
@@ -146,7 +148,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/bootloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common -Wl,--print-memory-usage',
+    LINKFLAGS=f'-T embed/bootloader/memory_{FILE_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common -Wl,--print-memory-usage',
     CPPPATH=[
         'embed/rust',
         'embed/bootloader',

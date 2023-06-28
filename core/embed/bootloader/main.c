@@ -278,6 +278,7 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 #if PRODUCTION
 
 static void check_bootloader_version(void) {
+  // TODO figure out how to do this for U5
   uint8_t bits[FLASH_OTP_BLOCK_SIZE];
   for (int i = 0; i < FLASH_OTP_BLOCK_SIZE * 8; i++) {
     if (i < VERSION_MONOTONIC) {

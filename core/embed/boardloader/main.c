@@ -193,7 +193,9 @@ int main(void) {
     return 2;
   }
 
+#ifndef STM32U5A9xx
   clear_otg_hs_memory();
+#endif
 
 #ifdef USE_SDRAM
   sdram_init();
