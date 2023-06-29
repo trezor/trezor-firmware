@@ -161,11 +161,8 @@ where
                 (content_area, scrollbar_area, Rect::zero())
             }
         } else {
-            const TITLE_SPACE: i16 = 2;
-
             let (title_and_scrollbar_area, content_area) =
                 bounds.split_top(theme::FONT_HEADER.line_height());
-            let content_area = content_area.inset(Insets::top(TITLE_SPACE));
 
             // When there is only one page, do not allocate anything for scrollbar,
             // which would reduce the space for title
