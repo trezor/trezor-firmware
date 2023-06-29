@@ -65,7 +65,9 @@ async def _continue_recovery_process(ctx: GenericContext) -> Success:
         if is_first_step:
             # If we are starting recovery, ask for word count first...
             # _request_word_count
-            await layout.homescreen_dialog(ctx, "Select", "Select number of words")
+            await layout.homescreen_dialog(
+                ctx, "Continue", "Select the number of words in your backup."
+            )
             # ask for the number of words
             word_count = await layout.request_word_count(ctx, dry_run)
             # ...and only then show the starting screen with word count.
@@ -157,9 +159,7 @@ async def _finish_recovery(
 
     storage_recovery.end_progress()
 
-    await show_success(
-        ctx, "success_recovery", "You have finished recovering your wallet."
-    )
+    await show_success(ctx, "success_recovery", "Wallet recovered successfully.")
     return Success(message="Device recovered")
 
 
@@ -192,11 +192,19 @@ async def _request_share_first_screen(ctx: GenericContext, word_count: int) -> N
             await _request_share_next_screen(ctx)
         else:
             await layout.homescreen_dialog(
-                ctx, "Enter share", "Enter any share", f"({word_count} words)"
+                ctx,
+                "Enter share",
+                "Enter any share",
+                f"({word_count} words)",
+                show_info=True,
             )
     else:  # BIP-39
         await layout.homescreen_dialog(
-            ctx, "Enter seed", "Enter recovery seed", f"({word_count} words)"
+            ctx,
+            "Continue",
+            "Enter your backup.",
+            f"({word_count} words)",
+            show_info=True,
         )
 
 

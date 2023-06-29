@@ -1298,8 +1298,3 @@ async def confirm_set_new_pin(
         verb="ENABLE",
         br_code=br_code,
     )
-
-
-async def mnemonic_word_entering(ctx: GenericContext) -> None:
-    """Not supported for TT."""
-    pass

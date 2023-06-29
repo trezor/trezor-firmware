@@ -1429,7 +1429,7 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
         let title = if dry_run {
             "SEED CHECK"
         } else {
-            "WALLET RECOVERY"
+            "RECOVER WALLET"
         };
 
         let paragraphs = Paragraphs::new(

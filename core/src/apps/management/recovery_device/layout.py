@@ -44,9 +44,6 @@ async def request_mnemonic(
     from . import word_validity
     from trezor.ui.layouts.common import button_request
     from trezor.ui.layouts.recovery import request_word
-    from trezor.ui.layouts import mnemonic_word_entering
-
-    await mnemonic_word_entering(ctx)
 
     await button_request(ctx, "mnemonic", code=ButtonRequestType.MnemonicInput)
 
@@ -64,7 +61,8 @@ async def request_mnemonic(
             await show_recovery_warning(
                 ctx,
                 "warning_known_share",
-                "Share already entered, please enter a different share.",
+                "Share already entered",
+                "Please enter a different share.",
             )
             return None
         except word_validity.IdentifierMismatch:
@@ -80,7 +78,8 @@ async def request_mnemonic(
             await show_recovery_warning(
                 ctx,
                 "warning_group_threshold",
-                "Threshold of this group has been reached. Input share from different group.",
+                "Threshold of this group has been reached.",
+                "Input share from different group.",
             )
             return None
 
@@ -115,13 +114,15 @@ async def show_invalid_mnemonic(ctx: GenericContext, word_count: int) -> None:
         await show_recovery_warning(
             ctx,
             "warning_invalid_share",
-            "You have entered an invalid recovery share.",
+            "Invalid recovery share entered.",
+            "Please try again",
         )
     else:
         await show_recovery_warning(
             ctx,
             "warning_invalid_seed",
-            "You have entered an invalid recovery seed.",
+            "Invalid recovery seed entered.",
+            "Please try again",
         )
 
 
@@ -131,6 +132,7 @@ async def homescreen_dialog(
     text: str,
     subtext: str | None = None,
     info_func: Callable | None = None,
+    show_info: bool = False,
 ) -> None:
     from .recover import RecoveryAborted
     import storage.recovery as storage_recovery
@@ -140,7 +142,7 @@ async def homescreen_dialog(
     while True:
         dry_run = storage_recovery.is_dry_run()
         if await continue_recovery(
-            ctx, button_label, text, subtext, info_func, dry_run
+            ctx, button_label, text, subtext, info_func, dry_run, show_info
         ):
             # go forward in the recovery process
             break

@@ -175,6 +175,16 @@ def confirm_fido(
 
 
 # rust/src/ui/model_tr/layout.rs
+def show_warning(
+    *,
+    button: str,
+    warning: str,
+    description: str,
+) -> object:
+    """Warning modal with middle button and centered text."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def show_info(
     *,
     title: str,
@@ -298,6 +308,7 @@ def confirm_recovery(
     button: str,
     dry_run: bool,
     info_button: bool,  # unused on TR
+    show_info: bool,
 ) -> object:
    """Device recovery homescreen."""
 

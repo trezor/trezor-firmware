@@ -147,8 +147,8 @@ async def _show_confirmation_failure(ctx: GenericContext) -> None:
     await show_recovery_warning(
         ctx,
         "warning_backup_check",
-        "Please check again.",
         "That is the wrong word.",
+        "Please check again.",
         "Check again",
         ButtonRequestType.ResetDevice,
     )

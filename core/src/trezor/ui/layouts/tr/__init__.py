@@ -409,6 +409,16 @@ async def confirm_reset_device(
         )
     )
 
+    if recovery:
+        await confirm_action(
+            ctx,
+            "recover_device",
+            title,
+            description="It is safe to eject your Trezor anytime and continue later.",
+            verb="CONTINUE",
+            br_code=ButtonRequestType.ProtectCall,
+        )
+
 
 # TODO cleanup @ redesign
 async def confirm_backup(ctx: GenericContext) -> bool:
@@ -624,23 +634,25 @@ async def show_error_and_raise(
     raise exc
 
 
-def show_warning(
+async def show_warning(
     ctx: GenericContext,
     br_type: str,
     content: str,
     subheader: str | None = None,
-    button: str = "Try again",
+    button: str = "CONTINUE",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[None]:
-    return _show_modal(
+) -> None:
+    await interact(
         ctx,
+        RustLayout(
+            trezorui2.show_warning(  # type: ignore [Argument missing for parameter "title"]
+                button=button,
+                warning=content,  # type: ignore [No parameter named "warning"]
+                description=subheader or "",
+            )
+        ),
         br_type,
-        "",
-        subheader or "WARNING",
-        content,
-        button_confirm=button,
-        button_cancel=None,
-        br_code=br_code,
+        br_code,
     )
 
 
@@ -1304,16 +1316,4 @@ async def confirm_set_new_pin(
         verb=verb,
         hold=True,
         br_code=br_code,
-    )
-
-
-async def mnemonic_word_entering(ctx: GenericContext) -> None:
-    await confirm_action(
-        ctx,
-        "request_word",
-        "WORD ENTERING",
-        description="You'll only have to select the first 2-3 letters.",
-        verb="CONTINUE",
-        verb_cancel=None,
-        br_code=ButtonRequestType.MnemonicInput,
     )

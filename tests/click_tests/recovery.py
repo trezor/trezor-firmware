@@ -42,12 +42,14 @@ def confirm_recovery(debug: "DebugLink") -> None:
     if debug.model == "T":
         if not debug.legacy_ui and not debug.legacy_debug:
             layout = debug.wait_layout()
-            assert layout.title().startswith("WALLET RECOVERY")
+            assert layout.title().startswith("RECOVER WALLET")
         debug.click(buttons.OK, wait=True)
     elif debug.model == "R":
         layout = debug.wait_layout()
-        assert layout.title() == "WALLET RECOVERY"
+        assert layout.title() == "RECOVER WALLET"
         debug.press_right(wait=True)
+        layout = debug.press_right(wait=True)
+        assert "safe to eject" in layout.text_content()
         debug.press_right()
 
 
@@ -67,7 +69,7 @@ def select_number_of_words(
             assert "SelectWordCount" in layout.json_str
         else:
             # Two title options
-            assert layout.title() in ("SEED CHECK", "WALLET RECOVERY")
+            assert layout.title() in ("SEED CHECK", "RECOVER WALLET")
 
         # click the number
         word_option_offset = 6
@@ -96,10 +98,12 @@ def select_number_of_words(
         if num_of_words in (20, 33):
             assert "Enter any share" in layout.text_content()
         else:
-            assert "Enter recovery seed" in layout.text_content()
+            assert "Enter your backup" in layout.text_content()
 
 
-def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
+def enter_share(
+    debug: "DebugLink", share: str, is_first: bool = True
+) -> "LayoutContent":
     if debug.model == "T":
         layout = debug.click(buttons.OK, wait=True)
 
@@ -115,10 +119,12 @@ def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
 
         return layout
     elif debug.model == "R":
+        assert "RECOVER WALLET" in debug.wait_layout().title()
         layout = debug.press_right(wait=True)
-        assert layout.title() == "WORD ENTERING"
-
-        layout = debug.press_right(wait=True)
+        if is_first:
+            # Word entering info
+            debug.press_right()
+            layout = debug.press_right(wait=True)
         assert "Slip39Entry" in layout.all_components()
 
         for word in share.split(" "):
@@ -133,39 +139,32 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
     layout = debug.read_layout()
     expected_text = "Enter any share"
     remaining = len(shares)
-    for share in shares:
+    for index, share in enumerate(shares):
         assert expected_text in layout.text_content()
-        layout = enter_share(debug, share)
+        layout = enter_share(debug, share, is_first=index == 0)
         remaining -= 1
         expected_text = f"{remaining} more share"
 
-    assert "You have finished recovering your wallet" in layout.text_content()
+    assert "Wallet recovered successfully" in layout.text_content()
 
 
 def enter_seed(debug: "DebugLink", seed_words: list[str]) -> None:
+    assert "Enter" in debug.read_layout().text_content()
     if debug.model == "T":
-        assert "Enter" in debug.read_layout().text_content()
-
         layout = debug.click(buttons.OK, wait=True)
         assert layout.main_component() == "MnemonicKeyboard"
-
-        for word in seed_words:
-            layout = enter_word(debug, word, is_slip39=False)
-
-        assert "You have finished recovering your wallet" in layout.text_content()
     elif debug.model == "R":
-        assert "Enter" in debug.read_layout().text_content()
-
         layout = debug.press_right(wait=True)
-        assert layout.title() == "WORD ENTERING"
+        assert "RECOVER WALLET" in layout.title()
+        debug.press_right()
 
         layout = debug.press_right(wait=True)
         assert "Bip39Entry" in layout.all_components()
 
-        for word in seed_words:
-            layout = enter_word(debug, word, is_slip39=False)
+    for word in seed_words:
+        layout = enter_word(debug, word, is_slip39=False)
 
-        assert "You have finished recovering your wallet" in layout.text_content()
+    assert "Wallet recovered successfully" in layout.text_content()  # type: ignore
 
 
 def finalize(debug: "DebugLink") -> None:

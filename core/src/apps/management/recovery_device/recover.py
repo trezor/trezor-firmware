@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage.recovery as storage_recovery
-import storage.recovery_shares
+import storage.recovery_shares as storage_recovery_shares
 from trezor.crypto import slip39
 
 if TYPE_CHECKING:
@@ -42,7 +42,7 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
         storage_recovery.set_slip39_iteration_exponent(share.iteration_exponent)
         storage_recovery.set_slip39_identifier(share.identifier)
         storage_recovery.set_slip39_remaining_shares(share.threshold - 1, group_index)
-        storage.recovery_shares.set(share.index, group_index, words)
+        storage_recovery_shares.set(share.index, group_index, words)
 
         # if share threshold and group threshold are 1
         # we can calculate the secret right away
@@ -58,7 +58,7 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
         raise RuntimeError("Slip39: Share identifiers do not match")
     if share.iteration_exponent != storage_recovery.get_slip39_iteration_exponent():
         raise RuntimeError("Slip39: Share exponents do not match")
-    if storage.recovery_shares.get(share.index, group_index):
+    if storage_recovery_shares.get(share.index, group_index):
         raise RuntimeError("Slip39: This mnemonic was already entered")
     if share.group_count != storage_recovery.get_slip39_group_count():
         raise RuntimeError("Slip39: Group count does not match")
@@ -68,7 +68,7 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
     )
     storage_recovery.set_slip39_remaining_shares(remaining_for_share - 1, group_index)
     remaining[group_index] = remaining_for_share - 1
-    storage.recovery_shares.set(share.index, group_index, words)
+    storage_recovery_shares.set(share.index, group_index, words)
 
     if remaining.count(0) < share.group_threshold:
         # we need more shares
@@ -79,11 +79,11 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
         for i, r in enumerate(remaining):
             # if we have multiple groups pass only the ones with threshold reached
             if r == 0:
-                group = storage.recovery_shares.fetch_group(i)
+                group = storage_recovery_shares.fetch_group(i)
                 mnemonics.extend(group)
     else:
         # in case of slip39 basic we only need the first and only group
-        mnemonics = storage.recovery_shares.fetch_group(0)
+        mnemonics = storage_recovery_shares.fetch_group(0)
 
     _, _, secret = slip39.recover_ems(mnemonics)
     return secret, share
@@ -111,7 +111,7 @@ def fetch_previous_mnemonics() -> list[list[str]] | None:
     if not storage_recovery.get_slip39_group_count():
         return None
     for i in range(storage_recovery.get_slip39_group_count()):
-        mnemonics.append(storage.recovery_shares.fetch_group(i))
+        mnemonics.append(storage_recovery_shares.fetch_group(i))
     if not any(p for p in mnemonics):
         return None
     return mnemonics

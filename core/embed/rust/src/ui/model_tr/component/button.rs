@@ -840,6 +840,11 @@ impl ButtonActions {
         )
     }
 
+    /// Only confirming with middle
+    pub fn none_confirm_none() -> Self {
+        Self::new(None, Some(ButtonAction::Confirm), None)
+    }
+
     /// Going to the beginning with left, cancelling with right
     pub fn beginning_none_cancel() -> Self {
         Self::new(

@@ -1266,7 +1266,9 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         self.debug.press_yes()
 
 
-def enter_recovery_seed_dry_run(debug: DebugLink, mnemonic: list[str]) -> GeneratorType:
+def enter_recovery_seed_dry_run_tt(
+    debug: DebugLink, mnemonic: list[str]
+) -> GeneratorType:
     yield
     assert "check the recovery seed" in debug.wait_layout().text_content()
     debug.click(buttons.OK)
@@ -1284,7 +1286,7 @@ def enter_recovery_seed_dry_run(debug: DebugLink, mnemonic: list[str]) -> Genera
     debug.click(buttons.grid34(index % 3, index // 3))
 
     yield
-    assert "Enter recovery seed" in debug.wait_layout().text_content()
+    assert "Enter your backup" in debug.wait_layout().text_content()
     debug.click(buttons.OK)
 
     yield
@@ -1299,7 +1301,7 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
         self.mnemonic = mnemonic
 
     def input_flow_tt(self) -> GeneratorType:
-        yield from enter_recovery_seed_dry_run(self.debug, self.mnemonic)
+        yield from enter_recovery_seed_dry_run_tt(self.debug, self.mnemonic)
 
         yield
         self.debug.wait_layout()
@@ -1315,7 +1317,6 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
         self.debug.press_yes()
 
         yield
-        yield
         assert "NUMBER OF WORDS" in self.layout().title()
         word_options = (12, 18, 20, 24, 33)
         index = word_options.index(len(self.mnemonic))
@@ -1324,11 +1325,12 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
         self.debug.input(str(len(self.mnemonic)))
 
         yield
-        assert "Enter recovery seed" in self.layout().text_content()
+        assert "Enter your backup" in self.layout().text_content()
+        # Paginate to see info
+        self.debug.press_right()
+        self.debug.press_right()
         self.debug.press_yes()
 
-        yield
-        self.debug.press_yes()
         yield
         for index, word in enumerate(self.mnemonic):
             assert "WORD" in self.layout().title()
@@ -1346,11 +1348,11 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
 
     def input_flow_tt(self) -> GeneratorType:
         mnemonic = ["stick"] * 12
-        yield from enter_recovery_seed_dry_run(self.debug, mnemonic)
+        yield from enter_recovery_seed_dry_run_tt(self.debug, mnemonic)
 
         br = yield
         assert br.code == messages.ButtonRequestType.Warning
-        assert "invalid recovery seed" in self.layout().text_content()
+        assert "Invalid recovery seed" in self.layout().text_content()
         self.debug.click(buttons.OK)
 
         yield  # retry screen
@@ -1371,17 +1373,15 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         self.debug.press_yes()
 
         yield
-        yield
         assert "NUMBER OF WORDS" in self.layout().title()
         # select 12 words
         self.debug.press_middle()
 
         yield
-        assert "Enter recovery seed" in self.layout().text_content()
-        self.debug.press_yes()
-
-        yield
-        assert "WORD ENTERING" in self.layout().title()
+        assert "Enter your backup" in self.layout().text_content()
+        # Paginate to see info
+        self.debug.press_right()
+        self.debug.press_right()
         self.debug.press_yes()
 
         yield
@@ -1391,8 +1391,8 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
 
         br = yield
         assert br.code == messages.ButtonRequestType.Warning
-        assert "invalid recovery seed" in self.layout().text_content()
-        self.debug.press_right()
+        assert "Invalid recovery seed" in self.layout().text_content()
+        self.debug.press_middle()
 
         yield  # retry screen
         assert "number of words" in self.layout().text_content()
@@ -1403,7 +1403,7 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         self.debug.press_right()
 
 
-def bip39_recovery_possible_pin(
+def bip39_recovery_possible_pin_tt(
     debug: DebugLink, mnemonic: list[str], pin: Optional[str]
 ) -> GeneratorType:
     yield
@@ -1429,7 +1429,7 @@ def bip39_recovery_possible_pin(
     debug.input(str(len(mnemonic)))
 
     yield
-    assert "Enter recovery seed" in debug.wait_layout().text_content()
+    assert "Enter your backup" in debug.wait_layout().text_content()
     debug.press_yes()
 
     yield
@@ -1438,10 +1438,57 @@ def bip39_recovery_possible_pin(
         debug.input(word)
 
     yield
-    assert (
-        "You have finished recovering your wallet."
-        in debug.wait_layout().text_content()
-    )
+    assert "Wallet recovered successfully" in debug.wait_layout().text_content()
+    debug.press_yes()
+
+
+def bip39_recovery_possible_pin_tr(
+    debug: DebugLink, mnemonic: list[str], pin: Optional[str]
+) -> GeneratorType:
+    yield
+    assert "By continuing you agree" in debug.wait_layout().text_content()
+    debug.press_right()
+    assert "trezor.io/tos" in debug.wait_layout().text_content()
+    debug.press_yes()
+
+    yield
+    assert "safe to eject" in debug.wait_layout().text_content()
+    debug.press_yes()
+
+    # PIN when requested
+    if pin is not None:
+        yield
+        debug.input("654")
+
+        yield
+        assert "re-enter to confirm" in debug.wait_layout().text_content()
+        debug.press_right()
+
+        yield
+        debug.input("654")
+
+    yield
+    assert "number of words" in debug.wait_layout().text_content()
+    debug.press_yes()
+
+    yield
+    assert "NUMBER OF WORDS" in debug.wait_layout().title()
+    debug.input(str(len(mnemonic)))
+
+    yield
+    assert "Enter your backup" in debug.wait_layout().text_content()
+    # Paginate to see info
+    debug.press_right()
+    debug.press_right()
+    debug.press_yes()
+
+    yield
+    for word in mnemonic:
+        assert "WORD" in debug.wait_layout().title()
+        debug.input(word)
+
+    yield
+    assert "Wallet recovered successfully" in debug.wait_layout().text_content()
     debug.press_yes()
 
 
@@ -1451,52 +1498,10 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
         self.mnemonic = mnemonic
 
     def input_flow_tt(self) -> GeneratorType:
-        yield from bip39_recovery_possible_pin(self.debug, self.mnemonic, pin="654")
+        yield from bip39_recovery_possible_pin_tt(self.debug, self.mnemonic, pin="654")
 
     def input_flow_tr(self) -> GeneratorType:
-        yield
-        assert "By continuing you agree" in self.layout().text_content()
-        self.debug.press_right()
-        assert "trezor.io/tos" in self.layout().text_content()
-        self.debug.press_yes()
-
-        yield
-        self.debug.input("654")
-
-        yield
-        assert "re-enter to confirm" in self.layout().text_content()
-        self.debug.press_right()
-
-        yield
-        self.debug.input("654")
-
-        yield
-        assert "number of words" in self.layout().text_content()
-        self.debug.press_yes()
-
-        yield
-        yield
-        assert "NUMBER OF WORDS" in self.layout().title()
-        self.debug.input(str(len(self.mnemonic)))
-
-        yield
-        assert "Enter recovery seed" in self.layout().text_content()
-        self.debug.press_yes()
-
-        yield
-        assert "WORD ENTERING" in self.layout().title()
-        self.debug.press_right()
-
-        yield
-        for word in self.mnemonic:
-            assert "WORD" in self.layout().title()
-            self.debug.input(word)
-
-        yield
-        assert (
-            "You have finished recovering your wallet." in self.layout().text_content()
-        )
-        self.debug.press_yes()
+        yield from bip39_recovery_possible_pin_tr(self.debug, self.mnemonic, pin="654")
 
 
 class InputFlowBip39RecoveryNoPIN(InputFlowBase):
@@ -1505,28 +1510,10 @@ class InputFlowBip39RecoveryNoPIN(InputFlowBase):
         self.mnemonic = mnemonic
 
     def input_flow_tt(self) -> GeneratorType:
-        yield from bip39_recovery_possible_pin(self.debug, self.mnemonic, pin=None)
+        yield from bip39_recovery_possible_pin_tt(self.debug, self.mnemonic, pin=None)
 
     def input_flow_tr(self) -> GeneratorType:
-        yield  # Confirm recovery
-        self.debug.press_yes()
-        yield  # Homescreen
-        self.debug.press_yes()
-
-        yield  # Enter word count
-        self.debug.input(str(len(self.mnemonic)))
-
-        yield  # Homescreen
-        self.debug.press_yes()
-        yield  # Homescreen
-        self.debug.press_yes()
-        yield  # Enter words
-        for word in self.mnemonic:
-            self.debug.input(word)
-
-        yield  # confirm success
-        self.debug.press_yes()
-        yield
+        yield from bip39_recovery_possible_pin_tr(self.debug, self.mnemonic, pin=None)
 
 
 class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
@@ -1547,8 +1534,19 @@ class InputFlowSlip39AdvancedRecovery(InputFlowBase):
         self.shares = shares
         self.click_info = click_info
 
-    def input_flow_common(self) -> GeneratorType:
+    def input_flow_tt(self) -> GeneratorType:
         yield  # Confirm Recovery
+        self.debug.press_yes()
+        # Proceed with recovery
+        yield from recovery_enter_shares(
+            self.debug, self.shares, groups=True, click_info=self.click_info
+        )
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Safe to eject
         self.debug.press_yes()
         # Proceed with recovery
         yield from recovery_enter_shares(
@@ -1560,8 +1558,19 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def input_flow_common(self) -> GeneratorType:
+    def input_flow_tt(self) -> GeneratorType:
         yield  # Confirm Recovery
+        self.debug.press_yes()
+        yield  # Homescreen - abort process
+        self.debug.press_no()
+        yield  # Homescreen - confirm abort
+        self.debug.press_yes()
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Eject anytime
         self.debug.press_yes()
         yield  # Homescreen - abort process
         self.debug.press_no()
@@ -1574,12 +1583,25 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
         super().__init__(client)
         self.shares = shares
 
-    def input_flow_common(self) -> GeneratorType:
+    def input_flow_tt(self) -> GeneratorType:
         yield  # Confirm Recovery
         self.debug.press_yes()
         yield  # Homescreen - abort process
         self.debug.press_no()
         yield  # Homescreen - go back to process
+        self.debug.press_no()
+        yield from recovery_enter_shares(self.debug, self.shares, groups=True)
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Eject anytime
+        self.debug.press_yes()
+        yield  # Homescreen - abort process
+        self.debug.press_no()
+        yield  # Homescreen - go back to process
+        self.debug.press_right()
         self.debug.press_no()
         yield from recovery_enter_shares(self.debug, self.shares, groups=True)
 
@@ -1655,6 +1677,11 @@ def slip39_recovery_possible_pin(
     debug: DebugLink, shares: list[str], pin: Optional[str]
 ) -> GeneratorType:
     yield  # Confirm Recovery/Dryrun
+    if debug.model == "R" and "SEED CHECK" not in debug.wait_layout().title():
+        # dryruns do not have extra dialogs
+        debug.press_right()
+        debug.press_yes()
+        yield
     debug.press_yes()
 
     if pin is not None:
@@ -1707,12 +1734,26 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
         super().__init__(client)
         self.shares = shares
 
-    def input_flow_common(self) -> GeneratorType:
+    def input_flow_tt(self) -> GeneratorType:
         yield  # Confirm Recovery
         self.debug.press_yes()
         yield  # Homescreen - abort process
         self.debug.press_no()
         yield  # Homescreen - go back to process
+        self.debug.press_no()
+        # run recovery flow
+        yield from recovery_enter_shares(self.debug, self.shares)
+
+    def input_flow_tr(self) -> GeneratorType:
+        yield  # Confirm Recovery
+        self.debug.press_right()
+        self.debug.press_yes()
+        yield  # Eject anytime
+        self.debug.press_yes()
+        yield  # Homescreen - abort process
+        self.debug.press_no()
+        yield  # Homescreen - go back to process
+        self.debug.press_right()
         self.debug.press_no()
         # run recovery flow
         yield from recovery_enter_shares(self.debug, self.shares)

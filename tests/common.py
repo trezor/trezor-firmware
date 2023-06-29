@@ -227,16 +227,15 @@ def recovery_enter_shares_tr(
     debug.input(str(word_count))
     # Homescreen - proceed to share entry
     yield
+    assert "Enter any share" in debug.wait_layout().text_content()
+    debug.press_right()
+    debug.press_right()
     debug.press_yes()
 
     # Enter shares
     for share in shares:
         br = yield
-        assert br.code == ButtonRequestType.RecoveryHomepage
-
-        # Word entering
-        yield
-        debug.press_yes()
+        assert br.code == ButtonRequestType.MnemonicInput
 
         # Enter mnemonic words
         for word in share.split(" "):

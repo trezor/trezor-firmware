@@ -874,6 +874,35 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let warning: StrBuffer = kwargs.get(Qstr::MP_QSTR_warning)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+
+        let get_page = move |page_index| {
+            assert!(page_index == 0);
+
+            let btn_layout = ButtonLayout::none_armed_none(button.clone());
+            let btn_actions = ButtonActions::none_confirm_none();
+            let mut ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL);
+            ops = ops.alignment(geometry::Alignment::Center);
+            if !warning.is_empty() {
+                ops = ops.text_bold(warning.clone()).newline().newline();
+            }
+            if !description.is_empty() {
+                ops = ops.text_normal(description.clone());
+            }
+            let formatted = FormattedText::new(ops).vertically_aligned(geometry::Alignment::Center);
+            Page::new(btn_layout, btn_actions, formatted)
+        };
+        let pages = FlowPages::new(get_page, 1);
+        let obj = LayoutObj::new(Flow::new(pages))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1134,16 +1163,32 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
+        let show_info: bool = kwargs.get(Qstr::MP_QSTR_show_info)?.try_into()?;
 
-        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
+        let mut paragraphs = ParagraphVecShort::new();
+        paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, description));
+        if show_info {
+            let first = "You'll only have to select the first 2-3 letters of each word.";
+            let second =
+                "Position of the cursor will change between entries for enhanced security.";
+            paragraphs
+                .add(Paragraph::new(&theme::TEXT_NORMAL, first.into()))
+                .add(Paragraph::new(&theme::TEXT_NORMAL, second.into()));
+        }
 
         let title = if dry_run {
             "SEED CHECK"
         } else {
-            "WALLET RECOVERY"
+            "RECOVER WALLET"
         };
 
-        content_in_button_page(title.into(), paragraphs, button, Some("".into()), false)
+        content_in_button_page(
+            title.into(),
+            paragraphs.into_paragraphs(),
+            button,
+            Some("".into()),
+            false,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1448,6 +1493,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_confirm_fido => obj_fn_kw!(0, new_confirm_fido).as_obj(),
 
+    /// def show_warning(
+    ///     *,
+    ///     button: str,
+    ///     warning: str,
+    ///     description: str,
+    /// ) -> object:
+    ///     """Warning modal with middle button and centered text."""
+    Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
+
     /// def show_info(
     ///     *,
     ///     title: str,
@@ -1559,6 +1613,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     dry_run: bool,
     ///     info_button: bool,  # unused on TR
+    ///     show_info: bool,
     /// ) -> object:
     ///    """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),

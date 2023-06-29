@@ -4,7 +4,7 @@ from trezor.enums import ButtonRequestType
 
 import trezorui2
 
-from ..common import button_request, interact
+from ..common import interact
 from . import RustLayout, raise_if_not_confirmed, show_warning
 
 if TYPE_CHECKING:
@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(ctx: GenericContext, dry_run: bool) -> int:
-    await button_request(ctx, "word_count", code=ButtonRequestType.MnemonicWordCount)
     count = await interact(
         ctx,
         RustLayout(trezorui2.select_word_count(dry_run=dry_run)),
@@ -76,6 +75,7 @@ async def continue_recovery(
     subtext: str | None,
     info_func: Callable | None,
     dry_run: bool,
+    show_info: bool = False,
 ) -> bool:
     # TODO: implement info_func?
     # There is very limited space on the screen
@@ -92,6 +92,7 @@ async def continue_recovery(
             button=button_label.upper(),
             info_button=False,
             dry_run=dry_run,
+            show_info=show_info,  # type: ignore [No parameter named "show_info"]
         )
     )
     result = await interact(
