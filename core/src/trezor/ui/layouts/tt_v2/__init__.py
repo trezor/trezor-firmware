@@ -1238,17 +1238,3 @@ async def confirm_set_new_pin(
             br_code,
         )
     )
-
-    # await confirm_action(
-    #     ctx,
-    #     br_type,
-    #     title,
-    #     description=description,
-    #     verb="TURN ON",
-    #     br_code=br_code,
-    # )
-
-
-async def mnemonic_word_entering() -> None:
-    """Not supported for TT."""
-    pass

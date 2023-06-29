@@ -399,6 +399,16 @@ async def confirm_reset_device(
         )
     )
 
+    if recovery:
+        await confirm_action(
+            ctx,
+            "recover_device",
+            title,
+            description="It is safe to eject your Trezor anytime and continue later.",
+            verb="CONTINUE",
+            br_code=ButtonRequestType.ProtectCall,
+        )
+
 
 async def confirm_backup() -> bool:
     br_type = "backup_device"
@@ -597,21 +607,23 @@ async def show_error_and_raise(
     raise exc
 
 
-def show_warning(
+async def show_warning(
     br_type: str,
     content: str,
     subheader: str | None = None,
-    button: str = "Try again",
+    button: str = "CONTINUE",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[None]:
-    return _show_modal(
+) -> None:
+    await interact(
+        RustLayout(
+            trezorui2.show_warning(  # type: ignore [Argument missing for parameter "title"]
+                button=button.upper(),
+                warning=content,  # type: ignore [No parameter named "warning"]
+                description=subheader or "",
+            )
+        ),
         br_type,
-        "",
-        subheader or "WARNING",
-        content,
-        button_confirm=button,
-        button_cancel=None,
-        br_code=br_code,
+        br_code,
     )
 
 
@@ -1160,26 +1172,6 @@ async def confirm_reenter_pin(
     )
 
 
-async def show_error(
-    br_type: str,
-    title: str,
-    description: str,
-    button: str,
-    br_code: ButtonRequestType = BR_TYPE_OTHER,
-) -> None:
-    await interact(
-        RustLayout(
-            trezorui2.show_error(
-                title=title,
-                description=description,
-                button=button,
-            )
-        ),
-        br_type,
-        br_code,
-    )
-
-
 async def confirm_multiple_pages_texts(
     br_type: str,
     title: str,
@@ -1207,7 +1199,7 @@ async def pin_mismatch_popup(
 ) -> None:
     description = "wipe codes" if is_wipe_code else "PINs"
     br_code = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
-    return await show_error(
+    return await show_warning(
         br_code,
         f"Entered {description} do not match!",
         "Please check again.",
@@ -1258,15 +1250,4 @@ async def confirm_set_new_pin(
         next_info,
         "CONTINUE",
         br_code,
-    )
-
-
-async def mnemonic_word_entering() -> None:
-    await confirm_action(
-        "request_word",
-        "WORD ENTERING",
-        description="You'll only have to select the first 2-3 letters.",
-        verb="CONTINUE",
-        verb_cancel=None,
-        br_code=ButtonRequestType.MnemonicInput,
     )

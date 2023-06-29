@@ -42,7 +42,7 @@ def test_abort(core_emulator: Emulator):
 
     device_handler.run(device.recover, pin_protection=False)
 
-    assert debug.wait_layout().title() == "WALLET RECOVERY"
+    assert debug.wait_layout().title() == "RECOVER WALLET"
 
     layout = debug.click(buttons.OK, wait=True)
     assert "number of words" in layout.text_content()
@@ -174,7 +174,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
             expected_text = "You have entered"
             debug = _restart(device_handler, core_emulator)
 
-        assert "You have finished recovering your wallet" in layout.text_content()
+        assert "Wallet recovered successfully" in layout.text_content()
 
     device_handler = BackgroundDeviceHandler(core_emulator.client)
     debug = device_handler.debuglink()

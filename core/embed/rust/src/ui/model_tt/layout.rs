@@ -1399,7 +1399,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         .with_spacing(theme::RECOVERY_SPACING);
 
         let notification = if dry_run {
-            "SEED CHECK"
+            "BACKUP CHECK"
         } else {
             "RECOVERY MODE"
         };
@@ -1427,9 +1427,9 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
     let block = move |_args: &[Obj], kwargs: &Map| {
         let dry_run: bool = kwargs.get(Qstr::MP_QSTR_dry_run)?.try_into()?;
         let title = if dry_run {
-            "SEED CHECK"
+            "BACKUP CHECK"
         } else {
-            "WALLET RECOVERY"
+            "RECOVER WALLET"
         };
 
         let paragraphs = Paragraphs::new(

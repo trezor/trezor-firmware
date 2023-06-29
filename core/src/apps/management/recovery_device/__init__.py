@@ -56,11 +56,11 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     # --------------------------------------------------------
     # _continue_dialog
     if not dry_run:
-        await confirm_reset_device("Wallet recovery", recovery=True)
+        await confirm_reset_device("Recover wallet", recovery=True)
     else:
         await confirm_action(
             "confirm_seedcheck",
-            "Seed check",
+            "Backup check",
             description="Do you really want to check the recovery seed?",
             br_code=ButtonRequestType.ProtectCall,
         )

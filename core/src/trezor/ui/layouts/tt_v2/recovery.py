@@ -102,6 +102,7 @@ async def continue_recovery(
     subtext: str | None,
     info_func: Callable | None,
     dry_run: bool,
+    show_info: bool = False,  # unused on TT
 ) -> bool:
     from ..common import button_request
 

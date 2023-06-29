@@ -6,7 +6,7 @@ from trezor.wire import ActionCancelled
 import trezorui2
 
 from ..common import interact
-from . import RustLayout, confirm_action, show_error
+from . import RustLayout, confirm_action, show_warning
 
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 
@@ -247,7 +247,7 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
 
 
 async def show_warning_backup(slip39: bool) -> None:
-    await show_error(
+    await show_warning(
         "backup_warning",
         "REMEMBER",
         "Never make a digital copy of your backup or upload it online!",
@@ -275,7 +275,7 @@ async def show_reset_warning(
     button: str = "TRY AGAIN",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
-    await show_error(
+    await show_warning(
         ctx,
         br_type,
         button.upper(),

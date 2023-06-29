@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import storage.recovery as storage_recovery
+import storage.recovery_shares as storage_recovery_shares
 from trezor import wire
 from trezor.messages import Success
 
@@ -62,7 +63,9 @@ async def _continue_recovery_process() -> Success:
         if is_first_step:
             # If we are starting recovery, ask for word count first...
             # _request_word_count
-            await layout.homescreen_dialog("Select", "Select number of words")
+            await layout.homescreen_dialog(
+                "Continue", "Select the number of words in your backup."
+            )
             # ask for the number of words
             word_count = await layout.request_word_count(dry_run)
             # ...and only then show the starting screen with word count.
@@ -150,7 +153,7 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
 
     storage_recovery.end_progress()
 
-    await show_success("success_recovery", "You have finished recovering your wallet.")
+    await show_success("success_recovery", "Wallet recovered successfully.")
     return Success(message="Device recovered")
 
 
@@ -181,11 +184,17 @@ async def _request_share_first_screen(word_count: int) -> None:
             await _request_share_next_screen()
         else:
             await layout.homescreen_dialog(
-                "Enter share", "Enter any share", f"({word_count} words)"
+                "Enter share",
+                "Enter any share",
+                f"({word_count} words)",
+                show_info=True,
             )
     else:  # BIP-39
         await layout.homescreen_dialog(
-            "Enter seed", "Enter recovery seed", f"({word_count} words)"
+            "Continue",
+            "Enter your backup.",
+            f"({word_count} words)",
+            show_info=True,
         )
 
 
@@ -205,8 +214,16 @@ async def _request_share_next_screen() -> None:
             info_func=_show_remaining_groups_and_shares,
         )
     else:
-        text = strings.format_plural("{count} more {plural}", remaining[0], "share")
-        await layout.homescreen_dialog("Enter share", text, "needed to enter")
+        still_needed_shares = remaining[0]
+        already_entered_shares = len(storage_recovery_shares.fetch_group(0))
+        overall_needed = still_needed_shares + already_entered_shares
+        entered = (
+            f"{already_entered_shares} of {overall_needed} shares entered successfully."
+        )
+        needed = strings.format_plural(
+            "{count} more {plural} needed.", still_needed_shares, "share"
+        )
+        await layout.homescreen_dialog("Enter share", entered, needed)
 
 
 async def _show_remaining_groups_and_shares() -> None:
@@ -214,7 +231,6 @@ async def _show_remaining_groups_and_shares() -> None:
     Show info dialog for Slip39 Advanced - what shares are to be entered.
     """
     from trezor.crypto import slip39
-    import storage.recovery_shares as storage_recovery_shares
 
     shares_remaining = storage_recovery.fetch_slip39_remaining_shares()
     # should be stored at this point

@@ -301,7 +301,8 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.model == "R":
         layout = debug.press_right(wait=True)
-        assert "WORD ENTERING" in layout.title()
+        assert "RECOVER WALLET" in layout.title()
+        debug.press_right()
         layout = debug.press_right(wait=True)
         assert "Slip39Entry" in layout.all_components()
 
@@ -337,7 +338,8 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.model == "R":
         layout = debug.press_right(wait=True)
-        assert "WORD ENTERING" in layout.title()
+        assert "RECOVER WALLET" in layout.title()
+        debug.press_right()
         layout = debug.press_right(wait=True)
         assert "Slip39Entry" in layout.all_components()
 

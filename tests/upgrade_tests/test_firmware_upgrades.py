@@ -313,7 +313,10 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
         recovery.select_number_of_words(debug, wait=not debug.legacy_debug)
         layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
         if not debug.legacy_ui and not debug.legacy_debug:
-            assert "2 more shares" in layout.text_content()
+            assert (
+                "1 of 3 shares entered" in layout.text_content()
+                or "2 more shares" in layout.text_content()
+            )
 
         device_id = emu.client.features.device_id
         storage = emu.get_storage()
@@ -327,11 +330,17 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
 
         # second share
         layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[2])
-        assert "1 more share" in layout.text_content()
+        assert (
+            "2 of 3 shares entered" in layout.text_content()
+            or "1 more share" in layout.text_content()
+        )
 
         # last one
         layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[1])
-        assert "You have finished recovering your wallet" in layout.text_content()
+        assert (
+            "Wallet recovered successfully" in layout.text_content()
+            or "finished recovering" in layout.text_content()
+        )
 
         # Check the result
         state = debug.state()
