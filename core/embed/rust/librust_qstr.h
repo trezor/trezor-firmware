@@ -146,6 +146,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_value;
   MP_QSTR_verb;
   MP_QSTR_verb_cancel;
+  MP_QSTR_warning;
   MP_QSTR_words;
   MP_QSTR_wrong_pin;
   MP_QSTR_xpubs;

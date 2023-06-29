@@ -30,7 +30,6 @@ def test_tt_pin_passphrase(client: Client):
     with client:
         IF = InputFlowBip39RecoveryPIN(client, MNEMONIC12.split(" "))
         client.set_input_flow(IF.get())
-        client.watch_layout()
         device.recover(
             client,
             pin_protection=True,
@@ -51,7 +50,6 @@ def test_tt_nopin_nopassphrase(client: Client):
     with client:
         IF = InputFlowBip39RecoveryNoPIN(client, MNEMONIC12.split(" "))
         client.set_input_flow(IF.get())
-        client.watch_layout()
         device.recover(
             client,
             pin_protection=False,
