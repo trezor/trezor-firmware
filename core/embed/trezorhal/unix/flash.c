@@ -28,10 +28,19 @@
 
 #include "common.h"
 #include "flash.h"
+#include "model.h"
 #include "profile.h"
 
 #ifndef FLASH_FILE
 #define FLASH_FILE profile_flash_path()
+#endif
+
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
+#define FLASH_SECTOR_COUNT 24
+#elif defined TREZOR_MODEL_1
+#define FLASH_SECTOR_COUNT 12
+#else
+#error Unknown MCU
 #endif
 
 static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
@@ -66,27 +75,6 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 #else
 #error Unknown Trezor model
 #endif
-};
-
-const uint8_t FIRMWARE_SECTORS[FIRMWARE_SECTORS_COUNT] = {
-    FLASH_SECTOR_FIRMWARE_START,
-    7,
-    8,
-    9,
-    10,
-    FLASH_SECTOR_FIRMWARE_END,
-    FLASH_SECTOR_FIRMWARE_EXTRA_START,
-    18,
-    19,
-    20,
-    21,
-    22,
-    FLASH_SECTOR_FIRMWARE_EXTRA_END,
-};
-
-const uint8_t STORAGE_SECTORS[STORAGE_SECTORS_COUNT] = {
-    FLASH_SECTOR_STORAGE_1,
-    FLASH_SECTOR_STORAGE_2,
 };
 
 static uint8_t *FLASH_BUFFER = NULL;
@@ -145,7 +133,7 @@ secbool flash_unlock_write(void) { return sectrue; }
 
 secbool flash_lock_write(void) { return sectrue; }
 
-const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size) {
+const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   if (sector >= FLASH_SECTOR_COUNT) {
     return NULL;
   }
@@ -157,32 +145,52 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size) {
   return FLASH_BUFFER + addr - FLASH_SECTOR_TABLE[0];
 }
 
-uint32_t flash_sector_size(uint8_t sector) {
+uint32_t flash_sector_size(uint16_t sector) {
   if (sector >= FLASH_SECTOR_COUNT) {
     return 0;
   }
   return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
 }
 
-secbool flash_erase_sectors(const uint8_t *sectors, int len,
-                            void (*progress)(int pos, int len)) {
-  if (progress) {
-    progress(0, len);
-  }
-  for (int i = 0; i < len; i++) {
-    const uint8_t sector = sectors[i];
-    const uint32_t offset = FLASH_SECTOR_TABLE[sector] - FLASH_SECTOR_TABLE[0];
-    const uint32_t size =
-        FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
-    memset(FLASH_BUFFER + offset, 0xFF, size);
-    if (progress) {
-      progress(i + 1, len);
+secbool flash_area_erase_bulk(const flash_area_t *area, int count,
+                              void (*progress)(int pos, int len)) {
+  ensure(flash_unlock_write(), NULL);
+
+  int total_sectors = 0;
+  int done_sectors = 0;
+  for (int a = 0; a < count; a++) {
+    for (int i = 0; i < area[a].num_subareas; i++) {
+      total_sectors += area[a].subarea[i].num_sectors;
     }
   }
+
+  if (progress) {
+    progress(0, total_sectors);
+  }
+
+  for (int a = 0; a < count; a++) {
+    for (int s = 0; s < area[a].num_subareas; s++) {
+      for (int i = 0; i < area[a].subarea[s].num_sectors; i++) {
+        int sector = area[a].subarea[s].first_sector + i;
+
+        const uint32_t offset =
+            FLASH_SECTOR_TABLE[sector] - FLASH_SECTOR_TABLE[0];
+        const uint32_t size =
+            FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+        memset(FLASH_BUFFER + offset, 0xFF, size);
+
+        done_sectors++;
+        if (progress) {
+          progress(done_sectors, total_sectors);
+        }
+      }
+    }
+  }
+  ensure(flash_lock_write(), NULL);
   return sectrue;
 }
 
-secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data) {
+secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
   uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, 1);
   if (!flash) {
     return secfalse;
@@ -194,7 +202,7 @@ secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data) {
   return sectrue;
 }
 
-secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data) {
+secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   if (offset % sizeof(uint32_t)) {  // we write only at 4-byte boundary
     return secfalse;
   }

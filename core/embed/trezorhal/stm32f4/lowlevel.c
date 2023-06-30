@@ -57,15 +57,6 @@
 #define OPTION_BYTES_BANK1_WRP (*(volatile uint16_t* const)0x1FFFC008U)
 #define OPTION_BYTES_BANK2_WRP (*(volatile uint16_t* const)0x1FFEC008U)
 
-uint32_t flash_wait_and_clear_status_flags(void) {
-  while (FLASH->SR & FLASH_SR_BSY)
-    ;  // wait for all previous flash operations to complete
-  const uint32_t result =
-      FLASH->SR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
-  FLASH->SR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
-  return result;
-}
-
 secbool flash_check_option_bytes(void) {
   flash_wait_and_clear_status_flags();
   // check values stored in flash interface registers

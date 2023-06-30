@@ -43,8 +43,10 @@
 #include "display.h"
 #include "flash.h"
 #include "image.h"
+#include "model.h"
 #include "mpu.h"
 #include "random_delays.h"
+
 #ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif

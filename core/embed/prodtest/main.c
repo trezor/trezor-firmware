@@ -29,6 +29,7 @@
 #include "flash.h"
 #include "i2c.h"
 #include "mini_printf.h"
+#include "model.h"
 #include "random_delays.h"
 #include "rng.h"
 #include "sbu.h"
@@ -426,9 +427,9 @@ static void test_wipe(void) {
   // erase start of the firmware (metadata) -> invalidate FW
   ensure(flash_unlock_write(), NULL);
   for (int i = 0; i < 1024 / sizeof(uint32_t); i++) {
-    ensure(flash_write_word(FLASH_SECTOR_FIRMWARE_START, i * sizeof(uint32_t),
-                            0x00000000),
-           NULL);
+    ensure(
+        flash_area_write_word(&FIRMWARE_AREA, i * sizeof(uint32_t), 0x00000000),
+        NULL);
   }
   ensure(flash_lock_write(), NULL);
   display_clear();

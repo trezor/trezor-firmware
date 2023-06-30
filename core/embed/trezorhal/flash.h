@@ -22,100 +22,40 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include "platform.h"
 #include "secbool.h"
-
-// see docs/memory.md for more information
-
-#if defined STM32F427xx || defined STM32F429xx
-#define FLASH_SECTOR_COUNT 24
-#elif defined STM32F405xx
-#define FLASH_SECTOR_COUNT 12
-#else
-#error Unsupported MCU
-#endif
-
-#define FLASH_SECTOR_BOARDLOADER_START 0
-//                                           1
-#define FLASH_SECTOR_BOARDLOADER_END 2
-
-//                                           3
-
-#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R || \
-    defined TREZOR_MODEL_DISC1
-#define FLASH_SECTOR_STORAGE_1 4
-#define FLASH_SECTOR_STORAGE_2 16
-#elif defined TREZOR_MODEL_1
-#define FLASH_SECTOR_STORAGE_1 2
-#define FLASH_SECTOR_STORAGE_2 3
-#else
-#error Unknown Trezor model
-#endif
-
-#define FLASH_SECTOR_BOOTLOADER 5
-
-#define FLASH_SECTOR_FIRMWARE_START 6
-//                                           7
-//                                           8
-//                                           9
-//                                          10
-#define FLASH_SECTOR_FIRMWARE_END 11
-
-#define FLASH_SECTOR_UNUSED_START 12
-//                                          13
-//                                          14
-#define FLASH_SECTOR_UNUSED_END 15
-
-#define FLASH_SECTOR_FIRMWARE_EXTRA_START 17
-//                                          18
-//                                          19
-//                                          20
-//                                          21
-//                                          22
-#define FLASH_SECTOR_FIRMWARE_EXTRA_END 23
-
-#define BOOTLOADER_SECTORS_COUNT (1)
-#define STORAGE_SECTORS_COUNT (2)
-#define FIRMWARE_SECTORS_COUNT (6 + 7)
-
-extern const uint8_t STORAGE_SECTORS[STORAGE_SECTORS_COUNT];
-extern const uint8_t FIRMWARE_SECTORS[FIRMWARE_SECTORS_COUNT];
-
-// note: FLASH_SR_RDERR is STM32F42xxx and STM32F43xxx specific (STM32F427)
-// (reference RM0090 section 3.7.5)
-#if !defined STM32F427xx && !defined STM32F429xx
-#define FLASH_SR_RDERR 0
-#endif
-
-#define FLASH_STATUS_ALL_FLAGS                                            \
-  (FLASH_SR_RDERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR | FLASH_SR_PGAERR | \
-   FLASH_SR_WRPERR | FLASH_SR_SOP | FLASH_SR_EOP)
-
-void flash_init(void);
-
-uint32_t flash_wait_and_clear_status_flags(void);
-
-secbool __wur flash_unlock_write(void);
-secbool __wur flash_lock_write(void);
-
-const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size);
-uint32_t flash_sector_size(uint8_t sector);
-secbool __wur flash_erase_sectors(const uint8_t *sectors, int len,
-                                  void (*progress)(int pos, int len));
-static inline secbool flash_erase(uint8_t sector) {
-  return flash_erase_sectors(&sector, 1, NULL);
-}
-secbool __wur flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data);
-secbool __wur flash_write_word(uint8_t sector, uint32_t offset, uint32_t data);
 
 #define FLASH_OTP_NUM_BLOCKS 16
 #define FLASH_OTP_BLOCK_SIZE 32
 
-// OTP blocks allocation
-#define FLASH_OTP_BLOCK_BATCH 0
-#define FLASH_OTP_BLOCK_BOOTLOADER_VERSION 1
-#define FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK 2
-#define FLASH_OTP_BLOCK_RANDOMNESS 3
-#define FLASH_OTP_BLOCK_DEVICE_VARIANT 4
+/**
+ * Flash driver interface is designed to abstract away differences between
+ * various MCUs used in Trezor devices.
+ *
+ * Generally, flash memory is divided into sectors. On different MCUs, sectors
+ * may have different sizes, and therefore, different number of sectors are used
+ * for a given purpose. For example, on STM32F4, the sectors are relatively
+ * large so we use single sector for Storage. On STM32U5, the sectors are
+ * smaller, so we use multiple sectors for the Storage. Storage implementation
+ * should not care about this, and should use flash_area_t interface to access
+ * the flash memory.
+ *
+ * flash_area_t represents a location in flash memory. It may be contiguous, or
+ * it may be composed of multiple non-contiguous subareas.
+ *
+ * flash_subarea_t represents a contiguous area in flash memory, specified by
+ * first_sector and num_sectors.
+ */
+
+#include "flash_common.h"
+
+void flash_init(void);
+
+secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data);
+
+secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data);
+
+uint32_t flash_wait_and_clear_status_flags(void);
 
 secbool __wur flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
                              uint8_t datalen);

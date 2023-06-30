@@ -37,6 +37,7 @@
 
 #include "bootui.h"
 #include "messages.h"
+#include "model.h"
 // #include "mpu.h"
 
 const uint8_t BOOTLOADER_KEY_M = 2;
@@ -262,9 +263,8 @@ int main(void) {
         check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub);
   }
   if (sectrue == firmware_present) {
-    firmware_present =
-        check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
-                             FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT);
+    firmware_present = check_image_contents(
+        hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
   }
 
   // always start bootloader even if firmware is already present
@@ -299,7 +299,7 @@ int main(void) {
          "invalid firmware signature");
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
-                              FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT),
+                              &FIRMWARE_AREA),
          "invalid firmware hash");
 
   // do not check any trust flags on header, proceed

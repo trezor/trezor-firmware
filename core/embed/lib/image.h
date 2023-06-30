@@ -21,11 +21,8 @@
 #define __TREZORHAL_IMAGE_H__
 
 #include <stdint.h>
+#include "flash.h"
 #include "secbool.h"
-
-#define BOARDLOADER_START 0x08000000
-#define BOOTLOADER_START 0x08020000
-#define FIRMWARE_START 0x08040000
 
 #define IMAGE_HEADER_SIZE 0x400  // size of the bootloader or firmware header
 #define IMAGE_SIG_SIZE 65
@@ -33,10 +30,8 @@
 #define IMAGE_INIT_CHUNK_SIZE (16 * 1024)
 
 #define BOOTLOADER_IMAGE_MAGIC 0x425A5254  // TRZB
-#define BOOTLOADER_IMAGE_MAXSIZE (BOOTLOADER_SECTORS_COUNT * IMAGE_CHUNK_SIZE)
 
 #define FIRMWARE_IMAGE_MAGIC 0x465A5254  // TRZF
-#define FIRMWARE_IMAGE_MAXSIZE (FIRMWARE_SECTORS_COUNT * IMAGE_CHUNK_SIZE)
 
 typedef struct {
   uint32_t magic;
@@ -104,8 +99,8 @@ secbool __wur check_single_hash(const uint8_t *const hash,
                                 const uint8_t *const data, int len);
 
 secbool __wur check_image_contents(const image_header *const hdr,
-                                   uint32_t firstskip, const uint8_t *sectors,
-                                   int blocks);
+                                   uint32_t firstskip,
+                                   const flash_area_t *area);
 
 void get_image_fingerprint(const image_header *const hdr, uint8_t *const out);
 

@@ -352,7 +352,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
   firmware_remaining = msg_recv.has_length ? msg_recv.length : 0;
   if ((firmware_remaining > 0) &&
       ((firmware_remaining % sizeof(uint32_t)) == 0) &&
-      (firmware_remaining <= (FIRMWARE_SECTORS_COUNT * IMAGE_CHUNK_SIZE))) {
+      (firmware_remaining <= FIRMWARE_IMAGE_MAXSIZE)) {
     // request new firmware
     chunk_requested = (firmware_remaining > IMAGE_INIT_CHUNK_SIZE)
                           ? IMAGE_INIT_CHUNK_SIZE
@@ -591,12 +591,10 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       // if firmware is not upgrade, erase storage
       if (sectrue != should_keep_seed) {
-        ensure(
-            flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL),
-            NULL);
+        ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
+               NULL);
       }
-      ensure(flash_erase_sectors(FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT,
-                                 ui_screen_install_progress_erase),
+      ensure(flash_area_erase(&FIRMWARE_AREA, ui_screen_install_progress_erase),
              NULL);
 
       headers_offset = IMAGE_HEADER_SIZE + vhdr.hdrlen;
@@ -621,7 +619,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   }
 
   // should not happen, but double-check
-  if (firmware_block >= FIRMWARE_SECTORS_COUNT) {
+  if (flash_area_get_address(&FIRMWARE_AREA, firmware_block * IMAGE_CHUNK_SIZE,
+                             0) == NULL) {
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Firmware too big");
@@ -651,9 +650,12 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   ensure(flash_unlock_write(), NULL);
 
   const uint32_t *const src = (const uint32_t *const)CHUNK_BUFFER_PTR;
-  for (int i = 0; i < chunk_size / sizeof(uint32_t); i++) {
-    ensure(flash_write_word(FIRMWARE_SECTORS[firmware_block],
-                            i * sizeof(uint32_t), src[i]),
+
+  for (int i = 0; i < chunk_size / (sizeof(uint32_t) * 4); i++) {
+    ensure(flash_area_write_quadword(
+               &FIRMWARE_AREA,
+               firmware_block * IMAGE_CHUNK_SIZE + i * 4 * sizeof(uint32_t),
+               &src[4 * i]),
            NULL);
   }
 
@@ -680,29 +682,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 }
 
 secbool bootloader_WipeDevice(void) {
-  static const uint8_t sectors[] = {
-      FLASH_SECTOR_STORAGE_1,
-      FLASH_SECTOR_STORAGE_2,
-      // 3,  // skip because of MPU protection
-      FLASH_SECTOR_FIRMWARE_START,
-      7,
-      8,
-      9,
-      10,
-      FLASH_SECTOR_FIRMWARE_END,
-      FLASH_SECTOR_UNUSED_START,
-      13,
-      14,
-      // FLASH_SECTOR_UNUSED_END,  // skip because of MPU protection
-      FLASH_SECTOR_FIRMWARE_EXTRA_START,
-      18,
-      19,
-      20,
-      21,
-      22,
-      FLASH_SECTOR_FIRMWARE_EXTRA_END,
-  };
-  return flash_erase_sectors(sectors, sizeof(sectors), ui_screen_wipe_progress);
+  return flash_area_erase(&WIPE_AREA, ui_screen_wipe_progress);
 }
 
 int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {

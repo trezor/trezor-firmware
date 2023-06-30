@@ -1,5 +1,6 @@
 #include "unit_variant.h"
 #include "flash.h"
+#include "model.h"
 
 static uint8_t unit_variant_color = 0;
 static bool unit_variant_btconly = false;

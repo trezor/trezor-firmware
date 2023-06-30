@@ -25,6 +25,7 @@
 #ifdef USE_TOUCH
 
 #include "common.h"
+#include "platform.h"
 #include "touch.h"
 
 extern int sdl_display_res_x, sdl_display_res_y;

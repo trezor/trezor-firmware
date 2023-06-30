@@ -26,14 +26,7 @@
 #include "image.h"
 #include "random_delays.h"
 #include "secbool.h"
-#ifdef TREZOR_EMULATOR
-#include "emulator.h"
-#else
-#include "compiler_traits.h"
-#include "mini_printf.h"
-#include "mpu.h"
-#include "platform.h"
-#endif
+
 #ifdef USE_DMA2D
 #include "dma2d.h"
 #endif
@@ -60,6 +53,15 @@
 #include "messages.h"
 #include "rust_ui.h"
 #include "unit_variant.h"
+
+#ifdef TREZOR_EMULATOR
+#include "emulator.h"
+#else
+#include "compiler_traits.h"
+#include "mini_printf.h"
+#include "mpu.h"
+#include "platform.h"
+#endif
 
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
@@ -305,9 +307,10 @@ int bootloader_main(void) {
   }
 
   if (sectrue == firmware_present) {
-    hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
-                            FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
-    if (hdr != (const image_header *)(FIRMWARE_START + vhdr.hdrlen)) {
+    hdr = read_image_header(
+        (const uint8_t *)(size_t)(FIRMWARE_START + vhdr.hdrlen),
+        FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+    if (hdr != (const image_header *)(size_t)(FIRMWARE_START + vhdr.hdrlen)) {
       firmware_present = secfalse;
     }
   }
@@ -319,9 +322,8 @@ int bootloader_main(void) {
         check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub);
   }
   if (sectrue == firmware_present) {
-    firmware_present =
-        check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
-                             FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT);
+    firmware_present = check_image_contents(
+        hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
   }
 
 #if defined TREZOR_MODEL_T
@@ -408,7 +410,7 @@ int bootloader_main(void) {
     ui_screen_welcome();
 
     // erase storage
-    ensure(flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL),
+    ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
            NULL);
 
     // and start the usb loop
@@ -502,11 +504,13 @@ int bootloader_main(void) {
 
   ensure(check_vendor_header_lock(&vhdr), "Unauthorized vendor keys");
 
-  hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
-                          FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+  hdr =
+      read_image_header((const uint8_t *)(size_t)(FIRMWARE_START + vhdr.hdrlen),
+                        FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
 
-  ensure(hdr == (const image_header *)(FIRMWARE_START + vhdr.hdrlen) ? sectrue
-                                                                     : secfalse,
+  ensure(hdr == (const image_header *)(size_t)(FIRMWARE_START + vhdr.hdrlen)
+             ? sectrue
+             : secfalse,
          "Firmware is corrupted");
 
   ensure(check_image_model(hdr), "Wrong firmware model");
@@ -515,7 +519,7 @@ int bootloader_main(void) {
          "Firmware is corrupted");
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
-                              FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT),
+                              &FIRMWARE_AREA),
          "Firmware is corrupted");
 
   // if all VTRUST flags are unset = ultimate trust => skip the procedure

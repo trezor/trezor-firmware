@@ -33,6 +33,8 @@
  */
 #define NORCOW_HEADER_LEN (0)
 
+extern const flash_area_t STORAGE_AREAS[NORCOW_SECTOR_COUNT];
+
 /*
  * Current storage version.
  */

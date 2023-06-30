@@ -19,12 +19,14 @@
 
 #include <string.h>
 
+#include TREZOR_BOARD
 #include "board_capabilities.h"
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
 #include "flash.h"
 #include "image.h"
+#include "model.h"
 #include "rng.h"
 #ifdef USE_SD_CARD
 #include "sdcard.h"
@@ -141,31 +143,7 @@ static secbool copy_sdcard(void) {
   display_printf("\n\nerasing flash:\n\n");
 
   // erase all flash (except boardloader)
-  static const uint8_t sectors[] = {
-      FLASH_SECTOR_STORAGE_1,
-      FLASH_SECTOR_STORAGE_2,
-      3,
-      FLASH_SECTOR_BOOTLOADER,
-      FLASH_SECTOR_FIRMWARE_START,
-      7,
-      8,
-      9,
-      10,
-      FLASH_SECTOR_FIRMWARE_END,
-      FLASH_SECTOR_UNUSED_START,
-      13,
-      14,
-      FLASH_SECTOR_UNUSED_END,
-      FLASH_SECTOR_FIRMWARE_EXTRA_START,
-      18,
-      19,
-      20,
-      21,
-      22,
-      FLASH_SECTOR_FIRMWARE_EXTRA_END,
-  };
-  if (sectrue !=
-      flash_erase_sectors(sectors, sizeof(sectors), progress_callback)) {
+  if (sectrue != flash_area_erase(&ALL_WIPE_AREA, progress_callback)) {
     display_printf(" failed\n");
     return secfalse;
   }
@@ -183,9 +161,9 @@ static secbool copy_sdcard(void) {
   for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
     ensure(sdcard_read_blocks(sdcard_buf, i, 1), NULL);
     for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-      ensure(flash_write_word(FLASH_SECTOR_BOOTLOADER,
-                              i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t),
-                              sdcard_buf[j]),
+      ensure(flash_area_write_word(&BOOTLOADER_AREA,
+                                   i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t),
+                                   sdcard_buf[j]),
              NULL);
     }
   }
@@ -210,7 +188,7 @@ int main(void) {
   if (sectrue != flash_configure_option_bytes()) {
     // display is not initialized so don't call ensure
     const secbool r =
-        flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL);
+        flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL);
     (void)r;
     return 2;
   }
@@ -232,9 +210,9 @@ int main(void) {
   }
 #endif
 
-  const image_header *hdr =
-      read_image_header((const uint8_t *)BOOTLOADER_START,
-                        BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE);
+  const image_header *hdr = read_image_header(
+      (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
+      flash_area_get_size(&BOOTLOADER_AREA));
 
   ensure(hdr == (const image_header *)BOOTLOADER_START ? sectrue : secfalse,
          "invalid bootloader header");
@@ -243,10 +221,7 @@ int main(void) {
                                 BOARDLOADER_KEYS),
          "invalid bootloader signature");
 
-  const uint8_t sectors[] = {
-      FLASH_SECTOR_BOOTLOADER,
-  };
-  ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, sectors, 1),
+  ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA),
          "invalid bootloader hash");
 
   ensure_compatible_settings();

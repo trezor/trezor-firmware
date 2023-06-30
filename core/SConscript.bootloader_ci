@@ -45,6 +45,7 @@ elif TREZOR_MODEL in ('T', ):
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
+    'vendor/trezor-storage',
 ]
 CPPDEFINES_MOD += [
     'AES_128',
@@ -65,6 +66,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/memzero.c',
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/sha2.c',
+    'vendor/trezor-storage/flash_common.c',
 ]
 
 # modtrezorui
@@ -76,6 +78,7 @@ SOURCE_MOD += [
     'embed/lib/colors.c',
     'embed/lib/fonts/fonts.c',
     'embed/lib/fonts/font_bitmap.c',
+    'embed/lib/image.c',
     'embed/lib/mini_printf.c',
     'embed/extmod/modtrezorcrypto/rand.c',
     'vendor/micropython/lib/uzlib/adler32.c',
