@@ -31,6 +31,7 @@ typedef enum {
   SCREEN_WIPE_CONFIRM = 2,
   SCREEN_FINGER_PRINT = 3,
   SCREEN_WAIT_FOR_HOST = 4,
+  SCREEN_WELCOME = 5,
 } screen_t;
 
 void ui_screen_boot(const vendor_header* const vhdr,
@@ -42,9 +43,9 @@ void ui_click(void);
 void ui_screen_welcome(void);
 
 uint32_t ui_screen_intro(const vendor_header* const vhdr,
-                         const image_header* const hdr);
+                         const image_header* const hdr, bool fw_ok);
 
-uint32_t ui_screen_menu(void);
+uint32_t ui_screen_menu(secbool firmware_present);
 
 uint32_t ui_screen_install_confirm(const vendor_header* const vhdr,
                                    const image_header* const hdr,
