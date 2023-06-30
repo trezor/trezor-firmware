@@ -18,6 +18,8 @@ pub mod uzlib;
 pub mod wordlist;
 
 pub mod buffers;
+pub mod secbool;
+
 #[cfg(not(feature = "micropython"))]
 pub mod time;
 

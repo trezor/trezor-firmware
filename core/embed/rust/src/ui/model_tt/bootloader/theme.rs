@@ -14,6 +14,8 @@ pub const BLD_FG: Color = WHITE;
 pub const BLD_WIPE_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const BLD_WIPE_TEXT_COLOR: Color = WHITE;
 
+pub const BLD_WARN_COLOR: Color = Color::rgb(0xFF, 0x00, 0x00);
+
 pub const BLD_WIPE_BTN_COLOR: Color = WHITE;
 pub const BLD_WIPE_BTN_COLOR_ACTIVE: Color = Color::rgb(0xFA, 0xCF, 0xCF);
 
@@ -238,6 +240,13 @@ pub const TEXT_TITLE: TextStyle = TextStyle::new(
 );
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
+pub const TEXT_WARNING: TextStyle = TextStyle::new(
+    Font::BOLD,
+    BLD_WARN_COLOR,
+    BLD_BG,
+    BLD_WARN_COLOR,
+    BLD_WARN_COLOR,
+);
 pub const TEXT_FINGERPRINT: TextStyle =
     TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG)
         .with_line_breaking(BreakWordsNoHyphen);

@@ -1,0 +1,1 @@
+No longer erases seed when firmware is corrupted but firmware header is correct and signed. Added firmware corrupted info to bootloader screen.

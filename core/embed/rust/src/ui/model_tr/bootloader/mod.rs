@@ -21,11 +21,14 @@ mod menu;
 mod theme;
 mod welcome;
 
-use crate::ui::{
-    constant,
-    constant::HEIGHT,
-    geometry::Point,
-    model_tr::theme::{ICON_ARM_LEFT, ICON_ARM_RIGHT, WHITE},
+use crate::{
+    trezorhal::secbool::secbool,
+    ui::{
+        constant,
+        constant::HEIGHT,
+        geometry::Point,
+        model_tr::theme::{ICON_ARM_LEFT, ICON_ARM_RIGHT, WHITE},
+    },
 };
 use confirm::Confirm;
 use connect::Connect;
@@ -192,8 +195,8 @@ extern "C" fn screen_unlock_bootloader_success() {
 }
 
 #[no_mangle]
-extern "C" fn screen_menu(_bld_version: *const cty::c_char) -> u32 {
-    run(&mut Menu::new())
+extern "C" fn screen_menu(firmware_present: secbool) -> u32 {
+    run(&mut Menu::new(firmware_present))
 }
 
 #[no_mangle]
@@ -202,6 +205,7 @@ extern "C" fn screen_intro(
     vendor_str: *const cty::c_char,
     vendor_str_len: u8,
     version: *const cty::c_char,
+    fw_ok: bool,
 ) -> u32 {
     let vendor = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
     let version = unwrap!(unsafe { from_c_str(version) });
@@ -217,7 +221,7 @@ extern "C" fn screen_intro(
     unwrap!(version_str.push_str("\nby "));
     unwrap!(version_str.push_str(vendor));
 
-    let mut frame = Intro::new(title_str.as_str(), version_str.as_str());
+    let mut frame = Intro::new(title_str.as_str(), version_str.as_str(), fw_ok);
     run(&mut frame)
 }
 

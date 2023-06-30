@@ -35,7 +35,7 @@ pub mod menu;
 pub mod theme;
 pub mod welcome;
 
-use crate::ui::model_tt::theme::BLACK;
+use crate::{trezorhal::secbool::secbool, ui::model_tt::theme::BLACK};
 use confirm::Confirm;
 use intro::Intro;
 use menu::Menu;
@@ -220,8 +220,8 @@ extern "C" fn screen_wipe_confirm() -> u32 {
 }
 
 #[no_mangle]
-extern "C" fn screen_menu() -> u32 {
-    run(&mut Menu::new())
+extern "C" fn screen_menu(firmware_present: secbool) -> u32 {
+    run(&mut Menu::new(firmware_present))
 }
 
 #[no_mangle]
@@ -230,6 +230,7 @@ extern "C" fn screen_intro(
     vendor_str: *const cty::c_char,
     vendor_str_len: u8,
     version: *const cty::c_char,
+    fw_ok: bool,
 ) -> u32 {
     let vendor = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
     let version = unwrap!(unsafe { from_c_str(version) });
@@ -245,7 +246,7 @@ extern "C" fn screen_intro(
     unwrap!(version_str.push_str("\nby "));
     unwrap!(version_str.push_str(vendor));
 
-    let mut frame = Intro::new(title_str.as_str(), version_str.as_str());
+    let mut frame = Intro::new(title_str.as_str(), version_str.as_str(), fw_ok);
 
     run(&mut frame)
 }
