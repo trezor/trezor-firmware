@@ -167,16 +167,18 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
     ui_wait_callback = args[1];
   }
 
-  ui_progress(ui_wait_callback, 0, FIRMWARE_SECTORS_COUNT);
-  for (int i = 0; i < FIRMWARE_SECTORS_COUNT; i++) {
-    uint8_t sector = FIRMWARE_SECTORS[i];
+  uint16_t firmware_sectors = flash_total_sectors(&FIRMWARE_AREA);
+
+  ui_progress(ui_wait_callback, 0, firmware_sectors);
+  for (int i = 0; i < firmware_sectors; i++) {
+    uint8_t sector = flash_get_sector_num(&FIRMWARE_AREA, i);
     uint32_t size = flash_sector_size(sector);
     const void *data = flash_get_address(sector, 0, size);
     if (data == NULL) {
       mp_raise_msg(&mp_type_RuntimeError, "Failed to read firmware.");
     }
     blake2s_Update(&ctx, data, size);
-    ui_progress(ui_wait_callback, i + 1, FIRMWARE_SECTORS_COUNT);
+    ui_progress(ui_wait_callback, i + 1, firmware_sectors);
   }
 
   vstr_t vstr = {0};
@@ -200,8 +202,9 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
   return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)"EMULATOR", 8);
 #else
   vendor_header vhdr = {0};
-  uint32_t size = flash_sector_size(FLASH_SECTOR_FIRMWARE_START);
-  const void *data = flash_get_address(FLASH_SECTOR_FIRMWARE_START, 0, size);
+  uint32_t size = flash_sector_size(FIRMWARE_AREA.subarea[0].first_sector);
+  const void *data =
+      flash_get_address(FIRMWARE_AREA.subarea[0].first_sector, 0, size);
   if (data == NULL || sectrue != read_vendor_header(data, &vhdr)) {
     mp_raise_msg(&mp_type_RuntimeError, "Failed to read vendor header.");
   }

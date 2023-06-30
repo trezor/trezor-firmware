@@ -24,6 +24,24 @@
 #include "common.h"
 #include "flash.h"
 
+#if defined STM32F427xx || defined STM32F429xx
+#define FLASH_SECTOR_COUNT 24
+#elif defined STM32F405x
+#define FLASH_SECTOR_COUNT 12
+#else
+#error Unknown MCU
+#endif
+
+// note: FLASH_SR_RDERR is STM32F42xxx and STM32F43xxx specific (STM32F427)
+// (reference RM0090 section 3.7.5)
+#if !defined STM32F427xx && !defined STM32F429xx
+#define FLASH_SR_RDERR 0
+#endif
+
+#define FLASH_STATUS_ALL_FLAGS                                            \
+  (FLASH_SR_RDERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR | FLASH_SR_PGAERR | \
+   FLASH_SR_WRPERR | FLASH_SR_SOP | FLASH_SR_EOP)
+
 // see docs/memory.md for more information
 
 static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
@@ -60,26 +78,14 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 #endif
 };
 
-const uint8_t FIRMWARE_SECTORS[FIRMWARE_SECTORS_COUNT] = {
-    FLASH_SECTOR_FIRMWARE_START,
-    7,
-    8,
-    9,
-    10,
-    FLASH_SECTOR_FIRMWARE_END,
-    FLASH_SECTOR_FIRMWARE_EXTRA_START,
-    18,
-    19,
-    20,
-    21,
-    22,
-    FLASH_SECTOR_FIRMWARE_EXTRA_END,
-};
-
-const uint8_t STORAGE_SECTORS[STORAGE_SECTORS_COUNT] = {
-    FLASH_SECTOR_STORAGE_1,
-    FLASH_SECTOR_STORAGE_2,
-};
+uint32_t flash_wait_and_clear_status_flags(void) {
+  while (FLASH->SR & FLASH_SR_BSY)
+    ;  // wait for all previous flash operations to complete
+  const uint32_t result =
+      FLASH->SR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
+  FLASH->SR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
+  return result;
+}
 
 secbool flash_unlock_write(void) {
   HAL_FLASH_Unlock();
@@ -92,7 +98,7 @@ secbool flash_lock_write(void) {
   return sectrue;
 }
 
-const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size) {
+const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   if (sector >= FLASH_SECTOR_COUNT) {
     return NULL;
   }
@@ -104,48 +110,64 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size) {
   return (const void *)addr;
 }
 
-uint32_t flash_sector_size(uint8_t sector) {
+uint32_t flash_sector_size(uint16_t sector) {
   if (sector >= FLASH_SECTOR_COUNT) {
     return 0;
   }
   return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
 }
 
-secbool flash_erase_sectors(const uint8_t *sectors, int len,
-                            void (*progress)(int pos, int len)) {
+secbool flash_area_erase_bulk(const flash_area_t *area, int count,
+                              void (*progress)(int pos, int len)) {
   ensure(flash_unlock_write(), NULL);
-  FLASH_EraseInitTypeDef EraseInitStruct;
+  FLASH_EraseInitTypeDef EraseInitStruct = {0};
   EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
   EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
   EraseInitStruct.NbSectors = 1;
-  if (progress) {
-    progress(0, len);
+
+  int total_sectors = 0;
+  int done_sectors = 0;
+  for (int a = 0; a < count; a++) {
+    for (int i = 0; i < area[a].num_subareas; i++) {
+      total_sectors += area[a].subarea[i].num_sectors;
+    }
   }
-  for (int i = 0; i < len; i++) {
-    EraseInitStruct.Sector = sectors[i];
-    uint32_t SectorError;
-    if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
-      ensure(flash_lock_write(), NULL);
-      return secfalse;
-    }
-    // check whether the sector was really deleted (contains only 0xFF)
-    const uint32_t addr_start = FLASH_SECTOR_TABLE[sectors[i]],
-                   addr_end = FLASH_SECTOR_TABLE[sectors[i] + 1];
-    for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
-      if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
-        ensure(flash_lock_write(), NULL);
-        return secfalse;
+  if (progress) {
+    progress(0, total_sectors);
+  }
+
+  for (int a = 0; a < count; a++) {
+    for (int s = 0; s < area[a].num_subareas; s++) {
+      for (int i = 0; i < area[a].subarea[s].num_sectors; i++) {
+        int sector = area[a].subarea[s].first_sector + i;
+
+        EraseInitStruct.Sector = sector;
+        uint32_t SectorError;
+        if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
+          ensure(flash_lock_write(), NULL);
+          return secfalse;
+        }
+        // check whether the sector was really deleted (contains only 0xFF)
+        const uint32_t addr_start = FLASH_SECTOR_TABLE[sector],
+                       addr_end = FLASH_SECTOR_TABLE[sector + 1];
+        for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
+          if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
+            ensure(flash_lock_write(), NULL);
+            return secfalse;
+          }
+        }
+        done_sectors++;
+        if (progress) {
+          progress(done_sectors, total_sectors);
+        }
       }
-    }
-    if (progress) {
-      progress(i + 1, len);
     }
   }
   ensure(flash_lock_write(), NULL);
   return sectrue;
 }
 
-secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data) {
+secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
   uint32_t address = (uint32_t)flash_get_address(sector, offset, 1);
   if (address == 0) {
     return secfalse;
@@ -162,7 +184,7 @@ secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data) {
   return sectrue;
 }
 
-secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data) {
+secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   uint32_t address = (uint32_t)flash_get_address(sector, offset, 4);
   if (address == 0) {
     return secfalse;

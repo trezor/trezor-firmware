@@ -33,6 +33,9 @@ def configure(
     defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
+    sources += [
+        "embed/models/model_D001_layout.c",
+    ]
     sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
     sources += ["embed/trezorhal/stm32f4/displays/ili9341_spi.c"]
     sources += ["embed/trezorhal/stm32f4/dma.c"]

@@ -27,6 +27,7 @@
 #include "display.h"
 #include "flash.h"
 #include "image.h"
+#include "model.h"
 #include "rng.h"
 #include "sbu.h"
 #include "sdcard.h"
@@ -35,7 +36,7 @@
 
 static void progress_callback(int pos, int len) { display_printf("."); }
 
-static void flash_from_sdcard(uint8_t sector, uint32_t source,
+static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
                               uint32_t length) {
   static uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
 
@@ -50,9 +51,10 @@ static void flash_from_sdcard(uint8_t sector, uint32_t source,
     ensure(sdcard_read_blocks(buf, i + source / SDCARD_BLOCK_SIZE, 1),
            "sdcard_read_blocks");
 
-    for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-      ensure(flash_write_word(
-                 sector, i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]),
+    for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / (sizeof(uint32_t) * 4); j++) {
+      ensure(flash_area_write_quadword(
+                 area, i * SDCARD_BLOCK_SIZE + j * 4 * sizeof(uint32_t),
+                 &buf[j * 4]),
              NULL);
     }
   }
@@ -70,14 +72,10 @@ int main(void) {
 
   display_printf("updating boardloader + bootloader\n");
 
-  static const uint8_t sectors[] = {
-      FLASH_SECTOR_BOARDLOADER_START,
-      1,
-      FLASH_SECTOR_BOARDLOADER_END,
-      FLASH_SECTOR_BOOTLOADER,
-  };
   display_printf("erasing sectors");
-  ensure(flash_erase_sectors(sectors, sizeof(sectors), progress_callback),
+  ensure(flash_area_erase(&BOARDLOADER_AREA, progress_callback),
+         "flash_erase_sectors");
+  ensure(flash_area_erase(&BOOTLOADER_AREA, progress_callback),
          "flash_erase_sectors");
   display_printf("\n");
   display_printf("erased\n");
@@ -90,12 +88,8 @@ int main(void) {
 #define BOARDLOADER_TOTAL_SIZE (3 * BOARDLOADER_CHUNK_SIZE)
 #define BOOTLOADER_TOTAL_SIZE (128 * 1024)
 
-  flash_from_sdcard(FLASH_SECTOR_BOARDLOADER_START, 0 * BOARDLOADER_CHUNK_SIZE,
-                    BOARDLOADER_CHUNK_SIZE);
-  flash_from_sdcard(1, 1 * BOARDLOADER_CHUNK_SIZE, BOARDLOADER_CHUNK_SIZE);
-  flash_from_sdcard(FLASH_SECTOR_BOARDLOADER_END, 2 * BOARDLOADER_CHUNK_SIZE,
-                    BOARDLOADER_CHUNK_SIZE);
-  flash_from_sdcard(FLASH_SECTOR_BOOTLOADER, BOARDLOADER_TOTAL_SIZE,
+  flash_from_sdcard(&BOARDLOADER_AREA, 0, BOARDLOADER_TOTAL_SIZE);
+  flash_from_sdcard(&BOOTLOADER_AREA, BOARDLOADER_TOTAL_SIZE,
                     BOOTLOADER_TOTAL_SIZE);
 
   display_printf("done\n");

@@ -23,6 +23,8 @@
 #include STM32_HAL_H
 #include <stdint.h>
 
+#define FLASH_BYTE_ACCESS 1
+
 typedef enum {
   CLOCK_180_MHZ = 0,
   CLOCK_168_MHZ = 1,

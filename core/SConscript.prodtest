@@ -45,6 +45,7 @@ elif TREZOR_MODEL in ('T', ):
 # modtrezorcrypto
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
+    'vendor/trezor-storage',
 ]
 SOURCE_MOD += [
     'vendor/trezor-crypto/chacha_drbg.c',
@@ -64,11 +65,13 @@ SOURCE_MOD += [
     'embed/lib/colors.c',
     'embed/lib/fonts/fonts.c',
     'embed/lib/fonts/font_bitmap.c',
+    'embed/lib/image.c',
     'embed/lib/mini_printf.c',
     'embed/lib/qr-code-generator/qrcodegen.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
+    'vendor/trezor-storage/flash_common.c',
 ]
 
 SOURCE_PRODTEST = [

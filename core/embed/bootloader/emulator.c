@@ -4,9 +4,13 @@
 #include "bootui.h"
 #include "common.h"
 #include "display.h"
-#include "emulator.h"
 #include "flash.h"
+#include "model.h"
 #include "rust_ui.h"
+
+#include "emulator.h"
+
+#undef FIRMWARE_START
 
 uint8_t *FIRMWARE_START = 0;
 uint32_t stay_in_bootloader_flag;
@@ -15,7 +19,7 @@ void set_core_clock(int) {}
 
 int bootloader_main(void);
 
-bool sector_is_empty(uint8_t sector) {
+bool sector_is_empty(uint16_t sector) {
   const uint8_t *storage = flash_get_address(sector, 0, 0);
   size_t storage_size = flash_sector_size(sector);
   for (size_t i = 0; i < storage_size; i++) {
@@ -28,12 +32,11 @@ bool sector_is_empty(uint8_t sector) {
 
 __attribute__((noreturn)) int main(int argc, char **argv) {
   flash_init();
-  FIRMWARE_START =
-      (uint8_t *)flash_get_address(FLASH_SECTOR_FIRMWARE_START, 0, 0);
+  FIRMWARE_START = (uint8_t *)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
   // simulate non-empty storage so that we know whether it was erased or not
-  if (sector_is_empty(FLASH_SECTOR_STORAGE_1)) {
-    secbool ret = flash_write_word(FLASH_SECTOR_STORAGE_1, 16, 0x12345678);
+  if (sector_is_empty(STORAGE_AREAS[0].subarea[0].first_sector)) {
+    secbool ret = flash_area_write_word(&STORAGE_AREAS[0], 16, 0x12345678);
     (void)ret;
   }
 
@@ -63,8 +66,9 @@ void mpu_config_bootloader(void) {}
 void mpu_config_off(void) {}
 
 __attribute__((noreturn)) void jump_to(void *addr) {
-  bool storage_is_erased = sector_is_empty(FLASH_SECTOR_STORAGE_1) &&
-                           sector_is_empty(FLASH_SECTOR_STORAGE_2);
+  bool storage_is_erased =
+      sector_is_empty(STORAGE_AREAS[0].subarea[0].first_sector) &&
+      sector_is_empty(STORAGE_AREAS[1].subarea[0].first_sector);
 
   if (storage_is_erased) {
     printf("STORAGE WAS ERASED\n");

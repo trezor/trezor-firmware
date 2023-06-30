@@ -113,7 +113,7 @@ void check_and_replace_bootloader(void) {
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
   const uint32_t bl_len = 128 * 1024;
-  const void *bl_data = flash_get_address(FLASH_SECTOR_BOOTLOADER, 0, bl_len);
+  const void *bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
   blake2s(bl_data, bl_len, hash, BLAKE2S_DIGEST_LENGTH);
 
   // don't whitelist the valid bootloaders for now
@@ -172,16 +172,16 @@ void check_and_replace_bootloader(void) {
     ensure(secfalse, "Incompatible embedded bootloader");
   }
 
-  ensure(flash_erase(FLASH_SECTOR_BOOTLOADER), NULL);
+  ensure(flash_area_erase(&BOOTLOADER_AREA, NULL), NULL);
   ensure(flash_unlock_write(), NULL);
   for (int i = 0; i < len / sizeof(uint32_t); i++) {
-    ensure(flash_write_word(FLASH_SECTOR_BOOTLOADER, i * sizeof(uint32_t),
-                            data[i]),
-           NULL);
+    ensure(
+        flash_area_write_word(&BOOTLOADER_AREA, i * sizeof(uint32_t), data[i]),
+        NULL);
   }
   for (int i = len / sizeof(uint32_t); i < 128 * 1024 / sizeof(uint32_t); i++) {
-    ensure(flash_write_word(FLASH_SECTOR_BOOTLOADER, i * sizeof(uint32_t),
-                            0x00000000),
+    ensure(flash_area_write_word(&BOOTLOADER_AREA, i * sizeof(uint32_t),
+                                 0x00000000),
            NULL);
   }
   ensure(flash_lock_write(), NULL);

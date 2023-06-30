@@ -23,6 +23,8 @@
 
 #include "common.h"
 #include "display.h"
+#include "model.h"
+
 #ifdef FANCY_FATAL_ERROR
 #include "rust_ui.h"
 #endif

@@ -21,6 +21,7 @@
 #define __NORCOW_CONFIG_H__
 
 #include "flash.h"
+#include "model.h"
 
 #define NORCOW_HEADER_LEN 0
 #define NORCOW_SECTOR_COUNT 2
@@ -33,9 +34,6 @@
 #else
 #error Unknown Trezor model
 #endif
-
-#define NORCOW_SECTORS \
-  { FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2 }
 
 /*
  * Current storage version.

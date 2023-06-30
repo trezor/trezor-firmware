@@ -32,6 +32,7 @@ PATH_HAL = []
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
+    'vendor/trezor-storage',
 ]
 CPPDEFINES_MOD += [
     'AES_128',
@@ -60,7 +61,9 @@ SOURCE_MOD += [
     'embed/lib/colors.c',
     'embed/lib/fonts/fonts.c',
     'embed/lib/fonts/font_bitmap.c',
+    'embed/lib/image.c',
     'embed/lib/mini_printf.c',
+    'vendor/trezor-storage/flash_common.c',
 ]
 
 SOURCE_BOARDLOADER = [

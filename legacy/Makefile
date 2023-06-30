@@ -20,6 +20,7 @@ OBJS += usb_standard.o
 OBJS += util.o
 OBJS += webusb.o
 OBJS += winusb.o
+OBJS += vendor/trezor-storage/flash_common.o
 
 libtrezor.a: $(OBJS)
 

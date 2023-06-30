@@ -93,12 +93,14 @@ secbool check_image_model(const image_header *const hdr) {
   }
 #endif
 
+#ifndef TREZOR_EMULATOR
   if (hdr->hw_model != HW_MODEL) {
     return secfalse;
   }
   if (hdr->hw_revision != HW_REVISION) {
     return secfalse;
   }
+#endif
 
   return sectrue;
 }
@@ -215,14 +217,15 @@ secbool check_single_hash(const uint8_t *const hash, const uint8_t *const data,
   blake2s(data, len, h, BLAKE2S_DIGEST_LENGTH);
   return sectrue * (0 == memcmp(h, hash, BLAKE2S_DIGEST_LENGTH));
 }
-
+//
 secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
-                             const uint8_t *sectors, int blocks) {
-  if (0 == sectors || blocks < 1) {
+                             const flash_area_t *area) {
+  if (0 == area) {
     return secfalse;
   }
+
   const void *data =
-      flash_get_address(sectors[0], firstskip, IMAGE_CHUNK_SIZE - firstskip);
+      flash_area_get_address(area, firstskip, IMAGE_CHUNK_SIZE - firstskip);
   if (!data) {
     return secfalse;
   }
@@ -232,22 +235,24 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
                         MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
     return secfalse;
   }
-  int block = 1;
+
   remaining -= IMAGE_CHUNK_SIZE - firstskip;
+
+  int chunk = 1;
+
   while (remaining > 0) {
-    if (block >= blocks) {
-      return secfalse;
-    }
-    data = flash_get_address(sectors[block], 0, IMAGE_CHUNK_SIZE);
+    data = flash_area_get_address(area, chunk * IMAGE_CHUNK_SIZE,
+                                  IMAGE_CHUNK_SIZE);
     if (!data) {
       return secfalse;
     }
-    if (sectrue != check_single_hash(hdr->hashes + block * 32, data,
+    if (sectrue != check_single_hash(hdr->hashes + chunk * 32, data,
                                      MIN(remaining, IMAGE_CHUNK_SIZE))) {
       return secfalse;
     }
-    block++;
+    chunk++;
     remaining -= IMAGE_CHUNK_SIZE;
   }
+
   return sectrue;
 }

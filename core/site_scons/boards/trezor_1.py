@@ -31,6 +31,9 @@ def configure(
     defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
+    sources += [
+        "embed/models/model_T1B1_layout.c",
+    ]
     sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 
     if "input" in features_wanted:
