@@ -23,9 +23,11 @@ use crate::ui::component::image::Image;
 #[cfg(not(feature = "dma2d"))]
 use crate::ui::geometry::Alignment2D;
 
+#[cfg(feature = "backlight")]
+use crate::{time::Duration, trezorhal::time};
+
 use crate::{
-    time::Duration,
-    trezorhal::{buffers, display, time, uzlib::UzlibContext},
+    trezorhal::{buffers, display, uzlib::UzlibContext},
     ui::lerp::Lerp,
 };
 

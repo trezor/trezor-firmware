@@ -230,6 +230,7 @@ def cargo_build():
 
     if TREZOR_MODEL in ('T',):
         features.append('touch')
+        features.append('backlight')
     if TREZOR_MODEL in ('R', '1'):
         features.append('button')
 
