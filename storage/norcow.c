@@ -28,8 +28,6 @@
 // NRCW = 4e524357
 #define NORCOW_MAGIC_V0 ((uint32_t)0x5743524e)
 
-#define NORCOW_WORD_SIZE (sizeof(uint32_t))
-#define NORCOW_PREFIX_LEN NORCOW_WORD_SIZE
 #define NORCOW_MAGIC_LEN NORCOW_WORD_SIZE
 #define NORCOW_VERSION_LEN NORCOW_WORD_SIZE
 
@@ -39,9 +37,25 @@
 // The key value which is used to indicate that the entry has been deleted.
 #define NORCOW_KEY_DELETED (0x0000)
 
+#ifdef FLASH_BYTE_ACCESS
+#define NORCOW_WORD_SIZE (sizeof(uint32_t))
+#define NORCOW_PREFIX_LEN (NORCOW_WORD_SIZE)
+#define NORCOW_KEY_LEN 2
+#define NORCOW_LEN_LEN 2
+#define ALIGN(X) ((X) = ((X) + 3) & ~3)
 // The offset from the beginning of the sector where stored items start.
 #define NORCOW_STORAGE_START \
   (NORCOW_HEADER_LEN + NORCOW_MAGIC_LEN + NORCOW_VERSION_LEN)
+
+#else
+#define NORCOW_WORD_SIZE (4 * sizeof(uint32_t))
+#define NORCOW_PREFIX_LEN (2 * NORCOW_WORD_SIZE)
+#define NORCOW_KEY_LEN 16
+#define NORCOW_LEN_LEN 16
+#define ALIGN(X) ((X) = ((X) + 0xF) & ~0xF)
+// The offset from the beginning of the sector where stored items start.
+#define NORCOW_STORAGE_START (NORCOW_HEADER_LEN + NORCOW_WORD_SIZE)
+#endif
 
 // The index of the active reading sector and writing sector. These should be
 // equal except when storage version upgrade or compaction is in progress.
@@ -66,7 +80,8 @@ static const void *norcow_ptr(uint8_t sector, uint32_t offset, uint32_t size) {
 /*
  * Writes data to given sector, starting from offset
  */
-static secbool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix,
+#ifdef FLASH_BYTE_ACCESS
+static secbool norcow_write(uint8_t sector, uint32_t offset, uint16_t key,
                             const uint8_t *data, uint16_t len) {
   if (sector >= NORCOW_SECTOR_COUNT) {
     return secfalse;
@@ -75,6 +90,8 @@ static secbool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix,
   if (offset + NORCOW_PREFIX_LEN + len > NORCOW_SECTOR_SIZE) {
     return secfalse;
   }
+
+  uint32_t prefix = ((uint32_t)len << 16) | key;
 
   ensure(flash_unlock_write(), NULL);
 
@@ -100,6 +117,62 @@ static secbool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix,
   ensure(flash_lock_write(), NULL);
   return sectrue;
 }
+#else
+static secbool norcow_write(uint8_t sector, uint32_t offset, uint16_t key,
+                            const uint8_t *data, uint16_t len) {
+  if (sector >= NORCOW_SECTOR_COUNT) {
+    return secfalse;
+  }
+
+  uint16_t len_adjusted = ((len) + 0xF) & ~0xF;
+
+  if (offset + NORCOW_PREFIX_LEN + len_adjusted > NORCOW_SECTOR_SIZE) {
+    return secfalse;
+  }
+
+  ensure(flash_unlock_write(), NULL);
+
+  uint32_t d[4];
+  d[0] = key;
+  d[1] = 0xFFFFFFFF;
+  d[2] = 0xFFFFFFFF;
+  d[3] = 0xFFFFFFFF;
+  // write key
+  ensure(flash_area_write_quadword(&STORAGE_AREAS[sector], offset, d), NULL);
+  offset += NORCOW_WORD_SIZE;
+
+  d[0] = len;
+  // write len
+  ensure(flash_area_write_quadword(&STORAGE_AREAS[sector], offset, d), NULL);
+  offset += NORCOW_WORD_SIZE;
+
+  if (data != NULL) {
+    // write data
+    for (uint16_t i = 0; i < len / NORCOW_WORD_SIZE;
+         i++, offset += NORCOW_WORD_SIZE) {
+      memcpy(d, data + i * NORCOW_WORD_SIZE, NORCOW_WORD_SIZE);
+      ensure(flash_area_write_quadword(&STORAGE_AREAS[sector], offset, d),
+             NULL);
+    }
+
+    memset(d, 0, sizeof(d));
+    // pad with zeroes
+    for (uint16_t i = 0; i < len % NORCOW_WORD_SIZE; i++) {
+      ((uint8_t *)d)[i] = data[i + len - len % NORCOW_WORD_SIZE];
+    }
+
+    if (len % NORCOW_WORD_SIZE != 0) {
+      ensure(flash_area_write_quadword(&STORAGE_AREAS[sector], offset, d),
+             NULL);
+    }
+  } else {
+    offset += len;
+  }
+
+  ensure(flash_lock_write(), NULL);
+  return sectrue;
+}
+#endif
 
 /*
  * Erases sector (and sets a magic)
@@ -126,15 +199,35 @@ static void erase_sector(uint8_t sector, secbool set_magic) {
 #endif
 
   if (sectrue == set_magic) {
-    ensure(norcow_write(sector, NORCOW_HEADER_LEN, NORCOW_MAGIC, NULL, 0),
-           "set magic failed");
-    ensure(norcow_write(sector, NORCOW_HEADER_LEN + NORCOW_MAGIC_LEN,
-                        ~NORCOW_VERSION, NULL, 0),
+#ifdef FLASH_BYTE_ACCESS
+    ensure(flash_unlock_write(), NULL);
+
+    ensure(flash_area_write_word(&STORAGE_AREAS[sector], NORCOW_HEADER_LEN,
+                                 NORCOW_MAGIC),
+           NULL);
+    ensure(flash_area_write_word(&STORAGE_AREAS[sector],
+                                 NORCOW_HEADER_LEN + NORCOW_MAGIC_LEN,
+                                 ~NORCOW_VERSION),
            "set version failed");
+    ensure(flash_lock_write(), NULL);
+#else
+    uint32_t d[4];
+    d[0] = NORCOW_MAGIC;
+    d[1] = ~NORCOW_VERSION;
+    d[2] = 0xFFFFFFFF;
+    d[3] = 0xFFFFFFFF;
+
+    ensure(flash_unlock_write(), NULL);
+
+    ensure(
+        flash_area_write_quadword(&STORAGE_AREAS[sector], NORCOW_HEADER_LEN, d),
+        "set magic and version failed");
+
+    ensure(flash_lock_write(), NULL);
+
+#endif
   }
 }
-
-#define ALIGN4(X) (X) = ((X) + 3) & ~3
 
 /*
  * Reads one item starting from offset
@@ -145,7 +238,7 @@ static secbool read_item(uint8_t sector, uint32_t offset, uint16_t *key,
 
   const void *k = norcow_ptr(sector, *pos, 2);
   if (k == NULL) return secfalse;
-  *pos += 2;
+  *pos += NORCOW_KEY_LEN;
   memcpy(key, k, sizeof(uint16_t));
   if (*key == NORCOW_KEY_FREE) {
     return secfalse;
@@ -153,13 +246,13 @@ static secbool read_item(uint8_t sector, uint32_t offset, uint16_t *key,
 
   const void *l = norcow_ptr(sector, *pos, 2);
   if (l == NULL) return secfalse;
-  *pos += 2;
+  *pos += NORCOW_LEN_LEN;
   memcpy(len, l, sizeof(uint16_t));
 
   *val = norcow_ptr(sector, *pos, *len);
   if (*val == NULL) return secfalse;
   *pos += *len;
-  ALIGN4(*pos);
+  ALIGN(*pos);
   return sectrue;
 }
 
@@ -168,10 +261,9 @@ static secbool read_item(uint8_t sector, uint32_t offset, uint16_t *key,
  */
 static secbool write_item(uint8_t sector, uint32_t offset, uint16_t key,
                           const void *val, uint16_t len, uint32_t *pos) {
-  uint32_t prefix = ((uint32_t)len << 16) | key;
   *pos = offset + NORCOW_PREFIX_LEN + len;
-  ALIGN4(*pos);
-  return norcow_write(sector, offset, prefix, val, len);
+  ALIGN(*pos);
+  return norcow_write(sector, offset, key, val, len);
 }
 
 /*
@@ -417,6 +509,7 @@ secbool norcow_set_ex(uint16_t key, const void *val, uint16_t len,
     return secfalse;
   }
 
+  const flash_area_t *area = &STORAGE_AREAS[norcow_write_sector];
   secbool ret = secfalse;
   const void *ptr = NULL;
   uint16_t len_old = 0;
@@ -428,19 +521,20 @@ secbool norcow_set_ex(uint16_t key, const void *val, uint16_t len,
     offset =
         (const uint8_t *)ptr -
         (const uint8_t *)norcow_ptr(norcow_write_sector, 0, NORCOW_SECTOR_SIZE);
+#ifdef FLASH_BYTE_ACCESS
     if (val != NULL && len_old == len) {
       ret = sectrue;
       ensure(flash_unlock_write(), NULL);
       for (uint16_t i = 0; i < len; i++) {
-        if (sectrue !=
-            flash_area_write_byte(&STORAGE_AREAS[norcow_write_sector],
-                                  offset + i, ((const uint8_t *)val)[i])) {
+        if (sectrue != flash_area_write_byte(area, offset + i,
+                                             ((const uint8_t *)val)[i])) {
           ret = secfalse;
           break;
         }
       }
       ensure(flash_lock_write(), NULL);
     }
+#endif
   }
 
   // If the update was not possible then write the entry as a new item.
@@ -449,18 +543,26 @@ secbool norcow_set_ex(uint16_t key, const void *val, uint16_t len,
     if (sectrue == *found) {
       ensure(flash_unlock_write(), NULL);
 
+#ifdef FLASH_BYTE_ACCESS
       // Update the prefix to indicate that the old item has been deleted.
       uint32_t prefix = (uint32_t)len_old << 16;
-      ensure(flash_area_write_word(&STORAGE_AREAS[norcow_write_sector],
-                                   offset - NORCOW_PREFIX_LEN, prefix),
+      ensure(flash_area_write_word(area, offset - NORCOW_PREFIX_LEN, prefix),
              NULL);
+#else
+      // Update the key to indicate that the old item has been deleted.
+      uint32_t d[4] = {0};
+      ensure(flash_area_write_quadword(area, offset - NORCOW_PREFIX_LEN, d),
+             NULL);
+#endif
 
       // Delete the old item data.
       uint32_t end = offset + len_old;
       while (offset < end) {
-        ensure(flash_area_write_word(&STORAGE_AREAS[norcow_write_sector],
-                                     offset, 0x00000000),
-               NULL);
+#ifdef FLASH_BYTE_ACCESS
+        ensure(flash_area_write_word(area, offset, 0x00000000), NULL);
+#else
+        ensure(flash_area_write_quadword(area, offset, d), NULL);
+#endif
         offset += NORCOW_WORD_SIZE;
       }
 
@@ -490,6 +592,7 @@ secbool norcow_delete(uint16_t key) {
     return secfalse;
   }
 
+  const flash_area_t *area = &STORAGE_AREAS[norcow_write_sector];
   const void *ptr = NULL;
   uint16_t len = 0;
   if (sectrue != find_item(norcow_write_sector, key, &ptr, &len)) {
@@ -502,18 +605,24 @@ secbool norcow_delete(uint16_t key) {
 
   ensure(flash_unlock_write(), NULL);
 
+#ifdef FLASH_BYTE_ACCESS
   // Update the prefix to indicate that the item has been deleted.
   uint32_t prefix = (uint32_t)len << 16;
-  ensure(flash_area_write_word(&STORAGE_AREAS[norcow_write_sector],
-                               offset - NORCOW_PREFIX_LEN, prefix),
-         NULL);
+  ensure(flash_area_write_word(area, offset - NORCOW_PREFIX_LEN, prefix), NULL);
+#else
+  // Update the key to indicate that the old item has been deleted.
+  uint32_t d[4] = {0};
+  ensure(flash_area_write_quadword(area, offset - NORCOW_PREFIX_LEN, d), NULL);
+#endif
 
   // Delete the item data.
   uint32_t end = offset + len;
   while (offset < end) {
-    ensure(flash_area_write_word(&STORAGE_AREAS[norcow_write_sector], offset,
-                                 0x00000000),
-           NULL);
+#ifdef FLASH_BYTE_ACCESS
+    ensure(flash_area_write_word(area, offset, 0x00000000), NULL);
+#else
+    ensure(flash_area_write_quadword(area, offset, d), NULL);
+#endif
     offset += NORCOW_WORD_SIZE;
   }
 
@@ -522,6 +631,7 @@ secbool norcow_delete(uint16_t key) {
   return sectrue;
 }
 
+#ifdef FLASH_BYTE_ACCESS
 /*
  * Update a word in flash at the given pointer.  The pointer must point
  * into the NORCOW area.
@@ -546,6 +656,7 @@ secbool norcow_update_word(uint16_t key, uint16_t offset, uint32_t value) {
   ensure(flash_lock_write(), NULL);
   return sectrue;
 }
+#endif
 
 /*
  * Update the value of the given key starting at the given offset.
@@ -564,12 +675,28 @@ secbool norcow_update_bytes(const uint16_t key, const uint16_t offset,
       (const uint8_t *)ptr -
       (const uint8_t *)norcow_ptr(norcow_write_sector, 0, NORCOW_SECTOR_SIZE) +
       offset;
+  const flash_area_t *area = &STORAGE_AREAS[norcow_write_sector];
   ensure(flash_unlock_write(), NULL);
+#ifdef FLASH_BYTE_ACCESS
   for (uint16_t i = 0; i < len; i++, sector_offset++) {
-    ensure(flash_area_write_byte(&STORAGE_AREAS[norcow_write_sector],
-                                 sector_offset, data[i]),
-           NULL);
+    ensure(flash_area_write_byte(area, sector_offset, data[i]), NULL);
   }
+#else
+  uint32_t d[4];
+  for (uint16_t i = 0; i < len / 16; i++) {
+    memcpy(d, data + i * 16, 16);
+    ensure(flash_area_write_quadword(area, sector_offset, d), NULL);
+    sector_offset += 16;
+  }
+  memset(d, 0, 16);
+  // pad with zeroes
+  for (uint16_t i = 0; i < len % 16; i++) {
+    ((uint8_t *)d)[i] = data[i + len - len % 16];
+  }
+  if (len % 16 != 0) {
+    ensure(flash_area_write_quadword(area, sector_offset, d), NULL);
+  }
+#endif
   ensure(flash_lock_write(), NULL);
   return sectrue;
 }

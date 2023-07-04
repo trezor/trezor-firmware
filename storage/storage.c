@@ -126,6 +126,12 @@ const uint32_t V0_PIN_EMPTY = 1;
 // The length of the ChaCha20 IV (aka nonce) in bytes as per RFC 7539.
 #define CHACHA20_IV_SIZE 12
 
+#ifdef FLASH_BYTE_ACCESS
+#define CHACHA20_IV_PADDING 0
+#else
+#define CHACHA20_IV_PADDING 4
+#endif
+
 // The length of the ChaCha20 block in bytes.
 #define CHACHA20_BLOCK_SIZE 64
 
@@ -145,7 +151,11 @@ const uint8_t WIPE_CODE_EMPTY[] = {0, 0, 0, 0};
 #define V2_WIPE_CODE_EMPTY 0
 
 // The length of the counter tail in words.
+#ifdef FLASH_BYTE_ACCESS
 #define COUNTER_TAIL_WORDS 2
+#else
+#define COUNTER_TAIL_WORDS 0
+#endif
 
 // Values used in the guard key integrity check.
 #define GUARD_KEY_MODULUS 6311
@@ -404,19 +414,22 @@ static secbool set_wipe_code(const uint8_t *wipe_code, size_t wipe_code_len) {
     return secfalse;
   }
 
+  uint32_t data[(MAX_WIPE_CODE_LEN + WIPE_CODE_SALT_SIZE + WIPE_CODE_TAG_SIZE) /
+                sizeof(uint32_t)] = {0};
+
+  memcpy((uint8_t *)data, wipe_code, wipe_code_len);
+  memcpy((uint8_t *)data + wipe_code_len, salt_and_tag,
+         WIPE_CODE_SALT_SIZE + WIPE_CODE_TAG_SIZE);
+
   // Write wipe code into the preallocated entry.
-  if (sectrue !=
-      norcow_update_bytes(WIPE_CODE_DATA_KEY, 0, wipe_code, wipe_code_len)) {
+  if (sectrue != norcow_update_bytes(WIPE_CODE_DATA_KEY, 0, (uint8_t *)data,
+                                     wipe_code_len + WIPE_CODE_SALT_SIZE +
+                                         WIPE_CODE_TAG_SIZE)) {
+    memzero(data, sizeof(data));
     return secfalse;
   }
 
-  // Write salt and tag into the preallocated entry.
-  if (sectrue !=
-      norcow_update_bytes(WIPE_CODE_DATA_KEY, wipe_code_len, salt_and_tag,
-                          WIPE_CODE_SALT_SIZE + WIPE_CODE_TAG_SIZE)) {
-    return secfalse;
-  }
-
+  memzero(data, sizeof(data));
   return sectrue;
 }
 
@@ -710,6 +723,12 @@ static secbool pin_fails_reset(void) {
     return secfalse;
   }
 
+#ifndef FLASH_BYTE_ACCESS
+  uint32_t new_logs[GUARD_KEY_WORDS + 2 * PIN_LOG_WORDS];
+  secbool edited = secfalse;
+  memcpy(new_logs, logs, len);
+#endif
+
   uint32_t guard_mask = 0;
   uint32_t guard = 0;
   wait_random();
@@ -723,16 +742,35 @@ static secbool pin_fails_reset(void) {
   const uint32_t *entry_log = success_log + PIN_LOG_WORDS;
   for (size_t i = 0; i < PIN_LOG_WORDS; ++i) {
     if (entry_log[i] == unused) {
+#ifndef FLASH_BYTE_ACCESS
+      if (edited == sectrue) {
+        return norcow_set(PIN_LOGS_KEY, new_logs, sizeof(new_logs));
+      }
+#endif
       return sectrue;
     }
     if (success_log[i] != guard) {
+#ifdef FLASH_BYTE_ACCESS
       if (sectrue != norcow_update_word(
                          PIN_LOGS_KEY, sizeof(uint32_t) * (i + GUARD_KEY_WORDS),
                          entry_log[i])) {
         return secfalse;
       }
+#else
+      if (new_logs[(i + GUARD_KEY_WORDS)] != entry_log[i]) {
+        edited = sectrue;
+        new_logs[(i + GUARD_KEY_WORDS)] = entry_log[i];
+      }
+#endif
     }
   }
+#ifndef FLASH_BYTE_ACCESS
+  if (edited == sectrue) {
+    if (sectrue != norcow_set(PIN_LOGS_KEY, new_logs, sizeof(new_logs))) {
+      return secfalse;
+    }
+  }
+#endif
   return pin_logs_init(0);
 }
 
@@ -750,6 +788,11 @@ secbool storage_pin_fails_increase(void) {
     handle_fault("no PIN logs");
     return secfalse;
   }
+
+#ifndef FLASH_BYTE_ACCESS
+  uint32_t new_logs[GUARD_KEY_WORDS + 2 * PIN_LOG_WORDS];
+  memcpy(new_logs, logs, len);
+#endif
 
   uint32_t guard_mask = 0;
   uint32_t guard = 0;
@@ -775,6 +818,7 @@ secbool storage_pin_fails_increase(void) {
       word = (word >> 2) | (word >> 1);
 
       wait_random();
+#ifdef FLASH_BYTE_ACCESS
       if (sectrue !=
           norcow_update_word(
               PIN_LOGS_KEY,
@@ -783,6 +827,14 @@ secbool storage_pin_fails_increase(void) {
         handle_fault("PIN logs update");
         return secfalse;
       }
+#else
+      new_logs[(i + GUARD_KEY_WORDS + PIN_LOG_WORDS)] =
+          (word & ~guard_mask) | guard;
+      if (sectrue != norcow_set(PIN_LOGS_KEY, new_logs, sizeof(new_logs))) {
+        handle_fault("PIN logs update");
+        return secfalse;
+      }
+#endif
       return sectrue;
     }
   }
@@ -1145,11 +1197,11 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
     return secfalse;
   }
 
-  if (*len < CHACHA20_IV_SIZE + POLY1305_TAG_SIZE) {
+  if (*len < CHACHA20_IV_SIZE + CHACHA20_IV_PADDING + POLY1305_TAG_SIZE) {
     handle_fault("ciphertext length check");
     return secfalse;
   }
-  *len -= CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+  *len -= CHACHA20_IV_SIZE + CHACHA20_IV_PADDING + POLY1305_TAG_SIZE;
 
   if (val_dest == NULL) {
     return sectrue;
@@ -1160,9 +1212,10 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
   }
 
   const uint8_t *iv = (const uint8_t *)val_stored;
-  const uint8_t *tag_stored = (const uint8_t *)val_stored + CHACHA20_IV_SIZE;
-  const uint8_t *ciphertext =
-      (const uint8_t *)val_stored + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+  const uint8_t *tag_stored =
+      (const uint8_t *)val_stored + CHACHA20_IV_SIZE + CHACHA20_IV_PADDING;
+  const uint8_t *ciphertext = (const uint8_t *)val_stored + CHACHA20_IV_SIZE +
+                              CHACHA20_IV_PADDING + POLY1305_TAG_SIZE;
   uint8_t tag_computed[POLY1305_TAG_SIZE] = {0};
   chacha20poly1305_ctx ctx = {0};
   rfc7539_init(&ctx, cached_dek, iv);
@@ -1229,24 +1282,27 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
  */
 static secbool storage_set_encrypted(const uint16_t key, const void *val,
                                      const uint16_t len) {
-  if (len > UINT16_MAX - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE) {
+  if (len >
+      UINT16_MAX - CHACHA20_IV_SIZE - CHACHA20_IV_PADDING - POLY1305_TAG_SIZE) {
     return secfalse;
   }
 
   // Preallocate space on the flash storage.
-  if (sectrue !=
-      auth_set(key, NULL, CHACHA20_IV_SIZE + POLY1305_TAG_SIZE + len)) {
+  if (sectrue != auth_set(key, NULL,
+                          CHACHA20_IV_SIZE + CHACHA20_IV_PADDING +
+                              POLY1305_TAG_SIZE + len)) {
     return secfalse;
   }
 
   // Write the IV to the flash.
-  uint8_t buffer[CHACHA20_BLOCK_SIZE] = {0};
+  uint8_t buffer[CHACHA20_BLOCK_SIZE + CHACHA20_IV_PADDING] = {0};
   random_buffer(buffer, CHACHA20_IV_SIZE);
   uint16_t offset = 0;
-  if (sectrue != norcow_update_bytes(key, offset, buffer, CHACHA20_IV_SIZE)) {
+  if (sectrue != norcow_update_bytes(key, offset, buffer,
+                                     CHACHA20_IV_SIZE + CHACHA20_IV_PADDING)) {
     return secfalse;
   }
-  offset += CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+  offset += CHACHA20_IV_SIZE + CHACHA20_IV_PADDING + POLY1305_TAG_SIZE;
 
   // Encrypt all blocks except for the last one.
   chacha20poly1305_ctx ctx = {0};
@@ -1270,7 +1326,8 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   secbool ret = norcow_update_bytes(key, offset, buffer, len - i);
   if (sectrue == ret) {
     rfc7539_finish(&ctx, sizeof(key), len, buffer);
-    ret = norcow_update_bytes(key, CHACHA20_IV_SIZE, buffer, POLY1305_TAG_SIZE);
+    ret = norcow_update_bytes(key, CHACHA20_IV_SIZE + CHACHA20_IV_PADDING,
+                              buffer, POLY1305_TAG_SIZE);
   }
   memzero(&ctx, sizeof(ctx));
   memzero(buffer, sizeof(buffer));
@@ -1372,7 +1429,11 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
       // Value overflow.
       return secfalse;
     }
+#ifdef FLASH_BYTE_ACCESS
     return norcow_update_word(key, sizeof(uint32_t) * i, val_stored[i] >> 1);
+#else
+    return storage_set_counter(key, *count);
+#endif
   } else {
     return storage_set_counter(key, *count);
   }
