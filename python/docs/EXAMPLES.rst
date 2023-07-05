@@ -77,7 +77,7 @@ After authenticating, open the "Send" tab, fill-out all details, then open the "
   Coin name [Bitcoin]: Bitcoin
 
   Previous output to spend (txid:vout) []: a5ea715aa99ca30516f3af6f622dfe7399d883d49ad74b1fe33fdf73d201e64e:0
-  BIP-32 path to derive the key: Bitcoin/0h/0/0
+  BIP-32 path to derive the key: m/44h/0h/0h/0/0
   Prefilling input amount: 111000
   Sequence Number to use (RBF opt-in enabled by default) [4294967293]: 4294967293
   Input type (address, segwit, p2shsegwit) [address]:
