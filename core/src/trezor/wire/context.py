@@ -24,10 +24,6 @@ if TYPE_CHECKING:
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
 
-# If set to False protobuf messages marked with "experimental_message" option are rejected.
-EXPERIMENTAL_ENABLED = False
-
-
 class UnexpectedMessage(Exception):
     def __init__(self, msg: codec_v1.Message) -> None:
         super().__init__()
