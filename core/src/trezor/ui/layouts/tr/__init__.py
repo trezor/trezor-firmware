@@ -1101,15 +1101,15 @@ def request_passphrase_on_host() -> None:
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
-    await button_request("passphrase_device", code=ButtonRequestType.PassphraseEntry)
-
-    result = await ctx_wait(
+    result = await interact(
         RustLayout(
             trezorui2.request_passphrase(
                 prompt="ENTER PASSPHRASE",
                 max_len=max_len,
             )
-        )
+        ),
+        "passphrase_device",
+        ButtonRequestType.PassphraseEntry,
     )
     if result is CANCELLED:
         raise ActionCancelled("Passphrase entry cancelled")
@@ -1135,18 +1135,19 @@ async def request_pin_on_device(
     else:
         subprompt = f"{attempts_remaining} tries left"
 
-    await button_request("pin_device", code=ButtonRequestType.PinEntry)
-
-    dialog = RustLayout(
-        trezorui2.request_pin(
-            prompt=prompt,
-            subprompt=subprompt,
-            allow_cancel=allow_cancel,
-            wrong_pin=wrong_pin,
-        )
+    result = await interact(
+        RustLayout(
+            trezorui2.request_pin(
+                prompt=prompt,
+                subprompt=subprompt,
+                allow_cancel=allow_cancel,
+                wrong_pin=wrong_pin,
+            )
+        ),
+        "pin_device",
+        ButtonRequestType.PinEntry,
     )
 
-    result = await ctx_wait(dialog)
     if result is CANCELLED:
         raise wire.PinCancelled
     assert isinstance(result, str)

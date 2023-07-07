@@ -219,26 +219,30 @@ def recovery_enter_shares_tr(
     word_count = len(shares[0].split(" "))
 
     # Homescreen - proceed to word number selection
-    yield
+    br = yield
+    assert br.code == ButtonRequestType.RecoveryHomepage
     debug.press_yes()
+
     # Input word number
     br = yield
     assert br.code == ButtonRequestType.MnemonicWordCount
     debug.input(str(word_count))
+
     # Homescreen - proceed to share entry
-    yield
+    br = yield
+    assert br.code == ButtonRequestType.RecoveryHomepage
     debug.press_yes()
 
     # Enter shares
     for share in shares:
-        br = yield
-        assert br.code == ButtonRequestType.RecoveryHomepage
-
         # Word entering
-        yield
+        br = yield
+        assert br.code == ButtonRequestType.MnemonicInput
         debug.press_yes()
 
         # Enter mnemonic words
+        br = yield
+        assert br.code == ButtonRequestType.MnemonicInput
         for word in share.split(" "):
             debug.input(word)
 

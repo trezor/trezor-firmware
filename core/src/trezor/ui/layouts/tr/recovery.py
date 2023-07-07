@@ -4,12 +4,11 @@ from trezor.enums import ButtonRequestType
 
 import trezorui2
 
-from ..common import button_request, interact
+from ..common import interact
 from . import RustLayout, raise_if_not_confirmed, show_warning
 
 
 async def request_word_count(dry_run: bool) -> int:
-    await button_request("word_count", code=ButtonRequestType.MnemonicWordCount)
     count = await interact(
         RustLayout(trezorui2.select_word_count(dry_run=dry_run)),
         "word_count",

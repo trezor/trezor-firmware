@@ -1181,7 +1181,6 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
         self.debug.press_yes()
 
         yield
-        yield
         assert "NUMBER OF WORDS" in self.layout().title()
         word_options = (12, 18, 20, 24, 33)
         index = word_options.index(len(self.mnemonic))
@@ -1236,7 +1235,6 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
         assert "number of words" in self.layout().text_content()
         self.debug.press_yes()
 
-        yield
         yield
         assert "NUMBER OF WORDS" in self.layout().title()
         # select 12 words
@@ -1340,7 +1338,6 @@ class InputFlowBip39RecoveryPIN(InputFlowBase):
         assert "number of words" in self.layout().text_content()
         self.debug.press_yes()
 
-        yield
         yield
         assert "NUMBER OF WORDS" in self.layout().title()
         self.debug.input(str(len(self.mnemonic)))
@@ -1864,7 +1861,6 @@ class InputFlowSlip39BasicRecoverySameShare(InputFlowBase):
         for word in self.second_share:
             self.debug.input(word)
 
-        br = yield
         br = yield
         assert br.code == messages.ButtonRequestType.Warning
         self.debug.press_right()
