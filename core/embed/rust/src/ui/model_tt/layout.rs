@@ -1594,415 +1594,416 @@ extern "C" fn draw_welcome_screen() -> Obj {
 
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
+    //# package: trezorui2
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
 
-    /// CONFIRMED: object
+    //# CONFIRMED: object
     Qstr::MP_QSTR_CONFIRMED => CONFIRMED.as_obj(),
 
-    /// CANCELLED: object
+    //# CANCELLED: object
     Qstr::MP_QSTR_CANCELLED => CANCELLED.as_obj(),
 
-    /// INFO: object
+    //# INFO: object
     Qstr::MP_QSTR_INFO => INFO.as_obj(),
 
-    /// def disable_animation(disable: bool) -> None:
-    ///     """Disable animations, debug builds only."""
+    //# def disable_animation(disable: bool) -> None:
+    //#     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
-    /// def jpeg_info(data: bytes) -> tuple[int, int, int]:
-    ///     """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
+    //# def jpeg_info(data: bytes) -> tuple[int, int, int]:
+    //#     """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
     Qstr::MP_QSTR_jpeg_info => obj_fn_1!(upy_jpeg_info).as_obj(),
 
-    /// def jpeg_test(data: bytes) -> bool:
-    ///     """Test JPEG image."""
+    //# def jpeg_test(data: bytes) -> bool:
+    //#     """Test JPEG image."""
     Qstr::MP_QSTR_jpeg_test => obj_fn_1!(upy_jpeg_test).as_obj(),
 
-    /// def confirm_action(
-    ///     *,
-    ///     title: str,
-    ///     action: str | None,
-    ///     description: str | None,
-    ///     verb: str | None = None,
-    ///     verb_cancel: str | None = None,
-    ///     hold: bool = False,
-    ///     hold_danger: bool = False,
-    ///     reverse: bool = False,
-    /// ) -> object:
-    ///     """Confirm action."""
+    //# def confirm_action(
+    //#     *,
+    //#     title: str,
+    //#     action: str | None,
+    //#     description: str | None,
+    //#     verb: str | None = None,
+    //#     verb_cancel: str | None = None,
+    //#     hold: bool = False,
+    //#     hold_danger: bool = False,
+    //#     reverse: bool = False,
+    //# ) -> LayoutObj:
+    //#     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
 
-    /// def confirm_emphasized(
-    ///     *,
-    ///     title: str,
-    ///     items: Iterable[str | tuple[bool, str]],
-    ///     verb: str | None = None,
-    /// ) -> object:
-    ///     """Confirm formatted text that has been pre-split in python. For tuples
-    ///     the first component is a bool indicating whether this part is emphasized."""
+    //# def confirm_emphasized(
+    //#     *,
+    //#     title: str,
+    //#     items: Iterable[str | tuple[bool, str]],
+    //#     verb: str | None = None,
+    //# ) -> LayoutObj:
+    //#     """Confirm formatted text that has been pre-split in python. For tuples
+    //#     the first component is a bool indicating whether this part is emphasized."""
     Qstr::MP_QSTR_confirm_emphasized => obj_fn_kw!(0, new_confirm_emphasized).as_obj(),
 
-    /// def confirm_homescreen(
-    ///     *,
-    ///     title: str,
-    ///     image: bytes,
-    /// ) -> object:
-    ///     """Confirm homescreen."""
+    //# def confirm_homescreen(
+    //#     *,
+    //#     title: str,
+    //#     image: bytes,
+    //# ) -> LayoutObj:
+    //#     """Confirm homescreen."""
     Qstr::MP_QSTR_confirm_homescreen => obj_fn_kw!(0, new_confirm_homescreen).as_obj(),
 
-    /// def confirm_blob(
-    ///     *,
-    ///     title: str,
-    ///     data: str | bytes,
-    ///     description: str | None,
-    ///     extra: str | None,
-    ///     verb: str | None = None,
-    ///     verb_cancel: str | None = None,
-    ///     hold: bool = False,
-    /// ) -> object:
-    ///     """Confirm byte sequence data."""
+    //# def confirm_blob(
+    //#     *,
+    //#     title: str,
+    //#     data: str | bytes,
+    //#     description: str | None,
+    //#     extra: str | None,
+    //#     verb: str | None = None,
+    //#     verb_cancel: str | None = None,
+    //#     hold: bool = False,
+    //# ) -> LayoutObj:
+    //#     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
 
-    /// def confirm_address(
-    ///     *,
-    ///     title: str,
-    ///     data: str | bytes,
-    ///     description: str | None,
-    ///     extra: str | None,
-    /// ) -> object:
-    ///     """Confirm address. Similar to `confirm_blob` but has corner info button
-    ///     and allows left swipe which does the same thing as the button."""
+    //# def confirm_address(
+    //#     *,
+    //#     title: str,
+    //#     data: str | bytes,
+    //#     description: str | None,
+    //#     extra: str | None,
+    //# ) -> LayoutObj:
+    //#     """Confirm address. Similar to `confirm_blob` but has corner info button
+    //#     and allows left swipe which does the same thing as the button."""
     Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
 
-    /// def confirm_properties(
-    ///     *,
-    ///     title: str,
-    ///     items: list[tuple[str | None, str | bytes | None, bool]],
-    ///     hold: bool = False,
-    /// ) -> object:
-    ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
-    ///     the value is to be rendered as binary with monospace font, False otherwise."""
+    //# def confirm_properties(
+    //#     *,
+    //#     title: str,
+    //#     items: list[tuple[str | None, str | bytes | None, bool]],
+    //#     hold: bool = False,
+    //# ) -> LayoutObj:
+    //#     """Confirm list of key-value pairs. The third component in the tuple should be True if
+    //#     the value is to be rendered as binary with monospace font, False otherwise."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
-    /// def confirm_reset_device(
-    ///     *,
-    ///     title: str,
-    ///     button: str,
-    /// ) -> object:
-    ///     """Confirm TOS before device setup."""
+    //# def confirm_reset_device(
+    //#     *,
+    //#     title: str,
+    //#     button: str,
+    //# ) -> LayoutObj:
+    //#     """Confirm TOS before device setup."""
     Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
 
-    /// def show_address_details(
-    ///     *,
-    ///     address: str,
-    ///     case_sensitive: bool,
-    ///     account: str | None,
-    ///     path: str | None,
-    ///     xpubs: list[tuple[str, str]],
-    /// ) -> object:
-    ///     """Show address details - QR code, account, path, cosigner xpubs."""
+    //# def show_address_details(
+    //#     *,
+    //#     address: str,
+    //#     case_sensitive: bool,
+    //#     account: str | None,
+    //#     path: str | None,
+    //#     xpubs: list[tuple[str, str]],
+    //# ) -> LayoutObj:
+    //#     """Show address details - QR code, account, path, cosigner xpubs."""
     Qstr::MP_QSTR_show_address_details => obj_fn_kw!(0, new_show_address_details).as_obj(),
 
-    /// def show_spending_details(
-    ///     *,
-    ///     title: str = "INFORMATION",
-    ///     account: str | None,
-    ///     fee_rate: str | None,
-    ///     fee_rate_title: str = "Fee rate:",
-    /// ) -> object:
-    ///     """Show metadata when for outgoing transaction."""
+    //# def show_spending_details(
+    //#     *,
+    //#     title: str = "INFORMATION",
+    //#     account: str | None,
+    //#     fee_rate: str | None,
+    //#     fee_rate_title: str = "Fee rate:",
+    //# ) -> LayoutObj:
+    //#     """Show metadata when for outgoing transaction."""
     Qstr::MP_QSTR_show_spending_details => obj_fn_kw!(0, new_show_spending_details).as_obj(),
 
-    /// def confirm_value(
-    ///     *,
-    ///     title: str,
-    ///     value: str,
-    ///     description: str | None,
-    ///     subtitle: str | None,
-    ///     verb: str | None = None,
-    ///     verb_cancel: str | None = None,
-    ///     info_button: bool = False,
-    ///     hold: bool = False,
-    /// ) -> object:
-    ///     """Confirm value. Merge of confirm_total and confirm_output."""
+    //# def confirm_value(
+    //#     *,
+    //#     title: str,
+    //#     value: str,
+    //#     description: str | None,
+    //#     subtitle: str | None,
+    //#     verb: str | None = None,
+    //#     verb_cancel: str | None = None,
+    //#     info_button: bool = False,
+    //#     hold: bool = False,
+    //# ) -> LayoutObj:
+    //#     """Confirm value. Merge of confirm_total and confirm_output."""
     Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
 
-    /// def confirm_total(
-    ///     *,
-    ///     title: str,
-    ///     items: list[tuple[str, str]],
-    ///     info_button: bool = False,
-    /// ) -> object:
-    ///     """Transaction summary. Always hold to confirm."""
+    //# def confirm_total(
+    //#     *,
+    //#     title: str,
+    //#     items: list[tuple[str, str]],
+    //#     info_button: bool = False,
+    //# ) -> LayoutObj:
+    //#     """Transaction summary. Always hold to confirm."""
     Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
 
-    /// def confirm_modify_output(
-    ///     *,
-    ///     address: str,  # ignored
-    ///     sign: int,
-    ///     amount_change: str,
-    ///     amount_new: str,
-    /// ) -> object:
-    ///     """Decrease or increase amount for given address."""
+    //# def confirm_modify_output(
+    //#     *,
+    //#     address: str,  # ignored
+    //#     sign: int,
+    //#     amount_change: str,
+    //#     amount_new: str,
+    //# ) -> LayoutObj:
+    //#     """Decrease or increase amount for given address."""
     Qstr::MP_QSTR_confirm_modify_output => obj_fn_kw!(0, new_confirm_modify_output).as_obj(),
 
-    /// def confirm_modify_fee(
-    ///     *,
-    ///     title: str,
-    ///     sign: int,
-    ///     user_fee_change: str,
-    ///     total_fee_new: str,
-    ///     fee_rate_amount: str | None,  # ignored
-    /// ) -> object:
-    ///     """Decrease or increase transaction fee."""
+    //# def confirm_modify_fee(
+    //#     *,
+    //#     title: str,
+    //#     sign: int,
+    //#     user_fee_change: str,
+    //#     total_fee_new: str,
+    //#     fee_rate_amount: str | None,  # ignored
+    //# ) -> LayoutObj:
+    //#     """Decrease or increase transaction fee."""
     Qstr::MP_QSTR_confirm_modify_fee => obj_fn_kw!(0, new_confirm_modify_fee).as_obj(),
 
-    /// def confirm_fido(
-    ///     *,
-    ///     title: str,
-    ///     app_name: str,
-    ///     icon_name: str | None,
-    ///     accounts: list[str | None],
-    /// ) -> int | object:
-    ///     """FIDO confirmation.
-    ///
-    ///     Returns page index in case of confirmation and CANCELLED otherwise.
-    ///     """
+    //# def confirm_fido(
+    //#     *,
+    //#     title: str,
+    //#     app_name: str,
+    //#     icon_name: str | None,
+    //#     accounts: list[str | None],
+    //# ) -> int | object:
+    //#     """FIDO confirmation.
+    //#
+    //#     Returns page index in case of confirmation and CANCELLED otherwise.
+    //#     """
     Qstr::MP_QSTR_confirm_fido => obj_fn_kw!(0, new_confirm_fido).as_obj(),
 
-    /// def show_error(
-    ///     *,
-    ///     title: str,
-    ///     button: str = "CONTINUE",
-    ///     description: str = "",
-    ///     allow_cancel: bool = False,
-    ///     time_ms: int = 0,
-    /// ) -> object:
-    ///     """Error modal. No buttons shown when `button` is empty string."""
+    //# def show_error(
+    //#     *,
+    //#     title: str,
+    //#     button: str = "CONTINUE",
+    //#     description: str = "",
+    //#     allow_cancel: bool = False,
+    //#     time_ms: int = 0,
+    //# ) -> LayoutObj:
+    //#     """Error modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_error => obj_fn_kw!(0, new_show_error).as_obj(),
 
-    /// def show_warning(
-    ///     *,
-    ///     title: str,
-    ///     button: str = "CONTINUE",
-    ///     description: str = "",
-    ///     allow_cancel: bool = False,
-    ///     time_ms: int = 0,
-    /// ) -> object:
-    ///     """Warning modal. No buttons shown when `button` is empty string."""
+    //# def show_warning(
+    //#     *,
+    //#     title: str,
+    //#     button: str = "CONTINUE",
+    //#     description: str = "",
+    //#     allow_cancel: bool = False,
+    //#     time_ms: int = 0,
+    //# ) -> LayoutObj:
+    //#     """Warning modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
 
-    /// def show_success(
-    ///     *,
-    ///     title: str,
-    ///     button: str = "CONTINUE",
-    ///     description: str = "",
-    ///     allow_cancel: bool = False,
-    ///     time_ms: int = 0,
-    /// ) -> object:
-    ///     """Success modal. No buttons shown when `button` is empty string."""
+    //# def show_success(
+    //#     *,
+    //#     title: str,
+    //#     button: str = "CONTINUE",
+    //#     description: str = "",
+    //#     allow_cancel: bool = False,
+    //#     time_ms: int = 0,
+    //# ) -> LayoutObj:
+    //#     """Success modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
 
-    /// def show_info(
-    ///     *,
-    ///     title: str,
-    ///     button: str = "CONTINUE",
-    ///     description: str = "",
-    ///     allow_cancel: bool = False,
-    ///     time_ms: int = 0,
-    /// ) -> object:
-    ///     """Info modal. No buttons shown when `button` is empty string."""
+    //# def show_info(
+    //#     *,
+    //#     title: str,
+    //#     button: str = "CONTINUE",
+    //#     description: str = "",
+    //#     allow_cancel: bool = False,
+    //#     time_ms: int = 0,
+    //# ) -> LayoutObj:
+    //#     """Info modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
-    /// def show_mismatch() -> object:
-    ///     """Warning modal, receiving address mismatch."""
+    //# def show_mismatch() -> LayoutObj:
+    //#     """Warning modal, receiving address mismatch."""
     Qstr::MP_QSTR_show_mismatch => obj_fn_0!(new_show_mismatch).as_obj(),
 
-    /// def show_simple(
-    ///     *,
-    ///     title: str | None,
-    ///     description: str = "",
-    ///     button: str = "",
-    /// ) -> object:
-    ///     """Simple dialog with text and one button."""
+    //# def show_simple(
+    //#     *,
+    //#     title: str | None,
+    //#     description: str = "",
+    //#     button: str = "",
+    //# ) -> LayoutObj:
+    //#     """Simple dialog with text and one button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
 
-    /// def confirm_with_info(
-    ///     *,
-    ///     title: str,
-    ///     button: str,
-    ///     info_button: str,
-    ///     items: Iterable[tuple[int, str]],
-    /// ) -> object:
-    ///     """Confirm given items but with third button. Always single page
-    ///     without scrolling."""
+    //# def confirm_with_info(
+    //#     *,
+    //#     title: str,
+    //#     button: str,
+    //#     info_button: str,
+    //#     items: Iterable[tuple[int, str]],
+    //# ) -> LayoutObj:
+    //#     """Confirm given items but with third button. Always single page
+    //#     without scrolling."""
     Qstr::MP_QSTR_confirm_with_info => obj_fn_kw!(0, new_confirm_with_info).as_obj(),
 
-    /// def confirm_more(
-    ///     *,
-    ///     title: str,
-    ///     button: str,
-    ///     items: Iterable[tuple[int, str]],
-    /// ) -> object:
-    ///     """Confirm long content with the possibility to go back from any page.
-    ///     Meant to be used with confirm_with_info."""
+    //# def confirm_more(
+    //#     *,
+    //#     title: str,
+    //#     button: str,
+    //#     items: Iterable[tuple[int, str]],
+    //# ) -> LayoutObj:
+    //#     """Confirm long content with the possibility to go back from any page.
+    //#     Meant to be used with confirm_with_info."""
     Qstr::MP_QSTR_confirm_more => obj_fn_kw!(0, new_confirm_more).as_obj(),
 
-    /// def confirm_coinjoin(
-    ///     *,
-    ///     max_rounds: str,
-    ///     max_feerate: str,
-    /// ) -> object:
-    ///     """Confirm coinjoin authorization."""
+    //# def confirm_coinjoin(
+    //#     *,
+    //#     max_rounds: str,
+    //#     max_feerate: str,
+    //# ) -> LayoutObj:
+    //#     """Confirm coinjoin authorization."""
     Qstr::MP_QSTR_confirm_coinjoin => obj_fn_kw!(0, new_confirm_coinjoin).as_obj(),
 
-    /// def request_pin(
-    ///     *,
-    ///     prompt: str,
-    ///     subprompt: str,
-    ///     allow_cancel: bool = True,
-    ///     wrong_pin: bool = False,
-    /// ) -> str | object:
-    ///     """Request pin on device."""
+    //# def request_pin(
+    //#     *,
+    //#     prompt: str,
+    //#     subprompt: str,
+    //#     allow_cancel: bool = True,
+    //#     wrong_pin: bool = False,
+    //# ) -> str | object:
+    //#     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
 
-    /// def request_passphrase(
-    ///     *,
-    ///     prompt: str,
-    ///     max_len: int,
-    /// ) -> str | object:
-    ///     """Passphrase input keyboard."""
+    //# def request_passphrase(
+    //#     *,
+    //#     prompt: str,
+    //#     max_len: int,
+    //# ) -> str | object:
+    //#     """Passphrase input keyboard."""
     Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
 
-    /// def request_bip39(
-    ///     *,
-    ///     prompt: str,
-    /// ) -> str:
-    ///     """BIP39 word input keyboard."""
+    //# def request_bip39(
+    //#     *,
+    //#     prompt: str,
+    //# ) -> str:
+    //#     """BIP39 word input keyboard."""
     Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
 
-    /// def request_slip39(
-    ///     *,
-    ///     prompt: str,
-    /// ) -> str:
-    ///     """SLIP39 word input keyboard."""
+    //# def request_slip39(
+    //#     *,
+    //#     prompt: str,
+    //# ) -> str:
+    //#     """SLIP39 word input keyboard."""
     Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
 
-    /// def select_word(
-    ///     *,
-    ///     title: str,
-    ///     description: str,
-    ///     words: Iterable[str],
-    /// ) -> int:
-    ///     """Select mnemonic word from three possibilities - seed check after backup. The
-    ///    iterable must be of exact size. Returns index in range `0..3`."""
+    //# def select_word(
+    //#     *,
+    //#     title: str,
+    //#     description: str,
+    //#     words: Iterable[str],
+    //# ) -> int:
+    //#     """Select mnemonic word from three possibilities - seed check after backup. The
+    //#    iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
 
-    /// def show_share_words(
-    ///     *,
-    ///     title: str,
-    ///     pages: Iterable[str],
-    /// ) -> object:
-    ///     """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
+    //# def show_share_words(
+    //#     *,
+    //#     title: str,
+    //#     pages: Iterable[str],
+    //# ) -> LayoutObj:
+    //#     """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
-    /// def request_number(
-    ///     *,
-    ///     title: str,
-    ///     count: int,
-    ///     min_count: int,
-    ///     max_count: int,
-    ///     description: Callable[[int], str] | None = None,
-    /// ) -> object:
-    ///     """Number input with + and - buttons, description, and info button."""
+    //# def request_number(
+    //#     *,
+    //#     title: str,
+    //#     count: int,
+    //#     min_count: int,
+    //#     max_count: int,
+    //#     description: Callable[[int], str] | None = None,
+    //# ) -> LayoutObj:
+    //#     """Number input with + and - buttons, description, and info button."""
     Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
 
-    /// def show_checklist(
-    ///     *,
-    ///     title: str,
-    ///     items: Iterable[str],
-    ///     active: int,
-    ///     button: str,
-    /// ) -> object:
-    ///     """Checklist of backup steps. Active index is highlighted, previous items have check
-    ///    mark next to them."""
+    //# def show_checklist(
+    //#     *,
+    //#     title: str,
+    //#     items: Iterable[str],
+    //#     active: int,
+    //#     button: str,
+    //# ) -> LayoutObj:
+    //#     """Checklist of backup steps. Active index is highlighted, previous items have check
+    //#    mark next to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
-    /// def confirm_recovery(
-    ///     *,
-    ///     title: str,
-    ///     description: str,
-    ///     button: str,
-    ///     dry_run: bool,
-    ///     info_button: bool = False,
-    /// ) -> object:
-    ///     """Device recovery homescreen."""
+    //# def confirm_recovery(
+    //#     *,
+    //#     title: str,
+    //#     description: str,
+    //#     button: str,
+    //#     dry_run: bool,
+    //#     info_button: bool = False,
+    //# ) -> LayoutObj:
+    //#     """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
 
-    /// def select_word_count(
-    ///     *,
-    ///     dry_run: bool,
-    /// ) -> int | str:  # TT returns int
-    ///     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+    //# def select_word_count(
+    //#     *,
+    //#     dry_run: bool,
+    //# ) -> int | str:  # TT returns int
+    //#     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
-    /// def show_group_share_success(
-    ///     *,
-    ///     lines: Iterable[str]
-    /// ) -> int:
-    ///     """Shown after successfully finishing a group."""
+    //# def show_group_share_success(
+    //#     *,
+    //#     lines: Iterable[str]
+    //# ) -> int:
+    //#     """Shown after successfully finishing a group."""
     Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
 
-    /// def show_remaining_shares(
-    ///     *,
-    ///     pages: Iterable[tuple[str, str]],
-    /// ) -> int:
-    ///     """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
+    //# def show_remaining_shares(
+    //#     *,
+    //#     pages: Iterable[tuple[str, str]],
+    //# ) -> int:
+    //#     """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
     Qstr::MP_QSTR_show_remaining_shares => obj_fn_kw!(0, new_show_remaining_shares).as_obj(),
 
-    /// def show_progress(
-    ///     *,
-    ///     title: str,
-    ///     indeterminate: bool = False,
-    ///     description: str = "",
-    /// ) -> object:
-    ///     """Show progress loader. Please note that the number of lines reserved on screen for
-    ///    description is determined at construction time. If you want multiline descriptions
-    ///    make sure the initial description has at least that amount of lines."""
+    //# def show_progress(
+    //#     *,
+    //#     title: str,
+    //#     indeterminate: bool = False,
+    //#     description: str = "",
+    //# ) -> LayoutObj:
+    //#     """Show progress loader. Please note that the number of lines reserved on screen for
+    //#    description is determined at construction time. If you want multiline descriptions
+    //#    make sure the initial description has at least that amount of lines."""
     Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
 
-    /// def show_progress_coinjoin(
-    ///     *,
-    ///     title: str,
-    ///     indeterminate: bool = False,
-    ///     time_ms: int = 0,
-    ///     skip_first_paint: bool = False,
-    /// ) -> object:
-    ///     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
-    ///    time_ms timeout is passed."""
+    //# def show_progress_coinjoin(
+    //#     *,
+    //#     title: str,
+    //#     indeterminate: bool = False,
+    //#     time_ms: int = 0,
+    //#     skip_first_paint: bool = False,
+    //# ) -> LayoutObj:
+    //#     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
+    //#    time_ms timeout is passed."""
     Qstr::MP_QSTR_show_progress_coinjoin => obj_fn_kw!(0, new_show_progress_coinjoin).as_obj(),
 
-    /// def show_homescreen(
-    ///     *,
-    ///     label: str | None,
-    ///     hold: bool,
-    ///     notification: str | None,
-    ///     notification_level: int = 0,
-    ///     skip_first_paint: bool,
-    /// ) -> CANCELLED:
-    ///     """Idle homescreen."""
+    //# def show_homescreen(
+    //#     *,
+    //#     label: str | None,
+    //#     hold: bool,
+    //#     notification: str | None,
+    //#     notification_level: int = 0,
+    //#     skip_first_paint: bool,
+    //# ) -> CANCELLED:
+    //#     """Idle homescreen."""
     Qstr::MP_QSTR_show_homescreen => obj_fn_kw!(0, new_show_homescreen).as_obj(),
 
-    /// def show_lockscreen(
-    ///     *,
-    ///     label: str | None,
-    ///     bootscreen: bool,
-    ///     skip_first_paint: bool,
-    /// ) -> CANCELLED:
-    ///     """Homescreen for locked device."""
+    //# def show_lockscreen(
+    //#     *,
+    //#     label: str | None,
+    //#     bootscreen: bool,
+    //#     skip_first_paint: bool,
+    //# ) -> CANCELLED:
+    //#     """Homescreen for locked device."""
     Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
 
-    /// def draw_welcome_screen() -> None:
-    ///     """Show logo icon with the model name at the bottom and return."""
+    //# def draw_welcome_screen() -> None:
+    //#     """Show logo icon with the model name at the bottom and return."""
     Qstr::MP_QSTR_draw_welcome_screen => obj_fn_0!(draw_welcome_screen).as_obj(),
 };
 

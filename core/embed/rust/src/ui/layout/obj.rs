@@ -317,6 +317,21 @@ impl TryFrom<Never> for Obj {
     }
 }
 
+//# package: trezorui2
+//#
+//# from trezor import utils
+//# class LayoutObj:
+//#     """Representation of a Rust-based layout object.
+//#     see `trezor::ui::layout::obj::LayoutObj`.
+//#     """
+
+//# def attach_timer_fn(self, fn: Callable[[int, int], None]) -> None:
+//#     """Attach a timer setter function.
+//#
+//#     The layout object can call the timer setter with two arguments,
+//#     `token` and `deadline`. When `deadline` is reached, the layout object
+//#     expects a callback to `self.timer(token)`.
+//#     """
 extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
@@ -328,6 +343,10 @@ extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+
+//# if utils.USE_TOUCH:
+//#     def touch_event(self, event: int, x: int, y: int) -> None:
+//#         """Receive a touch event `event` at coordinates `x`, `y`."""
 #[cfg(feature = "touch")]
 extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
@@ -351,6 +370,9 @@ extern "C" fn ui_layout_touch_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
 
+//# if utils.USE_BUTTON:
+//#     def button_event(self, event: int, button: int) -> None:
+//#         """Receive a button event `event` for button `button`."""
 #[cfg(feature = "button")]
 extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
@@ -370,6 +392,8 @@ extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
 
+//# def progress_event(self, value: int, description: str) -> None:
+//#     """Receive a progress event."""
 extern "C" fn ui_layout_progress_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 3 {
@@ -384,6 +408,8 @@ extern "C" fn ui_layout_progress_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
+//# def usb_event(self, connected: bool) -> None:
+//#     """Receive a USB connect/disconnect event."""
 extern "C" fn ui_layout_usb_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 2 {
@@ -397,6 +423,12 @@ extern "C" fn ui_layout_usb_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
+//# def timer(self, token: int) -> None:
+//#     """Callback for the timer set by `attach_timer_fn`.
+//#
+//#     This function should be called by the executor after the corresponding
+//#     deadline is reached.
+//#     """
 extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
@@ -407,6 +439,11 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+//# def paint(self) -> None:
+//#     """Paint the layout object on screen.
+//#
+//#     Will only paint updated parts of the layout as required.
+//#     """
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
@@ -416,6 +453,11 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+//# def request_complete_repaint(self) -> None:
+//#     """Request a complete repaint of the screen.
+//#
+//#     Does not repaint the screen, a subsequent call to `paint()` is required.
+//#     """
 extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
@@ -432,6 +474,8 @@ extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+//# def page_count(self) -> int:
+//#     """Return the number of pages in the layout object."""
 extern "C" fn ui_layout_page_count(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
@@ -446,6 +490,14 @@ pub extern "C" fn ui_debug_layout_type() -> &'static Type {
     LayoutObj::obj_type()
 }
 
+//# if __debug__:
+//#     def trace(self, tracer: Callable[[str], None]) -> None:
+//#         """Generate a JSON trace of the layout object.
+//#
+//#         The JSON can be emitted as a sequence of calls to `tracer`, each of
+//#         which is not necessarily a valid JSON chunk. The caller must
+//#         reassemble the chunks to get a sensible result.
+//#         """
 #[cfg(feature = "ui_debug")]
 extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
     let block = || {
@@ -461,6 +513,9 @@ extern "C" fn ui_layout_trace(_this: Obj, _callback: Obj) -> Obj {
     Obj::const_none()
 }
 
+//# if __debug__:
+//#     def bounds(self) -> None:
+//#         """Paint bounds of individual components on screen."""
 #[cfg(feature = "ui_bounds")]
 extern "C" fn ui_layout_bounds(this: Obj) -> Obj {
     let block = || {

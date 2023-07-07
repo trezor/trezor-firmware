@@ -21,35 +21,21 @@ FR_TOO_MANY_OPEN_FILES: int  # (18) Number of open files > FF_FS_LOCK
 FR_INVALID_PARAMETER: int    # (19) Given parameter is invalid
 # nonstandard value:
 FR_NO_SPACE: int             # (64) No space left on device
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 class FatFSError(OSError):
-    pass
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
+        pass
 class NotMounted(FatFSError):
-    pass
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
+        pass
 class NoFilesystem(FatFSError):
-    pass
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
+        pass
 class FatFSFile:
-    """
-    Class encapsulating file
-    """
-
+        """
+        Class encapsulating file
+        """
     def __enter__(self) -> FatFSFile:
         """
         Return an open file object
         """
     from types import TracebackType
-
     def __exit__(
         self, type: type[BaseException] | None,
         value: BaseException | None,
@@ -58,121 +44,78 @@ class FatFSFile:
         """
         Close an open file object
         """
-
     def close(self) -> None:
         """
         Close an open file object
         """
-
     def read(self, data: bytearray) -> int:
         """
         Read data from the file
         """
-
     def write(self, data: bytes | bytearray) -> int:
         """
         Write data to the file
         """
-
     def seek(self, offset: int) -> None:
         """
         Move file pointer of the file object
         """
-
     def truncate(self) -> None:
         """
         Truncate the file
         """
-
     def sync(self) -> None:
         """
         Flush cached data of the writing file
         """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 class FatFSDir(Iterator[tuple[int, str, str]]):
-    """
-    Class encapsulating directory
-    """
-
+        """
+        Class encapsulating directory
+        """
     def __next__(self) -> tuple[int, str, str]:
         """
         Read an entry in the directory
         """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def open(path: str, flags: str) -> FatFSFile:
     """
     Open or create a file
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def listdir(path: str) -> FatFSDir:
     """
     List a directory (return generator)
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def mkdir(path: str, exist_ok: bool=False) -> None:
     """
     Create a sub directory
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def unlink(path: str) -> None:
     """
     Delete an existing file or directory
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def stat(path: str) -> tuple[int, str, str]:
     """
     Get file status
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def rename(oldpath: str, newpath: str) -> None:
     """
     Rename/Move a file or directory
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def mount() -> None:
     """
     Mount the SD card filesystem.
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def unmount() -> None:
     """
     Unmount the SD card filesystem.
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def is_mounted() -> bool:
    """
    Check if the filesystem is mounted.
    """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def mkfs() -> None:
     """
     Create a FAT volume on the SD card,
     """
-
-
-# extmod/modtrezorio/modtrezorio-fatfs.h
 def setlabel(label: str) -> None:
     """
     Set volume label
