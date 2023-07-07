@@ -226,7 +226,7 @@ def get_context() -> Context:
 
     Can be needed in case the caller needs raw read and raw write capabilities, which
     are not provided by the module functions.
-    
+
     Result of this function should not be stored -- the context is technically allowed
     to change inbetween any `await` statements.
     """
