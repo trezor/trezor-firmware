@@ -562,7 +562,7 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         self.client.debug.press_yes()
 
         yield  # transaction summary, press info
-        self.client.debug.press_info(wait=True)
+        self.client.debug.click(buttons.CORNER_BUTTON, wait=True)
         self.client.debug.click(buttons.CORNER_BUTTON, wait=True)
         self.client.debug.press_yes()
 
