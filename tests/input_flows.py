@@ -562,9 +562,9 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         self.debug.press_yes()
 
         yield  # transaction summary, press info
-        self.client.debug.click(buttons.CORNER_BUTTON, wait=True)
-        self.client.debug.click(buttons.CORNER_BUTTON, wait=True)
-        self.client.debug.press_yes()
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_yes()
 
     def input_flow_tr(self) -> GeneratorType:
         yield  # confirm txid
