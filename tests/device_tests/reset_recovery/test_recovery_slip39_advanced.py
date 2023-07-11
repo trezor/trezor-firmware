@@ -42,6 +42,8 @@ VECTORS = (
     ),
 )
 
+BR = messages.ButtonRequestType
+
 
 # To allow reusing functionality for multiple tests
 def _test_secret(
@@ -134,10 +136,67 @@ def test_group_threshold_reached(client: Client):
     # second share is first 3 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")[:3]
 
+    import time
+
     with client:
-        IF = InputFlowSlip39AdvancedRecoveryTwoSharesWarning(
-            client, first_share, second_share
-        )
-        client.set_input_flow(IF.get())
+        client.spawn(device.recover, pin_protection=False, label="label")
+        assert client.next().code == BR.ProtectCall
+        time.sleep(0.1)
+        assert "WALLET RECOVERY" in client.debug.read_layout().title()
+        client.debug.press_yes()
+
+        assert client.next().code == BR.RecoveryHomepage
+        time.sleep(0.1)
+        assert "Select number of words" in client.debug.read_layout().text_content()
+        client.debug.press_yes()
+
+        assert client.next().code == BR.MnemonicWordCount
+        time.sleep(0.1)
+        assert "NUMBER OF WORDS" in client.debug.read_layout().title()
+        client.debug.input(str(len(first_share)))
+
+        assert client.next().code == BR.RecoveryHomepage
+        time.sleep(0.1)
+        assert "Enter any share" in client.debug.read_layout().text_content()
+        client.debug.press_yes()
+
+        assert client.next().code == BR.MnemonicInput
+        time.sleep(0.1)
+        assert "You'll only have to" in client.debug.read_layout().text_content()
+        client.debug.press_yes()
+
+        assert client.next().code == BR.MnemonicInput
+        time.sleep(0.1)
+        assert "WORD 1 OF 20" in client.debug.read_layout().title()
+        for word in first_share:
+            client.debug.input(word)
+
+        assert client.next().code == BR.Other
+        time.sleep(0.1)
+        assert "You have entered" in client.debug.read_layout().text_content()
+        client.debug.press_yes()
+
+        assert client.next().code == BR.RecoveryHomepage
+        time.sleep(0.1)
+        assert "More shares needed" in client.debug.read_layout().text_content()
+        client.debug.press_yes()
+
+        assert client.next().code == BR.MnemonicInput
+        time.sleep(0.1)
+        assert "You'll only have to" in client.debug.read_layout().text_content()
+        client.debug.press_yes()
+
+        assert client.next().code == BR.MnemonicInput
+        time.sleep(0.1)
+        assert "WORD 1 OF 20" in client.debug.read_layout().title()
+        for word in second_share:
+            client.debug.input(word)
+
+        assert client.next().code == BR.Warning
+        time.sleep(0.1)
+        assert "Threshold of this group has been reached" in client.debug.read_layout().text_content()
+        client.debug.press_yes()
+
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            client.cancel()
+            client.next()

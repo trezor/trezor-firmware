@@ -41,6 +41,7 @@ from typing import (
     overload,
 )
 
+import greenlet
 from mnemonic import Mnemonic
 from typing_extensions import Literal
 
@@ -785,33 +786,42 @@ class DebugUI:
         self.input_flow: Union[
             Generator[None, messages.ButtonRequest, None], object, None
         ] = None
+        self.auto_button_request = True
+
+    def _button_request_inputflow(self, br: messages.ButtonRequest) -> None:
+        if self.input_flow is self.INPUT_FLOW_DONE:
+            raise AssertionError("input flow ended prematurely")
+
+        assert isinstance(self.input_flow, Generator)
+        try:
+            self.input_flow.send(br)
+        except StopIteration:
+            self.input_flow = self.INPUT_FLOW_DONE
+
+    def _button_request_auto(self, br: messages.ButtonRequest) -> None:
+        # Only calling screen-saver when not in input-flow
+        # as it collides with wait-layout of input flows.
+        # All input flows call debuglink.input(), so
+        # recording their screens that way (as well as
+        # possible swipes below).
+        self.debuglink.save_current_screen_if_relevant(wait=True)
+        if br.code == messages.ButtonRequestType.PinEntry:
+            self.debuglink.input(self.get_pin())
+        else:
+            # Paginating (going as further as possible) and pressing Yes
+            if br.pages is not None:
+                for _ in range(br.pages - 1):
+                    self.debuglink.swipe_up(wait=True)
+            self.debuglink.press_yes()
 
     def button_request(self, br: messages.ButtonRequest) -> None:
         self.debuglink.take_t1_screenshot_if_relevant()
 
-        if self.input_flow is None:
-            # Only calling screen-saver when not in input-flow
-            # as it collides with wait-layout of input flows.
-            # All input flows call debuglink.input(), so
-            # recording their screens that way (as well as
-            # possible swipes below).
-            self.debuglink.save_current_screen_if_relevant(wait=True)
-            if br.code == messages.ButtonRequestType.PinEntry:
-                self.debuglink.input(self.get_pin())
-            else:
-                # Paginating (going as further as possible) and pressing Yes
-                if br.pages is not None:
-                    for _ in range(br.pages - 1):
-                        self.debuglink.swipe_up(wait=True)
-                self.debuglink.press_yes()
-        elif self.input_flow is self.INPUT_FLOW_DONE:
-            raise AssertionError("input flow ended prematurely")
-        else:
-            try:
-                assert isinstance(self.input_flow, Generator)
-                self.input_flow.send(br)
-            except StopIteration:
-                self.input_flow = self.INPUT_FLOW_DONE
+        if self.auto_button_request:
+            self._button_request_auto(br)
+        elif self.input_flow is not None:
+            self._button_request_inputflow(br)
+        # else do nothing
 
     def get_pin(self, code: Optional["PinMatrixRequestType"] = None) -> str:
         self.debuglink.take_t1_screenshot_if_relevant()
@@ -932,6 +942,8 @@ class TrezorClientDebugLink(TrezorClient):
     # without special DebugLink interface provided
     # by the device.
 
+    NO_VALUE = object()
+
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
         try:
             debug_transport = transport.find_debug()
@@ -954,6 +966,9 @@ class TrezorClientDebugLink(TrezorClient):
         self.debug.model = self.features.model
         self.debug.version = self.version
 
+        self.thread: greenlet.greenlet = None
+        self.thread_return = self.NO_VALUE
+
     def reset_debug_features(self) -> None:
         """Prepare the debugging client for a new testcase.
 
@@ -967,6 +982,8 @@ class TrezorClientDebugLink(TrezorClient):
             Type[protobuf.MessageType],
             Optional[Callable[[protobuf.MessageType], protobuf.MessageType]],
         ] = {}
+        self.thread = None
+        self.thread_return = self.NO_VALUE
 
     def ensure_open(self) -> None:
         """Only open session if there isn't already an open one."""
@@ -1045,6 +1062,7 @@ class TrezorClientDebugLink(TrezorClient):
         if not hasattr(input_flow, "send"):
             raise RuntimeError("input_flow should be a generator function")
         self.ui.input_flow = input_flow
+        self.ui.auto_button_request = False
         input_flow.send(None)  # start the generator
 
     def watch_layout(self, watch: bool = True) -> None:
@@ -1073,9 +1091,12 @@ class TrezorClientDebugLink(TrezorClient):
         # copy expected/actual responses before clearing them
         expected_responses = self.expected_responses
         actual_responses = self.actual_responses
+        old_thread = self.thread
         self.reset_debug_features()
 
         if exc_type is None:
+            if old_thread is not None:
+                assert old_thread.dead
             # If no other exception was raised, evaluate missed responses
             # (raises AssertionError on mismatch)
             self._verify_responses(expected_responses, actual_responses)
@@ -1135,13 +1156,95 @@ class TrezorClientDebugLink(TrezorClient):
         Only applies to T1, where device prompts the host for mnemonic words."""
         self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
 
+    def spawn(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+        """Spawn and start a greenlet executing the given function."""
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+        if self.thread is not None:
+            raise RuntimeError("Cannot spawn multiple threads")
+
+        self.thread = greenlet.greenlet(run=func)
+        self._thread_next(self, *args, **kwargs)
+
+    def _thread_next(self, *args: Any, **kwargs: Any) -> None:
+        if self.thread is None:
+            raise RuntimeError("No thread running")
+
+        val = self.thread.switch(*args, **kwargs)
+        if val is not self.BEFORE_READ:
+            if not self.thread.dead:
+                raise RuntimeError("Invalid thread state :(")
+            self.thread_return = val
+
+    def send_pin(self, pin: str) -> None:
+        self.use_pin_sequence([pin])
+
+    def send_passphrase(self, passphrase: str) -> None:
+        self.use_passphrase(passphrase)
+
+    BEFORE_READ = object()
+
+    class Response:
+        def __init__(self, r) -> None:
+            self.r = r
+
+    def expect(
+        self, *expected_args: Union["ExpectedMessage", Tuple[bool, "ExpectedMessage"]]
+    ) -> None:
+        if self.thread is None or self.thread.dead:
+            raise RuntimeError("No thread running")
+
+        exp = ((True, e) if not isinstance(e, tuple) else e for e in expected_args)
+        expected = [msg for ok, msg in exp if ok]
+
+
+        for msg in expected[:-1]:
+            resp = self.thread.switch()
+            assert isinstance(resp, self.Response)
+            assert MessageFilter.from_message_or_type(msg).match(resp.r)
+
+            self.ui.auto_button_request = True
+            assert self.thread.switch() is self.BEFORE_READ
+
+        resp = self.thread.switch()
+        assert isinstance(resp, self.Response)
+        assert MessageFilter.from_message_or_type(expected[-1]).match(resp.r)
+        self._thread_next()
+
+    def next(self) -> protobuf.MessageType:
+        """Wait for the next message from the device and return it."""
+        if self.thread is None or self.thread.dead:
+            raise RuntimeError("No thread running")
+
+        resp = self.thread.switch()
+        assert isinstance(resp, self.Response)
+        self.ui.auto_button_request = False
+        self._thread_next()
+        return resp.r
+
+    def done(self) -> Any:
+        if self.thread is None:
+            raise RuntimeError("No thread was running")
+        if not self.thread.dead:
+            raise AssertionError("Thread is not finished")
+        if self.thread_return is self.NO_VALUE:
+            raise AssertionError("Thread return value was not set")
+        return self.thread_return
+
     def _raw_read(self) -> protobuf.MessageType:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
+
+        if self.thread is not None:
+            self.thread.parent.switch(self.BEFORE_READ)
 
         resp = super()._raw_read()
         resp = self._filter_message(resp)
         if self.actual_responses is not None:
             self.actual_responses.append(resp)
+
+        if self.thread is not None:
+            self.thread.parent.switch(self.Response(resp))
+
         return resp
 
     def _raw_write(self, msg: protobuf.MessageType) -> None:

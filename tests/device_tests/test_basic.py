@@ -31,6 +31,34 @@ def test_ping(client: Client):
     assert ping == messages.Success(message="ahoj!")
 
 
+def test_ping_spawn(client: Client):
+    with client:
+        client.spawn(Client.ping, "ahoj!")
+        assert client.next() == messages.Success(message="ahoj!")
+        assert client.done() == "ahoj!"
+
+
+def test_ping_spawn_button(client: Client):
+    with client:
+        client.spawn(Client.ping, "ahoj!", button_protection=True)
+        client.expect(
+            messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+            messages.Success(message="ahoj!"),
+        )
+        assert client.done() == "ahoj!"
+
+
+def test_ping_spawn_next(client: Client):
+    with client:
+        client.spawn(Client.ping, "ahoj!", button_protection=True)
+        assert client.next() == messages.ButtonRequest(
+            code=messages.ButtonRequestType.ProtectCall
+        )
+        client.debug.press_yes()
+        assert client.next() == messages.Success(message="ahoj!")
+        assert client.done() == "ahoj!"
+
+
 def test_device_id_same(client: Client):
     id1 = client.get_device_id()
     client.init_device()
