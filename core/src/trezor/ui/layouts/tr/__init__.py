@@ -401,7 +401,6 @@ async def confirm_reset_device(
 
     if recovery:
         await confirm_action(
-            ctx,
             "recover_device",
             title,
             description="It is safe to eject your Trezor anytime and continue later.",
@@ -879,6 +878,9 @@ def confirm_value(
     if not verb and not hold:
         raise ValueError("Either verb or hold=True must be set")
 
+    if verb:
+        verb = verb.upper()
+
     return raise_if_not_confirmed(
         interact(
             RustLayout(
@@ -901,7 +903,7 @@ async def confirm_total(
     fee_amount: str,
     fee_rate_amount: str | None = None,
     title: str = "SENDING",
-    total_label: str = "TOTAL AMOUNT",
+    total_label: str = "Total amount:",
     fee_label: str = "Including fee:",
     account_label: str | None = None,
     br_type: str = "confirm_total",
@@ -916,7 +918,7 @@ async def confirm_total(
                     fee_amount=fee_amount,  # type: ignore [No parameter named]
                     fee_rate_amount=fee_rate_amount,  # type: ignore [No parameter named]
                     account_label=account_label,  # type: ignore [No parameter named]
-                    total_label=total_label.upper(),  # type: ignore [No parameter named]
+                    total_label=total_label,  # type: ignore [No parameter named]
                     fee_label=fee_label,  # type: ignore [No parameter named]
                 )
             ),
