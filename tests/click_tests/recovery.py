@@ -143,12 +143,10 @@ def enter_share(
 def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
     layout = debug.read_layout()
     expected_text = "Enter any share"
-    remaining = len(shares)
     for index, share in enumerate(shares):
         assert expected_text in layout.text_content()
         layout = enter_share(debug, share, is_first=index == 0)
-        remaining -= 1
-        expected_text = f"{remaining} more share"
+        expected_text = f"{index + 1} of {len(shares)} shares entered"
 
     assert "Wallet recovered successfully" in layout.text_content()
 

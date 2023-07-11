@@ -1419,7 +1419,7 @@ def bip39_recovery_possible_pin_tr(
         debug.input("654")
 
         yield
-        assert "re-enter to confirm" in debug.wait_layout().text_content()
+        assert "re-enter PIN to confirm" in debug.wait_layout().text_content()
         debug.press_right()
 
         yield
@@ -1792,8 +1792,8 @@ class InputFlowResetSkipBackup(InputFlowBase):
             self.debug.press_right()
         self.debug.press_yes()
         yield  # Skip Backup
-        self.debug.press_no()
-        yield  # Confirm skip backup
         if self.debug.model == "R":
             self.debug.press_right()
+        self.debug.press_no()
+        yield  # Confirm skip backup
         self.debug.press_no()

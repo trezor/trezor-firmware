@@ -268,7 +268,6 @@ async def show_success_backup() -> None:
 
 
 async def show_reset_warning(
-    ctx: GenericContext,
     br_type: str,
     content: str,
     subheader: str | None = None,
@@ -276,7 +275,6 @@ async def show_reset_warning(
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
     await show_warning(
-        ctx,
         br_type,
         button.upper(),
         subheader or "",

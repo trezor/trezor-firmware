@@ -63,7 +63,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     debug.input("1234")
 
     assert (
-        f"auto-lock your device after {delay_ms // 1000} seconds"
+        f"Auto-lock your Trezor after {delay_ms // 1000} seconds"
         in debug.wait_layout().text_content()
     )
     layout = go_next(debug, wait=True)
@@ -106,7 +106,7 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
     elif debug.model == "R":
         debug.press_right(wait=True)
         layout = debug.press_right(wait=True)
-        assert "TOTAL AMOUNT 0.0039 BTC" in layout.text_content()
+        assert "Total amount: 0.0039 BTC" in layout.text_content()
 
     # wait for autolock to kick in
     time.sleep(10.1)
@@ -151,7 +151,7 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     elif debug.model == "R":
         debug.press_right(wait=True)
         layout = debug.press_right(wait=True)
-        assert "TOTAL AMOUNT 0.0039 BTC" in layout.text_content()
+        assert "Total amount: 0.0039 BTC" in layout.text_content()
 
     def sleepy_filter(msg: MessageType) -> MessageType:
         time.sleep(10.1)
@@ -301,7 +301,7 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.model == "R":
         layout = debug.press_right(wait=True)
-        assert "RECOVER WALLET" in layout.title()
+        assert layout.title() in ("RECOVER WALLET", "BACKUP CHECK")
         debug.press_right()
         layout = debug.press_right(wait=True)
         assert "Slip39Entry" in layout.all_components()
@@ -338,7 +338,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.model == "R":
         layout = debug.press_right(wait=True)
-        assert "RECOVER WALLET" in layout.title()
+        assert layout.title() in ("RECOVER WALLET", "BACKUP CHECK")
         debug.press_right()
         layout = debug.press_right(wait=True)
         assert "Slip39Entry" in layout.all_components()

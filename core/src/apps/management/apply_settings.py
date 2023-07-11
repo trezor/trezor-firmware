@@ -230,7 +230,7 @@ async def _require_confirm_change_autolock_delay(delay_ms: int) -> None:
     await confirm_action(
         "set_autolock_delay",
         "Auto-lock delay",
-        description="Do you really want to auto-lock your device after {}?",
+        description="Auto-lock your Trezor after {} of inactivity?",
         description_param=format_duration_ms(delay_ms),
         br_code=BRT_PROTECT_CALL,
     )

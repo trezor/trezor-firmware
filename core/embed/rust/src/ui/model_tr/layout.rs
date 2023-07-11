@@ -543,7 +543,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             Paragraph::new(&theme::TEXT_BOLD, "Address:".into()),
             Paragraph::new(&theme::TEXT_MONO, address).break_after(),
             Paragraph::new(&theme::TEXT_NORMAL, description.into()),
-            Paragraph::new(&theme::TEXT_MONO, amount_change),
+            Paragraph::new(&theme::TEXT_MONO, amount_change).break_after(),
             Paragraph::new(&theme::TEXT_BOLD, "New amount:".into()),
             Paragraph::new(&theme::TEXT_MONO, amount_new),
         ]);

@@ -146,7 +146,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
         layout = debug.wait_layout()
 
     # check that we entered the first share successfully
-    assert "2 more shares" in layout.text_content()
+    assert "1 of 3 shares entered" in layout.text_content()
 
     # try entering the remaining shares
     for share in MNEMONIC_SLIP39_BASIC_20_3of6[1:3]:
