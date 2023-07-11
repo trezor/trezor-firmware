@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import os
 import shutil
 import subprocess
@@ -6,64 +8,74 @@ import sys
 import tempfile
 from pathlib import Path
 
+import typing as t
+
 CORE_DIR = Path(__file__).resolve().parent.parent
 EXTMOD_PATH = CORE_DIR / "embed" / "extmod"
 RUSTMOD_PATH = CORE_DIR / "embed" / "rust" / "src"
 MOCKS_PATH = CORE_DIR / "mocks" / "generated"
 
-COMMENT_PREFIX = "/// "
+COMMENT_PREFIX = "///"
+COMMENT_PREFIX_RS = "//#"
 
-current_indent = 0
-current_class = None
-current_method = None
+in_class = False
 current_package = None
 current_method_is_overload = False
 
+def process_file(lines_iter: t.Iterator[str], block_prefix: str) -> t.Iterator[tuple[str, str]]:
+    in_class = False
+    package = None
 
-def split_to_parts(line, mod_desc=None):
-    global current_indent
-    global current_class
-    global current_method
+    def process_block() -> t.Iterator[tuple[str, str]]:
+        """Process a single block of comment-prefixed lines."""
+        block_indent = "" if not in_class else " " * 4
+        nonlocal package
+        nonlocal in_class
+        for line in lines_iter:
+            line = line.strip()
+            if not line.startswith(block_prefix):
+                return
+            
+            line = line[len(block_prefix) + 1 :].rstrip()
+            
+            if line.startswith("package: "):
+                package = line[len("package: ") :].strip()
+                continue
+
+            if package is None:
+                raise ValueError("No package set (use 'package: <name>')")
+
+        if not in_class:
+            yield package, f"\n# {mod_desc}"
+
+        for line in block:
+            if not line.strip():
+                continue
+
+            yield package, line
+
+
+def split_to_parts(line):
+    global in_class
     global current_package
     global current_method_is_overload
 
     if line.startswith("package: "):
-        current_package = line[9:].strip()
+        current_package = line[len("package: ") :].strip()
         return
+
+    if current_package is None:
+        raise ValueError("No package set (use 'package: <name>')")
 
     if line.startswith("mock:global"):
-        current_indent = 0
-        current_class = None
+        in_class = False
         return
 
-    if line == "@overload\n":
-        current_method_is_overload = True
-        return
+    indent = "" if not in_class else " " * 4
+    yield (current_package, (indent + line).rstrip())
 
     if line.startswith("class "):
-        current_class = line[6:].split("(")[0].strip(":")
-        current_indent = 0
-
-        yield (current_package, "\n\n")
-        yield (current_package, "# " + mod_desc + "\n")
-
-    elif line.startswith("def "):
-        current_method = line[4:].split("(")[0]
-
-        if current_class is None:
-            yield (current_package, "\n\n")
-            yield (current_package, "# " + mod_desc + "\n")
-        else:
-            yield (current_package, "\n")
-            current_indent = 4
-
-        if current_method_is_overload:
-            yield (current_package, current_indent * " " + "@overload\n")
-            current_method_is_overload = False
-
-    line = current_indent * " " + line
-
-    yield (current_package, line)
+        in_class = True
 
 
 def store_to_file(dest, parts):
@@ -76,8 +88,8 @@ def store_to_file(dest, parts):
         dirpath.mkdir(parents=True, exist_ok=True)
 
         if (dest / package).is_dir():
-            if not line.strip():
-                continue
+            # if not line.strip():
+            #     continue
             print(f"Package exists: {package}")
             print(f"You should set 'package:' in {line.strip()}")
             sys.exit(1)
@@ -86,12 +98,12 @@ def store_to_file(dest, parts):
             filepath.write_text("from typing import *\n")
 
         with open(filepath, "a") as f:
-            f.write(line)
+            f.write(line + "\n")
 
 
 def build_module(mod_file, dest):
     global current_indent
-    global current_class
+    global in_class
     global current_package
 
     assert mod_file.name.startswith("mod")
@@ -100,47 +112,51 @@ def build_module(mod_file, dest):
     name = mod_file.name[3:-2]
 
     current_indent = 0
-    current_class = None
+    in_class = None
     current_package = name.split("-")[0]
     mod_desc = str(mod_file.relative_to(CORE_DIR / "embed"))
 
     for l in open(mod_file):
+        l = l.strip()
         if not l.startswith(COMMENT_PREFIX):
             continue
 
-        l = l[len(COMMENT_PREFIX) :]  # .strip()
+        l = l[len(COMMENT_PREFIX) + 1 :]  # account for space after ///
         store_to_file(dest, split_to_parts(l, mod_desc))
 
 
-def build_rsmodule(mod_file, dest):
+def build_rsmodule(mod_file):
     global current_indent
-    global current_class
+    global in_class
     global current_package
 
     assert mod_file.suffix == ".rs"
 
-    start_prefix = "pub static mp_module_"
-    comment_prefix = f"    {COMMENT_PREFIX}"
-    in_module = False
     current_indent = 0
-    current_class = None
+    in_class = False
+    current_package = None
     mod_desc = str(mod_file.relative_to(CORE_DIR / "embed"))
 
+    yield_sep = False
     for l in open(mod_file):
-        if l.startswith(start_prefix):
-            in_module = True
-            current_package = l[len(start_prefix) : ].split(":")[0]
-        elif l.startswith("}"):
-            in_module = False
-
-        if not in_module:
+        l = l.strip()
+        if not l.startswith(COMMENT_PREFIX_RS):
+            if yield_sep:
+                if in_class:
+                    yield current_package, ""
+                else:
+                    yield current_package, f"\n# {mod_desc}"
+                yield_sep = False
             continue
 
-        if not l.startswith(comment_prefix):
-            continue
-
-        l = l[len(comment_prefix) :]
-        store_to_file(dest, split_to_parts(l, mod_desc))
+        l = l[len(COMMENT_PREFIX_RS) + 1 :]  # account for space after //#
+        try:
+            yield from split_to_parts(l, mod_desc)
+            yield_sep = True
+        except ValueError as e:
+            print(f"Error in {mod_file}: {e}")
+            print(f"Line: {l}")
+            sys.exit(1)
 
 
 def place_symlinks(dest):
@@ -154,7 +170,7 @@ def build_directory(dest):
     for modfile in sorted(EXTMOD_PATH.glob("**/mod*.[ch]")):
         build_module(modfile, dest)
     for modfile in sorted(RUSTMOD_PATH.glob("**/*.rs")):
-        build_rsmodule(modfile, dest)
+        store_to_file(dest, build_rsmodule(modfile))
     place_symlinks(dest)
 
 
