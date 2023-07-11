@@ -367,7 +367,7 @@ def read_and_confirm_mnemonic_tr(
     return " ".join(mnemonic)
 
 
-def click_info_button(debug: "DebugLink"):
+def click_info_button_tt(debug: "DebugLink"):
     """Click Shamir backup info button and return back."""
     debug.press_info()
     yield  # Info screen with text

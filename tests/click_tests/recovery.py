@@ -69,7 +69,7 @@ def select_number_of_words(
             assert "SelectWordCount" in layout.json_str
         else:
             # Two title options
-            assert layout.title() in ("SEED CHECK", "RECOVER WALLET")
+            assert layout.title() in ("BACKUP CHECK", "RECOVER WALLET")
 
         # click the number
         word_option_offset = 6

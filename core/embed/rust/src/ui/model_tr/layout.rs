@@ -1177,7 +1177,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         }
 
         let title = if dry_run {
-            "SEED CHECK"
+            "BACKUP CHECK"
         } else {
             "RECOVER WALLET"
         };

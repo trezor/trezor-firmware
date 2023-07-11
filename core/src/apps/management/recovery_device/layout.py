@@ -22,8 +22,8 @@ async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
         await confirm_action(
             ctx,
             "abort_recovery",
-            "Abort seed check",
-            description="Do you really want to abort the seed check?",
+            "Abort backup check",
+            description="Do you really want to abort the backup check?",
             br_code=ButtonRequestType.ProtectCall,
         )
     else:
@@ -105,7 +105,7 @@ async def show_dry_run_result(
         else:
             text = "The entered recovery seed is valid but does not match the one in the device."
         await show_recovery_warning(
-            ctx, "warning_dry_recovery", text, button="Continue"
+            ctx, "warning_dry_recovery", "", text, button="Continue"
         )
 
 

@@ -62,7 +62,7 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
         await confirm_action(
             ctx,
             "confirm_seedcheck",
-            "Seed check",
+            "Backup check",
             description="Do you really want to check the recovery seed?",
             br_code=ButtonRequestType.ProtectCall,
         )

@@ -646,7 +646,7 @@ async def show_warning(
         ctx,
         RustLayout(
             trezorui2.show_warning(  # type: ignore [Argument missing for parameter "title"]
-                button=button,
+                button=button.upper(),
                 warning=content,  # type: ignore [No parameter named "warning"]
                 description=subheader or "",
             )

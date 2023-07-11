@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import storage.recovery as storage_recovery
+import storage.recovery_shares as storage_recovery_shares
 from trezor import wire
 from trezor.messages import Success
 
@@ -225,8 +226,16 @@ async def _request_share_next_screen(ctx: GenericContext) -> None:
             info_func=_show_remaining_groups_and_shares,
         )
     else:
-        text = strings.format_plural("{count} more {plural}", remaining[0], "share")
-        await layout.homescreen_dialog(ctx, "Enter share", text, "needed to enter")
+        still_needed_shares = remaining[0]
+        already_entered_shares = len(storage_recovery_shares.fetch_group(0))
+        overall_needed = still_needed_shares + already_entered_shares
+        entered = (
+            f"{already_entered_shares} of {overall_needed} shares entered successfully."
+        )
+        needed = strings.format_plural(
+            "{count} more {plural} needed.", still_needed_shares, "share"
+        )
+        await layout.homescreen_dialog(ctx, "Enter share", entered, needed)
 
 
 async def _show_remaining_groups_and_shares(ctx: GenericContext) -> None:
@@ -234,7 +243,6 @@ async def _show_remaining_groups_and_shares(ctx: GenericContext) -> None:
     Show info dialog for Slip39 Advanced - what shares are to be entered.
     """
     from trezor.crypto import slip39
-    import storage.recovery_shares as storage_recovery_shares
 
     shares_remaining = storage_recovery.fetch_slip39_remaining_shares()
     # should be stored at this point

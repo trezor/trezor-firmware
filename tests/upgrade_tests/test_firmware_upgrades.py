@@ -331,7 +331,7 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
 
         # last one
         layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[1])
-        assert "You have finished recovering your wallet" in layout.text_content()
+        assert "Wallet recovered successfully" in layout.text_content()
 
         # Check the result
         state = debug.state()
