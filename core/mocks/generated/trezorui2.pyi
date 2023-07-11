@@ -1,16 +1,18 @@
 from typing import *
-
 CONFIRMED: object
 CANCELLED: object
 INFO: object
+
 
 # rust/src/ui/model_tr/layout.rs
 def disable_animation(disable: bool) -> None:
     """Disable animations, debug builds only."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def toif_info(data: bytes) -> tuple[int, int, bool]:
     """Get TOIF image dimensions and format (width: int, height: int, is_grayscale: bool)."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def confirm_action(
@@ -26,6 +28,7 @@ def confirm_action(
 ) -> object:
     """Confirm action."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def confirm_blob(
     *,
@@ -39,6 +42,7 @@ def confirm_blob(
 ) -> object:
     """Confirm byte sequence data."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def confirm_address(
     *,
@@ -48,6 +52,7 @@ def confirm_address(
     extra: str | None,  # unused on TR
 ) -> object:
     """Confirm address."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def confirm_properties(
@@ -60,6 +65,7 @@ def confirm_properties(
     the value is to be rendered as binary with monospace font, False otherwise.
     This only concerns the text style, you need to decode the value to UTF-8 in python."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def confirm_reset_device(
     *,
@@ -68,9 +74,11 @@ def confirm_reset_device(
 ) -> object:
     """Confirm TOS before device setup."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def confirm_backup() -> object:
     """Strongly recommend user to do backup."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def show_address_details(
@@ -83,6 +91,7 @@ def show_address_details(
 ) -> object:
     """Show address details - QR code, account, path, cosigner xpubs."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def confirm_value(
     *,
@@ -94,6 +103,7 @@ def confirm_value(
 ) -> object:
     """Confirm value."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def confirm_joint_total(
     *,
@@ -101,6 +111,7 @@ def confirm_joint_total(
     total_amount: str,
 ) -> object:
     """Confirm total if there are external inputs."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def confirm_modify_output(
@@ -112,6 +123,7 @@ def confirm_modify_output(
 ) -> object:
     """Decrease or increase amount for given address."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def confirm_output(
     *,
@@ -122,6 +134,7 @@ def confirm_output(
     amount_title: str,
 ) -> object:
     """Confirm output."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def confirm_total(
@@ -135,18 +148,11 @@ def confirm_total(
 ) -> object:
     """Confirm summary of a transaction."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def tutorial() -> object:
     """Show user how to interact with the device."""
 
-# rust/src/ui/model_tr/layout.rs
-def show_error(
-    *,
-    title: str,
-    description: str,
-    button: str,
-) -> object:
-    """Show a popup with text centered both vertically and horizontally. With just a middle button."""
 
 # rust/src/ui/model_tr/layout.rs
 def confirm_modify_fee(
@@ -158,6 +164,7 @@ def confirm_modify_fee(
     fee_rate_amount: str | None,
 ) -> object:
     """Decrease or increase transaction fee."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def confirm_fido(
@@ -171,6 +178,7 @@ def confirm_fido(
     Returns page index in case of confirmation and CANCELLED otherwise.
     """
 
+
 # rust/src/ui/model_tr/layout.rs
 def multiple_pages_texts(
     *,
@@ -180,6 +188,8 @@ def multiple_pages_texts(
 ) -> object:
     """Show multiple texts, each on its own page."""
 
+
+# rust/src/ui/model_tr/layout.rs
 def show_warning(
     *,
     button: str,
@@ -187,6 +197,7 @@ def show_warning(
     description: str,
 ) -> object:
     """Warning modal with middle button and centered text."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def show_info(
@@ -197,13 +208,16 @@ def show_info(
 ) -> object:
     """Info modal."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def show_passphrase() -> object:
     """Show passphrase on host dialog."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def show_mismatch() -> object:
     """Warning modal, receiving address mismatch."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def confirm_with_info(
@@ -216,6 +230,7 @@ def confirm_with_info(
     """Confirm given items but with third button. Always single page
     without scrolling."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def confirm_coinjoin(
     *,
@@ -223,6 +238,7 @@ def confirm_coinjoin(
     max_feerate: str,
 ) -> object:
     """Confirm coinjoin authorization."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def request_pin(
@@ -234,6 +250,7 @@ def request_pin(
 ) -> str | object:
     """Request pin on device."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def request_passphrase(
     *,
@@ -242,6 +259,7 @@ def request_passphrase(
 ) -> str | object:
     """Get passphrase."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def request_bip39(
     *,
@@ -249,12 +267,14 @@ def request_bip39(
 ) -> str:
     """Get recovery word for BIP39."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def request_slip39(
     *,
     prompt: str,
 ) -> str:
-    """SLIP39 word input keyboard."""
+   """SLIP39 word input keyboard."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def select_word(
@@ -263,8 +283,9 @@ def select_word(
     description: str,
     words: Iterable[str],
 ) -> int:
-    """Select mnemonic word from three possibilities - seed check after backup. The
-    iterable must be of exact size. Returns index in range `0..3`."""
+   """Select mnemonic word from three possibilities - seed check after backup. The
+   iterable must be of exact size. Returns index in range `0..3`."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def show_share_words(
@@ -272,6 +293,7 @@ def show_share_words(
     share_words: Iterable[str],
 ) -> object:
     """Shows a backup seed."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def request_number(
@@ -282,7 +304,8 @@ def request_number(
     max_count: int,
     description: Callable[[int], str] | None = None,  # unused on TR
 ) -> object:
-    """Number input with + and - buttons, description, and info button."""
+   """Number input with + and - buttons, description, and info button."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def show_checklist(
@@ -292,8 +315,9 @@ def show_checklist(
     active: int,
     button: str,
 ) -> object:
-    """Checklist of backup steps. Active index is highlighted, previous items have check
-    mark next to them."""
+   """Checklist of backup steps. Active index is highlighted, previous items have check
+   mark next to them."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def confirm_recovery(
@@ -305,21 +329,24 @@ def confirm_recovery(
     info_button: bool,  # unused on TR
     show_info: bool,
 ) -> object:
-    """Device recovery homescreen."""
+   """Device recovery homescreen."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def select_word_count(
     *,
     dry_run: bool,  # unused on TR
 ) -> int | str:  # TR returns str
-    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+   """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def show_group_share_success(
     *,
     lines: Iterable[str],
 ) -> int:
-    """Shown after successfully finishing a group."""
+   """Shown after successfully finishing a group."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def show_progress(
@@ -328,9 +355,10 @@ def show_progress(
     indeterminate: bool = False,
     description: str = "",
 ) -> object:
-    """Show progress loader. Please note that the number of lines reserved on screen for
-    description is determined at construction time. If you want multiline descriptions
-    make sure the initial description has at least that amount of lines."""
+   """Show progress loader. Please note that the number of lines reserved on screen for
+   description is determined at construction time. If you want multiline descriptions
+   make sure the initial description has at least that amount of lines."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def show_progress_coinjoin(
@@ -340,8 +368,9 @@ def show_progress_coinjoin(
     time_ms: int = 0,
     skip_first_paint: bool = False,
 ) -> object:
-    """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
-    time_ms timeout is passed."""
+   """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
+   time_ms timeout is passed."""
+
 
 # rust/src/ui/model_tr/layout.rs
 def show_homescreen(
@@ -354,6 +383,7 @@ def show_homescreen(
 ) -> CANCELLED:
     """Idle homescreen."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def show_lockscreen(
     *,
@@ -363,25 +393,29 @@ def show_lockscreen(
 ) -> CANCELLED:
     """Homescreen for locked device."""
 
+
 # rust/src/ui/model_tr/layout.rs
 def draw_welcome_screen() -> None:
     """Show logo icon with the model name at the bottom and return."""
-
 CONFIRMED: object
 CANCELLED: object
 INFO: object
+
 
 # rust/src/ui/model_tt/layout.rs
 def disable_animation(disable: bool) -> None:
     """Disable animations, debug builds only."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def jpeg_info(data: bytes) -> tuple[int, int, int]:
     """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def jpeg_test(data: bytes) -> bool:
     """Test JPEG image."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def confirm_action(
@@ -397,6 +431,7 @@ def confirm_action(
 ) -> object:
     """Confirm action."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_emphasized(
     *,
@@ -407,6 +442,7 @@ def confirm_emphasized(
     """Confirm formatted text that has been pre-split in python. For tuples
     the first component is a bool indicating whether this part is emphasized."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_homescreen(
     *,
@@ -414,6 +450,7 @@ def confirm_homescreen(
     image: bytes,
 ) -> object:
     """Confirm homescreen."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def confirm_blob(
@@ -428,6 +465,7 @@ def confirm_blob(
 ) -> object:
     """Confirm byte sequence data."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_address(
     *,
@@ -439,6 +477,7 @@ def confirm_address(
     """Confirm address. Similar to `confirm_blob` but has corner info button
     and allows left swipe which does the same thing as the button."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_properties(
     *,
@@ -449,6 +488,7 @@ def confirm_properties(
     """Confirm list of key-value pairs. The third component in the tuple should be True if
     the value is to be rendered as binary with monospace font, False otherwise."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_reset_device(
     *,
@@ -456,6 +496,7 @@ def confirm_reset_device(
     button: str,
 ) -> object:
     """Confirm TOS before device setup."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_address_details(
@@ -468,6 +509,7 @@ def show_address_details(
 ) -> object:
     """Show address details - QR code, account, path, cosigner xpubs."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def show_spending_details(
     *,
@@ -477,6 +519,7 @@ def show_spending_details(
     fee_rate_title: str = "Fee rate:",
 ) -> object:
     """Show metadata when for outgoing transaction."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def confirm_value(
@@ -492,6 +535,7 @@ def confirm_value(
 ) -> object:
     """Confirm value. Merge of confirm_total and confirm_output."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_total(
     *,
@@ -500,6 +544,7 @@ def confirm_total(
     info_button: bool = False,
 ) -> object:
     """Transaction summary. Always hold to confirm."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def confirm_modify_output(
@@ -511,6 +556,7 @@ def confirm_modify_output(
 ) -> object:
     """Decrease or increase amount for given address."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_modify_fee(
     *,
@@ -521,6 +567,7 @@ def confirm_modify_fee(
     fee_rate_amount: str | None,  # ignored
 ) -> object:
     """Decrease or increase transaction fee."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def confirm_fido(
@@ -534,6 +581,7 @@ def confirm_fido(
     Returns page index in case of confirmation and CANCELLED otherwise.
     """
 
+
 # rust/src/ui/model_tt/layout.rs
 def show_error(
     *,
@@ -544,6 +592,7 @@ def show_error(
     time_ms: int = 0,
 ) -> object:
     """Error modal. No buttons shown when `button` is empty string."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_warning(
@@ -556,6 +605,7 @@ def show_warning(
 ) -> object:
     """Warning modal. No buttons shown when `button` is empty string."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def show_success(
     *,
@@ -566,6 +616,7 @@ def show_success(
     time_ms: int = 0,
 ) -> object:
     """Success modal. No buttons shown when `button` is empty string."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_info(
@@ -578,9 +629,11 @@ def show_info(
 ) -> object:
     """Info modal. No buttons shown when `button` is empty string."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def show_mismatch() -> object:
     """Warning modal, receiving address mismatch."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_simple(
@@ -590,6 +643,7 @@ def show_simple(
     button: str = "",
 ) -> object:
     """Simple dialog with text and one button."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def confirm_with_info(
@@ -602,6 +656,7 @@ def confirm_with_info(
     """Confirm given items but with third button. Always single page
     without scrolling."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_more(
     *,
@@ -612,6 +667,7 @@ def confirm_more(
     """Confirm long content with the possibility to go back from any page.
     Meant to be used with confirm_with_info."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def confirm_coinjoin(
     *,
@@ -619,6 +675,7 @@ def confirm_coinjoin(
     max_feerate: str,
 ) -> object:
     """Confirm coinjoin authorization."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def request_pin(
@@ -630,6 +687,7 @@ def request_pin(
 ) -> str | object:
     """Request pin on device."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def request_passphrase(
     *,
@@ -638,6 +696,7 @@ def request_passphrase(
 ) -> str | object:
     """Passphrase input keyboard."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def request_bip39(
     *,
@@ -645,12 +704,14 @@ def request_bip39(
 ) -> str:
     """BIP39 word input keyboard."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def request_slip39(
     *,
     prompt: str,
 ) -> str:
     """SLIP39 word input keyboard."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def select_word(
@@ -660,7 +721,8 @@ def select_word(
     words: Iterable[str],
 ) -> int:
     """Select mnemonic word from three possibilities - seed check after backup. The
-    iterable must be of exact size. Returns index in range `0..3`."""
+   iterable must be of exact size. Returns index in range `0..3`."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_share_words(
@@ -669,6 +731,7 @@ def show_share_words(
     pages: Iterable[str],
 ) -> object:
     """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def request_number(
@@ -681,6 +744,7 @@ def request_number(
 ) -> object:
     """Number input with + and - buttons, description, and info button."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def show_checklist(
     *,
@@ -690,7 +754,8 @@ def show_checklist(
     button: str,
 ) -> object:
     """Checklist of backup steps. Active index is highlighted, previous items have check
-    mark next to them."""
+   mark next to them."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def confirm_recovery(
@@ -703,6 +768,7 @@ def confirm_recovery(
 ) -> object:
     """Device recovery homescreen."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def select_word_count(
     *,
@@ -710,9 +776,14 @@ def select_word_count(
 ) -> int | str:  # TT returns int
     """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
+
 # rust/src/ui/model_tt/layout.rs
-def show_group_share_success(*, lines: Iterable[str]) -> int:
+def show_group_share_success(
+    *,
+    lines: Iterable[str]
+) -> int:
     """Shown after successfully finishing a group."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_remaining_shares(
@@ -720,6 +791,7 @@ def show_remaining_shares(
     pages: Iterable[tuple[str, str]],
 ) -> int:
     """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_progress(
@@ -729,8 +801,9 @@ def show_progress(
     description: str = "",
 ) -> object:
     """Show progress loader. Please note that the number of lines reserved on screen for
-    description is determined at construction time. If you want multiline descriptions
-    make sure the initial description has at least that amount of lines."""
+   description is determined at construction time. If you want multiline descriptions
+   make sure the initial description has at least that amount of lines."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_progress_coinjoin(
@@ -741,7 +814,8 @@ def show_progress_coinjoin(
     skip_first_paint: bool = False,
 ) -> object:
     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
-    time_ms timeout is passed."""
+   time_ms timeout is passed."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def show_homescreen(
@@ -754,6 +828,7 @@ def show_homescreen(
 ) -> CANCELLED:
     """Idle homescreen."""
 
+
 # rust/src/ui/model_tt/layout.rs
 def show_lockscreen(
     *,
@@ -762,6 +837,7 @@ def show_lockscreen(
     skip_first_paint: bool,
 ) -> CANCELLED:
     """Homescreen for locked device."""
+
 
 # rust/src/ui/model_tt/layout.rs
 def draw_welcome_screen() -> None:
