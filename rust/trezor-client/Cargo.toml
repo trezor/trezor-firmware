@@ -2,9 +2,10 @@
 name = "trezor-client"
 version = "0.1.1"
 authors = [
-    "joshie",
+    "Piyush Kumar <piyushkumar2k02@kgpian.iitkgp.ac.in>",
+    "joshieDo <ranriver@protonmail.com>",
     "DaniPopes <57450786+DaniPopes@users.noreply.github.com>",
-    "romanz",
+    "Roman Zeyde <me@romanzey.de>",
     "Steven Roose <steven@stevenroose.org>",
 ]
 license = "CC0-1.0"
