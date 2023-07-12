@@ -343,7 +343,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
         layout = debug.press_right(wait=True)
         assert "Slip39Entry" in layout.all_components()
 
-        # type the word `ACADEMIC` slowly (A, C, and the whole word confirmation)
+        # pressing middle button three times
         for _ in range(3):
             time.sleep(9)
             debug.press_middle()
@@ -351,7 +351,8 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
         # should not have locked, even though we took 9 seconds to type each letter
         assert "Slip39Entry" in layout.all_components()
 
-    device_handler.kill_task()
+    with pytest.raises(exceptions.Cancelled):
+        device_handler.result()
 
 
 @pytest.mark.setup_client(pin=PIN4)
