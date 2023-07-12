@@ -30,6 +30,10 @@ stages:
   - posttest
   - deploy
 
+default:
+  # Cancel jobs when a newer pipeline appears
+  interruptible: true
+
 before_script:
   - . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh || true
   - $NIX_SHELL --run "poetry install --sync"
