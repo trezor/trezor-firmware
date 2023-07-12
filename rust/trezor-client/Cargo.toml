@@ -1,6 +1,6 @@
 [package]
 name = "trezor-client"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
     "joshie",
     "DaniPopes <57450786+DaniPopes@users.noreply.github.com>",
@@ -8,8 +8,8 @@ authors = [
     "Steven Roose <steven@stevenroose.org>",
 ]
 license = "CC0-1.0"
-homepage = "https://github.com/joshieDo/rust-trezor-api"
-repository = "https://github.com/joshieDo/rust-trezor-api"
+homepage = "https://github.com/trezor/trezor-firmware/tree/master/rust/trezor-client"
+repository = "https://github.com/trezor/trezor-firmware"
 description = "Client library for interfacing with Trezor hardware wallet devices"
 keywords = ["ethereum", "bitcoin", "trezor", "wallet"]
 categories = ["api-bindings", "cryptography::cryptocurrencies"]
