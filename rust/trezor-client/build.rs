@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
 fn main() {
-    let proto_path = "../../common/protob";
+    let proto_path = "protob";
     let protos: Vec<PathBuf> = fs::read_dir(proto_path)
         .unwrap()
         .filter_map(|entry| {
