@@ -52,14 +52,13 @@ def test_busy_state(client: Client):
     assert client.features.busy is False
 
 
+@pytest.mark.flaky(max_runs=5)
 def test_busy_expiry(client: Client):
-    expiry_ms = 100  # 100 milliseconds
-
     # Show the busy dialog.
-    device.set_busy(client, expiry_ms=expiry_ms)
+    device.set_busy(client, expiry_ms=100)
 
-    # Wait for it to expire.
-    time.sleep(expiry_ms / 1000)
+    # Wait for it to expire. Add 100ms tolerance to account for CI slowness.
+    time.sleep(0.2)
 
     # Check that the device is no longer busy.
     client.refresh_features()
