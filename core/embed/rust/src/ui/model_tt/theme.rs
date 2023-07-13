@@ -215,8 +215,8 @@ pub const fn button_confirm() -> ButtonStyleSheet {
         },
         disabled: &ButtonStyle {
             font: Font::BOLD,
-            text_color: FG,
-            button_color: GREEN,
+            text_color: GREY_LIGHT,
+            button_color: GREEN_DARK,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
