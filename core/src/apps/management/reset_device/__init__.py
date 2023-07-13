@@ -23,7 +23,7 @@ _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
 
 
 async def reset_device(msg: ResetDevice) -> Success:
-    from trezor import config, utils
+    from trezor import config
     from apps.common.request_pin import request_pin_confirm
     from trezor.ui.layouts import (
         prompt_backup,
@@ -39,14 +39,9 @@ async def reset_device(msg: ResetDevice) -> Success:
     # validate parameters and device state
     _validate_reset_device(msg)
 
-    # TR only has one-line title, TT can show more lines
-    delimiter = "\n" if utils.MODEL == "T" else " "
-
     # make sure user knows they're setting up a new wallet
-    if backup_type == BAK_T_SLIP39_BASIC:
-        title = f"Create wallet{delimiter}(Shamir)"
-    elif backup_type == BAK_T_SLIP39_ADVANCED:
-        title = f"Create wallet{delimiter}(Super Shamir)"
+    if backup_type in (BAK_T_SLIP39_BASIC, BAK_T_SLIP39_ADVANCED):
+        title = "Create wallet (Shamir)"
     else:
         title = "Create wallet"
     await confirm_reset_device(title)
