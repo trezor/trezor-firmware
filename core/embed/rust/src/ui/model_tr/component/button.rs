@@ -137,7 +137,13 @@ where
             }
         };
 
-        let button_bounds = self.bounds.split_bottom(theme::BUTTON_HEIGHT).1;
+        // Arms should connect to the center, therefore decreasing the height
+        let button_height = if style.with_arms {
+            theme::BUTTON_HEIGHT - 2
+        } else {
+            theme::BUTTON_HEIGHT
+        };
+        let button_bounds = self.bounds.split_bottom(button_height).1;
         match self.pos {
             ButtonPos::Left => button_bounds.split_left(button_width).0,
             ButtonPos::Right => button_bounds.split_right(button_width).1,
@@ -148,19 +154,13 @@ where
     /// Determine baseline point for the text.
     fn get_text_baseline(&self, style: &ButtonStyle) -> Point {
         // Arms and outline require the text to be elevated.
-        let offset_y = if style.with_outline || style.with_arms {
-            theme::BUTTON_OUTLINE
-        } else {
-            0
-        };
-
-        // Moving text to the right.
-        let mut offset_x = if style.with_outline {
-            theme::BUTTON_OUTLINE
+        // Moving text to the right and elevating it for arms and outline.
+        let (mut offset_x, offset_y) = if style.with_outline {
+            (theme::BUTTON_OUTLINE, theme::BUTTON_OUTLINE)
         } else if style.with_arms {
-            theme::ARMS_MARGIN
+            (theme::ARMS_MARGIN, theme::ARMS_MARGIN)
         } else {
-            0
+            (0, 0)
         };
 
         // Centering the text in case of fixed width.
@@ -211,16 +211,14 @@ where
         // Optionally display "arms" at both sides of content - always in FG and BG
         // colors (they are not inverted).
         if style.with_arms {
-            // Putting them one pixel down to touch the bottom.
-            let arms_area = area.translate(Offset::y(1));
             theme::ICON_ARM_LEFT.draw(
-                arms_area.left_center(),
+                area.left_center(),
                 Alignment2D::TOP_RIGHT,
                 theme::FG,
                 theme::BG,
             );
             theme::ICON_ARM_RIGHT.draw(
-                arms_area.right_center(),
+                area.right_center(),
                 Alignment2D::TOP_LEFT,
                 theme::FG,
                 theme::BG,
