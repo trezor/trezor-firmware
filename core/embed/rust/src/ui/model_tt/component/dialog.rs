@@ -129,7 +129,7 @@ where
     }
 
     pub fn with_description(self, description: T) -> Self {
-        self.with_text(&theme::TEXT_NORMAL_OFF_WHITE, description)
+        self.with_text(&theme::TEXT_NORMAL, description)
     }
 
     pub fn new_shares(lines: [T; 4], controls: U) -> Self {

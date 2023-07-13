@@ -1037,14 +1037,9 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_SUCCESS,
-            theme::SUCCESS_COLOR,
-            theme::FG,
-            theme::BG,
-        );
-        new_show_modal(kwargs, icon, theme::button_confirm())
+        // Not showing the rounded background, just the check icon
+        let icon = BlendedImage::single(theme::IMAGE_FG_SUCCESS, theme::FG, theme::BG);
+        new_show_modal(kwargs, icon, theme::button_success())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }

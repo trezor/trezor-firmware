@@ -225,6 +225,38 @@ pub const fn button_confirm() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_success() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: FG,
+            button_color: GREY_MEDIUM,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: FG,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: Font::BOLD,
+            text_color: FG,
+            button_color: GREY_LIGHT,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
 pub const fn button_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
