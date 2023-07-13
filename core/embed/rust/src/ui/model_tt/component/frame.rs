@@ -121,12 +121,14 @@ where
         const TITLE_SPACE: i16 = theme::BUTTON_SPACING;
 
         let bounds = bounds.inset(self.border);
+        // Allowing for little longer titles to fit in
+        const TITLE_EXTRA_SPACE: Insets = Insets::right(2);
         if let Some(b) = &mut self.button {
             let button_side = theme::CORNER_BUTTON_SIDE;
             let (header_area, button_area) = bounds.split_right(button_side);
             let (button_area, _) = button_area.split_top(button_side);
             b.place(button_area);
-            let title_area = self.title.place(header_area);
+            let title_area = self.title.place(header_area.outset(TITLE_EXTRA_SPACE));
             let remaining = header_area.inset(Insets::top(title_area.height()));
             let subtitle_area = self.subtitle.place(remaining);
 
@@ -141,7 +143,7 @@ where
             let content_area = bounds.inset(Insets::top(header_height + TITLE_SPACE));
             self.content.place(content_area);
         } else {
-            let title_area = self.title.place(bounds);
+            let title_area = self.title.place(bounds.outset(TITLE_EXTRA_SPACE));
             let remaining = bounds.inset(Insets::top(title_area.height()));
             let subtitle_area = self.subtitle.place(remaining);
             let remaining = remaining.inset(Insets::top(subtitle_area.height()));
