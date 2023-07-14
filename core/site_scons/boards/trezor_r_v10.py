@@ -44,7 +44,6 @@ def configure(
     if "consumption_mask" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/consumption_mask.c"]
         sources += ["vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"]
-        sources += ["embed/trezorhal/stm32f4/dma.c"]
 
     if "usb" in features_wanted:
         sources += [
