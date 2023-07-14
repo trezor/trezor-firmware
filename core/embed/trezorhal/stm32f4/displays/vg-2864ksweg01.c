@@ -127,7 +127,10 @@ int display_backlight(int val) {
 SPI_HandleTypeDef spi_handle;
 
 static inline void spi_send(const uint8_t *data, int len) {
-  HAL_Delay(1);
+  volatile int32_t timeout = 1000;
+  for (int i = 0; i < timeout; i++)
+    ;
+
   if (HAL_OK != HAL_SPI_Transmit(&spi_handle, (uint8_t *)data, len, 1000)) {
     // TODO: error
     return;
