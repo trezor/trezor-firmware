@@ -113,11 +113,11 @@ void mpu_config_firmware(void) {
      LL_MPU_REGION_SIZE_64KB | LL_MPU_REGION_PRIV_RO_URO | MPU_RASR_XN_Msk;
   */
 
-  // Bootloader (0x08020000 - 0x0803FFFF, 64 KiB, read-only)
+  // Bootloader (0x08020000 - 0x0803FFFF, 128 KiB, read-only)
   MPU->RNR = MPU_REGION_NUMBER0;
   MPU->RBAR = FLASH_BASE + 0x20000;
   MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_FLASH |
-              LL_MPU_REGION_SIZE_64KB | LL_MPU_REGION_PRIV_RO_URO;
+              LL_MPU_REGION_SIZE_128KB | LL_MPU_REGION_PRIV_RO_URO;
 
   // Storage#1 (0x08010000 - 0x0801FFFF, 64 KiB, read-write, execute never)
   MPU->RNR = MPU_REGION_NUMBER1;
