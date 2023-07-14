@@ -34,23 +34,4 @@
 // Works for x between 0 and 16 inclusive
 #define POW2_CEIL(x) ((((x) - 1) | ((x) - 1) >> 1 | ((x) - 1) >> 2 | ((x) - 1) >> 3) + 1)
 
-enum {
-    SYSTICK_DISPATCH_DMA = 0,
-    SYSTICK_DISPATCH_MAX
-};
-
-#define SYSTICK_DISPATCH_NUM_SLOTS POW2_CEIL(SYSTICK_DISPATCH_MAX)
-
-typedef void (*systick_dispatch_t)(uint32_t);
-
-extern systick_dispatch_t systick_dispatch_table[SYSTICK_DISPATCH_NUM_SLOTS];
-
-static inline void systick_enable_dispatch(size_t slot, systick_dispatch_t f) {
-    systick_dispatch_table[slot] = f;
-}
-
-static inline void systick_disable_dispatch(size_t slot) {
-    systick_dispatch_table[slot] = NULL;
-}
-
 #endif // MICROPY_INCLUDED_STM32_SYSTICK_H
