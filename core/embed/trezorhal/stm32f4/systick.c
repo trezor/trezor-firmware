@@ -56,8 +56,6 @@
 
 extern __IO uint32_t uwTick;
 
-systick_dispatch_t systick_dispatch_table[SYSTICK_DISPATCH_NUM_SLOTS];
-
 void SysTick_Handler(void) {
   SEGGER_SYSVIEW_RecordEnterISR();
   // this is a millisecond tick counter that wraps after approximately
@@ -67,9 +65,6 @@ void SysTick_Handler(void) {
 #ifdef RDI
     rdi_handler(uw_tick);
 #endif
-  systick_dispatch_t f = systick_dispatch_table[uw_tick & (SYSTICK_DISPATCH_NUM_SLOTS - 1)];
-  if (f != NULL) {
-    f(uw_tick);
-  }
+
   SEGGER_SYSVIEW_RecordExitISR();
 }

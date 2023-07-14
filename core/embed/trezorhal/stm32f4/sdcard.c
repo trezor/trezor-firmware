@@ -47,7 +47,6 @@
 
 #include <string.h>
 
-#include "dma.h"
 #include "irq.h"
 #include "sdcard-set_clr_card_detect.h"
 #include "sdcard.h"
@@ -56,9 +55,17 @@
 #define SDMMC_CLK_ENABLE() __HAL_RCC_SDMMC1_CLK_ENABLE()
 #define SDMMC_CLK_DISABLE() __HAL_RCC_SDMMC1_CLK_DISABLE()
 #define SDMMC_IRQn SDMMC1_IRQn
-#define SDMMC_DMA dma_SDIO_0
 
-static SD_HandleTypeDef sd_handle;
+static SD_HandleTypeDef sd_handle = {0};
+static DMA_HandleTypeDef sd_dma = {0};
+
+void DMA2_Stream3_IRQHandler(void) {
+  IRQ_ENTER(DMA2_Stream3_IRQn);
+
+  HAL_DMA_IRQHandler(&sd_dma);
+
+  IRQ_EXIT(DMA2_Stream3_IRQn);
+}
 
 static inline void sdcard_default_pin_state(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);     // SD_ON/PC0
@@ -114,7 +121,10 @@ static inline void sdcard_active_pin_state(void) {
   HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
-void sdcard_init(void) { sdcard_default_pin_state(); }
+void sdcard_init(void) {
+  sdcard_default_pin_state();
+  __HAL_RCC_DMA2_CLK_ENABLE();
+}
 
 void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
   if (hsd->Instance == sd_handle.Instance) {
@@ -283,8 +293,23 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   // we must disable USB irqs to prevent MSC contention with SD card
   uint32_t basepri = raise_irq_pri(IRQ_PRI_OTG_FS);
 
-  DMA_HandleTypeDef sd_dma;
-  dma_init(&sd_dma, &SDMMC_DMA, DMA_PERIPH_TO_MEMORY, &sd_handle);
+  sd_dma.Instance = DMA2_Stream3;
+  sd_dma.State = HAL_DMA_STATE_RESET;
+  sd_dma.Init.Channel = DMA_CHANNEL_4;
+  sd_dma.Init.Direction = DMA_PERIPH_TO_MEMORY;
+  sd_dma.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+  sd_dma.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+  sd_dma.Init.MemBurst = DMA_MBURST_INC4;
+  sd_dma.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+  sd_dma.Init.MemInc = DMA_MINC_ENABLE;
+  sd_dma.Init.Mode = DMA_PFCTRL;
+  sd_dma.Init.PeriphBurst = DMA_PBURST_INC4;
+  sd_dma.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+  sd_dma.Init.PeriphInc = DMA_PINC_DISABLE;
+  sd_dma.Init.Priority = DMA_PRIORITY_VERY_HIGH;
+  sd_dma.Parent = &sd_handle;
+  HAL_DMA_Init(&sd_dma);
+
   sd_handle.hdmarx = &sd_dma;
 
   // we need to assign hdmatx even though it's unused
@@ -295,6 +320,8 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   memset(&dummy_dma, 0, sizeof(dummy_dma));
   sd_handle.hdmatx = &dummy_dma;
 
+  svc_enableIRQ(DMA2_Stream3_IRQn);
+
   sdcard_reset_periph();
   err =
       HAL_SD_ReadBlocks_DMA(&sd_handle, (uint8_t *)dest, block_num, num_blocks);
@@ -302,7 +329,8 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
     err = sdcard_wait_finished(&sd_handle, 5000);
   }
 
-  dma_deinit(&SDMMC_DMA);
+  svc_disableIRQ(DMA2_Stream3_IRQn);
+  HAL_DMA_DeInit(&sd_dma);
   sd_handle.hdmarx = NULL;
 
   restore_irq_pri(basepri);
@@ -327,8 +355,23 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   // we must disable USB irqs to prevent MSC contention with SD card
   uint32_t basepri = raise_irq_pri(IRQ_PRI_OTG_FS);
 
-  DMA_HandleTypeDef sd_dma;
-  dma_init(&sd_dma, &SDMMC_DMA, DMA_MEMORY_TO_PERIPH, &sd_handle);
+  sd_dma.Instance = DMA2_Stream3;
+  sd_dma.State = HAL_DMA_STATE_RESET;
+  sd_dma.Init.Channel = DMA_CHANNEL_4;
+  sd_dma.Init.Direction = DMA_MEMORY_TO_PERIPH;
+  sd_dma.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+  sd_dma.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+  sd_dma.Init.MemBurst = DMA_MBURST_INC4;
+  sd_dma.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+  sd_dma.Init.MemInc = DMA_MINC_ENABLE;
+  sd_dma.Init.Mode = DMA_PFCTRL;
+  sd_dma.Init.PeriphBurst = DMA_PBURST_INC4;
+  sd_dma.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+  sd_dma.Init.PeriphInc = DMA_PINC_DISABLE;
+  sd_dma.Init.Priority = DMA_PRIORITY_VERY_HIGH;
+  sd_dma.Parent = &sd_handle;
+  HAL_DMA_Init(&sd_dma);
+
   sd_handle.hdmatx = &sd_dma;
 
   // we need to assign hdmarx even though it's unused
@@ -339,6 +382,8 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   memset(&dummy_dma, 0, sizeof(dummy_dma));
   sd_handle.hdmarx = &dummy_dma;
 
+  svc_enableIRQ(DMA2_Stream3_IRQn);
+
   sdcard_reset_periph();
   err =
       HAL_SD_WriteBlocks_DMA(&sd_handle, (uint8_t *)src, block_num, num_blocks);
@@ -346,7 +391,8 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
     err = sdcard_wait_finished(&sd_handle, 5000);
   }
 
-  dma_deinit(&SDMMC_DMA);
+  svc_disableIRQ(DMA2_Stream3_IRQn);
+  HAL_DMA_DeInit(&sd_dma);
   sd_handle.hdmatx = NULL;
 
   restore_irq_pri(basepri);
