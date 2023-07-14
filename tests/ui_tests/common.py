@@ -77,11 +77,25 @@ def prepare_fixtures(
     return fixtures, missing_tests
 
 
-def write_fixtures(
+def write_fixtures_only_new_results(
+    results: t.Iterable[TestResult],
+    dest: Path,
+) -> None:
+    """Generate new results file with only the tests that were actually run."""
+    content: dict[str, dict[str, dict[str, str]]] = {}
+    for res in results:
+        model = content.setdefault(res.test.model, {})
+        group = model.setdefault(res.test.group, {})
+        group[res.test.fixtures_name] = res.actual_hash
+    dest.write_text(json.dumps(content, indent=0, sort_keys=True) + "\n")
+
+
+def write_fixtures_complete(
     results: t.Iterable[TestResult],
     remove_missing: bool = False,
     dest: Path = FIXTURES_FILE,
 ) -> None:
+    """Generate new fixtures.json file with all the results, updated for the latest run."""
     global FIXTURES
     content, _ = prepare_fixtures(results, remove_missing)
     dest.write_text(json.dumps(content, indent=0, sort_keys=True) + "\n")
