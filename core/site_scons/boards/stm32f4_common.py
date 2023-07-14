@@ -46,6 +46,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         'embed/trezorhal/stm32f4/systick.c',
         'embed/trezorhal/stm32f4/random_delays.c',
         'embed/trezorhal/stm32f4/rng.c',
+        'embed/trezorhal/stm32f4/shared_data.c',
         'embed/trezorhal/stm32f4/util.s',
         'embed/trezorhal/stm32f4/vectortable.s',
     ]

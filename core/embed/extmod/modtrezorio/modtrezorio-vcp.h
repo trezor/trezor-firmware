@@ -93,7 +93,11 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type,
   o->info.rx_buffer = m_new(uint8_t, vcp_buffer_len);
   o->info.tx_buffer_len = vcp_buffer_len;
   o->info.rx_buffer_len = vcp_buffer_len;
+#ifndef TREZOR_MODEL_R
   o->info.rx_intr_fn = pendsv_kbd_intr;
+#else
+  o->info.rx_intr_fn = NULL;
+#endif
   o->info.rx_intr_byte = 3;  // Ctrl-C
   o->info.iface_num = (uint8_t)(iface_num);
   o->info.data_iface_num = (uint8_t)(data_iface_num);

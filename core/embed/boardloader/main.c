@@ -35,6 +35,7 @@
 
 #include "lowlevel.h"
 #include "model.h"
+#include "shared_data.h"
 #include "version.h"
 
 #include "memzero.h"
@@ -203,6 +204,8 @@ static secbool copy_sdcard(void) {
 int main(void) {
   reset_flags_reset();
 
+  shared_data_init();
+
   // need the systick timer running before many HAL operations.
   // want the PVD enabled before flash operations too.
   periph_init();
@@ -250,6 +253,7 @@ int main(void) {
          "invalid bootloader hash");
 
   ensure_compatible_settings();
+  shared_data_deinit();
 
   jump_to(BOOTLOADER_START + IMAGE_HEADER_SIZE);
 

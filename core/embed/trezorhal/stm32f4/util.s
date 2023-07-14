@@ -2,6 +2,55 @@
 
   .text
 
+  .global jump_to_untrusted
+  .type jump_to_untrusted, STT_FUNC
+jump_to_untrusted:
+  mov r4, r0            // save input argument r0 (the address of the next stage's vector table) (r4 is callee save)
+
+  mov lr, r4
+  // give the next stage a fresh main stack pointer
+  ldr r0, [lr]          // set r0 to the main stack pointer in the next stage's vector table
+  msr msp, r0           // give the next stage its main stack pointer
+  // switch to unprivileged mode
+  ldr r0, =1
+  msr control, r0
+  isb
+
+  cpsid f
+
+  // wipe memory at the end of the current stage of code
+  bl clear_otg_hs_memory
+  ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
+  ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
+  ldr r2, =0            // r2 - the word-sized value to be written
+  bl memset_reg
+  ldr r0, =sram_start   // r0 - point to beginning of SRAM
+  ldr r1, =sram_end     // r1 - point to byte after the end of SRAM
+  ldr r2, =0            // r2 - the word-sized value to be written
+  bl memset_reg
+  mov lr, r4
+  // clear out the general purpose registers before the next stage's code can run (even the NMI exception handler)
+  ldr r0, =0
+  mov r1, r0
+  mov r2, r0
+  mov r3, r0
+  mov r4, r0
+  mov r5, r0
+  mov r6, r0
+  mov r7, r0
+  mov r8, r0
+  mov r9, r0
+  mov r10, r0
+  mov r11, r0
+  mov r12, r0
+
+  // go on to the next stage
+
+  ldr lr, [lr, 4]       // set lr to the next stage's reset_handler
+
+  // jump
+  bx lr
+
   .global memset_reg
   .type memset_reg, STT_FUNC
 memset_reg:

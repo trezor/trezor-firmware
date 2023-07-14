@@ -55,6 +55,7 @@ CPPDEFINES_MOD += [
     'ED25519_NO_PRECOMP',
     'TREZOR_UI2',
     'FANCY_FATAL_ERROR',
+    'RDI',
 ]
 
 SOURCE_MOD += [

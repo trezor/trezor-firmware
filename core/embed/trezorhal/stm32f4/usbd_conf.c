@@ -57,6 +57,7 @@
 #include "irq.h"
 #include "supervise.h"
 #include "systemview.h"
+#include "shared_data.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -407,7 +408,9 @@ void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd)
   */
 USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
 {
+
 #if defined(USE_USB_FS)
+  shared_data_register(SHARED_DATA_USB_HANDLE, (uint32_t)&pcd_fs_handle);
   // Trezor 1 uses the OTG_FS peripheral
   if (pdev->id == USB_PHY_FS_ID) {
     /*Set LL Driver parameters */
@@ -441,6 +444,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
   }
 #endif
 #if defined(USE_USB_HS_IN_FS)
+  shared_data_register(SHARED_DATA_USB_HANDLE, (uint32_t)&pcd_hs_handle);
   // Trezor T uses the OTG_HS peripheral
   if (pdev->id == USB_PHY_HS_ID) {
     /* Set LL Driver parameters */
@@ -678,9 +682,10 @@ void  USBD_LL_Delay(uint32_t Delay)
 #if defined(USE_USB_FS)
 void OTG_FS_IRQHandler(void) {
     SEGGER_SYSVIEW_RecordEnterISR();
+    PCD_HandleTypeDef* handle = (PCD_HandleTypeDef*)shared_data[SHARED_DATA_USB_HANDLE];
     IRQ_ENTER(OTG_FS_IRQn);
-    if (pcd_fs_handle.Instance) {
-        HAL_PCD_IRQHandler(&pcd_fs_handle);
+    if (handle != NULL && handle->Instance) {
+        HAL_PCD_IRQHandler(handle);
     }
     IRQ_EXIT(OTG_FS_IRQn);
     SEGGER_SYSVIEW_RecordExitISR();
@@ -690,8 +695,9 @@ void OTG_FS_IRQHandler(void) {
 void OTG_HS_IRQHandler(void) {
     SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_HS_IRQn);
-    if (pcd_hs_handle.Instance) {
-        HAL_PCD_IRQHandler(&pcd_hs_handle);
+    PCD_HandleTypeDef* handle = (PCD_HandleTypeDef*)shared_data[SHARED_DATA_USB_HANDLE];
+    if (handle != NULL && handle->Instance) {
+        HAL_PCD_IRQHandler(handle);
     }
     IRQ_EXIT(OTG_HS_IRQn);
     SEGGER_SYSVIEW_RecordExitISR();
@@ -744,8 +750,9 @@ static void OTG_CMD_WKUP_Handler(PCD_HandleTypeDef *pcd_handle) {
 #if defined(USE_USB_FS)
 void OTG_FS_WKUP_IRQHandler(void) {
     IRQ_ENTER(OTG_FS_WKUP_IRQn);
-    if (pcd_fs_handle.Instance) {
-        OTG_CMD_WKUP_Handler(&pcd_fs_handle);
+    PCD_HandleTypeDef* handle = (PCD_HandleTypeDef*)shared_data[SHARED_DATA_USB_HANDLE];
+    if (handle != NULL && handle->Instance) {
+        OTG_CMD_WKUP_Handler(handle);
     }
     /* Clear EXTI pending Bit*/
     __HAL_USB_OTG_FS_WAKEUP_EXTI_CLEAR_FLAG();
@@ -755,8 +762,9 @@ void OTG_FS_WKUP_IRQHandler(void) {
 #if defined(USE_USB_HS)
 void OTG_HS_WKUP_IRQHandler(void) {
     IRQ_ENTER(OTG_HS_WKUP_IRQn);
-    if (pcd_hs_handle.Instance) {
-        OTG_CMD_WKUP_Handler(&pcd_hs_handle);
+    PCD_HandleTypeDef* handle = (PCD_HandleTypeDef*)shared_data[SHARED_DATA_USB_HANDLE];
+    if (handle != NULL && handle->Instance) {
+        OTG_CMD_WKUP_Handler(handle);
     }
     /* Clear EXTI pending Bit*/
     __HAL_USB_HS_EXTI_CLEAR_FLAG();

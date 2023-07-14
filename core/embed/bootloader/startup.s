@@ -37,5 +37,17 @@ reset_handler:
   bl main
 
   b shutdown_privileged
+    .global MemManage_Handler
+    .type MemManage_Handler, STT_FUNC
+  MemManage_Handler:
+    ldr r2, =_sstack
+    mrs r1, msp
+    ldr r0, =_estack
+    msr msp, r0
+    cmp r1, r2
+    IT lt
+    bllt MemManage_Handler_SO
+    bl MemManage_Handler_MM
+
 
   .end

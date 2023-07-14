@@ -47,24 +47,44 @@
 
 #include "irq.h"
 #include "systick.h"
+#include "shared_data.h"
 
 #ifdef RDI
-  #include "random_delays.h"
+#include "random_delays.h"
 #endif
 
 #include "systemview.h"
+#include "common.h"
 
 extern __IO uint32_t uwTick;
 
 void SysTick_Handler(void) {
   SEGGER_SYSVIEW_RecordEnterISR();
-  // this is a millisecond tick counter that wraps after approximately
-  // 49.71 days = (0xffffffff / (24 * 60 * 60 * 1000))
-  uint32_t uw_tick = uwTick + 1;
-  uwTick = uw_tick;
-#ifdef RDI
-    rdi_handler(uw_tick);
-#endif
 
+  __IO uint32_t *uwTick_ptr = (__IO uint32_t *) shared_data[SHARED_DATA_SYS_TICK];
+
+  if (uwTick_ptr != NULL) {
+
+    // this is a millisecond tick counter that wraps after approximately
+    // 49.71 days = (0xffffffff / (24 * 60 * 60 * 1000))
+    uint32_t uw_tick = *uwTick_ptr + 1;
+    *uwTick_ptr = uw_tick;
+
+#ifdef RDI
+    rdi_data_t *rdi = (rdi_data_t *) shared_data[SHARED_DATA_RDI_DATA];
+    if (rdi != NULL) {
+      rdi_handler(rdi, uw_tick);
+    }
+#endif
+  }
   SEGGER_SYSVIEW_RecordExitISR();
+}
+
+
+uint32_t get_ticks(void) {
+  __IO uint32_t *uwTick_ptr = (__IO uint32_t *) shared_data[SHARED_DATA_SYS_TICK];
+  if (uwTick_ptr != NULL) {
+    return *uwTick_ptr;
+  }
+  return 0;
 }

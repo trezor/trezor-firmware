@@ -31,6 +31,7 @@
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
+#include "shared_data.h"
 #include "touch.h"
 
 static void progress_callback(int pos, int len) { display_printf("."); }
@@ -59,6 +60,7 @@ static void flash_from_sdcard(uint8_t sector, uint32_t source,
 }
 
 int main(void) {
+  shared_data_init();
   sdcard_init();
   touch_init();
 

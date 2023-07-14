@@ -64,6 +64,8 @@ error_shutdown(const char *label, const char *msg);
 void show_wipe_code_screen(void);
 void show_pin_too_many_screen(void);
 
+uint32_t get_ticks(void);
+
 #define ensure(expr, msg) \
   (((expr) == sectrue)    \
        ? (void)0          \

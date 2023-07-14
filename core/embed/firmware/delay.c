@@ -48,8 +48,8 @@
 #include "py/runtime.h"
 #include "py/mphal.h"
 #include "irq.h"
+#include "common.h"
 
-extern __IO uint32_t uwTick;
 
 // We provide our own version of HAL_Delay that calls __WFI while waiting,
 // and works when interrupts are disabled.  This function is intended to be
@@ -57,9 +57,9 @@ extern __IO uint32_t uwTick;
 void HAL_Delay(uint32_t Delay) {
     if (query_irq() == IRQ_STATE_ENABLED) {
         // IRQs enabled, so can use systick counter to do the delay
-        uint32_t start = uwTick;
+        uint32_t start = get_ticks();
         // Wraparound of tick is taken care of by 2's complement arithmetic.
-        while (uwTick - start < Delay) {
+        while (get_ticks() - start < Delay) {
             // Enter sleep mode, waiting for (at least) the SysTick interrupt.
             __WFI();
         }
@@ -74,9 +74,9 @@ void HAL_Delay(uint32_t Delay) {
 void mp_hal_delay_ms(mp_uint_t Delay) {
     if (query_irq() == IRQ_STATE_ENABLED) {
         // IRQs enabled, so can use systick counter to do the delay
-        uint32_t start = uwTick;
+        uint32_t start = get_ticks();
         // Wraparound of tick is taken care of by 2's complement arithmetic.
-        while (uwTick - start < Delay) {
+        while (get_ticks() - start < Delay) {
             // This macro will execute the necessary idle behaviour.  It may
             // raise an exception, switch threads or enter sleep mode (waiting for
             // (at least) the SysTick interrupt).
@@ -110,9 +110,9 @@ void mp_hal_delay_us(mp_uint_t usec) {
 }
 
 mp_uint_t mp_hal_ticks_ms(void) {
-    return uwTick;
+    return get_ticks();
 }
 
 mp_uint_t mp_hal_ticks_us(void) {
-    return uwTick * 1000;
+    return get_ticks() * 1000;
 }

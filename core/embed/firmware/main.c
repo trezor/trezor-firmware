@@ -45,6 +45,8 @@
 #include "image.h"
 #include "mpu.h"
 #include "random_delays.h"
+#include "shared_data.h"
+
 #ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
@@ -82,6 +84,8 @@
 extern void shutdown_privileged(void);
 
 int main(void) {
+  shared_data_init();
+
   random_delays_init();
 
 #ifdef RDI
@@ -109,12 +113,17 @@ int main(void) {
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
 #endif
+#if ((!defined TREZOR_MODEL_R) || PRODUCTION)
+  // Unofficial Trezor R firmware is running in unprivileged mode
   // Enable MPU
   mpu_config_firmware();
 #endif
+#endif
 
   // Init peripherals
+#if ((!defined TREZOR_MODEL_R) || PRODUCTION)
   pendsv_init();
+#endif
 
 #ifdef USE_DMA2D
   dma2d_init();
@@ -122,7 +131,9 @@ int main(void) {
 
 #if !PRODUCTION
   // enable BUS fault and USAGE fault handlers
+#ifndef TREZOR_MODEL_R
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
+#endif
 #endif
 
 #if defined TREZOR_MODEL_T

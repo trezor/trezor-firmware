@@ -26,6 +26,9 @@
 #include "image.h"
 #include "random_delays.h"
 #include "secbool.h"
+#include "shared_data.h"
+#include "supervise.h"
+
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"
 #else
@@ -276,6 +279,8 @@ int main(void) {
 #else
 int bootloader_main(void) {
 #endif
+
+  shared_data_init();
 
   random_delays_init();
   // display_init_seq();
@@ -544,14 +549,97 @@ int bootloader_main(void) {
   }
 
   ensure_compatible_settings();
-
-  // mpu_config_firmware();
-  // jump_to_unprivileged(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
-
+  shared_data_deinit();
   mpu_config_off();
+
+#ifdef TREZOR_MODEL_R
+  if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
+    mpu_config_firmware_unpriviledged();
+    jump_to_untrusted(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+  }
+#endif
   jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
 
   return 0;
 }
 
+void NMI_Handler(void) {
+  // Clock Security System triggered NMI
+  if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
+    error_shutdown("INTERNAL ERROR", "(CS)");
+  }
+}
+
 void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }
+
+void MemManage_Handler_MM(void) { error_shutdown("INTERNAL ERROR", "(MM)"); }
+
+void MemManage_Handler_SO(void) { error_shutdown("INTERNAL ERROR", "(SO)"); }
+
+void BusFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(BF)"); }
+
+void UsageFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(UF)"); }
+
+void PendSV_Handler(void) {
+  for (;;)
+    ;
+}
+
+__attribute__((naked)) void SVC_Handler(void) {
+  __asm volatile(
+      " tst lr, #4    \n"  // Test Bit 3 to see which stack pointer we should
+      // use.
+      " ite eq        \n"  // Tell the assembler that the nest 2 instructions
+      // are if-then-else
+      " mrseq r0, msp \n"    // Make R0 point to main stack pointer
+      " mrsne r0, psp \n"    // Make R0 point to process stack pointer
+      " b SVC_C_Handler \n"  // Off to C land
+  );
+}
+
+__attribute__((noreturn)) void reboot_to_bootloader() {
+  jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE,
+                    STAY_IN_BOOTLOADER_FLAG);
+  for (;;)
+    ;
+}
+
+void SVC_C_Handler(uint32_t *stack) {
+  uint8_t svc_number = ((uint8_t *)stack[6])[-2];
+  switch (svc_number) {
+    case SVC_ENABLE_IRQ:
+      HAL_NVIC_EnableIRQ(stack[0]);
+      break;
+    case SVC_DISABLE_IRQ:
+      HAL_NVIC_DisableIRQ(stack[0]);
+      break;
+    case SVC_SET_PRIORITY:
+      NVIC_SetPriority(stack[0], stack[1]);
+      break;
+#ifdef SYSTEM_VIEW
+    case SVC_GET_DWT_CYCCNT:
+      cyccnt_cycles = *DWT_CYCCNT_ADDR;
+      break;
+#endif
+    case SVC_SHUTDOWN:
+      shutdown_privileged();
+      for (;;)
+        ;
+      break;
+    case SVC_REBOOT_TO_BOOTLOADER:
+      ensure_compatible_settings();
+      mpu_config_bootloader();
+      shared_data_deinit();
+      __asm__ volatile("msr control, %0" ::"r"(0x0));
+      __asm__ volatile("isb");
+      // See stack layout in
+      // https://developer.arm.com/documentation/ka004005/latest We are changing
+      // return address in PC to land into reboot to avoid any bug with ROP and
+      // raising privileges.
+      stack[6] = (uintptr_t)reboot_to_bootloader;
+      return;
+    default:
+      stack[0] = 0xffffffff;
+      break;
+  }
+}

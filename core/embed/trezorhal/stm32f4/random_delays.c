@@ -44,6 +44,7 @@ https://link.springer.com/content/pdf/10.1007%2F978-3-540-72354-7_3.pdf
 #include "common.h"
 #include "memzero.h"
 #include "rand.h"
+#include "shared_data.h"
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -52,49 +53,53 @@ extern void shutdown_privileged(void);
 #define DRBG_TRNG_ENTROPY_LENGTH 50
 _Static_assert(CHACHA_DRBG_OPTIMAL_RESEED_LENGTH(1) == DRBG_TRNG_ENTROPY_LENGTH,
                "");
-#define BUFFER_LENGTH 64
 
-static CHACHA_DRBG_CTX drbg_ctx;
-static secbool drbg_initialized = secfalse;
-static uint8_t session_delay;
-static bool refresh_session_delay;
-static secbool rdi_disabled = sectrue;
+volatile rdi_data_t rdi_data = {
+    .drbg_ctx = {0},
+    .drbg_initialized = secfalse,
+    .session_delay = 0,
+    .refresh_session_delay = false,
+    .rdi_disabled = sectrue,
+    .locked = ATOMIC_FLAG_INIT,
+    .buffer = {0},
+    .buffer_index = 0,
+
+};
 
 static void drbg_init() {
   uint8_t entropy[DRBG_TRNG_ENTROPY_LENGTH] = {0};
   random_buffer(entropy, sizeof(entropy));
-  chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
+  chacha_drbg_init((CHACHA_DRBG_CTX *)&rdi_data.drbg_ctx, entropy,
+                   sizeof(entropy), NULL, 0);
   memzero(entropy, sizeof(entropy));
 
-  drbg_initialized = sectrue;
+  rdi_data.drbg_initialized = sectrue;
+  shared_data_register(SHARED_DATA_RDI_DATA, (uint32_t)&rdi_data);
 }
 
-static void drbg_reseed() {
-  ensure(drbg_initialized, NULL);
+static void drbg_reseed(volatile rdi_data_t *rdi) {
+  ensure(rdi->drbg_initialized, NULL);
 
   uint8_t entropy[DRBG_TRNG_ENTROPY_LENGTH] = {0};
   random_buffer(entropy, sizeof(entropy));
-  chacha_drbg_reseed(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
+  chacha_drbg_reseed((CHACHA_DRBG_CTX *)(&rdi->drbg_ctx), entropy,
+                     sizeof(entropy), NULL, 0);
   memzero(entropy, sizeof(entropy));
 }
 
-static void drbg_generate(uint8_t *buffer, size_t length) {
-  ensure(drbg_initialized, NULL);
+static void drbg_generate(volatile rdi_data_t *rdi, uint8_t *buffer,
+                          size_t length) {
+  ensure(rdi->drbg_initialized, NULL);
 
-  if (drbg_ctx.reseed_counter > DRBG_RESEED_INTERVAL_CALLS) {
-    drbg_reseed();
+  if (rdi->drbg_ctx.reseed_counter > DRBG_RESEED_INTERVAL_CALLS) {
+    drbg_reseed(rdi);
   }
-  chacha_drbg_generate(&drbg_ctx, buffer, length);
+  chacha_drbg_generate((CHACHA_DRBG_CTX *)&rdi->drbg_ctx, buffer, length);
 }
 
 // WARNING: Returns a constant if the function's critical section is locked
-static uint32_t drbg_random8(void) {
-  // Since the function is called both from an interrupt (rdi_handler,
-  // wait_random) and the main thread (wait_random), we use a lock to
-  // synchronise access to global variables
-  static volatile atomic_flag locked = ATOMIC_FLAG_INIT;
-
-  if (atomic_flag_test_and_set(&locked))
+static uint32_t drbg_random8(volatile rdi_data_t *rdi) {
+  if (atomic_flag_test_and_set(&rdi->locked))
   // locked_old = locked; locked = true; locked_old
   {
     // If the critical section is locked we return a non-random value, which
@@ -102,21 +107,18 @@ static uint32_t drbg_random8(void) {
     return 128;
   }
 
-  static size_t buffer_index = 0;
-  static uint8_t buffer[BUFFER_LENGTH] = {0};
-
-  if (buffer_index == 0) {
-    drbg_generate(buffer, sizeof(buffer));
+  if (rdi->buffer_index == 0) {
+    drbg_generate(rdi, (uint8_t *)rdi->buffer, sizeof(rdi->buffer));
   }
 
   // To be extra sure there is no buffer overflow, we use a local copy of
   // buffer_index
-  size_t buffer_index_local = buffer_index % sizeof(buffer);
-  uint8_t value = buffer[buffer_index_local];
-  memzero(&buffer[buffer_index_local], 1);
-  buffer_index = (buffer_index_local + 1) % sizeof(buffer);
+  size_t buffer_index_local = rdi->buffer_index % sizeof(rdi->buffer);
+  uint8_t value = rdi->buffer[buffer_index_local];
+  memzero((void *)&rdi->buffer[buffer_index_local], 1);
+  rdi->buffer_index = (buffer_index_local + 1) % sizeof(rdi->buffer);
 
-  atomic_flag_clear(&locked);  // locked = false
+  atomic_flag_clear(&rdi->locked);  // locked = false
   return value;
 }
 
@@ -154,37 +156,37 @@ static void wait(uint32_t delay) {
 void random_delays_init() { drbg_init(); }
 
 void rdi_start(void) {
-  ensure(drbg_initialized, NULL);
+  ensure(rdi_data.drbg_initialized, NULL);
 
-  if (rdi_disabled == sectrue) {  // if rdi disabled
-    refresh_session_delay = true;
-    rdi_disabled = secfalse;
+  if (rdi_data.rdi_disabled == sectrue) {  // if rdi disabled
+    rdi_data.refresh_session_delay = true;
+    rdi_data.rdi_disabled = secfalse;
   }
 }
 
 void rdi_stop(void) {
-  if (rdi_disabled == secfalse) {  // if rdi enabled
-    rdi_disabled = sectrue;
-    session_delay = 0;
+  if (rdi_data.rdi_disabled == secfalse) {  // if rdi enabled
+    rdi_data.rdi_disabled = sectrue;
+    rdi_data.session_delay = 0;
   }
 }
 
 void rdi_refresh_session_delay(void) {
-  if (rdi_disabled == secfalse)  // if rdi enabled
-    refresh_session_delay = true;
+  if (rdi_data.rdi_disabled == secfalse)  // if rdi enabled
+    rdi_data.refresh_session_delay = true;
 }
 
-void rdi_handler(uint32_t uw_tick) {
-  if (rdi_disabled == secfalse) {  // if rdi enabled
-    if (refresh_session_delay) {
-      session_delay = drbg_random8();
-      refresh_session_delay = false;
+void rdi_handler(rdi_data_t *rdi, uint32_t uw_tick) {
+  if (rdi->rdi_disabled == secfalse) {  // if rdi enabled
+    if (rdi->refresh_session_delay) {
+      rdi->session_delay = drbg_random8(rdi);
+      rdi->refresh_session_delay = false;
     }
 
-    wait(drbg_random8() + session_delay);
+    wait(drbg_random8(rdi) + rdi->session_delay);
 
   } else {  // if rdi disabled or rdi_disabled corrupted
-    ensure(rdi_disabled, "Fault detected");
+    ensure(rdi->rdi_disabled, "Fault detected");
   }
 }
 
@@ -193,7 +195,7 @@ void rdi_handler(uint32_t uw_tick) {
  * against fault injection.
  */
 void wait_random(void) {
-  int wait = drbg_random8();
+  int wait = drbg_random8(&rdi_data);
   volatile int i = 0;
   volatile int j = wait;
   while (i < wait) {

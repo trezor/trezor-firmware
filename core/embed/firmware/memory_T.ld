@@ -84,7 +84,13 @@ SECTIONS {
 
   .heap : ALIGN(4) {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
-    . = ABSOLUTE(sram_end); /* this explicitly sets the end of the heap */
+    . = ABSOLUTE(sram_end - 64); /* this explicitly sets the end of the heap */
+  } >SRAM
+
+  .shared_data : ALIGN(4) {
+    *(.shared_data*);
+    . = 64;
+    . = ABSOLUTE(sram_end); /* this explicitly sets the end of the section */
   } >SRAM
 
   .data_ccm : ALIGN(4) {

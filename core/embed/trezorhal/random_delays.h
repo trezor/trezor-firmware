@@ -20,14 +20,37 @@
 #ifndef __TREZORHAL_RANDOM_DELAYS_H__
 #define __TREZORHAL_RANDOM_DELAYS_H__
 
+#include <stdatomic.h>
+#include <stdbool.h>
 #include <stdint.h>
+
+#include "chacha_drbg.h"
+
+#include "common.h"
+
+#define BUFFER_LENGTH 64
+
+typedef struct {
+  CHACHA_DRBG_CTX drbg_ctx;
+  secbool drbg_initialized;
+  uint8_t session_delay;
+  bool refresh_session_delay;
+  secbool rdi_disabled;
+
+  // Since the function is called both from an interrupt (rdi_handler,
+  // wait_random) and the main thread (wait_random), we use a lock to
+  // synchronise access to global variables
+  atomic_flag locked;
+  size_t buffer_index;
+  uint8_t buffer[BUFFER_LENGTH];
+} rdi_data_t;
 
 void random_delays_init(void);
 
 void rdi_start(void);
 void rdi_stop(void);
 void rdi_refresh_session_delay(void);
-void rdi_handler(uint32_t uw_tick);
+void rdi_handler(rdi_data_t* rdi, uint32_t uw_tick);
 
 void wait_random(void);
 #endif

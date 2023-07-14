@@ -30,6 +30,7 @@
 #include "platform.h"
 #include "rand.h"
 #include "supervise.h"
+#include "systick.h"
 
 #include "mini_printf.h"
 #include "stm32f4xx_ll_utils.h"
@@ -89,7 +90,6 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
               const char *func) {
   display_orientation(0);
   display_backlight(255);
-
 #ifdef FANCY_FATAL_ERROR
   char buf[256] = {0};
   mini_snprintf(buf, sizeof(buf), "%s: %d", file, line);
@@ -123,6 +123,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 
 void __attribute__((noreturn))
 error_shutdown(const char *label, const char *msg) {
+  display_reinit();
   display_orientation(0);
 
 #ifdef FANCY_FATAL_ERROR
@@ -149,6 +150,8 @@ void __assert_func(const char *file, int line, const char *func,
   __fatal_error(expr, "assert failed", file, line, func);
 }
 #endif
+
+#include "irq.h"
 
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
 uint32_t hal_ticks_ms() { return HAL_GetTick(); }
@@ -222,3 +225,5 @@ void show_pin_too_many_screen(void) {
   error_uni("TOO MANY PIN ATTEMPTS", "All data has been erased from the device",
             "PLEASE RECONNECT\nTHE DEVICE");
 }
+
+uint32_t HAL_GetTick(void) { return get_ticks(); }
