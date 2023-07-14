@@ -14,6 +14,7 @@ from .common import SCREENS_DIR, UI_TESTS_DIR, TestCase, TestResult
 from .reporting import testreport
 
 FIXTURES_SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"
+FIXTURES_RESULTS_FILE = UI_TESTS_DIR / "fixtures.results.json"
 
 
 def _process_recorded(result: TestResult) -> None:
@@ -113,7 +114,7 @@ def update_fixtures(remove_missing: bool = False) -> int:
     for result in results:
         result.store_recorded()
 
-    common.write_fixtures(results, remove_missing=remove_missing)
+    common.write_fixtures_complete(results, remove_missing=remove_missing)
     return len(results)
 
 
@@ -174,8 +175,15 @@ def sessionfinish(
         return exitstatus
 
     testreport.generate_reports(record_text_layout, do_master_diff)
+
+    if test_ui == "test":
+        common.write_fixtures_only_new_results(
+            TestResult.recent_results(),
+            dest=FIXTURES_RESULTS_FILE,
+        )
+
     if test_ui == "test" and check_missing and list_missing():
-        common.write_fixtures(
+        common.write_fixtures_complete(
             TestResult.recent_results(),
             remove_missing=True,
             dest=FIXTURES_SUGGESTION_FILE,

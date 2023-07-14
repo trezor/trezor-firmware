@@ -13,7 +13,7 @@ from urllib.parse import unquote
 
 import click
 
-from ui_tests.common import SCREENS_DIR, TestResult, write_fixtures
+from ui_tests.common import SCREENS_DIR, TestResult, write_fixtures_complete
 from ui_tests.reporting import testreport  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -78,7 +78,7 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
                 test_path = SCREENS_DIR / test_name
                 result = TestResult.load(test_path)
                 assert result.actual_hash == test_hash
-                write_fixtures([result])
+                write_fixtures_complete([result])
 
             self.send_response(200)
             self.send_header("Content-Type", "text/plain")
