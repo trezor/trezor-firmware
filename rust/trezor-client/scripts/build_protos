@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# Generates src/protos/generated and src/messages/generated.rs
+
+crate_root="$(dirname "$(dirname "$(realpath "$0")")")"
+
+protos="$crate_root/src/protos/generated"
+messages="$crate_root/src/messages/generated.rs"
+
+if [ "$1" = "--check" ]; then
+    protos_out=$(mktemp -d)
+    messages_out=$(mktemp)
+else
+    protos_out=$protos
+    messages_out=$messages
+fi
+
+cargo run --manifest-path "$crate_root/build/Cargo.toml" -- "$protos_out"
+
+"$crate_root/scripts/build_messages" > "$messages_out"
+rustfmt "$messages_out"
+
+if [ "$1" = "--check" ]; then
+    set -e
+    diff -ur "$protos_out" "$protos"
+    diff -ur "$messages_out" "$messages"
+fi

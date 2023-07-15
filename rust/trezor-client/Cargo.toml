@@ -15,12 +15,24 @@ description = "Client library for interfacing with Trezor hardware wallet device
 keywords = ["ethereum", "bitcoin", "trezor", "wallet"]
 categories = ["api-bindings", "cryptography::cryptocurrencies"]
 readme = "README.md"
-exclude = [".github/", ".vscode/", "examples/", "scripts/", "trezor-common/", "rustfmt.toml"]
+exclude = [".github/", "examples/", "scripts/", ".clippy.toml", ".gitignore", "rustfmt.toml"]
 edition = "2021"
 rust-version = "1.60"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[workspace]
+members = ["build", "."]
+
+[workspace.dependencies]
+# important: keep in sync
+protobuf = "=3.2.0"
+protobuf-codegen = "=3.2.0"
+
 [dependencies]
-protobuf = "3.2"
+protobuf.workspace = true
 byteorder = "1.4"
 rusb = "0.9"
 
@@ -34,9 +46,6 @@ unicode-normalization = { version = "0.1.22", optional = true }
 
 # ethereum
 primitive-types = { version = "0.12", default-features = false, optional = true }
-
-[build-dependencies]
-protobuf-codegen = "3.2.0"
 
 [dev-dependencies]
 tracing-subscriber = "0.3"
