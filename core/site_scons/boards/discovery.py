@@ -30,7 +30,9 @@ def configure(
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
     sources += ["embed/trezorhal/stm32f4/displays/ili9341_spi.c"]
+    sources += ["embed/trezorhal/stm32f4/dma.c"]
     sources += ["embed/trezorhal/stm32f4/sdram.c"]
+    sources += ["vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/i2c.c"]
