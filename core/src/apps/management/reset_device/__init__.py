@@ -26,7 +26,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     from trezor import config, utils
     from apps.common.request_pin import request_pin_confirm
     from trezor.ui.layouts import (
-        confirm_backup,
+        prompt_backup,
         confirm_reset_device,
     )
     from trezor.crypto import bip39, random
@@ -94,7 +94,7 @@ async def reset_device(msg: ResetDevice) -> Success:
 
     # If doing backup, ask the user to confirm.
     if perform_backup:
-        perform_backup = await confirm_backup()
+        perform_backup = await prompt_backup()
 
     # generate and display backup information for the master secret
     if perform_backup:
