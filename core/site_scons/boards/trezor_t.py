@@ -35,18 +35,18 @@ def configure(
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
-    sources += [f"embed/trezorhal/stm32f4/backlight_pwm.c"]
+    sources += ["embed/trezorhal/stm32f4/backlight_pwm.c"]
     sources += [
-        f"embed/trezorhal/stm32f4/displays/panels/tf15411a.c",
+        "embed/trezorhal/stm32f4/displays/panels/tf15411a.c",
     ]
     sources += [
-        f"embed/trezorhal/stm32f4/displays/panels/154a.c",
+        "embed/trezorhal/stm32f4/displays/panels/154a.c",
     ]
     sources += [
-        f"embed/trezorhal/stm32f4/displays/panels/lx154a2411.c",
+        "embed/trezorhal/stm32f4/displays/panels/lx154a2411.c",
     ]
     sources += [
-        f"embed/trezorhal/stm32f4/displays/panels/lx154a2422.c",
+        "embed/trezorhal/stm32f4/displays/panels/lx154a2422.c",
     ]
 
     features_available.append("backlight")

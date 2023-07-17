@@ -35,7 +35,7 @@ def configure(
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
 
-    sources += [f"embed/trezorhal/stm32f4/i2c.c"]
+    sources += ["embed/trezorhal/stm32f4/i2c.c"]
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/button.c"]
