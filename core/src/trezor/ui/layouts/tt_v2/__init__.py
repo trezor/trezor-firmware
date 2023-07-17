@@ -325,7 +325,7 @@ async def confirm_reset_device(title: str, recovery: bool = False) -> None:
 
 
 # TODO cleanup @ redesign
-async def confirm_backup() -> bool:
+async def prompt_backup() -> bool:
     result = await interact(
         RustLayout(
             trezorui2.confirm_action(

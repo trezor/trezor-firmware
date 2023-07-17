@@ -409,7 +409,7 @@ async def confirm_reset_device(
         )
 
 
-async def confirm_backup() -> bool:
+async def prompt_backup() -> bool:
     br_type = "backup_device"
     br_code = ButtonRequestType.ResetDevice
 
