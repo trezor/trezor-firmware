@@ -22,9 +22,13 @@ def configure(
 
     stm32f4_common_files(env, defines, sources, paths)
 
-    env.get("ENV")['CPU_ASFLAGS'] = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
-    env.get("ENV")['CPU_CCFLAGS'] = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
-    env.get("ENV")['RUST_TARGET'] = 'thumbv7em-none-eabihf'
+    env.get("ENV")[
+        "CPU_ASFLAGS"
+    ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16"
+    env.get("ENV")[
+        "CPU_CCFLAGS"
+    ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
+    env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
     defines += [mcu]
     defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
@@ -32,10 +36,18 @@ def configure(
     defines += [f"HW_REVISION={hw_revision}"]
     sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
     sources += [f"embed/trezorhal/stm32f4/backlight_pwm.c"]
-    sources += [f'embed/trezorhal/stm32f4/displays/panels/tf15411a.c', ]
-    sources += [f'embed/trezorhal/stm32f4/displays/panels/154a.c', ]
-    sources += [f'embed/trezorhal/stm32f4/displays/panels/lx154a2411.c', ]
-    sources += [f'embed/trezorhal/stm32f4/displays/panels/lx154a2422.c', ]
+    sources += [
+        f"embed/trezorhal/stm32f4/displays/panels/tf15411a.c",
+    ]
+    sources += [
+        f"embed/trezorhal/stm32f4/displays/panels/154a.c",
+    ]
+    sources += [
+        f"embed/trezorhal/stm32f4/displays/panels/lx154a2411.c",
+    ]
+    sources += [
+        f"embed/trezorhal/stm32f4/displays/panels/lx154a2422.c",
+    ]
 
     features_available.append("backlight")
 
@@ -49,7 +61,9 @@ def configure(
         sources += ["embed/trezorhal/stm32f4/sdcard.c"]
         sources += ["embed/extmod/modtrezorio/ff.c"]
         sources += ["embed/extmod/modtrezorio/ffunicode.c"]
-        sources += ["vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"]
+        sources += [
+            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
+        ]
         sources += ["embed/trezorhal/stm32f4/dma.c"]
         features_available.append("sd_card")
 
@@ -59,12 +73,12 @@ def configure(
 
     if "usb" in features_wanted:
         sources += [
-            'embed/trezorhal/stm32f4/usb.c',
-            'embed/trezorhal/stm32f4/usbd_conf.c',
-            'embed/trezorhal/stm32f4/usbd_core.c',
-            'embed/trezorhal/stm32f4/usbd_ctlreq.c',
-            'embed/trezorhal/stm32f4/usbd_ioreq.c',
-            'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c',
+            "embed/trezorhal/stm32f4/usb.c",
+            "embed/trezorhal/stm32f4/usbd_conf.c",
+            "embed/trezorhal/stm32f4/usbd_core.c",
+            "embed/trezorhal/stm32f4/usbd_ctlreq.c",
+            "embed/trezorhal/stm32f4/usbd_ioreq.c",
+            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")
 

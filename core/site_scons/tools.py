@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
-import subprocess
-from boards import trezor_1, trezor_r_v3, trezor_r_v4, trezor_t, trezor_r_v6, trezor_r_v10, discovery
+from boards import (
+    discovery,
+    trezor_1,
+    trezor_r_v3,
+    trezor_r_v4,
+    trezor_r_v6,
+    trezor_r_v10,
+    trezor_t,
+)
 
 HERE = Path(__file__).parent.resolve()
 
@@ -43,11 +51,11 @@ def configure_board(
             return trezor_r_v3.configure(env, features_wanted, defines, sources, paths)
         elif model_r_version == 4:
             return trezor_r_v4.configure(env, features_wanted, defines, sources, paths)
-        elif  model_r_version == 6:
+        elif model_r_version == 6:
             return trezor_r_v6.configure(env, features_wanted, defines, sources, paths)
         elif model_r_version == 10:
             return trezor_r_v10.configure(env, features_wanted, defines, sources, paths)
-    elif model in ('DISC1',):
+    elif model in ("DISC1",):
         return discovery.configure(env, features_wanted, defines, sources, paths)
     else:
         raise Exception("Unknown model")
@@ -60,7 +68,7 @@ def get_model_identifier(model: str) -> str:
         return "T2T1"
     elif model == "R":
         return "T2B1"
-    elif model == 'DISC1':
+    elif model == "DISC1":
         return "D001"
     else:
         raise Exception("Unknown model")
