@@ -39,7 +39,7 @@ def configure_board(
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],
-):
+) -> list[str]:
     model_r_version = 10
 
     if model in ("1",):
@@ -55,10 +55,10 @@ def configure_board(
             return trezor_r_v6.configure(env, features_wanted, defines, sources, paths)
         elif model_r_version == 10:
             return trezor_r_v10.configure(env, features_wanted, defines, sources, paths)
+        raise Exception("Unknown model_r_version")
     elif model in ("DISC1",):
         return discovery.configure(env, features_wanted, defines, sources, paths)
-    else:
-        raise Exception("Unknown model")
+    raise Exception("Unknown model")
 
 
 def get_model_identifier(model: str) -> str:
