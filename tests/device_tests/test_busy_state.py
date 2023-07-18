@@ -25,15 +25,24 @@ from trezorlib.tools import parse_path
 PIN = "1234"
 
 
+def _assert_busy(client: Client, should_be_busy: bool, screen: str = "Homescreen"):
+    assert client.features.busy is should_be_busy
+    if client.debug.model in ("T", "R"):
+        if should_be_busy:
+            assert "CoinJoinProgress" in client.debug.read_layout().all_components()
+        else:
+            assert client.debug.read_layout().main_component() == screen
+
+
 @pytest.mark.setup_client(pin=PIN)
 def test_busy_state(client: Client):
+    _assert_busy(client, False, "Lockscreen")
     assert client.features.unlocked is False
-    assert client.features.busy is False
 
     # Show busy dialog for 1 minute.
     device.set_busy(client, expiry_ms=60 * 1000)
+    _assert_busy(client, True)
     assert client.features.unlocked is False
-    assert client.features.busy is True
 
     with client:
         client.use_pin_sequence([PIN])
@@ -42,24 +51,31 @@ def test_busy_state(client: Client):
         )
 
     client.refresh_features()
+    _assert_busy(client, True)
     assert client.features.unlocked is True
-    assert client.features.busy is True
 
     # Hide the busy dialog.
     device.set_busy(client, None)
 
+    _assert_busy(client, False)
     assert client.features.unlocked is True
-    assert client.features.busy is False
 
 
 @pytest.mark.flaky(max_runs=5)
 def test_busy_expiry(client: Client):
+    _assert_busy(client, False)
     # Show the busy dialog.
-    device.set_busy(client, expiry_ms=100)
+    device.set_busy(client, expiry_ms=1500)
+    _assert_busy(client, True)
 
-    # Wait for it to expire. Add 100ms tolerance to account for CI slowness.
-    time.sleep(0.2)
+    # Hasn't expired yet.
+    time.sleep(1.4)
+    _assert_busy(client, True)
+
+    # Wait for it to expire. Add 400ms tolerance to account for CI slowness.
+    time.sleep(0.5)
 
     # Check that the device is no longer busy.
+    # Also needs to come back to Homescreen (for UI tests).
     client.refresh_features()
-    assert client.features.busy is False
+    _assert_busy(client, False)

@@ -77,7 +77,7 @@ class UnstructuredJSONReader:
             self.dict = {}
 
     def top_level_value(self, key: str) -> Any:
-        return self.dict[key]
+        return self.dict.get(key)
 
     def find_objects_with_key_and_value(self, key: str, value: Any) -> List["AnyDict"]:
         def recursively_find(data: Any) -> Iterator[Any]:
@@ -140,7 +140,7 @@ class LayoutContent(UnstructuredJSONReader):
 
     def main_component(self) -> str:
         """Getting the main component of the layout."""
-        return self.top_level_value("component")
+        return self.top_level_value("component") or "no main component"
 
     def all_components(self) -> List[str]:
         """Getting all components of the layout."""
@@ -332,7 +332,7 @@ class LayoutContent(UnstructuredJSONReader):
 
     def tt_pin_digits_order(self) -> str:
         """In what order the PIN buttons are shown on the screen. Only for TT."""
-        return self.top_level_value("digits_order")
+        return self.top_level_value("digits_order") or "no digits order"
 
     def get_middle_choice(self) -> str:
         """What is the choice being selected right now."""
