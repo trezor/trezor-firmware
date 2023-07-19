@@ -104,6 +104,10 @@ impl BlendedImage {
             self.area_color,
         );
     }
+
+    pub fn height(&self) -> i16 {
+        self.bg.toif.size().y
+    }
 }
 
 impl Component for BlendedImage {

@@ -1065,6 +1065,13 @@ extern "C" fn new_show_mismatch() -> Obj {
         let url: StrBuffer = "trezor.io/support".into();
         let button = "QUIT";
 
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_DEMIBOLD, title).centered(),
+            Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, description).centered(),
+            Paragraph::new(&theme::TEXT_DEMIBOLD, url).centered(),
+        ])
+        .into_paragraphs();
+
         let icon = BlendedImage::new(
             theme::IMAGE_BG_OCTAGON,
             theme::IMAGE_FG_WARN,
@@ -1072,19 +1079,15 @@ extern "C" fn new_show_mismatch() -> Obj {
             theme::FG,
             theme::BG,
         );
-        let obj = LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                Button::cancel_confirm(
-                    Button::with_icon(theme::ICON_BACK),
-                    Button::with_text(button).styled(theme::button_reset()),
-                    true,
-                ),
-            )
-            .with_description(description)
-            .with_text(&theme::TEXT_DEMIBOLD, url),
-        )?;
+        let obj = LayoutObj::new(IconDialog::from_paragraphs(
+            icon,
+            paragraphs,
+            Button::cancel_confirm(
+                Button::with_icon(theme::ICON_BACK),
+                Button::with_text(button).styled(theme::button_reset()),
+                true,
+            ),
+        ))?;
 
         Ok(obj.into())
     };

@@ -7,9 +7,10 @@ use crate::{
                 paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
                 TextStyle,
             },
-            Child, Component, Event, EventCtx, Never,
+            Child, Component, Event, EventCtx, Never, Paginate,
         },
-        geometry::{Insets, LinearPlacement, Rect},
+        geometry::{Insets, Rect},
+        util::ResultExt,
     },
 };
 
@@ -102,6 +103,10 @@ where
     T: StringType,
     U: Component,
 {
+    pub const ICON_AREA_PADDING: i16 = 2;
+    pub const TEXT_BUTTON_PADDING: i16 = 15;
+    pub const TEXT_ICON_PADDING: i16 = 20;
+
     pub fn new(icon: BlendedImage, title: T, controls: U) -> Self {
         Self {
             image: Child::new(icon),
@@ -109,12 +114,19 @@ where
                 &theme::TEXT_DEMIBOLD,
                 title,
             )
-            .centered()]))
-            .with_placement(
-                LinearPlacement::vertical()
-                    .align_at_center()
-                    .with_spacing(Self::VALUE_SPACE),
-            ),
+            .centered()])),
+            controls: Child::new(controls),
+        }
+    }
+
+    pub fn from_paragraphs(
+        icon: BlendedImage,
+        paragraphs: Paragraphs<ParagraphVecShort<T>>,
+        controls: U,
+    ) -> Self {
+        Self {
+            image: Child::new(icon),
+            paragraphs,
             controls: Child::new(controls),
         }
     }
@@ -148,15 +160,10 @@ where
                 Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l2).centered(),
                 Paragraph::new(&theme::TEXT_DEMIBOLD, l3).centered(),
             ])
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().align_at_center()),
+            .into_paragraphs(),
             controls: Child::new(controls),
         }
     }
-
-    pub const ICON_AREA_PADDING: i16 = 2;
-    pub const ICON_AREA_HEIGHT: i16 = 60;
-    pub const VALUE_SPACE: i16 = 5;
 }
 
 impl<T, U> Component for IconDialog<T, U>
@@ -172,9 +179,24 @@ where
             .inset(Insets::top(Self::ICON_AREA_PADDING));
 
         let controls_area = self.controls.place(bounds);
-        let content_area = bounds.inset(Insets::bottom(controls_area.height()));
+        let content_area = bounds.inset(Insets::bottom(
+            controls_area.height() + Self::TEXT_BUTTON_PADDING,
+        ));
 
-        let (image_area, content_area) = content_area.split_top(Self::ICON_AREA_HEIGHT);
+        // Determining the height of the content and image for placing them correctly.
+        // There are always fixes paddings between components.
+        self.paragraphs.place(content_area);
+        // if self.paragraphs.page_count() > 1 {
+        //     Err::<(), ()>(()).assert_if_debugging_ui("Must be single page");
+        // }
+        let content_height = self.paragraphs.current_height();
+        let (image_area, content_area) = content_area.split_bottom(content_height);
+        let image_area = image_area.inset(Insets::bottom(Self::TEXT_ICON_PADDING));
+        let image_height = self.image.inner().height();
+        // if image_height < image_area.height() {
+        //     Err::<(), ()>(()).assert_if_debugging_ui("Not enough space for image");
+        // }
+        let (_, image_area) = image_area.split_bottom(image_height);
 
         self.image.place(image_area);
         self.paragraphs.place(content_area);

@@ -1102,6 +1102,9 @@ async def confirm_signverify(
     )
 
 
+# TODO: currently used only in FIDO
+# If we used button instead of timeout, we could use show_warning there
+# and delete this completely
 async def show_error_popup(
     title: str,
     description: str,
@@ -1197,16 +1200,16 @@ async def pin_mismatch_popup(
     await button_request("pin_mismatch", code=BR_TYPE_OTHER)
     title = "Wipe code mismatch" if is_wipe_code else "PIN mismatch"
     description = "wipe codes" if is_wipe_code else "PINs"
-    return await show_error_popup(
+    return await show_warning(
         title,
-        f"The {description} you entered do not match.",
+        f"Entered {description} do not match!",
         button="TRY AGAIN",
     )
 
 
 async def wipe_code_same_as_pin_popup() -> None:
     await button_request("wipe_code_same_as_pin", code=BR_TYPE_OTHER)
-    return await show_error_popup(
+    return await show_warning(
         "Invalid wipe code",
         "The wipe code must be different from your PIN.",
         button="TRY AGAIN",
