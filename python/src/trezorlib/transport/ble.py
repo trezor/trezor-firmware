@@ -82,16 +82,17 @@ class BleTransport(ProtocolBasedTransport):
             raise TransportException(f"No BLE device: {path}")
 
     def open(self) -> None:
-        self.ble().connect(self.device)
+        self.conn = self.ble().connect(self.device)
 
     def close(self) -> None:
-        pass
+        # self.ble().disconnect(self.device)
+        self.conn = None
 
     def write_chunk(self, chunk: bytes) -> None:
-        self.ble().write(chunk)
+        self.conn.send(chunk)
 
     def read_chunk(self) -> bytes:
-        chunk = self.ble().read(64)
+        chunk = self.conn.recv()
         # LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
@@ -139,12 +140,7 @@ class BleAsync:
         tb = await TealBlue.create()
         # TODO: add cli option for mac_filter and pass it here
         self.adapter = await tb.find_adapter()
-        # TODO: currently only  one concurrent device is supported
-        #   To support more devices, connect() needs to return a Connection and also has to
-        #   spawn a task that will forward data between that Connection and rx,tx.
-        self.current = None
-        self.rx = None
-        self.tx = None
+        self.connected = {}
 
         self.devices = {}
         await self.lookup()  # populate self.devices
@@ -191,10 +187,9 @@ class BleAsync:
         ]
 
     async def connect(self, address: str):
-        if self.current == address:
-            return
-        # elif self.current is not None:
-        #     self.devices[self.current].disconnect()
+        if address in self.connected:
+            return self.connected[address][0]
+            # raise RuntimeError("Already connected")
 
         ble_device = self.devices[address]
         if not ble_device.connected:
@@ -205,23 +200,44 @@ class BleAsync:
 
         services = await ble_device.services()
         nus_service = services[NUS_SERVICE_UUID]
-        self.rx, _mtu = await nus_service.characteristics[
-            NUS_CHARACTERISTIC_RX
-        ].acquire(write=True)
-        self.tx, _mtu = await nus_service.characteristics[
-            NUS_CHARACTERISTIC_TX
-        ].acquire()
-        self.current = address
+        rx, _mtu = await nus_service.characteristics[NUS_CHARACTERISTIC_RX].acquire(
+            write=True
+        )
+        tx, _mtu = await nus_service.characteristics[NUS_CHARACTERISTIC_TX].acquire()
 
-    async def read(self, max_size):
-        assert self.tx is not None
-        await ready(self.tx)
-        return self.tx.read(max_size)
+        parent_pipe, child_pipe = Pipe()
 
-    async def write(self, chunk: bytes):
-        assert self.rx is not None
-        await ready(self.rx, write=True)
-        self.rx.write(chunk)
+        async def reader():
+            while True:
+                await ready(tx)
+                val = tx.read(64)
+                await ready(child_pipe, write=True)
+                child_pipe.send(val)
+
+        async def writer():
+            while True:
+                await ready(child_pipe)
+                val = child_pipe.recv()
+                await ready(rx, write=True)
+                rx.write(val)
+
+        task_r = asyncio.create_task(reader())
+        task_w = asyncio.create_task(writer())
+        self.connected[address] = (parent_pipe, rx, tx, task_r, task_w)
+
+        return parent_pipe
+
+    async def disconnect(self, address: str):
+        if address not in self.connected:
+            return
+
+        # (pipe, rx, tx, task_r, task_w) = self.connected[address]
+        # rx.close()
+        # tx.close()
+        # pipe.close()
+        # task_r.cancel()
+        # task_w.cancel()
+        # del self.connected[address]
 
 
 async def ready(f: Any, write: bool = False):
