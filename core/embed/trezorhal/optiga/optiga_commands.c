@@ -39,8 +39,10 @@ static size_t tx_size = 0;
 // TODO change to operational \x07
 const optiga_metadata_item OPTIGA_LCS_OPERATIONAL = {(const uint8_t *)"\x01",
                                                      1};
-const optiga_metadata_item OPTIGA_ACCESS_ALWAYS = {(const uint8_t *)"\x00", 1};
-const optiga_metadata_item OPTIGA_ACCESS_NEVER = {(const uint8_t *)"\xFF", 1};
+const optiga_metadata_item OPTIGA_ACCESS_ALWAYS = {
+    (const uint8_t[]){OPTIGA_ACCESS_COND_ALW}, 1};
+const optiga_metadata_item OPTIGA_ACCESS_NEVER = {
+    (const uint8_t[]){OPTIGA_ACCESS_COND_NEV}, 1};
 const optiga_metadata_item OPTIGA_VERSION_DEFAULT = {
     (const uint8_t *)"\xC1\x02\x00\x00", 4};
 
@@ -265,7 +267,7 @@ optiga_result optiga_get_error_code(uint8_t *error_code) {
   *(ptr++) = 0x00;  // get data
   write_uint16(&ptr, tx_size - 4);
 
-  write_uint16(&ptr, 0xf1c2);  // error code data object OID
+  write_uint16(&ptr, OPTIGA_OID_ERROR_CODE);
 
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);

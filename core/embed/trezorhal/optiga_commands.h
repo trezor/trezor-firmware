@@ -25,6 +25,19 @@
 #include <stdint.h>
 #include "optiga_common.h"
 
+// Data object identifiers.
+typedef enum {
+  OPTIGA_OID_COPROC_UID = 0xE0C2,      // Coprocessor UID.
+  OPTIGA_OID_CERT = 0xE0E0,            // Public key certificates [1-4].
+  OPTIGA_OID_CA_CERT = 0xE0E8,         // Root CA public key certificates [1-2].
+  OPTIGA_OID_COUNTER = 0xE120,         // Monotonic counters [1-4].
+  OPTIGA_OID_ECC_KEY = 0xE0F0,         // Private ECC keys [1-4].
+  OPTIGA_OID_PTFBIND_SECRET = 0xE140,  // Shared platform binding secret.
+  OPTIGA_OID_ERROR_CODE = 0xF1C2,      // Command error code.
+  OPTIGA_OID_DATA = 0xF1D0,            // Arbitrary 140 B data objects [1-12].
+  OPTIGA_OID_BIG_DATA = 0xF1E0,        // Arbitrary 1500 B data objects [1-2].
+} optiga_oid;
+
 // ECC curve identifiers.
 typedef enum {
   OPTIGA_CURVE_P256 = 0x03,  // NIST P256 ECC key.
@@ -79,6 +92,16 @@ typedef enum {
   OPTIGA_DATA_TYPE_AUTOREF = 0x31,   // Secret for verifying external entity.
 } optiga_data_type;
 
+// Access conditions.
+typedef enum {
+  OPTIGA_ACCESS_COND_ALW = 0x00,   // Always.
+  OPTIGA_ACCESS_COND_CONF = 0x20,  // Confidentiality protection required.
+  OPTIGA_ACCESS_COND_INT = 0x21,   // Integrity protection required.
+  OPTIGA_ACCESS_COND_AUTO = 0x23,  // Authorization required.
+  OPTIGA_ACCESS_COND_LUC = 0x40,   // Usage limited by counter.
+  OPTIGA_ACCESS_COND_NEV = 0xFF,   // Never.
+} optiga_access_cond;
+
 typedef struct {
   const uint8_t *ptr;
   uint16_t len;
@@ -98,6 +121,9 @@ typedef struct {
   optiga_metadata_item data_type;    // E8 - Data object type.
   optiga_metadata_item reset_type;   // F0 - Factory reset type.
 } optiga_metadata;
+
+#define OPTIGA_ACCESS_CONDITION(ac_id, oid) \
+  { (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 }
 
 extern const optiga_metadata_item OPTIGA_LCS_OPERATIONAL;
 extern const optiga_metadata_item OPTIGA_ACCESS_ALWAYS;

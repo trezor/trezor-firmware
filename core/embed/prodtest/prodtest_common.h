@@ -17,12 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __MPU_H__
-#define __MPU_H__
+#ifndef PRODTEST_COMMON_H
+#define PRODTEST_COMMON_H
 
-void mpu_config_off(void);
-void mpu_config_bootloader(void);
-void mpu_config_firmware(void);
-void mpu_config_prodtest(void);
+#include <stdint.h>
+#include <stdlib.h>
+
+enum { VCP_IFACE = 0x00 };
+
+void vcp_puts(const char *s, size_t len);
+void vcp_print(const char *fmt, ...);
+void vcp_println(const char *fmt, ...);
+void vcp_println_hex(uint8_t *data, uint16_t len);
+int get_from_hex(uint8_t *buf, uint16_t buf_len, const char *hex);
 
 #endif
