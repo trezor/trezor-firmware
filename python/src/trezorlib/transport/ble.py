@@ -91,7 +91,7 @@ class BleTransport(ProtocolBasedTransport):
         self.ble().write(chunk)
 
     def read_chunk(self) -> bytes:
-        chunk = self.ble().read()
+        chunk = self.ble().read(64)
         # LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
@@ -213,10 +213,10 @@ class BleAsync:
         ].acquire()
         self.current = address
 
-    async def read(self):
+    async def read(self, max_size):
         assert self.tx is not None
         await ready(self.tx)
-        return self.tx.read()
+        return self.tx.read(max_size)
 
     async def write(self, chunk: bytes):
         assert self.rx is not None
