@@ -39,6 +39,7 @@ pub struct Confirm<'a> {
     buttons: ButtonController<&'static str>,
     /// Whether we are on the info screen (optional extra screen)
     showing_info_screen: bool,
+    two_btn_confirm: bool,
 }
 
 impl<'a> Confirm<'a> {
@@ -48,8 +49,10 @@ impl<'a> Confirm<'a> {
         message: Label<&'a str>,
         alert: Option<Label<&'a str>>,
         button_text: &'static str,
+        two_btn_confirm: bool,
     ) -> Self {
-        let btn_layout = Self::get_button_layout_general(false, button_text, false);
+        let btn_layout =
+            Self::get_button_layout_general(false, button_text, false, two_btn_confirm);
         Self {
             bg: Pad::with_background(bg_color).with_clear(),
             bg_color,
@@ -61,6 +64,7 @@ impl<'a> Confirm<'a> {
             button_text,
             buttons: ButtonController::new(btn_layout),
             showing_info_screen: false,
+            two_btn_confirm,
         }
     }
 
@@ -81,6 +85,7 @@ impl<'a> Confirm<'a> {
             self.showing_info_screen,
             self.button_text,
             self.has_info_screen(),
+            self.two_btn_confirm,
         )
     }
 
@@ -89,11 +94,14 @@ impl<'a> Confirm<'a> {
         showing_info_screen: bool,
         button_text: &'static str,
         has_info_screen: bool,
+        two_btn_confirm: bool,
     ) -> ButtonLayout<&'static str> {
         if showing_info_screen {
             ButtonLayout::arrow_none_none()
         } else if has_info_screen {
             ButtonLayout::cancel_armed_info(button_text)
+        } else if two_btn_confirm {
+            ButtonLayout::cancel_armed_none(button_text)
         } else {
             ButtonLayout::cancel_none_text(button_text)
         }
@@ -163,6 +171,14 @@ impl<'a> Component for Confirm<'a> {
                     self.showing_info_screen = true;
                     self.update_everything(ctx);
                     None
+                }
+                _ => None,
+            }
+        } else if self.two_btn_confirm {
+            match msg {
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) => Some(ConfirmMsg::Cancel),
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Middle)) => {
+                    Some(ConfirmMsg::Confirm)
                 }
                 _ => None,
             }

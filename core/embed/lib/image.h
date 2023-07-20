@@ -56,6 +56,8 @@ typedef struct {
 #define VTRUST_RED 0x0010
 #define VTRUST_CLICK 0x0020
 #define VTRUST_STRING 0x0040
+#define VTRUST_SECRET \
+  0x0080  // inverse logic, if set, don't allow to run with secret present
 #define VTRUST_ALL (VTRUST_WAIT | VTRUST_RED | VTRUST_CLICK | VTRUST_STRING)
 
 typedef struct {

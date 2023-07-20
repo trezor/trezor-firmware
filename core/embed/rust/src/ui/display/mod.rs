@@ -858,9 +858,8 @@ pub fn marquee(area: Rect, text: &str, offset: i16, font: Font, fg: Color, bg: C
     pixeldata_dirty();
 }
 
-// Used on T1 only.
-pub fn dotted_line(start: Point, width: i16, color: Color) {
-    for x in (start.x..width).step_by(2) {
+pub fn dotted_line(start: Point, width: i16, color: Color, step: i16) {
+    for x in (start.x..width).step_by(step as usize) {
         display::bar(x, start.y, 1, 1, color.into());
     }
 }

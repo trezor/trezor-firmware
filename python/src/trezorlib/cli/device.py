@@ -300,6 +300,13 @@ def tutorial(client: "TrezorClient") -> str:
 
 
 @cli.command()
+@with_client
+def unlock_bootloader(client: "TrezorClient") -> str:
+    """Unlocks bootloader. Irreversible."""
+    return device.unlock_bootloader(client)
+
+
+@cli.command()
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @click.option(
     "-e",

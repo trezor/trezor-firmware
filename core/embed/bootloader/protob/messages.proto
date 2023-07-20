@@ -9,6 +9,7 @@ enum MessageType {
     MessageType_Ping = 1;
     MessageType_Success = 2;
     MessageType_Failure = 3;
+    MessageType_WipeDevice = 5;
     MessageType_FirmwareErase = 6;
     MessageType_FirmwareUpload = 7;
     MessageType_FirmwareRequest = 8;
@@ -16,6 +17,7 @@ enum MessageType {
     MessageType_ButtonRequest = 26;
     MessageType_ButtonAck = 27;
     MessageType_GetFeatures = 55;
+    MessageType_UnlockBootloader = 96;
 }
 
 /**
@@ -142,4 +144,13 @@ message FirmwareRequest {
 message FirmwareUpload {
     required bytes payload = 1; // firmware to be loaded into device
     optional bytes hash = 2;    // hash of the payload
+}
+
+/**
+ * Request: Unlock bootloader, !irreversible!
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message UnlockBootloader {
 }

@@ -1,0 +1,1 @@
+Locked bootloader support: bootloader will disallow installation of unofficial firmware unless the Optiga pairing secret is erased.

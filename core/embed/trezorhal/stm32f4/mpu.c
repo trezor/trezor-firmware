@@ -125,12 +125,13 @@ void mpu_config_firmware(void) {
   MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_FLASH |
               LL_MPU_REGION_SIZE_64KB | LL_MPU_REGION_FULL_ACCESS |
               MPU_RASR_XN_Msk;
-  // Storage#2 (0x08110000 - 0x0811FFFF, 64 KiB, read-write, execute never)
+  // Secret + Storage#2 (0x08100000 - 0x0811FFFF, 16 Kib + 64 KiB, read-write,
+  // execute never)
   MPU->RNR = MPU_REGION_NUMBER2;
   MPU->RBAR = FLASH_BASE + 0x110000;
   MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_FLASH |
-              LL_MPU_REGION_SIZE_64KB | LL_MPU_REGION_FULL_ACCESS |
-              MPU_RASR_XN_Msk;
+              LL_MPU_REGION_SIZE_128KB | LL_MPU_REGION_FULL_ACCESS |
+              MPU_RASR_XN_Msk | MPU_SUBREGION_DISABLE(0x0E);
 
   // Firmware (0x08040000 - 0x080FFFFF, 6 * 128 KiB = 1024 KiB except 2/8 at
   // start = 768 KiB, read-only)

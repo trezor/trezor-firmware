@@ -19,6 +19,8 @@
 
 #include <string.h>
 
+#include TREZOR_BOARD
+
 #include "bootui.h"
 #include "display.h"
 #ifdef TREZOR_EMULATOR
@@ -232,6 +234,12 @@ void ui_screen_boot_empty(bool fading) { screen_boot_empty(fading); }
 
 // error UI
 void ui_screen_fail(void) { screen_install_fail(); }
+
+#ifdef USE_OPTIGA
+uint32_t ui_screen_unlock_bootloader_confirm(void) {
+  return screen_unlock_bootloader_confirm();
+}
+#endif
 
 // general functions
 

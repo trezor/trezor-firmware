@@ -24,8 +24,10 @@
 #include "display.h"
 #include "flash.h"
 #include "image.h"
+#include "messages.pb.h"
 #include "random_delays.h"
 #include "secbool.h"
+#include "secret.h"
 
 #ifdef USE_DMA2D
 #include "dma2d.h"
@@ -149,13 +151,13 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
       continue;
     }
     switch (msg_id) {
-      case 0:  // Initialize
+      case MessageType_MessageType_Initialize:
         process_msg_Initialize(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
         break;
-      case 1:  // Ping
+      case MessageType_MessageType_Ping:
         process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
         break;
-      case 5:  // WipeDevice
+      case MessageType_MessageType_WipeDevice:
         response = ui_screen_wipe_confirm();
         if (INPUT_CANCEL == response) {
           send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
@@ -180,10 +182,10 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           return SHUTDOWN;
         }
         break;
-      case 6:  // FirmwareErase
+      case MessageType_MessageType_FirmwareErase:
         process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
         break;
-      case 7:  // FirmwareUpload
+      case MessageType_MessageType_FirmwareUpload:
         r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
         if (r < 0 && r != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
           ui_screen_fail();
@@ -210,9 +212,27 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           return CONTINUE;
         }
         break;
-      case 55:  // GetFeatures
+      case MessageType_MessageType_GetFeatures:
         process_msg_GetFeatures(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
         break;
+#ifdef USE_OPTIGA
+      case MessageType_MessageType_UnlockBootloader:
+        response = ui_screen_unlock_bootloader_confirm();
+        if (INPUT_CANCEL == response) {
+          send_user_abort(USB_IFACE_NUM, "Bootloader unlock cancelled");
+          hal_delay(100);
+          usb_stop();
+          usb_deinit();
+          return RETURN;
+        }
+        process_msg_AttestationDelete(USB_IFACE_NUM, msg_size, buf);
+        screen_unlock_bootloader_success();
+        hal_delay(100);
+        usb_stop();
+        usb_deinit();
+        return SHUTDOWN;
+        break;
+#endif
       default:
         process_msg_unknown(USB_IFACE_NUM, msg_size, buf);
         break;
@@ -522,8 +542,20 @@ int bootloader_main(void) {
                               &FIRMWARE_AREA),
          "Firmware is corrupted");
 
-  // if all VTRUST flags are unset = ultimate trust => skip the procedure
+#ifdef USE_OPTIGA
+  if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
+    display_clear();
+    screen_fatal_error_rust(
+        "INSTALL RESTRICTED",
+        "Installation of custom firmware is currently restricted.",
+        "Please visit\ntrezor.io/bootloader");
 
+    display_refresh();
+    return 1;
+  }
+#endif
+
+  // if all VTRUST flags are unset = ultimate trust => skip the procedure
   if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
     ui_fadeout();
     ui_screen_boot(&vhdr, hdr);

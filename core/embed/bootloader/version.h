@@ -11,4 +11,8 @@
 #define FIX_VERSION_PATCH 0
 #define FIX_VERSION_BUILD 0
 
+#ifdef TREZOR_MODEL_R
+#define VERSION_MONOTONIC 2
+#else
 #define VERSION_MONOTONIC 1
+#endif

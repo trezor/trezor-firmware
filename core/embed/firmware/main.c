@@ -165,10 +165,7 @@ int main(void) {
 #endif
 
 #if !defined TREZOR_MODEL_1
-  // jump to unprivileged mode
-  // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
-  __asm__ volatile("msr control, %0" ::"r"(0x1));
-  __asm__ volatile("isb");
+  drop_privileges();
 #endif
 
 #ifdef USE_SECP256K1_ZKP
