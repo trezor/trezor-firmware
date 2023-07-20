@@ -92,6 +92,20 @@ SOURCE_MOD += [
     'vendor/trezor-storage/flash_common.c',
 ]
 
+if TREZOR_MODEL in ('1', ):
+    SOURCE_MOD += [
+        'embed/models/model_T1B1_layout.c',
+    ]
+elif TREZOR_MODEL in ('T', ):
+    SOURCE_MOD += [
+        'embed/models/model_T2T1_layout.c',
+    ]
+elif TREZOR_MODEL in ('R', ):
+    SOURCE_MOD += [
+        'embed/models/model_T2B1_layout.c',
+    ]
+
+
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
     'vendor/nanopb/pb_decode.c',
@@ -114,6 +128,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/usb.c',
     'embed/trezorhal/unix/random_delays.c',
+    'embed/trezorhal/unix/secret.c',
 ]
 
 SOURCE_UNIX = [

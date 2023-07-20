@@ -516,3 +516,12 @@ message UnlockedPathRequest {
  */
 message ShowDeviceTutorial {
 }
+
+/**
+ * Request: Delete attestation from the device, !irreversible!
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message AttestationDelete {
+}

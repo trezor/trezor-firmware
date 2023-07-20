@@ -26,6 +26,7 @@
 #include "image.h"
 #include "random_delays.h"
 #include "secbool.h"
+#include "secret.h"
 
 #ifdef USE_DMA2D
 #include "dma2d.h"
@@ -521,6 +522,19 @@ int bootloader_main(void) {
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
                               &FIRMWARE_AREA),
          "Firmware is corrupted");
+
+#ifdef USE_OPTIGA
+  if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
+    display_clear();
+    screen_fatal_error_rust(
+        "ATTESTATION PRESENT",
+        "You need to delete device attestation to run unofficial firmware",
+        "RECONNECT THE DEVICE");
+
+    display_refresh();
+    return 1;
+  }
+#endif
 
   // if all VTRUST flags are unset = ultimate trust => skip the procedure
 

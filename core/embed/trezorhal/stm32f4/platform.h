@@ -40,6 +40,7 @@ void jump_to_unprivileged(uint32_t address);
 void jump_to_with_flag(uint32_t address, uint32_t register_flag);
 void ensure_compatible_settings(void);
 void clear_otg_hs_memory(void);
+void drop_privileges(void);
 
 extern uint32_t __stack_chk_guard;
 

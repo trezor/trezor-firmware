@@ -300,6 +300,13 @@ def tutorial(client: "TrezorClient") -> str:
 
 
 @cli.command()
+@with_client
+def attestation_delete(client: "TrezorClient") -> str:
+    """Delete device attestation. Irreversible."""
+    return device.attestation_delete(client)
+
+
+@cli.command()
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @click.option(
     "-e",
