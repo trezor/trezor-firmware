@@ -28,25 +28,30 @@
 #include "display.h"
 #include "flash.h"
 #include "i2c.h"
-#include "mini_printf.h"
 #include "model.h"
+#include "mpu.h"
+#include "prodtest_common.h"
 #include "random_delays.h"
-#include "rng.h"
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
 #include "touch.h"
 #include "usb.h"
 
+#ifdef USE_OPTIGA
+#include "optiga_commands.h"
+#include "optiga_prodtest.h"
+#include "optiga_transport.h"
+#endif
+
 #include "memzero.h"
+#include "stm32f4xx_ll_utils.h"
 
 #ifdef TREZOR_MODEL_T
 #define MODEL_IDENTIFIER "TREZOR2-"
 #elif TREZOR_MODEL_R
 #define MODEL_IDENTIFIER "T2B1-"
 #endif
-
-enum { VCP_IFACE = 0x00 };
 
 static secbool startswith(const char *s, const char *prefix) {
   return sectrue * (0 == strncmp(s, prefix, strlen(prefix)));
@@ -55,11 +60,6 @@ static secbool startswith(const char *s, const char *prefix) {
 static void vcp_intr(void) {
   display_clear();
   ensure(secfalse, "vcp_intr");
-}
-
-static void vcp_puts(const char *s, size_t len) {
-  int r = usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *)s, len, -1);
-  (void)r;
 }
 
 static char vcp_getchar(void) {
@@ -89,16 +89,6 @@ static void vcp_readline(char *buf, size_t len) {
   if (len > 0) {
     *buf = '\0';
   }
-}
-
-static void vcp_printf(const char *fmt, ...) {
-  static char buf[128];
-  va_list va;
-  va_start(va, fmt);
-  int r = mini_vsnprintf(buf, sizeof(buf), fmt, va);
-  va_end(va);
-  vcp_puts(buf, r);
-  vcp_puts("\r\n", 2);
 }
 
 static void usb_init_all(void) {
@@ -160,7 +150,7 @@ static void draw_border(int width, int padding) {
 
 static void test_border(void) {
   draw_border(2, 0);
-  vcp_printf("OK");
+  vcp_println("OK");
 }
 
 static void test_display(const char *colors) {
@@ -185,10 +175,10 @@ static void test_display(const char *colors) {
         c = 0xFFFF;
         break;
     }
-    display_bar(i * w, 0, i * w + w, 240, c);
+    display_bar(i * w, 0, i * w + w, DISPLAY_RESY, c);
   }
   display_refresh();
-  vcp_printf("OK");
+  vcp_println("OK");
 }
 
 #ifdef USE_BUTTON
@@ -196,13 +186,13 @@ static void test_display(const char *colors) {
 static secbool test_btn_press(uint32_t deadline, uint32_t btn) {
   while (button_read() != (btn | BTN_EVT_DOWN)) {
     if (HAL_GetTick() > deadline) {
-      vcp_printf("ERROR TIMEOUT");
+      vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
   }
   while (button_read() != (btn | BTN_EVT_UP)) {
     if (HAL_GetTick() > deadline) {
-      vcp_printf("ERROR TIMEOUT");
+      vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
   }
@@ -231,7 +221,7 @@ static secbool test_btn_all(uint32_t deadline) {
       break;
     }
     if (HAL_GetTick() > deadline) {
-      vcp_printf("ERROR TIMEOUT");
+      vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
   }
@@ -254,7 +244,7 @@ static secbool test_btn_all(uint32_t deadline) {
       break;
     }
     if (HAL_GetTick() > deadline) {
-      vcp_printf("ERROR TIMEOUT");
+      vcp_println("ERROR TIMEOUT");
       return secfalse;
     }
   }
@@ -268,21 +258,21 @@ static void test_button(const char *args) {
     timeout = args[5] - '0';
     uint32_t deadline = HAL_GetTick() + timeout * 1000;
     secbool r = test_btn_press(deadline, BTN_LEFT);
-    if (r == sectrue) vcp_printf("OK");
+    if (r == sectrue) vcp_println("OK");
   }
 
   if (startswith(args, "RIGHT ")) {
     timeout = args[6] - '0';
     uint32_t deadline = HAL_GetTick() + timeout * 1000;
     secbool r = test_btn_press(deadline, BTN_RIGHT);
-    if (r == sectrue) vcp_printf("OK");
+    if (r == sectrue) vcp_println("OK");
   }
 
   if (startswith(args, "BOTH ")) {
     timeout = args[5] - '0';
     uint32_t deadline = HAL_GetTick() + timeout * 1000;
     secbool r = test_btn_all(deadline);
-    if (r == sectrue) vcp_printf("OK");
+    if (r == sectrue) vcp_println("OK");
   }
 }
 
@@ -335,9 +325,9 @@ static void test_touch(const char *args) {
   if (touch_click_timeout(&evt, timeout * 1000)) {
     uint16_t x = touch_unpack_x(evt);
     uint16_t y = touch_unpack_y(evt);
-    vcp_printf("OK %d %d", x, y);
+    vcp_println("OK %d %d", x, y);
   } else {
-    vcp_printf("ERROR TIMEOUT");
+    vcp_println("ERROR TIMEOUT");
   }
   display_clear();
   display_refresh();
@@ -377,7 +367,7 @@ static void test_pwm(const char *args) {
 
   display_backlight(v);
   display_refresh();
-  vcp_printf("OK");
+  vcp_println("OK");
 }
 
 #ifdef USE_SD_CARD
@@ -387,13 +377,13 @@ static void test_sd(void) {
   static uint32_t buf2[BLOCK_SIZE / sizeof(uint32_t)];
 
   if (sectrue != sdcard_is_present()) {
-    vcp_printf("ERROR NOCARD");
+    vcp_println("ERROR NOCARD");
     return;
   }
 
   ensure(sdcard_power_on(), NULL);
   if (sectrue != sdcard_read_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-    vcp_printf("ERROR sdcard_read_blocks (0)");
+    vcp_println("ERROR sdcard_read_blocks (0)");
     goto power_off;
   }
   for (int j = 1; j <= 2; j++) {
@@ -402,21 +392,21 @@ static void test_sd(void) {
     }
     if (sectrue !=
         sdcard_write_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-      vcp_printf("ERROR sdcard_write_blocks (%d)", j);
+      vcp_println("ERROR sdcard_write_blocks (%d)", j);
       goto power_off;
     }
     HAL_Delay(1000);
     if (sectrue !=
         sdcard_read_blocks(buf2, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
-      vcp_printf("ERROR sdcard_read_blocks (%d)", j);
+      vcp_println("ERROR sdcard_read_blocks (%d)", j);
       goto power_off;
     }
     if (0 != memcmp(buf1, buf2, sizeof(buf1))) {
-      vcp_printf("ERROR DATA MISMATCH");
+      vcp_println("ERROR DATA MISMATCH");
       goto power_off;
     }
   }
-  vcp_printf("OK");
+  vcp_println("OK");
 
 power_off:
   sdcard_power_off();
@@ -436,7 +426,7 @@ static void test_wipe(void) {
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2 + 10, "WIPED", -1,
                       FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
   display_refresh();
-  vcp_printf("OK");
+  vcp_println("OK");
 }
 
 #ifdef USE_SBU
@@ -444,7 +434,7 @@ static void test_sbu(const char *args) {
   secbool sbu1 = sectrue * (args[0] == '1');
   secbool sbu2 = sectrue * (args[1] == '1');
   sbu_set(sbu1, sbu2);
-  vcp_printf("OK");
+  vcp_println("OK");
 }
 #endif
 
@@ -463,9 +453,9 @@ static void test_otp_read(void) {
 
   // use (null) for empty data
   if (data[0] == 0x00) {
-    vcp_printf("OK (null)");
+    vcp_println("OK (null)");
   } else {
-    vcp_printf("OK %s", (const char *)data);
+    vcp_println("OK %s", (const char *)data);
   }
 }
 
@@ -477,10 +467,23 @@ static void test_otp_write(const char *args) {
                          sizeof(data)),
          NULL);
   ensure(flash_otp_lock(FLASH_OTP_BLOCK_BATCH), NULL);
-  vcp_printf("OK");
+  vcp_println("OK");
 }
 
 static void test_otp_write_device_variant(const char *args) {
+#ifdef USE_OPTIGA
+  optiga_locked_status status = get_optiga_locked_status();
+  if (status == OPTIGA_LOCKED_FALSE) {
+    vcp_println("ERROR NOT LOCKED");
+    return;
+  }
+
+  if (status != OPTIGA_LOCKED_TRUE) {
+    // Error reported by get_optiga_locked_status().
+    return;
+  }
+#endif
+
   volatile char data[32];
   memzero((char *)data, sizeof(data));
   data[0] = 1;
@@ -513,7 +516,17 @@ static void test_otp_write_device_variant(const char *args) {
                          (const uint8_t *)data, sizeof(data)),
          NULL);
   ensure(flash_otp_lock(FLASH_OTP_BLOCK_DEVICE_VARIANT), NULL);
-  vcp_printf("OK");
+  vcp_println("OK");
+}
+
+void cpuid_read(void) {
+  uint32_t cpuid[3];
+  cpuid[0] = LL_GetUID_Word0();
+  cpuid[1] = LL_GetUID_Word1();
+  cpuid[2] = LL_GetUID_Word2();
+
+  vcp_print("OK ");
+  vcp_println_hex((uint8_t *)cpuid, sizeof(cpuid));
 }
 
 #define BACKLIGHT_NORMAL 150
@@ -528,14 +541,25 @@ int main(void) {
 #ifdef USE_BUTTON
   button_init();
 #endif
-#ifdef USE_TOUCH
+#ifdef USE_I2C
   i2c_init();
+#endif
+#ifdef USE_TOUCH
   touch_init();
 #endif
 #ifdef USE_SBU
   sbu_init();
 #endif
   usb_init_all();
+
+#ifdef USE_OPTIGA
+  optiga_init();
+  optiga_open_application();
+  pair_optiga();
+#endif
+
+  mpu_config_prodtest();
+  drop_privileges();
 
   display_clear();
   draw_border(1, 3);
@@ -551,13 +575,17 @@ int main(void) {
 
   display_fade(0, BACKLIGHT_NORMAL, 1000);
 
-  char line[128];
+  char line[2048];  // expecting hundreds of bytes represented as hexadecimal
+                    // characters
 
   for (;;) {
     vcp_readline(line, sizeof(line));
 
     if (startswith(line, "PING")) {
-      vcp_printf("OK");
+      vcp_println("OK");
+
+    } else if (startswith(line, "CPUID READ")) {
+      cpuid_read();
 
     } else if (startswith(line, "BORDER")) {
       test_border();
@@ -585,6 +613,29 @@ int main(void) {
     } else if (startswith(line, "SBU ")) {
       test_sbu(line + 4);
 #endif
+#ifdef USE_OPTIGA
+    } else if (startswith(line, "OPTIGAID READ")) {
+      optigaid_read();
+    } else if (startswith(line, "CERTINF READ")) {
+      cert_read(OID_CERT_INF);
+    } else if (startswith(line, "CERTDEV WRITE ")) {
+      cert_write(OID_CERT_DEV, line + 14);
+    } else if (startswith(line, "CERTDEV READ")) {
+      cert_read(OID_CERT_DEV);
+    } else if (startswith(line, "CERTFIDO WRITE ")) {
+      cert_write(OID_CERT_FIDO, line + 15);
+    } else if (startswith(line, "CERTFIDO READ")) {
+      cert_read(OID_CERT_FIDO);
+    } else if (startswith(line, "KEYFIDO WRITE ")) {
+      keyfido_write(line + 14);
+    } else if (startswith(line, "KEYFIDO READ")) {
+      pubkey_read(OID_KEY_FIDO);
+    } else if (startswith(line, "LOCK")) {
+      optiga_lock();
+    } else if (startswith(line, "CHECK LOCKED")) {
+      check_locked();
+
+#endif
 
     } else if (startswith(line, "OTP READ")) {
       test_otp_read();
@@ -599,7 +650,7 @@ int main(void) {
       test_wipe();
 
     } else {
-      vcp_printf("UNKNOWN");
+      vcp_println("UNKNOWN");
     }
   }
 

@@ -24,6 +24,7 @@ FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led", "usb", "consumption_mas
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = [
+    'AES_128',
     'USE_INSECURE_PRNG',
 ]
 SOURCE_MOD = []
@@ -50,11 +51,24 @@ CPPPATH_MOD += [
     'vendor/trezor-storage',
 ]
 SOURCE_MOD += [
+    'vendor/trezor-crypto/aes/aes_modes.c',
+    'vendor/trezor-crypto/aes/aesccm.c',
+    'vendor/trezor-crypto/aes/aescrypt.c',
+    'vendor/trezor-crypto/aes/aeskey.c',
+    'vendor/trezor-crypto/aes/aestab.c',
+    'vendor/trezor-crypto/bignum.c',
     'vendor/trezor-crypto/chacha_drbg.c',
     'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
+    'vendor/trezor-crypto/ecdsa.c',
+    'vendor/trezor-crypto/hmac.c',
+    'vendor/trezor-crypto/hmac_drbg.c',
     'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/rand.c',
+    'vendor/trezor-crypto/rfc6979.c',
+    'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
+    'vendor/trezor-crypto/tls_prf.c',
 ]
 
 # modtrezorui
@@ -80,7 +94,13 @@ SOURCE_PRODTEST = [
     'embed/prodtest/startup.s',
     'embed/prodtest/header.S',
     'embed/prodtest/main.c',
+    'embed/prodtest/prodtest_common.c',
 ]
+
+if TREZOR_MODEL in ('R',):
+    SOURCE_PRODTEST += [
+        'embed/prodtest/optiga_prodtest.c',
+    ]
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
