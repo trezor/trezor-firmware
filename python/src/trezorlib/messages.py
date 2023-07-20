@@ -72,6 +72,7 @@ class MessageType(IntEnum):
     UnlockPath = 93
     UnlockedPathRequest = 94
     ShowDeviceTutorial = 95
+    UnlockBootloader = 96
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -3735,6 +3736,10 @@ class UnlockedPathRequest(protobuf.MessageType):
 
 class ShowDeviceTutorial(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 95
+
+
+class UnlockBootloader(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 96
 
 
 class DebugLinkDecision(protobuf.MessageType):

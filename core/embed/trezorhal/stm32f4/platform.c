@@ -195,6 +195,13 @@ void set_core_clock(clock_settings_t settings) {
 }
 #endif
 
+void drop_privileges(void) {
+  // jump to unprivileged mode
+  // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
+  __asm__ volatile("msr control, %0" ::"r"(0x1));
+  __asm__ volatile("isb");
+}
+
 // from util.s
 extern void shutdown_privileged(void);
 

@@ -70,6 +70,7 @@ def configure(
         sources += ["embed/trezorhal/stm32f4/optiga_hal.c"]
         sources += ["embed/trezorhal/optiga/optiga_commands.c"]
         sources += ["embed/trezorhal/optiga/optiga_transport.c"]
+        sources += ["embed/trezorhal/stm32f4/secret.c"]
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu

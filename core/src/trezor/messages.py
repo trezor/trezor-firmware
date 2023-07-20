@@ -2628,6 +2628,12 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ShowDeviceTutorial"]:
             return isinstance(msg, cls)
 
+    class UnlockBootloader(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["UnlockBootloader"]:
+            return isinstance(msg, cls)
+
     class DebugLinkDecision(protobuf.MessageType):
         button: "DebugButton | None"
         swipe: "DebugSwipeDirection | None"

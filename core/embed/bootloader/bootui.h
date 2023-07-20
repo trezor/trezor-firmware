@@ -23,6 +23,7 @@
 #include "image.h"
 #include "secbool.h"
 #include "stdbool.h"
+#include TREZOR_BOARD
 
 typedef enum {
   SCREEN_INTRO = 0,
@@ -67,6 +68,10 @@ void ui_fadeout(void);
 void ui_set_initial_setup(bool initial);
 
 void ui_screen_boot_empty(bool fading);
+
+#ifdef USE_OPTIGA
+uint32_t ui_screen_unlock_bootloader_confirm(void);
+#endif
 
 // clang-format off
 #define INPUT_CANCEL 0x01        // Cancel button

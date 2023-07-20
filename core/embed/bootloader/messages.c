@@ -28,6 +28,7 @@
 #include "flash.h"
 #include "image.h"
 #include "secbool.h"
+#include "secret.h"
 #include "unit_variant.h"
 #include "usb.h"
 #include "version.h"
@@ -572,6 +573,16 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                             &should_keep_seed, &is_newvendor);
       }
 
+#ifdef USE_OPTIGA
+      if (sectrue != secret_wiped() && ((vhdr.vtrust & VTRUST_SECRET) != 0)) {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+        MSG_SEND_ASSIGN_STRING(message, "Attestation present");
+        MSG_SEND(Failure);
+        return UPLOAD_ERR_ATTESTATION_PRESENT;
+      }
+#endif
+
       uint32_t response = INPUT_CANCEL;
       if (sectrue == is_new) {
         // new installation - auto confirm
@@ -722,3 +733,12 @@ void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   MSG_SEND_ASSIGN_STRING(message, "Unexpected message");
   MSG_SEND(Failure);
 }
+
+#ifdef USE_OPTIGA
+void process_msg_AttestationDelete(uint8_t iface_num, uint32_t msg_size,
+                                   uint8_t *buf) {
+  secret_erase();
+  MSG_SEND_INIT(Success);
+  MSG_SEND(Success);
+}
+#endif
