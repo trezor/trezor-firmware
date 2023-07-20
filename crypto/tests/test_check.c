@@ -74,6 +74,7 @@
 #include "shamir.h"
 #include "slip39.h"
 #include "slip39_wordlist.h"
+#include "tls_prf.h"
 #include "zkp_bip340.h"
 #include "zkp_context.h"
 #include "zkp_ecdsa.h"
@@ -5453,6 +5454,56 @@ START_TEST(test_pbkdf2_hmac_sha512) {
 }
 END_TEST
 
+START_TEST(test_tls_prf_sha256) {
+  static const struct {
+    const char *secret;
+    const char *label;
+    const char *seed;
+    const char *result;
+  } tests[] = {
+      {
+          // Test vector from
+          // https://github.com/Infineon/optiga-trust-m/tree/develop/pal
+          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+          "426162796c6f6e20505246204170704e6f7465",
+          "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+          "bf88ebdefa7846a110559188d422f3f7fafef4a549bdaace3739c944657f2dd9bc30"
+          "831447d0ed1c89f65823b2ece052f3b795ede86cad59ca473b3a78986369446562c9"
+          "a40d6aac59a204fa0e44b7d7",
+      },
+      {
+          // Test vector from
+          // www.ietf.org/mail-archive/web/tls/current/msg03416.html
+          "9bbe436ba940f017b17652849a71db35",
+          "74657374206c6162656c",
+          "a0ba9f936cda311827a6f796ffd5198c",
+          "e3f229ba727be17b8d122620557cd453c2aab21d07c3d495329b52d4e61edb5a6b30"
+          "1791e90d35c9c9a46b4e14baf9af0fa022f7077def17abfd3797c0564bab4fbc9166"
+          "6e9def9b97fce34f796789baa48082d122ee42c5a72e5a5110fff70187347b66",
+      },
+  };
+
+  uint8_t secret[32] = {0};
+  uint8_t label[20] = {0};
+  uint8_t seed[32] = {0};
+  uint8_t output[100] = {0};
+
+  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+    size_t secret_len = strlen(tests[i].secret) / 2;
+    size_t label_len = strlen(tests[i].label) / 2;
+    size_t seed_len = strlen(tests[i].seed) / 2;
+    size_t result_len = strlen(tests[i].result) / 2;
+    memcpy(secret, fromhex(tests[i].secret), secret_len);
+    memcpy(label, fromhex(tests[i].label), label_len);
+    memcpy(seed, fromhex(tests[i].seed), seed_len);
+
+    tls_prf_sha256(secret, secret_len, label, label_len, seed, seed_len, output,
+                   result_len);
+    ck_assert_mem_eq(output, fromhex(tests[i].result), result_len);
+  }
+}
+END_TEST
+
 START_TEST(test_hmac_drbg) {
   char entropy[] =
       "06032cd5eed33f39265f49ecb142c511da9aff2af71203bffaf34a9ca5bd9c0d";
@@ -9899,6 +9950,10 @@ Suite *test_suite(void) {
   tc = tcase_create("pbkdf2");
   tcase_add_test(tc, test_pbkdf2_hmac_sha256);
   tcase_add_test(tc, test_pbkdf2_hmac_sha512);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("tls_prf");
+  tcase_add_test(tc, test_tls_prf_sha256);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("hmac_drbg");
