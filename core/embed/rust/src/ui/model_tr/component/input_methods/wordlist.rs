@@ -232,10 +232,7 @@ where
     T: StringType + Clone,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        match self.wordlist_type {
-            WordlistType::Bip39 => t.component("Bip39Entry"),
-            WordlistType::Slip39 => t.component("Slip39Entry"),
-        }
+        t.component("MnemonicKeyboard"); // unified with TT
         t.string("textbox", self.textbox.content());
 
         if self.offer_words {

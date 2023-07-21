@@ -266,3 +266,13 @@ impl Slip39Mask {
         self.0.count_ones() <= 1
     }
 }
+
+// DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Slip39Input {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Slip39Input");
+        t.child("textbox", &self.textbox);
+    }
+}
