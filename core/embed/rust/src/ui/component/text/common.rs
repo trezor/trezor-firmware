@@ -103,3 +103,13 @@ impl<const L: usize> TextBox<L> {
         }
     }
 }
+
+// DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+impl<const L: usize> crate::trace::Trace for TextBox<L> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("TextBox");
+        t.string("text", &self.text);
+    }
+}

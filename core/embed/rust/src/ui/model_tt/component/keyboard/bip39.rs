@@ -239,3 +239,13 @@ impl Bip39Input {
         }
     }
 }
+
+// DEBUG-ONLY SECTION BELOW
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Bip39Input {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Bip39Input");
+        t.child("textbox", &self.textbox);
+    }
+}
