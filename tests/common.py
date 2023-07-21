@@ -163,15 +163,14 @@ def recovery_enter_shares_tt(
     """
     word_count = len(shares[0].split(" "))
 
-    # Homescreen - proceed to word number selection
-    yield
-    debug.press_yes()
     # Input word number
     br = yield
     assert br.code == ButtonRequestType.MnemonicWordCount
+    assert "number of words" in debug.wait_layout().text_content()
     debug.input(str(word_count))
     # Homescreen - proceed to share entry
     yield
+    assert "Enter any share" in debug.wait_layout().text_content()
     debug.press_yes()
     # Enter shares
     for share in shares:
@@ -220,9 +219,11 @@ def recovery_enter_shares_tr(
 
     # Homescreen - proceed to word number selection
     yield
+    assert "number of words" in debug.wait_layout().text_content()
     debug.press_yes()
     # Input word number
     br = yield
+    assert "NUMBER OF WORDS" in debug.wait_layout().title()
     assert br.code == ButtonRequestType.MnemonicWordCount
     debug.input(str(word_count))
     # Homescreen - proceed to share entry
@@ -233,9 +234,10 @@ def recovery_enter_shares_tr(
     debug.press_yes()
 
     # Enter shares
-    for share in shares:
+    for index, share in enumerate(shares):
         br = yield
         assert br.code == ButtonRequestType.MnemonicInput
+        assert "MnemonicKeyboard" in debug.wait_layout().all_components()
 
         # Enter mnemonic words
         for word in share.split(" "):

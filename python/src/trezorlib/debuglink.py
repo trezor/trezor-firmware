@@ -252,6 +252,11 @@ class LayoutContent(UnstructuredJSONReader):
             text_lines = flow_page["text"]
             return "".join(text_lines)
 
+        # Looking for any "text": "something" values
+        text_values = self.find_values_by_key("text", only_type=str)
+        if text_values:
+            return "\n".join(text_values)
+
         # Default when not finding anything
         return self.main_component()
 
