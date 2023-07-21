@@ -30,7 +30,7 @@ pub use coinjoin_progress::CoinJoinProgress;
 pub use dialog::{Dialog, DialogMsg, IconDialog};
 pub use error::ErrorScreen;
 pub use fido::{FidoConfirm, FidoMsg};
-pub use frame::{Frame, FrameMsg, NotificationFrame};
+pub use frame::{Frame, FrameMsg};
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 #[cfg(feature = "dma2d")]
 pub use homescreen::{Homescreen, HomescreenMsg, Lockscreen};

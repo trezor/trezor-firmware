@@ -3,7 +3,7 @@ use crate::ui::{
     component::{
         base::ComponentExt, label::Label, text::TextStyle, Child, Component, Event, EventCtx,
     },
-    display::{self, Color, Font, Icon},
+    display::Icon,
     geometry::{Alignment, Insets, Offset, Rect},
     model_tt::component::{Button, ButtonMsg, CancelInfoConfirmMsg},
 };
@@ -194,91 +194,5 @@ where
         if let Some(button) = &self.button {
             t.child("button", button);
         }
-    }
-}
-
-pub struct NotificationFrame<T, U> {
-    area: Rect,
-    title: U,
-    content: Child<T>,
-}
-
-impl<T, U> NotificationFrame<T, U>
-where
-    T: Component,
-    U: AsRef<str>,
-{
-    const HEIGHT: i16 = 36;
-    const COLOR: Color = theme::YELLOW;
-    const BORDER: i16 = 6;
-
-    pub fn new(title: U, content: T) -> Self {
-        Self {
-            title,
-            area: Rect::zero(),
-            content: Child::new(content),
-        }
-    }
-
-    pub fn inner(&self) -> &T {
-        self.content.inner()
-    }
-
-    pub fn paint_notification(area: Rect, title: &str, color: Color) {
-        let (area, _) = area
-            .inset(Insets::uniform(Self::BORDER))
-            .split_top(Self::HEIGHT);
-        let font = Font::BOLD;
-        display::rect_fill_rounded(area, color, theme::BG, 2);
-        display::text_center(
-            area.center() + Offset::y((font.text_max_height() - font.text_baseline()) / 2),
-            title,
-            font,
-            theme::FG,
-            color,
-        );
-    }
-}
-
-impl<T, U> Component for NotificationFrame<T, U>
-where
-    T: Component,
-    U: AsRef<str>,
-{
-    type Msg = T::Msg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        let content_area = bounds.inset(theme::borders_notification());
-        self.area = bounds;
-        self.content.place(content_area);
-        bounds
-    }
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.content.event(ctx, event)
-    }
-
-    fn paint(&mut self) {
-        Self::paint_notification(self.area, self.title.as_ref(), Self::COLOR);
-        self.content.paint();
-    }
-
-    #[cfg(feature = "ui_bounds")]
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area);
-        self.content.bounds(sink);
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for NotificationFrame<T, U>
-where
-    T: crate::trace::Trace,
-    U: AsRef<str>,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("NotificationFrame");
-        t.string("title", self.title.as_ref());
-        t.child("content", &self.content);
     }
 }
