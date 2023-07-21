@@ -51,9 +51,9 @@ use super::{
         CancelInfoConfirmMsg, CoinJoinProgress, Dialog, DialogMsg, FidoConfirm, FidoMsg, Frame,
         FrameMsg, HoldToConfirm, HoldToConfirmMsg, Homescreen, HomescreenMsg, HorizontalPage,
         IconDialog, Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg,
-        NotificationFrame, NumberInputDialog, NumberInputDialogMsg, PassphraseKeyboard,
-        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress, SelectWordCount,
-        SelectWordCountMsg, SelectWordMsg, Slip39Input, SwipeHoldPage, SwipePage, WelcomeScreen,
+        NumberInputDialog, NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
+        PinKeyboard, PinKeyboardMsg, Progress, SelectWordCount, SelectWordCountMsg, SelectWordMsg,
+        Slip39Input, SwipeHoldPage, SwipePage, WelcomeScreen,
     },
     constant, theme,
 };
@@ -205,16 +205,6 @@ where
             FrameMsg::Content(c) => self.inner().msg_try_into_obj(c),
             FrameMsg::Button(b) => b.try_into(),
         }
-    }
-}
-
-impl<T, U> ComponentMsgObj for NotificationFrame<T, U>
-where
-    T: ComponentMsgObj,
-    U: AsRef<str>,
-{
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        self.inner().msg_try_into_obj(msg)
     }
 }
 
