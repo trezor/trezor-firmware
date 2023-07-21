@@ -106,40 +106,28 @@ async def continue_recovery(
 ) -> bool:
     from ..common import button_request
 
-    title = text
-    if subtext:
-        title += "\n"
-        title += subtext
+    if show_info:
+        # Show this just one-time
+        description = "You'll only have to select the first 2-3 letters of each word."
+    else:
+        description = subtext or ""
 
-    description = "It is safe to eject Trezor\nand continue later"
+    homepage = RustLayout(
+        trezorui2.confirm_recovery(
+            title=text,
+            description=description,
+            button=button_label.upper(),
+            info_button=info_func is not None,
+            dry_run=dry_run,
+        )
+    )
+
+    await button_request("recovery", ButtonRequestType.RecoveryHomepage)
 
     if info_func is not None:
-        homepage = RustLayout(
-            trezorui2.confirm_recovery(
-                title=title,
-                description=description,
-                button=button_label.upper(),
-                info_button=True,
-                dry_run=dry_run,
-            )
-        )
-        await button_request("recovery", ButtonRequestType.RecoveryHomepage)
         return await _is_confirmed_info(homepage, info_func)
     else:
-        homepage = RustLayout(
-            trezorui2.confirm_recovery(
-                title=text,
-                description=description,
-                button=button_label.upper(),
-                info_button=False,
-                dry_run=dry_run,
-            )
-        )
-        result = await interact(
-            homepage,
-            "recovery",
-            ButtonRequestType.RecoveryHomepage,
-        )
+        result = await ctx_wait(homepage)
         return result is CONFIRMED
 
 

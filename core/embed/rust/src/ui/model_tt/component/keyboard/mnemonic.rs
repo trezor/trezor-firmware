@@ -33,7 +33,7 @@ where
         Self {
             prompt: Child::new(Maybe::visible(
                 theme::BG,
-                Label::centered(prompt, theme::label_keyboard()),
+                Label::centered(prompt, theme::label_keyboard_prompt()),
             )),
             back: Child::new(Maybe::hidden(
                 theme::BG,

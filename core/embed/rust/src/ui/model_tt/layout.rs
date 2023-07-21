@@ -1393,19 +1393,20 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_DEMIBOLD, title).centered(),
-            Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, description).centered(),
+            Paragraph::new(&theme::TEXT_DEMIBOLD, title),
+            Paragraph::new(&theme::TEXT_NORMAL, description),
         ])
         .with_spacing(theme::RECOVERY_SPACING);
 
         let notification = if dry_run {
             "BACKUP CHECK"
         } else {
-            "RECOVERY MODE"
+            "RECOVER WALLET"
         };
 
         let obj = if info_button {
-            LayoutObj::new(NotificationFrame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 notification,
                 Dialog::new(
                     paragraphs,
@@ -1413,7 +1414,8 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
                 ),
             ))?
         } else {
-            LayoutObj::new(NotificationFrame::new(
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
                 notification,
                 Dialog::new(paragraphs, Button::cancel_confirm_text(None, Some(button))),
             ))?
@@ -1432,13 +1434,10 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             "RECOVER WALLET"
         };
 
-        let paragraphs = Paragraphs::new(
-            Paragraph::new(
-                &theme::TEXT_DEMIBOLD,
-                StrBuffer::from("Select number of words in your recovery seed."),
-            )
-            .centered(),
-        );
+        let paragraphs = Paragraphs::new(Paragraph::new(
+            &theme::TEXT_DEMIBOLD,
+            StrBuffer::from("Select the number of words in your backup."),
+        ));
 
         let obj = LayoutObj::new(Frame::left_aligned(
             theme::label_title(),

@@ -121,6 +121,10 @@ pub const fn label_keyboard() -> TextStyle {
     TextStyle::new(Font::DEMIBOLD, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
+pub const fn label_keyboard_prompt() -> TextStyle {
+    TextStyle::new(Font::DEMIBOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+}
+
 pub const fn label_keyboard_warning() -> TextStyle {
     TextStyle::new(Font::DEMIBOLD, RED, BG, GREY_LIGHT, GREY_LIGHT)
 }
@@ -380,7 +384,7 @@ pub const fn button_pin() -> ButtonStyleSheet {
         disabled: &ButtonStyle {
             font: Font::MONO,
             text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
+            button_color: BG, // so there is no "button" itself, just the text
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -412,7 +416,7 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
         disabled: &ButtonStyle {
             font: Font::MONO,
             text_color: GREY_LIGHT,
-            button_color: GREEN,
+            button_color: GREY_DARK,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
@@ -426,7 +430,7 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
         normal: &ButtonStyle {
             font: Font::MONO,
             text_color: FG,
-            button_color: BG,
+            button_color: GREY_DARK, // same as PIN buttons
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,

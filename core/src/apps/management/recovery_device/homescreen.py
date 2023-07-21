@@ -42,6 +42,7 @@ async def recovery_process() -> Success:
 
 async def _continue_recovery_process() -> Success:
     from trezor.errors import MnemonicError
+    from trezor import utils
 
     # gather the current recovery state from storage
     dry_run = storage_recovery.is_dry_run()
@@ -63,9 +64,11 @@ async def _continue_recovery_process() -> Success:
         if is_first_step:
             # If we are starting recovery, ask for word count first...
             # _request_word_count
-            await layout.homescreen_dialog(
-                "Continue", "Select the number of words in your backup."
-            )
+            # For TT, just continuing straight to word count keyboard
+            if utils.MODEL == "R":
+                await layout.homescreen_dialog(
+                    "Continue", "Select the number of words in your backup."
+                )
             # ask for the number of words
             word_count = await layout.request_word_count(dry_run)
             # ...and only then show the starting screen with word count.
@@ -153,7 +156,7 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
 
     storage_recovery.end_progress()
 
-    await show_success("success_recovery", "Wallet recovered successfully.")
+    await show_success("success_recovery", "Wallet recovered successfully")
     return Success(message="Device recovered")
 
 
