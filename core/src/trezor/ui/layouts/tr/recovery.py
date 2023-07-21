@@ -71,14 +71,17 @@ async def continue_recovery(
     # There is very limited space on the screen
     # (and having middle button would mean shortening the right button text)
 
-    description = text
+    # Never showing info for dry-run, user already saw it and it is disturbing
+    if dry_run:
+        show_info = False
+
     if subtext:
-        description += f"\n\n{subtext}"
+        text += f"\n\n{subtext}"
 
     homepage = RustLayout(
         trezorui2.confirm_recovery(
             title="",
-            description=description,
+            description=text,
             button=button_label.upper(),
             info_button=False,
             dry_run=dry_run,

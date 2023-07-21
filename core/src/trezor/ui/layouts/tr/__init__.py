@@ -399,15 +399,6 @@ async def confirm_reset_device(
         )
     )
 
-    if recovery:
-        await confirm_action(
-            "recover_device",
-            title,
-            description="It is safe to eject your Trezor anytime and continue later.",
-            verb="CONTINUE",
-            br_code=ButtonRequestType.ProtectCall,
-        )
-
 
 async def prompt_backup() -> bool:
     br_type = "backup_device"

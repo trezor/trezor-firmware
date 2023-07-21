@@ -194,7 +194,8 @@ impl Component for Slip39Input {
 impl Slip39Input {
     pub fn new() -> Self {
         Self {
-            button: Button::empty(),
+            // Button has the same style the whole time
+            button: Button::empty().styled(theme::button_pin_confirm()),
             textbox: TextBox::empty(),
             multi_tap: MultiTapKeyboard::new(),
             final_word: None,
@@ -232,13 +233,11 @@ impl Slip39Input {
         if self.final_word.is_some() {
             // Confirm button.
             self.button.enable(ctx);
-            self.button.set_stylesheet(ctx, theme::button_pin_confirm());
             self.button
                 .set_content(ctx, ButtonContent::Icon(theme::ICON_LIST_CHECK));
         } else {
             // Disabled button.
             self.button.disable(ctx);
-            self.button.set_stylesheet(ctx, theme::button_pin());
             self.button.set_content(ctx, ButtonContent::Text(""));
         }
     }

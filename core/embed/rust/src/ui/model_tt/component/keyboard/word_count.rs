@@ -9,7 +9,7 @@ use crate::ui::{
 
 const NUMBERS: [u32; 5] = [12, 18, 20, 24, 33];
 const LABELS: [&str; 5] = ["12", "18", "20", "24", "33"];
-const CELLS: [(usize, usize); 5] = [(0, 0), (0, 2), (0, 4), (1, 1), (1, 3)];
+const CELLS: [(usize, usize); 5] = [(0, 0), (0, 2), (0, 4), (1, 0), (1, 2)];
 
 pub struct SelectWordCount {
     button: [Button<&'static str>; NUMBERS.len()],
