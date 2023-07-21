@@ -26,10 +26,9 @@ from ...common import (
 from ...input_flows import (
     InputFlowSlip39BasicRecovery,
     InputFlowSlip39BasicRecoveryAbort,
+    InputFlowSlip39BasicRecoveryInvalidFirstShare,
+    InputFlowSlip39BasicRecoveryInvalidSecondShare,
     InputFlowSlip39BasicRecoveryNoAbort,
-    InputFlowSlip39BasicRecoveryPIN,
-    InputFlowSlip39BasicRecoveryRetryFirst,
-    InputFlowSlip39BasicRecoveryRetrySecond,
     InputFlowSlip39BasicRecoverySameShare,
     InputFlowSlip39BasicRecoveryWrongNthWord,
 )
@@ -63,7 +62,7 @@ def test_secret(client: Client, shares: list[str], secret: str):
         client.set_input_flow(IF.get())
         ret = device.recover(client, pin_protection=False, label="label")
 
-    # Workflow succesfully ended
+    # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
@@ -76,8 +75,8 @@ def test_secret(client: Client, shares: list[str], secret: str):
 @pytest.mark.setup_client(uninitialized=True)
 def test_recover_with_pin_passphrase(client: Client):
     with client:
-        IF = InputFlowSlip39BasicRecoveryPIN(
-            client, MNEMONIC_SLIP39_BASIC_20_3of6, "654"
+        IF = InputFlowSlip39BasicRecovery(
+            client, MNEMONIC_SLIP39_BASIC_20_3of6, pin="654"
         )
         client.set_input_flow(IF.get())
         ret = device.recover(
@@ -116,17 +115,20 @@ def test_noabort(client: Client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_ask_word_number(client: Client):
+def test_invalid_mnemonic_first_share(client: Client):
     with client:
-        IF = InputFlowSlip39BasicRecoveryRetryFirst(client)
+        IF = InputFlowSlip39BasicRecoveryInvalidFirstShare(client)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")
         client.init_device()
         assert client.features.initialized is False
 
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_invalid_mnemonic_second_share(client: Client):
     with client:
-        IF = InputFlowSlip39BasicRecoveryRetrySecond(
+        IF = InputFlowSlip39BasicRecoveryInvalidSecondShare(
             client, MNEMONIC_SLIP39_BASIC_20_3of6
         )
         client.set_input_flow(IF.get())
@@ -149,11 +151,9 @@ def test_wrong_nth_word(client: Client, nth_word: int):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_same_share(client: Client):
-    first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
-    # second share is first 4 words of first
-    second_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")[:4]
+    share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
     with client:
-        IF = InputFlowSlip39BasicRecoverySameShare(client, first_share, second_share)
+        IF = InputFlowSlip39BasicRecoverySameShare(client, share)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")

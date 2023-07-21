@@ -51,19 +51,19 @@ def do_recover_legacy(client: Client, mnemonic: list[str], **kwargs: Any):
     return ret
 
 
-def do_recover_core(client: Client, mnemonic: list[str], **kwargs: Any):
+def do_recover_core(client: Client, mnemonic: list[str], mismatch: bool = False):
     with client:
         client.watch_layout()
-        IF = InputFlowBip39RecoveryDryRun(client, mnemonic)
+        IF = InputFlowBip39RecoveryDryRun(client, mnemonic, mismatch=mismatch)
         client.set_input_flow(IF.get())
-        return device.recover(client, dry_run=True, **kwargs)
+        return device.recover(client, dry_run=True)
 
 
-def do_recover(client: Client, mnemonic: list[str]):
+def do_recover(client: Client, mnemonic: list[str], mismatch: bool = False):
     if client.features.model == "1":
         return do_recover_legacy(client, mnemonic)
     else:
-        return do_recover_core(client, mnemonic)
+        return do_recover_core(client, mnemonic, mismatch)
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
@@ -77,7 +77,7 @@ def test_seed_mismatch(client: Client):
     with pytest.raises(
         exceptions.TrezorFailure, match="does not match the one in the device"
     ):
-        do_recover(client, ["all"] * 12)
+        do_recover(client, ["all"] * 12, mismatch=True)
 
 
 @pytest.mark.skip_t2

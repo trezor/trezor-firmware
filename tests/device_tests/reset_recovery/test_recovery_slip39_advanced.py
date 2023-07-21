@@ -24,7 +24,8 @@ from ...input_flows import (
     InputFlowSlip39AdvancedRecovery,
     InputFlowSlip39AdvancedRecoveryAbort,
     InputFlowSlip39AdvancedRecoveryNoAbort,
-    InputFlowSlip39AdvancedRecoveryTwoSharesWarning,
+    InputFlowSlip39AdvancedRecoveryShareAlreadyEntered,
+    InputFlowSlip39AdvancedRecoveryThresholdReached,
 )
 
 pytestmark = pytest.mark.skip_t1
@@ -119,7 +120,7 @@ def test_same_share(client: Client):
     second_share = MNEMONIC_SLIP39_ADVANCED_20[1].split(" ")[:4]
 
     with client:
-        IF = InputFlowSlip39AdvancedRecoveryTwoSharesWarning(
+        IF = InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(
             client, first_share, second_share
         )
         client.set_input_flow(IF.get())
@@ -135,7 +136,7 @@ def test_group_threshold_reached(client: Client):
     second_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")[:3]
 
     with client:
-        IF = InputFlowSlip39AdvancedRecoveryTwoSharesWarning(
+        IF = InputFlowSlip39AdvancedRecoveryThresholdReached(
             client, first_share, second_share
         )
         client.set_input_flow(IF.get())

@@ -67,7 +67,7 @@ def test_2of3_invalid_seed_dryrun(client: Client):
         TrezorFailure, match=r"The seed does not match the one in the device"
     ):
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
-            client, INVALID_SHARES_SLIP39_ADVANCED_20
+            client, INVALID_SHARES_SLIP39_ADVANCED_20, mismatch=True
         )
         client.set_input_flow(IF.get())
         device.recover(

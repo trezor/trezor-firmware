@@ -23,13 +23,16 @@ from unittest import mock
 
 import pytest
 
-from trezorlib import btc, tools
+from trezorlib import btc, messages, tools
 from trezorlib.messages import ButtonRequestType
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
     from trezorlib.messages import ButtonRequest
     from _pytest.mark.structures import MarkDecorator
+
+
+BRGeneratorType = Generator[None, messages.ButtonRequest, None]
 
 
 # fmt: off
@@ -127,135 +130,6 @@ def generate_entropy(
         raise ValueError("Entropy length mismatch")
 
     return entropy_stripped
-
-
-def recovery_enter_shares(
-    debug: "DebugLink",
-    shares: list[str],
-    groups: bool = False,
-    click_info: bool = False,
-) -> Generator[None, "ButtonRequest", None]:
-    if debug.model == "T":
-        yield from recovery_enter_shares_tt(
-            debug, shares, groups=groups, click_info=click_info
-        )
-    elif debug.model == "R":
-        yield from recovery_enter_shares_tr(debug, shares, groups=groups)
-    else:
-        raise ValueError(f"Unknown model: {debug.model}")
-
-
-def recovery_enter_shares_tt(
-    debug: "DebugLink",
-    shares: list[str],
-    groups: bool = False,
-    click_info: bool = False,
-) -> Generator[None, "ButtonRequest", None]:
-    """Perform the recovery flow for a set of Shamir shares.
-
-    For use in an input flow function.
-    Example:
-
-    def input_flow():
-        yield  # start recovery
-        client.debug.press_yes()
-        yield from recovery_enter_shares(client.debug, SOME_SHARES)
-    """
-    word_count = len(shares[0].split(" "))
-
-    # Input word number
-    br = yield
-    assert br.code == ButtonRequestType.MnemonicWordCount
-    assert "number of words" in debug.wait_layout().text_content()
-    debug.input(str(word_count))
-    # Homescreen - proceed to share entry
-    yield
-    assert "Enter any share" in debug.wait_layout().text_content()
-    debug.press_yes()
-    # Enter shares
-    for share in shares:
-        br = yield
-        assert br.code == ButtonRequestType.MnemonicInput
-        # Enter mnemonic words
-        for word in share.split(" "):
-            debug.input(word)
-
-        if groups:
-            # Confirm share entered
-            yield
-            debug.press_yes()
-
-        # Homescreen - continue
-        # or Homescreen - confirm success
-        yield
-
-        if click_info:
-            # Moving through the INFO button
-            debug.press_info()
-            yield
-            debug.swipe_up()
-            debug.press_yes()
-
-        # Finishing with current share
-        debug.press_yes()
-
-
-def recovery_enter_shares_tr(
-    debug: "DebugLink",
-    shares: list[str],
-    groups: bool = False,
-) -> Generator[None, "ButtonRequest", None]:
-    """Perform the recovery flow for a set of Shamir shares.
-
-    For use in an input flow function.
-    Example:
-
-    def input_flow():
-        yield  # start recovery
-        client.debug.press_yes()
-        yield from recovery_enter_shares(client.debug, SOME_SHARES)
-    """
-    word_count = len(shares[0].split(" "))
-
-    # Homescreen - proceed to word number selection
-    yield
-    assert "number of words" in debug.wait_layout().text_content()
-    debug.press_yes()
-    # Input word number
-    br = yield
-    assert "NUMBER OF WORDS" in debug.wait_layout().title()
-    assert br.code == ButtonRequestType.MnemonicWordCount
-    debug.input(str(word_count))
-    # Homescreen - proceed to share entry
-    yield
-    assert "Enter any share" in debug.wait_layout().text_content()
-    debug.press_right()
-    debug.press_right()
-    debug.press_yes()
-
-    # Enter shares
-    for index, share in enumerate(shares):
-        br = yield
-        assert br.code == ButtonRequestType.MnemonicInput
-        assert "MnemonicKeyboard" in debug.wait_layout().all_components()
-
-        # Enter mnemonic words
-        for word in share.split(" "):
-            debug.input(word)
-
-        if groups:
-            # Confirm share entered
-            yield
-            debug.press_yes()
-
-        # Homescreen - continue
-        # or Homescreen - confirm success
-        yield
-
-        # Finishing with current share
-        debug.press_yes()
-
-    yield
 
 
 def click_through(

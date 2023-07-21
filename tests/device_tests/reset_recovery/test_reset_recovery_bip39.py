@@ -22,7 +22,7 @@ from trezorlib.messages import BackupType
 from trezorlib.tools import parse_path
 
 from ...common import WITH_MOCK_URANDOM
-from ...input_flows import InputFlowBip39RecoveryNoPIN, InputFlowBip39ResetBackup
+from ...input_flows import InputFlowBip39Recovery, InputFlowBip39ResetBackup
 
 
 @pytest.mark.skip_t1
@@ -67,7 +67,7 @@ def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str
 def recover(client: Client, mnemonic: str):
     words = mnemonic.split(" ")
     with client:
-        IF = InputFlowBip39RecoveryNoPIN(client, words)
+        IF = InputFlowBip39Recovery(client, words)
         client.set_input_flow(IF.get())
         client.watch_layout()
         ret = device.recover(client, pin_protection=False, label="label")
