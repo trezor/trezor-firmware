@@ -47,11 +47,11 @@ def write(fixture_test_path: Path, doc: document, filename: str) -> Path:
     return fixture_test_path / filename
 
 
-def image_column(hash: str | None, cur_dir: Path) -> None:
+def image_column(hash: str | None, cur_dir: Path, img_id: str | None = None) -> None:
     """Put image into table as one cell."""
     with td():
         if hash:
-            image_link(hash, cur_dir)
+            image_link(hash, cur_dir, img_id=img_id)
         else:
             i("missing")
 
@@ -72,10 +72,13 @@ def _relative_path(cur_dir: Path, path_to: Path) -> str:
     return "/".join(components)
 
 
-def image_link(hash: str, cur_dir: Path, title: str = "") -> None:
+def image_link(
+    hash: str, cur_dir: Path, title: str = "", img_id: str | None = None
+) -> None:
     """Put image into table as one cell."""
     path = _IMAGE_DIR / f"{hash}.png"
     img(
+        id=img_id,
         src=_relative_path(cur_dir, path),
         title=title,
         loading="lazy",
