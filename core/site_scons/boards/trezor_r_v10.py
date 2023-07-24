@@ -66,6 +66,11 @@ def configure(
         ]
         features_available.append("usb")
 
+    if "optiga" in features_wanted:
+        sources += ["embed/trezorhal/stm32f4/optiga_hal.c"]
+        sources += ["embed/trezorhal/optiga/optiga_commands.c"]
+        sources += ["embed/trezorhal/optiga/optiga_transport.c"]
+
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu
 
