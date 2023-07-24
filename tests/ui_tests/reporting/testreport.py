@@ -384,10 +384,12 @@ def recorded(result: TestResult, header: str = "Recorded", dir: str = "passed") 
 
         with table(border=1):
             with tr():
+                th("id")
                 th(header)
 
-            for screen in result.images:
+            for index, screen in enumerate(result.images):
                 with tr():
-                    html.image_column(screen, TESTREPORT_PATH / dir)
+                    td(index)
+                    html.image_column(screen, TESTREPORT_PATH / dir, img_id=str(index))
 
     return html.write(TESTREPORT_PATH / dir, doc, result.test.id + ".html")
