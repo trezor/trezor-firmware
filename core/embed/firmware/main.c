@@ -47,6 +47,8 @@
 #include "mpu.h"
 #include "random_delays.h"
 
+#include TREZOR_BOARD
+
 #ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
@@ -67,6 +69,9 @@
 #endif
 #ifdef USE_SD_CARD
 #include "sdcard.h"
+#endif
+#ifdef USE_OPTIGA
+#include "optiga_transport.h"
 #endif
 #include "unit_variant.h"
 
@@ -153,6 +158,10 @@ int main(void) {
 
 #ifdef USE_SD_CARD
   sdcard_init();
+#endif
+
+#ifdef USE_OPTIGA
+  optiga_init();
 #endif
 
 #if !defined TREZOR_MODEL_1

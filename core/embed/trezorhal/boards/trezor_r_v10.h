@@ -5,6 +5,7 @@
 #define USE_SBU 1
 #define USE_I2C 1
 #define USE_CONSUMPTION_MASK 1
+#define USE_OPTIGA 1
 
 #include "displays/vg-2864ksweg01.h"
 
@@ -47,5 +48,7 @@
 #define I2C_INSTANCE_1_SCL_PIN GPIO_PIN_10
 #define I2C_INSTANCE_1_SCL_CLK_EN __HAL_RCC_GPIOB_CLK_ENABLE
 #define I2C_INSTANCE_1_RESET_FLG RCC_APB1RSTR_I2C2RST
+
+#define OPTIGA_I2C_INSTANCE 0
 
 #endif  //_TREZOR_R_V10_H

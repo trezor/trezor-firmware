@@ -18,7 +18,7 @@ FEATURE_FLAGS = {
     "SYSTEM_VIEW": False,
 }
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
