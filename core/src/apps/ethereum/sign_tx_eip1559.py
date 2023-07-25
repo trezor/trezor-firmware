@@ -43,7 +43,7 @@ async def sign_tx_eip1559(
         require_confirm_eip1559_fee,
         require_confirm_tx,
     )
-    from .sign_tx import handle_erc20, send_request_chunk, check_common_fields
+    from .sign_tx import sign_tx_inner, send_request_chunk
 
     gas_limit = msg.gas_limit  # local_cache_attribute
 
@@ -52,18 +52,10 @@ async def sign_tx_eip1559(
         raise wire.DataError("Fee overflow")
     if len(msg.max_priority_fee) + len(gas_limit) > 30:
         raise wire.DataError("Fee overflow")
-    check_common_fields(msg)
 
-    await paths.validate_path(keychain, msg.address_n)
-
-    # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(msg, defs)
+    token, address_bytes, recipient, value = await sign_tx_inner(msg, keychain, defs)
 
     data_total = msg.data_length
-
-    await require_confirm_tx(recipient, value, defs.network, token)
-    if token is None and msg.data_length > 0:
-        await require_confirm_data(msg.data_initial_chunk, data_total)
 
     await require_confirm_eip1559_fee(
         value,

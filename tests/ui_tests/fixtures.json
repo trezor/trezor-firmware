@@ -2757,6 +2757,7 @@
 "TT_ethereum-test_signtx.py::test_signtx[data_1]": "863146c0494b76d4d8a9773a406994c3a35fb8c0cb989f372214aaa80b63b73c",
 "TT_ethereum-test_signtx.py::test_signtx[data_2_bigdata]": "05aa081d00a78c3a432904b19c21df1512c7660f4be3edaec75c9bc1aad83ae8",
 "TT_ethereum-test_signtx.py::test_signtx[erc20_token]": "d51cf4119a784bac447971e8e80be44985c28a9e5f14917efb7c2064d7f21752",
+"TT_ethereum-test_signtx.py::test_signtx[erc20_approve]": "a171451f6f0ba9da5d77790a7600766f639c5e4845c47b7992c430ce49f5260a",
 "TT_ethereum-test_signtx.py::test_signtx[max_chain_id]": "3723ceb0436e8d7f4669edcf36e72cb1fe65d891f910886fa79e9e406c5e9479",
 "TT_ethereum-test_signtx.py::test_signtx[max_chain_plus_one]": "3723ceb0436e8d7f4669edcf36e72cb1fe65d891f910886fa79e9e406c5e9479",
 "TT_ethereum-test_signtx.py::test_signtx[max_uint64]": "3723ceb0436e8d7f4669edcf36e72cb1fe65d891f910886fa79e9e406c5e9479",

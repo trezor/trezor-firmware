@@ -25,6 +25,26 @@
             }
         },
         {
+            "name": "erc20_approve",
+            "parameters": {
+                "comment": "Calling approve function for ERC 20 token",
+                "data": "095ea7b300000000000000000000000012345678901234567890123456789012345678900000000000000000000000000000000000000000000000056bc75e2d63100000",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "44386ce8c59780b2c7674f347fc891bcb22bd5eddf5b17bf9bc3fc71f06e0561",
+                "sig_s": "1467aa6e6887f4bef4278caad3499f06c1f8730967d988f760a4f536db7796f3"
+            }
+        },
+        {
             "name": "wanchain",
             "parameters": {
                 "data": "",
