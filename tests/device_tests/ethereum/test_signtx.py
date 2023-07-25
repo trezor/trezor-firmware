@@ -23,6 +23,7 @@ from trezorlib.tools import parse_path, unharden
 
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import (
+    InputFlowErc20Approve,
     InputFlowEthereumSignTxGoBack,
     InputFlowEthereumSignTxScrollDown,
     InputFlowEthereumSignTxSkip,
@@ -392,3 +393,25 @@ def test_signtx_data_pagination(client: Client, flow):
         client.watch_layout()
         client.set_input_flow(flow(client, cancel=True))
         _sign_tx_call()
+
+
+@pytest.mark.skip_t1
+def test_ethereum_sign_erc20_approve(client: Client):
+    with client:
+        client.watch_layout()
+        IF = InputFlowErc20Approve(client)
+        client.set_input_flow(IF.get())
+        ethereum.sign_tx(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0x0,
+            gas_price=0x14,
+            gas_limit=0x14,
+            to="0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+            chain_id=1,
+            value=0x0,
+            tx_type=None,
+            data=bytes.fromhex(
+                "095ea7b300000000000000000000000012345678901234567890123456789012345678900000000000000000000000000000000000000000000000056bc75e2d63100000"
+            ),
+        )
