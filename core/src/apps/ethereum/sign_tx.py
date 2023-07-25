@@ -37,7 +37,7 @@ async def sign_tx(
     if len(msg.gas_price) + len(msg.gas_limit) > 30:
         raise DataError("Fee overflow")
 
-    token, address_bytes, recipient, value = await sign_tx_inner(msg, keychain, defs)
+    token, address_bytes, _recipient, value = await sign_tx_inner(msg, keychain, defs)
 
     data_total = msg.data_length
 
@@ -90,12 +90,11 @@ async def sign_tx_inner(
     msg: MsgInSignTx,
     keychain: Keychain,
     defs: Definitions,
-) -> tuple[EthereumTokenInfo | None, bytes, bytes, int]:
+) -> tuple[EthereumTokenInfo | None, bytes, bytes, int | None]:
     from . import tokens
     from .layout import (
         require_confirm_approve_tx,
         require_confirm_data,
-        require_confirm_fee,
         require_confirm_tx,
         require_confirm_unknown_token,
     )
@@ -108,7 +107,6 @@ async def sign_tx_inner(
     token = None
     address_bytes = recipient = bytes_from_address(msg.to)
     value = int.from_bytes(msg.value, "big")
-    run_confirm_tx = True
     if (
         len(msg.to) in (40, 42)
         and len(msg.value) == 0
@@ -139,9 +137,8 @@ async def sign_tx_inner(
             allowance = int.from_bytes(data_initial_chunk[36:68], "big")
 
             await require_confirm_approve_tx(recipient, allowance, defs.network, token)
-            run_confirm_tx = False
 
-    if run_confirm_tx:
+    if value is not None:
         await require_confirm_tx(recipient, value, defs.network, token)
 
     if token is None and msg.data_length > 0:

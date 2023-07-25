@@ -37,11 +37,8 @@ async def sign_tx_eip1559(
     from trezor.utils import HashWriter
     from trezor import wire
     from trezor.crypto import rlp  # local_cache_global
-    from apps.common import paths
     from .layout import (
-        require_confirm_data,
         require_confirm_eip1559_fee,
-        require_confirm_tx,
     )
     from .sign_tx import sign_tx_inner, send_request_chunk
 
@@ -53,7 +50,7 @@ async def sign_tx_eip1559(
     if len(msg.max_priority_fee) + len(gas_limit) > 30:
         raise wire.DataError("Fee overflow")
 
-    token, address_bytes, recipient, value = await sign_tx_inner(msg, keychain, defs)
+    token, address_bytes, _recipient, value = await sign_tx_inner(msg, keychain, defs)
 
     data_total = msg.data_length
 

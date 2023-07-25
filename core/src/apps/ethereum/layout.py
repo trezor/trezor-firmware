@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
 from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_plural
 from trezor.ui.layouts import (
+    confirm_action,
     confirm_amount,
     confirm_blob,
     confirm_text,
@@ -14,7 +16,7 @@ from trezor.ui.layouts import (
 from .helpers import decode_typed_data
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Iterable
+    from typing import Any, Awaitable, Iterable
 
     from trezor.messages import (
         EthereumFieldType,
@@ -103,7 +105,7 @@ async def require_confirm_eip1559_fee(
     )
     if spending is None:
         await confirm_max_fee(
-            gas_price,
+            max_gas_fee,
             gas_limit,
             network,
         )
@@ -117,7 +119,6 @@ async def require_confirm_eip1559_fee(
 
 
 def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:
-    from ubinascii import hexlify
     from trezor.ui.layouts import confirm_address
 
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
@@ -131,7 +132,6 @@ def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:
 
 
 def require_confirm_address(address_bytes: bytes) -> Awaitable[None]:
-    from ubinascii import hexlify
     from trezor.ui.layouts import confirm_address
 
     address_hex = "0x" + hexlify(address_bytes).decode()
@@ -154,8 +154,6 @@ def require_confirm_data(data: bytes, data_total: int) -> Awaitable[None]:
 
 
 async def confirm_typed_data_final() -> None:
-    from trezor.ui.layouts import confirm_action
-
     await confirm_action(
         "confirm_typed_data_final",
         "Confirm typed data",
@@ -165,15 +163,12 @@ async def confirm_typed_data_final() -> None:
     )
 
 
-def require_confirm_approve_tx(
+async def require_confirm_approve_tx(
     address_bytes: bytes,
     allowance: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo,
-) -> Awaitable[None]:
-    from trezor.ui.layouts import confirm_action
-    from ubinascii import hexlify
-
+) -> None:
     address_hex = "0x" + hexlify(address_bytes).decode()
 
     await confirm_action(
