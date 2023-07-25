@@ -1324,27 +1324,43 @@ class InputFlowErc20Approve(InputFlowBase):
 
     def input_flow_tt(self) -> GeneratorType:
         br = yield
-        assert br.code == messages.ButtonRequestType.Other
-        assert "CONFIRM APPROVE" == self.layout().title()
+        assert br.code == B.SignTx
+        assert "UNKNOWN TOKEN" == self.layout().title()
         assert (
-            "Allow 0x123456789012345- 67890123456789012- 34567890 to withdraw up to 100,000,000,000,0"
+            "Contract: 0xFc6B5d6af8A13258f 7CbD0D39E11b35e01a3 2F93"
+            in self.layout().text_content()
+        )
+        self.debug.press_yes()
+
+        yield
+        assert br.code == B.SignTx
+        assert "ERC 20 APPROVE ALLOWANCE" == self.layout().title()
+        assert "Network: Ethereum" in self.layout().text_content()
+        self.debug.swipe_up()
+
+        assert br.code == B.SignTx
+        assert "ERC 20 APPROVE ALLOWANCE" == self.layout().title()
+        assert (
+            "spender (address): 0xC460622c115537f0- 5137C407Ad17b06bb1- 15bE8b"
             in self.layout().text_content()
         )
         self.debug.swipe_up()
 
-        assert br.code == messages.ButtonRequestType.Other
-        assert "CONFIRM APPROVE" == self.layout().title()
-        assert "00,000,000 Wei UNKN" in self.layout().text_content()
+        assert br.code == B.SignTx
+        assert "ERC 20 APPROVE ALLOWANCE" == self.layout().title()
+        assert (
+            "value (uint256): 100000000000000- 000000" in self.layout().text_content()
+        )
         self.debug.press_yes()
 
         yield
-        assert br.code == messages.ButtonRequestType.Other
+        assert br.code == B.SignTx
         assert "CONFIRM FEE" == self.layout().title()
         assert "Gas price: 20 Wei ETH" in self.layout().text_content()
         self.debug.press_yes()
 
         yield
-        assert br.code == messages.ButtonRequestType.Other
+        assert br.code == B.SignTx
         assert "TOTAL" == self.layout().title()
         assert "Maximum fee: 400 Wei ETH" in self.layout().text_content()
         self.debug.press_yes()

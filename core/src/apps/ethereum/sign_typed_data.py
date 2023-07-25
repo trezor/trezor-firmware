@@ -39,7 +39,7 @@ async def sign_typed_data(
     address_bytes: bytes = node.ethereum_pubkeyhash()
 
     # Display address so user can validate it
-    await require_confirm_address(address_bytes)
+    await require_confirm_address(address_bytes, defs.network)
 
     data_hash = await _generate_typed_data_hash(
         msg.primary_type, msg.metamask_v4_compat

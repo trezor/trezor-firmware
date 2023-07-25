@@ -5,7 +5,7 @@
     },
     "tests": [
         {
-            "name": "erc20_token",
+            "name": "erc20_transfer_unknown_token",
             "parameters": {
                 "comment": "Sending 291 Grzegorz Brzęczyszczykiewicz tokens to address 0x574bbb36871ba6b78e27f4b4dcfb76ea0091880b",
                 "data": "a9059cbb000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000123",
@@ -25,10 +25,30 @@
             }
         },
         {
+            "name": "erc20_transfer_dai",
+            "parameters": {
+                "comment": "Sending 291 Grzegorz Brzęczyszczykiewicz tokens to address 0x574bbb36871ba6b78e27f4b4dcfb76ea0091880b",
+                "data": "a9059cbb000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000123",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "72118d439b1784d235656d8b60a0b810ed68946b30901a42f85f8f19c14a655c",
+                "sig_s": "0804894c9e693faf144b4d2aaa16b05d08daf8215bf7272ce4135c7302766f56"
+            }
+        },
+        {
             "name": "erc20_approve",
             "parameters": {
                 "comment": "Calling approve function for ERC 20 token",
-                "data": "095ea7b300000000000000000000000012345678901234567890123456789012345678900000000000000000000000000000000000000000000000056bc75e2d63100000",
+                "data": "095ea7b3000000000000000000000000c460622c115537f05137c407ad17b06bb115be8b0000000000000000000000000000000000000000000000056bc75e2d63100000",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
                 "chain_id": 1,
@@ -40,8 +60,8 @@
             },
             "result": {
                 "sig_v": 38,
-                "sig_r": "44386ce8c59780b2c7674f347fc891bcb22bd5eddf5b17bf9bc3fc71f06e0561",
-                "sig_s": "1467aa6e6887f4bef4278caad3499f06c1f8730967d988f760a4f536db7796f3"
+                "sig_r": "42beac9ee8fd2391c48cb4ad8d8852843772a675693d5146a9eebb5907296f52",
+                "sig_s": "36680d5acffd5620b71a60815c6daae4b322db7a7e987482be13e67e5610bbab"
             }
         },
         {
