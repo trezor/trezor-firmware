@@ -99,6 +99,7 @@ def disconnect_device(client: "TrezorClient") -> None:
         click.echo(f"Disconnect failed: {e}")
         sys.exit(3)
 
+
 @cli.command()
 @click.option("--device", is_flag=True, help="Disconnect from device side.")
 def disconnect(device: bool) -> None:
