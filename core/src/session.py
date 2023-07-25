@@ -22,9 +22,8 @@ workflow.start_default()
 
 # initialize the wire codec
 wire.setup(usb.iface_wire)
-if __debug__:
-    wire.setup(usb.iface_debug, is_debug_session=True)
 
+# start the event loop
 loop.run()
 
 if __debug__:
