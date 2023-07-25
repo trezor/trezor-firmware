@@ -287,7 +287,6 @@ class race(Syscall):
     directly).  Return value of `race` is the return value of the child that
     triggered the  completion.  Other running children are killed (by cancelling
     any pending schedules and raising a `GeneratorExit` by calling `close()`).
-    Child that caused the completion is present in `self.finished`.
 
     Example:
 
@@ -297,19 +296,14 @@ class race(Syscall):
     >>> animation_task = animate_logo()
     >>> racer = loop.race(touch_task, animation_task)
     >>> result = await racer
-    >>> if animation_task in racer.finished:
-    >>>     print('animation task returned value:', result)
-    >>> elif touch_task in racer.finished:
-    >>>     print('touch task returned value:', result)
 
     Note: You should not directly `yield` a `race` instance, see logic in
     `race.__iter__` for explanation.  Always use `await`.
     """
 
-    def __init__(self, *children: AwaitableTask, exit_others: bool = True) -> None:
+    def __init__(self, *children: AwaitableTask) -> None:
         self.children = children
-        self.exit_others = exit_others
-        self.finished: list[AwaitableTask] = []  # children that finished
+        self.finished = False
         self.scheduled: list[Task] = []  # scheduled wrapper tasks
 
     def handle(self, task: Task) -> None:
@@ -318,11 +312,10 @@ class race(Syscall):
         """
         finalizer = self._finish
         scheduled = self.scheduled
-        finished = self.finished
+        self.finished = False
 
         self.callback = task
         scheduled.clear()
-        finished.clear()
 
         for child in self.children:
             child_task: Task
@@ -346,17 +339,8 @@ class race(Syscall):
 
     def _finish(self, task: Task, result: Any) -> None:
         if not self.finished:
-            # because we create tasks for children that are not generators yet,
-            # we need to find the child value that the caller supplied
-            for index, child_task in enumerate(self.scheduled):
-                if child_task is task:
-                    child = self.children[index]
-                    break
-            else:
-                raise RuntimeError  # task not found in scheduled
-            self.finished.append(child)
-            if self.exit_others:
-                self.exit(task)
+            self.finished = True
+            self.exit(task)
             schedule(self.callback, result)
 
     def __iter__(self) -> Task:
@@ -366,7 +350,7 @@ class race(Syscall):
             # exception was raised on the waiting task externally with
             # close() or throw(), kill the children tasks and re-raise
             # Make sure finalizers don't continue processing.
-            self.finished.append(self)
+            self.finished = True
             self.exit()
             raise
 
