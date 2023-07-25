@@ -396,7 +396,7 @@ def test_signtx_data_pagination(client: Client, flow):
 
 
 @pytest.mark.skip_t1
-def test_ethereum_sign_erc20_approve(client: Client):
+def test_signtx_erc20_approve(client: Client):
     with client:
         client.watch_layout()
         IF = InputFlowErc20Approve(client)
