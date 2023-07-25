@@ -218,10 +218,14 @@ class BleAsync:
             return
         ble_device = self.devices[self.current]
         if ble_device.connected:
-            LOG.info("Disconnecting from %s (%s)..." % (ble_device.name, ble_device.address))
+            LOG.info(
+                "Disconnecting from %s (%s)..." % (ble_device.name, ble_device.address)
+            )
             await ble_device.disconnect()
         else:
-            LOG.info("Disconnected from %s (%s)." % (ble_device.name, ble_device.address))
+            LOG.info(
+                "Disconnected from %s (%s)." % (ble_device.name, ble_device.address)
+            )
         self.current = None
         self.rx = None
         self.tx = None
