@@ -392,10 +392,17 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
 
 class InputFlowShowXpubQRCode(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, passphrase: bool = False):
         super().__init__(client)
+        self.passphrase = passphrase
 
-    def input_flow_tt(self) -> GeneratorType:
+    def input_flow_tt(self) -> BRGeneratorType:
+        if self.passphrase:
+            br = yield
+            self.debug.press_yes()
+            br = yield
+            self.debug.press_yes()
+
         br = yield
         layout = self.debug.wait_layout()
         if "coinjoin" in layout.title().lower():
@@ -436,12 +443,12 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             br = yield
 
         # Go into details
-        self.debug.press_right()
+        self.debug.press_right(wait=True)
         # Go through details and back
-        self.debug.press_right()
-        self.debug.press_right()
-        self.debug.press_left()
-        self.debug.press_left()
+        self.debug.press_right(wait=True)
+        self.debug.press_right(wait=True)
+        self.debug.press_left(wait=True)
+        self.debug.press_left(wait=True)
         assert br.pages is not None
         for _ in range(br.pages - 1):
             self.debug.press_right()
