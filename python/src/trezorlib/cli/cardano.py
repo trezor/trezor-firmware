@@ -271,16 +271,20 @@ def get_address(
     type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
     default=messages.CardanoDerivationType.ICARUS,
 )
+@click.option("-d", "--show-display", is_flag=True)
 @with_client
 def get_public_key(
     client: "TrezorClient",
     address: str,
     derivation_type: messages.CardanoDerivationType,
+    show_display: bool,
 ) -> messages.CardanoPublicKey:
     """Get Cardano public key."""
     address_n = tools.parse_path(address)
     client.init_device(derive_cardano=True)
-    return cardano.get_public_key(client, address_n, derivation_type=derivation_type)
+    return cardano.get_public_key(
+        client, address_n, derivation_type=derivation_type, show_display=show_display
+    )
 
 
 @cli.command()

@@ -798,10 +798,13 @@ def get_public_key(
     client: "TrezorClient",
     address_n: List[int],
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
+    show_display: bool = False,
 ) -> "MessageType":
     return client.call(
         messages.CardanoGetPublicKey(
-            address_n=address_n, derivation_type=derivation_type
+            address_n=address_n,
+            derivation_type=derivation_type,
+            show_display=show_display,
         )
     )
 

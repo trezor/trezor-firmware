@@ -157,8 +157,9 @@ VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
 )
 def test_descriptors(client: Client, coin, account, purpose, script_type, descriptors):
     with client:
-        IF = InputFlowShowXpubQRCode(client)
-        client.set_input_flow(IF.get())
+        if client.features.model != "1":
+            IF = InputFlowShowXpubQRCode(client)
+            client.set_input_flow(IF.get())
         res = btc._get_descriptor(
             client, coin, account, purpose, script_type, show_display=True
         )
