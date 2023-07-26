@@ -79,9 +79,31 @@ async def get_public_key(
     )
 
     if msg.show_display:
-        from trezor.ui.layouts import show_xpub
+        from trezor.ui.layouts import confirm_path_warning, show_pubkey
 
-        await show_xpub(node_xpub, "XPUB")
+        from apps.common.paths import address_n_to_str
+
+        from .keychain import address_n_to_name
+
+        path = address_n_to_str(address_n)
+        account_name = address_n_to_name(
+            coin, address_n, script_type, account_level=True
+        )
+        if account_name is None:
+            account = None
+            await confirm_path_warning(path)
+        elif account_name == "":
+            account = coin.coin_shortcut
+        else:
+            account = f"{coin.coin_shortcut} {account_name}"
+        await show_pubkey(
+            node_xpub,
+            "XPUB",
+            account=account,
+            path=path,
+            mismatch_title="XPUB mismatch?",
+            br_type="show_xpub",
+        )
 
     return PublicKey(
         node=node_type,

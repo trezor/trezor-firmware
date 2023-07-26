@@ -226,7 +226,7 @@ def show_passphrase() -> object:
 
 
 # rust/src/ui/model_tr/layout.rs
-def show_mismatch() -> object:
+def show_mismatch(*, title: str) -> object:
     """Warning modal, receiving address mismatch."""
 
 
@@ -524,8 +524,10 @@ def confirm_reset_device(
 # rust/src/ui/model_tt/layout.rs
 def show_address_details(
     *,
+    qr_title: str,
     address: str,
     case_sensitive: bool,
+    details_title: str,
     account: str | None,
     path: str | None,
     xpubs: list[tuple[str, str]],
@@ -653,7 +655,7 @@ def show_info(
 
 
 # rust/src/ui/model_tt/layout.rs
-def show_mismatch() -> object:
+def show_mismatch(*, title: str) -> object:
     """Warning modal, receiving address mismatch."""
 
 

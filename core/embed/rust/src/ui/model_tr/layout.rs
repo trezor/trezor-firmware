@@ -1090,15 +1090,16 @@ extern "C" fn new_show_passphrase() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn new_show_mismatch() -> Obj {
-    let block = move || {
+extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
             let btn_layout = ButtonLayout::arrow_none_text("QUIT".into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
-                .text_bold("ADDRESS MISMATCH?".into())
+                .text_bold(title.clone())
                 .newline()
                 .newline_half()
                 .text_normal("Please contact Trezor support at".into())
@@ -1112,7 +1113,7 @@ extern "C" fn new_show_mismatch() -> Obj {
         let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
     };
-    unsafe { util::try_or_raise(block) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -1737,9 +1738,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Show passphrase on host dialog."""
     Qstr::MP_QSTR_show_passphrase => obj_fn_0!(new_show_passphrase).as_obj(),
 
-    /// def show_mismatch() -> object:
+    /// def show_mismatch(*, title: str) -> object:
     ///     """Warning modal, receiving address mismatch."""
-    Qstr::MP_QSTR_show_mismatch => obj_fn_0!(new_show_mismatch).as_obj(),
+    Qstr::MP_QSTR_show_mismatch => obj_fn_kw!(0, new_show_mismatch).as_obj(),
 
     /// def confirm_with_info(
     ///     *,
