@@ -50,7 +50,7 @@ async def sign_tx_eip1559(
     if len(msg.max_priority_fee) + len(gas_limit) > 30:
         raise wire.DataError("Fee overflow")
 
-    token, address_bytes, _recipient, value = await sign_tx_inner(msg, keychain, defs)
+    token, address_bytes, value = await sign_tx_inner(msg, keychain, defs)
 
     data_total = msg.data_length
 

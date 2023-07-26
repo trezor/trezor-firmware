@@ -40,7 +40,7 @@ async def sign_tx(
     if len(msg.gas_price) + len(msg.gas_limit) > 30:
         raise DataError("Fee overflow")
 
-    token, address_bytes, _recipient, value = await sign_tx_inner(msg, keychain, defs)
+    token, address_bytes, value = await sign_tx_inner(msg, keychain, defs)
 
     data_total = msg.data_length
 
@@ -93,7 +93,7 @@ async def sign_tx_inner(
     msg: MsgInSignTx,
     keychain: Keychain,
     defs: Definitions,
-) -> tuple[EthereumTokenInfo | None, bytes, bytes, int | None]:
+) -> tuple[EthereumTokenInfo | None, bytes, int | None]:
     from . import tokens
     from .layout import (
         require_confirm_data,
@@ -103,7 +103,6 @@ async def sign_tx_inner(
     from trezor.ui.layouts import confirm_properties
     from trezor.enums import ButtonRequestType
     from apps.common import paths
-    from ubinascii import hexlify
 
     check_common_fields(msg)
     await paths.validate_path(keychain, msg.address_n)
@@ -113,72 +112,83 @@ async def sign_tx_inner(
     address_bytes = recipient = bytes_from_address(msg.to)
     value = int.from_bytes(msg.value, "big")
 
-    FUNCTION_HASH_LENGTH = (
-        4  # ETH function hashes are truncated to 4 bytes in calldata for some reason.
-    )
-    if (
-        len(msg.to) in (40, 42)
-        and len(msg.value) == 0
-        and msg.data_length >= FUNCTION_HASH_LENGTH
-        and len(data_initial_chunk) >= FUNCTION_HASH_LENGTH
-    ):
-        function_hash = int.from_bytes(data_initial_chunk[:FUNCTION_HASH_LENGTH], "big")
-
-        if value:
-            raise DataError(
-                "Expecting zero or None as native transaction value when calling smart contract functions"
-            )
-        # Force 0 value to None to signify that we are not spending regular ethereum in later dialogs
+    # We may be calling a function if we have a zero value.
+    if len(msg.value) == 0:
+        # Force 0 value to None to signify to outer code (require_confirm_fee) that we are not performing a transfer.
         value = None
 
-        confirm_props: list[PropertyType] = []
-
-        # Bother the user with confirming unknown tokens if we are indeed calling a function and not just transferring value.
-        token = defs.get_token(address_bytes)
-        if token is tokens.UNKNOWN_TOKEN:
-            await require_confirm_unknown_token(address_bytes, defs.network)
-        else:
-            confirm_props.append(("Token:", token.name))
-
-        if defs.network:
-            confirm_props.append(("Network:", defs.network.name))
-
-        if abi := _fetch_function_abi(function_hash):
-            confirm_props.extend(
-                _fetch_abi_input_properties(
-                    abi["inputs"],
-                    data_initial_chunk[FUNCTION_HASH_LENGTH:],
-                    defs.network,
+        # If we don't have a to-address, we are submitting a new contract.
+        if msg.to is None:
+            if msg.data_length < 1:
+                raise DataError(
+                    "Transaction should at least contain data or a destination address."
                 )
-            )
+            await require_confirm_data(msg.data_initial_chunk, msg.data_length)
 
-            await confirm_properties(
-                "confirm_call",
-                abi["description"],
-                confirm_props,
-                hold=True,
-                br_code=ButtonRequestType.SignTx,
-            )
-        elif token:
-            confirm_props.append(
-                ("Raw calldata:", f"0x{hexlify(data_initial_chunk).decode()}")
-            )
+        elif len(msg.to) in (40, 42):
+            FUNCTION_HASH_LENGTH = 4  # ETH function hashes are truncated to 4 bytes in calldata for some reason.
+            if (
+                msg.data_length < FUNCTION_HASH_LENGTH
+                or len(data_initial_chunk) < FUNCTION_HASH_LENGTH
+            ):
+                await require_confirm_data(msg.data_initial_chunk, msg.data_length)
+            else:
+                function_hash = int.from_bytes(
+                    data_initial_chunk[:FUNCTION_HASH_LENGTH], "big"
+                )
 
-            await confirm_properties(
-                "confirm_unknown_abi",
-                "Confirm calling function",
-                confirm_props,
-                hold=True,
-                br_code=ButtonRequestType.SignTx,
-            )
+                confirm_props: list[PropertyType] = []
 
+                # Bother the user with confirming unknown tokens if we are indeed calling a function and not just transferring value.
+                token = defs.get_token(address_bytes)
+                if token is tokens.UNKNOWN_TOKEN:
+                    await require_confirm_unknown_token(address_bytes, defs.network)
+                else:
+                    confirm_props.append(("Token:", token.name))
+
+                if defs.network:
+                    confirm_props.append(("Network:", defs.network.name))
+
+                if abi := _fetch_function_abi(function_hash):
+                    is_transfer = abi.get("is_transfer") or False
+                    input_props = _fetch_abi_input_properties(
+                        abi["inputs"],
+                        is_transfer,
+                        data_initial_chunk[FUNCTION_HASH_LENGTH:],
+                        defs.network,
+                    )
+
+                    if is_transfer:
+                        recipient = input_props[0]
+                        value = input_props[1]
+                    else:
+                        confirm_props.extend(input_props)
+
+                    await confirm_properties(
+                        "confirm_call",
+                        abi["description"],
+                        confirm_props,
+                        hold=True,
+                        br_code=ButtonRequestType.SignTx,
+                    )
+                else:
+                    await confirm_properties(
+                        "confirm_unknown_abi",
+                        "Confirm calling function",
+                        confirm_props,
+                        hold=True,
+                        br_code=ButtonRequestType.SignTx,
+                    )
+
+                    await require_confirm_data(msg.data_initial_chunk, msg.data_length)
+        else:
+            raise DataError(f"Expect msg.to to either be unset or 40/42 in length, but was: {msg.to}")
+
+    # This is not simply converted into an else-branch with the above block, since the above block may cause value to become set.
     if value is not None:
         await require_confirm_tx(recipient, value, defs.network, token)
 
-    if token is None and msg.data_length > 0:
-        await require_confirm_data(msg.data_initial_chunk, msg.data_length)
-
-    return token, address_bytes, recipient, value
+    return token, address_bytes, value
 
 
 def _fetch_function_abi(function_hash: int) -> dict[str, Any] | None:
@@ -186,6 +196,7 @@ def _fetch_function_abi(function_hash: int) -> dict[str, Any] | None:
     # * Only contains ERC-20 functions
     # * Does not include outputs, not shown in UI
     # In the future this lookup could be provided by the host, signed with SL keys.
+    # TODO: Protobufize this type with enum values instead of being stringly typed
     ABI_DB: dict[int, dict[str, Any]] = {
         0xDD62ED3E: {
             "name": "allowance",
@@ -222,6 +233,7 @@ def _fetch_function_abi(function_hash: int) -> dict[str, Any] | None:
                     "type": "uint256",
                 },
             ],
+            "is_transfer": True,
         },
         0x23B872DD: {
             "name": "transferFrom",
@@ -246,8 +258,11 @@ def _fetch_function_abi(function_hash: int) -> dict[str, Any] | None:
 
 
 def _fetch_abi_input_properties(
-    input_defs: list[dict[str, str]], calldata: memoryview, network: EthereumNetworkInfo
-) -> list[PropertyType]:
+    input_defs: list[dict[str, str]],
+    is_transfer: bool,
+    calldata: memoryview,
+    network: EthereumNetworkInfo,
+) -> Any:  # Any is not nice here, would be better to have two different methods using the same generator-function to iterate through the input fields, formatting addresses and yeilding etc...
     expected_data_length = len(input_defs) * 32
     if len(calldata) != expected_data_length:
         raise DataError(
@@ -255,32 +270,52 @@ def _fetch_abi_input_properties(
         )
 
     input_props: list[PropertyType] = []
+    recipient = None
+    value = None
 
     for index, input_def in enumerate(input_defs):
         input_type = input_def["type"]
         input_name = input_def["name"]
 
         if input_type == "address":
-            # We skip over the first 12 bytes of zero padding in the address
+            if (
+                calldata[(index * 32) : 12 + (index * 32)]
+                != b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            ):
+                raise DataError("Expected first 12 bytes of address to be zeroes")
             input_address = calldata[12 + (index * 32) : 32 + (index * 32)]
-            input_props.append(
-                (
-                    f"{input_name} ({input_type}):",
-                    address_from_bytes(input_address, network),
+            if is_transfer:
+                recipient = input_address
+            else:
+                input_props.append(
+                    (
+                        f"{input_name} ({input_type}):",
+                        address_from_bytes(input_address, network),
+                    )
                 )
-            )
         elif input_type == "uint256":
-            input_uint = int.from_bytes(
+            input_int = int.from_bytes(
                 calldata[(index * 32) : 32 + (index * 32)], "big"
             )
-            input_props.append((f"{input_name} ({input_type}):", str(input_uint)))
+            if is_transfer:
+                value = input_int
+            else:
+                input_props.append((f"{input_name} ({input_type}):", str(input_int)))
         else:
             raise DataError(
                 "Currently unsupported type returned by _fetch_function_abi: "
                 + input_type
             )
 
-    return input_props
+    if is_transfer:
+        if len(input_defs) != 2:
+            raise DataError("Unexpected number of parameters in transfer-call")
+        if not recipient or value is None:
+            raise DataError("Missing recipient address and/or value for transfer-call")
+
+        return (recipient, value)
+    else:
+        return input_props
 
 
 def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
