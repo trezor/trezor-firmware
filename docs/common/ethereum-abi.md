@@ -14,7 +14,7 @@ What follows in this example are two 32-byte input parameters:
 * The token amount to transfer - `0x123`/`291`, also left-padded with zeroes.
 
 
-## State of implementation
+## Present state of implementation & longer term goal
 
 Preliminary support for mapping smart contract function hashes exists in `trezor-firmware/core/src/apps/ethereum/sign_tx.py`.
 
