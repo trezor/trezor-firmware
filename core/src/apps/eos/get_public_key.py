@@ -24,7 +24,8 @@ async def get_public_key(msg: EosGetPublicKey, keychain: Keychain) -> EosPublicK
 
     public_key = secp256k1.publickey(node.private_key(), True)
     wif = public_key_to_wif(public_key)
+    path = paths.address_n_to_str(msg.address_n)
 
     if msg.show_display:
-        await require_get_public_key(wif)
+        await require_get_public_key(wif, path)
     return EosPublicKey(wif_public_key=wif, raw_public_key=public_key)

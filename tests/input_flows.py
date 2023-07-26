@@ -391,6 +391,64 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.press_middle()
 
 
+class InputFlowShowXpubQRCode(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_tt(self) -> GeneratorType:
+        br = yield
+        layout = self.debug.wait_layout()
+        if "coinjoin" in layout.title().lower():
+            self.debug.press_yes()
+            br = yield
+        elif br.code == B.UnknownDerivationPath:
+            self.debug.press_yes()
+            br = yield
+
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # synchronize; TODO get rid of this once we have single-global-layout
+        self.debug.synchronize_at("HorizontalPage")
+
+        self.debug.swipe_left(wait=True)
+        self.debug.swipe_right(wait=True)
+        self.debug.swipe_left(wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.press_no(wait=True)
+        for _ in range(br.pages - 1):
+            self.debug.swipe_up(wait=True)
+        self.debug.press_yes()
+
+    def input_flow_tr(self) -> BRGeneratorType:
+        if self.passphrase:
+            br = yield
+            self.debug.press_right()
+            br = yield
+            self.debug.press_right()
+
+        br = yield
+        layout = self.debug.wait_layout()
+        if "coinjoin" in layout.title().lower():
+            self.debug.press_right()
+            br = yield
+        elif br.code == B.UnknownDerivationPath:
+            self.debug.press_right()
+            br = yield
+
+        # Go into details
+        self.debug.press_right()
+        # Go through details and back
+        self.debug.press_right()
+        self.debug.press_right()
+        self.debug.press_left()
+        self.debug.press_left()
+        assert br.pages is not None
+        for _ in range(br.pages - 1):
+            self.debug.press_right()
+        # Confirm
+        self.debug.press_middle()
+
+
 class InputFlowPaymentRequestDetails(InputFlowBase):
     def __init__(self, client: Client, outputs: list[messages.TxOutputType]):
         super().__init__(client)

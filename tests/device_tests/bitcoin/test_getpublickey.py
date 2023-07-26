@@ -22,6 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ... import bip32
+from ...input_flows import InputFlowShowXpubQRCode
 
 VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
     (
@@ -113,6 +114,17 @@ def test_get_public_node(client: Client, coin_name, xpub_magic, path, xpub):
     res = btc.get_public_node(client, path, coin_name=coin_name)
     assert res.xpub == xpub
     assert bip32.serialize(res.node, xpub_magic) == xpub
+
+
+@pytest.mark.skip_t1
+@pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
+def test_get_public_node_show(client: Client, coin_name, xpub_magic, path, xpub):
+    with client:
+        IF = InputFlowShowXpubQRCode(client)
+        client.set_input_flow(IF.get())
+        res = btc.get_public_node(client, path, coin_name=coin_name, show_display=True)
+        assert res.xpub == xpub
+        assert bip32.serialize(res.node, xpub_magic) == xpub
 
 
 @pytest.mark.xfail(reason="Currently path validation on get_public_node is disabled.")

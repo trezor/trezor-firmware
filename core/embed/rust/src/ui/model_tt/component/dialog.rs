@@ -119,13 +119,15 @@ where
         }
     }
 
-    pub fn with_text(mut self, style: &'static TextStyle, text: T) -> Self {
-        if !text.as_ref().is_empty() {
-            self.paragraphs
-                .inner_mut()
-                .add(Paragraph::new(style, text).centered());
+    pub fn with_paragraph(mut self, para: Paragraph<T>) -> Self {
+        if !para.content().as_ref().is_empty() {
+            self.paragraphs.inner_mut().add(para);
         }
         self
+    }
+
+    pub fn with_text(self, style: &'static TextStyle, text: T) -> Self {
+        self.with_paragraph(Paragraph::new(style, text).centered())
     }
 
     pub fn with_description(self, description: T) -> Self {
