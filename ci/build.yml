@@ -29,9 +29,11 @@ core fw regular build:
     - $NIX_SHELL --run "poetry run make -C core build_firmware"
     - $NIX_SHELL --run "poetry run make -C core sizecheck"
     - cp core/build/firmware/firmware.bin firmware-T2T1-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - cp core/build/firmware/firmware.elf firmware.elf
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
+      - firmware.elf
       - firmware-T2T1-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
@@ -45,9 +47,11 @@ core fw regular debug build:
   script:
     - $NIX_SHELL --run "PYOPT=0 poetry run make -C core build_firmware"
     - cp core/build/firmware/firmware.bin firmware-T2T1-debug-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - cp core/build/firmware/firmware.elf firmware.elf
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
+      - firmware.elf
       - firmware-T2T1-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
@@ -162,9 +166,11 @@ core fw R debug build:
   script:
     - nix-shell --run "poetry run make -C core build_firmware"
     - cp core/build/firmware/firmware.bin trezor-fw-debug-tr-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - cp core/build/firmware/firmware.elf firmware.elf
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
+      - firmware.elf
       - trezor-fw-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
@@ -177,9 +183,11 @@ core fw R build:
   script:
     - nix-shell --run "poetry run make -C core build_firmware"
     - cp core/build/firmware/firmware.bin trezor-fw-tr-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - cp core/build/firmware/firmware.elf firmware.elf
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
+      - firmware.elf
       - trezor-fw-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
