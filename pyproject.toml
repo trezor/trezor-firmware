@@ -72,6 +72,9 @@ inotify = "*"
 yamllint = "^1.25.0"
 vulture = "^2.6"
 
+# tools
+binsize = "^0.1.3"
+
 [tool.poetry.dev-dependencies]
 scan-build = "*"
 towncrier = "^23.6.0"
