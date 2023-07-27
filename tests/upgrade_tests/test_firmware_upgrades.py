@@ -23,11 +23,10 @@ from trezorlib import btc, debuglink, device, exceptions, fido, models
 from trezorlib.messages import BackupType
 from trezorlib.tools import H_
 
-from ..click_tests import recovery
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of6_SECRET
 from ..device_handler import BackgroundDeviceHandler
 from ..emulators import ALL_TAGS, EmulatorWrapper
-from . import for_all, for_tags
+from . import for_all, for_tags, recovery_old
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -309,9 +308,9 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
 
         device_handler.run(device.recover, pin_protection=False)
 
-        recovery.confirm_recovery(debug)
-        recovery.select_number_of_words(debug, wait=not debug.legacy_debug)
-        layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
+        recovery_old.confirm_recovery(debug)
+        recovery_old.select_number_of_words(debug, wait=not debug.legacy_debug)
+        layout = recovery_old.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
         if not debug.legacy_ui and not debug.legacy_debug:
             assert (
                 "1 of 3 shares entered" in layout.text_content()
@@ -329,14 +328,14 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
         emu.client.watch_layout(True)
 
         # second share
-        layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[2])
+        layout = recovery_old.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[2])
         assert (
             "2 of 3 shares entered" in layout.text_content()
             or "1 more share" in layout.text_content()
         )
 
         # last one
-        layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[1])
+        layout = recovery_old.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[1])
         assert (
             "Wallet recovered successfully" in layout.text_content()
             or "finished recovering" in layout.text_content()
