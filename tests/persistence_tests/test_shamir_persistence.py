@@ -54,6 +54,11 @@ def test_abort(core_emulator: Emulator):
 
     # no waiting for layout because layout doesn't change
     assert "number of words" in debug.read_layout().text_content()
+    # clicking at 24 in word choice (the same coords as CANCEL)
+    layout = debug.click(buttons.CANCEL, wait=True)
+
+    # Cancelling the backup
+    assert "Enter your backup" in debug.read_layout().text_content()
     layout = debug.click(buttons.CANCEL, wait=True)
 
     assert layout.title() == "ABORT RECOVERY"
