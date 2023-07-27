@@ -39,19 +39,13 @@ def enter_word(
 
 
 def confirm_recovery(debug: "DebugLink") -> None:
+    layout = debug.wait_layout()
     if debug.model == "T":
-        if not debug.legacy_ui and not debug.legacy_debug:
-            layout = debug.wait_layout()
-            assert layout.title().startswith(
-                ("WALLET RECOVERY", "RECOVER WALLET", "BACKUP CHECK")
-            )
+        assert layout.title().startswith(("RECOVER WALLET", "BACKUP CHECK"))
         debug.click(buttons.OK, wait=True)
     elif debug.model == "R":
-        layout = debug.wait_layout()
         assert layout.title() == "RECOVER WALLET"
         debug.press_right(wait=True)
-        layout = debug.press_right(wait=True)
-        assert "safe to eject" in layout.text_content()
         debug.press_right()
 
 
@@ -61,20 +55,11 @@ def select_number_of_words(
     if wait:
         debug.wait_layout()
     if debug.model == "T":
-        # select number of words
-        if not debug.legacy_ui and not debug.legacy_debug:
-            assert "number of words" in debug.read_layout().text_content()
-        layout = debug.click(buttons.OK, wait=True)
-        if debug.legacy_ui:
-            assert layout.json_str == "WordSelector"
-        elif debug.legacy_debug:
-            assert "SelectWordCount" in layout.json_str
-        else:
-            assert layout.title() in (
-                "WALLET RECOVERY",
-                "BACKUP CHECK",
-                "RECOVER WALLET",
-            )
+        assert "number of words" in debug.read_layout().text_content()
+        assert debug.read_layout().title() in (
+            "BACKUP CHECK",
+            "RECOVER WALLET",
+        )
 
         # click the number
         word_option_offset = 6
@@ -99,11 +84,10 @@ def select_number_of_words(
     else:
         raise ValueError("Unknown model")
 
-    if not debug.legacy_ui and not debug.legacy_debug:
-        if num_of_words in (20, 33):
-            assert "Enter any share" in layout.text_content()
-        else:
-            assert "Enter your backup" in layout.text_content()
+    if num_of_words in (20, 33):
+        assert "Enter any share" in layout.text_content()
+    else:
+        assert "Enter your backup" in layout.text_content()
 
 
 def enter_share(
@@ -112,13 +96,7 @@ def enter_share(
     if debug.model == "T":
         layout = debug.click(buttons.OK, wait=True)
 
-        if debug.legacy_ui:
-            assert layout.json_str == "Slip39Keyboard"
-        elif debug.legacy_debug:
-            assert "MnemonicKeyboard" in layout.json_str
-        else:
-            assert layout.main_component() == "MnemonicKeyboard"
-
+        assert layout.main_component() == "MnemonicKeyboard"
         for word in share.split(" "):
             layout = enter_word(debug, word, is_slip39=True)
 
@@ -130,7 +108,7 @@ def enter_share(
             # Word entering info
             debug.press_right()
             layout = debug.press_right(wait=True)
-        assert "Slip39Entry" in layout.all_components()
+        assert "MnemonicKeyboard" in layout.all_components()
 
         for word in share.split(" "):
             layout = enter_word(debug, word, is_slip39=True)
@@ -162,7 +140,7 @@ def enter_seed(debug: "DebugLink", seed_words: list[str]) -> None:
         debug.press_right()
 
         layout = debug.press_right(wait=True)
-        assert "Bip39Entry" in layout.all_components()
+        assert "MnemonicKeyboard" in layout.all_components()
 
     for word in seed_words:
         layout = enter_word(debug, word, is_slip39=False)

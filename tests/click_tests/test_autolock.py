@@ -301,10 +301,7 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.model == "R":
         layout = debug.press_right(wait=True)
-        assert layout.title() in ("RECOVER WALLET", "BACKUP CHECK")
-        debug.press_right()
-        layout = debug.press_right(wait=True)
-        assert "Slip39Entry" in layout.all_components()
+        assert "MnemonicKeyboard" in layout.all_components()
 
     # make sure keyboard locks
     time.sleep(10.1)
@@ -338,10 +335,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.model == "R":
         layout = debug.press_right(wait=True)
-        assert layout.title() in ("RECOVER WALLET", "BACKUP CHECK")
-        debug.press_right()
-        layout = debug.press_right(wait=True)
-        assert "Slip39Entry" in layout.all_components()
+        assert "MnemonicKeyboard" in layout.all_components()
 
         # pressing middle button three times
         for _ in range(3):
@@ -349,7 +343,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
             debug.press_middle()
         layout = debug.wait_layout()
         # should not have locked, even though we took 9 seconds to type each letter
-        assert "Slip39Entry" in layout.all_components()
+        assert "MnemonicKeyboard" in layout.all_components()
 
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
