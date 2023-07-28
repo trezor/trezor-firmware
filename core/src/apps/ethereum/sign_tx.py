@@ -8,7 +8,7 @@ from .helpers import address_from_bytes, bytes_from_address
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Generator
 
     from apps.common.keychain import Keychain
     from trezor.messages import EthereumSignTx, EthereumTxAck, EthereumTokenInfo
@@ -123,6 +123,7 @@ async def sign_tx_inner(
                 raise DataError(
                     "Transaction should at least contain data or a destination address."
                 )
+
             await require_confirm_data(msg.data_initial_chunk, msg.data_length)
 
         elif len(msg.to) in (40, 42):
@@ -150,19 +151,19 @@ async def sign_tx_inner(
                     confirm_props.append(("Network:", defs.network.name))
 
                 if abi := _fetch_function_abi(function_hash):
-                    is_transfer = abi.get("is_transfer") or False
-                    input_props = _fetch_abi_input_properties(
-                        abi["inputs"],
-                        is_transfer,
-                        data_initial_chunk[FUNCTION_HASH_LENGTH:],
-                        defs.network,
-                    )
-
-                    if is_transfer:
-                        recipient = input_props[0]
-                        value = input_props[1]
+                    if abi.get("is_transfer"):
+                        # For transfer calls, we want to override the regular recipient and value to get the normal require_confirm_tx dialog below.
+                        recipient, value = _fetch_abi_input_transfer_tuple(
+                            abi["inputs"], data_initial_chunk[FUNCTION_HASH_LENGTH:]
+                        )
                     else:
-                        confirm_props.extend(input_props)
+                        confirm_props.extend(
+                            _fetch_abi_input_properties(
+                                abi["inputs"],
+                                data_initial_chunk[FUNCTION_HASH_LENGTH:],
+                                defs.network,
+                            )
+                        )
 
                     await confirm_properties(
                         "confirm_call",
@@ -182,7 +183,9 @@ async def sign_tx_inner(
 
                     await require_confirm_data(msg.data_initial_chunk, msg.data_length)
         else:
-            raise DataError(f"Expect msg.to to either be unset or 40/42 in length, but was: {msg.to}")
+            raise DataError(
+                f"Expect msg.to to either be unset or 40/42 in length, but was: {msg.to}"
+            )
 
     # This is not simply converted into an else-branch with the above block, since the above block may cause value to become set.
     if value is not None:
@@ -259,23 +262,84 @@ def _fetch_function_abi(function_hash: int) -> dict[str, Any] | None:
 
 def _fetch_abi_input_properties(
     input_defs: list[dict[str, str]],
-    is_transfer: bool,
     calldata: memoryview,
     network: EthereumNetworkInfo,
-) -> Any:  # Any is not nice here, would be better to have two different methods using the same generator-function to iterate through the input fields, formatting addresses and yeilding etc...
+) -> list[PropertyType]:
+    input_props: list[PropertyType] = []
+
+    for input_tuple in _iterate_abi_inputs(input_defs, calldata):
+        input_name = input_tuple[0]
+        input_type = input_tuple[1]
+        input_value = input_tuple[2]
+
+        if input_type == "address":
+            input_props.append(
+                (
+                    f"{input_name} ({input_type}):",
+                    address_from_bytes(input_value, network),
+                )
+            )
+        elif input_type == "uint256":
+            input_props.append((f"{input_name} ({input_type}):", str(input_value)))
+        else:
+            raise DataError(
+                "Currently unsupported type returned by _fetch_function_abi: "
+                + input_type
+            )
+
+    return input_props
+
+
+def _fetch_abi_input_transfer_tuple(
+    input_defs: list[dict[str, str]],
+    calldata: memoryview,
+) -> tuple[bytes, int]:
+    if len(input_defs) != 2:
+        raise DataError("Unexpected number of parameters in transfer-call")
+
+    recipient = None
+    value = None
+
+    for input_tuple in _iterate_abi_inputs(input_defs, calldata):
+        input_type = input_tuple[1]
+        input_value = input_tuple[2]
+
+        if input_type == "address":
+            if recipient is not None:
+                raise DataError("Only expect one address for transfer-type functions")
+            recipient = input_value
+        elif input_type == "uint256":
+            if value is not None:
+                raise DataError(
+                    "Only expect one int amount for transfer-type functions"
+                )
+            value = input_value
+        else:
+            raise DataError(
+                "Currently unsupported type returned by _fetch_function_abi: "
+                + input_type
+            )
+
+    if not recipient or value is None:
+        raise DataError("Missing recipient address and/or value for transfer-call")
+
+    return (recipient, value)
+
+
+def _iterate_abi_inputs(
+    input_defs: list[dict[str, str]],
+    calldata: memoryview,
+) -> Generator[tuple[str, str, Any], None, None]:
+    # Currently only supporting 32 byte-sized input types.
     expected_data_length = len(input_defs) * 32
     if len(calldata) != expected_data_length:
         raise DataError(
             f"Function definition requires more parameter data than provided in calldata ({len(calldata)} vs {expected_data_length})."
         )
 
-    input_props: list[PropertyType] = []
-    recipient = None
-    value = None
-
     for index, input_def in enumerate(input_defs):
-        input_type = input_def["type"]
         input_name = input_def["name"]
+        input_type = input_def["type"]
 
         if input_type == "address":
             if (
@@ -284,38 +348,17 @@ def _fetch_abi_input_properties(
             ):
                 raise DataError("Expected first 12 bytes of address to be zeroes")
             input_address = calldata[12 + (index * 32) : 32 + (index * 32)]
-            if is_transfer:
-                recipient = input_address
-            else:
-                input_props.append(
-                    (
-                        f"{input_name} ({input_type}):",
-                        address_from_bytes(input_address, network),
-                    )
-                )
+            yield (input_name, input_type, input_address)
         elif input_type == "uint256":
             input_int = int.from_bytes(
                 calldata[(index * 32) : 32 + (index * 32)], "big"
             )
-            if is_transfer:
-                value = input_int
-            else:
-                input_props.append((f"{input_name} ({input_type}):", str(input_int)))
+            yield (input_name, input_type, input_int)
         else:
             raise DataError(
                 "Currently unsupported type returned by _fetch_function_abi: "
                 + input_type
             )
-
-    if is_transfer:
-        if len(input_defs) != 2:
-            raise DataError("Unexpected number of parameters in transfer-call")
-        if not recipient or value is None:
-            raise DataError("Missing recipient address and/or value for transfer-call")
-
-        return (recipient, value)
-    else:
-        return input_props
 
 
 def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
