@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 from trezor import ui
 from trezor.enums import ButtonRequestType
@@ -13,7 +12,7 @@ from trezor.ui.layouts import (
     should_show_more,
 )
 
-from .helpers import decode_typed_data
+from .helpers import address_from_bytes, decode_typed_data
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable
@@ -118,10 +117,12 @@ async def require_confirm_eip1559_fee(
         )
 
 
-def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:
+def require_confirm_unknown_token(
+    address_bytes: bytes, network: EthereumNetworkInfo
+) -> Awaitable[None]:
     from trezor.ui.layouts import confirm_address
 
-    contract_address_hex = "0x" + hexlify(address_bytes).decode()
+    contract_address_hex = address_from_bytes(address_bytes, network)
     return confirm_address(
         "Unknown token",
         contract_address_hex,
@@ -131,10 +132,12 @@ def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:
     )
 
 
-def require_confirm_address(address_bytes: bytes) -> Awaitable[None]:
+def require_confirm_address(
+    address_bytes: bytes, network: EthereumNetworkInfo
+) -> Awaitable[None]:
     from trezor.ui.layouts import confirm_address
 
-    address_hex = "0x" + hexlify(address_bytes).decode()
+    address_hex = address_from_bytes(address_bytes, network)
     return confirm_address(
         "Signing address",
         address_hex,
@@ -169,7 +172,7 @@ async def require_confirm_approve_tx(
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo,
 ) -> None:
-    address_hex = "0x" + hexlify(address_bytes).decode()
+    address_hex = address_from_bytes(address_bytes, network)
 
     await confirm_action(
         "confirm_approve",
