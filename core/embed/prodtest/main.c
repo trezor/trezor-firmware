@@ -41,9 +41,14 @@
 #include "usb.h"
 
 #ifdef USE_OPTIGA
+#include "aes/aes.h"
+#include "ecdsa.h"
+#include "nist256p1.h"
 #include "optiga_commands.h"
 #include "optiga_hal.h"
 #include "optiga_transport.h"
+#include "rand.h"
+#include "sha2.h"
 #endif
 
 #include "memzero.h"
@@ -127,7 +132,7 @@ static void vcp_write_as_hex(uint8_t *data, uint16_t len) {
 }
 
 #ifdef USE_OPTIGA
-static uint8_t get_byte_from_hex(const char *hex) {
+static uint16_t get_byte_from_hex(const char *hex) {
   uint8_t result = 0;
   for (int i = 0; i < 2; i++) {
     result <<= 4;
@@ -137,8 +142,10 @@ static uint8_t get_byte_from_hex(const char *hex) {
       result |= hex[i] - 'A' + 10;
     } else if (hex[i] >= 'a' && hex[i] <= 'f') {
       result |= hex[i] - 'a' + 10;
+    } else if (hex[i] == '\0') {
+      return 0x100;
     } else {
-      return 0;
+      return 0xFFFF;
     }
   }
   return result;
@@ -146,15 +153,24 @@ static uint8_t get_byte_from_hex(const char *hex) {
 
 static int get_from_hex(uint8_t *buf, uint16_t buf_len, const char *hex) {
   int len = 0;
-  for (int i = 0; i < buf_len; i++) {
-    uint8_t b = get_byte_from_hex(hex + i * 2);
-    if (b == 0) {
-      break;
-    }
-    buf[i] = b;
-    len++;
+  uint16_t b = get_byte_from_hex(hex);
+  for (len = 0; len < buf_len && b <= 0xff; ++len) {
+    buf[len] = b;
+    b = get_byte_from_hex(hex + len * 2);
   }
-  return len;
+
+  if (b == 0x100) {
+    // Success.
+    return len;
+  }
+
+  if (b > 0xff) {
+    // Non-hexadecimal character.
+    return -1;
+  }
+
+  // Buffer too small.
+  return -2;
 }
 #endif
 
@@ -590,84 +606,342 @@ void cpuid_read(void) {
 }
 
 #ifdef USE_OPTIGA
-void pair_optiga(void) {
-  if (secret_wiped()) {
-    //    secret_write_header();
-    //
-    //    uint8_t data[] = {0, 0, 0, 0};  // todo replace by real key
-    //
-    //    secret_write(data, SECRET_OPTIGA_KEY_OFFSET, sizeof(data));
+static const uint16_t OID_CERT_INF = 0xE0E0;
+static const uint16_t OID_CERT_DEV = 0xE0E1;
+static const uint16_t OID_CERT_FIDO = 0xE0E2;
+static const uint16_t OID_KEY_DEV = 0xE0F0;
+static const uint16_t OID_KEY_FIDO = 0xE0F2;
+static const uint16_t OID_KEY_PAIRING = 0xE140;
+static const uint16_t OID_OPTIGA_UID = 0xE0C2;
+
+bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
+  uint8_t serialized[258] = {0};
+  size_t size = 0;
+  optiga_result ret = optiga_serialize_metadata(metadata, serialized,
+                                                sizeof(serialized), &size);
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_serialize_metadata error %d for OID 0x%04x.", ret,
+               oid);
+    return false;
   }
+
+  optiga_set_data_object(oid, true, serialized, size);
+
+  ret =
+      optiga_get_data_object(oid, true, serialized, sizeof(serialized), &size);
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_get_metadata error %d for OID 0x%04x.", ret, oid);
+    return false;
+  }
+
+  optiga_metadata metadata_stored = {0};
+  ret = optiga_parse_metadata(serialized, size, &metadata_stored);
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_parse_metadata error %d.", ret);
+    return false;
+  }
+
+  if (!optiga_compare_metadata(metadata, &metadata_stored)) {
+    vcp_printf("ERROR: optiga_compare_metadata failed.");
+    return false;
+  }
+
+  return true;
 }
 
-void optiga_lock(void) {}
+bool pair_optiga(void) {
+  // Generate pairing secret.
+  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
+  optiga_result ret = optiga_get_random(secret, sizeof(secret));
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_get_random error %d,", ret);
+    return false;
+  }
+
+  // Store pairing secret.
+  ret = optiga_set_data_object(OID_KEY_PAIRING, false, secret, sizeof(secret));
+  if (OPTIGA_SUCCESS == ret) {
+    // TODO: Uncomment.
+    // secret_erase()
+    // secret_write_header();
+    // secret_write(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+  }
+
+  // Verify whether the secret was stored correctly in flash and OPTIGA.
+  // TODO: Uncomment.
+  // memzero(secret, sizeof(secret));
+  // if (secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN) ==
+  //     secfalse) {
+  //   vcp_printf("ERROR: optiga_sec_chan_handshake error.");
+  //   return false;
+  // }
+
+  ret = optiga_sec_chan_handshake(secret, sizeof(secret));
+  memzero(secret, sizeof(secret));
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_sec_chan_handshake error %d.", ret);
+    return false;
+  }
+
+  return true;
+}
+
+void optiga_lock(void) {
+  if (!pair_optiga()) {
+    return;
+  }
+
+  // Delete trust anchor.
+  optiga_result ret = optiga_set_data_object(0xe0e8, false, NULL, 0);
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_set_data error %d for 0xe0e8.", ret);
+    return;
+  }
+
+  // Set data object metadata.
+  static const optiga_metadata_item ACCESS_PAIRED = {
+      (const uint8_t *)"\x20\xE1\x40", 3};
+  static const optiga_metadata_item KEY_USE_SIGN = {(const uint8_t *)"\x10", 1};
+  static const optiga_metadata_item TYPE_PTFBIND = {(const uint8_t *)"\x22", 1};
+  optiga_metadata metadata = {0};
+
+  // Set metadata for device certificate.
+  memzero(&metadata, sizeof(metadata));
+  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_ACCESS_NEVER;
+  metadata.read = OPTIGA_ACCESS_ALWAYS;
+  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  if (!set_metadata(OID_CERT_DEV, &metadata)) {
+    return;
+  }
+
+  // Set metadata for FIDO attestation certificate.
+  memzero(&metadata, sizeof(metadata));
+  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_ACCESS_NEVER;
+  metadata.read = OPTIGA_ACCESS_ALWAYS;
+  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  if (!set_metadata(OID_CERT_FIDO, &metadata)) {
+    return;
+  }
+
+  // Set metadata for device private key.
+  memzero(&metadata, sizeof(metadata));
+  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_ACCESS_NEVER;
+  metadata.read = OPTIGA_ACCESS_NEVER;
+  metadata.execute = ACCESS_PAIRED;
+  metadata.key_usage = KEY_USE_SIGN;
+  if (!set_metadata(OID_KEY_DEV, &metadata)) {
+    return;
+  }
+
+  // Set metadata for FIDO attestation private key.
+  memzero(&metadata, sizeof(metadata));
+  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_ACCESS_NEVER;
+  metadata.read = OPTIGA_ACCESS_NEVER;
+  metadata.execute = ACCESS_PAIRED;
+  metadata.key_usage = KEY_USE_SIGN;
+  if (!set_metadata(OID_KEY_FIDO, &metadata)) {
+    return;
+  }
+
+  // Set metadata for pairing key.
+  memzero(&metadata, sizeof(metadata));
+  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_ACCESS_NEVER;
+  metadata.read = OPTIGA_ACCESS_NEVER;
+  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  metadata.data_type = TYPE_PTFBIND;
+  if (!set_metadata(OID_KEY_PAIRING, &metadata)) {
+    return;
+  }
+}
 
 void optigaid_read(void) {
-  uint8_t optiga_id[27];
-  size_t data_size = 0;
+  uint8_t optiga_id[27] = {0};
+  size_t optiga_id_size = 0;
 
-  optiga_open_application();
-  optiga_get_data_object(0xE0C2, false, optiga_id, sizeof(optiga_id),
-                         &data_size);
-
-  vcp_write_as_hex(optiga_id, sizeof(optiga_id));
-}
-
-void certinf_read(void) {
-  uint8_t cert[507];
-
-  // todo feed real data
-  for (int i = 0; i < sizeof(cert); i++) {
-    cert[i] = i;
+  optiga_result ret = optiga_get_data_object(
+      OID_OPTIGA_UID, false, optiga_id, sizeof(optiga_id), &optiga_id_size);
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_get_data_object error %d for 0x%04x.", ret,
+               OID_OPTIGA_UID);
+    return;
   }
 
-  vcp_write_as_hex(cert, sizeof(cert));
+  vcp_printf_ex("OK: ");
+  vcp_write_as_hex(optiga_id, optiga_id_size);
 }
 
-void certdev_write(char *data) {
-  // expected 507
+void cert_read(uint16_t oid) {
+  uint8_t cert[1024] = {0};
+  size_t cert_size = 0;
+  optiga_result ret =
+      optiga_get_data_object(oid, false, cert, sizeof(cert), &cert_size);
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_get_data_object error %d for 0x%04x.", ret, oid);
+    return;
+  }
+
+  vcp_printf_ex("OK: ");
+  vcp_write_as_hex(cert, cert_size);
+}
+
+void cert_write(uint16_t oid, char *data) {
   uint8_t data_bytes[1024];
 
   int len = get_from_hex(data_bytes, sizeof(data_bytes), data);
+  if (len < 0) {
+    vcp_printf("ERROR: Hexadecimal decoding error %d.", len);
+    return;
+  }
 
-  (void)len;
-  // TODO: write to optiga
+  optiga_result ret = optiga_set_data_object(oid, false, data_bytes, len);
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_set_data error %d for 0x%04x.", ret, oid);
+    return;
+  }
 
   vcp_printf("OK");
 }
 
-void keyfido_handshake(char *data) {
-  // expected 97
-  uint8_t data_bytes[1024];
+void pubkey_read(uint16_t oid) {
+  // Enable key agreement usage.
 
-  int len = get_from_hex(data_bytes, sizeof(data_bytes), data);
+  optiga_metadata metadata = {0};
+  uint8_t key_usage = OPTIGA_KEY_USAGE_KEYAGREE;
+  metadata.key_usage.ptr = &key_usage;
+  metadata.key_usage.len = 1;
 
-  (void)len;
-  // todo
+  if (!set_metadata(oid, &metadata)) {
+    return;
+  }
 
-  vcp_printf("OK");
+  // Execute ECDH with base point to get the x-coordinate of the public key.
+  static const uint8_t BASE_POINT[] = {
+      0x03, 0x42, 0x00, 0x04, 0x6b, 0x17, 0xd1, 0xf2, 0xe1, 0x2c, 0x42, 0x47,
+      0xf8, 0xbc, 0xe6, 0xe5, 0x63, 0xa4, 0x40, 0xf2, 0x77, 0x03, 0x7d, 0x81,
+      0x2d, 0xeb, 0x33, 0xa0, 0xf4, 0xa1, 0x39, 0x45, 0xd8, 0x98, 0xc2, 0x96,
+      0x4f, 0xe3, 0x42, 0xe2, 0xfe, 0x1a, 0x7f, 0x9b, 0x8e, 0xe7, 0xeb, 0x4a,
+      0x7c, 0x0f, 0x9e, 0x16, 0x2b, 0xce, 0x33, 0x57, 0x6b, 0x31, 0x5e, 0xce,
+      0xcb, 0xb6, 0x40, 0x68, 0x37, 0xbf, 0x51, 0xf5};
+  uint8_t public_key[32] = {0};
+  size_t public_key_size = 0;
+  optiga_result ret = optiga_calc_ssec(
+      OPTIGA_CURVE_P256, OID_KEY_DEV, BASE_POINT, sizeof(BASE_POINT),
+      public_key, sizeof(public_key), &public_key_size);
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_calc_ssec error %d.", ret);
+    return;
+  }
+
+  vcp_printf_ex("OK: ");
+  vcp_write_as_hex(public_key, public_key_size);
 }
 
 void keyfido_write(char *data) {
-  // expected 81
-  uint8_t data_bytes[1024];
+  static const size_t EPH_PUB_KEY_SIZE = 33;
+  static const size_t PAYLOAD_SIZE = 32;
+  static const size_t CIPHERTEXT_OFFSET = EPH_PUB_KEY_SIZE;
+  static const size_t EXPECTED_SIZE = EPH_PUB_KEY_SIZE + PAYLOAD_SIZE;
 
+  // Enable key agreement usage for device key.
+
+  optiga_metadata metadata = {0};
+  uint8_t key_usage = OPTIGA_KEY_USAGE_KEYAGREE;
+  metadata.key_usage.ptr = &key_usage;
+  metadata.key_usage.len = 1;
+
+  if (!set_metadata(OID_KEY_DEV, &metadata)) {
+    return;
+  }
+
+  // Read encrypted FIDO attestation private key.
+
+  uint8_t data_bytes[EXPECTED_SIZE];
   int len = get_from_hex(data_bytes, sizeof(data_bytes), data);
+  if (len < 0) {
+    vcp_printf("ERROR: Hexadecimal decoding error %d.", len);
+    return;
+  }
 
-  (void)len;
-  // todo
+  if (len != EXPECTED_SIZE) {
+    vcp_printf("ERROR: Unexpected input length.");
+    return;
+  }
 
-  vcp_printf("OK");
-}
+  // Expand sender's ephemeral public key.
+  curve_point pub = {0};
+  if (0 == ecdsa_read_pubkey(&nist256p1, data_bytes, &pub)) {
+    vcp_printf("ERROR: Failed to decode public key.");
+    return;
+  }
+  uint8_t public_key[4 + 64] = {0x03, 0x42, 0x00, 0x04};
+  bn_write_be(&pub.x, public_key + 4);
+  bn_write_be(&pub.y, public_key + 4 + 32);
 
-void certfido_write(char *data) {
-  // expected 465
-  uint8_t data_bytes[1024];
+  // Execute ECDH with device private key.
+  uint8_t secret[64] = {0};
+  size_t secret_size = 0;
+  optiga_result ret = optiga_calc_ssec(OPTIGA_CURVE_P256, OID_KEY_DEV,
+                                       public_key, sizeof(public_key), secret,
+                                       sizeof(secret), &secret_size);
+  if (OPTIGA_SUCCESS != ret) {
+    memzero(secret, sizeof(secret));
+    vcp_printf("ERROR: optiga_calc_ssec error %d.", ret);
+    return;
+  }
 
-  int len = get_from_hex(data_bytes, sizeof(data_bytes), data);
+  // Hash the shared secret. Use the result as the decryption key and IV.
+  sha256_Raw(secret, secret_size, secret);
+  aes_decrypt_ctx ctx = {0};
+  AES_RETURN aes_ret = aes_decrypt_key256(secret, &ctx);
+  if (EXIT_SUCCESS != aes_ret) {
+    vcp_printf("ERROR: aes_decrypt_key256 error.");
+    memzero(&ctx, sizeof(ctx));
+    memzero(secret, sizeof(secret));
+    return;
+  }
 
-  (void)len;
-  // todo
+  // Decrypt the FIDO attestation key.
+  uint8_t fido_key[32] = {0};
+  uint8_t iv[16] = {0};
+  aes_ret = aes_cbc_decrypt(&data_bytes[CIPHERTEXT_OFFSET], fido_key,
+                            sizeof(fido_key), iv, &ctx);
+  memzero(&ctx, sizeof(ctx));
+  memzero(secret, sizeof(secret));
+  if (EXIT_SUCCESS != aes_ret) {
+    memzero(fido_key, sizeof(fido_key));
+    vcp_printf("ERROR: aes_cbc_decrypt error.");
+    return;
+  }
+
+  // Write trust anchor certificate to OID 0xE0E8
+  ret = optiga_set_trust_anchor();
+  if (OPTIGA_SUCCESS != ret) {
+    memzero(fido_key, sizeof(fido_key));
+    vcp_printf("ERROR: optiga_set_trust_anchor error %d.", ret);
+    return;
+  }
+
+  // Set change access condition for the FIDO key to Int(0xE0E8), so that we
+  // can write the FIDO key using the trust anchor in OID 0xE0E8.
+  memzero(&metadata, sizeof(metadata));
+  metadata.change.ptr = (const uint8_t *)"\x21\xe0\xe8";
+  metadata.change.len = 3;
+  if (!set_metadata(OID_KEY_FIDO, &metadata)) {
+    return;
+  }
+
+  // Store the FIDO attestation key.
+  ret = optiga_set_priv_key(OID_KEY_FIDO, fido_key);
+  memzero(fido_key, sizeof(fido_key));
+  if (OPTIGA_SUCCESS != ret) {
+    vcp_printf("ERROR: optiga_set_priv_key error %d.", ret);
+    return;
+  }
 
   vcp_printf("OK");
 }
@@ -698,9 +972,7 @@ int main(void) {
 
 #ifdef USE_OPTIGA
   optiga_init();
-  pair_optiga();
-  // todo authenticate optiga communication
-  // todo delete optiga pairing key from RAM
+  optiga_open_application();
 #endif
 
   display_reinit();
@@ -764,15 +1036,19 @@ int main(void) {
     } else if (startswith(line, "OPTIGAID READ")) {
       optigaid_read();
     } else if (startswith(line, "CERTINF READ")) {
-      certinf_read();
+      cert_read(OID_CERT_INF);
     } else if (startswith(line, "CERTDEV WRITE ")) {
-      certdev_write(line + 14);
-    } else if (startswith(line, "KEYFIDO HANDSHAKE ")) {
-      keyfido_handshake(line + 18);
+      cert_write(OID_CERT_DEV, line + 14);
+    } else if (startswith(line, "CERTDEV READ")) {
+      cert_read(OID_CERT_DEV);
+    } else if (startswith(line, "CERTFIDO WRITE ")) {
+      cert_write(OID_CERT_FIDO, line + 15);
+    } else if (startswith(line, "CERTFIDO READ")) {
+      cert_read(OID_CERT_FIDO);
     } else if (startswith(line, "KEYFIDO WRITE ")) {
       keyfido_write(line + 14);
-    } else if (startswith(line, "CERTFIDO WRITE ")) {
-      certfido_write(line + 15);
+    } else if (startswith(line, "KEYFIDO READ")) {
+      pubkey_read(OID_KEY_FIDO);
     } else if (startswith(line, "LOCK")) {
       optiga_lock();
 
