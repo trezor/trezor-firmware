@@ -99,6 +99,10 @@ typedef struct {
   optiga_metadata_item reset_type;   // F0 - Factory reset type.
 } optiga_metadata;
 
+extern const optiga_metadata_item OPTIGA_LCS_OPERATIONAL;
+extern const optiga_metadata_item OPTIGA_ACCESS_ALWAYS;
+extern const optiga_metadata_item OPTIGA_ACCESS_NEVER;
+
 optiga_result optiga_parse_metadata(const uint8_t *serialized,
                                     size_t serialized_size,
                                     optiga_metadata *metadata);
@@ -106,6 +110,8 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
                                         uint8_t *serialized,
                                         size_t max_serialized,
                                         size_t *serialized_size);
+bool optiga_compare_metadata(const optiga_metadata *expected,
+                             const optiga_metadata *stored);
 
 optiga_result optiga_open_application(void);
 optiga_result optiga_get_error_code(uint8_t *error_code);
