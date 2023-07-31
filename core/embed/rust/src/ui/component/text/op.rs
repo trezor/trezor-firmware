@@ -16,7 +16,7 @@ use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
-const MAX_OPS: usize = 15;
+const MAX_OPS: usize = 20;
 
 /// To account for operations that are not made of characters
 /// but need to be accounted for somehow.
@@ -37,6 +37,10 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
             layout: TextLayout::new(style),
             ops: Vec::new(),
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.ops.len() == 0
     }
 
     pub fn place(&mut self, bounds: Rect) -> Rect {

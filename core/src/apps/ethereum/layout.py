@@ -4,14 +4,13 @@ from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_plural
 from trezor.ui.layouts import (
-    confirm_amount,
     confirm_blob,
+    confirm_ethereum_tx,
     confirm_text,
-    confirm_total,
     should_show_more,
 )
 
-from .helpers import decode_typed_data
+from .helpers import address_from_bytes, decode_typed_data
 
 if TYPE_CHECKING:
     from typing import Awaitable, Iterable
@@ -24,71 +23,60 @@ if TYPE_CHECKING:
     )
 
 
-def require_confirm_tx(
+async def require_confirm_tx(
     to_bytes: bytes,
     value: int,
-    network: EthereumNetworkInfo,
-    token: EthereumTokenInfo | None,
-) -> Awaitable[None]:
-    from trezor.ui.layouts import confirm_output
-
-    from .helpers import address_from_bytes
-
-    if to_bytes:
-        to_str = address_from_bytes(to_bytes, network)
-    else:
-        to_str = "new contract?"
-    return confirm_output(
-        to_str,
-        format_ethereum_amount(value, token, network),
-        br_code=ButtonRequestType.SignTx,
-    )
-
-
-async def require_confirm_fee(
-    spending: int,
     gas_price: int,
     gas_limit: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
 ) -> None:
-    await confirm_amount(
-        title="Confirm fee",
-        description="Gas price:",
-        amount=format_ethereum_amount(gas_price, None, network),
-    )
-    await confirm_total(
-        total_amount=format_ethereum_amount(spending, token, network),
-        fee_amount=format_ethereum_amount(gas_price * gas_limit, None, network),
-        total_label="Amount sent:",
-        fee_label="Maximum fee:",
+    if to_bytes:
+        to_str = address_from_bytes(to_bytes, network)
+    else:
+        to_str = "new contract?"
+
+    total_amount = format_ethereum_amount(value, token, network)
+    maximum_fee = format_ethereum_amount(gas_price * gas_limit, None, network)
+    gas_limit_str = f"{gas_limit} units"
+    gas_price_str = format_ethereum_amount(gas_price, None, network)
+
+    items = (
+        ("Gas limit:", gas_limit_str),
+        ("Gas price:", gas_price_str),
     )
 
+    await confirm_ethereum_tx(to_str, total_amount, maximum_fee, items)
 
-async def require_confirm_eip1559_fee(
-    spending: int,
-    max_priority_fee: int,
+
+async def require_confirm_tx_eip1559(
+    to_bytes: bytes,
+    value: int,
     max_gas_fee: int,
+    max_priority_fee: int,
     gas_limit: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
 ) -> None:
-    await confirm_amount(
-        "Confirm fee",
-        format_ethereum_amount(max_gas_fee, None, network),
-        "Maximum fee per gas",
+
+    if to_bytes:
+        to_str = address_from_bytes(to_bytes, network)
+    else:
+        to_str = "new contract?"
+
+    total_amount = format_ethereum_amount(value, token, network)
+    maximum_fee = format_ethereum_amount(max_gas_fee * gas_limit, None, network)
+    gas_limit_str = f"{gas_limit} units"
+    max_gas_fee_str = format_ethereum_amount(max_gas_fee, None, network)
+    max_priority_fee_str = format_ethereum_amount(max_priority_fee, None, network)
+
+    items = (
+        ("Gas limit:", gas_limit_str),
+        ("Max gas price:", max_gas_fee_str),
+        ("Priority fee:", max_priority_fee_str),
     )
-    await confirm_amount(
-        "Confirm fee",
-        format_ethereum_amount(max_priority_fee, None, network),
-        "Priority fee per gas",
-    )
-    await confirm_total(
-        format_ethereum_amount(spending, token, network),
-        format_ethereum_amount(max_gas_fee * gas_limit, None, network),
-        total_label="Amount sent:",
-        fee_label="Maximum fee:",
-    )
+
+    await confirm_ethereum_tx(to_str, total_amount, maximum_fee, items)
 
 
 def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:
