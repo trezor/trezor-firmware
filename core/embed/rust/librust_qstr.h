@@ -41,6 +41,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
+  MP_QSTR_confirm_ethereum_tx;
   MP_QSTR_confirm_fido;
   MP_QSTR_confirm_homescreen;
   MP_QSTR_confirm_joint_total;
@@ -85,6 +86,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
   MP_QSTR_max_rounds;
+  MP_QSTR_maximum_fee;
   MP_QSTR_min_count;
   MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;
@@ -95,6 +97,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_path;
   MP_QSTR_progress_event;
   MP_QSTR_prompt;
+  MP_QSTR_recipient;
   MP_QSTR_request_bip39;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_request_number;

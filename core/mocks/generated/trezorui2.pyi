@@ -150,6 +150,17 @@ def confirm_total(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_ethereum_tx(
+    *,
+    recipient: str,
+    total_amount: str,
+    maximum_fee: str,
+    items: Iterable[Tuple[str, str]],
+) -> object:
+    """Confirm details about Ethereum transaction."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def tutorial() -> object:
     """Show user how to interact with the device."""
 

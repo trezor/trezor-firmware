@@ -679,6 +679,76 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_ethereum_tx(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let recipient: StrBuffer = kwargs.get(Qstr::MP_QSTR_recipient)?.try_into()?;
+        let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
+        let maximum_fee: StrBuffer = kwargs.get(Qstr::MP_QSTR_maximum_fee)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let get_page = move |page_index| {
+            match page_index {
+                0 => {
+                    // RECIPIENT
+                    let btn_layout = ButtonLayout::cancel_none_text("CONTINUE".into());
+                    let btn_actions = ButtonActions::cancel_none_next();
+
+                    let ops = OpTextLayout::new(theme::TEXT_MONO_DATA).text_mono(recipient.clone());
+
+                    let formatted = FormattedText::new(ops).vertically_centered();
+                    Page::new(btn_layout, btn_actions, formatted).with_title("RECIPIENT".into())
+                }
+                1 => {
+                    // Total amount + fee
+                    let btn_layout = ButtonLayout::up_arrow_armed_info("CONFIRM".into());
+                    let btn_actions = ButtonActions::prev_confirm_next();
+
+                    let ops = OpTextLayout::new(theme::TEXT_MONO)
+                        .text_mono(total_amount.clone())
+                        .newline()
+                        .newline_half()
+                        .text_bold("Maximum fee:".into())
+                        .newline()
+                        .text_mono(maximum_fee.clone());
+
+                    let formatted = FormattedText::new(ops);
+                    Page::new(btn_layout, btn_actions, formatted).with_title("Amount:".into())
+                }
+                2 => {
+                    // Fee information
+                    let btn_layout = ButtonLayout::arrow_none_none();
+                    let btn_actions = ButtonActions::prev_none_none();
+
+                    let mut ops = OpTextLayout::new(theme::TEXT_MONO);
+
+                    for item in unwrap!(IterBuf::new().try_iterate(items)) {
+                        let [key, value]: [Obj; 2] = unwrap!(iter_into_array(item));
+                        if !ops.is_empty() {
+                            // Each key-value pair is on its own page
+                            ops = ops.next_page();
+                        }
+                        ops = ops
+                            .text_bold(unwrap!(key.try_into()))
+                            .newline()
+                            .text_mono(unwrap!(value.try_into()));
+                    }
+
+                    let formatted = FormattedText::new(ops).vertically_centered();
+                    Page::new(btn_layout, btn_actions, formatted)
+                        .with_title("FEE INFORMATION".into())
+                        .with_slim_arrows()
+                }
+                _ => unreachable!(),
+            }
+        };
+        let pages = FlowPages::new(get_page, 3);
+
+        let obj = LayoutObj::new(Flow::new(pages).with_scrollbar(false))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1099,7 +1169,7 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
             title,
             paragraphs.into_paragraphs(),
             button,
-            Some("left_arrow_icon".into()),
+            Some("<".into()),
             false,
         )
     };
@@ -1598,6 +1668,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
+
+    /// def confirm_ethereum_tx(
+    ///     *,
+    ///     recipient: str,
+    ///     total_amount: str,
+    ///     maximum_fee: str,
+    ///     items: Iterable[Tuple[str, str]],
+    /// ) -> object:
+    ///     """Confirm details about Ethereum transaction."""
+    Qstr::MP_QSTR_confirm_ethereum_tx => obj_fn_kw!(0, new_confirm_ethereum_tx).as_obj(),
 
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""
