@@ -36,6 +36,14 @@
 static uint8_t tx_buffer[1750] = {0};
 static size_t tx_size = 0;
 
+// TODO change to operational \x07
+const optiga_metadata_item OPTIGA_LCS_OPERATIONAL = {(const uint8_t *)"\x01",
+                                                     1};
+const optiga_metadata_item OPTIGA_ACCESS_ALWAYS = {(const uint8_t *)"\x00", 1};
+const optiga_metadata_item OPTIGA_ACCESS_NEVER = {(const uint8_t *)"\xFF", 1};
+const optiga_metadata_item OPTIGA_VERSION_DEFAULT = {
+    (const uint8_t *)"\xC1\x02\x00\x00", 4};
+
 static optiga_result process_output_fixedlen(uint8_t *data, size_t data_size) {
   // Expecting data_size bytes of output data in the response.
   if (tx_size != 4 + data_size ||
@@ -86,19 +94,20 @@ static optiga_result process_output_varlen(uint8_t *data, size_t max_data_size,
 static const struct {
   size_t offset;
   uint8_t tag;
+  const optiga_metadata_item *default_value;
 } METADATA_OFFSET_TAG_MAP[] = {
-    {offsetof(optiga_metadata, lcso), 0xC0},
-    {offsetof(optiga_metadata, version), 0xC1},
-    {offsetof(optiga_metadata, max_size), 0xC4},
-    {offsetof(optiga_metadata, used_size), 0xC5},
-    {offsetof(optiga_metadata, change), 0xD0},
-    {offsetof(optiga_metadata, read), 0xD1},
-    {offsetof(optiga_metadata, execute), 0xD3},
-    {offsetof(optiga_metadata, meta_update), 0xD8},
-    {offsetof(optiga_metadata, algorithm), 0xE0},
-    {offsetof(optiga_metadata, key_usage), 0xE1},
-    {offsetof(optiga_metadata, data_type), 0xE8},
-    {offsetof(optiga_metadata, reset_type), 0xF0},
+    {offsetof(optiga_metadata, lcso), 0xC0, &OPTIGA_LCS_OPERATIONAL},
+    {offsetof(optiga_metadata, version), 0xC1, &OPTIGA_VERSION_DEFAULT},
+    {offsetof(optiga_metadata, max_size), 0xC4, NULL},
+    {offsetof(optiga_metadata, used_size), 0xC5, NULL},
+    {offsetof(optiga_metadata, change), 0xD0, &OPTIGA_ACCESS_NEVER},
+    {offsetof(optiga_metadata, read), 0xD1, &OPTIGA_ACCESS_NEVER},
+    {offsetof(optiga_metadata, execute), 0xD3, &OPTIGA_ACCESS_NEVER},
+    {offsetof(optiga_metadata, meta_update), 0xD8, NULL},
+    {offsetof(optiga_metadata, algorithm), 0xE0, NULL},
+    {offsetof(optiga_metadata, key_usage), 0xE1, NULL},
+    {offsetof(optiga_metadata, data_type), 0xE8, NULL},
+    {offsetof(optiga_metadata, reset_type), 0xF0, NULL},
 };
 
 static const size_t METADATA_TAG_COUNT =
@@ -183,6 +192,36 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
 
   *serialized_size = pos;
   return OPTIGA_SUCCESS;
+}
+
+// Returns true if all items defined in the expected metadata have the same
+// value in the stored metadata, i.e. items that are not defined in the expected
+// metadata may have arbitrary value in the stored metadata.
+bool optiga_compare_metadata(const optiga_metadata *expected,
+                             const optiga_metadata *stored) {
+  for (int i = 0; i < METADATA_TAG_COUNT; ++i) {
+    const optiga_metadata_item *expected_item =
+        (void *)((char *)expected + METADATA_OFFSET_TAG_MAP[i].offset);
+    if (expected_item->ptr == NULL) {
+      // Ignore undefined items.
+      continue;
+    }
+
+    const optiga_metadata_item *stored_item =
+        (void *)((char *)stored + METADATA_OFFSET_TAG_MAP[i].offset);
+    if (stored_item->ptr == NULL) {
+      if (METADATA_OFFSET_TAG_MAP[i].default_value == NULL) {
+        return false;
+      }
+      stored_item = METADATA_OFFSET_TAG_MAP[i].default_value;
+    }
+
+    if (stored_item->len != expected_item->len ||
+        memcmp(stored_item->ptr, expected_item->ptr, expected_item->len) != 0) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /*
