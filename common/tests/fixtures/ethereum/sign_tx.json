@@ -5,7 +5,7 @@
     },
     "tests": [
         {
-            "name": "erc20_token",
+            "name": "erc20_transfer",
             "parameters": {
                 "comment": "Sending 291 Grzegorz Brzęczyszczykiewicz tokens to address 0x574bbb36871ba6b78e27f4b4dcfb76ea0091880b",
                 "data": "a9059cbb000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000123",
@@ -22,6 +22,26 @@
                 "sig_v": 38,
                 "sig_r": "2559bbf1bcb80992b6eaa96f0074b19606d8ea7bf4219e1c9ac64a12855c0cce",
                 "sig_s": "633a74429eb6d3aeec4ed797542236a85daab3cab15e37736b87a45697541d7a"
+            }
+        },
+        {
+            "name": "erc20_approve",
+            "parameters": {
+                "comment": "Approving spending of 100 Grzegorz Brzęczyszczykiewicz tokens for address 0x574bbb36871ba6b78e27f4b4dcfb76ea0091880b",
+                "data": "095ea7b3000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000064",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "b10bb751b48d72bbb6d55ecb34800c08f92fda818480f67190d923c5bd73d2c4",
+                "sig_s": "78fb7fa237bc6bfa0e5bdb96164db4162f41866f2f30b54295d947fe87a813a8"
             }
         },
         {

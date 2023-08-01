@@ -23,6 +23,17 @@ if TYPE_CHECKING:
     )
 
 
+async def require_confirm_smart_contract(
+    func_name: str | bytes, func_args: list[tuple[str, str | bytes]]
+):
+    from trezor.ui.layouts import confirm_properties
+
+    await confirm_properties(
+        "confirm_smart_contract", "Smart contract", [("Function:", func_name)]
+    )
+    await confirm_properties("confirm_smart_contract", "Smart contract", func_args)
+
+
 async def require_confirm_tx(
     to_bytes: bytes,
     value: int,

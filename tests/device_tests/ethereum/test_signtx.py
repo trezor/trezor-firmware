@@ -158,6 +158,139 @@ def test_signtx_eip1559(client: Client, chunkify: bool, parameters: dict, result
     assert sig_v == result["sig_v"]
 
 
+def test_signtx_erc20_balanceof_misaligned_data(client: Client):
+    # "Data" field for a 'balanceOf' call with two last bytes removed.
+    with pytest.raises(TrezorFailure):
+        with client:
+            ethereum.sign_tx_eip1559(
+                client,
+                n=parse_path("m/44h/60h/0h/0/0"),
+                nonce=0,
+                gas_limit=20,
+                max_gas_fee=20,
+                max_priority_fee=1,
+                to=TO_ADDR,
+                chain_id=1,
+                value=0,
+                data=bytes.fromhex(
+                    "70a08231000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea009188"
+                ),
+            )
+
+
+def test_signtx_erc20_balanceof(client: Client):
+    # "Data" field for a 'balanceOf' call. The function checks the balance of the address 0x574bbb36871ba6b78e27f4b4dcfb76ea0091880b
+    # The function has 1 argument: 'address'
+    with client:
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0,
+            gas_limit=20,
+            max_gas_fee=20,
+            max_priority_fee=1,
+            to=TO_ADDR,
+            chain_id=1,
+            value=0,
+            data=bytes.fromhex(
+                "70a08231000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b"
+            ),
+        )
+
+
+def test_signtx_erc20_allowance(client: Client):
+    # "Data" field for an 'allowance' call. This function checks the amount of tokens that an owner allowed to a spender.
+    # The function has 2 arguments: 'address', 'address'
+    with client:
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0,
+            gas_limit=20,
+            max_gas_fee=20,
+            max_priority_fee=1,
+            to=TO_ADDR,
+            chain_id=1,
+            value=0,
+            data=bytes.fromhex(
+                "dd62ed3e0000000000000000000000001111111111111111111111111111111111111111000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b"
+            ),
+        )
+
+
+def test_signtx_erc20_transferfrom(client: Client):
+    # "Data" field for a 'transferFrom' call. The function allows a spender to transfer a certain amount of tokens from the owner's balance to another address.
+    # The function has 3 arguments: 'from', 'to', 'value'
+    with client:
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0,
+            gas_limit=20,
+            max_gas_fee=20,
+            max_priority_fee=1,
+            to=TO_ADDR,
+            chain_id=1,
+            value=0,
+            data=bytes.fromhex(
+                "23b872dd0000000000000000000000001111111111111111111111111111111111111111000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000064"
+            ),
+        )
+
+
+def test_signtx_erc20_invity(client: Client):
+    # https://eth1.trezor.io/tx/0xcce715f7bd2fb509a41f64519d29e5d666e5f2f664ea18ce486d446e83466e56
+    # "nonce": "0x10",
+    # "gasPrice": "0x737be7600",
+    # "gas": "0x39805",
+    # "to": "0x1111111254EEB25477B68fb85Ed929f73A960582",
+    # "value": "0x26b81237cb570000",
+    # "input": "0x12aa3caf00000000000000000000000092f3f71cef740ed5784874b8c70ff87ecdf33588000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000092f3f71cef740ed5784874b8c70ff87ecdf335880000000000000000000000007490ca03e52adbd7a05ed8cc30a228aeb968ae2500000000000000000000000000000000000000000000000026b81237cb5700000000000000000000000000000000000000000000000000000000000128cd0eef000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e10000000000000000000000000000000000c300009500004600002c000026e021973ee919693206e122950ff4b162ac52eb6248db00000000000000000080db5f7200e00000206b4be0b94041c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2d0e30db002a00000000000000000000000000000000000000000000000000000000128cd0eefee63c1e50088e6a0c2ddd26feeb64f039a2c41296fcb3f5640c02aaa39b223fe8d0a0e5c4f27ead9083c756cc280a06c4eca27a0b86991c6218b36c1d19d4a2e9eb0ce3606eb481111111254eeb25477b68fb85ed929f73a96058200000000000000000000000000000000000000000000000000000000000000cb1c12d1",
+    # "hash": "0xcce715f7bd2fb509a41f64519d29e5d666e5f2f664ea18ce486d446e83466e56",
+    # "blockNumber": "0x10fed3b",
+    # "from": "0x7490CA03E52ADbD7A05ed8cc30a228AeB968ae25",
+    # "transactionIndex": "0x72"
+    with client:
+        ethereum.sign_tx(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0x10,
+            gas_price=0x737BE7600,
+            gas_limit=0x39805,
+            to="0x1111111254EEB25477B68fb85Ed929f73A960582",
+            chain_id=1,
+            value=0x26B81237CB570000,  # TODO this wouldn't pass the check for smart contract
+            tx_type=None,
+            data=bytes.fromhex(
+                "12aa3caf00000000000000000000000092f3f71cef740ed5784874b8c70ff87ecdf33588000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000092f3f71cef740ed5784874b8c70ff87ecdf335880000000000000000000000007490ca03e52adbd7a05ed8cc30a228aeb968ae2500000000000000000000000000000000000000000000000026b81237cb5700000000000000000000000000000000000000000000000000000000000128cd0eef000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001400000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e10000000000000000000000000000000000c300009500004600002c000026e021973ee919693206e122950ff4b162ac52eb6248db00000000000000000080db5f7200e00000206b4be0b94041c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2d0e30db002a00000000000000000000000000000000000000000000000000000000128cd0eefee63c1e50088e6a0c2ddd26feeb64f039a2c41296fcb3f5640c02aaa39b223fe8d0a0e5c4f27ead9083c756cc280a06c4eca27a0b86991c6218b36c1d19d4a2e9eb0ce3606eb481111111254eeb25477b68fb85ed929f73a96058200000000000000000000000000000000000000000000000000000000000000cb1c12d1"
+            ),
+        )
+
+
+def test_signtx_erc20_args_test(client: Client):
+    # Testing various data types in ERC-20 function arguments
+    arg0_int = "0000000000000000000000000000000000000000000000000000000000001251"
+    arg1_str = "00000000000000000000000000000000000000000000000000000048656c6c6f"
+    arg2_bytes = "1111111122222222333333334444444455555555666666667777777788888888"
+    arg3_address = "000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b"
+
+    with client:
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0,
+            gas_limit=20,
+            max_gas_fee=20,
+            max_priority_fee=1,
+            to=TO_ADDR,
+            chain_id=1,
+            value=0,
+            data=bytes.fromhex(
+                "00000042" + arg0_int + arg1_str + arg2_bytes + arg3_address
+            ),
+        )
+
+
 def test_sanity_checks(client: Client):
     """Is not vectorized because these are internal-only tests that do not
     need to be exposed to the public.
