@@ -186,6 +186,12 @@ def _find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.BinanceSignTx:
             return "apps.binance.sign_tx"
 
+        # solana
+        if msg_type == MessageType.SolanaGetPublicKey:
+            return "apps.solana.get_public_key"
+        if msg_type == MessageType.SolanaGetAddress:
+            return "apps.solana.get_address"
+
     raise ValueError
 
 

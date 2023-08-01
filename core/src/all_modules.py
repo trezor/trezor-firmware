@@ -363,6 +363,14 @@ apps.misc.get_firmware_hash
 import apps.misc.get_firmware_hash
 apps.misc.sign_identity
 import apps.misc.sign_identity
+apps.solana
+import apps.solana
+apps.solana.get_address
+import apps.solana.get_address
+apps.solana.get_public_key
+import apps.solana.get_public_key
+apps.solana.helpers.paths
+import apps.solana.helpers.paths
 apps.workflow_handlers
 import apps.workflow_handlers
 
