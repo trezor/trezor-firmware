@@ -254,6 +254,10 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
+        SolanaGetPublicKey = 900
+        SolanaPublicKey = 901
+        SolanaGetAddress = 902
+        SolanaAddress = 903
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1
@@ -435,6 +439,7 @@ if TYPE_CHECKING:
         Shamir = 15
         ShamirGroups = 16
         PassphraseEntry = 17
+        Solana = 18
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0
