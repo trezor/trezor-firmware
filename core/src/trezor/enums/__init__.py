@@ -251,6 +251,10 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
+        SolanaGetPublicKey = 900
+        SolanaPublicKey = 901
+        SolanaGetAddress = 902
+        SolanaAddress = 903
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1

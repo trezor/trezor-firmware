@@ -233,3 +233,7 @@ if not utils.BITCOIN_ONLY:
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    SolanaGetPublicKey = 900
+    SolanaPublicKey = 901
+    SolanaGetAddress = 902
+    SolanaAddress = 903
