@@ -24,9 +24,10 @@ from trezorlib.tools import parse_path, unharden
 
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import (
-    InputFlowEthereumSignTxGoBack,
-    InputFlowEthereumSignTxScrollDown,
-    InputFlowEthereumSignTxSkip,
+    InputFlowEthereumSignTxDataGoBack,
+    InputFlowEthereumSignTxDataScrollDown,
+    InputFlowEthereumSignTxDataSkip,
+    InputFlowEthereumSignTxShowFeeInfo,
 )
 from .common import encode_network
 
@@ -51,8 +52,15 @@ def make_defs(parameters: dict) -> messages.EthereumDefinitions:
     "ethereum/sign_tx.json",
     "ethereum/sign_tx_eip155.json",
 )
-def test_signtx(client: Client, parameters, result):
+def test_signtx(client: Client, parameters: dict, result: dict):
+    _do_test_signtx(client, parameters, result)
+
+
+def _do_test_signtx(client: Client, parameters: dict, result: dict, input_flow=None):
     with client:
+        if input_flow:
+            client.watch_layout()
+            client.set_input_flow(input_flow)
         sig_v, sig_r, sig_s = ethereum.sign_tx(
             client,
             n=parse_path(parameters["path"]),
@@ -74,8 +82,32 @@ def test_signtx(client: Client, parameters, result):
     assert sig_v == result["sig_v"]
 
 
+@pytest.mark.skip_tr("Info is being shown in all the parametrized cases above")
+@pytest.mark.skip_t1("T1 does not support input flows")
+def test_signtx_fee_info(client: Client):
+    input_flow = InputFlowEthereumSignTxShowFeeInfo(client).get()
+    # Data taken from sign_tx_eip1559.json["tests"][0]
+    parameters = {
+        "chain_id": 1,
+        "path": "m/44'/60'/0'/0/0",
+        "nonce": "0x0",
+        "gas_price": "0x4a817c800",
+        "gas_limit": "0x5208",
+        "value": "0x2540be400",
+        "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+        "tx_type": None,
+        "data": "",
+    }
+    result = {
+        "sig_v": 38,
+        "sig_r": "6a6349bddb5749bb8b96ce2566a035ef87a09dbf89b5c7e3dfdf9ed725912f24",
+        "sig_s": "4ae58ccd3bacee07cdc4a3e8540544fd009c4311af7048122da60f2054c07ee4",
+    }
+    _do_test_signtx(client, parameters, result, input_flow)
+
+
 @parametrize_using_common_fixtures("ethereum/sign_tx_eip1559.json")
-def test_signtx_eip1559(client: Client, parameters, result):
+def test_signtx_eip1559(client: Client, parameters: dict, result: dict):
     with client:
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             client,
@@ -145,14 +177,13 @@ def test_data_streaming(client: Client):
     checked in vectorized function above.
     """
     with client:
+        t1 = client.features.model == "1"
         tt = client.features.model == "T"
-        not_t1 = client.features.model != "1"
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                (tt, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
-                (not_t1, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
+                (t1, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
+                (tt, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 message_filters.EthereumTxRequest(
                     data_length=1_024,
@@ -348,25 +379,25 @@ def test_sanity_checks_eip1559(client: Client):
         )
 
 
-def input_flow_skip(client: Client, cancel: bool = False):
-    return InputFlowEthereumSignTxSkip(client, cancel).get()
+def input_flow_data_skip(client: Client, cancel: bool = False):
+    return InputFlowEthereumSignTxDataSkip(client, cancel).get()
 
 
-def input_flow_scroll_down(client: Client, cancel: bool = False):
-    return InputFlowEthereumSignTxScrollDown(client, cancel).get()
+def input_flow_data_scroll_down(client: Client, cancel: bool = False):
+    return InputFlowEthereumSignTxDataScrollDown(client, cancel).get()
 
 
-def input_flow_go_back(client: Client, cancel: bool = False):
+def input_flow_data_go_back(client: Client, cancel: bool = False):
     if client.features.model == "R":
         pytest.skip("Go back not supported for model R")
-    return InputFlowEthereumSignTxGoBack(client, cancel).get()
+    return InputFlowEthereumSignTxDataGoBack(client, cancel).get()
 
 
 HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd030000056789abcd040000006789abcd050000000789abcd060000000089abcd070000000009abcd080000000000abcd090000000001abcd0a0000000011abcd0b0000000111abcd0c0000001111abcd0d0000011111abcd0e0000111111abcd0f0000000002abcd100000000022abcd110000000222abcd120000002222abcd130000022222abcd140000222222abcd15"
 
 
 @pytest.mark.parametrize(
-    "flow", (input_flow_skip, input_flow_scroll_down, input_flow_go_back)
+    "flow", (input_flow_data_skip, input_flow_data_scroll_down, input_flow_data_go_back)
 )
 @pytest.mark.skip_t1
 def test_signtx_data_pagination(client: Client, flow):

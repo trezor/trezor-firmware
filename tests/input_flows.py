@@ -731,31 +731,40 @@ class InputFlowEIP712Cancel(InputFlowBase):
         self.debug.press_no()
 
 
-class InputFlowEthereumSignTxSkip(InputFlowBase):
+class InputFlowEthereumSignTxShowFeeInfo(InputFlowBase):
+    def __init__(self, client: Client, cancel: bool = False):
+        super().__init__(client)
+        self.cancel = cancel
+
+    def input_flow_tt(self) -> BRGeneratorType:
+        yield  # confirm recipient
+        self.debug.press_yes()
+        yield  # summary
+        self.debug.press_info(wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.press_yes(wait=True)
+
+
+class InputFlowEthereumSignTxDataSkip(InputFlowBase):
     def __init__(self, client: Client, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
     def input_flow_common(self) -> BRGeneratorType:
-        yield  # confirm address
-        self.debug.press_yes()
-        yield  # confirm amount
-        self.debug.wait_layout()
-        self.debug.press_yes()
         yield  # confirm data
+        self.debug.press_yes()
+        yield  # confirm recipient
+        self.debug.press_yes()
+        yield  # summary
         if self.cancel:
+            self.debug.press_no()
+            yield  # confirm recipient
             self.debug.press_no()
         else:
             self.debug.press_yes()
-            yield  # gas price
-            self.debug.press_yes()
-            yield  # maximum fee
-            self.debug.press_yes()
-            yield  # hold to confirm
-            self.debug.press_yes()
 
 
-class InputFlowEthereumSignTxScrollDown(InputFlowBase):
+class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
     SHOW_ALL = (143, 167)
 
     def __init__(self, client: Client, cancel: bool = False):
@@ -763,12 +772,6 @@ class InputFlowEthereumSignTxScrollDown(InputFlowBase):
         self.cancel = cancel
 
     def input_flow_tt(self) -> BRGeneratorType:
-        yield  # confirm address
-        self.debug.wait_layout()
-        self.debug.press_yes()
-        yield  # confirm amount
-        self.debug.wait_layout()
-        self.debug.press_yes()
         yield  # confirm data
         self.debug.wait_layout()
         self.debug.click(self.SHOW_ALL)
@@ -782,18 +785,20 @@ class InputFlowEthereumSignTxScrollDown(InputFlowBase):
 
         self.debug.press_yes()
         yield  # confirm data
+        self.debug.press_yes()
+        yield  # confirm recipient
+        self.debug.press_yes()
+        yield  # summary
         if self.cancel:
             self.debug.press_no()
+            yield  # confirm recipient
+            self.debug.press_no()
         else:
-            self.debug.press_yes()
-            yield  # gas price
-            self.debug.press_yes()
-            yield  # maximum fee
-            self.debug.press_yes()
-            yield  # hold to confirm
-            self.debug.press_yes()
+            self.debug.press_yes(wait=True)
 
     def input_flow_tr(self) -> BRGeneratorType:
+        # TODO: fix this for TR and allow for cancelling the data
+
         yield  # confirm address
         self.debug.wait_layout()
         self.debug.press_yes()
@@ -821,7 +826,7 @@ class InputFlowEthereumSignTxScrollDown(InputFlowBase):
             self.debug.press_yes()
 
 
-class InputFlowEthereumSignTxGoBack(InputFlowBase):
+class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
     SHOW_ALL = (143, 167)
     GO_BACK = (16, 220)
 
@@ -830,13 +835,7 @@ class InputFlowEthereumSignTxGoBack(InputFlowBase):
         self.cancel = cancel
 
     def input_flow_tt(self) -> BRGeneratorType:
-        br = yield  # confirm address
-        self.debug.wait_layout()
-        self.debug.press_yes()
-        br = yield  # confirm amount
-        self.debug.wait_layout()
-        self.debug.press_yes()
-        br = yield  # confirm data
+        yield  # confirm data
         self.debug.wait_layout()
         self.debug.click(self.SHOW_ALL)
 
@@ -852,19 +851,16 @@ class InputFlowEthereumSignTxGoBack(InputFlowBase):
                     self.debug.press_no()
                 else:
                     self.debug.press_yes()
-                    yield  # confirm address
-                    self.debug.wait_layout()
+                    yield  # confirm recipient
                     self.debug.press_yes()
-                    yield  # confirm amount
-                    self.debug.wait_layout()
-                    self.debug.press_yes()
-                    yield  # hold to confirm
-                    self.debug.wait_layout()
+                    yield  # summary
                     self.debug.press_yes()
                 return
 
             elif i < br.pages - 1:
                 self.debug.swipe_up()
+
+    # TODO: support this for TR and allow for cancelling the data
 
 
 def get_mnemonic_and_confirm_success(

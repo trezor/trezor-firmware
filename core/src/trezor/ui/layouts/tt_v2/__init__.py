@@ -894,13 +894,61 @@ async def confirm_total(
             info_button=bool(account_label or fee_rate_amount),
         )
     )
+    items: list[tuple[str, str]] = []
+    if account_label:
+        items.append(("Sending from account:", account_label))
+    if fee_rate_amount:
+        items.append(("Fee rate:", fee_rate_amount))
     info_layout = RustLayout(
-        trezorui2.show_spending_details(
-            account=account_label or "",
-            fee_rate=fee_rate_amount or "",
+        trezorui2.show_info_with_cancel(
+            title="INFORMATION",
+            items=items,
         )
     )
     await with_info(total_layout, info_layout, br_type, br_code)
+
+
+async def confirm_ethereum_tx(
+    recipient: str,
+    total_amount: str,
+    maximum_fee: str,
+    items: Iterable[tuple[str, str]],
+    br_type: str = "confirm_ethereum_tx",
+    br_code: ButtonRequestType = ButtonRequestType.SignTx,
+) -> None:
+    total_layout = RustLayout(
+        trezorui2.confirm_total(
+            title="SUMMARY",
+            items=[
+                ("Amount:", total_amount),
+                ("Maximum fee:", maximum_fee),
+            ],
+            info_button=True,
+            cancel_arrow=True,
+        )
+    )
+    info_layout = RustLayout(
+        trezorui2.show_info_with_cancel(
+            title="FEE INFORMATION",
+            items=items,
+        )
+    )
+
+    while True:
+        # Allowing going back and forth between recipient and summary/details
+        await confirm_blob(
+            br_type,
+            "RECIPIENT",
+            recipient,
+            verb="CONTINUE",
+        )
+
+        try:
+            total_layout.request_complete_repaint()
+            await with_info(total_layout, info_layout, br_type, br_code)
+            break
+        except ActionCancelled:
+            continue
 
 
 async def confirm_joint_total(spending_amount: str, total_amount: str) -> None:
@@ -1041,12 +1089,13 @@ async def confirm_modify_fee(
             fee_rate_amount=fee_rate_amount,
         )
     )
+    items: list[tuple[str, str]] = []
+    if fee_rate_amount:
+        items.append(("New fee rate:", fee_rate_amount))
     info_layout = RustLayout(
-        trezorui2.show_spending_details(
-            account=None,
+        trezorui2.show_info_with_cancel(
             title="FEE INFORMATION",
-            fee_rate=fee_rate_amount,
-            fee_rate_title="New fee rate:",
+            items=items,
         )
     )
     await with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)

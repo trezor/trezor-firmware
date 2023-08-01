@@ -94,7 +94,7 @@ fn prepare_bindings() -> bindgen::Builder {
         let mut clang_args: Vec<&str> = Vec::new();
 
         let includes = env::var("RUST_INCLUDES").unwrap();
-        let args = includes.split(";");
+        let args = includes.split(';');
 
         for arg in args {
             clang_args.push(arg);

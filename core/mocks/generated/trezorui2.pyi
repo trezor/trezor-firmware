@@ -534,12 +534,10 @@ def show_address_details(
 
 
 # rust/src/ui/model_tt/layout.rs
-def show_spending_details(
+def show_info_with_cancel(
     *,
-    title: str = "INFORMATION",
-    account: str | None,
-    fee_rate: str | None,
-    fee_rate_title: str = "Fee rate:",
+    title: str,
+    items: Iterable[Tuple[str, str]],
 ) -> object:
     """Show metadata when for outgoing transaction."""
 
@@ -565,6 +563,7 @@ def confirm_total(
     title: str,
     items: list[tuple[str, str]],
     info_button: bool = False,
+    cancel_arrow: bool = False,
 ) -> object:
     """Transaction summary. Always hold to confirm."""
 

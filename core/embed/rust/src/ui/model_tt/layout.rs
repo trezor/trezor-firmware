@@ -750,25 +750,19 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_spending_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_title, "INFORMATION".into())?;
-        let account: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
-        let fee_rate: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_fee_rate)?.try_into_option()?;
-        let fee_rate_title: StrBuffer =
-            kwargs.get_or(Qstr::MP_QSTR_fee_rate_title, "Fee rate:".into())?;
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let mut paragraphs = ParagraphVecShort::new();
-        if let Some(a) = account {
-            paragraphs.add(Paragraph::new(
-                &theme::TEXT_NORMAL,
-                "Sending from account:".into(),
-            ));
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, a));
-        }
-        if let Some(f) = fee_rate {
-            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, fee_rate_title));
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, f));
+
+        for para in IterBuf::new().try_iterate(items)? {
+            let [key, value]: [Obj; 2] = iter_into_array(para)?;
+            let key: StrBuffer = key.try_into()?;
+            let value: StrBuffer = value.try_into()?;
+            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, key));
+            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
 
         let obj = LayoutObj::new(
@@ -816,6 +810,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
+        let cancel_arrow: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_arrow, false)?;
 
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -824,8 +819,11 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label));
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
-
-        let mut page = SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG);
+        let mut page = if cancel_arrow {
+            SwipeHoldPage::with_cancel_arrow(paragraphs.into_paragraphs(), theme::BG)
+        } else {
+            SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG)
+        };
         if info_button {
             page = page.with_swipe_left();
         }
@@ -1691,15 +1689,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Show address details - QR code, account, path, cosigner xpubs."""
     Qstr::MP_QSTR_show_address_details => obj_fn_kw!(0, new_show_address_details).as_obj(),
 
-    /// def show_spending_details(
+    /// def show_info_with_cancel(
     ///     *,
-    ///     title: str = "INFORMATION",
-    ///     account: str | None,
-    ///     fee_rate: str | None,
-    ///     fee_rate_title: str = "Fee rate:",
+    ///     title: str,
+    ///     items: Iterable[Tuple[str, str]],
     /// ) -> object:
     ///     """Show metadata when for outgoing transaction."""
-    Qstr::MP_QSTR_show_spending_details => obj_fn_kw!(0, new_show_spending_details).as_obj(),
+    Qstr::MP_QSTR_show_info_with_cancel => obj_fn_kw!(0, new_show_info_with_cancel).as_obj(),
 
     /// def confirm_value(
     ///     *,
@@ -1720,6 +1716,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     items: list[tuple[str, str]],
     ///     info_button: bool = False,
+    ///     cancel_arrow: bool = False,
     /// ) -> object:
     ///     """Transaction summary. Always hold to confirm."""
     Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),

@@ -997,7 +997,6 @@ async def confirm_ethereum_tx(
 
 
 async def confirm_joint_total(spending_amount: str, total_amount: str) -> None:
-
     await raise_if_not_confirmed(
         interact(
             RustLayout(

@@ -34,6 +34,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_bounds;
   MP_QSTR_button;
   MP_QSTR_button_event;
+  MP_QSTR_cancel_arrow;
   MP_QSTR_case_sensitive;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
@@ -67,9 +68,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_extra;
   MP_QSTR_fee_amount;
   MP_QSTR_fee_label;
-  MP_QSTR_fee_rate;
   MP_QSTR_fee_rate_amount;
-  MP_QSTR_fee_rate_title;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
   MP_QSTR_icon_name;
@@ -114,6 +113,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
   MP_QSTR_show_info;
+  MP_QSTR_show_info_with_cancel;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
   MP_QSTR_show_passphrase;
@@ -122,7 +122,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_simple;
-  MP_QSTR_show_spending_details;
   MP_QSTR_show_success;
   MP_QSTR_show_warning;
   MP_QSTR_sign;
