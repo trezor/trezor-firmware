@@ -133,6 +133,15 @@ impl CancelHold {
         })
     }
 
+    pub fn with_cancel_arrow() -> FixedHeightBar<Self> {
+        theme::button_bar(Self {
+            cancel: Some(Button::with_icon(theme::ICON_UP).into_child()),
+            hold: Button::with_text("HOLD TO CONFIRM")
+                .styled(theme::button_confirm())
+                .into_child(),
+        })
+    }
+
     pub fn without_cancel() -> FixedHeightBar<Self> {
         theme::button_bar(Self {
             cancel: None,

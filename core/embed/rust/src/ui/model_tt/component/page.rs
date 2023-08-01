@@ -404,6 +404,15 @@ where
         }
     }
 
+    pub fn with_cancel_arrow(content: T, background: Color) -> Self {
+        let buttons = CancelHold::with_cancel_arrow();
+        Self {
+            inner: SwipePage::new(content, buttons, background),
+            loader: Loader::new(),
+            pad: Pad::with_background(background),
+        }
+    }
+
     pub fn with_swipe_left(mut self) -> Self {
         self.inner = self.inner.with_swipe_left();
         self
