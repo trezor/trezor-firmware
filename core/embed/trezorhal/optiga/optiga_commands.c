@@ -33,7 +33,7 @@
 #include "sha2.h"
 
 // Static buffer for commands and responses.
-static uint8_t tx_buffer[1750] = {0};
+static uint8_t tx_buffer[OPTIGA_MAX_APDU_SIZE] = {0};
 static size_t tx_size = 0;
 
 // TODO change to operational \x07
