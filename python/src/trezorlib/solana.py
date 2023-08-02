@@ -34,3 +34,16 @@ def get_address(
             show_display=show_display,
         )
     )
+
+@expect(messages.SolanaSignedTx)
+def sign_tx(
+    client: "TrezorClient",
+    signer_path_n: List[int],
+    serialized_tx: bytes,
+) -> "MessageType":
+    return client.call(
+        messages.SolanaSignTx(
+            signer_path_n=signer_path_n,
+            serialized_tx=serialized_tx,
+        )
+    )
