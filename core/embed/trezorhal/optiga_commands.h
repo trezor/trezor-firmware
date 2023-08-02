@@ -126,7 +126,7 @@ optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
                                  uint8_t *output, size_t max_output_size,
                                  size_t *output_size);
 optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
-                                    const uint8_t key[32]);
+                                    const uint8_t *key, size_t key_size);
 optiga_result optiga_clear_auto_state(uint16_t key_oid);
 optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
                                size_t digest_size, uint8_t *signature,
