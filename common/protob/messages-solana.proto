@@ -41,3 +41,23 @@ message SolanaGetAddress {
 message SolanaAddress {
     required string address = 1; // Solana address as Base58 encoded string
 }
+
+/**
+ * Request: Ask device to sign a Solana transaction
+ * @start
+ * @next SolanaSignedTx
+ * @next Failure
+ */
+message SolanaSignTx {
+    repeated uint32 signer_path_n = 1;     // BIP-32 path to derive the key to sign with
+    required bytes serialized_tx = 2;  // serialized tx to be signed
+}
+
+/**
+ * Response: Contains the hash of the signed transaction and the signature
+ * @end
+ */
+message SolanaSignedTx {
+    required bytes serialized_tx = 1;   // the tx which has been signed (the same data which was passed to SolanaSignTx)
+    required bytes signature = 2;    // tx signature
+}

@@ -237,3 +237,5 @@ if not utils.BITCOIN_ONLY:
     SolanaPublicKey = 901
     SolanaGetAddress = 902
     SolanaAddress = 903
+    SolanaSignTx = 904
+    SolanaSignedTx = 905

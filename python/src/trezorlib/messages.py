@@ -263,6 +263,8 @@ class MessageType(IntEnum):
     SolanaPublicKey = 901
     SolanaGetAddress = 902
     SolanaAddress = 903
+    SolanaSignTx = 904
+    SolanaSignedTx = 905
 
 
 class FailureType(IntEnum):
@@ -6586,6 +6588,40 @@ class SolanaAddress(protobuf.MessageType):
         address: "str",
     ) -> None:
         self.address = address
+
+
+class SolanaSignTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 904
+    FIELDS = {
+        1: protobuf.Field("signer_path_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("serialized_tx", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        serialized_tx: "bytes",
+        signer_path_n: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.signer_path_n: Sequence["int"] = signer_path_n if signer_path_n is not None else []
+        self.serialized_tx = serialized_tx
+
+
+class SolanaSignedTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 905
+    FIELDS = {
+        1: protobuf.Field("serialized_tx", "bytes", repeated=False, required=True),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        serialized_tx: "bytes",
+        signature: "bytes",
+    ) -> None:
+        self.serialized_tx = serialized_tx
+        self.signature = signature
 
 
 class StellarAsset(protobuf.MessageType):
