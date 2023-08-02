@@ -247,3 +247,81 @@ class RecoveryFlow:
         yield
         self.debug.swipe_up()
         self.debug.press_yes()
+
+
+class EthereumFlow:
+    GO_BACK = (16, 220)
+
+    def __init__(self, client: Client):
+        self.client = client
+        self.debug = self.client.debug
+
+    def confirm_data(self, info: bool = False, cancel: bool = False) -> BRGeneratorType:
+        yield
+        assert self.debug.wait_layout().title() == "CONFIRM DATA"
+        assert "Size:" in self.debug.wait_layout().text_content()
+        if info:
+            self.debug.press_info()
+        elif cancel:
+            self.debug.press_no()
+        else:
+            self.debug.press_yes()
+
+    def paginate_data(self) -> BRGeneratorType:
+        br = yield
+        assert self.debug.wait_layout().title() == "CONFIRM DATA"
+        assert br.pages is not None
+        for i in range(br.pages):
+            self.debug.wait_layout()
+            if i < br.pages - 1:
+                self.debug.swipe_up()
+        self.debug.press_yes()
+
+    def paginate_data_go_back(self) -> BRGeneratorType:
+        br = yield
+        assert self.debug.wait_layout().title() == "CONFIRM DATA"
+        assert br.pages is not None
+        assert br.pages > 2
+        if self.debug.model == "T":
+            self.debug.swipe_up(wait=True)
+            self.debug.swipe_up(wait=True)
+            self.debug.click(self.GO_BACK)
+        else:
+            self.debug.press_right()
+            self.debug.press_right()
+            self.debug.press_left()
+            self.debug.press_left()
+            self.debug.press_left()
+
+    def confirm_tx(self, cancel: bool = False, info: bool = False) -> BRGeneratorType:
+        yield
+        assert self.debug.wait_layout().title() == "RECIPIENT"
+
+        if self.debug.model == "T":
+            if cancel:
+                self.debug.press_no()
+            else:
+                self.debug.press_yes()
+                yield
+                assert self.debug.wait_layout().title() == "SUMMARY"
+                assert "Maximum fee:" in self.debug.wait_layout().text_content()
+                if info:
+                    self.debug.press_info(wait=True)
+                    assert "Gas limit:" in self.debug.wait_layout().text_content()
+                    assert "Gas price:" in self.debug.wait_layout().text_content()
+                    self.debug.press_no(wait=True)
+                self.debug.press_yes()
+        else:
+            if cancel:
+                self.debug.press_left()
+            else:
+                self.debug.press_right()
+                assert "Maximum fee:" in self.debug.wait_layout().text_content()
+                if info:
+                    self.debug.press_right(wait=True)
+                    assert "Gas limit:" in self.debug.wait_layout().text_content()
+                    self.debug.press_right(wait=True)
+                    assert "Gas price:" in self.debug.wait_layout().text_content()
+                    self.debug.press_left(wait=True)
+                    self.debug.press_left(wait=True)
+                self.debug.press_middle()

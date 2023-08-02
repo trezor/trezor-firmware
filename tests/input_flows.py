@@ -27,7 +27,7 @@ from .common import (
     click_through,
     read_and_confirm_mnemonic,
 )
-from .input_flows_helpers import BackupFlow, PinFlow, RecoveryFlow
+from .input_flows_helpers import BackupFlow, EthereumFlow, PinFlow, RecoveryFlow
 
 B = messages.ButtonRequestType
 
@@ -48,6 +48,7 @@ class InputFlowBase:
         self.PIN = PinFlow(self.client)
         self.REC = RecoveryFlow(self.client)
         self.BAK = BackupFlow(self.client)
+        self.ETH = EthereumFlow(self.client)
 
     def model(self) -> str | None:
         return self.client.features.model
@@ -736,13 +737,8 @@ class InputFlowEthereumSignTxShowFeeInfo(InputFlowBase):
         super().__init__(client)
         self.cancel = cancel
 
-    def input_flow_tt(self) -> BRGeneratorType:
-        yield  # confirm recipient
-        self.debug.press_yes()
-        yield  # summary
-        self.debug.press_info(wait=True)
-        self.debug.press_no(wait=True)
-        self.debug.press_yes(wait=True)
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.ETH.confirm_tx(info=True)
 
 
 class InputFlowEthereumSignTxDataSkip(InputFlowBase):
@@ -751,116 +747,38 @@ class InputFlowEthereumSignTxDataSkip(InputFlowBase):
         self.cancel = cancel
 
     def input_flow_common(self) -> BRGeneratorType:
-        yield  # confirm data
-        self.debug.press_yes()
-        yield  # confirm recipient
-        self.debug.press_yes()
-        yield  # summary
-        if self.cancel:
-            self.debug.press_no()
-            yield  # confirm recipient
-            self.debug.press_no()
-        else:
-            self.debug.press_yes()
+        yield from self.ETH.confirm_data()
+        yield from self.ETH.confirm_tx(cancel=self.cancel)
 
 
 class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
-    SHOW_ALL = (143, 167)
-
     def __init__(self, client: Client, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
-    def input_flow_tt(self) -> BRGeneratorType:
-        yield  # confirm data
-        self.debug.wait_layout()
-        self.debug.click(self.SHOW_ALL)
-
-        br = yield  # paginated data
-        assert br.pages is not None
-        for i in range(br.pages):
-            self.debug.wait_layout()
-            if i < br.pages - 1:
-                self.debug.swipe_up()
-
-        self.debug.press_yes()
-        yield  # confirm data
-        self.debug.press_yes()
-        yield  # confirm recipient
-        self.debug.press_yes()
-        yield  # summary
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.ETH.confirm_data(info=True)
+        yield from self.ETH.paginate_data()
         if self.cancel:
-            self.debug.press_no()
-            yield  # confirm recipient
-            self.debug.press_no()
+            yield from self.ETH.confirm_data(cancel=True)
         else:
-            self.debug.press_yes(wait=True)
-
-    def input_flow_tr(self) -> BRGeneratorType:
-        # TODO: fix this for TR and allow for cancelling the data
-
-        yield  # confirm address
-        self.debug.wait_layout()
-        self.debug.press_yes()
-
-        yield  # confirm data
-        self.debug.press_info()
-
-        br = yield  # paginated data
-        assert br.pages is not None
-        for _ in range(br.pages):
-            self.debug.wait_layout()
-            self.debug.swipe_up()
-
-        yield  # confirm data
-        self.debug.press_yes()
-
-        yield  # confirm amount
-        self.debug.wait_layout()
-        self.debug.press_yes()
-
-        yield  # confirm before send
-        if self.cancel:
-            self.debug.press_no()
-        else:
-            self.debug.press_yes()
+            yield from self.ETH.confirm_data()
+            yield from self.ETH.confirm_tx()
 
 
 class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
-    SHOW_ALL = (143, 167)
-    GO_BACK = (16, 220)
-
     def __init__(self, client: Client, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
-    def input_flow_tt(self) -> BRGeneratorType:
-        yield  # confirm data
-        self.debug.wait_layout()
-        self.debug.click(self.SHOW_ALL)
-
-        br = yield  # paginated data
-        assert br.pages is not None
-        for i in range(br.pages):
-            self.debug.wait_layout()
-            if i == 2:
-                self.debug.click(self.GO_BACK)
-                yield  # confirm data
-                self.debug.wait_layout()
-                if self.cancel:
-                    self.debug.press_no()
-                else:
-                    self.debug.press_yes()
-                    yield  # confirm recipient
-                    self.debug.press_yes()
-                    yield  # summary
-                    self.debug.press_yes()
-                return
-
-            elif i < br.pages - 1:
-                self.debug.swipe_up()
-
-    # TODO: support this for TR and allow for cancelling the data
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.ETH.confirm_data(info=True)
+        yield from self.ETH.paginate_data_go_back()
+        if self.cancel:
+            yield from self.ETH.confirm_data(cancel=True)
+        else:
+            yield from self.ETH.confirm_data()
+            yield from self.ETH.confirm_tx()
 
 
 def get_mnemonic_and_confirm_success(
