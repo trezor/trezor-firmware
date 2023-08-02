@@ -37,13 +37,13 @@ pub const TEXT_MONO_DATA: TextStyle =
     TEXT_MONO.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 
 /// Convert Python-side numeric id to a `TextStyle`.
-/// Using only BOLD or MONO fonts.
-pub fn textstyle_number_bold_or_mono(num: i32) -> &'static TextStyle {
+pub fn textstyle_number(num: i32) -> &'static TextStyle {
     let font = Font::from_i32(-num);
     match font {
         Some(Font::BOLD) => &TEXT_BOLD,
         Some(Font::DEMIBOLD) => &TEXT_BOLD,
-        _ => &TEXT_MONO,
+        Some(Font::NORMAL) => &TEXT_NORMAL,
+        _ => &TEXT_MONO_DATA,
     }
 }
 
