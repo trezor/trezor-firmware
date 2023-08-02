@@ -256,7 +256,11 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     // Left button - icon, text or nothing.
     let cancel_btn = if let Some(verb_cancel) = verb_cancel {
         if !verb_cancel.is_empty() {
-            Some(ButtonDetails::text(verb_cancel))
+            if verb_cancel.as_ref() == "left_arrow_icon" {
+                Some(ButtonDetails::left_arrow_icon())
+            } else {
+                Some(ButtonDetails::text(verb_cancel))
+            }
         } else {
             Some(ButtonDetails::cancel_icon())
         }
@@ -1062,7 +1066,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
 
         for para in IterBuf::new().try_iterate(items)? {
             let [font, text]: [Obj; 2] = iter_into_array(para)?;
-            let style: &TextStyle = theme::textstyle_number_bold_or_mono(font.try_into()?);
+            let style: &TextStyle = theme::textstyle_number(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
             if paragraphs.is_full() {
@@ -1077,6 +1081,32 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             ),
         ))?;
         Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let mut paragraphs = ParagraphVecLong::new();
+
+        for para in IterBuf::new().try_iterate(items)? {
+            let [font, text]: [Obj; 2] = iter_into_array(para)?;
+            let style: &TextStyle = theme::textstyle_number(font.try_into()?);
+            let text: StrBuffer = text.try_into()?;
+            paragraphs.add(Paragraph::new(style, text));
+        }
+
+        content_in_button_page(
+            title,
+            paragraphs.into_paragraphs(),
+            button,
+            Some("left_arrow_icon".into()),
+            false,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1647,6 +1677,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling."""
     Qstr::MP_QSTR_confirm_with_info => obj_fn_kw!(0, new_confirm_with_info).as_obj(),
+
+    /// def confirm_more(
+    ///     *,
+    ///     title: str,
+    ///     button: str,
+    ///     items: Iterable[tuple[int, str]],
+    /// ) -> object:
+    ///     """Confirm long content with the possibility to go back from any page.
+    ///     Meant to be used with confirm_with_info."""
+    Qstr::MP_QSTR_confirm_more => obj_fn_kw!(0, new_confirm_more).as_obj(),
 
     /// def confirm_coinjoin(
     ///     *,

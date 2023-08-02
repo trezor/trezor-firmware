@@ -766,16 +766,61 @@ async def confirm_blob(
             extra=None,
             verb_cancel="",  # to show the cancel icon
             hold=hold,
+            verb_cancel="",  # icon
         )
     )
 
-    await raise_if_not_confirmed(
-        interact(
-            layout,
-            br_type,
-            br_code,
+    if ask_pagination and layout.page_count() > 1:
+        assert not hold
+        await _confirm_ask_pagination(br_type, title, data, description, br_code)
+
+    else:
+        await raise_if_not_confirmed(
+            interact(
+                layout,
+                br_type,
+                br_code,
+            )
         )
-    )
+
+
+async def _confirm_ask_pagination(
+    br_type: str,
+    title: str,
+    data: bytes | str,
+    description: str,
+    br_code: ButtonRequestType,
+) -> None:
+    paginated: ui.Layout | None = None
+    # TODO: make should_show_more/confirm_more accept bytes directly
+    if isinstance(data, bytes):
+        from ubinascii import hexlify
+
+        data = hexlify(data).decode()
+    while True:
+        if not await should_show_more(
+            title,
+            para=[(ui.NORMAL, description), (ui.MONO, data)],
+            br_type=br_type,
+            br_code=br_code,
+        ):
+            return
+
+        if paginated is None:
+            paginated = RustLayout(
+                trezorui2.confirm_more(
+                    title=title,
+                    button="GO BACK",
+                    items=[(ui.MONO, data)],
+                )
+            )
+        else:
+            paginated.request_complete_repaint()
+
+        result = await interact(paginated, br_type, br_code)
+        assert result in (CONFIRMED, CANCELLED)
+
+    assert False
 
 
 async def confirm_address(
