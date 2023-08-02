@@ -82,7 +82,6 @@ def _do_test_signtx(client: Client, parameters: dict, result: dict, input_flow=N
     assert sig_v == result["sig_v"]
 
 
-@pytest.mark.skip_tr("Info is being shown in all the parametrized cases above")
 @pytest.mark.skip_t1("T1 does not support input flows")
 def test_signtx_fee_info(client: Client):
     input_flow = InputFlowEthereumSignTxShowFeeInfo(client).get()
@@ -388,8 +387,6 @@ def input_flow_data_scroll_down(client: Client, cancel: bool = False):
 
 
 def input_flow_data_go_back(client: Client, cancel: bool = False):
-    if client.features.model == "R":
-        pytest.skip("Go back not supported for model R")
     return InputFlowEthereumSignTxDataGoBack(client, cancel).get()
 
 
