@@ -29,9 +29,11 @@
 #define OPTIGA_DATA_REG_LEN 277
 
 optiga_result optiga_init(void);
-optiga_result optiga_execute_command(
-    bool presentation_layer, const uint8_t *command_data, size_t command_size,
-    uint8_t *response_data, size_t max_response_size, size_t *response_size);
+optiga_result optiga_execute_command(const uint8_t *command_data,
+                                     size_t command_size,
+                                     uint8_t *response_data,
+                                     size_t max_response_size,
+                                     size_t *response_size);
 
 optiga_result optiga_resync(void);
 optiga_result optiga_soft_reset(void);

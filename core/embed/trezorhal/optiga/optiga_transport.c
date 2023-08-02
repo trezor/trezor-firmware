@@ -406,8 +406,8 @@ static optiga_result optiga_receive_packet(uint8_t *packet_control_byte,
   return OPTIGA_SUCCESS;
 }
 
-optiga_result optiga_execute_command(
-    bool presentation_layer, const uint8_t *command_data, size_t command_size,
+static optiga_result optiga_transceive(
+    bool presentation_layer, const uint8_t *request_data, size_t request_size,
     uint8_t *response_data, size_t max_response_size, size_t *response_size) {
   *response_size = 0;
   optiga_result ret = optiga_ensure_ready();
@@ -426,7 +426,7 @@ optiga_result optiga_execute_command(
     size_t packet_data_size = 0;
     // The first byte of each packet is the packet control byte pctr, so each
     // packet contains at most OPTIGA_MAX_PACKET_SIZE - 1 bytes of data.
-    if (command_size > OPTIGA_MAX_PACKET_SIZE - 1) {
+    if (request_size > OPTIGA_MAX_PACKET_SIZE - 1) {
       packet_data_size = OPTIGA_MAX_PACKET_SIZE - 1;
       if (chain == PCTR_CHAIN_NONE) {
         chain = PCTR_CHAIN_FIRST;
@@ -434,7 +434,7 @@ optiga_result optiga_execute_command(
         chain = PCTR_CHAIN_MIDDLE;
       }
     } else {
-      packet_data_size = command_size;
+      packet_data_size = request_size;
       if (chain != PCTR_CHAIN_NONE) {
         chain = PCTR_CHAIN_LAST;
       }
@@ -442,13 +442,13 @@ optiga_result optiga_execute_command(
 
     frame_num_out += 1;
 
-    ret = optiga_send_packet(pctr | chain, command_data, packet_data_size);
+    ret = optiga_send_packet(pctr | chain, request_data, packet_data_size);
     if (ret != OPTIGA_SUCCESS) {
       return ret;
     }
 
-    command_data += packet_data_size;
-    command_size -= packet_data_size;
+    request_data += packet_data_size;
+    request_size -= packet_data_size;
 
     ret = optiga_read();
     if (ret != OPTIGA_SUCCESS) {
@@ -466,7 +466,7 @@ optiga_result optiga_execute_command(
     if (ret != OPTIGA_SUCCESS) {
       return ret;
     }
-  } while (command_size != 0);
+  } while (request_size != 0);
 
   // Receive response packets from OPTIGA.
   do {
@@ -502,5 +502,14 @@ optiga_result optiga_execute_command(
     pctr &= PCTR_CHAIN_MASK;
   } while (pctr == PCTR_CHAIN_FIRST || pctr == PCTR_CHAIN_MIDDLE);
 
-  return command_size == 0 ? OPTIGA_SUCCESS : OPTIGA_ERR_CMD;
+  return request_size == 0 ? OPTIGA_SUCCESS : OPTIGA_ERR_CMD;
+}
+
+optiga_result optiga_execute_command(const uint8_t *command_data,
+                                     size_t command_size,
+                                     uint8_t *response_data,
+                                     size_t max_response_size,
+                                     size_t *response_size) {
+  return optiga_transcieve(false, command_data, command_size, response_data,
+                           max_response_size, response_size);
 }
