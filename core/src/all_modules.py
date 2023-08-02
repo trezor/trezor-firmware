@@ -373,6 +373,8 @@ apps.solana.get_public_key
 import apps.solana.get_public_key
 apps.solana.helpers.paths
 import apps.solana.helpers.paths
+apps.solana.sign_tx
+import apps.solana.sign_tx
 apps.workflow_handlers
 import apps.workflow_handlers
 
