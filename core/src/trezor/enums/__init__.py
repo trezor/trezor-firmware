@@ -258,6 +258,8 @@ if TYPE_CHECKING:
         SolanaPublicKey = 901
         SolanaGetAddress = 902
         SolanaAddress = 903
+        SolanaSignTx = 904
+        SolanaSignedTx = 905
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1
