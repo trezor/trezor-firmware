@@ -226,13 +226,12 @@ bool optiga_compare_metadata(const optiga_metadata *expected,
  */
 optiga_result optiga_open_application(void) {
   static const uint8_t OPEN_APP[] = {
-      0x70, 0x00, 0x00, 0x10, 0xD2, 0x76, 0x00, 0x00, 0x04, 0x47,
+      0xF0, 0x00, 0x00, 0x10, 0xD2, 0x76, 0x00, 0x00, 0x04, 0x47,
       0x65, 0x6E, 0x41, 0x75, 0x74, 0x68, 0x41, 0x70, 0x70, 0x6C,
   };
 
-  optiga_result ret =
-      optiga_execute_command(false, OPEN_APP, sizeof(OPEN_APP), tx_buffer,
-                             sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(
+      OPEN_APP, sizeof(OPEN_APP), tx_buffer, sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -261,16 +260,15 @@ optiga_result optiga_get_error_code(uint8_t *error_code) {
 optiga_result optiga_get_data_object(uint16_t oid, bool get_metadata,
                                      uint8_t *data, size_t max_data_size,
                                      size_t *data_size) {
-  uint8_t get_data[6] = {0x01, 0x00, 0x00, 0x02};
+  uint8_t get_data[6] = {0x81, 0x00, 0x00, 0x02};
   if (get_metadata) {
     get_data[1] = 0x01;
   }
   get_data[4] = oid >> 8;
   get_data[5] = oid & 0xff;
 
-  optiga_result ret =
-      optiga_execute_command(false, get_data, sizeof(get_data), tx_buffer,
-                             sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(
+      get_data, sizeof(get_data), tx_buffer, sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -288,7 +286,7 @@ optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
   }
 
   tx_size = data_size + 8;
-  tx_buffer[0] = 0x02;
+  tx_buffer[0] = 0x82;
   tx_buffer[1] = set_metadata ? 0x01 : 0x40;
   tx_buffer[2] = (tx_size - 4) >> 8;
   tx_buffer[3] = (tx_size - 4) & 0xff;
@@ -302,7 +300,7 @@ optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
   }
 
   optiga_result ret = optiga_execute_command(
-      false, tx_buffer, data_size + 8, tx_buffer, sizeof(tx_buffer), &tx_size);
+      tx_buffer, data_size + 8, tx_buffer, sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     memzero(tx_buffer + 8, data_size);
     return ret;
@@ -321,13 +319,12 @@ optiga_result optiga_get_random(uint8_t *random, size_t random_size) {
     return OPTIGA_ERR_SIZE;
   }
 
-  uint8_t get_random[6] = {0x0C, 0x00, 0x00, 0x02};
+  uint8_t get_random[6] = {0x8C, 0x00, 0x00, 0x02};
   get_random[4] = random_size >> 8;
   get_random[5] = random_size & 0xff;
 
-  optiga_result ret =
-      optiga_execute_command(false, get_random, sizeof(get_random), tx_buffer,
-                             sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(
+      get_random, sizeof(get_random), tx_buffer, sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -347,7 +344,7 @@ optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
   }
 
   tx_size = 9 + input_size;
-  tx_buffer[0] = 0x14;
+  tx_buffer[0] = 0x94;
   tx_buffer[1] = mode;
   tx_buffer[2] = (tx_size - 4) >> 8;
   tx_buffer[3] = (tx_size - 4) & 0xff;
@@ -358,8 +355,8 @@ optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
   tx_buffer[8] = input_size & 0xff;
   memcpy(tx_buffer + 9, input, input_size);
 
-  optiga_result ret = optiga_execute_command(
-      false, tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
+                                             sizeof(tx_buffer), &tx_size);
   if (ret == OPTIGA_SUCCESS) {
     ret = process_output_varlen(output, max_output_size, output_size);
   }
@@ -375,14 +372,13 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
                                     const uint8_t key[32]) {
   uint8_t nonce[16] = {0};
   uint8_t get_random[] = {
-      0x0C, 0x00, 0x00, 0x07, 0x00, sizeof(nonce), 0x00, 0x00, 0x41, 0x00, 0x00,
+      0x8C, 0x00, 0x00, 0x07, 0x00, sizeof(nonce), 0x00, 0x00, 0x41, 0x00, 0x00,
   };
   get_random[6] = nonce_oid >> 8;
   get_random[7] = nonce_oid & 0xff;
 
-  optiga_result ret =
-      optiga_execute_command(false, get_random, sizeof(get_random), tx_buffer,
-                             sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(
+      get_random, sizeof(get_random), tx_buffer, sizeof(tx_buffer), &tx_size);
 
   ret = process_output_fixedlen(nonce, sizeof(nonce));
   if (ret != OPTIGA_SUCCESS) {
@@ -390,7 +386,7 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   }
 
   tx_size = 11 + sizeof(nonce) + 3 + 32;
-  tx_buffer[0] = 0x15;
+  tx_buffer[0] = 0x95;
   tx_buffer[1] = 0x20;
   tx_buffer[2] = 0x00;
   tx_buffer[3] = tx_size - 4;
@@ -407,8 +403,8 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   tx_buffer[13 + sizeof(nonce)] = 0x20;
   hmac_sha256(key, 32, nonce, sizeof(nonce), &tx_buffer[14 + sizeof(nonce)]);
 
-  ret = optiga_execute_command(false, tx_buffer, tx_size, tx_buffer,
-                               sizeof(tx_buffer), &tx_size);
+  ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer),
+                               &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -418,14 +414,13 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
 
 optiga_result optiga_clear_auto_state(uint16_t key_oid) {
   uint8_t decrypt_sym[] = {
-      0x15, 0x20, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x00, 0x43, 0x00, 0x00,
+      0x95, 0x20, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x00, 0x43, 0x00, 0x00,
   };
   decrypt_sym[4] = key_oid >> 8;
   decrypt_sym[5] = key_oid & 0xff;
 
-  optiga_result ret =
-      optiga_execute_command(false, decrypt_sym, sizeof(decrypt_sym), tx_buffer,
-                             sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(
+      decrypt_sym, sizeof(decrypt_sym), tx_buffer, sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -450,7 +445,7 @@ optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
   }
 
   tx_size = digest_size + 12;
-  tx_buffer[0] = 0x31;
+  tx_buffer[0] = 0xB1;
   tx_buffer[1] = 0x11;
   tx_buffer[2] = (tx_size - 4) >> 8;
   tx_buffer[3] = (tx_size - 4) & 0xff;
@@ -464,8 +459,8 @@ optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
   tx_buffer[10 + digest_size] = oid >> 8;
   tx_buffer[11 + digest_size] = oid & 0xff;
 
-  optiga_result ret = optiga_execute_command(
-      false, tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
+                                             sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -481,7 +476,7 @@ optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
                                   size_t max_public_key_size,
                                   size_t *public_key_size) {
   tx_size = 13;
-  tx_buffer[0] = 0x38;
+  tx_buffer[0] = 0xB8;
   tx_buffer[1] = curve;
   tx_buffer[2] = 0x00;
   tx_buffer[3] = 0x09;
@@ -495,8 +490,8 @@ optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
   tx_buffer[11] = 0x01;
   tx_buffer[12] = usage;
 
-  optiga_result ret = optiga_execute_command(
-      false, tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
+                                             sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -511,7 +506,7 @@ optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
 optiga_result optiga_gen_sym_key(optiga_aes algorithm, optiga_key_usage usage,
                                  uint16_t oid) {
   tx_size = 13;
-  tx_buffer[0] = 0x39;
+  tx_buffer[0] = 0xB9;
   tx_buffer[1] = algorithm;
   tx_buffer[2] = 0x00;
   tx_buffer[3] = 0x09;
@@ -525,8 +520,8 @@ optiga_result optiga_gen_sym_key(optiga_aes algorithm, optiga_key_usage usage,
   tx_buffer[11] = 0x01;
   tx_buffer[12] = usage;
 
-  optiga_result ret = optiga_execute_command(
-      false, tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
+                                             sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -549,7 +544,7 @@ optiga_result optiga_calc_ssec(optiga_curve curve, uint16_t oid,
   }
 
   tx_size = 16 + public_key_size + 3;
-  tx_buffer[0] = 0x33;
+  tx_buffer[0] = 0xB3;
   tx_buffer[1] = 0x01;
   tx_buffer[2] = 0x00;
   tx_buffer[3] = tx_size - 4;
@@ -570,8 +565,8 @@ optiga_result optiga_calc_ssec(optiga_curve curve, uint16_t oid,
   tx_buffer[17 + public_key_size] = 0x00;
   tx_buffer[18 + public_key_size] = 0x00;
 
-  optiga_result ret = optiga_execute_command(
-      false, tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
+                                             sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
   }
@@ -599,7 +594,7 @@ optiga_result optiga_derive_key(optiga_key_derivation deriv, uint16_t oid,
   }
 
   tx_size = is_hkdf ? 23 + salt_size + info_size : 20 + salt_size;
-  tx_buffer[0] = 0x34;
+  tx_buffer[0] = 0xB4;
   tx_buffer[1] = deriv;
   tx_buffer[2] = (tx_size - 4) >> 8;
   tx_buffer[3] = (tx_size - 4) & 0xff;
@@ -636,8 +631,8 @@ optiga_result optiga_derive_key(optiga_key_derivation deriv, uint16_t oid,
     tx_buffer[19 + salt_size] = 0x00;
   }
 
-  optiga_result ret = optiga_execute_command(
-      false, tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer), &tx_size);
+  optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
+                                             sizeof(tx_buffer), &tx_size);
   if (ret == OPTIGA_SUCCESS) {
     ret = process_output_fixedlen(key, key_size);
   }
@@ -720,7 +715,7 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
 
   // First part of the SetObjectProtected command containing the manifest.
   uint8_t sop_cmd1[145] = {
-      0x03, 0x01, 0x00, 0x8d, 0x30, 0x00, 0x8a, 0x84, 0x43, 0xA1, 0x01, 0x26,
+      0x83, 0x01, 0x00, 0x8d, 0x30, 0x00, 0x8a, 0x84, 0x43, 0xA1, 0x01, 0x26,
       0xA1, 0x04, 0x42, 0xE0, 0xE8, 0x58, 0x3C, 0x86, 0x01, 0xF6, 0xF6, 0x84,
       0x22, 0x18, 0x23, 0x03, 0x82, 0x03, 0x10, 0x82, 0x82, 0x20, 0x58, 0x25,
       0x82, 0x18, 0x29, 0x58, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -732,7 +727,7 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
   // Second part of the SetObjectProtected command containing the fragment
   // with the private key.
   uint8_t sop_cmd2[42] = {
-      0x03, 0x01, 0x00, 0x26, 0x31, 0x00, 0x23, 0x01, 0x00, 0x20,
+      0x83, 0x01, 0x00, 0x26, 0x31, 0x00, 0x23, 0x01, 0x00, 0x20,
   };
 
   memcpy(&sop_cmd2[10], &priv_key[0], 32);
@@ -762,7 +757,7 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
     return OPTIGA_ERR_PROCESS;
   }
 
-  ret = optiga_execute_command(false, sop_cmd1, sizeof(sop_cmd1), tx_buffer,
+  ret = optiga_execute_command(sop_cmd1, sizeof(sop_cmd1), tx_buffer,
                                sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
     memzero(sop_cmd2, sizeof(sop_cmd2));
@@ -775,7 +770,7 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
     return ret;
   }
 
-  ret = optiga_execute_command(false, sop_cmd2, sizeof(sop_cmd2), tx_buffer,
+  ret = optiga_execute_command(sop_cmd2, sizeof(sop_cmd2), tx_buffer,
                                sizeof(tx_buffer), &tx_size);
   memzero(sop_cmd2, sizeof(sop_cmd2));
   if (ret != OPTIGA_SUCCESS) {
