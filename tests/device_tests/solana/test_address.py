@@ -36,9 +36,7 @@ def test_solana_get_address(client: Client, parameters, result):
     client.init_device(new_session=True)
 
     actual_result = get_address(
-        client,
-        address_n=parse_path(parameters["path"]),
-        show_display=True
+        client, address_n=parse_path(parameters["path"]), show_display=True
     )
 
     assert actual_result.address == result["expected_address"]
