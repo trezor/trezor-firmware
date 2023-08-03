@@ -132,31 +132,39 @@ static void vcp_write_as_hex(uint8_t *data, uint16_t len) {
 }
 
 #ifdef USE_OPTIGA
-static uint16_t get_byte_from_hex(const char *hex) {
+static uint16_t get_byte_from_hex(const char **hex) {
   uint8_t result = 0;
+
+  // Skip whitespace.
+  while (**hex == ' ') {
+    *hex += 1;
+  }
+
   for (int i = 0; i < 2; i++) {
     result <<= 4;
-    if (hex[i] >= '0' && hex[i] <= '9') {
-      result |= hex[i] - '0';
-    } else if (hex[i] >= 'A' && hex[i] <= 'F') {
-      result |= hex[i] - 'A' + 10;
-    } else if (hex[i] >= 'a' && hex[i] <= 'f') {
-      result |= hex[i] - 'a' + 10;
-    } else if (hex[i] == '\0') {
+    char c = **hex;
+    if (c >= '0' && c <= '9') {
+      result |= c - '0';
+    } else if (c >= 'A' && c <= 'F') {
+      result |= c - 'A' + 10;
+    } else if (c >= 'a' && c <= 'f') {
+      result |= c - 'a' + 10;
+    } else if (c == '\0') {
       return 0x100;
     } else {
       return 0xFFFF;
     }
+    *hex += 1;
   }
   return result;
 }
 
 static int get_from_hex(uint8_t *buf, uint16_t buf_len, const char *hex) {
   int len = 0;
-  uint16_t b = get_byte_from_hex(hex);
+  uint16_t b = get_byte_from_hex(&hex);
   for (len = 0; len < buf_len && b <= 0xff; ++len) {
     buf[len] = b;
-    b = get_byte_from_hex(hex + len * 2);
+    b = get_byte_from_hex(&hex);
   }
 
   if (b == 0x100) {
@@ -650,6 +658,15 @@ bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
 }
 
 bool pair_optiga(void) {
+  // The pairing key may already be written and locked. The success of the
+  // pairing procedure is determined by optiga_sec_chan_handshake(). Therefore
+  // it is OK for some of the intermediate operations to fail.
+
+  // Enable writing the pairing secret to OPTIGA.
+  optiga_metadata metadata = {0};
+  metadata.change = OPTIGA_ACCESS_ALWAYS;
+  set_metadata(OID_KEY_PAIRING, &metadata);  // Ignore result.
+
   // Generate pairing secret.
   uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
   optiga_result ret = optiga_get_random(secret, sizeof(secret));
@@ -692,7 +709,8 @@ void optiga_lock(void) {
   }
 
   // Delete trust anchor.
-  optiga_result ret = optiga_set_data_object(0xe0e8, false, NULL, 0);
+  optiga_result ret =
+      optiga_set_data_object(0xe0e8, false, (const uint8_t *)"\0", 1);
   if (OPTIGA_SUCCESS != ret) {
     vcp_printf("ERROR: optiga_set_data error %d for 0xe0e8.", ret);
     return;
@@ -757,6 +775,8 @@ void optiga_lock(void) {
   if (!set_metadata(OID_KEY_PAIRING, &metadata)) {
     return;
   }
+
+  vcp_printf("OK");
 }
 
 void optigaid_read(void) {
@@ -790,6 +810,11 @@ void cert_read(uint16_t oid) {
 }
 
 void cert_write(uint16_t oid, char *data) {
+  // Enable writing to the certificate slot.
+  optiga_metadata metadata = {0};
+  metadata.change = OPTIGA_ACCESS_ALWAYS;
+  set_metadata(oid, &metadata);  // Ignore result.
+
   uint8_t data_bytes[1024];
 
   int len = get_from_hex(data_bytes, sizeof(data_bytes), data);
@@ -814,6 +839,7 @@ void pubkey_read(uint16_t oid) {
   uint8_t key_usage = OPTIGA_KEY_USAGE_KEYAGREE;
   metadata.key_usage.ptr = &key_usage;
   metadata.key_usage.len = 1;
+  metadata.execute = OPTIGA_ACCESS_ALWAYS;
 
   if (!set_metadata(oid, &metadata)) {
     return;
@@ -853,6 +879,7 @@ void keyfido_write(char *data) {
   uint8_t key_usage = OPTIGA_KEY_USAGE_KEYAGREE;
   metadata.key_usage.ptr = &key_usage;
   metadata.key_usage.len = 1;
+  metadata.execute = OPTIGA_ACCESS_ALWAYS;
 
   if (!set_metadata(OID_KEY_DEV, &metadata)) {
     return;
@@ -883,7 +910,7 @@ void keyfido_write(char *data) {
   bn_write_be(&pub.y, public_key + 4 + 32);
 
   // Execute ECDH with device private key.
-  uint8_t secret[64] = {0};
+  uint8_t secret[32] = {0};
   size_t secret_size = 0;
   optiga_result ret = optiga_calc_ssec(OPTIGA_CURVE_P256, OID_KEY_DEV,
                                        public_key, sizeof(public_key), secret,
