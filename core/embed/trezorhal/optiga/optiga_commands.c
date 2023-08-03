@@ -511,6 +511,47 @@ optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
 }
 
 /*
+ * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#verifysign
+ * The public_key is encoded as a DER BIT STRING.
+ * The signature pair (r,s) is encoded as two DER INTEGERs.
+ */
+optiga_result optiga_verify_sign(optiga_curve curve, const uint8_t *public_key,
+                                 size_t public_key_size, const uint8_t *digest,
+                                 size_t digest_size, const uint8_t *signature,
+                                 size_t sig_size) {
+  tx_size = 17 + digest_size + sig_size + public_key_size;
+  if (tx_size > sizeof(tx_buffer)) {
+    return OPTIGA_ERR_PARAM;
+  }
+
+  uint8_t *ptr = tx_buffer;
+  *(ptr++) = 0xB2;  // command code
+  *(ptr++) = 0x11;  // ECDSA signature scheme
+  write_uint16(&ptr, tx_size - 4);
+
+  *(ptr++) = 0x01;  // digest tag
+  write_prefixed_data(&ptr, digest, digest_size);
+
+  *(ptr++) = 0x02;  // signature tag
+  write_prefixed_data(&ptr, signature, sig_size);
+
+  *(ptr++) = 0x05;  // curve tag
+  write_uint16(&ptr, 1);
+  *(ptr++) = curve;
+
+  *(ptr++) = 0x06;  // public key tag
+  write_prefixed_data(&ptr, public_key, public_key_size);
+
+  optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
+                                             sizeof(tx_buffer), &tx_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
+
+  return process_output_fixedlen(NULL, 0);
+}
+
+/*
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#genkeypair
  * Returns 0x02, public_key_size (2 bytes), public_key.
  * The public_key is encoded as a DER BIT STRING.
