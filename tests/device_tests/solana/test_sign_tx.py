@@ -38,7 +38,7 @@ def test_solana_sign_tx(client: Client, parameters, result):
     actual_result = sign_tx(
         client,
         signer_path_n=parse_path(parameters["signer_path"]),
-        serialized_tx=bytes.fromhex(parameters["serialized_tx"])
+        serialized_tx=bytes.fromhex(parameters["serialized_tx"]),
     )
 
     assert actual_result.signature == bytes.fromhex(result["expected_signature"])
