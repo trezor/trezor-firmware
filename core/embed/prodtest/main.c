@@ -132,6 +132,8 @@ static void vcp_write_as_hex(uint8_t *data, uint16_t len) {
 }
 
 #ifdef USE_OPTIGA
+static secbool is_optiga_locked(void);
+
 static uint16_t get_byte_from_hex(const char **hex) {
   uint8_t result = 0;
 
@@ -563,10 +565,10 @@ static void test_otp_write(const char *args) {
 
 static void test_otp_write_device_variant(const char *args) {
 #ifdef USE_OPTIGA
-//  if (sectrue != is_optiga_locked()) {
-//    vcp_printf("ERROR: NOT LOCKED");
-//    return;
-//  }
+  if (sectrue != is_optiga_locked()) {
+    vcp_printf("ERROR: NOT LOCKED");
+    return;
+  }
 #endif
 
   volatile char data[32];
@@ -622,7 +624,7 @@ static const uint16_t OID_KEY_FIDO = 0xE0F2;
 static const uint16_t OID_KEY_PAIRING = 0xE140;
 static const uint16_t OID_OPTIGA_UID = 0xE0C2;
 
-bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
+static bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
   uint8_t serialized[258] = {0};
   size_t size = 0;
   optiga_result ret = optiga_serialize_metadata(metadata, serialized,
@@ -657,7 +659,7 @@ bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
   return true;
 }
 
-bool pair_optiga(void) {
+static bool pair_optiga(void) {
   // The pairing key may already be written and locked. The success of the
   // pairing procedure is determined by optiga_sec_chan_handshake(). Therefore
   // it is OK for some of the intermediate operations to fail.
@@ -707,7 +709,7 @@ bool pair_optiga(void) {
   return true;
 }
 
-void optiga_lock(void) {
+static void optiga_lock(void) {
   if (!pair_optiga()) {
     return;
   }
@@ -783,7 +785,41 @@ void optiga_lock(void) {
   vcp_printf("OK");
 }
 
-void optigaid_read(void) {
+static secbool is_optiga_locked(void) {
+  const uint16_t oids[] = {OID_CERT_DEV, OID_CERT_FIDO, OID_KEY_DEV,
+                           OID_KEY_FIDO, OID_KEY_PAIRING};
+
+  optiga_metadata locked_metadata = {0};
+  locked_metadata.lcso = OPTIGA_LCS_OPERATIONAL;
+  for (size_t i = 0; i < sizeof(oids) / sizeof(oids[0]); ++i) {
+    uint8_t metadata_buffer[258] = {0};
+    size_t metadata_size = 0;
+    optiga_result ret =
+        optiga_get_data_object(oids[i], true, metadata_buffer,
+                               sizeof(metadata_buffer), &metadata_size);
+    if (OPTIGA_SUCCESS != ret) {
+      vcp_printf("ERROR: optiga_get_metadata error %d for OID 0x%04x.", ret,
+                 oids[i]);
+      return secfalse;
+    }
+
+    optiga_metadata stored_metadata = {0};
+    ret =
+        optiga_parse_metadata(metadata_buffer, metadata_size, &stored_metadata);
+    if (OPTIGA_SUCCESS != ret) {
+      vcp_printf("ERROR: optiga_parse_metadata error %d.", ret);
+      return secfalse;
+    }
+
+    if (!optiga_compare_metadata(&locked_metadata, &stored_metadata)) {
+      return secfalse;
+    }
+  }
+
+  return sectrue;
+}
+
+static void optigaid_read(void) {
   uint8_t optiga_id[27] = {0};
   size_t optiga_id_size = 0;
 
@@ -799,7 +835,7 @@ void optigaid_read(void) {
   vcp_write_as_hex(optiga_id, optiga_id_size);
 }
 
-void cert_read(uint16_t oid) {
+static void cert_read(uint16_t oid) {
   uint8_t cert[1024] = {0};
   size_t cert_size = 0;
   optiga_result ret =
@@ -813,7 +849,7 @@ void cert_read(uint16_t oid) {
   vcp_write_as_hex(cert, cert_size);
 }
 
-void cert_write(uint16_t oid, char *data) {
+static void cert_write(uint16_t oid, char *data) {
   // Enable writing to the certificate slot.
   optiga_metadata metadata = {0};
   metadata.change = OPTIGA_ACCESS_ALWAYS;
@@ -836,7 +872,7 @@ void cert_write(uint16_t oid, char *data) {
   vcp_printf("OK");
 }
 
-void pubkey_read(uint16_t oid) {
+static void pubkey_read(uint16_t oid) {
   // Enable key agreement usage.
 
   optiga_metadata metadata = {0};
@@ -871,7 +907,7 @@ void pubkey_read(uint16_t oid) {
   vcp_write_as_hex(public_key, public_key_size);
 }
 
-void keyfido_write(char *data) {
+static void keyfido_write(char *data) {
   static const size_t EPH_PUB_KEY_SIZE = 33;
   static const size_t PAYLOAD_SIZE = 32;
   static const size_t CIPHERTEXT_OFFSET = EPH_PUB_KEY_SIZE;
