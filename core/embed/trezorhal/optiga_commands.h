@@ -157,6 +157,10 @@ optiga_result optiga_clear_auto_state(uint16_t key_oid);
 optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
                                size_t digest_size, uint8_t *signature,
                                size_t max_sig_size, size_t *sig_size);
+optiga_result optiga_verify_sign(optiga_curve curve, const uint8_t *public_key,
+                                 size_t public_key_size, const uint8_t *digest,
+                                 size_t digest_size, const uint8_t *signature,
+                                 size_t sig_size);
 optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
                                   uint16_t oid, uint8_t *public_key,
                                   size_t max_public_key_size,
