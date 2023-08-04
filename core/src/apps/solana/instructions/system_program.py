@@ -8,12 +8,12 @@ from trezor.wire import ProcessError
 
 from ..constants import ADDRESS_RW, ADDRESS_SIG, ADDRESS_SIG_READ_ONLY
 from ..parsing.utils import read_string
-from . import SYSTEM_PROGRAM_ID
+from . import SYSTEM_PROGRAM_ID, Instruction
 
 if TYPE_CHECKING:
     from typing import Awaitable
 
-    from ..types import Instruction
+    from ..types import RawInstruction
 
 INS_CREATE_ACCOUNT = 0
 INS_TRANSFER = 2
@@ -21,221 +21,172 @@ INS_CREATE_ACCOUNT_WITH_SEED = 3
 
 
 def handle_system_program_instruction(
-    instruction: Instruction, signer_pub_key: bytes
+    raw_instruction: RawInstruction, signer_pub_key: bytes
 ) -> Awaitable[None]:
-    program_id, _, data = instruction
+    program_id, _, data = raw_instruction
 
     assert base58.encode(program_id) == SYSTEM_PROGRAM_ID
     assert data.remaining_count() >= 4
+
+    instruction = _get_instruction(raw_instruction)
+
+    instruction.parse()
+    instruction.validate(signer_pub_key)
+    return instruction.show()
+
+
+def _get_instruction(raw_instruction: RawInstruction) -> Instruction:
+    _, _, data = raw_instruction
 
     instruction_id = int.from_bytes(data.read(4), "little")
     data.seek(0)
 
     if instruction_id == INS_CREATE_ACCOUNT:
-        return _handle_create_account(instruction, signer_pub_key)
-    if instruction_id == INS_TRANSFER:
-        return _handle_transfer(instruction, signer_pub_key)
-    if instruction_id == INS_CREATE_ACCOUNT_WITH_SEED:
-        return _handle_create_account_with_seed(instruction, signer_pub_key)
+        return CreateAccountInstruction(raw_instruction)
+    elif instruction_id == INS_TRANSFER:
+        return TransferInstruction(raw_instruction)
+    elif instruction_id == INS_CREATE_ACCOUNT_WITH_SEED:
+        return CreateAccountWithSeedInstruction(raw_instruction)
     else:
         # TODO SOL: blind signing
         raise ProcessError("Unknown system program instruction")
 
 
-def _handle_create_account(
-    instruction: Instruction, signer_pub_key: bytes
-) -> Awaitable[None]:
-    lamports, space, owner, funding_account, new_account = _parse_create_account(
-        instruction
-    )
-    _validate_create_account(funding_account, signer_pub_key)
-    return _show_create_account(lamports, space, owner, funding_account, new_account)
+class CreateAccountInstruction(Instruction):
+    PROGRAM_ID = SYSTEM_PROGRAM_ID
+    INSTRUCTION_ID = INS_CREATE_ACCOUNT
+
+    lamports: int
+    space: int
+    owner: bytes
+    funding_account: bytes
+    created_account: bytes
+
+    def parse(self) -> None:
+        assert self.data.remaining_count() == 52
+        assert len(self.accounts) == 2
+
+        instruction_id = int.from_bytes(self.data.read(4), "little")
+        assert instruction_id == INS_CREATE_ACCOUNT
+
+        self.lamports = int.from_bytes(self.data.read(8), "little")
+        self.space = int.from_bytes(self.data.read(8), "little")
+        self.owner = self.data.read(32)
+
+        self.funding_account, funding_account_type = self.accounts[0]
+        assert funding_account_type == ADDRESS_SIG
+
+        self.new_account, new_account_type = self.accounts[1]
+        assert new_account_type == ADDRESS_RW
+
+    def validate(self, signer_pub_key: bytes) -> None:
+        if self.funding_account != signer_pub_key:
+            raise ProcessError("Invalid funding account")
+
+    def show(self) -> Awaitable[None]:
+        return confirm_properties(
+            "create_account",
+            "Create Account",
+            (
+                ("Lamports", str(self.lamports)),
+                ("Space", str(self.space)),
+                ("Owner", base58.encode(self.owner)),
+                ("Funding Account", base58.encode(self.funding_account)),
+                ("New Account", base58.encode(self.new_account)),
+            ),
+        )
 
 
-def _parse_create_account(
-    instruction: Instruction,
-) -> tuple[int, int, bytes, bytes, bytes]:
-    _, accounts, data = instruction
+class TransferInstruction(Instruction):
+    PROGRAM_ID = SYSTEM_PROGRAM_ID
+    INSTRUCTION_ID = INS_TRANSFER
 
-    assert data.remaining_count() == 52
-    assert len(accounts) == 2
+    amount: int
+    source: bytes
+    destination: bytes
 
-    instruction_id = int.from_bytes(data.read(4), "little")
-    assert instruction_id == INS_CREATE_ACCOUNT
+    def parse(self) -> None:
+        assert base58.encode(self.program_id) == self.PROGRAM_ID
+        assert self.data.remaining_count() == 12
+        assert len(self.accounts) == 2
 
-    lamports = int.from_bytes(data.read(8), "little")
-    space = int.from_bytes(data.read(8), "little")
-    owner = data.read(32)
+        instruction_id = int.from_bytes(self.data.read(4), "little")
+        assert instruction_id == self.INSTRUCTION_ID
 
-    funding_account, funding_account_type = accounts[0]
-    assert funding_account_type == ADDRESS_SIG
+        self.amount = int.from_bytes(self.data.read(8), "little")
 
-    new_account, new_account_type = accounts[1]
-    assert new_account_type == ADDRESS_RW
+        self.source, source_account_type = self.accounts[0]
+        assert source_account_type == ADDRESS_SIG
 
-    return lamports, space, owner, funding_account, new_account
+        self.destination, destination_account_type = self.accounts[1]
+        assert destination_account_type == ADDRESS_RW
 
+    def validate(self, signer_pub_key: bytes) -> None:
+        if self.source != signer_pub_key:
+            raise ProcessError("Invalid source account")
 
-def _validate_create_account(funding_account: bytes, signer_pub_key: bytes) -> None:
-    if funding_account != signer_pub_key:
-        raise ProcessError("Invalid funding account")
+        # TODO SOL: validate max amount?
 
-
-def _show_create_account(
-    lamports: int, space: int, owner: bytes, funding_account: bytes, new_account: bytes
-) -> Awaitable[None]:
-    return confirm_properties(
-        "create_account",
-        "Create Account",
-        (
-            ("Lamports", str(lamports)),
-            ("Space", str(space)),
-            ("Owner", base58.encode(owner)),
-            ("Funding Account", base58.encode(funding_account)),
-            ("New Account", base58.encode(new_account)),
-        ),
-    )
+    def show(self) -> Awaitable[None]:
+        return confirm_output(
+            base58.encode(self.destination),
+            f"{format_amount(self.amount, 8)} SOL",
+            br_code=ButtonRequestType.Other,
+        )
 
 
-def _handle_transfer(
-    instruction: Instruction, signer_pub_key: bytes
-) -> Awaitable[None]:
-    amount, source, destination = _parse_transfer(instruction)
-    _validate_transfer(source, signer_pub_key)
-    return _show_transfer(destination, amount)
+class CreateAccountWithSeedInstruction(Instruction):
+    PROGRAM_ID = SYSTEM_PROGRAM_ID
+    INSTRUCTION_ID = INS_CREATE_ACCOUNT_WITH_SEED
 
+    base: bytes
+    seed: str
+    lamports: int
+    space: int
+    owner: bytes
+    funding_account: bytes
+    created_account: bytes
+    base_account: bytes | None
 
-def _parse_transfer(instruction: Instruction) -> tuple[int, bytes, bytes]:
-    _, accounts, data = instruction
+    def parse(self) -> None:
+        assert len(self.accounts) == 2
 
-    assert data.remaining_count() == 12
-    assert len(accounts) == 2
+        instruction_id = int.from_bytes(self.data.read(4), "little")
+        assert instruction_id == INS_CREATE_ACCOUNT_WITH_SEED
 
-    instruction_id = int.from_bytes(data.read(4), "little")
-    assert instruction_id == INS_TRANSFER
+        self.base = self.data.read(32)
+        self.seed = read_string(self.data)
+        self.lamports = int.from_bytes(self.data.read(8), "little")
+        self.space = int.from_bytes(self.data.read(8), "little")
+        self.owner = self.data.read(32)
 
-    amount = int.from_bytes(data.read(8), "little")
+        self.funding_account, funding_account_type = self.accounts[0]
+        assert funding_account_type == ADDRESS_SIG
 
-    source, source_account_type = accounts[0]
-    assert source_account_type == ADDRESS_SIG
+        self.created_account, created_account_type = self.accounts[1]
+        assert created_account_type == ADDRESS_RW
 
-    destination, destination_account_type = accounts[1]
-    assert destination_account_type == ADDRESS_RW
+        self.base_account = None
+        if len(self.accounts) == 3:
+            self.base_account, base_account_type = self.accounts[2]
+            assert base_account_type == ADDRESS_SIG_READ_ONLY
 
-    return amount, source, destination
+    def validate(self, signer_pub_key: bytes) -> None:
+        if self.funding_account != signer_pub_key:
+            raise ProcessError("Invalid funding account")
 
+    def show(self) -> Awaitable[None]:
+        props = [
+            ("Base", base58.encode(self.base)),
+            ("Seed", self.seed),
+            ("Lamports", str(self.lamports)),
+            ("Space", str(self.space)),
+            ("Owner", base58.encode(self.owner)),
+            ("Funding Account", base58.encode(self.funding_account)),
+            ("Created Account", base58.encode(self.created_account)),
+        ]
 
-def _validate_transfer(source: bytes, signer_pub_key: bytes):
-    if source != signer_pub_key:
-        raise ProcessError("Invalid source account")
+        if self.base_account:
+            props.append(("Base Account", base58.encode(self.base_account)))
 
-    # TODO SOL: validate max amount?
-
-
-def _show_transfer(destination: bytes, amount: int) -> Awaitable[None]:
-    return confirm_output(
-        base58.encode(destination),
-        f"{format_amount(amount, 8)} SOL",
-        br_code=ButtonRequestType.Other,
-    )
-
-
-def _handle_create_account_with_seed(
-    instruction: Instruction, signer_address: bytes
-) -> Awaitable[None]:
-    (
-        base,
-        seed,
-        lamports,
-        space,
-        owner,
-        funding_account,
-        created_account,
-        base_account,
-    ) = _parse_create_account_with_seed(instruction)
-    _validate_create_account_with_seed(funding_account, signer_address)
-    return _show_create_account_with_seed(
-        base,
-        seed,
-        lamports,
-        space,
-        owner,
-        funding_account,
-        created_account,
-        base_account,
-    )
-
-
-def _parse_create_account_with_seed(
-    instruction: Instruction,
-) -> tuple[bytes, str, int, int, bytes, bytes, bytes, bytes | None]:
-    _, accounts, data = instruction
-
-    # assert len(data) == 52
-    assert len(accounts) == 2
-
-    instruction_id = int.from_bytes(data.read(4), "little")
-    assert instruction_id == INS_CREATE_ACCOUNT_WITH_SEED
-
-    base = data.read(32)
-    seed = read_string(data)
-    lamports = int.from_bytes(data.read(8), "little")
-    space = int.from_bytes(data.read(8), "little")
-    owner = data.read(32)
-
-    funding_account, funding_account_type = accounts[0]
-    assert funding_account_type == ADDRESS_SIG
-
-    created_account, created_account_type = accounts[1]
-    assert created_account_type == ADDRESS_RW
-
-    base_account = None
-    if len(accounts) == 3:
-        base_account, base_account_type = accounts[2]
-        assert base_account_type == ADDRESS_SIG_READ_ONLY
-
-    return (
-        base,
-        seed,
-        lamports,
-        space,
-        owner,
-        funding_account,
-        created_account,
-        base_account,
-    )
-
-
-def _validate_create_account_with_seed(
-    funding_account: bytes, signer_pub_key: bytes
-) -> None:
-    # TODO SOL: pass for now since we don't have the proper mnemonic
-    pass
-    # if funding_account != signer_pub_key:
-    #     raise ProcessError("Invalid funding account")
-
-
-def _show_create_account_with_seed(
-    base: bytes,
-    seed: str,
-    lamports: int,
-    space: int,
-    owner: bytes,
-    funding_account: bytes,
-    created_account: bytes,
-    base_account: bytes | None,
-) -> Awaitable[None]:
-    props = [
-        ("Base", base58.encode(base)),
-        ("Seed", seed),
-        ("Lamports", str(lamports)),
-        ("Space", str(space)),
-        ("Owner", base58.encode(owner)),
-        ("Funding Account", base58.encode(funding_account)),
-        ("Created Account", base58.encode(created_account)),
-    ]
-
-    if base_account:
-        props.append(("Base Account", base58.encode(base_account)))
-
-    return confirm_properties("create_account", "Create Account", props)
+        return confirm_properties("create_account", "Create Account", props)

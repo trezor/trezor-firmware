@@ -14,12 +14,12 @@ from .utils import read_compact_u16
 if TYPE_CHECKING:
     from trezor.utils import BufferReader
 
-    from ..types import Address, Instruction
+    from ..types import Address, RawInstruction
 
 
 def parse(
     serialized_tx: BufferReader,
-) -> tuple[list[Address], bytes, list[Instruction]]:
+) -> tuple[list[Address], bytes, list[RawInstruction]]:
     # TODO SOL: signature parsing can be removed?
     # num_of_signatures = decode_length(serialized_tx)
     # assert num_of_signatures == 0

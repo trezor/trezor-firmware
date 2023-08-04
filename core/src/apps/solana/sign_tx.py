@@ -28,7 +28,7 @@ async def sign_tx(
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
 
-    addresses, blockhash, instructions = parse(BufferReader(serialized_tx))
+    _, _, instructions = parse(BufferReader(serialized_tx))
 
     signer_pub_key = seed.remove_ed25519_prefix(node.public_key())
     await handle_instructions(instructions, signer_pub_key)
