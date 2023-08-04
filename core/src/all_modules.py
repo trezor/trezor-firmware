@@ -365,14 +365,30 @@ apps.misc.sign_identity
 import apps.misc.sign_identity
 apps.solana
 import apps.solana
+apps.solana.constants
+import apps.solana.constants
 apps.solana.get_address
 import apps.solana.get_address
 apps.solana.get_public_key
 import apps.solana.get_public_key
-apps.solana.helpers.paths
-import apps.solana.helpers.paths
+apps.solana.instructions
+import apps.solana.instructions
+apps.solana.instructions.stake_program
+import apps.solana.instructions.stake_program
+apps.solana.instructions.system_program
+import apps.solana.instructions.system_program
+apps.solana.parsing
+import apps.solana.parsing
+apps.solana.parsing.parse
+import apps.solana.parsing.parse
+apps.solana.parsing.parse_instructions
+import apps.solana.parsing.parse_instructions
+apps.solana.parsing.utils
+import apps.solana.parsing.utils
 apps.solana.sign_tx
 import apps.solana.sign_tx
+apps.solana.types
+import apps.solana.types
 apps.workflow_handlers
 import apps.workflow_handlers
 

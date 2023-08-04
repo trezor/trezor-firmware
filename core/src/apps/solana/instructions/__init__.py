@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..types import Instruction
+    from ..types import Address, Data, RawInstruction
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
@@ -9,8 +9,27 @@ STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
 SYSTEM_TRANSFER_ID = 2
 
 
+class Instruction:
+    program_id: bytes
+    accounts: list[Address]
+    data: Data
+
+    def __init__(self, raw_instruction: RawInstruction):
+        self.program_id, self.accounts, self.data = raw_instruction
+
+    def parse(self) -> None:
+        pass
+
+    def validate(self, signer_pub_key: bytes) -> None:
+        pass
+
+    async def show(self) -> None:
+        # TODO SOL: blind signing could be here?
+        pass
+
+
 async def handle_instructions(
-    instructions: list[Instruction], signer_pub_key: bytes
+    instructions: list[RawInstruction], signer_pub_key: bytes
 ) -> None:
     from trezor.crypto import base58
     from trezor.wire import ProcessError

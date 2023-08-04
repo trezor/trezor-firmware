@@ -6,4 +6,4 @@ if TYPE_CHECKING:
     Address = tuple[bytes, int]
     ProgramId = bytes
     Data = BufferReader
-    Instruction = tuple[ProgramId, list[Address], Data]
+    RawInstruction = tuple[ProgramId, list[Address], Data]
