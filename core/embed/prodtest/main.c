@@ -566,7 +566,7 @@ static void test_otp_write(const char *args) {
 static void test_otp_write_device_variant(const char *args) {
 #ifdef USE_OPTIGA
   if (sectrue != is_optiga_locked()) {
-    vcp_printf("ERROR: NOT LOCKED");
+    vcp_println("ERROR: NOT LOCKED");
     return;
   }
 #endif
@@ -612,6 +612,7 @@ void cpuid_read(void) {
   cpuid[1] = LL_GetUID_Word1();
   cpuid[2] = LL_GetUID_Word2();
 
+  vcp_print("OK: ");
   vcp_println_hex((uint8_t *)cpuid, sizeof(cpuid));
 }
 
@@ -630,8 +631,8 @@ static bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
   optiga_result ret = optiga_serialize_metadata(metadata, serialized,
                                                 sizeof(serialized), &size);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_serialize_metadata error %d for OID 0x%04x.", ret,
-               oid);
+    vcp_println("ERROR: optiga_serialize_metadata error %d for OID 0x%04x.",
+                ret, oid);
     return false;
   }
 
@@ -640,19 +641,20 @@ static bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
   ret =
       optiga_get_data_object(oid, true, serialized, sizeof(serialized), &size);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_get_metadata error %d for OID 0x%04x.", ret, oid);
+    vcp_println("ERROR: optiga_get_metadata error %d for OID 0x%04x.", ret,
+                oid);
     return false;
   }
 
   optiga_metadata metadata_stored = {0};
   ret = optiga_parse_metadata(serialized, size, &metadata_stored);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_parse_metadata error %d.", ret);
+    vcp_println("ERROR: optiga_parse_metadata error %d.", ret);
     return false;
   }
 
   if (!optiga_compare_metadata(metadata, &metadata_stored)) {
-    vcp_printf("ERROR: optiga_compare_metadata failed.");
+    vcp_println("ERROR: optiga_compare_metadata failed.");
     return false;
   }
 
@@ -673,7 +675,7 @@ static bool pair_optiga(void) {
   uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
   optiga_result ret = optiga_get_random(secret, sizeof(secret));
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_get_random error %d,", ret);
+    vcp_println("ERROR: optiga_get_random error %d,", ret);
     return false;
   }
 
@@ -694,7 +696,7 @@ static bool pair_optiga(void) {
   memzero(secret, sizeof(secret));
   if (secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN) !=
       sectrue) {
-    vcp_printf("ERROR: Failed to read pairing secret.");
+    vcp_println("ERROR: Failed to read pairing secret.");
     return false;
   }
   */
@@ -702,7 +704,7 @@ static bool pair_optiga(void) {
   ret = optiga_sec_chan_handshake(secret, sizeof(secret));
   memzero(secret, sizeof(secret));
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_sec_chan_handshake error %d.", ret);
+    vcp_println("ERROR: optiga_sec_chan_handshake error %d.", ret);
     return false;
   }
 
@@ -718,7 +720,7 @@ static void optiga_lock(void) {
   optiga_result ret =
       optiga_set_data_object(0xe0e8, false, (const uint8_t *)"\0", 1);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_set_data error %d for 0xe0e8.", ret);
+    vcp_println("ERROR: optiga_set_data error %d for 0xe0e8.", ret);
     return;
   }
 
@@ -782,7 +784,7 @@ static void optiga_lock(void) {
     return;
   }
 
-  vcp_printf("OK");
+  vcp_println("OK");
 }
 
 static secbool is_optiga_locked(void) {
@@ -798,8 +800,8 @@ static secbool is_optiga_locked(void) {
         optiga_get_data_object(oids[i], true, metadata_buffer,
                                sizeof(metadata_buffer), &metadata_size);
     if (OPTIGA_SUCCESS != ret) {
-      vcp_printf("ERROR: optiga_get_metadata error %d for OID 0x%04x.", ret,
-                 oids[i]);
+      vcp_println("ERROR: optiga_get_metadata error %d for OID 0x%04x.", ret,
+                  oids[i]);
       return secfalse;
     }
 
@@ -807,7 +809,7 @@ static secbool is_optiga_locked(void) {
     ret =
         optiga_parse_metadata(metadata_buffer, metadata_size, &stored_metadata);
     if (OPTIGA_SUCCESS != ret) {
-      vcp_printf("ERROR: optiga_parse_metadata error %d.", ret);
+      vcp_println("ERROR: optiga_parse_metadata error %d.", ret);
       return secfalse;
     }
 
@@ -826,13 +828,13 @@ static void optigaid_read(void) {
   optiga_result ret = optiga_get_data_object(
       OID_OPTIGA_UID, false, optiga_id, sizeof(optiga_id), &optiga_id_size);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_get_data_object error %d for 0x%04x.", ret,
-               OID_OPTIGA_UID);
+    vcp_println("ERROR: optiga_get_data_object error %d for 0x%04x.", ret,
+                OID_OPTIGA_UID);
     return;
   }
 
-  vcp_printf_ex("OK: ");
-  vcp_write_as_hex(optiga_id, optiga_id_size);
+  vcp_print("OK: ");
+  vcp_println_hex(optiga_id, optiga_id_size);
 }
 
 static void cert_read(uint16_t oid) {
@@ -841,12 +843,12 @@ static void cert_read(uint16_t oid) {
   optiga_result ret =
       optiga_get_data_object(oid, false, cert, sizeof(cert), &cert_size);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_get_data_object error %d for 0x%04x.", ret, oid);
+    vcp_println("ERROR: optiga_get_data_object error %d for 0x%04x.", ret, oid);
     return;
   }
 
-  vcp_printf_ex("OK: ");
-  vcp_write_as_hex(cert, cert_size);
+  vcp_print("OK: ");
+  vcp_println_hex(cert, cert_size);
 }
 
 static void cert_write(uint16_t oid, char *data) {
@@ -859,13 +861,13 @@ static void cert_write(uint16_t oid, char *data) {
 
   int len = get_from_hex(data_bytes, sizeof(data_bytes), data);
   if (len < 0) {
-    vcp_printf("ERROR: Hexadecimal decoding error %d.", len);
+    vcp_println("ERROR: Hexadecimal decoding error %d.", len);
     return;
   }
 
   optiga_result ret = optiga_set_data_object(oid, false, data_bytes, len);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_set_data error %d for 0x%04x.", ret, oid);
+    vcp_println("ERROR: optiga_set_data error %d for 0x%04x.", ret, oid);
     return;
   }
 
@@ -899,12 +901,12 @@ static void pubkey_read(uint16_t oid) {
       OPTIGA_CURVE_P256, OID_KEY_DEV, BASE_POINT, sizeof(BASE_POINT),
       public_key, sizeof(public_key), &public_key_size);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_calc_ssec error %d.", ret);
+    vcp_println("ERROR: optiga_calc_ssec error %d.", ret);
     return;
   }
 
-  vcp_printf_ex("OK: ");
-  vcp_write_as_hex(public_key, public_key_size);
+  vcp_print("OK: ");
+  vcp_println_hex(public_key, public_key_size);
 }
 
 static void keyfido_write(char *data) {
@@ -930,19 +932,19 @@ static void keyfido_write(char *data) {
   uint8_t data_bytes[EXPECTED_SIZE];
   int len = get_from_hex(data_bytes, sizeof(data_bytes), data);
   if (len < 0) {
-    vcp_printf("ERROR: Hexadecimal decoding error %d.", len);
+    vcp_println("ERROR: Hexadecimal decoding error %d.", len);
     return;
   }
 
   if (len != EXPECTED_SIZE) {
-    vcp_printf("ERROR: Unexpected input length.");
+    vcp_println("ERROR: Unexpected input length.");
     return;
   }
 
   // Expand sender's ephemeral public key.
   curve_point pub = {0};
   if (0 == ecdsa_read_pubkey(&nist256p1, data_bytes, &pub)) {
-    vcp_printf("ERROR: Failed to decode public key.");
+    vcp_println("ERROR: Failed to decode public key.");
     return;
   }
   uint8_t public_key[4 + 64] = {0x03, 0x42, 0x00, 0x04};
@@ -957,7 +959,7 @@ static void keyfido_write(char *data) {
                                        sizeof(secret), &secret_size);
   if (OPTIGA_SUCCESS != ret) {
     memzero(secret, sizeof(secret));
-    vcp_printf("ERROR: optiga_calc_ssec error %d.", ret);
+    vcp_println("ERROR: optiga_calc_ssec error %d.", ret);
     return;
   }
 
@@ -966,7 +968,7 @@ static void keyfido_write(char *data) {
   aes_decrypt_ctx ctx = {0};
   AES_RETURN aes_ret = aes_decrypt_key256(secret, &ctx);
   if (EXIT_SUCCESS != aes_ret) {
-    vcp_printf("ERROR: aes_decrypt_key256 error.");
+    vcp_println("ERROR: aes_decrypt_key256 error.");
     memzero(&ctx, sizeof(ctx));
     memzero(secret, sizeof(secret));
     return;
@@ -981,7 +983,7 @@ static void keyfido_write(char *data) {
   memzero(secret, sizeof(secret));
   if (EXIT_SUCCESS != aes_ret) {
     memzero(fido_key, sizeof(fido_key));
-    vcp_printf("ERROR: aes_cbc_decrypt error.");
+    vcp_println("ERROR: aes_cbc_decrypt error.");
     return;
   }
 
@@ -989,7 +991,7 @@ static void keyfido_write(char *data) {
   ret = optiga_set_trust_anchor();
   if (OPTIGA_SUCCESS != ret) {
     memzero(fido_key, sizeof(fido_key));
-    vcp_printf("ERROR: optiga_set_trust_anchor error %d.", ret);
+    vcp_println("ERROR: optiga_set_trust_anchor error %d.", ret);
     return;
   }
 
@@ -1006,7 +1008,7 @@ static void keyfido_write(char *data) {
   ret = optiga_set_priv_key(OID_KEY_FIDO, fido_key);
   memzero(fido_key, sizeof(fido_key));
   if (OPTIGA_SUCCESS != ret) {
-    vcp_printf("ERROR: optiga_set_priv_key error %d.", ret);
+    vcp_println("ERROR: optiga_set_priv_key error %d.", ret);
     return;
   }
 
