@@ -443,7 +443,7 @@ static optiga_result optiga_receive_packet(uint8_t *packet_control_byte,
   return OPTIGA_SUCCESS;
 }
 
-static optiga_result optiga_transcieve(
+static optiga_result optiga_transceive(
     bool presentation_layer, const uint8_t *request_data, size_t request_size,
     uint8_t *response_data, size_t max_response_size, size_t *response_size) {
   *response_size = 0;
