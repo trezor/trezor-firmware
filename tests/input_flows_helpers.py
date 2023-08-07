@@ -56,7 +56,7 @@ class RecoveryFlow:
 
     def confirm_dry_run(self) -> BRGeneratorType:
         yield
-        assert "check the recovery seed" in self.debug.wait_layout().text_content()
+        assert "Check your backup" in self.debug.wait_layout().text_content()
         self.debug.press_yes()
 
     def setup_slip39_recovery(self, num_words: int) -> BRGeneratorType:
@@ -109,7 +109,7 @@ class RecoveryFlow:
         self.debug.press_no()
 
         yield
-        assert "abort the recovery" in self.debug.wait_layout().text_content()
+        assert "cancel the recovery" in self.debug.wait_layout().text_content()
         if self.debug.model == "R":
             self.debug.press_right()
         if confirm:

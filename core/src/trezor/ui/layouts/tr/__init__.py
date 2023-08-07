@@ -634,7 +634,7 @@ def show_success(
     # Special case for Shamir backup - to show everything just on one page
     # in regular font.
     if "Continue with" in content:
-        content = f"{subheader}\n{content}"
+        content = f"{subheader}\n\n{content}"
         subheader = None
         title = ""
 
@@ -760,6 +760,7 @@ async def confirm_blob(
             description=description,
             data=data,
             extra=None,
+            verb_cancel="",  # to show the cancel icon
             hold=hold,
         )
     )
@@ -956,10 +957,10 @@ async def confirm_replacement(description: str, txid: str) -> None:
     await confirm_value(
         description.upper(),
         txid,
-        "Confirm transaction ID:",
+        "Transaction ID:",
         "confirm_replacement",
         ButtonRequestType.SignTx,
-        verb="CONFIRM",
+        verb="CONTINUE",
     )
 
 
@@ -1161,6 +1162,7 @@ async def confirm_reenter_pin(
         title,
         description=f"Please re-enter {description} to confirm.",
         verb="CONTINUE",
+        verb_cancel=None,
         br_code=BR_TYPE_OTHER,
     )
 

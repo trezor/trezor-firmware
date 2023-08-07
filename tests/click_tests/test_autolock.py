@@ -241,10 +241,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
 
 def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
-    assert (
-        "Do you really want to check the recovery seed?"
-        in debug.wait_layout().text_content()
-    )
+    assert "Check your backup?" in debug.wait_layout().text_content()
     layout = go_next(debug, wait=True)
     assert "PinKeyboard" in layout.all_components()
 

@@ -496,7 +496,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             title,
             paragraphs,
             verb.unwrap_or_else(|| "CONFIRM".into()),
-            None,
+            Some("".into()),
             hold,
         )
     };
@@ -519,7 +519,7 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
             "JOINT TRANSACTION".into(),
             paragraphs,
             "HOLD TO CONFIRM".into(),
-            None,
+            Some("".into()),
             true,
         )
     };
@@ -552,7 +552,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             "MODIFY AMOUNT".into(),
             paragraphs,
             "CONFIRM".into(),
-            None,
+            Some("".into()),
             false,
         )
     };

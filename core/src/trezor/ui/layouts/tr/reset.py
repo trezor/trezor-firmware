@@ -31,7 +31,7 @@ async def show_share_words(
         title = f"SHARE #{share_index + 1}"
         check_title = f"CHECK SHARE #{share_index + 1}"
     else:
-        title = f"G{group_index + 1} - SHARE {share_index + 1}"
+        title = f"GROUP {group_index + 1} - SHARE {share_index + 1}"
         check_title = f"GROUP {group_index + 1} - SHARE {share_index + 1}"
 
     # We want the option to go back from words to the previous screen
@@ -166,7 +166,7 @@ async def slip39_prompt_threshold(
     await confirm_action(
         "slip39_prompt_threshold",
         "Threshold",
-        description="= minimum number of unique words used for recovery.",
+        description="= minimum number of unique word lists used for recovery.",
         verb="CONTINUE",
         verb_cancel=None,
     )
@@ -276,8 +276,8 @@ async def show_reset_warning(
 ) -> None:
     await show_warning(
         br_type,
-        button.upper(),
         subheader or "",
         content,
+        button.upper(),
         br_code=br_code,
     )

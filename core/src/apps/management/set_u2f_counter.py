@@ -19,8 +19,9 @@ async def set_u2f_counter(msg: SetU2FCounter) -> Success:
     await confirm_action(
         "set_u2f_counter",
         "Set U2F counter",
-        description="Do you really want to set the U2F counter to {}?",
+        description="Set the U2F counter to {}?",
         description_param=str(msg.u2f_counter),
+        verb="SET",
         br_code=ButtonRequestType.ProtectCall,
     )
 

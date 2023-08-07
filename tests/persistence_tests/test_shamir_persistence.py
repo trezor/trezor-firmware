@@ -61,7 +61,7 @@ def test_abort(core_emulator: Emulator):
     assert "Enter your backup" in debug.read_layout().text_content()
     layout = debug.click(buttons.CANCEL, wait=True)
 
-    assert layout.title() == "ABORT RECOVERY"
+    assert layout.title() in ("ABORT RECOVERY", "CANCEL RECOVERY")
     layout = debug.click(buttons.OK, wait=True)
 
     assert layout.main_component() == "Homescreen"
