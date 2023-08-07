@@ -680,11 +680,6 @@ static bool pair_optiga(void) {
 
   // Store pairing secret.
   ret = optiga_set_data_object(OID_KEY_PAIRING, false, secret, sizeof(secret));
-  /*
-   * TODO: Uncomment. Right now this code will render the device unusable with
-   * unofficial firmware. We need to be able to call AttestationDelete before
-   * this code is enabled.
-   *
   if (OPTIGA_SUCCESS == ret) {
     secret_erase();
     secret_write_header();
@@ -698,7 +693,6 @@ static bool pair_optiga(void) {
     vcp_println("ERROR Failed to read pairing secret.");
     return false;
   }
-  */
 
   ret = optiga_sec_chan_handshake(secret, sizeof(secret));
   memzero(secret, sizeof(secret));
