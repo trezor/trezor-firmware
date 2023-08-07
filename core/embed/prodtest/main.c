@@ -962,7 +962,7 @@ static void keyfido_write(char *data) {
     return;
   }
 
-  // Hash the shared secret. Use the result as the decryption key and IV.
+  // Hash the shared secret. Use the result as the decryption key.
   sha256_Raw(secret, secret_size, secret);
   aes_decrypt_ctx ctx = {0};
   AES_RETURN aes_ret = aes_decrypt_key256(secret, &ctx);
