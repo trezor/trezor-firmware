@@ -16,8 +16,8 @@ async def get_next_u2f_counter(msg: GetNextU2FCounter) -> NextU2FCounter:
 
     await confirm_action(
         "get_u2f_counter",
-        "Get next U2F counter",
-        description="Do you really want to increase and retrieve the U2F counter?",
+        "Get U2F counter",
+        description="Increase and retrieve the U2F counter?",
         br_code=ButtonRequestType.ProtectCall,
     )
 

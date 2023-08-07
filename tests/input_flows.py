@@ -624,21 +624,18 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
         super().__init__(client)
         self.block_height = block_height
 
-    def input_flow_tt(self) -> BRGeneratorType:
-        def assert_func(debug: DebugLink) -> None:
-            layout_text = debug.wait_layout().text_content()
-            assert "blockheight" in layout_text
-            assert self.block_height in layout_text
+    def assert_func(self, debug: DebugLink) -> None:
+        layout_text = debug.wait_layout().text_content()
+        assert "blockheight" in layout_text
+        assert self.block_height in layout_text
 
-        yield from lock_time_input_flow_tt(self.debug, assert_func, double_confirm=True)
+    def input_flow_tt(self) -> BRGeneratorType:
+        yield from lock_time_input_flow_tt(
+            self.debug, self.assert_func, double_confirm=True
+        )
 
     def input_flow_tr(self) -> BRGeneratorType:
-        def assert_func(debug: DebugLink) -> None:
-            assert "blockheight" in debug.wait_layout().text_content()
-            debug.press_right()
-            assert self.block_height in debug.wait_layout().text_content()
-
-        yield from lock_time_input_flow_tr(self.debug, assert_func)
+        yield from lock_time_input_flow_tr(self.debug, self.assert_func)
 
 
 class InputFlowLockTimeDatetime(InputFlowBase):
@@ -646,21 +643,16 @@ class InputFlowLockTimeDatetime(InputFlowBase):
         super().__init__(client)
         self.lock_time_str = lock_time_str
 
-    def input_flow_tt(self) -> BRGeneratorType:
-        def assert_func(debug: DebugLink):
-            layout_text = debug.wait_layout().text_content()
-            assert "Locktime" in layout_text
-            assert self.lock_time_str in layout_text
+    def assert_func(self, debug: DebugLink):
+        layout_text = debug.wait_layout().text_content()
+        assert "Locktime" in layout_text
+        assert self.lock_time_str in layout_text
 
-        yield from lock_time_input_flow_tt(self.debug, assert_func)
+    def input_flow_tt(self) -> BRGeneratorType:
+        yield from lock_time_input_flow_tt(self.debug, self.assert_func)
 
     def input_flow_tr(self) -> BRGeneratorType:
-        def assert_func(debug: DebugLink):
-            assert "Locktime" in debug.wait_layout().text_content()
-            debug.press_right()
-            assert self.lock_time_str in debug.wait_layout().text_content()
-
-        yield from lock_time_input_flow_tr(self.debug, assert_func)
+        yield from lock_time_input_flow_tr(self.debug, self.assert_func)
 
 
 class InputFlowEIP712ShowMore(InputFlowBase):

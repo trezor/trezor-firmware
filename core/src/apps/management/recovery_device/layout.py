@@ -20,16 +20,18 @@ async def _confirm_abort(dry_run: bool = False) -> None:
     if dry_run:
         await confirm_action(
             "abort_recovery",
-            "Abort backup check",
-            description="Do you really want to abort the backup check?",
+            "Cancel backup check",
+            description="Are you sure you want to cancel the backup check?",
+            verb="CANCEL",
             br_code=ButtonRequestType.ProtectCall,
         )
     else:
         await confirm_action(
             "abort_recovery",
-            "Abort recovery",
+            "Cancel recovery",
             "All progress will be lost.",
-            "Do you really want to abort the recovery process?",
+            "Are you sure you want to cancel the recovery process?",
+            verb="CANCEL",
             reverse=True,
             br_code=ButtonRequestType.ProtectCall,
         )

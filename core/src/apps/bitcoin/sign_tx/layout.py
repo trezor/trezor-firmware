@@ -263,8 +263,8 @@ async def confirm_unverified_external_input() -> None:
     await layouts.show_warning(
         "unverified_external_input",
         "The transaction contains unverified external inputs.",
-        "Proceed anyway?",
-        button="Proceed",
+        "Continue anyway?",
+        button="Continue",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -276,16 +276,16 @@ async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) 
         await layouts.show_warning(
             "nondefault_locktime",
             "Locktime is set but will have no effect.",
-            "Proceed anyway?",
-            button="Proceed",
+            "Continue anyway?",
+            button="Continue",
             br_code=ButtonRequestType.SignTx,
         )
     else:
         if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
-            text = "Locktime for this transaction is set to blockheight:"
+            text = "Locktime set to blockheight:"
             value = str(lock_time)
         else:
-            text = "Locktime for this transaction is set to:"
+            text = "Locktime set to:"
             value = format_timestamp(lock_time)
         await layouts.confirm_value(
             "Confirm locktime",
