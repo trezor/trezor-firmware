@@ -975,7 +975,10 @@ static void keyfido_write(char *data) {
 
   // Decrypt the FIDO attestation key.
   uint8_t fido_key[32] = {0};
-  uint8_t iv[16] = {0};
+
+  // The IV is intentionally all-zero, which is not a problem, because the
+  // encryption key is unique for each ciphertext.
+  uint8_t iv[AES_BLOCK_SIZE] = {0};
   aes_ret = aes_cbc_decrypt(&data_bytes[CIPHERTEXT_OFFSET], fido_key,
                             sizeof(fido_key), iv, &ctx);
   memzero(&ctx, sizeof(ctx));
