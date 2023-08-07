@@ -563,7 +563,7 @@ optiga_result optiga_execute_command(const uint8_t *command_data,
                                      size_t max_response_size,
                                      size_t *response_size) {
   if (!sec_chan_established) {
-    return optiga_transcieve(false, command_data, command_size, response_data,
+    return optiga_transceive(false, command_data, command_size, response_data,
                              max_response_size, response_size);
   }
   sec_chan_size = command_size + SEC_CHAN_OVERHEAD_SIZE;
@@ -593,7 +593,7 @@ optiga_result optiga_execute_command(const uint8_t *command_data,
 
   // Transmit encrypted command and receive response.
   optiga_result ret =
-      optiga_transcieve(true, sec_chan_buffer, sec_chan_size, sec_chan_buffer,
+      optiga_transceive(true, sec_chan_buffer, sec_chan_size, sec_chan_buffer,
                         sizeof(sec_chan_buffer), &sec_chan_size);
   if (ret != OPTIGA_SUCCESS) {
     return ret;
@@ -636,7 +636,7 @@ optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
   static const uint8_t HANDSHAKE_HELLO[] = {SCTR_HELLO, SEC_CHAN_PROTOCOL};
 
   // Send Handshake Hello.
-  optiga_result ret = optiga_transcieve(
+  optiga_result ret = optiga_transceive(
       true, HANDSHAKE_HELLO, sizeof(HANDSHAKE_HELLO), sec_chan_buffer,
       sizeof(sec_chan_buffer), &sec_chan_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -684,7 +684,7 @@ optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
   }
 
   // Send Handshake Finished message.
-  ret = optiga_transcieve(true, handshake_finished, sizeof(handshake_finished),
+  ret = optiga_transceive(true, handshake_finished, sizeof(handshake_finished),
                           sec_chan_buffer, sizeof(sec_chan_buffer),
                           &sec_chan_size);
   if (ret != OPTIGA_SUCCESS) {
