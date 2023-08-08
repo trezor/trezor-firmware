@@ -27,8 +27,12 @@ where
     T: Component,
     U: StringType + Clone,
 {
-    pub fn new(content: T) -> Self {
-        let btn_layout = ButtonLayout::cancel_armed_info("CONFIRM".into());
+    pub fn new(content: T, cancel_button: Option<U>, button: U) -> Self {
+        let btn_layout = if let Some(cancel_text) = cancel_button {
+            ButtonLayout::text_armed_info(cancel_text, button)
+        } else {
+            ButtonLayout::cancel_armed_info(button)
+        };
         Self {
             content: Child::new(content),
             buttons: Child::new(ButtonController::new(btn_layout)),

@@ -254,19 +254,7 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     hold: bool,
 ) -> Result<Obj, Error> {
     // Left button - icon, text or nothing.
-    let cancel_btn = if let Some(verb_cancel) = verb_cancel {
-        if !verb_cancel.is_empty() {
-            if verb_cancel.as_ref() == "left_arrow_icon" {
-                Some(ButtonDetails::left_arrow_icon())
-            } else {
-                Some(ButtonDetails::text(verb_cancel))
-            }
-        } else {
-            Some(ButtonDetails::cancel_icon())
-        }
-    } else {
-        None
-    };
+    let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
 
     // Right button - text or nothing.
     // Optional HoldToConfirm
@@ -1060,6 +1048,11 @@ extern "C" fn new_show_mismatch() -> Obj {
 extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let verb_cancel: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let mut paragraphs = ParagraphVecShort::new();
@@ -1078,6 +1071,8 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             title,
             ShowMore::<Paragraphs<ParagraphVecShort<StrBuffer>>, StrBuffer>::new(
                 paragraphs.into_paragraphs(),
+                verb_cancel,
+                button,
             ),
         ))?;
         Ok(obj.into())
@@ -1670,9 +1665,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_with_info(
     ///     *,
     ///     title: str,
-    ///     button: str,  # unused on TR
+    ///     button: str,
     ///     info_button: str,  # unused on TR
     ///     items: Iterable[Tuple[int, str]],
+    ///     verb_cancel: str | None = None,
     /// ) -> object:
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling."""

@@ -235,12 +235,21 @@ class InputFlowSignMessagePagination(InputFlowBase):
         yield
         self.debug.press_yes()
 
+        # press info
+        yield
+        self.debug.press_right()
+
+        # paginate through the whole message
         br = yield
         # TODO: try load the message_read the same way as in model T
         if br.pages is not None:
             for i in range(br.pages):
                 if i < br.pages - 1:
                     self.debug.swipe_up()
+        self.debug.press_yes()
+
+        # confirm message
+        yield
         self.debug.press_yes()
 
 
@@ -789,11 +798,17 @@ class InputFlowEthereumSignTxScrollDown(InputFlowBase):
         self.debug.wait_layout()
         self.debug.press_yes()
 
+        yield  # confirm data
+        self.debug.press_info()
+
         br = yield  # paginated data
         assert br.pages is not None
         for _ in range(br.pages):
             self.debug.wait_layout()
             self.debug.swipe_up()
+
+        yield  # confirm data
+        self.debug.press_yes()
 
         yield  # confirm amount
         self.debug.wait_layout()

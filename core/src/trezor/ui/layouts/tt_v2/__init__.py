@@ -725,6 +725,7 @@ async def confirm_blob(
     data: bytes | str,
     description: str | None = None,
     verb: str = "CONFIRM",
+    verb_cancel: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     ask_pagination: bool = False,
@@ -739,6 +740,7 @@ async def confirm_blob(
             extra=None,
             hold=hold,
             verb=verb,
+            verb_cancel=verb_cancel,
         )
     )
 
