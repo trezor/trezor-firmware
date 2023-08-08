@@ -18,10 +18,6 @@ INS_INITIALIZE_STAKE = 0
 def handle_stake_program_instruction(
     raw_instruction: RawInstruction, signer_pub_key: bytes
 ) -> Awaitable[None]:
-    program_id, _, data = raw_instruction
-
-    assert base58.encode(program_id) == STAKE_PROGRAM_ID
-    assert data.remaining_count() >= 4
 
     instruction = _get_instruction(raw_instruction)
 
@@ -33,6 +29,7 @@ def handle_stake_program_instruction(
 def _get_instruction(raw_instruction: RawInstruction) -> Instruction:
     _, _, data = raw_instruction
 
+    assert data.remaining_count() >= 4
     instruction_id = int.from_bytes(data.read(4), "little")
     data.seek(0)
 
@@ -52,32 +49,25 @@ class InitializeStakeInstruction(Instruction):
     unix_timestamp: int
     epoch: int
     custodian: bytes
+
     uninitialized_stake_account: bytes
     rent_sysvar: bytes
 
-    def parse(self) -> None:
-        assert self.data.remaining_count() == 116
-        assert len(self.accounts) == 2
+    def get_data_template(self) -> list[tuple]:
+        return [
+            ("staker", "pubkey"),
+            ("withdrawer", "pubkey"),
+            # TODO SOL: should be signed int but from_bytes doesn't take the third arg
+            ("unix_timestamp", "u64"),
+            ("epoch", "u64"),
+            ("custodian", "pubkey"),
+        ]
 
-        instruction_id = int.from_bytes(self.data.read(4), "little")
-        assert instruction_id == INS_INITIALIZE_STAKE
-
-        # TODO SOL: validate staker, withdrawer, custodian
-        self.staker = self.data.read(32)
-        self.withdrawer = self.data.read(32)
-        # TODO SOL: should be signed int but from_bytes doesn't take the third arg
-        self.unix_timestamp = int.from_bytes(self.data.read(8), "little")
-        self.epoch = int.from_bytes(self.data.read(8), "little")
-        self.custodian = self.data.read(32)
-
-        (
-            self.uninitialized_stake_account,
-            uninitialized_stake_account_type,
-        ) = self.accounts[0]
-        assert uninitialized_stake_account_type == ADDRESS_RW
-
-        self.rent_sysvar, rent_sysvar_type = self.accounts[1]
-        assert rent_sysvar_type == ADDRESS_READ_ONLY
+    def get_accounts_template(self) -> list[tuple]:
+        return [
+            ("uninitialized_stake_account", ADDRESS_RW),
+            ("rent_sysvar", ADDRESS_READ_ONLY),
+        ]
 
     def validate(self, signer_pub_key: bytes) -> None:
         # TODO SOL: validation
