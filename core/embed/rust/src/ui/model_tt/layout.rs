@@ -646,8 +646,8 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 
         let paragraphs = PropsList::new(
             items,
-            &theme::TEXT_DEMIBOLD,
             &theme::TEXT_NORMAL,
+            &theme::TEXT_MONO,
             &theme::TEXT_MONO,
         )?;
         let obj = if hold {
