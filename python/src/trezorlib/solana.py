@@ -1,7 +1,4 @@
-from typing import (
-    TYPE_CHECKING,
-    List,
-)
+from typing import TYPE_CHECKING, List
 
 from . import messages
 from .tools import expect
@@ -16,11 +13,8 @@ def get_public_key(
     client: "TrezorClient",
     address_n: List[int],
 ) -> "MessageType":
-    return client.call(
-        messages.SolanaGetPublicKey(
-            address_n=address_n
-        )
-    )
+    return client.call(messages.SolanaGetPublicKey(address_n=address_n))
+
 
 @expect(messages.SolanaAddress)
 def get_address(
@@ -34,6 +28,7 @@ def get_address(
             show_display=show_display,
         )
     )
+
 
 @expect(messages.SolanaSignedTx)
 def sign_tx(
