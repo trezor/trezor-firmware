@@ -351,7 +351,10 @@ pub struct ButtonDetails<T> {
     offset: Offset,
 }
 
-impl<T> ButtonDetails<T> {
+impl<T> ButtonDetails<T>
+where
+    T: StringType,
+{
     /// Text button.
     pub fn text(text: T) -> Self {
         Self {
@@ -373,6 +376,19 @@ impl<T> ButtonDetails<T> {
             with_arms: false,
             fixed_width: None,
             offset: Offset::zero(),
+        }
+    }
+
+    /// Resolves text and finds possible icon names.
+    pub fn from_text_possible_icon(text: T) -> Self {
+        if text.as_ref() == "" {
+            Self::cancel_icon()
+        } else if text.as_ref() == "left_arrow_icon" {
+            Self::left_arrow_icon()
+        } else if text.as_ref() == "up_arrow_icon" {
+            Self::up_arrow_icon()
+        } else {
+            Self::text(text)
         }
     }
 
@@ -529,6 +545,15 @@ where
         )
     }
 
+    /// Left text, armed text and right info icon/text.
+    pub fn text_armed_info(left: T, middle: T) -> Self {
+        Self::new(
+            Some(ButtonDetails::from_text_possible_icon(left)),
+            Some(ButtonDetails::armed_text(middle)),
+            Some(ButtonDetails::text("i".into()).with_fixed_width(theme::BUTTON_ICON_WIDTH)),
+        )
+    }
+
     /// Left cancel, armed text and right info icon/text.
     pub fn cancel_armed_info(middle: T) -> Self {
         Self::new(
@@ -559,16 +584,16 @@ where
     /// Left and right texts.
     pub fn text_none_text(left: T, right: T) -> Self {
         Self::new(
-            Some(ButtonDetails::text(left)),
+            Some(ButtonDetails::from_text_possible_icon(left)),
             None,
-            Some(ButtonDetails::text(right)),
+            Some(ButtonDetails::from_text_possible_icon(right)),
         )
     }
 
     /// Left text and right arrow.
     pub fn text_none_arrow(text: T) -> Self {
         Self::new(
-            Some(ButtonDetails::text(text)),
+            Some(ButtonDetails::from_text_possible_icon(text)),
             None,
             Some(ButtonDetails::right_arrow_icon()),
         )
@@ -577,7 +602,7 @@ where
     /// Left text and WIDE right arrow.
     pub fn text_none_arrow_wide(text: T) -> Self {
         Self::new(
-            Some(ButtonDetails::text(text)),
+            Some(ButtonDetails::from_text_possible_icon(text)),
             None,
             Some(ButtonDetails::down_arrow_icon_wide()),
         )
@@ -585,7 +610,11 @@ where
 
     /// Only right text.
     pub fn none_none_text(text: T) -> Self {
-        Self::new(None, None, Some(ButtonDetails::text(text)))
+        Self::new(
+            None,
+            None,
+            Some(ButtonDetails::from_text_possible_icon(text)),
+        )
     }
 
     /// Left and right arrow icons for navigation.
@@ -602,7 +631,7 @@ where
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
-            Some(ButtonDetails::text(text)),
+            Some(ButtonDetails::from_text_possible_icon(text)),
         )
     }
 
@@ -611,7 +640,7 @@ where
         Self::new(
             Some(ButtonDetails::up_arrow_icon()),
             None,
-            Some(ButtonDetails::text(text)),
+            Some(ButtonDetails::from_text_possible_icon(text)),
         )
     }
 
@@ -656,7 +685,7 @@ where
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
-            Some(ButtonDetails::text(text)),
+            Some(ButtonDetails::from_text_possible_icon(text)),
         )
     }
 

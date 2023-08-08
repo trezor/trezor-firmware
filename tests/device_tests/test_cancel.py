@@ -90,6 +90,15 @@ def test_cancel_on_paginated(client: Client):
 
     resp = client._raw_read()
     assert isinstance(resp, m.ButtonRequest)
+
+    # In TR, confirm message is no longer paginated by default,
+    # user needs to click info button
+    if client.debug.model == "R":
+        client._raw_write(m.ButtonAck())
+        client.debug.press_right()
+        resp = client._raw_read()
+        assert isinstance(resp, m.ButtonRequest)
+
     assert resp.pages is not None
     client._raw_write(m.ButtonAck())
 

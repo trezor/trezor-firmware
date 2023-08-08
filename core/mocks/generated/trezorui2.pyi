@@ -223,9 +223,10 @@ def show_mismatch() -> object:
 def confirm_with_info(
     *,
     title: str,
-    button: str,  # unused on TR
+    button: str,
     info_button: str,  # unused on TR
     items: Iterable[Tuple[int, str]],
+    verb_cancel: str | None = None,
 ) -> object:
     """Confirm given items but with third button. Always single page
     without scrolling."""
