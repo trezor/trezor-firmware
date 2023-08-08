@@ -375,6 +375,10 @@ apps.solana.get_public_key
 import apps.solana.get_public_key
 apps.solana.instructions
 import apps.solana.instructions
+apps.solana.instructions.parse_template
+import apps.solana.instructions.parse_template
+apps.solana.instructions.pptest
+import apps.solana.instructions.pptest
 apps.solana.instructions.stake_program
 import apps.solana.instructions.stake_program
 apps.solana.instructions.system_program
