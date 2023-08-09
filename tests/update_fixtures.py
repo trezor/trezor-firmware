@@ -76,10 +76,12 @@ def ci(
 
     current_fixtures = get_current_fixtures()
 
+    is_error = False
     differing_total = 0
     for job_name, ui_res_dict in ui_results.items():
         print(f"Updating results from {job_name}...")
         if not ui_res_dict:
+            is_error = True
             print("No results found.")
             continue
         model = next(iter(ui_res_dict.keys()))
@@ -103,6 +105,9 @@ def ci(
         json.dumps(current_fixtures, indent=0, sort_keys=True) + "\n"
     )
     print("Updated fixtures.json with data from CI.")
+    if is_error:
+        print(80 * "-")
+        raise click.ClickException("Some jobs did not have any results.")
 
 
 if __name__ == "__main__":
