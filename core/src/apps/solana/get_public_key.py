@@ -2,7 +2,9 @@ from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from apps.common import seed
-from apps.common.keychain import auto_keychain
+from apps.common.keychain import with_slip44_keychain
+
+from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaGetPublicKey, SolanaPublicKey
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
 
 
 # TODO SOL: maybe only get_address is needed?
-@auto_keychain(__name__)
+@with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def get_public_key(
     msg: SolanaGetPublicKey, keychain: Keychain
 ) -> SolanaPublicKey:

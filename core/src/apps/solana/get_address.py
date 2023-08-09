@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
+from apps.common.keychain import with_slip44_keychain
 
-from apps.common.keychain import auto_keychain
+from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaGetAddress, SolanaAddress
@@ -10,7 +11,7 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
 
-@auto_keychain(__name__)
+@with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def get_address(
     msg: SolanaGetAddress,
     keychain: Keychain,
