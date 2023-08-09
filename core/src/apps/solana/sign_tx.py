@@ -1,13 +1,15 @@
 from typing import TYPE_CHECKING
 
-from apps.common.keychain import auto_keychain
+from apps.common.keychain import with_slip44_keychain
+
+from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaSignTx, SolanaSignedTx
     from apps.common.keychain import Keychain
 
 
-@auto_keychain(__name__)
+@with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(
     msg: SolanaSignTx,
     keychain: Keychain,
