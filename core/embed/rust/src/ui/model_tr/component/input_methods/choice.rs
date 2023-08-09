@@ -288,8 +288,7 @@ where
     /// Going as far as possible.
     fn show_right_choices(&self, area: Rect) {
         let mut page_index = self.page_counter + 1;
-        // start with a little offset to account for the middle highlight
-        let mut current_area = area.split_left(self.items_distance + 3).1;
+        let mut current_area = area.split_left(self.items_distance).1;
         while current_area.width() > 0 {
             // Breaking out of the loop if we exhausted right items
             // and the carousel mode is not enabled.
