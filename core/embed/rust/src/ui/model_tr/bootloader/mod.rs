@@ -166,6 +166,16 @@ extern "C" fn screen_wipe_confirm() -> u32 {
 }
 
 #[no_mangle]
+extern "C" fn screen_attestation_delete_confirm() -> u32 {
+    let message = Label::left_aligned("Delete attestation from the device?", theme::TEXT_NORMAL)
+        .vertically_centered();
+
+    let mut frame = Confirm::new(BLD_BG, "ATTESTATION ERASE", message, None, "ERASE");
+
+    run(&mut frame)
+}
+
+#[no_mangle]
 extern "C" fn screen_menu(_bld_version: *const cty::c_char) -> u32 {
     run(&mut Menu::new())
 }
