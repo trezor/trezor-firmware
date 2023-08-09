@@ -226,10 +226,11 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           return RETURN;
         }
         process_msg_AttestationDelete(USB_IFACE_NUM, msg_size, buf);
+        screen_attestation_delete_success();
         hal_delay(100);
         usb_stop();
         usb_deinit();
-        return RETURN;
+        return SHUTDOWN;
         break;
 #endif
       default:
@@ -544,10 +545,10 @@ int bootloader_main(void) {
 #ifdef USE_OPTIGA
   if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
     display_clear();
-    screen_fatal_error_rust(
-        "ATTESTATION PRESENT",
-        "You need to delete device attestation to run unofficial firmware",
-        "RECONNECT THE DEVICE");
+    screen_fatal_error_rust("ATTESTATION PRESENT",
+                            "On-device attestation must be deleted before "
+                            "installing unofficial firmware.",
+                            "PLEASE RECONNECT THE DEVICE");
 
     display_refresh();
     return 1;
