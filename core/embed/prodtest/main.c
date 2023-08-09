@@ -846,8 +846,29 @@ static void cert_read(uint16_t oid) {
     return;
   }
 
+  size_t offset = 0;
+  if (cert[0] == 0xC0) {
+    // TLS identity certificate chain.
+    size_t tls_identity_size = (cert[1] << 8) + cert[2];
+    size_t cert_chain_size = (cert[3] << 16) + (cert[4] << 8) + cert[5];
+    size_t first_cert_size = (cert[6] << 16) + (cert[7] << 8) + cert[8];
+    if (tls_identity_size + 3 > cert_size ||
+        cert_chain_size + 3 > tls_identity_size ||
+        first_cert_size > cert_chain_size) {
+      vcp_println("ERROR invalid TLS identity in 0x%04x.", oid);
+      return;
+    }
+    offset = 9;
+    cert_size = first_cert_size;
+  }
+
+  if (cert_size == 0) {
+    vcp_println("ERROR no certificate in 0x%04x.", oid);
+    return;
+  }
+
   vcp_print("OK ");
-  vcp_println_hex(cert, cert_size);
+  vcp_println_hex(cert + offset, cert_size);
 }
 
 static void cert_write(uint16_t oid, char *data) {
