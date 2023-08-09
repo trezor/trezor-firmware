@@ -88,6 +88,9 @@
 // from util.s
 extern void shutdown_privileged(void);
 
+// from linker script
+extern uint8_t firmware_header_start;
+
 int main(void) {
   random_delays_init();
 
@@ -234,10 +237,15 @@ void BusFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(BF)"); }
 void UsageFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(UF)"); }
 
 __attribute__((noreturn)) void reboot_to_bootloader() {
+  mpu_config_bootloader();
   jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE,
                     STAY_IN_BOOTLOADER_FLAG);
   for (;;)
     ;
+}
+
+void copy_image_header_for_bootloader(const uint8_t *image_header) {
+  memcpy(&firmware_header_start, image_header, IMAGE_HEADER_SIZE);
 }
 
 void SVC_C_Handler(uint32_t *stack) {
@@ -262,7 +270,11 @@ void SVC_C_Handler(uint32_t *stack) {
       for (;;)
         ;
       break;
+    case SVC_REBOOT_COPY_IMAGE_HEADER:
+      copy_image_header_for_bootloader((uint8_t *)stack[0]);
+      // break is omitted here because we want to continue to reboot below
     case SVC_REBOOT_TO_BOOTLOADER:
+
       ensure_compatible_settings();
       mpu_config_bootloader();
       __asm__ volatile("msr control, %0" ::"r"(0x0));

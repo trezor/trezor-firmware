@@ -22,7 +22,7 @@ FEATURES_WANTED = ["sd_card"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
-CPPDEFINES_MOD = []
+CPPDEFINES_MOD = ["BOARDLOADER"]
 SOURCE_MOD = []
 CPPDEFINES_HAL = []
 SOURCE_HAL = []
@@ -71,7 +71,7 @@ SOURCE_BOARDLOADER = [
     'embed/boardloader/main.c',
 ]
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')), CONSTRAINTS=["limited_util_s"])
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
