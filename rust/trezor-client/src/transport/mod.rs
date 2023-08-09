@@ -50,7 +50,7 @@ impl ProtoMessage {
 
 /// The transport interface that is implemented by the different ways to communicate with a Trezor
 /// device.
-pub trait Transport {
+pub trait Transport: Sync + Send {
     fn session_begin(&mut self) -> Result<(), error::Error>;
     fn session_end(&mut self) -> Result<(), error::Error>;
 
