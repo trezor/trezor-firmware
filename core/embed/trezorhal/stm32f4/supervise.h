@@ -5,10 +5,12 @@
 #define SVC_SET_PRIORITY 2
 #define SVC_SHUTDOWN 4
 #define SVC_REBOOT_TO_BOOTLOADER 5
+#define SVC_REBOOT_COPY_IMAGE_HEADER 6
 
 // from util.s
 extern void shutdown_privileged(void);
 extern void reboot_to_bootloader(void);
+extern void copy_image_header_for_bootloader(const uint8_t *image_header);
 
 static inline uint32_t is_mode_unprivileged(void) {
   uint32_t r0;
@@ -58,10 +60,22 @@ static inline void svc_shutdown(void) {
     shutdown_privileged();
   }
 }
+
 static inline void svc_reboot_to_bootloader(void) {
   if (is_mode_unprivileged() && !is_mode_handler()) {
     __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT_TO_BOOTLOADER) : "memory");
   } else {
+    reboot_to_bootloader();
+  }
+}
+
+static inline void svc_reboot_copy_image_header(const uint8_t *image_address) {
+  if (is_mode_unprivileged() && !is_mode_handler()) {
+    register const uint8_t *r0 __asm__("r0") = image_address;
+    __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT_COPY_IMAGE_HEADER), "r"(r0)
+                         : "memory");
+  } else {
+    copy_image_header_for_bootloader(image_address);
     reboot_to_bootloader();
   }
 }

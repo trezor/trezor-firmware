@@ -45,9 +45,20 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/systick.c",
         "embed/trezorhal/stm32f4/random_delays.c",
         "embed/trezorhal/stm32f4/rng.c",
-        "embed/trezorhal/stm32f4/util.s",
         "embed/trezorhal/stm32f4/vectortable.s",
     ]
+
+    # boardloader needs separate assembler for some function unencumbered by various FW+bootloader hacks
+    # this helps to prevent making a bug in boardloader which may be hard to fix since it's locked with write-protect
+    env_constraints = env.get("CONSTRAINTS")
+    if env_constraints and "limited_util_s" in env_constraints:
+        sources += [
+            "embed/trezorhal/stm32f4/limited_util.s",
+        ]
+    else:
+        sources += [
+            "embed/trezorhal/stm32f4/util.s",
+        ]
 
     env.get("ENV")["RUST_INCLUDES"] = (
         "-I../trezorhal/stm32f4;"

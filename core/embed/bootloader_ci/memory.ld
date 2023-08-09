@@ -23,6 +23,9 @@ ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
 sram_start = ORIGIN(SRAM);
 sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 
+/* IMAGE_HEADER_SIZE is 0x400, this is for interaction-less firmware update start */
+firmware_header_start = ccmram_end - 0x400;
+
 _codelen = SIZEOF(.flash) + SIZEOF(.data);
 
 SECTIONS {
