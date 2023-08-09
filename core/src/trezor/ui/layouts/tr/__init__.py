@@ -684,10 +684,12 @@ async def tutorial(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
     """Showing users how to interact with the device."""
-    await interact(
-        RustLayout(trezorui2.tutorial()),
-        "tutorial",
-        br_code,
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(trezorui2.tutorial()),
+            "tutorial",
+            br_code,
+        )
     )
 
 

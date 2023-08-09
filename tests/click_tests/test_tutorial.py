@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 
 from trezorlib import device
+from trezorlib.exceptions import Cancelled
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
@@ -32,14 +33,18 @@ pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2]
 
 @contextmanager
 def prepare_tutorial_and_cancel_after_it(
-    device_handler: "BackgroundDeviceHandler",
+    device_handler: "BackgroundDeviceHandler", cancelled: bool = False
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
     device_handler.run(device.show_device_tutorial)
 
     yield debug
 
-    device_handler.result()
+    try:
+        device_handler.result()
+    except Cancelled:
+        if not cancelled:
+            raise
 
 
 def go_through_tutorial(debug: "DebugLink") -> None:
@@ -64,7 +69,7 @@ def test_tutorial_finish(device_handler: "BackgroundDeviceHandler"):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_tutorial_skip(device_handler: "BackgroundDeviceHandler"):
-    with prepare_tutorial_and_cancel_after_it(device_handler) as debug:
+    with prepare_tutorial_and_cancel_after_it(device_handler, cancelled=True) as debug:
         # SKIP
         debug.press_left(wait=True)
         debug.press_right(wait=True)
@@ -72,7 +77,7 @@ def test_tutorial_skip(device_handler: "BackgroundDeviceHandler"):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_tutorial_again_and_skip(device_handler: "BackgroundDeviceHandler"):
-    with prepare_tutorial_and_cancel_after_it(device_handler) as debug:
+    with prepare_tutorial_and_cancel_after_it(device_handler, cancelled=True) as debug:
         # CLICK THROUGH
         go_through_tutorial(debug)
 
