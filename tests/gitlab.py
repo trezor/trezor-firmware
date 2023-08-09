@@ -7,6 +7,8 @@ Allowing for interaction with the test results, e.g. with UI tests.
 from __future__ import annotations
 
 import json
+import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
@@ -18,6 +20,9 @@ HERE = Path(__file__).parent
 
 BRANCHES_API_TEMPLATE = "https://gitlab.com/satoshilabs/trezor/trezor-firmware/-/pipelines.json?scope=branches&page={}"
 GRAPHQL_API = "https://gitlab.com/api/graphql"
+RAW_REPORT_URL_TEMPLATE = (
+    "https://gitlab.com/satoshilabs/trezor/trezor-firmware/-/jobs/{}/raw"
+)
 
 UI_JOB_NAMES = (
     "core click R test",
@@ -29,6 +34,33 @@ UI_JOB_NAMES = (
 )
 
 SAVE_GRAPHQL_RESULTS = False
+
+
+@dataclass
+class TestResult:
+    failed: int = 0
+    passed: int = 0
+    error: int = 0
+
+    @classmethod
+    def from_line(cls, line: str) -> TestResult:
+        self = TestResult()
+        for key in self.__annotations__:
+            match = re.search(rf"(\d+) {key}", line)
+            if match:
+                setattr(self, key, int(match.group(1)))
+        return self
+
+    @classmethod
+    def from_job_id(cls, job_id: str) -> TestResult:
+        report_link = RAW_REPORT_URL_TEMPLATE.format(job_id)
+        raw_content = requests.get(report_link).text
+        result_pattern = r"= .* passed.*s \(\d.*\) ="
+        result_line_match = re.search(result_pattern, raw_content)
+        if not result_line_match:
+            print("No results yet.")
+            return TestResult()
+        return cls.from_line(result_line_match.group(0))
 
 
 def _get_gitlab_branches(page: int) -> list[AnyDict]:
@@ -96,6 +128,12 @@ def _yield_pipeline_jobs(pipeline_iid: int) -> Iterator[AnyDict]:
 def _get_job_ui_fixtures_results(job: AnyDict) -> AnyDict:
     print(f"Checking job {job['name']}")
     job_id = job["id"].split("/")[-1]
+
+    job_results = TestResult.from_job_id(job_id)
+    if job_results.failed:
+        print(f"ERROR: Job {job['name']} failed - {job_results}")
+        return {}
+
     url = f"https://satoshilabs.gitlab.io/-/trezor/trezor-firmware/-/jobs/{job_id}/artifacts/tests/ui_tests/fixtures.results.json"
     response = requests.get(url)
     if response.status_code != 200:
