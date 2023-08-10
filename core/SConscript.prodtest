@@ -5,6 +5,8 @@ import tools
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
+BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 
 if TREZOR_MODEL in ('DISC1', ):
     # skip prodtest build
@@ -162,7 +164,14 @@ obj_program.extend(env.Object(source=SOURCE_HAL))
 
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 
-VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_' + ('unsafe_signed_prod.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'prodtest_signed_prod.bin')
+if PRODUCTION:
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_prodtest_signed_prod.bin'
+elif BOOTLOADER_DEVEL:
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_dev.bin'
+else:
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_prod.bin'
+
+
 
 obj_program.extend(
     env.Command(

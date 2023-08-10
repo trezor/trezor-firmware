@@ -7,6 +7,7 @@ import tools
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
+BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
@@ -747,6 +748,8 @@ if BOOTLOADER_QA:
     BOOTLOADER_SUFFIX = MODEL_IDENTIFIER + '_qa'
 elif PRODUCTION:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_satoshilabs_signed_prod.bin'
+elif BOOTLOADER_DEVEL:
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_dev.bin'
 else:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_prod.bin'
 
