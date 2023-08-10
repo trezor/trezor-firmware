@@ -4576,6 +4576,97 @@ START_TEST(test_sha256) {
 }
 END_TEST
 
+#define TEST7_384 "\x8b\xc5\x00\xc7\x7c\xee\xd9\x87\x9d\xa9\x89\x10\x7c\xe0\xaa"
+#define TEST8_384 \
+  "\xa4\x1c\x49\x77\x79\xc0\x37\x5f\xf1\x0a\x7f\x4e\x08\x59\x17\x39"
+#define TEST9_384                                                    \
+  "\x68\xf5\x01\x79\x2d\xea\x97\x96\x76\x70\x22\xd9\x3d\xa7\x16\x79" \
+  "\x30\x99\x20\xfa\x10\x12\xae\xa3\x57\xb2\xb1\x33\x1d\x40\xa1\xd0" \
+  "\x3c\x41\xc2\x40\xb3\xc9\xa7\x5b\x48\x92\xf4\xc0\x72\x4b\x68\xc8" \
+  "\x75\x32\x1a\xb8\xcf\xe5\x02\x3b\xd3\x75\xbc\x0f\x94\xbd\x89\xfe" \
+  "\x04\xf2\x97\x10\x5d\x7b\x82\xff\xc0\x02\x1a\xeb\x1c\xcb\x67\x4f" \
+  "\x52\x44\xea\x34\x97\xde\x26\xa4\x19\x1c\x5f\x62\xe5\xe9\xa2\xd8" \
+  "\x08\x2f\x05\x51\xf4\xa5\x30\x68\x26\xe9\x1c\xc0\x06\xce\x1b\xf6" \
+  "\x0f\xf7\x19\xd4\x2f\xa5\x21\xc8\x71\xcd\x23\x94\xd9\x6e\xf4\x46" \
+  "\x8f\x21\x96\x6b\x41\xf2\xba\x80\xc2\x6e\x83\xa9"
+#define TEST10_384                                                   \
+  "\x39\x96\x69\xe2\x8f\x6b\x9c\x6d\xbc\xbb\x69\x12\xec\x10\xff\xcf" \
+  "\x74\x79\x03\x49\xb7\xdc\x8f\xbe\x4a\x8e\x7b\x3b\x56\x21\xdb\x0f" \
+  "\x3e\x7d\xc8\x7f\x82\x32\x64\xbb\xe4\x0d\x18\x11\xc9\xea\x20\x61" \
+  "\xe1\xc8\x4a\xd1\x0a\x23\xfa\xc1\x72\x7e\x72\x02\xfc\x3f\x50\x42" \
+  "\xe6\xbf\x58\xcb\xa8\xa2\x74\x6e\x1f\x64\xf9\xb9\xea\x35\x2c\x71" \
+  "\x15\x07\x05\x3c\xf4\xe5\x33\x9d\x52\x86\x5f\x25\xcc\x22\xb5\xe8" \
+  "\x77\x84\xa1\x2f\xc9\x61\xd6\x6c\xb6\xe8\x95\x73\x19\x9a\x2c\xe6" \
+  "\x56\x5c\xbd\xf1\x3d\xca\x40\x38\x32\xcf\xcb\x0e\x8b\x72\x11\xe8" \
+  "\x3a\xf3\x2a\x11\xac\x17\x92\x9f\xf1\xc0\x73\xa5\x1c\xc0\x27\xaa" \
+  "\xed\xef\xf8\x5a\xad\x7c\x2b\x7c\x5a\x80\x3e\x24\x04\xd9\x6d\x2a" \
+  "\x77\x35\x7b\xda\x1a\x6d\xae\xed\x17\x15\x1c\xb9\xbc\x51\x25\xa4" \
+  "\x22\xe9\x41\xde\x0c\xa0\xfc\x50\x11\xc2\x3e\xcf\xfe\xfd\xd0\x96" \
+  "\x76\x71\x1c\xf3\xdb\x0a\x34\x40\x72\x0e\x16\x15\xc1\xf2\x2f\xbc" \
+  "\x3c\x72\x1d\xe5\x21\xe1\xb9\x9b\xa1\xbd\x55\x77\x40\x86\x42\x14" \
+  "\x7e\xd0\x96"
+
+// test vectors from rfc-4634
+START_TEST(test_sha384) {
+  struct {
+    const char *test;
+    int length;
+    int repeatcount;
+    int extrabits;
+    int numberExtrabits;
+    const char *result;
+  } tests[] = {/* 1 */ {TEST1, length(TEST1), 1, 0, 0,
+                        "CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED163"
+                        "1A8B605A43FF5BED8086072BA1E7CC2358BAECA134C825A7"},
+               /* 2 */
+               {TEST2_2, length(TEST2_2), 1, 0, 0,
+                "09330C33F71147E83D192FC782CD1B4753111B173B3B05D2"
+                "2FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039"},
+               /* 3 */
+               {TEST3, length(TEST3), 1000000, 0, 0,
+                "9D0E1809716474CB086E834E310A4A1CED149E9C00F24852"
+                "7972CEC5704C2A5B07B8B3DC38ECC4EBAE97DDD87F3D8985"},
+               /* 4 */
+               {TEST4, length(TEST4), 10, 0, 0,
+                "2FC64A4F500DDB6828F6A3430B8DD72A368EB7F3A8322A70"
+                "BC84275B9C0B3AB00D27A5CC3C2D224AA6B61A0D79FB4596"},
+               /* 5 */
+               {"", 0, 0, 0x10, 5,
+                "8D17BE79E32B6718E07D8A603EB84BA0478F7FCFD1BB9399"
+                "5F7D1149E09143AC1FFCFC56820E469F3878D957A15A3FE4"},
+               /* 6 */
+               {"\xb9", 1, 1, 0, 0,
+                "BC8089A19007C0B14195F4ECC74094FEC64F01F90929282C"
+                "2FB392881578208AD466828B1C6C283D2722CF0AD1AB6938"},
+               /* 7 */
+               {TEST7_384, length(TEST7_384), 1, 0xA0, 3,
+                "D8C43B38E12E7C42A7C9B810299FD6A770BEF30920F17532"
+                "A898DE62C7A07E4293449C0B5FA70109F0783211CFC4BCE3"},
+               /* 8 */
+               {TEST8_384, length(TEST8_384), 1, 0, 0,
+                "C9A68443A005812256B8EC76B00516F0DBB74FAB26D66591"
+                "3F194B6FFB0E91EA9967566B58109CBC675CC208E4C823F7"},
+               /* 9 */
+               {TEST9_384, length(TEST9_384), 1, 0xE0, 3,
+                "5860E8DE91C21578BB4174D227898A98E0B45C4C760F0095"
+                "49495614DAEDC0775D92D11D9F8CE9B064EEAC8DAFC3A297"},
+               /* 10 */
+               {TEST10_384, length(TEST10_384), 1, 0, 0,
+                "4F440DB1E6EDD2899FA335F09515AA025EE177A79F4B4AAF"
+                "38E42B5C4DE660F5DE8FB2A5B2FBD2A3CBFFD20CFF1288C0"}};
+
+  for (int i = 0; i < 10; i++) {
+    uint8_t digest[SHA384_DIGEST_LENGTH];
+    /* extra bits are not supported */
+    if (tests[i].numberExtrabits) continue;
+    /* repeat count not supported */
+    if (tests[i].repeatcount != 1) continue;
+    sha384_Raw((const uint8_t *)tests[i].test, tests[i].length, digest);
+    ck_assert_mem_eq(digest, fromhex(tests[i].result), sizeof(digest));
+  }
+}
+END_TEST
+
 #define TEST7_512 "\x08\xec\xb5\x2e\xba\xe1\xf7\x42\x2d\xb6\x2b\xcd\x54\x26\x70"
 #define TEST8_512 \
   "\x8d\x4e\x3c\x0e\x38\x89\x19\x14\x91\x81\x6e\x9d\x98\xbf\xf0\xa0"
@@ -9924,6 +10015,7 @@ Suite *test_suite(void) {
   tc = tcase_create("sha2");
   tcase_add_test(tc, test_sha1);
   tcase_add_test(tc, test_sha256);
+  tcase_add_test(tc, test_sha384);
   tcase_add_test(tc, test_sha512);
   suite_add_tcase(s, tc);
 
