@@ -28,12 +28,13 @@ Last tested with firmware v2.4.2.
 ## Credits
 
 -   [Trezor](https://github.com/trezor/trezor-firmware)
+-   [joshieDo](https://github.com/joshieDo)
+-   [Piyush Kumar](https://github.com/wszdexdrf)
 -   [stevenroose](https://github.com/stevenroose)
 -   [romanz](https://github.com/romanz)
+-   [DaniPopes](https://github.com/DaniPopes)
 
 [downloads-badge]: https://img.shields.io/crates/d/trezor-client?style=for-the-badge&logo=rust
 [crates-io]: https://crates.io/crates/trezor-client
 [license-badge]: https://img.shields.io/badge/license-CC0--1.0-blue.svg?style=for-the-badge
-[license-url]: https://github.com/joshieDo/rust-trezor-api/blob/master/LICENSE
-[actions-badge]: https://img.shields.io/github/actions/workflow/status/joshieDo/rust-trezor-api/ci.yml?branch=master&style=for-the-badge
-[actions-url]: https://github.com/joshieDo/rust-trezor-api/actions?query=workflow%3ACI+branch%3Amaster
+[license-url]: https://github.com/trezor/trezor-firmware/blob/master/rust/trezor-client/LICENSE
