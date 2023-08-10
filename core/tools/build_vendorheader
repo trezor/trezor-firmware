@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+from pathlib import Path
 
 import click
 
@@ -20,8 +21,15 @@ def minimum_header_len(spec):
 @click.command()
 @click.argument("specfile", type=click.File("r"))
 @click.argument("image", type=click.File("rb"))
-@click.argument("outfile", type=click.File("wb"))
-def build_vendorheader(specfile, image, outfile):
+@click.argument("outfile", type=click.Path(dir_okay=False, writable=True, path_type=Path))
+@click.option("-c", "--check", is_flag=True, help="Check but do not write header.")
+@click.option("-q", "--quiet", is_flag=True, help="Do not print anything.")
+def build_vendorheader(specfile, image, outfile, check: bool, quiet: bool):
+    if quiet:
+        echo = lambda *args, **kwargs: None
+    else:
+        echo = click.echo
+
     spec = json.load(specfile)
     spec["pubkeys"] = [bytes.fromhex(k) for k in spec["pubkeys"]]
     spec["image"] = toif.ToifStruct.parse(image.read())
@@ -41,16 +49,26 @@ def build_vendorheader(specfile, image, outfile):
             f"Minimum allowable value is {min_length}."
         )
     elif spec["header_len"] == min_length:
-        click.echo(f"{specfile.name}: Header has correct length.")
+        echo(f"{specfile.name}: Header has correct length.")
     else:
-        click.echo(
+        echo(
             f"{specfile.name}: Extending header ({min_length} bytes) to {spec['header_len']} bytes."
         )
 
     if spec["header_len"] % 512 != 0:
         raise click.ClickException("Invalid header_len: must be a multiple of 512")
 
-    outfile.write(firmware.VendorHeader.SUBCON.build(spec))
+    vh_bytes = firmware.VendorHeader.SUBCON.build(spec)
+    if check:
+        if not outfile.exists():
+            raise click.ClickException(f"Header file {outfile.name} does not exist.")
+        outfile_bytes = outfile.read_bytes()
+        if outfile_bytes != vh_bytes:
+            raise click.ClickException(
+                f"Header file {outfile.name} differs from expected header."
+            )
+    else:
+        outfile.write_bytes(firmware.VendorHeader.SUBCON.build(spec))
 
 
 if __name__ == "__main__":

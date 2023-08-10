@@ -100,6 +100,7 @@ def do_replace_vendorheader(fw, vh_file) -> None:
     is_flag=True,
     help="Only output header digest for signing and exit.",
 )
+@click.option("-q", "--quiet", is_flag=True, help="Do not print anything.")
 @click.argument("firmware_file", type=click.File("rb+"))
 def cli(
     firmware_file,
@@ -111,6 +112,7 @@ def cli(
     insert_signature,
     replace_vendor_header,
     print_digest,
+    quiet,
 ):
     """Manage firmware headers.
 
@@ -160,6 +162,11 @@ def cli(
         click.echo(digest.hex())
         return
 
+    if quiet:
+        echo = lambda *args, **kwargs: None
+    else:
+        echo = click.echo
+
     if replace_vendor_header:
         do_replace_vendorheader(fw, replace_vendor_header)
 
@@ -174,11 +181,11 @@ def cli(
     signature = None
 
     if privkeys:
-        click.echo("Signing with local private keys...", err=True)
+        echo("Signing with local private keys...", err=True)
         signature = sign_with_privkeys(digest, privkeys)
 
     if insert_signature:
-        click.echo("Inserting external signature...", err=True)
+        echo("Inserting external signature...", err=True)
         sigmask_str, signature = insert_signature
         signature = bytes.fromhex(signature)
         sigmask = 0
@@ -193,14 +200,14 @@ def cli(
     if signature or rehash:
         do_rehash(fw)
 
-    click.echo(f"Detected image type: {fw.NAME}")
-    click.echo(fw.format(verbose))
+    echo(f"Detected image type: {fw.NAME}")
+    echo(fw.format(verbose))
 
     updated_data = fw.build()
     if updated_data == firmware_data:
-        click.echo("No changes made", err=True)
+        echo("No changes made", err=True)
     elif dry_run:
-        click.echo("Not saving changes", err=True)
+        echo("Not saving changes", err=True)
     else:
         firmware_file.seek(0)
         firmware_file.truncate(0)
