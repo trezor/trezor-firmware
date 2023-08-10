@@ -970,14 +970,11 @@ static void keyfido_write(char *data) {
   }
 
   // Expand sender's ephemeral public key.
-  curve_point pub = {0};
-  if (0 == ecdsa_read_pubkey(&nist256p1, data_bytes, &pub)) {
+  uint8_t public_key[3 + 65] = {0x03, 0x42, 0x00};
+  if (ecdsa_uncompress_pubkey(&nist256p1, data_bytes, &public_key[3]) != 1) {
     vcp_println("ERROR Failed to decode public key.");
     return;
   }
-  uint8_t public_key[4 + 64] = {0x03, 0x42, 0x00, 0x04};
-  bn_write_be(&pub.x, public_key + 4);
-  bn_write_be(&pub.y, public_key + 4 + 32);
 
   // Execute ECDH with device private key.
   uint8_t secret[32] = {0};
