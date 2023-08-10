@@ -130,8 +130,8 @@ static uint8_t *const sec_chan_mseq = &sec_chan_encr_nonce[4];
 static uint8_t *const sec_chan_sseq = &sec_chan_decr_nonce[4];
 
 // Static buffer for encrypted commands and responses.
-static uint8_t
-    sec_chan_buffer[OPTIGA_MAX_COMMAND_SIZE + SEC_CHAN_OVERHEAD_SIZE] = {0};
+static uint8_t sec_chan_buffer[OPTIGA_MAX_APDU_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
+    {0};
 static size_t sec_chan_size = 0;
 
 #ifdef NDEBUG

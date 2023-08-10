@@ -28,8 +28,8 @@
 // Maximum data register length supported by OPTIGA.
 #define OPTIGA_DATA_REG_LEN 277
 
-// Maximum command and response size supported by this library.
-#define OPTIGA_MAX_COMMAND_SIZE 1750
+// Maximum command and response APDU size supported by OPTIGA.
+#define OPTIGA_MAX_APDU_SIZE 1557
 
 optiga_result optiga_init(void);
 optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
