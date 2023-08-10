@@ -236,8 +236,8 @@ void ui_screen_boot_empty(bool fading) { screen_boot_empty(fading); }
 void ui_screen_fail(void) { screen_install_fail(); }
 
 #ifdef USE_OPTIGA
-uint32_t ui_screen_attestation_delete_confirm(void) {
-  return screen_attestation_delete_confirm();
+uint32_t ui_screen_unlock_bootloader_confirm(void) {
+  return screen_unlock_bootloader_confirm();
 }
 #endif
 

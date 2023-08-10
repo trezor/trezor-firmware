@@ -70,7 +70,7 @@ void ui_set_initial_setup(bool initial);
 void ui_screen_boot_empty(bool fading);
 
 #ifdef USE_OPTIGA
-uint32_t ui_screen_attestation_delete_confirm(void);
+uint32_t ui_screen_unlock_bootloader_confirm(void);
 #endif
 
 // clang-format off

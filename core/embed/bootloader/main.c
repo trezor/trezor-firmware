@@ -216,17 +216,17 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
         process_msg_GetFeatures(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
         break;
 #ifdef USE_OPTIGA
-      case MessageType_MessageType_AttestationDelete:
-        response = ui_screen_attestation_delete_confirm();
+      case MessageType_MessageType_UnlockBootloader:
+        response = ui_screen_unlock_bootloader_confirm();
         if (INPUT_CANCEL == response) {
-          send_user_abort(USB_IFACE_NUM, "Attestation delete cancelled");
+          send_user_abort(USB_IFACE_NUM, "Bootloader unlock cancelled");
           hal_delay(100);
           usb_stop();
           usb_deinit();
           return RETURN;
         }
         process_msg_AttestationDelete(USB_IFACE_NUM, msg_size, buf);
-        screen_attestation_delete_success();
+        screen_unlock_bootloader_success();
         hal_delay(100);
         usb_stop();
         usb_deinit();
@@ -545,10 +545,10 @@ int bootloader_main(void) {
 #ifdef USE_OPTIGA
   if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
     display_clear();
-    screen_fatal_error_rust("ATTESTATION PRESENT",
-                            "On-device attestation must be deleted before "
-                            "installing unofficial firmware.",
-                            "PLEASE RECONNECT THE DEVICE");
+    screen_fatal_error_rust(
+        "INSTALL RESTRICTED",
+        "Installation of custom firmware is currently restricted.",
+        "Please visit\ntrezor.io/bootloader");
 
     display_refresh();
     return 1;

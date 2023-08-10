@@ -250,8 +250,8 @@ def show_device_tutorial(client: "TrezorClient") -> "MessageType":
 
 @session
 @expect(messages.Success, field="message", ret_type=str)
-def attestation_delete(client: "TrezorClient") -> "MessageType":
-    return client.call(messages.AttestationDelete())
+def unlock_bootloader(client: "TrezorClient") -> "MessageType":
+    return client.call(messages.UnlockBootloader())
 
 
 @expect(messages.Success, field="message", ret_type=str)

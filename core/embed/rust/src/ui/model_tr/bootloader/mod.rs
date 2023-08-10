@@ -150,7 +150,7 @@ extern "C" fn screen_install_confirm(
         theme::TEXT_NORMAL,
     ));
 
-    let mut frame = Confirm::new(BLD_BG, title_str, message, alert, "INSTALL")
+    let mut frame = Confirm::new(BLD_BG, title_str, message, alert, "INSTALL", false)
         .with_info_screen("FW FINGERPRINT", fingerprint);
     run(&mut frame)
 }
@@ -160,27 +160,24 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     let message = Label::left_aligned("Seed and firmware will be erased!", theme::TEXT_NORMAL)
         .vertically_centered();
 
-    let mut frame = Confirm::new(BLD_BG, "FACTORY RESET", message, None, "RESET");
+    let mut frame = Confirm::new(BLD_BG, "FACTORY RESET", message, None, "RESET", false);
 
     run(&mut frame)
 }
 
 #[no_mangle]
-extern "C" fn screen_attestation_delete_confirm() -> u32 {
-    let message = Label::left_aligned(
-        "Are you sure you want to delete the attestation from this device?",
-        theme::TEXT_NORMAL,
-    )
-    .vertically_centered();
+extern "C" fn screen_unlock_bootloader_confirm() -> u32 {
+    let message = Label::left_aligned("This action cannot be undone!", theme::TEXT_NORMAL)
+        .vertically_centered();
 
-    let mut frame = Confirm::new(BLD_BG, "DELETE ATTESTATION", message, None, "DELETE");
+    let mut frame = Confirm::new(BLD_BG, "UNLOCK BOOTLOADER?", message, None, "UNLOCK", true);
 
     run(&mut frame)
 }
 
 #[no_mangle]
-extern "C" fn screen_attestation_delete_success() {
-    let title = Label::centered("Attestation deleted", theme::TEXT_BOLD).vertically_centered();
+extern "C" fn screen_unlock_bootloader_success() {
+    let title = Label::centered("Bootloader unlocked", theme::TEXT_BOLD).vertically_centered();
 
     let content =
         Label::centered("Please reconnect the\ndevice", theme::TEXT_NORMAL).vertically_centered();

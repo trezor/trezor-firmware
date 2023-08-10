@@ -39,7 +39,7 @@ PB_BIND(FirmwareRequest, FirmwareRequest, AUTO)
 PB_BIND(FirmwareUpload, FirmwareUpload, AUTO)
 
 
-PB_BIND(AttestationDelete, AttestationDelete, AUTO)
+PB_BIND(UnlockBootloader, UnlockBootloader, AUTO)
 
 
 

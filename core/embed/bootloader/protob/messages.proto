@@ -17,7 +17,7 @@ enum MessageType {
     MessageType_ButtonRequest = 26;
     MessageType_ButtonAck = 27;
     MessageType_GetFeatures = 55;
-    MessageType_AttestationDelete = 96;
+    MessageType_UnlockBootloader = 96;
 }
 
 /**
@@ -147,10 +147,10 @@ message FirmwareUpload {
 }
 
 /**
- * Request: Delete attestation from the device, !irreversible!
+ * Request: Unlock bootloader, !irreversible!
  * @start
  * @next Success
  * @next Failure
  */
-message AttestationDelete {
+message UnlockBootloader {
 }

@@ -518,10 +518,10 @@ message ShowDeviceTutorial {
 }
 
 /**
- * Request: Delete attestation from the device, !irreversible!
+ * Request: Unlocks bootloader, !irreversible!
  * @start
  * @next Success
  * @next Failure
  */
-message AttestationDelete {
+message UnlockBootloader {
 }

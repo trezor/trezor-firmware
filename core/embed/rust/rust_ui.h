@@ -25,6 +25,6 @@ uint32_t screen_install_fail(void);
 void screen_welcome_model(void);
 void screen_welcome(void);
 void screen_boot_empty(bool fading);
-uint32_t screen_attestation_delete_confirm(void);
-void screen_attestation_delete_success(void);
+uint32_t screen_unlock_bootloader_confirm(void);
+void screen_unlock_bootloader_success(void);
 void display_image(int16_t x, int16_t y, const uint8_t* data, uint32_t datalen);

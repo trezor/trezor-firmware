@@ -301,9 +301,9 @@ def tutorial(client: "TrezorClient") -> str:
 
 @cli.command()
 @with_client
-def attestation_delete(client: "TrezorClient") -> str:
-    """Delete device attestation. Irreversible."""
-    return device.attestation_delete(client)
+def unlock_bootloader(client: "TrezorClient") -> str:
+    """Unlocks bootloader. Irreversible."""
+    return device.unlock_bootloader(client)
 
 
 @cli.command()
