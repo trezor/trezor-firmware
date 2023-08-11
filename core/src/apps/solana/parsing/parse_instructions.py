@@ -4,32 +4,24 @@ from .utils import read_compact_u16
 
 
 def parse_instructions(
-    serialized_tx: BufferReader, addresses: list[tuple[bytes, int]]
-) -> list[tuple[bytes, list[tuple[bytes, int]], BufferReader]]:
+    serialized_tx: BufferReader,
+) -> list[tuple[int, list[int], BufferReader]]:
     num_of_instructions = read_compact_u16(serialized_tx)
 
-    instructions: list[tuple[bytes, list[tuple[bytes, int]], BufferReader]] = []
+    instructions: list[tuple[int, list[int], BufferReader]] = []
     for _ in range(num_of_instructions):
         program_index = serialized_tx.get()
-        assert program_index < len(addresses)
-
-        program_id = addresses[program_index][0]
 
         num_of_accounts = read_compact_u16(serialized_tx)
-
-        instruction_accounts: list[tuple[bytes, int]] = []
+        accounts: list[int] = []
         for _ in range(num_of_accounts):
             assert serialized_tx.remaining_count() > 0
             account_index = serialized_tx.get()
-            assert account_index < len(addresses)
-
-            account = addresses[account_index]
-
-            instruction_accounts.append(account)
+            accounts.append(account_index)
 
         data_length = read_compact_u16(serialized_tx)
         data = BufferReader(serialized_tx.read(data_length))
 
-        instructions.append((program_id, instruction_accounts, data))
+        instructions.append((program_index, accounts, data))
 
     return instructions

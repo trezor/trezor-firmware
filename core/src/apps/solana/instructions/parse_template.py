@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from ..constants import ADDRESS_SIZE
 from ..parsing.utils import read_string
@@ -83,7 +83,12 @@ def parse_accounts_template(instruction: Instruction) -> None:
             else:
                 raise Exception(f"Missing account for {attribute}")
 
-        account, account_type = instruction.accounts[i]
-        assert account_type == type
-
-        setattr(instruction, attribute, account)
+        instruction_account = instruction.accounts[i]
+        if len(instruction_account) == 2:
+            account, account_type = instruction_account
+            assert account_type == type
+            setattr(instruction, attribute, account)
+        else:
+            lookup_table_account, index, account_type = instruction_account
+            assert account_type == type
+            setattr(instruction, attribute, (lookup_table_account, index))

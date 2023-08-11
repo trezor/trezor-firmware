@@ -112,8 +112,13 @@ class TransferInstruction(Instruction):
         # TODO SOL: validate max amount?
 
     def show(self) -> Awaitable[None]:
+        destination = (
+            base58.encode(self.destination)
+            if type(self.destination) is not tuple
+            else f"Lookup table account: {self.destination[0]}\nLookup table index: {self.destination[1]}"
+        )
         return confirm_output(
-            base58.encode(self.destination),
+            destination,
             f"{format_amount(self.amount, 8)} SOL",
             br_code=ButtonRequestType.Other,
         )
