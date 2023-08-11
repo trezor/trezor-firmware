@@ -20,6 +20,12 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/*
+ * For a specification of AES-CCM see one of the following:
+ * https://datatracker.ietf.org/doc/html/rfc3610
+ * https://doi.org/10.6028/NIST.SP.800-38C
+ */
+
 #include <string.h>
 
 #include "aesccm.h"
@@ -216,6 +222,7 @@ static AES_RETURN aes_ccm_init(aes_encrypt_ctx *encrypt_ctx,
   }
 
   // Initialize counter.
+  memzero(ctr_block, AES_BLOCK_SIZE);
   ctr_block[0] = q - 1;
   memcpy(&ctr_block[1], nonce, nonce_len);
 
