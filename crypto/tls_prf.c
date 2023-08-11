@@ -20,6 +20,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/*
+ * For a specification of TLS-PRF see
+ * https://datatracker.ietf.org/doc/html/rfc5246#section-5
+ */
+
 #include <string.h>
 
 #include "hmac.h"
