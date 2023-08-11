@@ -82,20 +82,20 @@ def reboot_to_bootloader(
     """
     Reboots to bootloader.
     """
+VersionTuple = Tuple[int, int, int, int]
 
 
 # extmod/modtrezorutils/modtrezorutils.c
-def check_firmware_header(
-    header : bytes
-) -> dict:
-    """
-    Checks firmware image and vendor header and returns
-       { "version": (major, minor, patch),
-         "vendor": string,
-         "fingerprint": bytes,
-         "hash": bytes
-       }
-    """
+class FirmwareHeaderInfo(NamedTuple):
+    version: VersionTuple
+    vendor: str
+    fingerprint: bytes
+    hash: bytes
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def check_firmware_header(header : bytes) -> FirmwareHeaderInfo:
+    """Parses incoming firmware header and returns information about it."""
 
 
 # extmod/modtrezorutils/modtrezorutils.c
@@ -106,12 +106,8 @@ def bootloader_locked() -> bool | None:
     """
 SCM_REVISION: bytes
 """Git commit hash of the firmware."""
-VERSION_MAJOR: int
-"""Major version."""
-VERSION_MINOR: int
-"""Minor version."""
-VERSION_PATCH: int
-"""Patch version."""
+VERSION: VersionTuple
+"""Firmware version as a tuple (major, minor, patch, build)."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
 USE_BACKLIGHT: bool

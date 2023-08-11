@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
 import trezorui2
-from trezor import ui
+from trezor import TR, ui
 
 from . import RustLayout
 
@@ -42,8 +42,7 @@ class Homescreen(HomescreenBase):
     ) -> None:
         level = 1
         if notification is not None:
-            notification = notification.rstrip("!")
-            if "EXPERIMENTAL" in notification:
+            if notification == TR.homescreen__title_experimental_mode:
                 level = 2
             elif notification_is_error:
                 level = 0
@@ -106,10 +105,12 @@ class Busyscreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.BUSYSCREEN_ON
 
     def __init__(self, delay_ms: int) -> None:
+        from trezor import TR
+
         skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_progress_coinjoin(
-                title="Waiting for others",
+                title=TR.coinjoin__waiting_for_others,
                 indeterminate=True,
                 time_ms=delay_ms,
                 skip_first_paint=skip,

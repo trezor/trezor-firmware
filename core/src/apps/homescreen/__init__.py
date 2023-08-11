@@ -16,27 +16,31 @@ async def busyscreen() -> None:
 
 
 async def homescreen() -> None:
+    from trezor import TR
+
     if storage.device.is_initialized():
         label = storage.device.get_label()
     else:
         label = None
 
+    # TODO: add notification that translations are out of date
+
     notification = None
     notification_is_error = False
     if is_set_any_session(MessageType.AuthorizeCoinJoin):
-        notification = "COINJOIN AUTHORIZED"
+        notification = TR.homescreen__title_coinjoin_authorized
     elif storage.device.is_initialized() and storage.device.no_backup():
-        notification = "SEEDLESS"
+        notification = TR.homescreen__title_seedless
         notification_is_error = True
     elif storage.device.is_initialized() and storage.device.unfinished_backup():
-        notification = "BACKUP FAILED"
+        notification = TR.homescreen__title_backup_failed
         notification_is_error = True
     elif storage.device.is_initialized() and storage.device.needs_backup():
-        notification = "BACKUP NEEDED"
+        notification = TR.homescreen__title_backup_needed
     elif storage.device.is_initialized() and not config.has_pin():
-        notification = "PIN NOT SET"
+        notification = TR.homescreen__title_pin_not_set
     elif storage.device.get_experimental_features():
-        notification = "EXPERIMENTAL MODE"
+        notification = TR.homescreen__title_experimental_mode
 
     await Homescreen(
         label=label,

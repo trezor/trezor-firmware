@@ -1,7 +1,10 @@
 use core::mem;
 
 use crate::{
+    error::Error,
     maybe_trace::MaybeTrace,
+    micropython::buffer::StrBuffer,
+    translations::TR,
     ui::{
         component::{
             base::Never, painter, Child, Component, ComponentExt, Empty, Event, EventCtx, Label,
@@ -25,7 +28,7 @@ const LOADER_SPEED: u16 = 5;
 pub struct CoinJoinProgress<T, U> {
     value: u16,
     indeterminate: bool,
-    content: Child<Frame<Split<Empty, U>, &'static str>>,
+    content: Child<Frame<Split<Empty, U>, StrBuffer>>,
     // Label is not a child since circular loader paints large black rectangle which overlaps it.
     // To work around this, draw label every time loader is drawn.
     label: Label<T>,
@@ -38,12 +41,16 @@ where
     pub fn new(
         text: T,
         indeterminate: bool,
-    ) -> CoinJoinProgress<T, impl Component<Msg = Never> + MaybeTrace>
+    ) -> Result<CoinJoinProgress<T, impl Component<Msg = Never> + MaybeTrace>, Error>
     where
         T: AsRef<str>,
     {
         let style = theme::label_coinjoin_progress();
-        let label = Label::centered("DO NOT DISCONNECT YOUR TREZOR!", style).vertically_centered();
+        let label = Label::centered(
+            TryInto::<StrBuffer>::try_into(TR::coinjoin__title_do_not_disconnect)?,
+            style,
+        )
+        .vertically_centered();
         let bg = painter::rect_painter(style.background_color, theme::BG);
         let inner = (bg, label);
         CoinJoinProgress::with_background(text, inner, indeterminate)
@@ -55,18 +62,18 @@ where
     T: AsRef<str>,
     U: Component<Msg = Never>,
 {
-    pub fn with_background(text: T, inner: U, indeterminate: bool) -> Self {
-        Self {
+    pub fn with_background(text: T, inner: U, indeterminate: bool) -> Result<Self, Error> {
+        Ok(Self {
             value: 0,
             indeterminate,
             content: Frame::centered(
                 theme::label_title(),
-                "COINJOIN IN PROGRESS",
+                TR::coinjoin__title_progress.try_into()?,
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),
             )
             .into_child(),
             label: Label::centered(text, theme::TEXT_NORMAL),
-        }
+        })
     }
 }
 

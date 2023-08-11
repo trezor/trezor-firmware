@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         component::{Child, Component, Event, EventCtx},
         geometry::{Insets, Rect},
@@ -14,20 +14,20 @@ pub enum CancelInfoConfirmMsg {
     Confirmed,
 }
 
-pub struct ShowMore<T, U>
-where
-    U: StringType,
-{
+pub struct ShowMore<T> {
     content: Child<T>,
-    buttons: Child<ButtonController<U>>,
+    buttons: Child<ButtonController>,
 }
 
-impl<T, U> ShowMore<T, U>
+impl<T> ShowMore<T>
 where
     T: Component,
-    U: StringType + Clone,
 {
-    pub fn new(content: T, cancel_button: Option<U>, button: U) -> Self {
+    pub fn new(
+        content: T,
+        cancel_button: Option<TString<'static>>,
+        button: TString<'static>,
+    ) -> Self {
         let btn_layout = if let Some(cancel_text) = cancel_button {
             ButtonLayout::text_armed_info(cancel_text, button)
         } else {
@@ -40,10 +40,9 @@ where
     }
 }
 
-impl<T, U> Component for ShowMore<T, U>
+impl<T> Component for ShowMore<T>
 where
     T: Component,
-    U: StringType + Clone,
 {
     type Msg = CancelInfoConfirmMsg;
 
@@ -83,10 +82,9 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for ShowMore<T, U>
+impl<T> crate::trace::Trace for ShowMore<T>
 where
     T: crate::trace::Trace + Component,
-    U: StringType + Clone,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ShowMore");

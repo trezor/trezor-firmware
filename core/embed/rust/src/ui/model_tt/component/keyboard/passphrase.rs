@@ -385,6 +385,6 @@ impl Component for Input {
 impl crate::trace::Trace for PassphraseKeyboard {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PassphraseKeyboard");
-        t.string("passphrase", self.passphrase());
+        t.string("passphrase", self.passphrase().into());
     }
 }

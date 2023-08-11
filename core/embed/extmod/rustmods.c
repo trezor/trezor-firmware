@@ -18,6 +18,7 @@
  */
 
 #include "librust.h"
+#include "librust_fonts.h"
 #include "py/runtime.h"
 
 #if MICROPY_PY_TREZORUI2
@@ -26,4 +27,8 @@ MP_REGISTER_MODULE(MP_QSTR_trezorui2, mp_module_trezorui2);
 
 #if MICROPY_PY_TREZORPROTO
 MP_REGISTER_MODULE(MP_QSTR_trezorproto, mp_module_trezorproto);
+#endif
+
+#if MICROPY_PY_TREZORTRANSLATE
+MP_REGISTER_MODULE(MP_QSTR_trezortranslate, mp_module_trezortranslate);
 #endif

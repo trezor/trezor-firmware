@@ -1,10 +1,7 @@
-use crate::{
-    strutil::StringType,
-    ui::{
-        component::{Child, Component, Event, EventCtx, Pad},
-        geometry::{Insets, Offset, Rect},
-        util::animation_disabled,
-    },
+use crate::ui::{
+    component::{Child, Component, Event, EventCtx, Pad},
+    geometry::{Insets, Offset, Rect},
+    util::animation_disabled,
 };
 
 use super::super::{
@@ -13,7 +10,7 @@ use super::super::{
 
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
 
-pub trait Choice<T: StringType> {
+pub trait Choice {
     // Only `paint_center` is required, the rest is optional
     // and therefore has a default implementation.
     fn paint_center(&self, area: Rect, inverse: bool);
@@ -26,9 +23,7 @@ pub trait Choice<T: StringType> {
         0
     }
 
-    fn btn_layout(&self) -> ButtonLayout<T> {
-        ButtonLayout::default_three_icons()
-    }
+    fn btn_layout(&self) -> ButtonLayout;
 
     /// Whether it is possible to do the middle action event without
     /// releasing the button - after long-press duration is reached.
@@ -46,9 +41,9 @@ pub trait Choice<T: StringType> {
 /// but offers a "lazy-loading" way of requesting the
 /// items only when they are needed, one-by-one.
 /// This way, no more than one item is stored in memory at any time.
-pub trait ChoiceFactory<T: StringType> {
+pub trait ChoiceFactory {
     type Action;
-    type Item: Choice<T>;
+    type Item: Choice;
 
     fn count(&self) -> usize;
     fn get(&self, index: usize) -> (Self::Item, Self::Action);
@@ -67,14 +62,13 @@ pub trait ChoiceFactory<T: StringType> {
 ///
 /// `is_carousel` can be used to make the choice page "infinite" -
 /// after reaching one end, users will appear at the other end.
-pub struct ChoicePage<F, T, A>
+pub struct ChoicePage<F, A>
 where
-    F: ChoiceFactory<T, Action = A>,
-    T: StringType,
+    F: ChoiceFactory<Action = A>,
 {
     choices: F,
     pad: Pad,
-    buttons: Child<ButtonController<T>>,
+    buttons: Child<ButtonController>,
     page_counter: usize,
     /// How many pixels are between the items.
     items_distance: i16,
@@ -97,10 +91,9 @@ where
     animated_steps_to_do: i16,
 }
 
-impl<F, T, A> ChoicePage<F, T, A>
+impl<F, A> ChoicePage<F, A>
 where
-    F: ChoiceFactory<T, Action = A>,
-    T: StringType + Clone,
+    F: ChoiceFactory<Action = A>,
 {
     pub fn new(choices: F) -> Self {
         let initial_btn_layout = choices.get(0).0.btn_layout();
@@ -283,12 +276,12 @@ where
     }
 
     /// Getting the choice on the current index
-    fn get_current_choice(&self) -> (<F as ChoiceFactory<T>>::Item, A) {
+    fn get_current_choice(&self) -> (<F as ChoiceFactory>::Item, A) {
         self.choices.get(self.page_counter)
     }
 
     /// Getting the current item
-    pub fn get_current_item(&self) -> <F as ChoiceFactory<T>>::Item {
+    pub fn get_current_item(&self) -> <F as ChoiceFactory>::Item {
         self.get_current_choice().0
     }
 
@@ -484,10 +477,9 @@ where
     }
 }
 
-impl<F, T, A> Component for ChoicePage<F, T, A>
+impl<F, A> Component for ChoicePage<F, A>
 where
-    F: ChoiceFactory<T, Action = A>,
-    T: StringType + Clone,
+    F: ChoiceFactory<Action = A>,
 {
     type Msg = (A, bool);
 
@@ -599,11 +591,10 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<F, T, A> crate::trace::Trace for ChoicePage<F, T, A>
+impl<F, A> crate::trace::Trace for ChoicePage<F, A>
 where
-    F: ChoiceFactory<T, Action = A>,
-    T: StringType + Clone,
-    <F as ChoiceFactory<T>>::Item: crate::trace::Trace,
+    F: ChoiceFactory<Action = A>,
+    <F as ChoiceFactory>::Item: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ChoicePage");

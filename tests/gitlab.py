@@ -24,14 +24,31 @@ RAW_REPORT_URL_TEMPLATE = (
     "https://gitlab.com/satoshilabs/trezor/trezor-firmware/-/jobs/{}/raw"
 )
 
-UI_JOB_NAMES = (
+UI_JOBS_ENGLISH = [
     "core click R test",
     "core device R test",
     "core click test",
     "core device test",
     "core persistence test",
     "legacy device test",
-)
+]
+
+
+def get_foreign_tests(langs: list[str]) -> list[str]:
+    result: list[str] = []
+    for lang in langs:
+        result += [
+            f"core click R test {lang}",
+            f"core device R test {lang}",
+            f"core click test {lang}",
+            f"core device test {lang}",
+        ]
+    return result
+
+
+FOREIGN_LANGS = ["french", "czech", "german", "spanish"]
+
+UI_JOB_NAMES = UI_JOBS_ENGLISH + get_foreign_tests(FOREIGN_LANGS)
 
 SAVE_GRAPHQL_RESULTS = False
 

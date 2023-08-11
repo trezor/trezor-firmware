@@ -37,7 +37,6 @@ def test_pin_passphrase(client: Client):
             passphrase_protection=True,
             pin_protection=True,
             label="label",
-            language="en-US",
             enforce_wordlist=True,
         )
     )
@@ -99,7 +98,6 @@ def test_nopin_nopassphrase(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="label",
-            language="en-US",
             enforce_wordlist=True,
         )
     )
@@ -148,7 +146,6 @@ def test_word_fail(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="label",
-            language="en-US",
             enforce_wordlist=True,
         )
     )
@@ -177,7 +174,6 @@ def test_pin_fail(client: Client):
             passphrase_protection=True,
             pin_protection=True,
             label="label",
-            language="en-US",
             enforce_wordlist=True,
         )
     )
@@ -210,8 +206,7 @@ def test_already_initialized(client: Client):
             False,
             False,
             "label",
-            "en-US",
-            client.mnemonic_callback,
+            input_callback=client.mnemonic_callback,
         )
 
     ret = client.call_raw(

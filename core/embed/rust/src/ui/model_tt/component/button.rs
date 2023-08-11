@@ -329,10 +329,10 @@ where
         t.component("Button");
         match &self.content {
             ButtonContent::Empty => {}
-            ButtonContent::Text(text) => t.string("text", text.as_ref()),
+            ButtonContent::Text(text) => t.string("text", text.as_ref().into()),
             ButtonContent::Icon(_) => t.bool("icon", true),
             ButtonContent::IconAndText(content) => {
-                t.string("text", content.text);
+                t.string("text", content.text.into());
                 t.bool("icon", true);
             }
             ButtonContent::IconBlend(_, _, _) => t.bool("icon", true),

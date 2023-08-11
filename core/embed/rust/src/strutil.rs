@@ -1,5 +1,14 @@
 use heapless::String;
 
+#[cfg(feature = "micropython")]
+use crate::error::Error;
+
+#[cfg(feature = "micropython")]
+use crate::micropython::{buffer::StrBuffer, obj::Obj};
+
+#[cfg(feature = "translations")]
+use crate::translations::TR;
+
 /// Trait for slicing off string prefix by a specified number of bytes.
 /// See `StringType` for deeper explanation.
 pub trait SkipPrefix {
@@ -23,9 +32,15 @@ impl SkipPrefix for &str {
 /// - create a new string by skipping some number of bytes (SkipPrefix) - used
 ///   when rendering continuations of long strings
 /// - create a new string from a string literal (From<&'static str>)
-pub trait StringType: AsRef<str> + From<&'static str> + SkipPrefix {}
+pub trait StringType:
+    AsRef<str> + From<&'static str> + Into<TString<'static>> + SkipPrefix
+{
+}
 
-impl<T> StringType for T where T: AsRef<str> + From<&'static str> + SkipPrefix {}
+impl<T> StringType for T where
+    T: AsRef<str> + From<&'static str> + Into<TString<'static>> + SkipPrefix
+{
+}
 
 /// Unified-length String type, long enough for most simple use-cases.
 pub type ShortString = String<50>;
@@ -70,5 +85,94 @@ pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {
             result.reverse();
             Some(unsafe { core::str::from_utf8_unchecked(result) })
         }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum TString<'a> {
+    #[cfg(feature = "micropython")]
+    Allocated(StrBuffer),
+    #[cfg(feature = "translations")]
+    Translation(TR),
+    Str(&'a str),
+}
+
+impl TString<'_> {
+    pub fn is_empty(&self) -> bool {
+        self.map(|s| s.is_empty())
+    }
+
+    pub fn map<F, T>(&self, fun: F) -> T
+    where
+        F: for<'a> FnOnce(&'a str) -> T,
+        T: 'static,
+    {
+        match self {
+            #[cfg(feature = "micropython")]
+            Self::Allocated(buf) => fun(buf.as_ref()),
+            #[cfg(feature = "translations")]
+            Self::Translation(tr) => tr.map_translated(fun),
+            Self::Str(s) => fun(s),
+        }
+    }
+}
+
+impl TString<'static> {
+    #[cfg(feature = "translations")]
+    pub const fn from_translation(tr: TR) -> Self {
+        Self::Translation(tr)
+    }
+
+    #[cfg(feature = "micropython")]
+    pub const fn from_strbuffer(buf: StrBuffer) -> Self {
+        Self::Allocated(buf)
+    }
+
+    pub const fn empty() -> Self {
+        Self::Str("")
+    }
+}
+
+impl<'a> TString<'a> {
+    pub const fn from_str(s: &'a str) -> Self {
+        Self::Str(s)
+    }
+}
+
+impl<'a> From<&'a str> for TString<'a> {
+    fn from(s: &'a str) -> Self {
+        Self::Str(s)
+    }
+}
+
+#[cfg(feature = "translations")]
+impl From<TR> for TString<'static> {
+    fn from(tr: TR) -> Self {
+        Self::from_translation(tr)
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl From<StrBuffer> for TString<'static> {
+    fn from(buf: StrBuffer) -> Self {
+        Self::from_strbuffer(buf)
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl TryFrom<Obj> for TString<'static> {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        Ok(StrBuffer::try_from(obj)?.into())
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl<'a> TryFrom<TString<'a>> for Obj {
+    type Error = Error;
+
+    fn try_from(s: TString<'a>) -> Result<Self, Self::Error> {
+        s.map(|t| t.try_into())
     }
 }

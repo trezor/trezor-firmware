@@ -35,7 +35,6 @@ def test_reset_device_skip_backup(client: Client):
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
-            language="en-US",
             label="test",
             skip_backup=True,
         )
@@ -104,7 +103,6 @@ def test_reset_device_skip_backup_break(client: Client):
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
-            language="en-US",
             label="test",
             skip_backup=True,
         )
@@ -163,7 +161,6 @@ def test_reset_device_skip_backup_show_entropy_fail(client: Client):
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
-            language="en-US",
             label="test",
             skip_backup=True,
         )

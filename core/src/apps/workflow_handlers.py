@@ -42,6 +42,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.management.recovery_device"
     if msg_type == MessageType.ApplySettings:
         return "apps.management.apply_settings"
+    if msg_type == MessageType.ChangeLanguage:
+        return "apps.management.change_language"
     if msg_type == MessageType.ApplyFlags:
         return "apps.management.apply_flags"
     if msg_type == MessageType.ChangePin:

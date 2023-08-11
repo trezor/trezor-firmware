@@ -34,7 +34,6 @@ def reset_device(client: Client, strength: int):
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
-            language="en-US",
             label="test",
         )
     )
@@ -110,7 +109,6 @@ def test_reset_device_256_pin(client: Client):
             strength=strength,
             passphrase_protection=True,
             pin_protection=True,
-            language="en-US",
             label="test",
         )
     )
@@ -199,7 +197,6 @@ def test_failed_pin(client: Client):
             strength=strength,
             passphrase_protection=True,
             pin_protection=True,
-            language="en-US",
             label="test",
         )
     )
@@ -235,4 +232,4 @@ def test_failed_pin(client: Client):
 
 def test_already_initialized(client: Client):
     with pytest.raises(Exception):
-        device.reset(client, False, 128, True, True, "label", "en-US")
+        device.reset(client, False, 128, True, True, "label")

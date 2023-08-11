@@ -295,17 +295,18 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorutils_reboot_to_bootloader_obj, 0, 2,
     mod_trezorutils_reboot_to_bootloader);
 
-/// def check_firmware_header(
-///     header : bytes
-/// ) -> dict:
-///     """
-///     Checks firmware image and vendor header and returns
-///        { "version": (major, minor, patch),
-///          "vendor": string,
-///          "fingerprint": bytes,
-///          "hash": bytes
-///        }
-///     """
+/// VersionTuple = Tuple[int, int, int, int]
+///
+/// class FirmwareHeaderInfo(NamedTuple):
+///     version: VersionTuple
+///     vendor: str
+///     fingerprint: bytes
+///     hash: bytes
+///
+/// mock:global
+///
+/// def check_firmware_header(header : bytes) -> FirmwareHeaderInfo:
+///     """Parses incoming firmware header and returns information about it."""
 STATIC mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {
   mp_buffer_info_t header_buf = {0};
   mp_get_buffer_raise(header, &header_buf, MP_BUFFER_READ);
@@ -313,23 +314,18 @@ STATIC mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {
   firmware_header_info_t info;
 
   if (sectrue == check_firmware_header(header_buf.buf, header_buf.len, &info)) {
-    mp_obj_t version[3] = {mp_obj_new_int(info.ver_major),
-                           mp_obj_new_int(info.ver_minor),
-                           mp_obj_new_int(info.ver_patch)};
+    mp_obj_t version[4] = {
+        mp_obj_new_int(info.ver_major), mp_obj_new_int(info.ver_minor),
+        mp_obj_new_int(info.ver_patch), mp_obj_new_int(info.ver_build)};
 
-    mp_obj_t result = mp_obj_new_dict(4);
-    mp_obj_dict_store(result, MP_ROM_QSTR(MP_QSTR_version),
-                      mp_obj_new_tuple(MP_ARRAY_SIZE(version), version));
-    mp_obj_dict_store(
-        result, MP_ROM_QSTR(MP_QSTR_vendor),
-        mp_obj_new_str_copy(&mp_type_str, info.vstr, info.vstr_len));
-    mp_obj_dict_store(
-        result, MP_ROM_QSTR(MP_QSTR_fingerprint),
-        mp_obj_new_bytes(info.fingerprint, sizeof(info.fingerprint)));
-    mp_obj_dict_store(result, MP_ROM_QSTR(MP_QSTR_hash),
-                      mp_obj_new_bytes(info.hash, sizeof(info.hash)));
-
-    return result;
+    static const qstr fields[4] = {MP_QSTR_version, MP_QSTR_vendor,
+                                   MP_QSTR_fingerprint, MP_QSTR_hash};
+    const mp_obj_t values[4] = {
+        mp_obj_new_tuple(MP_ARRAY_SIZE(version), version),
+        mp_obj_new_str_copy(&mp_type_str, info.vstr, info.vstr_len),
+        mp_obj_new_bytes(info.fingerprint, sizeof(info.fingerprint)),
+        mp_obj_new_bytes(info.hash, sizeof(info.hash))};
+    return mp_obj_new_attrtuple(fields, MP_ARRAY_SIZE(fields), values);
   }
 
   mp_raise_ValueError("Invalid value.");
@@ -370,14 +366,16 @@ STATIC mp_obj_str_t mod_trezorutils_full_name_obj = {
     sizeof(MODEL_FULL_NAME) - 1,
     (const byte *)MODEL_FULL_NAME};
 
+STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
+    {&mp_type_tuple},
+    4,
+    {MP_OBJ_NEW_SMALL_INT(VERSION_MAJOR), MP_OBJ_NEW_SMALL_INT(VERSION_MINOR),
+     MP_OBJ_NEW_SMALL_INT(VERSION_PATCH), MP_OBJ_NEW_SMALL_INT(VERSION_BUILD)}};
+
 /// SCM_REVISION: bytes
 /// """Git commit hash of the firmware."""
-/// VERSION_MAJOR: int
-/// """Major version."""
-/// VERSION_MINOR: int
-/// """Minor version."""
-/// VERSION_PATCH: int
-/// """Patch version."""
+/// VERSION: VersionTuple
+/// """Firmware version as a tuple (major, minor, patch, build)."""
 /// USE_SD_CARD: bool
 /// """Whether the hardware supports SD card."""
 /// USE_BACKLIGHT: bool
@@ -419,9 +417,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
      MP_ROM_PTR(&mod_trezorutils_revision_obj)},
-    {MP_ROM_QSTR(MP_QSTR_VERSION_MAJOR), MP_ROM_INT(VERSION_MAJOR)},
-    {MP_ROM_QSTR(MP_QSTR_VERSION_MINOR), MP_ROM_INT(VERSION_MINOR)},
-    {MP_ROM_QSTR(MP_QSTR_VERSION_PATCH), MP_ROM_INT(VERSION_PATCH)},
+    {MP_ROM_QSTR(MP_QSTR_VERSION), MP_ROM_PTR(&mod_trezorutils_version_obj)},
 #ifdef USE_SD_CARD
     {MP_ROM_QSTR(MP_QSTR_USE_SD_CARD), mp_const_true},
 #else

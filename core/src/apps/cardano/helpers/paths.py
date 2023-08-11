@@ -25,9 +25,3 @@ CHAIN_STAKING_KEY = const(2)
 
 ADDRESS_INDEX_PATH_INDEX = const(4)
 RECOMMENDED_ADDRESS_INDEX = const(0)  # https://cips.cardano.org/cips/cip11/
-
-CHANGE_OUTPUT_PATH_NAME = "Change output path"
-CHANGE_OUTPUT_STAKING_PATH_NAME = "Change output staking path"
-CERTIFICATE_PATH_NAME = "Certificate path"
-POOL_OWNER_STAKING_PATH_NAME = "Pool owner staking path"
-WITNESS_PATH_NAME = "Witness path"

@@ -22,7 +22,7 @@ class TestStrings(unittest.TestCase):
         for v in VECTORS:
             self.assertEqual(strings.format_amount(v[0], v[1]), v[2])
 
-    def test_format_plural(self):
+    def test_format_plural_english(self):
         VECTORS = [
             ("We need {count} more {plural}", 1, "share", "We need 1 more share"),
             ("We need {count} more {plural}", 3, "share", "We need 3 more shares"),
@@ -36,12 +36,36 @@ class TestStrings(unittest.TestCase):
             ("We need {count} more {plural}", 2, "fuzz", "We need 2 more fuzzes"),
         ]
         for v in VECTORS:
+            self.assertEqual(strings.format_plural_english(v[0], v[1], v[2]), v[3])
+
+        with self.assertRaises(ValueError):
+            strings.format_plural_english("Hello", 1, "share")
+
+    def test_format_plural(self):
+        VECTORS = [
+            ("You are about to sign {count} {plural}", 0, "action|actions", "You are about to sign 0 actions"),
+            ("You are about to sign {count} {plural}", 1, "action|actions", "You are about to sign 1 action"),
+            ("You are about to sign {count} {plural}", 3, "action|actions", "You are about to sign 3 actions"),
+            ("You are about to sign {count} {plural}", 15, "action|actions", "You are about to sign 15 actions"),
+            ("Chystáte se podepsat {count} {plural}", 0, "akci|akce|akcí", "Chystáte se podepsat 0 akcí"),
+            ("Chystáte se podepsat {count} {plural}", 1, "akci|akce|akcí", "Chystáte se podepsat 1 akci"),
+            ("Chystáte se podepsat {count} {plural}", 3, "akci|akce|akcí", "Chystáte se podepsat 3 akce"),
+            ("Chystáte se podepsat {count} {plural}", 15, "akci|akce|akcí", "Chystáte se podepsat 15 akcí"),
+        ]
+        for v in VECTORS:
             self.assertEqual(strings.format_plural(v[0], v[1], v[2]), v[3])
 
         with self.assertRaises(ValueError):
             strings.format_plural("Hello", 1, "share")
 
     def test_format_duration_ms(self):
+        unit_plurals = {
+            "millisecond": "millisecond|milliseconds",
+            "second": "second|seconds",
+            "minute": "minute|minutes",
+            "hour": "hour|hours",
+        }
+
         VECTORS = [
             (0, "0 milliseconds"),
             (1, "1 millisecond"),
@@ -60,7 +84,7 @@ class TestStrings(unittest.TestCase):
         ]
 
         for v in VECTORS:
-            self.assertEqual(strings.format_duration_ms(v[0]), v[1])
+            self.assertEqual(strings.format_duration_ms(v[0], unit_plurals), v[1])
 
     def test_format_timestamp(self):
         VECTORS = [

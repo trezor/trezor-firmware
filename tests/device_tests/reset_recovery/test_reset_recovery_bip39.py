@@ -50,7 +50,6 @@ def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str
             passphrase_protection=False,
             pin_protection=False,
             label="test",
-            language="en-US",
             backup_type=BackupType.Bip39,
         )
 

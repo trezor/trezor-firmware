@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    translations::TR,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
         display::Color,
@@ -12,30 +12,28 @@ use super::{
     ButtonDetails, ButtonLayout, ButtonPos,
 };
 
-pub struct ButtonPage<T, U>
+pub struct ButtonPage<T>
 where
     T: Component + Paginate,
-    U: StringType,
 {
     page_count: usize,
     active_page: usize,
     content: Child<T>,
     pad: Pad,
     /// Left button of the first screen
-    cancel_btn_details: Option<ButtonDetails<U>>,
+    cancel_btn_details: Option<ButtonDetails>,
     /// Right button of the last screen
-    confirm_btn_details: Option<ButtonDetails<U>>,
+    confirm_btn_details: Option<ButtonDetails>,
     /// Left button of every screen
-    back_btn_details: Option<ButtonDetails<U>>,
+    back_btn_details: Option<ButtonDetails>,
     /// Right button of every screen apart the last one
-    next_btn_details: Option<ButtonDetails<U>>,
-    buttons: Child<ButtonController<U>>,
+    next_btn_details: Option<ButtonDetails>,
+    buttons: Child<ButtonController>,
 }
 
-impl<T, U> ButtonPage<T, U>
+impl<T> ButtonPage<T>
 where
     T: Component + Paginate,
-    U: StringType + Clone,
 {
     pub fn new(content: T, background: Color) -> Self {
         Self {
@@ -44,7 +42,7 @@ where
             content: Child::new(content),
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
-            confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
+            confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
@@ -54,22 +52,22 @@ where
         }
     }
 
-    pub fn with_cancel_btn(mut self, btn_details: Option<ButtonDetails<U>>) -> Self {
+    pub fn with_cancel_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.cancel_btn_details = btn_details;
         self
     }
 
-    pub fn with_confirm_btn(mut self, btn_details: Option<ButtonDetails<U>>) -> Self {
+    pub fn with_confirm_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.confirm_btn_details = btn_details;
         self
     }
 
-    pub fn with_back_btn(mut self, btn_details: Option<ButtonDetails<U>>) -> Self {
+    pub fn with_back_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.back_btn_details = btn_details;
         self
     }
 
-    pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails<U>>) -> Self {
+    pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.next_btn_details = btn_details;
         self
     }
@@ -118,14 +116,14 @@ where
         });
     }
 
-    fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout<U> {
+    fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
         let btn_left = self.get_left_button_details(!has_prev);
         let btn_right = self.get_right_button_details(has_next);
         ButtonLayout::new(btn_left, None, btn_right)
     }
 
     /// Get the left button details, depending whether the page is first or not.
-    fn get_left_button_details(&self, is_first: bool) -> Option<ButtonDetails<U>> {
+    fn get_left_button_details(&self, is_first: bool) -> Option<ButtonDetails> {
         if is_first {
             self.cancel_btn_details.clone()
         } else {
@@ -135,7 +133,7 @@ where
 
     /// Get the right button details, depending on whether there is a next
     /// page.
-    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails<U>> {
+    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails> {
         if has_next_page {
             self.next_btn_details.clone()
         } else {
@@ -144,10 +142,9 @@ where
     }
 }
 
-impl<T, U> ScrollableContent for ButtonPage<T, U>
+impl<T> ScrollableContent for ButtonPage<T>
 where
     T: Component + Paginate,
-    U: StringType,
 {
     fn page_count(&self) -> usize {
         self.page_count
@@ -157,10 +154,9 @@ where
     }
 }
 
-impl<T, U> Component for ButtonPage<T, U>
+impl<T> Component for ButtonPage<T>
 where
     T: Component + Paginate,
-    U: StringType + Clone,
 {
     type Msg = PageMsg<T::Msg>;
 
@@ -224,10 +220,9 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for ButtonPage<T, U>
+impl<T> crate::trace::Trace for ButtonPage<T>
 where
     T: crate::trace::Trace + Paginate + Component,
-    U: StringType + Clone,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ButtonPage");

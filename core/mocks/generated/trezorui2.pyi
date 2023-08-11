@@ -446,6 +446,11 @@ def confirm_firmware_update(
     fingerprint: str,
 ) -> None:
     """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_wait_text(/, message: str) -> None:
+    """Show single-line text in the middle of the screen."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object
@@ -897,3 +902,8 @@ def confirm_firmware_update(
     fingerprint: str,
 ) -> None:
     """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_wait_text(/, message: str) -> None:
+    """Show single-line text in the middle of the screen."""

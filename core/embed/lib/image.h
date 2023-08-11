@@ -88,6 +88,7 @@ typedef struct {
   uint8_t ver_major;
   uint8_t ver_minor;
   uint8_t ver_patch;
+  uint8_t ver_build;
   // firmware fingerprint
   uint8_t fingerprint[BLAKE2S_DIGEST_LENGTH];
   // hash of vendor and image header

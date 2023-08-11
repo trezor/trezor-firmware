@@ -5,6 +5,7 @@ if TYPE_CHECKING:
 
 
 async def verify_message(msg: EthereumVerifyMessage) -> Success:
+    from trezor import TR
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha3_256
     from trezor.messages import Success
@@ -36,5 +37,5 @@ async def verify_message(msg: EthereumVerifyMessage) -> Success:
 
     await confirm_signverify(decode_message(msg.message), address, verify=True)
 
-    await show_success("verify_message", "The signature is valid.")
+    await show_success("verify_message", TR.ethereum__valid_signature)
     return Success(message="Message verified")

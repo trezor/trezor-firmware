@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import os
 import time
 from typing import TYPE_CHECKING, Callable, Optional
@@ -61,6 +63,41 @@ def apply_settings(
     out = client.call(settings)
     client.refresh_features()
     return out
+
+
+def _send_language_data(
+    client: "TrezorClient",
+    request: "messages.TranslationDataRequest",
+    language_data: bytes,
+) -> "MessageType":
+    response: MessageType = request
+    while not isinstance(response, messages.Success):
+        assert isinstance(response, messages.TranslationDataRequest)
+        data_length = response.data_length
+        data_offset = response.data_offset
+        chunk = language_data[data_offset : data_offset + data_length]
+        response = client.call(messages.TranslationDataAck(data_chunk=chunk))
+
+    return response
+
+
+@expect(messages.Success, field="message", ret_type=str)
+@session
+def change_language(
+    client: "TrezorClient",
+    language_data: bytes,
+    show_display: bool | None = None,
+) -> "MessageType":
+    data_length = len(language_data)
+    msg = messages.ChangeLanguage(data_length=data_length, show_display=show_display)
+
+    response = client.call(msg)
+    if data_length > 0:
+        assert isinstance(response, messages.TranslationDataRequest)
+        response = _send_language_data(client, response, language_data)
+    assert isinstance(response, messages.Success)
+    client.refresh_features()  # changing the language in features
+    return response
 
 
 @expect(messages.Success, field="message", ret_type=str)
@@ -242,12 +279,18 @@ def reboot_to_bootloader(
     client: "TrezorClient",
     boot_command: messages.BootCommand = messages.BootCommand.STOP_AND_WAIT,
     firmware_header: Optional[bytes] = None,
+    language_data: bytes = b"",
 ) -> "MessageType":
-    return client.call(
+    response = client.call(
         messages.RebootToBootloader(
-            boot_command=boot_command, firmware_header=firmware_header
+            boot_command=boot_command,
+            firmware_header=firmware_header,
+            language_data_length=len(language_data),
         )
     )
+    if isinstance(response, messages.TranslationDataRequest):
+        response = _send_language_data(client, response, language_data)
+    return response
 
 
 @session

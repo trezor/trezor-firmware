@@ -31,6 +31,7 @@ async def get_ecdh_session_key(msg: GetECDHSessionKey) -> ECDHSessionKey:
     # require_confirm_ecdh_session_key
     proto = msg_identity.proto.upper() if msg_identity.proto else "identity"
     await confirm_address(
+        # TODO: translate?
         f"Decrypt {proto}",
         serialize_identity_without_proto(msg_identity),
         "",

@@ -222,7 +222,7 @@ def test_reset_device(client: Client):
             + [messages.ButtonRequest] * 24
             + [messages.Success, messages.Features]
         )
-        device.reset(client, False, 128, True, False, "label", "en-US")
+        device.reset(client, False, 128, True, False, "label")
 
     with pytest.raises(TrezorFailure):
         # This must fail, because device is already initialized
@@ -234,7 +234,6 @@ def test_reset_device(client: Client):
                 passphrase_protection=True,
                 pin_protection=False,
                 label="label",
-                language="en-US",
             )
         )
 
@@ -259,8 +258,7 @@ def test_recovery_device(client: Client):
             False,
             False,
             "label",
-            "en-US",
-            client.mnemonic_callback,
+            input_callback=client.mnemonic_callback,
         )
 
     with pytest.raises(TrezorFailure):
@@ -272,7 +270,6 @@ def test_recovery_device(client: Client):
                 passphrase_protection=False,
                 pin_protection=False,
                 label="label",
-                language="en-US",
             )
         )
 

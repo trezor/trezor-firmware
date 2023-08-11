@@ -18,6 +18,7 @@ async def get_ownership_proof(
     coin: CoinInfo,
     authorization: CoinJoinAuthorization | None = None,
 ) -> OwnershipProof:
+    from trezor import TR
     from trezor.enums import InputScriptType
     from trezor.messages import OwnershipProof
     from trezor.ui.layouts import confirm_action, confirm_blob
@@ -71,15 +72,15 @@ async def get_ownership_proof(
     if msg.user_confirmation and not authorization:
         await confirm_action(
             "confirm_ownership_proof",
-            "Proof of ownership",
-            description="Do you want to create a proof of ownership?",
+            TR.bitcoin__title_proof_of_ownership,
+            description=TR.bitcoin__create_proof_of_ownership,
         )
         if msg.commitment_data:
             await confirm_blob(
                 "confirm_ownership_proof",
-                "Proof of ownership",
+                TR.bitcoin__title_proof_of_ownership,
                 msg.commitment_data,
-                "Commitment data:",
+                TR.bitcoin__commitment_data,
             )
 
     ownership_proof, signature = generate_proof(

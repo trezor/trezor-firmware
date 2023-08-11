@@ -75,6 +75,9 @@ class MessageType(IntEnum):
     UnlockBootloader = 96
     AuthenticateDevice = 97
     AuthenticityProof = 98
+    ChangeLanguage = 990
+    TranslationDataRequest = 991
+    TranslationDataAck = 992
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -3378,6 +3381,54 @@ class ApplySettings(protobuf.MessageType):
         self.hide_passphrase_from_host = hide_passphrase_from_host
 
 
+class ChangeLanguage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 990
+    FIELDS = {
+        1: protobuf.Field("data_length", "uint32", repeated=False, required=True),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_length: "int",
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.data_length = data_length
+        self.show_display = show_display
+
+
+class TranslationDataRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 991
+    FIELDS = {
+        1: protobuf.Field("data_length", "uint32", repeated=False, required=True),
+        2: protobuf.Field("data_offset", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_length: "int",
+        data_offset: "int",
+    ) -> None:
+        self.data_length = data_length
+        self.data_offset = data_offset
+
+
+class TranslationDataAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 992
+    FIELDS = {
+        1: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_chunk: "bytes",
+    ) -> None:
+        self.data_chunk = data_chunk
+
+
 class ApplyFlags(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 28
     FIELDS = {
@@ -3762,6 +3813,7 @@ class RebootToBootloader(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("boot_command", "BootCommand", repeated=False, required=False, default=BootCommand.STOP_AND_WAIT),
         2: protobuf.Field("firmware_header", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("language_data_length", "uint32", repeated=False, required=False, default=0),
     }
 
     def __init__(
@@ -3769,9 +3821,11 @@ class RebootToBootloader(protobuf.MessageType):
         *,
         boot_command: Optional["BootCommand"] = BootCommand.STOP_AND_WAIT,
         firmware_header: Optional["bytes"] = None,
+        language_data_length: Optional["int"] = 0,
     ) -> None:
         self.boot_command = boot_command
         self.firmware_header = firmware_header
+        self.language_data_length = language_data_length
 
 
 class GetNonce(protobuf.MessageType):

@@ -12,6 +12,7 @@
 #include "secbool.h"
 #include "storage.h"
 #include "touch.h"
+#include "translations.h"
 #include "usb.h"
 
 #include "bip39.h"

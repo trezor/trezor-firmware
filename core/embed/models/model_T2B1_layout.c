@@ -38,6 +38,15 @@ const flash_area_t SECRET_AREA = {
         },
 };
 
+const flash_area_t TRANSLATIONS_AREA = {
+    .num_subareas = 1,
+    .subarea[0] =
+        {
+            .first_sector = 13,
+            .num_sectors = 2,
+        },
+};
+
 const flash_area_t BOOTLOADER_AREA = {
     .num_subareas = 1,
     .subarea[0] =
@@ -62,7 +71,7 @@ const flash_area_t FIRMWARE_AREA = {
 };
 
 const flash_area_t WIPE_AREA = {
-    .num_subareas = 4,
+    .num_subareas = 3,
     .subarea[0] =
         {
             .first_sector = 4,
@@ -74,12 +83,6 @@ const flash_area_t WIPE_AREA = {
             .num_sectors = 6,
         },
     .subarea[2] =
-        {
-            .first_sector = 13,
-            .num_sectors = 2,  // sector 15 skipped due to bootloader MPU
-                               // settings, sector 12 is secret
-        },
-    .subarea[3] =
         {
             .first_sector = 16,
             .num_sectors = 8,

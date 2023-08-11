@@ -163,6 +163,5 @@ def test_no_backup_show_entropy_fails(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="test",
-            language="en-US",
             no_backup=True,
         )

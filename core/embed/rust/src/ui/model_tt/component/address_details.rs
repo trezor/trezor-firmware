@@ -2,7 +2,9 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
+    micropython::buffer::StrBuffer,
     strutil::StringType,
+    translations::TR,
     ui::{
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
@@ -18,7 +20,7 @@ const MAX_XPUBS: usize = 16;
 
 pub struct AddressDetails<T> {
     qr_code: Frame<Qr, T>,
-    details: Frame<Paragraphs<ParagraphVecShort<T>>, T>,
+    details: Frame<Paragraphs<ParagraphVecShort<StrBuffer>>, T>,
     xpub_view: Frame<Paragraphs<Paragraph<T>>, T>,
     xpubs: Vec<(T, T), MAX_XPUBS>,
     xpub_page_count: Vec<u8, MAX_XPUBS>,
@@ -34,21 +36,24 @@ where
         qr_address: T,
         case_sensitive: bool,
         details_title: T,
-        account: Option<T>,
-        path: Option<T>,
+        account: Option<StrBuffer>,
+        path: Option<StrBuffer>,
     ) -> Result<Self, Error>
     where
         T: From<&'static str>,
     {
         let mut para = ParagraphVecShort::new();
         if let Some(a) = account {
-            para.add(Paragraph::new(&theme::TEXT_NORMAL, "Account:".into()));
+            para.add(Paragraph::new(
+                &theme::TEXT_NORMAL,
+                TR::words__account_colon.try_into()?,
+            ));
             para.add(Paragraph::new(&theme::TEXT_MONO, a));
         }
         if let Some(p) = path {
             para.add(Paragraph::new(
                 &theme::TEXT_NORMAL,
-                "Derivation path:".into(),
+                TR::address_details__derivation_path.try_into()?,
             ));
             para.add(Paragraph::new(&theme::TEXT_MONO, p));
         }

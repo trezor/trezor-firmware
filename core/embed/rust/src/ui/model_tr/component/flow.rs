@@ -26,7 +26,7 @@ where
     content_area: Rect,
     title_area: Rect,
     pad: Pad,
-    buttons: Child<ButtonController<T>>,
+    buttons: Child<ButtonController>,
     page_counter: usize,
     return_confirmed_index: bool,
     show_scrollbar: bool,

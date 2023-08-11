@@ -124,6 +124,9 @@ enum MessageType {
     MessageType_UnlockBootloader = 96 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_AuthenticateDevice = 97 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_AuthenticityProof = 98 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_ChangeLanguage = 990 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_TranslationDataRequest = 991 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_TranslationDataAck = 992 [(bitcoin_only) = true, (wire_in) = true];
 
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];

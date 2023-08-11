@@ -117,6 +117,10 @@ def _make_bad_params():
     and default values of the appropriate type.
     """
     for field in messages.RecoveryDevice.FIELDS.values():
+        # language is not supported anymore:
+        if field.name == "language":
+            continue
+
         if field.name in DRY_RUN_ALLOWED_FIELDS:
             continue
 

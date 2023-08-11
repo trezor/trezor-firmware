@@ -102,7 +102,7 @@
 /* } */ static const uint8_t Font_Unifont_Bold_16_glyph_125[] = { 5, 13, 7, 0, 11, 225, 140, 198, 24, 102, 99, 12, 110, 0 };
 /* ~ */ static const uint8_t Font_Unifont_Bold_16_glyph_126[] = { 7, 3, 8, 0, 11, 99, 118, 48 };
 
-const uint8_t Font_Unifont_Bold_16_glyph_nonprintable[] = { 7, 10, 8, 0, 10, 130, 112, 231, 207, 60, 249, 255, 231, 207 };
+/* ? */ const uint8_t Font_Unifont_Bold_16_glyph_nonprintable[] = { 6, 10, 7, 0, 10, 5, 199, 60, 231, 60, 255, 207, 63 };
 
 const uint8_t * const Font_Unifont_Bold_16[126 + 1 - 32] = {
     Font_Unifont_Bold_16_glyph_32,

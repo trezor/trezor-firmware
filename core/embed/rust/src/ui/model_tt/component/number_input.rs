@@ -1,5 +1,8 @@
 use crate::{
+    error::Error,
+    micropython::buffer::StrBuffer,
     strutil::{self, StringType},
+    translations::TR,
     ui::{
         component::{
             base::ComponentExt,
@@ -28,8 +31,8 @@ where
     input: Child<NumberInput>,
     paragraphs: Child<Paragraphs<Paragraph<T>>>,
     paragraphs_pad: Pad,
-    info_button: Child<Button<&'static str>>,
-    confirm_button: Child<Button<&'static str>>,
+    info_button: Child<Button<StrBuffer>>,
+    confirm_button: Child<Button<StrBuffer>>,
 }
 
 impl<T, F> NumberInputDialog<T, F>
@@ -37,19 +40,19 @@ where
     F: Fn(u32) -> T,
     T: StringType,
 {
-    pub fn new(min: u32, max: u32, init_value: u32, description_func: F) -> Self {
+    pub fn new(min: u32, max: u32, init_value: u32, description_func: F) -> Result<Self, Error> {
         let text = description_func(init_value);
-        Self {
+        Ok(Self {
             area: Rect::zero(),
             description_func,
             input: NumberInput::new(min, max, init_value).into_child(),
             paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)).into_child(),
             paragraphs_pad: Pad::with_background(theme::BG),
-            info_button: Button::with_text("INFO").into_child(),
-            confirm_button: Button::with_text("CONTINUE")
+            info_button: Button::with_text(TR::buttons__info.try_into()?).into_child(),
+            confirm_button: Button::with_text(TR::buttons__continue.try_into()?)
                 .styled(theme::button_confirm())
                 .into_child(),
-        }
+        })
     }
 
     fn update_text(&mut self, ctx: &mut EventCtx, value: u32) {

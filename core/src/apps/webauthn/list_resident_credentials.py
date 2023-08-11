@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 async def list_resident_credentials(
     msg: WebAuthnListResidentCredentials,
 ) -> WebAuthnCredentials:
+    from trezor import TR
     from trezor.messages import WebAuthnCredential, WebAuthnCredentials
     from trezor.ui.layouts import confirm_action
 
@@ -14,9 +15,9 @@ async def list_resident_credentials(
 
     await confirm_action(
         "credentials_list",
-        "List credentials",
-        description="Export information about the credentials stored on this device?",
-        verb="EXPORT",
+        TR.fido__title_list_credentials,
+        description=TR.fido__export_credentials,
+        verb=TR.buttons__export,
     )
     creds = [
         WebAuthnCredential(

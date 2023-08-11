@@ -27,6 +27,8 @@ mod storage;
 mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;
+#[cfg(feature = "translations")]
+pub mod translations;
 
 #[cfg(feature = "ui")]
 #[macro_use]

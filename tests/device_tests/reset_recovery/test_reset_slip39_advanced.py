@@ -46,7 +46,6 @@ def test_reset_device_slip39_advanced(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="test",
-            language="en-US",
             backup_type=BackupType.Slip39_Advanced,
         )
 

@@ -2249,6 +2249,52 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ApplySettings"]:
             return isinstance(msg, cls)
 
+    class ChangeLanguage(protobuf.MessageType):
+        data_length: "int"
+        show_display: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            data_length: "int",
+            show_display: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ChangeLanguage"]:
+            return isinstance(msg, cls)
+
+    class TranslationDataRequest(protobuf.MessageType):
+        data_length: "int"
+        data_offset: "int"
+
+        def __init__(
+            self,
+            *,
+            data_length: "int",
+            data_offset: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TranslationDataRequest"]:
+            return isinstance(msg, cls)
+
+    class TranslationDataAck(protobuf.MessageType):
+        data_chunk: "bytes"
+
+        def __init__(
+            self,
+            *,
+            data_chunk: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TranslationDataAck"]:
+            return isinstance(msg, cls)
+
     class ApplyFlags(protobuf.MessageType):
         flags: "int"
 
@@ -2620,12 +2666,14 @@ if TYPE_CHECKING:
     class RebootToBootloader(protobuf.MessageType):
         boot_command: "BootCommand"
         firmware_header: "bytes | None"
+        language_data_length: "int"
 
         def __init__(
             self,
             *,
             boot_command: "BootCommand | None" = None,
             firmware_header: "bytes | None" = None,
+            language_data_length: "int | None" = None,
         ) -> None:
             pass
 

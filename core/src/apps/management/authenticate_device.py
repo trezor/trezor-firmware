@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 
 async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
-    from trezor import utils, wire
+    from trezor import TR, utils, wire
     from trezor.crypto import optiga
     from trezor.crypto.der import read_length
     from trezor.crypto.hashlib import sha256
@@ -22,9 +22,9 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
 
     await confirm_action(
         "authenticate_device",
-        "Authenticate device",
-        description=f"Allow connected computer to confirm your {utils.MODEL_FULL_NAME} is genuine?",
-        verb="Allow",
+        TR.authenticate__header,
+        description=TR.authenticate__confirm_template.format(utils.MODEL_FULL_NAME),
+        verb=TR.buttons__allow,
     )
 
     header = b"AuthenticateDevice:"
@@ -34,7 +34,7 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     write_compact_size(h, len(msg.challenge))
     h.extend(msg.challenge)
 
-    spinner = progress("", description="Checking authenticity...")
+    spinner = progress("", description=TR.progress__authenticity_check)
     spinner.report(0)
 
     try:

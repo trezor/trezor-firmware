@@ -77,18 +77,6 @@ def test_apply_settings_rotation(client: Client):
     assert client.features.display_rotation == 270
 
 
-@pytest.mark.skip_t2
-@pytest.mark.skip_tr
-def test_invalid_language(client: Client):
-    assert client.features.language == "en-US"
-
-    with client:
-        _set_expected_responses(client)
-        device.apply_settings(client, language="nonexistent")
-
-    assert client.features.language == "en-US"
-
-
 @pytest.mark.setup_client(pin=PIN4, passphrase=False)
 def test_apply_settings_passphrase(client: Client):
     with client:

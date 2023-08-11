@@ -714,11 +714,9 @@ class Signer:
     async def _show_certificate(
         self, certificate: messages.CardanoTxCertificate
     ) -> None:
-        from ..helpers.paths import CERTIFICATE_PATH_NAME
-
         if certificate.path:
             await self._fail_or_warn_if_invalid_path(
-                SCHEMA_STAKING, certificate.path, CERTIFICATE_PATH_NAME
+                SCHEMA_STAKING, certificate.path, "Certificate path"
             )
 
         if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
@@ -755,11 +753,9 @@ class Signer:
         certificates.assert_cond(owners_as_path_count == 1)
 
     async def _show_pool_owner(self, owner: messages.CardanoPoolOwner) -> None:
-        from ..helpers.paths import POOL_OWNER_STAKING_PATH_NAME
-
         if owner.staking_key_path:
             await self._fail_or_warn_if_invalid_path(
-                SCHEMA_STAKING, owner.staking_key_path, POOL_OWNER_STAKING_PATH_NAME
+                SCHEMA_STAKING, owner.staking_key_path, "Pool owner staking path"
             )
 
         await layout.confirm_stake_pool_owner(
@@ -1238,19 +1234,14 @@ class Signer:
     def _fail_if_strict_and_unusual(
         self, address_parameters: messages.CardanoAddressParametersType
     ) -> None:
-        from ..helpers.paths import (
-            CHANGE_OUTPUT_PATH_NAME,
-            CHANGE_OUTPUT_STAKING_PATH_NAME,
-        )
-
         if not safety_checks.is_strict():
             return
 
         if Credential.payment_credential(address_parameters).is_unusual_path:
-            raise DataError(f"Invalid {CHANGE_OUTPUT_PATH_NAME.lower()}")
+            raise DataError("Invalid change output path")
 
         if Credential.stake_credential(address_parameters).is_unusual_path:
-            raise DataError(f"Invalid {CHANGE_OUTPUT_STAKING_PATH_NAME.lower()}")
+            raise DataError("Invalid change output staking path")
 
     async def _show_if_showing_details(self, layout_fn: Awaitable) -> None:
         if self.should_show_details:

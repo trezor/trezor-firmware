@@ -17,6 +17,7 @@
 import os
 import sys
 import time
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -618,6 +619,7 @@ def download(
 @click.option("-v", "--version", help="Which version to download")
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
 @click.option("-n", "--dry-run", is_flag=True, help="Perform all steps but do not actually upload the firmware")
+@click.option("-l", "--language", help="Language code, blob, or URL")
 @click.option("--beta", is_flag=True, help="Use firmware from BETA channel")
 @click.option("--bitcoin-only/--universal", is_flag=True, default=None, help="Download bitcoin-only or universal firmware (defaults to universal)")
 @click.option("--raw", is_flag=True, help="Push raw firmware data to Trezor")
@@ -635,6 +637,7 @@ def update(
     dry_run: bool,
     beta: bool,
     bitcoin_only: Optional[bool],
+    language: Optional[str],
 ) -> None:
     """Upload new firmware to device.
 
@@ -651,6 +654,23 @@ def update(
         if sum(bool(x) for x in (filename, url, version)) > 1:
             click.echo("You can use only one of: filename, url, version.")
             sys.exit(1)
+
+        language_data = b""
+        if language is not None:
+            if client.features.bootloader_mode:
+                click.echo("Language data cannot be uploaded in bootloader mode.")
+                sys.exit(1)
+
+            assert language is not None
+            try:
+                language_data = Path(language).read_bytes()
+            except Exception:
+                try:
+                    language_data = requests.get(language).content
+                except Exception:
+                    raise click.ClickException(
+                        f"Failed to load translations from {language}"
+                    ) from None
 
         if filename:
             firmware_data = filename.read()
@@ -689,8 +709,13 @@ def update(
                     client,
                     boot_command=messages.BootCommand.INSTALL_UPGRADE,
                     firmware_header=firmware_data[:header_size],
+                    language_data=language_data,
                 )
             else:
+                if language_data:
+                    click.echo(
+                        "WARNING: Seamless installation not possible, language data will not be uploaded."
+                    )
                 device.reboot_to_bootloader(client)
 
             click.echo("Waiting for bootloader...")

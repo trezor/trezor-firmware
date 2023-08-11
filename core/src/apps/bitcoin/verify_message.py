@@ -51,7 +51,7 @@ def _address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
 
 
 async def verify_message(msg: VerifyMessage) -> Success:
-    from trezor import utils
+    from trezor import TR, utils
     from trezor.crypto.curve import secp256k1
     from trezor.enums import InputScriptType
     from trezor.messages import Success
@@ -116,5 +116,5 @@ async def verify_message(msg: VerifyMessage) -> Success:
         verify=True,
     )
 
-    await show_success("verify_message", "The signature is valid.")
+    await show_success("verify_message", TR.bitcoin__valid_signature)
     return Success(message="Message verified")

@@ -30,7 +30,7 @@ where
     result_anim: Child<ResultAnim>,
     headline: Option<Label<&'static str>>,
     text: Child<Paragraphs<Paragraph<T>>>,
-    buttons: Option<Child<ButtonController<T>>>,
+    buttons: Option<Child<ButtonController>>,
     autoclose: bool,
 }
 

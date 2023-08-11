@@ -3,16 +3,62 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import NoReturn
 
+    from trezor.enums import BootCommand
     from trezor.messages import RebootToBootloader
 
 
-async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
+async def install_upgrade(
+    firmware_header: bytes, language_data_length: int
+) -> tuple[BootCommand, bytes]:
     from ubinascii import hexlify
 
-    from trezor import io, loop, utils, wire
+    from trezor import TR, utils, wire
+    from trezor.enums import BootCommand
+    from trezor.ui.layouts import confirm_firmware_update, show_wait_text
+
+    from apps.management.change_language import do_change_language
+
+    # check and parse received firmware header
+    try:
+        hdr = utils.check_firmware_header(firmware_header)
+    except Exception:
+        raise wire.DataError("Invalid firmware header.")
+
+    # vendor must be the same
+    if hdr.vendor != utils.firmware_vendor():
+        raise wire.DataError("Different firmware vendor.")
+
+    # firmware must be newer
+    if hdr.version <= utils.VERSION:
+        raise wire.DataError("Not a firmware upgrade.")
+
+    version_str = ".".join(map(str, hdr.version[:3]))
+
+    await confirm_firmware_update(
+        description=TR.reboot_to_bootloader__version_by_template.format(
+            version_str, hdr.vendor
+        ),
+        fingerprint=hexlify(hdr.fingerprint).decode(),
+    )
+
+    # send language data
+    if language_data_length > 0:
+        show_wait_text(TR.reboot_to_bootloader__just_a_moment)
+        await do_change_language(
+            language_data_length,
+            show_display=False,
+            expected_version=hdr.version,
+            report=lambda i: None,
+        )
+
+    return BootCommand.INSTALL_UPGRADE, hdr.hash
+
+
+async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
+    from trezor import TR, io, loop, utils
     from trezor.enums import BootCommand
     from trezor.messages import Success
-    from trezor.ui.layouts import confirm_action, confirm_firmware_update
+    from trezor.ui.layouts import confirm_action
     from trezor.wire.context import get_context
 
     # Bootloader will only allow the INSTALL_UPGRADE flow for official images.
@@ -27,40 +73,16 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
         and msg.firmware_header is not None
         and is_official
     ):
-        # check and parse received firmware header
-        hdr = utils.check_firmware_header(msg.firmware_header)
-        if hdr is None:
-            raise wire.DataError("Invalid firmware header.")
-        else:
-            # vendor must be the same
-            if hdr["vendor"] != utils.firmware_vendor():
-                raise wire.DataError("Different firmware vendor.")
-
-            current_version = (
-                int(utils.VERSION_MAJOR),
-                int(utils.VERSION_MINOR),
-                int(utils.VERSION_PATCH),
-            )
-
-            # firmware must be newer
-            if hdr["version"] <= current_version:
-                raise wire.DataError("Not a firmware upgrade.")
-
-            version_str = ".".join(map(str, hdr["version"]))
-
-            await confirm_firmware_update(
-                description=f"Firmware version {version_str}\nby {hdr['vendor']}",
-                fingerprint=hexlify(hdr["fingerprint"]).decode(),
-            )
-            boot_command = BootCommand.INSTALL_UPGRADE
-            boot_args = hdr["hash"]
+        boot_command, boot_args = await install_upgrade(
+            msg.firmware_header, msg.language_data_length
+        )
 
     else:
         await confirm_action(
             "reboot",
-            "Go to bootloader",
-            "Trezor will restart in bootloader mode.",
-            verb="Restart",
+            TR.reboot_to_bootloader__title,
+            TR.reboot_to_bootloader__restart,
+            verb=TR.buttons__restart,
         )
         boot_command = BootCommand.STOP_AND_WAIT
         boot_args = None

@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 async def ask_provision_namespace(
     common: NEMTransactionCommon, namespace: NEMProvisionNamespace
 ) -> None:
+    from trezor import TR
+
     from ..layout import (
         require_confirm_content,
         require_confirm_fee,
@@ -15,14 +17,14 @@ async def ask_provision_namespace(
 
     if namespace.parent:
         content = [
-            ("Create namespace", namespace.namespace),
-            ("under namespace", namespace.parent),
+            (TR.nem__create_namespace, namespace.namespace),
+            (TR.nem__under_namespace, namespace.parent),
         ]
-        await require_confirm_content("Confirm namespace", content)
+        await require_confirm_content(TR.nem__confirm_namespace, content)
     else:
-        content = [("Create namespace", namespace.namespace)]
-        await require_confirm_content("Confirm namespace", content)
+        content = [(TR.nem__create_namespace, namespace.namespace)]
+        await require_confirm_content(TR.nem__confirm_namespace, content)
 
-    await require_confirm_fee("Confirm rental fee", namespace.fee)
+    await require_confirm_fee(TR.nem__confirm_rental_fee, namespace.fee)
 
     await require_confirm_final(common.fee)

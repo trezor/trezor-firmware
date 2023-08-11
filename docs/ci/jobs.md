@@ -279,6 +279,47 @@ device capable of pushing an actual buttons on the device.
 Also device tests on physical Trezor 1 but with Bitcoin-only firmware.
 
 ---
+## TEST-NONENGLISH stage - [test-nonenglish.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml)
+Tests for non-english languages, that run only nightly
+- apart from that, they run also for every branch containing "translations" in its name
+
+Consists of **16 jobs** below:
+
+### [core device test czech](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L14)
+START_DEVICE_TESTS
+
+### [core device test french](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L50)
+
+### [core device test german](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L86)
+
+### [core device test spanish](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L122)
+
+### [core device R test czech](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L158)
+
+### [core device R test french](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L194)
+
+### [core device R test german](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L230)
+
+### [core device R test spanish](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L266)
+
+### [core click test czech](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L306)
+START_CLICK_TESTS
+
+### [core click test french](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L341)
+
+### [core click test german](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L376)
+
+### [core click test spanish](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L411)
+
+### [core click R test czech](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L446)
+
+### [core click R test french](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L481)
+
+### [core click R test german](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L516)
+
+### [core click R test spanish](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml#L551)
+
+---
 ## POSTTEST stage - [posttest.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/posttest.yml)
 
 Consists of **2 jobs** below:
@@ -290,7 +331,7 @@ Consists of **2 jobs** below:
 ---
 ## DEPLOY stage - [deploy.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml)
 
-Consists of **13 jobs** below:
+Consists of **14 jobs** below:
 
 ### [release core fw regular deploy](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L5)
 
@@ -314,8 +355,10 @@ Consists of **13 jobs** below:
 
 ### [ui tests fixtures deploy](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L239)
 
-### [sync emulators to aws](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L266)
+### [ui tests fixtures deploy nonenglish](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L264)
 
-### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L292)
+### [sync emulators to aws](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L304)
+
+### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L330)
 
 ---
