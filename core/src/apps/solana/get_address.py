@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
+
 from apps.common.keychain import with_slip44_keychain
 
 from . import CURVE, PATTERNS, SLIP44_ID

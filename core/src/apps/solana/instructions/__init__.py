@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .parse_template import parse_accounts_template, parse_data_template
 
 if TYPE_CHECKING:
-    from ..types import Address, Data, RawInstruction
+    from ..types import Address, AddressReference, Data, RawInstruction
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
@@ -16,7 +16,7 @@ class Instruction:
     INSTRUCTION_ID = -1
 
     program_id: bytes
-    accounts: list[Address]
+    accounts: list[Address | AddressReference]
     data: Data
 
     def __init__(self, raw_instruction: RawInstruction):
