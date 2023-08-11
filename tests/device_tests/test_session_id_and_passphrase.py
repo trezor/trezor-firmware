@@ -24,6 +24,8 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import FailureType, SafetyCheckLevel
 from trezorlib.tools import parse_path
 
+from .. import translations as TR
+
 XPUB_PASSPHRASES = {
     "A": "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG",
     "B": "xpub6CFxuyQpgryoR64QC38w42dLgDv5P4qWXhn1fbaN62UYzu1wJXZyrYqGnkq5d8xPUK68RXtXFBiqp3rfLGpeQ57zLtx675ZZn5ezKMAWQfu",
@@ -395,16 +397,13 @@ def test_hide_passphrase_from_host(client: Client):
 
         def input_flow():
             yield
-            layout = client.debug.wait_layout()
+            TR.assert_in(
+                client.debug.wait_layout().text_content(),
+                "passphrase__access_hidden_wallet",
+            )
             if client.debug.model == "T":
-                assert (
-                    "Passphrase provided by host will be used but will not be displayed due to the device settings."
-                    in layout.text_content()
-                )
                 client.debug.press_yes()
             elif client.debug.model == "Safe 3":
-                layout = client.debug.wait_layout()
-                assert "will not be displayed" in layout.text_content()
                 client.debug.press_right()
                 client.debug.press_right()
                 client.debug.press_yes()
@@ -433,15 +432,18 @@ def test_hide_passphrase_from_host(client: Client):
 
         def input_flow():
             yield
-            layout = client.debug.wait_layout()
-            assert "Next screen will show the passphrase" in layout.text_content()
+            TR.assert_in(
+                client.debug.wait_layout().text_content(),
+                "passphrase__next_screen_will_show_passphrase",
+            )
             client.debug.press_yes()
 
             yield
-            layout = client.debug.wait_layout()
-            assert "confirm passphrase" in layout.title().lower()
-
-            assert passphrase in layout.text_content()
+            TR.assert_equals(
+                client.debug.wait_layout().title(),
+                "passphrase__title_confirm",
+            )
+            assert passphrase in client.debug.wait_layout().text_content()
             client.debug.press_yes()
 
         client.watch_layout()

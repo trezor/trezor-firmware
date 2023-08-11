@@ -1,0 +1,12 @@
+"project_id": "625982"
+"base_path": "."
+# api_token is being supplied on via `--token $CROWDIN_TOKEN` CLI option
+"base_url": "https://api.crowdin.com"
+"preserve_hierarchy": true
+
+files: [
+  {
+    "source": "en.json",
+    "translation": "%two_letters_code%/%original_file_name%",
+  }
+]

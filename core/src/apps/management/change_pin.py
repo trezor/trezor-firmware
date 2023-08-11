@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import config, wire
+from trezor import TR, config, wire
 
 if TYPE_CHECKING:
     from typing import Awaitable
@@ -27,7 +27,7 @@ async def change_pin(msg: ChangePin) -> Success:
     await _require_confirm_change_pin(msg)
 
     # get old pin
-    curpin, salt = await request_pin_and_sd_salt("Enter PIN")
+    curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)
 
     # if changing pin, pre-check the entered pin before getting new pin
     if curpin and not msg.remove:
@@ -49,13 +49,13 @@ async def change_pin(msg: ChangePin) -> Success:
 
     if newpin:
         if curpin:
-            msg_screen = "PIN changed."
+            msg_screen = TR.pin__changed
             msg_wire = "PIN changed"
         else:
-            msg_screen = "PIN protection\nturned on."
+            msg_screen = TR.pin__enabled
             msg_wire = "PIN enabled"
     else:
-        msg_screen = "PIN protection\nturned off."
+        msg_screen = TR.pin__disabled
         msg_wire = "PIN removed"
 
     await show_success("success_pin", msg_screen)
@@ -67,30 +67,28 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
 
     has_pin = config.has_pin()
 
-    title = "PIN settings"
-
     if msg.remove and has_pin:  # removing pin
         return confirm_action(
             "disable_pin",
-            title,
-            description="Are you sure you want to turn off PIN protection?",
-            verb="Turn off",
+            TR.pin__title_settings,
+            description=TR.pin__turn_off,
+            verb=TR.buttons__turn_off,
         )
 
     if not msg.remove and has_pin:  # changing pin
         return confirm_action(
             "change_pin",
-            title,
-            description="Change PIN?",
-            verb="Change",
+            TR.pin__title_settings,
+            description=TR.pin__change,
+            verb=TR.buttons__change,
         )
 
     if not msg.remove and not has_pin:  # setting new pin
         return confirm_set_new_pin(
             "set_pin",
-            title,
-            "PIN",
-            "PIN will be required to access this device.",
+            TR.pin__title_settings,
+            TR.pin__turn_on,
+            TR.pin__info,
         )
 
     # removing non-existing PIN

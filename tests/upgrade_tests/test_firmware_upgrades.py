@@ -41,7 +41,6 @@ MNEMONIC = " ".join(["all"] * 12)
 PATH = [H_(44), H_(0), H_(0), 0, 0]
 ADDRESS = "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
 LABEL = "test"
-LANGUAGE = "en-US"
 STRENGTH = 128
 
 
@@ -61,7 +60,6 @@ def test_upgrade_load(gen: str, tag: str) -> None:
             pin="",
             passphrase_protection=False,
             label=LABEL,
-            language=LANGUAGE,
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
@@ -70,7 +68,6 @@ def test_upgrade_load(gen: str, tag: str) -> None:
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
-        assert emu.client.features.language == LANGUAGE
 
 
 @for_all("legacy")
@@ -92,7 +89,6 @@ def test_upgrade_load_pin(gen: str, tag: str) -> None:
             pin=PIN,
             passphrase_protection=False,
             label=LABEL,
-            language=LANGUAGE,
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
@@ -101,7 +97,6 @@ def test_upgrade_load_pin(gen: str, tag: str) -> None:
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
-        assert emu.client.features.language == LANGUAGE
 
 
 # Test progressive upgrade of storage versions without unlocking in between.
@@ -134,7 +129,6 @@ def test_storage_upgrade_progressive(gen: str, tags: List[str]):
             pin=PIN,
             passphrase_protection=False,
             label=LABEL,
-            language=LANGUAGE,
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
@@ -147,7 +141,6 @@ def test_storage_upgrade_progressive(gen: str, tags: List[str]):
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
-        assert emu.client.features.language == LANGUAGE
 
 
 @for_all("legacy", legacy_minimum_version=(1, 9, 0))
@@ -170,7 +163,6 @@ def test_upgrade_wipe_code(gen: str, tag: str):
             pin=PIN,
             passphrase_protection=False,
             label=LABEL,
-            language=LANGUAGE,
         )
 
         # Set wipe code.
@@ -184,7 +176,6 @@ def test_upgrade_wipe_code(gen: str, tag: str):
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
-        assert emu.client.features.language == LANGUAGE
 
         # Check that wipe code is set by changing the PIN to it.
         emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
@@ -214,7 +205,6 @@ def test_upgrade_reset(gen: str, tag: str):
             passphrase_protection=False,
             pin_protection=False,
             label=LABEL,
-            language=LANGUAGE,
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
@@ -224,7 +214,6 @@ def test_upgrade_reset(gen: str, tag: str):
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
-        assert emu.client.features.language == LANGUAGE
         assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
@@ -247,7 +236,6 @@ def test_upgrade_reset_skip_backup(gen: str, tag: str):
             passphrase_protection=False,
             pin_protection=False,
             label=LABEL,
-            language=LANGUAGE,
             skip_backup=True,
         )
         device_id = emu.client.features.device_id
@@ -258,7 +246,6 @@ def test_upgrade_reset_skip_backup(gen: str, tag: str):
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
-        assert emu.client.features.language == LANGUAGE
         assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
@@ -281,7 +268,6 @@ def test_upgrade_reset_no_backup(gen: str, tag: str):
             passphrase_protection=False,
             pin_protection=False,
             label=LABEL,
-            language=LANGUAGE,
             no_backup=True,
         )
         device_id = emu.client.features.device_id
@@ -292,7 +278,6 @@ def test_upgrade_reset_no_backup(gen: str, tag: str):
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
-        assert emu.client.features.language == LANGUAGE
         assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 

@@ -27,6 +27,7 @@ use crate::ui::geometry::Alignment2D;
 use crate::{time::Duration, trezorhal::time};
 
 use crate::{
+    strutil::TString,
     trezorhal::{buffers, display, uzlib::UzlibContext},
     ui::lerp::Lerp,
 };
@@ -346,39 +347,39 @@ pub fn clear() {
     display::clear();
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub struct TextOverlay<T> {
+#[derive(Clone)]
+pub struct TextOverlay {
     area: Rect,
-    text: T,
+    text: TString<'static>,
     font: Font,
     max_height: i16,
     baseline: i16,
 }
 
-impl<T: AsRef<str>> TextOverlay<T> {
-    pub fn new(text: T, font: Font) -> Self {
+impl TextOverlay {
+    pub fn new<T: Into<TString<'static>>>(text: T, font: Font) -> Self {
         let area = Rect::zero();
 
         Self {
             area,
-            text,
+            text: text.into(),
             font,
             max_height: font.max_height(),
             baseline: font.text_baseline(),
         }
     }
 
-    pub fn set_text(&mut self, text: T) {
-        self.text = text;
+    pub fn set_text<T: Into<TString<'static>>>(&mut self, text: T) {
+        self.text = text.into();
     }
 
-    pub fn get_text(&self) -> &T {
-        &self.text
+    pub fn get_text(&self) -> TString<'static> {
+        self.text
     }
 
     // baseline relative to the underlying render area
     pub fn place(&mut self, baseline: Point) {
-        let text_width = self.font.text_width(self.text.as_ref());
+        let text_width = self.text.map(|t| self.font.text_width(t));
         let text_height = self.font.text_height();
 
         let text_area_start = baseline + Offset::new(-(text_width / 2), -text_height);
@@ -397,30 +398,28 @@ impl<T: AsRef<str>> TextOverlay<T> {
 
         let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
-        for g in self
-            .text
-            .as_ref()
-            .bytes()
-            .filter_map(|c| self.font.get_glyph(c))
-        {
-            let top = self.max_height - self.baseline - g.bearing_y;
-            let char_area = Rect::new(
-                Point::new(tot_adv + g.bearing_x, top),
-                Point::new(tot_adv + g.bearing_x + g.width, top + g.height),
-            );
+        let color = self.text.map(|t| {
+            for g in t.chars().map(|c| self.font.get_glyph(c)) {
+                let top = self.max_height - self.baseline - g.bearing_y;
+                let char_area = Rect::new(
+                    Point::new(tot_adv + g.bearing_x, top),
+                    Point::new(tot_adv + g.bearing_x + g.width, top + g.height),
+                );
 
-            tot_adv += g.adv;
+                tot_adv += g.adv;
 
-            if !char_area.contains(p_rel) {
-                continue;
+                if !char_area.contains(p_rel) {
+                    continue;
+                }
+
+                let p_inner = p_rel - char_area.top_left();
+                let overlay_data = g.get_pixel_data(p_inner);
+                return Some(Color::lerp(underlying, fg, overlay_data as f32 / 15_f32));
             }
+            None
+        });
 
-            let p_inner = p_rel - char_area.top_left();
-            let overlay_data = g.get_pixel_data(p_inner);
-            return Color::lerp(underlying, fg, overlay_data as f32 / 15_f32);
-        }
-
-        underlying
+        color.unwrap_or(underlying)
     }
 }
 
@@ -995,9 +994,9 @@ fn rect_rounded2_get_pixel(
 /// Optionally draws a text inside the rectangle and adjusts its color to match
 /// the fill. The coordinates of the text are specified in the TextOverlay
 /// struct.
-pub fn bar_with_text_and_fill<T: AsRef<str>>(
+pub fn bar_with_text_and_fill(
     area: Rect,
-    overlay: Option<&TextOverlay<T>>,
+    overlay: Option<&TextOverlay>,
     fg_color: Color,
     bg_color: Color,
     fill_from: i16,

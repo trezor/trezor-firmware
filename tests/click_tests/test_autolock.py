@@ -25,6 +25,7 @@ from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path
 
 from .. import buttons, common
+from .. import translations as TR
 from ..device_tests.bitcoin.payment_req import make_coinjoin_request
 from ..tx_cache import TxCache
 from . import recovery
@@ -63,10 +64,11 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
 
     debug.input("1234")
 
-    assert (
-        f"Auto-lock your Trezor after {delay_ms // 1000} seconds"
-        in debug.wait_layout().text_content()
+    TR.assert_template(
+        debug.wait_layout().text_content(),
+        "auto_lock__change_template",
     )
+
     layout = go_next(debug, wait=True)
     assert layout.main_component() == "Homescreen"
     assert device_handler.result() == "Settings applied"
@@ -103,11 +105,13 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
     if debug.model == "T":
         debug.click(buttons.OK, wait=True)
         layout = debug.click(buttons.OK, wait=True)
-        assert "Total amount: 0.0039 BTC" in layout.text_content()
+        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert "0.0039 BTC" in layout.text_content()
     elif debug.model == "Safe 3":
         debug.press_right(wait=True)
         layout = debug.press_right(wait=True)
-        assert "Total amount: 0.0039 BTC" in layout.text_content()
+        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert "0.0039 BTC" in layout.text_content()
 
     # wait for autolock to kick in
     time.sleep(10.1)
@@ -148,11 +152,13 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     if debug.model == "T":
         debug.click(buttons.OK, wait=True)
         layout = debug.click(buttons.OK, wait=True)
-        assert "Total amount: 0.0039 BTC" in layout.text_content()
+        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert "0.0039 BTC" in layout.text_content()
     elif debug.model == "Safe 3":
         debug.press_right(wait=True)
         layout = debug.press_right(wait=True)
-        assert "Total amount: 0.0039 BTC" in layout.text_content()
+        TR.assert_in(layout.text_content(), "send__total_amount")
+        assert "0.0039 BTC" in layout.text_content()
 
     def sleepy_filter(msg: MessageType) -> MessageType:
         time.sleep(10.1)
@@ -242,7 +248,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
 
 def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
-    assert "Check your backup?" in debug.wait_layout().text_content()
+    TR.assert_in(debug.wait_layout().text_content(), "recovery__check_dry_run")
     layout = go_next(debug, wait=True)
     assert "PinKeyboard" in layout.all_components()
 
@@ -259,7 +265,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     device_handler.run(device.recover, dry_run=True)  # type: ignore
 
     layout = unlock_dry_run(debug)
-    assert "number of words" in layout.text_content()
+    TR.assert_in(debug.wait_layout().text_content(), "recovery__num_of_words")
 
     if debug.model == "Safe 3":
         debug.press_right(wait=True)
@@ -279,7 +285,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     assert layout is not None
 
     # we are back at homescreen
-    assert "number of words" in layout.text_content()
+    TR.assert_in(debug.wait_layout().text_content(), "recovery__num_of_words")
 
 
 @pytest.mark.setup_client(pin=PIN4)

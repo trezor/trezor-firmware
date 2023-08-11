@@ -44,7 +44,6 @@ def reset_device(client: Client, strength: int):
             passphrase_protection=False,
             pin_protection=False,
             label="test",
-            language="en-US",
         )
 
     # generate mnemonic locally
@@ -94,7 +93,6 @@ def test_reset_device_pin(client: Client):
             passphrase_protection=True,
             pin_protection=True,
             label="test",
-            language="en-US",
         )
 
     # generate mnemonic locally
@@ -129,7 +127,6 @@ def test_reset_failed_check(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="test",
-            language="en-US",
         )
 
     # generate mnemonic locally
@@ -188,4 +185,4 @@ def test_failed_pin(client: Client):
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_already_initialized(client: Client):
     with pytest.raises(Exception):
-        device.reset(client, False, 128, True, True, "label", "en-US")
+        device.reset(client, False, 128, True, True, "label")

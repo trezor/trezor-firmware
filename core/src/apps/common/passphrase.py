@@ -30,6 +30,7 @@ async def get() -> str:
 
 
 async def _request_on_host() -> str:
+    from trezor import TR
     from trezor.messages import PassphraseAck, PassphraseRequest
     from trezor.ui.layouts import request_passphrase_on_host
     from trezor.wire.context import call
@@ -58,23 +59,22 @@ async def _request_on_host() -> str:
 
         # We want to hide the passphrase, or show it, according to settings.
         if storage_device.get_hide_passphrase_from_host():
-            explanation = "Passphrase provided by host will be used but will not be displayed due to the device settings."
             await confirm_action(
                 "passphrase_host1_hidden",
-                "Hidden wallet",
-                description=f"Access hidden wallet?\n{explanation}",
+                TR.passphrase__hidden_wallet,
+                description=f"{TR.passphrase__access_hidden_wallet}\n{TR.passphrase__from_host_not_shown}",
             )
         else:
             await confirm_action(
                 "passphrase_host1",
-                "Hidden wallet",
-                description="Next screen will show the passphrase.",
-                verb="Continue",
+                TR.passphrase__hidden_wallet,
+                description=TR.passphrase__next_screen_will_show_passphrase,
+                verb=TR.buttons__continue,
             )
 
             await confirm_blob(
                 "passphrase_host2",
-                "Confirm passphrase",
+                TR.passphrase__title_confirm,
                 passphrase,
             )
 

@@ -113,7 +113,6 @@ def test_load_device_utf(client: Client):
         pin="",
         passphrase_protection=True,
         label="test",
-        language="en-US",
         skip_checksum=True,
     )
     client.use_passphrase(passphrase_nfkd)
@@ -126,7 +125,6 @@ def test_load_device_utf(client: Client):
         pin="",
         passphrase_protection=True,
         label="test",
-        language="en-US",
         skip_checksum=True,
     )
     client.use_passphrase(passphrase_nfc)
@@ -139,7 +137,6 @@ def test_load_device_utf(client: Client):
         pin="",
         passphrase_protection=True,
         label="test",
-        language="en-US",
         skip_checksum=True,
     )
     client.use_passphrase(passphrase_nfkc)
@@ -152,7 +149,6 @@ def test_load_device_utf(client: Client):
         pin="",
         passphrase_protection=True,
         label="test",
-        language="en-US",
         skip_checksum=True,
     )
     client.use_passphrase(passphrase_nfd)

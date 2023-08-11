@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{ShortString, StringType},
+    strutil::ShortString,
     ui::{
         display::{self, rect_fill, rect_fill_corners, rect_outline_rounded, Font, Icon},
         geometry::{Alignment2D, Offset, Rect},
@@ -14,16 +14,16 @@ const ICON_RIGHT_PADDING: i16 = 2;
 
 /// Simple string component used as a choice item.
 #[derive(Clone)]
-pub struct ChoiceItem<T: StringType> {
+pub struct ChoiceItem {
     text: ShortString,
     icon: Option<Icon>,
-    btn_layout: ButtonLayout<T>,
+    btn_layout: ButtonLayout,
     font: Font,
     middle_action_without_release: bool,
 }
 
-impl<T: StringType> ChoiceItem<T> {
-    pub fn new<U: AsRef<str>>(text: U, btn_layout: ButtonLayout<T>) -> Self {
+impl ChoiceItem {
+    pub fn new<U: AsRef<str>>(text: U, btn_layout: ButtonLayout) -> Self {
         Self {
             text: String::from(text.as_ref()),
             icon: None,
@@ -55,17 +55,17 @@ impl<T: StringType> ChoiceItem<T> {
     }
 
     /// Setting left button.
-    pub fn set_left_btn(&mut self, btn_left: Option<ButtonDetails<T>>) {
+    pub fn set_left_btn(&mut self, btn_left: Option<ButtonDetails>) {
         self.btn_layout.btn_left = btn_left;
     }
 
     /// Setting middle button.
-    pub fn set_middle_btn(&mut self, btn_middle: Option<ButtonDetails<T>>) {
+    pub fn set_middle_btn(&mut self, btn_middle: Option<ButtonDetails>) {
         self.btn_layout.btn_middle = btn_middle;
     }
 
     /// Setting right button.
-    pub fn set_right_btn(&mut self, btn_right: Option<ButtonDetails<T>>) {
+    pub fn set_right_btn(&mut self, btn_right: Option<ButtonDetails>) {
         self.btn_layout.btn_right = btn_right;
     }
 
@@ -87,10 +87,7 @@ impl<T: StringType> ChoiceItem<T> {
     }
 }
 
-impl<T> Choice<T> for ChoiceItem<T>
-where
-    T: StringType + Clone,
-{
+impl Choice for ChoiceItem {
     /// Painting the item as the main choice in the middle.
     /// Showing both the icon and text, if the icon is available.
     fn paint_center(&self, area: Rect, inverse: bool) {
@@ -125,7 +122,7 @@ where
     }
 
     /// Getting current button layout.
-    fn btn_layout(&self) -> ButtonLayout<T> {
+    fn btn_layout(&self) -> ButtonLayout {
         self.btn_layout.clone()
     }
 
@@ -196,9 +193,9 @@ fn paint_text_icon(
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T: StringType> crate::trace::Trace for ChoiceItem<T> {
+impl crate::trace::Trace for ChoiceItem {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ChoiceItem");
-        t.string("content", self.text.as_ref());
+        t.string("content", self.text.as_str().into());
     }
 }

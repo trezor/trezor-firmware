@@ -21,6 +21,7 @@ import pytest
 
 from trezorlib import exceptions
 
+from .. import translations as TR
 from ..common import get_test_address
 from .common import (
     CommonPass,
@@ -55,9 +56,22 @@ assert len(AAA_51) == 51
 assert AAA_51_ADDRESS == AAA_50_ADDRESS
 
 
+def _get_possible_btns(path: str) -> str:
+    return "|".join(TR.translate(path))
+
+
+def _get_cancel_or_delete() -> str:
+    paths = ["inputs__cancel", "inputs__delete"]
+    return "|".join(_get_possible_btns(path) for path in paths)
+
+
+BACK = _get_possible_btns("inputs__back")
+SHOW = _get_possible_btns("inputs__show")
+ENTER = _get_possible_btns("inputs__enter")
+SPACE = _get_possible_btns("inputs__space")
+CANCEL_OR_DELETE = _get_cancel_or_delete()
 # fmt: off
-BACK = "BACK"
-MENU_ACTIONS = ["SHOW", "CANCEL|DELETE", "ENTER", "abc", "ABC", "123", "#$!", "SPACE"]
+MENU_ACTIONS = [SHOW, CANCEL_OR_DELETE, ENTER, "abc", "ABC", "123", "#$!", SPACE]
 DIGITS_ACTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", BACK]
 LOWERCASE_ACTIONS = [
     "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s",
@@ -143,7 +157,7 @@ def press_char(debug: "DebugLink", char: str) -> None:
     # Space is a special case
     if char == " ":
         go_to_category(debug, PassphraseCategory.MENU)
-        navigate_to_action_and_press(debug, "SPACE", _current_actions(debug))
+        navigate_to_action_and_press(debug, SPACE, _current_actions(debug))
     else:
         char_category = get_char_category(char)
         go_to_category(debug, char_category)
@@ -162,19 +176,19 @@ def input_passphrase(debug: "DebugLink", passphrase: str) -> None:
 def show_passphrase(debug: "DebugLink") -> None:
     """Show a passphrase"""
     go_to_category(debug, PassphraseCategory.MENU)
-    navigate_to_action_and_press(debug, "SHOW", _current_actions(debug))
+    navigate_to_action_and_press(debug, SHOW, _current_actions(debug))
 
 
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     go_to_category(debug, PassphraseCategory.MENU)
-    navigate_to_action_and_press(debug, "ENTER", _current_actions(debug))
+    navigate_to_action_and_press(debug, ENTER, _current_actions(debug))
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
     go_to_category(debug, PassphraseCategory.MENU)
-    navigate_to_action_and_press(debug, "CANCEL|DELETE", _current_actions(debug))
+    navigate_to_action_and_press(debug, CANCEL_OR_DELETE, _current_actions(debug))
 
 
 def cancel(debug: "DebugLink") -> None:

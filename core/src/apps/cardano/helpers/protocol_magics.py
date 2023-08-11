@@ -1,5 +1,7 @@
 from micropython import const
 
+from trezor import TR
+
 # https://book.world.dev.cardano.org/environments.html
 MAINNET = const(764824073)
 TESTNET_PREPROD = const(1)
@@ -19,4 +21,4 @@ def is_mainnet(protocol_magic: int) -> bool:
 
 
 def to_ui_string(value: int) -> str:
-    return NAMES.get(value, "Unknown")
+    return NAMES.get(value, TR.words__unknown)

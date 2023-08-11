@@ -50,7 +50,6 @@ def test_2of3_dryrun(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="label",
-            language="en-US",
             dry_run=True,
         )
 
@@ -75,6 +74,5 @@ def test_2of3_invalid_seed_dryrun(client: Client):
             passphrase_protection=False,
             pin_protection=False,
             label="label",
-            language="en-US",
             dry_run=True,
         )

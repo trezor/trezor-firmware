@@ -29,7 +29,11 @@ from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
 from trezorlib.transport import enumerate_devices, get_transport
 
-from . import ui_tests
+# register rewrites before importing from local package
+# so that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+
+from . import translations, ui_tests
 from .device_handler import BackgroundDeviceHandler
 from .emulators import EmulatorWrapper
 
@@ -42,10 +46,7 @@ if TYPE_CHECKING:
 
 
 HERE = Path(__file__).resolve().parent
-
-
-# So that we see details of failed asserts from this module
-pytest.register_assert_rewrite("tests.common")
+CORE = HERE.parent / "core"
 
 
 def _emulator_wrapper_main_args() -> list[str]:
@@ -128,14 +129,23 @@ def _raw_client(request: pytest.FixtureRequest) -> Client:
     # Requesting the emulator fixture only if relevant.
     if request.session.config.getoption("control_emulators"):
         emu_fixture = request.getfixturevalue("emulator")
-        return emu_fixture.client
+        client = emu_fixture.client
     else:
         interact = os.environ.get("INTERACT") == "1"
         path = os.environ.get("TREZOR_PATH")
         if path:
-            return _client_from_path(request, path, interact)
+            client = _client_from_path(request, path, interact)
         else:
-            return _find_client(request, interact)
+            client = _find_client(request, interact)
+
+    # Setting the appropriate language
+    # Not doing it for T1
+    if client.features.model != "1":
+        lang = request.session.config.getoption("lang") or "en"
+        assert isinstance(lang, str)
+        translations.set_language(client, lang)
+
+    return client
 
 
 def _client_from_path(
@@ -229,6 +239,13 @@ def client(
 
     wipe_device(_raw_client)
 
+    # Load language again, as it got erased in wipe
+    if _raw_client.features.model != "1":
+        lang = request.session.config.getoption("lang") or "en"
+        assert isinstance(lang, str)
+        if lang != "en":
+            translations.set_language(_raw_client, lang)
+
     setup_params = dict(
         uninitialized=False,
         mnemonic=" ".join(["all"] * 12),
@@ -253,7 +270,6 @@ def client(
             pin=setup_params["pin"],  # type: ignore
             passphrase_protection=use_passphrase,
             label="test",
-            language="en-US",
             needs_backup=setup_params["needs_backup"],  # type: ignore
             no_backup=setup_params["no_backup"],  # type: ignore
         )
@@ -356,6 +372,12 @@ def pytest_addoption(parser: "Parser") -> None:
         default=False,
         help="Generating a master-diff report. "
         "This shows all unique differing screens compared to master.",
+    )
+    parser.addoption(
+        "--lang",
+        action="store",
+        choices=translations.LANGUAGES,
+        help="Run tests with a specified language: 'en' is the default",
     )
 
 

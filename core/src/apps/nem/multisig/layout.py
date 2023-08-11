@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.crypto import nem
 
 if TYPE_CHECKING:
@@ -17,10 +18,10 @@ async def ask_multisig(msg: NEMSignTx) -> None:
     assert msg.multisig.signer is not None  # sign_tx
     address = nem.compute_address(msg.multisig.signer, msg.transaction.network)
     if msg.cosigning:
-        await _require_confirm_address("Cosign transaction for", address)
+        await _require_confirm_address(TR.nem__cosign_transaction_for, address)
     else:
-        await _require_confirm_address("Initiate transaction for", address)
-    await require_confirm_fee("Confirm multisig fee", msg.transaction.fee)
+        await _require_confirm_address(TR.nem__initiate_transaction_for, address)
+    await require_confirm_fee(TR.nem__confirm_multisig_fee, msg.transaction.fee)
 
 
 async def ask_aggregate_modification(
@@ -33,21 +34,21 @@ async def ask_aggregate_modification(
     from ..layout import require_confirm_final, require_confirm_text
 
     if not multisig:
-        await require_confirm_text("Convert account to multisig account?")
+        await require_confirm_text(TR.nem__convert_account_to_multisig)
 
     for m in mod.modifications:
         if m.type == NEMModificationType.CosignatoryModification_Add:
-            action = "Add"
+            action = TR.nem__add
         else:
-            action = "Remove"
+            action = TR.nem__remove
         address = nem.compute_address(m.public_key, common.network)
-        await _require_confirm_address(action + " cosignatory", address)
+        await _require_confirm_address(action + TR.nem__cosignatory, address)
 
     if mod.relative_change:
         if multisig:
-            action = "Modify the number of cosignatories by "
+            action = TR.nem__modify_the_number_of_cosignatories_by
         else:
-            action = "Set minimum cosignatories to "
+            action = TR.nem__set_minimum_cosignatories_to
         await require_confirm_text(action + str(mod.relative_change) + "?")
 
     await require_confirm_final(common.fee)
@@ -58,7 +59,7 @@ async def _require_confirm_address(action: str, address: str) -> None:
     from trezor.ui.layouts import confirm_address
 
     await confirm_address(
-        "Confirm address",
+        TR.nem__confirm_address,
         address,
         action,
         "confirm_multisig",

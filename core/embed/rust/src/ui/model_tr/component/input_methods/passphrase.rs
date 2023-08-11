@@ -1,5 +1,6 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
+    translations::TR,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
@@ -43,64 +44,72 @@ const DIGITS_INDEX: usize = 5;
 const SPECIAL_INDEX: usize = 6;
 const SPACE_INDEX: usize = 7;
 
-/// Menu text, action, icon data, middle button with CONFIRM, without_release
-const MENU: [(&str, PassphraseAction, Option<Icon>, bool, bool); MENU_LENGTH] = [
-    (
-        "SHOW",
-        PassphraseAction::Show,
-        Some(theme::ICON_EYE),
-        true,
-        false,
-    ),
-    (
-        "CANCEL_OR_DELETE", // will be chosen dynamically
-        PassphraseAction::CancelOrDelete,
-        None,
-        true,
-        true, // without_release
-    ),
-    (
-        "ENTER",
-        PassphraseAction::Enter,
-        Some(theme::ICON_TICK),
-        true,
-        false,
-    ),
-    (
-        "abc",
-        PassphraseAction::Category(ChoiceCategory::LowercaseLetter),
-        None,
-        false,
-        false,
-    ),
-    (
-        "ABC",
-        PassphraseAction::Category(ChoiceCategory::UppercaseLetter),
-        None,
-        false,
-        false,
-    ),
-    (
-        "123",
-        PassphraseAction::Category(ChoiceCategory::Digit),
-        None,
-        false,
-        false,
-    ),
-    (
-        "#$!",
-        PassphraseAction::Category(ChoiceCategory::SpecialSymbol),
-        None,
-        false,
-        false,
-    ),
-    (
-        "SPACE",
-        PassphraseAction::Character(' '),
-        Some(theme::ICON_SPACE),
-        false,
-        false,
-    ),
+#[derive(Clone)]
+struct MenuItem {
+    text: TString<'static>,
+    action: PassphraseAction,
+    icon: Option<Icon>,
+    show_confirm: bool,
+    without_release: bool,
+}
+
+const MENU: [MenuItem; MENU_LENGTH] = [
+    MenuItem {
+        text: TR::inputs__show.as_tstring(),
+        action: PassphraseAction::Show,
+        icon: Some(theme::ICON_EYE),
+        show_confirm: true,
+        without_release: false,
+    },
+    MenuItem {
+        text: TString::from_str("CANCEL OR DELETE"),
+        action: PassphraseAction::CancelOrDelete,
+        icon: None,
+        show_confirm: true,
+        without_release: true,
+    },
+    MenuItem {
+        text: TR::inputs__enter.as_tstring(),
+        action: PassphraseAction::Enter,
+        icon: Some(theme::ICON_TICK),
+        show_confirm: true,
+        without_release: false,
+    },
+    MenuItem {
+        text: TString::from_str("abc"),
+        action: PassphraseAction::Category(ChoiceCategory::LowercaseLetter),
+        icon: None,
+        show_confirm: false,
+        without_release: false,
+    },
+    MenuItem {
+        text: TString::from_str("ABC"),
+        action: PassphraseAction::Category(ChoiceCategory::UppercaseLetter),
+        icon: None,
+        show_confirm: false,
+        without_release: false,
+    },
+    MenuItem {
+        text: TString::from_str("123"),
+        action: PassphraseAction::Category(ChoiceCategory::Digit),
+        icon: None,
+        show_confirm: false,
+        without_release: false,
+    },
+    MenuItem {
+        text: TString::from_str("#$!"),
+        action: PassphraseAction::Category(ChoiceCategory::SpecialSymbol),
+        icon: None,
+        show_confirm: false,
+        without_release: false,
+    },
+    MenuItem {
+        text: TR::inputs__space.as_tstring(),
+        action: PassphraseAction::Character(' '),
+        icon: Some(theme::ICON_SPACE),
+        show_confirm: false,
+        without_release: false,
+    },
 ];
 
 #[derive(Clone, Copy)]
@@ -172,66 +181,74 @@ impl ChoiceFactoryPassphrase {
     }
 
     /// MENU choices with accept and cancel hold-to-confirm side buttons.
-    fn get_menu_item<T: StringType>(
-        &self,
-        choice_index: usize,
-    ) -> (ChoiceItem<T>, PassphraseAction) {
+    fn get_menu_item(&self, choice_index: usize) -> (ChoiceItem, PassphraseAction) {
+        #[allow(const_item_mutation)]
+        let current_item = &mut MENU[choice_index];
         // More options for CANCEL/DELETE button
-        let (mut text, action, mut icon, show_confirm, without_release) = MENU[choice_index];
-        if matches!(action, PassphraseAction::CancelOrDelete) {
+        if matches!(current_item.action, PassphraseAction::CancelOrDelete) {
             if self.is_empty {
-                text = "CANCEL";
-                icon = Some(theme::ICON_CANCEL);
+                current_item.text = TR::inputs__cancel.into();
+                current_item.icon = Some(theme::ICON_CANCEL);
             } else {
-                text = "DELETE";
-                icon = Some(theme::ICON_DELETE);
+                current_item.text = TR::inputs__delete.into();
+                current_item.icon = Some(theme::ICON_DELETE);
             }
         }
 
-        let mut menu_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
+        let mut menu_item = current_item.text.map(|t| {
+            ChoiceItem::new(
+                t,
+                ButtonLayout::arrow_armed_arrow(TR::buttons__select.into()),
+            )
+        });
 
         // Action buttons have different middle button text
-        if show_confirm {
-            let confirm_btn = ButtonDetails::armed_text("CONFIRM".into());
+        if current_item.show_confirm {
+            let confirm_btn = ButtonDetails::armed_text(TR::buttons__confirm.into());
             menu_item.set_middle_btn(Some(confirm_btn));
         }
 
         // Making middle button create LongPress events
-        if without_release {
+        if current_item.without_release {
             menu_item = menu_item.with_middle_action_without_release();
         }
 
-        if let Some(icon) = icon {
+        if let Some(icon) = current_item.icon {
             menu_item = menu_item.with_icon(icon);
         }
-        (menu_item, action)
+        (menu_item, current_item.action)
     }
 
     /// Character choices with a BACK to MENU choice at the end (visible from
     /// start) to return back
-    fn get_character_item<T: StringType>(
-        &self,
-        choice_index: usize,
-    ) -> (ChoiceItem<T>, PassphraseAction) {
+    fn get_character_item(&self, choice_index: usize) -> (ChoiceItem, PassphraseAction) {
         if is_menu_choice(&self.current_category, choice_index) {
             (
-                ChoiceItem::new("BACK", ButtonLayout::arrow_armed_arrow("RETURN".into()))
-                    .with_icon(theme::ICON_ARROW_BACK_UP),
+                TR::inputs__back.map_translated(|t| {
+                    ChoiceItem::new(
+                        t,
+                        ButtonLayout::arrow_armed_arrow(TR::inputs__return.into()),
+                    )
+                    .with_icon(theme::ICON_ARROW_BACK_UP)
+                }),
                 PassphraseAction::Menu,
             )
         } else {
             let ch = get_char(&self.current_category, choice_index);
             (
-                ChoiceItem::new(char_to_string(ch), ButtonLayout::default_three_icons()),
+                ChoiceItem::new(
+                    char_to_string(ch),
+                    ButtonLayout::arrow_armed_arrow(TR::buttons__select.into()),
+                ),
                 PassphraseAction::Character(ch),
             )
         }
     }
 }
 
-impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPassphrase {
+impl ChoiceFactory for ChoiceFactoryPassphrase {
     type Action = PassphraseAction;
-    type Item = ChoiceItem<T>;
+    type Item = ChoiceItem;
 
     fn count(&self) -> usize {
         let length = get_category_length(&self.current_category);
@@ -250,8 +267,8 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPassphrase {
 }
 
 /// Component for entering a passphrase.
-pub struct PassphraseEntry<T: StringType + Clone> {
-    choice_page: ChoicePage<ChoiceFactoryPassphrase, T, PassphraseAction>,
+pub struct PassphraseEntry {
+    choice_page: ChoicePage<ChoiceFactoryPassphrase, PassphraseAction>,
     passphrase_dots: Child<ChangingTextLine<String<MAX_PASSPHRASE_LENGTH>>>,
     show_plain_passphrase: bool,
     show_last_digit: bool,
@@ -259,10 +276,7 @@ pub struct PassphraseEntry<T: StringType + Clone> {
     current_category: ChoiceCategory,
 }
 
-impl<T> PassphraseEntry<T>
-where
-    T: StringType + Clone,
-{
+impl PassphraseEntry {
     pub fn new() -> Self {
         Self {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
@@ -353,10 +367,7 @@ where
     }
 }
 
-impl<T> Component for PassphraseEntry<T>
-where
-    T: StringType + Clone,
-{
+impl Component for PassphraseEntry {
     type Msg = CancelConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -442,21 +453,18 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for PassphraseEntry<T>
-where
-    T: StringType + Clone,
-{
+impl crate::trace::Trace for PassphraseEntry {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PassphraseKeyboard");
-        t.string("passphrase", self.textbox.content());
+        t.string("passphrase", self.textbox.content().into());
         t.string(
             "current_category",
             match self.current_category {
-                ChoiceCategory::Menu => "MENU",
-                ChoiceCategory::LowercaseLetter => MENU[LOWERCASE_INDEX].0,
-                ChoiceCategory::UppercaseLetter => MENU[UPPERCASE_INDEX].0,
-                ChoiceCategory::Digit => MENU[DIGITS_INDEX].0,
-                ChoiceCategory::SpecialSymbol => MENU[SPECIAL_INDEX].0,
+                ChoiceCategory::Menu => "MENU".into(),
+                ChoiceCategory::LowercaseLetter => MENU[LOWERCASE_INDEX].text,
+                ChoiceCategory::UppercaseLetter => MENU[UPPERCASE_INDEX].text,
+                ChoiceCategory::Digit => MENU[DIGITS_INDEX].text,
+                ChoiceCategory::SpecialSymbol => MENU[SPECIAL_INDEX].text,
             },
         );
         t.child("choice_page", &self.choice_page);

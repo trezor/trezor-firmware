@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.enums import CardanoAddressType
 
 from .paths import SCHEMA_PAYMENT
@@ -163,13 +164,13 @@ class Credential:
 
     def get_title(self) -> str:
         if self.path:
-            return "path"
+            return TR.cardano__path
         elif self.key_hash:
-            return "key hash"
+            return TR.cardano__key_hash
         elif self.script_hash:
-            return "script"
+            return TR.cardano__script
         elif self.pointer:
-            return "pointer"
+            return TR.cardano__pointer
         else:
             return ""
 
@@ -192,9 +193,9 @@ class Credential:
             return [(None, bech32.encode(bech32.HRP_SCRIPT_HASH, self.script_hash))]
         elif pointer:
             return [
-                (f"Block: {pointer.block_index}", None),
-                (f"Transaction: {pointer.tx_index}", None),
-                (f"Certificate: {pointer.certificate_index}", None),
+                (f"{TR.cardano__block}: {pointer.block_index}", None),
+                (f"{TR.cardano__transaction}: {pointer.tx_index}", None),
+                (f"{TR.cardano__certificate}: {pointer.certificate_index}", None),
             ]
         else:
             return []

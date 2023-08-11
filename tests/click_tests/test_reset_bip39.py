@@ -50,10 +50,10 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_new_wallet(debug)
 
     # confirm back up
-    reset.confirm_read(debug, "Success")
+    reset.confirm_read(debug)
 
     # confirm backup warning
-    reset.confirm_read(debug, "Caution", middle_r=True)
+    reset.confirm_read(debug, middle_r=True)
 
     # read words
     words = reset.read_words(debug, messages.BackupType.Bip39)
@@ -62,7 +62,7 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_words(debug, words)
 
     # confirm backup done
-    reset.confirm_read(debug, "Success")
+    reset.confirm_read(debug)
 
     # Your backup is done
     go_next(debug)

@@ -116,6 +116,10 @@ def ascii_filter(s: str) -> str:
     return re.sub("[^ -\x7e]", "_", s)
 
 
+def utf8_str_filter(s: str) -> str:
+    return '"' + repr(s)[1:-1] + '"'
+
+
 def make_support_filter(
     support_info: SupportInfo,
 ) -> Callable[[str, Coins], Iterator[Coin]]:
@@ -126,6 +130,7 @@ def make_support_filter(
 
 
 MAKO_FILTERS = {
+    "utf8_str": utf8_str_filter,
     "c_str": c_str_filter,
     "ascii": ascii_filter,
     "black_repr": black_repr_filter,

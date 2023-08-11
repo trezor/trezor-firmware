@@ -60,7 +60,6 @@ def reset(client: Client, strength: int = 128) -> list[str]:
             passphrase_protection=False,
             pin_protection=False,
             label="test",
-            language="en-US",
             backup_type=BackupType.Slip39_Basic,
         )
 

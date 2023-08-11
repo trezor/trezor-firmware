@@ -102,7 +102,7 @@
 /* } */ static const uint8_t Font_PixelOperator_Regular_8_glyph_125[] = { 4, 7, 6, 0, 7, 194, 33, 34, 192 };
 /* ~ */ static const uint8_t Font_PixelOperator_Regular_8_glyph_126[] = { 6, 2, 7, 0, 7, 102, 96 };
 
-const uint8_t Font_PixelOperator_Regular_8_glyph_nonprintable[] = { 5, 7, 6, 0, 7, 139, 189, 221, 255, 127 };
+/* ? */ const uint8_t Font_PixelOperator_Regular_8_glyph_nonprintable[] = { 5, 7, 6, 0, 7, 139, 189, 221, 255, 127 };
 
 const uint8_t * const Font_PixelOperator_Regular_8[126 + 1 - 32] = {
     Font_PixelOperator_Regular_8_glyph_32,

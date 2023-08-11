@@ -127,6 +127,6 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Title");
-        t.string("text", self.title.as_ref());
+        t.string("text", self.title.as_ref().into());
     }
 }

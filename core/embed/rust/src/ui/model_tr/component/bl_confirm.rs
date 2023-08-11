@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::TString,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
         display::{self, Color, Font},
@@ -20,40 +20,40 @@ pub enum ConfirmMsg {
     Confirm = 2,
 }
 
-pub struct Confirm<T: StringType, U> {
+pub struct Confirm<U> {
     bg: Pad,
     bg_color: Color,
-    title: &'static str,
+    title: TString<'static>,
     message: Child<Label<U>>,
-    alert: Option<Label<T>>,
-    info_title: Option<T>,
+    alert: Option<Label<U>>,
+    info_title: Option<TString<'static>>,
     info_text: Option<Label<U>>,
-    button_text: T,
-    buttons: ButtonController<T>,
+    button_text: TString<'static>,
+    buttons: ButtonController,
     /// Whether we are on the info screen (optional extra screen)
     showing_info_screen: bool,
     two_btn_confirm: bool,
 }
 
-impl<T, U> Confirm<T, U>
+impl<U> Confirm<U>
 where
-    T: StringType + Clone,
     U: AsRef<str>,
 {
-    pub fn new(
+    pub fn new<T: Into<TString<'static>>>(
         bg_color: Color,
-        title: &'static str,
+        title: T,
         message: Label<U>,
-        alert: Option<Label<T>>,
+        alert: Option<Label<U>>,
         button_text: T,
         two_btn_confirm: bool,
     ) -> Self {
+        let button_text = button_text.into();
         let btn_layout =
-            Self::get_button_layout_general(false, button_text.clone(), false, two_btn_confirm);
+            Self::get_button_layout_general(false, button_text, false, two_btn_confirm);
         Self {
             bg: Pad::with_background(bg_color).with_clear(),
             bg_color,
-            title,
+            title: title.into(),
             message: Child::new(message),
             alert,
             info_title: None,
@@ -66,8 +66,12 @@ where
     }
 
     /// Adding optional info screen
-    pub fn with_info_screen(mut self, info_title: T, info_text: Label<U>) -> Self {
-        self.info_title = Some(info_title);
+    pub fn with_info_screen<T: Into<TString<'static>>>(
+        mut self,
+        info_title: T,
+        info_text: Label<U>,
+    ) -> Self {
+        self.info_title = Some(info_title.into());
         self.info_text = Some(info_text);
         self.buttons = ButtonController::new(self.get_button_layout());
         self
@@ -77,10 +81,10 @@ where
         self.info_title.is_some()
     }
 
-    fn get_button_layout(&self) -> ButtonLayout<T> {
+    fn get_button_layout(&self) -> ButtonLayout {
         Self::get_button_layout_general(
             self.showing_info_screen,
-            self.button_text.clone(),
+            self.button_text,
             self.has_info_screen(),
             self.two_btn_confirm,
         )
@@ -89,10 +93,10 @@ where
     /// Not relying on self here, to call it in constructor.
     fn get_button_layout_general(
         showing_info_screen: bool,
-        button_text: T,
+        button_text: TString<'static>,
         has_info_screen: bool,
         two_btn_confirm: bool,
-    ) -> ButtonLayout<T> {
+    ) -> ButtonLayout {
         if showing_info_screen {
             ButtonLayout::arrow_none_none()
         } else if has_info_screen {
@@ -121,9 +125,8 @@ where
     }
 }
 
-impl<T, U> Component for Confirm<T, U>
+impl<U> Component for Confirm<U>
 where
-    T: StringType + Clone,
     U: AsRef<str>,
 {
     type Msg = ConfirmMsg;
@@ -204,13 +207,17 @@ where
     fn paint(&mut self) {
         self.bg.paint();
 
-        let display_top_left = |text: &str| {
-            display::text_top_left(Point::zero(), text, Font::BOLD, WHITE, self.bg_color);
+        let display_top_left = |text: TString<'static>| {
+            text.map(|t| {
+                display::text_top_left(Point::zero(), t, Font::BOLD, WHITE, self.bg_color)
+            });
         };
 
         // We are either on the info screen or on the "main" screen
         if self.showing_info_screen {
-            display_top_left(unwrap!(self.info_title.clone()).as_ref());
+            if let Some(title) = self.info_title {
+                display_top_left(title);
+            }
             self.info_text.paint();
         } else {
             display_top_left(self.title);
@@ -227,9 +234,8 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for Confirm<T, U>
+impl<U> crate::trace::Trace for Confirm<U>
 where
-    T: StringType + Clone,
     U: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {

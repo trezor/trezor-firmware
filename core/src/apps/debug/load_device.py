@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 async def load_device(msg: LoadDevice) -> Success:
     import storage.device as storage_device
-    from trezor import config
+    from trezor import TR, config
     from trezor.crypto import bip39, slip39
     from trezor.enums import BackupType
     from trezor.messages import Success
@@ -39,9 +39,9 @@ async def load_device(msg: LoadDevice) -> Success:
     # _warn
     await confirm_action(
         "warn_loading_seed",
-        "Loading seed",
-        "Loading private seed is not recommended.",
-        "Continue only if you know what you are doing!",
+        TR.debug__loading_seed,
+        TR.debug__loading_seed_not_recommended,
+        TR.words__know_what_your_doing,
     )
     # END _warn
 

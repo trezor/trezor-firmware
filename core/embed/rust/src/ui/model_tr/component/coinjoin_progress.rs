@@ -2,6 +2,7 @@ use core::mem;
 
 use crate::{
     strutil::StringType,
+    translations::TR,
     ui::{
         component::{
             base::Never,
@@ -16,8 +17,6 @@ use crate::{
 
 use super::theme;
 
-const HEADER: &str = "COINJOIN IN PROGRESS";
-const FOOTER: &str = "Do not disconnect your Trezor!";
 const FOOTER_TEXT_MARGIN: i16 = 8;
 const LOADER_OFFSET: i16 = -15;
 const LOADER_SPEED: u16 = 10;
@@ -89,7 +88,7 @@ where
         if self.indeterminate {
             text_multiline(
                 self.area,
-                HEADER,
+                TR::coinjoin__title_progress.into(),
                 Font::BOLD,
                 theme::FG,
                 theme::BG,
@@ -114,7 +113,7 @@ where
         // BOTTOM
         let top_rest = text_multiline_bottom(
             self.area,
-            FOOTER,
+            TR::coinjoin__do_not_disconnect.into(),
             Font::BOLD,
             theme::FG,
             theme::BG,
@@ -123,7 +122,7 @@ where
         if let Some(rest) = top_rest {
             text_multiline_bottom(
                 rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
-                self.text.as_ref(),
+                self.text.as_ref().into(),
                 Font::NORMAL,
                 theme::FG,
                 theme::BG,
@@ -140,8 +139,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("CoinJoinProgress");
-        t.string("header", HEADER);
-        t.string("text", self.text.as_ref());
-        t.string("footer", FOOTER);
+        t.string("header", TR::coinjoin__title_progress.into());
+        t.string("text", self.text.as_ref().into());
+        t.string("footer", TR::coinjoin__do_not_disconnect.into());
     }
 }

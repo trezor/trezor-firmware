@@ -15,7 +15,7 @@ impl Qstr {
         //    micropython/py/obj.h #define MP_OBJ_NEW_QSTR(qst)
         //    ((mp_obj_t)((((mp_uint_t)(qst)) << 3) | 2))
         let bits = (self.0 << 3) | 2;
-        unsafe { Obj::from_bits(bits as usize) }
+        unsafe { Obj::from_bits(bits) }
     }
 
     pub const fn from_obj_bits(bits: cty::uintptr_t) -> Self {

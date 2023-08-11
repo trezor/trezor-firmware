@@ -14,11 +14,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import io
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, cast
 
 import click
+import requests
 
 from .. import device, messages, toif
 from . import AliasedGroup, ChoiceType, with_client
@@ -201,6 +204,38 @@ def wipe_code(client: "TrezorClient", enable: Optional[bool], remove: bool) -> s
 def label(client: "TrezorClient", label: str) -> str:
     """Set new device label."""
     return device.apply_settings(client, label=label)
+
+
+@cli.command()
+@click.argument("path_or_url", required=False)
+@click.option(
+    "-r", "--remove", is_flag=True, default=False, help="Switch back to english."
+)
+@click.option("-d/-D", "--display/--no-display", default=None)
+@with_client
+def language(
+    client: "TrezorClient", path_or_url: str | None, remove: bool, display: bool | None
+) -> str:
+    """Set new language with translations."""
+    if remove != (path_or_url is None):
+        raise click.ClickException("Either provide a path or URL or use --remove")
+
+    if remove:
+        language_data = b""
+    else:
+        assert path_or_url is not None
+        try:
+            language_data = Path(path_or_url).read_bytes()
+        except Exception:
+            try:
+                language_data = requests.get(path_or_url).content
+            except Exception:
+                raise click.ClickException(
+                    f"Failed to load translations from {path_or_url}"
+                ) from None
+    return device.change_language(
+        client, language_data=language_data, show_display=display
+    )
 
 
 @cli.command()

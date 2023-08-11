@@ -151,6 +151,6 @@ impl Component for Qr {
 impl crate::trace::Trace for Qr {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Qr");
-        t.string("text", self.text.as_ref());
+        t.string("text", self.text.as_str().into());
     }
 }

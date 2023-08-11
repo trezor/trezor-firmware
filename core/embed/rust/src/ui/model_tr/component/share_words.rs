@@ -1,5 +1,6 @@
 use crate::{
     strutil::StringType,
+    translations::TR,
     ui::{
         component::{
             text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
@@ -69,19 +70,24 @@ where
     }
 
     fn get_final_text(&self) -> String<50> {
-        build_string!(
-            50,
-            "I wrote down all ",
-            inttostr!(self.share_words.len() as u8),
-            " words in order."
-        )
+        TR::share_words__wrote_down_all.map_translated(|wrote_down_all| {
+            TR::share_words__words_in_order.map_translated(|in_order| {
+                build_string!(
+                    50,
+                    wrote_down_all,
+                    inttostr!(self.share_words.len() as u8),
+                    in_order
+                )
+            })
+        })
     }
 
     /// Display the final page with user confirmation.
     fn paint_final_page(&mut self) {
+        let final_text = self.get_final_text();
         text_multiline(
             self.area.split_top(INFO_TOP_OFFSET).1,
-            &self.get_final_text(),
+            final_text.as_str().into(),
             Font::NORMAL,
             theme::FG,
             theme::BG,
@@ -103,7 +109,7 @@ where
             let baseline = self.area.top_left() + Offset::y(y_offset);
             let ordinal = build_string!(5, inttostr!(index as u8 + 1), ".");
             display_left(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal, NUMBER_FONT);
-            display_left(baseline + Offset::x(WORD_X_OFFSET), &word, WORD_FONT);
+            display_left(baseline + Offset::x(WORD_X_OFFSET), word, WORD_FONT);
         }
     }
 }
@@ -183,6 +189,6 @@ where
             }
             content
         };
-        t.string("screen_content", &content);
+        t.string("screen_content", content.as_str().into());
     }
 }

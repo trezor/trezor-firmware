@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 async def get_public_key(
     msg: GetPublicKey, auth_msg: MessageType | None = None
 ) -> PublicKey:
-    from trezor import wire
+    from trezor import TR, wire
     from trezor.enums import InputScriptType
     from trezor.messages import HDNodeType, PublicKey, UnlockPath
 
@@ -107,7 +107,7 @@ async def get_public_key(
             "XPUB",
             account=account,
             path=path,
-            mismatch_title="XPUB mismatch?",
+            mismatch_title=TR.addr_mismatch__xpub_mismatch,
             br_type="show_xpub",
         )
 

@@ -20,25 +20,19 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import multipage_content
 
 from . import buttons
+from . import translations as TR
 from .common import (
     BRGeneratorType,
     check_pin_backoff_time,
     click_info_button_tt,
     click_through,
+    get_text_possible_pagination,
     read_and_confirm_mnemonic,
+    swipe_if_necessary,
 )
 from .input_flows_helpers import BackupFlow, EthereumFlow, PinFlow, RecoveryFlow
 
 B = messages.ButtonRequestType
-
-
-def swipe_if_necessary(debug: DebugLink, br_code: B | None = None) -> BRGeneratorType:
-    br = yield
-    if br_code is not None:
-        assert br.code == br_code
-    if br.pages is not None:
-        for _ in range(br.pages - 1):
-            debug.swipe_up()
 
 
 class InputFlowBase:
@@ -264,7 +258,7 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         self.debug.press_no(wait=True)
-        self.debug.synchronize_at("mismatch")
+        self.debug.synchronize_at("IconDialog")
         # address mismatch?
         self.debug.press_no()
         yield
@@ -340,8 +334,10 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         self.debug.press_left()
         self.debug.press_left()
         # Cancel
-        self.debug.press_left()
+        self.debug.press_left(wait=True)
         # Confirm address mismatch
+        # Clicking right twice, as some languages can have two pages
+        self.debug.press_right()
         self.debug.press_right()
 
 
@@ -358,7 +354,8 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.wait_layout()
-        assert "RECEIVE ADDRESS\n(MULTISIG)" == layout.title()
+        TR.assert_in(layout.title(), "address__title_receive_address")
+        assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
         self.debug.click(buttons.CORNER_BUTTON)
@@ -367,15 +364,13 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         layout = self.debug.swipe_left(wait=True)
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
-        assert "Derivation path:" in layout.screen_content()
+        TR.assert_in(layout.screen_content(), "address_details__derivation_path")
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
-            expected_title = f"MULTISIG XPUB #{xpub_num + 1}\n" + (
-                "(YOURS)" if self.index == xpub_num else "(COSIGNER)"
-            )
+            expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
             layout = self.debug.swipe_left(wait=True)
-            assert expected_title == layout.title()
+            assert expected_title in layout.title()
             content = layout.text_content().replace(" ", "")
             assert self.xpubs[xpub_num] in content
 
@@ -393,7 +388,8 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.wait_layout()
-        assert "RECEIVE ADDRESS (MULTISIG)" in layout.title()
+        TR.assert_in(layout.title(), "address__title_receive_address")
+        assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
         self.debug.press_right()
@@ -406,9 +402,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
-            expected_title = f"MULTISIG XPUB #{xpub_num + 1} " + (
-                "(YOURS)" if self.index == xpub_num else "(COSIGNER)"
-            )
+            expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
             layout = self.debug.press_right(wait=True)
             assert expected_title in layout.title()
             xpub_part_1 = layout.text_content().replace(" ", "")
@@ -555,7 +549,7 @@ def sign_tx_go_to_info(client: Client) -> Generator[None, None, str]:
     client.debug.press_info()
 
     layout = client.debug.wait_layout()
-    content = layout.text_content().lower()
+    content = layout.text_content()
 
     client.debug.click(buttons.CORNER_BUTTON, wait=True)
 
@@ -596,20 +590,21 @@ class InputFlowSignTxInformation(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def assert_content(self, content: str) -> None:
-        assert "sending from" in content
-        assert "legacy #6" in content
-        assert "fee rate" in content
+    def assert_content(self, content: str, title_path: str) -> None:
+        TR.assert_in(content, title_path)
+        assert "Legacy #6" in content
+        TR.assert_in(content, "confirm_total__fee_rate")
         assert "71.56 sat" in content
 
     def input_flow_tt(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info(self.client)
-        self.assert_content(content)
+        self.assert_content(content, "confirm_total__sending_from_account")
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_tr(self.client)
-        self.assert_content(content.lower())
+        print("content", content)
+        self.assert_content(content, "confirm_total__title_sending_from")
         self.debug.press_yes()
 
 
@@ -617,10 +612,10 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def assert_content(self, content: str) -> None:
-        assert "sending from" in content
-        assert "multiple accounts" in content
-        assert "fee rate" in content
+    def assert_content(self, content: str, title_path: str) -> None:
+        TR.assert_in(content, title_path)
+        TR.assert_in(content, "bitcoin__multiple_accounts")
+        TR.assert_in(content, "confirm_total__fee_rate")
         assert "18.33 sat" in content
 
     def input_flow_tt(self) -> BRGeneratorType:
@@ -629,12 +624,16 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         self.debug.press_yes()
 
         content = yield from sign_tx_go_to_info(self.client)
-        self.assert_content(content)
+        self.assert_content(content, "confirm_total__sending_from_account")
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
+        # multiple accounts warning
+        yield
+        self.debug.press_yes()
+
         content = yield from sign_tx_go_to_info_tr(self.client)
-        self.assert_content(content.lower())
+        self.assert_content(content, "confirm_total__title_sending_from")
         self.debug.press_yes()
 
 
@@ -689,7 +688,7 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
 
 def lock_time_input_flow_tt(
     debug: DebugLink,
-    layout_assert_func: Callable[[DebugLink], None],
+    layout_assert_func: Callable[[DebugLink, messages.ButtonRequest], None],
     double_confirm: bool = False,
 ) -> BRGeneratorType:
     yield  # confirm output
@@ -699,8 +698,8 @@ def lock_time_input_flow_tt(
     debug.wait_layout()
     debug.press_yes()
 
-    yield  # confirm locktime
-    layout_assert_func(debug)
+    br = yield  # confirm locktime
+    layout_assert_func(debug, br)
     debug.press_yes()
 
     yield  # confirm transaction
@@ -711,7 +710,8 @@ def lock_time_input_flow_tt(
 
 
 def lock_time_input_flow_tr(
-    debug: DebugLink, layout_assert_func: Callable[[DebugLink], None]
+    debug: DebugLink,
+    layout_assert_func: Callable[[DebugLink, messages.ButtonRequest], None],
 ) -> BRGeneratorType:
     yield  # confirm address
     debug.wait_layout()
@@ -720,8 +720,8 @@ def lock_time_input_flow_tr(
     debug.wait_layout()
     debug.press_yes()
 
-    yield  # confirm locktime
-    layout_assert_func(debug)
+    br = yield  # confirm locktime
+    layout_assert_func(debug, br)
     debug.press_yes()
 
     yield  # confirm transaction
@@ -733,9 +733,9 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
         super().__init__(client)
         self.block_height = block_height
 
-    def assert_func(self, debug: DebugLink) -> None:
-        layout_text = debug.wait_layout().text_content()
-        assert "blockheight" in layout_text
+    def assert_func(self, debug: DebugLink, br: messages.ButtonRequest) -> None:
+        layout_text = get_text_possible_pagination(debug, br)
+        TR.assert_in(layout_text, "bitcoin__locktime_set_to_blockheight")
         assert self.block_height in layout_text
 
     def input_flow_tt(self) -> BRGeneratorType:
@@ -752,9 +752,9 @@ class InputFlowLockTimeDatetime(InputFlowBase):
         super().__init__(client)
         self.lock_time_str = lock_time_str
 
-    def assert_func(self, debug: DebugLink):
-        layout_text = debug.wait_layout().text_content()
-        assert "Locktime" in layout_text
+    def assert_func(self, debug: DebugLink, br: messages.ButtonRequest) -> None:
+        layout_text = get_text_possible_pagination(debug, br)
+        TR.assert_in(layout_text, "bitcoin__locktime_set_to")
         assert self.lock_time_str in layout_text
 
     def input_flow_tt(self) -> BRGeneratorType:
@@ -1595,10 +1595,15 @@ class InputFlowResetSkipBackup(InputFlowBase):
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
-        assert "New wallet created" in self.text_content()
+        info_path = (
+            "backup__new_wallet_created"
+            if self.debug.model == "Safe 3"
+            else "backup__new_wallet_successfully_created"
+        )
+        TR.assert_in(self.text_content(), info_path)
         if self.debug.model == "Safe 3":
             self.debug.press_right()
         self.debug.press_no()
         yield  # Confirm skip backup
-        assert "skip the backup" in self.text_content()
+        TR.assert_in(self.text_content(), "backup__want_to_skip")
         self.debug.press_no()

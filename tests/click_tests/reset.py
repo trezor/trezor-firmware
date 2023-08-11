@@ -1,3 +1,4 @@
+import re
 from typing import TYPE_CHECKING
 
 from shamir_mnemonic import shamir  # type: ignore
@@ -5,14 +6,17 @@ from shamir_mnemonic import shamir  # type: ignore
 from trezorlib import messages
 
 from .. import buttons
+from .. import translations as TR
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
 
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
-    layout = debug.wait_layout()
-    assert layout.title().startswith("CREATE WALLET")
+    TR.assert_equals_multiple(
+        debug.read_layout().title(),
+        ["reset__title_create_wallet", "reset__title_create_wallet_shamir"],
+    )
     if debug.model == "T":
         debug.click(buttons.OK, wait=True)
     elif debug.model == "Safe 3":
@@ -20,32 +24,14 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
         debug.press_right(wait=True)
 
 
-def confirm_read(debug: "DebugLink", title: str, middle_r: bool = False) -> None:
-    layout = debug.read_layout()
-    if title == "Caution":
-        assert "Never make a digital copy" in layout.text_content()
-    elif title == "Success":
-        # TODO: improve this
-        assert any(
-            text in layout.text_content()
-            for text in (
-                "success",
-                "finished",
-                "done",
-                "created",
-                "Keep it safe",
-            )
-        )
-    elif title == "Checklist":
-        assert "number of shares" in layout.text_content().lower()
-    else:
-        assert title.upper() in layout.title()
-
+def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
     if debug.model == "T":
         debug.click(buttons.OK, wait=True)
     elif debug.model == "Safe 3":
-        if layout.page_count() > 1:
-            debug.press_right(wait=True)
+        page_count = debug.read_layout().page_count()
+        if page_count > 1:
+            for _ in range(page_count - 1):
+                debug.press_right(wait=True)
         if middle_r:
             debug.press_middle(wait=True)
         else:
@@ -60,7 +46,9 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
         debug.click(buttons.OK, wait=True)
     elif debug.model == "Safe 3":
         layout = debug.read_layout()
-        if layout.title() in ("NUMBER OF SHARES", "THRESHOLD"):
+        if layout.title() in TR.translate(
+            "reset__title_number_of_shares"
+        ) + TR.translate("words__title_threshold"):
             # Special info screens
             layout = debug.press_right(wait=True)
         assert "NumberInput" in layout.all_components()
@@ -77,27 +65,12 @@ def read_words(
     debug: "DebugLink", backup_type: messages.BackupType, do_htc: bool = True
 ) -> list[str]:
     words: list[str] = []
-    layout = debug.read_layout()
 
-    if debug.model == "T":
-        if backup_type == messages.BackupType.Slip39_Advanced:
-            assert layout.title().startswith("GROUP")
-        elif backup_type == messages.BackupType.Slip39_Basic:
-            assert layout.title().startswith("RECOVERY SHARE #")
-        else:
-            assert layout.title() == "RECOVERY SEED"
-    elif debug.model == "Safe 3":
-        if backup_type == messages.BackupType.Slip39_Advanced:
-            assert "SHARE" in layout.title()
-        elif backup_type == messages.BackupType.Slip39_Basic:
-            assert layout.title().startswith("SHARE #")
-        else:
-            assert layout.title() == "STANDARD BACKUP"
-
-        assert "Write down" in layout.text_content()
-        layout = debug.press_right(wait=True)
+    if debug.model == "Safe 3":
+        debug.press_right(wait=True)
 
     # Swiping through all the pages and loading the words
+    layout = debug.read_layout()
     for _ in range(layout.page_count() - 1):
         words.extend(layout.seed_words())
         layout = debug.swipe_up(wait=True)
@@ -122,11 +95,13 @@ def read_words(
 def confirm_words(debug: "DebugLink", words: list[str]) -> None:
     layout = debug.wait_layout()
     if debug.model == "T":
-        assert "Select word" in layout.text_content()
+        TR.assert_template(layout.text_content(), "reset__select_word_x_of_y_template")
         for _ in range(3):
             # "Select word 3 of 20"
             #              ^
-            word_pos = int(layout.text_content().split()[2])
+            word_pos_match = re.search(r"\d+", debug.wait_layout().text_content())
+            assert word_pos_match is not None
+            word_pos = int(word_pos_match.group(0))
             # Unifying both the buttons and words to lowercase
             btn_texts = [
                 text.lower() for text in layout.tt_check_seed_button_contents()
@@ -135,12 +110,15 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             button_pos = btn_texts.index(wanted_word)
             layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
     elif debug.model == "Safe 3":
-        assert "Select the correct word" in layout.text_content()
+        TR.assert_in(layout.text_content(), "reset__select_correct_word")
         layout = debug.press_right(wait=True)
         for _ in range(3):
             # "SELECT 2ND WORD"
             #         ^
-            word_pos = int(layout.title().split()[1][:-2])
+            word_pos_match = re.search(r"\d+", layout.title())
+            assert word_pos_match is not None
+            word_pos = int(word_pos_match.group(0))
+
             wanted_word = words[word_pos - 1].lower()
 
             while not layout.get_middle_choice() == wanted_word:

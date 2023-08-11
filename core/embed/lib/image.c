@@ -334,6 +334,7 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
   info->ver_major = ihdr->version & 0xFF;
   info->ver_minor = (ihdr->version >> 8) & 0xFF;
   info->ver_patch = (ihdr->version >> 16) & 0xFF;
+  info->ver_build = (ihdr->version >> 24) & 0xFF;
 
   // calculate and copy the image fingerprint
   get_image_fingerprint(ihdr, info->fingerprint);

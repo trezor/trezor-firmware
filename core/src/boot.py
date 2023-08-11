@@ -10,7 +10,7 @@ welcome_screen_start_ms = utime.ticks_ms()
 
 import storage
 import storage.device
-from trezor import config, log, loop, ui, utils, wire
+from trezor import config, log, loop, ui, utils, wire, translations
 from trezor.pin import (
     allow_all_loader_messages,
     ignore_nonpin_loader_messages,
@@ -82,6 +82,7 @@ async def bootscreen() -> None:
 ignore_nonpin_loader_messages()
 
 config.init(show_pin_timeout)
+translations.init()
 
 if __debug__ and not utils.EMULATOR:
     config.wipe()

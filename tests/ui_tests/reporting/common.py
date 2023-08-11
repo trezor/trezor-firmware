@@ -220,7 +220,7 @@ def _get_unique_differing_screens(
         current_screens_path = get_screen_path(test_name)
         if not current_screens_path:
             current_screens_path = MASTER_CACHE_DIR / "empty_current_screens"
-            current_screens_path.mkdir()
+            current_screens_path.mkdir(exist_ok=True)
 
         # Saving all the images to a common directory
         # They will be referenced from the HTML files

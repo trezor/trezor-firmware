@@ -31,6 +31,7 @@ def _get_xpubs(
 
 @with_keychain
 async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Address:
+    from trezor import TR
     from trezor.enums import InputScriptType
     from trezor.messages import Address
     from trezor.ui.layouts import show_address, show_warning
@@ -105,8 +106,8 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
 
             await show_warning(
                 "warning_multisig",
-                "Receiving to a multisig address.",
-                "Continue anyway?",
+                TR.send__receiving_to_multisig,
+                TR.words__continue_anyway,
             )
 
             await show_address(

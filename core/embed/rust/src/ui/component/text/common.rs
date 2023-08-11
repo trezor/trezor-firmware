@@ -110,6 +110,6 @@ impl<const L: usize> TextBox<L> {
 impl<const L: usize> crate::trace::Trace for TextBox<L> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("TextBox");
-        t.string("text", &self.text);
+        t.string("text", self.text.as_str().into());
     }
 }

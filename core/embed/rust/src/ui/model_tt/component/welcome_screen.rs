@@ -74,6 +74,6 @@ impl crate::trace::Trace for WelcomeScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("WelcomeScreen");
         #[cfg(not(feature = "bootloader"))]
-        t.string("model", model::FULL_NAME);
+        t.string("model", model::FULL_NAME.into());
     }
 }

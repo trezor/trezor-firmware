@@ -1,5 +1,6 @@
 use crate::{
-    strutil::StringType,
+    strutil::{StringType, TString},
+    translations::TR,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
@@ -22,27 +23,65 @@ enum PinAction {
     Digit(char),
 }
 
+struct PinChoice {
+    text: TString<'static>,
+    action: PinAction,
+    icon: Option<Icon>,
+    without_release: bool,
+}
+
+impl PinChoice {
+    pub const fn new(
+        text: TString<'static>,
+        action: PinAction,
+        icon: Option<Icon>,
+        without_release: bool,
+    ) -> Self {
+        Self {
+            text,
+            action,
+            icon,
+            without_release,
+        }
+    }
+}
+
 const MAX_PIN_LENGTH: usize = 50;
 const EMPTY_PIN_STR: &str = "_";
 
 const CHOICE_LENGTH: usize = 13;
 const NUMBER_START_INDEX: usize = 3;
-/// Text, action, icon, without_release
-const CHOICES: [(&str, PinAction, Option<Icon>, bool); CHOICE_LENGTH] = [
+
+const CHOICES: [PinChoice; CHOICE_LENGTH] = [
     // DELETE should be triggerable without release (after long-press)
-    ("DELETE", PinAction::Delete, Some(theme::ICON_DELETE), true),
-    ("SHOW", PinAction::Show, Some(theme::ICON_EYE), false),
-    ("ENTER", PinAction::Enter, Some(theme::ICON_TICK), false),
-    ("0", PinAction::Digit('0'), None, false),
-    ("1", PinAction::Digit('1'), None, false),
-    ("2", PinAction::Digit('2'), None, false),
-    ("3", PinAction::Digit('3'), None, false),
-    ("4", PinAction::Digit('4'), None, false),
-    ("5", PinAction::Digit('5'), None, false),
-    ("6", PinAction::Digit('6'), None, false),
-    ("7", PinAction::Digit('7'), None, false),
-    ("8", PinAction::Digit('8'), None, false),
-    ("9", PinAction::Digit('9'), None, false),
+    PinChoice::new(
+        TR::inputs__delete.as_tstring(),
+        PinAction::Delete,
+        Some(theme::ICON_DELETE),
+        true, // without_release
+    ),
+    PinChoice::new(
+        TR::inputs__show.as_tstring(),
+        PinAction::Show,
+        Some(theme::ICON_EYE),
+        false,
+    ),
+    PinChoice::new(
+        TR::inputs__enter.as_tstring(),
+        PinAction::Enter,
+        Some(theme::ICON_TICK),
+        false,
+    ),
+    PinChoice::new(TString::from_str("0"), PinAction::Digit('0'), None, false),
+    PinChoice::new(TString::from_str("1"), PinAction::Digit('1'), None, false),
+    PinChoice::new(TString::from_str("2"), PinAction::Digit('2'), None, false),
+    PinChoice::new(TString::from_str("3"), PinAction::Digit('3'), None, false),
+    PinChoice::new(TString::from_str("4"), PinAction::Digit('4'), None, false),
+    PinChoice::new(TString::from_str("5"), PinAction::Digit('5'), None, false),
+    PinChoice::new(TString::from_str("6"), PinAction::Digit('6'), None, false),
+    PinChoice::new(TString::from_str("7"), PinAction::Digit('7'), None, false),
+    PinChoice::new(TString::from_str("8"), PinAction::Digit('8'), None, false),
+    PinChoice::new(TString::from_str("9"), PinAction::Digit('9'), None, false),
 ];
 
 fn get_random_digit_position() -> usize {
@@ -51,32 +90,37 @@ fn get_random_digit_position() -> usize {
 
 struct ChoiceFactoryPIN;
 
-impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
+impl ChoiceFactory for ChoiceFactoryPIN {
     type Action = PinAction;
-    type Item = ChoiceItem<T>;
+    type Item = ChoiceItem;
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
-        let (choice_str, action, icon, without_release) = CHOICES[choice_index];
+        let choice = &CHOICES[choice_index];
 
-        let mut choice_item = ChoiceItem::new(choice_str, ButtonLayout::default_three_icons());
+        let mut choice_item = choice.text.map(|t| {
+            ChoiceItem::new(
+                t,
+                ButtonLayout::arrow_armed_arrow(TR::buttons__select.into()),
+            )
+        });
 
         // Action buttons have different middle button text
-        if !matches!(action, PinAction::Digit(_)) {
-            let confirm_btn = ButtonDetails::armed_text("CONFIRM".into());
+        if !matches!(choice.action, PinAction::Digit(_)) {
+            let confirm_btn = ButtonDetails::armed_text(TR::buttons__confirm.into());
             choice_item.set_middle_btn(Some(confirm_btn));
         }
 
         // Making middle button create LongPress events
-        if without_release {
+        if choice.without_release {
             choice_item = choice_item.with_middle_action_without_release();
         }
 
         // Adding icons for appropriate items
-        if let Some(icon) = icon {
+        if let Some(icon) = choice.icon {
             choice_item = choice_item.with_icon(icon);
         }
 
-        (choice_item, action)
+        (choice_item, choice.action)
     }
 
     fn count(&self) -> usize {
@@ -86,7 +130,7 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
 
 /// Component for entering a PIN.
 pub struct PinEntry<T: StringType + Clone> {
-    choice_page: ChoicePage<ChoiceFactoryPIN, T, PinAction>,
+    choice_page: ChoicePage<ChoiceFactoryPIN, PinAction>,
     header_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
     pin_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
     prompt: T,
@@ -111,7 +155,7 @@ where
         let (showing_real_prompt, header_line_content, pin_line_content) = if show_subprompt {
             (
                 false,
-                String::from("WRONG PIN"),
+                TR::pin__title_wrong_pin.map_translated(|t| String::from(t)),
                 String::from(subprompt.as_ref()),
             )
         } else {
@@ -296,8 +340,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PinKeyboard");
-        t.string("subprompt", self.subprompt.as_ref());
-        t.string("pin", self.textbox.content());
+        t.string("subprompt", self.subprompt.as_ref().into());
+        t.string("pin", self.textbox.content().into());
         t.child("choice_page", &self.choice_page);
     }
 }

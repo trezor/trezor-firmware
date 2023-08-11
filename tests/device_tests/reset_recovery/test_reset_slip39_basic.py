@@ -45,7 +45,6 @@ def reset_device(client: Client, strength: int):
             passphrase_protection=False,
             pin_protection=False,
             label="test",
-            language="en-US",
             backup_type=BackupType.Slip39_Basic,
         )
 

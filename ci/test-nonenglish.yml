@@ -1,0 +1,587 @@
+# Tests for non-english languages, that run only nightly
+# - apart from that, they run also for every branch containing "translations" in its name
+
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
+
+# Caching
+.gitlab_caching: &gitlab_caching
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .venv/
+
+##START_DEVICE_TESTS
+core device test czech:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "T"
+    MULTICORE: "4"  # more could interfere with other jobs
+    TEST_LANG: "cs"  # czech
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
+  after_script:
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/junit.xml
+      - tests/trezor.log
+      - core/.coverage.*
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+core device test french:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "T"
+    MULTICORE: "4"  # more could interfere with other jobs
+    TEST_LANG: "fr"  # french
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
+  after_script:
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/junit.xml
+      - tests/trezor.log
+      - core/.coverage.*
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+core device test german:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "T"
+    MULTICORE: "4"  # more could interfere with other jobs
+    TEST_LANG: "de"  # german
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
+  after_script:
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/junit.xml
+      - tests/trezor.log
+      - core/.coverage.*
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+core device test spanish:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "T"
+    MULTICORE: "4"  # more could interfere with other jobs
+    TEST_LANG: "es"  # spanish
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
+  after_script:
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/junit.xml
+      - tests/trezor.log
+      - core/.coverage.*
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+core device R test czech:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen R debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "R"
+    MULTICORE: "4"  # more could interfere with other jobs
+    TEST_LANG: "cs"  # czech
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
+  after_script:
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/junit.xml
+      - tests/trezor.log
+      - core/.coverage.*
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+core device R test french:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen R debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "R"
+    MULTICORE: "4"  # more could interfere with other jobs
+    TEST_LANG: "fr"  # french
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
+  after_script:
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/junit.xml
+      - tests/trezor.log
+      - core/.coverage.*
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+core device R test german:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen R debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "R"
+    MULTICORE: "4"  # more could interfere with other jobs
+    TEST_LANG: "de"  # german
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
+  after_script:
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/junit.xml
+      - tests/trezor.log
+      - core/.coverage.*
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+core device R test spanish:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen R debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "R"
+    MULTICORE: "4"  # more could interfere with other jobs
+    TEST_LANG: "es"  # spanish
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_ui_multicore | ts -s"
+  after_script:
+    - mv core/src/.coverage.* core  # there will be more coverage files (one per core)
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/junit.xml
+      - tests/trezor.log
+      - core/.coverage.*
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+
+##END_DEVICE_TESTS
+
+##START_CLICK_TESTS
+core click test czech:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "T"
+    TEST_LANG: "cs"  # czech
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core click test french:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "T"
+    TEST_LANG: "fr"  # french
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core click test german:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "T"
+    TEST_LANG: "de"  # german
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core click test spanish:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "T"
+    TEST_LANG: "es"  # spanish
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core click R test czech:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen R debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "R"
+    TEST_LANG: "cs"  # czech
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core click R test french:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen R debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "R"
+    TEST_LANG: "fr"  # french
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core click R test german:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen R debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "R"
+    TEST_LANG: "de"  # german
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core click R test spanish:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen R debug build
+  variables:
+    TREZOR_PROFILING: "1"  # so that we get coverage data
+    TREZOR_MODEL: "R"
+    TEST_LANG: "es"  # spanish
+  only:
+    - schedules  # nightly build
+    - /translations/  # translations branches
+  script:
+    - $NIX_SHELL --run "poetry run make -C core test_emu_click_ui | ts -s"
+  after_script:
+    - mv core/src/.coverage core/.coverage.test_click
+    - mv tests/ui_tests/reports/test/ test_ui_report
+    - $NIX_SHELL --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
+      - tests/ui_tests/fixtures.results.json
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+
+##END_CLICK_TESTS

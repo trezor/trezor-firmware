@@ -13,7 +13,7 @@ use crate::{
 
 use super::{
     super::{
-        component::{Choice, ChoiceFactory, ChoicePage},
+        component::{ButtonLayout, Choice, ChoiceFactory, ChoicePage},
         theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
     },
     ReturnToC,
@@ -51,7 +51,7 @@ impl MenuChoice {
     }
 }
 
-impl Choice<&'static str> for MenuChoice {
+impl Choice for MenuChoice {
     fn paint_center(&self, _area: Rect, _inverse: bool) {
         // Icon on top and two lines of text below
         self.icon.draw(
@@ -69,6 +69,10 @@ impl Choice<&'static str> for MenuChoice {
             BLD_FG,
             BLD_BG,
         );
+    }
+
+    fn btn_layout(&self) -> ButtonLayout {
+        ButtonLayout::arrow_armed_arrow("SELECT".into())
     }
 }
 
@@ -95,7 +99,7 @@ impl MenuChoiceFactory {
     }
 }
 
-impl ChoiceFactory<&'static str> for MenuChoiceFactory {
+impl ChoiceFactory for MenuChoiceFactory {
     type Action = MenuMsg;
     type Item = MenuChoice;
 
@@ -125,7 +129,7 @@ impl ChoiceFactory<&'static str> for MenuChoiceFactory {
 
 pub struct Menu {
     pad: Pad,
-    choice_page: Child<ChoicePage<MenuChoiceFactory, &'static str, MenuMsg>>,
+    choice_page: Child<ChoicePage<MenuChoiceFactory, MenuMsg>>,
 }
 
 impl Menu {

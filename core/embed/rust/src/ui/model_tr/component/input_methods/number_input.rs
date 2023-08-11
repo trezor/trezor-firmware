@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    translations::TR,
     ui::{
         component::{Component, Event, EventCtx},
         geometry::Rect,
@@ -20,9 +20,9 @@ impl ChoiceFactoryNumberInput {
     }
 }
 
-impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryNumberInput {
+impl ChoiceFactory for ChoiceFactoryNumberInput {
     type Action = u32;
-    type Item = ChoiceItem<T>;
+    type Item = ChoiceItem;
 
     fn count(&self) -> usize {
         (self.max - self.min + 1) as usize
@@ -31,14 +31,17 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryNumberInput {
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let num = self.min + choice_index as u32;
         let text: String<10> = String::from(num);
-        let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
+        let mut choice_item = ChoiceItem::new(
+            text,
+            ButtonLayout::arrow_armed_arrow(TR::buttons__select.into()),
+        );
 
         // Disabling prev/next buttons for the first/last choice.
         // (could be done to the same button if there is only one)
         if choice_index == 0 {
             choice_item.set_left_btn(None);
         }
-        if choice_index == <ChoiceFactoryNumberInput as ChoiceFactory<T>>::count(self) - 1 {
+        if choice_index == <ChoiceFactoryNumberInput as ChoiceFactory>::count(self) - 1 {
             choice_item.set_right_btn(None);
         }
 
@@ -48,15 +51,12 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryNumberInput {
 
 /// Simple wrapper around `ChoicePage` that allows for
 /// inputting a list of values and receiving the chosen one.
-pub struct NumberInput<T: StringType + Clone> {
-    choice_page: ChoicePage<ChoiceFactoryNumberInput, T, u32>,
+pub struct NumberInput {
+    choice_page: ChoicePage<ChoiceFactoryNumberInput, u32>,
     min: u32,
 }
 
-impl<T> NumberInput<T>
-where
-    T: StringType + Clone,
-{
+impl NumberInput {
     pub fn new(min: u32, max: u32, init_value: u32) -> Self {
         let choices = ChoiceFactoryNumberInput::new(min, max);
         let initial_page = init_value - min;
@@ -67,10 +67,7 @@ where
     }
 }
 
-impl<T> Component for NumberInput<T>
-where
-    T: StringType + Clone,
-{
+impl Component for NumberInput {
     type Msg = u32;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -89,10 +86,7 @@ where
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for NumberInput<T>
-where
-    T: StringType + Clone,
-{
+impl crate::trace::Trace for NumberInput {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("NumberInput");
         t.child("choice_page", &self.choice_page);

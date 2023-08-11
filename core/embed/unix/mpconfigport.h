@@ -212,6 +212,7 @@ extern const struct _mp_print_t mp_stderr_print;
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 #define MICROPY_PY_TREZORPROTO      (1)
+#define MICROPY_PY_TREZORTRANSLATE  (1)
 #define MICROPY_PY_TREZORUI2        (1)
 
 #define MP_STATE_PORT MP_STATE_VM

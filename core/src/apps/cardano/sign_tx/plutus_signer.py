@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor import wire
+from trezortranslate import TR
 
 from .. import layout
 from .signer import Signer
@@ -15,7 +16,7 @@ class PlutusSigner(Signer):
     validation rules are less strict, but more tx items/warnings are shown to the user.
     """
 
-    SIGNING_MODE_TITLE = "Confirming a Plutus transaction."
+    SIGNING_MODE_TITLE = TR.cardano__confirming_a_plutus_transaction
 
     async def _show_tx_init(self) -> None:
         await super()._show_tx_init()

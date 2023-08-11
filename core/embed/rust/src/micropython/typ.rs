@@ -17,6 +17,14 @@ impl Type {
         ObjBase { type_: self }
     }
 
+    pub const fn as_obj(&'static self) -> Obj {
+        // SAFETY:
+        //  - We are an object struct with a base and a type.
+        //  - 'static lifetime holds us in place.
+        //  - MicroPython is smart enough not to mutate `mp_obj_type_t` objects.
+        unsafe { Obj::from_ptr(self as *const _ as *mut _) }
+    }
+
     #[cfg(feature = "debug")]
     pub fn name(&self) -> &'static str {
         use super::qstr::Qstr;
