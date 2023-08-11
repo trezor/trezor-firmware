@@ -624,6 +624,13 @@ static const uint16_t OID_KEY_DEV = 0xE0F0;
 static const uint16_t OID_KEY_FIDO = 0xE0F2;
 static const uint16_t OID_KEY_PAIRING = 0xE140;
 static const uint16_t OID_OPTIGA_UID = 0xE0C2;
+static const uint16_t OID_TRUST_ANCHOR = 0xE0E8;
+
+// Data object access conditions.
+static const optiga_metadata_item ACCESS_PAIRED = {
+    (const uint8_t *)"\x20\xE1\x40", 3};
+static const optiga_metadata_item KEY_USE_SIGN = {(const uint8_t *)"\x10", 1};
+static const optiga_metadata_item TYPE_PTFBIND = {(const uint8_t *)"\x22", 1};
 
 static bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
   uint8_t serialized[258] = {0};
@@ -668,6 +675,8 @@ static bool pair_optiga(void) {
   // Enable writing the pairing secret to OPTIGA.
   optiga_metadata metadata = {0};
   metadata.change = OPTIGA_ACCESS_ALWAYS;
+  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  metadata.data_type = TYPE_PTFBIND;
   set_metadata(OID_KEY_PAIRING, &metadata);  // Ignore result.
 
   // Generate pairing secret.
@@ -717,17 +726,14 @@ static void optiga_lock(void) {
 
   // Delete trust anchor.
   optiga_result ret =
-      optiga_set_data_object(0xe0e8, false, (const uint8_t *)"\0", 1);
+      optiga_set_data_object(OID_TRUST_ANCHOR, false, (const uint8_t *)"\0", 1);
   if (OPTIGA_SUCCESS != ret) {
-    vcp_println("ERROR optiga_set_data error %d for 0xe0e8.", ret);
+    vcp_println("ERROR optiga_set_data error %d for 0x%04x.", ret,
+                OID_TRUST_ANCHOR);
     return;
   }
 
   // Set data object metadata.
-  static const optiga_metadata_item ACCESS_PAIRED = {
-      (const uint8_t *)"\x20\xE1\x40", 3};
-  static const optiga_metadata_item KEY_USE_SIGN = {(const uint8_t *)"\x10", 1};
-  static const optiga_metadata_item TYPE_PTFBIND = {(const uint8_t *)"\x22", 1};
   optiga_metadata metadata = {0};
 
   // Set metadata for device certificate.
