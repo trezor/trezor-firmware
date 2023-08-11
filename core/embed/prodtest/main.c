@@ -917,9 +917,9 @@ static void pubkey_read(uint16_t oid) {
       0xcb, 0xb6, 0x40, 0x68, 0x37, 0xbf, 0x51, 0xf5};
   uint8_t public_key[32] = {0};
   size_t public_key_size = 0;
-  optiga_result ret = optiga_calc_ssec(
-      OPTIGA_CURVE_P256, OID_KEY_DEV, BASE_POINT, sizeof(BASE_POINT),
-      public_key, sizeof(public_key), &public_key_size);
+  optiga_result ret =
+      optiga_calc_ssec(OPTIGA_CURVE_P256, oid, BASE_POINT, sizeof(BASE_POINT),
+                       public_key, sizeof(public_key), &public_key_size);
   if (OPTIGA_SUCCESS != ret) {
     vcp_println("ERROR optiga_calc_ssec error %d.", ret);
     return;
