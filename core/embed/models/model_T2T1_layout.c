@@ -29,6 +29,16 @@ const flash_area_t BOARDLOADER_AREA = {
         },
 };
 
+const flash_area_t TRANSLATIONS_AREA = {
+    .num_subareas = 1,
+    .subarea[0] =
+        {
+            // TODO: can we use the 4th sector?
+            .first_sector = 12,
+            .num_sectors = 3,
+        },
+};
+
 const flash_area_t BOOTLOADER_AREA = {
     .num_subareas = 1,
     .subarea[0] =

@@ -14,6 +14,7 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     from trezor.ui.layouts import confirm_action
     from trezor.ui.layouts.progress import progress
     from trezor.utils import BufferReader, bootloader_locked
+    from trezortranslate import TR
 
     from apps.common.writers import write_compact_size
 
@@ -22,9 +23,9 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
 
     await confirm_action(
         "authenticate_device",
-        "Authenticate device",
-        description=f"Allow connected computer to confirm your {utils.MODEL_FULL_NAME} is genuine?",
-        verb="Allow",
+        TR.authenticate__header,
+        description=TR.authenticate__confirm_template.format(utils.MODEL_FULL_NAME),
+        verb=TR.buttons__allow,
     )
 
     header = b"AuthenticateDevice:"
@@ -34,7 +35,7 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     write_compact_size(h, len(msg.challenge))
     h.extend(msg.challenge)
 
-    spinner = progress("", description="Checking authenticity...")
+    spinner = progress("", description=TR.progress__authenticity_check)
     spinner.report(0)
 
     try:

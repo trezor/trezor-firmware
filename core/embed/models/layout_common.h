@@ -15,6 +15,7 @@
 extern const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT];
 extern const flash_area_t BOARDLOADER_AREA;
 extern const flash_area_t SECRET_AREA;
+extern const flash_area_t TRANSLATIONS_AREA;
 extern const flash_area_t BOOTLOADER_AREA;
 extern const flash_area_t FIRMWARE_AREA;
 extern const flash_area_t WIPE_AREA;

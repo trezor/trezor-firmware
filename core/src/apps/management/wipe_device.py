@@ -9,16 +9,17 @@ async def wipe_device(msg: WipeDevice) -> Success:
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
+    from trezortranslate import TR
 
     from apps.base import reload_settings_from_storage
 
     await confirm_action(
         "confirm_wipe",
-        "Wipe device",
-        "All data will be erased.",
-        "Do you really want to wipe the device?\n",
+        TR.wipe__title,
+        TR.wipe__info,
+        TR.wipe__want_to_wipe,
         reverse=True,
-        verb="Hold to confirm",
+        verb=TR.buttons__hold_to_confirm,
         hold=True,
         hold_danger=True,
         br_code=ButtonRequestType.WipeDevice,

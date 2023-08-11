@@ -39,6 +39,7 @@ use crate::{
             util::{iter_into_array, iter_into_vec, upy_disable_animation, ConfirmBlob},
         },
         model_tr::component::check_homescreen_format,
+        translations::tr,
     },
 };
 
@@ -319,7 +320,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let action: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
         let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, "CONFIRM".into())?;
+        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, tr("buttons__confirm").into())?;
         let verb_cancel: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -355,7 +356,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let extra: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
-        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, "CONFIRM".into())?;
+        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, tr("buttons__confirm").into())?;
         let verb_cancel: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -425,7 +426,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
         content_in_button_page(
             title,
             paragraphs.into_paragraphs(),
-            "CONFIRM".into(),
+            tr("buttons__confirm").into(),
             None,
             hold,
         )
@@ -457,11 +458,11 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
 
         let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
-            .text_normal("By continuing you agree to Trezor Company's terms and conditions.".into())
+            .text_normal(tr("reset__by_continuing").into())
             .next_page()
-            .text_normal("More info at".into())
+            .text_normal(tr("reset__more_info_at").into())
             .newline()
-            .text_bold("trezor.io/tos".into());
+            .text_bold(tr("reset__tos_link").into());
         let formatted = FormattedText::new(ops).vertically_centered();
 
         content_in_button_page(title, formatted, button, Some("".into()), false)
@@ -473,25 +474,25 @@ extern "C" fn new_confirm_backup(n_args: usize, args: *const Obj, kwargs: *mut M
     let block = move |_args: &[Obj], _kwargs: &Map| {
         let get_page = move |page_index| match page_index {
             0 => {
-                let btn_layout = ButtonLayout::text_none_arrow_wide("SKIP".into());
+                let btn_layout = ButtonLayout::text_none_arrow_wide(tr("buttons__skip").into());
                 let btn_actions = ButtonActions::cancel_none_next();
                 let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                    .text_normal("New wallet created.".into())
+                    .text_normal(tr("backup__new_wallet_created").into())
                     .newline()
                     .newline()
-                    .text_normal("It should be backed up now!".into());
+                    .text_normal(tr("backup__it_should_be_backed_up_now").into());
                 let formatted = FormattedText::new(ops).vertically_centered();
-                Page::new(btn_layout, btn_actions, formatted).with_title("SUCCESS".into())
+                Page::new(btn_layout, btn_actions, formatted)
+                    .with_title(tr("words__title_success").into())
             }
             1 => {
-                let btn_layout = ButtonLayout::up_arrow_none_text("BACK UP".into());
+                let btn_layout = ButtonLayout::up_arrow_none_text(tr("buttons__back_up").into());
                 let btn_actions = ButtonActions::prev_none_confirm();
-                let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(
-                    "You can use your backup to recover your wallet at any time.".into(),
-                );
+                let ops = OpTextLayout::new(theme::TEXT_NORMAL)
+                    .text_normal(tr("backup__recover_anytime").into());
                 let formatted = FormattedText::new(ops).vertically_centered();
                 Page::<StrBuffer>::new(btn_layout, btn_actions, formatted)
-                    .with_title("BACK UP WALLET".into())
+                    .with_title(tr("backup__title_backup_wallet").into())
             }
             _ => unreachable!(),
         };
@@ -545,7 +546,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         content_in_button_page(
             title,
             paragraphs,
-            verb.unwrap_or_else(|| "CONFIRM".into()),
+            verb.unwrap_or_else(|| tr("buttons__confirm").into()),
             Some("".into()),
             hold,
         )
@@ -559,16 +560,16 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
         let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, "You are contributing:".into()),
+            Paragraph::new(&theme::TEXT_BOLD, tr("joint__you_are_contributing").into()),
             Paragraph::new(&theme::TEXT_MONO, spending_amount),
-            Paragraph::new(&theme::TEXT_BOLD, "To the total amount:".into()),
+            Paragraph::new(&theme::TEXT_BOLD, tr("joint__to_the_total_amount").into()),
             Paragraph::new(&theme::TEXT_MONO, total_amount),
         ]);
 
         content_in_button_page(
-            "JOINT TRANSACTION".into(),
+            tr("joint__title").into(),
             paragraphs,
-            "HOLD TO CONFIRM".into(),
+            tr("buttons__hold_to_confirm").into(),
             Some("".into()),
             true,
         )
@@ -583,22 +584,22 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         let amount_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_new)?.try_into()?;
 
         let description = if sign < 0 {
-            "Decrease amount by:"
+            tr("modify_amount__decrease_amount")
         } else {
-            "Increase amount by:"
+            tr("modify_amount__increase_amount")
         };
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_NORMAL, description.into()),
             Paragraph::new(&theme::TEXT_MONO, amount_change).break_after(),
-            Paragraph::new(&theme::TEXT_BOLD, "New amount:".into()),
+            Paragraph::new(&theme::TEXT_BOLD, tr("modify_amount__new_amount").into()),
             Paragraph::new(&theme::TEXT_MONO, amount_new),
         ]);
 
         content_in_button_page(
-            "MODIFY AMOUNT".into(),
+            tr("modify_amount__title").into(),
             paragraphs,
-            "CONFIRM".into(),
+            tr("buttons__confirm").into(),
             Some("".into()),
             false,
         )
@@ -616,7 +617,7 @@ extern "C" fn new_confirm_output_address(n_args: usize, args: *const Obj, kwargs
         let get_page = move |page_index| {
             assert!(page_index == 0);
             // RECIPIENT + address
-            let btn_layout = ButtonLayout::cancel_none_text("CONTINUE".into());
+            let btn_layout = ButtonLayout::cancel_none_text(tr("buttons__continue").into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             // Not putting hyphens in the address.
             // Potentially adding address label in different font.
@@ -654,7 +655,7 @@ extern "C" fn new_confirm_output_amount(n_args: usize, args: *const Obj, kwargs:
         let get_page = move |page_index| {
             assert!(page_index == 0);
             // AMOUNT + amount
-            let btn_layout = ButtonLayout::up_arrow_none_text("CONFIRM".into());
+            let btn_layout = ButtonLayout::up_arrow_none_text(tr("buttons__confirm").into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount.clone());
             let formatted = FormattedText::new(ops).vertically_centered();
@@ -684,7 +685,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             match page_index {
                 0 => {
                     // Total amount + fee
-                    let btn_layout = ButtonLayout::cancel_armed_info("CONFIRM".into());
+                    let btn_layout = ButtonLayout::cancel_armed_info(tr("buttons__confirm").into());
                     let btn_actions = ButtonActions::cancel_confirm_next();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
@@ -708,11 +709,11 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     let fee_rate_amount = fee_rate_amount.clone().unwrap_or_default();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold("FEE INFORMATION".into())
+                        .text_bold(tr("confirm_total__title_fee").into())
                         .newline()
                         .newline()
                         .newline_half()
-                        .text_bold("Fee rate:".into())
+                        .text_bold(tr("confirm_total__fee_rate").into())
                         .newline()
                         .text_mono(fee_rate_amount);
 
@@ -729,11 +730,11 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
                     // TODO: include wallet info when available
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold("SENDING FROM".into())
+                        .text_bold(tr("confirm_total__title_sending_from").into())
                         .newline()
                         .newline()
                         .newline_half()
-                        .text_bold("Account:".into())
+                        .text_bold(tr("confirm_total__account").into())
                         .newline()
                         .text_mono(account_label);
 
@@ -765,9 +766,9 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
                 0 => {
                     // Amount + fee
                     let btn_layout = if cancel_cross {
-                        ButtonLayout::cancel_armed_info("CONFIRM".into())
+                        ButtonLayout::cancel_armed_info(tr("buttons__confirm").into())
                     } else {
-                        ButtonLayout::up_arrow_armed_info("CONFIRM".into())
+                        ButtonLayout::up_arrow_armed_info(tr("buttons__confirm").into())
                     };
                     let btn_actions = ButtonActions::cancel_confirm_next();
 
@@ -803,7 +804,7 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
 
                     let formatted = FormattedText::new(ops).vertically_centered();
                     Page::new(btn_layout, btn_actions, formatted)
-                        .with_title("FEE INFORMATION".into())
+                        .with_title(tr("confirm_total__title_fee").into())
                         .with_slim_arrows()
                 }
                 _ => unreachable!(),
@@ -821,7 +822,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
-        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, "CONFIRM".into())?;
+        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, tr("buttons__confirm").into())?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let get_page = move |page_index| {
@@ -872,62 +873,51 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             // really cancel the tutorial.
             match page_index {
                 // title, text, btn_layout, btn_actions
-                0 => {
-                    tutorial_screen(
-                        "HELLO",
-                        "Welcome to Trezor. Press right to continue.",
-                        ButtonLayout::cancel_none_arrow(),
-                        ButtonActions::last_none_next(),
-                    )
-                },
-                1 => {
-                    tutorial_screen(
-                        "",
-                        "Use Trezor by\nclicking the left and right buttons.\n\rContinue right.",
-                        ButtonLayout::arrow_none_arrow(),
-                        ButtonActions::prev_none_next(),
-                    )
-                },
-                2 => {
-                    tutorial_screen(
-                        "HOLD TO CONFIRM",
-                        "Press and hold the right button to\napprove important operations.",
-                        ButtonLayout::arrow_none_htc("HOLD TO CONFIRM".into()),
-                        ButtonActions::prev_none_next(),
-                    )
-                },
-                3 => {
-                    tutorial_screen(
-                        "SCREEN SCROLL",
-                        "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.",
-                        ButtonLayout::arrow_none_text("CONTINUE".into()),
-                        ButtonActions::prev_none_next(),
-                    )
-                },
-                4 => {
-                    tutorial_screen(
-                        "CONFIRM",
-                        "Press both left and right at the same\ntime to confirm.",
-                        ButtonLayout::none_armed_none("CONFIRM".into()),
-                        ButtonActions::none_next_none(),
-                    )
-                },
-                5 => {
-                    tutorial_screen(
-                        "TUTORIAL COMPLETE",
-                        "You're ready to\nuse Trezor.",
-                        ButtonLayout::text_none_text("AGAIN".into(), "CONTINUE".into()),
-                        ButtonActions::beginning_none_confirm(),
-                    )
-                },
-                6 => {
-                    tutorial_screen(
-                        "SKIP TUTORIAL",
-                        "Are you sure you\nwant to skip the tutorial?",
-                        ButtonLayout::arrow_none_text("SKIP".into()),
-                        ButtonActions::beginning_none_cancel(),
-                    )
-                },
+                0 => tutorial_screen(
+                    tr("tutorial__title_hello"),
+                    tr("tutorial__welcome_press_right"),
+                    ButtonLayout::cancel_none_arrow(),
+                    ButtonActions::last_none_next(),
+                ),
+                1 => tutorial_screen(
+                    "",
+                    tr("tutorial__use_trezor"),
+                    ButtonLayout::arrow_none_arrow(),
+                    ButtonActions::prev_none_next(),
+                ),
+                2 => tutorial_screen(
+                    tr("buttons__hold_to_confirm"),
+                    tr("tutorial__press_and_hold"),
+                    ButtonLayout::arrow_none_htc(tr("buttons__hold_to_confirm").into()),
+                    ButtonActions::prev_none_next(),
+                ),
+                3 => tutorial_screen(
+                    tr("tutorial__title_screen_scroll"),
+                    tr("tutorial__scroll_down"),
+                    ButtonLayout::arrow_none_text(tr("buttons__continue").into()),
+                    ButtonActions::prev_none_next(),
+                ),
+                4 => tutorial_screen(
+                    tr("buttons__confirm"),
+                    tr("tutorial__middle_click"),
+                    ButtonLayout::none_armed_none(tr("buttons__confirm").into()),
+                    ButtonActions::none_next_none(),
+                ),
+                5 => tutorial_screen(
+                    tr("tutorial__title_tutorial_complete"),
+                    tr("tutorial__ready_to_use"),
+                    ButtonLayout::text_none_text(
+                        tr("buttons__again").into(),
+                        tr("buttons__continue").into(),
+                    ),
+                    ButtonActions::beginning_none_confirm(),
+                ),
+                6 => tutorial_screen(
+                    tr("tutorial__title_skip"),
+                    tr("tutorial__sure_you_want_skip"),
+                    ButtonLayout::arrow_none_text(tr("buttons__skip").into()),
+                    ButtonActions::beginning_none_cancel(),
+                ),
                 _ => unreachable!(),
             }
         };
@@ -957,28 +947,33 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             .try_into_option()?;
 
         let (description, change) = match sign {
-            s if s < 0 => ("Decrease fee by:", user_fee_change),
-            s if s > 0 => ("Increase fee by:", user_fee_change),
-            _ => ("Your fee did not change.", StrBuffer::empty()),
+            s if s < 0 => (tr("modify_fee__decrease_fee"), user_fee_change),
+            s if s > 0 => (tr("modify_fee__increase_fee"), user_fee_change),
+            _ => (tr("modify_fee__no_change"), StrBuffer::empty()),
         };
 
         let mut paragraphs_vec = ParagraphVecShort::new();
         paragraphs_vec
             .add(Paragraph::new(&theme::TEXT_BOLD, description.into()))
             .add(Paragraph::new(&theme::TEXT_MONO, change))
-            .add(Paragraph::new(&theme::TEXT_BOLD, "Transaction fee:".into()).no_break())
+            .add(
+                Paragraph::new(&theme::TEXT_BOLD, tr("modify_fee__transaction_fee").into())
+                    .no_break(),
+            )
             .add(Paragraph::new(&theme::TEXT_MONO, total_fee_new));
 
         if let Some(fee_rate_amount) = fee_rate_amount {
             paragraphs_vec
-                .add(Paragraph::new(&theme::TEXT_BOLD, "Fee rate:".into()).no_break())
+                .add(
+                    Paragraph::new(&theme::TEXT_BOLD, tr("modify_fee__fee_rate").into()).no_break(),
+                )
                 .add(Paragraph::new(&theme::TEXT_MONO, fee_rate_amount));
         }
 
         content_in_button_page(
-            "MODIFY FEE".into(),
+            tr("modify_fee__title").into(),
             paragraphs_vec.into_paragraphs(),
-            "CONFIRM".into(),
+            tr("buttons__confirm").into(),
             Some("".into()),
             false,
         )
@@ -1060,25 +1055,25 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
             let (btn_layout, btn_actions) = if page_count == 1 {
                 // There is only one page
                 (
-                    ButtonLayout::cancel_none_text("CONFIRM".into()),
+                    ButtonLayout::cancel_none_text(tr("buttons__confirm").into()),
                     ButtonActions::cancel_none_confirm(),
                 )
             } else if page_index == 0 {
                 // First page
                 (
-                    ButtonLayout::cancel_armed_arrow("SELECT".into()),
+                    ButtonLayout::cancel_armed_arrow(tr("buttons__select").into()),
                     ButtonActions::cancel_confirm_next(),
                 )
             } else if page_index == page_count - 1 {
                 // Last page
                 (
-                    ButtonLayout::arrow_armed_none("SELECT".into()),
+                    ButtonLayout::arrow_armed_none(tr("buttons__select").into()),
                     ButtonActions::prev_confirm_none(),
                 )
             } else {
                 // Page in the middle
                 (
-                    ButtonLayout::arrow_armed_arrow("SELECT".into()),
+                    ButtonLayout::arrow_armed_arrow(tr("buttons__select").into()),
                     ButtonActions::prev_confirm_next(),
                 )
             };
@@ -1162,7 +1157,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 
 extern "C" fn new_show_passphrase() -> Obj {
     let block = move || {
-        let text: StrBuffer = "Please enter your passphrase.".into();
+        let text: StrBuffer = tr("passphrase__please_enter").into();
         let paragraph = Paragraph::new(&theme::TEXT_NORMAL, text).centered();
         let content = Paragraphs::new([paragraph]);
         let obj = LayoutObj::new(content)?;
@@ -1177,15 +1172,15 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
-            let btn_layout = ButtonLayout::arrow_none_text("QUIT".into());
+            let btn_layout = ButtonLayout::arrow_none_text(tr("buttons__quit").into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
                 .text_bold(title.clone())
                 .newline()
                 .newline_half()
-                .text_normal("Please contact Trezor support at".into())
+                .text_normal(tr("addr_mismatch__contact_support").into())
                 .newline()
-                .text_bold("trezor.io/support".into());
+                .text_bold(tr("addr_mismatch__support_url").into());
             let formatted = FormattedText::new(ops);
             Page::new(btn_layout, btn_actions, formatted)
         };
@@ -1265,18 +1260,19 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
 
         // Decreasing bottom padding between paragraphs to fit one screen
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, "Max rounds".into()).with_bottom_padding(2),
+            Paragraph::new(&theme::TEXT_BOLD, tr("coinjoin__max_rounds").into())
+                .with_bottom_padding(2),
             Paragraph::new(&theme::TEXT_MONO, max_rounds),
-            Paragraph::new(&theme::TEXT_BOLD, "Max mining fee".into())
+            Paragraph::new(&theme::TEXT_BOLD, tr("coinjoin__max_mining_fee").into())
                 .with_bottom_padding(2)
                 .no_break(),
             Paragraph::new(&theme::TEXT_MONO, max_feerate).with_bottom_padding(2),
         ]);
 
         content_in_button_page(
-            "AUTHORIZE COINJOIN".into(),
+            tr("coinjoin__title").into(),
             paragraphs,
-            "HOLD TO CONFIRM".into(),
+            tr("buttons__hold_to_confirm").into(),
             None,
             true,
         )
@@ -1367,7 +1363,8 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
 
         let cancel_btn = Some(ButtonDetails::up_arrow_icon());
         let confirm_btn = Some(
-            ButtonDetails::<StrBuffer>::text("HOLD TO CONFIRM".into()).with_default_duration(),
+            ButtonDetails::<StrBuffer>::text(tr("buttons__hold_to_confirm").into())
+                .with_default_duration(),
         );
 
         let obj = LayoutObj::new(
@@ -1449,18 +1446,21 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let mut paragraphs = ParagraphVecShort::new();
         paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, description));
         if show_info {
-            let first = "You'll only have to select the first 2-4 letters of each word.";
-            let second =
-                "Position of the cursor will change between entries for enhanced security.";
             paragraphs
-                .add(Paragraph::new(&theme::TEXT_NORMAL, first.into()))
-                .add(Paragraph::new(&theme::TEXT_NORMAL, second.into()));
+                .add(Paragraph::new(
+                    &theme::TEXT_NORMAL,
+                    tr("recovery__only_first_n_letters").into(),
+                ))
+                .add(Paragraph::new(
+                    &theme::TEXT_NORMAL,
+                    tr("recovery__cursor_will_change").into(),
+                ));
         }
 
         let title = if dry_run {
-            "BACKUP CHECK"
+            tr("recovery__title_dry_run")
         } else {
-            "RECOVER WALLET"
+            tr("recovery__title")
         };
 
         content_in_button_page(
@@ -1476,7 +1476,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
 
 extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
-        let title: StrBuffer = "NUMBER OF WORDS".into();
+        let title: StrBuffer = tr("word_count__title").into();
 
         let choices: Vec<StrBuffer, 5> = ["12", "18", "20", "24", "33"]
             .map(|num| num.into())
@@ -1509,7 +1509,13 @@ extern "C" fn new_show_group_share_success(
             Paragraph::new(&theme::TEXT_BOLD, l3),
         ]);
 
-        content_in_button_page("".into(), paragraphs, "CONTINUE".into(), None, false)
+        content_in_button_page(
+            "".into(),
+            paragraphs,
+            tr("buttons__continue").into(),
+            None,
+            false,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1607,7 +1613,7 @@ extern "C" fn new_confirm_firmware_update(
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let fingerprint: StrBuffer = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
 
-        let title = "UPDATE FIRMWARE";
+        let title = tr("firmware_update__title");
         let message = Label::left_aligned(description, theme::TEXT_NORMAL).vertically_centered();
         let fingerprint = Label::left_aligned(
             fingerprint,
@@ -1616,8 +1622,18 @@ extern "C" fn new_confirm_firmware_update(
         .vertically_centered();
 
         let obj = LayoutObj::new(
-            Confirm::new(theme::BG, title, message, None, "INSTALL".into(), false)
-                .with_info_screen(StrBuffer::from("FW FINGERPRINT"), fingerprint),
+            Confirm::new(
+                theme::BG,
+                title,
+                message,
+                None,
+                tr("buttons__install").into(),
+                false,
+            )
+            .with_info_screen(
+                StrBuffer::from(tr("firmware_update__title_fingerprint")),
+                fingerprint,
+            ),
         )?;
         Ok(obj.into())
     };

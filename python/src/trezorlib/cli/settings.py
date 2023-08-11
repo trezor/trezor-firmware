@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Optional, cast
 
 import click
 
-from .. import device, messages, toif
+from .. import device, messages, toif, translations
 from . import AliasedGroup, ChoiceType, with_client
 
 if TYPE_CHECKING:
@@ -201,6 +201,30 @@ def wipe_code(client: "TrezorClient", enable: Optional[bool], remove: bool) -> s
 def label(client: "TrezorClient", label: str) -> str:
     """Set new device label."""
     return device.apply_settings(client, label=label)
+
+
+@cli.command()
+@click.option("-f", "--file", type=str, help="Language JSON file with translations.")
+@click.option("-u", "--url", help="Link to already created and signed blob.")
+@click.option("-r", "--remove", is_flag=True, help="Switch back to english.")
+@with_client
+def language(client: "TrezorClient", file: str, url: str, remove: bool) -> str:
+    """Set new language with translations."""
+    if file and url:
+        raise click.ClickException("Please provide only one of -f or -u")
+
+    if remove:
+        language_data = b""
+    else:
+        if file:
+            model = client.features.model
+            assert model is not None
+            language_data = translations.blob_from_file(Path(file), model)
+        elif url:
+            language_data = translations.blob_from_url(url)
+        else:
+            raise click.ClickException("Please provide either -f or -u")
+    return device.change_language(client, language_data=language_data)
 
 
 @cli.command()

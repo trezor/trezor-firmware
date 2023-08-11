@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx},
         geometry::Rect,
+        translations::tr,
     },
 };
 
@@ -31,7 +32,10 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryNumberInput {
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let num = self.min + choice_index as u32;
         let text: String<10> = String::from(num);
-        let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
+        let mut choice_item = ChoiceItem::new(
+            text,
+            ButtonLayout::arrow_armed_arrow(tr("buttons__select").into()),
+        );
 
         // Disabling prev/next buttons for the first/last choice.
         // (could be done to the same button if there is only one)

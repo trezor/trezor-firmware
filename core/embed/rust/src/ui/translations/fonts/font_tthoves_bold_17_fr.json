@@ -1,0 +1,162 @@
+[
+  {
+    "char": "À",
+    "utf8": "C380",
+    "data": "0d100d0010000067400000000005ff100000000007fb00000000000000000000003ffff100000008ffff60000000dffffb0000003ff8aff1000008ff35ff600000efe00ffc00003ff900bff10009ffffffff6000effffffffc003ffb6666cff109ff500007ff70eff000002ffc"
+  },
+  {
+    "char": "Â",
+    "utf8": "C382",
+    "data": "0d100d0010000002771000000001dffc00000000cf68fa000000000000000000003ffff100000008ffff60000000dffffb0000003ff8aff1000008ff35ff600000efe00ffc00003ff900bff10009ffffffff6000effffffffc003ffb6666cff109ff500007ff70eff000002ffc"
+  },
+  {
+    "char": "Æ",
+    "utf8": "C386",
+    "data": "110c11000c000005ffffffffff800000cffffffffff800003ffbcff8777740000aff29ff1000000001ffb09ff1000000008ff509fffffff3000efe009fffffff3006ffffffff76666100dffffffff10000004ffc888dff8777730bff30009fffffff82ffd00009fffffff8"
+  },
+  {
+    "char": "Ç",
+    "utf8": "C387",
+    "data": "0c100c000c00029cfd9200005ffffffe3002fffdbeffe00cff70008ff70ffc000008973ff7000000004ff7000000001ffa000006760dff40005ff905fffa7afff2008fffffff400005cfffc40000000bf10000000008fc0000000017ef000000002fd60000"
+  },
+  {
+    "char": "È",
+    "utf8": "C388",
+    "data": "09100a011004760000001ef50000003fe1000000000000cfffffff5cfffffff5cff777772cfe000000cfe000000cfffffff0cfffffff0cff666660cfe000000cff777772cfffffff5cfffffff5"
+  },
+  {
+    "char": "É",
+    "utf8": "C389",
+    "data": "09100a01100000277100000cf9000006fc000000000000cfffffff5cfffffff5cff777772cfe000000cfe000000cfffffff0cfffffff0cff666660cfe000000cff777772cfffffff5cfffffff5"
+  },
+  {
+    "char": "Ê",
+    "utf8": "C38A",
+    "data": "09100a011000077300000afff30007fb4fe10000000000cfffffff5cfffffff5cff777772cfe000000cfe000000cfffffff0cfffffff0cff666660cfe000000cff777772cfffffff5cfffffff5"
+  },
+  {
+    "char": "Ë",
+    "utf8": "C38B",
+    "data": "09100a011000110110008fa2ff0008fa2ff00000000000cfffffff5cfffffff5cff777772cfe000000cfe000000cfffffff0cfffffff0cff666660cfe000000cff777772cfffffff5cfffffff5"
+  },
+  {
+    "char": "Î",
+    "utf8": "C38E",
+    "data": "0710060010005760005fff603fe3df4000000000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe00"
+  },
+  {
+    "char": "Ï",
+    "utf8": "C38F",
+    "data": "071006001001101104ff0df54ff0df5000000000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe0000cfe00"
+  },
+  {
+    "char": "Ô",
+    "utf8": "C394",
+    "data": "0d100d0010000006750000000007fff500000004fd3ef3000000000000000000029cfc91000005ffffffe40002fffdbdfff100cff70008ffa00ffb00000dff03ff7000009ff23ff7000009ff20ffb00000dff00cff60008ffa002fffdadfff10005ffffffe40000029dfc91000"
+  },
+  {
+    "char": "Ù",
+    "utf8": "C399",
+    "data": "0b100c011000575000000003ff3000000005fd0000000000000000efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efd00009ff1cfe0000bff0aff6003ffd04fffcbfff7009ffffffc00004beec7000"
+  },
+  {
+    "char": "Û",
+    "utf8": "C39B",
+    "data": "0b100c011000017720000000cffe1000009f96fc00000000000000efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efd00009ff1cfe0000bff0aff6003ffd04fffcbfff7009ffffffc00004beec7000"
+  },
+  {
+    "char": "Ü",
+    "utf8": "C39C",
+    "data": "0b100c01100011001100000af84fe00000af84fe00000000000000efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efd00009ff1cfe0000bff0aff6003ffd04fffcbfff7009ffffffc00004beec7000"
+  },
+  {
+    "char": "Ÿ",
+    "utf8": "C5B8",
+    "data": "0d100c001000001101100000005fd0ff30000005fd0ff300000000000000001eff10002ffd007ff8000aff5000eff102ffc00006ff80aff400000eff3ffc0000006fffff30000000dfffb000000005fff3000000000efd0000000000efc0000000000efc0000000000efc00000"
+  },
+  {
+    "char": "Œ",
+    "utf8": "C592",
+    "data": "120c12000c00029dfd79fffffff6005ffffffffffffff602fffa8cffff7777730bff50009fff0000000ffb00001fff0000003ff700000cfffffff14ff700000bfffffff11ffa00000eff6666600dff30007fff00000004fffa8bffff777773007ffffffffffffff60002adfd79fffffff6"
+  },
+  {
+    "char": "à",
+    "utf8": "C3A0",
+    "data": "090d0a000d006740000005fe10000008fb000000000000006dfea2008fffffe10cca27ff7000000ff903beffffa1ffebbffa5ff505ffa2fffffffa03cfe9afa0"
+  },
+  {
+    "char": "â",
+    "utf8": "C3A2",
+    "data": "090d0a000d000277200000dffd0000bf77fb0000000000006dfea2008fffffe10cca27ff7000000ff903beffffa1ffebbffa5ff505ffa2fffffffa03cfe9afa0"
+  },
+  {
+    "char": "æ",
+    "utf8": "C3A6",
+    "data": "0f090f0009007dfd706dfc70008fffffefffffa00cc916fff817ff5003688fff555ef90affffffffffffc3ff933ffe3222225ff607fff715cc41ffffffdfffffb003cfeb307dfc8000"
+  },
+  {
+    "char": "ç",
+    "utf8": "C3A7",
+    "data": "0a0d0a0009002aefc40004ffffff500eff87eff13ff60039935ff20000004ff50027720efe66dff106ffffff70005dffd6000000de000000009fb00000017fe0000004fc5000"
+  },
+  {
+    "char": "è",
+    "utf8": "C3A8",
+    "data": "0a0d0a000d0067400000004ff200000006fc00000000000000003beeb40004ffffff600efc21aff23ffa889ff65ffffffff73ff50000000efd229cc104ffffff60002beeb400"
+  },
+  {
+    "char": "é",
+    "utf8": "C3A9",
+    "data": "0a0d0a000d000003760000001ef5000000af80000000000000003beeb40004ffffff600efc21aff23ffa889ff65ffffffff73ff50000000efd229cc104ffffff60002beeb400"
+  },
+  {
+    "char": "ê",
+    "utf8": "C3AA",
+    "data": "0a0d0a000d0002772000000dffd00000bf77fb000000000000003beeb40004ffffff600efc21aff23ffa889ff65ffffffff73ff50000000efd229cc104ffffff60002beeb400"
+  },
+  {
+    "char": "ë",
+    "utf8": "C3AB",
+    "data": "0a0d0a000d001100110000cf66fc0000cf66fc000000000000003beeb40004ffffff600efc21aff23ffa889ff65ffffffff73ff50000000efd229cc104ffffff60002beeb400"
+  },
+  {
+    "char": "î",
+    "utf8": "C3AE",
+    "data": "070d06000d03ffc002efbfa04740771000000000ff80000ff80000ff80000ff80000ff80000ff80000ff80000ff80000ff8000"
+  },
+  {
+    "char": "ï",
+    "utf8": "C3AF",
+    "data": "070d06000d01101108fa1ff18fa1ff1000000000ff80000ff80000ff80000ff80000ff80000ff80000ff80000ff80000ff8000"
+  },
+  {
+    "char": "ô",
+    "utf8": "C3B4",
+    "data": "0a0d0a000d0001772000000cffe10000af96fc000000000000002beeb40004ffffff700eff87eff23ff6003ff65ff2000ff83ff6003ff60eff87eff204ffffff70003beeb400"
+  },
+  {
+    "char": "ù",
+    "utf8": "C3B9",
+    "data": "090d0a010d07fe1000000afa0000000770000000000000ff8003ff5ff8003ff5ff8003ff5ff8003ff5ff9003ff5ffc006ff5cffb9fff55fffffff505dfd6ff50"
+  },
+  {
+    "char": "û",
+    "utf8": "C3BB",
+    "data": "090d0a010d005ffa00003febf800057307710000000000ff8003ff5ff8003ff5ff8003ff5ff8003ff5ff9003ff5ffc006ff5cffb9fff55fffffff505dfd6ff50"
+  },
+  {
+    "char": "ü",
+    "utf8": "C3BC",
+    "data": "090d0a010d01110110009f93ff0009f93ff00000000000ff8003ff5ff8003ff5ff8003ff5ff8003ff5ff9003ff5ffc006ff5cffb9fff55fffffff505dfd6ff50"
+  },
+  {
+    "char": "ÿ",
+    "utf8": "C3BF",
+    "data": "0b110a000d00011011000002ff1bf700002ff1bf700000000000000efc0007ff409ff200bfe003ff700ff9000dfd04ff40008ff29fe00002ff8dfa00000dffff4000007ffff0000002fffa0000000cff50000056dff000000ffff9000000ffea100000"
+  },
+  {
+    "char": "œ",
+    "utf8": "C593",
+    "data": "1009100009003beea119eeb40005fffffeefffff600efe78fffe31aff13ff5008ffc889ff55ff2005ffffffff63ff6009ff90000000eff79ffff419cc004fffffeefffff60003beea12aeeb500"
+  }
+]

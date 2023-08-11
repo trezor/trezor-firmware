@@ -10,14 +10,13 @@ use crate::{
         },
         display::{self, Font},
         geometry::{Alignment, Insets, Rect},
+        translations::tr,
         util::animation_disabled,
     },
 };
 
 use super::theme;
 
-const HEADER: &str = "COINJOIN IN PROGRESS";
-const FOOTER: &str = "Do not disconnect your Trezor!";
 const FOOTER_TEXT_MARGIN: i16 = 8;
 const LOADER_OFFSET: i16 = -15;
 const LOADER_SPEED: u16 = 10;
@@ -89,7 +88,7 @@ where
         if self.indeterminate {
             text_multiline(
                 self.area,
-                HEADER,
+                tr("coinjoin__title_progress"),
                 Font::BOLD,
                 theme::FG,
                 theme::BG,
@@ -114,7 +113,7 @@ where
         // BOTTOM
         let top_rest = text_multiline_bottom(
             self.area,
-            FOOTER,
+            tr("coinjoin__do_not_disconnect"),
             Font::BOLD,
             theme::FG,
             theme::BG,
@@ -140,8 +139,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("CoinJoinProgress");
-        t.string("header", HEADER);
+        t.string("header", tr("coinjoin__title_progress"));
         t.string("text", self.text.as_ref());
-        t.string("footer", FOOTER);
+        t.string("footer", tr("coinjoin__do_not_disconnect"));
     }
 }

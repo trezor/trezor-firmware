@@ -26,9 +26,7 @@ pub trait Choice<T: StringType> {
         0
     }
 
-    fn btn_layout(&self) -> ButtonLayout<T> {
-        ButtonLayout::default_three_icons()
-    }
+    fn btn_layout(&self) -> ButtonLayout<T>;
 
     /// Whether it is possible to do the middle action event without
     /// releasing the button - after long-press duration is reached.

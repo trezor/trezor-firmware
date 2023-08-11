@@ -217,6 +217,7 @@ elif TREZOR_MODEL in ('R', ):
 
 CPPDEFINES_MOD += [
     'TREZOR_UI2',
+    'TRANSLATIONS',
 ]
 if TREZOR_MODEL not in ('1', ):
     CPPDEFINES_MOD += [
@@ -370,6 +371,7 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
+    'embed/trezorhal/unix/translations.c',
     'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/display-unix.c',
     'embed/trezorhal/unix/flash.c',
@@ -791,6 +793,7 @@ def cargo_build():
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
     features.append('ui')
+    features.append('translations')
     if PYOPT == '0':
         features.append('debug')
     if DMA2D:

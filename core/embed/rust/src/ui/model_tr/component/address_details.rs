@@ -9,6 +9,7 @@ use crate::{
             Child, Component, Event, EventCtx, Pad, Paginate, Qr,
         },
         geometry::Rect,
+        translations::tr,
     },
 };
 
@@ -48,11 +49,17 @@ where
         let details_view = {
             let mut para = ParagraphVecShort::new();
             if let Some(account) = account {
-                para.add(Paragraph::new(&theme::TEXT_BOLD, "Account:".into()));
+                para.add(Paragraph::new(
+                    &theme::TEXT_BOLD,
+                    tr("address_details__account").into(),
+                ));
                 para.add(Paragraph::new(&theme::TEXT_MONO, account));
             }
             if let Some(path) = path {
-                para.add(Paragraph::new(&theme::TEXT_BOLD, "Derivation path:".into()));
+                para.add(Paragraph::new(
+                    &theme::TEXT_BOLD,
+                    tr("address_details__derivation_path").into(),
+                ));
                 para.add(Paragraph::new(&theme::TEXT_MONO, path));
             }
             Paragraphs::new(para)
@@ -123,7 +130,7 @@ where
         } else {
             let left = Some(ButtonDetails::left_arrow_icon());
             let middle = if self.is_xpub_page() && self.subpages_in_current_page() > 1 {
-                Some(ButtonDetails::armed_text("SHOW ALL".into()))
+                Some(ButtonDetails::armed_text(tr("buttons__show_all").into()))
             } else {
                 None
             };

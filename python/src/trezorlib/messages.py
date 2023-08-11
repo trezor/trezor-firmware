@@ -75,6 +75,9 @@ class MessageType(IntEnum):
     UnlockBootloader = 96
     AuthenticateDevice = 97
     AuthenticityProof = 98
+    ChangeLanguage = 990
+    TranslationDataRequest = 991
+    TranslationDataAck = 992
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -3376,6 +3379,51 @@ class ApplySettings(protobuf.MessageType):
         self.safety_checks = safety_checks
         self.experimental_features = experimental_features
         self.hide_passphrase_from_host = hide_passphrase_from_host
+
+
+class ChangeLanguage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 990
+    FIELDS = {
+        1: protobuf.Field("data_length", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_length: "int",
+    ) -> None:
+        self.data_length = data_length
+
+
+class TranslationDataRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 991
+    FIELDS = {
+        1: protobuf.Field("data_length", "uint32", repeated=False, required=True),
+        2: protobuf.Field("data_offset", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_length: "int",
+        data_offset: "int",
+    ) -> None:
+        self.data_length = data_length
+        self.data_offset = data_offset
+
+
+class TranslationDataAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 992
+    FIELDS = {
+        1: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_chunk: "bytes",
+    ) -> None:
+        self.data_chunk = data_chunk
 
 
 class ApplyFlags(protobuf.MessageType):

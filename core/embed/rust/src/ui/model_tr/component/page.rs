@@ -4,6 +4,7 @@ use crate::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
         display::Color,
         geometry::{Insets, Rect},
+        translations::tr,
     },
 };
 
@@ -44,7 +45,7 @@ where
             content: Child::new(content),
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
-            confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
+            confirm_btn_details: Some(ButtonDetails::text(tr("buttons__confirm").into())),
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.

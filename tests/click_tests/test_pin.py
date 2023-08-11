@@ -23,6 +23,7 @@ import pytest
 from trezorlib import device, exceptions
 
 from .. import buttons
+from .. import translations as TR
 from .common import go_back, go_next, navigate_to_action_and_press
 
 if TYPE_CHECKING:
@@ -41,10 +42,20 @@ PIN24 = "875163065288639289952973"
 PIN50 = "31415926535897932384626433832795028841971693993751"
 PIN60 = PIN50 + "9" * 10
 
+
+def _get_possible_btns(path: str) -> str:
+    return "|".join(TR.translate(path))
+
+
+DELETE = _get_possible_btns("inputs.delete")
+SHOW = _get_possible_btns("inputs.show")
+ENTER = _get_possible_btns("inputs.enter")
+
+
 TR_PIN_ACTIONS = [
-    "DELETE",
-    "SHOW",
-    "ENTER",
+    DELETE,
+    SHOW,
+    ENTER,
     "0",
     "1",
     "2",
@@ -84,7 +95,7 @@ def prepare(
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
-        assert "Turn on" in debug.wait_layout().text_content()
+        TR.assert_in(debug.wait_layout().text_content(), "pin.turn_on")
         if debug.model == "T":
             go_next(debug)
         elif debug.model == "Safe 3":
@@ -96,7 +107,7 @@ def prepare(
         # Change PIN
         device_handler.run(device.change_pin)  # type: ignore
         _input_see_confirm(debug, old_pin)
-        assert "Change PIN" in debug.read_layout().text_content()
+        TR.assert_in(debug.wait_layout().text_content(), "pin.change")
         go_next(debug, wait=True)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
@@ -104,7 +115,7 @@ def prepare(
         device_handler.run(device.change_wipe_code)  # type: ignore
         if old_pin:
             _input_see_confirm(debug, old_pin)
-        assert "Turn on" in debug.wait_layout().text_content()
+        TR.assert_in(debug.wait_layout().text_content(), "wipe_code.turn_on")
         go_next(debug, wait=True)
         if debug.model == "Safe 3":
             go_next(debug, wait=True)
@@ -150,7 +161,7 @@ def _see_pin(debug: "DebugLink") -> None:
     if debug.model == "T":
         debug.click(buttons.TOP_ROW, wait=True)
     elif debug.model == "Safe 3":
-        navigate_to_action_and_press(debug, "SHOW", TR_PIN_ACTIONS)
+        navigate_to_action_and_press(debug, SHOW, TR_PIN_ACTIONS)
 
 
 def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -> None:
@@ -162,7 +173,7 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
         if debug.model == "T":
             debug.click(buttons.pin_passphrase_grid(9), wait=True)
         elif debug.model == "Safe 3":
-            navigate_to_action_and_press(debug, "DELETE", TR_PIN_ACTIONS)
+            navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS)
 
     if check:
         after = debug.read_layout().pin()
@@ -174,7 +185,7 @@ def _delete_all(debug: "DebugLink", check: bool = True) -> None:
     if debug.model == "T":
         debug.click_hold(buttons.pin_passphrase_grid(9), hold_ms=1500)
     elif debug.model == "Safe 3":
-        navigate_to_action_and_press(debug, "DELETE", TR_PIN_ACTIONS, hold_ms=1000)
+        navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS, hold_ms=1000)
 
     if check:
         after = debug.read_layout().pin()
@@ -193,7 +204,7 @@ def _confirm_pin(debug: "DebugLink") -> None:
     if debug.model == "T":
         debug.click(buttons.pin_passphrase_grid(11), wait=True)
     elif debug.model == "Safe 3":
-        navigate_to_action_and_press(debug, "ENTER", TR_PIN_ACTIONS)
+        navigate_to_action_and_press(debug, ENTER, TR_PIN_ACTIONS)
 
 
 def _input_see_confirm(debug: "DebugLink", pin: str) -> None:

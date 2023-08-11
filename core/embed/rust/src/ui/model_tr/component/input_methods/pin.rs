@@ -5,6 +5,7 @@ use crate::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         display::{Font, Icon},
         geometry::Rect,
+        translations::tr,
     },
 };
 
@@ -27,22 +28,40 @@ const EMPTY_PIN_STR: &str = "_";
 
 const CHOICE_LENGTH: usize = 13;
 const NUMBER_START_INDEX: usize = 3;
-/// Text, action, icon, without_release
-const CHOICES: [(&str, PinAction, Option<Icon>, bool); CHOICE_LENGTH] = [
+/// Text, action, icon, without_release, translate
+const CHOICES: [(&str, PinAction, Option<Icon>, bool, bool); CHOICE_LENGTH] = [
     // DELETE should be triggerable without release (after long-press)
-    ("DELETE", PinAction::Delete, Some(theme::ICON_DELETE), true),
-    ("SHOW", PinAction::Show, Some(theme::ICON_EYE), false),
-    ("ENTER", PinAction::Enter, Some(theme::ICON_TICK), false),
-    ("0", PinAction::Digit('0'), None, false),
-    ("1", PinAction::Digit('1'), None, false),
-    ("2", PinAction::Digit('2'), None, false),
-    ("3", PinAction::Digit('3'), None, false),
-    ("4", PinAction::Digit('4'), None, false),
-    ("5", PinAction::Digit('5'), None, false),
-    ("6", PinAction::Digit('6'), None, false),
-    ("7", PinAction::Digit('7'), None, false),
-    ("8", PinAction::Digit('8'), None, false),
-    ("9", PinAction::Digit('9'), None, false),
+    (
+        "inputs__delete",
+        PinAction::Delete,
+        Some(theme::ICON_DELETE),
+        true,
+        true,
+    ),
+    (
+        "inputs__show",
+        PinAction::Show,
+        Some(theme::ICON_EYE),
+        false,
+        true,
+    ),
+    (
+        "inputs__enter",
+        PinAction::Enter,
+        Some(theme::ICON_TICK),
+        false,
+        true,
+    ),
+    ("0", PinAction::Digit('0'), None, false, false),
+    ("1", PinAction::Digit('1'), None, false, false),
+    ("2", PinAction::Digit('2'), None, false, false),
+    ("3", PinAction::Digit('3'), None, false, false),
+    ("4", PinAction::Digit('4'), None, false, false),
+    ("5", PinAction::Digit('5'), None, false, false),
+    ("6", PinAction::Digit('6'), None, false, false),
+    ("7", PinAction::Digit('7'), None, false, false),
+    ("8", PinAction::Digit('8'), None, false, false),
+    ("9", PinAction::Digit('9'), None, false, false),
 ];
 
 fn get_random_digit_position() -> usize {
@@ -56,13 +75,21 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
     type Item = ChoiceItem<T>;
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
-        let (choice_str, action, icon, without_release) = CHOICES[choice_index];
+        let (mut choice_str, action, icon, without_release, translate) = CHOICES[choice_index];
 
-        let mut choice_item = ChoiceItem::new(choice_str, ButtonLayout::default_three_icons());
+        // Translating when needed
+        if translate {
+            choice_str = tr(choice_str);
+        }
+
+        let mut choice_item = ChoiceItem::new(
+            choice_str,
+            ButtonLayout::arrow_armed_arrow(tr("buttons__select").into()),
+        );
 
         // Action buttons have different middle button text
         if !matches!(action, PinAction::Digit(_)) {
-            let confirm_btn = ButtonDetails::armed_text("CONFIRM".into());
+            let confirm_btn = ButtonDetails::armed_text(tr("buttons__confirm").into());
             choice_item.set_middle_btn(Some(confirm_btn));
         }
 
@@ -111,7 +138,7 @@ where
         let (showing_real_prompt, header_line_content, pin_line_content) = if show_subprompt {
             (
                 false,
-                String::from("WRONG PIN"),
+                String::from(tr("pin__title_wrong_pin")),
                 String::from(subprompt.as_ref()),
             )
         } else {

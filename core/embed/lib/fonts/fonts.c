@@ -18,19 +18,27 @@
  */
 
 #include "fonts.h"
+#include <stdbool.h>
+#include <stdio.h>
+#ifdef TRANSLATIONS
+#include "librust_fonts.h"
+#endif
 
-static uint8_t convert_char(const uint8_t c) {
-  static char last_was_utf8 = 0;
+// TODO: make it return uint32_t (needs logic to assemble at most 4 bytes
+// together)
+static uint16_t convert_char_utf8(const uint8_t c) {
+  // Considering only two-byte UTF-8 characters currently
+  static uint8_t first_utf8_byte = 0;
 
   // non-printable ASCII character
   if (c < ' ') {
-    last_was_utf8 = 0;
+    first_utf8_byte = 0;
     return 0x7F;
   }
 
   // regular ASCII character
   if (c < 0x80) {
-    last_was_utf8 = 0;
+    first_utf8_byte = 0;
     return c;
   }
 
@@ -38,13 +46,13 @@ static uint8_t convert_char(const uint8_t c) {
 
   // bytes 11xxxxxx are first bytes of UTF-8 characters
   if (c >= 0xC0) {
-    last_was_utf8 = 1;
-    return 0x7F;
+    first_utf8_byte = c;
+    return 0;  // not print this
   }
 
-  if (last_was_utf8) {
-    // bytes 10xxxxxx can be successive UTF-8 characters ...
-    return 0;  // skip glyph
+  if (first_utf8_byte) {
+    // encountered a successive UTF-8 character ...
+    return ((uint16_t)first_utf8_byte << 8) | c;
   } else {
     // ... or they are just non-printable ASCII characters
     return 0x7F;
@@ -130,31 +138,46 @@ int font_baseline(int font) {
 }
 
 const uint8_t *font_get_glyph(int font, uint8_t c) {
-  c = convert_char(c);
-  if (!c) return 0;
+  uint16_t c_2bytes = convert_char_utf8(c);
+  bool is_printable = c_2bytes != 0x7F;
+  if (!c_2bytes) return 0;
+
+#ifdef TRANSLATIONS
+  // found UTF8 character
+  // it is not hardcoded in firmware fonts, it must be extracted from the
+  // embedded blob
+  if (c_2bytes > 0xFF) {
+    PointerData glyph_data = get_utf8_glyph(c_2bytes, font);
+    if (glyph_data.ptr != NULL) {
+      return glyph_data.ptr;
+    } else {
+      is_printable = false;
+    }
+  }
+#endif
 
   // printable ASCII character
-  if (c >= ' ' && c < 0x7F) {
+  if (is_printable && c_2bytes >= ' ' && c_2bytes <= 126) {
     switch (font) {
 #ifdef TREZOR_FONT_NORMAL_ENABLE
       case FONT_NORMAL:
-        return FONT_NORMAL_DATA[c - ' '];
+        return FONT_NORMAL_DATA[c_2bytes - ' '];
 #endif
 #ifdef TREZOR_FONT_DEMIBOLD_ENABLE
       case FONT_DEMIBOLD:
-        return FONT_DEMIBOLD_DATA[c - ' '];
+        return FONT_DEMIBOLD_DATA[c_2bytes - ' '];
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
       case FONT_BOLD:
-        return FONT_BOLD_DATA[c - ' '];
+        return FONT_BOLD_DATA[c_2bytes - ' '];
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
       case FONT_MONO:
-        return FONT_MONO_DATA[c - ' '];
+        return FONT_MONO_DATA[c_2bytes - ' '];
 #endif
 #ifdef TREZOR_FONT_BIG_ENABLE
       case FONT_BIG:
-        return FONT_BIG_DATA[c - ' '];
+        return FONT_BIG_DATA[c_2bytes - ' '];
 #endif
     }
     return 0;
@@ -180,6 +203,10 @@ const uint8_t *font_get_glyph(int font, uint8_t c) {
 #ifdef TREZOR_FONT_MONO_ENABLE
     case FONT_MONO:
       return NONPRINTABLE_GLYPH(FONT_MONO_DATA);
+#endif
+#ifdef TREZOR_FONT_BIG_ENABLE
+    case FONT_BIG:
+      return NONPRINTABLE_GLYPH(FONT_BIG_DATA);
 #endif
   }
   return 0;

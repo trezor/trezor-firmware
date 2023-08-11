@@ -147,6 +147,8 @@ trezor.sdcard
 import trezor.sdcard
 trezor.strings
 import trezor.strings
+trezor.translations
+import trezor.translations
 trezor.ui
 import trezor.ui
 trezor.ui.layouts
@@ -321,6 +323,8 @@ apps.management.backup_device
 import apps.management.backup_device
 apps.management.backup_types
 import apps.management.backup_types
+apps.management.change_language
+import apps.management.change_language
 apps.management.change_pin
 import apps.management.change_pin
 apps.management.change_wipe_code

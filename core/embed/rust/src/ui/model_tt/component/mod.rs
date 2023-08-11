@@ -1,6 +1,8 @@
+#[cfg(feature = "translations")]
 mod address_details;
 pub mod bl_confirm;
 mod button;
+#[cfg(feature = "translations")]
 mod coinjoin_progress;
 mod dialog;
 mod fido;
@@ -12,7 +14,9 @@ mod frame;
 mod homescreen;
 mod keyboard;
 mod loader;
+#[cfg(feature = "translations")]
 mod number_input;
+#[cfg(feature = "translations")]
 mod page;
 mod progress;
 mod result;
@@ -21,11 +25,13 @@ mod simple_page;
 mod swipe;
 mod welcome_screen;
 
+#[cfg(feature = "translations")]
 pub use address_details::AddressDetails;
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
     CancelInfoConfirmMsg, IconText, SelectWordMsg,
 };
+#[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;
 pub use dialog::{Dialog, DialogMsg, IconDialog};
 pub use error::ErrorScreen;
@@ -42,7 +48,9 @@ pub use keyboard::{
     word_count::{SelectWordCount, SelectWordCountMsg},
 };
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
+#[cfg(feature = "translations")]
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
+#[cfg(feature = "translations")]
 pub use page::ButtonPage;
 pub use progress::Progress;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};

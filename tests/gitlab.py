@@ -24,14 +24,30 @@ RAW_REPORT_URL_TEMPLATE = (
     "https://gitlab.com/satoshilabs/trezor/trezor-firmware/-/jobs/{}/raw"
 )
 
-UI_JOB_NAMES = (
+UI_JOBS_ENGLISH = [
     "core click R test",
     "core device R test",
     "core click test",
     "core device test",
     "core persistence test",
     "legacy device test",
-)
+]
+
+UI_JOBS_FRENCH = [
+    "core click R test french",
+    "core device R test french",
+    "core click test french",
+    "core device test french",
+]
+
+UI_JOBS_CZECH = [
+    "core click R test czech",
+    "core device R test czech",
+    "core click test czech",
+    "core device test czech",
+]
+
+UI_JOB_NAMES = UI_JOBS_ENGLISH + UI_JOBS_FRENCH + UI_JOBS_CZECH
 
 SAVE_GRAPHQL_RESULTS = False
 

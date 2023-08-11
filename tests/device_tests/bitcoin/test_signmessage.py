@@ -364,9 +364,9 @@ def test_signmessage_pagination(client: Client, message: str):
     # We cannot differentiate between a newline and space in the message read from Trezor.
     # TODO: do the check also for model R
     if client.features.model == "T":
-        expected_message = message.replace("\n", "").replace(" ", "")
         message_read = IF.message_read.replace(" ", "").replace("...", "")
-        assert expected_message == message_read
+        signed_message = message.replace("\n", "").replace(" ", "")
+        assert signed_message in message_read
 
 
 @pytest.mark.skip_t1

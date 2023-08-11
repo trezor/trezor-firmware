@@ -13,7 +13,7 @@ use crate::{
 
 use super::{
     super::{
-        component::{Choice, ChoiceFactory, ChoicePage},
+        component::{ButtonLayout, Choice, ChoiceFactory, ChoicePage},
         theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
     },
     ReturnToC,
@@ -69,6 +69,10 @@ impl Choice<&'static str> for MenuChoice {
             BLD_FG,
             BLD_BG,
         );
+    }
+
+    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+        ButtonLayout::arrow_armed_arrow("SELECT")
     }
 }
 

@@ -202,6 +202,7 @@ SOURCE_MOD += [
 
 CPPDEFINES_MOD += [
     'TREZOR_UI2',
+    'TRANSLATIONS',
 ]
 
 if TREZOR_MODEL not in ('1', ):
@@ -713,6 +714,7 @@ def cargo_build():
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
     features.append('ui')
+    features.append('translations')
     if PYOPT == '0':
         features.append('ui_debug')
 

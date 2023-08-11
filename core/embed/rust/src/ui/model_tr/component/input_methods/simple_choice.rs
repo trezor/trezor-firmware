@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx},
         geometry::Rect,
+        translations::tr,
     },
 };
 
@@ -38,7 +39,10 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactorySimple<T> {
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let text = &self.choices[choice_index];
-        let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
+        let mut choice_item = ChoiceItem::new(
+            text,
+            ButtonLayout::arrow_armed_arrow(tr("buttons__select").into()),
+        );
 
         // Disabling prev/next buttons for the first/last choice when not in carousel.
         // (could be done to the same button if there is only one)

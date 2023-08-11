@@ -1,0 +1,152 @@
+[
+  {
+    "char": "Á",
+    "utf8": "C381",
+    "data": "0d100d001000000004760000000002ff4000000000bf70000000000000000000003ffff100000008ffff60000000dffffb0000003ff8aff1000008ff35ff600000efe00ffc00003ff900bff10009ffffffff6000effffffffc003ffb6666cff109ff500007ff70eff000002ffc"
+  },
+  {
+    "char": "Č",
+    "utf8": "C48C",
+    "data": "0c100c00100004730671000002efbfa00000004ffc000000000000000000029cfd9200005fffffff4002fffdbeffe10cff70008ff80ffb000007863ff7000000003ff7000000000ffb000008970cff60008ff802fffdadffe1005fffffff4000029dfd9200"
+  },
+  {
+    "char": "Ď",
+    "utf8": "C48E",
+    "data": "0b100c011000672177000004fecf70000006ffa000000000000000cffffd92000cfffffff600cffaadfff30cfe0006ffd0cfe0000bff1cfe00006ff4cfe00006ff4cfe0000bff1cfe0006ffd0cff9adfff30cfffffff600cffffd92000"
+  },
+  {
+    "char": "É",
+    "utf8": "C389",
+    "data": "09100a01100000277100000cf9000006fc000000000000cfffffff5cfffffff5cff777772cfe000000cfe000000cfffffff0cfffffff0cff666660cfe000000cff777772cfffffff5cfffffff5"
+  },
+  {
+    "char": "Ě",
+    "utf8": "C49A",
+    "data": "09100a011005730671002ffbf900004ffc000000000000cfffffff5cfffffff5cff777772cfe000000cfe000000cfffffff0cfffffff0cff666660cfe000000cff777772cfffffff5cfffffff5"
+  },
+  {
+    "char": "Í",
+    "utf8": "C38D",
+    "data": "05100501100077307fd02fe2000000cfe00cfe00cfe00cfe00cfe00cfe00cfe00cfe00cfe00cfe00cfe00cfe00"
+  },
+  {
+    "char": "Ň",
+    "utf8": "C587",
+    "data": "0b100d011000473067100002efbfa0000004ffc000000000000000cffc0006ff4cfff4006ff4cfffc006ff4cffff406ff4cffffc06ff4cfe7ff46ff4cfe0efc6ff4cfe06ffdff4cfe00dffff4cfe005ffff4cfe000dfff4cfe0004fff4"
+  },
+  {
+    "char": "Ó",
+    "utf8": "C393",
+    "data": "0d100d001000000007720000000009fc0000000003fe10000000000000000000029cfc91000005ffffffe40002fffdbdfff100cff70008ffa00ffb00000dff03ff7000009ff23ff7000009ff20ffb00000dff00cff60008ffa002fffdadfff10005ffffffe40000029dfc91000"
+  },
+  {
+    "char": "Ř",
+    "utf8": "C598",
+    "data": "0b100c01100276047400000bfafd1000001dff2000000000000000cfffffd9000cfffffffc00cff889eff50cfe0004ff90cfe0001ffa0cfe0008ff80cffffffff20cffffffd300cffaffc0000cfe0affa000cfe00bff900cfe000cff90"
+  },
+  {
+    "char": "Š",
+    "utf8": "C5A0",
+    "data": "0b100b001000474067200001efafa0000003ffd000000000000000004befd910006fffffff200fff97cffc03ff9000cff01ffe630000009fffffc600005beffff900000015eff06ff50009ff22fff868ffe007fffffff50003bdfda300"
+  },
+  {
+    "char": "Ť",
+    "utf8": "C5A4",
+    "data": "0a100a00100067117600005fddf5000008ff80000000000000affffffffaaffffffffa6aacffcaa70005ff50000005ff50000005ff50000005ff50000005ff50000005ff50000005ff50000005ff50000005ff5000"
+  },
+  {
+    "char": "Ú",
+    "utf8": "C39A",
+    "data": "0b100c01100000037600000001ef60000000af8000000000000000efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efd00009ff1cfe0000bff0aff6003ffd04fffcbfff7009ffffffc00004beec7000"
+  },
+  {
+    "char": "Ů",
+    "utf8": "C5AE",
+    "data": "0b110c0111000001000000005ef80000000ba7e00000005ff8000000000100000efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efc00009ff1efd00009ff1cfe0000bff0aff6003ffd04fffcbfff7009ffffffc00004beec70000"
+  },
+  {
+    "char": "Ý",
+    "utf8": "C39D",
+    "data": "0d100c001000000007720000000009fc0000000004fd1000000000000000001eff10002ffd007ff8000aff5000eff102ffc00006ff80aff400000eff3ffc0000006fffff30000000dfffb000000005fff3000000000efd0000000000efc0000000000efc0000000000efc00000"
+  },
+  {
+    "char": "Ž",
+    "utf8": "C5BD",
+    "data": "0a100b00100057306710002ffbf9000004ffc00000000000003ffffffffc3ffffffffc2aaaaafffa000009ffe100005fff300002fff600001dff900000bffc000008ffe100003fffc999985ffffffffd5ffffffffd"
+  },
+  {
+    "char": "á",
+    "utf8": "C3A1",
+    "data": "090d0a000d00000476000002ff400000cf700000000000006dfea2008fffffe10cca27ff7000000ff903beffffa1ffebbffa5ff505ffa2fffffffa03cfe9afa0"
+  },
+  {
+    "char": "č",
+    "utf8": "C48D",
+    "data": "0a0d0a000d0067117600005fddf5000008ff80000000000000002befc40004ffffff600eff87eff13ff60039935ff20000003ff60038830eff87eff104ffffff60003befc400"
+  },
+  {
+    "char": "ď",
+    "utf8": "C48F",
+    "data": "0e0c0d000c0000000ff93ff10000000ff97fa00000000ff9ae40003bee7ff9000005fffffff900000eff87eff900003ff6003ff900005ff2000ff900003ff6003ff900000eff87eff9000005fffffff90000003bfe7bf90000"
+  },
+  {
+    "char": "é",
+    "utf8": "C3A9",
+    "data": "0a0d0a000d000003760000001ef5000000af80000000000000003beeb40004ffffff600efc21aff23ffa889ff65ffffffff73ff50000000efd229cc104ffffff60002beeb400"
+  },
+  {
+    "char": "ě",
+    "utf8": "C49B",
+    "data": "0a0d0a000d0067117600005fddf5000008ff80000000000000003beeb40004ffffff600efc21aff23ffa889ff65ffffffff73ff50000000efd229cc104ffffff60002beeb400"
+  },
+  {
+    "char": "í",
+    "utf8": "C3AD",
+    "data": "050d05010d07fe12ff304740000000ff800ff800ff800ff800ff800ff800ff800ff800ff8000"
+  },
+  {
+    "char": "ň",
+    "utf8": "C588",
+    "data": "090d0a010d05730771003febf800005ffb000000000000ff7bfe800fffffffa0fffb9fff2ffc007ff4ff9003ff5ff8003ff5ff8003ff5ff8003ff5ff8003ff50"
+  },
+  {
+    "char": "ó",
+    "utf8": "C3B3",
+    "data": "0a0d0a000d000003770000000ef70000009f90000000000000002beeb40004ffffff700eff87eff23ff6003ff65ff2000ff83ff6003ff60eff87eff204ffffff70003beeb400"
+  },
+  {
+    "char": "ř",
+    "utf8": "C599",
+    "data": "080d07000d0bf78fb001dffd0000277200000000000ffadf900fffff900fff96300ffb00000ff800000ff800000ff800000ff800000ff80000"
+  },
+  {
+    "char": "š",
+    "utf8": "C5A1",
+    "data": "090d09000d05730671002ffbf900004ffb00000000000003aefd6002ffffff806ff308bb05ffc8510009fffff6000146dff06dd107ff11effeffb002befd8000"
+  },
+  {
+    "char": "ť",
+    "utf8": "C5A5",
+    "data": "0a0d09000d0000004dd002ff608fa002ff60cf4002ff6000007fffff50007fffff500037ffa6200002ff60000002ff60000002ff60000002ffb5200000ffff5000005dff5000"
+  },
+  {
+    "char": "ú",
+    "utf8": "C3BA",
+    "data": "090d0a010d0000afc000004fe100000572000000000000ff8003ff5ff8003ff5ff8003ff5ff8003ff5ff9003ff5ffc006ff5cffb9fff55fffffff505dfd6ff50"
+  },
+  {
+    "char": "ů",
+    "utf8": "C5AF",
+    "data": "090e0a010e000010000004ef900000ab6f000004ef9000000010000ff8003ff5ff8003ff5ff8003ff5ff8003ff5ff9003ff5ffc006ff5cffb9fff55fffffff505dfd6ff5"
+  },
+  {
+    "char": "ý",
+    "utf8": "C3BD",
+    "data": "0b110a000d000002ff50000000cf700000002760000000000000000efc0007ff409ff200bfe003ff700ff9000dfd04ff40008ff29fe00002ff8dfa00000dffff4000007ffff0000002fffa0000000cff50000056dff000000ffff9000000ffea100000"
+  },
+  {
+    "char": "ž",
+    "utf8": "C5BE",
+    "data": "080d09000d06fc3fe2009fff4000077400000000005ffffffe5ffffffe2666effa0009ffc0007ffd1005ffe2003fff95556fffffff6fffffff"
+  }
+]

@@ -214,7 +214,11 @@ def read_and_confirm_mnemonic_tt(
 
     # check share
     for _ in range(3):
-        word_pos = int(debug.wait_layout().text_content().split()[2])
+        # Word position is the first number in the text
+        word_pos_match = re.search(r"\d+", debug.wait_layout().text_content())
+        assert word_pos_match is not None
+        word_pos = int(word_pos_match.group(0))
+
         index = word_pos - 1
         if choose_wrong:
             debug.input(mnemonic[(index + 1) % len(mnemonic)])
@@ -278,7 +282,7 @@ def get_test_address(client: "Client") -> str:
     return btc.get_address(client, "Testnet", TEST_ADDRESS_N)
 
 
-def compact_size(n) -> bytes:
+def compact_size(n: int) -> bytes:
     if n < 253:
         return n.to_bytes(1, "little")
     elif n < 0x1_0000:

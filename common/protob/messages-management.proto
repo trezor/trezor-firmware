@@ -161,7 +161,7 @@ message EndSession {
 }
 
 /**
- * Request: change language and/or label of the device
+ * Request: change some property of the device, e.g. label or homescreen
  * @start
  * @next Success
  * @next Failure
@@ -178,6 +178,37 @@ message ApplySettings {
     optional SafetyCheckLevel safety_checks = 9;  // Safety check level, set to Prompt to limit path namespace enforcement
     optional bool experimental_features = 10;  // enable experimental message types
     optional bool hide_passphrase_from_host = 11;  // do not show passphrase coming from host
+}
+
+/**
+ * Request: change the device language via translation data
+ * Does not send the translation data itself, as they are too large for one message.
+ * Device will request the translation data in chunks.
+ * @start
+ * @next TranslationDataRequest
+ * @next Failure
+ */
+message ChangeLanguage {
+    required uint32 data_length = 1;   // byte length of the whole translation blob (set to 0 for default language)
+}
+
+/**
+ * Response: Device asks for more data from transaction payload.
+ * @end
+ * @next TranslationDataAck
+ */
+ message TranslationDataRequest {
+    required uint32 data_length = 1;    // Number of bytes being requested (<= 1024)
+    required uint32 data_offset = 2;    // Offset of the first byte being requested
+}
+
+/**
+ * Request: Translation payload data.
+ * @next TranslationDataRequest
+ * @next Success
+ */
+message TranslationDataAck {
+    required bytes data_chunk = 1;  // Bytes from translation payload (<= 1024 bytes)
 }
 
 /**

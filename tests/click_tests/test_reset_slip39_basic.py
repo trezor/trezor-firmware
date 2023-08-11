@@ -59,10 +59,10 @@ def test_reset_slip39_basic(
     reset.confirm_new_wallet(debug)
 
     # confirm back up
-    reset.confirm_read(debug, "Success")
+    reset.confirm_read(debug)
 
     # confirm checklist
-    reset.confirm_read(debug, "Checklist")
+    reset.confirm_read(debug)
 
     # set num of shares - default is 5
     if num_of_shares < 5:
@@ -71,7 +71,7 @@ def test_reset_slip39_basic(
         reset.set_selection(debug, buttons.RESET_PLUS, num_of_shares - 5)
 
     # confirm checklist
-    reset.confirm_read(debug, "Checklist")
+    reset.confirm_read(debug)
 
     # set threshold
     # TODO: could make it general as well
@@ -83,10 +83,10 @@ def test_reset_slip39_basic(
         raise RuntimeError("not a supported combination")
 
     # confirm checklist
-    reset.confirm_read(debug, "Checklist")
+    reset.confirm_read(debug)
 
     # confirm backup warning
-    reset.confirm_read(debug, "Caution", middle_r=True)
+    reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []
     for _ in range(num_of_shares):
@@ -97,12 +97,12 @@ def test_reset_slip39_basic(
         reset.confirm_words(debug, words)
 
         # confirm share checked
-        reset.confirm_read(debug, "Success")
+        reset.confirm_read(debug)
 
         all_words.append(" ".join(words))
 
     # confirm backup done
-    reset.confirm_read(debug, "Success")
+    reset.confirm_read(debug)
 
     # generate secret locally
     internal_entropy = debug.state().reset_entropy

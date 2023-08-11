@@ -65,6 +65,27 @@ def apply_settings(
 
 @expect(messages.Success, field="message", ret_type=str)
 @session
+def change_language(
+    client: "TrezorClient",
+    language_data: bytes,
+) -> "MessageType":
+    msg = messages.ChangeLanguage(data_length=len(language_data))
+
+    response = client.call(msg)
+    while not isinstance(response, messages.Success):
+        assert isinstance(response, messages.TranslationDataRequest)
+        data_length = response.data_length
+        data_offset = response.data_offset
+        chunk = language_data[data_offset : data_offset + data_length]
+        response = client.call(messages.TranslationDataAck(data_chunk=chunk))
+
+    assert isinstance(response, messages.Success)
+    client.refresh_features()  # changing the language in features
+    return response
+
+
+@expect(messages.Success, field="message", ret_type=str)
+@session
 def apply_flags(client: "TrezorClient", flags: int) -> "MessageType":
     out = client.call(messages.ApplyFlags(flags=flags))
     client.refresh_features()

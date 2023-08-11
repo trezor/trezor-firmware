@@ -10,11 +10,14 @@ async def require_sign_tx(num_actions: int) -> None:
     from trezor.enums import ButtonRequestType
     from trezor.strings import format_plural
     from trezor.ui.layouts import confirm_action
+    from trezortranslate import TR
 
     await confirm_action(
         "confirm_tx",
-        "Sign transaction",
-        description="You are about to sign {}.",
-        description_param=format_plural("{count} {plural}", num_actions, "action"),
+        TR.eos__sign_transaction,
+        description=TR.eos__about_to_sign_template,
+        description_param=format_plural(
+            "{count} {plural}", num_actions, TR.plurals__sign_x_actions
+        ),
         br_code=ButtonRequestType.SignTx,
     )

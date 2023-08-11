@@ -31,3 +31,12 @@ CHANGE_OUTPUT_STAKING_PATH_NAME = "Change output staking path"
 CERTIFICATE_PATH_NAME = "Certificate path"
 POOL_OWNER_STAKING_PATH_NAME = "Pool owner staking path"
 WITNESS_PATH_NAME = "Witness path"
+
+# TODO: these appear also in DataErrors being thrown,
+# so device tests would fail with translations
+
+# CHANGE_OUTPUT_PATH_NAME = TR.cardano__change_output_path
+# CHANGE_OUTPUT_STAKING_PATH_NAME = TR.cardano__change_output_staking_path
+# CERTIFICATE_PATH_NAME = TR.cardano__certificate_path
+# POOL_OWNER_STAKING_PATH_NAME = TR.cardano__pool_owner_path
+# WITNESS_PATH_NAME = TR.cardano__witness_path

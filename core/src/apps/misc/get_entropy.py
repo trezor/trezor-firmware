@@ -9,12 +9,13 @@ async def get_entropy(msg: GetEntropy) -> Entropy:
     from trezor.enums import ButtonRequestType
     from trezor.messages import Entropy
     from trezor.ui.layouts import confirm_action
+    from trezortranslate import TR
 
     await confirm_action(
         "get_entropy",
-        "Confirm entropy",
-        "Do you really want to send entropy?",
-        "Continue only if you know what you are doing!",
+        TR.entropy__title_confirm,
+        TR.entropy__send,
+        TR.words__know_what_your_doing,
         br_code=ButtonRequestType.ProtectCall,
     )
 

@@ -12,6 +12,7 @@ async def load_device(msg: LoadDevice) -> Success:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
     from trezor.wire import ProcessError, UnexpectedMessage
+    from trezortranslate import TR
 
     from apps.management import backup_types
 
@@ -39,9 +40,9 @@ async def load_device(msg: LoadDevice) -> Success:
     # _warn
     await confirm_action(
         "warn_loading_seed",
-        "Loading seed",
-        "Loading private seed is not recommended.",
-        "Continue only if you know what you are doing!",
+        TR.debug__loading_seed,
+        TR.debug__loading_seed_not_recommended,
+        TR.words__know_what_your_doing,
     )
     # END _warn
 

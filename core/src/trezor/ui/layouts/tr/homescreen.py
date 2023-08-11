@@ -43,6 +43,7 @@ class Homescreen(HomescreenBase):
         level = 1
         if notification is not None:
             notification = notification.rstrip("!")
+            # TODO: handle translation of EXPERIMENTAL
             if "EXPERIMENTAL" in notification:
                 level = 2
             elif notification_is_error:
@@ -106,10 +107,12 @@ class Busyscreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.BUSYSCREEN_ON
 
     def __init__(self, delay_ms: int) -> None:
+        from trezortranslate import TR
+
         skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_progress_coinjoin(
-                title="Waiting for others",
+                title=TR.coinjoin__waiting_for_others,
                 indeterminate=True,
                 time_ms=delay_ms,
                 skip_first_paint=skip,

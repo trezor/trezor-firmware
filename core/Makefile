@@ -29,6 +29,7 @@ TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
 PYTEST_TIMEOUT ?= 400
+TEST_LANG ?= "en"
 
 # OpenOCD interface default. Alternative: ftdi/olimex-arm-usb-tiny-h
 OPENOCD_INTERFACE ?= stlink
@@ -95,11 +96,12 @@ test_rust: ## run rs unit tests
 		-- --test-threads=1 --nocapture
 
 test_emu: ## run selected device tests from python-trezor
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) --lang=$(TEST_LANG)
 
 test_emu_multicore: ## run device tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
-		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
+		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM) \
+		--lang=$(TEST_LANG)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
 	cd tests ; $(EMU_TEST) ./run_tests_device_emu_monero.sh $(TESTOPTS)
@@ -113,31 +115,33 @@ test_emu_fido2: ## run fido2 device tests
 		$(EMU_TEST) --slip0014 $(PYTEST) --maxfail=5 --sim tests/standard/ --vendor trezor $(TESTOPTS)
 
 test_emu_click: ## run click tests
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS) --lang=$(TEST_LANG)
 
 test_emu_click_ui: ## run click tests with UI testing
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing --do-master-diff
+		--ui=test --ui-check-missing --do-master-diff --lang=$(TEST_LANG)
 
 test_emu_persistence: ## run persistence tests
-	$(PYTEST) $(TESTPATH)/persistence_tests $(TESTOPTS)
+	$(PYTEST) $(TESTPATH)/persistence_tests $(TESTOPTS) --lang=$(TEST_LANG)
 
 test_emu_persistence_ui: ## run persistence tests with UI testing
 	$(PYTEST) $(TESTPATH)/persistence_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing --do-master-diff
+		--ui=test --ui-check-missing --do-master-diff --lang=$(TEST_LANG)
 
 test_emu_ui: ## run ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing --record-text-layout --do-master-diff
+		--ui=test --ui-check-missing --record-text-layout --do-master-diff \
+		--lang=$(TEST_LANG)
 
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
 		--ui=test --ui-check-missing --record-text-layout --do-master-diff \
-		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
+		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM) \
+		--lang=$(TEST_LANG)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=record --ui-check-missing --do-master-diff
+		--ui=record --ui-check-missing --do-master-diff --lang=$(TEST_LANG)
 
 test_emu_ui_record_multicore: ## quickly record all screens
 	make test_emu_ui_multicore || echo "All errors are recorded in fixtures.json"

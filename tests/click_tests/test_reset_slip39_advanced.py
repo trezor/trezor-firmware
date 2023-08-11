@@ -62,10 +62,10 @@ def test_reset_slip39_advanced(
     reset.confirm_new_wallet(debug)
 
     # confirm back up
-    reset.confirm_read(debug, "Success")
+    reset.confirm_read(debug)
 
     # confirm checklist
-    reset.confirm_read(debug, "Checklist")
+    reset.confirm_read(debug)
 
     # set num of groups - default is 5
     if group_count < 5:
@@ -74,7 +74,7 @@ def test_reset_slip39_advanced(
         reset.set_selection(debug, buttons.RESET_PLUS, group_count - 5)
 
     # confirm checklist
-    reset.confirm_read(debug, "Checklist")
+    reset.confirm_read(debug)
 
     # set group threshold
     # TODO: could make it general as well
@@ -86,7 +86,7 @@ def test_reset_slip39_advanced(
         raise RuntimeError("not a supported combination")
 
     # confirm checklist
-    reset.confirm_read(debug, "Checklist")
+    reset.confirm_read(debug)
 
     # set share num and threshold for groups
     for _ in range(group_count):
@@ -106,7 +106,7 @@ def test_reset_slip39_advanced(
             raise RuntimeError("not a supported combination")
 
     # confirm backup warning
-    reset.confirm_read(debug, "Caution", middle_r=True)
+    reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []
     for _ in range(group_count):
@@ -120,12 +120,12 @@ def test_reset_slip39_advanced(
             reset.confirm_words(debug, words)
 
             # confirm share checked
-            reset.confirm_read(debug, "Success")
+            reset.confirm_read(debug)
 
             all_words.append(" ".join(words))
 
     # confirm backup done
-    reset.confirm_read(debug, "Success")
+    reset.confirm_read(debug)
 
     # generate secret locally
     internal_entropy = debug.state().reset_entropy

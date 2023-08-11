@@ -4,6 +4,7 @@ use crate::{
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         geometry::Rect,
+        translations::tr,
         util::char_to_string,
     },
 };
@@ -94,9 +95,12 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryWordlist {
         // (is a requirement for WORDS, doing it for LETTERS as well to unite it)
         if choice_index == DELETE_INDEX {
             return (
-                ChoiceItem::new("DELETE", ButtonLayout::arrow_armed_arrow("CONFIRM".into()))
-                    .with_icon(theme::ICON_DELETE)
-                    .with_middle_action_without_release(),
+                ChoiceItem::new(
+                    tr("inputs__delete"),
+                    ButtonLayout::arrow_armed_arrow(tr("buttons__confirm").into()),
+                )
+                .with_icon(theme::ICON_DELETE)
+                .with_middle_action_without_release(),
                 WordlistAction::Delete,
             );
         }
@@ -105,7 +109,10 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryWordlist {
             let index = self.word_random_order[choice_index - 1];
             let word = self.wordlist.get(index).unwrap_or_default();
             (
-                ChoiceItem::new(word, ButtonLayout::default_three_icons()),
+                ChoiceItem::new(
+                    word,
+                    ButtonLayout::arrow_armed_arrow(tr("buttons__select").into()),
+                ),
                 WordlistAction::Word(word),
             )
         } else {
@@ -115,7 +122,10 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryWordlist {
                 .nth(choice_index - 1)
                 .unwrap_or_default();
             (
-                ChoiceItem::new(char_to_string(letter), ButtonLayout::default_three_icons()),
+                ChoiceItem::new(
+                    char_to_string(letter),
+                    ButtonLayout::arrow_armed_arrow(tr("buttons__select").into()),
+                ),
                 WordlistAction::Letter(letter),
             )
         }

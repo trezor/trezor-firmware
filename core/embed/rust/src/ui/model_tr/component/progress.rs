@@ -19,7 +19,7 @@ use crate::{
 use super::super::theme;
 
 const BOTTOM_DESCRIPTION_MARGIN: i16 = 10;
-const LOADER_Y_OFFSET_TITLE: i16 = -10;
+const LOADER_Y_OFFSET_TITLE: i16 = 0;
 const LOADER_Y_OFFSET_NO_TITLE: i16 = -20;
 
 pub struct Progress<T>

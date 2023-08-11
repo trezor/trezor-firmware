@@ -11,6 +11,7 @@ async def get_public_key(
     from trezor import wire
     from trezor.enums import InputScriptType
     from trezor.messages import HDNodeType, PublicKey, UnlockPath
+    from trezortranslate import TR
 
     from apps.common import coininfo, paths
     from apps.common.keychain import FORBIDDEN_KEY_PATH, get_keychain
@@ -101,7 +102,7 @@ async def get_public_key(
             "XPUB",
             account=account,
             path=path,
-            mismatch_title="XPUB mismatch?",
+            mismatch_title=TR.addr_mismatch__xpub_mismatch,
             br_type="show_xpub",
         )
 

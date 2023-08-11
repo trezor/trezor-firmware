@@ -9,6 +9,7 @@ use crate::{
             Component, Event, EventCtx, Paginate, Qr,
         },
         geometry::Rect,
+        translations::tr,
     },
 };
 
@@ -42,13 +43,16 @@ where
     {
         let mut para = ParagraphVecShort::new();
         if let Some(a) = account {
-            para.add(Paragraph::new(&theme::TEXT_NORMAL, "Account:".into()));
+            para.add(Paragraph::new(
+                &theme::TEXT_NORMAL,
+                tr("address_details__account").into(),
+            ));
             para.add(Paragraph::new(&theme::TEXT_MONO, a));
         }
         if let Some(p) = path {
             para.add(Paragraph::new(
                 &theme::TEXT_NORMAL,
-                "Derivation path:".into(),
+                tr("address_details__derivation_path").into(),
             ));
             para.add(Paragraph::new(&theme::TEXT_MONO, p));
         }

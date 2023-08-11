@@ -10,14 +10,15 @@ async def get_next_u2f_counter(msg: GetNextU2FCounter) -> NextU2FCounter:
     from trezor.messages import NextU2FCounter
     from trezor.ui.layouts import confirm_action
     from trezor.wire import NotInitialized
+    from trezortranslate import TR
 
     if not storage_device.is_initialized():
         raise NotInitialized("Device is not initialized")
 
     await confirm_action(
         "get_u2f_counter",
-        "Get U2F counter",
-        description="Increase and retrieve the U2F counter?",
+        TR.u2f__title_get,
+        description=TR.u2f__get,
         br_code=ButtonRequestType.ProtectCall,
     )
 

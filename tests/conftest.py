@@ -23,9 +23,9 @@ from typing import TYPE_CHECKING, Generator, Iterator
 import pytest
 import xdist
 
-from trezorlib import debuglink, log
+from trezorlib import debuglink, log, translations
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.device import apply_settings
+from trezorlib.device import apply_settings, change_language
 from trezorlib.device import wipe as wipe_device
 from trezorlib.transport import enumerate_devices, get_transport
 
@@ -42,6 +42,11 @@ if TYPE_CHECKING:
 
 
 HERE = Path(__file__).resolve().parent
+CORE = HERE.parent / "core"
+TRANSLATIONS = CORE / "embed" / "rust" / "src" / "ui" / "translations"
+
+CS_JSON = TRANSLATIONS / "cs.json"
+FR_JSON = TRANSLATIONS / "fr.json"
 
 
 # So that we see details of failed asserts from this module
@@ -128,14 +133,41 @@ def _raw_client(request: pytest.FixtureRequest) -> Client:
     # Requesting the emulator fixture only if relevant.
     if request.session.config.getoption("control_emulators"):
         emu_fixture = request.getfixturevalue("emulator")
-        return emu_fixture.client
+        client = emu_fixture.client
     else:
         interact = os.environ.get("INTERACT") == "1"
         path = os.environ.get("TREZOR_PATH")
         if path:
-            return _client_from_path(request, path, interact)
+            client = _client_from_path(request, path, interact)
         else:
-            return _find_client(request, interact)
+            client = _find_client(request, interact)
+
+    # Setting the appropriate language
+    # Not doing it for T1
+    if client.features.model != "1":
+        lang = request.session.config.getoption("lang") or "en"
+        _set_language(client, lang)  # type: ignore
+
+    return client
+
+
+def _set_language(client: Client, lang: str) -> Client:
+    model = client.features.model or ""
+    if lang == "en":
+        with client:
+            change_language(client, language_data=b"")
+    elif lang == "cs":
+        change_language(
+            client, language_data=translations.blob_from_file(CS_JSON, model)
+        )
+    elif lang == "fr":
+        change_language(
+            client, language_data=translations.blob_from_file(FR_JSON, model)
+        )
+    else:
+        raise RuntimeError(f"Unknown language: {lang}")
+
+    return client
 
 
 def _client_from_path(
@@ -356,6 +388,12 @@ def pytest_addoption(parser: "Parser") -> None:
         default=False,
         help="Generating a master-diff report. "
         "This shows all unique differing screens compared to master.",
+    )
+    parser.addoption(
+        "--lang",
+        action="store",
+        choices=["en", "cs", "fr"],
+        help="Run tests with a specified language: 'en' (default), 'cs' or 'fr'",
     )
 
 

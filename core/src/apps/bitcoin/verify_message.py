@@ -57,6 +57,7 @@ async def verify_message(msg: VerifyMessage) -> Success:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_signverify, show_success
     from trezor.wire import ProcessError
+    from trezortranslate import TR
 
     from apps.common import coins
     from apps.common.signverify import decode_message, message_digest
@@ -116,5 +117,5 @@ async def verify_message(msg: VerifyMessage) -> Success:
         verify=True,
     )
 
-    await show_success("verify_message", "The signature is valid.")
+    await show_success("verify_message", TR.bitcoin__valid_signature)
     return Success(message="Message verified")

@@ -10,6 +10,7 @@ use crate::{
         geometry::{Offset, Point, Rect},
         layout::util::get_user_custom_image,
         model_tt::{constant, theme::IMAGE_HOMESCREEN},
+        translations::tr,
     },
 };
 
@@ -87,7 +88,7 @@ where
         if !usb_configured() {
             let (color, icon) = Self::level_to_style(0);
             Some(HomescreenNotification {
-                text: "NO USB CONNECTION",
+                text: tr("homescreen__title_no_usb_connection"),
                 icon,
                 color,
             })
@@ -106,7 +107,7 @@ where
     fn paint_loader(&mut self) {
         display::text_center(
             TOP_CENTER + Offset::y(HOLD_Y),
-            "HOLD TO LOCK",
+            tr("homescreen__title_hold_to_lock"),
             Font::BOLD,
             theme::FG,
             theme::BG,
@@ -302,9 +303,15 @@ where
 
     fn paint(&mut self) {
         let (locked, tap) = if self.bootscreen {
-            ("NOT CONNECTED", "Tap to connect")
+            (
+                tr("lockscreen__title_not_connected"),
+                tr("lockscreen__tap_to_connect"),
+            )
         } else {
-            ("LOCKED", "Tap to unlock")
+            (
+                tr("lockscreen__title_locked"),
+                tr("lockscreen__tap_to_unlock"),
+            )
         };
 
         let mut label_style = theme::TEXT_DEMIBOLD;

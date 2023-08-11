@@ -28,6 +28,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     from trezor.pin import render_empty_loader
     from trezor.ui.layouts import confirm_reset_device, prompt_backup
     from trezor.wire.context import call
+    from trezortranslate import TR
 
     from apps.common.request_pin import request_pin_confirm
 
@@ -38,13 +39,13 @@ async def reset_device(msg: ResetDevice) -> Success:
 
     # make sure user knows they're setting up a new wallet
     if backup_type in (BAK_T_SLIP39_BASIC, BAK_T_SLIP39_ADVANCED):
-        title = "Create wallet (Shamir)"
+        title = TR.reset__title_create_wallet_shamir
     else:
-        title = "Create wallet"
+        title = TR.reset__title_create_wallet
     await confirm_reset_device(title)
 
     # Rendering empty loader so users do not feel a freezing screen
-    render_empty_loader("PROCESSING", "")
+    render_empty_loader(TR.progress__processing, "")
 
     # wipe storage to make sure the device is in a clear state
     storage.reset()

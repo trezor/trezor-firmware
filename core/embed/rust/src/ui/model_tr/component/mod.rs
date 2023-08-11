@@ -26,26 +26,32 @@ pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use result::ResultScreen;
 pub use welcome_screen::WelcomeScreen;
 
+#[cfg(feature = "translations")]
 mod address_details;
 mod changing_text;
+#[cfg(feature = "translations")]
 mod coinjoin_progress;
 mod flow;
 mod flow_pages;
 mod frame;
 #[cfg(feature = "micropython")]
 mod homescreen;
+#[cfg(feature = "translations")]
 mod page;
 mod progress;
 mod result_anim;
 mod result_popup;
 mod scrollbar;
+#[cfg(feature = "translations")]
 mod share_words;
 mod show_more;
 mod title;
 
+#[cfg(feature = "translations")]
 pub use address_details::AddressDetails;
 
 pub use changing_text::ChangingTextLine;
+#[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;
 pub use flow::Flow;
 pub use flow_pages::{FlowPages, Page};
@@ -59,10 +65,12 @@ pub use input_methods::{
     simple_choice::SimpleChoice,
     wordlist::{WordlistEntry, WordlistType},
 };
+#[cfg(feature = "translations")]
 pub use page::ButtonPage;
 pub use progress::Progress;
 pub use result_anim::{ResultAnim, ResultAnimMsg};
 pub use result_popup::{ResultPopup, ResultPopupMsg};
 pub use scrollbar::ScrollBar;
+#[cfg(feature = "translations")]
 pub use share_words::ShareWords;
 pub use show_more::{CancelInfoConfirmMsg, ShowMore};

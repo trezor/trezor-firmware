@@ -27,17 +27,17 @@ def format_ordinal(number: int) -> str:
     )
 
 
-def format_plural(string: str, count: int, plural: str) -> str:
+def format_plural_english(string: str, count: int, plural: str) -> str:
     """
     Adds plural form to a string based on `count`.
     !! Does not work with irregular words !!
 
     Example:
-    >>> format_plural("We need {count} more {plural}", 3, "share")
+    >>> format_plural_english("We need {count} more {plural}", 3, "share")
     'We need 3 more shares'
-    >>> format_plural("We need {count} more {plural}", 1, "share")
+    >>> format_plural_english("We need {count} more {plural}", 1, "share")
     'We need 1 more share'
-    >>> format_plural("{count} {plural}", 4, "candy")
+    >>> format_plural_english("{count} {plural}", 4, "candy")
     '4 candies'
     """
     if not all(s in string for s in ("{count}", "{plural}")):
@@ -56,20 +56,49 @@ def format_plural(string: str, count: int, plural: str) -> str:
     return string.format(count=count, plural=plural)
 
 
-def format_duration_ms(milliseconds: int) -> str:
+def format_plural(string: str, count: int, plurals: str) -> str:
+    """
+    Adds plural form to a string based on `count`.
+    """
+    if not all(s in string for s in ("{count}", "{plural}")):
+        # string needs to have {count} and {plural} inside
+        raise ValueError
+
+    plural_options = plurals.split("|")
+    if len(plural_options) not in (2, 3):
+        # plurals need to have 2 or 3 options
+        raise ValueError
+
+    # First one is for singular, last one is for MANY (or zero)
+    if count == 1:
+        plural = plural_options[0]
+    else:
+        plural = plural_options[-1]
+
+    # In case there are three options, the middle one is for FEW (2-4)
+    if len(plural_options) == 3:
+        # TODO: this is valid for czech - are there some other languages that have it differently?
+        # In that case we need to add language-specific rules
+        if 1 < count < 5:
+            plural = plural_options[1]
+
+    return string.format(count=count, plural=plural)
+
+
+def format_duration_ms(milliseconds: int, unit_plurals: dict[str, str]) -> str:
     """
     Returns human-friendly representation of a duration. Truncates all decimals.
     """
-    units = (
-        ("hour", 60 * 60 * 1000),
-        ("minute", 60 * 1000),
-        ("second", 1000),
+    units: tuple[tuple[str, int], ...] = (
+        (unit_plurals["hour"], 60 * 60 * 1000),
+        (unit_plurals["minute"], 60 * 1000),
+        (unit_plurals["second"], 1000),
     )
     for unit, divisor in units:
         if milliseconds >= divisor:
             break
     else:
-        unit = "millisecond"
+        unit = unit_plurals["millisecond"]
         divisor = 1
 
     return format_plural("{count} {plural}", milliseconds // divisor, unit)

@@ -23,6 +23,7 @@ async def authorize_coinjoin(
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_coinjoin, confirm_metadata
     from trezor.wire import DataError
+    from trezortranslate import TR
 
     from apps.common import authorization, safety_checks
     from apps.common.keychain import FORBIDDEN_KEY_PATH
@@ -79,8 +80,8 @@ async def authorize_coinjoin(
     if msg.max_fee_per_kvbyte > coin.maxfee_kb:
         await confirm_metadata(
             "fee_over_threshold",
-            "High mining fee",
-            "The mining fee of\n{}\nis unexpectedly high.",
+            TR.bitcoin__title_high_mining_fee,
+            TR.bitcoin__high_mining_fee_template,
             max_fee_per_vbyte,
             ButtonRequestType.FeeOverThreshold,
         )

@@ -513,12 +513,7 @@ where
         Self::new(None, None, None)
     }
 
-    /// Default button layout for all three buttons - icons.
-    pub fn default_three_icons() -> Self {
-        Self::arrow_armed_arrow("SELECT".into())
-    }
-
-    /// Special middle text for default icon layout.
+    /// Arrows at sides, armed text in the middle.
     pub fn arrow_armed_arrow(text: T) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
@@ -935,9 +930,6 @@ impl ButtonActions {
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-use crate::strutil::ShortString;
-
-#[cfg(feature = "ui_debug")]
 impl<T: StringType> crate::trace::Trace for Button<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Button");
@@ -966,22 +958,6 @@ impl<T: StringType> crate::trace::Trace for ButtonDetails<T> {
         }
         if let Some(duration) = &self.duration {
             t.int("hold_to_confirm", duration.to_millis() as i64);
-        }
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl ButtonAction {
-    /// Describing the action as a string. Debug-only.
-    pub fn string(&self) -> ShortString {
-        match self {
-            ButtonAction::NextPage => "Next".into(),
-            ButtonAction::PrevPage => "Prev".into(),
-            ButtonAction::FirstPage => "First".into(),
-            ButtonAction::LastPage => "Last".into(),
-            ButtonAction::Cancel => "Cancel".into(),
-            ButtonAction::Confirm => "Confirm".into(),
-            ButtonAction::Info => "Info".into(),
         }
     }
 }

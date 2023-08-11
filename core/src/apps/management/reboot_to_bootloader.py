@@ -14,6 +14,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action, confirm_firmware_update
     from trezor.wire.context import get_context
+    from trezortranslate import TR
 
     # Bootloader will only allow the INSTALL_UPGRADE flow for official images.
     # This is to prevent a problematic custom signed firmware from self-updating
@@ -49,7 +50,9 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
             version_str = ".".join(map(str, hdr["version"]))
 
             await confirm_firmware_update(
-                description=f"Firmware version {version_str}\nby {hdr['vendor']}",
+                description=TR.reboot_to_bootloader__version_by_template.format(
+                    version_str, hdr["vendor"]
+                ),
                 fingerprint=hexlify(hdr["fingerprint"]).decode(),
             )
             boot_command = BootCommand.INSTALL_UPGRADE
@@ -58,9 +61,9 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     else:
         await confirm_action(
             "reboot",
-            "Go to bootloader",
-            "Trezor will restart in bootloader mode.",
-            verb="Restart",
+            TR.reboot_to_bootloader__title,
+            TR.reboot_to_bootloader__restart,
+            verb=TR.buttons__restart,
         )
         boot_command = BootCommand.STOP_AND_WAIT
         boot_args = None

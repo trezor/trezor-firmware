@@ -8,6 +8,7 @@ use crate::{
         event::USBEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
+        translations::tr,
     },
 };
 
@@ -82,7 +83,11 @@ where
         if !usb_configured() {
             self.fill_notification_background();
             // TODO: fill warning icons here as well?
-            display_center(baseline, &"NO USB CONNECTION", NOTIFICATION_FONT);
+            display_center(
+                baseline,
+                &tr("homescreen__title_no_usb_connection"),
+                NOTIFICATION_FONT,
+            );
         } else if let Some((notification, _level)) = &self.notification {
             self.fill_notification_background();
             display_center(baseline, &notification.as_ref(), NOTIFICATION_FONT);
@@ -192,9 +197,9 @@ where
         // so that even middle-click triggers the event.
         let invisible_btn_layout = ButtonLayout::arrow_armed_arrow("".into());
         let instruction_str = if bootscreen {
-            "Click to Connect"
+            tr("homescreen__click_to_connect")
         } else {
-            "Click to Unlock"
+            tr("homescreen__click_to_unlock")
         };
         Lockscreen {
             label: Child::new(Label::centered(label, theme::TEXT_BIG)),
@@ -264,7 +269,7 @@ where
     T: StringType + Clone,
 {
     pub fn new(title: T, buffer_func: F) -> Self {
-        let btn_layout = ButtonLayout::cancel_none_text("CHANGE".into());
+        let btn_layout = ButtonLayout::cancel_none_text(tr("buttons__change").into());
         ConfirmHomescreen {
             title: Child::new(Label::centered(title, theme::TEXT_BOLD)),
             buffer_func,

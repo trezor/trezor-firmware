@@ -5,6 +5,7 @@ use crate::{
         constant,
         display::{self, Color},
         geometry::{Insets, Rect},
+        translations::tr,
         util::animation_disabled,
     },
 };
@@ -88,8 +89,8 @@ where
     }
 
     pub fn with_hold(mut self) -> Self {
-        self.button_confirm =
-            Button::with_text("HOLD TO CONFIRM".into()).styled(theme::button_confirm());
+        self.button_confirm = Button::with_text(tr("buttons__hold_to_confirm").into())
+            .styled(theme::button_confirm());
         self.loader = Some(Loader::new());
         self
     }

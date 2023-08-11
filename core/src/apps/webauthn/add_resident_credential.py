@@ -10,6 +10,7 @@ async def add_resident_credential(msg: WebAuthnAddResidentCredential) -> Success
     from trezor.messages import Success
     from trezor.ui.layouts import show_error_and_raise
     from trezor.ui.layouts.fido import confirm_fido
+    from trezortranslate import TR
 
     from .credential import Fido2Credential
     from .resident_credentials import store_resident_credential
@@ -24,11 +25,11 @@ async def add_resident_credential(msg: WebAuthnAddResidentCredential) -> Success
     except Exception:
         await show_error_and_raise(
             "warning_credential",
-            "The credential you are trying to import does\nnot belong to this authenticator.",
+            TR.fido__does_not_belong,
         )
 
     await confirm_fido(
-        "Import credential",
+        TR.fido__title_import_credential,
         cred.app_name(),
         cred.icon_name(),
         [cred.account_name()],

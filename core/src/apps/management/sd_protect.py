@@ -7,6 +7,7 @@ from trezor.enums import SdProtectOperationType
 from trezor.messages import Success
 from trezor.ui.layouts import show_success
 from trezor.wire import ProcessError
+from trezortranslate import TR
 
 from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
 from apps.common.sdcard import ensure_sdcard
@@ -67,7 +68,7 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
 
     # Get the current PIN.
     if config.has_pin():
-        pin = await request_pin("Enter PIN", config.get_pin_rem())
+        pin = await request_pin(TR.pin__enter, config.get_pin_rem())
     else:
         pin = ""
 
@@ -88,7 +89,7 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
 
     storage_device.set_sd_salt_auth_key(salt_auth_key)
 
-    await show_success("success_sd", "You have successfully enabled SD protection.")
+    await show_success("success_sd", TR.sd_card__enabled)
     return Success(message="SD card protection enabled")
 
 
@@ -103,7 +104,7 @@ async def _sd_protect_disable(msg: SdProtect) -> Success:
     await require_confirm_sd_protect(msg)
 
     # Get the current PIN and salt from the SD card.
-    pin, salt = await request_pin_and_sd_salt("Enter PIN")
+    pin, salt = await request_pin_and_sd_salt(TR.pin__enter)
 
     # Check PIN and remove salt.
     if not config.change_pin(pin, pin, salt, None):
@@ -120,7 +121,7 @@ async def _sd_protect_disable(msg: SdProtect) -> Success:
         # because overall SD-protection was successfully disabled.
         pass
 
-    await show_success("success_sd", "You have successfully disabled SD protection.")
+    await show_success("success_sd", TR.sd_card__disabled)
     return Success(message="SD card protection disabled")
 
 
@@ -135,7 +136,7 @@ async def _sd_protect_refresh(msg: SdProtect) -> Success:
     await ensure_sdcard()
 
     # Get the current PIN and salt from the SD card.
-    pin, old_salt = await request_pin_and_sd_salt("Enter PIN")
+    pin, old_salt = await request_pin_and_sd_salt(TR.pin__enter)
 
     # Check PIN and change salt.
     new_salt, new_auth_key, new_salt_tag = _make_salt()
@@ -155,7 +156,7 @@ async def _sd_protect_refresh(msg: SdProtect) -> Success:
         # SD-protection was successfully refreshed.
         pass
 
-    await show_success("success_sd", "You have successfully refreshed SD protection.")
+    await show_success("success_sd", TR.sd_card__refreshed)
     return Success(message="SD card protection refreshed")
 
 
@@ -163,12 +164,12 @@ def require_confirm_sd_protect(msg: SdProtect) -> Awaitable[None]:
     from trezor.ui.layouts import confirm_action
 
     if msg.operation == SdProtectOperationType.ENABLE:
-        text = "Do you really want to secure your device with SD card protection?"
+        text = TR.sd_card__enable
     elif msg.operation == SdProtectOperationType.DISABLE:
-        text = "Do you really want to remove SD card protection from your device?"
+        text = TR.sd_card__disable
     elif msg.operation == SdProtectOperationType.REFRESH:
-        text = "Do you really want to replace the current SD card secret with a newly generated one?"
+        text = TR.sd_card__refresh
     else:
         raise ProcessError("Unknown operation")
 
-    return confirm_action("set_sd", "SD card protection", description=text)
+    return confirm_action("set_sd", TR.sd_card__title, description=text)

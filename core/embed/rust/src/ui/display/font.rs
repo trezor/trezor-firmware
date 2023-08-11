@@ -144,6 +144,36 @@ impl Font {
         display::text_width(text, self.into())
     }
 
+    /// Supports UTF8 characters
+    fn get_glyph_from_char(self, c: char) -> Option<Glyph> {
+        let mut buffer = [0; 4];
+        let bytes = c.encode_utf8(&mut buffer);
+        for byte in bytes.bytes() {
+            if let Some(glyph) = self.get_glyph(byte) {
+                return Some(glyph);
+            }
+        }
+        None
+    }
+
+    /// Supports UTF8 characters
+    fn get_first_glyph_from_text(self, text: &str) -> Option<Glyph> {
+        if let Some(c) = text.chars().next() {
+            self.get_glyph_from_char(c)
+        } else {
+            None
+        }
+    }
+
+    /// Supports UTF8 characters
+    fn get_last_glyph_from_text(self, text: &str) -> Option<Glyph> {
+        if let Some(c) = text.chars().next_back() {
+            self.get_glyph_from_char(c)
+        } else {
+            None
+        }
+    }
+
     /// Width of the text that is visible.
     /// Not including the spaces before the first and after the last character.
     pub fn visible_text_width(self, text: &str) -> i16 {
@@ -152,14 +182,20 @@ impl Font {
             return 0;
         }
 
-        let first_char = unwrap!(text.chars().next());
-        let first_char_glyph = unwrap!(self.get_glyph(first_char as u8));
+        let first_char_bearing = if let Some(glyph) = self.get_first_glyph_from_text(text) {
+            glyph.bearing_x
+        } else {
+            0
+        };
 
-        let last_char = unwrap!(text.chars().last());
-        let last_char_glyph = unwrap!(self.get_glyph(last_char as u8));
+        let last_char_bearing = if let Some(glyph) = self.get_last_glyph_from_text(text) {
+            glyph.right_side_bearing()
+        } else {
+            0
+        };
 
         // Strip leftmost and rightmost spaces/bearings/margins.
-        self.text_width(text) - first_char_glyph.bearing_x - last_char_glyph.right_side_bearing()
+        self.text_width(text) - first_char_bearing - last_char_bearing
     }
 
     /// Returning the x-bearing (offset) of the first character.
@@ -169,9 +205,11 @@ impl Font {
             return 0;
         }
 
-        let first_char = unwrap!(text.chars().next());
-        let first_char_glyph = unwrap!(self.get_glyph(first_char as u8));
-        first_char_glyph.bearing_x
+        if let Some(glyph) = self.get_first_glyph_from_text(text) {
+            glyph.bearing_x
+        } else {
+            0
+        }
     }
 
     pub fn char_width(self, ch: char) -> i16 {

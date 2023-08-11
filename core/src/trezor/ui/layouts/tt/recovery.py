@@ -3,6 +3,7 @@ from typing import Callable, Iterable
 import trezorui2
 from trezor.enums import ButtonRequestType
 from trezor.wire.context import wait as ctx_wait
+from trezortranslate import TR
 
 from ..common import interact
 from . import RustLayout, raise_if_not_confirmed
@@ -32,7 +33,7 @@ async def request_word_count(dry_run: bool) -> int:
 
 
 async def request_word(word_index: int, word_count: int, is_slip39: bool) -> str:
-    prompt = f"Type word {word_index + 1} of {word_count}"
+    prompt = TR.recovery__type_word_x_of_y_template.format(word_index + 1, word_count)
     if is_slip39:
         keyboard = RustLayout(trezorui2.request_slip39(prompt=prompt))
     else:
@@ -54,7 +55,9 @@ async def show_remaining_shares(
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:
             title = strings.format_plural(
-                "{count} more {plural} starting", remaining, "share"
+                TR.recovery__x_more_items_starting_template_plural,
+                remaining,
+                TR.plurals__x_shares_needed,
             )
             words = "\n".join(group)
             pages.append((title, words))
@@ -63,7 +66,9 @@ async def show_remaining_shares(
         ):
             groups_remaining = group_threshold - shares_remaining.count(0)
             title = strings.format_plural(
-                "{count} more {plural} starting", groups_remaining, "group"
+                TR.recovery__x_more_items_starting_template_plural,
+                groups_remaining,
+                TR.plurals__x_groups_needed,
             )
             words = "\n".join(group)
             pages.append((title, words))
@@ -83,10 +88,10 @@ async def show_group_share_success(share_index: int, group_index: int) -> None:
             RustLayout(
                 trezorui2.show_group_share_success(
                     lines=[
-                        "You have entered",
-                        f"Share {share_index + 1}",
-                        "from",
-                        f"Group {group_index + 1}",
+                        TR.recovery__you_have_entered,
+                        TR.recovery__share_num_template.format(share_index + 1),
+                        TR.words__from,
+                        TR.recovery__group_num_template.format(group_index + 1),
                     ],
                 )
             ),
@@ -108,7 +113,7 @@ async def continue_recovery(
 
     if show_info:
         # Show this just one-time
-        description = "You'll only have to select the first 2-4 letters of each word."
+        description = TR.recovery__only_first_n_letters
     else:
         description = subtext or ""
 
@@ -135,9 +140,10 @@ async def show_recovery_warning(
     br_type: str,
     content: str,
     subheader: str | None = None,
-    button: str = "TRY AGAIN",
+    button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
+    button = button or TR.buttons__try_again  # def_arg
     await raise_if_not_confirmed(
         interact(
             RustLayout(

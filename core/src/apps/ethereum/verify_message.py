@@ -10,6 +10,7 @@ async def verify_message(msg: EthereumVerifyMessage) -> Success:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_signverify, show_success
     from trezor.wire import DataError
+    from trezortranslate import TR
 
     from apps.common.signverify import decode_message
 
@@ -36,5 +37,5 @@ async def verify_message(msg: EthereumVerifyMessage) -> Success:
 
     await confirm_signverify(decode_message(msg.message), address, verify=True)
 
-    await show_success("verify_message", "The signature is valid.")
+    await show_success("verify_message", TR.ethereum__valid_signature)
     return Success(message="Message verified")

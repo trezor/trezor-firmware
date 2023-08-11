@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.wire import ProcessError
+from trezortranslate import TR
 
 from .. import layout
 from ..helpers.paths import SCHEMA_MINT
@@ -16,7 +17,7 @@ class OrdinarySigner(Signer):
     controlled by 1852' keys, dealing with staking and minting/burning tokens.
     """
 
-    SIGNING_MODE_TITLE = "Confirming a transaction."
+    SIGNING_MODE_TITLE = TR.cardano__confirming_transction
 
     def _validate_tx_init(self) -> None:
         msg = self.msg  # local_cache_attribute

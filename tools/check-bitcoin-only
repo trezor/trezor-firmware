@@ -7,6 +7,8 @@ EXCEPTIONS+=( "omni" )  # OMNI is part of the bitcoin app
 # BIP39 or SLIP39 words that have "dash" in them
 EXCEPTIONS+=( "dash" )
 EXCEPTIONS+=( "confirm_ethereum_tx" )  # is model-specific, so is in layout/__init__.py instead of ethereum/layout.py
+EXCEPTIONS+=( "__" )  # ignoring the translations blob (section__key delimiter)
+EXCEPTIONS+=( "{}" )  # ignoring the translations blob (template identifier)
 
 GREP_ARGS=()
 for exception in "${EXCEPTIONS[@]}"; do

@@ -9,6 +9,7 @@ use crate::{
         },
         display::{self, Font},
         geometry::{Grid, Insets, Offset, Rect},
+        translations::tr,
     },
 };
 
@@ -45,8 +46,8 @@ where
             input: NumberInput::new(min, max, init_value).into_child(),
             paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)).into_child(),
             paragraphs_pad: Pad::with_background(theme::BG),
-            info_button: Button::with_text("INFO").into_child(),
-            confirm_button: Button::with_text("CONTINUE")
+            info_button: Button::with_text(tr("buttons__info")).into_child(),
+            confirm_button: Button::with_text(tr("buttons__continue"))
                 .styled(theme::button_confirm())
                 .into_child(),
         }
