@@ -29,30 +29,17 @@ async def sign_tx(
 ) -> EthereumTxRequest:
     from trezor.utils import HashWriter
     from trezor.crypto.hashlib import sha3_256
-    from apps.common import paths
-    from .layout import (
-        require_confirm_data,
-        require_confirm_fee,
-        require_confirm_tx,
-    )
+    from .layout import require_confirm_fee
 
     # check
     if msg.tx_type not in [1, 6, None]:
         raise DataError("tx_type out of bounds")
     if len(msg.gas_price) + len(msg.gas_limit) > 30:
         raise DataError("Fee overflow")
-    check_common_fields(msg)
 
-    await paths.validate_path(keychain, msg.address_n)
-
-    # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(msg, defs)
+    token, address_bytes, _recipient, value = await sign_tx_inner(msg, keychain, defs)
 
     data_total = msg.data_length
-
-    await require_confirm_tx(recipient, value, defs.network, token)
-    if token is None and msg.data_length > 0:
-        await require_confirm_data(msg.data_initial_chunk, data_total)
 
     await require_confirm_fee(
         value,
@@ -99,12 +86,22 @@ async def sign_tx(
     return result
 
 
-async def handle_erc20(
+async def sign_tx_inner(
     msg: MsgInSignTx,
-    definitions: Definitions,
-) -> tuple[EthereumTokenInfo | None, bytes, bytes, int]:
-    from .layout import require_confirm_unknown_token
+    keychain: Keychain,
+    defs: Definitions,
+) -> tuple[EthereumTokenInfo | None, bytes, bytes, int | None]:
     from . import tokens
+    from .layout import (
+        require_confirm_approve_tx,
+        require_confirm_data,
+        require_confirm_tx,
+        require_confirm_unknown_token,
+    )
+    from apps.common import paths
+
+    check_common_fields(msg)
+    await paths.validate_path(keychain, msg.address_n)
 
     data_initial_chunk = msg.data_initial_chunk  # local_cache_attribute
     token = None
@@ -115,15 +112,37 @@ async def handle_erc20(
         and len(msg.value) == 0
         and msg.data_length == 68
         and len(data_initial_chunk) == 68
-        and data_initial_chunk[:16]
-        == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     ):
-        token = definitions.get_token(address_bytes)
-        recipient = data_initial_chunk[16:36]
-        value = int.from_bytes(data_initial_chunk[36:68], "big")
+        initial_prefix = data_initial_chunk[:16]
+        # See https://github.com/ethereum-lists/4bytes/blob/master/signatures/a9059cbb etc
+        ETH_ERC20_TRANSFER = (
+            b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        )
+        ETH_ERC20_APPROVE = (
+            b"\x09\x5e\xa7\xb3\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        )
 
-        if token is tokens.UNKNOWN_TOKEN:
-            await require_confirm_unknown_token(address_bytes)
+        if initial_prefix == ETH_ERC20_TRANSFER:
+            token = defs.get_token(address_bytes)
+            recipient = data_initial_chunk[16:36]
+            value = int.from_bytes(data_initial_chunk[36:68], "big")
+
+            if token is tokens.UNKNOWN_TOKEN:
+                await require_confirm_unknown_token(address_bytes)
+        elif initial_prefix == ETH_ERC20_APPROVE:
+            token = defs.get_token(address_bytes)
+            recipient = data_initial_chunk[16:36]
+            # We are not transferring any value, just setting an allowance.
+            value = None
+            allowance = int.from_bytes(data_initial_chunk[36:68], "big")
+
+            await require_confirm_approve_tx(recipient, allowance, defs.network, token)
+
+    if value is not None:
+        await require_confirm_tx(recipient, value, defs.network, token)
+
+    if token is None and msg.data_length > 0:
+        await require_confirm_data(msg.data_initial_chunk, msg.data_length)
 
     return token, address_bytes, recipient, value
 
