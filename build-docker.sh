@@ -382,6 +382,7 @@ EOF
       -v "$DIR/build/core$DIRSUFFIX":/build:z \
       --env TREZOR_MODEL="$TREZOR_MODEL" \
       --env PRODUCTION="$PRODUCTION" \
+      --env BOOTLOADER_DEVEL=1 \
       --init \
       "$SNAPSHOT_NAME" \
       /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"
