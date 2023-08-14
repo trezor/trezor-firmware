@@ -241,6 +241,25 @@ impl<'i> Toif<'i> {
     }
 }
 
+#[no_mangle]
+extern "C" fn display_icon(
+    x: cty::int16_t,
+    y: cty::int16_t,
+    data: *const cty::uint8_t,
+    data_len: cty::uint32_t,
+    fg_color: cty::uint16_t,
+    bg_color: cty::uint16_t,
+) {
+    let data_slice = unsafe { core::slice::from_raw_parts(data, data_len as usize) };
+    let icon = Icon::new(data_slice);
+    icon.draw(
+        Point::new(x, y),
+        Alignment2D::TOP_LEFT,
+        Color::from_u16(fg_color),
+        Color::from_u16(bg_color),
+    );
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Icon {
     pub toif: Toif<'static>,

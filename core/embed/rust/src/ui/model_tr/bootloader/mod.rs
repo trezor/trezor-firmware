@@ -22,6 +22,12 @@ mod menu;
 mod theme;
 mod welcome;
 
+use crate::ui::{
+    constant,
+    constant::HEIGHT,
+    geometry::Point,
+    model_tr::theme::{ICON_ARM_LEFT, ICON_ARM_RIGHT, WHITE},
+};
 use confirm::Confirm;
 use connect::Connect;
 use intro::Intro;
@@ -365,4 +371,27 @@ extern "C" fn screen_welcome() {
 extern "C" fn screen_welcome_model() {
     let mut frame = WelcomeScreen::new();
     show(&mut frame);
+}
+
+#[no_mangle]
+extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
+    display::text_center(
+        Point::new(constant::WIDTH / 2, HEIGHT - 2),
+        "CONTINUE",
+        Font::NORMAL,
+        WHITE,
+        Color::from_u16(bg_color),
+    );
+    ICON_ARM_LEFT.draw(
+        Point::new(constant::WIDTH / 2 - 36, HEIGHT - 6),
+        Alignment2D::TOP_LEFT,
+        WHITE,
+        Color::from_u16(bg_color),
+    );
+    ICON_ARM_RIGHT.draw(
+        Point::new(constant::WIDTH / 2 + 25, HEIGHT - 6),
+        Alignment2D::TOP_LEFT,
+        WHITE,
+        Color::from_u16(bg_color),
+    );
 }

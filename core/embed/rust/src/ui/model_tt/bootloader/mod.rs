@@ -417,3 +417,14 @@ extern "C" fn screen_welcome() {
     let mut frame = Welcome::new();
     show(&mut frame, true);
 }
+
+#[no_mangle]
+extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
+    display::text_center(
+        Point::new(constant::WIDTH / 2, HEIGHT - 5),
+        "click to continue ...",
+        Font::NORMAL,
+        WHITE,
+        Color::from_u16(bg_color),
+    );
+}
