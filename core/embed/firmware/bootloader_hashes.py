@@ -29,7 +29,7 @@ def aligned_digest(data: bytes, padding: bytes) -> bytes:
     (unwritten NOR-flash byte) or 0x00 (explicitly cleared byte).
     """
     if len(data) > ALIGNED_SIZE:
-        raise ValueError(fn, "too big")
+        raise ValueError("too big")
 
     assert len(padding) == 1
     digest_data = data + padding * (ALIGNED_SIZE - len(data))
@@ -55,6 +55,7 @@ def bootloader_str(file: Path) -> str:
     data = file.read_bytes()
 
     suffix = file.stem[len("bootloader_") :].upper()
+
     bytes_00 = to_uint_array(aligned_digest(data, b"\x00"))
     bytes_ff = to_uint_array(aligned_digest(data, b"\xff"))
 
@@ -84,7 +85,10 @@ def main():
 
         # write bootloader definitions
         for file in BOOTLOADERS.glob("bootloader*.bin"):
-            bl_check_new.append(bootloader_str(file))
+            try:
+                bl_check_new.append(bootloader_str(file))
+            except ValueError:
+                raise ValueError(f"Data too big in {file}")
 
         # consume up to auto-end
         for line in f:

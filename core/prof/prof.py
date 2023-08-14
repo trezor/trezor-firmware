@@ -16,7 +16,7 @@ class Coverage:
         self.__files = {}
 
     def line_tick(self, filename, lineno):
-        if not filename in self.__files:
+        if filename not in self.__files:
             self.__files[filename] = set()
         self.__files[filename].add(lineno)
 
@@ -120,7 +120,7 @@ def atexit():
 sys.atexit(atexit)
 
 global __prof__
-if not "__prof__" in globals():
+if "__prof__" not in globals():
     if getenv("TREZOR_MEMPERF") == "1":
         __prof__ = AllocCounter()
     else:
@@ -131,4 +131,4 @@ sys.settrace(trace_handler)
 if isinstance(__prof__, AllocCounter):
     __prof__.last_alloc_count = micropython.alloc_count()
 
-import main
+import main  # noqa: F401 (imported but unused)

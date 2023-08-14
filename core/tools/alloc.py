@@ -10,7 +10,7 @@ from typing_extensions import TypedDict
 
 import click
 from dominate import document
-from dominate.tags import *
+from dominate.tags import meta, style, h3, table, thead, tr, th, tbody, td, a
 from dominate.util import raw
 
 HERE = Path(__file__).resolve().parent

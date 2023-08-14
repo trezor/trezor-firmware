@@ -102,3 +102,11 @@ extra_standard_library = [
 ]
 known_first_party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests", "gitlab"]
 known_third_party = ["trezor", "storage"]
+
+[tool.ruff]
+ignore = [
+    "E501", # line too long
+    "E402", # module level import not at top of file
+    "E741", # ambiguous variable name
+]
+exclude = ["tests", "mocks"]
