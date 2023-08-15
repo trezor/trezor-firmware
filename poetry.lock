@@ -1476,6 +1476,24 @@ files = [
 tests = ["pytest", "pytest-cov"]
 
 [[package]]
+name = "toiftool"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = ">=3.8"
+files = []
+develop = true
+
+[package.dependencies]
+click = ">=7.0,<9.0"
+Pillow = "^9"
+trezor = ">=0.13"
+
+[package.source]
+type = "directory"
+url = "python/tools/toiftool"
+
+[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -1776,4 +1794,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "3e671a37f0bf4b63d64d3f17c54f7a87006d65f4747335cb6d86cc07166764ed"
+content-hash = "40852ed8dec342c2386342584a7bd656d2e45bade0e78a15a17bf4b7b62240af"
