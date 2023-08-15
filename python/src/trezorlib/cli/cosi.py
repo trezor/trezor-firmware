@@ -22,8 +22,8 @@ from .. import cosi, tools
 from . import with_client
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
     from .. import messages
+    from ..client import TrezorClient
 
 PATH_HELP = "BIP-32 path, e.g. m/10018'/0'"
 

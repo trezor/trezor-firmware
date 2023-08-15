@@ -22,8 +22,8 @@ from .tools import b58decode, expect, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .tools import Address
     from .protobuf import MessageType
+    from .tools import Address
 
 
 def name_to_number(name: str) -> int:

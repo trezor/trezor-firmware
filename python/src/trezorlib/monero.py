@@ -21,8 +21,8 @@ from .tools import expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .tools import Address
     from .protobuf import MessageType
+    from .tools import Address
 
 
 # MAINNET = 0
