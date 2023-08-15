@@ -28,10 +28,7 @@
   "fork_id": null,
   "force_bip143": false,
   "default_fee_b": {
-    "Low": 10,
-    "Economy": 70,
-    "Normal": 140,
-    "High": 200
+    "Normal": 30
   },
   "dust_limit": 546,
   "blocktime_seconds": 15,
