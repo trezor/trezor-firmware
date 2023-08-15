@@ -30,7 +30,7 @@
   "default_fee_b": {
     "Normal": 1000
   },
-  "dust_limit": 999999,
+  "dust_limit": 1000000,
   "blocktime_seconds": 60,
   "uri_prefix": "dogecoin",
   "min_address_length": 27,
