@@ -465,24 +465,6 @@
                 }
             ]
         },
-        "bitcoin:MUE": {
-            "links": {
-                "Github": "https://github.com/muecoin/MUE",
-                "Homepage": "https://www.monetaryunit.org"
-            },
-            "marketcap_usd": 0,
-            "name": "MonetaryUnit",
-            "shortcut": "MUE",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": [
-                {
-                    "name": "Electrum-MUE",
-                    "url": "https://electrum.monetaryunit.org"
-                }
-            ]
-        },
         "bitcoin:NMC": {
             "links": {
                 "Github": "https://github.com/namecoin/namecoin-core",
