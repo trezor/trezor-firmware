@@ -6,7 +6,6 @@ import sys
 from hashlib import sha1, sha256
 
 import ecdsa
-
 from fill_t1_fw_signatures import Signatures
 
 secret_keys_hex = [
