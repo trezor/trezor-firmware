@@ -65,7 +65,7 @@ async def _continue_recovery_process() -> Success:
             # If we are starting recovery, ask for word count first...
             # _request_word_count
             # For TT, just continuing straight to word count keyboard
-            if utils.MODEL == "R":
+            if utils.INTERNAL_MODEL == "T2B1":
                 await layout.homescreen_dialog(
                     "Continue", "Select the number of words in your backup."
                 )

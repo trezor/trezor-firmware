@@ -266,7 +266,9 @@ class TrezorClient(Generic[UI]):
 
         if not self.model:
             # Trezor Model One bootloader 1.8.0 or older does not send model name
-            self.model = models.by_name(features.model or "1")
+            self.model = models.by_internal_name(features.internal_model)
+            if self.model is None:
+                self.model = models.by_name(features.model or "1")
             if self.model is None:
                 raise RuntimeError("Unsupported Trezor model")
 

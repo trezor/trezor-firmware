@@ -52,7 +52,7 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.RebootToBootloader:
         return "apps.management.reboot_to_bootloader"
 
-    if utils.MODEL in ("R",) and msg_type == MessageType.ShowDeviceTutorial:
+    if utils.INTERNAL_MODEL in ("T2B1",) and msg_type == MessageType.ShowDeviceTutorial:
         return "apps.management.show_tutorial"
 
     if utils.USE_SD_CARD and msg_type == MessageType.SdProtect:
