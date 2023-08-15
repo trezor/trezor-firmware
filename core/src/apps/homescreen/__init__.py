@@ -19,7 +19,10 @@ async def homescreen() -> None:
     if storage.device.is_initialized():
         label = storage.device.get_label()
     else:
-        label = f"Trezor Model {utils.MODEL}"
+        if utils.INTERNAL_MODEL in ("T1B1", "T2T1"):
+            label = f"Trezor Model {utils.MODEL}"
+        else:
+            label = f"Trezor {utils.MODEL}"
 
     notification = None
     notification_is_error = False

@@ -53,7 +53,7 @@ TREZOR_T = TrezorModel(
 )
 
 TREZOR_R = TrezorModel(
-    name="R",
+    name="Safe 3",
     internal_name="T2B1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,

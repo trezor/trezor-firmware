@@ -11,7 +11,7 @@ pub const LOADER_OUTER: i16 = 32;
 pub const LOADER_INNER: i16 = 18;
 pub const LOADER_ICON_MAX_SIZE: i16 = 8;
 
-pub const MODEL_NAME: &str = "Trezor Model R";
+pub const MODEL_NAME: &str = "Trezor Safe 3";
 
 pub const fn size() -> Offset {
     Offset::new(WIDTH, HEIGHT)

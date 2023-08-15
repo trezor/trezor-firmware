@@ -58,6 +58,6 @@ impl Component for WelcomeScreen {
 impl crate::trace::Trace for WelcomeScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("WelcomeScreen");
-        t.string("model_name", "Trezor Model R");
+        t.string("model_name", "Trezor Safe 3");
     }
 }
