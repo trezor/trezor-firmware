@@ -34,6 +34,10 @@ For other users:
 3. To install OpenOCD, run `brew install open-ocd`
 4. Run `make vendor build_boardloader build_bootloader build_firmware`
 
+## Protobuf Compiler
+
+The protocol buffer compiler `protoc` is needed to (unsurprisingly) compile protocol buffer files. [Follow the installation instructions for your system](https://grpc.io/docs/protoc-installation/).
+
 ## Rust
 
 Install the appropriate target with [`rustup`](https://rustup.rs/):
