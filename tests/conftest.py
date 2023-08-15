@@ -25,7 +25,8 @@ import xdist
 
 from trezorlib import debuglink, log
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.device import apply_settings, wipe as wipe_device
+from trezorlib.device import apply_settings
+from trezorlib.device import wipe as wipe_device
 from trezorlib.transport import enumerate_devices, get_transport
 
 from . import ui_tests
@@ -33,10 +34,11 @@ from .device_handler import BackgroundDeviceHandler
 from .emulators import EmulatorWrapper
 
 if TYPE_CHECKING:
-    from trezorlib._internal.emulator import Emulator
     from _pytest.config import Config
     from _pytest.config.argparsing import Parser
     from _pytest.terminal import TerminalReporter
+
+    from trezorlib._internal.emulator import Emulator
 
 
 HERE = Path(__file__).resolve().parent

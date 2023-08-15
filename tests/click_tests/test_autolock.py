@@ -31,8 +31,9 @@ from . import recovery
 from .common import go_next
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
     from trezorlib.debuglink import DebugLink, LayoutContent
+
+    from ..device_handler import BackgroundDeviceHandler
 
 TX_CACHE_MAINNET = TxCache("Bitcoin")
 TX_CACHE_TESTNET = TxCache("Testnet")

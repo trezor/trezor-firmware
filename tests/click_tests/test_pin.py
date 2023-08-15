@@ -26,8 +26,9 @@ from .. import buttons
 from .common import go_back, go_next, navigate_to_action_and_press
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
     from trezorlib.debuglink import DebugLink
+
+    from ..device_handler import BackgroundDeviceHandler
 
 
 pytestmark = pytest.mark.skip_t1

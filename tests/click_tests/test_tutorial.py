@@ -23,8 +23,9 @@ from trezorlib import device
 from trezorlib.exceptions import Cancelled
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
     from trezorlib.debuglink import DebugLink
+
+    from ..device_handler import BackgroundDeviceHandler
 
 
 # TR-only

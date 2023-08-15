@@ -19,7 +19,8 @@ from typing import Any
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client, message_filters
+from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import message_filters
 from trezorlib.tools import parse_path
 
 from ...input_flows import InputFlowSignMessagePagination

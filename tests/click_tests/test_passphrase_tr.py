@@ -30,8 +30,9 @@ from .common import (
 )
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
     from trezorlib.debuglink import DebugLink
+
+    from ..device_handler import BackgroundDeviceHandler
 
 
 pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2]

@@ -25,8 +25,9 @@ from ..common import MNEMONIC12, MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
     from trezorlib.debuglink import DebugLink
+
+    from ..device_handler import BackgroundDeviceHandler
 
 
 pytestmark = [pytest.mark.skip_t1]

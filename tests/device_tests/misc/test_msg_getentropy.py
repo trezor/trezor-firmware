@@ -18,7 +18,8 @@ import math
 
 import pytest
 
-from trezorlib import messages as m, misc
+from trezorlib import messages as m
+from trezorlib import misc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 ENTROPY_LENGTHS_POW2 = [2**l for l in range(10)]
