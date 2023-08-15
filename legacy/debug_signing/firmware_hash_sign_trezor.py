@@ -2,6 +2,7 @@
 import sys
 
 from fill_t1_fw_signatures import Signatures
+
 from trezorlib.btc import get_public_node, sign_message
 from trezorlib.client import get_default_client
 from trezorlib.tools import parse_path
