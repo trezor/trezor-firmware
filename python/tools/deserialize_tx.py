@@ -48,11 +48,11 @@ class CompactUintAdapter(c.Adapter):
     def _encode(self, obj: int, context: Any, path: Any) -> dict:
         if obj < 0xFD:
             return {"base": obj}
-        if obj < 2 ** 16:
+        if obj < 2**16:
             return {"base": 0xFD, "ext": obj}
-        if obj < 2 ** 32:
+        if obj < 2**32:
             return {"base": 0xFE, "ext": obj}
-        if obj < 2 ** 64:
+        if obj < 2**64:
             return {"base": 0xFF, "ext": obj}
         raise ValueError("Value too big for compact uint")
 

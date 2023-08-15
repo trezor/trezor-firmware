@@ -20,10 +20,10 @@ try:
     from stellar_sdk import (
         Account,
         Asset,
+        MuxedAccount,
         Network,
         TransactionBuilder,
         TrustLineEntryFlag,
-        MuxedAccount,
     )
     from stellar_sdk.strkey import StrKey
 except ImportError:

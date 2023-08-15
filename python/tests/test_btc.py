@@ -19,7 +19,6 @@ from decimal import Decimal
 
 from trezorlib import btc
 
-
 # https://btc1.trezor.io/api/tx-specific/f5e735549daeb480d4348f2574b8967a4f149715edb220a742d8bb654d668348
 TX_JSON_BIG = """
 {
@@ -217,7 +216,7 @@ def test_from_json():
         assert i.sequence == v["sequence"]
 
     for v, o in zip(tx_dict["vout"], tx.bin_outputs):
-        assert o.amount == int(Decimal(v["value"]) * (10 ** 8))
+        assert o.amount == int(Decimal(v["value"]) * (10**8))
         assert o.script_pubkey.hex() == v["scriptPubKey"]["hex"]
 
 
@@ -233,5 +232,5 @@ def test_coinbase_from_json():
 
     coinbase = tx.inputs[0]
     assert coinbase.prev_hash == b"\x00" * 32
-    assert coinbase.prev_index == 2 ** 32 - 1
+    assert coinbase.prev_index == 2**32 - 1
     assert coinbase.script_sig.hex() == tx_dict["vin"][0]["coinbase"]
