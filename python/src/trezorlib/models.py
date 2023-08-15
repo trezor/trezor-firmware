@@ -27,6 +27,7 @@ VENDORS = ("bitcointrezor.com", "trezor.io")
 @dataclass(eq=True, frozen=True)
 class TrezorModel:
     name: str
+    internal_name: str
     minimum_version: Tuple[int, int, int]
     vendors: Collection[str]
     usb_ids: Collection[UsbId]
@@ -35,6 +36,7 @@ class TrezorModel:
 
 TREZOR_ONE = TrezorModel(
     name="1",
+    internal_name="T1B1",
     minimum_version=(1, 8, 0),
     vendors=VENDORS,
     usb_ids=((0x534C, 0x0001),),
@@ -43,6 +45,7 @@ TREZOR_ONE = TrezorModel(
 
 TREZOR_T = TrezorModel(
     name="T",
+    internal_name="T2T1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
     usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
@@ -51,6 +54,7 @@ TREZOR_T = TrezorModel(
 
 TREZOR_R = TrezorModel(
     name="R",
+    internal_name="T2B1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
     usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
@@ -59,6 +63,7 @@ TREZOR_R = TrezorModel(
 
 TREZOR_DISC1 = TrezorModel(
     name="DISC1",
+    internal_name="D001",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,
     usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
@@ -73,5 +78,14 @@ def by_name(name: Optional[str]) -> Optional[TrezorModel]:
         return TREZOR_ONE
     for model in TREZORS:
         if model.name == name:
+            return model
+    return None
+
+
+def by_internal_name(name: Optional[str]) -> Optional[TrezorModel]:
+    if name is None:
+        return None
+    for model in TREZORS:
+        if model.internal_name == name:
             return model
     return None

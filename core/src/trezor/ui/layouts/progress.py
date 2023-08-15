@@ -1,6 +1,6 @@
 from trezor import utils
 
-if utils.MODEL in ("T", "DISC1"):
+if utils.INTERNAL_MODEL in ("T2T1", "D001"):
     from .tt_v2.progress import *  # noqa: F401,F403
-elif utils.MODEL in ("R",):
+elif utils.INTERNAL_MODEL in ("T2B1",):
     from .tr.progress import *  # noqa: F401,F403

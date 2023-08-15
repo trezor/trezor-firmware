@@ -69,7 +69,7 @@ def get_features() -> Features:
         unit_btconly=utils.unit_btconly(),
     )
 
-    if utils.MODEL in ("1", "R"):
+    if utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
         f.homescreen_format = HomescreenFormat.ToiG
     else:
         f.homescreen_format = HomescreenFormat.Jpeg

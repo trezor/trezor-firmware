@@ -1,5 +1,5 @@
-#ifndef MODELS_MODEL_T2T1_H_
-#define MODELS_MODEL_T2T1_H_
+#ifndef MODELS_MODEL_D001_H_
+#define MODELS_MODEL_D001_H_
 
 #define MODEL_NAME "T"
 #define MODEL_INTERNAL_NAME "D001"

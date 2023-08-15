@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
-if utils.MODEL in ("1", "R"):
+if utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
 
     def _validate_homescreen_model_specific(homescreen: bytes) -> None:
         from trezor.ui import WIDTH, HEIGHT
