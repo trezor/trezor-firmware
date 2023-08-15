@@ -28,8 +28,8 @@ if TYPE_CHECKING:
 
 try:
     from stellar_sdk import (
-        parse_transaction_envelope_from_xdr,
         FeeBumpTransactionEnvelope,
+        parse_transaction_envelope_from_xdr,
     )
 except ImportError:
     pass

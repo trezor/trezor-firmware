@@ -51,8 +51,8 @@ from .log import DUMP_BYTES
 from .tools import expect
 
 if TYPE_CHECKING:
-    from .transport import Transport
     from .messages import PinMatrixRequestType
+    from .transport import Transport
 
     ExpectedMessage = Union[
         protobuf.MessageType, Type[protobuf.MessageType], "MessageFilter"
