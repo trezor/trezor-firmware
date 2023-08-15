@@ -15,12 +15,9 @@ import time
 from typing import Callable, Generator
 
 from trezorlib import messages
-from trezorlib.debuglink import (
-    DebugLink,
-    LayoutContent,
-    TrezorClientDebugLink as Client,
-    multipage_content,
-)
+from trezorlib.debuglink import DebugLink, LayoutContent
+from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import multipage_content
 
 from . import buttons
 from .common import (

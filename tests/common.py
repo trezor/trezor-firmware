@@ -27,9 +27,11 @@ from trezorlib import btc, messages, tools
 from trezorlib.messages import ButtonRequestType
 
 if TYPE_CHECKING:
-    from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
-    from trezorlib.messages import ButtonRequest
     from _pytest.mark.structures import MarkDecorator
+
+    from trezorlib.debuglink import DebugLink
+    from trezorlib.debuglink import TrezorClientDebugLink as Client
+    from trezorlib.messages import ButtonRequest
 
 
 BRGeneratorType = Generator[None, messages.ButtonRequest, None]

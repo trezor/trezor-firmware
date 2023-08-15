@@ -5,9 +5,10 @@ from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.transport import udp
 
 if TYPE_CHECKING:
-    from trezorlib.messages import Features
-    from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
     from trezorlib._internal.emulator import Emulator
+    from trezorlib.debuglink import DebugLink
+    from trezorlib.debuglink import TrezorClientDebugLink as Client
+    from trezorlib.messages import Features
 
 
 udp.SOCKET_TIMEOUT = 0.1

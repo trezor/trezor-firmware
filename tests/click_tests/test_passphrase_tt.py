@@ -25,8 +25,9 @@ from ..common import get_test_address
 from .common import CommonPass, PassphraseCategory, get_char_category
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
     from trezorlib.debuglink import DebugLink
+
+    from ..device_handler import BackgroundDeviceHandler
 
 
 pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_tr]
