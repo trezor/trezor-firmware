@@ -81,12 +81,6 @@
       "https://blockbook.groestlcoin.org"
     ]
   },
-  "bitcoin:KOTO": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook.kotocoin.info"
-    ]
-  },
   "bitcoin:LTC": {
     "type": "blockbook",
     "url": [
@@ -101,12 +95,6 @@
     "type": "blockbook",
     "url": [
       "https://blockbook.electrum-mona.org"
-    ]
-  },
-  "bitcoin:MUE": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook.monetaryunit.org"
     ]
   },
   "bitcoin:NMC": {
@@ -153,13 +141,6 @@
       "https://tbtc2.trezor.io"
     ]
   },
-  "bitcoin:UNO": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook.flurbo.xyz",
-      "https://blockbook.unobtanium.uno"
-    ]
-  },
   "bitcoin:VIPS": {
     "type": "blockbook",
     "url": [
@@ -174,19 +155,6 @@
       "https://vtc3.trezor.io",
       "https://vtc4.trezor.io",
       "https://vtc5.trezor.io"
-    ]
-  },
-  "bitcoin:XRC": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook1.bitcoinrh.org",
-      "https://blockbook2.bitcoinrh.org"
-    ]
-  },
-  "bitcoin:ZCR": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook.zcore.cash"
     ]
   },
   "bitcoin:ZEC": {
