@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.enums import MoneroNetworkType
+
     from apps.monero.xmr import crypto
 
 
@@ -33,10 +34,11 @@ class AccountCreds:
         priv_spend_key: crypto.Scalar,
         network_type: MoneroNetworkType | None = None,
     ) -> "AccountCreds":
+        from trezor.enums import MoneroNetworkType
+
         from apps.monero.xmr import crypto, crypto_helpers
         from apps.monero.xmr.addresses import encode_addr
         from apps.monero.xmr.networks import net_version
-        from trezor.enums import MoneroNetworkType
 
         if network_type is None:
             network_type = MoneroNetworkType.MAINNET

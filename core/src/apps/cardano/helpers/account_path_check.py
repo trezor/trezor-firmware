@@ -9,8 +9,8 @@ if TYPE_CHECKING:
         CardanoPoolOwner,
         CardanoTxCertificate,
         CardanoTxOutput,
-        CardanoTxWitnessRequest,
         CardanoTxWithdrawal,
+        CardanoTxWitnessRequest,
     )
 
 

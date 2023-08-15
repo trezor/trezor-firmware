@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import RippleGetAddress, RippleAddress
+    from trezor.messages import RippleAddress, RippleGetAddress
+
     from apps.common.keychain import Keychain
 
 
@@ -12,7 +13,9 @@ async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddres
     # NOTE: local imports here saves 20 bytes
     from trezor.messages import RippleAddress
     from trezor.ui.layouts import show_address
+
     from apps.common import paths
+
     from .helpers import address_from_public_key
 
     await paths.validate_path(keychain, msg.address_n)

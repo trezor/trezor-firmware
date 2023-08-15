@@ -10,10 +10,11 @@ def validate(msg: NEMSignTx) -> None:
     from trezor.crypto import nem
     from trezor.enums import NEMModificationType
     from trezor.wire import ProcessError  # local_cache_global
+
     from .helpers import (
+        NEM_MAX_DIVISIBILITY,
         NEM_MAX_ENCRYPTED_PAYLOAD_SIZE,
         NEM_MAX_PLAIN_PAYLOAD_SIZE,
-        NEM_MAX_DIVISIBILITY,
         NEM_MAX_SUPPLY,
     )
 
@@ -158,11 +159,7 @@ def validate(msg: NEMSignTx) -> None:
 
 
 def validate_network(network: int) -> None:
-    from .helpers import (
-        NEM_NETWORK_MAINNET,
-        NEM_NETWORK_MIJIN,
-        NEM_NETWORK_TESTNET,
-    )
+    from .helpers import NEM_NETWORK_MAINNET, NEM_NETWORK_MIJIN, NEM_NETWORK_TESTNET
 
     if network not in (NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN):
         raise ProcessError("Invalid NEM network")

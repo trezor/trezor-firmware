@@ -7,6 +7,7 @@ from .. import writers
 
 if TYPE_CHECKING:
     from trezor.messages import TxAckPaymentRequest, TxOutput
+
     from apps.common import coininfo
     from apps.common.keychain import Keychain
 
@@ -28,7 +29,9 @@ class PaymentRequestVerifier:
         from storage import cache
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
+
         from apps.common.address_mac import check_address_mac
+
         from .. import writers  # pylint: disable=import-outside-toplevel
 
         self.h_outputs = HashWriter(sha256())

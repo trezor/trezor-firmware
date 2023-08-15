@@ -6,8 +6,10 @@ if TYPE_CHECKING:
 
 async def get_public_key(msg: EthereumGetPublicKey) -> EthereumPublicKey:
     from ubinascii import hexlify
+
     from trezor.messages import EthereumPublicKey, GetPublicKey
     from trezor.ui.layouts import show_pubkey
+
     from apps.bitcoin import get_public_key as bitcoin_get_public_key
 
     # we use the Bitcoin format for Ethereum xpubs

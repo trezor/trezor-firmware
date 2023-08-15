@@ -6,7 +6,7 @@ from trezor import io, utils
 from trezor.sdcard import with_filesystem
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Callable
+    from typing import Callable, TypeVar
 
     T = TypeVar("T", bound=Callable)
 

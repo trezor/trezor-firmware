@@ -22,9 +22,11 @@ from ..helpers.utils import derive_public_key
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, ClassVar
+
     from trezor.enums import CardanoAddressType
-    from apps.common.paths import PathSchema
+
     from apps.common import cbor
+    from apps.common.paths import PathSchema
 
     from ..helpers.hash_builder_collection import HashBuilderEmbeddedCBOR
 

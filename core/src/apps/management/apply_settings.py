@@ -1,15 +1,14 @@
 from typing import TYPE_CHECKING
 
+import trezorui2
 from trezor import utils
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, confirm_homescreen, confirm_single
 from trezor.wire import DataError
 
-import trezorui2
-
 if TYPE_CHECKING:
-    from trezor.messages import ApplySettings, Success
     from trezor.enums import SafetyCheckLevel
+    from trezor.messages import ApplySettings, Success
 
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
@@ -17,7 +16,7 @@ BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 if utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
 
     def _validate_homescreen_model_specific(homescreen: bytes) -> None:
-        from trezor.ui import WIDTH, HEIGHT
+        from trezor.ui import HEIGHT, WIDTH
 
         try:
             w, h, is_grayscale = trezorui2.toif_info(homescreen)
@@ -31,7 +30,7 @@ if utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
 else:
 
     def _validate_homescreen_model_specific(homescreen: bytes) -> None:
-        from trezor.ui import WIDTH, HEIGHT
+        from trezor.ui import HEIGHT, WIDTH
 
         try:
             w, h, mcu_height = trezorui2.jpeg_info(homescreen)
@@ -63,10 +62,11 @@ def _validate_homescreen(homescreen: bytes) -> None:
 
 async def apply_settings(msg: ApplySettings) -> Success:
     import storage.device as storage_device
-    from apps.common import safety_checks
     from trezor.messages import Success
-    from trezor.wire import ProcessError, NotInitialized
+    from trezor.wire import NotInitialized, ProcessError
+
     from apps.base import reload_settings_from_storage
+    from apps.common import safety_checks
 
     if not storage_device.is_initialized():
         raise NotInitialized("Device is not initialized")

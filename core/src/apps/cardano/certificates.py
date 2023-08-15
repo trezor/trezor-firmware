@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     from trezor import messages
+
     from apps.common.cbor import CborSequence
 
     from . import seed

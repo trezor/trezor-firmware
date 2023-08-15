@@ -4,36 +4,31 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from storage import debug as storage
-    from storage.debug import debug_events
+    from typing import TYPE_CHECKING
 
     import trezorui2
-
+    from storage import debug as storage
+    from storage.debug import debug_events
     from trezor import log, loop, utils, wire
+    from trezor.enums import MessageType
+    from trezor.messages import DebugLinkLayout, Success
     from trezor.ui import display
     from trezor.wire import context
-    from trezor.enums import MessageType
-    from trezor.messages import (
-        DebugLinkLayout,
-        Success,
-    )
 
     from apps import workflow_handlers
 
-    from typing import TYPE_CHECKING
-
     if TYPE_CHECKING:
-        from trezor.ui import Layout
         from trezor.messages import (
             DebugLinkDecision,
             DebugLinkEraseSdCard,
             DebugLinkGetState,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
+            DebugLinkResetDebugEvents,
             DebugLinkState,
             DebugLinkWatchLayout,
-            DebugLinkResetDebugEvents,
         )
+        from trezor.ui import Layout
 
     swipe_chan = loop.chan()
     result_chan = loop.chan()
@@ -194,6 +189,7 @@ if __debug__:
         msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
         from trezor.messages import DebugLinkState
+
         from apps.common import mnemonic, passphrase
 
         m = DebugLinkState()

@@ -1,18 +1,17 @@
 from typing import TYPE_CHECKING
 
+import trezorui2
 from trezor import io, loop, ui
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 from trezor.wire.context import wait as ctx_wait
-
-import trezorui2
 
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
-    from ..common import PropertyType, ExceptionType
+    from ..common import ExceptionType, PropertyType
 
     T = TypeVar("T")
 
@@ -69,8 +68,9 @@ class RustLayout(ui.Layout):
 
             Waits for `result_signal` and carries it out.
             """
-            from apps.debug import result_signal
             from storage import debug as debug_storage
+
+            from apps.debug import result_signal
 
             while True:
                 event_id, result = await result_signal()
@@ -88,8 +88,9 @@ class RustLayout(ui.Layout):
             self.layout.trace(callback)
 
         async def handle_swipe(self):
-            from apps.debug import notify_layout_change, swipe_signal
             from trezor.enums import DebugSwipeDirection
+
+            from apps.debug import notify_layout_change, swipe_signal
 
             while True:
                 event_id, direction = await swipe_signal()
@@ -120,9 +121,10 @@ class RustLayout(ui.Layout):
             y: int,
             hold_ms: int | None,
         ) -> Any:
-            from trezor import workflow
-            from apps.debug import notify_layout_change
             from storage import debug as debug_storage
+            from trezor import workflow
+
+            from apps.debug import notify_layout_change
 
             self.layout.touch_event(io.TOUCH_START, x, y)
             self._paint()
@@ -164,8 +166,9 @@ class RustLayout(ui.Layout):
         self._paint()
 
         if __debug__ and self.should_notify_layout_change:
-            from apps.debug import notify_layout_change
             from storage import debug as debug_storage
+
+            from apps.debug import notify_layout_change
 
             # notify about change and do not notify again until next await.
             # (handle_rendering might be called multiple times in a single await,

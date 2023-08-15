@@ -5,15 +5,8 @@ HARDENED = const(0x8000_0000)
 SLIP25_PURPOSE = const(10025 | HARDENED)
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        Callable,
-        Collection,
-        Container,
-        Iterable,
-        Sequence,
-        TypeVar,
-    )
+    from typing import Any, Callable, Collection, Container, Iterable, Sequence, TypeVar
+
     from typing_extensions import Protocol
 
     Bip32Path = Sequence[int]

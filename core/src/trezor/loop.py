@@ -14,13 +14,7 @@ from typing import TYPE_CHECKING
 from trezor import io, log
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        Awaitable,
-        Callable,
-        Coroutine,
-        Generator,
-    )
+    from typing import Any, Awaitable, Callable, Coroutine, Generator
 
     Task = Coroutine | Generator
     AwaitableTask = Task | Awaitable

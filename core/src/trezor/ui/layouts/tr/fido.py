@@ -1,6 +1,5 @@
-from trezor.enums import ButtonRequestType
-
 import trezorui2
+from trezor.enums import ButtonRequestType
 
 from ..common import interact
 from . import RustLayout

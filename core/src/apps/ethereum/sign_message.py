@@ -3,12 +3,10 @@ from typing import TYPE_CHECKING
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
 if TYPE_CHECKING:
-    from trezor.messages import (
-        EthereumSignMessage,
-        EthereumMessageSignature,
-    )
+    from trezor.messages import EthereumMessageSignature, EthereumSignMessage
 
     from apps.common.keychain import Keychain
+
     from .definitions import Definitions
 
 

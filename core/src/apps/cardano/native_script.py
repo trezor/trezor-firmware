@@ -5,6 +5,7 @@ from trezor.wire import ProcessError
 
 if TYPE_CHECKING:
     from typing import Any
+
     from trezor import messages
 
     from apps.common.cbor import CborSequence
@@ -13,9 +14,9 @@ if TYPE_CHECKING:
 
 
 def validate_native_script(script: messages.CardanoNativeScript | None) -> None:
+    from . import seed
     from .helpers import ADDRESS_KEY_HASH_SIZE
     from .helpers.paths import SCHEMA_MINT
-    from . import seed
 
     INVALID_NATIVE_SCRIPT = ProcessError("Invalid native script")
 
@@ -120,9 +121,11 @@ def _validate_native_script_structure(script: messages.CardanoNativeScript) -> N
 def get_native_script_hash(
     keychain: seed.Keychain, script: messages.CardanoNativeScript
 ) -> bytes:
-    from .helpers import SCRIPT_HASH_SIZE
     from trezor.crypto import hashlib
+
     from apps.common import cbor
+
+    from .helpers import SCRIPT_HASH_SIZE
 
     script_cbor = cbor.encode(cborize_native_script(keychain, script))
     prefixed_script_cbor = b"\00" + script_cbor

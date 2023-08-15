@@ -10,8 +10,6 @@ from . import CURVE, definitions, networks
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, Iterable, TypeVar
 
-    from apps.common.keychain import Keychain
-
     from trezor.messages import (
         EthereumGetAddress,
         EthereumSignMessage,
@@ -20,10 +18,7 @@ if TYPE_CHECKING:
         EthereumSignTypedData,
     )
 
-    from apps.common.keychain import (
-        MsgOut,
-        Handler,
-    )
+    from apps.common.keychain import Handler, Keychain, MsgOut
 
     # messages for "with_keychain_and_network_from_path" decorator
     MsgInAddressN = TypeVar(

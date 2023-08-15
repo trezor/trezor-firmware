@@ -60,6 +60,7 @@ async def cosi_commit(msg: CosiCommit) -> CosiSignature:
     from trezor.crypto.curve import ed25519
     from trezor.ui.layouts import confirm_blob, confirm_text
     from trezor.wire.context import call
+
     from apps.common import paths
     from apps.common.keychain import get_keychain
 

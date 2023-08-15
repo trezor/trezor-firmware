@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WipeDevice, Success
+    from trezor.messages import Success, WipeDevice
 
 
 async def wipe_device(msg: WipeDevice) -> Success:

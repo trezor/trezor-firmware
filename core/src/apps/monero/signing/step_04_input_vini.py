@@ -10,8 +10,10 @@ if TYPE_CHECKING:
         MoneroTransactionInputViniAck,
         MoneroTransactionSourceEntry,
     )
-    from .state import State
+
     from apps.monero.layout import MoneroTransactionProgress
+
+    from .state import State
 
 
 def input_vini(
@@ -22,10 +24,10 @@ def input_vini(
     orig_idx: int,
     progress: MoneroTransactionProgress,
 ) -> MoneroTransactionInputViniAck:
+    from trezor.messages import MoneroTransactionInputViniAck
+
     from apps.monero.signing import offloading_keys
     from apps.monero.xmr import crypto
-
-    from trezor.messages import MoneroTransactionInputViniAck
 
     STEP_VINI = state.STEP_VINI  # local_cache_attribute
 

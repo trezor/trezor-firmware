@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import StellarSignTx, StellarSignedTx
+    from trezor.messages import StellarSignedTx, StellarSignTx
 
     from apps.common.keychain import Keychain
 
@@ -11,17 +11,18 @@ if TYPE_CHECKING:
 @auto_keychain(__name__)
 async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     from ubinascii import hexlify
-    from trezor.messages import StellarSignedTx
+
     from trezor.crypto.curve import ed25519
-    from apps.common import paths, seed
-    from trezor.enums import StellarMemoType
     from trezor.crypto.hashlib import sha256
+    from trezor.enums import StellarMemoType
+    from trezor.messages import StellarSignedTx, StellarTxOpRequest
     from trezor.wire import DataError, ProcessError
     from trezor.wire.context import call_any
-    from trezor.messages import StellarTxOpRequest
+
+    from apps.common import paths, seed
+
+    from . import consts, helpers, layout, writers
     from .operations import process_operation
-    from . import helpers
-    from . import consts, layout, writers
 
     await paths.validate_path(keychain, msg.address_n)
 

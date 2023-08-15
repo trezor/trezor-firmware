@@ -10,10 +10,11 @@ if TYPE_CHECKING:
 
 @auto_keychain(__name__)
 async def get_watch_only(msg: MoneroGetWatchKey, keychain: Keychain) -> MoneroWatchKey:
+    from trezor.messages import MoneroWatchKey
+
     from apps.common import paths
     from apps.monero import layout, misc
     from apps.monero.xmr import crypto_helpers
-    from trezor.messages import MoneroWatchKey
 
     await paths.validate_path(keychain, msg.address_n)
 

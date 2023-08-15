@@ -6,16 +6,11 @@ from trezor.wire import DataError
 from . import paths, safety_checks
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        Awaitable,
-        Callable,
-        Iterable,
-        TypeVar,
-    )
-    from typing_extensions import Protocol
+    from typing import Any, Awaitable, Callable, Iterable, TypeVar
 
     from trezor.protobuf import MessageType
+    from typing_extensions import Protocol
+
     from .seed import Slip21Node
 
     T = TypeVar("T")

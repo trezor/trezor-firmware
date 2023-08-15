@@ -9,6 +9,7 @@ from trezor import log
 
 if TYPE_CHECKING:
     from typing import Any, Generic, Iterator, TypeVar
+
     from trezor.utils import BufferReader
 
     K = TypeVar("K")

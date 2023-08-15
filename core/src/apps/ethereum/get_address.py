@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
 if TYPE_CHECKING:
-    from trezor.messages import EthereumGetAddress, EthereumAddress
+    from trezor.messages import EthereumAddress, EthereumGetAddress
 
     from apps.common.keychain import Keychain
+
     from .definitions import Definitions
 
 
@@ -17,7 +18,9 @@ async def get_address(
 ) -> EthereumAddress:
     from trezor.messages import EthereumAddress
     from trezor.ui.layouts import show_address
+
     from apps.common import paths
+
     from .helpers import address_from_bytes
 
     address_n = msg.address_n  # local_cache_attribute

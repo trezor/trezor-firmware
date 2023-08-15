@@ -10,8 +10,9 @@ if TYPE_CHECKING:
 async def get_native_script_hash(
     msg: CardanoGetNativeScriptHash, keychain: seed.Keychain
 ) -> CardanoNativeScriptHash:
-    from trezor.messages import CardanoNativeScriptHash
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
+    from trezor.messages import CardanoNativeScriptHash
+
     from . import layout, native_script
 
     native_script.validate_native_script(msg.script)

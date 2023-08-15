@@ -7,6 +7,7 @@ from ..helpers import eos_asset_to_string, eos_name_to_string
 
 if TYPE_CHECKING:
     from typing import Iterable
+
     from trezor.messages import (
         EosActionBuyRam,
         EosActionBuyRamBytes,
@@ -254,6 +255,7 @@ async def confirm_action_unknown(action: EosActionCommon, checksum: bytes) -> No
 
 def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
     from trezor.wire import DataError
+
     from ..helpers import public_key_to_wif
 
     fields: list[PropertyType] = []

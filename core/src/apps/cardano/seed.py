@@ -10,14 +10,14 @@ from apps.common.seed import get_seed
 from .helpers.paths import BYRON_ROOT, MINTING_ROOT, MULTISIG_ROOT, SHELLEY_ROOT
 
 if TYPE_CHECKING:
-    from typing import Callable, Awaitable, TypeVar
-
-    from apps.common.paths import Bip32Path
-    from apps.common.keychain import MsgOut, Handler
+    from typing import Awaitable, Callable, TypeVar
 
     from trezor import messages
-    from trezor.enums import CardanoDerivationType
     from trezor.crypto import bip32
+    from trezor.enums import CardanoDerivationType
+
+    from apps.common.keychain import Handler, MsgOut
+    from apps.common.paths import Bip32Path
 
     CardanoMessages = (
         messages.CardanoGetAddress
@@ -137,8 +137,9 @@ def derive_and_store_secrets(passphrase: str) -> None:
 
 
 async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychain:
-    from apps.common.seed import derive_and_store_roots
     from trezor.enums import CardanoDerivationType
+
+    from apps.common.seed import derive_and_store_roots
 
     if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
