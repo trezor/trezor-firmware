@@ -52,6 +52,10 @@ brew install scons sdl2 sdl2_image pkg-config llvm
 
 * __Windows__: not supported yet, sorry.
 
+## Protobuf Compiler
+
+The protocol buffer compiler `protoc` is needed to (unsurprisingly) compile protocol buffer files. [Follow the installation instructions for your system](https://grpc.io/docs/protoc-installation/).
+
 ## Rust
 
 You will require Rust and Cargo. The currently supported version is 1.64 nightly. The
