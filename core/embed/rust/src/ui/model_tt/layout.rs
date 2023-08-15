@@ -1477,7 +1477,7 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
             SwipePage::new(
                 paragraphs.into_paragraphs(),
                 theme::button_bar(Button::with_text("CONTINUE").map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Cancelled)
                 })),
                 theme::BG,
             ),
