@@ -36,7 +36,7 @@ python-bitcoinlib = "^0.11.0"
 typing-extensions = ">=3.7.4"
 
 ## style
-isort = "<5"  # 5 changes lots of stuff that need to be addressed first: https://timothycrosley.github.io/isort/docs/upgrade_guides/5.0.0/
+isort = "^5"
 flake8 = ">=3.7.0"
 black = ">=22.3"
 mako = "^1.0.7"
@@ -84,3 +84,21 @@ towncrier = "^23.6.0"
 [build-system]
 requires = ["poetry>=1;<1.1", "pip>=20"]
 build-backend = "poetry.masonry.api"
+
+[tool.isort]
+profile = "black"
+extra_standard_library = [
+  "micropython",
+  "ubinascii",
+  "ustruct",
+  "uctypes",
+  "utime",
+  "utimeq",
+  "trezorio",
+  "trezorui",
+  "trezorutils",
+  "trezorconfig",
+  "trezorcrypto",
+]
+known_first_party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests", "gitlab"]
+known_third_party = ["trezor", "storage"]
