@@ -1,18 +1,17 @@
 from typing import TYPE_CHECKING
 
+import trezorui2
 from trezor import io, loop, ui
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 from trezor.wire.context import wait as ctx_wait
 
-import trezorui2
-
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
-    from typing import Any, NoReturn, Awaitable, Iterable, Sequence, TypeVar
+    from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
-    from ..common import PropertyType, ExceptionType
+    from ..common import ExceptionType, PropertyType
 
     T = TypeVar("T")
 
@@ -70,8 +69,9 @@ class RustLayout(ui.Layout):
 
             Waits for `result_signal` and carries it out.
             """
-            from apps.debug import result_signal
             from storage import debug as debug_storage
+
+            from apps.debug import result_signal
 
             while True:
                 event_id, result = await result_signal()
@@ -123,10 +123,11 @@ class RustLayout(ui.Layout):
             btn_to_press: DebugPhysicalButton,
             hold_ms: int | None,
         ) -> Any:
-            from trezor.enums import DebugPhysicalButton
-            from trezor import workflow
-            from apps.debug import notify_layout_change
             from storage import debug as debug_storage
+            from trezor import workflow
+            from trezor.enums import DebugPhysicalButton
+
+            from apps.debug import notify_layout_change
 
             if btn_to_press == DebugPhysicalButton.LEFT_BTN:
                 msg = await self._press_left(hold_ms)
@@ -198,8 +199,9 @@ class RustLayout(ui.Layout):
         self._paint()
 
         if __debug__ and self.should_notify_layout_change:
-            from apps.debug import notify_layout_change
             from storage import debug as debug_storage
+
+            from apps.debug import notify_layout_change
 
             # notify about change and do not notify again until next await.
             # (handle_rendering might be called multiple times in a single await,

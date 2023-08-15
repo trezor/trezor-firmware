@@ -14,9 +14,13 @@ import gc
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from trezor.messages import (
+        MoneroTransactionSignInputAck,
+        MoneroTransactionSourceEntry,
+    )
+
     from apps.monero.layout import MoneroTransactionProgress
-    from trezor.messages import MoneroTransactionSourceEntry
-    from trezor.messages import MoneroTransactionSignInputAck
+
     from .state import State
 
 
@@ -46,8 +50,8 @@ def sign_input(
     :return: Generated signature MGs[i]
     """
     from trezor import utils
-    from apps.monero.xmr import crypto_helpers
-    from apps.monero.xmr import crypto
+
+    from apps.monero.xmr import crypto, crypto_helpers
 
     ensure = utils.ensure  # local_cache_attribute
     mem_trace = state.mem_trace  # local_cache_attribute
@@ -216,8 +220,8 @@ def _protect_signature(state: State, mg_buffer: list[bytes]) -> list[bytes]:
     After protocol finishes without error, opening_key is sent to the
     host.
     """
-    from trezor.crypto import random
-    from trezor.crypto import chacha20poly1305
+    from trezor.crypto import chacha20poly1305, random
+
     from apps.monero.signing import offloading_keys
 
     if state.last_step != state.STEP_SIGN:

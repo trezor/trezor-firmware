@@ -6,6 +6,7 @@ from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
     from trezor.messages import TezosGetPublicKey, TezosPublicKey
+
     from apps.common.keychain import Keychain
 
 
@@ -13,7 +14,9 @@ if TYPE_CHECKING:
 async def get_public_key(msg: TezosGetPublicKey, keychain: Keychain) -> TezosPublicKey:
     from trezor.messages import TezosPublicKey
     from trezor.ui.layouts import show_pubkey
+
     from apps.common import paths, seed
+
     from . import helpers
 
     await paths.validate_path(keychain, msg.address_n)

@@ -12,15 +12,16 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionFinalAck
+
     from .state import State
 
 
 def final_msg(state: State) -> MoneroTransactionFinalAck:
-    from trezor.messages import MoneroTransactionFinalAck
-    from apps.monero.xmr import chacha_poly
     from trezor.crypto import random
+    from trezor.messages import MoneroTransactionFinalAck
+
     from apps.monero import misc
-    from apps.monero.xmr import crypto, crypto_helpers
+    from apps.monero.xmr import chacha_poly, crypto, crypto_helpers
 
     if state.last_step != state.STEP_SIGN:
         raise ValueError("Invalid state transition")

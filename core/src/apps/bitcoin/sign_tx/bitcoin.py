@@ -23,23 +23,15 @@ if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.crypto import bip32
-
-    from trezor.messages import (
-        PrevInput,
-        PrevOutput,
-        PrevTx,
-        SignTx,
-        TxInput,
-        TxOutput,
-    )
+    from trezor.messages import PrevInput, PrevOutput, PrevTx, SignTx, TxInput, TxOutput
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
+    from ..writers import Writer
     from . import approvers
     from .sig_hasher import SigHasher
     from .tx_info import TxInfo
-    from ..writers import Writer
 
 
 # the number of bytes to preallocate for serialized transaction chunks
@@ -110,6 +102,7 @@ class Bitcoin:
             TxRequestDetailsType,
             TxRequestSerializedType,
         )
+
         from . import approvers
         from .tx_info import TxInfo
 

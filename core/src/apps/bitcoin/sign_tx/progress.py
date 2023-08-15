@@ -2,7 +2,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import SignTx
+
     from apps.common.coininfo import CoinInfo
+
     from .tx_info import OriginalTxInfo
 
 # Checking previous transactions typically requires the following pieces of

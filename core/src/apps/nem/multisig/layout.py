@@ -29,6 +29,7 @@ async def ask_aggregate_modification(
     multisig: bool,
 ) -> None:
     from trezor.enums import NEMModificationType
+
     from ..layout import require_confirm_final, require_confirm_text
 
     if not multisig:

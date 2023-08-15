@@ -16,13 +16,15 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr import crypto_helpers
 
 if TYPE_CHECKING:
-    from .state import State
     from trezor.messages import (
-        MoneroTransactionSourceEntry,
         MoneroTransactionSetInputAck,
+        MoneroTransactionSourceEntry,
     )
+
     from apps.monero.layout import MoneroTransactionProgress
     from apps.monero.xmr import crypto
+
+    from .state import State
 
 
 def set_input(
@@ -31,9 +33,10 @@ def set_input(
     progress: MoneroTransactionProgress,
 ) -> MoneroTransactionSetInputAck:
     from trezor.messages import MoneroTransactionSetInputAck
-    from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
-    from apps.monero.xmr import chacha_poly, monero, serialize
+
     from apps.monero.signing import offloading_keys
+    from apps.monero.xmr import chacha_poly, monero, serialize
+    from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
 
     state.current_input_index += 1
     current_input_index = state.current_input_index  # local_cache_attribute

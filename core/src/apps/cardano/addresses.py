@@ -12,7 +12,9 @@ from .helpers.utils import get_public_key_hash
 
 if TYPE_CHECKING:
     from typing import Any
+
     from trezor import messages
+
     from .seed import Keychain
 
 

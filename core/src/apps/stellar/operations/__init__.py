@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.utils import Writer
     from consts import StellarMessageType
+    from trezor.utils import Writer
 
 
 async def process_operation(w: Writer, op: StellarMessageType) -> None:

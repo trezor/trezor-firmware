@@ -51,14 +51,8 @@ from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
 
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        Callable,
-        Container,
-        Coroutine,
-        TypeVar,
-    )
     from trezorio import WireInterface
+    from typing import Any, Callable, Container, Coroutine, TypeVar
 
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]

@@ -22,6 +22,7 @@ class ThresholdReached(WordValidityResult):
 
 def check(backup_type: BackupType | None, partial_mnemonic: list[str]) -> None:
     from trezor.enums import BackupType
+
     from . import recover
 
     # we can't perform any checks if the backup type was not yet decided

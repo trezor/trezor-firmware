@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 async def recovery_homescreen() -> None:
     from trezor import workflow
+
     from apps.homescreen import homescreen
 
     if not storage_recovery.is_in_progress():
@@ -25,8 +26,8 @@ async def recovery_homescreen() -> None:
 
 
 async def recovery_process() -> Success:
-    from trezor.enums import MessageType
     import storage
+    from trezor.enums import MessageType
 
     wire.AVOID_RESTARTING_FOR = (MessageType.Initialize, MessageType.GetFeatures)
     try:
@@ -41,8 +42,8 @@ async def recovery_process() -> Success:
 
 
 async def _continue_recovery_process() -> Success:
-    from trezor.errors import MnemonicError
     from trezor import utils
+    from trezor.errors import MnemonicError
 
     # gather the current recovery state from storage
     dry_run = storage_recovery.is_dry_run()
@@ -101,8 +102,9 @@ async def _continue_recovery_process() -> Success:
 
 
 async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Success:
-    from trezor.crypto.hashlib import sha256
     from trezor import utils
+    from trezor.crypto.hashlib import sha256
+
     from apps.common import mnemonic
 
     if backup_type is None:
@@ -136,8 +138,8 @@ async def _finish_recovery_dry_run(secret: bytes, backup_type: BackupType) -> Su
 
 
 async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
-    from trezor.ui.layouts import show_success
     from trezor.enums import BackupType
+    from trezor.ui.layouts import show_success
 
     if backup_type is None:
         raise RuntimeError

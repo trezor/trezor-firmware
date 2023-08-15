@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WebAuthnListResidentCredentials, WebAuthnCredentials
+    from trezor.messages import WebAuthnCredentials, WebAuthnListResidentCredentials
 
 
 async def list_resident_credentials(

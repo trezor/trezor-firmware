@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import GetEntropy, Entropy
+    from trezor.messages import Entropy, GetEntropy
 
 
 async def get_entropy(msg: GetEntropy) -> Entropy:

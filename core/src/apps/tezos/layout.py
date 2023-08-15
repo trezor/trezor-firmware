@@ -82,6 +82,7 @@ async def require_confirm_register_delegate(address: str, fee: int) -> None:
 
 def format_tezos_amount(value: int) -> str:
     from trezor.strings import format_amount
+
     from .helpers import TEZOS_AMOUNT_DECIMALS
 
     formatted_value = format_amount(value, TEZOS_AMOUNT_DECIMALS)

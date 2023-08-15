@@ -31,6 +31,7 @@ async def ask_supply_change(
     common: NEMTransactionCommon, change: NEMMosaicSupplyChange
 ) -> None:
     from trezor.enums import NEMSupplyChangeType
+
     from ..layout import require_confirm_text
 
     supply_message = [

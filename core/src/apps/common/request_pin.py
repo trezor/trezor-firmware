@@ -16,7 +16,7 @@ async def _request_sd_salt(
     if not utils.USE_SD_CARD:
         return None
     else:
-        from .sdcard import request_sd_salt, SdCardUnavailable
+        from .sdcard import SdCardUnavailable, request_sd_salt
 
         try:
             return await request_sd_salt()
@@ -49,7 +49,7 @@ async def request_pin(
 
 
 async def request_pin_confirm(*args: Any, **kwargs: Any) -> str:
-    from trezor.ui.layouts import pin_mismatch_popup, confirm_reenter_pin
+    from trezor.ui.layouts import confirm_reenter_pin, pin_mismatch_popup
 
     while True:
         pin1 = await request_pin("Enter new PIN", *args, **kwargs)

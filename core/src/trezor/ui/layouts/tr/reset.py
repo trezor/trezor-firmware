@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
+import trezorui2
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
-
-import trezorui2
 
 from ..common import interact
 from . import RustLayout, confirm_action, show_warning
@@ -11,8 +10,9 @@ from . import RustLayout, confirm_action, show_warning
 CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType
     from typing import Sequence
+
+    from trezor.enums import BackupType
 
 
 async def show_share_words(

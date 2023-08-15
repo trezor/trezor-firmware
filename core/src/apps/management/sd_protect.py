@@ -13,6 +13,7 @@ from apps.common.sdcard import ensure_sdcard
 
 if TYPE_CHECKING:
     from typing import Awaitable
+
     from trezor.messages import SdProtect
 
 

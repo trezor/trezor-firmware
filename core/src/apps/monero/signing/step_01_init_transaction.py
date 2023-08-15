@@ -30,9 +30,10 @@ async def init_transaction(
     progress: MoneroTransactionProgress,
 ) -> MoneroTransactionInitAck:
     import gc
-    from apps.monero.signing import offloading_keys
+
     from apps.common import paths
     from apps.monero import layout, misc
+    from apps.monero.signing import offloading_keys
 
     mem_trace = state.mem_trace  # local_cache_attribute
     outputs = tsx_data.outputs  # local_cache_attribute
@@ -125,10 +126,7 @@ async def init_transaction(
 
     mem_trace(6)
 
-    from trezor.messages import (
-        MoneroTransactionInitAck,
-        MoneroTransactionRsigData,
-    )
+    from trezor.messages import MoneroTransactionInitAck, MoneroTransactionRsigData
 
     rsig_data = MoneroTransactionRsigData(offload_type=int(state.rsig_offload))
 
@@ -293,6 +291,7 @@ def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData) -> None:
     Generate master key H( H(TsxData || tx_priv) || rand )
     """
     from trezor import protobuf
+
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     writer = get_keccak_writer()
@@ -372,8 +371,9 @@ def _get_key_for_payment_id_encryption(
     payment id encryption. If no encrypted payment ID is chosen,
     dummy payment ID is set for better transaction uniformity if possible.
     """
-    from apps.monero.xmr.addresses import addr_eq
     from trezor.messages import MoneroAccountPublicAddress
+
+    from apps.monero.xmr.addresses import addr_eq
 
     addr = MoneroAccountPublicAddress(
         spend_public_key=crypto_helpers.NULL_KEY_ENC,

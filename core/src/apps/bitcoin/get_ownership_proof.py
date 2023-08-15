@@ -4,8 +4,10 @@ from .keychain import with_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import GetOwnershipProof, OwnershipProof
+
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
+
     from .authorization import CoinJoinAuthorization
 
 
@@ -16,10 +18,10 @@ async def get_ownership_proof(
     coin: CoinInfo,
     authorization: CoinJoinAuthorization | None = None,
 ) -> OwnershipProof:
-    from trezor.wire import DataError, ProcessError
     from trezor.enums import InputScriptType
     from trezor.messages import OwnershipProof
     from trezor.ui.layouts import confirm_action, confirm_blob
+    from trezor.wire import DataError, ProcessError
 
     from apps.common.paths import validate_path
 

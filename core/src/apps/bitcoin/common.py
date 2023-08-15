@@ -8,10 +8,12 @@ from trezor.enums import InputScriptType, OutputScriptType
 
 if TYPE_CHECKING:
     from enum import IntEnum
-    from apps.common.coininfo import CoinInfo
+
+    from trezor.crypto import bip32
     from trezor.messages import TxInput
     from trezor.utils import HashWriter
-    from trezor.crypto import bip32
+
+    from apps.common.coininfo import CoinInfo
 else:
     IntEnum = object
 

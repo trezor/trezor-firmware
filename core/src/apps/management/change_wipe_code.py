@@ -8,14 +8,12 @@ if TYPE_CHECKING:
 
 async def change_wipe_code(msg: ChangeWipeCode) -> Success:
     from storage.device import is_initialized
-    from trezor.wire import NotInitialized
-    from trezor.ui.layouts import show_success
-    from trezor.messages import Success
     from trezor import config
-    from apps.common.request_pin import (
-        error_pin_invalid,
-        request_pin_and_sd_salt,
-    )
+    from trezor.messages import Success
+    from trezor.ui.layouts import show_success
+    from trezor.wire import NotInitialized
+
+    from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
 
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
@@ -59,8 +57,8 @@ async def change_wipe_code(msg: ChangeWipeCode) -> Success:
 def _require_confirm_action(
     msg: ChangeWipeCode, has_wipe_code: bool
 ) -> Awaitable[None]:
-    from trezor.wire import ProcessError
     from trezor.ui.layouts import confirm_action, confirm_set_new_pin
+    from trezor.wire import ProcessError
 
     title = "Wipe code settings"
 
@@ -93,12 +91,13 @@ def _require_confirm_action(
 
 
 async def _request_wipe_code_confirm(pin: str) -> str:
-    from apps.common.request_pin import request_pin
     from trezor.ui.layouts import (
         confirm_reenter_pin,
         pin_mismatch_popup,
         wipe_code_same_as_pin_popup,
     )
+
+    from apps.common.request_pin import request_pin
 
     while True:
         code1 = await request_pin("Enter new wipe code")

@@ -11,15 +11,15 @@ from . import workflow_handlers
 if TYPE_CHECKING:
     from trezor import protobuf
     from trezor.messages import (
-        Features,
-        Initialize,
-        EndSession,
-        GetFeatures,
         Cancel,
+        CancelAuthorization,
+        DoPreauthorized,
+        EndSession,
+        Features,
+        GetFeatures,
+        Initialize,
         LockDevice,
         Ping,
-        DoPreauthorized,
-        CancelAuthorization,
         SetBusy,
     )
 
@@ -41,10 +41,9 @@ def busy_expiry_ms() -> int:
 
 def get_features() -> Features:
     import storage.recovery as storage_recovery
-
     from trezor.enums import Capability
     from trezor.messages import Features
-    from trezor.ui import WIDTH, HEIGHT
+    from trezor.ui import HEIGHT, WIDTH
 
     from apps.common import mnemonic, safety_checks
 
@@ -206,8 +205,8 @@ async def handle_EndSession(msg: EndSession) -> Success:
 
 async def handle_Ping(msg: Ping) -> Success:
     if msg.button_protection:
-        from trezor.ui.layouts import confirm_action
         from trezor.enums import ButtonRequestType as B
+        from trezor.ui.layouts import confirm_action
 
         await confirm_action("ping", "Confirm", "ping", br_code=B.ProtectCall)
     return Success(message=msg.message)
@@ -216,6 +215,7 @@ async def handle_Ping(msg: Ping) -> Success:
 async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
     from trezor.messages import PreauthorizedRequest
     from trezor.wire.context import call_any, get_context
+
     from apps.common import authorization
 
     if not authorization.is_set():
@@ -241,6 +241,7 @@ async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
     from trezor.messages import UnlockedPathRequest
     from trezor.ui.layouts import confirm_action
     from trezor.wire.context import call_any, get_context
+
     from apps.common.paths import SLIP25_PURPOSE
     from apps.common.seed import Slip21Node, get_seed
     from apps.common.writers import write_uint32_le

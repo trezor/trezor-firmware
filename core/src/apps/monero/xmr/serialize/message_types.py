@@ -5,9 +5,9 @@ from trezor.utils import obj_eq, obj_repr
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint, load_uvarint
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Generic
+    from typing import Generic, TypeVar
 
-    from .base_types import XmrType, XmrFspec, Reader, Writer
+    from .base_types import Reader, Writer, XmrFspec, XmrType
 
     T = TypeVar("T", bound=XmrType)
     MT = TypeVar("MT", bound="MessageType")

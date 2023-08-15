@@ -5,7 +5,8 @@ from apps.common.keychain import with_slip44_keychain
 from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
-    from trezor.messages import TezosGetAddress, TezosAddress
+    from trezor.messages import TezosAddress, TezosGetAddress
+
     from apps.common.keychain import Keychain
 
 
@@ -14,7 +15,9 @@ async def get_address(msg: TezosGetAddress, keychain: Keychain) -> TezosAddress:
     from trezor.crypto import hashlib
     from trezor.messages import TezosAddress
     from trezor.ui.layouts import show_address
+
     from apps.common import paths, seed
+
     from . import helpers
 
     await paths.validate_path(keychain, msg.address_n)

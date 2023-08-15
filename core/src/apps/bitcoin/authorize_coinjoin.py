@@ -6,6 +6,7 @@ from .keychain import with_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import AuthorizeCoinJoin, Success
+
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 

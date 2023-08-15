@@ -10,9 +10,10 @@ async def load_device(msg: LoadDevice) -> Success:
     from trezor.crypto import bip39, slip39
     from trezor.enums import BackupType
     from trezor.messages import Success
-    from apps.management import backup_types
-    from trezor.wire import UnexpectedMessage, ProcessError
     from trezor.ui.layouts import confirm_action
+    from trezor.wire import ProcessError, UnexpectedMessage
+
+    from apps.management import backup_types
 
     mnemonics = msg.mnemonics  # local_cache_attribute
 
