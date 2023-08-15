@@ -2,7 +2,7 @@ PYTHON=python3
 SETUP=$(PYTHON) setup.py
 
 EXCLUDES=.vscode
-STYLE_TARGETS=src/trezorlib setup.py
+STYLE_TARGETS=src tests tools helper-scripts setup.py
 
 all: build
 
@@ -45,7 +45,7 @@ git-clean:
 
 style:
 	black $(STYLE_TARGETS)
-	isort --apply --recursive $(STYLE_TARGETS)
+	isort $(STYLE_TARGETS)
 	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS)
 	flake8
 	make pyright

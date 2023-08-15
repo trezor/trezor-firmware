@@ -14,9 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import logging
 from enum import IntEnum
 from io import BytesIO
-import logging
 
 import pytest
 
@@ -90,7 +90,7 @@ class DefaultFields(protobuf.MessageType):
 class RecursiveMessage(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("uvarint", "uint64"),
-        2: protobuf.Field("recursivefield", "RecursiveMessage", required=False)
+        2: protobuf.Field("recursivefield", "RecursiveMessage", required=False),
     }
 
 
@@ -170,7 +170,7 @@ def test_sint_uint():
 
     # roundtrip:
     assert protobuf.uint_to_sint(protobuf.sint_to_uint(1234567891011)) == 1234567891011
-    assert protobuf.uint_to_sint(protobuf.sint_to_uint(-(2 ** 32))) == -(2 ** 32)
+    assert protobuf.uint_to_sint(protobuf.sint_to_uint(-(2**32))) == -(2**32)
 
 
 def test_simple_message():
@@ -314,11 +314,8 @@ def test_recursive():
     msg = RecursiveMessage(
         uvarint=1,
         recursivefield=RecursiveMessage(
-            uvarint=2,
-            recursivefield=RecursiveMessage(
-                uvarint=3
-            )
-        )
+            uvarint=2, recursivefield=RecursiveMessage(uvarint=3)
+        ),
     )
 
     buf = dump_message(msg)
