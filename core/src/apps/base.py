@@ -99,6 +99,7 @@ def get_features() -> Features:
             Capability.Shamir,
             Capability.ShamirGroups,
             Capability.PassphraseEntry,
+            Capability.Solana,
         ]
 
     # Only some models are capable of SD card
