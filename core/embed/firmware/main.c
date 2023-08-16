@@ -273,7 +273,8 @@ void SVC_C_Handler(uint32_t *stack) {
       clear_firmware_header = false;
       // break is omitted here because we want to continue to reboot below
     case SVC_REBOOT_TO_BOOTLOADER:
-      // if not going from copy image header & reboot, clean preventively this part of CCMRAM
+      // if not going from copy image header & reboot, clean preventively this
+      // part of CCMRAM
       if (clear_firmware_header) {
         explicit_bzero(&firmware_header_start, IMAGE_HEADER_SIZE);
       }
