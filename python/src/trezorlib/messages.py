@@ -268,6 +268,8 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaSignedTx = 905
+    SolanaSignOffChainMessage = 906
+    SolanaOffChainMessageSignature = 907
 
 
 class FailureType(IntEnum):
@@ -472,6 +474,7 @@ class Capability(IntEnum):
     Shamir = 15
     ShamirGroups = 16
     PassphraseEntry = 17
+    Solana = 18
 
 
 class SdProtectOperationType(IntEnum):
@@ -6716,6 +6719,37 @@ class SolanaSignedTx(protobuf.MessageType):
         signature: "bytes",
     ) -> None:
         self.serialized_tx = serialized_tx
+        self.signature = signature
+
+
+class SolanaSignOffChainMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 906
+    FIELDS = {
+        1: protobuf.Field("signer_path_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("serialized_message", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        serialized_message: "bytes",
+        signer_path_n: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.signer_path_n: Sequence["int"] = signer_path_n if signer_path_n is not None else []
+        self.serialized_message = serialized_message
+
+
+class SolanaOffChainMessageSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 907
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+    ) -> None:
         self.signature = signature
 
 

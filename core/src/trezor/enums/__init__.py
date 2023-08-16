@@ -260,6 +260,8 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaSignedTx = 905
+        SolanaSignOffChainMessage = 906
+        SolanaOffChainMessageSignature = 907
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1

@@ -370,4 +370,6 @@ enum MessageType {
     MessageType_SolanaAddress = 903 [(wire_out) = true];
     MessageType_SolanaSignTx = 904 [(wire_in) = true];
     MessageType_SolanaSignedTx = 905 [(wire_out) = true];
+    MessageType_SolanaSignOffChainMessage = 906 [(wire_in) = true];
+    MessageType_SolanaOffChainMessageSignature = 907 [(wire_out) = true];
 }

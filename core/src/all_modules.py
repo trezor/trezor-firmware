@@ -395,6 +395,8 @@ apps.solana.parsing.parse_instructions
 import apps.solana.parsing.parse_instructions
 apps.solana.parsing.utils
 import apps.solana.parsing.utils
+apps.solana.sign_off_chain_message
+import apps.solana.sign_off_chain_message
 apps.solana.sign_tx
 import apps.solana.sign_tx
 apps.solana.types
