@@ -275,6 +275,8 @@ void SVC_C_Handler(uint32_t *stack) {
         explicit_bzero(&firmware_header_start, IMAGE_HEADER_SIZE);
       }
 
+      ensure_compatible_settings();
+
       __asm__ volatile("msr control, %0" ::"r"(0x0));
       __asm__ volatile("isb");
       // See stack layout in
