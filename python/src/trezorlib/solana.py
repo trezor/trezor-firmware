@@ -42,3 +42,17 @@ def sign_tx(
             serialized_tx=serialized_tx,
         )
     )
+
+
+@expect(messages.SolanaOffChainMessageSignature)
+def sign_off_chain_message(
+    client: "TrezorClient",
+    signer_path_n: List[int],
+    serialized_message: bytes,
+) -> "MessageType":
+    return client.call(
+        messages.SolanaSignOffChainMessage(
+            signer_path_n=signer_path_n,
+            serialized_message=serialized_message,
+        )
+    )

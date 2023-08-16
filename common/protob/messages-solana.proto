@@ -59,5 +59,24 @@ message SolanaSignTx {
  */
 message SolanaSignedTx {
     required bytes serialized_tx = 1;   // the tx which has been signed (the same data which was passed to SolanaSignTx)
-    required bytes signature = 2;    // tx signature
+    required bytes signature = 2;       // tx signature
+}
+
+/**
+ * Request: Ask device to sign a Solana off-chain message
+ * @start
+ * @next SolanaOffChainMessageSignature
+ * @next Failure
+ */
+message SolanaSignOffChainMessage {
+    repeated uint32 signer_path_n = 1;      // BIP-32 path to derive the key to sign with
+    required bytes serialized_message = 2;  // serialized off-chain message to be signed
+}
+
+/**
+ * Response: Contains a off-chain message signature
+ * @end
+ */
+message SolanaOffChainMessageSignature {
+    required bytes signature = 1; // off-chain message signature
 }
