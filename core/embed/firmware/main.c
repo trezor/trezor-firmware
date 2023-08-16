@@ -88,9 +88,6 @@
 // from util.s
 extern void shutdown_privileged(void);
 
-// from linker script
-extern uint8_t firmware_header_start;
-
 int main(void) {
   random_delays_init();
 
@@ -247,6 +244,7 @@ void copy_image_header_for_bootloader(const uint8_t *image_header) {
 
 void SVC_C_Handler(uint32_t *stack) {
   uint8_t svc_number = ((uint8_t *)stack[6])[-2];
+  bool clear_firmware_header = true;
   switch (svc_number) {
     case SVC_ENABLE_IRQ:
       HAL_NVIC_EnableIRQ(stack[0]);
@@ -269,11 +267,14 @@ void SVC_C_Handler(uint32_t *stack) {
       break;
     case SVC_REBOOT_COPY_IMAGE_HEADER:
       copy_image_header_for_bootloader((uint8_t *)stack[0]);
+      clear_firmware_header = false;
       // break is omitted here because we want to continue to reboot below
     case SVC_REBOOT_TO_BOOTLOADER:
+      // if not going from copy image header & reboot, clean preventively this part of CCMRAM
+      if (clear_firmware_header) {
+        explicit_bzero(&firmware_header_start, IMAGE_HEADER_SIZE);
+      }
 
-      ensure_compatible_settings();
-      mpu_config_bootloader();
       __asm__ volatile("msr control, %0" ::"r"(0x0));
       __asm__ volatile("isb");
       // See stack layout in
