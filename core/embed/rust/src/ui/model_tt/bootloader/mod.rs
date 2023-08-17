@@ -6,7 +6,7 @@ use crate::{
         constant::{screen, HEIGHT},
         display::{self, Color, Font, Icon},
         event::TouchEvent,
-        geometry::{Alignment2D, Point},
+        geometry::Point,
         model_tt::{
             bootloader::{
                 confirm::ConfirmTitle,
@@ -14,13 +14,13 @@ use crate::{
                 theme::{
                     button_bld, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
                     BLD_FG, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32, FIRE40,
-                    LOGO_EMPTY, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+                    TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
                 },
                 welcome::Welcome,
             },
             component::{Button, ResultScreen, WelcomeScreen},
             constant,
-            theme::{BACKLIGHT_DIM, BACKLIGHT_NORMAL, BLACK, FG, WHITE},
+            theme::{BACKLIGHT_DIM, BACKLIGHT_NORMAL, FG, WHITE},
         },
         util::{from_c_array, from_c_str},
     },
@@ -35,6 +35,7 @@ pub mod menu;
 pub mod theme;
 pub mod welcome;
 
+use crate::ui::model_tt::theme::BLACK;
 use confirm::Confirm;
 use intro::Intro;
 use menu::Menu;
@@ -338,17 +339,10 @@ extern "C" fn screen_boot_empty(fading: bool) {
         fadeout();
     }
 
-    let fg = WHITE;
-    let bg = BLACK;
+    display::rect_fill(constant::screen(), BLACK);
 
-    display::rect_fill(constant::screen(), bg);
-    let icon = Icon::new(LOGO_EMPTY);
-    icon.draw(
-        Point::new(screen().center().x, 48),
-        Alignment2D::TOP_CENTER,
-        fg,
-        bg,
-    );
+    let mut frame = WelcomeScreen::new(true);
+    show(&mut frame, false);
 
     if fading {
         fadein();
@@ -408,7 +402,7 @@ extern "C" fn screen_install_success(
 
 #[no_mangle]
 extern "C" fn screen_welcome_model() {
-    let mut frame = WelcomeScreen::new();
+    let mut frame = WelcomeScreen::new(false);
     show(&mut frame, false);
 }
 

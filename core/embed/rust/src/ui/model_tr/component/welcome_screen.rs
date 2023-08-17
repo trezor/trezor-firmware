@@ -5,15 +5,19 @@ use crate::ui::{
 
 use super::super::theme;
 
-const ICON_TOP_MARGIN: i16 = 11;
+const ICON_TOP_MARGIN: i16 = 12;
 
 pub struct WelcomeScreen {
     area: Rect,
+    empty_lock: bool,
 }
 
 impl WelcomeScreen {
-    pub fn new() -> Self {
-        Self { area: Rect::zero() }
+    pub fn new(empty_lock: bool) -> Self {
+        Self {
+            area: Rect::zero(),
+            empty_lock,
+        }
     }
 }
 
@@ -31,12 +35,17 @@ impl Component for WelcomeScreen {
 
     fn paint(&mut self) {
         theme::ICON_DEVICE_NAME.draw(
-            self.area.bottom_center(),
+            self.area.bottom_center() - Offset::y(5),
             Alignment2D::BOTTOM_CENTER,
             theme::FG,
             theme::BG,
         );
-        theme::ICON_LOGO.draw(
+        let icon = if self.empty_lock {
+            theme::ICON_LOGO_EMPTY
+        } else {
+            theme::ICON_LOGO
+        };
+        icon.draw(
             self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
             Alignment2D::TOP_CENTER,
             theme::FG,
