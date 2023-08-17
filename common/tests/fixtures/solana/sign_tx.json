@@ -6,7 +6,7 @@
   "tests": [
     {
       "parameters": {
-        "signer_path": "m/44'/501'/0'/0'",
+        "address": "m/44'/501'/0'/0'",
         "annotated_serialized_tx": [
           "#header",
           "010001",

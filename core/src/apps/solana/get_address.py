@@ -19,17 +19,13 @@ async def get_address(
 ) -> SolanaAddress:
     from trezor.messages import SolanaAddress
     from trezor.ui.layouts import show_address
-    from apps.common import paths, seed
+    from apps.common import paths
+    from .get_public_key import derive_public_key
 
-    address_n = msg.address_n  # local_cache_attribute
-
-    await paths.validate_path(keychain, address_n)
-
-    node = keychain.derive(address_n)
-
-    address = base58.encode(seed.remove_ed25519_prefix(node.public_key()))
+    public_key = derive_public_key(keychain, msg.address_n)
+    address = base58.encode(public_key)
 
     if msg.show_display:
-        await show_address(address, path=paths.address_n_to_str(address_n))
+        await show_address(address, path=paths.address_n_to_str(msg.address_n))
 
     return SolanaAddress(address=address)

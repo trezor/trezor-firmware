@@ -5,7 +5,7 @@ from apps.common.keychain import with_slip44_keychain
 from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
-    from trezor.messages import SolanaSignTx, SolanaSignedTx
+    from trezor.messages import SolanaSignTx, SolanaTxSignature
     from apps.common.keychain import Keychain
 
 
@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 async def sign_tx(
     msg: SolanaSignTx,
     keychain: Keychain,
-) -> SolanaSignedTx:
+) -> SolanaTxSignature:
     from trezor.crypto.curve import ed25519
-    from trezor.messages import SolanaSignedTx
+    from trezor.messages import SolanaTxSignature
     from apps.common import seed
     from .parser_poc import parser
     from .parser_poc import builder
@@ -23,10 +23,10 @@ async def sign_tx(
     from .instructions import handle_instructions
     from trezor.utils import BufferReader
 
-    signer_path = msg.signer_path_n
+    address_n = msg.address_n
     serialized_tx = msg.serialized_tx
 
-    node = keychain.derive(signer_path)
+    node = keychain.derive(address_n)
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
     signer_pub_key = seed.remove_ed25519_prefix(node.public_key())
@@ -36,14 +36,14 @@ async def sign_tx(
 
     await builder.show_parsed_message(parsed_msg)
 
-    return SolanaSignedTx(serialized_tx=bytes(), signature=signature)
-    
+    return SolanaTxSignature(signature=signature)
+
     # TODO Gabo's original code
 
-    # signer_path = msg.signer_path_n
+    # address_n = msg.address_n
     # serialized_tx = msg.serialized_tx
 
-    # node = keychain.derive(signer_path)
+    # node = keychain.derive(address_n)
 
     # signature = ed25519.sign(node.private_key(), serialized_tx)
 
@@ -55,4 +55,4 @@ async def sign_tx(
     # # TODO SOL: final confirmation screen, include blockhash
 
     # # TODO SOL: only one signature per request?
-    # return SolanaSignedTx(serialized_tx=serialized_tx, signature=signature)
+    # return SolanaTxSignature(signature=signature)
