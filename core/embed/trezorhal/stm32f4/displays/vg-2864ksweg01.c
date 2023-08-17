@@ -228,9 +228,9 @@ void display_init(void) {
 
   // Reset the LCD
   HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
-  HAL_Delay(40);
+  HAL_Delay(1);
   HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
-  HAL_Delay(400);
+  HAL_Delay(1);
   HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_SET);
 
   // init

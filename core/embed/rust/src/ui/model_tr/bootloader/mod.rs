@@ -1,7 +1,7 @@
 use crate::{
     strutil::hexlify,
     time::Duration,
-    trezorhal::{io::io_button_read, time},
+    trezorhal::io::io_button_read,
     ui::{
         component::{Component, Event, EventCtx, Label, LineBreaking::BreakWordsNoHyphen, Never},
         constant::SCREEN,
@@ -320,7 +320,7 @@ extern "C" fn screen_wipe_fail() {
 }
 
 #[no_mangle]
-extern "C" fn screen_boot_empty(_firmware_present: bool) {
+extern "C" fn screen_boot_empty(_fading: bool) {
     display::rect_fill(SCREEN, BLD_BG);
     LOGO_EMPTY.draw(
         SCREEN.top_center() + Offset::y(11),
@@ -329,9 +329,6 @@ extern "C" fn screen_boot_empty(_firmware_present: bool) {
         BLD_BG,
     );
     display::refresh();
-    if !_firmware_present {
-        time::sleep(Duration::from_millis(1000));
-    }
 }
 
 #[no_mangle]
