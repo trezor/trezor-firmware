@@ -519,6 +519,7 @@ static void test_otp_write_device_variant(const char *args) {
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
+  display_reinit();
   display_orientation(0);
   random_delays_init();
 #ifdef USE_SD_CARD
@@ -536,7 +537,6 @@ int main(void) {
 #endif
   usb_init_all();
 
-  display_reinit();
   display_clear();
   draw_border(1, 3);
 

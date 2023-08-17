@@ -307,6 +307,8 @@ int bootloader_main(void) {
 
   display_reinit();
 
+  ui_screen_boot_empty(false);
+
   mpu_config_bootloader();
 
   const image_header *hdr = NULL;
@@ -350,8 +352,6 @@ int bootloader_main(void) {
   set_core_clock(CLOCK_180_MHZ);
   display_set_little_endian();
 #endif
-
-  ui_screen_boot_empty(false);
 
 #ifdef USE_I2C
   i2c_init();
@@ -426,7 +426,11 @@ int bootloader_main(void) {
     ui_set_initial_setup(true);
 
     ui_screen_welcome_model();
+#ifndef USE_BACKLIGHT
+    hal_delay(1500);
+#else
     hal_delay(1000);
+#endif
     ui_screen_welcome();
 
     // erase storage
