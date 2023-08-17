@@ -1,6 +1,5 @@
 use crate::{
     strutil::hexlify,
-    time::Duration,
     trezorhal::io::io_button_read,
     ui::{
         component::{Component, Event, EventCtx, Label, LineBreaking::BreakWordsNoHyphen, Never},
@@ -32,7 +31,7 @@ use confirm::Confirm;
 use connect::Connect;
 use intro::Intro;
 use menu::Menu;
-use theme::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS, LOGO_EMPTY};
+use theme::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS};
 use welcome::Welcome;
 
 pub type BootloaderString = String<128>;
@@ -322,13 +321,9 @@ extern "C" fn screen_wipe_fail() {
 #[no_mangle]
 extern "C" fn screen_boot_empty(_fading: bool) {
     display::rect_fill(SCREEN, BLD_BG);
-    LOGO_EMPTY.draw(
-        SCREEN.top_center() + Offset::y(11),
-        Alignment2D::TOP_CENTER,
-        BLD_FG,
-        BLD_BG,
-    );
-    display::refresh();
+
+    let mut frame = WelcomeScreen::new(true);
+    show(&mut frame);
 }
 
 #[no_mangle]
@@ -366,7 +361,7 @@ extern "C" fn screen_welcome() {
 
 #[no_mangle]
 extern "C" fn screen_welcome_model() {
-    let mut frame = WelcomeScreen::new();
+    let mut frame = WelcomeScreen::new(false);
     show(&mut frame);
 }
 

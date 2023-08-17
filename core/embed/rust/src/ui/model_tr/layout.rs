@@ -1422,7 +1422,7 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 extern "C" fn draw_welcome_screen() -> Obj {
     // No need of util::try_or_raise, this does not allocate
-    let mut screen = WelcomeScreen::new();
+    let mut screen = WelcomeScreen::new(false);
     screen.place(constant::screen());
     display::sync();
     screen.paint();

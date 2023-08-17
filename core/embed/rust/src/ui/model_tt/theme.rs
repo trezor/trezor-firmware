@@ -99,6 +99,7 @@ include_icon!(IMAGE_BG_BACK_BTN_TALL, "model_tt/res/bg-back52.toif");
 
 // Welcome screen.
 include_icon!(ICON_LOGO, "model_tt/res/lock_full.toif");
+include_icon!(ICON_LOGO_EMPTY, "model_tt/res/lock_empty.toif");
 
 // Default homescreen
 pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");

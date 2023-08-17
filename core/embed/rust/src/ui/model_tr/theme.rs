@@ -79,6 +79,7 @@ include_icon!(ICON_DEVICE_NAME, "model_tr/res/device_name.toif"); // 116*18
 include_icon!(ICON_EYE, "model_tr/res/eye_round.toif"); // 12*7
 include_icon!(ICON_LOCK, "model_tr/res/lock.toif"); // 10*10
 include_icon!(ICON_LOGO, "model_tr/res/logo_22_33.toif"); // 22*33
+include_icon!(ICON_LOGO_EMPTY, "model_tr/res/logo_22_33_empty.toif");
 include_icon!(
     ICON_NEXT_PAGE,
     "model_tr/res/next_page.toif",

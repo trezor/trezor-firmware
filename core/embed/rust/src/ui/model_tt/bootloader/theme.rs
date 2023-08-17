@@ -66,7 +66,6 @@ pub const WARNING40: &[u8] = include_res!("model_tt/res/warning40.toif");
 pub const CHECK24: &[u8] = include_res!("model_tt/res/check24.toif");
 pub const CHECK40: &[u8] = include_res!("model_tt/res/check40.toif");
 
-pub const LOGO_EMPTY: &[u8] = include_res!("model_tt/res/lock_empty.toif");
 pub const DEVICE_NAME: &[u8] = include_res!("model_tt/res/device_name_T.toif");
 pub const START_URL: &[u8] = include_res!("model_tt/res/start.toif");
 

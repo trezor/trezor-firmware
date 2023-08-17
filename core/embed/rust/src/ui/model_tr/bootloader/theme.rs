@@ -8,7 +8,6 @@ pub use super::super::theme::{BLACK, WHITE};
 pub const BLD_BG: Color = BLACK;
 pub const BLD_FG: Color = WHITE;
 
-include_icon!(LOGO_EMPTY, "model_tr/res/logo_22_33_empty.toif");
 include_icon!(ICON_TRASH, "model_tr/res/trash.toif");
 include_icon!(ICON_ALERT, "model_tr/res/alert.toif");
 include_icon!(ICON_SPINNER, "model_tr/res/spinner.toif");
