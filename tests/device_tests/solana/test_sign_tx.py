@@ -36,14 +36,14 @@ def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
 
     # make sure the annotated transaction matches the original one
-    assert parameters["serialized_tx"] == "".join([i for i in parameters["annotated_serialized_tx"] if "#" not in i])
+    assert parameters["serialized_tx"] == "".join(
+        [i for i in parameters["annotated_serialized_tx"] if "#" not in i]
+    )
 
     actual_result = sign_tx(
         client,
-        signer_path_n=parse_path(parameters["signer_path"]),
+        address_n=parse_path(parameters["address"]),
         serialized_tx=bytes.fromhex(parameters["serialized_tx"]),
     )
 
     assert actual_result.signature == bytes.fromhex(result["expected_signature"])
-    # make sure the same transaction is returned
-    assert actual_result.serialized_tx == bytes.fromhex(parameters["serialized_tx"])

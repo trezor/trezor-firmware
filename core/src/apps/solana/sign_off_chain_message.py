@@ -29,12 +29,12 @@ async def sign_off_chain_message(
     from trezor.ui.layouts import confirm_signverify
     from apps.common import seed
 
-    signer_path = msg.signer_path_n
+    address_n = msg.address_n
     serialized_message = msg.serialized_message
 
     message, format = _parse_off_chain_message(serialized_message)
 
-    node = keychain.derive(signer_path)
+    node = keychain.derive(address_n)
 
     address = base58.encode(seed.remove_ed25519_prefix(node.public_key()))
 

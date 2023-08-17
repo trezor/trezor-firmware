@@ -259,7 +259,7 @@ if TYPE_CHECKING:
         SolanaGetAddress = 902
         SolanaAddress = 903
         SolanaSignTx = 904
-        SolanaSignedTx = 905
+        SolanaTxSignature = 905
         SolanaSignOffChainMessage = 906
         SolanaOffChainMessageSignature = 907
 

@@ -267,7 +267,7 @@ class MessageType(IntEnum):
     SolanaGetAddress = 902
     SolanaAddress = 903
     SolanaSignTx = 904
-    SolanaSignedTx = 905
+    SolanaTxSignature = 905
     SolanaSignOffChainMessage = 906
     SolanaOffChainMessageSignature = 907
 
@@ -6643,18 +6643,15 @@ class SolanaGetPublicKey(protobuf.MessageType):
 class SolanaPublicKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 901
     FIELDS = {
-        1: protobuf.Field("xpub", "string", repeated=False, required=True),
-        2: protobuf.Field("node", "HDNodeType", repeated=False, required=True),
+        1: protobuf.Field("public_key", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        xpub: "str",
-        node: "HDNodeType",
+        public_key: "bytes",
     ) -> None:
-        self.xpub = xpub
-        self.node = node
+        self.public_key = public_key
 
 
 class SolanaGetAddress(protobuf.MessageType):
@@ -6691,7 +6688,7 @@ class SolanaAddress(protobuf.MessageType):
 class SolanaSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 904
     FIELDS = {
-        1: protobuf.Field("signer_path_n", "uint32", repeated=True, required=False, default=None),
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("serialized_tx", "bytes", repeated=False, required=True),
     }
 
@@ -6699,33 +6696,30 @@ class SolanaSignTx(protobuf.MessageType):
         self,
         *,
         serialized_tx: "bytes",
-        signer_path_n: Optional[Sequence["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.signer_path_n: Sequence["int"] = signer_path_n if signer_path_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.serialized_tx = serialized_tx
 
 
-class SolanaSignedTx(protobuf.MessageType):
+class SolanaTxSignature(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 905
     FIELDS = {
-        1: protobuf.Field("serialized_tx", "bytes", repeated=False, required=True),
-        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        serialized_tx: "bytes",
         signature: "bytes",
     ) -> None:
-        self.serialized_tx = serialized_tx
         self.signature = signature
 
 
 class SolanaSignOffChainMessage(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 906
     FIELDS = {
-        1: protobuf.Field("signer_path_n", "uint32", repeated=True, required=False, default=None),
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("serialized_message", "bytes", repeated=False, required=True),
     }
 
@@ -6733,9 +6727,9 @@ class SolanaSignOffChainMessage(protobuf.MessageType):
         self,
         *,
         serialized_message: "bytes",
-        signer_path_n: Optional[Sequence["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.signer_path_n: Sequence["int"] = signer_path_n if signer_path_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.serialized_message = serialized_message
 
 

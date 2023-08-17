@@ -5193,14 +5193,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class SolanaPublicKey(protobuf.MessageType):
-        xpub: "str"
-        node: "HDNodeType"
+        public_key: "bytes"
 
         def __init__(
             self,
             *,
-            xpub: "str",
-            node: "HDNodeType",
+            public_key: "bytes",
         ) -> None:
             pass
 
@@ -5239,14 +5237,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class SolanaSignTx(protobuf.MessageType):
-        signer_path_n: "list[int]"
+        address_n: "list[int]"
         serialized_tx: "bytes"
 
         def __init__(
             self,
             *,
             serialized_tx: "bytes",
-            signer_path_n: "list[int] | None" = None,
+            address_n: "list[int] | None" = None,
         ) -> None:
             pass
 
@@ -5254,31 +5252,29 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["SolanaSignTx"]:
             return isinstance(msg, cls)
 
-    class SolanaSignedTx(protobuf.MessageType):
-        serialized_tx: "bytes"
+    class SolanaTxSignature(protobuf.MessageType):
         signature: "bytes"
 
         def __init__(
             self,
             *,
-            serialized_tx: "bytes",
             signature: "bytes",
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaSignedTx"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaTxSignature"]:
             return isinstance(msg, cls)
 
     class SolanaSignOffChainMessage(protobuf.MessageType):
-        signer_path_n: "list[int]"
+        address_n: "list[int]"
         serialized_message: "bytes"
 
         def __init__(
             self,
             *,
             serialized_message: "bytes",
-            signer_path_n: "list[int] | None" = None,
+            address_n: "list[int] | None" = None,
         ) -> None:
             pass
 
