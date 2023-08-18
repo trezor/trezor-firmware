@@ -40,21 +40,17 @@ impl Component for WelcomeScreen {
     }
 
     fn paint(&mut self) {
-        if self.empty_lock {
-            theme::ICON_LOGO_EMPTY.draw(
-                self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-                Alignment2D::TOP_CENTER,
-                theme::FG,
-                theme::BG,
-            );
+        let logo = if self.empty_lock {
+            theme::ICON_LOGO_EMPTY
         } else {
-            theme::ICON_LOGO.draw(
-                self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-                Alignment2D::TOP_CENTER,
-                theme::FG,
-                theme::BG,
-            );
-        }
+            theme::ICON_LOGO
+        };
+        logo.draw(
+            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
+            Alignment2D::TOP_CENTER,
+            theme::FG,
+            theme::BG,
+        );
         #[cfg(not(feature = "bootloader"))]
         display::text_center(
             self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
