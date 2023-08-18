@@ -34,7 +34,7 @@ async def sign_tx(
     parsed_msg = parser.parse_message(BufferReader(serialized_tx))
     print(parsed_msg)
 
-    await builder.show_parsed_message(parsed_msg)
+    # await builder.show_parsed_message(parsed_msg)
 
     return SolanaTxSignature(signature=signature)
 
