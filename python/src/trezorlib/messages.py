@@ -268,8 +268,6 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
-    SolanaSignOffChainMessage = 906
-    SolanaOffChainMessageSignature = 907
 
 
 class FailureType(IntEnum):
@@ -6704,37 +6702,6 @@ class SolanaSignTx(protobuf.MessageType):
 
 class SolanaTxSignature(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 905
-    FIELDS = {
-        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        signature: "bytes",
-    ) -> None:
-        self.signature = signature
-
-
-class SolanaSignOffChainMessage(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 906
-    FIELDS = {
-        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        2: protobuf.Field("serialized_message", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        serialized_message: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-    ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.serialized_message = serialized_message
-
-
-class SolanaOffChainMessageSignature(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 907
     FIELDS = {
         1: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }
