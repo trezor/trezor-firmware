@@ -70,7 +70,7 @@ def print_firmware_version(fw: "firmware.FirmwareType") -> None:
         click.echo("Trezor One v2 firmware (1.8.0 or later)")
         _print_version(fw.header.version)
     elif isinstance(fw, firmware.VendorFirmware):
-        click.echo("Trezor T firmware image.")
+        click.echo(f"{fw.vendor_header.hw_model} firmware image.")
         vendor = fw.vendor_header.text
         vendor_version = "{}.{}".format(*fw.vendor_header.version)
         click.echo(f"Vendor header from {vendor}, version {vendor_version}")
