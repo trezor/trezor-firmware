@@ -421,16 +421,17 @@ int bootloader_main(void) {
     stay_in_bootloader = secfalse;
     touched = false;
 
-    // show intro animation
-
     ui_set_initial_setup(true);
 
-    ui_screen_welcome_model();
+    // keep the model screen up for a while
 #ifndef USE_BACKLIGHT
     hal_delay(1500);
 #else
+    // backlight fading takes some time so the explicit delay here is shorter
     hal_delay(1000);
 #endif
+
+    // show welcome screen
     ui_screen_welcome();
 
     // erase storage
