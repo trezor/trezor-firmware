@@ -57,18 +57,3 @@ def sign_tx(
     address_n = tools.parse_path(address)
     client.init_device()
     return solana.sign_tx(client, address_n, bytes.fromhex(serialized_tx))
-
-
-@cli.command()
-@click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option("-m", "--serialized-message", required=True)
-@with_client
-def sign_off_chain_message(
-    client: "TrezorClient",
-    address: str,
-    serialized_message: str,
-) -> messages.SolanaOffChainMessageSignature:
-    """Sign Solana off-chain message."""
-    address_n = tools.parse_path(address)
-    client.init_device()
-    return solana.sign_off_chain_message(client, address_n, bytes.fromhex(serialized_message))
