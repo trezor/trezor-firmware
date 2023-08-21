@@ -117,6 +117,9 @@ secbool flash_area_write_word(const flash_area_t *area, uint32_t offset,
 
 secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
                                   const uint32_t *data) {
+  if (offset % 16 != 0) {
+    return secfalse;
+  }
   for (int i = 0; i < 4; i++) {
     if (sectrue !=
         flash_area_write_word(area, offset + i * sizeof(uint32_t), data[i])) {
