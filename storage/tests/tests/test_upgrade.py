@@ -59,18 +59,19 @@ def test_upgrade():
 
 
 def test_python_set_sectors():
-    sp0 = StoragePy()
-    sp0.init(common.test_uid)
-    assert sp0.unlock("")
-    set_values(sp0)
-    for _ in range(10):
-        assert not sp0.unlock("3")
-    assert sp0.get_pin_rem() == 6
+    for byte_access in (True, False):
+        sp0 = StoragePy(byte_access)
+        sp0.init(common.test_uid)
+        assert sp0.unlock("")
+        set_values(sp0)
+        for _ in range(10):
+            assert not sp0.unlock("3")
+        assert sp0.get_pin_rem() == 6
 
-    sp1 = StoragePy()
-    sp1.nc._set_sectors(sp0._dump())
-    sp1.init(common.test_uid)
-    common.memory_equals(sp0, sp1)
+        sp1 = StoragePy(byte_access)
+        sp1.nc._set_sectors(sp0._dump())
+        sp1.init(common.test_uid)
+        common.memory_equals(sp0, sp1)
 
-    assert sp1.get_pin_rem() == 6
-    check_values(sp1)
+        assert sp1.get_pin_rem() == 6
+        check_values(sp1)

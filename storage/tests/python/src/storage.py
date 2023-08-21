@@ -7,12 +7,12 @@ from .pin_log import PinLog
 
 
 class Storage:
-    def __init__(self):
+    def __init__(self, flash_byte_access: bool = True):
         self.initialized = False
         self.unlocked = False
         self.dek = None
         self.sak = None
-        self.nc = Norcow()
+        self.nc = Norcow(flash_byte_access=flash_byte_access)
         self.pin_log = PinLog(self.nc)
 
     def init(self, hardware_salt: bytes = b""):
@@ -153,9 +153,10 @@ class Storage:
         if val > consts.UINT32_MAX:
             raise RuntimeError("Failed to set value in storage.")
 
-        counter = val.to_bytes(4, sys.byteorder) + bytearray(
-            b"\xFF" * consts.COUNTER_TAIL_SIZE
-        )
+        counter = val.to_bytes(4, sys.byteorder)
+
+        if self.nc.is_byte_access():
+            counter += bytearray(b"\xFF" * consts.COUNTER_TAIL_SIZE)
         self.set(key, counter)
 
     def next_counter(self, key: int) -> int:
@@ -168,21 +169,30 @@ class Storage:
             return 0
 
         base = int.from_bytes(current[:4], sys.byteorder)
-        tail = helpers.to_int_by_words(current[4:])
-        tail_count = f"{tail:064b}".count("0")
-        increased_count = base + tail_count + 1
-        if increased_count > consts.UINT32_MAX:
-            raise RuntimeError("Failed to set value in storage.")
 
-        if tail_count == consts.COUNTER_MAX_TAIL:
+        if self.nc.is_byte_access():
+            base = int.from_bytes(current[:4], sys.byteorder)
+            tail = helpers.to_int_by_words(current[4:])
+            tail_count = f"{tail:064b}".count("0")
+            increased_count = base + tail_count + 1
+            if increased_count > consts.UINT32_MAX:
+                raise RuntimeError("Failed to set value in storage.")
+
+            if tail_count == consts.COUNTER_MAX_TAIL:
+                self.set_counter(key, increased_count)
+                return increased_count
+
+            self.set(
+                key,
+                current[:4]
+                + helpers.to_bytes_by_words(tail >> 1, consts.COUNTER_TAIL_SIZE),
+            )
+        else:
+            increased_count = base + 1
+            if increased_count > consts.UINT32_MAX:
+                raise RuntimeError("Failed to set value in storage.")
+
             self.set_counter(key, increased_count)
-            return increased_count
-
-        self.set(
-            key,
-            current[:4]
-            + helpers.to_bytes_by_words(tail >> 1, consts.COUNTER_TAIL_SIZE),
-        )
         return increased_count
 
     def delete(self, key: int) -> bool:
@@ -214,10 +224,9 @@ class Storage:
         data = self.nc.get(key)
         iv = data[: consts.CHACHA_IV_SIZE]
         # cipher text with MAC
-        tag = data[
-            consts.CHACHA_IV_SIZE : consts.CHACHA_IV_SIZE + consts.POLY1305_MAC_SIZE
-        ]
-        ciphertext = data[consts.CHACHA_IV_SIZE + consts.POLY1305_MAC_SIZE :]
+
+        tag = data[len(data) - consts.POLY1305_MAC_SIZE :]
+        ciphertext = data[consts.CHACHA_IV_SIZE : len(data) - consts.POLY1305_MAC_SIZE]
         return crypto.chacha_poly_decrypt(
             self.dek, key, iv, ciphertext + tag, key.to_bytes(2, sys.byteorder)
         )
@@ -237,7 +246,7 @@ class Storage:
         cipher_text, tag = crypto.chacha_poly_encrypt(
             self.dek, iv, val, key.to_bytes(2, sys.byteorder)
         )
-        return self.nc.replace(key, iv + tag + cipher_text)
+        return self.nc.replace(key, iv + cipher_text + tag)
 
     def _calculate_authentication_tag(self) -> bytes:
         keys = []

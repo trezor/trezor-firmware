@@ -117,7 +117,10 @@ class PinLog:
             + helpers.to_bytes_by_words(pin_success_log, consts.PIN_LOG_SIZE)
             + helpers.to_bytes_by_words(pin_entry_log, consts.PIN_LOG_SIZE)
         )
-        try:
-            self.norcow.replace(consts.PIN_LOG_KEY, pin_log)
-        except RuntimeError:
+        if self.norcow.is_byte_access():
+            try:
+                self.norcow.replace(consts.PIN_LOG_KEY, pin_log)
+            except RuntimeError:
+                self.norcow.set(consts.PIN_LOG_KEY, pin_log)
+        else:
             self.norcow.set(consts.PIN_LOG_KEY, pin_log)
