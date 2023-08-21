@@ -4,11 +4,12 @@ import os
 EXTERNAL_SALT_LEN = 32
 sectrue = -1431655766  # 0xAAAAAAAAA
 fname = os.path.join(os.path.dirname(__file__), "libtrezor-storage.so")
+fname_qw = os.path.join(os.path.dirname(__file__), "libtrezor-storage-qw.so")
 
 
 class Storage:
-    def __init__(self) -> None:
-        self.lib = c.cdll.LoadLibrary(fname)
+    def __init__(self, flash_byte_access=True) -> None:
+        self.lib = c.cdll.LoadLibrary(fname if flash_byte_access else fname_qw)
         self.flash_size = c.cast(self.lib.FLASH_SIZE, c.POINTER(c.c_uint32))[0]
         self.flash_buffer = c.create_string_buffer(self.flash_size)
         c.cast(self.lib.FLASH_BUFFER, c.POINTER(c.c_void_p))[0] = c.addressof(
