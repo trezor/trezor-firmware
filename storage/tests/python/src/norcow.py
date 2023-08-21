@@ -22,10 +22,20 @@ class Norcow:
             for sector in range(consts.NORCOW_SECTOR_COUNT):
                 if self.sectors[sector][:8] == consts.NORCOW_MAGIC_AND_VERSION:
                     self.active_sector = sector
-                    self.active_offset = len(consts.NORCOW_MAGIC_AND_VERSION)
+                    self.active_offset = self.find_free_offset()
                     break
         else:
             self.wipe()
+
+    def find_free_offset(self):
+        offset = len(consts.NORCOW_MAGIC_AND_VERSION)
+        while True:
+            try:
+                k, v = self._read_item(offset)
+            except ValueError:
+                break
+            offset = offset + self._norcow_item_length(v)
+        return offset
 
     def wipe(self, sector: int = None):
         if sector is None:
