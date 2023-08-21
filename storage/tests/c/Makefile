@@ -28,19 +28,32 @@ SRC += crypto/sha2.c
 SRC += crypto/memzero.c
 
 OBJ = $(SRC:%.c=build/%.o)
+OBJ_QW = $(SRC:%.c=build_qw/%.o)
 
 OUT = libtrezor-storage.so
+OUT_QW = libtrezor-storage-qw.so
 
 $(OUT): $(OBJ)
 	$(CC) $(CFLAGS) $(LIBS) $(OBJ) -shared -o $(OUT)
 
+$(OUT_QW): $(OBJ_QW)
+	$(CC) $(CFLAGS) -DFLASH_QUADWORD $(LIBS) $(OBJ_QW) -shared -o $(OUT_QW)
+
 build/crypto/chacha20poly1305/chacha_merged.o: $(BASE)crypto/chacha20poly1305/chacha_merged.c
+	mkdir -p $(@D)
+
+	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+build_qw/crypto/chacha20poly1305/chacha_merged.o: $(BASE)crypto/chacha20poly1305/chacha_merged.c
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 
 build/%.o: $(BASE)%.c $(BASE)%.h
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+
+build_qw/%.o: $(BASE)%.c $(BASE)%.h
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -DFLASH_QUADWORD $(INC) -c $< -o $@
 
 clean:
 	rm -f $(OUT) $(OBJ)
