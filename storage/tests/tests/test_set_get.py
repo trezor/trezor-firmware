@@ -165,8 +165,8 @@ def test_set_locked():
     assert common.memory_equals(sc, sp)
 
     for s in (sc, sp):
-        s.get(0xC001) == b"Ahoj"
-        s.get(0xC003) == b"test"
+        assert s.get(0xC001) == b"Ahoj"
+        assert s.get(0xC003) == b"test"
 
 
 def test_counter():
