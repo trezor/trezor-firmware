@@ -24,7 +24,9 @@
 #include <stdlib.h>
 #include "secbool.h"
 
+#ifndef FLASH_QUADWORD
 #define FLASH_BYTE_ACCESS 1
+#endif
 
 #include "flash_common.h"
 #include "test_layout.h"
