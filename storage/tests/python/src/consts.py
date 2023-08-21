@@ -70,7 +70,6 @@ WIPE_CODE_TAG_SIZE = 8
 WIPE_CODE_EMPTY = "\0\0\0\0"
 
 # Size of counter. 4B integer and 8B tail.
-COUNTER_TAIL = 12
 COUNTER_TAIL_SIZE = 8
 COUNTER_MAX_TAIL = 64
 
