@@ -65,18 +65,17 @@ secbool norcow_set_ex(uint16_t key, const void *val, uint16_t len,
  */
 secbool norcow_delete(uint16_t key);
 
-/*
- * Update a word in flash in the given key at the given offset.
- * Note that you can only change bits from 1 to 0.
- */
-secbool norcow_update_word(uint16_t key, uint16_t offset, uint32_t value);
+secbool norcow_set_counter(uint16_t key, uint32_t count);
+
+secbool norcow_next_counter(uint16_t key, uint32_t *count);
 
 /*
- * Update the value of the given key starting at the given offset.
+ * Update the value of the given key, data are written sequentially from start
+ * Data are guaranteed to be stored on flash once the total item len is reached.
  * Note that you can only change bits from 1 to 0.
  */
-secbool norcow_update_bytes(const uint16_t key, const uint16_t offset,
-                            const uint8_t *data, const uint16_t len);
+secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
+                            const uint16_t len);
 
 /*
  * Complete storage version upgrade

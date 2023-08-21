@@ -120,6 +120,7 @@ POLY1305_MAC_SIZE = 16
 
 # The length of the ChaCha20 IV (aka nonce) in bytes as per RFC 7539.
 CHACHA_IV_SIZE = 12
+CHACHA_IV_PADDING = 4
 
 # ----- Norcow ----- #
 
