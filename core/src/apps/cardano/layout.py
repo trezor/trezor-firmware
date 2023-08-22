@@ -244,7 +244,7 @@ async def confirm_sending_token(policy_id: bytes, token: messages.CardanoToken) 
                     asset_name_bytes=token.asset_name_bytes,
                 ),
             ),
-            ("Amount sent:", format_amount(token.amount, 0)),
+            ("Amount sent (decimals unknown):", format_amount(token.amount, 0)),
         ),
         br_code=BRT_Other,
     )
@@ -817,7 +817,9 @@ async def confirm_token_minting(policy_id: bytes, token: messages.CardanoToken) 
                 ),
             ),
             (
-                "Amount minted:" if token.mint_amount >= 0 else "Amount burned:",
+                "Amount minted (decimals unknown):"
+                if token.mint_amount >= 0
+                else "Amount burned (decimals unknown):",
                 format_amount(token.mint_amount, 0),
             ),
         ),
