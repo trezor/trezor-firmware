@@ -7,6 +7,7 @@ from trezorutils import (  # noqa: F401
     MODEL,
     SCM_REVISION,
     USE_BACKLIGHT,
+    USE_OPTIGA,
     USE_SD_CARD,
     VERSION_MAJOR,
     VERSION_MINOR,
