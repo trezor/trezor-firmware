@@ -313,6 +313,8 @@ apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings
 import apps.management.apply_settings
+apps.management.authenticate_device
+import apps.management.authenticate_device
 apps.management.backup_device
 import apps.management.backup_device
 apps.management.backup_types
