@@ -3,6 +3,7 @@ from typing import Any, NoReturn
 
 import storage.cache as storage_cache
 from trezor import config, utils, wire
+from trezor.ui.layouts import show_error_and_raise
 
 
 async def _request_sd_salt(
@@ -125,8 +126,6 @@ async def verify_user_pin(
 
 
 async def error_pin_invalid() -> NoReturn:
-    from trezor.ui.layouts import show_error_and_raise
-
     await show_error_and_raise(
         "warning_wrong_pin",
         "The PIN you have entered is not valid.",
@@ -137,8 +136,6 @@ async def error_pin_invalid() -> NoReturn:
 
 
 async def error_pin_matches_wipe_code() -> NoReturn:
-    from trezor.ui.layouts import show_error_and_raise
-
     await show_error_and_raise(
         "warning_invalid_new_pin",
         "The new PIN must be different from your wipe code.",

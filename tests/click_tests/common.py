@@ -51,11 +51,16 @@ def go_next(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
         raise RuntimeError("Unknown model")
 
 
-def go_back(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
+def go_back(
+    debug: "DebugLink", wait: bool = False, r_middle: bool = False
+) -> "LayoutContent" | None:
     if debug.model == "T":
         return debug.click(buttons.CANCEL, wait=wait)  # type: ignore
     elif debug.model == "R":
-        return debug.press_left(wait=wait)  # type: ignore
+        if r_middle:
+            return debug.press_middle(wait=wait)  # type: ignore
+        else:
+            return debug.press_left(wait=wait)  # type: ignore
     else:
         raise RuntimeError("Unknown model")
 

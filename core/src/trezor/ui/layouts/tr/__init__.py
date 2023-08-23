@@ -580,21 +580,16 @@ async def _show_modal(
 async def show_error_and_raise(
     br_type: str,
     content: str,
-    header: str = "Error",
     subheader: str | None = None,
-    button: str = "Close",
-    red: bool = False,  # unused on TR
+    button: str = "TRY AGAIN",
     exc: ExceptionType = ActionCancelled,
 ) -> NoReturn:
-    await _show_modal(
+    await show_warning(
         br_type,
-        header,
-        subheader,
+        subheader or "",
         content,
-        button_confirm=None,
-        button_cancel=button,
+        button=button,
         br_code=BR_TYPE_OTHER,
-        exc=exc,
     )
     raise exc
 
