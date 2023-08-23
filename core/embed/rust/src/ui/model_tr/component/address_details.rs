@@ -108,7 +108,7 @@ where
 
     /// Button layout for the current page.
     /// Normally there are arrows everywhere, apart from the right side of the
-    /// last page. On xpub pages there is VIEW FULL middle button when it
+    /// last page. On xpub pages there is SHOW ALL middle button when it
     /// cannot fit one page. On xpub subpages there are wide arrows to
     /// scroll.
     fn get_button_layout(&mut self) -> ButtonLayout<T> {
@@ -123,7 +123,7 @@ where
         } else {
             let left = Some(ButtonDetails::left_arrow_icon());
             let middle = if self.is_xpub_page() && self.subpages_in_current_page() > 1 {
-                Some(ButtonDetails::armed_text("VIEW FULL".into()))
+                Some(ButtonDetails::armed_text("SHOW ALL".into()))
             } else {
                 None
             };
