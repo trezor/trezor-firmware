@@ -65,6 +65,8 @@ if TYPE_CHECKING:
         UnlockedPathRequest = 94
         ShowDeviceTutorial = 95
         UnlockBootloader = 96
+        AuthenticateDevice = 97
+        AuthenticityProof = 98
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81

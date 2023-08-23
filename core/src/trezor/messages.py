@@ -2362,6 +2362,36 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["FirmwareHash"]:
             return isinstance(msg, cls)
 
+    class AuthenticateDevice(protobuf.MessageType):
+        challenge: "bytes"
+
+        def __init__(
+            self,
+            *,
+            challenge: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthenticateDevice"]:
+            return isinstance(msg, cls)
+
+    class AuthenticityProof(protobuf.MessageType):
+        certificates: "list[bytes]"
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            signature: "bytes",
+            certificates: "list[bytes] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["AuthenticityProof"]:
+            return isinstance(msg, cls)
+
     class WipeDevice(protobuf.MessageType):
 
         @classmethod
