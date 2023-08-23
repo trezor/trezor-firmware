@@ -491,7 +491,7 @@ async def show_error_and_raise(
     br_type: str,
     content: str,
     subheader: str | None = None,
-    button: str = "CLOSE",
+    button: str = "TRY AGAIN",
     exc: ExceptionType = ActionCancelled,
 ) -> NoReturn:
     await interact(
