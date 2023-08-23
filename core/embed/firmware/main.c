@@ -43,6 +43,7 @@
 #include "display.h"
 #include "flash.h"
 #include "image.h"
+#include "memzero.h"
 #include "model.h"
 #include "mpu.h"
 #include "random_delays.h"
@@ -71,7 +72,9 @@
 #include "sdcard.h"
 #endif
 #ifdef USE_OPTIGA
+#include "optiga_commands.h"
 #include "optiga_transport.h"
+#include "secret.h"
 #endif
 #include "unit_variant.h"
 
@@ -162,6 +165,14 @@ int main(void) {
 
 #ifdef USE_OPTIGA
   optiga_init();
+  optiga_open_application();
+
+  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
+  if (secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN) ==
+      sectrue) {
+    optiga_sec_chan_handshake(secret, sizeof(secret));
+  }
+  memzero(secret, sizeof(secret));
 #endif
 
 #if !defined TREZOR_MODEL_1

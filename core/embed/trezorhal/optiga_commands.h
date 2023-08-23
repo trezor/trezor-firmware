@@ -122,6 +122,10 @@ typedef struct {
   optiga_metadata_item reset_type;   // F0 - Factory reset type.
 } optiga_metadata;
 
+#define OPTIGA_ECC_KEY_COUNT 4
+#define OPTIGA_CERT_COUNT 4
+#define OPTIGA_MAX_METADATA_SIZE 44
+
 #define OPTIGA_ACCESS_CONDITION(ac_id, oid) \
   { (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 }
 

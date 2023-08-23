@@ -390,6 +390,14 @@ if TREZOR_MODEL in ('T', 'R'):
         'embed/trezorhal/unix/sdcard.c',
     ]
 
+if TREZOR_MODEL == 'R':
+    CPPDEFINES_MOD += [
+        ('USE_OPTIGA', '1'),
+    ]
+    SOURCE_UNIX += [
+        'embed/trezorhal/unix/optiga.c',
+    ]
+
 if DMA2D:
     CPPDEFINES_MOD += [
         'USE_DMA2D',
@@ -653,7 +661,9 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL not in ('T',) else [])
+        ] if TREZOR_MODEL not in ('T',) else [] + [
+            SOURCE_PY_DIR + 'apps/management/authenticate_device.py',
+        ] if TREZOR_MODEL not in ('R',) else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -714,7 +724,8 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight=TREZOR_MODEL in ('T',)
+        backlight=TREZOR_MODEL in ('T',),
+        optiga=TREZOR_MODEL in ('R',)
         )
 
     source_mpyc = env.FrozenCFile(

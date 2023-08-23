@@ -71,7 +71,7 @@ static bool optiga_paired(void) {
 }
 
 static bool set_metadata(uint16_t oid, const optiga_metadata *metadata) {
-  uint8_t serialized[258] = {0};
+  uint8_t serialized[OPTIGA_MAX_METADATA_SIZE] = {0};
   size_t size = 0;
   optiga_result ret = optiga_serialize_metadata(metadata, serialized,
                                                 sizeof(serialized), &size);
@@ -232,7 +232,7 @@ optiga_locked_status get_optiga_locked_status(void) {
   optiga_metadata locked_metadata = {0};
   locked_metadata.lcso = OPTIGA_LCS_OPERATIONAL;
   for (size_t i = 0; i < sizeof(oids) / sizeof(oids[0]); ++i) {
-    uint8_t metadata_buffer[258] = {0};
+    uint8_t metadata_buffer[OPTIGA_MAX_METADATA_SIZE] = {0};
     size_t metadata_size = 0;
     optiga_result ret =
         optiga_get_data_object(oids[i], true, metadata_buffer,
