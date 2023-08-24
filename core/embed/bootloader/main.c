@@ -188,7 +188,11 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
       case MessageType_MessageType_FirmwareUpload:
         r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
         if (r < 0 && r != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
-          ui_screen_fail();
+          if (r == UPLOAD_ERR_BOOTLOADER_LOCKED) {
+            ui_screen_install_restricted();
+          } else {
+            ui_screen_fail();
+          }
           usb_stop();
           usb_deinit();
           return SHUTDOWN;
@@ -225,7 +229,7 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           usb_deinit();
           return RETURN;
         }
-        process_msg_AttestationDelete(USB_IFACE_NUM, msg_size, buf);
+        process_msg_UnlockBootloader(USB_IFACE_NUM, msg_size, buf);
         screen_unlock_bootloader_success();
         hal_delay(100);
         usb_stop();
@@ -549,13 +553,7 @@ int bootloader_main(void) {
 
 #ifdef USE_OPTIGA
   if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
-    display_clear();
-    screen_fatal_error_rust(
-        "INSTALL RESTRICTED",
-        "Installation of custom firmware is currently restricted.",
-        "Please visit\ntrezor.io/bootloader");
-
-    display_refresh();
+    ui_screen_install_restricted();
     return 1;
   }
 #endif

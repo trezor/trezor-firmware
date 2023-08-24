@@ -41,7 +41,7 @@ enum {
   UPLOAD_ERR_USER_ABORT = -7,
   UPLOAD_ERR_FIRMWARE_TOO_BIG = -8,
   UPLOAD_ERR_INVALID_CHUNK_HASH = -9,
-  UPLOAD_ERR_ATTESTATION_PRESENT = -10,
+  UPLOAD_ERR_BOOTLOADER_LOCKED = -10,
 };
 
 enum {
@@ -69,8 +69,8 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf);
 void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf);
 
 #ifdef USE_OPTIGA
-void process_msg_AttestationDelete(uint8_t iface_num, uint32_t msg_size,
-                                   uint8_t *buf);
+void process_msg_UnlockBootloader(uint8_t iface_num, uint32_t msg_size,
+                                  uint8_t *buf);
 #endif
 
 secbool bootloader_WipeDevice(void);

@@ -61,6 +61,7 @@ void ui_screen_wipe_progress(int pos, int len);
 void ui_screen_done(uint8_t restart_seconds, secbool full_redraw);
 
 void ui_screen_fail(void);
+void ui_screen_install_restricted(void);
 
 void ui_fadein(void);
 void ui_fadeout(void);
