@@ -1,6 +1,6 @@
 from trezor import utils
 
-if utils.INTERNAL_MODEL in ("T2T1", "D001"):
+if utils.LAYOUT == "TTV2":
     from .tt_v2.homescreen import *  # noqa: F401,F403
-elif utils.INTERNAL_MODEL in ("T2B1",):
+elif utils.LAYOUT == "TR":
     from .tr.homescreen import *  # noqa: F401,F403

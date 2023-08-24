@@ -387,7 +387,6 @@ SOURCE_UNIX = [
 if TREZOR_MODEL in ('T', 'R'):
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sbu.c',
-        'embed/trezorhal/unix/sdcard.c',
     ]
 
 if DMA2D:
@@ -415,6 +414,22 @@ else:
     STATIC=""
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
+
+
+if TREZOR_MODEL in ('T',):
+    LAYOUT = 'LAYOUT_TTV2'
+elif TREZOR_MODEL in ('1', 'R'):
+    LAYOUT = 'LAYOUT_TR'
+else:
+    raise ValueError('Unknown Trezor model')
+
+if TREZOR_MODEL in ('T',):
+    SDCARD = True
+    SOURCE_UNIX += [
+        'embed/trezorhal/unix/sdcard.c',
+    ]
+else:
+    SDCARD = False
 
 env.Tool('micropython')
 
@@ -500,6 +515,7 @@ env.Replace(
         'TREZOR_BOARD=\\"boards/board-unix.h\\"',
         'MCU_TYPE='+CPU_MODEL,
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
+        LAYOUT,
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
@@ -591,7 +607,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/sdcard.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if not SDCARD else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
@@ -602,27 +618,27 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/ui/layouts/fido.py',
         ] if not EVERYTHING else []
     ))
-    if TREZOR_MODEL in ('T',):
+    if LAYOUT == 'LAYOUT_TTV2':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/*.py',
             exclude=[
                 SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/fido.py',
             ] if not EVERYTHING else []
         ))
-    elif TREZOR_MODEL in ('R'):
+    elif LAYOUT == 'LAYOUT_TR':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/*.py',
             exclude=[
                 SOURCE_PY_DIR + 'trezor/ui/layouts/tr/fido.py',
             ] if not EVERYTHING else []
         ))
     else:
-        raise ValueError('Unknown Trezor model')
+        raise ValueError('Unknown layout')
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
         exclude=[
             SOURCE_PY_DIR + 'storage/sd_salt.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if not SDCARD else []
     ))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/__init__.py'))
@@ -646,14 +662,14 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/common/sdcard.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if not SDCARD else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL not in ('T',) else [])
+        ] if not SDCARD else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -714,7 +730,8 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight=TREZOR_MODEL in ('T',)
+        backlight=TREZOR_MODEL in ('T',),
+        layout=LAYOUT,
         )
 
     source_mpyc = env.FrozenCFile(

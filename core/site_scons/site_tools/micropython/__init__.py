@@ -37,11 +37,15 @@ def generate(env):
         # so the compiler can optimize out the things we don't want
         btc_only = env["bitcoin_only"] == "1"
         backlight = env["backlight"]
+        layout_ttv2 = env["layout"] == "LAYOUT_TTV2"
+        layout_tr = env["layout"] == "LAYOUT_TR"
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = " ".join(
             [
                 rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
                 rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
+                rf"-e 's/utils\.LAYOUT == \"TTV2\"/{layout_ttv2}/g'",
+                rf"-e 's/utils\.LAYOUT == \"TR\"/{layout_tr}/g'",
                 r"-e 's/if TYPE_CHECKING/if False/'",
                 r"-e 's/import typing/# \0/'",
                 r"-e '/from typing import (/,/^\s*)/ {s/^/# /}'",
