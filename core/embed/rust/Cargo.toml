@@ -27,6 +27,7 @@ disp_i8080_8bit_dw = [] # write pixels directly to peripheral
 disp_i8080_16bit_dw = [] # write pixels directly to peripheral
 debug = ["ui_debug"]
 sbu = []
+haptic = []
 sd_card = []
 rgb_led = []
 backlight = []

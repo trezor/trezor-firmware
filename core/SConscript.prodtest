@@ -19,7 +19,7 @@ if TREZOR_MODEL in ('DISC1', 'DISC2'):
                  action=build_prodtest)
     Return()
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led", "usb", "consumption_mask", "optiga"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led", "usb", "consumption_mask", "optiga", "haptic"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
