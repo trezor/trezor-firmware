@@ -52,8 +52,8 @@
 
 #ifdef TREZOR_MODEL_T
 #define MODEL_IDENTIFIER "TREZOR2-"
-#elif TREZOR_MODEL_R
-#define MODEL_IDENTIFIER "T2B1-"
+#else
+#define MODEL_IDENTIFIER MODEL_INTERNAL_NAME "-"
 #endif
 
 static secbool startswith(const char *s, const char *prefix) {

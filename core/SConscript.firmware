@@ -41,7 +41,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
     FONT_BIG='Font_Unifont_Regular_16'
-elif TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
+elif TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD='Font_TTHoves_DemiBold_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -386,7 +386,7 @@ SOURCE_FIRMWARE = [
 ]
 
 
-if TREZOR_MODEL in ('T', 'DISC1', 'DISC2'):
+if TREZOR_MODEL in ('T', 'T3T1', 'DISC1', 'DISC2'):
     UI_LAYOUT = 'UI_LAYOUT_TT'
     ui_layout_feature = 'model_tt'
 elif TREZOR_MODEL in ('1', 'R'):
@@ -825,8 +825,7 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 
-
-if TREZOR_MODEL in ('1',):
+if TREZOR_MODEL in ('1'):
     action_bin=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data -j .sensitive $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',
