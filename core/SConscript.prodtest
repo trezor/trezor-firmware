@@ -167,7 +167,7 @@ MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 if PRODUCTION:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_prodtest_signed_prod.bin'
 elif BOOTLOADER_DEVEL:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_dev.bin'
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
 else:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_prod.bin'
 
