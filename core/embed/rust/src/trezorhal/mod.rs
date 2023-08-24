@@ -9,7 +9,7 @@ pub mod dma2d;
 mod ffi;
 pub mod io;
 pub mod random;
-#[cfg(feature = "model_tr")]
+#[cfg(feature = "rgb_led")]
 pub mod rgb_led;
 pub mod slip39;
 pub mod storage;

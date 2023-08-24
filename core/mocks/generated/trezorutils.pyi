@@ -98,3 +98,4 @@ MODEL: str
 INTERNAL_MODEL: str
 EMULATOR: bool
 BITCOIN_ONLY: bool
+UI_LAYOUT: str
