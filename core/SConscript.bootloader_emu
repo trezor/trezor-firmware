@@ -33,7 +33,7 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperator_Regular_8'
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', 'DISC2'):
+elif TREZOR_MODEL in ('T', 'T3T1', 'DISC2'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
     FONT_DEMIBOLD=None
     FONT_BOLD='Font_TTHoves_Bold_17'
@@ -171,6 +171,8 @@ env.Replace(
 
 if TREZOR_MODEL in ('T', 'R'):
     CPU_MODEL   = 'STM32F427xx'
+elif TREZOR_MODEL in ('T3T1', ):
+    CPU_MODEL   = 'STM32U585xx'
 elif TREZOR_MODEL in ('DISC1', ):
     CPU_MODEL   = 'STM32F429xx'
 elif TREZOR_MODEL in ('DISC2', ):
@@ -261,7 +263,7 @@ def cargo_build():
     else:
         features = ["model_tt"]
 
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T', 'T3T1'):
         features.append('touch')
         features.append('backlight')
     if TREZOR_MODEL in ('R', '1'):
