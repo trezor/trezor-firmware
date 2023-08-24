@@ -264,6 +264,18 @@ void ui_screen_fail(void) { screen_install_fail(); }
 uint32_t ui_screen_unlock_bootloader_confirm(void) {
   return screen_unlock_bootloader_confirm();
 }
+
+void ui_screen_install_restricted(void) {
+  display_clear();
+  screen_fatal_error_rust(
+      "INSTALL RESTRICTED",
+      "Installation of custom firmware is currently restricted.",
+      "Please visit\ntrezor.io/bootloader");
+
+  display_refresh();
+}
+#else
+void ui_screen_install_restricted(void) { screen_install_fail(); }
 #endif
 
 // general functions
