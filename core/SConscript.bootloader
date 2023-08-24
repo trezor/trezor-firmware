@@ -36,11 +36,11 @@ if TREZOR_MODEL in ('R', ):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperator_Regular_8'
     FONT_BIG=None
-elif TREZOR_MODEL in ('T', 'T3W1', 'DISC1'):
+elif TREZOR_MODEL in ('T', 'T3T1', 'T3W1', 'DISC1'):
     FONT_NORMAL='Font_TTHoves_Regular_21'
-    FONT_DEMIBOLD=None
+    FONT_DEMIBOLD='Font_TTHoves_Regular_21'
     FONT_BOLD='Font_TTHoves_Bold_17'
-    FONT_MONO=None
+    FONT_MONO='Font_TTHoves_Regular_21'
     FONT_BIG=None
 
 # modtrezorcrypto
