@@ -387,7 +387,6 @@ SOURCE_UNIX = [
 if TREZOR_MODEL in ('T', 'R'):
     SOURCE_UNIX += [
         'embed/trezorhal/unix/sbu.c',
-        'embed/trezorhal/unix/sdcard.c',
     ]
 
 if TREZOR_MODEL == 'R':
@@ -423,6 +422,24 @@ else:
     STATIC=""
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
+
+
+if TREZOR_MODEL in ('T',):
+    UI_LAYOUT = 'UI_LAYOUT_TT'
+    ui_layout_feature = 'model_tt'
+elif TREZOR_MODEL in ('1', 'R'):
+    UI_LAYOUT = 'UI_LAYOUT_TR'
+    ui_layout_feature = 'model_tr'
+else:
+    raise ValueError('Unknown Trezor model')
+
+if TREZOR_MODEL in ('T',):
+    SDCARD = True
+    SOURCE_UNIX += [
+        'embed/trezorhal/unix/sdcard.c',
+    ]
+else:
+    SDCARD = False
 
 env.Tool('micropython')
 
@@ -508,6 +525,7 @@ env.Replace(
         'TREZOR_BOARD=\\"boards/board-unix.h\\"',
         'MCU_TYPE='+CPU_MODEL,
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
+        UI_LAYOUT,
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
@@ -599,7 +617,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/sdcard.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if not SDCARD else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
@@ -610,27 +628,27 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/ui/layouts/fido.py',
         ] if not EVERYTHING else []
     ))
-    if TREZOR_MODEL in ('T',):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/*.py',
+    if UI_LAYOUT == 'UI_LAYOUT_TT':
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/*.py',
             exclude=[
-                SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/fido.py',
+                SOURCE_PY_DIR + 'trezor/ui/layouts/tt/fido.py',
             ] if not EVERYTHING else []
         ))
-    elif TREZOR_MODEL in ('R'):
+    elif UI_LAYOUT == 'UI_LAYOUT_TR':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/*.py',
             exclude=[
                 SOURCE_PY_DIR + 'trezor/ui/layouts/tr/fido.py',
             ] if not EVERYTHING else []
         ))
     else:
-        raise ValueError('Unknown Trezor model')
+        raise ValueError('Unknown layout')
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
         exclude=[
             SOURCE_PY_DIR + 'storage/sd_salt.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if not SDCARD else []
     ))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/__init__.py'))
@@ -654,14 +672,14 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/common/sdcard.py',
-        ] if TREZOR_MODEL not in ('T',) else []
+        ] if not SDCARD else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL not in ('T',) else [] + [
+        ] if not SDCARD else [] + [
             SOURCE_PY_DIR + 'apps/management/authenticate_device.py',
         ] if TREZOR_MODEL not in ('R',) else [])
     )
@@ -728,7 +746,8 @@ if FROZEN:
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
         backlight=TREZOR_MODEL in ('T',),
-        optiga=TREZOR_MODEL in ('R',)
+        optiga=TREZOR_MODEL in ('R',),
+        ui_layout=UI_LAYOUT,
         )
 
     source_mpyc = env.FrozenCFile(
@@ -764,9 +783,7 @@ RUST_LIB = 'trezor_lib'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    # T1 does not have its own Rust feature, it shares it with TR
-    model_feature = 'model_tr' if TREZOR_MODEL == '1' else f'model_t{TREZOR_MODEL.lower()}'
-    features = ['micropython', 'protobuf', model_feature]
+    features = ['micropython', 'protobuf', ui_layout_feature]
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
     features.append('ui')
