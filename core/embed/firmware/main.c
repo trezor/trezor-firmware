@@ -84,6 +84,9 @@
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
+#ifdef USE_HAPTIC
+#include "haptic.h"
+#endif
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -158,6 +161,10 @@ int main(void) {
 
 #ifdef USE_SD_CARD
   sdcard_init();
+#endif
+
+#ifdef USE_HAPTIC
+  haptic_init();
 #endif
 
 #ifdef USE_OPTIGA
