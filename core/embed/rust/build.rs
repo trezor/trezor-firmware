@@ -370,7 +370,10 @@ fn generate_trezorhal_bindings() {
         // touch
         .allowlist_function("touch_read")
         // button
-        .allowlist_function("button_read");
+        .allowlist_function("button_read")
+        // haptic
+        .allowlist_type("haptic_effect_t")
+        .allowlist_function("haptic_play");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
