@@ -20,6 +20,7 @@ MODELS=(T2T1 T2B1 D001)
 
 for MODEL in ${MODELS[@]}; do
     cd $MODEL
+    echo "Generating vendor headers for $MODEL"
     # construct all vendor headers
     for fn in *.json; do
         name=$(echo $fn | sed 's/vendor_\(.*\)\.json/\1/')
@@ -29,7 +30,7 @@ for MODEL in ${MODELS[@]}; do
     TMPDIR=$(mktemp -d)
     trap "rm -rf $TMPDIR" EXIT
     # sign dev and QA vendor header
-    for name in unsafe qa_DO_NOT_SIGN; do
+    for name in unsafe dev_DO_NOT_SIGN; do
         SRC_NAME="vendorheader_${name}_unsigned.bin"
         DEST_NAME="vendorheader_${name}_signed_dev.bin"
         if [ ! -f "$SRC_NAME" ]; then

@@ -1,6 +1,6 @@
 {
     "header_len": 4608,
-    "text": "QA ONLY, DO NOT USE!",
+    "text": "DEV ONLY, DO NOT USE!",
     "hw_model": "T2B1",
     "expiry": 0,
     "version": [0, 0],
