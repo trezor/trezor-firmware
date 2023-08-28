@@ -5,6 +5,8 @@ from ecdsa import ECDH, SECP256k1, SigningKey
 
 from trezorlib import btc, messages
 
+from ...common import compact_size
+
 SLIP44 = 1  # Testnet
 
 TextMemo = namedtuple("TextMemo", "text")
@@ -20,13 +22,7 @@ payment_req_signer = SigningKey.from_string(
 
 
 def hash_bytes_prefixed(hasher, data):
-    n = len(data)
-    if n < 253:
-        hasher.update(n.to_bytes(1, "little"))
-    elif n < 0x1_0000:
-        hasher.update(bytes([253]))
-        hasher.update(n.to_bytes(2, "little"))
-
+    hasher.update(compact_size(len(data)))
     hasher.update(data)
 
 
