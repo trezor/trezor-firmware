@@ -236,6 +236,7 @@ pub struct PassphraseEntry<T: StringType + Clone> {
     choice_page: ChoicePage<ChoiceFactoryPassphrase, T, PassphraseAction>,
     passphrase_dots: Child<ChangingTextLine<String<MAX_PASSPHRASE_LENGTH>>>,
     show_plain_passphrase: bool,
+    show_last_digit: bool,
     textbox: TextBox<MAX_PASSPHRASE_LENGTH>,
     current_category: ChoiceCategory,
 }
@@ -251,6 +252,7 @@ where
                 .with_initial_page_counter(random_menu_position()),
             passphrase_dots: Child::new(ChangingTextLine::center_mono(String::new())),
             show_plain_passphrase: false,
+            show_last_digit: false,
             textbox: TextBox::empty(),
             current_category: ChoiceCategory::Menu,
         }
@@ -259,11 +261,20 @@ where
     fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
         let text_to_show = if self.show_plain_passphrase {
             String::from(self.passphrase())
+        } else if self.is_empty() {
+            String::from("")
         } else {
+            // Showing asterisks and possibly the last digit.
             let mut dots: String<MAX_PASSPHRASE_LENGTH> = String::new();
-            for _ in 0..self.textbox.len() {
-                unwrap!(dots.push_str("*"));
+            for _ in 0..self.textbox.len() - 1 {
+                unwrap!(dots.push('*'));
             }
+            let last_char = if self.show_last_digit {
+                unwrap!(self.textbox.content().chars().last())
+            } else {
+                '*'
+            };
+            unwrap!(dots.push(last_char));
             dots
         };
         self.passphrase_dots.mutate(ctx, |ctx, passphrase_dots| {
@@ -332,10 +343,17 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Any event when showing real passphrase should hide it
-        if self.show_plain_passphrase {
-            self.show_plain_passphrase = false;
-            self.update_passphrase_dots(ctx);
+        // Any non-timer event when showing real passphrase should hide it
+        // Same with showing last digit
+        if !matches!(event, Event::Timer(_)) {
+            if self.show_plain_passphrase {
+                self.show_plain_passphrase = false;
+                self.update_passphrase_dots(ctx);
+            }
+            if self.show_last_digit {
+                self.show_last_digit = false;
+                self.update_passphrase_dots(ctx);
+            }
         }
 
         if let Some(action) = self.choice_page.event(ctx, event) {
@@ -373,6 +391,7 @@ where
                 }
                 PassphraseAction::Character(ch) if !self.is_full() => {
                     self.append_char(ctx, ch);
+                    self.show_last_digit = true;
                     self.update_passphrase_dots(ctx);
                     self.randomize_category_position(ctx);
                     ctx.request_paint();
