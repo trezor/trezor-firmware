@@ -36,11 +36,13 @@ def generate(env):
         # replace "utils.BITCOIN_ONLY" with literal constant (True/False)
         # so the compiler can optimize out the things we don't want
         btc_only = env["bitcoin_only"] == "1"
+        is_t2b1 = env["TREZOR_MODEL"] == "R"
         backlight = env["backlight"]
         optiga = env["optiga"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = " ".join(
             [
+                rf"-e 's/utils\.MODEL_IS_T2B1/{is_t2b1}/g'",
                 rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
                 rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
                 rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",

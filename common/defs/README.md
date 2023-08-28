@@ -86,7 +86,7 @@ If you want to add a **wallet link**, modify the file [`wallets.json`](wallets.j
 # Support Information
 
 We keep track of support status of each built-in coin over our devices. That is
-`trezor1` for Trezor One, `trezor2` for Trezor T, `connect` for [Connect](https://github.com/trezor/connect)
+`T1B1` for Trezor One, `T2T1` for Trezor T, `T2B1` for Trezor R, `connect` for [Connect](https://github.com/trezor/connect)
 and `suite` for [Trezor Suite](https://suite.trezor.io/). In further description, the word "device"
 applies to Connect and Suite as well.
 

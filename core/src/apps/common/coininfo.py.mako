@@ -136,21 +136,18 @@ ATTRIBUTES = (
 
 btc_names = ["Bitcoin", "Testnet", "Regtest"]
 
-coins_btc = [c for c in supported_on("trezor2", bitcoin) if c.name in btc_names]
-coins_alt = [c for c in supported_on("trezor2", bitcoin) if c.name not in btc_names]
+# TODO: make this easily extendable for more models
+
+coins_btc_t2t1 = [c for c in supported_on("T2T1", bitcoin) if c.name in btc_names]
+coins_alt_t2t1 = [c for c in supported_on("T2T1", bitcoin) if c.name not in btc_names]
+
+coins_btc_t2b1 = [c for c in supported_on("T2B1", bitcoin) if c.name in btc_names]
+coins_alt_t2b1 = [c for c in supported_on("T2B1", bitcoin) if c.name not in btc_names]
 
 %>\
 def by_name(name: str) -> CoinInfo:
-% for coin in coins_btc:
-    if name == ${black_repr(coin["coin_name"])}:
-        return CoinInfo(
-            % for attr, func in ATTRIBUTES:
-            ${func(coin[attr])},  # ${attr}
-            % endfor
-        )
-% endfor
-    if not utils.BITCOIN_ONLY:
-% for coin in coins_alt:
+    if utils.MODEL_IS_T2B1:
+% for coin in coins_btc_t2b1:
         if name == ${black_repr(coin["coin_name"])}:
             return CoinInfo(
                 % for attr, func in ATTRIBUTES:
@@ -158,4 +155,32 @@ def by_name(name: str) -> CoinInfo:
                 % endfor
             )
 % endfor
-    raise ValueError  # Unknown coin name
+        if not utils.BITCOIN_ONLY:
+% for coin in coins_alt_t2b1:
+            if name == ${black_repr(coin["coin_name"])}:
+                return CoinInfo(
+                    % for attr, func in ATTRIBUTES:
+                    ${func(coin[attr])},  # ${attr}
+                    % endfor
+                )
+% endfor
+        raise ValueError  # Unknown coin name
+    else:
+% for coin in coins_btc_t2t1:
+        if name == ${black_repr(coin["coin_name"])}:
+            return CoinInfo(
+                % for attr, func in ATTRIBUTES:
+                ${func(coin[attr])},  # ${attr}
+                % endfor
+            )
+% endfor
+        if not utils.BITCOIN_ONLY:
+% for coin in coins_alt_t2t1:
+            if name == ${black_repr(coin["coin_name"])}:
+                return CoinInfo(
+                    % for attr, func in ATTRIBUTES:
+                    ${func(coin[attr])},  # ${attr}
+                    % endfor
+                )
+% endfor
+        raise ValueError  # Unknown coin name

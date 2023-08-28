@@ -25,6 +25,7 @@ from ...common import MNEMONIC12
 
 @pytest.mark.altcoin
 @pytest.mark.nem
+@pytest.mark.skip_tr  # coin not supported,
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_nem_getaddress(client: Client):
     assert (

@@ -23,6 +23,10 @@ from trezorutils import (  # noqa: F401
 )
 from typing import TYPE_CHECKING
 
+# Will get replaced by "True" / "False" in the build process
+# However, needs to stay as an exported symbol for the unit tests
+MODEL_IS_T2B1: bool = INTERNAL_MODEL == "T2B1"
+
 DISABLE_ANIMATION = 0
 
 if __debug__:

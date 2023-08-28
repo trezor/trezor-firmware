@@ -4,11 +4,6 @@ from trezor import utils
 
 from ..keychain import with_keychain
 
-if not utils.BITCOIN_ONLY:
-    from apps.zcash.signer import Zcash
-
-    from . import bitcoinlike, decred, zcash_v4
-
 if TYPE_CHECKING:
     from typing import Protocol
 
@@ -74,13 +69,21 @@ async def sign_tx(
         signer_class: type[SignerClass] = bitcoin.Bitcoin
     else:
         if coin.decred:
+            from . import decred
+
             signer_class = decred.Decred
         elif coin.overwintered:
             if msg.version == 5:
+                from apps.zcash.signer import Zcash
+
                 signer_class = Zcash
             else:
+                from . import zcash_v4
+
                 signer_class = zcash_v4.ZcashV4
         else:
+            from . import bitcoinlike
+
             signer_class = bitcoinlike.Bitcoinlike
 
     signer = signer_class(msg, keychain, coin, approver).signer()
