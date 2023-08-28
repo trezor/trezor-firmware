@@ -91,7 +91,7 @@ Since Alonzo era, network id may be included as an item in the transaction body.
 
 ## Key types
 
-In Shelley two types of keys are used. Payment key and staking key. Payment keys are derived from _m/1852'/1815'/x/[0,1]/y_ paths and are used for holding/transferring funds. Staking keys are derived from _m/1852'/1815'/x/2/0_ paths, thus there is only one staking key per account. They are used for staking operations - certificates, withdrawals. Shelley addresses are built from the combination of hashes of these keys.
+In Shelley two types of keys are used. Payment key and staking key. Payment keys are derived from _m/1852'/1815'/x/[0,1]/y_ paths and are used for holding/transferring funds. Staking keys are derived from _m/1852'/1815'/x/2/y_ paths (in the past, the only allowed value of `y` was `0`). They are used for staking operations - certificates, withdrawals. Shelley addresses are built from the combination of hashes of these keys.
 
 [Multi-sig paths (1854')](https://cips.cardano.org/cips/cip1854/) are used to generate keys which should be used in native scripts and also to sign multi-sig transactions. [Minting paths (1855')](https://cips.cardano.org/cips/cip1855/) are used for creating minting policies and for witnessing minting transactions.
 

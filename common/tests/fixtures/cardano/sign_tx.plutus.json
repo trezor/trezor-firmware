@@ -1104,6 +1104,60 @@
       }
     },
     {
+      "description": "Plutus transaction with base address device-owned output with non-zero staking path address_index",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/1",
+            "amount": "7120787"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "2399f1743e4074d3e18a742898c3e4d5eac66a7284a949ddcd1eac004498720f",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "8bb3d58bff5d999d1fe2fbfe818395be2a4a9e1373ff785148ba925e0aefec9f1dbf43c962ebc14c38b29b5f67935527080b9a2eaa837d9fda8fdce66c922503",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
       "description": "Plutus transaction with BASE_KEY_SCRIPT address device-owned output",
       "parameters": {
         "protocol_magic": 764824073,

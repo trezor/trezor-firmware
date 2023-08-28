@@ -88,6 +88,9 @@ class Signer:
 
         self.account_path_checker = AccountPathChecker()
 
+        # There should be at most one pool owner given as a path.
+        self.pool_owner_path = None
+
         # Inputs, outputs and fee are mandatory, count the number of optional fields present.
         tx_dict_items_count = 3 + sum(
             (
@@ -747,6 +750,7 @@ class Signer:
 
             if owner.staking_key_path:
                 owners_as_path_count += 1
+                self.pool_owner_path = owner.staking_key_path
 
         certificates.assert_cond(owners_as_path_count == 1)
 

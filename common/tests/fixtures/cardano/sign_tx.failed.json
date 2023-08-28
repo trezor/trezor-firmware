@@ -2006,6 +2006,50 @@
       }
     },
     {
+      "description": "Stake deregistration address index larger than 1_000_000",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [
+          {
+            "type": 1,
+            "path": "m/1852'/1815'/0'/2/1234567"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/190'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
       "description": "Repeated asset name in multiasset token group",
       "parameters": {
         "protocol_magic": 764824073,
