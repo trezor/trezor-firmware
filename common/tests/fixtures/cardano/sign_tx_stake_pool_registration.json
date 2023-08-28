@@ -546,6 +546,107 @@
           }
         ]
       }
+    },
+    {
+      "description": "Sample stake pool registration certificate with a non-zero owner staking path address index",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [
+          {
+            "type": 3,
+            "pool_parameters": {
+              "pool_id": "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973",
+              "vrf_key_hash": "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640",
+              "pledge": 500000000,
+              "cost": 340000000,
+              "margin": {
+                "numerator": 1,
+                "denominator": 2
+              },
+              "reward_account": "stake1uya87zwnmax0v6nnn8ptqkl6ydx4522kpsc3l3wmf3yswygwx45el",
+              "owners": [
+                {
+                  "staking_key_path": "m/1852'/1815'/0'/2/1"
+                },
+                {
+                  "staking_key_hash": "3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c490711"
+                }
+              ],
+              "relays": [
+                {
+                  "type": 0,
+                  "ipv4_address": "192.168.0.1",
+                  "ipv6_address": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+                  "port": 1234
+                },
+                {
+                  "type": 0,
+                  "ipv6_address": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+                  "port": 1234
+                },
+                {
+                  "type": 0,
+                  "ipv4_address": "192.168.0.1",
+                  "port": 1234
+                },
+                {
+                  "type": 1,
+                  "host_name": "www.test.test",
+                  "port": 1234
+                },
+                {
+                  "type": 2,
+                  "host_name": "www.test2.test"
+                }
+              ],
+              "metadata": {
+                "url": "https://www.test.test",
+                "hash": "914c57c1f12bbf4a82b12d977d4f274674856a11ed4b9b95bd70f5d41c5064a6"
+              }
+            }
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": null,
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "POOL_REGISTRATION_AS_OWNER",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "36d7e5b9acc9487b9190c3bbe8fa0ec60a6fd66b3c0af7cfd8a015a18b00d765",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "3963e13782d53ac894789a145db59830231d11f84d2df25c7f38db320de20cdc",
+            "signature": "b9c1131865991dbec67da4db2ff315afbf84965c823a893e4821382630d669e7e1b95197743213f24effaf8fee174a4369cfb5db417f20dce4ed40fd42450e0a",
+            "chain_code": null
+          }
+        ]
+      }
     }
   ]
 }

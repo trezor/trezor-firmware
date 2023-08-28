@@ -78,9 +78,12 @@ class PoolOwnerSigner(Signer):
         from ..helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 
         super()._validate_witness_request(witness_request)
-        if not SCHEMA_STAKING_ANY_ACCOUNT.match(witness_request.path):
+        if not (
+            SCHEMA_STAKING_ANY_ACCOUNT.match(witness_request.path)
+            and witness_request.path == self.pool_owner_path
+        ):
             raise ProcessError(
-                "Stakepool registration transaction can only contain staking witnesses"
+                "Stakepool registration transaction can only contain the pool owner witness request"
             )
 
     def _is_network_id_verifiable(self) -> bool:

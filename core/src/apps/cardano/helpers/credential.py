@@ -220,5 +220,7 @@ def _do_base_address_credentials_match(
     from .paths import CHAIN_STAKING_KEY
     from .utils import to_account_path
 
+    # Note: This checks that the account matches and the staking path address_index is 0.
+    # (Even though other values are allowed, we want to display them to the user.)
     path_to_staking_path = to_account_path(address_n) + [CHAIN_STAKING_KEY, 0]
     return address_n_staking == path_to_staking_path
