@@ -45,7 +45,7 @@ class Mosaic:
 
 
 def mosaics_iterator() -> Iterator[Mosaic]:
-% for m in supported_on("trezor2", nem):
+% for m in supported_on("T2T1", nem):
     yield Mosaic(
         "${m.name}",  # name
         " ${m.ticker}",  # ticker

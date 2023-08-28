@@ -7,6 +7,7 @@
 
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.messages import EthereumNetworkInfo
 
 if TYPE_CHECKING:
@@ -58,11 +59,21 @@ def by_slip44(slip44: int) -> EthereumNetworkInfo:
 
 # fmt: off
 def _networks_iterator() -> Iterator[NetworkInfoTuple]:
-% for n in sorted(supported_on("trezor2", eth), key=lambda network: (int(network.chain_id), network.name)):
-    yield (
-        ${n.chain_id},  # chain_id
-        ${n.slip44},  # slip44
-        "${n.shortcut}",  # symbol
-        "${n.name}",  # name
-    )
+    if utils.MODEL_IS_T2B1:
+% for n in sorted(supported_on("T2B1", eth), key=lambda network: (int(network.chain_id), network.name)):
+        yield (
+            ${n.chain_id},  # chain_id
+            ${n.slip44},  # slip44
+            "${n.shortcut}",  # symbol
+            "${n.name}",  # name
+        )
+% endfor
+    else:
+% for n in sorted(supported_on("T2T1", eth), key=lambda network: (int(network.chain_id), network.name)):
+        yield (
+            ${n.chain_id},  # chain_id
+            ${n.slip44},  # slip44
+            "${n.shortcut}",  # symbol
+            "${n.name}",  # name
+        )
 % endfor

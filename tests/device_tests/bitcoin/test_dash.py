@@ -39,7 +39,7 @@ TXHASH_15575a = bytes.fromhex(
     "15575a1c874bd60a819884e116c42e6791c8283ce1fc3b79f0d18531a61bbb8a"
 )
 
-pytestmark = pytest.mark.altcoin
+pytestmark = [pytest.mark.altcoin, pytest.mark.skip_tr]
 
 
 def test_send_dash(client: Client):

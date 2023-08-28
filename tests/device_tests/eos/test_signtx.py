@@ -30,6 +30,7 @@ pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.eos,
     pytest.mark.skip_t1,
+    pytest.mark.skip_tr,  # coin not supported
     pytest.mark.setup_client(mnemonic=MNEMONIC12),
 ]
 

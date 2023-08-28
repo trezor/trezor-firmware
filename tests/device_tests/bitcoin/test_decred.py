@@ -49,7 +49,7 @@ FAKE_TXHASH_51bc9c = bytes.fromhex(
     "51bc9c71f10a81eef3caedb5333062eb4b1f70998adf02916fe98fdc04c572e8"
 )
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.decred]
+pytestmark = [pytest.mark.altcoin, pytest.mark.decred, pytest.mark.skip_tr]
 
 
 def test_send_decred(client: Client):

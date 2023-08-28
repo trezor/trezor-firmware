@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -225,8 +227,7 @@ def check(ignore_missing):
 
 @cli.command()
 # fmt: off
-@click.option("--v1", help="Version for T1 release (default: guess from latest)")
-@click.option("--v2", help="Version for TT release (default: guess from latest)")
+@click.option("-r", '--releases', multiple=True, type=str, help='Key-value pairs of model and version. E.g. "T2B1=2.6.1"')
 @click.option("-n", "--dry-run", is_flag=True, help="Do not write changes")
 @click.option("-f", "--force", is_flag=True, help="Proceed even with bad version/device info")
 @click.option("--skip-testnets/--no-skip-testnets", default=True, help="Automatically exclude testnets")
@@ -234,11 +235,10 @@ def check(ignore_missing):
 @click.pass_context
 def release(
     ctx,
-    v1,
-    v2,
-    dry_run,
-    force,
-    skip_testnets,
+    releases: list[str],
+    dry_run: bool,
+    force: bool,
+    skip_testnets: bool,
 ):
     """Release a new Trezor firmware.
 
@@ -248,27 +248,36 @@ def release(
 
     The tool will ask you to confirm each added coin.
     """
-    latest_releases = coin_info.latest_releases()
+    # Transforming the user release input into a dict and validating
+    user_releases_dict = {
+        key: val for key, val in (release.split("=") for release in releases)
+    }
+    for key in user_releases_dict:
+        if key not in coin_info.VERSIONED_SUPPORT_INFO:
+            raise click.ClickException(
+                f"Unknown device: {key} - allowed are: {coin_info.VERSIONED_SUPPORT_INFO}"
+            )
 
-    def bump_version(version_tuple):
+    def bump_version(version_tuple: tuple[int]) -> str:
         version_list = list(version_tuple)
         version_list[-1] += 1
         return ".".join(str(n) for n in version_list)
 
-    # guess `version` if not given
-    if not v1:
-        v1 = bump_version(latest_releases["trezor1"])
-    if not v2:
-        v2 = bump_version(latest_releases["trezor2"])
+    latest_releases = coin_info.latest_releases()
 
-    versions = {"trezor1": v1, "trezor2": v2}
+    # Take version either from user or guess it from latest releases info
+    device_release_version: dict[str, str] = {}
+    for device in coin_info.VERSIONED_SUPPORT_INFO:
+        if device in user_releases_dict:
+            device_release_version[device] = user_releases_dict[device]
+        else:
+            device_release_version[device] = bump_version(latest_releases[device])
 
-    for number in "1", "2":
-        device = f"trezor{number}"
-        version = versions[device]
-        if not force and not version.startswith(number + "."):
+    for device, version in device_release_version.items():
+        version_starting_num = device[1]  # "T1B1" -> "1", "T2B1" -> "2"
+        if not force and not version.startswith(version_starting_num + "."):
             raise click.ClickException(
-                f"Device trezor{device} should not be version {version}. "
+                f"Device {device} should not be version {version}. "
                 "Use --force to proceed anyway."
             )
 
@@ -295,7 +304,7 @@ def release(
             if not unsupport_reason:
                 return
 
-        for device, version in versions.items():
+        for device, version in device_release_version.items():
             if add:
                 support_setdefault(device, coin["key"], version)
             else:
@@ -311,7 +320,7 @@ def release(
 
     for coin in missing_list:
         if skip_testnets and coin["is_testnet"]:
-            for device, version in versions.items():
+            for device, version in device_release_version.items():
                 support_setdefault(device, coin["key"], False, "(AUTO) exclude testnet")
         else:
             maybe_add(coin)
@@ -346,13 +355,13 @@ def set_support_value(key, entries, reason):
     """Set a support info variable.
 
     Examples:
-    support.py set coin:BTC trezor1=1.10.5 trezor2=2.4.7 suite=yes connect=no
-    support.py set coin:LTC trezor1=yes connect=
+    support.py set coin:BTC T1B1=1.10.5 T2T1=2.4.7 suite=yes connect=no
+    support.py set coin:LTC T1B1=yes connect=
 
     Setting a variable to "yes", "true" or "1" sets support to true.
     Setting a variable to "no", "false" or "0" sets support to false.
-    (or null, in case of trezor1/2)
-    Setting variable to empty ("trezor1=") will set to null, or clear the entry.
+    (or null, in case of T1B1/T2T1)
+    Setting variable to empty ("T1B1=") will set to null, or clear the entry.
     Setting a variable to a particular version string (e.g., "2.4.7") will set that
     particular version.
     """

@@ -5,7 +5,7 @@
 #include "ethereum.h"
 #include "ethereum_tokens.h"
 
-<% erc20_list = list(supported_on("trezor1", erc20)) %>\
+<% erc20_list = list(supported_on("T1B1", erc20)) %>\
 #define TOKENS_COUNT ${len(erc20_list)}
 
 static const EthereumTokenInfo tokens[TOKENS_COUNT] = {

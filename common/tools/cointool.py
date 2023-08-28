@@ -672,7 +672,7 @@ def check(backend: bool, icons: bool) -> None:
 
 
 type_choice = click.Choice(["bitcoin", "eth", "erc20", "nem", "misc"])
-device_choice = click.Choice(["connect", "suite", "trezor1", "trezor2"])
+device_choice = click.Choice(["connect", "suite", "T1B1", "T2T1", "T2B1"])
 
 
 @cli.command()
@@ -689,8 +689,8 @@ device_choice = click.Choice(["connect", "suite", "trezor1", "trezor2"])
 @click.option("-f", "--filter", metavar="FIELD=FILTER", multiple=True, help="Include only coins that match a filter (-f taproot=true -f maintainer='*stick*')")
 @click.option("-F", "--filter-exclude", metavar="FIELD=FILTER", multiple=True, help="Exclude coins that match a filter (-F 'blockbook=[]' -F 'slip44=*')")
 @click.option("-t", "--exclude-tokens", is_flag=True, help="Exclude ERC20 tokens. Equivalent to '-E erc20'")
-@click.option("-d", "--device-include", metavar="NAME", multiple=True, type=device_choice, help="Only include coins supported on these given devices (-d connect -d trezor1)")
-@click.option("-D", "--device-exclude", metavar="NAME", multiple=True, type=device_choice, help="Only include coins not supported on these given devices (-D suite -D trezor2)")
+@click.option("-d", "--device-include", metavar="NAME", multiple=True, type=device_choice, help="Only include coins supported on these given devices (-d connect -d T1B1)")
+@click.option("-D", "--device-exclude", metavar="NAME", multiple=True, type=device_choice, help="Only include coins not supported on these given devices (-D suite -D T2T1)")
 # fmt: on
 def dump(
     outfile: TextIO,
@@ -739,7 +739,7 @@ def dump(
 
     Also devices can be used as filters. For example to find out which coins are
     supported in Suite and connect but not on Trezor 1, it is possible to say
-    '-d suite -d connect -D trezor1'.
+    '-d suite -d connect -D T1B1'.
 
     Includes even the wallet data, unless turned off by '-W'.
     These can be filtered by using '-f', for example `-f 'wallet=*exodus*'` (* are necessary)
