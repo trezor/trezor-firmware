@@ -52,7 +52,8 @@ def parse(
 
     parsed_instructions = parse_instructions(serialized_tx)
 
-    merged_addresses: list[Address | AddressReference] = addresses[:]
+    merged_addresses: list[Address | AddressReference] = []
+    [merged_addresses.append(address) for address in addresses]
     if is_v0:
         (
             address_table_lookup_rw_addresses,

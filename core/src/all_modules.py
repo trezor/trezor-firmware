@@ -375,18 +375,10 @@ apps.solana.get_public_key
 import apps.solana.get_public_key
 apps.solana.instructions
 import apps.solana.instructions
+apps.solana.instructions.instruction
+import apps.solana.instructions.instruction
 apps.solana.instructions.parse_template
 import apps.solana.instructions.parse_template
-apps.solana.instructions.stake_program
-import apps.solana.instructions.stake_program
-apps.solana.instructions.system_program
-import apps.solana.instructions.system_program
-apps.solana.parser_poc
-import apps.solana.parser_poc
-apps.solana.parser_poc.parser
-import apps.solana.parser_poc.parser
-apps.solana.parser_poc.template
-import apps.solana.parser_poc.template
 apps.solana.parsing
 import apps.solana.parsing
 apps.solana.parsing.parse

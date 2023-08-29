@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING
 
-from .parse_template import parse_accounts_template, parse_data_template
+from trezor.crypto import base58
 
 if TYPE_CHECKING:
-    from ..types import Address, AddressReference, Data, RawInstruction
+    from typing import Any, TypeGuard
+    from trezor.utils import BufferReader
+    from ..types import Address, AddressReference, RawInstruction
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
@@ -12,52 +14,68 @@ SYSTEM_TRANSFER_ID = 2
 
 
 class Instruction:
-    PROGRAM_ID = -1
-    INSTRUCTION_ID = -1
+    PROGRAM_ID: str
+    INSTRUCTION_ID: int
 
-    program_id: bytes
+    ui_identifier: str
+    ui_name: str
+
+    program_id: str
     accounts: list[Address | AddressReference]
-    data: Data
+    data: BufferReader
 
-    def __init__(self, raw_instruction: RawInstruction):
-        self.program_id, self.accounts, self.data = raw_instruction
+    instruction_id: int
+    data_template: list[tuple[str, str] | tuple[str, str, bool]]
+    accounts_template: list[tuple[str, str, int] | tuple[str, str, int, bool]]
 
-    def get_data_template(self) -> list[tuple]:
-        return []
+    parsed_data: dict[str, Any] | None = None
+    parsed_accounts: dict[str, bytes | tuple[bytes, int] | None] | None = None
 
-    def get_accounts_template(self) -> list[tuple[str, int]]:
-        return []
+    def __init__(
+        self,
+        raw_instruction: RawInstruction,
+        instruction_id: int,
+        data_template: list[tuple[str, str] | tuple[str, str, bool]],
+        accounts_template: list[tuple[str, str, int] | tuple[str, str, int, bool]],
+        ui_identifier: str,
+        ui_name: str,
+    ):
+        raw_program_id, self.accounts, self.data = raw_instruction
+        self.program_id = base58.encode(raw_program_id)
 
-    def parse(self) -> None:
-        parse_data_template(self)
-        parse_accounts_template(self)
+        self.instruction_id = instruction_id
 
-    def validate(self, signer_pub_key: bytes) -> None:
-        pass
+        self.data_template = data_template
+        self.accounts_template = accounts_template
 
-    async def show(self) -> None:
-        # TODO SOL: blind signing could be here?
-        pass
+        self.ui_identifier = ui_identifier
+        self.ui_name = ui_name
 
+        self.parsed_data = {}
+        self.parsed_accounts = {}
 
-async def handle_instructions(
-    instructions: list[RawInstruction], signer_pub_key: bytes
-) -> None:
-    from trezor.crypto import base58
-    from trezor.wire import ProcessError
+    def __getattr__(self, attr: str) -> Any:
+        assert self.parsed_data is not None
+        assert self.parsed_accounts is not None
 
-    from .system_program import handle_system_program_instruction
-    from .stake_program import handle_stake_program_instruction
-
-    for raw_instruction in instructions:
-        program_id, _, _ = raw_instruction
-
-        encoded_program_id = base58.encode(program_id)
-
-        if encoded_program_id == SYSTEM_PROGRAM_ID:
-            await handle_system_program_instruction(raw_instruction, signer_pub_key)
-        elif encoded_program_id == STAKE_PROGRAM_ID:
-            await handle_stake_program_instruction(raw_instruction, signer_pub_key)
+        if attr in self.parsed_data:
+            return self.parsed_data[attr]
+        elif attr in self.parsed_accounts:
+            return self.parsed_accounts[attr]
         else:
-            # TODO SOL: blind signing for unknown programs
-            raise ProcessError(f"Unknown program id: {encoded_program_id}")
+            # TODO SOL - what to do? object.__getattribute__ doesn't seem to work
+            raise AttributeError(f"Attribute {attr} not found")
+
+    def set_parsed_data(self, attr: str, value: Any) -> None:
+        assert self.parsed_data is not None
+        self.parsed_data[attr] = value
+
+    def set_parsed_account(
+        self, account: str, value: bytes | tuple[bytes, int] | None
+    ) -> None:
+        assert self.parsed_accounts is not None
+        self.parsed_accounts[account] = value
+
+    @classmethod
+    def is_type_of(cls, ins: Any) -> TypeGuard["Instruction"]:
+        return ins.program_id == cls.PROGRAM_ID and ins.type == cls.INSTRUCTION_ID
