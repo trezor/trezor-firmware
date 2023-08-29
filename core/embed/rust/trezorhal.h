@@ -12,6 +12,7 @@
 #include "storage.h"
 #include "touch.h"
 #include "usb.h"
+#include "haptic.h"
 
 #include "bip39.h"
 #include "rand.h"

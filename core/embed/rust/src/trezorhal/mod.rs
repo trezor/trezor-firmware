@@ -18,6 +18,9 @@ pub mod uzlib;
 pub mod wordlist;
 
 pub mod buffers;
+
+pub mod haptic;
+
 #[cfg(not(feature = "micropython"))]
 pub mod time;
 

@@ -72,12 +72,13 @@ void haptic_init(void) {
   read_reg(DRV2625_REG_CHIPID, (uint8_t *)&chip_id);
 }
 
-void haptic_play(void) {
-  set_reg(DRV2625_REG_GO, 0x01);
-  waveform += 1;
-  if (waveform > 123) {
-    waveform = 1;
+void haptic_play(uint16_t effect) {
+  if (effect > 123) {
+    return;
   }
-
-  set_reg(DRV2625_REG_WAVESEQ1, waveform);
+  if (effect == 0) {
+    effect = 1;
+  }
+  set_reg(DRV2625_REG_WAVESEQ1, effect);
+  set_reg(DRV2625_REG_GO, 0x01);
 }

@@ -106,7 +106,7 @@ where
     fn generate_digit_buttons() -> [Child<Button<&'static str>>; DIGIT_COUNT] {
         // Generate a random sequence of digits from 0 to 9.
         let mut digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        random::shuffle(&mut digits);
+        //random::shuffle(&mut digits);
         digits
             .map(Button::with_text)
             .map(|b| b.styled(theme::button_pin()))
@@ -144,6 +144,11 @@ where
 
     pub fn pin(&self) -> &str {
         self.textbox.inner().pin()
+    }
+
+    pub fn clear(&mut self, ctx: &mut EventCtx) {
+        self.textbox.mutate(ctx, |ctx, t| t.clear(ctx));
+        self.pin_modified(ctx);
     }
 }
 
@@ -301,7 +306,7 @@ impl PinDots {
             pad: Pad::with_background(style.background_color),
             style,
             digits: String::new(),
-            display_digits: false,
+            display_digits: true,
         }
     }
 
@@ -433,7 +438,7 @@ impl Component for PinDots {
                 None
             }
             Event::Touch(TouchEvent::TouchEnd(_)) => {
-                if mem::replace(&mut self.display_digits, false) {
+                if mem::replace(&mut self.display_digits, true) {
                     self.pad.clear();
                     ctx.request_paint();
                 };

@@ -358,6 +358,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("usb_configured")
         // touch
         .allowlist_function("touch_read")
+        // haptic
+        .allowlist_function("haptic_play")
         // button
         .allowlist_function("button_read");
 
