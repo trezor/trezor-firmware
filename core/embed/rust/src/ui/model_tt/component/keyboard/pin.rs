@@ -105,7 +105,7 @@ where
 
     fn generate_digit_buttons() -> [Child<Button<&'static str>>; DIGIT_COUNT] {
         // Generate a random sequence of digits from 0 to 9.
-        let mut digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+        let mut digits = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
         //random::shuffle(&mut digits);
         digits
             .map(Button::with_text)
