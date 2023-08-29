@@ -21,6 +21,7 @@
 
 #include "platform.h"
 #include "rng.h"
+#include TREZOR_BOARD
 
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0,
                                    1, 2, 3, 4, 6, 7, 8, 9};
@@ -206,6 +207,8 @@ void drop_privileges(void) {
 extern void shutdown_privileged(void);
 
 void PVD_IRQHandler(void) {
-  TIM1->CCR1 = 0;  // turn off display backlight
+#ifdef BACKLIGHT_PWM_TIM
+  BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;  // turn off display backlight
+#endif
   shutdown_privileged();
 }
