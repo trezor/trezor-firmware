@@ -1,1 +1,0 @@
-When building a `PRODUCTION=0` bootloader, it will recognize the development signing keys instead of production ones.
