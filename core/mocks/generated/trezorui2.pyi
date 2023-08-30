@@ -623,6 +623,7 @@ def show_warning(
     *,
     title: str,
     button: str = "CONTINUE",
+    value: str = "",
     description: str = "",
     allow_cancel: bool = False,
     time_ms: int = 0,

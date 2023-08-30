@@ -919,6 +919,7 @@ fn new_show_modal(
     button_style: ButtonStyleSheet,
 ) -> Result<Obj, Error> {
     let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+    let value: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_value, StrBuffer::empty())?;
     let description: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
     let button: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_button, "CONTINUE".into())?;
     let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
@@ -928,7 +929,12 @@ fn new_show_modal(
     let obj = if no_buttons && time_ms == 0 {
         // No buttons and no timer, used when we only want to draw the dialog once and
         // then throw away the layout object.
-        LayoutObj::new(IconDialog::new(icon, title, Empty).with_description(description))?.into()
+        LayoutObj::new(
+            IconDialog::new(icon, title, Empty)
+                .with_value(value)
+                .with_description(description),
+        )?
+        .into()
     } else if no_buttons && time_ms > 0 {
         // Timeout, no buttons.
         LayoutObj::new(
@@ -937,6 +943,7 @@ fn new_show_modal(
                 title,
                 Timeout::new(time_ms).map(|_| Some(CancelConfirmMsg::Confirmed)),
             )
+            .with_value(value)
             .with_description(description),
         )?
         .into()
@@ -952,6 +959,7 @@ fn new_show_modal(
                     false,
                 ),
             )
+            .with_value(value)
             .with_description(description),
         )?
         .into()
@@ -965,6 +973,7 @@ fn new_show_modal(
                     (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                 })),
             )
+            .with_value(value)
             .with_description(description),
         )?
         .into()
@@ -1788,6 +1797,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     button: str = "CONTINUE",
+    ///     value: str = "",
     ///     description: str = "",
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
