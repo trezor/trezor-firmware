@@ -141,7 +141,7 @@ test_emu_ui_record: ## record and hash screens for ui integration tests
 
 test_emu_ui_record_multicore: ## quickly record all screens
 	make test_emu_ui_multicore || echo "All errors are recorded in fixtures.json"
-	../tests/update_fixtures.py -r
+	../tests/update_fixtures.py local
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
