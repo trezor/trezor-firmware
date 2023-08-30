@@ -365,12 +365,24 @@ async def confirm_path_warning(
     path: str,
     path_type: str | None = None,
 ) -> None:
-    title = "Unknown path" if not path_type else f"Unknown {path_type.lower()}"
-    await show_warning(
-        "path_warning",
-        title,
-        path,
-        br_code=ButtonRequestType.UnknownDerivationPath,
+    title = (
+        "Wrong derivation path for selected account."
+        if not path_type
+        else f"Unknown {path_type.lower()}."
+    )
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(
+                trezorui2.show_warning(
+                    title=title,
+                    value=path,
+                    description="Continue anyway?",
+                    button="CONTINUE",
+                )
+            ),
+            "path_warning",
+            br_code=ButtonRequestType.UnknownDerivationPath,
+        )
     )
 
 

@@ -134,6 +134,10 @@ where
         self.with_text(&theme::TEXT_NORMAL_OFF_WHITE, description)
     }
 
+    pub fn with_value(self, value: T) -> Self {
+        self.with_text(&theme::TEXT_MONO, value)
+    }
+
     pub fn new_shares(lines: [T; 4], controls: U) -> Self {
         let [l0, l1, l2, l3] = lines;
         Self {
