@@ -1027,14 +1027,9 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
 
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let icon = BlendedImage::new(
-            theme::IMAGE_BG_CIRCLE,
-            theme::IMAGE_FG_SUCCESS,
-            theme::SUCCESS_COLOR,
-            theme::FG,
-            theme::BG,
-        );
-        new_show_modal(kwargs, icon, theme::button_confirm())
+        // Not showing the rounded background, just the check icon
+        let icon = BlendedImage::single(theme::IMAGE_FG_SUCCESS, theme::FG, theme::BG);
+        new_show_modal(kwargs, icon, theme::button_success())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1060,6 +1055,13 @@ extern "C" fn new_show_mismatch() -> Obj {
         let url: StrBuffer = "trezor.io/support".into();
         let button = "QUIT";
 
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_DEMIBOLD, title).centered(),
+            Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, description).centered(),
+            Paragraph::new(&theme::TEXT_DEMIBOLD, url).centered(),
+        ])
+        .into_paragraphs();
+
         let icon = BlendedImage::new(
             theme::IMAGE_BG_OCTAGON,
             theme::IMAGE_FG_WARN,
@@ -1067,19 +1069,15 @@ extern "C" fn new_show_mismatch() -> Obj {
             theme::FG,
             theme::BG,
         );
-        let obj = LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                Button::cancel_confirm(
-                    Button::with_icon(theme::ICON_BACK),
-                    Button::with_text(button).styled(theme::button_reset()),
-                    true,
-                ),
-            )
-            .with_description(description)
-            .with_text(&theme::TEXT_DEMIBOLD, url),
-        )?;
+        let obj = LayoutObj::new(IconDialog::from_paragraphs(
+            icon,
+            paragraphs,
+            Button::cancel_confirm(
+                Button::with_icon(theme::ICON_BACK),
+                Button::with_text(button).styled(theme::button_reset()),
+                true,
+            ),
+        ))?;
 
         Ok(obj.into())
     };

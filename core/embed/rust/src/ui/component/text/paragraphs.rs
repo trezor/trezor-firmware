@@ -156,6 +156,13 @@ where
             chr = 0;
         }
     }
+
+    pub fn current_height(&self) -> i16 {
+        self.visible
+            .iter()
+            .map(|layout| layout.bounds.height())
+            .sum()
+    }
 }
 
 impl<T> Component for Paragraphs<T>
