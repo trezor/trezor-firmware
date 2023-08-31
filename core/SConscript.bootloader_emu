@@ -128,8 +128,12 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/usb.c',
     'embed/trezorhal/unix/random_delays.c',
-    'embed/trezorhal/unix/secret.c',
 ]
+
+if TREZOR_MODEL in ('R', ):
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/unix/secret.c',
+    ]
 
 SOURCE_UNIX = [
     'embed/unix/profile.c',
