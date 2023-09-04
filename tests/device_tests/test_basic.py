@@ -23,6 +23,9 @@ def test_features(client: Client):
     # client erases session_id from its features
     f0.session_id = client.session_id
     f1 = client.call(messages.Initialize(session_id=f0.session_id))
+    # Internal model for T1 does not come from the device
+    if f0.model == "1":
+        f1.internal_model = "T1B1"
     assert f0 == f1
 
 

@@ -275,6 +275,11 @@ class TrezorClient(Generic[UI]):
         if features.vendor not in self.model.vendors:
             raise RuntimeError("Unsupported device")
 
+        # Manually setting features.internal_model for T1
+        # (it does not come from the device itself)
+        if self.model == models.TREZOR_ONE:
+            features.internal_model = self.model.internal_name
+
         self.features = features
         self.version = (
             self.features.major_version,
