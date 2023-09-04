@@ -368,7 +368,7 @@ class DebugLink:
         self.mapping = mapping.DEFAULT_MAPPING
 
         # To be set by TrezorClientDebugLink (is not known during creation time)
-        self.model: Optional[str] = None
+        self.internal_model: Optional[str] = None
         self.version: Tuple[int, int, int] = (0, 0, 0)
 
         # Where screenshots are being saved
@@ -956,7 +956,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         # So that we can choose right screenshotting logic (T1 vs TT)
         # and know the supported debug capabilities
-        self.debug.model = self.features.model
+        self.debug.internal_model = self.features.internal_model
         self.debug.version = self.version
 
     def reset_debug_features(self) -> None:
