@@ -65,7 +65,7 @@ def test_send_p2sh(client: Client):
         amount=123_456_789 - 11_000 - 12_300_000,
     )
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -119,7 +119,7 @@ def test_send_p2sh_change(client: Client):
         amount=123_456_789 - 11_000 - 12_300_000,
     )
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -175,7 +175,7 @@ def test_testnet_segwit_big_amount(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -233,7 +233,7 @@ def test_send_multisig_1(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    tt = client.features.model == "T"
+    tt = client.features.internal_model == "T2T1"
     expected_responses = [
         request_input(0),
         request_output(0),
@@ -301,7 +301,7 @@ def test_attack_change_input_address(client: Client):
 
     # Test if the transaction can be signed normally.
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -381,7 +381,7 @@ def test_attack_mixed_inputs(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    tt = client.features.model == "T"
+    tt = client.features.internal_model == "T2T1"
     expected_responses = [
         request_input(0),
         request_input(1),
@@ -409,7 +409,7 @@ def test_attack_mixed_inputs(client: Client):
         request_finished(),
     ]
 
-    if client.features.model == "1":
+    if client.features.internal_model == "T1B1":
         # T1 asks for first input for witness again
         expected_responses.insert(-2, request_input(0))
 
@@ -428,7 +428,7 @@ def test_attack_mixed_inputs(client: Client):
     # In Phase 1 make the user confirm a lower value of the segwit input.
     inp2.amount = FAKE_AMOUNT
 
-    if client.features.model == "1":
+    if client.features.internal_model == "T1B1":
         # T1 fails as soon as it encounters the fake amount.
         expected_responses = (
             expected_responses[:4] + expected_responses[5:15] + [messages.Failure()]

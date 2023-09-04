@@ -106,7 +106,7 @@ def test_one_one_fee_sapling(client: Client):
     )
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -260,7 +260,7 @@ def test_external_presigned(client: Client):
     )
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),

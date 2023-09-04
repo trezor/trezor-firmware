@@ -78,7 +78,7 @@ def test_send_p2tr(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -133,7 +133,7 @@ def test_send_two_with_change(client: Client):
         amount=6_800 + 13_000 - 200 - 15_000,
     )
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -223,7 +223,7 @@ def test_send_mixed(client: Client):
     )
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 # process inputs
@@ -293,7 +293,7 @@ def test_send_mixed(client: Client):
                 request_input(0),
                 request_input(1),
                 request_input(2),
-                (client.features.model == "1", request_input(3)),
+                (client.features.internal_model == "T1B1", request_input(3)),
                 request_finished(),
             ]
         )
@@ -355,7 +355,7 @@ def test_attack_script_type(client: Client):
         return msg
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [

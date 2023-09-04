@@ -188,11 +188,20 @@ def client(
 
     @pytest.mark.experimental
     """
-    if request.node.get_closest_marker("skip_t2") and _raw_client.features.model == "T":
+    if (
+        request.node.get_closest_marker("skip_t2")
+        and _raw_client.features.internal_model == "T2T1"
+    ):
         pytest.skip("Test excluded on Trezor T")
-    if request.node.get_closest_marker("skip_t1") and _raw_client.features.model == "1":
+    if (
+        request.node.get_closest_marker("skip_t1")
+        and _raw_client.features.internal_model == "T1B1"
+    ):
         pytest.skip("Test excluded on Trezor 1")
-    if request.node.get_closest_marker("skip_tr") and _raw_client.features.model == "R":
+    if (
+        request.node.get_closest_marker("skip_tr")
+        and _raw_client.features.internal_model == "T2B1"
+    ):
         pytest.skip("Test excluded on Trezor R")
 
     sd_marker = request.node.get_closest_marker("sd_card")

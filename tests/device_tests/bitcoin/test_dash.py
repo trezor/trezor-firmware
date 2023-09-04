@@ -57,7 +57,7 @@ def test_send_dash(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -105,7 +105,7 @@ def test_send_dash_dip2_input(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),

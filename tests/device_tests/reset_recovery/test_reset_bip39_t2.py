@@ -167,7 +167,7 @@ def test_failed_pin(client: Client):
     ret = client.call_raw(messages.ButtonAck())
 
     # Re-enter PIN for TR
-    if client.debug.model == "R":
+    if client.debug.internal_model == "T2B1":
         assert isinstance(ret, messages.ButtonRequest)
         client.debug.press_yes()
         ret = client.call_raw(messages.ButtonAck())

@@ -59,7 +59,7 @@ def test_load_device_2(client: Client):
     state = client.debug.state()
     assert state.mnemonic_secret == MNEMONIC12.encode()
 
-    if client.features.model == "1":
+    if client.features.internal_model == "T1B1":
         # we do not send PIN in DebugLinkState in Core
         assert state.pin == "1234"
     assert state.passphrase_protection is True

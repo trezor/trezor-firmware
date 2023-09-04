@@ -449,7 +449,7 @@ def test_sign_tx_spend(client: Client):
         )
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
@@ -524,7 +524,7 @@ def test_sign_tx_migration(client: Client):
         )
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),

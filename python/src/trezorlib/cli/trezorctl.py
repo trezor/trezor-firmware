@@ -334,7 +334,7 @@ def get_session(obj: TrezorConnection) -> str:
     obj.session_id = None
 
     with obj.client_context() as client:
-        if client.features.model == "1" and client.version < (1, 9, 0):
+        if client.features.internal_model == "T1B1" and client.version < (1, 9, 0):
             raise click.ClickException(
                 "Upgrade your firmware to enable session support."
             )

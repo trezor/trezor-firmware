@@ -60,7 +60,7 @@ def do_recover_core(client: Client, mnemonic: list[str], mismatch: bool = False)
 
 
 def do_recover(client: Client, mnemonic: list[str], mismatch: bool = False):
-    if client.features.model == "1":
+    if client.features.internal_model == "T1B1":
         return do_recover_legacy(client, mnemonic)
     else:
         return do_recover_core(client, mnemonic, mismatch)

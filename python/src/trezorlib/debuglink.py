@@ -452,7 +452,7 @@ class DebugLink:
 
     def reset_debug_events(self) -> None:
         # Only supported on TT and above certain version
-        if self.model in ("T", "R") and not self.legacy_debug:
+        if self.internal_model in ("T2T1", "T2B1") and not self.legacy_debug:
             return self._call(messages.DebugLinkResetDebugEvents())
         return None
 
@@ -685,7 +685,7 @@ class DebugLink:
     ) -> None:
         self.screenshot_recording_dir = directory
         # Different recording logic between core and legacy
-        if self.model in ("T", "R"):
+        if self.internal_model in ("T2T1", "T2B1"):
             self._call(
                 messages.DebugLinkRecordScreen(
                     target_directory=directory, refresh_index=refresh_index
@@ -699,7 +699,7 @@ class DebugLink:
     def stop_recording(self) -> None:
         self.screenshot_recording_dir = None
         # Different recording logic between TT and T1
-        if self.model in ("T", "R"):
+        if self.internal_model in ("T2T1", "T2B1"):
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
         else:
             self.t1_take_screenshots = False
@@ -726,7 +726,7 @@ class DebugLink:
 
         TT handles them differently, see debuglink.start_recording.
         """
-        if self.model == "1" and self.t1_take_screenshots:
+        if self.internal_model == "T1B1" and self.t1_take_screenshots:
             self.save_screenshot_for_t1()
 
     def save_screenshot_for_t1(self) -> None:
@@ -1102,7 +1102,7 @@ class TrezorClientDebugLink(TrezorClient):
         expected response is only evaluated if the first field is True.
         This is useful for differentiating sequences between Trezor models:
 
-        >>> trezor_one = client.features.model == "1"
+        >>> trezor_one = client.features.internal_model == "T1B1"
         >>> client.set_expected_responses([
         >>>     messages.ButtonRequest(code=ConfirmOutput),
         >>>     (trezor_one, messages.ButtonRequest(code=ConfirmOutput)),

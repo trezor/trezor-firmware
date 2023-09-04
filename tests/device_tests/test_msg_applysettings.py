@@ -50,7 +50,7 @@ TR_HOMESCREEN = b"TOIG\x80\x00@\x00\x0c\x04\x00\x00\xa5RY\x96\xdc0\x08\xe4\x06\x
 
 def _set_expected_responses(client: Client):
     client.use_pin_sequence([PIN4])
-    if client.features.model == "1":
+    if client.features.internal_model == "T1B1":
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_T1)
     else:
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
@@ -356,7 +356,7 @@ def test_safety_checks(client: Client):
         client.set_expected_responses([messages.Failure])
         get_bad_address()
 
-    if client.features.model != "1":
+    if client.features.internal_model != "T1B1":
         with client:
             client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
             device.apply_settings(

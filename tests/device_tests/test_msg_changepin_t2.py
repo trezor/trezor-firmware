@@ -62,7 +62,7 @@ def test_set_pin(client: Client):
 
     # Let's set new PIN
     with client:
-        br_amount = 4 if client.debug.model == "T" else 6
+        br_amount = 4 if client.debug.internal_model == "T2T1" else 6
         client.use_pin_sequence([PIN_MAX, PIN_MAX])
         client.set_expected_responses(
             [messages.ButtonRequest] * br_amount + [messages.Success, messages.Features]
@@ -84,7 +84,7 @@ def test_change_pin(client: Client):
     # Let's change PIN
     with client:
         client.use_pin_sequence([PIN4, PIN_MAX, PIN_MAX])
-        br_amount = 5 if client.debug.model == "T" else 6
+        br_amount = 5 if client.debug.internal_model == "T2T1" else 6
         client.set_expected_responses(
             [messages.ButtonRequest] * br_amount + [messages.Success, messages.Features]
         )

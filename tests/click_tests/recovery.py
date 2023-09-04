@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 def enter_word(
     debug: "DebugLink", word: str, is_slip39: bool = False
 ) -> "LayoutContent":
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         typed_word = word[:4]
         for coords in buttons.type_word(typed_word, is_slip39=is_slip39):
             debug.click(coords)
 
         return debug.click(buttons.CONFIRM_WORD, wait=True)
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         letter_index = 0
         layout = debug.read_layout()
 
@@ -40,10 +40,10 @@ def enter_word(
 
 def confirm_recovery(debug: "DebugLink") -> None:
     layout = debug.wait_layout()
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         assert layout.title().startswith(("RECOVER WALLET", "BACKUP CHECK"))
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         assert layout.title() == "RECOVER WALLET"
         debug.press_right(wait=True)
         debug.press_right()
@@ -54,7 +54,7 @@ def select_number_of_words(
 ) -> None:
     if wait:
         debug.wait_layout()
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         assert "number of words" in debug.read_layout().text_content()
         assert debug.read_layout().title() in (
             "BACKUP CHECK",
@@ -69,7 +69,7 @@ def select_number_of_words(
         )  # raises if num of words is invalid
         coords = buttons.grid34(index % 3, index // 3)
         layout = debug.click(coords, wait=True)
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         assert "number of words" in debug.read_layout().text_content()
         layout = debug.press_right(wait=True)
 
@@ -93,7 +93,7 @@ def select_number_of_words(
 def enter_share(
     debug: "DebugLink", share: str, is_first: bool = True
 ) -> "LayoutContent":
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         layout = debug.click(buttons.OK, wait=True)
 
         assert layout.main_component() == "MnemonicKeyboard"
@@ -101,7 +101,7 @@ def enter_share(
             layout = enter_word(debug, word, is_slip39=True)
 
         return layout
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         assert "RECOVER WALLET" in debug.wait_layout().title()
         layout = debug.press_right(wait=True)
         if is_first:
@@ -131,10 +131,10 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
 
 def enter_seed(debug: "DebugLink", seed_words: list[str]) -> None:
     assert "Enter" in debug.read_layout().text_content()
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         layout = debug.click(buttons.OK, wait=True)
         assert layout.main_component() == "MnemonicKeyboard"
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         layout = debug.press_right(wait=True)
         assert "RECOVER WALLET" in layout.title()
         debug.press_right()

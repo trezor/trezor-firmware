@@ -63,7 +63,7 @@ def test_opreturn(client: Client):
     )
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),

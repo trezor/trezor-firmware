@@ -31,7 +31,7 @@ pytestmark = [
 
 # assertion data from T1
 def test_nem_signtx_simple(client: Client):
-    tt = client.features.model == "T"
+    tt = client.features.internal_model == "T2T1"
     with client:
         client.set_expected_responses(
             [
@@ -82,7 +82,7 @@ def test_nem_signtx_simple(client: Client):
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_nem_signtx_encrypted_payload(client: Client):
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 # Confirm transfer and network fee

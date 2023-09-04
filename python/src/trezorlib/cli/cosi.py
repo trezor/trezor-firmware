@@ -34,7 +34,7 @@ def cli() -> None:
 
 
 def cosi_warn(client: "TrezorClient") -> None:
-    if client.features.model == "1" and client.version < (1, 11, 2):
+    if client.features.internal_model == "T1B1" and client.version < (1, 11, 2):
         click.echo("WARNING: CoSi signing on your Trezor is insecure.")
         click.echo("Please update your Trezor to firmware version 1.11.2 or newer.")
         click.echo("If you used CoSi in the past, consider rotating your keys.")

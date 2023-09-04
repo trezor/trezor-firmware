@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 def confirm_new_wallet(debug: "DebugLink") -> None:
     layout = debug.wait_layout()
     assert layout.title().startswith("CREATE WALLET")
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         debug.press_right(wait=True)
         debug.press_right(wait=True)
 
@@ -41,9 +41,9 @@ def confirm_read(debug: "DebugLink", title: str, middle_r: bool = False) -> None
     else:
         assert title.upper() in layout.title()
 
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         if layout.page_count() > 1:
             debug.press_right(wait=True)
         if middle_r:
@@ -53,12 +53,12 @@ def confirm_read(debug: "DebugLink", title: str, middle_r: bool = False) -> None
 
 
 def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> None:
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         assert "NumberInputDialog" in debug.read_layout().all_components()
         for _ in range(diff):
             debug.click(button)
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         layout = debug.read_layout()
         if layout.title() in ("NUMBER OF SHARES", "THRESHOLD"):
             # Special info screens
@@ -79,14 +79,14 @@ def read_words(
     words: list[str] = []
     layout = debug.read_layout()
 
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         if backup_type == messages.BackupType.Slip39_Advanced:
             assert layout.title().startswith("GROUP")
         elif backup_type == messages.BackupType.Slip39_Basic:
             assert layout.title().startswith("RECOVERY SHARE #")
         else:
             assert layout.title() == "RECOVERY SEED"
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         if backup_type == messages.BackupType.Slip39_Advanced:
             assert "SHARE" in layout.title()
         elif backup_type == messages.BackupType.Slip39_Basic:
@@ -102,14 +102,14 @@ def read_words(
         words.extend(layout.seed_words())
         layout = debug.swipe_up(wait=True)
         assert layout is not None
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         words.extend(layout.seed_words())
 
     # There is hold-to-confirm button
     if do_htc:
-        if debug.model == "T":
+        if debug.internal_model == "T2T1":
             debug.click_hold(buttons.OK, hold_ms=1500)
-        elif debug.model == "R":
+        elif debug.internal_model == "T2B1":
             debug.press_right_htc(1200)
     else:
         # It would take a very long time to test 16-of-16 with doing 1500 ms HTC after
@@ -121,7 +121,7 @@ def read_words(
 
 def confirm_words(debug: "DebugLink", words: list[str]) -> None:
     layout = debug.wait_layout()
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         assert "Select word" in layout.text_content()
         for _ in range(3):
             # "Select word 3 of 20"
@@ -134,7 +134,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
             layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         assert "Select the correct word" in layout.text_content()
         layout = debug.press_right(wait=True)
         for _ in range(3):

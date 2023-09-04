@@ -177,7 +177,7 @@ def test_payment_request(client: Client, payment_request_params):
 
 
 def test_payment_request_details(client: Client):
-    if client.features.model == "R":
+    if client.features.internal_model == "T2B1":
         pytest.skip("Details not implemented on TR")
 
     # Test that payment request details are shown when requested.

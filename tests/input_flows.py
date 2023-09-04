@@ -51,7 +51,7 @@ class InputFlowBase:
         self.ETH = EthereumFlow(self.client)
 
     def model(self) -> str | None:
-        return self.client.features.model
+        return self.client.features.internal_model
 
     def get(self) -> Callable[[], BRGeneratorType]:
         self.client.watch_layout(True)
@@ -59,9 +59,9 @@ class InputFlowBase:
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):
             return getattr(self, "input_flow_common")
-        elif self.model() == "T":
+        elif self.model() == "T2T1":
             return self.input_flow_tt
-        elif self.model() == "R":
+        elif self.model() == "T2B1":
             return self.input_flow_tr
         else:
             raise ValueError("Unknown model")
@@ -97,7 +97,7 @@ class InputFlowSetupDevicePINWIpeCode(InputFlowBase):
         yield  # do you want to set/change the wipe code?
         self.debug.press_yes()
 
-        if self.debug.model == "R":
+        if self.debug.internal_model == "T2B1":
             yield from swipe_if_necessary(self.debug)  # wipe code info
             self.debug.press_yes()
 
@@ -126,7 +126,7 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         yield  # do you want to set/change the pin/wipe code?
         self.debug.press_yes()
 
-        if self.debug.model == "R":
+        if self.debug.internal_model == "T2B1":
             yield from swipe_if_necessary(self.debug)  # code info
             self.debug.press_yes()
 
@@ -671,9 +671,9 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        if self.model() == "T":
+        if self.model() == "T2T1":
             self.debug.click(self.SHOW_MORE)
-        elif self.model() == "R":
+        elif self.model() == "T2B1":
             self.debug.press_right()
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1260,7 +1260,7 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.debug.model == "T":
+        if self.debug.internal_model == "T2T1":
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True)
 
@@ -1273,7 +1273,7 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.debug.model == "T":
+        if self.debug.internal_model == "T2T1":
             yield from self.REC.input_number_of_words(self.word_count)
             yield from self.REC.abort_recovery(False)
         else:
@@ -1372,7 +1372,7 @@ class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.debug.model == "T":
+        if self.debug.internal_model == "T2T1":
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True)
 
@@ -1386,7 +1386,7 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
 
-        if self.debug.model == "T":
+        if self.debug.internal_model == "T2T1":
             yield from self.REC.input_number_of_words(self.word_count)
             yield from self.REC.abort_recovery(False)
         else:
@@ -1487,7 +1487,7 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
         assert "New wallet created" in self.text_content()
-        if self.debug.model == "R":
+        if self.debug.internal_model == "T2B1":
             self.debug.press_right()
         self.debug.press_no()
         yield  # Confirm skip backup

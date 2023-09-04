@@ -176,8 +176,8 @@ def test_data_streaming(client: Client):
     checked in vectorized function above.
     """
     with client:
-        t1 = client.features.model == "1"
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
+        t1 = client.features.internal_model == "T1B1"
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
@@ -386,8 +386,15 @@ def input_flow_data_scroll_down(client: Client, cancel: bool = False):
     return InputFlowEthereumSignTxDataScrollDown(client, cancel).get()
 
 
+<<<<<<< HEAD
 def input_flow_data_go_back(client: Client, cancel: bool = False):
     return InputFlowEthereumSignTxDataGoBack(client, cancel).get()
+=======
+def input_flow_go_back(client: Client, cancel: bool = False):
+    if client.features.internal_model == "T2B1":
+        pytest.skip("Go back not supported for model R")
+    return InputFlowEthereumSignTxGoBack(client, cancel).get()
+>>>>>>> 4ca6fa320 (chore(tests): change model to internal model, change model identifiers)
 
 
 HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd030000056789abcd040000006789abcd050000000789abcd060000000089abcd070000000009abcd080000000000abcd090000000001abcd0a0000000011abcd0b0000000111abcd0c0000001111abcd0d0000011111abcd0e0000111111abcd0f0000000002abcd100000000022abcd110000000222abcd120000002222abcd130000022222abcd140000222222abcd15"

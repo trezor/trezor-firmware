@@ -274,7 +274,7 @@ def sd_protect(
     off - Remove SD card secret protection.
     refresh - Replace the current SD card secret with a new one.
     """
-    if client.features.model == "1":
+    if client.features.internal_model == "T1B1":
         raise click.ClickException("Trezor One does not support SD card protection.")
     return device.sd_protect(client, operation)
 

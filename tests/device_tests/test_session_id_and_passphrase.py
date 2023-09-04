@@ -396,13 +396,13 @@ def test_hide_passphrase_from_host(client: Client):
         def input_flow():
             yield
             layout = client.debug.wait_layout()
-            if client.debug.model == "T":
+            if client.debug.internal_model == "T2T1":
                 assert (
                     "Passphrase provided by host will be used but will not be displayed due to the device settings."
                     in layout.text_content()
                 )
                 client.debug.press_yes()
-            elif client.debug.model == "R":
+            elif client.debug.internal_model == "T2B1":
                 layout = client.debug.wait_layout()
                 assert "will not be displayed" in layout.text_content()
                 client.debug.press_right()
