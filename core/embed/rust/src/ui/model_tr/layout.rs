@@ -1207,8 +1207,7 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
 
-        let obj =
-            LayoutObj::new(Frame::new(prompt, PinEntry::new(subprompt)).with_title_centered())?;
+        let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
 
         Ok(obj.into())
     };
