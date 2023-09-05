@@ -282,7 +282,7 @@ class EthereumFlow:
         assert self.debug.wait_layout().title() == "CONFIRM DATA"
         assert br.pages is not None
         assert br.pages > 2
-        if self.debug.model == "T":
+        if self.debug.internal_model == "T2T1":
             self.debug.swipe_up(wait=True)
             self.debug.swipe_up(wait=True)
             self.debug.click(self.GO_BACK)
@@ -297,7 +297,7 @@ class EthereumFlow:
         yield
         assert self.debug.wait_layout().title() == "RECIPIENT"
 
-        if self.debug.model == "T":
+        if self.debug.internal_model == "T2T1":
             if cancel:
                 self.debug.press_no()
             else:
