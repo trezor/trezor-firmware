@@ -5,12 +5,16 @@
 #include "compiler_abstraction.h"
 #include "stdint.h"
 
-/** @brief Public key used to verify DFU images */
-__ALIGN(4)
-const uint8_t pk[64] = {
-    0x7e, 0x2f, 0x54, 0x41, 0xb7, 0x3f, 0x0c, 0xc8, 0xa8, 0x8f, 0x29,
-    0x1a, 0x91, 0x3c, 0x9f, 0x70, 0x7e, 0xc6, 0x6f, 0x69, 0x51, 0x14,
-    0xa6, 0x04, 0xeb, 0x0b, 0x23, 0x61, 0xf0, 0x22, 0xa4, 0xf4, 0xad,
-    0x73, 0x9b, 0xfa, 0x48, 0x2e, 0x1a, 0x90, 0xf6, 0x59, 0x28, 0x4c,
-    0x73, 0x49, 0x64, 0xc5, 0x18, 0xd3, 0xb3, 0xb2, 0x1a, 0x60, 0xf0,
-    0x79, 0xe8, 0x2c, 0x0a, 0x7c, 0x04, 0x84, 0xcd, 0xd6};
+/** @brief Public keys used to verify DFU images */
+
+const uint8_t NRF_BOOTLOADER_KEY_M = 2;
+const uint8_t NRF_BOOTLOADER_KEY_N = 3;
+const uint8_t * const NRF_BOOTLOADER_KEYS[] = {
+#if !PRODUCTION
+        (const uint8_t *)"\xdb\x99\x5f\xe2\x51\x69\xd1\x41\xca\xb9\xbb\xba\x92\xba\xa0\x1f\x9f\x2e\x1e\xce\x7d\xf4\xcb\x2a\xc0\x51\x90\xf3\x7f\xcc\x1f\x9d",
+        (const uint8_t *)"\x21\x52\xf8\xd1\x9b\x79\x1d\x24\x45\x32\x42\xe1\x5f\x2e\xab\x6c\xb7\xcf\xfa\x7b\x6a\x5e\xd3\x00\x97\x96\x0e\x06\x98\x81\xdb\x12",
+        (const uint8_t *)"\x22\xfc\x29\x77\x92\xf0\xb6\xff\xc0\xbf\xcf\xdb\x7e\xdb\x0c\x0a\xa1\x4e\x02\x5a\x36\x5e\xc0\xe3\x42\xe8\x6e\x38\x29\xcb\x74\xb6",
+#else
+        MODEL_NRF_BOOTLOADER_KEYS
+#endif
+};
