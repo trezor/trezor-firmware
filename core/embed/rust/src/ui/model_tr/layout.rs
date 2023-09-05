@@ -399,8 +399,7 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
 
         let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
             .text_normal("By continuing you agree to Trezor Company's terms and conditions.".into())
-            .newline()
-            .newline()
+            .next_page()
             .text_normal("More info at".into())
             .newline()
             .text_bold("trezor.io/tos".into());
@@ -762,7 +761,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             let ops = OpTextLayout::new(theme::TEXT_MONO)
                 .line_breaking(LineBreaking::BreakWordsNoHyphen)
                 .text_mono(address.clone());
-            let formatted = FormattedText::new(ops);
+            let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted).with_title(title.clone())
         };
         let pages = FlowPages::new(get_page, 1);
