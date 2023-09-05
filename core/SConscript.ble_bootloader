@@ -49,6 +49,9 @@ CPPDEFINES_MOD += [
     ('uECC_SQUARE_FUNC', '0'),
     ('uECC_SUPPORT_COMPRESSED_POINT', '0'),
     ('uECC_VLI_NATIVE_LITTLE_ENDIAN', '1'),
+
+
+    'ED25519_NO_PRECOMP',
 ]
 
 
@@ -112,7 +115,11 @@ CPPPATH_MOD += [
     'embed/sdk/nrf52/components/libraries/mutex',
     'embed/sdk/nrf52/components/libraries/ringbuf',
 
+
     'embed/trezorhal/boards',
+    'embed/lib',
+
+    'vendor/trezor-crypto',
 ]
 SOURCE_MOD += [
 ]
@@ -176,7 +183,6 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_settings.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_transport.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_utils.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_validation.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_ver_validation.c',
   'embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial.c',
   'embed/sdk/nrf52/components/libraries/crypto/backend/micro_ecc/micro_ecc_backend_ecc.c',
@@ -192,6 +198,16 @@ SOURCE_BLE_BOOTLOADER = [
     # originally embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial_uart.c',
     'embed/ble_bootloader/nrf_dfu_serial_uart.c',
     'embed/ble_bootloader/nrf_bootloader.c',
+    'embed/ble_bootloader/nrf_dfu_validation.c',
+    'vendor/trezor-crypto/blake2s.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.c',
+    'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
+    'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/sha2.c',
 ]
 
 if DEBUG:
@@ -251,7 +267,8 @@ env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Og'),
     CCFLAGS='$COPT '
     '-g3 '
-    '-std=c99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -Wno-unused-function '
+    '-nostdlib '
+    '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -Wno-unused-function '
     '-fdata-sections -ffunction-sections '
     '-fno-strict-aliasing '
     '-fno-builtin '
