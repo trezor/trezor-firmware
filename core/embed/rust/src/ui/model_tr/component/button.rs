@@ -381,14 +381,11 @@ where
 
     /// Resolves text and finds possible icon names.
     pub fn from_text_possible_icon(text: T) -> Self {
-        if text.as_ref() == "" {
-            Self::cancel_icon()
-        } else if text.as_ref() == "<" {
-            Self::left_arrow_icon()
-        } else if text.as_ref() == "^" {
-            Self::up_arrow_icon()
-        } else {
-            Self::text(text)
+        match text.as_ref() {
+            "" => Self::cancel_icon(),
+            "<" => Self::left_arrow_icon(),
+            "^" => Self::up_arrow_icon(),
+            _ => Self::text(text),
         }
     }
 
