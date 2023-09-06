@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.1 [September 2023]
+
+### Added
+- Added support for STM32F429I-DISC1 board  [#2989]
+
+### Fixed
+- Fixed gamma correction settings for Model T  [#2955]
+- Removed unwanted delay when resetting LCD on the Model R.  [#3222]
+
+
 ## 2.1.0 [June 2023]
 
 Internal only release for Model R prototypes.
@@ -30,4 +40,7 @@ Internal only release for Model R prototypes.
 [#2587]: https://github.com/trezor/trezor-firmware/pull/2587
 [#2595]: https://github.com/trezor/trezor-firmware/pull/2595
 [#2623]: https://github.com/trezor/trezor-firmware/pull/2623
+[#2955]: https://github.com/trezor/trezor-firmware/pull/2955
+[#2989]: https://github.com/trezor/trezor-firmware/pull/2989
 [#3048]: https://github.com/trezor/trezor-firmware/pull/3048
+[#3222]: https://github.com/trezor/trezor-firmware/pull/3222
