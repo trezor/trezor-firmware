@@ -55,6 +55,11 @@
 #include "nrf_dfu_ver_validation.h"
 #include "nrf_strerror.h"
 
+#include "blake2s.h"
+#include "ed25519-donna/ed25519.h"
+#include "secbool.h"
+
+
 #define NRF_LOG_MODULE_NAME nrf_dfu_validation
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -85,17 +90,6 @@ extern const uint8_t NRF_BOOTLOADER_KEY_M;
 extern const uint8_t NRF_BOOTLOADER_KEY_N;
 extern const uint8_t * const NRF_BOOTLOADER_KEYS[];
 
-/** @brief Structure to hold a signature
- */
-static nrf_crypto_ecdsa_secp256r1_signature_t       m_signature;
-
-/** @brief Structure to hold the hash for signature verification
- */
-static nrf_crypto_hash_sha256_digest_t              m_sig_hash;
-
-/** @brief Structure to hold the hash for the firmware image
- */
-static nrf_crypto_hash_sha256_digest_t              m_fw_hash;
 
 /** @brief Flag used by parser code to indicate that the init command has been found to be invalid.
  */
@@ -292,9 +286,6 @@ static bool signature_required(dfu_fw_type_t fw_type_to_be_updated)
     return result;
 }
 
-#include "ed25519-donna/ed25519.h"
-#include "secbool.h"
-
 static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n,
                               const uint8_t *const *pub, uint8_t sigmask,
                               ed25519_public_key res) {
@@ -346,13 +337,10 @@ static nrf_dfu_result_t nrf_dfu_validation_signature_check(dfu_signature_type_t 
                                                            uint8_t      const * p_data,
                                                            uint32_t             data_len)
 {
-    ret_code_t err_code;
-    size_t     hash_len = NRF_CRYPTO_HASH_SIZE_SHA256;
+    ret_code_t err_code = NRF_SUCCESS;
 
-    nrf_crypto_hash_context_t         hash_context   = {0};
-//    nrf_crypto_ecdsa_verify_context_t verify_context = {0};
-
- //   crypto_init();
+    uint8_t hash_digest[BLAKE2S_DIGEST_LENGTH];
+    uint8_t signature[64];
 
     NRF_LOG_INFO("Signature required. Checking signature.")
     if (p_signature == NULL)
@@ -361,36 +349,24 @@ static nrf_dfu_result_t nrf_dfu_validation_signature_check(dfu_signature_type_t 
         return EXT_ERR(NRF_DFU_EXT_ERROR_SIGNATURE_MISSING);
     }
 
-    if (signature_type != DFU_SIGNATURE_TYPE_ECDSA_P256_SHA256)
-    {
-        NRF_LOG_INFO("Invalid signature type");
-        return EXT_ERR(NRF_DFU_EXT_ERROR_WRONG_SIGNATURE_TYPE);
-    }
 
     NRF_LOG_INFO("Calculating hash (len: %d)", data_len);
-    err_code = nrf_crypto_hash_calculate(&hash_context,
-                                         &g_nrf_crypto_hash_sha256_info,
-                                         p_data,
-                                         data_len,
-                                         m_sig_hash,
-                                         &hash_len);
-    if (err_code != NRF_SUCCESS)
-    {
-        return NRF_DFU_RES_CODE_OPERATION_FAILED;
-    }
 
-    if (sizeof(m_signature) != signature_len)
+    blake2s(p_data, data_len, hash_digest, BLAKE2S_DIGEST_LENGTH);
+
+
+    if (sizeof(signature) != signature_len)
     {
         return NRF_DFU_RES_CODE_OPERATION_FAILED;
     }
 
     // Prepare the signature received over the air.
-    memcpy(m_signature, p_signature, signature_len);
+    memcpy(signature, p_signature, signature_len);
 
     // Calculate the signature.
     NRF_LOG_INFO("Verify signature");
 
-    if (sectrue != check_trezor_sig(m_sig_hash, hash_len, NRF_BOOTLOADER_KEY_M, NRF_BOOTLOADER_KEY_N, 3, NRF_BOOTLOADER_KEYS, m_signature)){
+    if (sectrue != check_trezor_sig(hash_digest, BLAKE2S_DIGEST_LENGTH, NRF_BOOTLOADER_KEY_M, NRF_BOOTLOADER_KEY_N, 3, NRF_BOOTLOADER_KEYS, signature)){
       NRF_LOG_ERROR("Signature failed");
       err_code = NRF_ERROR_CRYPTO_ECDSA_INVALID_SIGNATURE;
     }
@@ -399,9 +375,9 @@ static nrf_dfu_result_t nrf_dfu_validation_signature_check(dfu_signature_type_t 
     {
         NRF_LOG_ERROR("Signature failed (err_code: 0x%x)", err_code);
         NRF_LOG_DEBUG("Signature:");
-        NRF_LOG_HEXDUMP_DEBUG(m_signature, sizeof(m_signature));
+        NRF_LOG_HEXDUMP_DEBUG(signature, sizeof(signature));
         NRF_LOG_DEBUG("Hash:");
-        NRF_LOG_HEXDUMP_DEBUG(m_sig_hash, hash_len);
+        NRF_LOG_HEXDUMP_DEBUG(hash_digest, BLAKE2S_DIGEST_LENGTH);
         NRF_LOG_FLUSH();
 
         return NRF_DFU_RES_CODE_INVALID_OBJECT;
@@ -633,47 +609,25 @@ nrf_dfu_result_t nrf_dfu_validation_init_cmd_execute(uint32_t * p_dst_data_addr,
 
 // Function to check the hash received in the init command against the received firmware.
 // little_endian specifies the endianness of @p p_hash.
-static bool nrf_dfu_validation_hash_ok(uint8_t const * p_hash, uint32_t src_addr, uint32_t data_len, bool little_endian)
+static bool nrf_dfu_validation_hash_ok(uint8_t const * p_hash, uint32_t src_addr, uint32_t data_len)
 {
-    ret_code_t err_code;
     bool       result   = true;
-    uint8_t    hash_be[NRF_CRYPTO_HASH_SIZE_SHA256];
-    size_t     hash_len = NRF_CRYPTO_HASH_SIZE_SHA256;
+    uint8_t    hash[BLAKE2S_DIGEST_LENGTH];
 
-    nrf_crypto_hash_context_t hash_context = {0};
-
-    if (little_endian)
-    {
-        // Convert to hash to big-endian format for use in nrf_crypto.
-        nrf_crypto_internal_swap_endian(hash_be,
-                                        p_hash,
-                                        NRF_CRYPTO_HASH_SIZE_SHA256);
-        p_hash = hash_be;
-    }
 
     NRF_LOG_DEBUG("Hash verification. start address: 0x%x, size: 0x%x",
                   src_addr,
                   data_len);
 
-    err_code = nrf_crypto_hash_calculate(&hash_context,
-                                         &g_nrf_crypto_hash_sha256_info,
-                                         (uint8_t*)src_addr,
-                                         data_len,
-                                         m_fw_hash,
-                                         &hash_len);
+    blake2s( (uint8_t*)src_addr, data_len, hash, BLAKE2S_DIGEST_LENGTH);
 
-    if (err_code != NRF_SUCCESS)
-    {
-        NRF_LOG_ERROR("Could not run hash verification (err_code 0x%x).", err_code);
-        result = false;
-    }
-    else if (memcmp(m_fw_hash, p_hash, NRF_CRYPTO_HASH_SIZE_SHA256) != 0)
+    if (memcmp(hash, p_hash, NRF_CRYPTO_HASH_SIZE_SHA256) != 0)
     {
         NRF_LOG_WARNING("Hash verification failed.");
         NRF_LOG_DEBUG("Expected FW hash:")
         NRF_LOG_HEXDUMP_DEBUG(p_hash, NRF_CRYPTO_HASH_SIZE_SHA256);
         NRF_LOG_DEBUG("Actual FW hash:")
-        NRF_LOG_HEXDUMP_DEBUG(m_fw_hash, NRF_CRYPTO_HASH_SIZE_SHA256);
+        NRF_LOG_HEXDUMP_DEBUG(hash, NRF_CRYPTO_HASH_SIZE_SHA256);
         NRF_LOG_FLUSH();
 
         result = false;
@@ -687,7 +641,7 @@ static bool nrf_dfu_validation_hash_ok(uint8_t const * p_hash, uint32_t src_addr
 bool fw_hash_ok(dfu_init_command_t const * p_init, uint32_t fw_start_addr, uint32_t fw_size)
 {
     ASSERT(p_init != NULL);
-    return nrf_dfu_validation_hash_ok((uint8_t *)p_init->hash.hash.bytes, fw_start_addr, fw_size, true);
+    return nrf_dfu_validation_hash_ok((uint8_t *)p_init->hash.hash.bytes, fw_start_addr, fw_size);
 }
 
 
@@ -754,11 +708,6 @@ static bool boot_validation_extract(boot_validation_t * p_boot_validation,
                                     uint32_t data_len,
                                     boot_validation_type_t default_type)
 {
-    ret_code_t err_code;
-    size_t     hash_len = NRF_CRYPTO_HASH_SIZE_SHA256;
-
-    nrf_crypto_hash_context_t hash_context = {0};
-
     memset(p_boot_validation, 0, sizeof(boot_validation_t));
     p_boot_validation->type = (p_init->boot_validation_count > index)
                               ? (boot_validation_type_t)p_init->boot_validation[index].type
@@ -766,27 +715,6 @@ static bool boot_validation_extract(boot_validation_t * p_boot_validation,
 
     switch(p_boot_validation->type)
     {
-        case NO_VALIDATION:
-            break;
-
-        case VALIDATE_CRC:
-            *(uint32_t *)&p_boot_validation->bytes[0] = crc32_compute((uint8_t *)start_addr, data_len, NULL);
-            break;
-
-        case VALIDATE_SHA256:
-            err_code = nrf_crypto_hash_calculate(&hash_context,
-                                                 &g_nrf_crypto_hash_sha256_info,
-                                                 (uint8_t*)start_addr,
-                                                 data_len,
-                                                 p_boot_validation->bytes,
-                                                 &hash_len);
-            if (err_code != NRF_SUCCESS)
-            {
-                NRF_LOG_ERROR("nrf_crypto_hash_calculate() failed with error %s", nrf_strerror_get(err_code));
-                return false;
-            }
-            break;
-
         case VALIDATE_ECDSA_P256_SHA256:
             memcpy(p_boot_validation->bytes, p_init->boot_validation[index].bytes.bytes, p_init->boot_validation[index].bytes.size);
             break;
@@ -949,43 +877,15 @@ static bool postvalidate_sd_bl(dfu_init_command_t const  * p_init,
 bool nrf_dfu_validation_boot_validate(boot_validation_t const * p_validation, uint32_t data_addr, uint32_t data_len)
 {
     uint8_t const * p_data = (uint8_t*) data_addr;
-    switch(p_validation->type)
-    {
-        case NO_VALIDATION:
-            return true;
 
-        case VALIDATE_CRC:
-        {
-            uint32_t current_crc = *(uint32_t *)p_validation->bytes;
-            uint32_t crc = crc32_compute(p_data, data_len, NULL);
+    nrf_dfu_result_t res_code = nrf_dfu_validation_signature_check(
+                                    p_validation->sigmask,
+                                    p_validation->bytes,
+                                    NRF_CRYPTO_ECDSA_SECP256R1_SIGNATURE_SIZE,
+                                    p_data,
+                                    data_len);
+    return (res_code == NRF_DFU_RES_CODE_SUCCESS);
 
-            if (crc != current_crc)
-            {
-                // CRC does not match with what is stored.
-                NRF_LOG_DEBUG("CRC check of app failed. Return %d", NRF_DFU_DEBUG);
-                return NRF_DFU_DEBUG;
-            }
-            return true;
-        }
-
-        case VALIDATE_SHA256:
-            return nrf_dfu_validation_hash_ok(p_validation->bytes, data_addr, data_len, false);
-
-        case VALIDATE_ECDSA_P256_SHA256:
-        {
-            nrf_dfu_result_t res_code = nrf_dfu_validation_signature_check(
-                                            DFU_SIGNATURE_TYPE_ECDSA_P256_SHA256,
-                                            p_validation->bytes,
-                                            NRF_CRYPTO_ECDSA_SECP256R1_SIGNATURE_SIZE,
-                                            p_data,
-                                            data_len);
-            return (res_code == NRF_DFU_RES_CODE_SUCCESS);
-        }
-
-        default:
-            ASSERT(false);
-            return false;
-    }
 }
 
 
