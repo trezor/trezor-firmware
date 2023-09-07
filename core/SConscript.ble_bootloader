@@ -109,7 +109,6 @@ CPPPATH_MOD += [
     'embed/sdk/nrf52/components/libraries/crypto/backend/nrf_sw',
     'embed/sdk/nrf52/modules/nrfx/mdk',
     'embed/sdk/nrf52/external/nrf_cc310/include',
-    'embed/sdk/nrf52/external/nano-pb',
     'embed/sdk/nrf52/components/libraries/queue',
     'embed/sdk/nrf52/components/libraries/mutex',
     'embed/sdk/nrf52/components/libraries/ringbuf',
@@ -119,6 +118,7 @@ CPPPATH_MOD += [
     'embed/lib',
 
     'vendor/trezor-crypto',
+    'vendor/nanopb',
 ]
 SOURCE_MOD += [
 ]
@@ -165,8 +165,6 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_fw_activation.c',
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_info.c',
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_wdt.c',
-  'embed/sdk/nrf52/external/nano-pb/pb_common.c',
-  'embed/sdk/nrf52/external/nano-pb/pb_decode.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/dfu-cc.pb.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_flash.c',
@@ -197,6 +195,10 @@ SOURCE_BLE_BOOTLOADER = [
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
     'vendor/trezor-crypto/memzero.c',
     'vendor/trezor-crypto/sha2.c',
+
+    'vendor/nanopb/pb_common.c',
+    'vendor/nanopb/pb_decode.c',
+    'vendor/nanopb/pb_encode.c',
 ]
 
 if DEBUG:
