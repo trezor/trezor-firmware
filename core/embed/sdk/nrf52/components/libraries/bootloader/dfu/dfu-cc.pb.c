@@ -57,8 +57,8 @@ const pb_field_t dfu_hash_fields[3] = {
 };
 
 const pb_field_t dfu_boot_validation_fields[3] = {
-    PB_FIELD(  1, UENUM   , REQUIRED, STATIC  , FIRST, dfu_boot_validation_t, type, type, 0),
-    PB_FIELD(  2, BYTES   , REQUIRED, STATIC  , OTHER, dfu_boot_validation_t, bytes, type, 0),
+    PB_FIELD(  1, UINT32   , REQUIRED, STATIC  , FIRST, dfu_boot_validation_t, sigmask, type, 0),
+    PB_FIELD(  2, BYTES   , REQUIRED, STATIC  , OTHER, dfu_boot_validation_t, bytes, sigmask, 0),
     PB_LAST_FIELD
 };
 
@@ -84,8 +84,8 @@ const pb_field_t dfu_command_fields[3] = {
 
 const pb_field_t dfu_signed_command_fields[4] = {
     PB_FIELD(  1, MESSAGE , REQUIRED, STATIC  , FIRST, dfu_signed_command_t, command, command, &dfu_command_fields),
-    PB_FIELD(  2, UENUM   , REQUIRED, STATIC  , OTHER, dfu_signed_command_t, signature_type, command, 0),
-    PB_FIELD(  3, BYTES   , REQUIRED, STATIC  , OTHER, dfu_signed_command_t, signature, signature_type, 0),
+    PB_FIELD(  2, UINT32   , REQUIRED, STATIC  , OTHER, dfu_signed_command_t, sigmask, command, 0),
+    PB_FIELD(  3, BYTES   , REQUIRED, STATIC  , OTHER, dfu_signed_command_t, signature, sigmask, 0),
     PB_LAST_FIELD
 };
 

@@ -1102,7 +1102,7 @@
 
 
 #ifndef NRF_DFU_SETTINGS_COMPATIBILITY_MODE
-#define NRF_DFU_SETTINGS_COMPATIBILITY_MODE 1
+#define NRF_DFU_SETTINGS_COMPATIBILITY_MODE 0
 #endif
 
 // <h> nrf_dfu - Device Firmware Upgrade

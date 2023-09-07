@@ -417,6 +417,9 @@ bool ble_reset_to_bootloader(void) {
 
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
 
+  HAL_Delay(1000);
+
+
   return true;
 }
 

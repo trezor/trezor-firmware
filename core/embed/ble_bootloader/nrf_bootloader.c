@@ -236,10 +236,7 @@ static bool crc_on_valid_app_required(void) {
 }
 
 static bool boot_validate(boot_validation_t const* p_validation,
-                          uint32_t data_addr, uint32_t data_len, bool do_crc) {
-  if (!do_crc && (p_validation->type == VALIDATE_CRC)) {
-    return true;
-  }
+                          uint32_t data_addr, uint32_t data_len) {
   return nrf_dfu_validation_boot_validate(p_validation, data_addr, data_len);
 }
 
@@ -259,22 +256,15 @@ static bool app_is_valid(bool do_crc) {
   if (s_dfu_settings.bank_0.bank_code != NRF_DFU_BANK_VALID_APP) {
     NRF_LOG_INFO("Boot validation failed. No valid app to boot.");
     return false;
-  } else if (NRF_BL_APP_SIGNATURE_CHECK_REQUIRED &&
-             (s_dfu_settings.boot_validation_app.type !=
-              VALIDATE_ECDSA_P256_SHA256)) {
-    NRF_LOG_WARNING(
-        "Boot validation failed. The boot validation of the app must be a "
-        "signature check.");
-    return false;
   } else if (SD_PRESENT &&
              !boot_validate(&s_dfu_settings.boot_validation_softdevice,
-                            MBR_SIZE, s_dfu_settings.sd_size, do_crc)) {
+                            MBR_SIZE, s_dfu_settings.sd_size)) {
     NRF_LOG_WARNING(
         "Boot validation failed. SoftDevice is present but invalid.");
     return false;
   } else if (!boot_validate(&s_dfu_settings.boot_validation_app,
                             nrf_dfu_bank0_start_addr(),
-                            s_dfu_settings.bank_0.image_size, do_crc)) {
+                            s_dfu_settings.bank_0.image_size)) {
     NRF_LOG_WARNING("Boot validation failed. App is invalid.");
     return false;
   }

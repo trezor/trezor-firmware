@@ -331,7 +331,7 @@ secbool check_trezor_sig(const uint8_t * digest,
 
 
 // Function to perform signature check if required.
-static nrf_dfu_result_t nrf_dfu_validation_signature_check(dfu_signature_type_t signature_type,
+static nrf_dfu_result_t nrf_dfu_validation_signature_check(uint32_t sigmask,
                                                            uint8_t      const * p_signature,
                                                            uint32_t             signature_len,
                                                            uint8_t      const * p_data,
@@ -366,7 +366,7 @@ static nrf_dfu_result_t nrf_dfu_validation_signature_check(dfu_signature_type_t 
     // Calculate the signature.
     NRF_LOG_INFO("Verify signature");
 
-    if (sectrue != check_trezor_sig(hash_digest, BLAKE2S_DIGEST_LENGTH, NRF_BOOTLOADER_KEY_M, NRF_BOOTLOADER_KEY_N, 3, NRF_BOOTLOADER_KEYS, signature)){
+    if (sectrue != check_trezor_sig(hash_digest, BLAKE2S_DIGEST_LENGTH, NRF_BOOTLOADER_KEY_M, NRF_BOOTLOADER_KEY_N, sigmask, NRF_BOOTLOADER_KEYS, signature)){
       NRF_LOG_ERROR("Signature failed");
       err_code = NRF_ERROR_CRYPTO_ECDSA_INVALID_SIGNATURE;
     }
@@ -511,14 +511,14 @@ nrf_dfu_result_t nrf_dfu_validation_prevalidate(void)
 {
     nrf_dfu_result_t                 ret_val        = NRF_DFU_RES_CODE_SUCCESS;
     dfu_command_t            const * p_command      = &m_packet.command;
-    dfu_signature_type_t             signature_type = DFU_SIGNATURE_TYPE_MIN;
+    uint32_t              sigmask = 0;
     uint8_t                  const * p_signature    = NULL;
     uint32_t                         signature_len  = 0;
 
     if (m_packet.has_signed_command)
     {
         p_command      = &m_packet.signed_command.command;
-        signature_type =  m_packet.signed_command.signature_type;
+        sigmask =  m_packet.signed_command.sigmask;
         p_signature    =  m_packet.signed_command.signature.bytes;
         signature_len  =  m_packet.signed_command.signature.size;
     }
@@ -526,7 +526,7 @@ nrf_dfu_result_t nrf_dfu_validation_prevalidate(void)
     // Validate signature.
     if (signature_required(p_command->init.type))
     {
-        ret_val = nrf_dfu_validation_signature_check(signature_type,
+        ret_val = nrf_dfu_validation_signature_check(sigmask,
                                                      p_signature,
                                                      signature_len,
                                                      m_init_packet_data_ptr,
@@ -709,19 +709,12 @@ static bool boot_validation_extract(boot_validation_t * p_boot_validation,
                                     boot_validation_type_t default_type)
 {
     memset(p_boot_validation, 0, sizeof(boot_validation_t));
-    p_boot_validation->type = (p_init->boot_validation_count > index)
-                              ? (boot_validation_type_t)p_init->boot_validation[index].type
-                              : default_type; // default
+    p_boot_validation->sigmask = (boot_validation_type_t)p_init->boot_validation[index].sigmask;
 
-    switch(p_boot_validation->type)
-    {
-        case VALIDATE_ECDSA_P256_SHA256:
-            memcpy(p_boot_validation->bytes, p_init->boot_validation[index].bytes.bytes, p_init->boot_validation[index].bytes.size);
-            break;
+    memcpy(p_boot_validation->bytes, p_init->boot_validation[index].bytes.bytes, p_init->boot_validation[index].bytes.size);
 
-        default:
-            NRF_LOG_ERROR("Invalid boot validation type: %d", p_boot_validation->type);
-            return false;
+    if (default_type == NO_VALIDATION) {
+      return true;
     }
 
     return nrf_dfu_validation_boot_validate(p_boot_validation, start_addr, data_len);
@@ -735,18 +728,18 @@ static bool postvalidate_app(dfu_init_command_t const * p_init, uint32_t src_add
 
     ASSERT(p_init->type == DFU_FW_TYPE_APPLICATION);
 
-    if (!boot_validation_extract(&boot_validation, p_init, 0, src_addr, data_len, VALIDATE_CRC))
+    if (!boot_validation_extract(&boot_validation, p_init, 0, src_addr, data_len, VALIDATE_ECDSA_P256_SHA256))
     {
         return false;
     }
-#if !NRF_DFU_IN_APP
-    else if (NRF_BL_APP_SIGNATURE_CHECK_REQUIRED &&
-             (boot_validation.type != VALIDATE_ECDSA_P256_SHA256))
-    {
-        NRF_LOG_WARNING("The boot validation of the app must be a signature check.");
-        return false;
-    }
-#endif
+//#if !NRF_DFU_IN_APP
+//    else if (NRF_BL_APP_SIGNATURE_CHECK_REQUIRED &&
+//             (boot_validation.type != VALIDATE_ECDSA_P256_SHA256))
+//    {
+//        NRF_LOG_WARNING("The boot validation of the app must be a signature check.");
+//        return false;
+//    }
+//#endif
 
     if (!is_trusted)
     {
@@ -810,7 +803,7 @@ static bool postvalidate_sd_bl(dfu_init_command_t const  * p_init,
             }
         }
 
-        if (!boot_validation_extract(&boot_validation_sd, p_init, 0, start_addr, p_init->sd_size, VALIDATE_CRC))
+        if (!boot_validation_extract(&boot_validation_sd, p_init, 0, start_addr, p_init->sd_size, VALIDATE_ECDSA_P256_SHA256))
         {
             return false;
         }
@@ -820,14 +813,7 @@ static bool postvalidate_sd_bl(dfu_init_command_t const  * p_init,
     }
     if (with_bl)
     {
-        if (!boot_validation_extract(&boot_validation_bl, p_init, with_sd ? 1 : 0, bl_start, bl_size, NO_VALIDATION))
-        {
-            return false;
-        }
-        else if (boot_validation_bl.type != NO_VALIDATION)
-        {
-            NRF_LOG_WARNING("Boot validation of bootloader is not supported and will be ignored.");
-        }
+        boot_validation_extract(&boot_validation_bl, p_init, with_sd ? 1 : 0, bl_start, bl_size, NO_VALIDATION);
     }
 
     if (!is_trusted)

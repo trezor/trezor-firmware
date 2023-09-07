@@ -93,7 +93,6 @@ CPPPATH_MOD += [
     'embed/sdk/nrf52/modules/nrfx/hal',
     'embed/sdk/nrf52/components/libraries/crypto/backend/nrf_hw',
     'embed/sdk/nrf52/components/libraries/log',
-    'embed/sdk/nrf52/external/nrf_oberon',
     'embed/sdk/nrf52/components/libraries/strerror',
     'embed/sdk/nrf52/components/libraries/crypto/backend/mbedtls',
     'embed/sdk/nrf52/components/libraries/crypto/backend/cc310',
@@ -139,7 +138,6 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/components/libraries/scheduler/app_scheduler.c',
   'embed/sdk/nrf52/components/libraries/util/app_util_platform.c',
   'embed/sdk/nrf52/components/libraries/crc32/crc32.c',
-  'embed/sdk/nrf52/components/libraries/sha256/sha256.c',
   'embed/sdk/nrf52/components/libraries/mem_manager/mem_manager.c',
   'embed/sdk/nrf52/components/libraries/util/nrf_assert.c',
   'embed/sdk/nrf52/components/libraries/atomic/nrf_atomic.c',
@@ -161,11 +159,6 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/modules/nrfx/drivers/src/prs/nrfx_prs.c',
   'embed/sdk/nrf52/modules/nrfx/drivers/src/nrfx_uart.c',
   'embed/sdk/nrf52/modules/nrfx/drivers/src/nrfx_uarte.c',
-  'embed/sdk/nrf52/components/libraries/crypto/nrf_crypto_ecc.c',
-  'embed/sdk/nrf52/components/libraries/crypto/nrf_crypto_ecdsa.c',
-  'embed/sdk/nrf52/components/libraries/crypto/nrf_crypto_hash.c',
-  'embed/sdk/nrf52/components/libraries/crypto/nrf_crypto_init.c',
-  'embed/sdk/nrf52/components/libraries/crypto/nrf_crypto_shared.c',
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_app_start.c',
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_app_start_final.c',
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_dfu_timers.c',
@@ -185,10 +178,6 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_utils.c',
   'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_ver_validation.c',
   'embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial.c',
-  'embed/sdk/nrf52/components/libraries/crypto/backend/micro_ecc/micro_ecc_backend_ecc.c',
-  'embed/sdk/nrf52/components/libraries/crypto/backend/micro_ecc/micro_ecc_backend_ecdh.c',
-  'embed/sdk/nrf52/components/libraries/crypto/backend/micro_ecc/micro_ecc_backend_ecdsa.c',
-  'embed/sdk/nrf52/components/libraries/crypto/backend/nrf_sw/nrf_sw_backend_hash.c',
 ]
 
 SOURCE_BLE_BOOTLOADER = [
@@ -309,8 +298,6 @@ cmake_gen = env.Command(
 
 
 LIB_FILES = [
-    'embed/sdk/nrf52/external/nrf_oberon/lib/cortex-m4/hard-float/liboberon_3.0.8.a',
-    'embed/sdk/nrf52/external/nrf_cc310_bl/lib/cortex-m4/hard-float/libnrf_cc310_bl_0.9.13.a',
 ]
 
 program_elf = env.Command(
