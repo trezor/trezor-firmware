@@ -33,7 +33,7 @@ def _get_xpubs(
 async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Address:
     from trezor.enums import InputScriptType
     from trezor.messages import Address
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_warning
 
     from apps.common.address_mac import get_address_mac
     from apps.common.paths import address_n_to_str, validate_path
@@ -99,6 +99,12 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             else:
                 pubnodes = [hd.node for hd in multisig.pubkeys]
             multisig_index = multisig_pubkey_index(multisig, node.public_key())
+
+            await show_warning(
+                "warning_multisig",
+                "Receiving to a multisig address.",
+                "Continue anyway?",
+            )
 
             await show_address(
                 address_short,

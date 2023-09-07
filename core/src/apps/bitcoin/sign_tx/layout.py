@@ -270,6 +270,16 @@ async def confirm_unverified_external_input() -> None:
     )
 
 
+async def confirm_multiple_accounts() -> None:
+    await layouts.show_warning(
+        "sending_from_multiple_accounts",
+        "Sending from multiple accounts.",
+        "Continue anyway?",
+        button="Continue",
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
 async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> None:
     from trezor.strings import format_timestamp
 

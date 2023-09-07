@@ -382,12 +382,14 @@ def test_attack_mixed_inputs(client: Client):
     )
 
     tt = client.features.model == "T"
+    is_core = client.features.model in ("T", "R")
     expected_responses = [
         request_input(0),
         request_input(1),
         request_output(0),
         messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
         (tt, messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput)),
+        (is_core, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
         messages.ButtonRequest(code=messages.ButtonRequestType.FeeOverThreshold),
         messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
         request_input(0),
