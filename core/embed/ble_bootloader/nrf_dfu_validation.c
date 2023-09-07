@@ -79,12 +79,12 @@ NRF_LOG_MODULE_REGISTER();
  * is not yet fully transferred. This value will also be correct after reset.
  */
 static bool               m_valid_init_cmd_present = false;
-static dfu_packet_t       m_packet                 = DFU_PACKET_INIT_DEFAULT;
+static dfu_Packet       m_packet                 = dfu_Packet_init_default;
 static uint8_t*           m_init_packet_data_ptr   = 0;
 static uint32_t           m_init_packet_data_len   = 0;
 static pb_istream_t       m_pb_stream;
 
-static dfu_init_command_t const * mp_init = NULL;
+static dfu_InitCommand const * mp_init = NULL;
 
 extern const uint8_t NRF_BOOTLOADER_KEY_M;
 extern const uint8_t NRF_BOOTLOADER_KEY_N;
@@ -94,43 +94,43 @@ extern const uint8_t * const NRF_BOOTLOADER_KEYS[];
 /** @brief Flag used by parser code to indicate that the init command has been found to be invalid.
  */
 static bool                                         m_init_packet_valid = false;
-
-static void pb_decoding_callback(pb_istream_t *str,
-                                 uint32_t tag,
-                                 pb_wire_type_t wire_type,
-                                 void *iter)
-{
-    pb_field_iter_t* p_iter = (pb_field_iter_t *) iter;
-
-    // Match the beginning of the init command.
-    if (p_iter->pos->ptr == &dfu_init_command_fields[0])
-    {
-        uint8_t  * ptr  = (uint8_t *)str->state;
-        uint32_t   size = str->bytes_left;
-
-        if (m_init_packet_data_ptr != NULL || m_init_packet_data_len != 0)
-        {
-            m_init_packet_valid = false;
-            return;
-        }
-
-        // Remove tag.
-        while (*ptr & 0x80)
-        {
-            ptr++;
-            size--;
-        }
-        ptr++;
-        size--;
-
-        // Store the info in init_packet_data.
-        m_init_packet_data_ptr = ptr;
-        m_init_packet_data_len = size;
-        m_init_packet_valid    = true;
-
-        NRF_LOG_DEBUG("PB: Init packet data len: %d", size);
-    }
-}
+//
+//static void pb_decoding_callback(pb_istream_t *str,
+//                                 uint32_t tag,
+//                                 pb_wire_type_t wire_type,
+//                                 void *iter)
+//{
+//    pb_field_iter_t* p_iter = (pb_field_iter_t *) iter;
+//
+//    // Match the beginning of the init command.
+//    if (p_iter->pos->ptr == &dfu_init_command_fields[0])
+//    {
+//        uint8_t  * ptr  = (uint8_t *)str->state;
+//        uint32_t   size = str->bytes_left;
+//
+//        if (m_init_packet_data_ptr != NULL || m_init_packet_data_len != 0)
+//        {
+//            m_init_packet_valid = false;
+//            return;
+//        }
+//
+//        // Remove tag.
+//        while (*ptr & 0x80)
+//        {
+//            ptr++;
+//            size--;
+//        }
+//        ptr++;
+//        size--;
+//
+//        // Store the info in init_packet_data.
+//        m_init_packet_data_ptr = ptr;
+//        m_init_packet_data_len = size;
+//        m_init_packet_valid    = true;
+//
+//        NRF_LOG_DEBUG("PB: Init packet data len: %d", size);
+//    }
+//}
 
 /** @brief Function for decoding byte stream into variable.
  *
@@ -142,20 +142,34 @@ static bool stored_init_cmd_decode(void)
     m_pb_stream = pb_istream_from_buffer(s_dfu_settings.init_command,
                                          s_dfu_settings.progress.command_size);
 
-    dfu_init_command_t * p_init;
+    dfu_InitCommand * p_init;
 
     // Attach our callback to follow the field decoding.
-    m_pb_stream.decoding_callback = pb_decoding_callback;
+    //m_pb_stream.decoding_callback = pb_decoding_callback;
 
     m_init_packet_valid    = false;
     m_init_packet_data_ptr = NULL;
     m_init_packet_data_len = 0;
     memset(&m_packet, 0, sizeof(m_packet));
 
-    if (!pb_decode(&m_pb_stream, dfu_packet_fields, &m_packet))
+    if (!pb_decode(&m_pb_stream, dfu_Packet_fields, &m_packet))
     {
         NRF_LOG_ERROR("Handler: Invalid protocol buffer m_pb_stream");
         return false;
+    }
+
+    if (m_packet.has_signed_command && m_packet.has_command)
+    {
+      NRF_LOG_ERROR("Handler: Invalid init command.");
+      return false;
+    }
+
+    if (m_packet.has_signed_command) {
+      //TODO: this is where signed init command is stored, but is it guaranteed to be there always?
+      // pb_decoding_callback was meant to find it, how to do that without nanopb modifications?
+      m_init_packet_data_ptr = &s_dfu_settings.init_command[11];
+      m_init_packet_data_len = 128;
+      m_init_packet_valid    = true;
     }
 
     if (!m_init_packet_valid || (m_packet.has_signed_command && m_packet.has_command))
@@ -168,9 +182,9 @@ static bool stored_init_cmd_decode(void)
         p_init = &m_packet.signed_command.command.init;
 
         m_pb_stream = pb_istream_from_buffer(m_init_packet_data_ptr, m_init_packet_data_len);
-        memset(p_init, 0, sizeof(dfu_init_command_t));
+        memset(p_init, 0, sizeof(dfu_InitCommand));
 
-        if (!pb_decode(&m_pb_stream, dfu_init_command_fields, p_init))
+        if (!pb_decode(&m_pb_stream, dfu_InitCommand_fields, p_init))
         {
             NRF_LOG_ERROR("Handler: Invalid protocol buffer m_pb_stream (init command)");
             return false;
@@ -272,14 +286,14 @@ bool nrf_dfu_validation_init_cmd_present(void)
 
 
 // Function determines if init command signature is obligatory.
-static bool signature_required(dfu_fw_type_t fw_type_to_be_updated)
+static bool signature_required(dfu_FwType fw_type_to_be_updated)
 {
     bool result = true;
 
     // DFU_FW_TYPE_EXTERNAL_APPLICATION and bootloader updates always require
     // signature check
-    if ((!DFU_REQUIRES_SOFTDEVICE && (fw_type_to_be_updated == DFU_FW_TYPE_SOFTDEVICE)) ||
-            (fw_type_to_be_updated == DFU_FW_TYPE_APPLICATION))
+    if ((!DFU_REQUIRES_SOFTDEVICE && (fw_type_to_be_updated == dfu_FwType_SOFTDEVICE)) ||
+            (fw_type_to_be_updated == dfu_FwType_APPLICATION))
     {
         result = NRF_DFU_REQUIRE_SIGNED_APP_UPDATE;
     }
@@ -389,25 +403,25 @@ static nrf_dfu_result_t nrf_dfu_validation_signature_check(uint32_t sigmask,
 
 
 // Function to calculate the total size of the firmware(s) in the update.
-static nrf_dfu_result_t update_data_size_get(dfu_init_command_t const * p_init, uint32_t * p_size)
+static nrf_dfu_result_t update_data_size_get(dfu_InitCommand const * p_init, uint32_t * p_size)
 {
     nrf_dfu_result_t ret_val = EXT_ERR(NRF_DFU_EXT_ERROR_INIT_COMMAND_INVALID);
     uint32_t         fw_sz   = 0;
 
-    if ((p_init->type == DFU_FW_TYPE_APPLICATION ||
-         p_init->type == DFU_FW_TYPE_EXTERNAL_APPLICATION) &&
+    if ((p_init->type == dfu_FwType_APPLICATION ||
+         p_init->type == dfu_FwType_EXTERNAL_APPLICATION) &&
          (p_init->has_app_size == true))
     {
         fw_sz = p_init->app_size;
     }
     else
     {
-        if ((p_init->type & DFU_FW_TYPE_SOFTDEVICE) && (p_init->has_sd_size == true))
+        if ((p_init->type & dfu_FwType_SOFTDEVICE) && (p_init->has_sd_size == true))
         {
             fw_sz = p_init->sd_size;
         }
 
-        if ((p_init->type & DFU_FW_TYPE_BOOTLOADER) && (p_init->has_bl_size == true))
+        if ((p_init->type & dfu_FwType_BOOTLOADER) && (p_init->has_bl_size == true))
         {
             if (p_init->bl_size <= BOOTLOADER_SIZE)
             {
@@ -441,13 +455,13 @@ static nrf_dfu_result_t update_data_size_get(dfu_init_command_t const * p_init, 
  *
  * @param new_fw_type Firmware type.
  */
-static bool use_single_bank(dfu_fw_type_t new_fw_type)
+static bool use_single_bank(dfu_FwType new_fw_type)
 {
     bool result = false;
 
     // DFU_FW_TYPE_EXTERNAL_APPLICATION never uses single bank
-    if (((new_fw_type == DFU_FW_TYPE_APPLICATION) ||
-         (new_fw_type == DFU_FW_TYPE_SOFTDEVICE)) &&
+    if (((new_fw_type == dfu_FwType_APPLICATION) ||
+         (new_fw_type == dfu_FwType_SOFTDEVICE)) &&
         NRF_DFU_SINGLE_BANK_APP_UPDATES)
     {
         result = true;
@@ -458,14 +472,14 @@ static bool use_single_bank(dfu_fw_type_t new_fw_type)
 
 
 // Function to determine whether the new firmware needs a SoftDevice to be present.
-static bool update_requires_softdevice(dfu_init_command_t const * p_init)
+static bool update_requires_softdevice(dfu_InitCommand const * p_init)
 {
     return ((p_init->sd_req_count > 0) && (p_init->sd_req[0] != SD_REQ_APP_OVERWRITES_SD));
 }
 
 
 // Function to determine whether the SoftDevice can be removed during the update or not.
-static bool keep_softdevice(dfu_init_command_t const * p_init)
+static bool keep_softdevice(dfu_InitCommand const * p_init)
 {
     UNUSED_PARAMETER(p_init); // It's unused when DFU_REQUIRES_SOFTDEVICE is true.
     return DFU_REQUIRES_SOFTDEVICE || update_requires_softdevice(p_init);
@@ -484,7 +498,7 @@ static bool keep_softdevice(dfu_init_command_t const * p_init)
  *                                                  an address was found.
  * @retval NRF_DFU_RES_CODE_INSUFFICIENT_RESOURCES  If the size check failed.
  */
-static nrf_dfu_result_t update_data_addr_get(dfu_init_command_t const * p_init,
+static nrf_dfu_result_t update_data_addr_get(dfu_InitCommand const * p_init,
                                              uint32_t                   fw_size,
                                              uint32_t                 * p_addr)
 {
@@ -510,7 +524,7 @@ static nrf_dfu_result_t update_data_addr_get(dfu_init_command_t const * p_init,
 nrf_dfu_result_t nrf_dfu_validation_prevalidate(void)
 {
     nrf_dfu_result_t                 ret_val        = NRF_DFU_RES_CODE_SUCCESS;
-    dfu_command_t            const * p_command      = &m_packet.command;
+    dfu_Command            const * p_command      = &m_packet.command;
     uint32_t              sigmask = 0;
     uint8_t                  const * p_signature    = NULL;
     uint32_t                         signature_len  = 0;
@@ -638,7 +652,7 @@ static bool nrf_dfu_validation_hash_ok(uint8_t const * p_hash, uint32_t src_addr
 
 
 // Function to check the hash received in the init command against the received firmware.
-bool fw_hash_ok(dfu_init_command_t const * p_init, uint32_t fw_start_addr, uint32_t fw_size)
+bool fw_hash_ok(dfu_InitCommand const * p_init, uint32_t fw_start_addr, uint32_t fw_size)
 {
     ASSERT(p_init != NULL);
     return nrf_dfu_validation_hash_ok((uint8_t *)p_init->hash.hash.bytes, fw_start_addr, fw_size);
@@ -702,7 +716,7 @@ static bool softdevice_info_ok(uint32_t sd_start_addr, uint32_t sd_size)
 
 
 static bool boot_validation_extract(boot_validation_t * p_boot_validation,
-                                    dfu_init_command_t const * p_init,
+                                    dfu_InitCommand const * p_init,
                                     uint32_t index,
                                     uint32_t start_addr,
                                     uint32_t data_len,
@@ -722,11 +736,11 @@ static bool boot_validation_extract(boot_validation_t * p_boot_validation,
 
 
 // The is_trusted argument specifies whether the function should have side effects.
-static bool postvalidate_app(dfu_init_command_t const * p_init, uint32_t src_addr, uint32_t data_len, bool is_trusted)
+static bool postvalidate_app(dfu_InitCommand const * p_init, uint32_t src_addr, uint32_t data_len, bool is_trusted)
 {
     boot_validation_t boot_validation;
 
-    ASSERT(p_init->type == DFU_FW_TYPE_APPLICATION);
+    ASSERT(p_init->type == dfu_FwType_APPLICATION);
 
     if (!boot_validation_extract(&boot_validation, p_init, 0, src_addr, data_len, VALIDATE_ECDSA_P256_SHA256))
     {
@@ -772,7 +786,7 @@ static bool postvalidate_app(dfu_init_command_t const * p_init, uint32_t src_add
 // Function to check a received SoftDevice or Bootloader firmware, or both,
 // before it is copied into place.
 // The is_trusted argument specifies whether the function should have side effects.
-static bool postvalidate_sd_bl(dfu_init_command_t const  * p_init,
+static bool postvalidate_sd_bl(dfu_InitCommand const  * p_init,
                                bool                        with_sd,
                                bool                        with_bl,
                                uint32_t                    start_addr,
@@ -878,7 +892,7 @@ bool nrf_dfu_validation_boot_validate(boot_validation_t const * p_validation, ui
 nrf_dfu_result_t postvalidate(uint32_t data_addr, uint32_t data_len, bool is_trusted)
 {
     nrf_dfu_result_t           ret_val = NRF_DFU_RES_CODE_SUCCESS;
-    dfu_init_command_t const * p_init  = mp_init;
+  dfu_InitCommand const * p_init  = mp_init;
 
     if (!fw_hash_ok(p_init, data_addr, data_len))
     {
@@ -886,7 +900,7 @@ nrf_dfu_result_t postvalidate(uint32_t data_addr, uint32_t data_len, bool is_tru
     }
     else
     {
-        if (p_init->type == DFU_FW_TYPE_APPLICATION)
+        if (p_init->type == dfu_FwType_APPLICATION)
         {
             if (!postvalidate_app(p_init, data_addr, data_len, is_trusted))
             {
@@ -909,8 +923,8 @@ nrf_dfu_result_t postvalidate(uint32_t data_addr, uint32_t data_len, bool is_tru
 #endif // NRF_DFU_SUPPORTS_EXTERNAL_APP
         else
         {
-            bool with_sd = p_init->type & DFU_FW_TYPE_SOFTDEVICE;
-            bool with_bl = p_init->type & DFU_FW_TYPE_BOOTLOADER;
+            bool with_sd = p_init->type & dfu_FwType_SOFTDEVICE;
+            bool with_bl = p_init->type & dfu_FwType_BOOTLOADER;
 
             if (!postvalidate_sd_bl(p_init, with_sd, with_bl, data_addr, data_len, is_trusted))
             {
