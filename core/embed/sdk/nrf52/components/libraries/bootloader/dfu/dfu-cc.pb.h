@@ -86,30 +86,10 @@ typedef enum
 #define DFU_OP_CODE_MAX DFU_OP_CODE_INIT
 #define DFU_OP_CODE_ARRAYSIZE ((dfu_op_code_t)(DFU_OP_CODE_INIT+1))
 
-typedef enum
-{
-    DFU_VALIDATION_TYPE_NO_VALIDATION = 0,
-    DFU_VALIDATION_TYPE_VALIDATE_GENERATED_CRC = 1,
-    DFU_VALIDATION_TYPE_VALIDATE_SHA256 = 2,
-    DFU_VALIDATION_TYPE_VALIDATE_ECDSA_P256_SHA256 = 3
-} dfu_validation_type_t;
-#define DFU_VALIDATION_TYPE_MIN DFU_VALIDATION_TYPE_NO_VALIDATION
-#define DFU_VALIDATION_TYPE_MAX DFU_VALIDATION_TYPE_VALIDATE_ECDSA_P256_SHA256
-#define DFU_VALIDATION_TYPE_ARRAYSIZE ((dfu_validation_type_t)(DFU_VALIDATION_TYPE_VALIDATE_ECDSA_P256_SHA256+1))
-
-typedef enum
-{
-    DFU_SIGNATURE_TYPE_ECDSA_P256_SHA256 = 0,
-    DFU_SIGNATURE_TYPE_ED25519 = 1
-} dfu_signature_type_t;
-#define DFU_SIGNATURE_TYPE_MIN DFU_SIGNATURE_TYPE_ECDSA_P256_SHA256
-#define DFU_SIGNATURE_TYPE_MAX DFU_SIGNATURE_TYPE_ED25519
-#define DFU_SIGNATURE_TYPE_ARRAYSIZE ((dfu_signature_type_t)(DFU_SIGNATURE_TYPE_ED25519+1))
-
 /* Struct definitions */
 typedef PB_BYTES_ARRAY_T(64) dfu_boot_validation_bytes_t;
 typedef struct {
-    dfu_validation_type_t type;
+    uint32_t sigmask;
     dfu_boot_validation_bytes_t bytes;
 /* @@protoc_insertion_point(struct:dfu_boot_validation_t) */
 } dfu_boot_validation_t;
@@ -156,7 +136,7 @@ typedef struct {
 typedef PB_BYTES_ARRAY_T(64) dfu_signed_command_signature_t;
 typedef struct {
     dfu_command_t command;
-    dfu_signature_type_t signature_type;
+    uint32_t sigmask;
     dfu_signed_command_signature_t signature;
 /* @@protoc_insertion_point(struct:dfu_signed_command_t) */
 } dfu_signed_command_t;
@@ -174,16 +154,16 @@ extern const bool dfu_init_command_is_debug_default;
 
 /* Initializer values for message structs */
 #define DFU_HASH_INIT_DEFAULT                    {(dfu_hash_type_t)0, {0, {0}}}
-#define DFU_BOOT_VALIDATION_INIT_DEFAULT         {(dfu_validation_type_t)0, {0, {0}}}
+#define DFU_BOOT_VALIDATION_INIT_DEFAULT         {0, {0, {0}}}
 #define DFU_INIT_COMMAND_INIT_DEFAULT            {false, 0, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, (dfu_fw_type_t)0, false, 0, false, 0, false, 0, false, DFU_HASH_INIT_DEFAULT, false, false, 0, {DFU_BOOT_VALIDATION_INIT_DEFAULT, DFU_BOOT_VALIDATION_INIT_DEFAULT, DFU_BOOT_VALIDATION_INIT_DEFAULT}}
 #define DFU_COMMAND_INIT_DEFAULT                 {false, (dfu_op_code_t)0, false, DFU_INIT_COMMAND_INIT_DEFAULT}
-#define DFU_SIGNED_COMMAND_INIT_DEFAULT          {DFU_COMMAND_INIT_DEFAULT, (dfu_signature_type_t)0, {0, {0}}}
+#define DFU_SIGNED_COMMAND_INIT_DEFAULT          {DFU_COMMAND_INIT_DEFAULT, 0, {0, {0}}}
 #define DFU_PACKET_INIT_DEFAULT                  {false, DFU_COMMAND_INIT_DEFAULT, false, DFU_SIGNED_COMMAND_INIT_DEFAULT}
 #define DFU_HASH_INIT_ZERO                       {(dfu_hash_type_t)0, {0, {0}}}
-#define DFU_BOOT_VALIDATION_INIT_ZERO            {(dfu_validation_type_t)0, {0, {0}}}
+#define DFU_BOOT_VALIDATION_INIT_ZERO            {0, {0, {0}}}
 #define DFU_INIT_COMMAND_INIT_ZERO               {false, 0, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, (dfu_fw_type_t)0, false, 0, false, 0, false, 0, false, DFU_HASH_INIT_ZERO, false, 0, 0, {DFU_BOOT_VALIDATION_INIT_ZERO, DFU_BOOT_VALIDATION_INIT_ZERO, DFU_BOOT_VALIDATION_INIT_ZERO}}
 #define DFU_COMMAND_INIT_ZERO                    {false, (dfu_op_code_t)0, false, DFU_INIT_COMMAND_INIT_ZERO}
-#define DFU_SIGNED_COMMAND_INIT_ZERO             {DFU_COMMAND_INIT_ZERO, (dfu_signature_type_t)0, {0, {0}}}
+#define DFU_SIGNED_COMMAND_INIT_ZERO             {DFU_COMMAND_INIT_ZERO, 0, {0, {0}}}
 #define DFU_PACKET_INIT_ZERO                     {false, DFU_COMMAND_INIT_ZERO, false, DFU_SIGNED_COMMAND_INIT_ZERO}
 
 /* Field tags (for use in manual encoding/decoding) */

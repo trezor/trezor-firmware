@@ -36,7 +36,7 @@ message Hash {
 
 message BootValidation {
 
-    required ValidationType type    = 1;
+    required uint32         sigmask = 1;
     required bytes          bytes   = 2;
 }
 
@@ -63,15 +63,9 @@ message Command {
     optional InitCommand    init    = 2;
 }
 
-// Signed command types
-enum SignatureType {
-    ECDSA_P256_SHA256   = 0;
-    ED25519             = 1;
-}
-
 message SignedCommand {
     required Command        command         = 1;
-    required SignatureType  signature_type  = 2;
+    required uint32         sigmask         = 2;
     required bytes          signature       = 3;
 }
 

@@ -258,19 +258,9 @@ void nrf_dfu_settings_reinit(void)
 
     if (NRF_DFU_SETTINGS_COMPATIBILITY_MODE && !NRF_DFU_IN_APP && (s_dfu_settings.settings_version == 1))
     {
-        NRF_LOG_INFO("Old settings page detected. Upgrading info.");
-
-        // Old version. Translate.
-        memcpy(&s_dfu_settings.peer_data, (uint8_t *)&s_dfu_settings + DFU_SETTINGS_BOND_DATA_OFFSET_V1, NRF_DFU_PEER_DATA_LEN);
-        memcpy(&s_dfu_settings.adv_name,  (uint8_t *)&s_dfu_settings + DFU_SETTINGS_ADV_NAME_OFFSET_V1,  NRF_DFU_ADV_NAME_LEN);
-
-        // Initialize with defaults.
-        s_dfu_settings.boot_validation_softdevice.type = NO_VALIDATION;
-        s_dfu_settings.boot_validation_app.type        = VALIDATE_CRC;
-        s_dfu_settings.boot_validation_bootloader.type = NO_VALIDATION;
-        memcpy(s_dfu_settings.boot_validation_app.bytes, &s_dfu_settings.bank_0.image_crc, sizeof(uint32_t));
-
-        s_dfu_settings.settings_version = NRF_DFU_SETTINGS_VERSION;
+      NRF_LOG_WARNING("Resetting bootloader settings since neither the settings page is old.");
+      memset(&s_dfu_settings, 0x00, sizeof(nrf_dfu_settings_t));
+      s_dfu_settings.settings_version = NRF_DFU_SETTINGS_VERSION;
     }
 
     return;
