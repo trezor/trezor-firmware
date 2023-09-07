@@ -321,6 +321,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.index = index
 
     def input_flow_tt(self) -> BRGeneratorType:
+        yield  # multisig address warning
+        self.debug.press_yes()
+
         yield  # show address
         layout = self.debug.wait_layout()
         assert "RECEIVE ADDRESS\n(MULTISIG)" == layout.title()
@@ -353,6 +356,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
+        yield  # multisig address warning
+        self.debug.press_middle()
+
         yield  # show address
         layout = self.debug.wait_layout()
         assert "RECEIVE ADDRESS (MULTISIG)" in layout.title()
@@ -398,17 +404,14 @@ class InputFlowShowXpubQRCode(InputFlowBase):
 
     def input_flow_tt(self) -> BRGeneratorType:
         if self.passphrase:
-            br = yield
+            yield
             self.debug.press_yes()
-            br = yield
+            yield
             self.debug.press_yes()
 
         br = yield
         layout = self.debug.wait_layout()
-        if "coinjoin" in layout.title().lower():
-            self.debug.press_yes()
-            br = yield
-        elif br.code == B.UnknownDerivationPath:
+        if "coinjoin" in layout.title().lower() or br.code == B.UnknownDerivationPath:
             self.debug.press_yes()
             br = yield
 
@@ -428,18 +431,15 @@ class InputFlowShowXpubQRCode(InputFlowBase):
 
     def input_flow_tr(self) -> BRGeneratorType:
         if self.passphrase:
-            br = yield
+            yield
             self.debug.press_right()
-            br = yield
+            yield
             self.debug.press_right()
 
         br = yield
         layout = self.debug.wait_layout()
-        if "coinjoin" in layout.title().lower():
-            self.debug.press_right()
-            br = yield
-        elif br.code == B.UnknownDerivationPath:
-            self.debug.press_right()
+        if "coinjoin" in layout.title().lower() or br.code == B.UnknownDerivationPath:
+            self.debug.press_yes()
             br = yield
 
         # Go into details
@@ -549,6 +549,11 @@ def sign_tx_go_to_info_tr(
     screen_texts: list[str] = []
 
     yield  # confirm total
+    layout = client.debug.wait_layout()
+    if "multiple accounts" in layout.text_content().lower():
+        client.debug.press_middle()
+        yield
+
     layout = client.debug.press_right(wait=True)
     screen_texts.append(layout.text_content())
 
@@ -593,6 +598,10 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         assert "18.33 sat" in content
 
     def input_flow_tt(self) -> BRGeneratorType:
+        # multiple accounts warning
+        yield
+        self.debug.press_yes()
+
         content = yield from sign_tx_go_to_info(self.client)
         self.assert_content(content)
         self.debug.press_yes()

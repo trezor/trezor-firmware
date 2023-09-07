@@ -274,6 +274,9 @@ class BasicApprover(Approver):
         if self.has_unverified_external_input:
             await helpers.confirm_unverified_external_input()
 
+        if tx_info.wallet_path.get_path() is None:
+            await helpers.confirm_multiple_accounts()
+
         fee = self.total_in - self.total_out
 
         # some coins require negative fees for reward TX

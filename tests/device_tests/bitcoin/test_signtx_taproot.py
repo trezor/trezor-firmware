@@ -224,6 +224,7 @@ def test_send_mixed(client: Client):
 
     with client:
         tt = client.features.model == "T"
+        is_core = client.features.model in ("T", "R")
         client.set_expected_responses(
             [
                 # process inputs
@@ -246,6 +247,7 @@ def test_send_mixed(client: Client):
                 request_output(4),
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core, messages.ButtonRequest(code=B.SignTx)),
                 messages.ButtonRequest(code=B.SignTx),
                 # verify inputs
                 request_input(0),
@@ -356,6 +358,7 @@ def test_attack_script_type(client: Client):
 
     with client:
         tt = client.features.model == "T"
+        is_core = client.features.model in ("T", "R")
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
@@ -364,6 +367,7 @@ def test_attack_script_type(client: Client):
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core, messages.ButtonRequest(code=B.SignTx)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_input(1),
