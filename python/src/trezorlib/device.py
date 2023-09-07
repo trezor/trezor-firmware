@@ -119,7 +119,7 @@ def recover(
     dry_run: bool = False,
     u2f_counter: Optional[int] = None,
 ) -> "MessageType":
-    if client.features.model == "1" and input_callback is None:
+    if client.features.internal_model == "T1B1" and input_callback is None:
         raise RuntimeError("Input callback required for Trezor One")
 
     if word_count not in (12, 18, 24):
@@ -180,7 +180,7 @@ def reset(
         )
 
     if strength is None:
-        if client.features.model == "1":
+        if client.features.internal_model == "T1B1":
             strength = 256
         else:
             strength = 128

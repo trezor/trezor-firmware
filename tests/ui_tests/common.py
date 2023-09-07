@@ -225,7 +225,7 @@ class TestCase:
     def build(cls, client: Client, request: pytest.FixtureRequest) -> Self:
         name, group = _get_test_name_and_group(request.node.nodeid)
         return cls(
-            model=f"T{client.features.model}",
+            model=client.features.internal_model or "",
             name=name,
             group=group,
         )

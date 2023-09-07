@@ -115,7 +115,7 @@ def test_p2pkh_fee_bump(client: Client):
         orig_index=1,
     )
 
-    new_model = client.features.model in ("T", "R")
+    new_model = client.features.internal_model in ("T2T1", "T2B1")
 
     with client:
         client.set_expected_responses(
@@ -600,7 +600,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
         orig_index=0,
     )
 
-    tr = client.features.model == "R"
+    tr = client.features.internal_model == "T2B1"
     with client:
         client.set_expected_responses(
             [

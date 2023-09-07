@@ -42,7 +42,7 @@ def test_correct_pin(client: Client):
     with client:
         client.use_pin_sequence([PIN4])
         # Expected responses differ between T1 and TT
-        is_t1 = client.features.model == "1"
+        is_t1 = client.features.internal_model == "T1B1"
         client.set_expected_responses(
             [
                 (is_t1, messages.PinMatrixRequest),

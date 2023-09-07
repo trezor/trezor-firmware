@@ -176,8 +176,8 @@ def test_data_streaming(client: Client):
     checked in vectorized function above.
     """
     with client:
-        t1 = client.features.model == "1"
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
+        t1 = client.features.internal_model == "T1B1"
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),

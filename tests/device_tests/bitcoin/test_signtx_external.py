@@ -216,7 +216,7 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
     )
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -268,7 +268,7 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
     # Test corrupted script hash in scriptsig.
     inp1.script_sig[10] ^= 1
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -401,7 +401,7 @@ def test_p2wsh_external_presigned(client: Client):
     )
 
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -447,7 +447,7 @@ def test_p2wsh_external_presigned(client: Client):
     # Test corrupted signature in witness.
     inp2.witness[10] ^= 1
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -513,7 +513,7 @@ def test_p2tr_external_presigned(client: Client):
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -546,7 +546,7 @@ def test_p2tr_external_presigned(client: Client):
     # Test corrupted signature in witness.
     inp2.witness[10] ^= 1
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -616,8 +616,8 @@ def test_p2wpkh_with_proof(client: Client):
     )
 
     with client:
-        t1 = client.features.model == "1"
-        tt = client.features.model == "T"
+        t1 = client.features.internal_model == "T1B1"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -710,8 +710,8 @@ def test_p2tr_with_proof(client: Client):
     )
 
     with client:
-        t1 = client.features.model == "1"
-        tt = client.features.model == "T"
+        t1 = client.features.internal_model == "T1B1"
+        tt = client.features.internal_model == "T2T1"
         client.set_expected_responses(
             [
                 request_input(0),

@@ -265,7 +265,7 @@ def homescreen(client: "TrezorClient", filename: str) -> str:
         if not path.exists() or not path.is_file():
             raise click.ClickException("Cannot open file")
 
-        if client.features.model == "1":
+        if client.features.internal_model == "T1B1":
             img = image_to_t1(path)
         else:
             if client.features.homescreen_format == messages.HomescreenFormat.Jpeg:

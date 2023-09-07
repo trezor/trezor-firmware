@@ -82,7 +82,7 @@ def test_2_of_3(client: Client):
     )
 
     # Expected responses are the same for both two signings
-    tt = client.features.model == "T"
+    tt = client.features.internal_model == "T2T1"
     expected_responses = [
         request_input(0),
         request_output(0),
@@ -233,7 +233,7 @@ def test_missing_pubkey(client: Client):
     with pytest.raises(TrezorFailure) as exc:
         btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
-    if client.features.model == "1":
+    if client.features.internal_model == "T1B1":
         assert exc.value.message.endswith("Failed to derive scriptPubKey")
     else:
         assert exc.value.message.endswith("Pubkey not found in multisig script")

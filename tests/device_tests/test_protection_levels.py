@@ -44,7 +44,7 @@ pytestmark = pytest.mark.setup_client(pin=PIN4, passphrase=True)
 
 def _pin_request(client: Client):
     """Get appropriate PIN request for each model"""
-    if client.features.model == "1":
+    if client.features.internal_model == "T1B1":
         return messages.PinMatrixRequest
     else:
         return messages.ButtonRequest(code=B.PinEntry)
@@ -140,7 +140,7 @@ def test_change_pin_t2(client: Client):
                 messages.ButtonRequest,
                 _pin_request(client),
                 _pin_request(client),
-                (client.debug.model == "R", messages.ButtonRequest),
+                (client.debug.internal_model == "T2B1", messages.ButtonRequest),
                 _pin_request(client),
                 messages.ButtonRequest,
                 messages.Success,
@@ -362,7 +362,7 @@ def test_signtx(client: Client):
 
     _assert_protection(client)
     with client:
-        tt = client.features.model == "T"
+        tt = client.features.internal_model == "T2T1"
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [

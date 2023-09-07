@@ -32,7 +32,7 @@ pytestmark = pytest.mark.setup_client(pin=PIN4)
 def pin_request(client: Client):
     return (
         messages.PinMatrixRequest
-        if client.features.model == "1"
+        if client.features.internal_model == "T1B1"
         else messages.ButtonRequest
     )
 

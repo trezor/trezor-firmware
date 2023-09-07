@@ -160,12 +160,12 @@ def read_and_confirm_mnemonic(
     debug: "DebugLink", choose_wrong: bool = False
 ) -> Generator[None, "ButtonRequest", Optional[str]]:
     # TODO: these are very similar, reuse some code
-    if debug.model == "T":
+    if debug.internal_model == "T2T1":
         mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
-    elif debug.model == "R":
+    elif debug.internal_model == "T2B1":
         mnemonic = yield from read_and_confirm_mnemonic_tr(debug, choose_wrong)
     else:
-        raise ValueError(f"Unknown model: {debug.model}")
+        raise ValueError(f"Unknown model: {debug.internal_model}")
 
     return mnemonic
 

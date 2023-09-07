@@ -145,7 +145,7 @@ def _responses(
     change: int = 0,
     foreign: bool = False,
 ):
-    tt = client.features.model == "T"
+    tt = client.features.internal_model == "T2T1"
     resp = [
         request_input(0),
         request_input(1),

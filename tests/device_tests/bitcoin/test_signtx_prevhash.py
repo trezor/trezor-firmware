@@ -64,7 +64,7 @@ def hash_tx(data: bytes) -> bytes:
 
 def _check_error_message(value: bytes, model: str, message: str):
     # T1 has several possible errors
-    if model == "1" and len(value) > 32:
+    if model == "T1B1" and len(value) > 32:
         assert message.endswith("bytes overflow")
     else:
         assert message.endswith("Provided prev_hash is invalid.")
@@ -92,7 +92,7 @@ def test_invalid_prev_hash(client: Client, prev_hash):
 
     with pytest.raises(TrezorFailure) as e:
         btc.sign_tx(client, "Testnet", [inp1], [out1], prev_txes={})
-    _check_error_message(prev_hash, client.features.model, e.value.message)
+    _check_error_message(prev_hash, client.features.internal_model, e.value.message)
 
 
 @with_bad_prevhashes
@@ -134,7 +134,7 @@ def test_invalid_prev_hash_attack(client: Client, prev_hash):
 
     # check that injection was performed
     assert counter == 0
-    _check_error_message(prev_hash, client.features.model, e.value.message)
+    _check_error_message(prev_hash, client.features.internal_model, e.value.message)
 
 
 @with_bad_prevhashes
@@ -165,4 +165,4 @@ def test_invalid_prev_hash_in_prevtx(client: Client, prev_hash):
 
     with pytest.raises(TrezorFailure) as e:
         btc.sign_tx(client, "Bitcoin", [inp0], [out1], prev_txes={tx_hash: prev_tx})
-    _check_error_message(prev_hash, client.features.model, e.value.message)
+    _check_error_message(prev_hash, client.features.internal_model, e.value.message)
