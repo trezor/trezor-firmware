@@ -10,7 +10,7 @@ def get_ui_property(property: Any) -> str | bytes | None:
     
     return property
 
-async def show_confirm(instruction: Instruction) -> None:
+async def show_confirm(count: tuple[int, int] ,instruction: Instruction) -> None:
     from trezor.ui.layouts import confirm_properties
 
     # assertions for pyright
@@ -36,5 +36,7 @@ async def show_confirm(instruction: Instruction) -> None:
     props = datas + accounts
 
     return await confirm_properties(
-        instruction.ui_identifier, instruction.ui_name, props
+        instruction.ui_identifier,
+        "{0}/{1}: {2}".format(count[0], count[1], instruction.ui_name),
+        props
     )

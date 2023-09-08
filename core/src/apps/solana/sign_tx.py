@@ -32,11 +32,12 @@ async def sign_tx(
     transaction: Transaction = Transaction(BufferReader(serialized_tx))
     
     # Show instructions on UI
-    for instruction in transaction.instructions:
+    num_instructions = len(transaction.instructions)
+    for i, instruction in enumerate(transaction.instructions):
         # Check template id. Template id is derived from program.json
         if instruction.ui_identifier == "ui_confirm":
             from .ui import show_confirm
-            await show_confirm(instruction)
+            await show_confirm((num_instructions, i + 1), instruction)
         else:
             # TODO SOL: handle other UI templates
             pass
