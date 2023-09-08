@@ -7,8 +7,6 @@ from . import CURVE, PATTERNS, SLIP44_ID
 if TYPE_CHECKING:
     from trezor.messages import SolanaSignTx, SolanaTxSignature
     from apps.common.keychain import Keychain
-    from .instructions import Instruction
-    from .types import RawInstruction
 
 
 from .transaction import Transaction
