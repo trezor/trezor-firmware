@@ -10,9 +10,10 @@ import builtins
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-random.h
-def bytes(len: int) -> builtins.bytes:
+def bytes(len: int, strong: bool = False) -> builtins.bytes:
     """
-    Generate random bytes sequence of length len.
+    Generate random bytes sequence of length len. If `strong` is set then
+    maximum sources of entropy are used.
     """
 
 

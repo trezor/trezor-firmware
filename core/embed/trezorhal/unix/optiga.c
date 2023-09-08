@@ -22,6 +22,7 @@
 #include "ecdsa.h"
 #include "nist256p1.h"
 #include "optiga_common.h"
+#include "rand.h"
 
 static const uint8_t DEVICE_CERT_CHAIN[] = {
     0x30, 0x82, 0x01, 0x90, 0x30, 0x82, 0x01, 0x37, 0xa0, 0x03, 0x02, 0x01,
@@ -143,5 +144,10 @@ bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
 
   memcpy(cert, DEVICE_CERT_CHAIN, sizeof(DEVICE_CERT_CHAIN));
   *cert_size = sizeof(DEVICE_CERT_CHAIN);
+  return true;
+}
+
+bool optiga_random_buffer(uint8_t *dest, size_t size) {
+  random_buffer(dest, size);
   return true;
 }

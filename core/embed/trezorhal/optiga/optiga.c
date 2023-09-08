@@ -18,6 +18,7 @@
  */
 
 #include "optiga.h"
+#include <string.h>
 #include "optiga_commands.h"
 
 int optiga_sign(uint8_t index, const uint8_t *digest, size_t digest_size,
@@ -88,4 +89,23 @@ bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
   optiga_result ret = optiga_get_data_object(OPTIGA_OID_CERT + index, false,
                                              cert, max_cert_size, cert_size);
   return OPTIGA_SUCCESS == ret;
+}
+
+bool optiga_random_buffer(uint8_t *dest, size_t size) {
+  while (size > OPTIGA_RANDOM_MAX_SIZE) {
+    if (optiga_get_random(dest, OPTIGA_RANDOM_MAX_SIZE) != OPTIGA_SUCCESS) {
+      return false;
+    }
+    dest += OPTIGA_RANDOM_MAX_SIZE;
+    size -= OPTIGA_RANDOM_MAX_SIZE;
+  }
+
+  if (size < OPTIGA_RANDOM_MIN_SIZE) {
+    static uint8_t buffer[OPTIGA_RANDOM_MIN_SIZE] = {0};
+    optiga_result ret = optiga_get_random(buffer, OPTIGA_RANDOM_MIN_SIZE);
+    memcpy(dest, buffer, size);
+    return ret == OPTIGA_SUCCESS;
+  }
+
+  return optiga_get_random(dest, size) == OPTIGA_SUCCESS;
 }

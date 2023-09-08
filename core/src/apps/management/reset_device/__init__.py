@@ -56,7 +56,7 @@ async def reset_device(msg: ResetDevice) -> Success:
             raise ProcessError("Failed to set PIN")
 
     # generate and display internal entropy
-    int_entropy = random.bytes(32)
+    int_entropy = random.bytes(32, True)
     if __debug__:
         storage.debug.reset_internal_entropy = int_entropy
     if msg.display_random:
