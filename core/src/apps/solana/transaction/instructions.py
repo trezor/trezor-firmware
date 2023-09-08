@@ -73,7 +73,7 @@ class Instruction:
         instruction_id: int,
         property_templates: list[dict[str, str | bool]],
         accounts_template: list[dict[str, str | bool]],
-        ui_parameter_list: list[int],
+        ui_parameter_list: list[str],
         ui_account_list: list[int],
         ui_identifier: str,
         ui_name: str
@@ -83,6 +83,7 @@ class Instruction:
         self.ui_identifier = ui_identifier
         self.ui_name = ui_name
 
+        # contains the list of parameters that needs to be displayed to the user
         self.ui_parameter_list = []
         self.ui_account_list = []
 
@@ -106,7 +107,7 @@ class Instruction:
     
     def __getattr__(self, attr: str) -> Any:
         assert self.parsed_data is not None
-        # assert self.parsed_accounts is not None
+        assert self.parsed_accounts is not None
 
         if attr in self.parsed_data:
             return self.parsed_data[attr]

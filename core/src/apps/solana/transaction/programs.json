@@ -1,4 +1,27 @@
 {
+    "complex_ui": [
+        {
+            "instructions": [
+                {
+                    "program_id": "111111",
+                    "instruction_id": 0
+                },{
+                    "program_id": "111111",
+                    "instruction_id": 1
+                },{
+                    "program_id": "111111",
+                    "instruction_id": 2
+                },
+            ],
+            "ui": {
+                "template": "ui_confirm",
+                "elements": {
+                    "parameter_indexes": [[0, 0]],
+                    "account_indexes": [[0, 0]]
+                }
+            }
+        }
+    ],
     "programs": [
         {
             "id": "11111111111111111111111111111111",

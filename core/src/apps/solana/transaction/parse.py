@@ -36,6 +36,7 @@ def parseHeader(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]:
         num_read_only_addresses,
     )
 
+# TODO SOL: Shall be considerd to use CompactU16 instead of VarInt
 def parseVarInt(serialized_tx: BufferReader) -> int:
     value = 0
     shift = 0
@@ -144,6 +145,7 @@ def parseEnum(serialized_tx: BufferReader) -> int:
     return serialized_tx.get()
 
 def parseString(serialized_tx: BufferReader) -> str:
+    # TODO SOL: validation shall be checked (length is less than 2^32 or even less)
     length = parseU64(serialized_tx)
     assert serialized_tx.remaining_count() >= length
     return serialized_tx.read(length).decode("utf-8")
