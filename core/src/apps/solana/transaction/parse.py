@@ -21,6 +21,9 @@ def parseHeader(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]:
     if serialized_tx.peek() & 0b10000000:
         isLegacy = False
         version = serialized_tx.get() & 0b01111111
+        # only version 0 is supported
+        # less or equal is used in order to support future versions
+        assert version <= 0
     num_required_signatures: int = serialized_tx.get()
     num_signature_read_only_addresses: int = serialized_tx.get()
     num_read_only_addresses: int = serialized_tx.get()
