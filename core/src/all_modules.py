@@ -377,6 +377,8 @@ apps.solana.instructions
 import apps.solana.instructions
 apps.solana.instructions.instruction
 import apps.solana.instructions.instruction
+apps.solana.instructions.instructions
+import apps.solana.instructions.instructions
 apps.solana.instructions.parse_template
 import apps.solana.instructions.parse_template
 apps.solana.parsing

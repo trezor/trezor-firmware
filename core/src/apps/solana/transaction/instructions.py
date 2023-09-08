@@ -590,7 +590,7 @@ def get_instruction(
                 [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'New account', 'access': 'w', 'signer': True, 'optional': False}],
                 [0, 2],
                 [0],
-                "templatename",
+                "ui_confirm",
                 "Create Account"
             )
         elif instruction_id == INS_ASSIGN:
@@ -602,7 +602,7 @@ def get_instruction(
                 [{'name': 'Assigned account', 'access': 'w', 'signer': True, 'optional': False}],
                 [0],
                 [0],
-                "templatename",
+                "ui_confirm",
                 "Assign"
             )
         elif instruction_id == INS_TRANSFER:
@@ -614,7 +614,7 @@ def get_instruction(
                 [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'Recipient account', 'access': 'w', 'signer': False, 'optional': False}],
                 [0],
                 [0, 1],
-                "templatename",
+                "ui_confirm",
                 "Transfer"
             )
         elif instruction_id == INS_CREATE_ACCOUNT_WITH_SEED:
@@ -626,7 +626,7 @@ def get_instruction(
                 [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'Created account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': True}],
                 [0, 2, 3],
                 [0, 2],
-                "templatename",
+                "ui_confirm",
                 "Create Account With Seed"
             )
         elif instruction_id == INS_ALLOCATE:
@@ -638,7 +638,7 @@ def get_instruction(
                 [{'name': 'New account', 'access': 'w', 'signer': True, 'optional': False}],
                 [0],
                 [0],
-                "templatename",
+                "ui_confirm",
                 "Allocate"
             )
         elif instruction_id == INS_ALLOCATE_WITH_SEED:
@@ -650,7 +650,7 @@ def get_instruction(
                 [{'name': 'Allocated account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': False}],
                 [0, 2],
                 [0, 1],
-                "templatename",
+                "ui_confirm",
                 "Allocate With Seed"
             )
         elif instruction_id == INS_ASSIGN_WITH_SEED:
@@ -662,7 +662,7 @@ def get_instruction(
                 [{'name': 'Assigned account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': False}],
                 [0, 2],
                 [0, 1],
-                "templatename",
+                "ui_confirm",
                 "Assign With Seed"
             )
         else:
@@ -679,7 +679,7 @@ def get_instruction(
                 [{'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Rent sysvar', 'access': '', 'signer': False, 'optional': False}],
                 [0, 2, 3, 4],
                 [0, 1],
-                "templatename",
+                "ui_confirm",
                 "Initialize"
             )
         elif instruction_id == INS_AUTHORIZE:
@@ -691,7 +691,7 @@ def get_instruction(
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
                 [0],
                 [0, 1, 2, 3],
-                "templatename",
+                "ui_confirm",
                 "Authorize"
             )
         elif instruction_id == INS_DELEGATE_STAKE:
@@ -703,7 +703,7 @@ def get_instruction(
                 [{'name': 'Initialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Vote account', 'access': '', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'config account', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
                 [],
                 [0, 2, 3, 4, 5],
-                "templatename",
+                "ui_confirm",
                 "Delegate Stake"
             )
         elif instruction_id == INS_SPLIT:
@@ -715,7 +715,7 @@ def get_instruction(
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
                 [0],
                 [2],
-                "templatename",
+                "ui_confirm",
                 "Split"
             )
         elif instruction_id == INS_WITHDRAW:
@@ -727,7 +727,7 @@ def get_instruction(
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Recipient account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
                 [0],
                 [0, 1],
-                "templatename",
+                "ui_confirm",
                 "Withdraw"
             )
         elif instruction_id == INS_DEACTIVATE:
@@ -739,7 +739,7 @@ def get_instruction(
                 [{'name': 'Delegated stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
                 [],
                 [0, 1, 2],
-                "templatename",
+                "ui_confirm",
                 "Deactivate"
             )
         elif instruction_id == INS_SET_LOCKUP:
@@ -751,7 +751,7 @@ def get_instruction(
                 [{'name': 'Initialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Lockup authority or withdraw authority', 'access': '', 'signer': True, 'optional': False}],
                 [0, 2],
                 [0],
-                "templatename",
+                "ui_confirm",
                 "Set Lockup"
             )
         elif instruction_id == INS_MERGE:
@@ -763,7 +763,7 @@ def get_instruction(
                 [{'name': 'Destination stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Source stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
                 [],
                 [0],
-                "templatename",
+                "ui_confirm",
                 "Merge"
             )
         elif instruction_id == INS_AUTHORIZE_WITH_SEED:
@@ -775,7 +775,7 @@ def get_instruction(
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
                 [0, 2],
                 [0],
-                "templatename",
+                "ui_confirm",
                 "Authorize With Seed"
             )
         elif instruction_id == INS_INITIALIZE_CHECKED:
@@ -787,7 +787,7 @@ def get_instruction(
                 [{'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Rent sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake authority', 'access': '', 'signer': False, 'optional': False}, {'name': 'withdraw authority', 'access': '', 'signer': True, 'optional': False}],
                 [],
                 [0, 1, 2, 3],
-                "templatename",
+                "ui_confirm",
                 "Initialize Checked"
             )
         elif instruction_id == INS_AUTHORIZE_CHECKED:
@@ -799,7 +799,7 @@ def get_instruction(
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'new stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
                 [0],
                 [0, 1, 2],
-                "templatename",
+                "ui_confirm",
                 "Authorize Checked"
             )
         elif instruction_id == INS_AUTHORIZE_CHECKED_WITH_SEED:
@@ -811,7 +811,7 @@ def get_instruction(
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'new stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
                 [0, 2],
                 [0],
-                "templatename",
+                "ui_confirm",
                 "Authorize Checked With Seed"
             )
         elif instruction_id == INS_SET_LOCKUP_CHECKED:
@@ -823,7 +823,7 @@ def get_instruction(
                 [{'name': 'stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Lockup authority or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'New lockup authority', 'access': '', 'signer': True, 'optional': True}],
                 [0, 1],
                 [0],
-                "templatename",
+                "ui_confirm",
                 "Set Lockup Checked"
             )
         else:
@@ -840,7 +840,7 @@ def get_instruction(
                 [],
                 [0],
                 [],
-                "templatename",
+                "ui_confirm",
                 "Request Heap Frame"
             )
         elif instruction_id == INS_SET_COMPUTE_UNIT_LIMIT:
@@ -852,7 +852,7 @@ def get_instruction(
                 [],
                 [0],
                 [],
-                "templatename",
+                "ui_confirm",
                 "Set Compute Unit Limit"
             )
         elif instruction_id == INS_SET_COMPUTE_UNIT_PRICE:
@@ -864,7 +864,7 @@ def get_instruction(
                 [],
                 [0],
                 [],
-                "templatename",
+                "ui_confirm",
                 "Set Compute Unit Price"
             )
         else:
