@@ -125,6 +125,8 @@ typedef struct {
 #define OPTIGA_ECC_KEY_COUNT 4
 #define OPTIGA_CERT_COUNT 4
 #define OPTIGA_MAX_METADATA_SIZE 44
+#define OPTIGA_RANDOM_MIN_SIZE 8
+#define OPTIGA_RANDOM_MAX_SIZE 256
 
 #define OPTIGA_ACCESS_CONDITION(ac_id, oid) \
   { (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 }

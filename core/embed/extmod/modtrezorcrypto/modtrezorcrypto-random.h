@@ -23,6 +23,10 @@
 
 #include "rand.h"
 
+#if USE_OPTIGA
+#include "optiga.h"
+#endif
+
 /// package: trezorcrypto.random
 
 /// def uniform(n: int) -> int:
@@ -40,22 +44,52 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj,
                                  mod_trezorcrypto_random_uniform);
 
 /// import builtins
-/// def bytes(len: int) -> builtins.bytes:
+/// def bytes(len: int, strong: bool = False) -> builtins.bytes:
 ///     """
-///     Generate random bytes sequence of length len.
+///     Generate random bytes sequence of length len. If `strong` is set then
+///     maximum sources of entropy are used.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_random_bytes(mp_obj_t len) {
-  uint32_t l = trezor_obj_get_uint(len);
-  if (l > 1024) {
+STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
+                                              const mp_obj_t *args) {
+  uint32_t len = trezor_obj_get_uint(args[0]);
+  if (len > 1024) {
     mp_raise_ValueError("Maximum requested size is 1024");
   }
   vstr_t vstr = {0};
-  vstr_init_len(&vstr, l);
-  random_buffer((uint8_t *)vstr.buf, l);
+  vstr_init_len(&vstr, len);
+#if USE_OPTIGA
+  if (n_args > 1 && mp_obj_is_true(args[1])) {
+    uint8_t *dest = (uint8_t *)vstr.buf;
+    if (!optiga_random_buffer(dest, len)) {
+      vstr_clear(&vstr);
+      mp_raise_msg(&mp_type_RuntimeError,
+                   "Failed to get randomness from Optiga.");
+    }
+
+    uint8_t buffer[4] = {0};
+    while (len > sizeof(buffer)) {
+      random_buffer(buffer, sizeof(buffer));
+      for (int i = 0; i < sizeof(buffer); ++i) {
+        *dest ^= buffer[i];
+        ++dest;
+      }
+      len -= sizeof(buffer);
+    }
+
+    random_buffer(buffer, len);
+    for (int i = 0; i < len; ++i) {
+      *dest ^= buffer[i];
+      ++dest;
+    }
+  } else
+#endif
+  {
+    random_buffer((uint8_t *)vstr.buf, len);
+  }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_bytes_obj,
-                                 mod_trezorcrypto_random_bytes);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_random_bytes_obj, 1,
+                                           2, mod_trezorcrypto_random_bytes);
 
 /// def shuffle(data: list) -> None:
 ///     """

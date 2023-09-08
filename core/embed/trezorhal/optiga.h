@@ -39,4 +39,6 @@ bool optiga_cert_size(uint8_t index, size_t *cert_size);
 bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
                       size_t *cert_size);
 
+bool optiga_random_buffer(uint8_t *dest, size_t size);
+
 #endif

@@ -338,7 +338,8 @@ optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#getrandom
  */
 optiga_result optiga_get_random(uint8_t *random, size_t random_size) {
-  if (random_size < 8 || random_size > 256) {
+  if (random_size < OPTIGA_RANDOM_MIN_SIZE ||
+      random_size > OPTIGA_RANDOM_MAX_SIZE) {
     return OPTIGA_ERR_SIZE;
   }
 
