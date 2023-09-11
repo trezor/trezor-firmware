@@ -463,14 +463,14 @@ program_pkg = env.Command(
     target='ble_firmware.zip',
     source=program_hex,
     action=[
-        f'python ../../pc-nrfutil/nordicsemi/  pkg generate --hw-version 52 --sd-req=0x100 --application $SOURCE --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --key-file ./embed/ble_bootloader/priv.pem $TARGET --application-version-string {tools.get_version("embed/ble_firmware/version.h")}'
+        f'python ../../pc-nrfutil/nordicsemi/  pkg generate --hw-version 52 --sd-req=0x100 --application $SOURCE --key-file ./embed/ble_bootloader/priv.pem $TARGET --application-version-string {tools.get_version("embed/ble_firmware/version.h")} --sd-id=0x100 --softdevice ./embed/sdk/nrf52/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex '
     ],
 )
 
 settings = env.Command(
     target='settings.hex',
     source=program_hex,
-    action=f'python ../../pc-nrfutil/nordicsemi/  settings generate --family NRF52 --application $SOURCE --app-boot-validation VALIDATE_ECDSA_P256_SHA256 --application-version-string {tools.get_version("embed/ble_firmware/version.h")} --bootloader-version {tools.get_version_int("embed/ble_bootloader/version.h")} --bl-settings-version 2  --sd-boot-validation VALIDATE_ECDSA_P256_SHA256 --softdevice ./embed/sdk/nrf52/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ./embed/ble_bootloader/priv.pem $TARGET',
+    action=f'python ../../pc-nrfutil/nordicsemi/  settings generate --family NRF52 --application $SOURCE --application-version-string {tools.get_version("embed/ble_firmware/version.h")} --bootloader-version {tools.get_version_int("embed/ble_bootloader/version.h")} --softdevice ./embed/sdk/nrf52/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --key-file ./embed/ble_bootloader/priv.pem $TARGET',
 )
 
 program_merge = env.Command(
