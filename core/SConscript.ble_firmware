@@ -383,7 +383,7 @@ CPU_CCFLAGS = '-mthumb -mabi=aapcs -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-s
 
 
 env.Replace(
-    COPT=env.get('ENV').get('OPTIMIZE', '-Og'),
+    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
     '-g3 '
     '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -Wno-unused-function '
