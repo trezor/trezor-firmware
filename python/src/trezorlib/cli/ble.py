@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import json
 import sys
 import zipfile
 from typing import TYPE_CHECKING, BinaryIO
@@ -45,22 +46,27 @@ def update(
     """Upload new BLE firmware to device."""
 
     with zipfile.ZipFile(package) as archive:
-        binfile = archive.read("ble_firmware.bin")
-        datfile = archive.read("ble_firmware.dat")
+        manifest = archive.read("manifest.json")
+        mainfest_data = json.loads(manifest.decode("utf-8"))["manifest"]
 
-        """Perform the final act of loading the firmware into Trezor."""
-        try:
-            click.echo("Uploading...\r", nl=False)
-            with click.progressbar(
-                label="Uploading", length=len(binfile), show_eta=False
-            ) as bar:
-                ble.update(client, datfile, binfile, bar.update)
-                click.echo("Update successful.")
-        except exceptions.Cancelled:
-            click.echo("Update aborted on device.")
-        except exceptions.TrezorException as e:
-            click.echo(f"Update failed: {e}")
-            sys.exit(3)
+        for k in mainfest_data.keys():
+
+            binfile = archive.read(mainfest_data[k]["bin_file"])
+            datfile = archive.read(mainfest_data[k]["dat_file"])
+
+            """Perform the final act of loading the firmware into Trezor."""
+            try:
+                click.echo("Uploading...\r", nl=False)
+                with click.progressbar(
+                    label="Uploading", length=len(binfile), show_eta=False
+                ) as bar:
+                    ble.update(client, datfile, binfile, bar.update)
+                    click.echo("Update successful.")
+            except exceptions.Cancelled:
+                click.echo("Update aborted on device.")
+            except exceptions.TrezorException as e:
+                click.echo(f"Update failed: {e}")
+                sys.exit(3)
 
 
 @cli.command()
