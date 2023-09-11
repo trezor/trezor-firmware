@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2021, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2021, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -37,28 +37,54 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __NRF_DFU_VER_VALIDATION_H
-#define __NRF_DFU_VER_VALIDATION_H
-
-#include "stdint.h"
-#include "sdk_errors.h"
-#include "nrf_dfu_handling_error.h"
-#include "dfu-cc.pb.h"
-
-/** @brief SD_REQ field value which indicates that Softdevice can be overwritten by the application. */
-#define SD_REQ_APP_OVERWRITES_SD 0
-
-/** @brief SD_REQ_ANY_VERSION field value which indicates that any SoftDevice version is valid. 
+/**@file
  *
- * @note This is used by external application in case SoftDevice version compatibility isn't needed.
+ * @defgroup sdk_nrf_dfu_mbr MBR functions
+ * @{
+ * @ingroup  nrf_dfu
  */
-#define SD_REQ_ANY_VERSION (0xFFFE)
 
-/**
- * @brief Function for validating version of new firmware.
+#ifndef NRF_DFU_MBR_H__
+#define NRF_DFU_MBR_H__
+
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** @brief Function for copying the bootloader using an MBR command.
  *
- * @return NRF_DFU_RES_CODE_SUCCESS if successful or error code otherwise
+ * @param[in] p_src         Source address of the bootloader data to copy.
+ * @param[in] len           Length of the data to copy in bytes.
+ *
+ * @return  This function will return only if the command request could not be run.
+ *          See @ref sd_mbr_command_copy_bl_t for possible return values.
  */
-nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_init_command_t const * p_init);
+uint32_t nrf_dfu_mbr_copy_bl(uint32_t * p_src, uint32_t len);
 
-#endif //__NRF_DFU_VER_VALIDATION_H
+
+/** @brief Function for initializing the SoftDevice using an MBR command.
+ *
+ * @retval  NRF_SUCCESS     If the SoftDevice was initialized successfully.
+ *                          Any other return value indicates that the SoftDevice
+ *                          could not be initialized.
+ */
+uint32_t nrf_dfu_mbr_init_sd(void);
+
+
+/** @brief Function for setting the address of the IRQ table to the app's using an MBR command.
+ *
+ * @retval  NRF_SUCCESS  If the address of the new irq table was set. Any other
+ *                       return value indicates that the address could not be set.
+ */
+uint32_t nrf_dfu_mbr_irq_forward_address_set(void);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NRF_DFU_MBR_H__
+
+/** @} */

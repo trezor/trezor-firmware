@@ -43,6 +43,8 @@ CPPDEFINES_MOD += [
     'MBR_PRESENT',
     'SVC_INTERFACE_CALL_AS_NORMAL_FUNCTION',
     ('__HEAP_SIZE','0'),
+    '__STARTUP_CLEAR_BSS',
+    ('__START', 'main'),
 
     ('uECC_ENABLE_VLI_API', '0'),
     ('uECC_OPTIMIZATION_LEVEL', '3'),
@@ -67,48 +69,35 @@ SOURCE_MOD += [
 
 CPPPATH_MOD += [
     'embed/sdk/nrf52/modules/nrfx/drivers/include',
-    'embed/sdk/nrf52/components/libraries/crypto/backend/micro_ecc',
     'embed/sdk/nrf52/components/libraries/memobj',
     'embed/sdk/nrf52/components/libraries/crc32',
-    'embed/sdk/nrf52/components/libraries/sha256',
     'embed/sdk/nrf52/components/libraries/experimental_section_vars',
     'embed/sdk/nrf52/components/libraries/mem_manager',
     'embed/sdk/nrf52/components/libraries/fstorage',
     'embed/sdk/nrf52/components/libraries/util',
     'embed/sdk/nrf52/modules/nrfx',
     'embed/sdk/nrf52/external/nrf_oberon/include',
-    'embed/sdk/nrf52/components/libraries/crypto/backend/oberon',
-    'embed/sdk/nrf52/components/libraries/crypto/backend/cifra',
     'embed/sdk/nrf52/components/libraries/atomic',
     'embed/sdk/nrf52/integration/nrfx',
     'embed/sdk/nrf52/components/libraries/crypto/backend/cc310_bl',
     'embed/sdk/nrf52/components/drivers_nrf/nrf_soc_nosd',
     'embed/sdk/nrf52/components/libraries/log/src',
-    'embed/sdk/nrf52/components/libraries/bootloader/dfu',
     'embed/sdk/nrf52/components/libraries/bootloader/serial_dfu',
-    'embed/sdk/nrf52/external/nrf_cc310_bl/include',
     'embed/sdk/nrf52/external/segger_rtt',
     'embed/sdk/nrf52/components/libraries/delay',
     'embed/sdk/nrf52/integration/nrfx/legacy',
     'embed/sdk/nrf52/modules/nrfx/hal',
-    'embed/sdk/nrf52/components/libraries/crypto/backend/nrf_hw',
     'embed/sdk/nrf52/components/libraries/log',
     'embed/sdk/nrf52/components/libraries/strerror',
-    'embed/sdk/nrf52/components/libraries/crypto/backend/mbedtls',
-    'embed/sdk/nrf52/components/libraries/crypto/backend/cc310',
     'embed/sdk/nrf52/components/libraries/bootloader',
     'embed/sdk/nrf52/components/softdevice/mbr/headers',
-    'embed/sdk/nrf52/components/libraries/crypto',
-    'embed/sdk/nrf52/components/libraries/crypto/backend/optiga',
     'embed/sdk/nrf52/components/libraries/scheduler',
     'embed/sdk/nrf52/components/libraries/slip',
     'embed/sdk/nrf52/external/fprintf',
     'embed/sdk/nrf52/components/toolchain/cmsis/include',
     'embed/sdk/nrf52/components/libraries/balloc',
     'embed/sdk/nrf52/components/libraries/stack_info',
-    'embed/sdk/nrf52/components/libraries/crypto/backend/nrf_sw',
     'embed/sdk/nrf52/modules/nrfx/mdk',
-    'embed/sdk/nrf52/external/nrf_cc310/include',
     'embed/sdk/nrf52/components/libraries/queue',
     'embed/sdk/nrf52/components/libraries/mutex',
     'embed/sdk/nrf52/components/libraries/ringbuf',
@@ -165,27 +154,28 @@ SOURCE_NRFHAL = [
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_fw_activation.c',
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_info.c',
   'embed/sdk/nrf52/components/libraries/bootloader/nrf_bootloader_wdt.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/dfu-cc.pb.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_flash.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_handling_error.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_mbr.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_req_handler.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_settings.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_transport.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_utils.c',
-  'embed/sdk/nrf52/components/libraries/bootloader/dfu/nrf_dfu_ver_validation.c',
   'embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial.c',
 ]
 
 SOURCE_BLE_BOOTLOADER = [
     'embed/ble_bootloader/main.c',
-    'embed/ble_bootloader/uecc/uECC.c',
     'embed/ble_bootloader/dfu_public_key.c',
     # originally embed/sdk/nrf52/components/libraries/bootloader/serial_dfu/nrf_dfu_serial_uart.c',
     'embed/ble_bootloader/nrf_dfu_serial_uart.c',
     'embed/ble_bootloader/nrf_bootloader.c',
-    'embed/ble_bootloader/nrf_dfu_validation.c',
+    # ejected from embed/sdk/nrf52/components/libraries/bootloader/dfu
+    'embed/ble_bootloader/dfu/nrf_dfu_validation.c',
+    'embed/ble_bootloader/dfu/dfu-cc.pb.c',
+    'embed/ble_bootloader/dfu/nrf_dfu.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_flash.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_handling_error.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_mbr.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_req_handler.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_settings.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_transport.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_utils.c',
+    'embed/ble_bootloader/dfu/nrf_dfu_ver_validation.c',
+
     'vendor/trezor-crypto/blake2s.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
@@ -255,11 +245,11 @@ CPU_CCFLAGS = '-mthumb -mabi=aapcs -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-s
 
 
 env.Replace(
-    COPT=env.get('ENV').get('OPTIMIZE', '-Og'),
+    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
     '-g3 '
     '-nostdlib '
-    '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -Wno-unused-function '
+    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -Wno-unused-function '
     '-fdata-sections -ffunction-sections '
     '-fno-strict-aliasing '
     '-fno-builtin '
@@ -268,7 +258,7 @@ env.Replace(
     LINKFLAGS='-Lembed/sdk/nrf52/modules/nrfx/mdk  -T embed/ble_bootloader/memory.ld -Wl,--gc-sections --specs=nano.specs -Wl,-Map=build/ble_bootloader/ble_bootloader.map -Wl,--warn-common  -Wl,--print-memory-usage',
     CPPPATH=[
         'embed/ble_bootloader',
-        'embed/ble_bootloader/uecc',
+        'embed/ble_bootloader/dfu',
         'embed/sdk/nrf52',
     ] + CPPPATH_MOD,
     CPPDEFINES=[

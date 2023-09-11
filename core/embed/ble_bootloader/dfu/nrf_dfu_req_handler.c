@@ -57,7 +57,6 @@
 #include "crc32.h"
 #include "app_scheduler.h"
 #include "sdk_macros.h"
-#include "nrf_crypto.h"
 #include "nrf_assert.h"
 #include "nrf_dfu_validation.h"
 
@@ -71,7 +70,7 @@ NRF_LOG_MODULE_REGISTER();
 #define NRF_DFU_PROTOCOL_REDUCED 0
 #endif
 
-STATIC_ASSERT(DFU_SIGNED_COMMAND_SIZE <= INIT_COMMAND_MAX_SIZE);
+STATIC_ASSERT(dfu_SignedCommand_size <= INIT_COMMAND_MAX_SIZE);
 
 static uint32_t m_firmware_start_addr;          /**< Start address of the current firmware image. */
 static uint32_t m_firmware_size_req;            /**< The size of the entire firmware image. Defined by the init command. */

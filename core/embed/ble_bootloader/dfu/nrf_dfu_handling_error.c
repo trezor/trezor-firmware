@@ -37,28 +37,25 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __NRF_DFU_VER_VALIDATION_H
-#define __NRF_DFU_VER_VALIDATION_H
 
-#include "stdint.h"
-#include "sdk_errors.h"
 #include "nrf_dfu_handling_error.h"
-#include "dfu-cc.pb.h"
 
-/** @brief SD_REQ field value which indicates that Softdevice can be overwritten by the application. */
-#define SD_REQ_APP_OVERWRITES_SD 0
+#include "nrf_log.h"
+#include "nrf_dfu_req_handler.h"
 
-/** @brief SD_REQ_ANY_VERSION field value which indicates that any SoftDevice version is valid. 
- *
- * @note This is used by external application in case SoftDevice version compatibility isn't needed.
- */
-#define SD_REQ_ANY_VERSION (0xFFFE)
+static nrf_dfu_ext_error_code_t m_last_error = NRF_DFU_EXT_ERROR_NO_ERROR;
 
-/**
- * @brief Function for validating version of new firmware.
- *
- * @return NRF_DFU_RES_CODE_SUCCESS if successful or error code otherwise
- */
-nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_init_command_t const * p_init);
+nrf_dfu_result_t ext_error_set(nrf_dfu_ext_error_code_t error_code)
+{
+    m_last_error = error_code;
 
-#endif //__NRF_DFU_VER_VALIDATION_H
+    return NRF_DFU_RES_CODE_EXT_ERROR;
+}
+
+nrf_dfu_ext_error_code_t ext_error_get()
+{
+    nrf_dfu_ext_error_code_t last_error = m_last_error;
+    m_last_error = NRF_DFU_EXT_ERROR_NO_ERROR;
+
+    return last_error;
+}

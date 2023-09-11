@@ -48,8 +48,6 @@
 #include "pb_decode.h"
 #include "dfu-cc.pb.h"
 #include "crc32.h"
-#include "nrf_crypto.h"
-#include "nrf_crypto_shared.h"
 #include "nrf_assert.h"
 #include "nrf_dfu_validation.h"
 #include "nrf_dfu_ver_validation.h"
@@ -382,7 +380,7 @@ static nrf_dfu_result_t nrf_dfu_validation_signature_check(uint32_t sigmask,
 
     if (sectrue != check_trezor_sig(hash_digest, BLAKE2S_DIGEST_LENGTH, NRF_BOOTLOADER_KEY_M, NRF_BOOTLOADER_KEY_N, sigmask, NRF_BOOTLOADER_KEYS, signature)){
       NRF_LOG_ERROR("Signature failed");
-      err_code = NRF_ERROR_CRYPTO_ECDSA_INVALID_SIGNATURE;
+      err_code = NRF_DFU_ERROR_INVALID_SIGNATURE;
     }
 
     if (err_code != NRF_SUCCESS)
@@ -635,13 +633,13 @@ static bool nrf_dfu_validation_hash_ok(uint8_t const * p_hash, uint32_t src_addr
 
     blake2s( (uint8_t*)src_addr, data_len, hash, BLAKE2S_DIGEST_LENGTH);
 
-    if (memcmp(hash, p_hash, NRF_CRYPTO_HASH_SIZE_SHA256) != 0)
+    if (memcmp(hash, p_hash, BLAKE2S_DIGEST_LENGTH) != 0)
     {
         NRF_LOG_WARNING("Hash verification failed.");
         NRF_LOG_DEBUG("Expected FW hash:")
-        NRF_LOG_HEXDUMP_DEBUG(p_hash, NRF_CRYPTO_HASH_SIZE_SHA256);
+        NRF_LOG_HEXDUMP_DEBUG(p_hash, BLAKE2S_DIGEST_LENGTH);
         NRF_LOG_DEBUG("Actual FW hash:")
-        NRF_LOG_HEXDUMP_DEBUG(hash, NRF_CRYPTO_HASH_SIZE_SHA256);
+        NRF_LOG_HEXDUMP_DEBUG(hash, BLAKE2S_DIGEST_LENGTH);
         NRF_LOG_FLUSH();
 
         result = false;
@@ -881,7 +879,7 @@ bool nrf_dfu_validation_boot_validate(boot_validation_t const * p_validation, ui
     nrf_dfu_result_t res_code = nrf_dfu_validation_signature_check(
                                     p_validation->sigmask,
                                     p_validation->bytes,
-                                    NRF_CRYPTO_ECDSA_SECP256R1_SIGNATURE_SIZE,
+                                    64,
                                     p_data,
                                     data_len);
     return (res_code == NRF_DFU_RES_CODE_SUCCESS);

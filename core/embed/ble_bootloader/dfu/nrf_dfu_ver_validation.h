@@ -59,6 +59,6 @@
  *
  * @return NRF_DFU_RES_CODE_SUCCESS if successful or error code otherwise
  */
-nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_init_command_t const * p_init);
+nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_InitCommand const * p_init);
 
 #endif //__NRF_DFU_VER_VALIDATION_H

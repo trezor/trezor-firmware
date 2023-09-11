@@ -295,7 +295,7 @@ typedef enum
 
 typedef struct
 {
-    boot_validation_type_t type;
+    uint32_t               sigmask;
     uint8_t                bytes[SETTINGS_BOOT_VALIDATION_SIZE];
 } boot_validation_t;
 

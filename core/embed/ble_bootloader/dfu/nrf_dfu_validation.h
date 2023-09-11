@@ -185,7 +185,7 @@ nrf_dfu_result_t nrf_dfu_validation_activation_prepare(uint32_t data_addr, uint3
  *
  * @return      Operation result. see @ref nrf_dfu_result_t.
  */
-nrf_dfu_result_t nrf_dfu_validation_post_external_app_execute(dfu_init_command_t const * p_init, bool is_trusted);
+nrf_dfu_result_t nrf_dfu_validation_post_external_app_execute(dfu_InitCommand const * p_init, bool is_trusted);
 
 /**
 * @brief Function to check if there is a valid external app in Bank 1.

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2021, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2021, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -37,28 +37,62 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __NRF_DFU_VER_VALIDATION_H
-#define __NRF_DFU_VER_VALIDATION_H
+#include "nrf_dfu.h"
 
-#include "stdint.h"
-#include "sdk_errors.h"
-#include "nrf_dfu_handling_error.h"
-#include "dfu-cc.pb.h"
+#include "nrf_dfu_utils.h"
+#include "nrf_dfu_transport.h"
+#include "nrf_dfu_req_handler.h"
+#include "nrf_log.h"
 
-/** @brief SD_REQ field value which indicates that Softdevice can be overwritten by the application. */
-#define SD_REQ_APP_OVERWRITES_SD 0
+static nrf_dfu_observer_t m_user_observer;                          //<! Observer callback set by the user.
 
-/** @brief SD_REQ_ANY_VERSION field value which indicates that any SoftDevice version is valid. 
- *
- * @note This is used by external application in case SoftDevice version compatibility isn't needed.
- */
-#define SD_REQ_ANY_VERSION (0xFFFE)
+
 
 /**
- * @brief Function for validating version of new firmware.
- *
- * @return NRF_DFU_RES_CODE_SUCCESS if successful or error code otherwise
+ * @brief This function calls the user's observer (@ref m_observer) after it is done handling the event.
  */
-nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_init_command_t const * p_init);
+static void dfu_observer(nrf_dfu_evt_type_t event)
+{
+    switch (event)
+    {
+        case NRF_DFU_EVT_DFU_COMPLETED:
+        case NRF_DFU_EVT_DFU_ABORTED:
+#ifndef NRF_DFU_NO_TRANSPORT
+            UNUSED_RETURN_VALUE(nrf_dfu_transports_close(NULL));
+#endif
+            break;
+        default:
+            break;
+    }
 
-#endif //__NRF_DFU_VER_VALIDATION_H
+    /* Call user's observer if present. */
+    if (m_user_observer)
+    {
+        m_user_observer(event);
+    }
+}
+
+
+
+uint32_t nrf_dfu_init(nrf_dfu_observer_t observer)
+{
+    uint32_t ret_val;
+
+    m_user_observer = observer;
+
+    NRF_LOG_INFO("Entering DFU mode.");
+
+    dfu_observer(NRF_DFU_EVT_DFU_INITIALIZED);
+
+    // Initializing transports
+    ret_val = nrf_dfu_transports_init(dfu_observer);
+    if (ret_val != NRF_SUCCESS)
+    {
+        NRF_LOG_ERROR("Could not initalize DFU transport: 0x%08x", ret_val);
+        return ret_val;
+    }
+
+    ret_val = nrf_dfu_req_handler_init(dfu_observer);
+
+    return ret_val;
+}

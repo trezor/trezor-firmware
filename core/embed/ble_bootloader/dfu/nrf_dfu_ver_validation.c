@@ -42,7 +42,6 @@
 #include "nrf_dfu_settings.h"
 #include "nrf_dfu_utils.h"
 #include "nrf_bootloader_info.h"
-#include "nrf_crypto.h"
 #include "nrf_assert.h"
 #include "dfu-cc.pb.h"
 #include "nrf_dfu_ver_validation.h"
@@ -78,7 +77,7 @@ static bool sd_req_check(uint32_t const * p_sd_req, uint8_t sd_req_cnt, bool acc
 }
 
 
-static bool sd_req_ok(dfu_init_command_t const * p_init)
+static bool sd_req_ok(dfu_InitCommand const * p_init)
 {
     ASSERT(p_init != NULL);
     bool result;
@@ -100,9 +99,9 @@ static bool sd_req_ok(dfu_init_command_t const * p_init)
         {
             result = sd_req_check(p_init->sd_req,
                                   p_init->sd_req_count,
-                                  (p_init->type == DFU_FW_TYPE_EXTERNAL_APPLICATION));
+                                  (p_init->type == dfu_FwType_EXTERNAL_APPLICATION));
         }
-        else if (p_init->type == DFU_FW_TYPE_APPLICATION)
+        else if (p_init->type == dfu_FwType_APPLICATION)
         {
             // The application wants to overwrite the SoftDevice.
             if (prevent_downgrade && (p_init->sd_req_count > 1) && (p_init->sd_req[0] == SD_REQ_APP_OVERWRITES_SD))
@@ -131,7 +130,7 @@ static bool sd_req_ok(dfu_init_command_t const * p_init)
         else
         {
             // Don't allow SoftDevice updates which assume no SD is present already.
-            result = !prevent_downgrade || (p_init->type != DFU_FW_TYPE_SOFTDEVICE);
+            result = !prevent_downgrade || (p_init->type != dfu_FwType_SOFTDEVICE);
         }
     }
 
@@ -158,23 +157,23 @@ static bool sd_req_ok(dfu_init_command_t const * p_init)
 }
 
 
-static bool fw_hash_type_ok(dfu_init_command_t const * p_init)
+static bool fw_hash_type_ok(dfu_InitCommand const * p_init)
 {
     ASSERT(p_init != NULL);
 
-    return (p_init->hash.hash_type == DFU_HASH_TYPE_SHA256);
+    return (p_init->hash.hash_type == dfu_HashType_SHA256);
 }
 
 
-static bool fw_version_required(dfu_fw_type_t new_fw_type)
+static bool fw_version_required(dfu_FwType new_fw_type)
 {
     bool result = true;
 
-    if (new_fw_type == DFU_FW_TYPE_SOFTDEVICE)
+    if (new_fw_type == dfu_FwType_SOFTDEVICE)
     {
         result = false; // fw_version is optional in SoftDevice updates. If present, it will be checked against the app version.
     }
-    else if (new_fw_type == DFU_FW_TYPE_APPLICATION)
+    else if (new_fw_type == dfu_FwType_APPLICATION)
     {
         result = NRF_DFU_APP_DOWNGRADE_PREVENTION; // fw_version is configurable in app updates.
     }
@@ -191,15 +190,15 @@ static bool fw_version_required(dfu_fw_type_t new_fw_type)
 }
 
 
-static bool fw_type_ok(dfu_init_command_t const * p_init)
+static bool fw_type_ok(dfu_InitCommand const * p_init)
 {
     ASSERT(p_init != NULL);
 
     return ((p_init->has_type)
-            && (  (p_init->type == DFU_FW_TYPE_APPLICATION)
-               || (p_init->type == DFU_FW_TYPE_SOFTDEVICE)
-               || (p_init->type == DFU_FW_TYPE_BOOTLOADER)
-               || (p_init->type == DFU_FW_TYPE_SOFTDEVICE_BOOTLOADER)
+            && (  (p_init->type == dfu_FwType_APPLICATION)
+               || (p_init->type == dfu_FwType_SOFTDEVICE)
+               || (p_init->type == dfu_FwType_BOOTLOADER)
+               || (p_init->type == dfu_FwType_SOFTDEVICE_BOOTLOADER)
 #if NRF_DFU_SUPPORTS_EXTERNAL_APP
                || (p_init->type == DFU_FW_TYPE_EXTERNAL_APPLICATION)
 #endif // NRF_DFU_SUPPORTS_EXTERNAL_APP
@@ -214,13 +213,13 @@ static bool fw_type_ok(dfu_init_command_t const * p_init)
 
 
 // This function assumes p_init->has_fw_version.
-static bool fw_version_ok(dfu_init_command_t const * p_init)
+static bool fw_version_ok(dfu_InitCommand const * p_init)
 {
     ASSERT(p_init != NULL);
     ASSERT(p_init->has_fw_version);
 
-    if ((p_init->type == DFU_FW_TYPE_APPLICATION) ||
-        (p_init->type == DFU_FW_TYPE_SOFTDEVICE))
+    if ((p_init->type == dfu_FwType_APPLICATION) ||
+        (p_init->type == dfu_FwType_SOFTDEVICE))
     {
         if (!NRF_DFU_APP_DOWNGRADE_PREVENTION)
         {
@@ -259,7 +258,7 @@ static bool fw_version_ok(dfu_init_command_t const * p_init)
 }
 
 
-nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_init_command_t const * p_init)
+nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_InitCommand const * p_init)
 {
     nrf_dfu_result_t ret_val = NRF_DFU_RES_CODE_SUCCESS;
     if (!fw_type_ok(p_init))

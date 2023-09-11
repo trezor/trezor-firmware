@@ -37,28 +37,38 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __NRF_DFU_VER_VALIDATION_H
-#define __NRF_DFU_VER_VALIDATION_H
+#ifndef NRF_DFU_TRIGGER_USB_H
+#define NRF_DFU_TRIGGER_USB_H
 
-#include "stdint.h"
 #include "sdk_errors.h"
-#include "nrf_dfu_handling_error.h"
-#include "dfu-cc.pb.h"
-
-/** @brief SD_REQ field value which indicates that Softdevice can be overwritten by the application. */
-#define SD_REQ_APP_OVERWRITES_SD 0
-
-/** @brief SD_REQ_ANY_VERSION field value which indicates that any SoftDevice version is valid. 
- *
- * @note This is used by external application in case SoftDevice version compatibility isn't needed.
- */
-#define SD_REQ_ANY_VERSION (0xFFFE)
 
 /**
- * @brief Function for validating version of new firmware.
+ * @defgroup nrf_dfu_trigger_usb USB DFU trigger library
+ * @ingroup app_common
  *
- * @return NRF_DFU_RES_CODE_SUCCESS if successful or error code otherwise
+ * @brief @tagAPI52840 USB DFU trigger library is used to enter the bootloader and read the firmware version.
+ *
+ * @details See @ref lib_dfu_trigger_usb for additional documentation.
+ * @{
  */
-nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_init_command_t const * p_init);
 
-#endif //__NRF_DFU_VER_VALIDATION_H
+/**
+ * @brief Function for initializing the USB DFU trigger library.
+ *
+ * @note  If the USB is also used for other purposes, then this function must be called after USB is
+ *        initialized but before it is enabled. In this case, the configuration flag @ref
+ *        NRF_DFU_TRIGGER_USB_USB_SHARED must be set to 1.
+ *
+ * @note  Calling this again after the first success has no effect and returns @ref NRF_SUCCESS.
+ *
+ * @note  If @ref APP_USBD_CONFIG_EVENT_QUEUE_ENABLE is on (1), USB events must be handled manually.
+ *        See @ref app_usbd_event_queue_process.
+ *
+ * @retval NRF_SUCCESS  On successful initialization.
+ * @return An error code on failure, for example if called at a wrong time.
+ */
+ret_code_t nrf_dfu_trigger_usb_init(void);
+
+/** @} */
+
+#endif //NRF_DFU_TRIGGER_USB_H

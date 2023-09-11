@@ -12,5 +12,6 @@
 ^\./crypto/sha3
 ^\./legacy/vendor
 ^\./core/embed/segger
-^\./core/embed/ble_bootloader/uecc
+^\./core/embed/ble_bootloader/dfu
+^\./core/embed/ble_firmware/uecc
 ^\./core/embed/sdk

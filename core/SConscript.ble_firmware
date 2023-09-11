@@ -46,6 +46,8 @@ CPPDEFINES_MOD += [
     'S140',
     ('__HEAP_SIZE','8192'),
     ('__STACK_SIZE','8192'),
+    '__STARTUP_CLEAR_BSS',
+    ('__START', 'main'),
 
     ('uECC_ENABLE_VLI_API', '0'),
     ('uECC_OPTIMIZATION_LEVEL', '3'),
@@ -323,9 +325,9 @@ SOURCE_BLE_FIRMWARE = [
     'embed/ble_firmware/power.c',
     'embed/ble_firmware/advertising.c',
     'embed/ble_firmware/connection.c',
+    'embed/ble_firmware/uecc/uECC.c',
     'embed/bootloader/protob/messages.pb.c',
     'embed/lib/protob_helpers.c',
-    'embed/ble_bootloader/uecc/uECC.c',
 ]
 
 if MMD:
@@ -384,7 +386,7 @@ env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Og'),
     CCFLAGS='$COPT '
     '-g3 '
-    '-std=c99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -Wno-unused-function '
+    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -Wno-unused-function '
     '-fdata-sections -ffunction-sections '
     '-fno-strict-aliasing '
     '-fno-builtin '
@@ -397,7 +399,7 @@ env.Replace(
         'embed/sdk/nrf52',
         'embed/lib',
         'vendor/nanopb',
-        'embed/ble_bootloader/uecc',
+        'embed/ble_firmware/uecc',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         'BLE_FIRMWARE',
