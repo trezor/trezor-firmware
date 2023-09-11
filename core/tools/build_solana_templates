@@ -4,8 +4,13 @@ set -e
 CWD=`dirname "$0"`
 RENDER="python3 $CWD/build_solana_templates.py"
 
-ROOT_PATH="$CWD/../src/apps/solana/transaction"
-OUTPUT_PATH="$ROOT_PATH/instructions.py"
+PROGRAMS_PATH="$CWD/../src/apps/solana/transaction"
+
+FW_PATH=$PROGRAMS_PATH
+FW_OUTPUT_PATH="$FW_PATH/instructions.py"
+
+TESTS_PATH="$CWD/../../tests/device_tests/solana/construct"
+TESTS_OUTPUT_PATH="$TESTS_PATH/instructions.py"
 
 format() {
 	isort $1
@@ -14,10 +19,12 @@ format() {
 }
 
 check_results() {
+    OUTPUT_PATH=$1
+
     CHECK_FAIL=0
     TMP=`mktemp`
     TARGET=$OUTPUT_PATH
-    $RENDER "$ROOT_PATH" -o $TMP
+    $RENDER "$PROGRAMS_PATH" -o $TMP
     format $TMP
 
     if ! diff -u "$TARGET" "$TMP"; then
@@ -27,8 +34,12 @@ check_results() {
 }
 
 if [ "$1" = "--check" ]; then
-    check_results
+    check_results $FW_OUTPUT_PATH
+    check_results $TESTS_OUTPUT_PATH
 else
-    $RENDER "$ROOT_PATH" -o $OUTPUT_PATH
-    format $OUTPUT_PATH
+    $RENDER $FW_PATH -p $PROGRAMS_PATH -o $FW_OUTPUT_PATH
+    format $FW_OUTPUT_PATH
+
+    $RENDER $TESTS_PATH -p "$PROGRAMS_PATH" -o $TESTS_OUTPUT_PATH
+    format $TESTS_OUTPUT_PATH
 fi

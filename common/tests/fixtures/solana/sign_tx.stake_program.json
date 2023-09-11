@@ -1,0 +1,112 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "description": "Initialize stake account",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": "legacy",
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_id": "STAKE_PROGRAM_ID",
+              "instruction_accounts": {
+                "uninitialized_stake_account": "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+                "rent_sysvar": "SysvarRent111111111111111111111111111111111"
+              },
+              "data": {
+                "instruction_id": "INS_INITIALIZE",
+                "parameters": {
+                  "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                  "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                  "unix_timestamp": 20,
+                  "epoch": 330,
+                  "custodian": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
+                }
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "196037eae9f57396938a8c673d255a8f34f1d79200fb439a1bcc551484b0a79716e8db42af041f23207f9e9e7603e567ba8fb9b6ffa4f20dad64e1277453530d"
+      }
+    },
+    {
+      "description": "Create stake account",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": "legacy",
+          "header": {
+            "signers": 2,
+            "readonly_signers": 0,
+            "readonly_non_signers": 3
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "11111111111111111111111111111111",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_id": "SYSTEM_PROGRAM_ID",
+              "instruction_accounts": {
+                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "new_account": "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv"
+              },
+              "data": {
+                "instruction_id": "INS_CREATE_ACCOUNT",
+                "parameters": {
+                  "lamports": 20000000,
+                  "space": 1000,
+                  "owner": "Stake11111111111111111111111111111111111111"
+                }
+              }
+            },
+            {
+              "program_id": "STAKE_PROGRAM_ID",
+              "instruction_accounts": {
+                "uninitialized_stake_account": "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+                "rent_sysvar": "SysvarRent111111111111111111111111111111111"
+              },
+              "data": {
+                "instruction_id": "INS_INITIALIZE",
+                "parameters": {
+                  "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                  "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                  "unix_timestamp": 0,
+                  "epoch": 0,
+                  "custodian": "11111111111111111111111111111111"
+                }
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "e99a383ce8f9fcd0ebbb03fce2c47db188734bd36613d226110dfa9d95ba28ad55c4e3ff36d1c4936538350d96d7aeff024c3e6afbb5c45dfe921a18e981ea0c"
+      }
+    }
+  ]
+}

@@ -17,12 +17,10 @@
 import pytest
 
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.solana import sign_tx
+from trezorlib.solana import get_public_key
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
-from .construct.instructions import replace_account_placeholders
-from .construct.transaction import MESSAGE
 
 pytestmark = [
     pytest.mark.altcoin,
@@ -32,18 +30,11 @@ pytestmark = [
 
 
 @parametrize_using_common_fixtures(
-    "solana/sign_tx.system_program.json",
-    "solana/sign_tx.stake_program.json",
+    "solana/get_public_key.json",
 )
-def test_solana_sign_tx(client: Client, parameters, result):
+def test_solana_get_public_key(client: Client, parameters, result):
     client.init_device(new_session=True)
 
-    serialized_tx = MESSAGE.build(replace_account_placeholders(parameters["construct"]))
+    actual_result = get_public_key(client, address_n=parse_path(parameters["path"]))
 
-    actual_result = sign_tx(
-        client,
-        address_n=parse_path(parameters["address"]),
-        serialized_tx=serialized_tx,
-    )
-
-    assert actual_result.signature == bytes.fromhex(result["expected_signature"])
+    assert actual_result.public_key.hex() == result["expected_public_key"]

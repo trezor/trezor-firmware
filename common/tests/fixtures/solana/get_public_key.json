@@ -9,7 +9,7 @@
         "path": "m/44'/501'"
       },
       "result": {
-        "expected_address": "zZqNUDNijfbMXFy2wVCdJSm9MeMfxBMdxBqseSuiSW6"
+        "expected_public_key": "0ebf3b4a5e8efc65c508f1c813377a650f655814db3b23472bdcde5f2aeaa7a3"
       }
     },
     {
@@ -17,7 +17,7 @@
         "path": "m/44'/501'/0'"
       },
       "result": {
-        "expected_address": "4UR47Kp4FxGJiJZZGSPAzXqRgMmZ27oVfGhHoLmcHakE"
+        "expected_public_key": "3398f0abc4f8ec2f62435a78d8f4f3219b47b04f268798d2ed2260da0b4de45f"
       }
     },
     {
@@ -25,7 +25,7 @@
         "path": "m/44'/501'/0'/0'"
       },
       "result": {
-        "expected_address": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
+        "expected_public_key": "00d1699dcb1811b50bb0055f13044463128242e37a463b52f6c97a1f6eef88ad"
       }
     }
   ]
