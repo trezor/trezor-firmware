@@ -788,7 +788,7 @@
 // <e> NRF_CRYPTO_BACKEND_MICRO_ECC_ENABLED - Enable the micro-ecc backend.
 //==========================================================
 #ifndef NRF_CRYPTO_BACKEND_MICRO_ECC_ENABLED
-#define NRF_CRYPTO_BACKEND_MICRO_ECC_ENABLED 1
+#define NRF_CRYPTO_BACKEND_MICRO_ECC_ENABLED 0
 #endif
 // <q> NRF_CRYPTO_BACKEND_MICRO_ECC_ECC_SECP192R1_ENABLED  - Enable secp192r1 (NIST 192-bit) curve
 

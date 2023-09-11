@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2021, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2021, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -37,28 +37,49 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __NRF_DFU_VER_VALIDATION_H
-#define __NRF_DFU_VER_VALIDATION_H
-
-#include "stdint.h"
-#include "sdk_errors.h"
-#include "nrf_dfu_handling_error.h"
-#include "dfu-cc.pb.h"
-
-/** @brief SD_REQ field value which indicates that Softdevice can be overwritten by the application. */
-#define SD_REQ_APP_OVERWRITES_SD 0
-
-/** @brief SD_REQ_ANY_VERSION field value which indicates that any SoftDevice version is valid. 
+/**@file
  *
- * @note This is used by external application in case SoftDevice version compatibility isn't needed.
- */
-#define SD_REQ_ANY_VERSION (0xFFFE)
-
-/**
- * @brief Function for validating version of new firmware.
+ * @defgroup nrf_dfu DFU modules
+ * @{
+ * @ingroup  nrf_bootloader
+ * @brief Modules providing Device Firmware Update (DFU) functionality.
  *
- * @return NRF_DFU_RES_CODE_SUCCESS if successful or error code otherwise
+ * The DFU module, in combination with the @ref nrf_bootloader module,
+ * can be used to implement a bootloader that supports Device Firmware Updates.
  */
-nrf_dfu_result_t nrf_dfu_ver_validation_check(dfu_init_command_t const * p_init);
 
-#endif //__NRF_DFU_VER_VALIDATION_H
+#ifndef NRF_DFU_H__
+#define NRF_DFU_H__
+
+#include <stdint.h>
+#include <stdbool.h>
+#include "nrf_dfu_types.h"
+#include "nrf_dfu_req_handler.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#define NRF_DFU_SCHED_EVENT_DATA_SIZE (sizeof(nrf_dfu_request_t))
+
+
+/** @brief Function for initializing a DFU operation.
+ *
+ * This function initializes a DFU operation and any transports that are registered
+ * in the system.
+ *
+ * @param[in] observer  Callback function for receiving DFU notifications.
+ *
+ * @retval  NRF_SUCCESS     If the DFU operation was successfully initialized.
+ */
+uint32_t nrf_dfu_init(nrf_dfu_observer_t observer);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NRF_DFU_H__
+
+/** @} */
