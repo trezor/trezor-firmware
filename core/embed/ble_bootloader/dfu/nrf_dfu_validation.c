@@ -166,7 +166,7 @@ static bool stored_init_cmd_decode(void)
       //TODO: this is where signed init command is stored, but is it guaranteed to be there always?
       // pb_decoding_callback was meant to find it, how to do that without nanopb modifications?
       m_init_packet_data_ptr = &s_dfu_settings.init_command[11];
-      m_init_packet_data_len = 128;
+      m_init_packet_data_len = s_dfu_settings.progress.command_size-(64+4+11); // signature, sigmask
       m_init_packet_valid    = true;
     }
 

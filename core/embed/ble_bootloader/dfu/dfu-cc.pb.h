@@ -30,13 +30,6 @@ typedef enum _dfu_OpCode {
     dfu_OpCode_INIT = 1 
 } dfu_OpCode;
 
-typedef enum _dfu_ValidationType { 
-    dfu_ValidationType_NO_VALIDATION = 0, 
-    dfu_ValidationType_VALIDATE_GENERATED_CRC = 1, 
-    dfu_ValidationType_VALIDATE_SHA256 = 2, 
-    dfu_ValidationType_VALIDATE_ECDSA_P256_SHA256 = 3 
-} dfu_ValidationType;
-
 /* Struct definitions */
 typedef PB_BYTES_ARRAY_T(64) dfu_BootValidation_bytes_t;
 typedef struct _dfu_BootValidation { 
@@ -110,10 +103,6 @@ typedef struct _dfu_Packet {
 #define _dfu_OpCode_MIN dfu_OpCode_INIT
 #define _dfu_OpCode_MAX dfu_OpCode_INIT
 #define _dfu_OpCode_ARRAYSIZE ((dfu_OpCode)(dfu_OpCode_INIT+1))
-
-#define _dfu_ValidationType_MIN dfu_ValidationType_NO_VALIDATION
-#define _dfu_ValidationType_MAX dfu_ValidationType_VALIDATE_ECDSA_P256_SHA256
-#define _dfu_ValidationType_ARRAYSIZE ((dfu_ValidationType)(dfu_ValidationType_VALIDATE_ECDSA_P256_SHA256+1))
 
 
 #ifdef __cplusplus
