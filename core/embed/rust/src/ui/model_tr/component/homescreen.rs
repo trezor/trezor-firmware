@@ -102,7 +102,7 @@ where
         let mut outset = Insets::uniform(LABEL_OUTSET);
         // the margin at top is bigger (caused by text-height vs line-height?)
         // compensate by shrinking the outset
-        outset.top -= 1;
+        outset.top -= 2;
         rect_fill(self.label.text_area().outset(outset), theme::BG);
         self.label.paint();
     }
