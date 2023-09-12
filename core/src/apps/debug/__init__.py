@@ -9,7 +9,7 @@ if __debug__:
     import trezorui2
     from storage import debug as storage
     from storage.debug import debug_events
-    from trezor import log, loop, utils, wire
+    from trezor import log, loop, wire
     from trezor.enums import MessageType
     from trezor.messages import DebugLinkLayout, Success
     from trezor.ui import display
