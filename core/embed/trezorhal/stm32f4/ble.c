@@ -419,7 +419,6 @@ bool ble_reset_to_bootloader(void) {
 
   HAL_Delay(1000);
 
-
   return true;
 }
 
