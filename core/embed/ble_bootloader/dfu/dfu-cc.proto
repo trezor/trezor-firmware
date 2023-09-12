@@ -22,13 +22,6 @@ enum OpCode {
     INIT = 1;
 }
 
-enum ValidationType {
-    NO_VALIDATION                   = 0;
-    VALIDATE_GENERATED_CRC          = 1;
-    VALIDATE_SHA256                 = 2;
-    VALIDATE_ECDSA_P256_SHA256      = 3;
-}
-
 message Hash {
     required HashType   hash_type   = 1;
     required bytes      hash        = 2;
