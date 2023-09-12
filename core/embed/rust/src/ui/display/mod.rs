@@ -24,7 +24,9 @@ use crate::ui::component::image::Image;
 use crate::ui::geometry::Alignment2D;
 
 #[cfg(feature = "backlight")]
-use crate::{time::Duration, trezorhal::time};
+use crate::time::Duration;
+#[cfg(feature = "backlight")]
+use crate::trezorhal::time;
 
 use crate::{
     trezorhal::{buffers, display, uzlib::UzlibContext},
