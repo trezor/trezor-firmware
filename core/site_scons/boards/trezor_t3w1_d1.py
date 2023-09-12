@@ -56,7 +56,6 @@ def configure(
         sources += ["embed/extmod/modtrezorio/ffunicode.c"]
         features_available.append("sd_card")
 
-
     if "ble" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/ble.c"]
         sources += ["embed/lib/ble/dfu.c"]

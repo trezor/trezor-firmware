@@ -2,11 +2,7 @@ from trezorio import ble
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import (
-        UploadBLEFirmwareInit,
-        UploadBLEFirmwareChunk,
-        Success,
-    )
+    from trezor.messages import Success, UploadBLEFirmwareChunk, UploadBLEFirmwareInit
 
 
 async def upload_ble_firmware_chunk(msg: UploadBLEFirmwareChunk) -> int:
@@ -18,9 +14,9 @@ async def upload_ble_firmware_chunk(msg: UploadBLEFirmwareChunk) -> int:
 async def upload_ble_firmware_init(msg: UploadBLEFirmwareInit) -> Success:
     from trezor.enums import ButtonRequestType
     from trezor.messages import (
-        UploadBLEFirmwareNextChunk,
-        UploadBLEFirmwareChunk,
         Success,
+        UploadBLEFirmwareChunk,
+        UploadBLEFirmwareNextChunk,
     )
     from trezor.ui.layouts import confirm_action
 
@@ -34,9 +30,9 @@ async def upload_ble_firmware_init(msg: UploadBLEFirmwareInit) -> Success:
         br_code=ButtonRequestType.Other,
     )
 
+    from trezor.enums import MessageType
     from trezor.ui.layouts import progress
     from trezor.wire.context import get_context
-    from trezor.enums import MessageType
 
     ctx = get_context()
 
