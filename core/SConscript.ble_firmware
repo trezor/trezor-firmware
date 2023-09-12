@@ -467,6 +467,15 @@ program_pkg = env.Command(
     ],
 )
 
+softdevice_pkg = env.Command(
+    target='ble_softdevice.zip',
+    source=None,
+    action=[
+        f'python ../../pc-nrfutil/nordicsemi/  pkg generate --hw-version 52 --sd-req=0x100 --key-file ./embed/ble_bootloader/priv.pem $TARGET --sd-id=0x100 --softdevice ./embed/sdk/nrf52/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex'
+    ],
+)
+
+
 settings = env.Command(
     target='settings.hex',
     source=program_hex,
@@ -492,6 +501,7 @@ env.Depends(program_bin, program_hex)
 env.Depends(program_pkg, program_hex)
 env.Depends(settings, program_hex)
 env.Depends(program_bin, program_pkg)
+env.Depends(program_bin, softdevice_pkg)
 env.Depends(program_merge, settings)
 env.Depends(program_merge, program_hex)
 env.Depends(program_bin, program_merge)

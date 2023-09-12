@@ -327,6 +327,17 @@ program_bin = env.Command(
     ],
 )
 
+
+bootloader_pkg = env.Command(
+    target='ble_bootloader.zip',
+    source=program_hex,
+    action=[
+        f'python ../../pc-nrfutil/nordicsemi/  pkg generate --hw-version 52 --sd-req=0x100 --key-file ./embed/ble_bootloader/priv.pem $TARGET --bootloader $SOURCE --bootloader-version {tools.get_version_int("embed/ble_bootloader/version.h")}'
+    ],
+)
+
+
+
 program_settings = env.Command(
     target='settings.hex',
     source=None,
@@ -334,4 +345,5 @@ program_settings = env.Command(
 )
 
 env.Depends(program_bin, program_hex)
+env.Depends(program_bin, bootloader_pkg)
 env.Depends(program_bin, program_settings)
