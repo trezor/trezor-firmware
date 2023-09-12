@@ -196,25 +196,6 @@ void ble_int_comm_send(uint8_t *data, uint32_t len, uint8_t message_type) {
   HAL_UART_Transmit(&urt, &eom, 1, 1);
 }
 
-void process_poll(uint8_t *data, uint32_t len) {
-  uint8_t cmd = data[0];
-
-  switch (cmd) {
-      //    case INTERNAL_EVENT_INITIALIZED: {
-      //      set_connected(false);
-      //      set_initialized(true);
-      //      break;
-      //    }
-    case INTERNAL_EVENT_STATUS: {
-      set_status(data[1], data[2], data[3], data[4]);
-      set_initialized(true);
-      break;
-    }
-    default:
-      break;
-  }
-}
-
 void flush_line(void) {
   while (urt.Instance->SR & USART_SR_RXNE) {
     (void)urt.Instance->DR;

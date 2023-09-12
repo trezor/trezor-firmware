@@ -19,22 +19,21 @@ bool ble_connected(void) {
 
 void set_connected(bool connected) {}
 
-void set_status(bool connected, bool advertising, bool whitelist,
-                uint8_t count) {
-  if (ble_state_connected != connected) {
-    ble_advertising_wanted = count > 0;
+void set_status(event_status_msg_t *msg) {
+  if (ble_state_connected != msg->connected) {
+    ble_advertising_wanted = msg->peer_count > 0;
     ble_advertising_wl_wanted = true;
   }
-  ble_state_connected = connected;
+  ble_state_connected = msg->connected;
 
-  ble_peer_count = count;
-  if (count > 0 && !ble_initialized()) {
+  ble_peer_count = msg->peer_count;
+  if (msg->peer_count > 0 && !ble_initialized()) {
     ble_advertising_wanted = true;
     ble_advertising_wl_wanted = true;
   }
 
-  if (ble_advertising_wanted != advertising ||
-      (ble_advertising_wl_wanted != whitelist)) {
+  if (ble_advertising_wanted != msg->advertising ||
+      (ble_advertising_wl_wanted != msg->advertising_whitelist)) {
     if (ble_advertising_wanted) {
       send_advertising_on(ble_advertising_wl_wanted);
     }
@@ -42,8 +41,8 @@ void set_status(bool connected, bool advertising, bool whitelist,
       send_advertising_off();
     }
   }
-  ble_advertising = advertising;
-  ble_advertising_wl = whitelist;
+  ble_advertising = msg->advertising;
+  ble_advertising_wl = msg->advertising_whitelist;
 }
 
 void set_initialized(bool initialized) { ble_state_initialized = initialized; }

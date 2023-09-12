@@ -7,13 +7,13 @@
 #include "ble_nus.h"
 #include "connection.h"
 #include "messages.pb.h"
+#include "nrf_dfu_types.h"
 #include "nrf_drv_spi.h"
 #include "nrf_log.h"
 #include "pm.h"
 #include "protob_helpers.h"
 #include "stdint.h"
 #include "trezor_t3w1_d1_NRF.h"
-#include "nrf_dfu_types.h"
 
 #define SPI_INSTANCE 0 /**< SPI instance index. */
 
@@ -29,13 +29,10 @@ static const nrf_drv_spi_t spi =
 static volatile bool spi_xfer_done = true; /**< Flag used to indicate that SPI
                                        instance completed the transfer. */
 
-
-#define CODE_PAGE_SIZE            (MBR_PAGE_SIZE_IN_WORDS * sizeof(uint32_t))
-#define BOOTLOADER_SETTINGS_PAGE_SIZE       (CODE_PAGE_SIZE)
+#define CODE_PAGE_SIZE (MBR_PAGE_SIZE_IN_WORDS * sizeof(uint32_t))
+#define BOOTLOADER_SETTINGS_PAGE_SIZE (CODE_PAGE_SIZE)
 uint8_t m_dfu_settings_buffer[BOOTLOADER_SETTINGS_PAGE_SIZE]
-        __attribute__((section(".bootloader_settings_page")))
-        __attribute__((used));
-
+    __attribute__((section(".bootloader_settings_page"))) __attribute__((used));
 
 /**
  * @brief SPI user event handler.
@@ -362,27 +359,24 @@ void nus_data_handler(ble_nus_evt_t *p_evt) {
 /**@snippet [Handling the data received over BLE] */
 
 void send_status_event(void) {
-
-  ble_version_t version ={0};
-  nrf_dfu_settings_t * settins= (nrf_dfu_settings_t *)m_dfu_settings_buffer;
+  ble_version_t version = {0};
+  nrf_dfu_settings_t *settins = (nrf_dfu_settings_t *)m_dfu_settings_buffer;
 
   sd_ble_version_get(&version);
 
-
-
   event_status_msg_t msg = {0};
   msg.msg_id = INTERNAL_EVENT_STATUS;
-  msg.connected =     (get_connection_handle() != BLE_CONN_HANDLE_INVALID) ? 1 : 0;
+  msg.connected = (get_connection_handle() != BLE_CONN_HANDLE_INVALID) ? 1 : 0;
   msg.advertising = is_advertising() ? 1 : 0;
-  msg.advertising_whitelist =   is_advertising_wl() ? 1 : 0;
-  msg.peer_count =   pm_peer_count();
+  msg.advertising_whitelist = is_advertising_wl() ? 1 : 0;
+  msg.peer_count = pm_peer_count();
   msg.sd_version_number = version.version_number;
   msg.sd_company_id = version.company_id;
   msg.sd_subversion_number = version.subversion_number;
   msg.app_version = settins->app_version;
   msg.bld_version = settins->bootloader_version;
 
-  send_packet(INTERNAL_EVENT, (uint8_t*) &msg, sizeof(msg));
+  send_packet(INTERNAL_EVENT, (uint8_t *)&msg, sizeof(msg));
 }
 
 void send_success_event(void) {
