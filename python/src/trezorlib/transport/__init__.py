@@ -113,11 +113,11 @@ class Transport:
 
 
 def all_transports() -> Iterable[Type["Transport"]]:
+    from .ble import BleTransport
     from .bridge import BridgeTransport
     from .hid import HidTransport
     from .udp import UdpTransport
     from .webusb import WebUsbTransport
-    from .ble import BleTransport
 
     transports: Tuple[Type["Transport"], ...] = (
         BridgeTransport,
