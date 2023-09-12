@@ -18,7 +18,7 @@
 
 static uint8_t m_uart_rx_data[BLE_NUS_MAX_DATA_LEN];
 static uint8_t m_spi_tx_data[BLE_PACKET_SIZE];
-static bool m_uart_rx_data_ready_internal = false;
+static volatile bool m_uart_rx_data_ready_internal = false;
 
 BLE_NUS_DEF(m_nus,
             NRF_SDH_BLE_TOTAL_LINK_COUNT); /**< BLE NUS service instance. */
