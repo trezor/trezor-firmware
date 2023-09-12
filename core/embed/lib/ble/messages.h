@@ -3,6 +3,10 @@
 
 #include <stdbool.h>
 
+bool wait_for_answer(void);
+
+void process_poll(uint8_t *data, uint32_t len);
+
 void send_state_request(void);
 
 void send_advertising_on(bool whitelist);

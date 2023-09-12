@@ -5,14 +5,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "int_comm_defs.h"
+
 bool ble_initialized(void);
 
 void set_initialized(bool initialized);
 
 bool ble_connected(void);
 
-void set_status(bool connected, bool advertising, bool whitelist,
-                uint8_t count);
+void set_status(event_status_msg_t *msg);
 
 void start_advertising(bool whitelist);
 
