@@ -396,6 +396,7 @@ env.Replace(
     CPPPATH=[
         'embed/ble_firmware',
         'embed/bootloader/protob',
+        'embed/ble_bootloader/dfu',
         'embed/sdk/nrf52',
         'embed/lib',
         'vendor/nanopb',

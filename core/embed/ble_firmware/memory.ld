@@ -7,10 +7,19 @@ MEMORY
 {
   FLASH (rx) : ORIGIN = 0x27000, LENGTH = 0x49000
   RAM (rwx) :  ORIGIN = 0x20002ae8, LENGTH = 0x1d518
+  bootloader_settings_page (r) : ORIGIN = 0x0007F000, LENGTH = 0x1000
 }
 
 SECTIONS
 {
+  . = ALIGN(4);
+  .bootloader_settings_page(NOLOAD) :
+  {
+    PROVIDE(__start_bootloader_settings_page = .);
+    KEEP(*(SORT(.bootloader_settings_page*)))
+    PROVIDE(__stop_bootloader_settings_page = .);
+  } > bootloader_settings_page
+  . = ALIGN(4);
 }
 
 SECTIONS
