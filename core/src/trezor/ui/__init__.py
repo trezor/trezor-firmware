@@ -121,7 +121,7 @@ class Component:
         self.repaint = True
 
     def dispatch(self, event: int, x: int, y: int) -> None:
-        from trezor.utils import USE_TOUCH, USE_BUTTON
+        from trezor.utils import USE_BUTTON, USE_TOUCH
 
         if event is RENDER:
             self.on_render()
