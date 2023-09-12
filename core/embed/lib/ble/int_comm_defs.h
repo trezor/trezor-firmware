@@ -15,6 +15,25 @@
 #define EXTERNAL_MESSAGE (0xA1)
 #define INTERNAL_MESSAGE (0xA0)
 
+
+typedef struct {
+    uint8_t msg_id;
+    uint8_t connected;
+    uint8_t advertising;
+    uint8_t advertising_whitelist;
+
+    uint8_t peer_count;
+    uint8_t reserved[2];
+    uint8_t sd_version_number;
+
+    uint16_t sd_company_id;
+    uint16_t sd_subversion_number;
+
+    uint32_t app_version;
+    uint32_t bld_version;
+
+}event_status_msg_t;
+
 typedef enum {
   INTERNAL_EVENT_STATUS = 0x01,
   INTERNAL_EVENT_SUCCESS = 0x02,
