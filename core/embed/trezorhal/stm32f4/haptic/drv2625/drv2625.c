@@ -3,6 +3,7 @@
 #include STM32_HAL_H
 
 #include "i2c.h"
+#include TREZOR_BOARD
 
 #define I2C_ADDRESS (0x5A << 1)
 
@@ -30,7 +31,7 @@ uint8_t waveform = 1;
 
 void set_reg(uint8_t addr, uint8_t value) {
   uint8_t data[] = {addr, value};
-  i2c_transmit(0, I2C_ADDRESS, data, sizeof(data), 1);
+  i2c_transmit(HAPTIC_I2C_NUM, I2C_ADDRESS, data, sizeof(data), 1);
 }
 
 void read_reg(uint8_t addr, uint8_t *value) {
