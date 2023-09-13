@@ -22,3 +22,5 @@ pub const fn screen() -> Rect {
     Rect::from_top_left_and_size(Point::zero(), SIZE)
 }
 pub const SCREEN: Rect = screen();
+
+pub const IGNORE_OTHER_BTN_MS: u32 = 200;

@@ -859,7 +859,14 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 
         let pages = FlowPages::new(get_page, PAGE_COUNT);
 
-        let obj = LayoutObj::new(Flow::new(pages).with_scrollbar(false))?;
+        // Setting the ignore-second-button to mimic all the Choice pages, to teach user
+        // that they should really press both buttons at the same time to achieve
+        // middle-click.
+        let obj = LayoutObj::new(
+            Flow::new(pages)
+                .with_scrollbar(false)
+                .with_ignore_second_button_ms(constant::IGNORE_OTHER_BTN_MS),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

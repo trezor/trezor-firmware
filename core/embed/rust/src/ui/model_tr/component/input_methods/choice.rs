@@ -3,10 +3,13 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Pad},
         geometry::{Insets, Offset, Rect},
+        util::animation_disabled,
     },
 };
 
-use super::super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
+use super::super::{
+    constant, theme, AutomaticMover, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
+};
 
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
 
@@ -79,6 +82,13 @@ where
     /// Whether the middle selected item should be painted with
     /// inverse colors - black on white.
     inverse_selected_item: bool,
+    /// For moving through the items when holding left/right button
+    holding_mover: AutomaticMover,
+    /// For doing quick animations when changing the page counter.
+    animation_mover: AutomaticMover,
+    /// How many animated steps we should still do (positive for right, negative
+    /// for left).
+    animated_steps_to_do: i16,
 }
 
 impl<F, T, A> ChoicePage<F, T, A>
@@ -89,16 +99,30 @@ where
     pub fn new(choices: F) -> Self {
         let initial_btn_layout = choices.get(0).0.btn_layout();
 
+        /// First move happens immediately, then in 35 ms intervals
+        fn animation_duration_func(steps: usize) -> u32 {
+            match steps {
+                0 => 0,
+                _ => 35,
+            }
+        }
+
         Self {
             choices,
             pad: Pad::with_background(theme::BG),
-            buttons: Child::new(ButtonController::new(initial_btn_layout)),
+            buttons: Child::new(
+                ButtonController::new(initial_btn_layout)
+                    .with_ignore_btn_delay(constant::IGNORE_OTHER_BTN_MS),
+            ),
             page_counter: 0,
             items_distance: DEFAULT_ITEMS_DISTANCE,
             is_carousel: false,
             show_incomplete: false,
             show_only_one_item: false,
             inverse_selected_item: false,
+            holding_mover: AutomaticMover::new(),
+            animation_mover: AutomaticMover::new().with_duration_func(animation_duration_func),
+            animated_steps_to_do: 0,
         }
     }
 
@@ -107,7 +131,10 @@ where
     pub fn with_initial_page_counter(mut self, page_counter: usize) -> Self {
         self.page_counter = page_counter;
         let initial_btn_layout = self.get_current_choice().0.btn_layout();
-        self.buttons = Child::new(ButtonController::new(initial_btn_layout));
+        self.buttons = Child::new(
+            ButtonController::new(initial_btn_layout)
+                .with_ignore_btn_delay(constant::IGNORE_OTHER_BTN_MS),
+        );
         self
     }
 
@@ -156,9 +183,33 @@ where
     }
 
     /// Navigating to the chosen page index.
-    pub fn set_page_counter(&mut self, ctx: &mut EventCtx, page_counter: usize) {
-        self.page_counter = page_counter;
-        self.update(ctx);
+    pub fn set_page_counter(
+        &mut self,
+        ctx: &mut EventCtx,
+        page_counter: usize,
+        do_animation: bool,
+    ) {
+        // Either moving with animation or just jumping to the final position directly.
+        if do_animation && !animation_disabled() {
+            let diff = page_counter as i16 - self.page_counter as i16;
+            // When there would be a small number of animation frames (3 or less),
+            // animating in the opposite direction to make the animation longer.
+            self.animated_steps_to_do = match diff {
+                -3..=0 => diff + self.choices.count() as i16,
+                1..=3 => diff - self.choices.count() as i16,
+                _ => diff,
+            };
+            // Starting the movement immediately - either left or right.
+            let pos = if self.animated_steps_to_do > 0 {
+                ButtonPos::Right
+            } else {
+                ButtonPos::Left
+            };
+            self.animation_mover.start_moving(ctx, pos);
+        } else {
+            self.page_counter = page_counter;
+            self.update(ctx);
+        }
     }
 
     /// Display current, previous and next choices according to
@@ -356,13 +407,65 @@ where
     /// whether they are long-pressed, and painting them.
     fn set_buttons(&mut self, ctx: &mut EventCtx) {
         let btn_layout = self.get_current_choice().0.btn_layout();
-        self.buttons.mutate(ctx, |_ctx, buttons| {
+        self.buttons.mutate(ctx, |ctx, buttons| {
             buttons.set(btn_layout);
+            // When user holds one of the buttons, highlighting it.
+            if let Some(btn_down) = self.holding_mover.moving_direction() {
+                buttons.highlight_button(ctx, btn_down);
+            }
+            ctx.request_paint();
         });
     }
 
     pub fn choice_factory(&self) -> &F {
         &self.choices
+    }
+
+    /// Go to the choice visually on the left.
+    fn move_left(&mut self, ctx: &mut EventCtx) {
+        if self.has_previous_choice() {
+            self.decrease_page_counter();
+            self.update(ctx);
+        } else if self.is_carousel {
+            self.page_counter_to_max();
+            self.update(ctx);
+        }
+    }
+
+    /// Go to the choice visually on the right.
+    fn move_right(&mut self, ctx: &mut EventCtx) {
+        if self.has_next_choice() {
+            self.increase_page_counter();
+            self.update(ctx);
+        } else if self.is_carousel {
+            self.page_counter_to_zero();
+            self.update(ctx);
+        }
+    }
+
+    /// Possibly doing an animation movement with the choice - either left or
+    /// right.
+    fn animation_event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<ButtonPos> {
+        if animation_disabled() {
+            return None;
+        }
+        // Stopping the movement if it is moving and there are no steps left
+        if self.animated_steps_to_do == 0 {
+            if self.animation_mover.is_moving() {
+                self.animation_mover.stop_moving();
+            }
+            return None;
+        }
+        let animation_result = self.animation_mover.event(ctx, event);
+        // When about to animate, decreasing the number of steps to do.
+        if animation_result.is_some() {
+            if self.animated_steps_to_do > 0 {
+                self.animated_steps_to_do -= 1;
+            } else {
+                self.animated_steps_to_do += 1;
+            }
+        }
+        animation_result
     }
 }
 
@@ -381,32 +484,67 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Possible animation movement when setting (randomizing) the page counter.
+        if let Some(animation_direction) = self.animation_event(ctx, event) {
+            match animation_direction {
+                ButtonPos::Left => self.move_left(ctx),
+                ButtonPos::Right => self.move_right(ctx),
+                _ => {}
+            }
+            return None;
+        }
+
+        // When animation is running, ignoring all user events
+        if self.animation_mover.is_moving() {
+            return None;
+        }
+
+        // Possible automatic movement when user is holding left or right button.
+        if let Some(auto_move_direction) = self.holding_mover.event(ctx, event) {
+            match auto_move_direction {
+                ButtonPos::Left => self.move_left(ctx),
+                ButtonPos::Right => self.move_right(ctx),
+                _ => {}
+            }
+            return None;
+        }
+
         let button_event = self.buttons.event(ctx, event);
 
-        // Button was "triggered" - released. Doing the appropriate action.
+        // Possibly stopping or starting the automatic mover.
+        if let Some(moving_direction) = self.holding_mover.moving_direction() {
+            // Stopping the automatic movement when the released button is the same as the
+            // direction we were moving, or when the pressed button is the
+            // opposite one (user does middle-click).
+            if matches!(button_event, Some(ButtonControllerMsg::Triggered(pos)) if pos == moving_direction)
+                || matches!(button_event, Some(ButtonControllerMsg::Pressed(pos)) if pos != moving_direction)
+            {
+                self.holding_mover.stop_moving();
+                // Ignoring the event when it already did some automatic movements. (Otherwise
+                // it would do one more movement.)
+                if self.holding_mover.was_moving() {
+                    return None;
+                }
+            }
+        } else if let Some(ButtonControllerMsg::Pressed(pos)) = button_event {
+            // Starting the movement when left/right button is pressed.
+            if matches!(pos, ButtonPos::Left | ButtonPos::Right) {
+                self.holding_mover.start_moving(ctx, pos);
+            }
+        }
+
+        // There was a legitimate button event - doing some action
         if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
             match pos {
                 ButtonPos::Left => {
-                    if self.has_previous_choice() {
-                        // Clicked BACK. Decrease the page counter.
-                        self.decrease_page_counter();
-                        self.update(ctx);
-                    } else if self.is_carousel {
-                        // In case of carousel going to the right end.
-                        self.page_counter_to_max();
-                        self.update(ctx);
-                    }
+                    // Clicked BACK. Decrease the page counter.
+                    // In case of carousel going to the right end.
+                    self.move_left(ctx);
                 }
                 ButtonPos::Right => {
-                    if self.has_next_choice() {
-                        // Clicked NEXT. Increase the page counter.
-                        self.increase_page_counter();
-                        self.update(ctx);
-                    } else if self.is_carousel {
-                        // In case of carousel going to the left end.
-                        self.page_counter_to_zero();
-                        self.update(ctx);
-                    }
+                    // Clicked NEXT. Increase the page counter.
+                    // In case of carousel going to the left end.
+                    self.move_right(ctx);
                 }
                 ButtonPos::Middle => {
                     // Clicked SELECT. Send current choice index
@@ -415,7 +553,7 @@ where
                 }
             }
         };
-        // The middle button was "pressed", highlighting the current choice by color
+        // The middle button was pressed, highlighting the current choice by color
         // inversion.
         if let Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)) = button_event {
             self.inverse_selected_item = true;

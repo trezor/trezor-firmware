@@ -3,8 +3,9 @@ use super::{
 };
 use crate::{
     strutil::StringType,
+    time::Duration,
     ui::{
-        component::{base::Event, Component, EventCtx, Pad},
+        component::{base::Event, Component, EventCtx, Pad, TimerToken},
         event::{ButtonEvent, PhysicalButton},
         geometry::Rect,
     },
@@ -195,6 +196,9 @@ where
 ///
 /// Only "final" button events are returned in `ButtonControllerMsg::Triggered`,
 /// based upon the buttons being long-press or not.
+///
+/// There is optional complexity with IgnoreButtonDelay, which gets executed
+/// only in cases where clients request it.
 pub struct ButtonController<T>
 where
     T: StringType,
@@ -204,10 +208,12 @@ where
     middle_btn: ButtonContainer<T>,
     right_btn: ButtonContainer<T>,
     state: ButtonState,
-    // Button area is needed so the buttons
-    // can be "re-placed" after their text is changed
-    // Will be set in `place`
+    /// Button area is needed so the buttons
+    /// can be "re-placed" after their text is changed
+    /// Will be set in `place`
     button_area: Rect,
+    /// Handling optional ignoring of buttons after pressing the other button.
+    ignore_btn_delay: Option<IgnoreButtonDelay>,
 }
 
 impl<T> ButtonController<T>
@@ -222,7 +228,15 @@ where
             right_btn: ButtonContainer::new(ButtonPos::Right, btn_layout.btn_right),
             state: ButtonState::Nothing,
             button_area: Rect::zero(),
+            ignore_btn_delay: None,
         }
+    }
+
+    /// Set up the logic to ignore a button after some time from pressing
+    /// the other button.
+    pub fn with_ignore_btn_delay(mut self, delay_ms: u32) -> Self {
+        self.ignore_btn_delay = Some(IgnoreButtonDelay::new(delay_ms));
+        self
     }
 
     /// Updating all the three buttons to the wanted states.
@@ -238,6 +252,14 @@ where
         self.left_btn.set_pressed(ctx, left);
         self.middle_btn.set_pressed(ctx, mid);
         self.right_btn.set_pressed(ctx, right);
+    }
+
+    pub fn highlight_button(&mut self, ctx: &mut EventCtx, pos: ButtonPos) {
+        match pos {
+            ButtonPos::Left => self.left_btn.set_pressed(ctx, true),
+            ButtonPos::Middle => self.middle_btn.set_pressed(ctx, true),
+            ButtonPos::Right => self.right_btn.set_pressed(ctx, true),
+        }
     }
 
     /// Handle middle button hold-to-confirm start.
@@ -291,22 +313,29 @@ where
                     // _ _
                     ButtonState::Nothing => match button_event {
                         // ▼ * | * ▼
-                        ButtonEvent::ButtonPressed(which) => (
+                        ButtonEvent::ButtonPressed(which) => {
                             // ↓ _ | _ ↓
-                            ButtonState::OneDown(which),
-                            match which {
-                                // ▼ *
-                                PhysicalButton::Left => {
-                                    self.left_btn.hold_started(ctx);
-                                    Some(ButtonControllerMsg::Pressed(ButtonPos::Left))
-                                }
-                                // * ▼
-                                PhysicalButton::Right => {
-                                    self.right_btn.hold_started(ctx);
-                                    Some(ButtonControllerMsg::Pressed(ButtonPos::Right))
-                                }
-                            },
-                        ),
+                            // Initial button press will set the timer for second button,
+                            // and after some delay, it will become un-clickable
+                            if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
+                                ignore_btn_delay.handle_button_press(ctx, which);
+                            }
+                            (
+                                ButtonState::OneDown(which),
+                                match which {
+                                    // ▼ *
+                                    PhysicalButton::Left => {
+                                        self.left_btn.hold_started(ctx);
+                                        Some(ButtonControllerMsg::Pressed(ButtonPos::Left))
+                                    }
+                                    // * ▼
+                                    PhysicalButton::Right => {
+                                        self.right_btn.hold_started(ctx);
+                                        Some(ButtonControllerMsg::Pressed(ButtonPos::Right))
+                                    }
+                                },
+                            )
+                        }
                         _ => (self.state, None),
                     },
                     // ↓ _ | _ ↓
@@ -314,18 +343,32 @@ where
                         // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(b) if b == which_down => match which_down {
                             // ▲ *
+                            // Trigger the button and make the second one clickable in all cases
                             PhysicalButton::Left => {
+                                if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
+                                    ignore_btn_delay.make_button_clickable(ButtonPos::Right);
+                                }
                                 // _ _
                                 (ButtonState::Nothing, self.left_btn.maybe_trigger(ctx))
                             }
                             // * ▲
                             PhysicalButton::Right => {
+                                if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
+                                    ignore_btn_delay.make_button_clickable(ButtonPos::Left);
+                                }
                                 // _ _
                                 (ButtonState::Nothing, self.right_btn.maybe_trigger(ctx))
                             }
                         },
                         // * ▼ | ▼ *
                         ButtonEvent::ButtonPressed(b) if b != which_down => {
+                            // Buttons may be non-clickable (caused by long-holding the other
+                            // button)
+                            if let Some(ignore_btn_delay) = &self.ignore_btn_delay {
+                                if ignore_btn_delay.ignore_button(b) {
+                                    return None;
+                                }
+                            }
                             self.middle_hold_started(ctx);
                             (
                                 // ↓ ↓
@@ -356,6 +399,11 @@ where
                         // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(b) if b != which_up => {
                             // _ _
+                            // Both button needs to be clickable now
+                            if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
+                                ignore_btn_delay.make_button_clickable(ButtonPos::Left);
+                                ignore_btn_delay.make_button_clickable(ButtonPos::Right);
+                            }
                             (ButtonState::Nothing, self.middle_btn.maybe_trigger(ctx))
                         }
                         _ => (self.state, None),
@@ -394,8 +442,13 @@ where
                 self.state = new_state;
                 event
             }
-            // HoldToConfirm expiration
-            Event::Timer(_) => self.handle_htc_expiration(ctx, event),
+            // Timer - handle clickable properties and HoldToConfirm expiration
+            Event::Timer(token) => {
+                if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
+                    ignore_btn_delay.handle_timer_token(token);
+                }
+                self.handle_htc_expiration(ctx, event)
+            }
             _ => None,
         }
     }
@@ -421,6 +474,179 @@ where
     }
 }
 
+/// When one button is pressed, the other one becomes un-clickable after some
+/// small time period. This is to prevent accidental clicks when user is holding
+/// the button to automatically move through items.
+struct IgnoreButtonDelay {
+    /// How big is the delay after the button is inactive
+    delay: Duration,
+    /// Whether left button is currently clickable
+    left_clickable: bool,
+    /// Whether right button is currently clickable
+    right_clickable: bool,
+    /// Timer for setting the left_clickable
+    left_clickable_timer: Option<TimerToken>,
+    /// Timer for setting the right_clickable
+    right_clickable_timer: Option<TimerToken>,
+}
+
+impl IgnoreButtonDelay {
+    pub fn new(delay_ms: u32) -> Self {
+        Self {
+            delay: Duration::from_millis(delay_ms),
+            left_clickable: true,
+            right_clickable: true,
+            left_clickable_timer: None,
+            right_clickable_timer: None,
+        }
+    }
+
+    pub fn make_button_clickable(&mut self, pos: ButtonPos) {
+        match pos {
+            ButtonPos::Left => {
+                self.left_clickable = true;
+                self.left_clickable_timer = None;
+            }
+            ButtonPos::Right => {
+                self.right_clickable = true;
+                self.right_clickable_timer = None;
+            }
+            ButtonPos::Middle => {}
+        }
+    }
+
+    pub fn handle_button_press(&mut self, ctx: &mut EventCtx, button: PhysicalButton) {
+        if matches!(button, PhysicalButton::Left) {
+            self.right_clickable_timer = Some(ctx.request_timer(self.delay));
+        }
+        if matches!(button, PhysicalButton::Right) {
+            self.left_clickable_timer = Some(ctx.request_timer(self.delay));
+        }
+    }
+
+    pub fn ignore_button(&self, button: PhysicalButton) -> bool {
+        if matches!(button, PhysicalButton::Left) && !self.left_clickable {
+            return true;
+        }
+        if matches!(button, PhysicalButton::Right) && !self.right_clickable {
+            return true;
+        }
+        false
+    }
+
+    pub fn handle_timer_token(&mut self, token: TimerToken) {
+        if self.left_clickable_timer == Some(token) {
+            self.left_clickable = false;
+            self.left_clickable_timer = None;
+        }
+        if self.right_clickable_timer == Some(token) {
+            self.right_clickable = false;
+            self.right_clickable_timer = None;
+        }
+    }
+}
+
+/// Component allowing for automatically moving through items (e.g. Choice
+/// items).
+///
+/// Users are in full control of starting/stopping the movement.
+///
+/// Can be started e.g. by holding left/right button.
+pub struct AutomaticMover {
+    /// For requesting timer events repeatedly
+    timer_token: Option<TimerToken>,
+    /// Which direction should we go (which button is down)
+    moving_direction: Option<ButtonPos>,
+    /// How many screens were moved automatically
+    auto_moved_screens: usize,
+    /// Function to get duration of each movement according to the already moved
+    /// steps
+    duration_func: fn(usize) -> u32,
+}
+
+impl AutomaticMover {
+    pub fn new() -> Self {
+        fn default_duration_func(steps: usize) -> u32 {
+            match steps {
+                x if x < 3 => 200,
+                x if x < 10 => 150,
+                _ => 100,
+            }
+        }
+
+        Self {
+            timer_token: None,
+            moving_direction: None,
+            auto_moved_screens: 0,
+            duration_func: default_duration_func,
+        }
+    }
+
+    pub fn with_duration_func(mut self, duration_func: fn(usize) -> u32) -> Self {
+        self.duration_func = duration_func;
+        self
+    }
+
+    /// Determines how long to wait between automatic movements.
+    /// Moves quicker with increasing number of screens moved.
+    /// Can be forced to be always the same (e.g. for animation purposes).
+    fn get_auto_move_duration(&self) -> Duration {
+        // Calculating duration from function
+        let ms_duration = (self.duration_func)(self.auto_moved_screens);
+        Duration::from_millis(ms_duration)
+    }
+
+    /// In which direction we are moving, if any
+    pub fn moving_direction(&self) -> Option<ButtonPos> {
+        self.moving_direction
+    }
+
+    // Whether we are currently moving.
+    pub fn is_moving(&self) -> bool {
+        self.moving_direction.is_some()
+    }
+
+    /// Whether we have done at least one automatic movement.
+    pub fn was_moving(&self) -> bool {
+        self.auto_moved_screens > 0
+    }
+
+    pub fn start_moving(&mut self, ctx: &mut EventCtx, button: ButtonPos) {
+        self.auto_moved_screens = 0;
+        self.moving_direction = Some(button);
+        self.timer_token = Some(ctx.request_timer(self.get_auto_move_duration()));
+    }
+
+    pub fn stop_moving(&mut self) {
+        self.moving_direction = None;
+        self.timer_token = None;
+    }
+}
+
+impl Component for AutomaticMover {
+    type Msg = ButtonPos;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        bounds
+    }
+
+    fn paint(&mut self) {}
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Moving automatically only when we receive a TimerToken that we have
+        // requested before
+        if let Event::Timer(token) = event {
+            if self.timer_token == Some(token) && self.moving_direction.is_some() {
+                // Request new token and send the appropriate button trigger event
+                self.timer_token = Some(ctx.request_timer(self.get_auto_move_duration()));
+                self.auto_moved_screens += 1;
+                return self.moving_direction;
+            }
+        }
+        None
+    }
+}
+
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
@@ -441,5 +667,12 @@ impl<T: StringType> crate::trace::Trace for ButtonController<T> {
         t.child("left_btn", &self.left_btn);
         t.child("middle_btn", &self.middle_btn);
         t.child("right_btn", &self.right_btn);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for AutomaticMover {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("AutomaticMover");
     }
 }
