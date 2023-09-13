@@ -28,6 +28,16 @@
 
 #define MAX_DER_SIGNATURE_SIZE 72
 
+/// class OptigaError(Exception):
+///     """Error returned by the Optiga chip."""
+MP_DEFINE_EXCEPTION(OptigaError, Exception)
+/// class SigningInaccessible(OptigaError):
+///     """The signing key is inaccessible.
+///     Typically, this will happen after the bootloader has been unlocked.
+///     """
+MP_DEFINE_EXCEPTION(SigningInaccessible, OptigaError)
+
+/// mock:global
 /// def get_certificate(cert_index: int) -> bytes:
 ///     """
 ///     Return the certificate stored at the given index.
@@ -40,14 +50,14 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index) {
 
   size_t cert_size = 0;
   if (!optiga_cert_size(idx, &cert_size)) {
-    mp_raise_ValueError("Failed to get certificate size.");
+    mp_raise_msg(&mp_type_OptigaError, "Failed to get certificate size.");
   }
 
   vstr_t cert = {0};
   vstr_init_len(&cert, cert_size);
   if (!optiga_read_cert(idx, (uint8_t *)cert.buf, cert.alloc, &cert_size)) {
     vstr_clear(&cert);
-    mp_raise_ValueError("Failed to read certificate.");
+    mp_raise_msg(&mp_type_OptigaError, "Failed to read certificate.");
   }
 
   cert.len = cert_size;
@@ -85,9 +95,9 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
   if (ret != 0) {
     vstr_clear(&sig);
     if (ret == OPTIGA_ERR_ACCESS_COND_NOT_SAT) {
-      mp_raise_msg(&mp_type_RuntimeError, "Signing inaccessible.");
+      mp_raise_msg(&mp_type_SigningInaccessible, "Signing inaccessible.");
     } else {
-      mp_raise_msg(&mp_type_RuntimeError, "Signing failed.");
+      mp_raise_msg(&mp_type_OptigaError, "Signing failed.");
     }
   }
 
@@ -110,7 +120,9 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_optiga_globals_table[] = {
      MP_ROM_INT(OPTIGA_DEVICE_CERT_INDEX)},
     {MP_ROM_QSTR(MP_QSTR_DEVICE_ECC_KEY_INDEX),
      MP_ROM_INT(OPTIGA_DEVICE_ECC_KEY_INDEX)},
-};
+    {MP_ROM_QSTR(MP_QSTR_OptigaError), MP_ROM_PTR(&mp_type_OptigaError)},
+    {MP_ROM_QSTR(MP_QSTR_SigningInaccessible),
+     MP_ROM_PTR(&mp_type_SigningInaccessible)}};
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_optiga_globals,
                             mod_trezorcrypto_optiga_globals_table);
 
