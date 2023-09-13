@@ -7,6 +7,8 @@
 #define SECRET_OPTIGA_KEY_OFFSET 16
 #define SECRET_OPTIGA_KEY_LEN 32
 
+secbool secret_bootloader_locked(void);
+
 void secret_write(uint8_t* data, uint32_t offset, uint32_t len);
 
 secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len);

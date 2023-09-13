@@ -129,6 +129,7 @@ message Features {
     optional bool unit_btconly = 46;          // unit/device is intended as bitcoin only
     optional uint32 homescreen_width = 47;         // homescreen width in pixels
     optional uint32 homescreen_height = 48;         // homescreen height in pixels
+    optional bool bootloader_locked = 49;       // bootloader is locked
 }
 
 /**

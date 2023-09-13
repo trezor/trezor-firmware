@@ -44,6 +44,10 @@
 #include "emulator.h"
 #endif
 
+#if USE_OPTIGA
+#include "secret.h"
+#endif
+
 #define MSG_HEADER1_LEN 9
 #define MSG_HEADER2_LEN 1
 
@@ -311,6 +315,11 @@ static void send_msg_features(uint8_t iface_num,
     MSG_SEND_ASSIGN_VALUE(unit_color, unit_variant_get_color());
     MSG_SEND_ASSIGN_VALUE(unit_btconly, unit_variant_get_btconly());
   }
+
+#if USE_OPTIGA
+  MSG_SEND_ASSIGN_VALUE(bootloader_locked,
+                        (secret_bootloader_locked() == sectrue));
+#endif
   MSG_SEND(Features);
 }
 
