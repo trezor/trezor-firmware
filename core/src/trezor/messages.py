@@ -2114,6 +2114,7 @@ if TYPE_CHECKING:
         unit_btconly: "bool | None"
         homescreen_width: "int | None"
         homescreen_height: "int | None"
+        bootloader_locked: "bool | None"
 
         def __init__(
             self,
@@ -2163,6 +2164,7 @@ if TYPE_CHECKING:
             unit_btconly: "bool | None" = None,
             homescreen_width: "int | None" = None,
             homescreen_height: "int | None" = None,
+            bootloader_locked: "bool | None" = None,
         ) -> None:
             pass
 

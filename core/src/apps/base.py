@@ -66,6 +66,7 @@ def get_features() -> Features:
         homescreen_height=HEIGHT,
         unit_color=utils.unit_color(),
         unit_btconly=utils.unit_btconly(),
+        bootloader_locked=utils.bootloader_locked(),
     )
 
     if utils.INTERNAL_MODEL in ("T1B1", "T2B1"):

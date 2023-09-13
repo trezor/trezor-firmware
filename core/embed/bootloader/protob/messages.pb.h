@@ -103,6 +103,8 @@ typedef struct _Features {
     uint32_t unit_color;
     bool has_unit_btconly;
     bool unit_btconly;
+    bool has_bootloader_locked;
+    bool bootloader_locked;
 } Features;
 
 typedef struct _FirmwareErase {
@@ -154,7 +156,7 @@ extern "C" {
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0}
+#define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0}
 #define Ping_init_default                        {false, ""}
 #define Success_init_default                     {false, ""}
 #define Failure_init_default                     {false, _FailureType_MIN, false, ""}
@@ -166,7 +168,7 @@ extern "C" {
 #define UnlockBootloader_init_default            {0}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0}
+#define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0}
 #define Ping_init_zero                           {false, ""}
 #define Success_init_zero                        {false, ""}
 #define Failure_init_zero                        {false, _FailureType_MIN, false, ""}
@@ -200,6 +202,7 @@ extern "C" {
 #define Features_internal_model_tag              44
 #define Features_unit_color_tag                  45
 #define Features_unit_btconly_tag                46
+#define Features_bootloader_locked_tag           49
 #define FirmwareErase_length_tag                 1
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
@@ -238,7 +241,8 @@ X(a, STATIC,   OPTIONAL, UINT32,   fw_patch,         24) \
 X(a, STATIC,   OPTIONAL, STRING,   fw_vendor,        25) \
 X(a, STATIC,   OPTIONAL, STRING,   internal_model,   44) \
 X(a, STATIC,   OPTIONAL, UINT32,   unit_color,       45) \
-X(a, STATIC,   OPTIONAL, BOOL,     unit_btconly,     46)
+X(a, STATIC,   OPTIONAL, BOOL,     unit_btconly,     46) \
+X(a, STATIC,   OPTIONAL, BOOL,     bootloader_locked,  49)
 #define Features_CALLBACK NULL
 #define Features_DEFAULT NULL
 
@@ -322,7 +326,7 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 #define ButtonAck_size                           0
 #define ButtonRequest_size                       2
 #define Failure_size                             260
-#define Features_size                            487
+#define Features_size                            490
 #define FirmwareErase_size                       6
 #define FirmwareRequest_size                     12
 #define GetFeatures_size                         0

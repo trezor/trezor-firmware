@@ -43,6 +43,10 @@
 #include "image.h"
 #endif
 
+#if USE_OPTIGA && !defined(TREZOR_EMULATOR)
+#include "secret.h"
+#endif
+
 static void ui_progress(mp_obj_t ui_wait_callback, uint32_t current,
                         uint32_t total) {
   if (mp_obj_is_callable(ui_wait_callback)) {
@@ -254,6 +258,26 @@ STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_to_bootloader_obj,
                                  mod_trezorutils_reboot_to_bootloader);
 
+/// def bootloader_locked() -> bool | None:
+///     """
+///     Returns True/False if the the bootloader is locked/unlocked and None if
+///     the feature is not supported.
+///     """
+STATIC mp_obj_t mod_trezorutils_bootloader_locked() {
+#if USE_OPTIGA
+#ifdef TREZOR_EMULATOR
+  return mp_const_true;
+#else
+  return (secret_bootloader_locked() == sectrue) ? mp_const_true
+                                                 : mp_const_false;
+#endif
+#else
+  return mp_const_none;
+#endif
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_bootloader_locked_obj,
+                                 mod_trezorutils_bootloader_locked);
+
 STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION) - 1, (const byte *)SCM_REVISION};
 
@@ -280,6 +304,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
      MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
+    {MP_ROM_QSTR(MP_QSTR_bootloader_locked),
+     MP_ROM_PTR(&mod_trezorutils_bootloader_locked_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_color),
      MP_ROM_PTR(&mod_trezorutils_unit_color_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_btconly),

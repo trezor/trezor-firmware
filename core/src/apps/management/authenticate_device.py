@@ -11,9 +11,12 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     from trezor.crypto.hashlib import sha256
     from trezor.messages import AuthenticityProof
     from trezor.ui.layouts import confirm_action
-    from trezor.utils import BufferReader
+    from trezor.utils import BufferReader, bootloader_locked
 
     from apps.common.writers import write_compact_size
+
+    if not bootloader_locked():
+        raise wire.ProcessError("Cannot authenticate since bootloader is unlocked.")
 
     await confirm_action(
         "authenticate_device",
