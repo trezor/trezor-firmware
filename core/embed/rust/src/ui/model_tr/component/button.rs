@@ -13,7 +13,7 @@ use super::{loader::DEFAULT_DURATION_MS, theme};
 
 const HALF_SCREEN_BUTTON_WIDTH: i16 = constant::WIDTH / 2 - 1;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum ButtonPos {
     Left,
     Middle,

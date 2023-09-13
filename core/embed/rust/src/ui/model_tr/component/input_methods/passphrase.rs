@@ -323,8 +323,11 @@ where
 
     /// Randomly choose an index in the current category
     fn randomize_category_position(&mut self, ctx: &mut EventCtx) {
-        self.choice_page
-            .set_page_counter(ctx, random_category_position(&self.current_category));
+        self.choice_page.set_page_counter(
+            ctx,
+            random_category_position(&self.current_category),
+            true,
+        );
     }
 }
 
