@@ -51,11 +51,14 @@ def cli() -> None:
     default=stellar.DEFAULT_BIP32_PATH,
 )
 @click.option("-d", "--show-display", is_flag=True)
+@click.option("-C", "--chunkify", is_flag=True)
 @with_client
-def get_address(client: "TrezorClient", address: str, show_display: bool) -> str:
+def get_address(
+    client: "TrezorClient", address: str, show_display: bool, chunkify: bool
+) -> str:
     """Get Stellar public address."""
     address_n = tools.parse_path(address)
-    return stellar.get_address(client, address_n, show_display)
+    return stellar.get_address(client, address_n, show_display, chunkify)
 
 
 @cli.command()

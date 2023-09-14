@@ -41,16 +41,18 @@ def cli() -> None:
     type=ChoiceType({m.name: m for m in messages.MoneroNetworkType}),
     default=messages.MoneroNetworkType.MAINNET,
 )
+@click.option("-C", "--chunkify", is_flag=True)
 @with_client
 def get_address(
     client: "TrezorClient",
     address: str,
     show_display: bool,
     network_type: messages.MoneroNetworkType,
+    chunkify: bool,
 ) -> bytes:
     """Get Monero address for specified path."""
     address_n = tools.parse_path(address)
-    return monero.get_address(client, address_n, show_display, network_type)
+    return monero.get_address(client, address_n, show_display, network_type, chunkify)
 
 
 @cli.command()

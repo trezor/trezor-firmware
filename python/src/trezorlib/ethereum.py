@@ -167,12 +167,14 @@ def get_address(
     n: "Address",
     show_display: bool = False,
     encoded_network: Optional[bytes] = None,
+    chunkify: bool = False,
 ) -> "MessageType":
     return client.call(
         messages.EthereumGetAddress(
             address_n=n,
             show_display=show_display,
             encoded_network=encoded_network,
+            chunkify=chunkify,
         )
     )
 
@@ -199,6 +201,7 @@ def sign_tx(
     chain_id: Optional[int] = None,
     tx_type: Optional[int] = None,
     definitions: Optional[messages.EthereumDefinitions] = None,
+    chunkify: bool = False,
 ) -> Tuple[int, bytes, bytes]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -213,6 +216,7 @@ def sign_tx(
         chain_id=chain_id,
         tx_type=tx_type,
         definitions=definitions,
+        chunkify=chunkify,
     )
 
     if data is None:
@@ -258,6 +262,7 @@ def sign_tx_eip1559(
     max_priority_fee: int,
     access_list: Optional[List[messages.EthereumAccessList]] = None,
     definitions: Optional[messages.EthereumDefinitions] = None,
+    chunkify: bool = False,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -274,6 +279,7 @@ def sign_tx_eip1559(
         data_length=length,
         data_initial_chunk=chunk,
         definitions=definitions,
+        chunkify=chunkify,
     )
 
     response = client.call(msg)

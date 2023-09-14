@@ -38,11 +38,14 @@ def cli() -> None:
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
+@click.option("-C", "--chunkify", is_flag=True)
 @with_client
-def get_address(client: "TrezorClient", address: str, show_display: bool) -> str:
+def get_address(
+    client: "TrezorClient", address: str, show_display: bool, chunkify: bool
+) -> str:
     """Get Binance address for specified path."""
     address_n = tools.parse_path(address)
-    return binance.get_address(client, address_n, show_display)
+    return binance.get_address(client, address_n, show_display, chunkify)
 
 
 @cli.command()
@@ -59,13 +62,14 @@ def get_public_key(client: "TrezorClient", address: str, show_display: bool) -> 
 @click.argument("file", type=click.File("r"))
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
+@click.option("-C", "--chunkify", is_flag=True)
 @with_client
 def sign_tx(
-    client: "TrezorClient", address: str, file: TextIO
+    client: "TrezorClient", address: str, file: TextIO, chunkify: bool
 ) -> "messages.BinanceSignedTx":
     """Sign Binance transaction.
 
     Transaction must be provided as a JSON file.
     """
     address_n = tools.parse_path(address)
-    return binance.sign_tx(client, address_n, json.load(file))
+    return binance.sign_tx(client, address_n, json.load(file), chunkify=chunkify)

@@ -28,10 +28,15 @@ if TYPE_CHECKING:
 
 @expect(messages.BinanceAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient", address_n: "Address", show_display: bool = False
+    client: "TrezorClient",
+    address_n: "Address",
+    show_display: bool = False,
+    chunkify: bool = False,
 ) -> "MessageType":
     return client.call(
-        messages.BinanceGetAddress(address_n=address_n, show_display=show_display)
+        messages.BinanceGetAddress(
+            address_n=address_n, show_display=show_display, chunkify=chunkify
+        )
     )
 
 
@@ -46,12 +51,13 @@ def get_public_key(
 
 @session
 def sign_tx(
-    client: "TrezorClient", address_n: "Address", tx_json: dict
+    client: "TrezorClient", address_n: "Address", tx_json: dict, chunkify: bool = False
 ) -> messages.BinanceSignedTx:
     msg = tx_json["msgs"][0]
     tx_msg = tx_json.copy()
     tx_msg["msg_count"] = 1
     tx_msg["address_n"] = address_n
+    tx_msg["chunkify"] = chunkify
     envelope = dict_to_proto(messages.BinanceSignTx, tx_msg)
 
     response = client.call(envelope)
