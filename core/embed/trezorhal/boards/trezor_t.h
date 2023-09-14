@@ -1,6 +1,8 @@
 #ifndef _TREZOR_T_H
 #define _TREZOR_T_H
 
+#define HSE_8MHZ
+
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
 
