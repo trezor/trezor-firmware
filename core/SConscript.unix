@@ -390,9 +390,6 @@ if TREZOR_MODEL in ('T', 'R'):
     ]
 
 if TREZOR_MODEL == 'R':
-    CPPDEFINES_MOD += [
-        ('USE_OPTIGA', '1'),
-    ]
     SOURCE_UNIX += [
         'embed/trezorhal/unix/optiga.c',
     ]

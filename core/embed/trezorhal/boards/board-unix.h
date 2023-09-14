@@ -16,6 +16,7 @@
 #ifdef TREZOR_MODEL_R
 #define USE_BUTTON 1
 #define USE_SBU 1
+#define USE_OPTIGA 1
 #endif
 
 #include "display-unix.h"

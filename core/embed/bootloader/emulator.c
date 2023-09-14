@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include TREZOR_BOARD
 #include "bootui.h"
 #include "common.h"
 #include "display.h"
