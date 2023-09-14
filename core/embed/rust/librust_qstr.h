@@ -50,7 +50,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
   MP_QSTR_confirm_more;
-  MP_QSTR_confirm_output;
+  MP_QSTR_confirm_output_address;
+  MP_QSTR_confirm_output_amount;
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_recovery;
   MP_QSTR_confirm_reset_device;
