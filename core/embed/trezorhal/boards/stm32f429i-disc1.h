@@ -1,6 +1,8 @@
 #ifndef _STM32F429I_DISC1_H
 #define _STM32F429I_DISC1_H
 
+#define HSE_8MHZ
+
 #define MAX_DISPLAY_RESX 240
 #define MAX_DISPLAY_RESY 320
 #define DISPLAY_RESX 240
