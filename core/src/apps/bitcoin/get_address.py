@@ -113,6 +113,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 multisig_index=multisig_index,
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
                 account=f"Multisig {multisig.m} of {len(pubnodes)}",
+                chunkify=bool(msg.chunkify),
             )
         else:
             account_name = address_n_to_name(coin, address_n, script_type)
@@ -128,6 +129,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 case_sensitive=address_case_sensitive,
                 path=path,
                 account=account,
+                chunkify=bool(msg.chunkify),
             )
 
     return Address(address=address, mac=mac)

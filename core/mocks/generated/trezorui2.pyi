@@ -50,6 +50,7 @@ def confirm_address(
     data: str,
     description: str | None,  # unused on TR
     extra: str | None,  # unused on TR
+    chunkify: bool = False,
 ) -> object:
     """Confirm address."""
 
@@ -132,6 +133,7 @@ def confirm_output(
     amount: str,
     address_title: str,
     amount_title: str,
+    chunkify: bool = False,
 ) -> object:
     """Confirm output."""
 
@@ -496,6 +498,7 @@ def confirm_address(
     data: str | bytes,
     description: str | None,
     extra: str | None,
+    chunkify: bool = False,
 ) -> object:
     """Confirm address. Similar to `confirm_blob` but has corner info button
     and allows left swipe which does the same thing as the button."""
@@ -555,6 +558,7 @@ def confirm_value(
     verb_cancel: str | None = None,
     info_button: bool = False,
     hold: bool = False,
+    chunkify: bool = False,
 ) -> object:
     """Confirm value. Merge of confirm_total and confirm_output."""
 

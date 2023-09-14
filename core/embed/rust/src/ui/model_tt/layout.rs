@@ -496,6 +496,7 @@ struct ConfirmBlobParams {
     verb_cancel: Option<StrBuffer>,
     info_button: bool,
     hold: bool,
+    chunkify: bool,
 }
 
 impl ConfirmBlobParams {
@@ -517,6 +518,7 @@ impl ConfirmBlobParams {
             verb_cancel,
             info_button: false,
             hold,
+            chunkify: false,
         }
     }
 
@@ -535,6 +537,11 @@ impl ConfirmBlobParams {
         self
     }
 
+    fn with_chunkify(mut self, chunkify: bool) -> Self {
+        self.chunkify = chunkify;
+        self
+    }
+
     fn into_layout(self) -> Result<Obj, Error> {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or_else(StrBuffer::empty),
@@ -542,7 +549,11 @@ impl ConfirmBlobParams {
             data: self.data.try_into()?,
             description_font: &theme::TEXT_NORMAL,
             extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: &theme::TEXT_MONO,
+            data_font: if self.chunkify {
+                &theme::TEXT_MONO_ADDRESS_CHUNKS
+            } else {
+                &theme::TEXT_MONO
+            },
         }
         .into_paragraphs();
 
@@ -611,6 +622,21 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let extra: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+
+        let data_style = if chunkify {
+            // Longer addresses have smaller x_offset so they fit even with scrollbar
+            // (as they will be shown on more than one page)
+            const FITS_ON_ONE_PAGE: usize = 16 * 4;
+            let address: StrBuffer = data.try_into()?;
+            if address.len() <= FITS_ON_ONE_PAGE {
+                &theme::TEXT_MONO_ADDRESS_CHUNKS
+            } else {
+                &theme::TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET
+            }
+        } else {
+            &theme::TEXT_MONO
+        };
 
         let paragraphs = ConfirmBlob {
             description: description.unwrap_or_else(StrBuffer::empty),
@@ -618,7 +644,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             data: data.try_into()?,
             description_font: &theme::TEXT_NORMAL,
             extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: &theme::TEXT_MONO,
+            data_font: data_style,
         }
         .into_paragraphs();
 
@@ -805,10 +831,12 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold)
             .with_subtitle(subtitle)
             .with_info_button(info_button)
+            .with_chunkify(chunkify)
             .into_layout()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1680,6 +1708,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     data: str | bytes,
     ///     description: str | None,
     ///     extra: str | None,
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm address. Similar to `confirm_blob` but has corner info button
     ///     and allows left swipe which does the same thing as the button."""
@@ -1734,6 +1763,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     verb_cancel: str | None = None,
     ///     info_button: bool = False,
     ///     hold: bool = False,
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm value. Merge of confirm_total and confirm_output."""
     Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),

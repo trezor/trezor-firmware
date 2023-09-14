@@ -22,7 +22,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            ComponentExt, FormattedText, LineBreaking, Timeout,
+            ComponentExt, FormattedText, Timeout,
         },
         display, geometry,
         layout::{
@@ -557,6 +557,7 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
         let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
         let address_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_title)?.try_into()?;
         let amount_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let get_page = move |page_index| {
             // Showing two screens - the recipient address and summary confirmation
@@ -567,10 +568,19 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
                     let btn_actions = ButtonActions::cancel_none_next();
                     // Not putting hyphens in the address.
                     // Potentially adding address label in different font.
-                    let mut ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .line_breaking(LineBreaking::BreakWordsNoHyphen);
+                    let mut ops = OpTextLayout::new(theme::TEXT_MONO_DATA);
                     if !address_label.is_empty() {
+                        // NOTE: need to explicitly turn off the chunkification before rendering the
+                        // address label (for some reason it does not help to turn it off after
+                        // rendering the chunks)
+                        if chunkify {
+                            ops = ops.chunkify_text(None);
+                        }
                         ops = ops.text_normal(address_label.clone()).newline();
+                    }
+                    if chunkify {
+                        // Chunkifying the address into smaller pieces when requested
+                        ops = ops.chunkify_text(Some((theme::MONO_CHUNKS, 2)));
                     }
                     ops = ops.text_mono(address.clone());
                     let formatted = FormattedText::new(ops).vertically_centered();
@@ -752,15 +762,20 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
             let btn_layout = ButtonLayout::cancel_armed_info("CONFIRM".into());
             let btn_actions = ButtonActions::cancel_confirm_info();
-            let ops = OpTextLayout::new(theme::TEXT_MONO)
-                .line_breaking(LineBreaking::BreakWordsNoHyphen)
-                .text_mono(address.clone());
+            let style = if chunkify {
+                // Chunkifying the address into smaller pieces when requested
+                theme::TEXT_MONO_ADDRESS_CHUNKS
+            } else {
+                theme::TEXT_MONO_DATA
+            };
+            let ops = OpTextLayout::new(style).text_mono(address.clone());
             let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted).with_title(title.clone())
         };
@@ -1584,6 +1599,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     data: str,
     ///     description: str | None,  # unused on TR
     ///     extra: str | None,  # unused on TR
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm address."""
     Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
@@ -1659,6 +1675,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     amount: str,
     ///     address_title: str,
     ///     amount_title: str,
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm output."""
     Qstr::MP_QSTR_confirm_output => obj_fn_kw!(0, new_confirm_output).as_obj(),

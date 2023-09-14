@@ -466,6 +466,7 @@ async def show_address(
     mismatch_title: str = "ADDRESS MISMATCH?",
     br_type: str = "show_address",
     br_code: ButtonRequestType = ButtonRequestType.Address,
+    chunkify: bool = False,
 ) -> None:
     send_button_request = True
     if title is None:
@@ -482,6 +483,7 @@ async def show_address(
                 data=address,
                 description="",  # unused on TR
                 extra=None,  # unused on TR
+                chunkify=chunkify,
             )
         )
         if send_button_request:
@@ -550,6 +552,7 @@ def show_pubkey(
         br_type=br_type,
         br_code=ButtonRequestType.PublicKey,
         mismatch_title=mismatch_title,
+        chunkify=False,
     )
 
 
@@ -652,6 +655,7 @@ async def confirm_output(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     address_label: str | None = None,
     output_index: int | None = None,
+    chunkify: bool = False,
 ) -> None:
     address_title = (
         "RECIPIENT" if output_index is None else f"RECIPIENT #{output_index + 1}"
@@ -667,6 +671,7 @@ async def confirm_output(
                     address_title=address_title,
                     amount_title=amount_title,
                     amount=amount,
+                    chunkify=chunkify,
                 )
             ),
             "confirm_output",

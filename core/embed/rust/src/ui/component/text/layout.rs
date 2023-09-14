@@ -52,6 +52,40 @@ pub struct TextLayout {
     pub continues_from_prev_page: bool,
 }
 
+/// Configuration for chunkifying the text into smaller parts.
+#[derive(Copy, Clone)]
+pub struct Chunks {
+    /// How many characters will be grouped in one chunk.
+    pub chunk_size: usize,
+    /// How big will be the space between chunks (in pixels).
+    pub x_offset: i16,
+    /// Optional characters that are wider and should be accounted for
+    pub wider_chars: Option<&'static str>,
+}
+
+impl Chunks {
+    pub const fn new(chunk_size: usize, x_offset: i16) -> Self {
+        Chunks {
+            chunk_size,
+            x_offset,
+            wider_chars: None,
+        }
+    }
+
+    pub const fn with_wider_chars(mut self, wider_chars: &'static str) -> Self {
+        self.wider_chars = Some(wider_chars);
+        self
+    }
+
+    pub fn is_char_wider(self, ch: char) -> bool {
+        if let Some(wider_chars) = self.wider_chars {
+            wider_chars.contains(ch)
+        } else {
+            false
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct TextStyle {
     /// Text font ID.
@@ -76,6 +110,14 @@ pub struct TextStyle {
     pub line_breaking: LineBreaking,
     /// Specifies what to do at the end of the page.
     pub page_breaking: PageBreaking,
+
+    /// Optionally chunkify all the text with a specified chunk
+    /// size and pixel offset for the next chunk.
+    pub chunks: Option<Chunks>,
+
+    /// Optionally increase the vertical space between text lines
+    /// (can be even negative, in which case it will decrease it).
+    pub line_spacing: i16,
 }
 
 impl TextStyle {
@@ -96,6 +138,8 @@ impl TextStyle {
             prev_page_ellipsis_icon: None,
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
+            chunks: None,
+            line_spacing: 0,
         }
     }
 
@@ -118,6 +162,18 @@ impl TextStyle {
     /// Adding optional icon signalling content continues from previous page.
     pub const fn with_prev_page_icon(mut self, icon: Icon, margin: i16) -> Self {
         self.prev_page_ellipsis_icon = Some((icon, margin));
+        self
+    }
+
+    /// Adding optional chunkification to the text.
+    pub const fn with_chunks(mut self, chunks: Chunks) -> Self {
+        self.chunks = Some(chunks);
+        self
+    }
+
+    /// Adding optional change of vertical line spacing.
+    pub const fn with_line_spacing(mut self, line_spacing: i16) -> Self {
+        self.line_spacing = line_spacing;
         self
     }
 
@@ -220,12 +276,13 @@ impl TextLayout {
             };
 
             let remaining_width = self.bounds.x1 - cursor.x;
-            let span = Span::fit_horizontally(
+            let mut span = Span::fit_horizontally(
                 remaining_text,
                 remaining_width,
                 self.style.text_font,
                 self.style.line_breaking,
                 line_ending_space,
+                self.style.chunks,
             );
 
             cursor.x += match self.align {
@@ -250,6 +307,9 @@ impl TextLayout {
 
             if span.advance.y > 0 {
                 // We're advancing to the next line.
+
+                // Possibly making a bigger/smaller vertical jump
+                span.advance.y += self.style.line_spacing;
 
                 // Check if we should be appending a hyphen at this point.
                 if span.insert_hyphen_before_line_break {
@@ -488,6 +548,7 @@ impl Span {
         text_font: impl GlyphMetrics,
         breaking: LineBreaking,
         line_ending_space: i16,
+        chunks: Option<Chunks>,
     ) -> Self {
         const ASCII_LF: char = '\n';
         const ASCII_CR: char = '\r';
@@ -537,12 +598,29 @@ impl Span {
 
         let mut span_width = 0;
         let mut found_any_whitespace = false;
+        let mut chunks_wider_chars = 0;
 
         let mut char_indices_iter = text.char_indices().peekable();
         // Iterating manually because we need a reference to the iterator inside the
         // loop.
         while let Some((i, ch)) = char_indices_iter.next() {
             let char_width = text_font.char_width(ch);
+
+            // When there is a set chunk size and we reach it,
+            // adjust the line advances and return the line.
+            if let Some(chunkify_config) = chunks {
+                if i == chunkify_config.chunk_size {
+                    line.advance.y = 0;
+                    // Decreasing the offset for each wider character in the chunk
+                    line.advance.x += chunkify_config.x_offset - chunks_wider_chars;
+                    return line;
+                } else {
+                    // Counting all the wider characters in the chunk
+                    if chunkify_config.is_char_wider(ch) {
+                        chunks_wider_chars += 1;
+                    }
+                }
+            }
 
             // Consider if we could be breaking the line at this position.
             if is_whitespace(ch) && span_width + complete_word_end_width <= max_width {
@@ -679,6 +757,7 @@ mod tests {
                 FIXED_FONT,
                 LineBreaking::BreakAtWhitespace,
                 0,
+                None,
             );
             spans.push((
                 &remaining_text[..span.length],

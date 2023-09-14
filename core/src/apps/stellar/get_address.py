@@ -25,6 +25,8 @@ async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddr
 
     if msg.show_display:
         path = paths.address_n_to_str(msg.address_n)
-        await show_address(address, case_sensitive=False, path=path)
+        await show_address(
+            address, case_sensitive=False, path=path, chunkify=bool(msg.chunkify)
+        )
 
     return StellarAddress(address=address)

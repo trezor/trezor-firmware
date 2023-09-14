@@ -210,6 +210,7 @@ async def confirm_sending(
     to: str,
     output_type: Literal["address", "change", "collateral-return"],
     network_id: int,
+    chunkify: bool,
 ) -> None:
     if output_type == "address":
         title = "Sending"
@@ -225,6 +226,7 @@ async def confirm_sending(
         format_coin_amount(ada_amount, network_id),
         title,
         br_code=ButtonRequestType.Other,
+        chunkify=chunkify,
     )
 
 
@@ -898,6 +900,7 @@ async def show_cardano_address(
     address_parameters: messages.CardanoAddressParametersType,
     address: str,
     protocol_magic: int,
+    chunkify: bool,
 ) -> None:
     CAT = CardanoAddressType  # local_cache_global
 
@@ -925,4 +928,5 @@ async def show_cardano_address(
         path=path,
         account=account,
         network=network_name,
+        chunkify=chunkify,
     )
