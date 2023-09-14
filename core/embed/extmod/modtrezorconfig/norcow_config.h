@@ -20,6 +20,7 @@
 #ifndef __NORCOW_CONFIG_H__
 #define __NORCOW_CONFIG_H__
 
+#include TREZOR_BOARD
 #include "flash.h"
 #include "model.h"
 

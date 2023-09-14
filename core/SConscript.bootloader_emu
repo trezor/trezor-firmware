@@ -131,9 +131,6 @@ SOURCE_TREZORHAL = [
 ]
 
 if TREZOR_MODEL in ('R', ):
-    CPPDEFINES_MOD += [
-        ('USE_OPTIGA', '1'),
-    ]
     SOURCE_TREZORHAL += [
         'embed/trezorhal/unix/secret.c',
         'embed/trezorhal/unix/optiga_hal.c',

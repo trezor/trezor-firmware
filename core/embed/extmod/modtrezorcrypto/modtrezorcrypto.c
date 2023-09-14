@@ -25,6 +25,8 @@
 
 #include "py/runtime.h"
 
+#include TREZOR_BOARD
+
 #if MICROPY_PY_TREZORCRYPTO
 
 static mp_obj_t ui_wait_callback = mp_const_none;
