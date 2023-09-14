@@ -126,16 +126,23 @@ def confirm_modify_output(
 
 
 # rust/src/ui/model_tr/layout.rs
-def confirm_output(
+def confirm_output_address(
     *,
     address: str,
     address_label: str,
-    amount: str,
     address_title: str,
-    amount_title: str,
     chunkify: bool = False,
 ) -> object:
-    """Confirm output."""
+    """Confirm output address."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_output_amount(
+    *,
+    amount: str,
+    amount_title: str,
+) -> object:
+    """Confirm output amount."""
 
 
 # rust/src/ui/model_tr/layout.rs
