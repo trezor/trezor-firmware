@@ -52,11 +52,18 @@ def make_defs(parameters: dict) -> messages.EthereumDefinitions:
     "ethereum/sign_tx.json",
     "ethereum/sign_tx_eip155.json",
 )
-def test_signtx(client: Client, parameters: dict, result: dict):
-    _do_test_signtx(client, parameters, result)
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_signtx(client: Client, chunkify: bool, parameters: dict, result: dict):
+    _do_test_signtx(client, parameters, result, chunkify=chunkify)
 
 
-def _do_test_signtx(client: Client, parameters: dict, result: dict, input_flow=None):
+def _do_test_signtx(
+    client: Client,
+    parameters: dict,
+    result: dict,
+    input_flow=None,
+    chunkify: bool = False,
+):
     with client:
         if input_flow:
             client.watch_layout()
@@ -73,6 +80,7 @@ def _do_test_signtx(client: Client, parameters: dict, result: dict, input_flow=N
             tx_type=parameters["tx_type"],
             data=bytes.fromhex(parameters["data"]),
             definitions=make_defs(parameters),
+            chunkify=chunkify,
         )
 
     expected_v = 2 * parameters["chain_id"] + 35
@@ -106,7 +114,8 @@ def test_signtx_fee_info(client: Client):
 
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_eip1559.json")
-def test_signtx_eip1559(client: Client, parameters: dict, result: dict):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_signtx_eip1559(client: Client, chunkify: bool, parameters: dict, result: dict):
     with client:
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             client,
@@ -120,6 +129,7 @@ def test_signtx_eip1559(client: Client, parameters: dict, result: dict):
             value=int(parameters["value"], 16),
             data=bytes.fromhex(parameters["data"]),
             definitions=make_defs(parameters),
+            chunkify=chunkify,
         )
 
     assert sig_r.hex() == result["sig_r"]

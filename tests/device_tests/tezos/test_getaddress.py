@@ -24,11 +24,12 @@ from trezorlib.tools import parse_path
 @pytest.mark.altcoin
 @pytest.mark.tezos
 @pytest.mark.skip_t1
-def test_tezos_get_address(client: Client):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_tezos_get_address(client: Client, chunkify: bool):
     path = parse_path("m/44h/1729h/0h")
-    address = get_address(client, path, show_display=True)
+    address = get_address(client, path, show_display=True, chunkify=chunkify)
     assert address == "tz1Kef7BSg6fo75jk37WkKRYSnJDs69KVqt9"
 
     path = parse_path("m/44h/1729h/1h")
-    address = get_address(client, path, show_display=True)
+    address = get_address(client, path, show_display=True, chunkify=chunkify)
     assert address == "tz1ekQapZCX4AXxTJhJZhroDKDYLHDHegvm1"

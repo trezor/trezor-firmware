@@ -47,7 +47,8 @@ pytestmark = [
     "cardano/get_reward_address.json",
     "cardano/get_base_address.derivations.json",
 )
-def test_cardano_get_address(client: Client, parameters, result):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_cardano_get_address(client: Client, chunkify: bool, parameters, result):
     client.init_device(new_session=True, derive_cardano=True)
 
     derivation_type = CardanoDerivationType.__members__[
@@ -81,6 +82,7 @@ def test_cardano_get_address(client: Client, parameters, result):
         network_id=parameters["network_id"],
         show_display=True,
         derivation_type=derivation_type,
+        chunkify=chunkify,
     )
     assert address == result["expected_address"]
 

@@ -26,8 +26,10 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 @parametrize_using_common_fixtures("ethereum/getaddress.json")
-def test_getaddress(client: Client, parameters, result):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_getaddress(client: Client, chunkify: bool, parameters, result):
     address_n = parse_path(parameters["path"])
     assert (
-        ethereum.get_address(client, address_n, show_display=True) == result["address"]
+        ethereum.get_address(client, address_n, show_display=True, chunkify=chunkify)
+        == result["address"]
     )

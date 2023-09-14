@@ -140,7 +140,14 @@ BIP86_VECTORS = (  # path, address for "abandon ... abandon about" seed
 
 @pytest.mark.parametrize("show_display", (True, False))
 @pytest.mark.parametrize("coin, path, script_type, address", VECTORS)
-def test_show_segwit(client: Client, show_display, coin, path, script_type, address):
+def test_show_segwit(
+    client: Client,
+    show_display: bool,
+    coin: str,
+    path: str,
+    script_type: messages.InputScriptType,
+    address: str,
+):
     assert (
         btc.get_address(
             client,
@@ -159,7 +166,7 @@ def test_show_segwit(client: Client, show_display, coin, path, script_type, addr
     mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 )
 @pytest.mark.parametrize("path, address", BIP86_VECTORS)
-def test_bip86(client: Client, path, address):
+def test_bip86(client: Client, path: str, address: str):
     assert (
         btc.get_address(
             client,
@@ -214,7 +221,7 @@ def test_show_multisig_3(client: Client):
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
-def test_multisig_missing(client: Client, show_display):
+def test_multisig_missing(client: Client, show_display: bool):
     # Multisig with global suffix specification.
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.

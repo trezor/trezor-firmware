@@ -45,7 +45,8 @@ TXHASH_e5040e = bytes.fromhex(
 )
 
 
-def test_send_p2sh(client: Client):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_send_p2sh(client: Client, chunkify: bool):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -89,7 +90,12 @@ def test_send_p2sh(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
+            client,
+            "Testnet",
+            [inp1],
+            [out1, out2],
+            prev_txes=TX_API_TESTNET,
+            chunkify=chunkify,
         )
 
     # Transaction does not exist on the blockchain, not using assert_tx_matches()

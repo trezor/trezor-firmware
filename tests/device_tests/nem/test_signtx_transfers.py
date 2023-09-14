@@ -31,7 +31,8 @@ pytestmark = [
 
 
 # assertion data from T1
-def test_nem_signtx_simple(client: Client):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_nem_signtx_simple(client: Client, chunkify: bool):
     tt = client.features.model == "T"
     with client:
         client.set_expected_responses(
@@ -68,6 +69,7 @@ def test_nem_signtx_simple(client: Client):
                 },
                 "version": (0x98 << 24),
             },
+            chunkify=chunkify,
         )
 
         assert (

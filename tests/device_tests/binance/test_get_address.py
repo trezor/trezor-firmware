@@ -32,9 +32,14 @@ BINANCE_ADDRESS_TEST_VECTORS = [
 @pytest.mark.setup_client(
     mnemonic="offer caution gift cross surge pretty orange during eye soldier popular holiday mention east eight office fashion ill parrot vault rent devote earth cousin"
 )
+@pytest.mark.parametrize("chunkify", (True, False))
 @pytest.mark.parametrize("path, expected_address", BINANCE_ADDRESS_TEST_VECTORS)
-def test_binance_get_address(client: Client, path, expected_address):
+def test_binance_get_address(
+    client: Client, chunkify: bool, path: str, expected_address: str
+):
     # data from https://github.com/binance-chain/javascript-sdk/blob/master/__tests__/crypto.test.js#L50
 
-    address = get_address(client, parse_path(path), show_display=True)
+    address = get_address(
+        client, parse_path(path), show_display=True, chunkify=chunkify
+    )
     assert address == expected_address
