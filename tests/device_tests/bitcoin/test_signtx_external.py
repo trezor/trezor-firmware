@@ -616,7 +616,7 @@ def test_p2wpkh_with_proof(client: Client):
     )
 
     with client:
-        t1 = client.features.model == "1"
+        is_t1 = client.features.model == "1"
         tt = client.features.model == "T"
         client.set_expected_responses(
             [
@@ -643,7 +643,7 @@ def test_p2wpkh_with_proof(client: Client):
                 request_input(1),
                 request_output(0),
                 request_output(1),
-                (t1, request_input(0)),
+                (is_t1, request_input(0)),
                 request_input(1),
                 request_finished(),
             ]
@@ -710,7 +710,7 @@ def test_p2tr_with_proof(client: Client):
     )
 
     with client:
-        t1 = client.features.model == "1"
+        is_t1 = client.features.model == "1"
         tt = client.features.model == "T"
         client.set_expected_responses(
             [
@@ -723,7 +723,7 @@ def test_p2tr_with_proof(client: Client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
-                (t1, request_input(0)),
+                (is_t1, request_input(0)),
                 request_input(1),
                 request_finished(),
             ]
