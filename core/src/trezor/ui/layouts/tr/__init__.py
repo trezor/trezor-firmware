@@ -662,22 +662,34 @@ async def confirm_output(
     )
     amount_title = "AMOUNT" if output_index is None else f"AMOUNT #{output_index + 1}"
 
-    await raise_if_not_confirmed(
-        interact(
+    while True:
+        result = await interact(
             RustLayout(
-                trezorui2.confirm_output(
+                trezorui2.confirm_output_address(
                     address=address,
                     address_label=address_label or "",
                     address_title=address_title,
-                    amount_title=amount_title,
-                    amount=amount,
                     chunkify=chunkify,
                 )
             ),
             "confirm_output",
             br_code,
         )
-    )
+        if result is not CONFIRMED:
+            raise ActionCancelled
+
+        result = await interact(
+            RustLayout(
+                trezorui2.confirm_output_amount(
+                    amount_title=amount_title,
+                    amount=amount,
+                )
+            ),
+            "confirm_output",
+            br_code,
+        )
+        if result is CONFIRMED:
+            return
 
 
 async def tutorial(
