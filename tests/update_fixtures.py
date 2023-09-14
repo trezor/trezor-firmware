@@ -51,10 +51,12 @@ def _get_current_git_branch() -> str:
     help="Not take these jobs",
     multiple=True,
 )
+@click.option("-r", "--remove-missing", is_flag=True, help="Remove missing tests")
 def ci(
     branch: str | None,
     only_jobs: Iterable[str] | None,
     exclude_jobs: Iterable[str] | None,
+    remove_missing: bool,
 ) -> None:
     """Update fixtures file with results from CI."""
     print("Updating from CI...")
@@ -88,6 +90,15 @@ def ci(
         group = next(iter(ui_res_dict[model].keys()))
         current_model = current_fixtures.setdefault(model, {})
         current_group = current_model.setdefault(group, {})  # type: ignore
+
+        if remove_missing:
+            # get rid of tests that were not run in CI
+            removed = 0
+            for key in list(current_group.keys()):
+                if key not in ui_res_dict[model][group]:
+                    current_group.pop(key)
+                    removed += 1
+            print(f"Removed {removed} tests.")
 
         differing = 0
         for test_name, res in ui_res_dict[model][group].items():
