@@ -499,17 +499,9 @@ class InputFlowSignTxHighFee(InputFlowBase):
 
         self.finished = True
 
-    def input_flow_tt(self) -> BRGeneratorType:
+    def input_flow_common(self) -> BRGeneratorType:
         screens = [
             B.ConfirmOutput,
-            B.ConfirmOutput,
-            B.FeeOverThreshold,
-            B.SignTx,
-        ]
-        yield from self.go_through_all_screens(screens)
-
-    def input_flow_tr(self) -> BRGeneratorType:
-        screens = [
             B.ConfirmOutput,
             B.FeeOverThreshold,
             B.SignTx,
@@ -540,11 +532,12 @@ def sign_tx_go_to_info(client: Client) -> Generator[None, None, str]:
 def sign_tx_go_to_info_tr(
     client: Client,
 ) -> Generator[None, None, str]:
-    yield  # confirm output
+    yield  # confirm address
     client.debug.wait_layout()
-    client.debug.press_right()  # CONTINUE
+    client.debug.press_yes()  # CONTINUE
+    yield  # confirm amount
     client.debug.wait_layout()
-    client.debug.press_right()  # CONFIRM
+    client.debug.press_yes()  # CONFIRM
 
     screen_texts: list[str] = []
 
@@ -686,9 +679,10 @@ def lock_time_input_flow_tt(
 def lock_time_input_flow_tr(
     debug: DebugLink, layout_assert_func: Callable[[DebugLink], None]
 ) -> BRGeneratorType:
-    yield  # confirm output
+    yield  # confirm address
     debug.wait_layout()
-    debug.swipe_up()
+    debug.press_yes()
+    yield  # confirm amount
     debug.wait_layout()
     debug.press_yes()
 
