@@ -63,13 +63,13 @@ def test_opreturn(client: Client):
     )
 
     with client:
-        tt = client.features.model == "T"
+        is_core = client.features.model in ("T", "R")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
