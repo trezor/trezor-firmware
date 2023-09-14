@@ -174,10 +174,11 @@ def fill_transaction_by_type(msg: messages.NEMSignTx, transaction: dict) -> None
         raise ValueError("Unknown transaction type")
 
 
-def create_sign_tx(transaction: dict) -> messages.NEMSignTx:
+def create_sign_tx(transaction: dict, chunkify: bool = False) -> messages.NEMSignTx:
     msg = messages.NEMSignTx(
         transaction=create_transaction_common(transaction),
         cosigning=transaction["type"] == TYPE_MULTISIG_SIGNATURE,
+        chunkify=chunkify,
     )
 
     if transaction["type"] in (TYPE_MULTISIG_SIGNATURE, TYPE_MULTISIG):
@@ -197,17 +198,25 @@ def create_sign_tx(transaction: dict) -> messages.NEMSignTx:
 
 @expect(messages.NEMAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient", n: "Address", network: int, show_display: bool = False
+    client: "TrezorClient",
+    n: "Address",
+    network: int,
+    show_display: bool = False,
+    chunkify: bool = False,
 ) -> "MessageType":
     return client.call(
-        messages.NEMGetAddress(address_n=n, network=network, show_display=show_display)
+        messages.NEMGetAddress(
+            address_n=n, network=network, show_display=show_display, chunkify=chunkify
+        )
     )
 
 
 @expect(messages.NEMSignedTx)
-def sign_tx(client: "TrezorClient", n: "Address", transaction: dict) -> "MessageType":
+def sign_tx(
+    client: "TrezorClient", n: "Address", transaction: dict, chunkify: bool = False
+) -> "MessageType":
     try:
-        msg = create_sign_tx(transaction)
+        msg = create_sign_tx(transaction, chunkify=chunkify)
     except ValueError as e:
         raise exceptions.TrezorException("Failed to encode transaction") from e
 

@@ -324,10 +324,15 @@ def _read_asset(asset: "Asset") -> messages.StellarAsset:
 
 @expect(messages.StellarAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient", address_n: "Address", show_display: bool = False
+    client: "TrezorClient",
+    address_n: "Address",
+    show_display: bool = False,
+    chunkify: bool = False,
 ) -> "MessageType":
     return client.call(
-        messages.StellarGetAddress(address_n=address_n, show_display=show_display)
+        messages.StellarGetAddress(
+            address_n=address_n, show_display=show_display, chunkify=chunkify
+        )
     )
 
 
