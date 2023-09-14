@@ -318,7 +318,8 @@ def test_one_two_fee(client: Client):
     )
 
 
-def test_one_three_fee(client: Client):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_one_three_fee(client: Client, chunkify: bool):
     # input tx: bb5169091f09e833e155b291b662019df56870effe388c626221c5ea84274bc4
 
     inp1 = messages.TxInputType(
@@ -379,6 +380,7 @@ def test_one_three_fee(client: Client):
             [inp1],
             [out1, out2, out3],
             prev_txes=TX_CACHE_TESTNET,
+            chunkify=chunkify,
         )
 
     assert_tx_matches(

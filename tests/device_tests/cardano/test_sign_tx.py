@@ -57,7 +57,7 @@ def test_cardano_sign_tx(client: Client, parameters, result):
 
 @parametrize_using_common_fixtures("cardano/sign_tx.show_details.json")
 def test_cardano_sign_tx_show_details(client: Client, parameters, result):
-    response = call_sign_tx(client, parameters, show_details_input_flow)
+    response = call_sign_tx(client, parameters, show_details_input_flow, chunkify=True)
     assert response == _transform_expected_result(result)
 
 
@@ -72,7 +72,7 @@ def test_cardano_sign_tx_failed(client: Client, parameters, result):
         call_sign_tx(client, parameters, None)
 
 
-def call_sign_tx(client: Client, parameters, input_flow=None):
+def call_sign_tx(client: Client, parameters, input_flow=None, chunkify: bool = False):
     client.init_device(new_session=True, derive_cardano=True)
 
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]
@@ -136,6 +136,7 @@ def call_sign_tx(client: Client, parameters, input_flow=None):
             reference_inputs=reference_inputs,
             additional_witness_requests=additional_witness_requests,
             include_network_id=parameters["include_network_id"],
+            chunkify=chunkify,
         )
 
 

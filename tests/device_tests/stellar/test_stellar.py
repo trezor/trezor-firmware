@@ -112,8 +112,11 @@ def test_xdr(parameters, result):
 
 @pytest.mark.altcoin
 @pytest.mark.stellar
+@pytest.mark.parametrize("chunkify", (True, False))
 @parametrize_using_common_fixtures("stellar/get_address.json")
-def test_get_address(client: Client, parameters, result):
+def test_get_address(client: Client, chunkify: bool, parameters, result):
     address_n = parse_path(parameters["path"])
-    address = stellar.get_address(client, address_n, show_display=True)
+    address = stellar.get_address(
+        client, address_n, show_display=True, chunkify=chunkify
+    )
     assert address == result["address"]

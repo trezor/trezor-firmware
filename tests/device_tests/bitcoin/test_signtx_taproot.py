@@ -62,7 +62,8 @@ TXHASH_c96621 = bytes.fromhex(
 )
 
 
-def test_send_p2tr(client: Client):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_send_p2tr(client: Client, chunkify: bool):
     inp1 = messages.TxInputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
         address_n=parse_path("m/86h/1h/0h/1/0"),
@@ -93,7 +94,7 @@ def test_send_p2tr(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API
+            client, "Testnet", [inp1], [out1], prev_txes=TX_API, chunkify=chunkify
         )
 
     assert_tx_matches(

@@ -93,7 +93,9 @@ VECTORS_MULTISIG = (  # paths, address_index
 # Has AlwaysMatchingSchema but let's make sure the nonstandard paths are
 # accepted in case we make this more restrictive in the future.
 @pytest.mark.parametrize("path, script_types", VECTORS)
-def test_getpublicnode(client: Client, path, script_types):
+def test_getpublicnode(
+    client: Client, path: str, script_types: list[messages.InputScriptType]
+):
     for script_type in script_types:
         res = btc.get_public_node(
             client, parse_path(path), coin_name="Bitcoin", script_type=script_type
@@ -102,8 +104,14 @@ def test_getpublicnode(client: Client, path, script_types):
         assert res.xpub
 
 
+@pytest.mark.parametrize("chunkify", (True, False))
 @pytest.mark.parametrize("path, script_types", VECTORS)
-def test_getaddress(client: Client, path, script_types):
+def test_getaddress(
+    client: Client,
+    chunkify: bool,
+    path: str,
+    script_types: list[messages.InputScriptType],
+):
     for script_type in script_types:
         res = btc.get_address(
             client,
@@ -111,13 +119,16 @@ def test_getaddress(client: Client, path, script_types):
             parse_path(path),
             show_display=True,
             script_type=script_type,
+            chunkify=chunkify,
         )
 
         assert res
 
 
 @pytest.mark.parametrize("path, script_types", VECTORS)
-def test_signmessage(client: Client, path, script_types):
+def test_signmessage(
+    client: Client, path: str, script_types: list[messages.InputScriptType]
+):
     for script_type in script_types:
         sig = btc.sign_message(
             client,
@@ -131,7 +142,9 @@ def test_signmessage(client: Client, path, script_types):
 
 
 @pytest.mark.parametrize("path, script_types", VECTORS)
-def test_signtx(client: Client, path, script_types):
+def test_signtx(
+    client: Client, path: str, script_types: list[messages.InputScriptType]
+):
     address_n = parse_path(path)
 
     for script_type in script_types:
@@ -160,7 +173,9 @@ def test_signtx(client: Client, path, script_types):
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("paths, address_index", VECTORS_MULTISIG)
-def test_getaddress_multisig(client: Client, paths, address_index):
+def test_getaddress_multisig(
+    client: Client, paths: list[str], address_index: list[int]
+):
     pubs = [
         messages.HDNodePathType(
             node=btc.get_public_node(
@@ -186,7 +201,7 @@ def test_getaddress_multisig(client: Client, paths, address_index):
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("paths, address_index", VECTORS_MULTISIG)
-def test_signtx_multisig(client: Client, paths, address_index):
+def test_signtx_multisig(client: Client, paths: list[str], address_index: list[int]):
     pubs = [
         messages.HDNodePathType(
             node=btc.get_public_node(
