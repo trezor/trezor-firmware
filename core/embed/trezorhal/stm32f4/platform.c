@@ -34,25 +34,33 @@ typedef struct {
   uint32_t plln;
 } clock_conf_t;
 
+#ifdef HSE_16MHZ
+#define PLLM_COEF 2U
+#elif defined HSE_8MHZ
+#define PLLM_COEF 1U
+#else
+#error Unsupported HSE frequency
+#endif
+
 #if defined STM32F427xx || defined STM32F429xx
 #ifdef TREZOR_MODEL_T
 #define DEFAULT_FREQ 168U
 #define DEFAULT_PLLQ 7U
 #define DEFAULT_PLLP 0U  // P = 2 (two bits, 00 means PLLP = 2)
-#define DEFAULT_PLLM 4U
+#define DEFAULT_PLLM (4U * PLLM_COEF)
 #define DEFAULT_PLLN 168U
 #else
 #define DEFAULT_FREQ 180U
 #define DEFAULT_PLLQ 15U
 #define DEFAULT_PLLP 1U  // P = 4 (two bits, 01 means PLLP = 4)
-#define DEFAULT_PLLM 4U
+#define DEFAULT_PLLM (4U * PLLM_COEF)
 #define DEFAULT_PLLN 360U
 #endif
 #elif STM32F405xx
 #define DEFAULT_FREQ 120U
 #define DEFAULT_PLLQ 5U
 #define DEFAULT_PLLP 0U  // P = 2 (two bits, 00 means PLLP = 2)
-#define DEFAULT_PLLM 8U
+#define DEFAULT_PLLM (8U * PLLM_COEF)
 #define DEFAULT_PLLN 240U
 #else
 #error Unsupported MCU
@@ -69,7 +77,7 @@ clock_conf_t clock_conf[3] = {
         180,
         15,
         1,
-        4,
+        4 * PLLM_COEF,
         360,
     },
     {
@@ -79,7 +87,7 @@ clock_conf_t clock_conf[3] = {
         168,
         7,
         0,
-        4,
+        4 * PLLM_COEF,
         168,
     },
     {
@@ -89,7 +97,7 @@ clock_conf_t clock_conf[3] = {
         120,
         5,
         0,
-        8,
+        8 * PLLM_COEF,
         240,
     },
 };
