@@ -21,6 +21,9 @@ from coin_info import Coin, CoinBuckets, Coins, CoinsInfo, FidoApps, SupportInfo
 DEFINITIONS_TIMESTAMP_PATH = (
     coin_info.DEFS_DIR / "ethereum" / "released-definitions-timestamp.txt"
 )
+DEFINITIONS_LATEST_URL = (
+    "https://raw.githubusercontent.com/trezor/definitions/main/definitions-latest.json"
+)
 
 try:
     import termcolor
@@ -910,6 +913,25 @@ def render(
             target = file[: -len(".mako")]
             with open(target, "w") as dst:
                 do_render(file, dst)
+
+
+@cli.command()
+# fmt: off
+@click.option("-v", "--verbose", is_flag=True, help="Print timestamp and merkle root")
+# fmt: on
+def new_definitions(verbose: bool) -> None:
+    """Update timestamp of external coin definitions."""
+    assert requests is not None
+    eth_defs = requests.get(DEFINITIONS_LATEST_URL).json()
+    eth_defs_date = eth_defs["metadata"]["datetime"]
+    if verbose:
+        click.echo(
+            f"Latest definitions from {eth_defs_date}: {eth_defs['metadata']['merkle_root']}"
+        )
+    eth_defs_date = datetime.datetime.fromisoformat(eth_defs_date)
+    DEFINITIONS_TIMESTAMP_PATH.write_text(
+        eth_defs_date.isoformat(timespec="seconds") + "\n"
+    )
 
 
 if __name__ == "__main__":
