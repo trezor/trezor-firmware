@@ -1,6 +1,8 @@
 #ifndef _TREZOR_T3W1_H
 #define _TREZOR_T3W1_H
 
+#define HSE_8MHZ
+
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 320
 
