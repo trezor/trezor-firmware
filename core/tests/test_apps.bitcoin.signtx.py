@@ -111,7 +111,7 @@ class TestSignTx(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN, 0),
+            helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN, 0, False),
             True,
             helpers.UiConfirmTotal(3_801_747, 50_000, fee_rate, coin_bitcoin, AmountUnit.BITCOIN, inp1.address_n[:3]),
             True,
