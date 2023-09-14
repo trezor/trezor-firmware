@@ -116,6 +116,12 @@ int main(void) {
 
   unit_variant_init();
 
+#ifdef USE_OPTIGA
+  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
+  secbool secret_ok =
+      secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+#endif
+
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
 #endif
@@ -166,10 +172,7 @@ int main(void) {
 #ifdef USE_OPTIGA
   optiga_init();
   optiga_open_application();
-
-  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  if (secret_read(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN) ==
-      sectrue) {
+  if (sectrue == secret_ok) {
     optiga_sec_chan_handshake(secret, sizeof(secret));
   }
   memzero(secret, sizeof(secret));
