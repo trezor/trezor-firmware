@@ -110,6 +110,7 @@ message GetAddress {
     optional MultisigRedeemScriptType multisig = 4;                     // filled if we are showing a multisig address
     optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional bool ignore_xpub_magic = 6;                                // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+    optional bool chunkify = 7;                                         // display the address in chunks of 4 characters
 }
 
 /**
@@ -199,6 +200,7 @@ message SignTx {
     optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
     optional bool serialize = 13 [default=true];               // serialize the full transaction, as opposed to only outputting the signatures
     optional CoinJoinRequest coinjoin_request = 14;            // only for preauthorized CoinJoins
+    optional bool chunkify = 15;                               // display the address in chunks of 4 characters
 
     /**
      * Signing request for a CoinJoin transaction.

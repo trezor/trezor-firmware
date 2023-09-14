@@ -39,6 +39,7 @@ message EthereumGetAddress {
     repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
     optional bool show_display = 2;     // optionally show on display before sending the result
     optional bytes encoded_network = 3; // encoded Ethereum network, see ethereum-definitions.md for details
+    optional bool chunkify = 4;         // display the address in chunks of 4 characters
 }
 
 /**
@@ -71,6 +72,7 @@ message EthereumSignTx {
     required uint64 chain_id = 9;                                        // Chain Id for EIP 155
     optional uint32 tx_type = 10;                                        // Used for Wanchain
     optional ethereum_definitions.EthereumDefinitions definitions = 12;  // network and/or token definitions for tx
+    optional bool chunkify = 13;                                         // display the address in chunks of 4 characters
 }
 
 /**
@@ -93,6 +95,7 @@ message EthereumSignTxEIP1559 {
     required uint64 chain_id = 10;                                             // Chain Id for EIP 155
     repeated EthereumAccessList access_list = 11;                              // Access List
     optional ethereum_definitions.EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
+    optional bool chunkify = 13;                                               // display the address in chunks of 4 characters
 
     message EthereumAccessList {
         required string address = 1;

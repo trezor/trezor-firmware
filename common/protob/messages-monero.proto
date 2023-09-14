@@ -90,6 +90,7 @@ message MoneroGetAddress {
     optional uint32 account = 4;            // Major subaddr index
     optional uint32 minor = 5;              // Minor subaddr index
     optional bytes payment_id = 6;          // Payment ID for integrated address
+    optional bool chunkify = 7;             // display the address in chunks of 4 characters
 }
 
 /**
@@ -149,6 +150,7 @@ message MoneroTransactionInitRequest {
         optional uint32 client_version = 13;  // connected client version
         optional uint32 hard_fork = 14;       // transaction hard fork number
         optional bytes monero_version = 15;   // monero software version
+        optional bool chunkify = 16;          // display the address in chunks of 4 characters
     }
 }
 

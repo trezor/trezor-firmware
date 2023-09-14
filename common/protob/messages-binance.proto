@@ -22,6 +22,7 @@ chance that somebody is relying on the behavior.
 message BinanceGetAddress {
     repeated uint32 address_n = 1;  // BIP-32-style path to derive the key from master node
     optional bool show_display = 2; // optionally prompt for confirmation on trezor display
+    optional bool chunkify = 3;     // display the address in chunks of 4 characters
 }
 
 /**
@@ -66,6 +67,7 @@ message BinanceSignTx {
     optional string memo = 5;
     required sint64 sequence = 6;
     required sint64 source = 7;
+    optional bool chunkify = 8;    // display the address in chunks of 4 characters
 }
 
 /**
@@ -85,6 +87,7 @@ message BinanceTxRequest {
 message BinanceTransferMsg {
     repeated BinanceInputOutput inputs = 1;
     repeated BinanceInputOutput outputs = 2;
+    optional bool chunkify = 3;               // display the address in chunks of 4 characters
 
     message BinanceInputOutput {
         required string address = 1;
