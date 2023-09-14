@@ -205,10 +205,12 @@ def _get_unique_differing_screens(
         master_screens_path = MASTER_CACHE_DIR / master_hash
         if not master_screens_path.exists():
             master_screens_path.mkdir()
-            try:
-                download.fetch_recorded(master_hash, master_screens_path)
-            except RuntimeError as e:
-                print("WARNING:", e)
+            # master_hash may be empty, in case of new test
+            if master_hash:
+                try:
+                    download.fetch_recorded(master_hash, master_screens_path)
+                except RuntimeError as e:
+                    print("WARNING:", e)
 
         current_screens_path = get_screen_path(test_name)
         if not current_screens_path:
@@ -217,7 +219,10 @@ def _get_unique_differing_screens(
 
         # Saving all the images to a common directory
         # They will be referenced from the HTML files
-        master_screens, master_hashes = screens_and_hashes(master_screens_path)
+        if master_hash:
+            master_screens, master_hashes = screens_and_hashes(master_screens_path)
+        else:
+            master_screens, master_hashes = [], []
         current_screens, current_hashes = screens_and_hashes(current_screens_path)
         html.store_images(master_screens, master_hashes)
         html.store_images(current_screens, current_hashes)

@@ -270,7 +270,10 @@ def _get_current_results() -> FixturesType:
 def master_diff() -> None:
     """Creating an HTML page showing all screens differing from master."""
     current = _get_current_results()
-    _removed_tests, _added_tests, diff_tests = get_diff(current)
+    _removed_tests, added_tests, diff_tests = get_diff(current)
+    # Enriching the diff tests with the newly added ones (empty master hash)
+    for key, value in added_tests.items():
+        diff_tests[key] = ("", value)
     generate_master_diff_report(diff_tests, TESTREPORT_PATH)
 
 
