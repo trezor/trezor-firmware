@@ -362,7 +362,7 @@ def test_signtx(client: Client):
 
     _assert_protection(client)
     with client:
-        tt = client.features.model == "T"
+        is_core = client.features.model in ("T", "R")
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
@@ -371,7 +371,7 @@ def test_signtx(client: Client):
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_50f6f1),
