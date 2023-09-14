@@ -186,13 +186,13 @@ def test_data_streaming(client: Client):
     checked in vectorized function above.
     """
     with client:
-        t1 = client.features.model == "1"
-        tt = client.features.model == "T"
+        is_t1 = client.features.model == "1"
+        is_tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                (t1, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
-                (tt, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
+                (is_t1, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
+                (is_tt, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 message_filters.EthereumTxRequest(
                     data_length=1_024,
