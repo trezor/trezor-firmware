@@ -412,7 +412,7 @@ where
     /// Up arrow to signal paginating back. No outline. Offsetted little right
     /// to not be on the boundary.
     pub fn up_arrow_icon() -> Self {
-        Self::icon(theme::ICON_ARROW_UP).with_offset(Offset::new(2, -3))
+        Self::icon(theme::ICON_ARROW_UP).with_offset(Offset::new(3, -4))
     }
 
     /// Down arrow to signal paginating forward. Takes half the screen's width
