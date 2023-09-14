@@ -25,6 +25,10 @@ async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddres
     address = address_from_public_key(pubkey)
 
     if msg.show_display:
-        await show_address(address, path=paths.address_n_to_str(msg.address_n))
+        await show_address(
+            address,
+            path=paths.address_n_to_str(msg.address_n),
+            chunkify=bool(msg.chunkify),
+        )
 
     return RippleAddress(address=address)

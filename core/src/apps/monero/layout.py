@@ -126,7 +126,9 @@ async def require_confirm_transaction(
             cur_payment = payment_id
         else:
             cur_payment = None
-        await _require_confirm_output(dst, network_type, cur_payment)
+        await _require_confirm_output(
+            dst, network_type, cur_payment, chunkify=bool(tsx_data.chunkify)
+        )
 
     if (
         payment_id
@@ -143,6 +145,7 @@ async def _require_confirm_output(
     dst: MoneroTransactionDestinationEntry,
     network_type: MoneroNetworkType,
     payment_id: bytes | None,
+    chunkify: bool,
 ) -> None:
     """
     Single transaction destination confirmation
@@ -161,6 +164,7 @@ async def _require_confirm_output(
         addr,
         _format_amount(dst.amount),
         br_code=BRT_SignTx,
+        chunkify=chunkify,
     )
 
 

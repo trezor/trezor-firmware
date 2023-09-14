@@ -366,6 +366,7 @@ class Signer:
             address,
             "change" if self._is_change_output(output) else "address",
             self.msg.network_id,
+            chunkify=bool(self.msg.chunkify),
         )
 
     async def _show_output_credentials(
@@ -1043,6 +1044,7 @@ class Signer:
             address,
             "collateral-return",
             self.msg.network_id,
+            chunkify=bool(self.msg.chunkify),
         )
 
     def _should_show_collateral_return_init(self, output: CardanoTxOutput) -> bool:

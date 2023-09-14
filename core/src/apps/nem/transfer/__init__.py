@@ -12,11 +12,12 @@ async def transfer(
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     node: bip32.HDNode,
+    chunkify: bool,
 ) -> bytes:
     transfer.mosaics = serialize.canonicalize_mosaics(transfer.mosaics)
     payload, encrypted = serialize.get_transfer_payload(transfer, node)
 
-    await layout.ask_transfer(common, transfer, encrypted)
+    await layout.ask_transfer(common, transfer, encrypted, chunkify)
 
     w = serialize.serialize_transfer(common, transfer, public_key, payload, encrypted)
     for mosaic in transfer.mosaics:

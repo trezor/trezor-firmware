@@ -356,6 +356,7 @@ class AccountType:
         coin: coininfo.CoinInfo,
         address_n: Bip32Path,
         script_type: InputScriptType | None,
+        show_account_str: bool,
     ) -> str | None:
         pattern = self.pattern
         if self.account_level:
@@ -373,6 +374,8 @@ class AccountType:
             return None
 
         name = self.account_name
+        if show_account_str:
+            name = f"{self.account_name} account"
         account_pos = pattern.find("/account'")
         if account_pos >= 0:
             i = pattern.count("/", 0, account_pos)
@@ -387,6 +390,7 @@ def address_n_to_name(
     address_n: Bip32Path,
     script_type: InputScriptType | None = None,
     account_level: bool = False,
+    show_account_str: bool = False,
 ) -> str | None:
     ACCOUNT_TYPES = (
         AccountType(
@@ -446,7 +450,7 @@ def address_n_to_name(
     )
 
     for account in ACCOUNT_TYPES:
-        name = account.get_name(coin, address_n, script_type)
+        name = account.get_name(coin, address_n, script_type, show_account_str)
         if name:
             return name
 

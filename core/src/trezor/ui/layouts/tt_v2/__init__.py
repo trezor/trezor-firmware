@@ -417,6 +417,7 @@ async def show_address(
     mismatch_title: str = "Address mismatch?",
     br_type: str = "show_address",
     br_code: ButtonRequestType = ButtonRequestType.Address,
+    chunkify: bool = False,
 ) -> None:
     send_button_request = True
     if title is None:
@@ -435,6 +436,7 @@ async def show_address(
                 data=address,
                 description=network or "",
                 extra=None,
+                chunkify=chunkify,
             )
         )
         if send_button_request:
@@ -500,6 +502,7 @@ def show_pubkey(
         br_type=br_type,
         br_code=ButtonRequestType.PublicKey,
         mismatch_title=mismatch_title,
+        chunkify=False,
     )
 
 
@@ -577,6 +580,7 @@ async def confirm_output(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     address_label: str | None = None,
     output_index: int | None = None,
+    chunkify: bool = False,
 ) -> None:
     if title is not None:
         if title.upper().startswith("CONFIRM "):
@@ -601,6 +605,7 @@ async def confirm_output(
                     verb="CONTINUE",
                     hold=False,
                     info_button=False,
+                    chunkify=chunkify,
                 )
             ),
             "confirm_output",

@@ -22,7 +22,7 @@ async def require_confirm_destination_tag(tag: int) -> None:
     )
 
 
-async def require_confirm_tx(to: str, value: int) -> None:
+async def require_confirm_tx(to: str, value: int, chunkify: bool = False) -> None:
     from trezor.ui.layouts import confirm_output
 
-    await confirm_output(to, format_amount(value, DECIMALS) + " XRP")
+    await confirm_output(to, format_amount(value, DECIMALS) + " XRP", chunkify=chunkify)

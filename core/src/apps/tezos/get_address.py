@@ -29,6 +29,10 @@ async def get_address(msg: TezosGetAddress, keychain: Keychain) -> TezosAddress:
     address = helpers.base58_encode_check(pkh, helpers.TEZOS_ED25519_ADDRESS_PREFIX)
 
     if msg.show_display:
-        await show_address(address, path=paths.address_n_to_str(msg.address_n))
+        await show_address(
+            address,
+            path=paths.address_n_to_str(msg.address_n),
+            chunkify=bool(msg.chunkify),
+        )
 
     return TezosAddress(address=address)

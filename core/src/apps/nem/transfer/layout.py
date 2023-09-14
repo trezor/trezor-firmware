@@ -20,6 +20,7 @@ async def ask_transfer(
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     encrypted: bool,
+    chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_output, confirm_text
 
@@ -42,6 +43,7 @@ async def ask_transfer(
     await confirm_output(
         transfer.recipient,
         f"{format_amount(_get_xem_amount(transfer), NEM_MAX_DIVISIBILITY)} XEM",
+        chunkify=chunkify,
     )
 
     await require_confirm_final(common.fee)

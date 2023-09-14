@@ -4,13 +4,14 @@ from trezor.ui.layouts import confirm_address, confirm_metadata, confirm_propert
 BR_SIGN_TX = ButtonRequestType.SignTx  # global_import_cache
 
 
-async def require_confirm_tx(to: str, value: int) -> None:
+async def require_confirm_tx(to: str, value: int, chunkify: bool = False) -> None:
     from trezor.ui.layouts import confirm_output
 
     await confirm_output(
         to,
         format_tezos_amount(value),
         br_code=BR_SIGN_TX,
+        chunkify=chunkify,
     )
 
 
