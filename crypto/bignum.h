@@ -108,6 +108,7 @@ void bn_subi(bignum256 *x, uint32_t y, const bignum256 *prime);
 void bn_subtractmod(const bignum256 *x, const bignum256 *y, bignum256 *res,
                     const bignum256 *prime);
 void bn_subtract(const bignum256 *x, const bignum256 *y, bignum256 *res);
+int bn_legendre(const bignum256 *x, const bignum256 *prime);
 void bn_long_division(bignum256 *x, uint32_t d, bignum256 *q, uint32_t *r);
 void bn_divmod58(bignum256 *x, uint32_t *r);
 void bn_divmod1000(bignum256 *x, uint32_t *r);
