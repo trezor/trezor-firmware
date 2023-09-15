@@ -112,8 +112,8 @@ void pair_optiga(void) {
 
   // Enable writing the pairing secret to OPTIGA.
   optiga_metadata metadata = {0};
-  metadata.change = OPTIGA_ACCESS_ALWAYS;
-  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  metadata.change = OPTIGA_META_ACCESS_ALWAYS;
+  metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
   metadata.data_type = TYPE_PTFBIND;
   set_metadata(OID_KEY_PAIRING, &metadata);  // Ignore result.
 
@@ -169,29 +169,29 @@ void optiga_lock(void) {
 
   // Set metadata for device certificate.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
-  metadata.change = OPTIGA_ACCESS_NEVER;
-  metadata.read = OPTIGA_ACCESS_ALWAYS;
-  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_META_ACCESS_NEVER;
+  metadata.read = OPTIGA_META_ACCESS_ALWAYS;
+  metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
   if (!set_metadata(OID_CERT_DEV, &metadata)) {
     return;
   }
 
   // Set metadata for FIDO attestation certificate.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
-  metadata.change = OPTIGA_ACCESS_NEVER;
-  metadata.read = OPTIGA_ACCESS_ALWAYS;
-  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_META_ACCESS_NEVER;
+  metadata.read = OPTIGA_META_ACCESS_ALWAYS;
+  metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
   if (!set_metadata(OID_CERT_FIDO, &metadata)) {
     return;
   }
 
   // Set metadata for device private key.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
-  metadata.change = OPTIGA_ACCESS_NEVER;
-  metadata.read = OPTIGA_ACCESS_NEVER;
+  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_META_ACCESS_NEVER;
+  metadata.read = OPTIGA_META_ACCESS_NEVER;
   metadata.execute = ACCESS_PAIRED;
   metadata.key_usage = KEY_USE_SIGN;
   if (!set_metadata(OID_KEY_DEV, &metadata)) {
@@ -200,9 +200,9 @@ void optiga_lock(void) {
 
   // Set metadata for FIDO attestation private key.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
-  metadata.change = OPTIGA_ACCESS_NEVER;
-  metadata.read = OPTIGA_ACCESS_NEVER;
+  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_META_ACCESS_NEVER;
+  metadata.read = OPTIGA_META_ACCESS_NEVER;
   metadata.execute = ACCESS_PAIRED;
   metadata.key_usage = KEY_USE_SIGN;
   if (!set_metadata(OID_KEY_FIDO, &metadata)) {
@@ -211,10 +211,10 @@ void optiga_lock(void) {
 
   // Set metadata for pairing key.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_LCS_OPERATIONAL;
-  metadata.change = OPTIGA_ACCESS_NEVER;
-  metadata.read = OPTIGA_ACCESS_NEVER;
-  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  metadata.change = OPTIGA_META_ACCESS_NEVER;
+  metadata.read = OPTIGA_META_ACCESS_NEVER;
+  metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
   metadata.data_type = TYPE_PTFBIND;
   if (!set_metadata(OID_KEY_PAIRING, &metadata)) {
     return;
@@ -230,7 +230,7 @@ optiga_locked_status get_optiga_locked_status(void) {
                            OID_KEY_FIDO, OID_KEY_PAIRING};
 
   optiga_metadata locked_metadata = {0};
-  locked_metadata.lcso = OPTIGA_LCS_OPERATIONAL;
+  locked_metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
   for (size_t i = 0; i < sizeof(oids) / sizeof(oids[0]); ++i) {
     uint8_t metadata_buffer[OPTIGA_MAX_METADATA_SIZE] = {0};
     size_t metadata_size = 0;
@@ -334,7 +334,7 @@ void cert_write(uint16_t oid, char *data) {
 
   // Enable writing to the certificate slot.
   optiga_metadata metadata = {0};
-  metadata.change = OPTIGA_ACCESS_ALWAYS;
+  metadata.change = OPTIGA_META_ACCESS_ALWAYS;
   set_metadata(oid, &metadata);  // Ignore result.
 
   uint8_t data_bytes[1024];
@@ -360,10 +360,8 @@ void pubkey_read(uint16_t oid) {
   // Enable key agreement usage.
 
   optiga_metadata metadata = {0};
-  uint8_t key_usage = OPTIGA_KEY_USAGE_KEYAGREE;
-  metadata.key_usage.ptr = &key_usage;
-  metadata.key_usage.len = 1;
-  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  metadata.key_usage = OPTIGA_META_KEY_USE_KEYAGREE;
+  metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
 
   if (!set_metadata(oid, &metadata)) {
     return;
@@ -402,10 +400,8 @@ void keyfido_write(char *data) {
   // Enable key agreement usage for device key.
 
   optiga_metadata metadata = {0};
-  uint8_t key_usage = OPTIGA_KEY_USAGE_KEYAGREE;
-  metadata.key_usage.ptr = &key_usage;
-  metadata.key_usage.len = 1;
-  metadata.execute = OPTIGA_ACCESS_ALWAYS;
+  metadata.key_usage = OPTIGA_META_KEY_USE_KEYAGREE;
+  metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
 
   if (!set_metadata(OID_KEY_DEV, &metadata)) {
     return;

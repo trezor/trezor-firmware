@@ -131,9 +131,11 @@ typedef struct {
 #define OPTIGA_ACCESS_CONDITION(ac_id, oid) \
   { (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 }
 
-extern const optiga_metadata_item OPTIGA_LCS_OPERATIONAL;
-extern const optiga_metadata_item OPTIGA_ACCESS_ALWAYS;
-extern const optiga_metadata_item OPTIGA_ACCESS_NEVER;
+// Commonly used data object access conditions.
+extern const optiga_metadata_item OPTIGA_META_LCS_OPERATIONAL;
+extern const optiga_metadata_item OPTIGA_META_ACCESS_ALWAYS;
+extern const optiga_metadata_item OPTIGA_META_ACCESS_NEVER;
+extern const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE;
 
 optiga_result optiga_parse_metadata(const uint8_t *serialized,
                                     size_t serialized_size,
