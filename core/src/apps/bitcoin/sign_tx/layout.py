@@ -62,6 +62,7 @@ async def confirm_output(
     coin: CoinInfo,
     amount_unit: AmountUnit,
     output_index: int,
+    chunkify: bool,
 ) -> None:
     from trezor.enums import OutputScriptType
 
@@ -97,9 +98,18 @@ async def confirm_output(
 
         address_label = None
         if output.address_n and not output.multisig:
+            from trezor import utils
+
+            # Showing the account string only for T2B1 model
+            show_account_str = utils.INTERNAL_MODEL == "T2B1"
             script_type = CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[output.script_type]
             address_label = (
-                address_n_to_name(coin, output.address_n, script_type)
+                address_n_to_name(
+                    coin,
+                    output.address_n,
+                    script_type,
+                    show_account_str=show_account_str,
+                )
                 or f"address path {address_n_to_str(output.address_n)}"
             )
 
@@ -109,6 +119,7 @@ async def confirm_output(
             title=title,
             address_label=address_label,
             output_index=output_index,
+            chunkify=chunkify,
         )
 
     await layout
@@ -147,7 +158,7 @@ async def confirm_payment_request(
 ) -> Any:
     from trezor import wire
 
-    memo_texts = []
+    memo_texts: list[str] = []
     for m in msg.memos:
         if m.text_memo is not None:
             memo_texts.append(m.text_memo.text)
@@ -264,6 +275,16 @@ async def confirm_unverified_external_input() -> None:
     await layouts.show_warning(
         "unverified_external_input",
         "The transaction contains unverified external inputs.",
+        "Continue anyway?",
+        button="Continue",
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
+async def confirm_multiple_accounts() -> None:
+    await layouts.show_warning(
+        "sending_from_multiple_accounts",
+        "Sending from multiple accounts.",
         "Continue anyway?",
         button="Continue",
         br_code=ButtonRequestType.SignTx,

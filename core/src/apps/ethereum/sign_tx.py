@@ -33,7 +33,7 @@ async def sign_tx(
 
     from apps.common import paths
 
-    from .layout import require_confirm_data, require_confirm_fee, require_confirm_tx
+    from .layout import require_confirm_data, require_confirm_tx
 
     # check
     if msg.tx_type not in [1, 6, None]:
@@ -47,13 +47,13 @@ async def sign_tx(
     # Handle ERC20s
     token, address_bytes, recipient, value = await handle_erc20(msg, defs)
 
-    data_total = msg.data_length
+    data_total = msg.data_length  # local_cache_attribute
 
-    await require_confirm_tx(recipient, value, defs.network, token)
-    if token is None and msg.data_length > 0:
+    if token is None and data_total > 0:
         await require_confirm_data(msg.data_initial_chunk, data_total)
 
-    await require_confirm_fee(
+    await require_confirm_tx(
+        recipient,
         value,
         int.from_bytes(msg.gas_price, "big"),
         int.from_bytes(msg.gas_limit, "big"),

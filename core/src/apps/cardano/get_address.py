@@ -39,6 +39,8 @@ async def get_address(
                 Credential.payment_credential(address_parameters),
                 Credential.stake_credential(address_parameters),
             )
-        await show_cardano_address(address_parameters, address, msg.protocol_magic)
+        await show_cardano_address(
+            address_parameters, address, msg.protocol_magic, chunkify=bool(msg.chunkify)
+        )
 
     return CardanoAddress(address=address)

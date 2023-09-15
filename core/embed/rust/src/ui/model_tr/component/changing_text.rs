@@ -19,6 +19,8 @@ pub struct ChangingTextLine<T> {
     /// What to show in front of the text if it doesn't fit.
     ellipsis: &'static str,
     alignment: Alignment,
+    /// Whether to show the text completely aligned to the top of the bounds
+    text_at_the_top: bool,
 }
 
 impl<T> ChangingTextLine<T>
@@ -33,6 +35,7 @@ where
             show_content: true,
             ellipsis: "...",
             alignment,
+            text_at_the_top: false,
         }
     }
 
@@ -50,6 +53,12 @@ where
         self
     }
 
+    /// Showing text at the very top
+    pub fn with_text_at_the_top(mut self) -> Self {
+        self.text_at_the_top = true;
+        self
+    }
+
     /// Update the text to be displayed in the line.
     pub fn update_text(&mut self, text: T) {
         self.text = text;
@@ -58,6 +67,11 @@ where
     /// Get current text.
     pub fn get_text(&self) -> &T {
         &self.text
+    }
+
+    /// Changing the current font
+    pub fn update_font(&mut self, font: Font) {
+        self.font = font;
     }
 
     /// Whether we should display the text content.
@@ -76,7 +90,13 @@ where
 
     /// Y coordinate of text baseline, is the same for all paints.
     fn y_baseline(&self) -> i16 {
-        self.pad.area.y0 + self.font.line_height()
+        let y_coord = self.pad.area.y0 + self.font.line_height();
+        if self.text_at_the_top {
+            // Shifting the text up by 2 pixels.
+            y_coord - 2
+        } else {
+            y_coord
+        }
     }
 
     /// Whether the whole text can be painted in the available space

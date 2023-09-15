@@ -30,8 +30,10 @@ where
     T: StringType,
 {
     pub fn new(
+        qr_title: T,
         qr_address: T,
         case_sensitive: bool,
+        details_title: T,
         account: Option<T>,
         path: Option<T>,
     ) -> Result<Self, Error>
@@ -53,14 +55,14 @@ where
         let result = Self {
             qr_code: Frame::left_aligned(
                 theme::label_title(),
-                "RECEIVE ADDRESS".into(),
+                qr_title,
                 Qr::new(qr_address, case_sensitive)?.with_border(7),
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),
             details: Frame::left_aligned(
                 theme::label_title(),
-                "RECEIVING TO".into(),
+                details_title,
                 para.into_paragraphs(),
             )
             .with_cancel_button()

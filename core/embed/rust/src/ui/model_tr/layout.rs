@@ -22,7 +22,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            ComponentExt, FormattedText, LineBreaking, Timeout,
+            ComponentExt, FormattedText, Timeout,
         },
         display, geometry,
         layout::{
@@ -254,15 +254,7 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     hold: bool,
 ) -> Result<Obj, Error> {
     // Left button - icon, text or nothing.
-    let cancel_btn = if let Some(verb_cancel) = verb_cancel {
-        if !verb_cancel.is_empty() {
-            Some(ButtonDetails::text(verb_cancel))
-        } else {
-            Some(ButtonDetails::cancel_icon())
-        }
-    } else {
-        None
-    };
+    let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
 
     // Right button - text or nothing.
     // Optional HoldToConfirm
@@ -407,8 +399,7 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
 
         let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
             .text_normal("By continuing you agree to Trezor Company's terms and conditions.".into())
-            .newline()
-            .newline()
+            .next_page()
             .text_normal("More info at".into())
             .newline()
             .text_bold("trezor.io/tos".into());
@@ -559,44 +550,61 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_output_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
         let address_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_label)?.try_into()?;
-        let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
         let address_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_address_title)?.try_into()?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+
+        let get_page = move |page_index| {
+            assert!(page_index == 0);
+            // RECIPIENT + address
+            let btn_layout = ButtonLayout::cancel_none_text("CONTINUE".into());
+            let btn_actions = ButtonActions::cancel_none_confirm();
+            // Not putting hyphens in the address.
+            // Potentially adding address label in different font.
+            let mut ops = OpTextLayout::new(theme::TEXT_MONO_DATA);
+            if !address_label.is_empty() {
+                // NOTE: need to explicitly turn off the chunkification before rendering the
+                // address label (for some reason it does not help to turn it off after
+                // rendering the chunks)
+                if chunkify {
+                    ops = ops.chunkify_text(None);
+                }
+                ops = ops.text_normal(address_label.clone()).newline();
+            }
+            if chunkify {
+                // Chunkifying the address into smaller pieces when requested
+                ops = ops.chunkify_text(Some((theme::MONO_CHUNKS, 2)));
+            }
+            ops = ops.text_mono(address.clone());
+            let formatted = FormattedText::new(ops).vertically_centered();
+            Page::new(btn_layout, btn_actions, formatted).with_title(address_title.clone())
+        };
+        let pages = FlowPages::new(get_page, 1);
+
+        let obj = LayoutObj::new(Flow::new(pages))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_output_amount(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
         let amount_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
 
         let get_page = move |page_index| {
-            // Showing two screens - the recipient address and summary confirmation
-            match page_index {
-                0 => {
-                    // RECIPIENT + address
-                    let btn_layout = ButtonLayout::cancel_none_text("CONTINUE".into());
-                    let btn_actions = ButtonActions::cancel_none_next();
-                    // Not putting hyphens in the address.
-                    // Potentially adding address label in different font.
-                    let mut ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .line_breaking(LineBreaking::BreakWordsNoHyphen);
-                    if !address_label.is_empty() {
-                        ops = ops.text_normal(address_label.clone()).newline();
-                    }
-                    ops = ops.text_mono(address.clone());
-                    let formatted = FormattedText::new(ops).vertically_centered();
-                    Page::new(btn_layout, btn_actions, formatted).with_title(address_title.clone())
-                }
-                1 => {
-                    // AMOUNT + amount
-                    let btn_layout = ButtonLayout::up_arrow_none_text("CONFIRM".into());
-                    let btn_actions = ButtonActions::prev_none_confirm();
-                    let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount.clone());
-                    let formatted = FormattedText::new(ops).vertically_centered();
-                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.clone())
-                }
-                _ => unreachable!(),
-            }
+            assert!(page_index == 0);
+            // AMOUNT + amount
+            let btn_layout = ButtonLayout::up_arrow_none_text("CONFIRM".into());
+            let btn_actions = ButtonActions::cancel_none_confirm();
+            let ops = OpTextLayout::new(theme::TEXT_MONO).text_mono(amount.clone());
+            let formatted = FormattedText::new(ops).vertically_centered();
+            Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.clone())
         };
-        let pages = FlowPages::new(get_page, 2);
+        let pages = FlowPages::new(get_page, 1);
 
         let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
@@ -687,20 +695,95 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_ethereum_tx(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let recipient: StrBuffer = kwargs.get(Qstr::MP_QSTR_recipient)?.try_into()?;
+        let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
+        let maximum_fee: StrBuffer = kwargs.get(Qstr::MP_QSTR_maximum_fee)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let get_page = move |page_index| {
+            match page_index {
+                0 => {
+                    // RECIPIENT
+                    let btn_layout = ButtonLayout::cancel_none_text("CONTINUE".into());
+                    let btn_actions = ButtonActions::cancel_none_next();
+
+                    let ops = OpTextLayout::new(theme::TEXT_MONO_DATA).text_mono(recipient.clone());
+
+                    let formatted = FormattedText::new(ops).vertically_centered();
+                    Page::new(btn_layout, btn_actions, formatted).with_title("RECIPIENT".into())
+                }
+                1 => {
+                    // Total amount + fee
+                    let btn_layout = ButtonLayout::up_arrow_armed_info("CONFIRM".into());
+                    let btn_actions = ButtonActions::prev_confirm_next();
+
+                    let ops = OpTextLayout::new(theme::TEXT_MONO)
+                        .text_mono(total_amount.clone())
+                        .newline()
+                        .newline_half()
+                        .text_bold("Maximum fee:".into())
+                        .newline()
+                        .text_mono(maximum_fee.clone());
+
+                    let formatted = FormattedText::new(ops);
+                    Page::new(btn_layout, btn_actions, formatted).with_title("Amount:".into())
+                }
+                2 => {
+                    // Fee information
+                    let btn_layout = ButtonLayout::arrow_none_none();
+                    let btn_actions = ButtonActions::prev_none_none();
+
+                    let mut ops = OpTextLayout::new(theme::TEXT_MONO);
+
+                    for item in unwrap!(IterBuf::new().try_iterate(items)) {
+                        let [key, value]: [Obj; 2] = unwrap!(iter_into_array(item));
+                        if !ops.is_empty() {
+                            // Each key-value pair is on its own page
+                            ops = ops.next_page();
+                        }
+                        ops = ops
+                            .text_bold(unwrap!(key.try_into()))
+                            .newline()
+                            .text_mono(unwrap!(value.try_into()));
+                    }
+
+                    let formatted = FormattedText::new(ops).vertically_centered();
+                    Page::new(btn_layout, btn_actions, formatted)
+                        .with_title("FEE INFORMATION".into())
+                        .with_slim_arrows()
+                }
+                _ => unreachable!(),
+            }
+        };
+        let pages = FlowPages::new(get_page, 3);
+
+        let obj = LayoutObj::new(Flow::new(pages).with_scrollbar(false))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
             let btn_layout = ButtonLayout::cancel_armed_info("CONFIRM".into());
             let btn_actions = ButtonActions::cancel_confirm_info();
-            let ops = OpTextLayout::new(theme::TEXT_MONO)
-                .line_breaking(LineBreaking::BreakWordsNoHyphen)
-                .text_mono(address.clone());
-            let formatted = FormattedText::new(ops);
+            let style = if chunkify {
+                // Chunkifying the address into smaller pieces when requested
+                theme::TEXT_MONO_ADDRESS_CHUNKS
+            } else {
+                theme::TEXT_MONO_DATA
+            };
+            let ops = OpTextLayout::new(style).text_mono(address.clone());
+            let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted).with_title(title.clone())
         };
         let pages = FlowPages::new(get_page, 1);
@@ -798,7 +881,14 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 
         let pages = FlowPages::new(get_page, PAGE_COUNT);
 
-        let obj = LayoutObj::new(Flow::new(pages).with_scrollbar(false))?;
+        // Setting the ignore-second-button to mimic all the Choice pages, to teach user
+        // that they should really press both buttons at the same time to achieve
+        // middle-click.
+        let obj = LayoutObj::new(
+            Flow::new(pages)
+                .with_scrollbar(false)
+                .with_ignore_second_button_ms(constant::IGNORE_OTHER_BTN_MS),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1028,15 +1118,16 @@ extern "C" fn new_show_passphrase() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn new_show_mismatch() -> Obj {
-    let block = move || {
+extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
             let btn_layout = ButtonLayout::arrow_none_text("QUIT".into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::<StrBuffer>::new(theme::TEXT_NORMAL)
-                .text_bold("ADDRESS MISMATCH?".into())
+                .text_bold(title.clone())
                 .newline()
                 .newline_half()
                 .text_normal("Please contact Trezor support at".into())
@@ -1050,19 +1141,24 @@ extern "C" fn new_show_mismatch() -> Obj {
         let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
     };
-    unsafe { util::try_or_raise(block) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let verb_cancel: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
             let [font, text]: [Obj; 2] = iter_into_array(para)?;
-            let style: &TextStyle = theme::textstyle_number_bold_or_mono(font.try_into()?);
+            let style: &TextStyle = theme::textstyle_number(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
             if paragraphs.is_full() {
@@ -1074,9 +1170,37 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             title,
             ShowMore::<Paragraphs<ParagraphVecShort<StrBuffer>>, StrBuffer>::new(
                 paragraphs.into_paragraphs(),
+                verb_cancel,
+                button,
             ),
         ))?;
         Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let mut paragraphs = ParagraphVecLong::new();
+
+        for para in IterBuf::new().try_iterate(items)? {
+            let [font, text]: [Obj; 2] = iter_into_array(para)?;
+            let style: &TextStyle = theme::textstyle_number(font.try_into()?);
+            let text: StrBuffer = text.try_into()?;
+            paragraphs.add(Paragraph::new(style, text));
+        }
+
+        content_in_button_page(
+            title,
+            paragraphs.into_paragraphs(),
+            button,
+            Some("<".into()),
+            false,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1112,8 +1236,7 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
 
-        let obj =
-            LayoutObj::new(Frame::new(prompt, PinEntry::new(subprompt)).with_title_centered())?;
+        let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
 
         Ok(obj.into())
     };
@@ -1483,6 +1606,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     data: str,
     ///     description: str | None,  # unused on TR
     ///     extra: str | None,  # unused on TR
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm address."""
     Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
@@ -1551,16 +1675,23 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Decrease or increase amount for given address."""
     Qstr::MP_QSTR_confirm_modify_output => obj_fn_kw!(0, new_confirm_modify_output).as_obj(),
 
-    /// def confirm_output(
+    /// def confirm_output_address(
     ///     *,
     ///     address: str,
     ///     address_label: str,
-    ///     amount: str,
     ///     address_title: str,
+    ///     chunkify: bool = False,
+    /// ) -> object:
+    ///     """Confirm output address."""
+    Qstr::MP_QSTR_confirm_output_address => obj_fn_kw!(0, new_confirm_output_address).as_obj(),
+
+    /// def confirm_output_amount(
+    ///     *,
+    ///     amount: str,
     ///     amount_title: str,
     /// ) -> object:
-    ///     """Confirm output."""
-    Qstr::MP_QSTR_confirm_output => obj_fn_kw!(0, new_confirm_output).as_obj(),
+    ///     """Confirm output amount."""
+    Qstr::MP_QSTR_confirm_output_amount => obj_fn_kw!(0, new_confirm_output_amount).as_obj(),
 
     /// def confirm_total(
     ///     *,
@@ -1573,6 +1704,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
+
+    /// def confirm_ethereum_tx(
+    ///     *,
+    ///     recipient: str,
+    ///     total_amount: str,
+    ///     maximum_fee: str,
+    ///     items: Iterable[Tuple[str, str]],
+    /// ) -> object:
+    ///     """Confirm details about Ethereum transaction."""
+    Qstr::MP_QSTR_confirm_ethereum_tx => obj_fn_kw!(0, new_confirm_ethereum_tx).as_obj(),
 
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""
@@ -1633,20 +1774,31 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Show passphrase on host dialog."""
     Qstr::MP_QSTR_show_passphrase => obj_fn_0!(new_show_passphrase).as_obj(),
 
-    /// def show_mismatch() -> object:
+    /// def show_mismatch(*, title: str) -> object:
     ///     """Warning modal, receiving address mismatch."""
-    Qstr::MP_QSTR_show_mismatch => obj_fn_0!(new_show_mismatch).as_obj(),
+    Qstr::MP_QSTR_show_mismatch => obj_fn_kw!(0, new_show_mismatch).as_obj(),
 
     /// def confirm_with_info(
     ///     *,
     ///     title: str,
-    ///     button: str,  # unused on TR
+    ///     button: str,
     ///     info_button: str,  # unused on TR
     ///     items: Iterable[Tuple[int, str]],
+    ///     verb_cancel: str | None = None,
     /// ) -> object:
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling."""
     Qstr::MP_QSTR_confirm_with_info => obj_fn_kw!(0, new_confirm_with_info).as_obj(),
+
+    /// def confirm_more(
+    ///     *,
+    ///     title: str,
+    ///     button: str,
+    ///     items: Iterable[tuple[int, str]],
+    /// ) -> object:
+    ///     """Confirm long content with the possibility to go back from any page.
+    ///     Meant to be used with confirm_with_info."""
+    Qstr::MP_QSTR_confirm_more => obj_fn_kw!(0, new_confirm_more).as_obj(),
 
     /// def confirm_coinjoin(
     ///     *,

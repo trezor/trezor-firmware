@@ -70,8 +70,8 @@ CPPDEFINES_MOD += [
     ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
     ('USE_MONERO', '1' if EVERYTHING else '0'),
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
-    ('USE_NEM', '1' if EVERYTHING else '0'),
-    ('USE_EOS', '1' if EVERYTHING else '0'),
+    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL != "R") else '0'),
+    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL != "R") else '0'),
 ]
 SOURCE_MOD += [
     'embed/extmod/trezorobj.c',
@@ -80,6 +80,7 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/rand.c',
     'vendor/trezor-crypto/address.c',
     'vendor/trezor-crypto/aes/aes_modes.c',
+    'vendor/trezor-crypto/aes/aesccm.c',
     'vendor/trezor-crypto/aes/aescrypt.c',
     'vendor/trezor-crypto/aes/aeskey.c',
     'vendor/trezor-crypto/aes/aestab.c',
@@ -127,6 +128,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/shamir.c',
     'vendor/trezor-crypto/slip39.c',
     'vendor/trezor-crypto/slip39_english.c',
+    'vendor/trezor-crypto/tls_prf.c',
 ]
 if EVERYTHING:
     SOURCE_MOD += [
@@ -406,7 +408,7 @@ env.Replace(
     CCFLAGS='$COPT '
     '-g3 '
     '-nostdlib '
-    '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
+    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
     '-ffreestanding '
     '-fstack-protector-all '
@@ -599,9 +601,10 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Cardano*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Eos*.py'))
+        if TREZOR_MODEL != "R":
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Eos*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ethereum/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ethereum*.py'))
@@ -612,9 +615,10 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Monero*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/NEM*.py'))
+        if TREZOR_MODEL != "R":
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/NEM*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ripple*.py'))
@@ -630,7 +634,8 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
+        if TREZOR_MODEL != "R":
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
@@ -639,7 +644,8 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight='backlight' in FEATURES_AVAILABLE
+        backlight='backlight' in FEATURES_AVAILABLE,
+        optiga='optiga' in FEATURES_AVAILABLE
         )
 
     source_mpyc = env.FrozenCFile(
@@ -744,12 +750,12 @@ cmake_gen = env.Command(
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
 if BOOTLOADER_QA:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_qa_DO_NOT_SIGN_signed_dev.bin'
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
     BOOTLOADER_SUFFIX = MODEL_IDENTIFIER + '_qa'
 elif PRODUCTION:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_satoshilabs_signed_prod.bin'
 elif BOOTLOADER_DEVEL:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_dev.bin'
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
 else:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_prod.bin'
 

@@ -84,6 +84,7 @@ where
     current_page: usize,
     page_count: usize,
     title: Option<T>,
+    slim_arrows: bool,
 }
 
 // For `layout.rs`
@@ -103,6 +104,7 @@ where
             current_page: 0,
             page_count: 1,
             title: None,
+            slim_arrows: false,
         }
     }
 }
@@ -115,6 +117,12 @@ where
     /// Adding title.
     pub fn with_title(mut self, title: T) -> Self {
         self.title = Some(title);
+        self
+    }
+
+    /// Using slim arrows instead of wide buttons.
+    pub fn with_slim_arrows(mut self) -> Self {
+        self.slim_arrows = true;
         self
     }
 
@@ -137,17 +145,29 @@ where
         // On the last page showing only the narrow arrow, so the right
         // button with possibly long text has enough space.
         let btn_left = if self.has_prev_page() && !self.has_next_page() {
-            Some(ButtonDetails::up_arrow_icon())
+            if self.slim_arrows {
+                Some(ButtonDetails::left_arrow_icon())
+            } else {
+                Some(ButtonDetails::up_arrow_icon())
+            }
         } else if self.has_prev_page() {
-            Some(ButtonDetails::up_arrow_icon_wide())
+            if self.slim_arrows {
+                Some(ButtonDetails::left_arrow_icon())
+            } else {
+                Some(ButtonDetails::up_arrow_icon_wide())
+            }
         } else {
             current.btn_left
         };
 
         // Middle button should be shown only on the last page, not to collide
-        // with the fat right button.
+        // with the possible fat right button.
         let (btn_middle, btn_right) = if self.has_next_page() {
-            (None, Some(ButtonDetails::down_arrow_icon_wide()))
+            if self.slim_arrows {
+                (None, Some(ButtonDetails::right_arrow_icon()))
+            } else {
+                (None, Some(ButtonDetails::down_arrow_icon_wide()))
+            }
         } else {
             (current.btn_middle, current.btn_right)
         };

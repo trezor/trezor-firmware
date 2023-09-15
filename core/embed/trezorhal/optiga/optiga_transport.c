@@ -24,9 +24,13 @@
 
 #include "optiga_transport.h"
 #include <string.h>
+#include "aes/aesccm.h"
 #include "common.h"
 #include "i2c.h"
+#include "memzero.h"
 #include "optiga_hal.h"
+#include "tls_prf.h"
+
 #include TREZOR_BOARD
 
 // Maximum possible packet size that can be transmitted.
@@ -92,10 +96,43 @@ enum {
   PCTR_CHAIN_MASK = 0x07,          // Mask of chain field.
 };
 
+// Security control byte.
+enum {
+  SCTR_HELLO = 0x00,      // Handshake hello message.
+  SCTR_FINISHED = 0x08,   // Handshake finished message.
+  SCTR_PROTECTED = 0x23,  // Record exchange message. Fully protected.
+};
+
 static uint8_t frame_num_out = 0xff;
 static uint8_t frame_num_in = 0xff;
 static uint8_t frame_buffer[1 + OPTIGA_DATA_REG_LEN];
 static size_t frame_size = 0;  // Set by optiga_read().
+
+// Secure channel constants.
+#define SEC_CHAN_SCTR_SIZE 1
+#define SEC_CHAN_RND_SIZE 32
+#define SEC_CHAN_SEQ_SIZE 4
+#define SEC_CHAN_TAG_SIZE 8
+#define SEC_CHAN_PROTOCOL 1
+#define SEC_CHAN_HANDSHAKE_SIZE (SEC_CHAN_RND_SIZE + SEC_CHAN_SEQ_SIZE)
+#define SEC_CHAN_CIPHERTEXT_OFFSET (SEC_CHAN_SCTR_SIZE + SEC_CHAN_SEQ_SIZE)
+#define SEC_CHAN_OVERHEAD_SIZE \
+  (SEC_CHAN_SCTR_SIZE + SEC_CHAN_SEQ_SIZE + SEC_CHAN_TAG_SIZE)
+#define SEC_CHAN_SEQ_OFFSET SEC_CHAN_SCTR_SIZE
+
+// Secure channel status.
+static bool sec_chan_established = false;
+static aes_encrypt_ctx sec_chan_encr_ctx = {0};
+static aes_encrypt_ctx sec_chan_decr_ctx = {0};
+static uint8_t sec_chan_encr_nonce[8] = {0};
+static uint8_t sec_chan_decr_nonce[8] = {0};
+static uint8_t *const sec_chan_mseq = &sec_chan_encr_nonce[4];
+static uint8_t *const sec_chan_sseq = &sec_chan_decr_nonce[4];
+
+// Static buffer for encrypted commands and responses.
+static uint8_t sec_chan_buffer[OPTIGA_MAX_APDU_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
+    {0};
+static size_t sec_chan_size = 0;
 
 #ifdef NDEBUG
 #define OPTIGA_LOG(prefix, data, data_size)
@@ -406,8 +443,8 @@ static optiga_result optiga_receive_packet(uint8_t *packet_control_byte,
   return OPTIGA_SUCCESS;
 }
 
-optiga_result optiga_execute_command(
-    bool presentation_layer, const uint8_t *command_data, size_t command_size,
+static optiga_result optiga_transceive(
+    bool presentation_layer, const uint8_t *request_data, size_t request_size,
     uint8_t *response_data, size_t max_response_size, size_t *response_size) {
   *response_size = 0;
   optiga_result ret = optiga_ensure_ready();
@@ -426,7 +463,7 @@ optiga_result optiga_execute_command(
     size_t packet_data_size = 0;
     // The first byte of each packet is the packet control byte pctr, so each
     // packet contains at most OPTIGA_MAX_PACKET_SIZE - 1 bytes of data.
-    if (command_size > OPTIGA_MAX_PACKET_SIZE - 1) {
+    if (request_size > OPTIGA_MAX_PACKET_SIZE - 1) {
       packet_data_size = OPTIGA_MAX_PACKET_SIZE - 1;
       if (chain == PCTR_CHAIN_NONE) {
         chain = PCTR_CHAIN_FIRST;
@@ -434,7 +471,7 @@ optiga_result optiga_execute_command(
         chain = PCTR_CHAIN_MIDDLE;
       }
     } else {
-      packet_data_size = command_size;
+      packet_data_size = request_size;
       if (chain != PCTR_CHAIN_NONE) {
         chain = PCTR_CHAIN_LAST;
       }
@@ -442,13 +479,13 @@ optiga_result optiga_execute_command(
 
     frame_num_out += 1;
 
-    ret = optiga_send_packet(pctr | chain, command_data, packet_data_size);
+    ret = optiga_send_packet(pctr | chain, request_data, packet_data_size);
     if (ret != OPTIGA_SUCCESS) {
       return ret;
     }
 
-    command_data += packet_data_size;
-    command_size -= packet_data_size;
+    request_data += packet_data_size;
+    request_size -= packet_data_size;
 
     ret = optiga_read();
     if (ret != OPTIGA_SUCCESS) {
@@ -466,7 +503,7 @@ optiga_result optiga_execute_command(
     if (ret != OPTIGA_SUCCESS) {
       return ret;
     }
-  } while (command_size != 0);
+  } while (request_size != 0);
 
   // Receive response packets from OPTIGA.
   do {
@@ -502,5 +539,187 @@ optiga_result optiga_execute_command(
     pctr &= PCTR_CHAIN_MASK;
   } while (pctr == PCTR_CHAIN_FIRST || pctr == PCTR_CHAIN_MIDDLE);
 
-  return command_size == 0 ? OPTIGA_SUCCESS : OPTIGA_ERR_CMD;
+  return request_size == 0 ? OPTIGA_SUCCESS : OPTIGA_ERR_CMD;
+}
+
+static void increment_seq(uint8_t seq[SEC_CHAN_SEQ_SIZE]) {
+  for (int i = 3; i >= 0; --i) {
+    seq[i]++;
+    if (seq[i] != 0x00) {
+      return;
+    }
+  }
+
+  sec_chan_established = false;
+  memzero(&sec_chan_encr_ctx, sizeof(sec_chan_encr_ctx));
+  memzero(&sec_chan_decr_ctx, sizeof(sec_chan_decr_ctx));
+  memzero(sec_chan_encr_nonce, sizeof(sec_chan_encr_nonce));
+  memzero(sec_chan_decr_nonce, sizeof(sec_chan_decr_nonce));
+}
+
+optiga_result optiga_execute_command(const uint8_t *command_data,
+                                     size_t command_size,
+                                     uint8_t *response_data,
+                                     size_t max_response_size,
+                                     size_t *response_size) {
+  if (!sec_chan_established) {
+    return optiga_transceive(false, command_data, command_size, response_data,
+                             max_response_size, response_size);
+  }
+  sec_chan_size = command_size + SEC_CHAN_OVERHEAD_SIZE;
+  if (sec_chan_size > sizeof(sec_chan_buffer)) {
+    return OPTIGA_ERR_SIZE;
+  }
+
+  increment_seq(sec_chan_mseq);
+
+  // Encrypt command.
+  sec_chan_buffer[0] = SCTR_PROTECTED;
+  memcpy(&sec_chan_buffer[SEC_CHAN_SEQ_OFFSET], sec_chan_mseq,
+         SEC_CHAN_SEQ_SIZE);
+  uint8_t *ciphertext = &sec_chan_buffer[SEC_CHAN_CIPHERTEXT_OFFSET];
+  uint8_t associated_data[8] = {SCTR_PROTECTED, 0, 0, 0, 0, SEC_CHAN_PROTOCOL};
+  memcpy(&associated_data[SEC_CHAN_SEQ_OFFSET], sec_chan_mseq,
+         SEC_CHAN_SEQ_SIZE);
+  associated_data[6] = command_size >> 8;
+  associated_data[7] = command_size & 0xff;
+  if (EXIT_SUCCESS != aes_ccm_encrypt(&sec_chan_encr_ctx, sec_chan_encr_nonce,
+                                      sizeof(sec_chan_encr_nonce),
+                                      associated_data, sizeof(associated_data),
+                                      command_data, command_size,
+                                      SEC_CHAN_TAG_SIZE, ciphertext)) {
+    return OPTIGA_ERR_PROCESS;
+  }
+
+  // Transmit encrypted command and receive response.
+  optiga_result ret =
+      optiga_transceive(true, sec_chan_buffer, sec_chan_size, sec_chan_buffer,
+                        sizeof(sec_chan_buffer), &sec_chan_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
+
+  increment_seq(sec_chan_sseq);
+
+  if (sec_chan_size < SEC_CHAN_OVERHEAD_SIZE ||
+      sec_chan_buffer[0] != SCTR_PROTECTED ||
+      memcmp(&sec_chan_buffer[SEC_CHAN_SEQ_OFFSET], sec_chan_sseq,
+             SEC_CHAN_SEQ_SIZE) != 0) {
+    return OPTIGA_ERR_UNEXPECTED;
+  }
+
+  *response_size = sec_chan_size - SEC_CHAN_OVERHEAD_SIZE;
+  if (*response_size > max_response_size) {
+    *response_size = 0;
+    return OPTIGA_ERR_SIZE;
+  }
+
+  // Decrypt response.
+  memcpy(&associated_data[SEC_CHAN_SEQ_OFFSET], sec_chan_sseq,
+         SEC_CHAN_SEQ_SIZE);
+  associated_data[6] = *response_size >> 8;
+  associated_data[7] = *response_size & 0xff;
+  if (EXIT_SUCCESS != aes_ccm_decrypt(&sec_chan_decr_ctx, sec_chan_decr_nonce,
+                                      sizeof(sec_chan_decr_nonce),
+                                      associated_data, sizeof(associated_data),
+                                      ciphertext,
+                                      *response_size + SEC_CHAN_TAG_SIZE,
+                                      SEC_CHAN_TAG_SIZE, response_data)) {
+    return OPTIGA_ERR_PROCESS;
+  }
+
+  return OPTIGA_SUCCESS;
+}
+
+optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
+                                        size_t secret_size) {
+  static const uint8_t HANDSHAKE_HELLO[] = {SCTR_HELLO, SEC_CHAN_PROTOCOL};
+
+  // Send Handshake Hello.
+  optiga_result ret = optiga_transceive(
+      true, HANDSHAKE_HELLO, sizeof(HANDSHAKE_HELLO), sec_chan_buffer,
+      sizeof(sec_chan_buffer), &sec_chan_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
+
+  // Process Handshake Hello response (sctr[1], pver[1], rnd[32], sseq[4]).
+  if (sec_chan_size != 2 + SEC_CHAN_RND_SIZE + SEC_CHAN_SEQ_SIZE ||
+      sec_chan_buffer[0] != SCTR_HELLO ||
+      sec_chan_buffer[1] != SEC_CHAN_PROTOCOL) {
+    return OPTIGA_ERR_UNEXPECTED;
+  }
+
+  uint8_t payload[SEC_CHAN_HANDSHAKE_SIZE] = {0};
+  memcpy(payload, &sec_chan_buffer[2], sizeof(payload));
+  uint8_t *rnd = &payload[0];
+  uint8_t *sseq = &payload[SEC_CHAN_RND_SIZE];
+
+  // Compute encryption and decryption keys.
+  uint8_t encryption_keys[40] = {0};
+  tls_prf_sha256(secret, secret_size, (const uint8_t *)"Platform Binding", 16,
+                 rnd, SEC_CHAN_RND_SIZE, encryption_keys,
+                 sizeof(encryption_keys));
+  aes_encrypt_key128(&encryption_keys[0], &sec_chan_encr_ctx);
+  aes_encrypt_key128(&encryption_keys[16], &sec_chan_decr_ctx);
+  memcpy(&sec_chan_encr_nonce[0], &encryption_keys[32], 4);
+  memcpy(&sec_chan_decr_nonce[0], &encryption_keys[36], 4);
+  memzero(encryption_keys, sizeof(encryption_keys));
+
+  // Prepare Handshake Finished message (sctr[1], sseq[4], ciphertext[44]).
+  uint8_t handshake_finished[SEC_CHAN_HANDSHAKE_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
+      {SCTR_FINISHED};
+  memcpy(&handshake_finished[SEC_CHAN_SEQ_OFFSET], sseq, SEC_CHAN_SEQ_SIZE);
+  uint8_t *ciphertext = &handshake_finished[SEC_CHAN_CIPHERTEXT_OFFSET];
+  uint8_t associated_data[8] = {
+      SCTR_FINISHED, 0, 0, 0, 0, SEC_CHAN_PROTOCOL, 0, SEC_CHAN_HANDSHAKE_SIZE};
+  memcpy(&associated_data[SEC_CHAN_SEQ_OFFSET], sseq, SEC_CHAN_SEQ_SIZE);
+  memcpy(sec_chan_mseq, sseq, SEC_CHAN_SEQ_SIZE);
+  if (EXIT_SUCCESS != aes_ccm_encrypt(&sec_chan_encr_ctx, sec_chan_encr_nonce,
+                                      sizeof(sec_chan_encr_nonce),
+                                      associated_data, sizeof(associated_data),
+                                      payload, SEC_CHAN_HANDSHAKE_SIZE,
+                                      SEC_CHAN_TAG_SIZE, ciphertext)) {
+    return OPTIGA_ERR_PROCESS;
+  }
+
+  // Send Handshake Finished message.
+  ret = optiga_transceive(true, handshake_finished, sizeof(handshake_finished),
+                          sec_chan_buffer, sizeof(sec_chan_buffer),
+                          &sec_chan_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
+
+  // Process response (sctr[1], mseq[4], ciphertext[44]).
+  if (sec_chan_size != SEC_CHAN_HANDSHAKE_SIZE + SEC_CHAN_OVERHEAD_SIZE ||
+      sec_chan_buffer[0] != SCTR_FINISHED) {
+    return OPTIGA_ERR_UNEXPECTED;
+  }
+  uint8_t *mseq = &sec_chan_buffer[SEC_CHAN_SEQ_OFFSET];
+  ciphertext = &sec_chan_buffer[SEC_CHAN_CIPHERTEXT_OFFSET];
+
+  // Verify payload.
+  memcpy(sec_chan_sseq, mseq, SEC_CHAN_SEQ_SIZE);
+  memcpy(&associated_data[SEC_CHAN_SEQ_OFFSET], mseq, SEC_CHAN_SEQ_SIZE);
+  uint8_t response_payload[SEC_CHAN_HANDSHAKE_SIZE] = {0};
+  if (EXIT_SUCCESS !=
+      aes_ccm_decrypt(&sec_chan_decr_ctx, sec_chan_decr_nonce,
+                      sizeof(sec_chan_decr_nonce), associated_data,
+                      sizeof(associated_data), ciphertext,
+                      SEC_CHAN_HANDSHAKE_SIZE + SEC_CHAN_TAG_SIZE,
+                      SEC_CHAN_TAG_SIZE, response_payload)) {
+    return OPTIGA_ERR_UNEXPECTED;
+  }
+
+  if (memcmp(response_payload, rnd, SEC_CHAN_RND_SIZE) != 0 ||
+      memcmp(response_payload + SEC_CHAN_RND_SIZE, mseq, SEC_CHAN_SEQ_SIZE) !=
+          0) {
+    return OPTIGA_ERR_UNEXPECTED;
+  }
+
+  memcpy(sec_chan_mseq, mseq, SEC_CHAN_SEQ_SIZE);
+  memcpy(sec_chan_sseq, sseq, SEC_CHAN_SEQ_SIZE);
+  sec_chan_established = true;
+  return OPTIGA_SUCCESS;
 }

@@ -43,7 +43,7 @@ jump_to_with_flag:
   // wipe memory at the end of the current stage of code
   bl clear_otg_hs_memory
   ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
-  ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
+  ldr r1, =firmware_header_start   // r1 - point to byte after the end of CCMRAM
   ldr r2, =0            // r2 - the word-sized value to be written
   bl memset_reg
   ldr r0, =sram_start   // r0 - point to beginning of SRAM

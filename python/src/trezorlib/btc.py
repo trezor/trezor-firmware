@@ -152,6 +152,7 @@ def get_authenticated_address(
     ignore_xpub_magic: bool = False,
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
+    chunkify: bool = False,
 ) -> "MessageType":
     if unlock_path:
         res = client.call(
@@ -168,6 +169,7 @@ def get_authenticated_address(
             multisig=multisig,
             script_type=script_type,
             ignore_xpub_magic=ignore_xpub_magic,
+            chunkify=chunkify,
         )
     )
 

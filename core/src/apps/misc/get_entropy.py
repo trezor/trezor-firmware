@@ -19,6 +19,6 @@ async def get_entropy(msg: GetEntropy) -> Entropy:
     )
 
     size = min(msg.size, 1024)
-    entropy = random.bytes(size)
+    entropy = random.bytes(size, True)
 
     return Entropy(entropy=entropy)

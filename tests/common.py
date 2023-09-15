@@ -263,3 +263,14 @@ def get_test_address(client: "Client") -> str:
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
     return btc.get_address(client, "Testnet", TEST_ADDRESS_N)
+
+
+def compact_size(n) -> bytes:
+    if n < 253:
+        return n.to_bytes(1, "little")
+    elif n < 0x1_0000:
+        return bytes([253]) + n.to_bytes(2, "little")
+    elif n < 0x1_0000_0000:
+        return bytes([254]) + n.to_bytes(4, "little")
+    else:
+        return bytes([255]) + n.to_bytes(8, "little")

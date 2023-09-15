@@ -35,6 +35,7 @@ async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
             case_sensitive=False,
             path=address_n_to_str(address_n),
             network=get_network_str(network),
+            chunkify=bool(msg.chunkify),
         )
 
     return NEMAddress(address=address)

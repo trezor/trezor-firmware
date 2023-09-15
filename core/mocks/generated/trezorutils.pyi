@@ -79,12 +79,21 @@ def reboot_to_bootloader() -> None:
     """
     Reboots to bootloader.
     """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def bootloader_locked() -> bool | None:
+    """
+    Returns True/False if the the bootloader is locked/unlocked and None if
+    the feature is not supported.
+    """
 SCM_REVISION: bytes
 VERSION_MAJOR: int
 VERSION_MINOR: int
 VERSION_PATCH: int
 USE_SD_CARD: bool
 USE_BACKLIGHT: bool
+USE_OPTIGA: bool
 MODEL: str
 INTERNAL_MODEL: str
 EMULATOR: bool

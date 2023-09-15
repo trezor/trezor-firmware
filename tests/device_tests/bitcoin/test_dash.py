@@ -39,7 +39,7 @@ TXHASH_15575a = bytes.fromhex(
     "15575a1c874bd60a819884e116c42e6791c8283ce1fc3b79f0d18531a61bbb8a"
 )
 
-pytestmark = pytest.mark.altcoin
+pytestmark = [pytest.mark.altcoin, pytest.mark.skip_tr]
 
 
 def test_send_dash(client: Client):
@@ -57,13 +57,13 @@ def test_send_dash(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        tt = client.features.model == "T"
+        is_core = client.features.model in ("T", "R")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(inp1.prev_hash),
@@ -105,14 +105,14 @@ def test_send_dash_dip2_input(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        tt = client.features.model == "T"
+        is_core = client.features.model in ("T", "R")
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(inp1.prev_hash),

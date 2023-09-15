@@ -15,6 +15,7 @@ message NEMGetAddress {
     repeated uint32 address_n = 1;              // BIP-32 path to derive the key from master node
     optional uint32 network = 2 [default=0x68]; // Network ID (0x68 = Mainnet, 0x98 = Testnet, 0x60 = Mijin)
     optional bool show_display = 3;             // Optionally show on display before sending the result
+    optional bool chunkify = 4;                 // display the address in chunks of 4 characters
 }
 
 /**
@@ -41,6 +42,8 @@ message NEMSignTx {
     optional NEMMosaicSupplyChange supply_change = 7;               // Mosaic supply change part
     optional NEMAggregateModification aggregate_modification = 8;   // Aggregate modification part
     optional NEMImportanceTransfer importance_transfer = 9;         // Importance transfer part
+    optional bool chunkify = 10;                                    // display the address in chunks of 4 characters
+
     /**
     * Structure representing the common part for NEM transactions
     */

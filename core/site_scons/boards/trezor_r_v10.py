@@ -33,6 +33,7 @@ def configure(
     defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
+    defines += ["USE_OPTIGA=1"]
     sources += [
         "embed/models/model_T2B1_layout.c",
     ]
@@ -53,8 +54,6 @@ def configure(
         sources += [
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
         ]
-        sources += ["embed/trezorhal/stm32f4/dma.c"]
-
     if "usb" in features_wanted:
         sources += [
             "embed/trezorhal/stm32f4/usb.c",
@@ -68,9 +67,11 @@ def configure(
 
     if "optiga" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/optiga_hal.c"]
+        sources += ["embed/trezorhal/optiga/optiga.c"]
         sources += ["embed/trezorhal/optiga/optiga_commands.c"]
         sources += ["embed/trezorhal/optiga/optiga_transport.c"]
         sources += ["embed/trezorhal/stm32f4/secret.c"]
+        features_available.append("optiga")
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu

@@ -30,6 +30,9 @@ where
     page_counter: usize,
     return_confirmed_index: bool,
     show_scrollbar: bool,
+    /// Possibly enforcing the second button to be ignored after some time after
+    /// pressing the first button
+    ignore_second_button_ms: Option<u32>,
 }
 
 impl<F, T> Flow<F, T>
@@ -55,6 +58,7 @@ where
             page_counter: 0,
             return_confirmed_index: false,
             show_scrollbar: true,
+            ignore_second_button_ms: None,
         }
     }
 
@@ -74,6 +78,12 @@ where
     /// Show scrollbar or not.
     pub fn with_scrollbar(mut self, show_scrollbar: bool) -> Self {
         self.show_scrollbar = show_scrollbar;
+        self
+    }
+
+    /// Ignoring the second button duration
+    pub fn with_ignore_second_button_ms(mut self, ignore_second_button_ms: u32) -> Self {
+        self.ignore_second_button_ms = Some(ignore_second_button_ms);
         self
     }
 
@@ -225,7 +235,14 @@ where
 
         // We finally found how long is the first page, and can set its button layout.
         self.current_page.place(content_area);
-        self.buttons = Child::new(ButtonController::new(self.current_page.btn_layout()));
+        if let Some(ignore_ms) = self.ignore_second_button_ms {
+            self.buttons = Child::new(
+                ButtonController::new(self.current_page.btn_layout())
+                    .with_ignore_btn_delay(ignore_ms),
+            );
+        } else {
+            self.buttons = Child::new(ButtonController::new(self.current_page.btn_layout()));
+        }
 
         self.pad.place(title_content_area);
         self.buttons.place(button_area);

@@ -78,9 +78,14 @@ def test_show_t1(
 
 
 @pytest.mark.skip_t1
+@pytest.mark.parametrize("chunkify", (True, False))
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_tt(
-    client: Client, path: str, script_type: messages.InputScriptType, address: str
+    client: Client,
+    chunkify: bool,
+    path: str,
+    script_type: messages.InputScriptType,
+    address: str,
 ):
     with client:
         IF = InputFlowShowAddressQRCode(client)
@@ -92,6 +97,7 @@ def test_show_tt(
                 tools.parse_path(path),
                 script_type=script_type,
                 show_display=True,
+                chunkify=chunkify,
             )
             == address
         )

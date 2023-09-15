@@ -34,20 +34,24 @@ static void _librust_qstrs(void) {
   MP_QSTR_bounds;
   MP_QSTR_button;
   MP_QSTR_button_event;
+  MP_QSTR_cancel_arrow;
   MP_QSTR_case_sensitive;
+  MP_QSTR_chunkify;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
   MP_QSTR_confirm_backup;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
+  MP_QSTR_confirm_ethereum_tx;
   MP_QSTR_confirm_fido;
   MP_QSTR_confirm_homescreen;
   MP_QSTR_confirm_joint_total;
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
   MP_QSTR_confirm_more;
-  MP_QSTR_confirm_output;
+  MP_QSTR_confirm_output_address;
+  MP_QSTR_confirm_output_amount;
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_recovery;
   MP_QSTR_confirm_reset_device;
@@ -58,6 +62,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_data;
   MP_QSTR_decode;
   MP_QSTR_description;
+  MP_QSTR_details_title;
   MP_QSTR_disable_animation;
   MP_QSTR_draw_welcome_screen;
   MP_QSTR_dry_run;
@@ -66,9 +71,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_extra;
   MP_QSTR_fee_amount;
   MP_QSTR_fee_label;
-  MP_QSTR_fee_rate;
   MP_QSTR_fee_rate_amount;
-  MP_QSTR_fee_rate_title;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
   MP_QSTR_icon_name;
@@ -85,6 +88,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
   MP_QSTR_max_rounds;
+  MP_QSTR_maximum_fee;
   MP_QSTR_min_count;
   MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;
@@ -95,6 +99,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_path;
   MP_QSTR_progress_event;
   MP_QSTR_prompt;
+  MP_QSTR_qr_title;
+  MP_QSTR_recipient;
   MP_QSTR_request_bip39;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_request_number;
@@ -111,6 +117,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
   MP_QSTR_show_info;
+  MP_QSTR_show_info_with_cancel;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
   MP_QSTR_show_passphrase;
@@ -119,7 +126,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_simple;
-  MP_QSTR_show_spending_details;
   MP_QSTR_show_success;
   MP_QSTR_show_warning;
   MP_QSTR_sign;

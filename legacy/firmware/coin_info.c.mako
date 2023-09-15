@@ -23,7 +23,7 @@ def hex(x):
 #include "secp256k1.h"
 
 const CoinInfo coins[COINS_COUNT] = {
-% for c in supported_on("trezor1", bitcoin):
+% for c in supported_on("T1B1", bitcoin):
 {
 	.coin_name = ${c_str(c.coin_name)},
 	.coin_shortcut = ${c_str(c.coin_shortcut)},

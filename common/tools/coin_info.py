@@ -39,15 +39,17 @@ class SupportItemVersion(TypedDict):
 class SupportData(TypedDict):
     connect: SupportItemBool
     suite: SupportItemBool
-    trezor1: SupportItemVersion
-    trezor2: SupportItemVersion
+    t1b1: SupportItemVersion
+    t2t1: SupportItemVersion
+    t2b1: SupportItemVersion
 
 
 class SupportInfoItem(TypedDict):
     connect: bool
     suite: bool
-    trezor1: Literal[False] | str
-    trezor2: Literal[False] | str
+    t1b1: Literal[False] | str
+    t2t1: Literal[False] | str
+    t2b1: Literal[False] | str
 
 
 SupportInfo = Dict[str, SupportInfoItem]
@@ -452,7 +454,7 @@ def _load_fido_apps() -> FidoApps:
 
 RELEASES_URL = "https://data.trezor.io/firmware/{}/releases.json"
 MISSING_SUPPORT_MEANS_NO = ("connect", "suite")
-VERSIONED_SUPPORT_INFO = ("trezor1", "trezor2")
+VERSIONED_SUPPORT_INFO = ("T1B1", "T2T1", "T2B1")
 
 
 def get_support_data() -> SupportData:
@@ -461,14 +463,16 @@ def get_support_data() -> SupportData:
 
 
 def latest_releases() -> dict[str, Any]:
-    """Get latest released firmware versions for Trezor 1 and 2"""
+    """Get latest released firmware versions for all models"""
     if not requests:
         raise RuntimeError("requests library is required for getting release info")
 
     latest: dict[str, Any] = {}
-    for v in ("1", "2"):
-        releases = requests.get(RELEASES_URL.format(v)).json()
-        latest["trezor" + v] = max(tuple(r["version"]) for r in releases)
+    for model in VERSIONED_SUPPORT_INFO:
+        # TODO: support new UPPERCASE model names in RELEASES_URL
+        url_model = model.lower()  # need to be e.g. t1b1 for now
+        releases = requests.get(RELEASES_URL.format(url_model)).json()
+        latest[model] = max(tuple(r["version"]) for r in releases)
     return latest
 
 
@@ -505,7 +509,7 @@ def support_info(coins: Iterable[Coin] | CoinsInfo | dict[str, Coin]) -> Support
 
     Takes a collection of coins and generates a support-info entry for each.
     The support-info is a dict with keys based on `support.json` keys.
-    These are usually: "trezor1", "trezor2", "connect" and "suite".
+    These are usually: "T1B1", "T2T1", "T2B1", "connect" and "suite".
 
     The `coins` argument can be a `CoinsInfo` object, a list or a dict of
     coin items.

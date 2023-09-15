@@ -25,17 +25,27 @@ from ...common import MNEMONIC12
 
 @pytest.mark.altcoin
 @pytest.mark.nem
+@pytest.mark.skip_tr  # coin not supported,
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_getaddress(client: Client):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_nem_getaddress(client: Client, chunkify: bool):
     assert (
         nem.get_address(
-            client, parse_path("m/44h/1h/0h/0h/0h"), 0x68, show_display=True
+            client,
+            parse_path("m/44h/1h/0h/0h/0h"),
+            0x68,
+            show_display=True,
+            chunkify=chunkify,
         )
         == "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN"
     )
     assert (
         nem.get_address(
-            client, parse_path("m/44h/1h/0h/0h/0h"), 0x98, show_display=True
+            client,
+            parse_path("m/44h/1h/0h/0h/0h"),
+            0x98,
+            show_display=True,
+            chunkify=chunkify,
         )
         == "TB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQHSBNBMF"
     )

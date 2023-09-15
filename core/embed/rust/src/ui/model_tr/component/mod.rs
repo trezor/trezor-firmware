@@ -13,7 +13,7 @@ pub use button::{
     Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonPos,
     ButtonStyle, ButtonStyleSheet,
 };
-pub use button_controller::{ButtonController, ButtonControllerMsg};
+pub use button_controller::{AutomaticMover, ButtonController, ButtonControllerMsg};
 pub use common_messages::CancelConfirmMsg;
 pub use error::ErrorScreen;
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};

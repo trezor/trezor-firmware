@@ -24,6 +24,7 @@ async def get_public_key(
     pubkey = node.public_key()
 
     if msg.show_display:
-        await show_pubkey(hexlify(pubkey).decode())
+        path = paths.address_n_to_str(msg.address_n)
+        await show_pubkey(hexlify(pubkey).decode(), path=path)
 
     return BinancePublicKey(public_key=pubkey)

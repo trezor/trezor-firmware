@@ -21,39 +21,44 @@ from trezorlib.eos import get_public_key
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
+from ...input_flows import InputFlowShowXpubQRCode
 
 
 @pytest.mark.altcoin
 @pytest.mark.eos
 @pytest.mark.skip_t1
+@pytest.mark.skip_tr  # coin not supported
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_eos_get_public_key(client: Client):
-    public_key = get_public_key(
-        client, parse_path("m/44h/194h/0h/0/0"), show_display=True
-    )
-    assert (
-        public_key.wif_public_key
-        == "EOS4u6Sfnzj4Sh2pEQnkXyZQJqH3PkKjGByDCbsqqmyq6PttM9KyB"
-    )
-    assert (
-        public_key.raw_public_key.hex()
-        == "02015fabe197c955036bab25f4e7c16558f9f672f9f625314ab1ec8f64f7b1198e"
-    )
-    public_key = get_public_key(client, parse_path("m/44h/194h/0h/0/1"))
-    assert (
-        public_key.wif_public_key
-        == "EOS5d1VP15RKxT4dSakWu2TFuEgnmaGC2ckfSvQwND7pZC1tXkfLP"
-    )
-    assert (
-        public_key.raw_public_key.hex()
-        == "02608bc2c431521dee0b9d5f2fe34053e15fc3b20d2895e0abda857b9ed8e77a78"
-    )
-    public_key = get_public_key(client, parse_path("m/44h/194h/1h/0/0"))
-    assert (
-        public_key.wif_public_key
-        == "EOS7UuNeTf13nfcG85rDB7AHGugZi4C4wJ4ft12QRotqNfxdV2NvP"
-    )
-    assert (
-        public_key.raw_public_key.hex()
-        == "035588a197bd5a7356e8a702361b2d535c6372f843874bed6617cd1afe1dfcb502"
-    )
+    with client:
+        IF = InputFlowShowXpubQRCode(client)
+        client.set_input_flow(IF.get())
+        public_key = get_public_key(
+            client, parse_path("m/44h/194h/0h/0/0"), show_display=True
+        )
+        assert (
+            public_key.wif_public_key
+            == "EOS4u6Sfnzj4Sh2pEQnkXyZQJqH3PkKjGByDCbsqqmyq6PttM9KyB"
+        )
+        assert (
+            public_key.raw_public_key.hex()
+            == "02015fabe197c955036bab25f4e7c16558f9f672f9f625314ab1ec8f64f7b1198e"
+        )
+        public_key = get_public_key(client, parse_path("m/44h/194h/0h/0/1"))
+        assert (
+            public_key.wif_public_key
+            == "EOS5d1VP15RKxT4dSakWu2TFuEgnmaGC2ckfSvQwND7pZC1tXkfLP"
+        )
+        assert (
+            public_key.raw_public_key.hex()
+            == "02608bc2c431521dee0b9d5f2fe34053e15fc3b20d2895e0abda857b9ed8e77a78"
+        )
+        public_key = get_public_key(client, parse_path("m/44h/194h/1h/0/0"))
+        assert (
+            public_key.wif_public_key
+            == "EOS7UuNeTf13nfcG85rDB7AHGugZi4C4wJ4ft12QRotqNfxdV2NvP"
+        )
+        assert (
+            public_key.raw_public_key.hex()
+            == "035588a197bd5a7356e8a702361b2d535c6372f843874bed6617cd1afe1dfcb502"
+        )

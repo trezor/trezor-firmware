@@ -75,8 +75,8 @@ CPPDEFINES_MOD += [
     ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
     ('USE_MONERO', '1' if EVERYTHING else '0'),
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
-    ('USE_NEM', '1' if EVERYTHING else '0'),
-    ('USE_EOS', '1' if EVERYTHING else '0'),
+    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL != "R") else '0'),
+    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL != "R") else '0'),
 ]
 SOURCE_MOD += [
     'embed/extmod/trezorobj.c',
@@ -390,6 +390,14 @@ if TREZOR_MODEL in ('T', 'R'):
         'embed/trezorhal/unix/sdcard.c',
     ]
 
+if TREZOR_MODEL == 'R':
+    CPPDEFINES_MOD += [
+        ('USE_OPTIGA', '1'),
+    ]
+    SOURCE_UNIX += [
+        'embed/trezorhal/unix/optiga.c',
+    ]
+
 if DMA2D:
     CPPDEFINES_MOD += [
         'USE_DMA2D',
@@ -476,7 +484,7 @@ else:
 env.Replace(
     CCFLAGS='$COPT '
     '-g3 '
-    '-std=gnu99 -Wall -Werror -Wuninitialized -Wno-missing-braces '
+    '-std=gnu11 -Wall -Werror -Wuninitialized -Wno-missing-braces '
     '-fdata-sections -ffunction-sections -fPIE ' + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LIBS=['m'],
@@ -653,7 +661,9 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL not in ('T',) else [])
+        ] if TREZOR_MODEL not in ('T',) else [] + [
+            SOURCE_PY_DIR + 'apps/management/authenticate_device.py',
+        ] if TREZOR_MODEL not in ('R',) else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -674,9 +684,10 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Cardano*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Eos*.py'))
+        if TREZOR_MODEL != "R":
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Eos*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ethereum/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ethereum*.py'))
@@ -687,9 +698,10 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Monero*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/NEM*.py'))
+        if TREZOR_MODEL != "R":
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/NEM*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ripple*.py'))
@@ -705,7 +717,8 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
+        if TREZOR_MODEL != "R":
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
@@ -714,7 +727,8 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight=TREZOR_MODEL in ('T',)
+        backlight=TREZOR_MODEL in ('T',),
+        optiga=TREZOR_MODEL in ('R',)
         )
 
     source_mpyc = env.FrozenCFile(

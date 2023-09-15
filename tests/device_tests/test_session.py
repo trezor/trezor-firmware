@@ -32,9 +32,9 @@ PIN4 = "1234"
 
 @pytest.mark.setup_client(pin=PIN4, passphrase="")
 def test_clear_session(client: Client):
-    is_trezor1 = client.features.model == "1"
+    is_t1 = client.features.model == "1"
     init_responses = [
-        messages.PinMatrixRequest if is_trezor1 else messages.ButtonRequest,
+        messages.PinMatrixRequest if is_t1 else messages.ButtonRequest,
         messages.PassphraseRequest,
     ]
 

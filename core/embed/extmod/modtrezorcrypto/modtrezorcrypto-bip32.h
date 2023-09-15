@@ -358,6 +358,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj,
 
 #if !BITCOIN_ONLY
 
+#if USE_NEM
 /// def nem_address(self, network: int) -> str:
 ///     """
 ///     Compute a NEM address string from the HD node.
@@ -425,6 +426,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_HDNode_nem_encrypt_obj, 5, 5,
     mod_trezorcrypto_HDNode_nem_encrypt);
 
+#endif
+
 /// def ethereum_pubkeyhash(self) -> bytes:
 ///     """
 ///     Compute an Ethereum pubkeyhash (aka address) from the HD node.
@@ -484,10 +487,12 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_address),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_address_obj)},
 #if !BITCOIN_ONLY
+#if USE_NEM
     {MP_ROM_QSTR(MP_QSTR_nem_address),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_address_obj)},
     {MP_ROM_QSTR(MP_QSTR_nem_encrypt),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_encrypt_obj)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_ethereum_pubkeyhash),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj)},
 #endif

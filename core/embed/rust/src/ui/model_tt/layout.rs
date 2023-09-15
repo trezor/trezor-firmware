@@ -496,6 +496,7 @@ struct ConfirmBlobParams {
     verb_cancel: Option<StrBuffer>,
     info_button: bool,
     hold: bool,
+    chunkify: bool,
 }
 
 impl ConfirmBlobParams {
@@ -517,6 +518,7 @@ impl ConfirmBlobParams {
             verb_cancel,
             info_button: false,
             hold,
+            chunkify: false,
         }
     }
 
@@ -535,6 +537,11 @@ impl ConfirmBlobParams {
         self
     }
 
+    fn with_chunkify(mut self, chunkify: bool) -> Self {
+        self.chunkify = chunkify;
+        self
+    }
+
     fn into_layout(self) -> Result<Obj, Error> {
         let paragraphs = ConfirmBlob {
             description: self.description.unwrap_or_else(StrBuffer::empty),
@@ -542,7 +549,11 @@ impl ConfirmBlobParams {
             data: self.data.try_into()?,
             description_font: &theme::TEXT_NORMAL,
             extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: &theme::TEXT_MONO,
+            data_font: if self.chunkify {
+                &theme::TEXT_MONO_ADDRESS_CHUNKS
+            } else {
+                &theme::TEXT_MONO
+            },
         }
         .into_paragraphs();
 
@@ -611,6 +622,21 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let extra: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+
+        let data_style = if chunkify {
+            // Longer addresses have smaller x_offset so they fit even with scrollbar
+            // (as they will be shown on more than one page)
+            const FITS_ON_ONE_PAGE: usize = 16 * 4;
+            let address: StrBuffer = data.try_into()?;
+            if address.len() <= FITS_ON_ONE_PAGE {
+                &theme::TEXT_MONO_ADDRESS_CHUNKS
+            } else {
+                &theme::TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET
+            }
+        } else {
+            &theme::TEXT_MONO
+        };
 
         let paragraphs = ConfirmBlob {
             description: description.unwrap_or_else(StrBuffer::empty),
@@ -618,7 +644,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
             data: data.try_into()?,
             description_font: &theme::TEXT_NORMAL,
             extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: &theme::TEXT_MONO,
+            data_font: data_style,
         }
         .into_paragraphs();
 
@@ -730,6 +756,8 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
 
 extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
+        let qr_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_qr_title)?.try_into()?;
+        let details_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_details_title)?.try_into()?;
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
         let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
         let account: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
@@ -737,7 +765,14 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
 
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
 
-        let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
+        let mut ad = AddressDetails::new(
+            qr_title,
+            address,
+            case_sensitive,
+            details_title,
+            account,
+            path,
+        )?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
             let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
@@ -750,25 +785,19 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_spending_details(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_title, "INFORMATION".into())?;
-        let account: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
-        let fee_rate: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_fee_rate)?.try_into_option()?;
-        let fee_rate_title: StrBuffer =
-            kwargs.get_or(Qstr::MP_QSTR_fee_rate_title, "Fee rate:".into())?;
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let mut paragraphs = ParagraphVecShort::new();
-        if let Some(a) = account {
-            paragraphs.add(Paragraph::new(
-                &theme::TEXT_NORMAL,
-                "Sending from account:".into(),
-            ));
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, a));
-        }
-        if let Some(f) = fee_rate {
-            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, fee_rate_title));
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, f));
+
+        for para in IterBuf::new().try_iterate(items)? {
+            let [key, value]: [Obj; 2] = iter_into_array(para)?;
+            let key: StrBuffer = key.try_into()?;
+            let value: StrBuffer = value.try_into()?;
+            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, key));
+            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
 
         let obj = LayoutObj::new(
@@ -802,10 +831,12 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold)
             .with_subtitle(subtitle)
             .with_info_button(info_button)
+            .with_chunkify(chunkify)
             .into_layout()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -816,6 +847,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
+        let cancel_arrow: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_arrow, false)?;
 
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -824,8 +856,11 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
             paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label));
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
-
-        let mut page = SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG);
+        let mut page = if cancel_arrow {
+            SwipeHoldPage::with_cancel_arrow(paragraphs.into_paragraphs(), theme::BG)
+        } else {
+            SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG)
+        };
         if info_button {
             page = page.with_swipe_left();
         }
@@ -912,6 +947,7 @@ fn new_show_modal(
     button_style: ButtonStyleSheet,
 ) -> Result<Obj, Error> {
     let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+    let value: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_value, StrBuffer::empty())?;
     let description: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
     let button: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_button, "CONTINUE".into())?;
     let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
@@ -921,7 +957,12 @@ fn new_show_modal(
     let obj = if no_buttons && time_ms == 0 {
         // No buttons and no timer, used when we only want to draw the dialog once and
         // then throw away the layout object.
-        LayoutObj::new(IconDialog::new(icon, title, Empty).with_description(description))?.into()
+        LayoutObj::new(
+            IconDialog::new(icon, title, Empty)
+                .with_value(value)
+                .with_description(description),
+        )?
+        .into()
     } else if no_buttons && time_ms > 0 {
         // Timeout, no buttons.
         LayoutObj::new(
@@ -930,6 +971,7 @@ fn new_show_modal(
                 title,
                 Timeout::new(time_ms).map(|_| Some(CancelConfirmMsg::Confirmed)),
             )
+            .with_value(value)
             .with_description(description),
         )?
         .into()
@@ -945,6 +987,7 @@ fn new_show_modal(
                     false,
                 ),
             )
+            .with_value(value)
             .with_description(description),
         )?
         .into()
@@ -958,6 +1001,7 @@ fn new_show_modal(
                     (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                 })),
             )
+            .with_value(value)
             .with_description(description),
         )?
         .into()
@@ -1053,9 +1097,9 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_mismatch() -> Obj {
-    let block = move || {
-        let title: StrBuffer = "Address mismatch?".into();
+extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: StrBuffer = "Please contact Trezor support at".into();
         let url: StrBuffer = "trezor.io/support".into();
         let button = "QUIT";
@@ -1077,13 +1121,20 @@ extern "C" fn new_show_mismatch() -> Obj {
                     true,
                 ),
             )
-            .with_description(description)
+            .with_paragraph(
+                Paragraph::new(&theme::TEXT_NORMAL, description)
+                    .centered()
+                    .with_bottom_padding(
+                        theme::TEXT_NORMAL.text_font.text_height()
+                            - theme::TEXT_DEMIBOLD.text_font.text_height(),
+                    ),
+            )
             .with_text(&theme::TEXT_DEMIBOLD, url),
         )?;
 
         Ok(obj.into())
     };
-    unsafe { util::try_or_raise(block) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
@@ -1657,6 +1708,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     data: str | bytes,
     ///     description: str | None,
     ///     extra: str | None,
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm address. Similar to `confirm_blob` but has corner info button
     ///     and allows left swipe which does the same thing as the button."""
@@ -1682,8 +1734,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def show_address_details(
     ///     *,
+    ///     qr_title: str,
     ///     address: str,
     ///     case_sensitive: bool,
+    ///     details_title: str,
     ///     account: str | None,
     ///     path: str | None,
     ///     xpubs: list[tuple[str, str]],
@@ -1691,15 +1745,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Show address details - QR code, account, path, cosigner xpubs."""
     Qstr::MP_QSTR_show_address_details => obj_fn_kw!(0, new_show_address_details).as_obj(),
 
-    /// def show_spending_details(
+    /// def show_info_with_cancel(
     ///     *,
-    ///     title: str = "INFORMATION",
-    ///     account: str | None,
-    ///     fee_rate: str | None,
-    ///     fee_rate_title: str = "Fee rate:",
+    ///     title: str,
+    ///     items: Iterable[Tuple[str, str]],
     /// ) -> object:
     ///     """Show metadata when for outgoing transaction."""
-    Qstr::MP_QSTR_show_spending_details => obj_fn_kw!(0, new_show_spending_details).as_obj(),
+    Qstr::MP_QSTR_show_info_with_cancel => obj_fn_kw!(0, new_show_info_with_cancel).as_obj(),
 
     /// def confirm_value(
     ///     *,
@@ -1711,6 +1763,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     verb_cancel: str | None = None,
     ///     info_button: bool = False,
     ///     hold: bool = False,
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm value. Merge of confirm_total and confirm_output."""
     Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
@@ -1720,6 +1773,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     items: list[tuple[str, str]],
     ///     info_button: bool = False,
+    ///     cancel_arrow: bool = False,
     /// ) -> object:
     ///     """Transaction summary. Always hold to confirm."""
     Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
@@ -1773,6 +1827,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     button: str = "CONTINUE",
+    ///     value: str = "",
     ///     description: str = "",
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
@@ -1802,9 +1857,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Info modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
-    /// def show_mismatch() -> object:
+    /// def show_mismatch(*, title: str) -> object:
     ///     """Warning modal, receiving address mismatch."""
-    Qstr::MP_QSTR_show_mismatch => obj_fn_0!(new_show_mismatch).as_obj(),
+    Qstr::MP_QSTR_show_mismatch => obj_fn_kw!(0, new_show_mismatch).as_obj(),
 
     /// def show_simple(
     ///     *,

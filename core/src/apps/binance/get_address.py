@@ -26,6 +26,8 @@ async def get_address(msg: BinanceGetAddress, keychain: Keychain) -> BinanceAddr
     pubkey = node.public_key()
     address = address_from_public_key(pubkey, HRP)
     if msg.show_display:
-        await show_address(address, path=paths.address_n_to_str(address_n))
+        await show_address(
+            address, path=paths.address_n_to_str(address_n), chunkify=bool(msg.chunkify)
+        )
 
     return BinanceAddress(address=address)

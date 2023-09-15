@@ -781,6 +781,7 @@ def get_address(
     network_id: int = NETWORK_IDS["mainnet"],
     show_display: bool = False,
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
+    chunkify: bool = False,
 ) -> "MessageType":
     return client.call(
         messages.CardanoGetAddress(
@@ -789,6 +790,7 @@ def get_address(
             network_id=network_id,
             show_display=show_display,
             derivation_type=derivation_type,
+            chunkify=chunkify,
         )
     )
 
@@ -798,10 +800,13 @@ def get_public_key(
     client: "TrezorClient",
     address_n: List[int],
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
+    show_display: bool = False,
 ) -> "MessageType":
     return client.call(
         messages.CardanoGetPublicKey(
-            address_n=address_n, derivation_type=derivation_type
+            address_n=address_n,
+            derivation_type=derivation_type,
+            show_display=show_display,
         )
     )
 
@@ -845,6 +850,7 @@ def sign_tx(
     additional_witness_requests: Sequence[Path] = (),
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
     include_network_id: bool = False,
+    chunkify: bool = False,
 ) -> Dict[str, Any]:
     UNEXPECTED_RESPONSE_ERROR = exceptions.TrezorException("Unexpected response")
 
@@ -881,6 +887,7 @@ def sign_tx(
             witness_requests_count=len(witness_requests),
             derivation_type=derivation_type,
             include_network_id=include_network_id,
+            chunkify=chunkify,
         )
     )
     if not isinstance(response, messages.CardanoTxItemAck):

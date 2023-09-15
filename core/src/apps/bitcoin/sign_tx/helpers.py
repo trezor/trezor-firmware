@@ -44,11 +44,13 @@ class UiConfirmOutput(UiConfirm):
         coin: CoinInfo,
         amount_unit: AmountUnit,
         output_index: int,
+        chunkify: bool,
     ):
         self.output = output
         self.coin = coin
         self.amount_unit = amount_unit
         self.output_index = output_index
+        self.chunkify = chunkify
 
     def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_output(
@@ -56,6 +58,7 @@ class UiConfirmOutput(UiConfirm):
             self.coin,
             self.amount_unit,
             self.output_index,
+            self.chunkify,
         )
 
 
@@ -233,8 +236,13 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
         )
 
 
-def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmOutput(output, coin, amount_unit, output_index))
+class UiConfirmMultipleAccounts(UiConfirm):
+    def confirm_dialog(self) -> Awaitable[Any]:
+        return layout.confirm_multiple_accounts()
+
+
+def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int, chunkify: bool) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
+    return (yield UiConfirmOutput(output, coin, amount_unit, output_index, chunkify))
 
 
 def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
@@ -287,6 +295,10 @@ def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore 
 
 def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
+
+
+def confirm_multiple_accounts() -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
+    return (yield UiConfirmMultipleAccounts())
 
 
 def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevTx]:  # type: ignore [awaitable-is-generator]

@@ -27,6 +27,7 @@ from trezorlib.messages import CardanoAddressType, CardanoDerivationType
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
+from ...input_flows import InputFlowShowXpubQRCode
 
 pytestmark = [
     pytest.mark.altcoin,
@@ -46,7 +47,8 @@ pytestmark = [
     "cardano/get_reward_address.json",
     "cardano/get_base_address.derivations.json",
 )
-def test_cardano_get_address(client: Client, parameters, result):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_cardano_get_address(client: Client, chunkify: bool, parameters, result):
     client.init_device(new_session=True, derive_cardano=True)
 
     derivation_type = CardanoDerivationType.__members__[
@@ -80,6 +82,7 @@ def test_cardano_get_address(client: Client, parameters, result):
         network_id=parameters["network_id"],
         show_display=True,
         derivation_type=derivation_type,
+        chunkify=chunkify,
     )
     assert address == result["expected_address"]
 
@@ -90,13 +93,18 @@ def test_cardano_get_address(client: Client, parameters, result):
     "cardano/get_public_key.derivations.json",
 )
 def test_cardano_get_public_key(client: Client, parameters, result):
-    client.init_device(new_session=True, derive_cardano=True)
+    with client:
+        IF = InputFlowShowXpubQRCode(client, passphrase=bool(client.ui.passphrase))
+        client.set_input_flow(IF.get())
+        client.init_device(new_session=True, derive_cardano=True)
 
-    derivation_type = CardanoDerivationType.__members__[
-        parameters.get("derivation_type", "ICARUS_TREZOR")
-    ]
-    key = get_public_key(client, parse_path(parameters["path"]), derivation_type)
+        derivation_type = CardanoDerivationType.__members__[
+            parameters.get("derivation_type", "ICARUS_TREZOR")
+        ]
+        key = get_public_key(
+            client, parse_path(parameters["path"]), derivation_type, show_display=True
+        )
 
-    assert key.node.public_key.hex() == result["public_key"]
-    assert key.node.chain_code.hex() == result["chain_code"]
-    assert key.xpub == result["public_key"] + result["chain_code"]
+        assert key.node.public_key.hex() == result["public_key"]
+        assert key.node.chain_code.hex() == result["chain_code"]
+        assert key.xpub == result["public_key"] + result["chain_code"]

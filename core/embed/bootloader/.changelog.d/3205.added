@@ -1,0 +1,2 @@
+Added firmware update without interaction.
+Split builds of different parts to use simple util.s assembler, while FW+bootloader use interconnected ones.

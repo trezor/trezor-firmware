@@ -61,6 +61,7 @@ message Features {
     optional string internal_model = 44;        // internal model name
     optional uint32 unit_color = 45;          // color of the unit/device
     optional bool unit_btconly = 46;          // unit/device is intended as bitcoin only
+    optional bool bootloader_locked = 49;       // bootloader is locked
 }
 
 /**

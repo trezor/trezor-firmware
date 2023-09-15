@@ -8,7 +8,7 @@ use crate::{
 };
 
 use super::{
-    layout::{LayoutFit, LayoutSink, TextLayout},
+    layout::{Chunks, LayoutFit, LayoutSink, TextLayout},
     LineBreaking, TextStyle,
 };
 
@@ -16,7 +16,7 @@ use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
-const MAX_OPS: usize = 15;
+const MAX_OPS: usize = 20;
 
 /// To account for operations that are not made of characters
 /// but need to be accounted for somehow.
@@ -37,6 +37,10 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
             layout: TextLayout::new(style),
             ops: Vec::new(),
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.ops.len() == 0
     }
 
     pub fn place(&mut self, bounds: Rect) -> Rect {
@@ -85,6 +89,12 @@ impl<'a, T: StringType + Clone + 'a> OpTextLayout<T> {
                 Op::CursorOffset(offset) => {
                     cursor.x += offset.x;
                     cursor.y += offset.y;
+                }
+                Op::Chunkify(chunks) => {
+                    self.layout.style.chunks = chunks;
+                }
+                Op::LineSpacing(line_spacing) => {
+                    self.layout.style.line_spacing = line_spacing;
                 }
                 // Moving to the next page
                 Op::NextPage => {
@@ -215,6 +225,14 @@ impl<T: StringType + Clone> OpTextLayout<T> {
     pub fn line_breaking(self, line_breaking: LineBreaking) -> Self {
         self.with_new_item(Op::LineBreaking(line_breaking))
     }
+
+    pub fn chunks(self, chunks: Option<Chunks>) -> Self {
+        self.with_new_item(Op::Chunkify(chunks))
+    }
+
+    pub fn line_spacing(self, spacing: i16) -> Self {
+        self.with_new_item(Op::LineSpacing(spacing))
+    }
 }
 
 // Op-adding aggregation operations
@@ -233,6 +251,14 @@ impl<T: StringType + Clone> OpTextLayout<T> {
 
     pub fn text_demibold(self, text: T) -> Self {
         self.font(Font::DEMIBOLD).text(text)
+    }
+
+    pub fn chunkify_text(self, chunks: Option<(Chunks, i16)>) -> Self {
+        if let Some(chunks) = chunks {
+            self.chunks(Some(chunks.0)).line_spacing(chunks.1)
+        } else {
+            self.chunks(None).line_spacing(0)
+        }
     }
 }
 
@@ -254,4 +280,8 @@ pub enum Op<T: StringType> {
     CursorOffset(Offset),
     /// Force continuing on the next page.
     NextPage,
+    /// Render the following text in a chunkified way. None will disable that.
+    Chunkify(Option<Chunks>),
+    /// Change the line vertical line spacing.
+    LineSpacing(i16),
 }

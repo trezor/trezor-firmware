@@ -167,6 +167,7 @@ def cli() -> None:
     type=int,
     default=2,
 )
+@click.option("-C", "--chunkify", is_flag=True)
 @with_client
 def get_address(
     client: "TrezorClient",
@@ -177,6 +178,7 @@ def get_address(
     multisig_xpub: List[str],
     multisig_threshold: Optional[int],
     multisig_suffix_length: int,
+    chunkify: bool,
 ) -> str:
     """Get address for specified path.
 
@@ -225,6 +227,7 @@ def get_address(
         script_type=script_type,
         multisig=multisig,
         unlock_path=get_unlock_path(address_n),
+        chunkify=chunkify,
     )
 
 
@@ -366,9 +369,10 @@ def get_descriptor(
 
 @cli.command()
 @click.option("-c", "--coin", is_flag=True, hidden=True, expose_value=False)
+@click.option("-C", "--chunkify", is_flag=True)
 @click.argument("json_file", type=click.File())
 @with_client
-def sign_tx(client: "TrezorClient", json_file: TextIO) -> None:
+def sign_tx(client: "TrezorClient", json_file: TextIO, chunkify: bool) -> None:
     """Sign transaction.
 
     Transaction data must be provided in a JSON file. See `transaction-format.md` for
@@ -398,6 +402,7 @@ def sign_tx(client: "TrezorClient", json_file: TextIO) -> None:
         inputs,
         outputs,
         prev_txes=prev_txes,
+        chunkify=chunkify,
         **details,
     )
 

@@ -128,8 +128,15 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/rng.c',
     'embed/trezorhal/unix/usb.c',
     'embed/trezorhal/unix/random_delays.c',
-    'embed/trezorhal/unix/secret.c',
 ]
+
+if TREZOR_MODEL in ('R', ):
+    CPPDEFINES_MOD += [
+        ('USE_OPTIGA', '1'),
+    ]
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/unix/secret.c',
+    ]
 
 SOURCE_UNIX = [
     'embed/unix/profile.c',
@@ -176,7 +183,7 @@ env.Replace(
     CCFLAGS='$COPT '
     '-g3 '
     '-nostdlib '
-    '-std=gnu99 -Wall -Werror -Wpointer-arith -Wno-missing-braces -fno-common '
+    '-std=gnu11 -Wall -Werror -Wpointer-arith -Wno-missing-braces -fno-common '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
     '-ffreestanding '
     '-fstack-protector-all '

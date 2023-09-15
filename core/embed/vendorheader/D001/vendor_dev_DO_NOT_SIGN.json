@@ -1,7 +1,7 @@
 {
     "header_len": 4608,
-    "text": "QA ONLY, DO NOT USE!",
-    "hw_model": null,
+    "text": "DEV ONLY, DO NOT USE!",
+    "hw_model": "D001",
     "expiry": 0,
     "version": [0, 0],
     "sig_m": 2,

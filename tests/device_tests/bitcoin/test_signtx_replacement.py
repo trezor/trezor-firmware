@@ -115,7 +115,7 @@ def test_p2pkh_fee_bump(client: Client):
         orig_index=1,
     )
 
-    new_model = client.features.model in ("T", "R")
+    is_core = client.features.model in ("T", "R")
 
     with client:
         client.set_expected_responses(
@@ -133,7 +133,7 @@ def test_p2pkh_fee_bump(client: Client):
                 request_meta(TXHASH_beafc7),
                 request_input(0, TXHASH_beafc7),
                 request_output(0, TXHASH_beafc7),
-                (new_model, request_orig_input(0, TXHASH_50f6f1)),
+                (is_core, request_orig_input(0, TXHASH_50f6f1)),
                 request_orig_input(0, TXHASH_50f6f1),
                 request_orig_output(0, TXHASH_50f6f1),
                 request_orig_output(1, TXHASH_50f6f1),
@@ -600,7 +600,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
         orig_index=0,
     )
 
-    tr = client.features.model == "R"
+    is_tr = client.features.model == "R"
     with client:
         client.set_expected_responses(
             [
@@ -613,7 +613,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
                 request_output(0),
                 request_orig_output(0, TXHASH_334cd7),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (not tr, messages.ButtonRequest(code=B.ConfirmOutput)),
+                (not is_tr, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_orig_output(1, TXHASH_334cd7),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),

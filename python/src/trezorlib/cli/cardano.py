@@ -60,6 +60,7 @@ def cli() -> None:
     default=messages.CardanoDerivationType.ICARUS,
 )
 @click.option("-i", "--include-network-id", is_flag=True)
+@click.option("-C", "chunkify", is_flag=True)
 @with_client
 def sign_tx(
     client: "TrezorClient",
@@ -70,6 +71,7 @@ def sign_tx(
     testnet: str,
     derivation_type: messages.CardanoDerivationType,
     include_network_id: bool,
+    chunkify: bool,
 ) -> cardano.SignTxResponse:
     """Sign Cardano transaction."""
     transaction = json.load(file)
@@ -143,6 +145,7 @@ def sign_tx(
         additional_witness_requests,
         derivation_type=derivation_type,
         include_network_id=include_network_id,
+        chunkify=chunkify,
     )
 
     sign_tx_response["tx_hash"] = sign_tx_response["tx_hash"].hex()
@@ -200,6 +203,7 @@ def sign_tx(
     type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
     default=messages.CardanoDerivationType.ICARUS,
 )
+@click.option("-C", "--chunkify", is_flag=True)
 @with_client
 def get_address(
     client: "TrezorClient",
@@ -217,6 +221,7 @@ def get_address(
     show_display: bool,
     testnet: str,
     derivation_type: messages.CardanoDerivationType,
+    chunkify: bool,
 ) -> str:
     """
     Get Cardano address.
@@ -260,6 +265,7 @@ def get_address(
         network_id,
         show_display,
         derivation_type=derivation_type,
+        chunkify=chunkify,
     )
 
 
@@ -271,16 +277,20 @@ def get_address(
     type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
     default=messages.CardanoDerivationType.ICARUS,
 )
+@click.option("-d", "--show-display", is_flag=True)
 @with_client
 def get_public_key(
     client: "TrezorClient",
     address: str,
     derivation_type: messages.CardanoDerivationType,
+    show_display: bool,
 ) -> messages.CardanoPublicKey:
     """Get Cardano public key."""
     address_n = tools.parse_path(address)
     client.init_device(derive_cardano=True)
-    return cardano.get_public_key(client, address_n, derivation_type=derivation_type)
+    return cardano.get_public_key(
+        client, address_n, derivation_type=derivation_type, show_display=show_display
+    )
 
 
 @cli.command()

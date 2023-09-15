@@ -443,9 +443,11 @@ def _split_secret(
 
     random_share_count = threshold - 2
 
-    shares = [(i, random.bytes(len(shared_secret))) for i in range(random_share_count)]
+    shares = [
+        (i, random.bytes(len(shared_secret), True)) for i in range(random_share_count)
+    ]
 
-    random_part = random.bytes(len(shared_secret) - _DIGEST_LENGTH_BYTES)
+    random_part = random.bytes(len(shared_secret) - _DIGEST_LENGTH_BYTES, True)
     digest = _create_digest(random_part, shared_secret)
 
     base_shares = shares + [

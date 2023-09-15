@@ -47,7 +47,9 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
 
     if payment.destination_tag is not None:
         await layout.require_confirm_destination_tag(payment.destination_tag)
-    await layout.require_confirm_tx(payment.destination, payment.amount)
+    await layout.require_confirm_tx(
+        payment.destination, payment.amount, chunkify=bool(msg.chunkify)
+    )
     await layout.require_confirm_total(payment.amount + msg.fee, msg.fee)
 
     # Signs and encodes signature into DER format

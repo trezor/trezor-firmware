@@ -20,6 +20,8 @@ from trezorlib import messages
 from trezorlib.cli import btc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
+from ...input_flows import InputFlowShowXpubQRCode
+
 VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
     (
         "Bitcoin",
@@ -154,7 +156,11 @@ VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
     "coin, account, purpose, script_type, descriptors", VECTORS_DESCRIPTORS
 )
 def test_descriptors(client: Client, coin, account, purpose, script_type, descriptors):
-    res = btc._get_descriptor(
-        client, coin, account, purpose, script_type, show_display=True
-    )
-    assert res == descriptors
+    with client:
+        if client.features.model != "1":
+            IF = InputFlowShowXpubQRCode(client)
+            client.set_input_flow(IF.get())
+        res = btc._get_descriptor(
+            client, coin, account, purpose, script_type, show_display=True
+        )
+        assert res == descriptors

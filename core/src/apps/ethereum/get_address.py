@@ -32,6 +32,8 @@ async def get_address(
     address = address_from_bytes(node.ethereum_pubkeyhash(), defs.network)
 
     if msg.show_display:
-        await show_address(address, path=paths.address_n_to_str(address_n))
+        await show_address(
+            address, path=paths.address_n_to_str(address_n), chunkify=bool(msg.chunkify)
+        )
 
     return EthereumAddress(address=address)

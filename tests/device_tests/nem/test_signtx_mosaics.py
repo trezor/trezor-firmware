@@ -27,6 +27,7 @@ ADDRESS_N = parse_path("m/44h/1h/0h/0h/0h")
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.nem,
+    pytest.mark.skip_tr,  # coin not supported,
     pytest.mark.setup_client(mnemonic=MNEMONIC12),
 ]
 

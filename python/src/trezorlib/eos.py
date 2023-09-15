@@ -331,7 +331,11 @@ def get_public_key(
 
 @session
 def sign_tx(
-    client: "TrezorClient", address: "Address", transaction: dict, chain_id: str
+    client: "TrezorClient",
+    address: "Address",
+    transaction: dict,
+    chain_id: str,
+    chunkify: bool = False,
 ) -> messages.EosSignedTx:
     header, actions = parse_transaction_json(transaction)
 
@@ -340,6 +344,7 @@ def sign_tx(
         chain_id=bytes.fromhex(chain_id),
         header=header,
         num_actions=len(actions),
+        chunkify=chunkify,
     )
 
     response = client.call(msg)

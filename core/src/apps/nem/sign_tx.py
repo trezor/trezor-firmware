@@ -46,7 +46,9 @@ async def sign_tx(msg: NEMSignTx, keychain: Keychain) -> NEMSignedTx:
         common = transaction
 
     if msg.transfer:
-        tx = await transfer.transfer(public_key, common, msg.transfer, node)
+        tx = await transfer.transfer(
+            public_key, common, msg.transfer, node, chunkify=bool(msg.chunkify)
+        )
     elif msg.provision_namespace:
         tx = await namespace.namespace(public_key, common, msg.provision_namespace)
     elif msg.mosaic_creation:

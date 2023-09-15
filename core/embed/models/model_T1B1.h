@@ -11,5 +11,6 @@
 
 #define BOOTLOADER_IMAGE_MAXSIZE (32 * 1024 * 1)  // 32 KB
 #define FIRMWARE_IMAGE_MAXSIZE (64 * 1024 * 15)   // 960 KB
+#define NORCOW_SECTOR_SIZE (16 * 1024)
 
 #endif

@@ -34,21 +34,18 @@ async def require_confirm_transfer(msg: BinanceTransferMsg) -> None:
     for txoutput in msg.outputs:
         make_input_output_pages(txoutput, "Confirm output")
 
-    await _confirm_transfer(items)
+    await _confirm_transfer(items, chunkify=bool(msg.chunkify))
 
 
-async def _confirm_transfer(inputs_outputs: Sequence[tuple[str, str, str]]) -> None:
+async def _confirm_transfer(
+    inputs_outputs: Sequence[tuple[str, str, str]], chunkify: bool
+) -> None:
     from trezor.ui.layouts import confirm_output
 
     for index, (title, amount, address) in enumerate(inputs_outputs):
         # Having hold=True on the last item
         hold = index == len(inputs_outputs) - 1
-        await confirm_output(
-            address,
-            amount,
-            title,
-            hold=hold,
-        )
+        await confirm_output(address, amount, title, hold=hold, chunkify=chunkify)
 
 
 async def require_confirm_cancel(msg: BinanceCancelMsg) -> None:

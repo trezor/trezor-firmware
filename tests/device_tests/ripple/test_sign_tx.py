@@ -28,7 +28,8 @@ pytestmark = [
 ]
 
 
-def test_ripple_sign_simple_tx(client: Client):
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_ripple_sign_simple_tx(client: Client, chunkify: bool):
     msg = ripple.create_sign_tx_msg(
         {
             "TransactionType": "Payment",
@@ -41,7 +42,9 @@ def test_ripple_sign_simple_tx(client: Client):
             "Sequence": 25,
         }
     )
-    resp = ripple.sign_tx(client, parse_path("m/44h/144h/0h/0/0"), msg)
+    resp = ripple.sign_tx(
+        client, parse_path("m/44h/144h/0h/0/0"), msg, chunkify=chunkify
+    )
     assert (
         resp.signature.hex()
         == "3045022100e243ef623675eeeb95965c35c3e06d63a9fc68bb37e17dc87af9c0af83ec057e02206ca8aa5eaab8396397aef6d38d25710441faf7c79d292ee1d627df15ad9346c0"
@@ -62,7 +65,9 @@ def test_ripple_sign_simple_tx(client: Client):
             "Sequence": 1,
         }
     )
-    resp = ripple.sign_tx(client, parse_path("m/44h/144h/0h/0/2"), msg)
+    resp = ripple.sign_tx(
+        client, parse_path("m/44h/144h/0h/0/2"), msg, chunkify=chunkify
+    )
     assert (
         resp.signature.hex()
         == "3044022069900e6e578997fad5189981b74b16badc7ba8b9f1052694033fa2779113ddc002206c8006ada310edf099fb22c0c12073550c8fc73247b236a974c5f1144831dd5f"
@@ -86,7 +91,9 @@ def test_ripple_sign_simple_tx(client: Client):
             "LastLedgerSequence": 333111,
         }
     )
-    resp = ripple.sign_tx(client, parse_path("m/44h/144h/0h/0/2"), msg)
+    resp = ripple.sign_tx(
+        client, parse_path("m/44h/144h/0h/0/2"), msg, chunkify=chunkify
+    )
     assert (
         resp.signature.hex()
         == "30450221008770743a472bb2d1c746a53ef131cc17cc118d538ec910ca928d221db4494cf702201e4ef242d6c3bff110c3cc3897a471fed0f5ac10987ea57da63f98dfa01e94df"

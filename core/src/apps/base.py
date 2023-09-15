@@ -66,6 +66,7 @@ def get_features() -> Features:
         homescreen_height=HEIGHT,
         unit_color=utils.unit_color(),
         unit_btconly=utils.unit_btconly(),
+        bootloader_locked=utils.bootloader_locked(),
     )
 
     if utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
@@ -87,10 +88,8 @@ def get_features() -> Features:
             Capability.Binance,
             Capability.Cardano,
             Capability.Crypto,
-            Capability.EOS,
             Capability.Ethereum,
             Capability.Monero,
-            Capability.NEM,
             Capability.Ripple,
             Capability.Stellar,
             Capability.Tezos,
@@ -99,6 +98,15 @@ def get_features() -> Features:
             Capability.ShamirGroups,
             Capability.PassphraseEntry,
         ]
+
+        # We do not support some currencies on T2B1
+        if not utils.MODEL_IS_T2B1:
+            f.capabilities.extend(
+                [
+                    Capability.NEM,
+                    Capability.EOS,
+                ]
+            )
 
     # Only some models are capable of SD card
     if utils.USE_SD_CARD:

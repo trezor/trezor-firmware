@@ -27,7 +27,7 @@ from .common import (
     click_through,
     read_and_confirm_mnemonic,
 )
-from .input_flows_helpers import BackupFlow, PinFlow, RecoveryFlow
+from .input_flows_helpers import BackupFlow, EthereumFlow, PinFlow, RecoveryFlow
 
 B = messages.ButtonRequestType
 
@@ -48,6 +48,7 @@ class InputFlowBase:
         self.PIN = PinFlow(self.client)
         self.REC = RecoveryFlow(self.client)
         self.BAK = BackupFlow(self.client)
+        self.ETH = EthereumFlow(self.client)
 
     def model(self) -> str | None:
         return self.client.features.model
@@ -235,12 +236,21 @@ class InputFlowSignMessagePagination(InputFlowBase):
         yield
         self.debug.press_yes()
 
+        # press info
+        yield
+        self.debug.press_right()
+
+        # paginate through the whole message
         br = yield
         # TODO: try load the message_read the same way as in model T
         if br.pages is not None:
             for i in range(br.pages):
                 if i < br.pages - 1:
                     self.debug.swipe_up()
+        self.debug.press_yes()
+
+        # confirm message
+        yield
         self.debug.press_yes()
 
 
@@ -311,6 +321,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.index = index
 
     def input_flow_tt(self) -> BRGeneratorType:
+        yield  # multisig address warning
+        self.debug.press_yes()
+
         yield  # show address
         layout = self.debug.wait_layout()
         assert "RECEIVE ADDRESS\n(MULTISIG)" == layout.title()
@@ -343,6 +356,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
+        yield  # multisig address warning
+        self.debug.press_middle()
+
         yield  # show address
         layout = self.debug.wait_layout()
         assert "RECEIVE ADDRESS (MULTISIG)" in layout.title()
@@ -378,6 +394,65 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         # address mismatch
         self.debug.press_left()
         # show address
+        self.debug.press_middle()
+
+
+class InputFlowShowXpubQRCode(InputFlowBase):
+    def __init__(self, client: Client, passphrase: bool = False):
+        super().__init__(client)
+        self.passphrase = passphrase
+
+    def input_flow_tt(self) -> BRGeneratorType:
+        if self.passphrase:
+            yield
+            self.debug.press_yes()
+            yield
+            self.debug.press_yes()
+
+        br = yield
+        layout = self.debug.wait_layout()
+        if "coinjoin" in layout.title().lower() or br.code == B.UnknownDerivationPath:
+            self.debug.press_yes()
+            br = yield
+
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        # synchronize; TODO get rid of this once we have single-global-layout
+        self.debug.synchronize_at("HorizontalPage")
+
+        self.debug.swipe_left(wait=True)
+        self.debug.swipe_right(wait=True)
+        self.debug.swipe_left(wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.press_no(wait=True)
+        for _ in range(br.pages - 1):
+            self.debug.swipe_up(wait=True)
+        self.debug.press_yes()
+
+    def input_flow_tr(self) -> BRGeneratorType:
+        if self.passphrase:
+            yield
+            self.debug.press_right()
+            yield
+            self.debug.press_right()
+
+        br = yield
+        layout = self.debug.wait_layout()
+        if "coinjoin" in layout.title().lower() or br.code == B.UnknownDerivationPath:
+            self.debug.press_yes()
+            br = yield
+
+        # Go into details
+        self.debug.press_right(wait=True)
+        # Go through details and back
+        self.debug.press_right(wait=True)
+        self.debug.press_right(wait=True)
+        self.debug.press_left(wait=True)
+        self.debug.press_left(wait=True)
+        assert br.pages is not None
+        for _ in range(br.pages - 1):
+            self.debug.press_right()
+        # Confirm
         self.debug.press_middle()
 
 
@@ -424,17 +499,9 @@ class InputFlowSignTxHighFee(InputFlowBase):
 
         self.finished = True
 
-    def input_flow_tt(self) -> BRGeneratorType:
+    def input_flow_common(self) -> BRGeneratorType:
         screens = [
             B.ConfirmOutput,
-            B.ConfirmOutput,
-            B.FeeOverThreshold,
-            B.SignTx,
-        ]
-        yield from self.go_through_all_screens(screens)
-
-    def input_flow_tr(self) -> BRGeneratorType:
-        screens = [
             B.ConfirmOutput,
             B.FeeOverThreshold,
             B.SignTx,
@@ -465,15 +532,21 @@ def sign_tx_go_to_info(client: Client) -> Generator[None, None, str]:
 def sign_tx_go_to_info_tr(
     client: Client,
 ) -> Generator[None, None, str]:
-    yield  # confirm output
+    yield  # confirm address
     client.debug.wait_layout()
-    client.debug.press_right()  # CONTINUE
+    client.debug.press_yes()  # CONTINUE
+    yield  # confirm amount
     client.debug.wait_layout()
-    client.debug.press_right()  # CONFIRM
+    client.debug.press_yes()  # CONFIRM
 
     screen_texts: list[str] = []
 
     yield  # confirm total
+    layout = client.debug.wait_layout()
+    if "multiple accounts" in layout.text_content().lower():
+        client.debug.press_middle()
+        yield
+
     layout = client.debug.press_right(wait=True)
     screen_texts.append(layout.text_content())
 
@@ -518,6 +591,10 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         assert "18.33 sat" in content
 
     def input_flow_tt(self) -> BRGeneratorType:
+        # multiple accounts warning
+        yield
+        self.debug.press_yes()
+
         content = yield from sign_tx_go_to_info(self.client)
         self.assert_content(content)
         self.debug.press_yes()
@@ -602,9 +679,10 @@ def lock_time_input_flow_tt(
 def lock_time_input_flow_tr(
     debug: DebugLink, layout_assert_func: Callable[[DebugLink], None]
 ) -> BRGeneratorType:
-    yield  # confirm output
+    yield  # confirm address
     debug.wait_layout()
-    debug.swipe_up()
+    debug.press_yes()
+    yield  # confirm amount
     debug.wait_layout()
     debug.press_yes()
 
@@ -722,134 +800,53 @@ class InputFlowEIP712Cancel(InputFlowBase):
         self.debug.press_no()
 
 
-class InputFlowEthereumSignTxSkip(InputFlowBase):
+class InputFlowEthereumSignTxShowFeeInfo(InputFlowBase):
     def __init__(self, client: Client, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
     def input_flow_common(self) -> BRGeneratorType:
-        yield  # confirm address
-        self.debug.press_yes()
-        yield  # confirm amount
-        self.debug.wait_layout()
-        self.debug.press_yes()
-        yield  # confirm data
-        if self.cancel:
-            self.debug.press_no()
-        else:
-            self.debug.press_yes()
-            yield  # gas price
-            self.debug.press_yes()
-            yield  # maximum fee
-            self.debug.press_yes()
-            yield  # hold to confirm
-            self.debug.press_yes()
+        yield from self.ETH.confirm_tx(info=True)
 
 
-class InputFlowEthereumSignTxScrollDown(InputFlowBase):
-    SHOW_ALL = (143, 167)
-
+class InputFlowEthereumSignTxDataSkip(InputFlowBase):
     def __init__(self, client: Client, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
-    def input_flow_tt(self) -> BRGeneratorType:
-        yield  # confirm address
-        self.debug.wait_layout()
-        self.debug.press_yes()
-        yield  # confirm amount
-        self.debug.wait_layout()
-        self.debug.press_yes()
-        yield  # confirm data
-        self.debug.wait_layout()
-        self.debug.click(self.SHOW_ALL)
-
-        br = yield  # paginated data
-        assert br.pages is not None
-        for i in range(br.pages):
-            self.debug.wait_layout()
-            if i < br.pages - 1:
-                self.debug.swipe_up()
-
-        self.debug.press_yes()
-        yield  # confirm data
-        if self.cancel:
-            self.debug.press_no()
-        else:
-            self.debug.press_yes()
-            yield  # gas price
-            self.debug.press_yes()
-            yield  # maximum fee
-            self.debug.press_yes()
-            yield  # hold to confirm
-            self.debug.press_yes()
-
-    def input_flow_tr(self) -> BRGeneratorType:
-        yield  # confirm address
-        self.debug.wait_layout()
-        self.debug.press_yes()
-
-        br = yield  # paginated data
-        assert br.pages is not None
-        for _ in range(br.pages):
-            self.debug.wait_layout()
-            self.debug.swipe_up()
-
-        yield  # confirm amount
-        self.debug.wait_layout()
-        self.debug.press_yes()
-
-        yield  # confirm before send
-        if self.cancel:
-            self.debug.press_no()
-        else:
-            self.debug.press_yes()
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.ETH.confirm_data()
+        yield from self.ETH.confirm_tx(cancel=self.cancel)
 
 
-class InputFlowEthereumSignTxGoBack(InputFlowBase):
-    SHOW_ALL = (143, 167)
-    GO_BACK = (16, 220)
-
+class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
     def __init__(self, client: Client, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
-    def input_flow_tt(self) -> BRGeneratorType:
-        br = yield  # confirm address
-        self.debug.wait_layout()
-        self.debug.press_yes()
-        br = yield  # confirm amount
-        self.debug.wait_layout()
-        self.debug.press_yes()
-        br = yield  # confirm data
-        self.debug.wait_layout()
-        self.debug.click(self.SHOW_ALL)
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.ETH.confirm_data(info=True)
+        yield from self.ETH.paginate_data()
+        if self.cancel:
+            yield from self.ETH.confirm_data(cancel=True)
+        else:
+            yield from self.ETH.confirm_data()
+            yield from self.ETH.confirm_tx()
 
-        br = yield  # paginated data
-        assert br.pages is not None
-        for i in range(br.pages):
-            self.debug.wait_layout()
-            if i == 2:
-                self.debug.click(self.GO_BACK)
-                yield  # confirm data
-                self.debug.wait_layout()
-                if self.cancel:
-                    self.debug.press_no()
-                else:
-                    self.debug.press_yes()
-                    yield  # confirm address
-                    self.debug.wait_layout()
-                    self.debug.press_yes()
-                    yield  # confirm amount
-                    self.debug.wait_layout()
-                    self.debug.press_yes()
-                    yield  # hold to confirm
-                    self.debug.wait_layout()
-                    self.debug.press_yes()
-                return
 
-            elif i < br.pages - 1:
-                self.debug.swipe_up()
+class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
+    def __init__(self, client: Client, cancel: bool = False):
+        super().__init__(client)
+        self.cancel = cancel
+
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.ETH.confirm_data(info=True)
+        yield from self.ETH.paginate_data_go_back()
+        if self.cancel:
+            yield from self.ETH.confirm_data(cancel=True)
+        else:
+            yield from self.ETH.confirm_data()
+            yield from self.ETH.confirm_tx()
 
 
 def get_mnemonic_and_confirm_success(

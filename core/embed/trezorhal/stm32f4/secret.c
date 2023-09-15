@@ -4,13 +4,28 @@
 #include "flash.h"
 #include "model.h"
 
+static secbool bootloader_locked_set = secfalse;
+static secbool bootloader_locked = secfalse;
+
 static secbool verify_header(void) {
   uint8_t header[SECRET_HEADER_LEN] = {0};
 
   memcpy(header, flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN),
          SECRET_HEADER_LEN);
 
-  return memcmp(header, SECRET_HEADER_MAGIC, 4) == 0 ? sectrue : secfalse;
+  bootloader_locked =
+      memcmp(header, SECRET_HEADER_MAGIC, 4) == 0 ? sectrue : secfalse;
+  bootloader_locked_set = sectrue;
+  return bootloader_locked;
+}
+
+secbool secret_bootloader_locked(void) {
+  if (bootloader_locked_set != sectrue) {
+    // Set bootloader_locked.
+    verify_header();
+  }
+
+  return bootloader_locked;
 }
 
 void secret_write_header(void) {

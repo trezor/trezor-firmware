@@ -59,6 +59,9 @@ def _find_message_handler_module(msg_type: int) -> str:
     if utils.USE_SD_CARD and msg_type == MessageType.SdProtect:
         return "apps.management.sd_protect"
 
+    if utils.USE_OPTIGA and msg_type == MessageType.AuthenticateDevice:
+        return "apps.management.authenticate_device"
+
     # bitcoin
     if msg_type == MessageType.AuthorizeCoinJoin:
         return "apps.bitcoin.authorize_coinjoin"

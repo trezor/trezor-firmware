@@ -24,6 +24,7 @@ FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led", "usb", "consumption_mas
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = [
+    'AES_128',
     'USE_INSECURE_PRNG',
 ]
 SOURCE_MOD = []
@@ -50,11 +51,24 @@ CPPPATH_MOD += [
     'vendor/trezor-storage',
 ]
 SOURCE_MOD += [
+    'vendor/trezor-crypto/aes/aes_modes.c',
+    'vendor/trezor-crypto/aes/aesccm.c',
+    'vendor/trezor-crypto/aes/aescrypt.c',
+    'vendor/trezor-crypto/aes/aeskey.c',
+    'vendor/trezor-crypto/aes/aestab.c',
+    'vendor/trezor-crypto/bignum.c',
     'vendor/trezor-crypto/chacha_drbg.c',
     'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
+    'vendor/trezor-crypto/ecdsa.c',
+    'vendor/trezor-crypto/hmac.c',
+    'vendor/trezor-crypto/hmac_drbg.c',
     'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/rand.c',
+    'vendor/trezor-crypto/rfc6979.c',
+    'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
+    'vendor/trezor-crypto/tls_prf.c',
 ]
 
 # modtrezorui
@@ -80,7 +94,13 @@ SOURCE_PRODTEST = [
     'embed/prodtest/startup.s',
     'embed/prodtest/header.S',
     'embed/prodtest/main.c',
+    'embed/prodtest/prodtest_common.c',
 ]
+
+if TREZOR_MODEL in ('R',):
+    SOURCE_PRODTEST += [
+        'embed/prodtest/optiga_prodtest.c',
+    ]
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
@@ -89,7 +109,7 @@ tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')), CONSTRAINTS=["limited_util_s"])
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
@@ -113,7 +133,7 @@ env.Replace(
     CCFLAGS='$COPT '
     '-g3 '
     '-nostdlib '
-    '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
+    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
     '-ffreestanding '
     '-fstack-protector-all '
@@ -167,7 +187,7 @@ MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 if PRODUCTION:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_prodtest_signed_prod.bin'
 elif BOOTLOADER_DEVEL:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_dev.bin'
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
 else:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_prod.bin'
 

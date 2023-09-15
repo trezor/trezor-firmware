@@ -20,7 +20,7 @@ ATTRIBUTES_OPTIONAL = (
 #include "nem_mosaics.h"
 
 const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] = {
-% for m in supported_on("trezor1", nem):
+% for m in supported_on("T1B1", nem):
 {
 	% for attr, func in ATTRIBUTES_REQUIRED:
 		% if attr in m:

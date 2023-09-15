@@ -273,12 +273,15 @@ def cli(
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
+@click.option("-C", "--chunkify", is_flag=True)
 @with_client
-def get_address(client: "TrezorClient", address: str, show_display: bool) -> str:
+def get_address(
+    client: "TrezorClient", address: str, show_display: bool, chunkify: bool
+) -> str:
     """Get Ethereum address in hex encoding."""
     address_n = tools.parse_path(address)
     network = ethereum.network_from_address_n(address_n, DEFINITIONS_SOURCE)
-    return ethereum.get_address(client, address_n, show_display, network)
+    return ethereum.get_address(client, address_n, show_display, network, chunkify)
 
 
 @cli.command()
@@ -344,6 +347,7 @@ def get_public_node(client: "TrezorClient", address: str, show_display: bool) ->
     callback=_list_units,
     expose_value=False,
 )
+@click.option("-C", "--chunkify", is_flag=True)
 @click.argument("to_address")
 @click.argument("amount", callback=_amount_to_int)
 @with_client
@@ -364,6 +368,7 @@ def sign_tx(
     max_priority_fee: Optional[int],
     access_list: List[ethereum.messages.EthereumAccessList],
     eip2718_type: Optional[int],
+    chunkify: bool,
 ) -> str:
     """Sign (and optionally publish) Ethereum transaction.
 
@@ -462,6 +467,7 @@ def sign_tx(
             max_priority_fee=max_priority_fee,
             access_list=access_list,
             definitions=defs,
+            chunkify=chunkify,
         )
     else:
         if gas_price is None:
@@ -479,6 +485,7 @@ def sign_tx(
             data=data_bytes,
             chain_id=chain_id,
             definitions=defs,
+            chunkify=chunkify,
         )
 
     to = ethereum.decode_hex(to_address)

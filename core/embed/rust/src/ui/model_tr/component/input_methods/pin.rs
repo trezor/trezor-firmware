@@ -3,7 +3,7 @@ use crate::{
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
-        display::Icon,
+        display::{Font, Icon},
         geometry::Rect,
     },
 };
@@ -80,8 +80,12 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
 /// Component for entering a PIN.
 pub struct PinEntry<T: StringType + Clone> {
     choice_page: ChoicePage<ChoiceFactoryPIN, T, PinAction>,
+    header_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
     pin_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
+    prompt: T,
     subprompt: T,
+    /// Whether we already show the "real" prompt (not the warning).
+    showing_real_prompt: bool,
     show_real_pin: bool,
     show_last_digit: bool,
     textbox: TextBox<MAX_PIN_LENGTH>,
@@ -91,22 +95,45 @@ impl<T> PinEntry<T>
 where
     T: StringType + Clone,
 {
-    pub fn new(subprompt: T) -> Self {
-        let pin_line_content = if !subprompt.as_ref().is_empty() {
-            String::from(subprompt.as_ref())
+    pub fn new(prompt: T, subprompt: T) -> Self {
+        // When subprompt is not empty, it means that the user has entered bad PIN
+        // before. In this case we show the warning together with the subprompt
+        // at the beginning. (WRONG PIN will be replaced by real prompt after
+        // any button click.)
+        let show_subprompt = !subprompt.as_ref().is_empty();
+        let (showing_real_prompt, header_line_content, pin_line_content) = if show_subprompt {
+            (
+                false,
+                String::from("WRONG PIN"),
+                String::from(subprompt.as_ref()),
+            )
         } else {
-            String::from(EMPTY_PIN_STR)
+            (
+                true,
+                String::from(prompt.as_ref()),
+                String::from(EMPTY_PIN_STR),
+            )
         };
+
+        let mut pin_line = ChangingTextLine::center_bold(pin_line_content).without_ellipsis();
+        if show_subprompt {
+            pin_line.update_font(Font::NORMAL);
+        }
 
         Self {
             // Starting at a random digit.
             choice_page: ChoicePage::new(ChoiceFactoryPIN)
                 .with_initial_page_counter(get_random_digit_position())
                 .with_carousel(true),
-            pin_line: Child::new(
-                ChangingTextLine::center_bold(pin_line_content).without_ellipsis(),
+            header_line: Child::new(
+                ChangingTextLine::center_bold(header_line_content)
+                    .without_ellipsis()
+                    .with_text_at_the_top(),
             ),
+            pin_line: Child::new(pin_line),
             subprompt,
+            prompt,
+            showing_real_prompt,
             show_real_pin: false,
             show_last_digit: false,
             textbox: TextBox::empty(),
@@ -122,7 +149,10 @@ where
     /// Show updated content in the changing line.
     /// Many possibilities, according to the PIN state.
     fn update_pin_line(&mut self, ctx: &mut EventCtx) {
+        let mut used_font = Font::BOLD;
         let pin_line_text = if self.is_empty() && !self.subprompt.as_ref().is_empty() {
+            // Showing the subprompt in NORMAL font
+            used_font = Font::NORMAL;
             String::from(self.subprompt.as_ref())
         } else if self.is_empty() {
             String::from(EMPTY_PIN_STR)
@@ -144,8 +174,17 @@ where
         };
 
         self.pin_line.mutate(ctx, |ctx, pin_line| {
+            pin_line.update_font(used_font);
             pin_line.update_text(pin_line_text);
             pin_line.request_complete_repaint(ctx);
+        });
+    }
+
+    /// Showing the real prompt instead of WRONG PIN
+    fn show_prompt(&mut self, ctx: &mut EventCtx) {
+        self.header_line.mutate(ctx, |ctx, header_line| {
+            header_line.update_text(String::from(self.prompt.as_ref()));
+            header_line.request_complete_repaint(ctx);
         });
     }
 
@@ -169,23 +208,36 @@ where
     type Msg = CancelConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        let header_height = self.header_line.inner().needed_height();
+        let (header_area, rest) = bounds.split_top(header_height);
         let pin_height = self.pin_line.inner().needed_height();
-        let (pin_area, choice_area) = bounds.split_top(pin_height);
+        let (pin_area, choice_area) = rest.split_top(pin_height);
+        self.header_line.place(header_area);
         self.pin_line.place(pin_area);
         self.choice_page.place(choice_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Any event when showing real PIN should hide it
+        // Any non-timer event when showing real PIN should hide it
         // Same with showing last digit
-        if self.show_real_pin {
-            self.show_real_pin = false;
-            self.update(ctx)
+        if !matches!(event, Event::Timer(_)) {
+            if self.show_real_pin {
+                self.show_real_pin = false;
+                self.update(ctx)
+            }
+            if self.show_last_digit {
+                self.show_last_digit = false;
+                self.update(ctx)
+            }
         }
-        if self.show_last_digit {
-            self.show_last_digit = false;
-            self.update(ctx)
+
+        // Any button event will show the "real" prompt
+        if !self.showing_real_prompt {
+            if let Event::Button(_) = event {
+                self.show_prompt(ctx);
+                self.showing_real_prompt = true;
+            }
         }
 
         match self.choice_page.event(ctx, event) {
@@ -204,7 +256,7 @@ where
                 self.textbox.append(ctx, ch);
                 // Choosing random digit to be shown next
                 self.choice_page
-                    .set_page_counter(ctx, get_random_digit_position());
+                    .set_page_counter(ctx, get_random_digit_position(), true);
                 self.show_last_digit = true;
                 self.update(ctx);
                 None
@@ -214,6 +266,7 @@ where
     }
 
     fn paint(&mut self) {
+        self.header_line.paint();
         self.pin_line.paint();
         self.choice_page.paint();
     }

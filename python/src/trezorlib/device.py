@@ -265,3 +265,8 @@ def set_busy(client: "TrezorClient", expiry_ms: Optional[int]) -> "MessageType":
     ret = client.call(messages.SetBusy(expiry_ms=expiry_ms))
     client.refresh_features()
     return ret
+
+
+@expect(messages.AuthenticityProof)
+def authenticate(client: "TrezorClient", challenge: bytes):
+    return client.call(messages.AuthenticateDevice(challenge=challenge))

@@ -25,6 +25,19 @@
 #include <stdint.h>
 #include "optiga_common.h"
 
+// Data object identifiers.
+typedef enum {
+  OPTIGA_OID_COPROC_UID = 0xE0C2,      // Coprocessor UID.
+  OPTIGA_OID_CERT = 0xE0E0,            // Public key certificates [1-4].
+  OPTIGA_OID_CA_CERT = 0xE0E8,         // Root CA public key certificates [1-2].
+  OPTIGA_OID_COUNTER = 0xE120,         // Monotonic counters [1-4].
+  OPTIGA_OID_ECC_KEY = 0xE0F0,         // Private ECC keys [1-4].
+  OPTIGA_OID_PTFBIND_SECRET = 0xE140,  // Shared platform binding secret.
+  OPTIGA_OID_ERROR_CODE = 0xF1C2,      // Command error code.
+  OPTIGA_OID_DATA = 0xF1D0,            // Arbitrary 140 B data objects [1-12].
+  OPTIGA_OID_BIG_DATA = 0xF1E0,        // Arbitrary 1500 B data objects [1-2].
+} optiga_oid;
+
 // ECC curve identifiers.
 typedef enum {
   OPTIGA_CURVE_P256 = 0x03,  // NIST P256 ECC key.
@@ -79,6 +92,16 @@ typedef enum {
   OPTIGA_DATA_TYPE_AUTOREF = 0x31,   // Secret for verifying external entity.
 } optiga_data_type;
 
+// Access conditions.
+typedef enum {
+  OPTIGA_ACCESS_COND_ALW = 0x00,   // Always.
+  OPTIGA_ACCESS_COND_CONF = 0x20,  // Confidentiality protection required.
+  OPTIGA_ACCESS_COND_INT = 0x21,   // Integrity protection required.
+  OPTIGA_ACCESS_COND_AUTO = 0x23,  // Authorization required.
+  OPTIGA_ACCESS_COND_LUC = 0x40,   // Usage limited by counter.
+  OPTIGA_ACCESS_COND_NEV = 0xFF,   // Never.
+} optiga_access_cond;
+
 typedef struct {
   const uint8_t *ptr;
   uint16_t len;
@@ -99,6 +122,19 @@ typedef struct {
   optiga_metadata_item reset_type;   // F0 - Factory reset type.
 } optiga_metadata;
 
+#define OPTIGA_ECC_KEY_COUNT 4
+#define OPTIGA_CERT_COUNT 4
+#define OPTIGA_MAX_METADATA_SIZE 44
+#define OPTIGA_RANDOM_MIN_SIZE 8
+#define OPTIGA_RANDOM_MAX_SIZE 256
+
+#define OPTIGA_ACCESS_CONDITION(ac_id, oid) \
+  { (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 }
+
+extern const optiga_metadata_item OPTIGA_LCS_OPERATIONAL;
+extern const optiga_metadata_item OPTIGA_ACCESS_ALWAYS;
+extern const optiga_metadata_item OPTIGA_ACCESS_NEVER;
+
 optiga_result optiga_parse_metadata(const uint8_t *serialized,
                                     size_t serialized_size,
                                     optiga_metadata *metadata);
@@ -106,6 +142,8 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
                                         uint8_t *serialized,
                                         size_t max_serialized,
                                         size_t *serialized_size);
+bool optiga_compare_metadata(const optiga_metadata *expected,
+                             const optiga_metadata *stored);
 
 optiga_result optiga_open_application(void);
 optiga_result optiga_get_error_code(uint8_t *error_code);
@@ -120,11 +158,15 @@ optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
                                  uint8_t *output, size_t max_output_size,
                                  size_t *output_size);
 optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
-                                    const uint8_t key[32]);
+                                    const uint8_t *key, size_t key_size);
 optiga_result optiga_clear_auto_state(uint16_t key_oid);
 optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
                                size_t digest_size, uint8_t *signature,
                                size_t max_sig_size, size_t *sig_size);
+optiga_result optiga_verify_sign(optiga_curve curve, const uint8_t *public_key,
+                                 size_t public_key_size, const uint8_t *digest,
+                                 size_t digest_size, const uint8_t *signature,
+                                 size_t sig_size);
 optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
                                   uint16_t oid, uint8_t *public_key,
                                   size_t max_public_key_size,

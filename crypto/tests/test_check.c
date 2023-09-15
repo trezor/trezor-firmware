@@ -41,6 +41,7 @@
 
 #include "address.h"
 #include "aes/aes.h"
+#include "aes/aesccm.h"
 #include "base32.h"
 #include "base58.h"
 #include "bignum.h"
@@ -73,6 +74,7 @@
 #include "shamir.h"
 #include "slip39.h"
 #include "slip39_wordlist.h"
+#include "tls_prf.h"
 #include "zkp_bip340.h"
 #include "zkp_context.h"
 #include "zkp_ecdsa.h"
@@ -4108,6 +4110,299 @@ START_TEST(test_aes) {
 }
 END_TEST
 
+// test vectors from
+// https://datatracker.ietf.org/doc/html/rfc3610
+// https://doi.org/10.6028/NIST.SP.800-38C
+START_TEST(test_aesccm) {
+  struct {
+    char *key;
+    char *nonce;
+    char *aad;
+    char *plaintext;
+    int mac_len;
+    char *ciphertext;
+  } vectors[] = {
+      {
+          // RFC 3610 Packet Vector #1
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "00000003020100A0A1A2A3A4A5",
+          "0001020304050607",
+          "08090A0B0C0D0E0F101112131415161718191A1B1C1D1E",
+          8,
+          "588C979A61C663D2F066D0C2C0F989806D5F6B61DAC38417E8D12CFDF926E0",
+      },
+      {
+          // RFC 3610 Packet Vector #2
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "00000004030201A0A1A2A3A4A5",
+          "0001020304050607",
+          "08090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
+          8,
+          "72C91A36E135F8CF291CA894085C87E3CC15C439C9E43A3BA091D56E10400916",
+      },
+      {
+          // RFC 3610 Packet Vector #3
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "00000005040302A0A1A2A3A4A5",
+          "0001020304050607",
+          "08090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20",
+          8,
+          "51B1E5F44A197D1DA46B0F8E2D282AE871E838BB64DA8596574ADAA76FBD9FB0C5",
+      },
+      {
+          // RFC 3610 Packet Vector #4
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "00000006050403A0A1A2A3A4A5",
+          "000102030405060708090A0B",
+          "0C0D0E0F101112131415161718191A1B1C1D1E",
+          8,
+          "A28C6865939A9A79FAAA5C4C2A9D4A91CDAC8C96C861B9C9E61EF1",
+      },
+      {
+          // RFC 3610 Packet Vector #5
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "00000007060504A0A1A2A3A4A5",
+          "000102030405060708090A0B",
+          "0C0D0E0F101112131415161718191A1B1C1D1E1F",
+          8,
+          "DCF1FB7B5D9E23FB9D4E131253658AD86EBDCA3E51E83F077D9C2D93",
+      },
+      {
+          // RFC 3610 Packet Vector #6
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "00000008070605A0A1A2A3A4A5",
+          "000102030405060708090A0B",
+          "0C0D0E0F101112131415161718191A1B1C1D1E1F20",
+          8,
+          "6FC1B011F006568B5171A42D953D469B2570A4BD87405A0443AC91CB94",
+      },
+      {
+          // RFC 3610 Packet Vector #7
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "00000009080706A0A1A2A3A4A5",
+          "0001020304050607",
+          "08090A0B0C0D0E0F101112131415161718191A1B1C1D1E",
+          10,
+          "0135D1B2C95F41D5D1D4FEC185D166B8094E999DFED96C048C56602C97ACBB7490",
+      },
+      {
+          // RFC 3610 Packet Vector #8
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "0000000A090807A0A1A2A3A4A5",
+          "0001020304050607",
+          "08090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
+          10,
+          "7B75399AC0831DD2F0BBD75879A2FD8F6CAE6B6CD9B7DB24C17B4433F434963F34B"
+          "4",
+      },
+      {
+          // RFC 3610 Packet Vector #9
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "0000000B0A0908A0A1A2A3A4A5",
+          "0001020304050607",
+          "08090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20",
+          10,
+          "82531A60CC24945A4B8279181AB5C84DF21CE7F9B73F42E197EA9C07E56B5EB17E5F"
+          "4E",
+      },
+      {
+          // RFC 3610 Packet Vector #10
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "0000000C0B0A09A0A1A2A3A4A5",
+          "000102030405060708090A0B",
+          "0C0D0E0F101112131415161718191A1B1C1D1E",
+          10,
+          "07342594157785152B074098330ABB141B947B566AA9406B4D999988DD",
+      },
+      {
+          // RFC 3610 Packet Vector #11
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "0000000D0C0B0AA0A1A2A3A4A5",
+          "000102030405060708090A0B",
+          "0C0D0E0F101112131415161718191A1B1C1D1E1F",
+          10,
+          "676BB20380B0E301E8AB79590A396DA78B834934F53AA2E9107A8B6C022C",
+      },
+      {
+          // RFC 3610 Packet Vector #12
+          "C0C1C2C3C4C5C6C7C8C9CACBCCCDCECF",
+          "0000000E0D0C0BA0A1A2A3A4A5",
+          "000102030405060708090A0B",
+          "0C0D0E0F101112131415161718191A1B1C1D1E1F20",
+          10,
+          "C0FFA0D6F05BDB67F24D43A4338D2AA4BED7B20E43CD1AA31662E7AD65D6DB",
+      },
+      {
+          // RFC 3610 Packet Vector #13
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "00412B4EA9CDBE3C9696766CFA",
+          "0BE1A88BACE018B1",
+          "08E8CF97D820EA258460E96AD9CF5289054D895CEAC47C",
+          8,
+          "4CB97F86A2A4689A877947AB8091EF5386A6FFBDD080F8E78CF7CB0CDDD7B3",
+      },
+      {
+          // RFC 3610 Packet Vector #14
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "0033568EF7B2633C9696766CFA",
+          "63018F76DC8A1BCB",
+          "9020EA6F91BDD85AFA0039BA4BAFF9BFB79C7028949CD0EC",
+          8,
+          "4CCB1E7CA981BEFAA0726C55D378061298C85C92814ABC33C52EE81D7D77C08A",
+      },
+      {
+          // RFC 3610 Packet Vector #15
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "00103FE41336713C9696766CFA",
+          "AA6CFA36CAE86B40",
+          "B916E0EACC1C00D7DCEC68EC0B3BBB1A02DE8A2D1AA346132E",
+          8,
+          "B1D23A2220DDC0AC900D9AA03C61FCF4A559A4417767089708A776796EDB723506",
+      },
+      {
+          // RFC 3610 Packet Vector #16
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "00764C63B8058E3C9696766CFA",
+          "D0D0735C531E1BECF049C244",
+          "12DAAC5630EFA5396F770CE1A66B21F7B2101C",
+          8,
+          "14D253C3967B70609B7CBB7C499160283245269A6F49975BCADEAF",
+      },
+      {
+          // RFC 3610 Packet Vector #17
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "00F8B678094E3B3C9696766CFA",
+          "77B60F011C03E1525899BCAE",
+          "E88B6A46C78D63E52EB8C546EFB5DE6F75E9CC0D",
+          8,
+          "5545FF1A085EE2EFBF52B2E04BEE1E2336C73E3F762C0C7744FE7E3C",
+      },
+      {
+          // RFC 3610 Packet Vector #18
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "00D560912D3F703C9696766CFA",
+          "CD9044D2B71FDB8120EA60C0",
+          "6435ACBAFB11A82E2F071D7CA4A5EBD93A803BA87F",
+          8,
+          "009769ECABDF48625594C59251E6035722675E04C847099E5AE0704551",
+      },
+      {
+          // RFC 3610 Packet Vector #19
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "0042FFF8F1951C3C9696766CFA",
+          "D85BC7E69F944FB8",
+          "8A19B950BCF71A018E5E6701C91787659809D67DBEDD18",
+          10,
+          "BC218DAA947427B6DB386A99AC1AEF23ADE0B52939CB6A637CF9BEC2408897C6BA",
+      },
+      {
+          // RFC 3610 Packet Vector #20
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "00920F40E56CDC3C9696766CFA",
+          "74A0EBC9069F5B37",
+          "1761433C37C5A35FC1F39F406302EB907C6163BE38C98437",
+          10,
+          "5810E6FD25874022E80361A478E3E9CF484AB04F447EFFF6F0A477CC2FC9BF54894"
+          "4",
+      },
+      {
+          // RFC 3610 Packet Vector #21
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "0027CA0C7120BC3C9696766CFA",
+          "44A3AA3AAE6475CA",
+          "A434A8E58500C6E41530538862D686EA9E81301B5AE4226BFA",
+          10,
+          "F2BEED7BC5098E83FEB5B31608F8E29C38819A89C8E776F1544D4151A4ED3A8B87B9"
+          "CE",
+      },
+      {
+          // RFC 3610 Packet Vector #22
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "005B8CCBCD9AF83C9696766CFA",
+          "EC46BB63B02520C33C49FD70",
+          "B96B49E21D621741632875DB7F6C9243D2D7C2",
+          10,
+          "31D750A09DA3ED7FDDD49A2032AABF17EC8EBF7D22C8088C666BE5C197",
+      },
+      {
+          // RFC 3610 Packet Vector #23
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "003EBE94044B9A3C9696766CFA",
+          "47A65AC78B3D594227E85E71",
+          "E2FCFBB880442C731BF95167C8FFD7895E337076",
+          10,
+          "E882F1DBD38CE3EDA7C23F04DD65071EB41342ACDF7E00DCCEC7AE52987D",
+      },
+      {
+          // RFC 3610 Packet Vector #24
+          "D7828D13B2B0BDC325A76236DF93CC6B",
+          "008D493B30AE8B3C9696766CFA",
+          "6E37A6EF546D955D34AB6059",
+          "ABF21C0B02FEB88F856DF4A37381BCE3CC128517D4",
+          10,
+          "F32905B88A641B04B9C9FFB58CC390900F3DA12AB16DCE9E82EFA16DA62059",
+      },
+      {
+          // NIST.SP.800-38C Example 1
+          "404142434445464748494a4b4c4d4e4f",
+          "10111213141516",
+          "0001020304050607",
+          "20212223",
+          4,
+          "7162015b4dac255d",
+      },
+      {
+          // NIST.SP.800-38C Example 2
+          "404142434445464748494a4b4c4d4e4f",
+          "1011121314151617",
+          "000102030405060708090a0b0c0d0e0f",
+          "202122232425262728292a2b2c2d2e2f",
+          6,
+          "d2a1f0e051ea5f62081a7792073d593d1fc64fbfaccd",
+      },
+      {
+          // NIST.SP.800-38C Example 3
+          "404142434445464748494a4b4c4d4e4f",
+          "101112131415161718191a1b",
+          "000102030405060708090a0b0c0d0e0f10111213",
+          "202122232425262728292a2b2c2d2e2f3031323334353637",
+          8,
+          "e3b201a9f5b71a7a9b1ceaeccd97e70b6176aad9a4428aa5484392fbc1b09951",
+      }};
+
+  uint8_t nonce[13] = {0};
+  uint8_t aad[20] = {0};
+  uint8_t plaintext[30] = {0};
+  uint8_t ciphertext[40] = {0};
+  for (size_t i = 0; i < sizeof(vectors) / sizeof(vectors[0]); ++i) {
+    aes_encrypt_ctx ctx;
+    aes_encrypt_key128(fromhex(vectors[i].key), &ctx);
+    size_t nonce_len = strlen(vectors[i].nonce) / 2;
+    memcpy(nonce, fromhex(vectors[i].nonce), nonce_len);
+    size_t aad_len = strlen(vectors[i].aad) / 2;
+    memcpy(aad, fromhex(vectors[i].aad), aad_len);
+    size_t plaintext_len = strlen(vectors[i].plaintext) / 2;
+    memcpy(plaintext, fromhex(vectors[i].plaintext), plaintext_len);
+    size_t ciphertext_len = strlen(vectors[i].ciphertext) / 2;
+
+    // Test encryption.
+    AES_RETURN ret =
+        aes_ccm_encrypt(&ctx, nonce, nonce_len, aad, aad_len, plaintext,
+                        plaintext_len, vectors[i].mac_len, ciphertext);
+    ck_assert_int_eq(ret, EXIT_SUCCESS);
+    ck_assert_mem_eq(ciphertext, fromhex(vectors[i].ciphertext),
+                     ciphertext_len);
+
+    // Test decryption.
+    aes_encrypt_key128(fromhex(vectors[i].key), &ctx);
+    ret = aes_ccm_decrypt(&ctx, nonce, nonce_len, aad, aad_len, ciphertext,
+                          ciphertext_len, vectors[i].mac_len, plaintext);
+    ck_assert_int_eq(ret, EXIT_SUCCESS);
+    ck_assert_mem_eq(plaintext, fromhex(vectors[i].plaintext), plaintext_len);
+  }
+}
+END_TEST
+
 #define TEST1 "abc"
 #define TEST2_1 "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
 #define TEST2_2a "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
@@ -4277,6 +4572,97 @@ START_TEST(test_sha256) {
     }
     sha256_Final(&ctx, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].result), SHA256_DIGEST_LENGTH);
+  }
+}
+END_TEST
+
+#define TEST7_384 "\x8b\xc5\x00\xc7\x7c\xee\xd9\x87\x9d\xa9\x89\x10\x7c\xe0\xaa"
+#define TEST8_384 \
+  "\xa4\x1c\x49\x77\x79\xc0\x37\x5f\xf1\x0a\x7f\x4e\x08\x59\x17\x39"
+#define TEST9_384                                                    \
+  "\x68\xf5\x01\x79\x2d\xea\x97\x96\x76\x70\x22\xd9\x3d\xa7\x16\x79" \
+  "\x30\x99\x20\xfa\x10\x12\xae\xa3\x57\xb2\xb1\x33\x1d\x40\xa1\xd0" \
+  "\x3c\x41\xc2\x40\xb3\xc9\xa7\x5b\x48\x92\xf4\xc0\x72\x4b\x68\xc8" \
+  "\x75\x32\x1a\xb8\xcf\xe5\x02\x3b\xd3\x75\xbc\x0f\x94\xbd\x89\xfe" \
+  "\x04\xf2\x97\x10\x5d\x7b\x82\xff\xc0\x02\x1a\xeb\x1c\xcb\x67\x4f" \
+  "\x52\x44\xea\x34\x97\xde\x26\xa4\x19\x1c\x5f\x62\xe5\xe9\xa2\xd8" \
+  "\x08\x2f\x05\x51\xf4\xa5\x30\x68\x26\xe9\x1c\xc0\x06\xce\x1b\xf6" \
+  "\x0f\xf7\x19\xd4\x2f\xa5\x21\xc8\x71\xcd\x23\x94\xd9\x6e\xf4\x46" \
+  "\x8f\x21\x96\x6b\x41\xf2\xba\x80\xc2\x6e\x83\xa9"
+#define TEST10_384                                                   \
+  "\x39\x96\x69\xe2\x8f\x6b\x9c\x6d\xbc\xbb\x69\x12\xec\x10\xff\xcf" \
+  "\x74\x79\x03\x49\xb7\xdc\x8f\xbe\x4a\x8e\x7b\x3b\x56\x21\xdb\x0f" \
+  "\x3e\x7d\xc8\x7f\x82\x32\x64\xbb\xe4\x0d\x18\x11\xc9\xea\x20\x61" \
+  "\xe1\xc8\x4a\xd1\x0a\x23\xfa\xc1\x72\x7e\x72\x02\xfc\x3f\x50\x42" \
+  "\xe6\xbf\x58\xcb\xa8\xa2\x74\x6e\x1f\x64\xf9\xb9\xea\x35\x2c\x71" \
+  "\x15\x07\x05\x3c\xf4\xe5\x33\x9d\x52\x86\x5f\x25\xcc\x22\xb5\xe8" \
+  "\x77\x84\xa1\x2f\xc9\x61\xd6\x6c\xb6\xe8\x95\x73\x19\x9a\x2c\xe6" \
+  "\x56\x5c\xbd\xf1\x3d\xca\x40\x38\x32\xcf\xcb\x0e\x8b\x72\x11\xe8" \
+  "\x3a\xf3\x2a\x11\xac\x17\x92\x9f\xf1\xc0\x73\xa5\x1c\xc0\x27\xaa" \
+  "\xed\xef\xf8\x5a\xad\x7c\x2b\x7c\x5a\x80\x3e\x24\x04\xd9\x6d\x2a" \
+  "\x77\x35\x7b\xda\x1a\x6d\xae\xed\x17\x15\x1c\xb9\xbc\x51\x25\xa4" \
+  "\x22\xe9\x41\xde\x0c\xa0\xfc\x50\x11\xc2\x3e\xcf\xfe\xfd\xd0\x96" \
+  "\x76\x71\x1c\xf3\xdb\x0a\x34\x40\x72\x0e\x16\x15\xc1\xf2\x2f\xbc" \
+  "\x3c\x72\x1d\xe5\x21\xe1\xb9\x9b\xa1\xbd\x55\x77\x40\x86\x42\x14" \
+  "\x7e\xd0\x96"
+
+// test vectors from rfc-4634
+START_TEST(test_sha384) {
+  struct {
+    const char *test;
+    int length;
+    int repeatcount;
+    int extrabits;
+    int numberExtrabits;
+    const char *result;
+  } tests[] = {/* 1 */ {TEST1, length(TEST1), 1, 0, 0,
+                        "CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED163"
+                        "1A8B605A43FF5BED8086072BA1E7CC2358BAECA134C825A7"},
+               /* 2 */
+               {TEST2_2, length(TEST2_2), 1, 0, 0,
+                "09330C33F71147E83D192FC782CD1B4753111B173B3B05D2"
+                "2FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039"},
+               /* 3 */
+               {TEST3, length(TEST3), 1000000, 0, 0,
+                "9D0E1809716474CB086E834E310A4A1CED149E9C00F24852"
+                "7972CEC5704C2A5B07B8B3DC38ECC4EBAE97DDD87F3D8985"},
+               /* 4 */
+               {TEST4, length(TEST4), 10, 0, 0,
+                "2FC64A4F500DDB6828F6A3430B8DD72A368EB7F3A8322A70"
+                "BC84275B9C0B3AB00D27A5CC3C2D224AA6B61A0D79FB4596"},
+               /* 5 */
+               {"", 0, 0, 0x10, 5,
+                "8D17BE79E32B6718E07D8A603EB84BA0478F7FCFD1BB9399"
+                "5F7D1149E09143AC1FFCFC56820E469F3878D957A15A3FE4"},
+               /* 6 */
+               {"\xb9", 1, 1, 0, 0,
+                "BC8089A19007C0B14195F4ECC74094FEC64F01F90929282C"
+                "2FB392881578208AD466828B1C6C283D2722CF0AD1AB6938"},
+               /* 7 */
+               {TEST7_384, length(TEST7_384), 1, 0xA0, 3,
+                "D8C43B38E12E7C42A7C9B810299FD6A770BEF30920F17532"
+                "A898DE62C7A07E4293449C0B5FA70109F0783211CFC4BCE3"},
+               /* 8 */
+               {TEST8_384, length(TEST8_384), 1, 0, 0,
+                "C9A68443A005812256B8EC76B00516F0DBB74FAB26D66591"
+                "3F194B6FFB0E91EA9967566B58109CBC675CC208E4C823F7"},
+               /* 9 */
+               {TEST9_384, length(TEST9_384), 1, 0xE0, 3,
+                "5860E8DE91C21578BB4174D227898A98E0B45C4C760F0095"
+                "49495614DAEDC0775D92D11D9F8CE9B064EEAC8DAFC3A297"},
+               /* 10 */
+               {TEST10_384, length(TEST10_384), 1, 0, 0,
+                "4F440DB1E6EDD2899FA335F09515AA025EE177A79F4B4AAF"
+                "38E42B5C4DE660F5DE8FB2A5B2FBD2A3CBFFD20CFF1288C0"}};
+
+  for (int i = 0; i < 10; i++) {
+    uint8_t digest[SHA384_DIGEST_LENGTH];
+    /* extra bits are not supported */
+    if (tests[i].numberExtrabits) continue;
+    /* repeat count not supported */
+    if (tests[i].repeatcount != 1) continue;
+    sha384_Raw((const uint8_t *)tests[i].test, tests[i].length, digest);
+    ck_assert_mem_eq(digest, fromhex(tests[i].result), sizeof(digest));
   }
 }
 END_TEST
@@ -5156,6 +5542,56 @@ START_TEST(test_pbkdf2_hmac_sha512) {
           "8c0511f4c6e597c6ac6315d8f0362e225f3c501495ba23b868c005174dc4ee71115b"
           "59f9e60cd9532fa33e0f75aefe30225c583a186cd82bd4daea9724a3d3b8"),
       64);
+}
+END_TEST
+
+START_TEST(test_tls_prf_sha256) {
+  static const struct {
+    const char *secret;
+    const char *label;
+    const char *seed;
+    const char *result;
+  } tests[] = {
+      {
+          // Test vector from
+          // https://github.com/Infineon/optiga-trust-m/tree/develop/pal
+          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+          "426162796c6f6e20505246204170704e6f7465",
+          "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+          "bf88ebdefa7846a110559188d422f3f7fafef4a549bdaace3739c944657f2dd9bc30"
+          "831447d0ed1c89f65823b2ece052f3b795ede86cad59ca473b3a78986369446562c9"
+          "a40d6aac59a204fa0e44b7d7",
+      },
+      {
+          // Test vector from
+          // www.ietf.org/mail-archive/web/tls/current/msg03416.html
+          "9bbe436ba940f017b17652849a71db35",
+          "74657374206c6162656c",
+          "a0ba9f936cda311827a6f796ffd5198c",
+          "e3f229ba727be17b8d122620557cd453c2aab21d07c3d495329b52d4e61edb5a6b30"
+          "1791e90d35c9c9a46b4e14baf9af0fa022f7077def17abfd3797c0564bab4fbc9166"
+          "6e9def9b97fce34f796789baa48082d122ee42c5a72e5a5110fff70187347b66",
+      },
+  };
+
+  uint8_t secret[32] = {0};
+  uint8_t label[20] = {0};
+  uint8_t seed[32] = {0};
+  uint8_t output[100] = {0};
+
+  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+    size_t secret_len = strlen(tests[i].secret) / 2;
+    size_t label_len = strlen(tests[i].label) / 2;
+    size_t seed_len = strlen(tests[i].seed) / 2;
+    size_t result_len = strlen(tests[i].result) / 2;
+    memcpy(secret, fromhex(tests[i].secret), secret_len);
+    memcpy(label, fromhex(tests[i].label), label_len);
+    memcpy(seed, fromhex(tests[i].seed), seed_len);
+
+    tls_prf_sha256(secret, secret_len, label, label_len, seed, seed_len, output,
+                   result_len);
+    ck_assert_mem_eq(output, fromhex(tests[i].result), result_len);
+  }
 }
 END_TEST
 
@@ -9572,9 +10008,14 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_aes);
   suite_add_tcase(s, tc);
 
+  tc = tcase_create("aes_ccm");
+  tcase_add_test(tc, test_aesccm);
+  suite_add_tcase(s, tc);
+
   tc = tcase_create("sha2");
   tcase_add_test(tc, test_sha1);
   tcase_add_test(tc, test_sha256);
+  tcase_add_test(tc, test_sha384);
   tcase_add_test(tc, test_sha512);
   suite_add_tcase(s, tc);
 
@@ -9601,6 +10042,10 @@ Suite *test_suite(void) {
   tc = tcase_create("pbkdf2");
   tcase_add_test(tc, test_pbkdf2_hmac_sha256);
   tcase_add_test(tc, test_pbkdf2_hmac_sha512);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("tls_prf");
+  tcase_add_test(tc, test_tls_prf_sha256);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("hmac_drbg");

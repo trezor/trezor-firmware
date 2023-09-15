@@ -2,7 +2,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            text::{LineBreaking, PageBreaking, TextStyle},
+            text::{layout::Chunks, LineBreaking, PageBreaking, TextStyle},
             FixedHeightBar,
         },
         display::{Color, Font, Icon},
@@ -517,6 +517,18 @@ pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, 
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_PAGE_NEXT, 0)
     .with_prev_page_icon(ICON_PAGE_PREV, 0);
+/// Makes sure that the displayed text (usually address) will get divided into
+/// smaller chunks.
+pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO
+    .with_chunks(Chunks::new(4, 9))
+    .with_line_spacing(5);
+/// Smaller horizontal chunk offset, used e.g. for long Cardano addresses.
+/// Also moving the next page ellipsis to the left (as there is a space on the
+/// left).
+pub const TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET: TextStyle = TEXT_MONO
+    .with_chunks(Chunks::new(4, 7))
+    .with_line_spacing(5)
+    .with_ellipsis_icon(ICON_PAGE_NEXT, -12);
 
 /// Convert Python-side numeric id to a `TextStyle`.
 pub fn textstyle_number(num: i32) -> &'static TextStyle {

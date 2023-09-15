@@ -311,4 +311,4 @@ def test_pin_same_as_wipe_code(device_handler: "BackgroundDeviceHandler"):
         _enter_two_times(debug, "1", "1")
     with PIN_INVALID, prepare(device_handler, Situation.PIN_SETUP) as debug:
         _enter_two_times(debug, "1", "1")
-        go_back(debug)
+        go_back(debug, r_middle=True)

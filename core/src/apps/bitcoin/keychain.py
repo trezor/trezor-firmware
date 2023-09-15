@@ -7,7 +7,7 @@ from trezor.messages import AuthorizeCoinJoin, SignMessage
 from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema, unharden
 
 from . import authorization
-from .common import BITCOIN_NAMES
+from .common import BIP32_WALLET_DEPTH, BITCOIN_NAMES
 
 if TYPE_CHECKING:
     from typing import Awaitable, Callable, Iterable, TypeVar
@@ -341,6 +341,7 @@ class AccountType:
         require_segwit: bool,
         require_bech32: bool,
         require_taproot: bool,
+        account_level: bool = False,
     ):
         self.account_name = account_name
         self.pattern = pattern
@@ -348,16 +349,24 @@ class AccountType:
         self.require_segwit = require_segwit
         self.require_bech32 = require_bech32
         self.require_taproot = require_taproot
+        self.account_level = account_level
 
     def get_name(
         self,
         coin: coininfo.CoinInfo,
         address_n: Bip32Path,
         script_type: InputScriptType | None,
+        show_account_str: bool,
     ) -> str | None:
+        pattern = self.pattern
+        if self.account_level:
+            # Discard the last two parts of the pattern. For bitcoin these generally are `change`
+            # and `address_index`. The result can be used to match XPUB paths.
+            pattern = "/".join(pattern.split("/")[:-BIP32_WALLET_DEPTH])
+
         if (
             (script_type is not None and script_type != self.script_type)
-            or not PathSchema.parse(self.pattern, coin.slip44).match(address_n)
+            or not PathSchema.parse(pattern, coin.slip44).match(address_n)
             or (not coin.segwit and self.require_segwit)
             or (not coin.bech32_prefix and self.require_bech32)
             or (not coin.taproot and self.require_taproot)
@@ -365,9 +374,11 @@ class AccountType:
             return None
 
         name = self.account_name
-        account_pos = self.pattern.find("/account'")
+        if show_account_str:
+            name = f"{self.account_name} account"
+        account_pos = pattern.find("/account'")
         if account_pos >= 0:
-            i = self.pattern.count("/", 0, account_pos)
+            i = pattern.count("/", 0, account_pos)
             account_number = unharden(address_n[i]) + 1
             name += f" #{account_number}"
 
@@ -378,6 +389,8 @@ def address_n_to_name(
     coin: coininfo.CoinInfo,
     address_n: Bip32Path,
     script_type: InputScriptType | None = None,
+    account_level: bool = False,
+    show_account_str: bool = False,
 ) -> str | None:
     ACCOUNT_TYPES = (
         AccountType(
@@ -387,6 +400,7 @@ def address_n_to_name(
             require_segwit=True,
             require_bech32=False,
             require_taproot=False,
+            account_level=account_level,
         ),
         AccountType(
             "",
@@ -395,6 +409,7 @@ def address_n_to_name(
             require_segwit=False,
             require_bech32=False,
             require_taproot=False,
+            account_level=account_level,
         ),
         AccountType(
             "L. SegWit",
@@ -403,6 +418,7 @@ def address_n_to_name(
             require_segwit=True,
             require_bech32=False,
             require_taproot=False,
+            account_level=account_level,
         ),
         AccountType(
             "SegWit",
@@ -411,6 +427,7 @@ def address_n_to_name(
             require_segwit=True,
             require_bech32=True,
             require_taproot=False,
+            account_level=account_level,
         ),
         AccountType(
             "Taproot",
@@ -419,6 +436,7 @@ def address_n_to_name(
             require_segwit=False,
             require_bech32=True,
             require_taproot=True,
+            account_level=account_level,
         ),
         AccountType(
             "Coinjoin",
@@ -427,11 +445,12 @@ def address_n_to_name(
             require_segwit=False,
             require_bech32=True,
             require_taproot=True,
+            account_level=account_level,
         ),
     )
 
     for account in ACCOUNT_TYPES:
-        name = account.get_name(coin, address_n, script_type)
+        name = account.get_name(coin, address_n, script_type, show_account_str)
         if name:
             return name
 

@@ -164,6 +164,7 @@ message CardanoGetAddress {
     required uint32 network_id = 4;                                 // network id - mainnet or testnet
     required CardanoAddressParametersType address_parameters = 5;   // parameters used to derive the address
     required CardanoDerivationType derivation_type = 6;
+    optional bool chunkify = 7;                                     // display the address in chunks of 4 characters
 }
 
 /**
@@ -223,6 +224,7 @@ message CardanoSignTxInit {
     optional bool has_collateral_return = 19 [default=false];
     optional uint64 total_collateral = 20;
     optional uint32 reference_inputs_count = 21 [default=0];
+    optional bool chunkify = 22;                                // display the address in chunks of 4 characters
 }
 
 /**

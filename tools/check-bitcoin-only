@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 RETURN=0
 
 EXCEPTIONS=()
@@ -10,6 +10,7 @@ EXCEPTIONS+=( "mnemonic" )  # has NEM in it
 EXCEPTIONS+=( "workflow" "overflow" )  # has Flo in it
 EXCEPTIONS+=( "SyntaxError" )  # has Axe in it
 EXCEPTIONS+=( "DKDNEM" )  # has NEM in it, some sort of weird coincidence
+EXCEPTIONS+=( "confirm_ethereum_tx" )  # is model-specific, so is in layout/__init__.py instead of ethereum/layout.py
 
 GREP_ARGS=()
 for exception in "${EXCEPTIONS[@]}"; do
@@ -17,7 +18,7 @@ for exception in "${EXCEPTIONS[@]}"; do
 done
 
 # dump all coins except the first 3 (Bitcoin, Testnet, Regtest)
-ALTCOINS=$(./common/tools/cointool.py dump -l -p -t -d trezor1 -d trezor2 | grep '"name"' | cut -d '"' -f 4 | tail -n +4)
+ALTCOINS=$(./common/tools/cointool.py dump -l -p -t -d T1B1 -d T2T1 -d T2B1 | grep '"name"' | cut -d '"' -f 4 | tail -n +4)
 # split on newlines only
 OLDIFS=$IFS
 IFS="

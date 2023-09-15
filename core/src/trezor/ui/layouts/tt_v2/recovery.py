@@ -20,6 +20,7 @@ async def _is_confirmed_info(
 
         if result is trezorui2.INFO:
             await info_func()
+            dialog.request_complete_repaint()
         else:
             return result is CONFIRMED
 

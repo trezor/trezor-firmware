@@ -144,6 +144,7 @@ class BasicApprover(Approver):
         super().__init__(tx, coin)
         self.change_count = 0  # the number of change-outputs
         self.foreign_address_confirmed = False
+        self.chunkify = bool(tx.chunkify)
 
     async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         if not validate_path_against_script_type(self.coin, txi):
@@ -224,7 +225,11 @@ class BasicApprover(Approver):
             # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
             await helpers.confirm_output(
-                txo, self.coin, self.amount_unit, self.external_output_index
+                txo,
+                self.coin,
+                self.amount_unit,
+                self.external_output_index,
+                self.chunkify,
             )
             self.external_output_index += 1
 
@@ -273,6 +278,9 @@ class BasicApprover(Approver):
 
         if self.has_unverified_external_input:
             await helpers.confirm_unverified_external_input()
+
+        if tx_info.wallet_path.get_path() is None:
+            await helpers.confirm_multiple_accounts()
 
         fee = self.total_in - self.total_out
 

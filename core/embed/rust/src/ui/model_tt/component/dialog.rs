@@ -119,17 +119,23 @@ where
         }
     }
 
-    pub fn with_text(mut self, style: &'static TextStyle, text: T) -> Self {
-        if !text.as_ref().is_empty() {
-            self.paragraphs
-                .inner_mut()
-                .add(Paragraph::new(style, text).centered());
+    pub fn with_paragraph(mut self, para: Paragraph<T>) -> Self {
+        if !para.content().as_ref().is_empty() {
+            self.paragraphs.inner_mut().add(para);
         }
         self
     }
 
+    pub fn with_text(self, style: &'static TextStyle, text: T) -> Self {
+        self.with_paragraph(Paragraph::new(style, text).centered())
+    }
+
     pub fn with_description(self, description: T) -> Self {
         self.with_text(&theme::TEXT_NORMAL_OFF_WHITE, description)
+    }
+
+    pub fn with_value(self, value: T) -> Self {
+        self.with_text(&theme::TEXT_MONO, value)
     }
 
     pub fn new_shares(lines: [T; 4], controls: U) -> Self {

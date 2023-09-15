@@ -69,6 +69,7 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
             addr,
             address_qr="monero:" + addr,
             path=paths.address_n_to_str(msg.address_n),
+            chunkify=bool(msg.chunkify),
         )
 
     return MoneroAddress(address=addr.encode())

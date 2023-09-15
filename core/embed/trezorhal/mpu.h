@@ -23,5 +23,6 @@
 void mpu_config_off(void);
 void mpu_config_bootloader(void);
 void mpu_config_firmware(void);
+void mpu_config_prodtest(void);
 
 #endif
