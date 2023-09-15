@@ -551,6 +551,21 @@ def assert_bn_subtractmod(x, y, prime):
     assert res % prime == (x - y) % prime
 
 
+def legendre(x, prime):
+    res = pow(x, (prime - 1) // 2, prime)
+    if res == prime - 1:
+        return -1
+    return res
+
+
+def assert_bn_legendre(x, prime):
+    bn_x = int_to_bignum(x)
+    bn_prime = int_to_bignum(prime)
+    return_value = lib.bn_legendre(bn_x, bn_prime)
+
+    assert return_value == legendre(x, prime)
+
+
 def assert_bn_subtract(x, y):
     bn_x = int_to_bignum(x)
     bn_y = int_to_bignum(y)
@@ -1003,6 +1018,11 @@ def test_bn_subtract_2(r):
     if a < b:
         a, b = b, a
     assert_bn_subtract(a, b)
+
+
+def test_bn_legendre(r, prime):
+    x = r.rand_int_bitsize(259)
+    assert_bn_legendre(x, prime)
 
 
 def test_bn_long_division(r):

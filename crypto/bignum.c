@@ -1591,6 +1591,39 @@ void bn_subtract(const bignum256 *x, const bignum256 *y, bignum256 *res) {
   //     == 1
 }
 
+// Returns 0 if x is zero
+// Returns 1 if x is a square modulo prime
+// Returns -1 if x is not a square modulo prime
+// Assumes x is normalized, x < 2**259
+// Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
+// Assumes prime is a prime
+// The function doesn't have neither constant control flow nor constant memory
+//  access flow with regard to prime
+int bn_legendre(const bignum256 *x, const bignum256 *prime) {
+  // This is a naive implementation
+  // A better implementation would be to use the Euclidean algorithm together with the quadratic reciprocity law
+
+  // e = (prime - 1) / 2
+  bignum256 e = {0};
+  bn_copy(prime, &e);
+  bn_rshift(&e);
+
+  // res = x**e % prime
+  bignum256 res = {0};
+  bn_power_mod(x, &e, prime, &res);
+  bn_mod(&res, prime);
+
+  if (bn_is_one(&res)) {
+    return 1;
+  }
+
+  if (bn_is_zero(&res)) {
+    return 0;
+  }
+
+  return -1;
+}
+
 // q = x // d, r = x % d
 // Assumes x is normalized, 1 <= d <= 61304
 // Guarantees q is normalized
