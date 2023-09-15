@@ -36,13 +36,15 @@
 static uint8_t tx_buffer[OPTIGA_MAX_APDU_SIZE] = {0};
 static size_t tx_size = 0;
 
-const optiga_metadata_item OPTIGA_LCS_OPERATIONAL = {(const uint8_t *)"\x07",
-                                                     1};
-const optiga_metadata_item OPTIGA_ACCESS_ALWAYS = {
+const optiga_metadata_item OPTIGA_META_LCS_OPERATIONAL = {
+    (const uint8_t *)"\x07", 1};
+const optiga_metadata_item OPTIGA_META_ACCESS_ALWAYS = {
     (const uint8_t[]){OPTIGA_ACCESS_COND_ALW}, 1};
-const optiga_metadata_item OPTIGA_ACCESS_NEVER = {
+const optiga_metadata_item OPTIGA_META_ACCESS_NEVER = {
     (const uint8_t[]){OPTIGA_ACCESS_COND_NEV}, 1};
-const optiga_metadata_item OPTIGA_VERSION_DEFAULT = {
+const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE = {
+    (const uint8_t[]){OPTIGA_KEY_USAGE_KEYAGREE}, 1};
+static const optiga_metadata_item OPTIGA_META_VERSION_DEFAULT = {
     (const uint8_t *)"\xC1\x02\x00\x00", 4};
 
 static optiga_result process_output_fixedlen(uint8_t *data, size_t data_size) {
@@ -113,13 +115,13 @@ static const struct {
   uint8_t tag;
   const optiga_metadata_item *default_value;
 } METADATA_OFFSET_TAG_MAP[] = {
-    {offsetof(optiga_metadata, lcso), 0xC0, &OPTIGA_LCS_OPERATIONAL},
-    {offsetof(optiga_metadata, version), 0xC1, &OPTIGA_VERSION_DEFAULT},
+    {offsetof(optiga_metadata, lcso), 0xC0, &OPTIGA_META_LCS_OPERATIONAL},
+    {offsetof(optiga_metadata, version), 0xC1, &OPTIGA_META_VERSION_DEFAULT},
     {offsetof(optiga_metadata, max_size), 0xC4, NULL},
     {offsetof(optiga_metadata, used_size), 0xC5, NULL},
-    {offsetof(optiga_metadata, change), 0xD0, &OPTIGA_ACCESS_NEVER},
-    {offsetof(optiga_metadata, read), 0xD1, &OPTIGA_ACCESS_NEVER},
-    {offsetof(optiga_metadata, execute), 0xD3, &OPTIGA_ACCESS_NEVER},
+    {offsetof(optiga_metadata, change), 0xD0, &OPTIGA_META_ACCESS_NEVER},
+    {offsetof(optiga_metadata, read), 0xD1, &OPTIGA_META_ACCESS_NEVER},
+    {offsetof(optiga_metadata, execute), 0xD3, &OPTIGA_META_ACCESS_NEVER},
     {offsetof(optiga_metadata, meta_update), 0xD8, NULL},
     {offsetof(optiga_metadata, algorithm), 0xE0, NULL},
     {offsetof(optiga_metadata, key_usage), 0xE1, NULL},
