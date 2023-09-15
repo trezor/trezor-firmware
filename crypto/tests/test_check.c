@@ -58,6 +58,7 @@
 #include "ed25519-donna/ed25519-donna.h"
 #include "ed25519-donna/ed25519-keccak.h"
 #include "ed25519-donna/ed25519.h"
+#include "hash_to_curve.h"
 #include "hmac_drbg.h"
 #include "memzero.h"
 #include "monero/monero.h"
@@ -9859,6 +9860,171 @@ START_TEST(test_zkp_bip340_verify_publickey) {
 }
 END_TEST
 
+START_TEST(test_expand_message_xmd_sha256) {
+  static struct {
+    const char *msg;
+    const char *dst;
+    const char *expected_output;
+  } tests[] = {
+      // https://www.rfc-editor.org/rfc/rfc9380.html#name-expand_message_xmdsha-256
+      {"", "QUUX-V01-CS02-with-expander-SHA256-128",
+       "68a985b87eb6b46952128911f2a4412bbc302a9d759667f87f7a21d803f07235"},
+      {"abc", "QUUX-V01-CS02-with-expander-SHA256-128",
+       "d8ccab23b5985ccea865c6c97b6e5b8350e794e603b4b97902f53a8a0d605615"},
+      {"abcdef0123456789", "QUUX-V01-CS02-with-expander-SHA256-128",
+       "eff31487c770a893cfb36f912fbfcbff40d5661771ca4b2cb4eafe524333f5c1"},
+      {"q128_"
+       "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+       "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+       "QUUX-V01-CS02-with-expander-SHA256-128",
+       "b23a1d2b4d97b2ef7785562a7e8bac7eed54ed6e97e29aa51bfe3f12ddad1ff9"},
+      {"a512_"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaa",
+       "QUUX-V01-CS02-with-expander-SHA256-128",
+       "4623227bcc01293b8c130bf771da8c298dede7383243dc0993d2d94823958c4c"},
+      {"", "QUUX-V01-CS02-with-expander-SHA256-128",
+       "af84c27ccfd45d41914fdff5df25293e221afc53d8ad2ac06d5e3e29485dadbee0d1215"
+       "87713a3e0dd4d5e69e93eb7cd4f5df4cd103e188cf60cb02edc3edf18eda8576c412b18"
+       "ffb658e3dd6ec849469b979d444cf7b26911a08e63cf31f9dcc541708d3491184472c2c"
+       "29bb749d4286b004ceb5ee6b9a7fa5b646c993f0ced"},
+      {"abc", "QUUX-V01-CS02-with-expander-SHA256-128",
+       "abba86a6129e366fc877aab32fc4ffc70120d8996c88aee2fe4b32d6c7b6437a647e6c3"
+       "163d40b76a73cf6a5674ef1d890f95b664ee0afa5359a5c4e07985635bbecbac65d747d"
+       "3d2da7ec2b8221b17b0ca9dc8a1ac1c07ea6a1e60583e2cb00058e77b7b72a298425cd1"
+       "b941ad4ec65e8afc50303a22c0f99b0509b4c895f40"},
+      {"abcdef0123456789", "QUUX-V01-CS02-with-expander-SHA256-128",
+       "ef904a29bffc4cf9ee82832451c946ac3c8f8058ae97d8d629831a74c6572bd9ebd0df6"
+       "35cd1f208e2038e760c4994984ce73f0d55ea9f22af83ba4734569d4bc95e18350f740c"
+       "07eef653cbb9f87910d833751825f0ebefa1abe5420bb52be14cf489b37fe1a72f7de2d"
+       "10be453b2c9d9eb20c7e3f6edc5a60629178d9478df"},
+      {"q128_"
+       "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+       "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+       "QUUX-V01-CS02-with-expander-SHA256-128",
+       "80be107d0884f0d881bb460322f0443d38bd222db8bd0b0a5312a6fedb49c1bbd88fd75"
+       "d8b9a09486c60123dfa1d73c1cc3169761b17476d3c6b7cbbd727acd0e2c942f4dd96ae"
+       "3da5de368d26b32286e32de7e5a8cb2949f866a0b80c58116b29fa7fabb3ea7d520ee60"
+       "3e0c25bcaf0b9a5e92ec6a1fe4e0391d1cdbce8c68a"},
+      {"a512_"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaa",
+       "QUUX-V01-CS02-with-expander-SHA256-128",
+       "546aff5444b5b79aa6148bd81728704c32decb73a3ba76e9e75885cad9def1d06d6792f"
+       "8a7d12794e90efed817d96920d728896a4510864370c207f99bd4a608ea121700ef01ed"
+       "879745ee3e4ceef777eda6d9e5e38b90c86ea6fb0b36504ba4a45d22e86f6db5dd43d98"
+       "a294bebb9125d5b794e9d2a81181066eb954966a487"},
+  };
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    const size_t output_length = strlen(tests[i].expected_output) / 2;
+    uint8_t output[output_length];
+    uint8_t expected_output[output_length];
+
+    memcpy(expected_output, fromhex(tests[i].expected_output), output_length);
+
+    int res = expand_message_xmd_sha256(
+        (uint8_t *)tests[i].msg, strlen(tests[i].msg), (uint8_t *)tests[i].dst,
+        strlen(tests[i].dst), output, output_length);
+    ck_assert_int_eq(res, true);
+    ck_assert_mem_eq(output, expected_output, output_length);
+  }
+}
+END_TEST
+
+START_TEST(test_hash_to_curve_p256) {
+  static struct {
+    const char *msg;
+    const char *dst;
+    const char *expected_x;
+    const char *expected_y;
+  } tests[] = {
+      // https://www.rfc-editor.org/rfc/rfc9380.html#name-p256_xmdsha-256_sswu_ro_
+      {"", "QUUX-V01-CS02-with-P256_XMD:SHA-256_SSWU_RO_",
+       "2c15230b26dbc6fc9a37051158c95b79656e17a1a920b11394ca91c44247d3e4",
+       "8a7a74985cc5c776cdfe4b1f19884970453912e9d31528c060be9ab5c43e8415"},
+      {"abc", "QUUX-V01-CS02-with-P256_XMD:SHA-256_SSWU_RO_",
+       "0bb8b87485551aa43ed54f009230450b492fead5f1cc91658775dac4a3388a0f",
+       "5c41b3d0731a27a7b14bc0bf0ccded2d8751f83493404c84a88e71ffd424212e"},
+      {"abcdef0123456789", "QUUX-V01-CS02-with-P256_XMD:SHA-256_SSWU_RO_",
+       "65038ac8f2b1def042a5df0b33b1f4eca6bff7cb0f9c6c1526811864e544ed80",
+       "cad44d40a656e7aff4002a8de287abc8ae0482b5ae825822bb870d6df9b56ca3"},
+      {"q128_"
+       "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+       "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+       "QUUX-V01-CS02-with-P256_XMD:SHA-256_SSWU_RO_",
+       "4be61ee205094282ba8a2042bcb48d88dfbb609301c49aa8b078533dc65a0b5d",
+       "98f8df449a072c4721d241a3b1236d3caccba603f916ca680f4539d2bfb3c29e"},
+      {"a512_"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+       "aaaaaaaaaaaaaaa",
+       "QUUX-V01-CS02-with-P256_XMD:SHA-256_SSWU_RO_",
+       "457ae2981f70ca85d8e24c308b14db22f3e3862c5ea0f652ca38b5e49cd64bc5",
+       "ecb9f0eadc9aeed232dabc53235368c1394c78de05dd96893eefa62b0f4757dc"},
+  };
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    curve_point point = {0};
+    uint8_t expected_x[32] = {0};
+    uint8_t expected_y[32] = {0};
+    uint8_t x[32] = {0};
+    uint8_t y[32] = {0};
+
+    memcpy(expected_x, fromhex(tests[i].expected_x), 32);
+    memcpy(expected_y, fromhex(tests[i].expected_y), 32);
+
+    int res = hash_to_curve_p256((uint8_t *)tests[i].msg, strlen(tests[i].msg),
+                                 (uint8_t *)tests[i].dst, strlen(tests[i].dst),
+                                 &point);
+    bn_write_be(&point.x, x);
+    bn_write_be(&point.y, y);
+    ck_assert_int_eq(res, true);
+    ck_assert_mem_eq(x, expected_x, 32);
+    ck_assert_mem_eq(y, expected_y, 32);
+  }
+}
+END_TEST
+
+START_TEST(test_hash_to_curve_optiga) {
+  static struct {
+    const char *input;
+    const char *public_key;
+  } tests[] = {
+      {"0000000000000000000000000000000000000000000000000000000000000000",
+       "043d2ce2e6ab3d75430c7ce3627d840fef7856bf6a1b4aa7579d583e5906bb3c897ee7a"
+       "af81ebe6d18a2534e563ba67bb71964d0494737e282f9a99c8370cc7ea6"},
+  };
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    uint8_t input[32] = {0};
+    uint8_t expected_public_key[65] = {0};
+    uint8_t public_key[65] = {0};
+
+    memcpy(input, fromhex(tests[i].input), 32);
+    memcpy(expected_public_key, fromhex(tests[i].public_key), 65);
+
+    int res = hash_to_curve_optiga(input, public_key);
+    ck_assert_int_eq(res, true);
+    ck_assert_mem_eq(public_key, expected_public_key, 65);
+  }
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -10179,6 +10345,12 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_zkp_bip340_verify);
   tcase_add_test(tc, test_zkp_bip340_tweak);
   tcase_add_test(tc, test_zkp_bip340_verify_publickey);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("hash_to_curve");
+  tcase_add_test(tc, test_expand_message_xmd_sha256);
+  tcase_add_test(tc, test_hash_to_curve_p256);
+  tcase_add_test(tc, test_hash_to_curve_optiga);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
