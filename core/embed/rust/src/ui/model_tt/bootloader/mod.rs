@@ -315,7 +315,7 @@ extern "C" fn screen_wipe_success() {
         &RESULT_WIPE,
         Icon::new(CHECK40),
         "Trezor reset\nsuccessfully",
-        RECONNECT_MESSAGE,
+        Label::centered(RECONNECT_MESSAGE, RESULT_WIPE.title_style()).vertically_centered(),
         true,
     );
     show(&mut frame, true);
@@ -327,7 +327,7 @@ extern "C" fn screen_wipe_fail() {
         &RESULT_WIPE,
         Icon::new(WARNING40),
         "Trezor reset was\nnot successful",
-        RECONNECT_MESSAGE,
+        Label::centered(RECONNECT_MESSAGE, RESULT_WIPE.title_style()).vertically_centered(),
         true,
     );
     show(&mut frame, true);
@@ -357,29 +357,29 @@ extern "C" fn screen_install_fail() {
         &RESULT_FW_INSTALL,
         Icon::new(WARNING40),
         "Firmware installation was not successful",
-        RECONNECT_MESSAGE,
+        Label::centered(RECONNECT_MESSAGE, RESULT_FW_INSTALL.title_style()).vertically_centered(),
         true,
     );
     show(&mut frame, true);
 }
 
-fn screen_install_success_bld(msg: &'static str, complete_draw: bool) {
+fn screen_install_success_bld(msg: &str, complete_draw: bool) {
     let mut frame = ResultScreen::new(
         &RESULT_FW_INSTALL,
         Icon::new(CHECK40),
         "Firmware installed\nsuccessfully",
-        msg,
+        Label::centered(msg, RESULT_FW_INSTALL.title_style()).vertically_centered(),
         complete_draw,
     );
     show(&mut frame, complete_draw);
 }
 
-fn screen_install_success_initial(msg: &'static str, complete_draw: bool) {
+fn screen_install_success_initial(msg: &str, complete_draw: bool) {
     let mut frame = ResultScreen::new(
         &RESULT_INITIAL,
         Icon::new(CHECK40),
         "Firmware installed\nsuccessfully",
-        msg,
+        Label::centered(msg, RESULT_INITIAL.title_style()).vertically_centered(),
         complete_draw,
     );
     show(&mut frame, complete_draw);
@@ -387,15 +387,25 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) {
 
 #[no_mangle]
 extern "C" fn screen_install_success(
-    reboot_msg: *const cty::c_char,
+    restart_seconds: u8,
     initial_setup: bool,
     complete_draw: bool,
 ) {
-    let msg = unwrap!(unsafe { from_c_str(reboot_msg) });
-    if initial_setup {
-        screen_install_success_initial(msg, complete_draw)
+    let mut reboot_msg = BootloaderString::new();
+
+    if restart_seconds >= 1 {
+        unwrap!(reboot_msg.push_str("RESTARTING IN "));
+        // in practice, restart_seconds is 5 or less so this is fine
+        let seconds_char = b'0' + restart_seconds % 10;
+        unwrap!(reboot_msg.push(seconds_char as char));
     } else {
-        screen_install_success_bld(msg, complete_draw)
+        unwrap!(reboot_msg.push_str(RECONNECT_MESSAGE));
+    }
+
+    if initial_setup {
+        screen_install_success_initial(reboot_msg.as_str(), complete_draw)
+    } else {
+        screen_install_success_bld(reboot_msg.as_str(), complete_draw)
     }
     display::refresh();
 }
