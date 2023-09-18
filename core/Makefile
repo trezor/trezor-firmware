@@ -349,10 +349,10 @@ combine: ## combine boardloader + bootloader + prodtest into one combined image
 		$(PRODTEST_BUILD_DIR)/combined.bin
 
 upload: ## upload firmware using trezorctl
-	trezorctl firmware_update -f $(FIRMWARE_BUILD_DIR)/firmware.bin
+	trezorctl firmware_update -s -f $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 upload_prodtest: ## upload prodtest using trezorctl
-	trezorctl firmware_update -f $(PRODTEST_BUILD_DIR)/prodtest.bin
+	trezorctl firmware_update -s -f $(PRODTEST_BUILD_DIR)/prodtest.bin
 
 coverage:  ## generate coverage report
 	./tools/coverage-report
