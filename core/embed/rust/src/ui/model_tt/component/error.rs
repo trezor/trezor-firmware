@@ -30,7 +30,10 @@ impl<T: AsRef<str>> ErrorScreen<'_, T> {
     pub fn new(title: T, message: T, footer: T) -> Self {
         let title = Label::centered(title, STYLE.title_style());
         let message = Label::centered(message, STYLE.message_style());
-        let footer = ResultFooter::new(footer, STYLE);
+        let footer = ResultFooter::new(
+            Label::centered(footer, STYLE.title_style()).vertically_centered(),
+            STYLE,
+        );
 
         Self {
             bg: Pad::with_background(FATAL_ERROR_COLOR).with_clear(),
