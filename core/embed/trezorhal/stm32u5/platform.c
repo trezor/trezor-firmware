@@ -117,7 +117,7 @@ void SystemInit(void) {
 
   __HAL_RCC_PLL_FRACN_DISABLE();
 
-  __HAL_RCC_PLL_VCIRANGE(RCC_PLLVCIRANGE_0);
+  __HAL_RCC_PLL_VCIRANGE(RCC_PLLVCIRANGE_1);
 
   __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVR);
 
@@ -131,7 +131,11 @@ void SystemInit(void) {
 
   /** Initializes the CPU, AHB and APB buses clocks
    */
-  __HAL_FLASH_SET_LATENCY(FLASH_LATENCY_4);
+  FLASH->ACR = FLASH_ACR_LATENCY_4WS;
+  // wait until the new wait state config takes effect -- per section 3.5.1
+  // guidance
+  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_4WS)
+    ;
   MODIFY_REG(RCC->CFGR3, RCC_CFGR3_PPRE3, RCC_HCLK_DIV1);
   MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE2, ((RCC_HCLK_DIV1) << 4));
   MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE1, RCC_HCLK_DIV1);
@@ -174,6 +178,10 @@ void SystemInit(void) {
 
   // set CP10 and CP11 to enable full access to the fpu coprocessor;
   SCB->CPACR |= ((3U << 22) | (3U << 20));
+
+  // enable instruction cache
+  // todo check how it works with booloader update from SD
+  ICACHE->CR = ICACHE_CR_EN;
 }
 
 void drop_privileges(void) {
