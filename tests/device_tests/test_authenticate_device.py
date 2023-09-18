@@ -12,7 +12,7 @@ from ..common import compact_size
 pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_t2]
 
 ROOT_PUBLIC_KEY = bytes.fromhex(
-    "04626d58aca84f0fcb52ea63f0eb08de1067b8d406574a715d5e7928f4b67f113a00fb5c5918e74d2327311946c446b242c20fe7347482999bdc1e229b94e27d96"
+    "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
 )
 
 
