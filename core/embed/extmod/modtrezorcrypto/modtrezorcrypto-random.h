@@ -59,28 +59,13 @@ STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
   vstr_init_len(&vstr, len);
 #if USE_OPTIGA
   if (n_args > 1 && mp_obj_is_true(args[1])) {
-    uint8_t *dest = (uint8_t *)vstr.buf;
-    if (!optiga_random_buffer(dest, len)) {
+    if (!optiga_random_buffer((uint8_t *)vstr.buf, len)) {
       vstr_clear(&vstr);
       mp_raise_msg(&mp_type_RuntimeError,
                    "Failed to get randomness from Optiga.");
     }
 
-    uint8_t buffer[4] = {0};
-    while (len > sizeof(buffer)) {
-      random_buffer(buffer, sizeof(buffer));
-      for (int i = 0; i < sizeof(buffer); ++i) {
-        *dest ^= buffer[i];
-        ++dest;
-      }
-      len -= sizeof(buffer);
-    }
-
-    random_buffer(buffer, len);
-    for (int i = 0; i < len; ++i) {
-      *dest ^= buffer[i];
-      ++dest;
-    }
+    random_xor((uint8_t *)vstr.buf, len);
   } else
 #endif
   {

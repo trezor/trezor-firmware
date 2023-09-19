@@ -151,3 +151,19 @@ bool optiga_random_buffer(uint8_t *dest, size_t size) {
   random_buffer(dest, size);
   return true;
 }
+
+bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
+                    const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+                    uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
+  memcpy(out_secret, pin_secret, OPTIGA_PIN_SECRET_SIZE);
+  ui_progress(OPTIGA_PIN_DERIVE_MS);
+  return true;
+}
+
+bool optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
+                       const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+                       uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
+  memcpy(out_secret, pin_secret, OPTIGA_PIN_SECRET_SIZE);
+  ui_progress(OPTIGA_PIN_DERIVE_MS);
+  return true;
+}
