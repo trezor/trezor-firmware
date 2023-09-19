@@ -80,6 +80,15 @@
 #define BN_MAX_DECIMAL_DIGITS \
   79  // floor(log(2**(LIMBS * BITS_PER_LIMB), 10)) + 1
 
+// y = (bignum256) x
+// Assumes x is normalized and x < 2**261 == 2**(BITS_PER_LIMB * LIMBS)
+// Guarantees y is normalized
+void bn_copy_lower(const bignum512 *x, bignum256 *y) {
+  for (int i = 0; i < BN_LIMBS; i++) {
+    y->val[i] = x->val[i];
+  }
+}
+
 // out_number = (bignum256) in_number
 // Assumes in_number is a raw bigendian 256-bit number
 // Guarantees out_number is normalized
@@ -667,12 +676,11 @@ void bn_multiply_reduce_step(bignum512 *res, const bignum256 *prime,
   res->val[d + BN_LIMBS] = 0;
 }
 
-// Auxiliary function for bn_multiply
-// Partly reduces res and stores both in x and res
-// Assumes res in normalized and res < 2**519
+// Partly reduces x
+// Assumes x in normalized and res < 2**519
 // Guarantees x is normalized and partly reduced modulo prime
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
-void bn_multiply_reduce(bignum256 *x, bignum512 *res, const bignum256 *prime) {
+void bn_reduce(bignum512 *x, const bignum256 *prime) {
   for (int i = BN_LIMBS - 1; i >= 0; i--) {
     // res < 2**(256 + 29*i + 31)
     // Proof:
@@ -683,11 +691,7 @@ void bn_multiply_reduce(bignum256 *x, bignum512 *res, const bignum256 *prime) {
     //   else:
     //     res < 2 * prime * 2**(29 * (i + 1))
     //       <= 2**256 * 2**(29*i + 29) < 2**(256 + 29*i + 31)
-    bn_multiply_reduce_step(res, prime, i);
-  }
-
-  for (int i = 0; i < BN_LIMBS; i++) {
-    x->val[i] = res->val[i];
+    bn_multiply_reduce_step(x, prime, i);
   }
 }
 
@@ -699,7 +703,8 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime) {
   bignum512 res = {0};
 
   bn_multiply_long(k, x, &res);
-  bn_multiply_reduce(x, &res, prime);
+  bn_reduce(&res, prime);
+  bn_copy_lower(&res, x);
 
   memzero(&res, sizeof(res));
 }

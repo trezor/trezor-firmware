@@ -197,6 +197,16 @@ class Random(random.Random):
         return self.rand_bignum(2 * limbs_number)
 
 
+def assert_bn_copy_lower(x):
+    x_number = int_to_bignum512(x)
+    y_number = bignum256()
+    lib.bn_copy_lower(x_number, y_number)
+    y = bignum256_to_int(y_number)
+
+    assert bignum_is_normalised(y_number)
+    assert y == x
+
+
 def assert_bn_read_be(in_number):
     raw_in_number = integer_to_raw_number256(in_number, "big")
     bn_out_number = bignum256()
@@ -456,6 +466,17 @@ def assert_bn_multiply(k, x_old, prime):
     assert bignum_is_normalised(bn_x)
     assert number_is_partly_reduced(x_new, prime)
     assert x_new % prime == (k * x_old) % prime
+
+
+def assert_bn_reduce(x_old, prime):
+    bn_x = int_to_bignum512(x_old)
+    bn_prime = int_to_bignum256(prime)
+    lib.bn_reduce(bn_x, bn_prime)
+    x_new = bignum256_to_int(bn_x)
+
+    assert bignum_is_normalised(bn_x)
+    assert number_is_partly_reduced(x_new, prime)
+    assert x_new % prime == x_old % prime
 
 
 def assert_bn_fast_mod(x_old, prime):
@@ -731,6 +752,10 @@ def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing, thousands)
     assert return_value == correct_return_value
 
 
+def test_bn_copy_lower(r):
+    assert_bn_copy_lower(r.rand_int_bitsize(261))
+
+
 def test_bn_read_be(r):
     assert_bn_read_be(r.rand_int_256())
 
@@ -914,6 +939,11 @@ def test_bn_multiply_reduce_step(r, prime):
     k = r.randrange(0, limbs_number)
     res = r.randrange(2 ** (256 + 29 * k + 31))
     assert_bn_multiply_reduce_step(res, prime, k)
+
+
+def test_bn_reduce(r, prime):
+    x = r.rand_int_bitsize(519)
+    assert_bn_reduce(x, prime)
 
 
 def test_bn_multiply(r, prime):
