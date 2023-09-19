@@ -886,7 +886,7 @@ void bn_sqrt(bignum256 *x, const bignum256 *prime) {
   // http://en.wikipedia.org/wiki/Quadratic_residue#Prime_or_prime_power_modulus
   // If prime % 4 == 3, then sqrt(x) % prime == x**((prime+1)//4) % prime
 
-  assert(prime->val[BN_LIMBS - 1] % 4 == 3);
+  assert(prime->val[0] % 4 == 3);
 
   // e = (prime + 1) // 4
   bignum256 e = {0};
