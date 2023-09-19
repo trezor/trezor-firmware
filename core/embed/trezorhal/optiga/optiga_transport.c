@@ -139,9 +139,26 @@ static size_t sec_chan_size = 0;
 #else
 static optiga_log_hex_t log_hex = NULL;
 void optiga_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
-#define OPTIGA_LOG(prefix, data, data_size) \
-  if (log_hex != NULL) {                    \
-    log_hex(prefix, data, data_size);       \
+#define OPTIGA_LOG(prefix, data, data_size)                                  \
+  if (log_hex != NULL) {                                                     \
+    static uint8_t prev_data[4];                                             \
+    static size_t prev_size = 0;                                             \
+    static bool repeated = false;                                            \
+    if (prev_size == data_size && memcmp(data, prev_data, data_size) == 0) { \
+      if (!repeated) {                                                       \
+        repeated = true;                                                     \
+        log_hex(prefix "(REPEATED) ", data, data_size);                      \
+      }                                                                      \
+    } else {                                                                 \
+      repeated = false;                                                      \
+      if (data_size <= sizeof(prev_data)) {                                  \
+        memcpy(prev_data, data, data_size);                                  \
+        prev_size = data_size;                                               \
+      } else {                                                               \
+        prev_size = 0;                                                       \
+      }                                                                      \
+      log_hex(prefix, data, data_size);                                      \
+    }                                                                        \
   }
 #endif
 
