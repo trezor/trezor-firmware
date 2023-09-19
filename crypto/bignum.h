@@ -72,6 +72,7 @@ static inline void write_le(uint8_t *data, uint32_t x) {
   data[0] = x;
 }
 
+void bn_copy_lower(const bignum512 *x, bignum256 *y);
 void bn_read_be(const uint8_t *in_number, bignum256 *out_number);
 void bn_write_be(const bignum256 *in_number, uint8_t *out_number);
 void bn_read_le(const uint8_t *in_number, bignum256 *out_number);
@@ -99,6 +100,7 @@ void bn_mult_half(bignum256 *x, const bignum256 *prime);
 void bn_mult_k(bignum256 *x, uint8_t k, const bignum256 *prime);
 void bn_mod(bignum256 *x, const bignum256 *prime);
 void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime);
+void bn_reduce(bignum512 *x, const bignum256 *prime);
 void bn_fast_mod(bignum256 *x, const bignum256 *prime);
 void bn_power_mod(const bignum256 *x, const bignum256 *e,
                   const bignum256 *prime, bignum256 *res);
