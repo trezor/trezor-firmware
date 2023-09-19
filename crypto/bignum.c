@@ -525,8 +525,7 @@ void bn_mod(bignum256 *x, const bignum256 *prime) {
 // res = k * x
 // Assumes k and x are normalized
 // Guarantees res is normalized 18 digit little endian number in base 2**29
-void bn_multiply_long(const bignum256 *k, const bignum256 *x,
-                      uint32_t res[2 * BN_LIMBS]) {
+void bn_multiply_long(const bignum256 *k, const bignum256 *x, bignum512 *res) {
   // Uses long multiplication in base 2**29, see
   // https://en.wikipedia.org/wiki/Multiplication_algorithm#Long_multiplication
 
@@ -545,7 +544,7 @@ void bn_multiply_long(const bignum256 *k, const bignum256 *x,
       //     <= 2**35 + 9 * 2**58 < 2**64
     }
 
-    res[i] = acc & BN_LIMB_MASK;
+    res->val[i] = acc & BN_LIMB_MASK;
     acc >>= BN_BITS_PER_LIMB;
     // acc <= 2**35 - 1 == 2**(64 - BITS_PER_LIMB) - 1
   }
@@ -563,12 +562,12 @@ void bn_multiply_long(const bignum256 *k, const bignum256 *x,
       //     <= 2**35 + 9 * 2**58 < 2**64
     }
 
-    res[i] = acc & (BN_BASE - 1);
+    res->val[i] = acc & (BN_BASE - 1);
     acc >>= BN_BITS_PER_LIMB;
     // acc < 2**35 == 2**(64 - BITS_PER_LIMB)
   }
 
-  res[2 * BN_LIMBS - 1] = acc;
+  res->val[2 * BN_LIMBS - 1] = acc;
 }
 
 // Auxiliary function for bn_multiply
@@ -576,7 +575,7 @@ void bn_multiply_long(const bignum256 *k, const bignum256 *x,
 // Assumes res is normalized and res < 2**(256 + 29*d + 31)
 // Guarantess res in normalized and res < 2 * prime * 2**(29*d)
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
-void bn_multiply_reduce_step(uint32_t res[2 * BN_LIMBS], const bignum256 *prime,
+void bn_multiply_reduce_step(bignum512 *res, const bignum256 *prime,
                              uint32_t d) {
   // clang-format off
   // Computes res = res - (res // 2**(256 + BITS_PER_LIMB * d)) * prime * 2**(BITS_PER_LIMB * d)
@@ -598,8 +597,9 @@ void bn_multiply_reduce_step(uint32_t res[2 * BN_LIMBS], const bignum256 *prime,
   // clang-format on
 
   uint32_t coef =
-      (res[d + BN_LIMBS - 1] >> (256 - (BN_LIMBS - 1) * BN_BITS_PER_LIMB)) +
-      (res[d + BN_LIMBS] << ((BN_LIMBS * BN_BITS_PER_LIMB) - 256));
+      (res->val[d + BN_LIMBS - 1] >>
+       (256 - (BN_LIMBS - 1) * BN_BITS_PER_LIMB)) +
+      (res->val[d + BN_LIMBS] << ((BN_LIMBS * BN_BITS_PER_LIMB) - 256));
 
   // coef == res // 2**(256 + BITS_PER_LIMB * d)
 
@@ -613,7 +613,7 @@ void bn_multiply_reduce_step(uint32_t res[2 * BN_LIMBS], const bignum256 *prime,
   uint64_t acc = 1ull << shift;
 
   for (int i = 0; i < BN_LIMBS; i++) {
-    acc += (((uint64_t)(BN_BASE - 1)) << shift) + res[d + i] -
+    acc += (((uint64_t)(BN_BASE - 1)) << shift) + res->val[d + i] -
            prime->val[i] * (uint64_t)coef;
     // acc neither overflow 64 bits nor underflow zero
     // Proof:
@@ -633,7 +633,7 @@ void bn_multiply_reduce_step(uint32_t res[2 * BN_LIMBS], const bignum256 *prime,
     //     == (2**35 - 1) + (2**31 + 1) * (2**29 - 1)
     //     <= 2**35 + 2**60 + 2**29 < 2**64
 
-    res[d + i] = acc & BN_LIMB_MASK;
+    res->val[d + i] = acc & BN_LIMB_MASK;
     acc >>= BN_BITS_PER_LIMB;
     // acc <= 2**(64 - BITS_PER_LIMB) - 1 == 2**35 - 1
 
@@ -664,7 +664,7 @@ void bn_multiply_reduce_step(uint32_t res[2 * BN_LIMBS], const bignum256 *prime,
   //     == 1 << shift
   // clang-format on
 
-  res[d + BN_LIMBS] = 0;
+  res->val[d + BN_LIMBS] = 0;
 }
 
 // Auxiliary function for bn_multiply
@@ -672,8 +672,7 @@ void bn_multiply_reduce_step(uint32_t res[2 * BN_LIMBS], const bignum256 *prime,
 // Assumes res in normalized and res < 2**519
 // Guarantees x is normalized and partly reduced modulo prime
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
-void bn_multiply_reduce(bignum256 *x, uint32_t res[2 * BN_LIMBS],
-                        const bignum256 *prime) {
+void bn_multiply_reduce(bignum256 *x, bignum512 *res, const bignum256 *prime) {
   for (int i = BN_LIMBS - 1; i >= 0; i--) {
     // res < 2**(256 + 29*i + 31)
     // Proof:
@@ -688,7 +687,7 @@ void bn_multiply_reduce(bignum256 *x, uint32_t res[2 * BN_LIMBS],
   }
 
   for (int i = 0; i < BN_LIMBS; i++) {
-    x->val[i] = res[i];
+    x->val[i] = res->val[i];
   }
 }
 
@@ -697,12 +696,12 @@ void bn_multiply_reduce(bignum256 *x, uint32_t res[2 * BN_LIMBS],
 // Guarantees x is normalized and partly reduced modulo prime
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
 void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime) {
-  uint32_t res[2 * BN_LIMBS] = {0};
+  bignum512 res = {0};
 
-  bn_multiply_long(k, x, res);
-  bn_multiply_reduce(x, res, prime);
+  bn_multiply_long(k, x, &res);
+  bn_multiply_reduce(x, &res, prime);
 
-  memzero(res, sizeof(res));
+  memzero(&res, sizeof(res));
 }
 
 // Partly reduces x modulo prime

@@ -43,6 +43,11 @@ typedef struct {
   uint32_t val[BN_LIMBS];
 } bignum256;
 
+// Represents the number sum([val[i] * 2**(29*i) for i in range(18))
+typedef struct {
+  uint32_t val[2 * BN_LIMBS];
+} bignum512;
+
 static inline uint32_t read_be(const uint8_t *data) {
   return (((uint32_t)data[0]) << 24) | (((uint32_t)data[1]) << 16) |
          (((uint32_t)data[2]) << 8) | (((uint32_t)data[3]));
