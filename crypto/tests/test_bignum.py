@@ -24,10 +24,13 @@ lib = ctypes.cdll.LoadLibrary(os.path.join(dir, "libtrezor-crypto.so"))
 limbs_number = 9
 bits_per_limb = 29
 
+secp256k1_prime = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+p256_prime = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF
 
-@pytest.fixture()
+
+@pytest.fixture(params=[secp256k1_prime, p256_prime])
 def prime(request):
-    return 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+    return request.param
 
 
 @pytest.fixture(params=range(limbs_number * bits_per_limb))
@@ -400,7 +403,7 @@ def assert_bn_multiply(k, x_old, prime):
 
     assert bignum_is_normalised(bn_x)
     assert number_is_partly_reduced(x_new, prime)
-    assert x_new == (k * x_old) % prime
+    assert x_new % prime == (k * x_old) % prime
 
 
 def assert_bn_fast_mod(x_old, prime):
