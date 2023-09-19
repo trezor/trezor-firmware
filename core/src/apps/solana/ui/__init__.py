@@ -27,11 +27,10 @@ async def show_confirm(count: tuple[int, int] ,instruction: Instruction) -> None
         )
 
     accounts = []
-    # TODO SOL: handle accounts
-    # for account in instruction.accounts_template:
-    #     account_value = instruction.parsed_accounts[account[0]]
-    #     if account_value is not None:
-    #         accounts.append((account[1], account_value))
+    for account in instruction.ui_account_list:
+        account_value = instruction.parsed_accounts[account[0]]
+        if account_value is not None:
+            accounts.append((account[0], account_value[0]))
 
     props = datas + accounts
 

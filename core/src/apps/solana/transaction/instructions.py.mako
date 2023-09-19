@@ -65,7 +65,7 @@ from trezor.utils import BufferReader
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
-    from ..types import RawInstruction
+    from ..types import Address
 
 ## creates the program identifier with address from the template
 % for program in programs["programs"]:
@@ -111,6 +111,7 @@ class Instruction:
         self,
         instruction_data: bytes,
         program_id: str,
+        accounts: list[Address],
         instruction_id: int,
         property_templates: list[dict[str, str | bool]],
         accounts_template: list[dict[str, str | bool]],
@@ -134,20 +135,24 @@ class Instruction:
 
         for property_template in property_templates:
             self.set_property(property_template["name"], parseProperty(reader, property_template))
-        
-        # TODO SOL: parsed account shall be appended here
-        
+
+        for i, account_template in enumerate(accounts_template):
+            self.set_account(account_template["name"], accounts[i])
+
         for index in ui_parameter_list:
             self.ui_parameter_list.append(
                 property_templates[index]["name"]
             )
             # ui_parameter_list: list[tuple[str, str]] | None = None
-        
-        # TODO SOL: ui_account_list shall be appended here
-    
+
+        for index in ui_account_list:
+            self.ui_account_list.append(
+                (accounts_template[index]["name"], accounts[index])
+            )
+
     def __getattr__(self, attr: str) -> Any:
         assert self.parsed_data is not None
-        # assert self.parsed_accounts is not None
+        assert self.parsed_accounts is not None
 
         if attr in self.parsed_data:
             return self.parsed_data[attr]
@@ -155,11 +160,11 @@ class Instruction:
             return self.parsed_accounts[attr]
         else:
             raise AttributeError(f"Attribute {attr} not found")
-    
+
     def set_property(self, attr: str, value: Any) -> None:
         assert self.parsed_data is not None
         self.parsed_data[attr] = value
-    
+
     def set_account(
         self, account: str, value: bytes | tuple[bytes, int] | None
     ) -> None:
@@ -220,7 +225,7 @@ if TYPE_CHECKING:
 % endfor
 
 def get_instruction(
-    program_id: str, instruction_id: int, accounts: list[int], instruction_data: bytes
+    program_id: str, instruction_id: int, instruction_accounts: list[Address], instruction_data: bytes
 ) -> Instruction:
 % for program in programs["programs"]:
 % if len(program["instructions"]) > 0:
@@ -234,6 +239,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 ${getInstructionIdText(instruction)},
                 ${instruction["parameters"]},
                 ${instruction["references"]},

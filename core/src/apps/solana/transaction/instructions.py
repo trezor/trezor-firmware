@@ -7,7 +7,7 @@ from trezor.utils import BufferReader
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
-    from ..types import RawInstruction
+    from ..types import Address
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
@@ -70,10 +70,11 @@ class Instruction:
         self,
         instruction_data: bytes,
         program_id: str,
+        accounts: list[Address],
         instruction_id: int,
         property_templates: list[dict[str, str | bool]],
         accounts_template: list[dict[str, str | bool]],
-        ui_parameter_list: list[str],
+        ui_parameter_list: list[int],
         ui_account_list: list[int],
         ui_identifier: str,
         ui_name: str
@@ -83,7 +84,6 @@ class Instruction:
         self.ui_identifier = ui_identifier
         self.ui_name = ui_name
 
-        # contains the list of parameters that needs to be displayed to the user
         self.ui_parameter_list = []
         self.ui_account_list = []
 
@@ -94,17 +94,21 @@ class Instruction:
 
         for property_template in property_templates:
             self.set_property(property_template["name"], parseProperty(reader, property_template))
-        
-        # TODO SOL: parsed account shall be appended here
-        
+
+        for i, account_template in enumerate(accounts_template):
+            self.set_account(account_template["name"], accounts[i])
+
         for index in ui_parameter_list:
             self.ui_parameter_list.append(
                 property_templates[index]["name"]
             )
             # ui_parameter_list: list[tuple[str, str]] | None = None
-        
-        # TODO SOL: ui_account_list shall be appended here
-    
+
+        for index in ui_account_list:
+            self.ui_account_list.append(
+                (accounts_template[index]["name"], accounts[index])
+            )
+
     def __getattr__(self, attr: str) -> Any:
         assert self.parsed_data is not None
         assert self.parsed_accounts is not None
@@ -115,11 +119,11 @@ class Instruction:
             return self.parsed_accounts[attr]
         else:
             raise AttributeError(f"Attribute {attr} not found")
-    
+
     def set_property(self, attr: str, value: Any) -> None:
         assert self.parsed_data is not None
         self.parsed_data[attr] = value
-    
+
     def set_account(
         self, account: str, value: bytes | tuple[bytes, int] | None
     ) -> None:
@@ -579,13 +583,14 @@ if TYPE_CHECKING:
 
 
 def get_instruction(
-    program_id: str, instruction_id: int, accounts: list[int], instruction_data: bytes
+    program_id: str, instruction_id: int, instruction_accounts: list[Address], instruction_data: bytes
 ) -> Instruction:
     if program_id == SYSTEM_PROGRAM_ID:
         if instruction_id == INS_CREATE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_CREATE_ACCOUNT,
                 [{'name': 'lamports', 'type': 'u64', 'optional': False}, {'name': 'space', 'type': 'u64', 'optional': False}, {'name': 'owner', 'type': 'pubkey', 'optional': False}],
                 [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'New account', 'access': 'w', 'signer': True, 'optional': False}],
@@ -598,6 +603,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_ASSIGN,
                 [{'name': 'owner', 'type': 'pubkey', 'optional': False}],
                 [{'name': 'Assigned account', 'access': 'w', 'signer': True, 'optional': False}],
@@ -610,6 +616,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_TRANSFER,
                 [{'name': 'lamports', 'type': 'u64', 'optional': False}],
                 [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'Recipient account', 'access': 'w', 'signer': False, 'optional': False}],
@@ -622,6 +629,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_CREATE_ACCOUNT_WITH_SEED,
                 [{'name': 'base', 'type': 'pubkey', 'optional': False}, {'name': 'seed', 'type': 'string', 'optional': False}, {'name': 'lamports', 'type': 'u64', 'optional': False}, {'name': 'space', 'type': 'u64', 'optional': False}, {'name': 'owner', 'type': 'pubkey', 'optional': False}],
                 [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'Created account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': True}],
@@ -634,6 +642,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_ALLOCATE,
                 [{'name': 'space', 'type': 'u64', 'optional': False}],
                 [{'name': 'New account', 'access': 'w', 'signer': True, 'optional': False}],
@@ -646,6 +655,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_ALLOCATE_WITH_SEED,
                 [{'name': 'base', 'type': 'pubkey', 'optional': False}, {'name': 'seed', 'type': 'string', 'optional': False}, {'name': 'space', 'type': 'u64', 'optional': False}, {'name': 'owner', 'type': 'pubkey', 'optional': False}],
                 [{'name': 'Allocated account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': False}],
@@ -658,6 +668,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_ASSIGN_WITH_SEED,
                 [{'name': 'base', 'type': 'pubkey', 'optional': False}, {'name': 'seed', 'type': 'string', 'optional': False}, {'name': 'owner', 'type': 'pubkey', 'optional': False}],
                 [{'name': 'Assigned account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': False}],
@@ -675,6 +686,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_INITIALIZE,
                 [{'name': 'staker', 'type': 'pubkey', 'optional': False}, {'name': 'withdrawer', 'type': 'pubkey', 'optional': False}, {'name': 'unix_timestamp', 'type': 'i64', 'optional': False}, {'name': 'epoch', 'type': 'u64', 'optional': False}, {'name': 'custodian', 'type': 'pubkey', 'optional': False}],
                 [{'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Rent sysvar', 'access': '', 'signer': False, 'optional': False}],
@@ -687,6 +699,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_AUTHORIZE,
                 [{'name': 'pubkey', 'type': 'pubkey', 'optional': False}, {'name': 'stakeauthorize', 'type': 'StakeAuthorize', 'optional': False}],
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
@@ -699,6 +712,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_DELEGATE_STAKE,
                 [],
                 [{'name': 'Initialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Vote account', 'access': '', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'config account', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
@@ -711,6 +725,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_SPLIT,
                 [{'name': 'lamports', 'type': 'u64', 'optional': False}],
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
@@ -723,6 +738,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_WITHDRAW,
                 [{'name': 'lamports', 'type': 'u64', 'optional': False}],
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Recipient account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
@@ -735,6 +751,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_DEACTIVATE,
                 [],
                 [{'name': 'Delegated stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
@@ -747,6 +764,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_SET_LOCKUP,
                 [{'name': 'unix_timestamp', 'type': 'i64', 'optional': True}, {'name': 'epoch', 'type': 'u64', 'optional': True}, {'name': 'custodian', 'type': 'pubkey', 'optional': True}],
                 [{'name': 'Initialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Lockup authority or withdraw authority', 'access': '', 'signer': True, 'optional': False}],
@@ -759,6 +777,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_MERGE,
                 [],
                 [{'name': 'Destination stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Source stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
@@ -771,6 +790,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_AUTHORIZE_WITH_SEED,
                 [{'name': 'new_authorized_pubkey', 'type': 'pubkey', 'optional': False}, {'name': 'stake_authorize', 'type': 'StakeAuthorize', 'optional': False}, {'name': 'authority_seed', 'type': 'string', 'optional': False}, {'name': 'authority_owner', 'type': 'pubkey', 'optional': False}],
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
@@ -783,6 +803,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_INITIALIZE_CHECKED,
                 [],
                 [{'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Rent sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake authority', 'access': '', 'signer': False, 'optional': False}, {'name': 'withdraw authority', 'access': '', 'signer': True, 'optional': False}],
@@ -795,6 +816,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_AUTHORIZE_CHECKED,
                 [{'name': 'stakeauthorize', 'type': 'StakeAuthorize', 'optional': False}],
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'new stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
@@ -807,6 +829,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_AUTHORIZE_CHECKED_WITH_SEED,
                 [{'name': 'stake_authorize', 'type': 'StakeAuthorize', 'optional': False}, {'name': 'authority_seed', 'type': 'string', 'optional': False}, {'name': 'authority_owner', 'type': 'pubkey', 'optional': False}],
                 [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'new stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
@@ -819,6 +842,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_SET_LOCKUP_CHECKED,
                 [{'name': 'unix_timestamp', 'type': 'i64', 'optional': True}, {'name': 'epoch', 'type': 'u64', 'optional': True}],
                 [{'name': 'stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Lockup authority or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'New lockup authority', 'access': '', 'signer': True, 'optional': True}],
@@ -836,6 +860,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_REQUEST_HEAP_FRAME,
                 [{'name': 'bytes', 'type': 'u32', 'optional': False}],
                 [],
@@ -848,6 +873,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_SET_COMPUTE_UNIT_LIMIT,
                 [{'name': 'units', 'type': 'u32', 'optional': False}],
                 [],
@@ -860,6 +886,7 @@ def get_instruction(
             return Instruction(
                 instruction_data,
                 program_id,
+                instruction_accounts,
                 INS_SET_COMPUTE_UNIT_PRICE,
                 [{'name': 'lamports', 'type': 'u64', 'optional': False}],
                 [],

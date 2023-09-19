@@ -60,7 +60,8 @@ class Transaction:
         raw_instructions = parseInstructions(serialized_tx)
         for (program_index, instruction_id, accounts, instruction_data) in raw_instructions:
             program_id = self.addresses[program_index][0]
-            instruction = get_instruction(program_id, instruction_id, accounts, instruction_data)
+            instruction_accounts = [self.addresses[account_index] for account_index in accounts]
+            instruction = get_instruction(program_id, instruction_id, instruction_accounts, instruction_data)
             self.instructions.append(instruction)
         
         if not self.is_legacy:
