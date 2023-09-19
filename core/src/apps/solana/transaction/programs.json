@@ -11,7 +11,7 @@
                 },{
                     "program_id": "111111",
                     "instruction_id": 2
-                },
+                }
             ],
             "ui": {
                 "template": "ui_confirm",
