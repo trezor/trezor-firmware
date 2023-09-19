@@ -43,8 +43,8 @@ pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_DATA
     .with_line_spacing(2)
     .with_ellipsis_icon(ICON_NEXT_PAGE, -2);
 
-// Chunks for this model, with accounting for some wider characters in MONO font
-pub const MONO_CHUNKS: Chunks = Chunks::new(4, 4).with_wider_chars("mMwW");
+// Chunks for this model
+pub const MONO_CHUNKS: Chunks = Chunks::new(4, 4);
 
 /// Convert Python-side numeric id to a `TextStyle`.
 pub fn textstyle_number(num: i32) -> &'static TextStyle {
