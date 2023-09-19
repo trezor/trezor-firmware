@@ -216,6 +216,13 @@ def assert_bn_read_be(in_number):
     assert bignum_is_normalised(bn_out_number)
     assert out_number == in_number
 
+
+def assert_bn_read_be_512(in_number):
+    raw_in_number = integer_to_raw_number512(in_number, "big")
+    bn_out_number = bignum512()
+    lib.bn_read_be_512(raw_in_number, bn_out_number)
+    out_number = bignum512_to_int(bn_out_number)
+
     assert bignum_is_normalised(bn_out_number)
     assert out_number == in_number
 
@@ -758,6 +765,10 @@ def test_bn_copy_lower(r):
 
 def test_bn_read_be(r):
     assert_bn_read_be(r.rand_int_256())
+
+
+def test_bn_read_be_512(r):
+    assert_bn_read_be_512(r.rand_int_512())
 
 
 def test_bn_read_le(r):
