@@ -144,7 +144,7 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
         // HTC press of any button will lock the device
-        if let Some(ButtonControllerMsg::Triggered(_)) = self.invisible_buttons.event(ctx, event) {
+        if let Some(ButtonControllerMsg::Triggered(..)) = self.invisible_buttons.event(ctx, event) {
             return Some(());
         }
         None
@@ -202,7 +202,7 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Press of any button will unlock the device
-        if let Some(ButtonControllerMsg::Triggered(_)) = self.invisible_buttons.event(ctx, event) {
+        if let Some(ButtonControllerMsg::Triggered(..)) = self.invisible_buttons.event(ctx, event) {
             return Some(());
         }
         None
@@ -261,7 +261,7 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Left button cancels, right confirms
-        if let Some(ButtonControllerMsg::Triggered(pos)) = self.buttons.event(ctx, event) {
+        if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event) {
             match pos {
                 ButtonPos::Left => return Some(CancelConfirmMsg::Cancelled),
                 ButtonPos::Right => return Some(CancelConfirmMsg::Confirmed),

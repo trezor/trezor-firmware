@@ -291,6 +291,10 @@ where
         self.textbox.delete_last(ctx);
     }
 
+    fn delete_all_digits(&mut self, ctx: &mut EventCtx) {
+        self.textbox.clear(ctx);
+    }
+
     /// Displaying the MENU
     fn show_menu_page(&mut self, ctx: &mut EventCtx) {
         let menu_choices = ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, self.is_empty());
@@ -359,13 +363,18 @@ where
             }
         }
 
-        if let Some(action) = self.choice_page.event(ctx, event) {
+        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
             match action {
                 PassphraseAction::CancelOrDelete => {
                     if self.is_empty() {
                         return Some(CancelConfirmMsg::Cancelled);
                     } else {
-                        self.delete_last_digit(ctx);
+                        // Deleting all when long-pressed
+                        if long_press {
+                            self.delete_all_digits(ctx);
+                        } else {
+                            self.delete_last_digit(ctx);
+                        }
                         self.update_passphrase_dots(ctx);
                         if self.is_empty() {
                             // Allowing for DELETE/CANCEL change

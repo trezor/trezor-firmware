@@ -240,29 +240,34 @@ where
             }
         }
 
-        match self.choice_page.event(ctx, event) {
-            Some(PinAction::Delete) => {
-                self.textbox.delete_last(ctx);
-                self.update(ctx);
-                None
+        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
+            match action {
+                PinAction::Delete => {
+                    // Deleting all when long-pressed
+                    if long_press {
+                        self.textbox.clear(ctx);
+                    } else {
+                        self.textbox.delete_last(ctx);
+                    }
+                    self.update(ctx);
+                }
+                PinAction::Show => {
+                    self.show_real_pin = true;
+                    self.update(ctx);
+                }
+                PinAction::Enter => return Some(CancelConfirmMsg::Confirmed),
+                PinAction::Digit(ch) if !self.is_full() => {
+                    self.textbox.append(ctx, ch);
+                    // Choosing random digit to be shown next
+                    self.choice_page
+                        .set_page_counter(ctx, get_random_digit_position(), true);
+                    self.show_last_digit = true;
+                    self.update(ctx);
+                }
+                _ => {}
             }
-            Some(PinAction::Show) => {
-                self.show_real_pin = true;
-                self.update(ctx);
-                None
-            }
-            Some(PinAction::Enter) => Some(CancelConfirmMsg::Confirmed),
-            Some(PinAction::Digit(ch)) if !self.is_full() => {
-                self.textbox.append(ctx, ch);
-                // Choosing random digit to be shown next
-                self.choice_page
-                    .set_page_counter(ctx, get_random_digit_position(), true);
-                self.show_last_digit = true;
-                self.update(ctx);
-                None
-            }
-            _ => None,
         }
+        None
     }
 
     fn paint(&mut self) {

@@ -134,7 +134,7 @@ where
         self.text.event(ctx, event);
         self.headline.event(ctx, event);
 
-        if let Some(ButtonControllerMsg::Triggered(ButtonPos::Right)) =
+        if let Some(ButtonControllerMsg::Triggered(ButtonPos::Right, _)) =
             self.buttons.event(ctx, event)
         {
             button_confirmed = true;
