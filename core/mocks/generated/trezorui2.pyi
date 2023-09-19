@@ -30,6 +30,15 @@ def confirm_action(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_homescreen(
+    *,
+    title: str,
+    image: bytes,
+) -> object:
+    """Confirm homescreen."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_blob(
     *,
     title: str,

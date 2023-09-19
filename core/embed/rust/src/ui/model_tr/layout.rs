@@ -6,8 +6,15 @@ use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
-        buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, map::Map, module::Module, obj::Obj,
-        qstr::Qstr, util,
+        buffer::{get_buffer, StrBuffer},
+        gc::Gc,
+        iter::IterBuf,
+        list::List,
+        map::Map,
+        module::Module,
+        obj::Obj,
+        qstr::Qstr,
+        util,
     },
     strutil::StringType,
     ui::{
@@ -38,9 +45,10 @@ use crate::{
 use super::{
     component::{
         AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelConfirmMsg,
-        CancelInfoConfirmMsg, CoinJoinProgress, Flow, FlowPages, Frame, Homescreen, Lockscreen,
-        NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableContent, ScrollableFrame,
-        ShareWords, ShowMore, SimpleChoice, WelcomeScreen, WordlistEntry, WordlistType,
+        CancelInfoConfirmMsg, CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame,
+        Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress,
+        ScrollableContent, ScrollableFrame, ShareWords, ShowMore, SimpleChoice, WelcomeScreen,
+        WordlistEntry, WordlistType,
     },
     constant, theme,
 };
@@ -242,6 +250,19 @@ where
     }
 }
 
+impl<'a, T, F> ComponentMsgObj for ConfirmHomescreen<T, F>
+where
+    T: StringType + Clone,
+    F: Fn() -> &'a [u8],
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+            CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
 /// Function to create and call a `ButtonPage` dialog based on paginable content
 /// (e.g. `Paragraphs` or `FormattedText`).
 /// Has optional title (supply empty `StrBuffer` for that) and hold-to-confirm
@@ -389,6 +410,24 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             hold,
         )
     };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let data: Obj = kwargs.get(Qstr::MP_QSTR_image)?;
+
+        // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
+        // in every paint pass.
+        // SAFETY: We expect no existing mutable reference. Resulting reference is
+        //         discarded before returning to micropython.
+        let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
+
+        let obj = LayoutObj::new(ConfirmHomescreen::new(title, buffer_func))?;
+        Ok(obj.into())
+    };
+
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
@@ -1586,6 +1625,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+    /// def confirm_homescreen(
+    ///     *,
+    ///     title: str,
+    ///     image: bytes,
+    /// ) -> object:
+    ///     """Confirm homescreen."""
+    Qstr::MP_QSTR_confirm_homescreen => obj_fn_kw!(0, new_confirm_homescreen).as_obj(),
 
     /// def confirm_blob(
     ///     *,
