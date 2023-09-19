@@ -107,6 +107,30 @@ void bn_read_be(const uint8_t *in_number, bignum256 *out_number) {
   out_number->val[BN_LIMBS - 1] = temp;
 }
 
+// out_number = (bignum512) in_number
+// Assumes in_number is a raw bigendian 512-bit number
+// Guarantees out_number is normalized
+void bn_read_be_512(const uint8_t *in_number, bignum512 *out_number) {
+  bignum256 lower = {0}, upper = {0};
+
+  bn_read_be(in_number + 32, &lower);
+  bn_read_be(in_number, &upper);
+
+  const int shift_length = BN_BITS_PER_LIMB * BN_LIMBS - 256;
+  uint32_t shift = upper.val[0] & ((1 << shift_length) - 1);
+  for (int i = 0; i < shift_length; i++) {
+    bn_rshift(&upper);
+  }
+  lower.val[BN_LIMBS - 1] |= shift << (BN_BITS_PER_LIMB - shift_length);
+
+  for (int i = 0; i < BN_LIMBS; i++) {
+    out_number->val[i] = lower.val[i];
+  }
+  for (int i = 0; i < BN_LIMBS; i++) {
+    out_number->val[i + BN_LIMBS] = upper.val[i];
+  }
+}
+
 // out_number = (256BE) in_number
 // Assumes in_number < 2**256
 // Guarantess out_number is a raw bigendian 256-bit number
