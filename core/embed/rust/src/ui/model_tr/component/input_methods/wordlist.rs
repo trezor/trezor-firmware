@@ -201,19 +201,25 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match self.choice_page.event(ctx, event) {
-            Some(WordlistAction::Delete) => {
-                self.textbox.delete_last(ctx);
-                self.update(ctx);
+        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
+            match action {
+                WordlistAction::Delete => {
+                    // Deleting all when long-pressed
+                    if long_press {
+                        self.textbox.clear(ctx);
+                    } else {
+                        self.textbox.delete_last(ctx);
+                    }
+                    self.update(ctx);
+                }
+                WordlistAction::Letter(letter) => {
+                    self.textbox.append(ctx, letter);
+                    self.update(ctx);
+                }
+                WordlistAction::Word(word) => {
+                    return Some(word);
+                }
             }
-            Some(WordlistAction::Letter(letter)) => {
-                self.textbox.append(ctx, letter);
-                self.update(ctx);
-            }
-            Some(WordlistAction::Word(word)) => {
-                return Some(word);
-            }
-            _ => {}
         }
         None
     }

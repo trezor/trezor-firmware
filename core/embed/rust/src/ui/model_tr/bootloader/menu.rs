@@ -141,7 +141,7 @@ impl Component for Menu {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.choice_page.event(ctx, event)
+        self.choice_page.event(ctx, event).map(|evt| evt.0)
     }
 
     fn paint(&mut self) {

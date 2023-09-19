@@ -67,10 +67,10 @@ impl<'a> Component for Intro<'a> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = self.buttons.event(ctx, event);
 
-        if let Some(Triggered(ButtonPos::Left)) = msg {
+        if let Some(Triggered(ButtonPos::Left, _)) = msg {
             return Some(Self::Msg::InstallFirmware);
         };
-        if let Some(Triggered(ButtonPos::Right)) = msg {
+        if let Some(Triggered(ButtonPos::Right, _)) = msg {
             return Some(Self::Msg::GoToMenu);
         };
         None

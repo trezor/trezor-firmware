@@ -3,7 +3,7 @@ use super::{
 };
 use crate::{
     strutil::StringType,
-    time::Duration,
+    time::{Duration, Instant},
     ui::{
         component::{base::Event, Component, EventCtx, Pad, TimerToken},
         event::{ButtonEvent, PhysicalButton},
@@ -40,7 +40,8 @@ enum ButtonState {
 
 pub enum ButtonControllerMsg {
     Pressed(ButtonPos),
-    Triggered(ButtonPos),
+    /// Which button was triggered, and whether it was pressed for a longer time
+    Triggered(ButtonPos, bool),
 }
 
 /// Defines what kind of button should be currently used.
@@ -105,6 +106,11 @@ where
 {
     pos: ButtonPos,
     button_type: ButtonType<T>,
+    /// Holds the timestamp of when the button was pressed.
+    pressed_since: Option<Instant>,
+    /// How long the button should be pressed to send `long_press=true` in
+    /// `Triggered`
+    long_press_ms: u32,
 }
 
 impl<T> ButtonContainer<T>
@@ -114,9 +120,12 @@ where
     /// Supplying `None` as `btn_details`  marks the button inactive
     /// (it can be later activated in `set()`).
     pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails<T>>) -> Self {
+        const DEFAULT_LONG_PRESS_MS: u32 = 1000;
         Self {
             pos,
             button_type: ButtonType::from_button_details(pos, btn_details),
+            pressed_since: None,
+            long_press_ms: DEFAULT_LONG_PRESS_MS,
         }
     }
 
@@ -151,7 +160,14 @@ where
     /// hold.
     pub fn maybe_trigger(&mut self, ctx: &mut EventCtx) -> Option<ButtonControllerMsg> {
         match self.button_type {
-            ButtonType::Button(_) => Some(ButtonControllerMsg::Triggered(self.pos)),
+            ButtonType::Button(_) => {
+                // Finding out whether the button was long-pressed
+                let long_press = self.pressed_since.map_or(false, |since| {
+                    Instant::now().saturating_duration_since(since).to_millis() > self.long_press_ms
+                });
+                self.pressed_since = None;
+                Some(ButtonControllerMsg::Triggered(self.pos, long_press))
+            }
             _ => {
                 self.hold_ended(ctx);
                 None
@@ -167,6 +183,11 @@ where
             }
         }
         false
+    }
+
+    /// Saving the timestamp of when the button was pressed.
+    pub fn got_pressed(&mut self) {
+        self.pressed_since = Some(Instant::now());
     }
 
     /// Registering hold event.
@@ -283,15 +304,15 @@ where
         if self.left_btn.htc_got_triggered(ctx, event) {
             self.state = ButtonState::HTCNeedsRelease(PhysicalButton::Left);
             self.set_pressed(ctx, false, false, false);
-            return Some(ButtonControllerMsg::Triggered(ButtonPos::Left));
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Left, true));
         } else if self.middle_btn.htc_got_triggered(ctx, event) {
             self.state = ButtonState::Nothing;
             self.set_pressed(ctx, false, false, false);
-            return Some(ButtonControllerMsg::Triggered(ButtonPos::Middle));
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Middle, true));
         } else if self.right_btn.htc_got_triggered(ctx, event) {
             self.state = ButtonState::HTCNeedsRelease(PhysicalButton::Right);
             self.set_pressed(ctx, false, false, false);
-            return Some(ButtonControllerMsg::Triggered(ButtonPos::Right));
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Right, true));
         }
         None
     }
@@ -325,11 +346,13 @@ where
                                 match which {
                                     // ▼ *
                                     PhysicalButton::Left => {
+                                        self.left_btn.got_pressed();
                                         self.left_btn.hold_started(ctx);
                                         Some(ButtonControllerMsg::Pressed(ButtonPos::Left))
                                     }
                                     // * ▼
                                     PhysicalButton::Right => {
+                                        self.right_btn.got_pressed();
                                         self.right_btn.hold_started(ctx);
                                         Some(ButtonControllerMsg::Pressed(ButtonPos::Right))
                                     }
@@ -369,6 +392,7 @@ where
                                     return None;
                                 }
                             }
+                            self.middle_btn.got_pressed();
                             self.middle_hold_started(ctx);
                             (
                                 // ↓ ↓
@@ -399,7 +423,7 @@ where
                         // ▲ * | * ▲
                         ButtonEvent::ButtonReleased(b) if b != which_up => {
                             // _ _
-                            // Both button needs to be clickable now
+                            // Both buttons need to be clickable now
                             if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
                                 ignore_btn_delay.make_button_clickable(ButtonPos::Left);
                                 ignore_btn_delay.make_button_clickable(ButtonPos::Right);

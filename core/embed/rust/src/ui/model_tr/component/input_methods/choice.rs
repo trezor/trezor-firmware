@@ -474,7 +474,7 @@ where
     F: ChoiceFactory<T, Action = A>,
     T: StringType + Clone,
 {
-    type Msg = A;
+    type Msg = (A, bool);
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
@@ -516,7 +516,7 @@ where
             // Stopping the automatic movement when the released button is the same as the
             // direction we were moving, or when the pressed button is the
             // opposite one (user does middle-click).
-            if matches!(button_event, Some(ButtonControllerMsg::Triggered(pos)) if pos == moving_direction)
+            if matches!(button_event, Some(ButtonControllerMsg::Triggered(pos, _)) if pos == moving_direction)
                 || matches!(button_event, Some(ButtonControllerMsg::Pressed(pos)) if pos != moving_direction)
             {
                 self.holding_mover.stop_moving();
@@ -534,7 +534,7 @@ where
         }
 
         // There was a legitimate button event - doing some action
-        if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
+        if let Some(ButtonControllerMsg::Triggered(pos, long_press)) = button_event {
             match pos {
                 ButtonPos::Left => {
                     // Clicked BACK. Decrease the page counter.
@@ -547,9 +547,9 @@ where
                     self.move_right(ctx);
                 }
                 ButtonPos::Middle => {
-                    // Clicked SELECT. Send current choice index
+                    // Clicked SELECT. Send current choice index with information about long-press
                     self.clear_and_repaint(ctx);
-                    return Some(self.get_current_choice().1);
+                    return Some((self.get_current_choice().1, long_press));
                 }
             }
         };

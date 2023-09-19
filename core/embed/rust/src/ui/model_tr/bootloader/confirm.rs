@@ -155,7 +155,7 @@ impl<'a> Component for Confirm<'a> {
         let msg = self.buttons.event(ctx, event);
         if self.showing_info_screen {
             // Showing the info screen currently - going back with the left button
-            if let Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) = msg {
+            if let Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) = msg {
                 self.showing_info_screen = false;
                 self.update_everything(ctx);
             };
@@ -163,11 +163,13 @@ impl<'a> Component for Confirm<'a> {
         } else if self.has_info_screen() {
             // Being on the "main" screen but with an info screen available on the right
             match msg {
-                Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) => Some(ConfirmMsg::Cancel),
-                Some(ButtonControllerMsg::Triggered(ButtonPos::Middle)) => {
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) => {
+                    Some(ConfirmMsg::Cancel)
+                }
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Middle, _)) => {
                     Some(ConfirmMsg::Confirm)
                 }
-                Some(ButtonControllerMsg::Triggered(ButtonPos::Right)) => {
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Right, _)) => {
                     self.showing_info_screen = true;
                     self.update_everything(ctx);
                     None
@@ -176,8 +178,10 @@ impl<'a> Component for Confirm<'a> {
             }
         } else if self.two_btn_confirm {
             match msg {
-                Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) => Some(ConfirmMsg::Cancel),
-                Some(ButtonControllerMsg::Triggered(ButtonPos::Middle)) => {
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) => {
+                    Some(ConfirmMsg::Cancel)
+                }
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Middle, _)) => {
                     Some(ConfirmMsg::Confirm)
                 }
                 _ => None,
@@ -185,8 +189,12 @@ impl<'a> Component for Confirm<'a> {
         } else {
             // There is just one main screen without info screen
             match msg {
-                Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) => Some(ConfirmMsg::Cancel),
-                Some(ButtonControllerMsg::Triggered(ButtonPos::Right)) => Some(ConfirmMsg::Confirm),
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) => {
+                    Some(ConfirmMsg::Cancel)
+                }
+                Some(ButtonControllerMsg::Triggered(ButtonPos::Right, _)) => {
+                    Some(ConfirmMsg::Confirm)
+                }
                 _ => None,
             }
         }

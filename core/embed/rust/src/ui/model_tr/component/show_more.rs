@@ -58,7 +58,7 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let button_event = self.buttons.event(ctx, event);
 
-        if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
+        if let Some(ButtonControllerMsg::Triggered(pos, _)) = button_event {
             match pos {
                 ButtonPos::Left => {
                     return Some(CancelInfoConfirmMsg::Cancelled);

@@ -182,7 +182,7 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         ctx.set_page_count(self.page_count());
-        if let Some(ButtonControllerMsg::Triggered(pos)) = self.buttons.event(ctx, event) {
+        if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event) {
             match pos {
                 ButtonPos::Left => {
                     if self.has_previous_page() {
