@@ -64,6 +64,16 @@ void __attribute__((weak)) random_buffer(uint8_t *buf, size_t len) {
   }
 }
 
+void random_xor(uint8_t *buf, size_t len) {
+  uint8_t r[4] = {0};
+  for (size_t i = 0; i < len; i++) {
+    if (i % sizeof(r) == 0) {
+      random_buffer(r, sizeof(r));
+    }
+    buf[i] ^= r[i % sizeof(r)];
+  }
+}
+
 uint32_t random_uniform(uint32_t n) {
   uint32_t x = 0, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
   while ((x = random32()) >= max)
