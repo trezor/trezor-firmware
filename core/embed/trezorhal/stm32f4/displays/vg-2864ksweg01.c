@@ -92,11 +92,9 @@ void display_pixeldata(uint16_t c) {
   }
 }
 
-#define PIXELDATA(c) display_pixeldata(c)
-
 void display_reset_state() {}
 
-void pixeldata_dirty(void) { pixeldata_dirty_flag = true; }
+void display_pixeldata_dirty(void) { pixeldata_dirty_flag = true; }
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   PIXELWINDOW.start.x = x0;

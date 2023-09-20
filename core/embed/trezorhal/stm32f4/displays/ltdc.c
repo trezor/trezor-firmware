@@ -43,28 +43,29 @@ static int DISPLAY_ORIENTATION = -1;
 // this is just for compatibility with DMA2D using algorithms
 uint8_t *const DISPLAY_DATA_ADDRESS = 0;
 
-uint16_t display_index_x = 0;
-uint16_t display_index_y = 0;
-uint16_t display_window_x0 = 0;
-uint16_t display_window_y0 = MAX_DISPLAY_RESX - 1;
-uint16_t display_window_x1 = 0;
-uint16_t display_window_y1 = MAX_DISPLAY_RESY - 1;
+uint16_t cursor_x = 0;
+uint16_t cursor_y = 0;
+uint16_t window_x0 = 0;
+uint16_t window_y0 = MAX_DISPLAY_RESX - 1;
+uint16_t window_x1 = 0;
+uint16_t window_y1 = MAX_DISPLAY_RESY - 1;
 
 void display_pixeldata(uint16_t c) {
-  ((uint16_t *)LCD_FRAME_BUFFER)[(display_index_y * MAX_DISPLAY_RESX) +
-                                 display_index_x] = c;
+  ((uint16_t *)LCD_FRAME_BUFFER)[(cursor_y * MAX_DISPLAY_RESX) + cursor_x] = c;
 
-  display_index_x++;
+  cursor_x++;
 
-  if (display_index_x > display_window_x1) {
-    display_index_x = display_window_x0;
-    display_index_y++;
+  if (cursor_x > window_x1) {
+    cursor_x = window_x0;
+    cursor_y++;
 
-    if (display_index_y > display_window_y1) {
-      display_index_y = display_window_y0;
+    if (cursor_y > window_y1) {
+      cursor_y = window_y0;
     }
   }
 }
+
+void display_pixeldata_dirty(void) {}
 
 void display_reset_state() {}
 
@@ -192,12 +193,12 @@ void BSP_LCD_SetLayerAddress_NoReload(uint32_t LayerIndex, uint32_t Address) {
 // static struct { uint16_t x, y; } BUFFER_OFFSET;
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
-  display_window_x0 = x0;
-  display_window_x1 = x1;
-  display_window_y0 = y0;
-  display_window_y1 = y1;
-  display_index_x = x0;
-  display_index_y = y0;
+  window_x0 = x0;
+  window_x1 = x1;
+  window_y0 = y0;
+  window_y1 = y1;
+  cursor_x = x0;
+  cursor_y = y0;
 
   //    /* Reconfigure the layer size */
   //    HAL_LTDC_SetWindowSize_NoReload(&LtdcHandler, x1-x0 + 1, y1-y0 + 1, 0);
@@ -371,3 +372,46 @@ void display_sync(void) {}
 const char *display_save(const char *prefix) { return NULL; }
 
 void display_clear_save(void) {}
+
+void display_efficient_clear(void) {
+  memzero((void *)LCD_FRAME_BUFFER, 153600);
+}
+
+uint8_t *display_get_wr_addr(void) {
+  uint32_t address = LCD_FRAME_BUFFER;
+  /* Get the rectangle start address */
+  address = (address + (2 * ((cursor_y)*MAX_DISPLAY_RESX + (cursor_x))));
+
+  return (uint8_t *)address;
+}
+
+uint32_t *display_get_fb_addr(void) { return (uint32_t *)LCD_FRAME_BUFFER; }
+
+uint16_t display_get_window_width(void) { return window_x1 - window_x0 + 1; }
+
+uint16_t display_get_window_height(void) { return window_y1 - window_y0 + 1; }
+
+void display_shift_window(uint16_t pixels) {
+  uint16_t w = display_get_window_width();
+  uint16_t h = display_get_window_height();
+
+  uint16_t line_rem = w - (cursor_x - window_x0);
+
+  if (pixels < line_rem) {
+    cursor_x += pixels;
+    return;
+  }
+
+  // start of next line
+  pixels = pixels - line_rem;
+  cursor_x = window_x0;
+  cursor_y++;
+
+  // add the rest of pixels
+  cursor_y = window_y0 + (((cursor_y - window_y0) + (pixels / w)) % h);
+  cursor_x += pixels % w;
+}
+
+uint16_t display_get_window_offset(void) {
+  return MAX_DISPLAY_RESX - display_get_window_width();
+}

@@ -6,6 +6,20 @@ use crate::trezorhal::buffers::BufferText;
 
 pub use ffi::{DISPLAY_RESX, DISPLAY_RESY};
 
+#[cfg(feature = "framebuffer")]
+pub use ffi::{
+    DISPLAY_FRAMEBUFFER_HEIGHT, DISPLAY_FRAMEBUFFER_OFFSET_X, DISPLAY_FRAMEBUFFER_OFFSET_Y,
+    DISPLAY_FRAMEBUFFER_WIDTH,
+};
+
+#[cfg(all(feature = "framebuffer", not(feature = "framebuffer32bit")))]
+#[derive(Copy, Clone)]
+pub struct FrameBuffer(*mut u16);
+
+#[cfg(all(feature = "framebuffer", feature = "framebuffer32bit"))]
+#[derive(Copy, Clone)]
+pub struct FrameBuffer(*mut u32);
+
 #[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
 pub enum ToifFormat {
     FullColorBE = ffi::toif_format_t_TOIF_FULL_COLOR_BE as _,
@@ -74,37 +88,6 @@ pub fn text_baseline(font: i32) -> i16 {
     unsafe { ffi::font_baseline(font).try_into().unwrap_or(i16::MAX) }
 }
 
-pub fn bar(x: i16, y: i16, w: i16, h: i16, fgcolor: u16) {
-    unsafe { ffi::display_bar(x.into(), y.into(), w.into(), h.into(), fgcolor) }
-}
-
-pub fn bar_radius(x: i16, y: i16, w: i16, h: i16, fgcolor: u16, bgcolor: u16, radius: u8) {
-    unsafe {
-        ffi::display_bar_radius(
-            x.into(),
-            y.into(),
-            w.into(),
-            h.into(),
-            fgcolor,
-            bgcolor,
-            radius,
-        )
-    }
-}
-
-pub fn bar_radius_buffer(x: i16, y: i16, w: i16, h: i16, radius: u8, buffer: &mut BufferText) {
-    unsafe {
-        ffi::display_bar_radius_buffer(
-            x.into(),
-            y.into(),
-            w.into(),
-            h.into(),
-            radius,
-            buffer.deref_mut(),
-        )
-    }
-}
-
 #[inline(always)]
 #[cfg(all(feature = "disp_i8080_16bit_dw", not(feature = "disp_i8080_8bit_dw")))]
 pub fn pixeldata(c: u16) {
@@ -113,12 +96,41 @@ pub fn pixeldata(c: u16) {
     }
 }
 
+#[cfg(feature = "framebuffer")]
+pub fn get_fb_addr() -> FrameBuffer {
+    unsafe { FrameBuffer(ffi::display_get_fb_addr() as _) }
+}
+
 #[inline(always)]
 #[cfg(feature = "disp_i8080_8bit_dw")]
 pub fn pixeldata(c: u16) {
     unsafe {
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c & 0xff) as u8);
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c >> 8) as u8);
+    }
+}
+
+#[inline(always)]
+#[cfg(all(feature = "framebuffer", not(feature = "framebuffer32bit")))]
+pub fn pixel(fb: FrameBuffer, x: i16, y: i16, c: u16) {
+    unsafe {
+        let addr = fb.0.offset(
+            ((y as u32 + DISPLAY_FRAMEBUFFER_OFFSET_Y) * DISPLAY_FRAMEBUFFER_WIDTH
+                + (x as u32 + DISPLAY_FRAMEBUFFER_OFFSET_X)) as isize,
+        );
+        addr.write_volatile(c);
+    }
+}
+
+#[inline(always)]
+#[cfg(all(feature = "framebuffer", feature = "framebuffer32bit"))]
+pub fn pixel(fb: FrameBuffer, x: i16, y: i16, c: u32) {
+    unsafe {
+        let addr = fb.0.offset(
+            ((y as u32 + DISPLAY_FRAMEBUFFER_OFFSET_Y) * DISPLAY_FRAMEBUFFER_WIDTH
+                + (x as u32 + DISPLAY_FRAMEBUFFER_OFFSET_X)) as isize,
+        );
+        addr.write_volatile(c);
     }
 }
 
