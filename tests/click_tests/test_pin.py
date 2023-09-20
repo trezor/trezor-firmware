@@ -169,6 +169,18 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
         assert before[:-digits_to_delete] == after
 
 
+def _delete_all(debug: "DebugLink", check: bool = True) -> None:
+    """Navigate to "DELETE" and hold it until all digits are deleted"""
+    if debug.model == "T":
+        debug.click_hold(buttons.pin_passphrase_grid(9), hold_ms=1500)
+    elif debug.model == "R":
+        navigate_to_action_and_press(debug, "DELETE", TR_PIN_ACTIONS, hold_ms=1000)
+
+    if check:
+        after = debug.read_layout().pin()
+        assert after == ""
+
+
 def _cancel_pin(debug: "DebugLink") -> None:
     """Navigate to "CANCEL" and press it"""
     # It is the same button as DELETE
@@ -222,6 +234,17 @@ def test_pin_long_delete(device_handler: "BackgroundDeviceHandler"):
         _see_pin(debug)
 
         _input_see_confirm(debug, PIN24[-10:])
+
+
+@pytest.mark.setup_client(pin=PIN4)
+def test_pin_delete_hold(device_handler: "BackgroundDeviceHandler"):
+    with prepare(device_handler) as debug:
+        _input_pin(debug, PIN4)
+        _see_pin(debug)
+
+        _delete_all(debug)
+
+        _input_see_confirm(debug, PIN4)
 
 
 @pytest.mark.setup_client(pin=PIN60[:50])

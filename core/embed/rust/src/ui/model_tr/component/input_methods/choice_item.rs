@@ -19,6 +19,7 @@ pub struct ChoiceItem<T: StringType> {
     icon: Option<Icon>,
     btn_layout: ButtonLayout<T>,
     font: Font,
+    middle_action_without_release: bool,
 }
 
 impl<T: StringType> ChoiceItem<T> {
@@ -28,6 +29,7 @@ impl<T: StringType> ChoiceItem<T> {
             icon: None,
             btn_layout,
             font: theme::FONT_CHOICE_ITEMS,
+            middle_action_without_release: false,
         }
     }
 
@@ -40,6 +42,15 @@ impl<T: StringType> ChoiceItem<T> {
     /// Allows to change the font.
     pub fn with_font(mut self, font: Font) -> Self {
         self.font = font;
+        self
+    }
+
+    /// Allows for middle action without release.
+    pub fn with_middle_action_without_release(mut self) -> Self {
+        self.middle_action_without_release = true;
+        if let Some(middle) = self.btn_layout.btn_middle.as_mut() {
+            middle.send_long_press = true;
+        }
         self
     }
 
@@ -116,6 +127,11 @@ where
     /// Getting current button layout.
     fn btn_layout(&self) -> ButtonLayout<T> {
         self.btn_layout.clone()
+    }
+
+    /// Whether to do middle action without release
+    fn trigger_middle_without_release(&self) -> bool {
+        self.middle_action_without_release
     }
 }
 

@@ -95,7 +95,8 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryWordlist {
         if choice_index == DELETE_INDEX {
             return (
                 ChoiceItem::new("DELETE", ButtonLayout::arrow_armed_arrow("CONFIRM".into()))
-                    .with_icon(theme::ICON_DELETE),
+                    .with_icon(theme::ICON_DELETE)
+                    .with_middle_action_without_release(),
                 WordlistAction::Delete,
             );
         }

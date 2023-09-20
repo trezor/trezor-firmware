@@ -349,6 +349,7 @@ pub struct ButtonDetails<T> {
     with_arms: bool,
     fixed_width: Option<i16>,
     offset: Offset,
+    pub send_long_press: bool,
 }
 
 impl<T> ButtonDetails<T>
@@ -364,6 +365,7 @@ where
             with_arms: false,
             fixed_width: None,
             offset: Offset::zero(),
+            send_long_press: false,
         }
     }
 
@@ -376,6 +378,7 @@ where
             with_arms: false,
             fixed_width: None,
             offset: Offset::zero(),
+            send_long_press: false,
         }
     }
 
