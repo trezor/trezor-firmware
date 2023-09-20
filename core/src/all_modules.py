@@ -377,6 +377,8 @@ apps.solana.sign_tx
 import apps.solana.sign_tx
 apps.solana.transaction
 import apps.solana.transaction
+apps.solana.transaction.instruction
+import apps.solana.transaction.instruction
 apps.solana.transaction.instructions
 import apps.solana.transaction.instructions
 apps.solana.transaction.parse

@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 
-from .instructions import Instruction, get_instruction
+from trezor.utils import BufferReader
+
+from .instruction import Instruction
+from .instructions import get_instruction
 from .parse import (
     parseAddresses,
     parseBlockHash,
@@ -10,7 +13,6 @@ from .parse import (
 )
 
 if TYPE_CHECKING:
-    from trezor.utils import BufferReader
     from ..types import Address, AddressReference
 
 

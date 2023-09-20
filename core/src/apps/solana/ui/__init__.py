@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+
 from trezor.crypto import base58
 
 from ..transaction.instructions import Instruction
@@ -25,12 +26,16 @@ async def show_confirm(count: tuple[int, int], instruction: Instruction) -> None
 
     datas = []
     for prop in instruction.ui_parameter_list:
+        # TODO SOL: public keys in params are not base58 encoded
         datas.append((prop, get_ui_property(instruction.parsed_data[prop])))
 
     accounts = []
     for account in instruction.ui_account_list:
         account_value = instruction.parsed_accounts[account[0]]
-        if account_value is not None:
+        # TODO SOL:
+        if type(account_value) is bytes:
+            accounts.append((account[0], base58.encode(account_value)))
+        elif type(account_value) is tuple:
             accounts.append((account[0], base58.encode(account_value[0])))
 
     props = datas + accounts
