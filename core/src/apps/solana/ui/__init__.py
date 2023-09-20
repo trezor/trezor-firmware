@@ -8,11 +8,13 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-def get_ui_property(property: Any) -> str | bytes | None:
-    if isinstance(property, int):
-        return str(property)
+def format_property(value: Any, type: str) -> str | bytes | None:
+    if type == "pubkey":
+        return base58.encode(value)
+    elif isinstance(value, int):
+        return str(value)
 
-    return property
+    return value
 
 
 async def show_confirm(count: tuple[int, int], instruction: Instruction) -> None:
@@ -25,18 +27,27 @@ async def show_confirm(count: tuple[int, int], instruction: Instruction) -> None
     assert instruction.ui_account_list is not None
 
     datas = []
-    for prop in instruction.ui_parameter_list:
-        # TODO SOL: public keys in params are not base58 encoded
-        datas.append((prop, get_ui_property(instruction.parsed_data[prop])))
+    for property in instruction.ui_parameter_list:
+        value = instruction.parsed_data[property]
+        _type = instruction.get_property_type(property)
+
+        datas.append((property, format_property(value, _type)))
 
     accounts = []
     for account in instruction.ui_account_list:
         account_value = instruction.parsed_accounts[account[0]]
-        # TODO SOL:
-        if type(account_value) is bytes:
-            accounts.append((account[0], base58.encode(account_value)))
-        elif type(account_value) is tuple:
+
+        if len(account_value) == 2:
             accounts.append((account[0], base58.encode(account_value[0])))
+        elif len(account_value) == 3:
+            accounts.append(
+                (
+                    account[0],
+                    f"LUT: {base58.encode(account_value[0])}, index: {account_value[1]}",
+                )
+            )
+        else:
+            raise ValueError("Invalid account value")
 
     props = datas + accounts
 

@@ -13,7 +13,7 @@ from .parse import (
 )
 
 if TYPE_CHECKING:
-    from ..types import Address, AddressReference
+    from ..types import Account, Address, AddressReference
 
 
 class Transaction:
@@ -54,6 +54,18 @@ class Transaction:
         self.blockhash = parseBlockHash(serialized_tx)
 
         raw_instructions = parseInstructions(serialized_tx)
+
+        addresses_and_luts: list[Account] = []
+        for address in self.addresses:
+            addresses_and_luts.append(address)
+
+        if not self.is_legacy:
+            self.lut_rw_addresses, self.lut_ro_addresses = parseLut(serialized_tx)
+            for lut_rw_address in self.lut_rw_addresses:
+                addresses_and_luts.append(lut_rw_address)
+            for lut_ro_address in self.lut_ro_addresses:
+                addresses_and_luts.append(lut_ro_address)
+
         for (
             program_index,
             instruction_id,
@@ -62,7 +74,7 @@ class Transaction:
         ) in raw_instructions:
             program_id = self.addresses[program_index][0]
             instruction_accounts = [
-                self.addresses[account_index] for account_index in accounts
+                addresses_and_luts[account_index] for account_index in accounts
             ]
             instruction = get_instruction(
                 program_id,
@@ -71,8 +83,5 @@ class Transaction:
                 instruction_data,
             )
             self.instructions.append(instruction)
-
-        if not self.is_legacy:
-            (self.lut_rw_addresses, self.lut_ro_addresses) = parseLut(serialized_tx)
 
         assert serialized_tx.remaining_count() == 0

@@ -65,7 +65,7 @@ from .instruction import Instruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
-    from ..types import Address
+    from ..types import Account
 
 ## creates the program identifier with address from the template
 % for program in programs["programs"]:
@@ -127,7 +127,7 @@ if TYPE_CHECKING:
 % endfor
 
 def get_instruction(
-    program_id: bytes, instruction_id: int, instruction_accounts: list[Address], instruction_data: bytes
+    program_id: bytes, instruction_id: int, instruction_accounts: list[Account], instruction_data: bytes
 ) -> Instruction:
 % for program in programs["programs"]:
 % if len(program["instructions"]) > 0:

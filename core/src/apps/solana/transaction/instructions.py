@@ -9,7 +9,7 @@ from .instruction import Instruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
-    from ..types import Address
+    from ..types import Account
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
@@ -509,7 +509,7 @@ if TYPE_CHECKING:
 def get_instruction(
     program_id: bytes,
     instruction_id: int,
-    instruction_accounts: list[Address],
+    instruction_accounts: list[Account],
     instruction_data: bytes,
 ) -> Instruction:
     if base58.encode(program_id) == SYSTEM_PROGRAM_ID:

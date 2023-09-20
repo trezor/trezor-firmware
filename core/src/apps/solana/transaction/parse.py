@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor.crypto import base58
-
 from ..constants import (
     ADDRESS_READ_ONLY,
     ADDRESS_RW,
@@ -87,7 +85,7 @@ def parseAddresses(
         else:
             type = ADDRESS_READ_ONLY
 
-        address = serialized_tx.read(ADDRESS_SIZE)
+        address = parsePubkey(serialized_tx)
 
         addresses.append((address, type))
 
@@ -190,7 +188,7 @@ def parseLut(
 
     address_table_lookups_count = parseVarInt(serialized_tx)
     for _ in range(address_table_lookups_count):
-        account = base58.encode(serialized_tx.read(ADDRESS_SIZE))
+        account = parsePubkey(serialized_tx)
 
         table_rw_indexes_count = parseVarInt(serialized_tx)
         for _ in range(table_rw_indexes_count):
