@@ -1,13 +1,28 @@
 # generated from __init__.py.mako
 # do not edit manually!
 from typing import TYPE_CHECKING
-from trezor.wire import ProcessError
-from .parse import parseProperty
+
+from trezor.crypto import base58
 from trezor.utils import BufferReader
+from trezor.wire import ProcessError
+
+from .parse import parseProperty
 
 if TYPE_CHECKING:
-    from typing import Any, Type, TypeGuard
+    from typing import Any, Type, TypedDict, TypeGuard
     from ..types import Address
+
+    class PropertyTemplate(TypedDict):
+        name: str
+        type: str
+        optional: bool
+
+    class AccountsTemplate(TypedDict):
+        name: str
+        access: str
+        signer: bool
+        optional: bool
+
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
@@ -43,7 +58,7 @@ class Instruction:
     PROGRAM_ID: str
     INSTRUCTION_ID: int
 
-    program_id: str
+    program_id: bytes
     instruction_id: int
 
     # name of the UI template to be used derived from the template
@@ -59,25 +74,23 @@ class Instruction:
     # second item is the account name that can be used to retrieve the value
     # by using the __getattr__ function or access directly from the parsed_accounts
     # list.
-    ui_account_list: list[tuple[str, str]] | None = None
-
+    ui_account_list: list[tuple[str, bytes]] | None = None
 
     parsed_data: dict[str, Any] | None = None
     parsed_accounts: dict[str, bytes | tuple[bytes, int] | None] | None = None
 
-
     def __init__(
         self,
         instruction_data: bytes,
-        program_id: str,
+        program_id: bytes,
         accounts: list[Address],
         instruction_id: int,
-        property_templates: list[dict[str, str | bool]],
-        accounts_template: list[dict[str, str | bool]],
+        property_templates: list[PropertyTemplate],
+        accounts_template: list[AccountsTemplate],
         ui_parameter_list: list[int],
         ui_account_list: list[int],
         ui_identifier: str,
-        ui_name: str
+        ui_name: str,
     ) -> None:
         self.program_id = program_id
         self.instruction_id = instruction_id
@@ -93,20 +106,21 @@ class Instruction:
         reader = BufferReader(instruction_data)
 
         for property_template in property_templates:
-            self.set_property(property_template["name"], parseProperty(reader, property_template))
+            self.set_property(
+                property_template["name"],
+                parseProperty(reader, property_template["type"]),
+            )
 
         for i, account_template in enumerate(accounts_template):
             self.set_account(account_template["name"], accounts[i])
 
         for index in ui_parameter_list:
-            self.ui_parameter_list.append(
-                property_templates[index]["name"]
-            )
+            self.ui_parameter_list.append(property_templates[index]["name"])
             # ui_parameter_list: list[tuple[str, str]] | None = None
 
         for index in ui_account_list:
             self.ui_account_list.append(
-                (accounts_template[index]["name"], accounts[index])
+                (accounts_template[index]["name"], accounts[index][0])
             )
 
     def __getattr__(self, attr: str) -> Any:
@@ -132,8 +146,10 @@ class Instruction:
 
     @classmethod
     def is_type_of(cls, ins: Any) -> TypeGuard["Instruction"]:
-        return ins.program_id == cls.PROGRAM_ID and ins.instruction_id == cls.INSTRUCTION_ID
-
+        return (
+            base58.encode(ins.program_id) == cls.PROGRAM_ID
+            and ins.instruction_id == cls.INSTRUCTION_ID
+        )
 
 
 def __getattr__(name: str) -> Type[Instruction]:
@@ -153,14 +169,38 @@ def __getattr__(name: str) -> Type[Instruction]:
         "DeactivateInstruction": ("Stake11111111111111111111111111111111111111", 5),
         "SetLockupInstruction": ("Stake11111111111111111111111111111111111111", 6),
         "MergeInstruction": ("Stake11111111111111111111111111111111111111", 7),
-        "AuthorizeWithSeedInstruction": ("Stake11111111111111111111111111111111111111", 8),
-        "InitializeCheckedInstruction": ("Stake11111111111111111111111111111111111111", 9),
-        "AuthorizeCheckedInstruction": ("Stake11111111111111111111111111111111111111", 10),
-        "AuthorizeCheckedWithSeedInstruction": ("Stake11111111111111111111111111111111111111", 11),
-        "SetLockupCheckedInstruction": ("Stake11111111111111111111111111111111111111", 12),
-        "RequestHeapFrameInstruction": ("ComputeBudget111111111111111111111111111111", 1),
-        "SetComputeUnitLimitInstruction": ("ComputeBudget111111111111111111111111111111", 2),
-        "SetComputeUnitPriceInstruction": ("ComputeBudget111111111111111111111111111111", 3),
+        "AuthorizeWithSeedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            8,
+        ),
+        "InitializeCheckedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            9,
+        ),
+        "AuthorizeCheckedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            10,
+        ),
+        "AuthorizeCheckedWithSeedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            11,
+        ),
+        "SetLockupCheckedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            12,
+        ),
+        "RequestHeapFrameInstruction": (
+            "ComputeBudget111111111111111111111111111111",
+            1,
+        ),
+        "SetComputeUnitLimitInstruction": (
+            "ComputeBudget111111111111111111111111111111",
+            2,
+        ),
+        "SetComputeUnitPriceInstruction": (
+            "ComputeBudget111111111111111111111111111111",
+            3,
+        ),
     }
     id = ids[name]
 
@@ -339,7 +379,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = STAKE_PROGRAM_ID
         INSTRUCTION_ID = INS_DELEGATE_STAKE
 
-
         initialized_stake_account: bytes
         vote_account: bytes
         clock_sysvar: bytes
@@ -395,7 +434,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = STAKE_PROGRAM_ID
         INSTRUCTION_ID = INS_DEACTIVATE
 
-
         delegated_stake_account: bytes
         clock_sysvar: bytes
         stake_authority: bytes
@@ -428,7 +466,6 @@ if TYPE_CHECKING:
     class MergeInstruction(Instruction):
         PROGRAM_ID = STAKE_PROGRAM_ID
         INSTRUCTION_ID = INS_MERGE
-
 
         destination_stake_account: bytes
         source_stake_account: bytes
@@ -467,7 +504,6 @@ if TYPE_CHECKING:
     class InitializeCheckedInstruction(Instruction):
         PROGRAM_ID = STAKE_PROGRAM_ID
         INSTRUCTION_ID = INS_INITIALIZE_CHECKED
-
 
         uninitialized_stake_account: bytes
         rent_sysvar: bytes
@@ -515,7 +551,9 @@ if TYPE_CHECKING:
         lockup_authority: bytes | None
 
         @classmethod
-        def is_type_of(cls, ins: Any) -> TypeGuard["AuthorizeCheckedWithSeedInstruction"]:
+        def is_type_of(
+            cls, ins: Any
+        ) -> TypeGuard["AuthorizeCheckedWithSeedInstruction"]:
             return (
                 ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
@@ -545,7 +583,6 @@ if TYPE_CHECKING:
 
         bytes: int
 
-
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["RequestHeapFrameInstruction"]:
             return (
@@ -558,7 +595,6 @@ if TYPE_CHECKING:
         INSTRUCTION_ID = INS_SET_COMPUTE_UNIT_LIMIT
 
         units: int
-
 
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["SetComputeUnitLimitInstruction"]:
@@ -573,7 +609,6 @@ if TYPE_CHECKING:
 
         lamports: int
 
-
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["SetComputeUnitPriceInstruction"]:
             return (
@@ -583,21 +618,41 @@ if TYPE_CHECKING:
 
 
 def get_instruction(
-    program_id: str, instruction_id: int, instruction_accounts: list[Address], instruction_data: bytes
+    program_id: bytes,
+    instruction_id: int,
+    instruction_accounts: list[Address],
+    instruction_data: bytes,
 ) -> Instruction:
-    if program_id == SYSTEM_PROGRAM_ID:
+    if base58.encode(program_id) == SYSTEM_PROGRAM_ID:
         if instruction_id == INS_CREATE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 INS_CREATE_ACCOUNT,
-                [{'name': 'lamports', 'type': 'u64', 'optional': False}, {'name': 'space', 'type': 'u64', 'optional': False}, {'name': 'owner', 'type': 'pubkey', 'optional': False}],
-                [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'New account', 'access': 'w', 'signer': True, 'optional': False}],
+                [
+                    {"name": "lamports", "type": "u64", "optional": False},
+                    {"name": "space", "type": "u64", "optional": False},
+                    {"name": "owner", "type": "pubkey", "optional": False},
+                ],
+                [
+                    {
+                        "name": "Funding account",
+                        "access": "w",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "New account",
+                        "access": "w",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [0, 2],
                 [0],
                 "ui_confirm",
-                "Create Account"
+                "Create Account",
             )
         elif instruction_id == INS_ASSIGN:
             return Instruction(
@@ -605,12 +660,19 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_ASSIGN,
-                [{'name': 'owner', 'type': 'pubkey', 'optional': False}],
-                [{'name': 'Assigned account', 'access': 'w', 'signer': True, 'optional': False}],
+                [{"name": "owner", "type": "pubkey", "optional": False}],
+                [
+                    {
+                        "name": "Assigned account",
+                        "access": "w",
+                        "signer": True,
+                        "optional": False,
+                    }
+                ],
                 [0],
                 [0],
                 "ui_confirm",
-                "Assign"
+                "Assign",
             )
         elif instruction_id == INS_TRANSFER:
             return Instruction(
@@ -618,12 +680,25 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_TRANSFER,
-                [{'name': 'lamports', 'type': 'u64', 'optional': False}],
-                [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'Recipient account', 'access': 'w', 'signer': False, 'optional': False}],
+                [{"name": "lamports", "type": "u64", "optional": False}],
+                [
+                    {
+                        "name": "Funding account",
+                        "access": "w",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Recipient account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                ],
                 [0],
                 [0, 1],
                 "ui_confirm",
-                "Transfer"
+                "Transfer",
             )
         elif instruction_id == INS_CREATE_ACCOUNT_WITH_SEED:
             return Instruction(
@@ -631,12 +706,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_CREATE_ACCOUNT_WITH_SEED,
-                [{'name': 'base', 'type': 'pubkey', 'optional': False}, {'name': 'seed', 'type': 'string', 'optional': False}, {'name': 'lamports', 'type': 'u64', 'optional': False}, {'name': 'space', 'type': 'u64', 'optional': False}, {'name': 'owner', 'type': 'pubkey', 'optional': False}],
-                [{'name': 'Funding account', 'access': 'w', 'signer': True, 'optional': False}, {'name': 'Created account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': True}],
+                [
+                    {"name": "base", "type": "pubkey", "optional": False},
+                    {"name": "seed", "type": "string", "optional": False},
+                    {"name": "lamports", "type": "u64", "optional": False},
+                    {"name": "space", "type": "u64", "optional": False},
+                    {"name": "owner", "type": "pubkey", "optional": False},
+                ],
+                [
+                    {
+                        "name": "Funding account",
+                        "access": "w",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Created account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Base account",
+                        "access": "",
+                        "signer": True,
+                        "optional": True,
+                    },
+                ],
                 [0, 2, 3],
                 [0, 2],
                 "ui_confirm",
-                "Create Account With Seed"
+                "Create Account With Seed",
             )
         elif instruction_id == INS_ALLOCATE:
             return Instruction(
@@ -644,12 +744,19 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_ALLOCATE,
-                [{'name': 'space', 'type': 'u64', 'optional': False}],
-                [{'name': 'New account', 'access': 'w', 'signer': True, 'optional': False}],
+                [{"name": "space", "type": "u64", "optional": False}],
+                [
+                    {
+                        "name": "New account",
+                        "access": "w",
+                        "signer": True,
+                        "optional": False,
+                    }
+                ],
                 [0],
                 [0],
                 "ui_confirm",
-                "Allocate"
+                "Allocate",
             )
         elif instruction_id == INS_ALLOCATE_WITH_SEED:
             return Instruction(
@@ -657,12 +764,30 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_ALLOCATE_WITH_SEED,
-                [{'name': 'base', 'type': 'pubkey', 'optional': False}, {'name': 'seed', 'type': 'string', 'optional': False}, {'name': 'space', 'type': 'u64', 'optional': False}, {'name': 'owner', 'type': 'pubkey', 'optional': False}],
-                [{'name': 'Allocated account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': False}],
+                [
+                    {"name": "base", "type": "pubkey", "optional": False},
+                    {"name": "seed", "type": "string", "optional": False},
+                    {"name": "space", "type": "u64", "optional": False},
+                    {"name": "owner", "type": "pubkey", "optional": False},
+                ],
+                [
+                    {
+                        "name": "Allocated account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Base account",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [0, 2],
                 [0, 1],
                 "ui_confirm",
-                "Allocate With Seed"
+                "Allocate With Seed",
             )
         elif instruction_id == INS_ASSIGN_WITH_SEED:
             return Instruction(
@@ -670,30 +795,66 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_ASSIGN_WITH_SEED,
-                [{'name': 'base', 'type': 'pubkey', 'optional': False}, {'name': 'seed', 'type': 'string', 'optional': False}, {'name': 'owner', 'type': 'pubkey', 'optional': False}],
-                [{'name': 'Assigned account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Base account', 'access': '', 'signer': True, 'optional': False}],
+                [
+                    {"name": "base", "type": "pubkey", "optional": False},
+                    {"name": "seed", "type": "string", "optional": False},
+                    {"name": "owner", "type": "pubkey", "optional": False},
+                ],
+                [
+                    {
+                        "name": "Assigned account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Base account",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [0, 2],
                 [0, 1],
                 "ui_confirm",
-                "Assign With Seed"
+                "Assign With Seed",
             )
         else:
             raise ProcessError(
                 f"Unknown instruction type: {program_id} {instruction_id}"
             )
-    if program_id == STAKE_PROGRAM_ID:
+    if base58.encode(program_id) == STAKE_PROGRAM_ID:
         if instruction_id == INS_INITIALIZE:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 INS_INITIALIZE,
-                [{'name': 'staker', 'type': 'pubkey', 'optional': False}, {'name': 'withdrawer', 'type': 'pubkey', 'optional': False}, {'name': 'unix_timestamp', 'type': 'i64', 'optional': False}, {'name': 'epoch', 'type': 'u64', 'optional': False}, {'name': 'custodian', 'type': 'pubkey', 'optional': False}],
-                [{'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Rent sysvar', 'access': '', 'signer': False, 'optional': False}],
+                [
+                    {"name": "staker", "type": "pubkey", "optional": False},
+                    {"name": "withdrawer", "type": "pubkey", "optional": False},
+                    {"name": "unix_timestamp", "type": "i64", "optional": False},
+                    {"name": "epoch", "type": "u64", "optional": False},
+                    {"name": "custodian", "type": "pubkey", "optional": False},
+                ],
+                [
+                    {
+                        "name": "Uninitialized stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Rent sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                ],
                 [0, 2, 3, 4],
                 [0, 1],
                 "ui_confirm",
-                "Initialize"
+                "Initialize",
             )
         elif instruction_id == INS_AUTHORIZE:
             return Instruction(
@@ -701,12 +862,44 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_AUTHORIZE,
-                [{'name': 'pubkey', 'type': 'pubkey', 'optional': False}, {'name': 'stakeauthorize', 'type': 'StakeAuthorize', 'optional': False}],
-                [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
+                [
+                    {"name": "pubkey", "type": "pubkey", "optional": False},
+                    {
+                        "name": "stakeauthorize",
+                        "type": "StakeAuthorize",
+                        "optional": False,
+                    },
+                ],
+                [
+                    {
+                        "name": "Stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Clock sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "stake or withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Lockup authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": True,
+                    },
+                ],
                 [0],
                 [0, 1, 2, 3],
                 "ui_confirm",
-                "Authorize"
+                "Authorize",
             )
         elif instruction_id == INS_DELEGATE_STAKE:
             return Instruction(
@@ -715,11 +908,48 @@ def get_instruction(
                 instruction_accounts,
                 INS_DELEGATE_STAKE,
                 [],
-                [{'name': 'Initialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Vote account', 'access': '', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'config account', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
+                [
+                    {
+                        "name": "Initialized stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Vote account",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Clock sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Stake history sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "config account",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Stake authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [],
                 [0, 2, 3, 4, 5],
                 "ui_confirm",
-                "Delegate Stake"
+                "Delegate Stake",
             )
         elif instruction_id == INS_SPLIT:
             return Instruction(
@@ -727,12 +957,31 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_SPLIT,
-                [{'name': 'lamports', 'type': 'u64', 'optional': False}],
-                [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
+                [{"name": "lamports", "type": "u64", "optional": False}],
+                [
+                    {
+                        "name": "Stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Uninitialized stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Stake authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [0],
                 [2],
                 "ui_confirm",
-                "Split"
+                "Split",
             )
         elif instruction_id == INS_WITHDRAW:
             return Instruction(
@@ -740,12 +989,49 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_WITHDRAW,
-                [{'name': 'lamports', 'type': 'u64', 'optional': False}],
-                [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Recipient account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
+                [{"name": "lamports", "type": "u64", "optional": False}],
+                [
+                    {
+                        "name": "Stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Recipient account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Clock sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Stake history sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Lockup authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": True,
+                    },
+                ],
                 [0],
                 [0, 1],
                 "ui_confirm",
-                "Withdraw"
+                "Withdraw",
             )
         elif instruction_id == INS_DEACTIVATE:
             return Instruction(
@@ -754,11 +1040,30 @@ def get_instruction(
                 instruction_accounts,
                 INS_DEACTIVATE,
                 [],
-                [{'name': 'Delegated stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
+                [
+                    {
+                        "name": "Delegated stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Clock sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Stake authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [],
                 [0, 1, 2],
                 "ui_confirm",
-                "Deactivate"
+                "Deactivate",
             )
         elif instruction_id == INS_SET_LOCKUP:
             return Instruction(
@@ -766,12 +1071,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_SET_LOCKUP,
-                [{'name': 'unix_timestamp', 'type': 'i64', 'optional': True}, {'name': 'epoch', 'type': 'u64', 'optional': True}, {'name': 'custodian', 'type': 'pubkey', 'optional': True}],
-                [{'name': 'Initialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Lockup authority or withdraw authority', 'access': '', 'signer': True, 'optional': False}],
+                [
+                    {"name": "unix_timestamp", "type": "i64", "optional": True},
+                    {"name": "epoch", "type": "u64", "optional": True},
+                    {"name": "custodian", "type": "pubkey", "optional": True},
+                ],
+                [
+                    {
+                        "name": "Initialized stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Lockup authority or withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [0, 2],
                 [0],
                 "ui_confirm",
-                "Set Lockup"
+                "Set Lockup",
             )
         elif instruction_id == INS_MERGE:
             return Instruction(
@@ -780,11 +1102,42 @@ def get_instruction(
                 instruction_accounts,
                 INS_MERGE,
                 [],
-                [{'name': 'Destination stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Source stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake history sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Stake authority', 'access': '', 'signer': True, 'optional': False}],
+                [
+                    {
+                        "name": "Destination stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Source stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Clock sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Stake history sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Stake authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [],
                 [0],
                 "ui_confirm",
-                "Merge"
+                "Merge",
             )
         elif instruction_id == INS_AUTHORIZE_WITH_SEED:
             return Instruction(
@@ -792,12 +1145,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_AUTHORIZE_WITH_SEED,
-                [{'name': 'new_authorized_pubkey', 'type': 'pubkey', 'optional': False}, {'name': 'stake_authorize', 'type': 'StakeAuthorize', 'optional': False}, {'name': 'authority_seed', 'type': 'string', 'optional': False}, {'name': 'authority_owner', 'type': 'pubkey', 'optional': False}],
-                [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
+                [
+                    {
+                        "name": "new_authorized_pubkey",
+                        "type": "pubkey",
+                        "optional": False,
+                    },
+                    {
+                        "name": "stake_authorize",
+                        "type": "StakeAuthorize",
+                        "optional": False,
+                    },
+                    {"name": "authority_seed", "type": "string", "optional": False},
+                    {"name": "authority_owner", "type": "pubkey", "optional": False},
+                ],
+                [
+                    {
+                        "name": "Stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "stake or withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Clock sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Lockup authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": True,
+                    },
+                ],
                 [0, 2],
                 [0],
                 "ui_confirm",
-                "Authorize With Seed"
+                "Authorize With Seed",
             )
         elif instruction_id == INS_INITIALIZE_CHECKED:
             return Instruction(
@@ -806,11 +1197,36 @@ def get_instruction(
                 instruction_accounts,
                 INS_INITIALIZE_CHECKED,
                 [],
-                [{'name': 'Uninitialized stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Rent sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake authority', 'access': '', 'signer': False, 'optional': False}, {'name': 'withdraw authority', 'access': '', 'signer': True, 'optional': False}],
+                [
+                    {
+                        "name": "Uninitialized stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Rent sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "stake authority",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                ],
                 [],
                 [0, 1, 2, 3],
                 "ui_confirm",
-                "Initialize Checked"
+                "Initialize Checked",
             )
         elif instruction_id == INS_AUTHORIZE_CHECKED:
             return Instruction(
@@ -818,12 +1234,49 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_AUTHORIZE_CHECKED,
-                [{'name': 'stakeauthorize', 'type': 'StakeAuthorize', 'optional': False}],
-                [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'new stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
+                [
+                    {
+                        "name": "stakeauthorize",
+                        "type": "StakeAuthorize",
+                        "optional": False,
+                    }
+                ],
+                [
+                    {
+                        "name": "Stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Clock sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "stake or withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "new stake or withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Lockup authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": True,
+                    },
+                ],
                 [0],
                 [0, 1, 2],
                 "ui_confirm",
-                "Authorize Checked"
+                "Authorize Checked",
             )
         elif instruction_id == INS_AUTHORIZE_CHECKED_WITH_SEED:
             return Instruction(
@@ -831,12 +1284,51 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_AUTHORIZE_CHECKED_WITH_SEED,
-                [{'name': 'stake_authorize', 'type': 'StakeAuthorize', 'optional': False}, {'name': 'authority_seed', 'type': 'string', 'optional': False}, {'name': 'authority_owner', 'type': 'pubkey', 'optional': False}],
-                [{'name': 'Stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Clock sysvar', 'access': '', 'signer': False, 'optional': False}, {'name': 'new stake or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'Lockup authority', 'access': '', 'signer': True, 'optional': True}],
+                [
+                    {
+                        "name": "stake_authorize",
+                        "type": "StakeAuthorize",
+                        "optional": False,
+                    },
+                    {"name": "authority_seed", "type": "string", "optional": False},
+                    {"name": "authority_owner", "type": "pubkey", "optional": False},
+                ],
+                [
+                    {
+                        "name": "Stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "stake or withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Clock sysvar",
+                        "access": "",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "new stake or withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Lockup authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": True,
+                    },
+                ],
                 [0, 2],
                 [0],
                 "ui_confirm",
-                "Authorize Checked With Seed"
+                "Authorize Checked With Seed",
             )
         elif instruction_id == INS_SET_LOCKUP_CHECKED:
             return Instruction(
@@ -844,30 +1336,52 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_SET_LOCKUP_CHECKED,
-                [{'name': 'unix_timestamp', 'type': 'i64', 'optional': True}, {'name': 'epoch', 'type': 'u64', 'optional': True}],
-                [{'name': 'stake account', 'access': 'w', 'signer': False, 'optional': False}, {'name': 'Lockup authority or withdraw authority', 'access': '', 'signer': True, 'optional': False}, {'name': 'New lockup authority', 'access': '', 'signer': True, 'optional': True}],
+                [
+                    {"name": "unix_timestamp", "type": "i64", "optional": True},
+                    {"name": "epoch", "type": "u64", "optional": True},
+                ],
+                [
+                    {
+                        "name": "stake account",
+                        "access": "w",
+                        "signer": False,
+                        "optional": False,
+                    },
+                    {
+                        "name": "Lockup authority or withdraw authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": False,
+                    },
+                    {
+                        "name": "New lockup authority",
+                        "access": "",
+                        "signer": True,
+                        "optional": True,
+                    },
+                ],
                 [0, 1],
                 [0],
                 "ui_confirm",
-                "Set Lockup Checked"
+                "Set Lockup Checked",
             )
         else:
             raise ProcessError(
                 f"Unknown instruction type: {program_id} {instruction_id}"
             )
-    if program_id == COMPUTE_BUDGET_PROGRAM_ID:
+    if base58.encode(program_id) == COMPUTE_BUDGET_PROGRAM_ID:
         if instruction_id == INS_REQUEST_HEAP_FRAME:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 INS_REQUEST_HEAP_FRAME,
-                [{'name': 'bytes', 'type': 'u32', 'optional': False}],
+                [{"name": "bytes", "type": "u32", "optional": False}],
                 [],
                 [0],
                 [],
                 "ui_confirm",
-                "Request Heap Frame"
+                "Request Heap Frame",
             )
         elif instruction_id == INS_SET_COMPUTE_UNIT_LIMIT:
             return Instruction(
@@ -875,12 +1389,12 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_SET_COMPUTE_UNIT_LIMIT,
-                [{'name': 'units', 'type': 'u32', 'optional': False}],
+                [{"name": "units", "type": "u32", "optional": False}],
                 [],
                 [0],
                 [],
                 "ui_confirm",
-                "Set Compute Unit Limit"
+                "Set Compute Unit Limit",
             )
         elif instruction_id == INS_SET_COMPUTE_UNIT_PRICE:
             return Instruction(
@@ -888,18 +1402,16 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 INS_SET_COMPUTE_UNIT_PRICE,
-                [{'name': 'lamports', 'type': 'u64', 'optional': False}],
+                [{"name": "lamports", "type": "u64", "optional": False}],
                 [],
                 [0],
                 [],
                 "ui_confirm",
-                "Set Compute Unit Price"
+                "Set Compute Unit Price",
             )
         else:
             raise ProcessError(
                 f"Unknown instruction type: {program_id} {instruction_id}"
             )
     else:
-        raise ProcessError(
-            f"Unknown instruction type: {program_id} {instruction_id}"
-        )
+        raise ProcessError(f"Unknown instruction type: {program_id} {instruction_id}")

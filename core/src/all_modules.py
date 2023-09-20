@@ -373,26 +373,20 @@ apps.solana.get_address
 import apps.solana.get_address
 apps.solana.get_public_key
 import apps.solana.get_public_key
-apps.solana.instructions
-import apps.solana.instructions
-apps.solana.instructions.instruction
-import apps.solana.instructions.instruction
-apps.solana.instructions.instructions
-import apps.solana.instructions.instructions
-apps.solana.instructions.parse_template
-import apps.solana.instructions.parse_template
-apps.solana.parsing
-import apps.solana.parsing
-apps.solana.parsing.parse
-import apps.solana.parsing.parse
-apps.solana.parsing.parse_instructions
-import apps.solana.parsing.parse_instructions
-apps.solana.parsing.utils
-import apps.solana.parsing.utils
 apps.solana.sign_tx
 import apps.solana.sign_tx
+apps.solana.transaction
+import apps.solana.transaction
+apps.solana.transaction.instructions
+import apps.solana.transaction.instructions
+apps.solana.transaction.parse
+import apps.solana.transaction.parse
+apps.solana.transaction.trezor_mako
+import apps.solana.transaction.trezor_mako
 apps.solana.types
 import apps.solana.types
+apps.solana.ui
+import apps.solana.ui
 apps.workflow_handlers
 import apps.workflow_handlers
 

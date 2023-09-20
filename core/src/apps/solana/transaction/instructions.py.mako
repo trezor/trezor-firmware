@@ -58,14 +58,25 @@ int\
 % endif
 </%def>\
 from typing import TYPE_CHECKING
+from trezor.crypto import base58
 from trezor.wire import ProcessError
 from .parse import parseProperty
 from trezor.utils import BufferReader
-## from ..constants import ADDRESS_SIG, ADDRESS_SIG_READ_ONLY, ADDRESS_READ_ONLY, ADDRESS_RW
 
 if TYPE_CHECKING:
-    from typing import Any, Type, TypeGuard
+    from typing import Any, Type, TypedDict, TypeGuard
     from ..types import Address
+
+    class PropertyTemplate(TypedDict):
+        name: str
+        type: str
+        optional: bool
+
+    class AccountsTemplate(TypedDict):
+        name: str
+        access: str
+        signer: bool
+        optional: bool
 
 ## creates the program identifier with address from the template
 % for program in programs["programs"]:
@@ -84,7 +95,7 @@ class Instruction:
     PROGRAM_ID: str
     INSTRUCTION_ID: int
 
-    program_id: str
+    program_id: bytes
     instruction_id: int
 
     # name of the UI template to be used derived from the template
@@ -100,7 +111,7 @@ class Instruction:
     # second item is the account name that can be used to retrieve the value
     # by using the __getattr__ function or access directly from the parsed_accounts
     # list.
-    ui_account_list: list[tuple[str, str]] | None = None
+    ui_account_list: list[tuple[str, bytes]] | None = None
 
 
     parsed_data: dict[str, Any] | None = None
@@ -110,11 +121,11 @@ class Instruction:
     def __init__(
         self,
         instruction_data: bytes,
-        program_id: str,
+        program_id: bytes,
         accounts: list[Address],
         instruction_id: int,
-        property_templates: list[dict[str, str | bool]],
-        accounts_template: list[dict[str, str | bool]],
+        property_templates: list[PropertyTemplate],
+        accounts_template: list[AccountsTemplate],
         ui_parameter_list: list[int],
         ui_account_list: list[int],
         ui_identifier: str,
@@ -134,7 +145,7 @@ class Instruction:
         reader = BufferReader(instruction_data)
 
         for property_template in property_templates:
-            self.set_property(property_template["name"], parseProperty(reader, property_template))
+            self.set_property(property_template["name"], parseProperty(reader, property_template["type"]))
 
         for i, account_template in enumerate(accounts_template):
             self.set_account(account_template["name"], accounts[i])
@@ -147,7 +158,7 @@ class Instruction:
 
         for index in ui_account_list:
             self.ui_account_list.append(
-                (accounts_template[index]["name"], accounts[index])
+                (accounts_template[index]["name"], accounts[index][0])
             )
 
     def __getattr__(self, attr: str) -> Any:
@@ -173,7 +184,7 @@ class Instruction:
 
     @classmethod
     def is_type_of(cls, ins: Any) -> TypeGuard["Instruction"]:
-        return ins.program_id == cls.PROGRAM_ID and ins.instruction_id == cls.INSTRUCTION_ID
+        return base58.encode(ins.program_id) == cls.PROGRAM_ID and ins.instruction_id == cls.INSTRUCTION_ID
 
 
 
@@ -225,11 +236,11 @@ if TYPE_CHECKING:
 % endfor
 
 def get_instruction(
-    program_id: str, instruction_id: int, instruction_accounts: list[Address], instruction_data: bytes
+    program_id: bytes, instruction_id: int, instruction_accounts: list[Address], instruction_data: bytes
 ) -> Instruction:
 % for program in programs["programs"]:
 % if len(program["instructions"]) > 0:
-    if program_id == ${getProgramId(program)}:
+    if base58.encode(program_id) == ${getProgramId(program)}:
     % for instruction in program["instructions"]:
         % if instruction == program["instructions"][0]:
         if instruction_id == ${getInstructionIdText(instruction)}:
