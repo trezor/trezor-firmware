@@ -24,11 +24,16 @@
 #include "common.h"
 #include TREZOR_BOARD
 
+#ifndef DISPLAY_FB_BPP
+#define DISPLAY_FB_BPP 2
+#endif
+
 #ifndef PIXELDATA
 #define PIXELDATA(c) display_pixeldata(c)
 #endif
 
 void display_pixeldata(uint16_t c);
+void display_pixeldata_dirty(void);
 
 #ifndef PIXELDATA_DIRTY
 #define PIXELDATA_DIRTY()
@@ -47,5 +52,11 @@ void display_sync(void);
 void display_refresh(void);
 const char *display_save(const char *prefix);
 void display_clear_save(void);
+
+void display_efficient_clear(void);
+uint32_t *display_get_fb_addr(void);
+uint8_t *display_get_wr_addr(void);
+void display_shift_window(uint16_t pixels);
+uint16_t display_get_window_offset(void);
 
 #endif  //_DISPLAY_INTERFACE_H

@@ -8,7 +8,7 @@ mod fido_icons;
 mod error;
 mod frame;
 mod hold_to_confirm;
-#[cfg(feature = "dma2d")]
+#[cfg(feature = "micropython")]
 mod homescreen;
 mod horizontal_page;
 mod keyboard;
@@ -32,7 +32,7 @@ pub use error::ErrorScreen;
 pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, FrameMsg};
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
-#[cfg(feature = "dma2d")]
+#[cfg(feature = "micropython")]
 pub use homescreen::{Homescreen, HomescreenMsg, Lockscreen};
 pub use horizontal_page::HorizontalPage;
 pub use keyboard::{

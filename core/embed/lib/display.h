@@ -37,24 +37,11 @@ typedef enum {
   TOIF_GRAYSCALE_EH = 3,   // even hi
 } toif_format_t;
 
-// provided by port
-
-void display_init(void);
-void display_init_seq(void);
-void display_refresh(void);
-const char *display_save(const char *prefix);
-void display_clear_save(void);
-
 // provided by common
 
 void display_clear(void);
 
 void display_bar(int x, int y, int w, int h, uint16_t c);
-void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
-                        uint8_t r);
-void display_bar_radius_buffer(int x, int y, int w, int h, uint8_t r,
-                               buffer_text_t *buffer);
-
 bool display_toif_info(const uint8_t *buf, uint32_t len, uint16_t *out_w,
                        uint16_t *out_h, toif_format_t *out_format);
 
@@ -85,8 +72,5 @@ void display_fade(int start, int end, int delay);
 // helper for locating a substring in buffer with utf-8 string
 void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
                          int char_len, const char **out_start, int *out_len);
-
-// pixeldata accessor
-void display_pixeldata_dirty();
 
 #endif

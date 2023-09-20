@@ -24,6 +24,7 @@ uint32_t rgb565_to_rgb888(uint16_t color) {
   res |= ((((((uint32_t)color & 0xF800) >> 11) * 527) + 23) >> 6) << 16;
   res |= ((((((uint32_t)color & 0x07E0) >> 5) * 259) + 33) >> 6) << 8;
   res |= ((((((uint32_t)color & 0x001F) >> 0) * 527) + 23) >> 6) << 0;
+  res |= 0xFF000000;
   return res;
 }
 
@@ -37,5 +38,5 @@ uint32_t interpolate_rgb888_color(uint32_t color0, uint32_t color1,
         ((color1 & 0xFF00) >> 8) * (15 - step)) /
        15;
   cb = ((color0 & 0x00FF) * step + (color1 & 0x00FF) * (15 - step)) / 15;
-  return (cr << 16) | (cg << 8) | cb;
+  return (cr << 16) | (cg << 8) | cb | 0xFF000000;
 }

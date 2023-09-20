@@ -38,22 +38,24 @@ def configure(
     ]
     sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
     sources += ["embed/trezorhal/stm32f4/displays/ili9341_spi.c"]
-    sources += ["embed/trezorhal/stm32f4/dma.c"]
+    sources += ["embed/trezorhal/stm32f4/dma2d.c"]
+    sources += [
+        "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
+    ]
     sources += ["embed/trezorhal/stm32f4/sdram.c"]
     sources += [
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
     ]
+    defines += ["USE_DMA2D"]
+    defines += ["FRAMEBUFFER"]
+    features_available.append("dma2d")
+    features_available.append("framebuffer")
 
     if "input" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/i2c.c"]
         sources += ["embed/trezorhal/stm32f4/touch/stmpe811.c"]
         sources += ["embed/lib/touch.c"]
         features_available.append("touch")
-
-    if "dma2d" in features_wanted:
-        defines += ["USE_DMA2D"]
-        sources += ["embed/lib/dma2d_emul.c"]
-        features_available.append("dma2d")
 
     if "usb" in features_wanted:
         sources += [

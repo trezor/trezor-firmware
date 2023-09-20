@@ -74,37 +74,6 @@ pub fn text_baseline(font: i32) -> i16 {
     unsafe { ffi::font_baseline(font).try_into().unwrap_or(i16::MAX) }
 }
 
-pub fn bar(x: i16, y: i16, w: i16, h: i16, fgcolor: u16) {
-    unsafe { ffi::display_bar(x.into(), y.into(), w.into(), h.into(), fgcolor) }
-}
-
-pub fn bar_radius(x: i16, y: i16, w: i16, h: i16, fgcolor: u16, bgcolor: u16, radius: u8) {
-    unsafe {
-        ffi::display_bar_radius(
-            x.into(),
-            y.into(),
-            w.into(),
-            h.into(),
-            fgcolor,
-            bgcolor,
-            radius,
-        )
-    }
-}
-
-pub fn bar_radius_buffer(x: i16, y: i16, w: i16, h: i16, radius: u8, buffer: &mut BufferText) {
-    unsafe {
-        ffi::display_bar_radius_buffer(
-            x.into(),
-            y.into(),
-            w.into(),
-            h.into(),
-            radius,
-            buffer.deref_mut(),
-        )
-    }
-}
-
 #[inline(always)]
 #[cfg(all(feature = "disp_i8080_16bit_dw", not(feature = "disp_i8080_8bit_dw")))]
 pub fn pixeldata(c: u16) {
@@ -113,12 +82,29 @@ pub fn pixeldata(c: u16) {
     }
 }
 
+#[cfg(feature = "framebuffer")]
+pub fn get_fb_addr() -> u32 {
+    unsafe { ffi::display_get_fb_addr() as u32 }
+}
+
 #[inline(always)]
 #[cfg(feature = "disp_i8080_8bit_dw")]
 pub fn pixeldata(c: u16) {
     unsafe {
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c & 0xff) as u8);
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c >> 8) as u8);
+    }
+}
+
+#[inline(always)]
+#[cfg(feature = "framebuffer")]
+pub fn pixel(fb: u32, x: i16, y: i16, c: u16) {
+    unsafe {
+        let addr = fb + (y as u32 * DISPLAY_RESX + x as u32) * ffi::DISPLAY_FB_BPP;
+        let ptr1 = addr as *mut u8;
+        let ptr2 = (addr + 1) as *mut u8;
+        ptr1.write_volatile((c & 0xff) as u8);
+        ptr2.write_volatile((c >> 8) as u8);
     }
 }
 
