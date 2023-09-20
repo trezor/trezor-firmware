@@ -70,6 +70,7 @@ def navigate_to_action_and_press(
     wanted_action: str,
     all_actions: list[str],
     is_carousel: bool = True,
+    hold_ms: int = 0,
 ) -> None:
     """Navigate to the button with certain action and press it"""
     # Orient
@@ -99,8 +100,11 @@ def navigate_to_action_and_press(
             is_carousel=is_carousel,
         )
 
-    # Press
-    debug.press_middle(wait=True)
+    # Press or hold
+    if hold_ms:
+        debug.press_middle_htc(1000)
+    else:
+        debug.press_middle(wait=True)
 
 
 def _get_action_index(wanted_action: str, all_actions: list[str]) -> int:

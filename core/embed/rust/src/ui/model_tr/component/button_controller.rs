@@ -39,9 +39,13 @@ enum ButtonState {
 }
 
 pub enum ButtonControllerMsg {
+    /// Button was pressed down.
     Pressed(ButtonPos),
-    /// Which button was triggered, and whether it was pressed for a longer time
+    /// Which button was triggered, and whether it was pressed for a longer
+    /// time before releasing.
     Triggered(ButtonPos, bool),
+    /// Button was pressed and held for longer time (not released yet).
+    LongPressed(ButtonPos),
 }
 
 /// Defines what kind of button should be currently used.
@@ -109,8 +113,13 @@ where
     /// Holds the timestamp of when the button was pressed.
     pressed_since: Option<Instant>,
     /// How long the button should be pressed to send `long_press=true` in
-    /// `Triggered`
+    /// `ButtonControllerMsg::Triggered`
     long_press_ms: u32,
+    /// Timer for sending `ButtonControllerMsg::LongPressed`
+    long_pressed_timer: Option<TimerToken>,
+    /// Whether it should even send `ButtonControllerMsg::LongPressed` events
+    /// (optional)
+    send_long_press: bool,
 }
 
 impl<T> ButtonContainer<T>
@@ -121,11 +130,16 @@ where
     /// (it can be later activated in `set()`).
     pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails<T>>) -> Self {
         const DEFAULT_LONG_PRESS_MS: u32 = 1000;
+        let send_long_press = btn_details
+            .as_ref()
+            .map_or(false, |btn| btn.send_long_press);
         Self {
             pos,
             button_type: ButtonType::from_button_details(pos, btn_details),
             pressed_since: None,
             long_press_ms: DEFAULT_LONG_PRESS_MS,
+            long_pressed_timer: None,
+            send_long_press,
         }
     }
 
@@ -133,6 +147,9 @@ where
     ///
     /// Passing `None` as `btn_details` will mark the button as inactive.
     pub fn set(&mut self, btn_details: Option<ButtonDetails<T>>, button_area: Rect) {
+        self.send_long_press = btn_details
+            .as_ref()
+            .map_or(false, |btn| btn.send_long_press);
         self.button_type = ButtonType::from_button_details(self.pos, btn_details);
         self.button_type.place(button_area);
     }
@@ -166,6 +183,7 @@ where
                     Instant::now().saturating_duration_since(since).to_millis() > self.long_press_ms
                 });
                 self.pressed_since = None;
+                self.long_pressed_timer = None;
                 Some(ButtonControllerMsg::Triggered(self.pos, long_press))
             }
             _ => {
@@ -186,8 +204,24 @@ where
     }
 
     /// Saving the timestamp of when the button was pressed.
-    pub fn got_pressed(&mut self) {
+    /// Also requesting a timer for long-press if wanted.
+    pub fn got_pressed(&mut self, ctx: &mut EventCtx) {
         self.pressed_since = Some(Instant::now());
+        if self.send_long_press {
+            self.long_pressed_timer =
+                Some(ctx.request_timer(Duration::from_millis(self.long_press_ms)));
+        }
+    }
+
+    /// Reset the pressed information.
+    pub fn reset(&mut self) {
+        self.pressed_since = None;
+        self.long_pressed_timer = None;
+    }
+
+    /// Whether token matches what we have
+    pub fn is_timer_token(&self, token: TimerToken) -> bool {
+        self.long_pressed_timer == Some(token)
     }
 
     /// Registering hold event.
@@ -316,6 +350,51 @@ where
         }
         None
     }
+
+    fn reset_button_presses(&mut self) {
+        self.left_btn.reset();
+        self.middle_btn.reset();
+        self.right_btn.reset();
+    }
+
+    fn got_pressed(&mut self, ctx: &mut EventCtx, pos: ButtonPos) {
+        // Only one (virtual) button can be pressed at the same time
+        self.reset_button_presses();
+        match pos {
+            ButtonPos::Left => {
+                self.left_btn.got_pressed(ctx);
+            }
+            ButtonPos::Middle => {
+                self.middle_btn.got_pressed(ctx);
+            }
+            ButtonPos::Right => {
+                self.right_btn.got_pressed(ctx);
+            }
+        }
+    }
+
+    fn handle_long_press_timer_token(&mut self, token: TimerToken) -> Option<ButtonPos> {
+        if self.left_btn.is_timer_token(token) {
+            return Some(ButtonPos::Left);
+        }
+        if self.middle_btn.is_timer_token(token) {
+            return Some(ButtonPos::Middle);
+        }
+        if self.right_btn.is_timer_token(token) {
+            return Some(ButtonPos::Right);
+        }
+        None
+    }
+
+    /// Resetting the state of the controller.
+    pub fn reset_state(&mut self, ctx: &mut EventCtx) {
+        self.state = ButtonState::Nothing;
+        self.reset_button_presses();
+        self.set_pressed(ctx, false, false, false);
+        if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
+            ignore_btn_delay.reset();
+        }
+    }
 }
 
 impl<T> Component for ButtonController<T>
@@ -346,13 +425,13 @@ where
                                 match which {
                                     // ▼ *
                                     PhysicalButton::Left => {
-                                        self.left_btn.got_pressed();
+                                        self.got_pressed(ctx, ButtonPos::Left);
                                         self.left_btn.hold_started(ctx);
                                         Some(ButtonControllerMsg::Pressed(ButtonPos::Left))
                                     }
                                     // * ▼
                                     PhysicalButton::Right => {
-                                        self.right_btn.got_pressed();
+                                        self.got_pressed(ctx, ButtonPos::Right);
                                         self.right_btn.hold_started(ctx);
                                         Some(ButtonControllerMsg::Pressed(ButtonPos::Right))
                                     }
@@ -392,7 +471,7 @@ where
                                     return None;
                                 }
                             }
-                            self.middle_btn.got_pressed();
+                            self.got_pressed(ctx, ButtonPos::Middle);
                             self.middle_hold_started(ctx);
                             (
                                 // ↓ ↓
@@ -470,6 +549,9 @@ where
             Event::Timer(token) => {
                 if let Some(ignore_btn_delay) = &mut self.ignore_btn_delay {
                     ignore_btn_delay.handle_timer_token(token);
+                }
+                if let Some(pos) = self.handle_long_press_timer_token(token) {
+                    return Some(ButtonControllerMsg::LongPressed(pos));
                 }
                 self.handle_htc_expiration(ctx, event)
             }
@@ -567,6 +649,13 @@ impl IgnoreButtonDelay {
             self.right_clickable = false;
             self.right_clickable_timer = None;
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.left_clickable = true;
+        self.right_clickable = true;
+        self.left_clickable_timer = None;
+        self.right_clickable_timer = None;
     }
 }
 
