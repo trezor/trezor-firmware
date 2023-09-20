@@ -112,6 +112,12 @@ templates: icons ## rebuild coin lists from definitions in common
 templates_check: ## check that coin lists are up to date
 	./core/tools/build_templates --check
 
+solana_templates:
+	./core/tools/build_solana_templates
+
+solana_templates_check:
+	./core/tools/build_solana_templates --check
+
 icons: ## generate FIDO service icons
 	python3 core/tools/build_icons.py
 
@@ -130,12 +136,6 @@ ci_docs: ## generate CI documentation
 ci_docs_check: ## check that generated CI documentation is up to date
 	./tools/generate_ci_docs.py --check
 
-vendorheader: ## generate vendor header
-	./core/embed/vendorheader/generate.sh --quiet
+gen:  mocks icons templates protobuf ci_docs solana_templates ## regenerate auto-generated files from sources
 
-vendorheader_check: ## check that vendor header is up to date
-	./core/embed/vendorheader/generate.sh --quiet --check
-
-gen:  mocks icons templates protobuf ci_docs vendorheader ## regenerate auto-generated files from sources
-
-gen_check: mocks_check icons_check templates_check protobuf_check ci_docs_check vendorheader_check ## check validity of auto-generated files
+gen_check: mocks_check icons_check templates_check protobuf_check ci_docs_check solana_templates_check ## check validity of auto-generated files

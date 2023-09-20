@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -e
+
+CWD=`dirname "$0"`
+RENDER="python3 $CWD/build_solana_templates.py"
+
+ROOT_PATH="$CWD/../src/apps/solana/transaction"
+OUTPUT_PATH="$ROOT_PATH/instructions.py"
+
+format() {
+	isort $1
+	black $1
+	flake8 $1
+}
+
+check_results() {
+    CHECK_FAIL=0
+    TMP=`mktemp`
+    TARGET=$OUTPUT_PATH
+    $RENDER "$ROOT_PATH" -o $TMP
+    format $TMP
+
+    if ! diff -u "$TARGET" "$TMP"; then
+        CHECK_FAIL=1
+    fi
+    exit $CHECK_FAIL
+}
+
+if [ "$1" = "--check" ]; then
+    check_results
+else
+    $RENDER "$ROOT_PATH" -o $OUTPUT_PATH
+    format $OUTPUT_PATH
+fi
