@@ -70,6 +70,8 @@ static int DISPLAY_ORIENTATION = -1;
 
 void display_pixeldata(uint16_t c) { PIXELDATA(c); }
 
+void display_pixeldata_dirty(void) {}
+
 static uint32_t read_display_id(uint8_t command) {
   volatile uint8_t c = 0;
   uint32_t id = 0;
@@ -470,3 +472,9 @@ void display_set_big_endian(void) {
 const char *display_save(const char *prefix) { return NULL; }
 
 void display_clear_save(void) {}
+
+uint8_t *display_get_wr_addr(void) { return (uint8_t *)DISPLAY_DATA_ADDRESS; }
+
+uint16_t display_get_window_offset(void) { return 0; }
+
+void display_shift_window(uint16_t pixels) {}

@@ -20,6 +20,7 @@
 #include "dma2d.h"
 #include "colors.h"
 #include STM32_HAL_H
+#include "display_interface.h"
 
 typedef enum {
   DMA2D_LAYER_FG = 1,
@@ -27,12 +28,14 @@ typedef enum {
 } dma2d_layer_t;
 
 static DMA2D_HandleTypeDef dma2d_handle = {0};
+static uint16_t current_width = 0;
+static uint16_t current_height = 0;
 
 void dma2d_init(void) {
   __HAL_RCC_DMA2D_CLK_ENABLE();
 
   dma2d_handle.Instance = (DMA2D_TypeDef*)DMA2D_BASE;
-  dma2d_handle.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  dma2d_handle.Init.ColorMode = DISPLAY_COLOR_MODE;
   dma2d_handle.Init.OutputOffset = 0;
 }
 
@@ -61,11 +64,13 @@ static void dma2d_init_clut(uint16_t fg, uint16_t bg, dma2d_layer_t layer) {
 
 void dma2d_setup_const(void) {
   dma2d_handle.Init.Mode = DMA2D_R2M;
+  dma2d_handle.Init.OutputOffset = display_get_window_offset();
   HAL_DMA2D_Init(&dma2d_handle);
 }
 
 void dma2d_setup_4bpp(uint16_t fg_color, uint16_t bg_color) {
   dma2d_handle.Init.Mode = DMA2D_M2M_PFC;
+  dma2d_handle.Init.OutputOffset = display_get_window_offset();
   dma2d_handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_L4;
   dma2d_handle.LayerCfg[1].InputOffset = 0;
   dma2d_handle.LayerCfg[1].AlphaMode = 0;
@@ -79,6 +84,7 @@ void dma2d_setup_4bpp(uint16_t fg_color, uint16_t bg_color) {
 
 void dma2d_setup_16bpp(void) {
   dma2d_handle.Init.Mode = DMA2D_M2M_PFC;
+  dma2d_handle.Init.OutputOffset = display_get_window_offset();
   dma2d_handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
   dma2d_handle.LayerCfg[1].InputOffset = 0;
   dma2d_handle.LayerCfg[1].AlphaMode = 0;
@@ -90,6 +96,7 @@ void dma2d_setup_16bpp(void) {
 
 void dma2d_setup_4bpp_over_16bpp(uint16_t overlay_color) {
   dma2d_handle.Init.Mode = DMA2D_M2M_BLEND;
+  dma2d_handle.Init.OutputOffset = display_get_window_offset();
   dma2d_handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
   dma2d_handle.LayerCfg[1].InputOffset = 0;
   dma2d_handle.LayerCfg[1].AlphaMode = 0;
@@ -109,6 +116,7 @@ void dma2d_setup_4bpp_over_16bpp(uint16_t overlay_color) {
 void dma2d_setup_4bpp_over_4bpp(uint16_t fg_color, uint16_t bg_color,
                                 uint16_t overlay_color) {
   dma2d_handle.Init.Mode = DMA2D_M2M_BLEND;
+  dma2d_handle.Init.OutputOffset = display_get_window_offset();
   dma2d_handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
   dma2d_handle.LayerCfg[1].InputOffset = 0;
   dma2d_handle.LayerCfg[1].AlphaMode = 0;
@@ -127,17 +135,31 @@ void dma2d_setup_4bpp_over_4bpp(uint16_t fg_color, uint16_t bg_color,
 }
 
 void dma2d_start(uint8_t* in_addr, uint8_t* out_addr, int32_t pixels) {
+  current_width = pixels;
+  current_height = 1;
   HAL_DMA2D_Start(&dma2d_handle, (uint32_t)in_addr, (uint32_t)out_addr, pixels,
                   1);
 }
 
 void dma2d_start_const(uint16_t color, uint8_t* out_addr, int32_t pixels) {
+  current_width = pixels;
+  current_height = 1;
   HAL_DMA2D_Start(&dma2d_handle, rgb565_to_rgb888(color), (uint32_t)out_addr,
                   pixels, 1);
 }
 
+void dma2d_start_const_multiline(uint16_t color, uint8_t* out_addr,
+                                 int32_t width, int32_t height) {
+  current_width = width;
+  current_height = height;
+  HAL_DMA2D_Start(&dma2d_handle, rgb565_to_rgb888(color), (uint32_t)out_addr,
+                  width, height);
+}
+
 void dma2d_start_blend(uint8_t* overlay_addr, uint8_t* bg_addr,
                        uint8_t* out_addr, int32_t pixels) {
+  current_width = pixels;
+  current_height = 1;
   HAL_DMA2D_BlendingStart(&dma2d_handle, (uint32_t)overlay_addr,
                           (uint32_t)bg_addr, (uint32_t)out_addr, pixels, 1);
 }
@@ -145,4 +167,7 @@ void dma2d_start_blend(uint8_t* overlay_addr, uint8_t* bg_addr,
 void dma2d_wait_for_transfer(void) {
   while (HAL_DMA2D_PollForTransfer(&dma2d_handle, 10) != HAL_OK)
     ;
+  display_shift_window(current_width * current_height);
+  current_width = 0;
+  current_height = 0;
 }

@@ -115,7 +115,7 @@ void display_pixeldata(pixel_color c) {
   }
 }
 
-#define PIXELDATA(c) display_pixeldata(c)
+void display_pixeldata_dirty(void) {}
 
 void display_reset_state() {}
 
@@ -332,3 +332,5 @@ void display_clear_save(void) {
   SDL_FreeSurface(PREV_SAVED);
   PREV_SAVED = NULL;
 }
+
+uint8_t *display_get_wr_addr(void) { return (uint8_t *)DISPLAY_DATA_ADDRESS; }

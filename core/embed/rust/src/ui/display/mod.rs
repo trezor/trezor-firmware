@@ -32,12 +32,20 @@ use crate::{
 };
 
 // Reexports
+use crate::trezorhal::buffers::BufferText;
 pub use crate::ui::display::toif::Icon;
 pub use color::Color;
 pub use font::{Font, Glyph, GlyphMetrics};
 pub use loader::{
     loader, loader_indeterminate, loader_small_indeterminate, LOADER_MAX, LOADER_MIN,
 };
+
+#[cfg(all(feature = "dma2d", feature = "framebuffer"))]
+use crate::trezorhal::{
+    display::{get_fb_addr, pixel},
+    dma2d::{dma2d_setup_const, dma2d_start_const_multiline},
+};
+use crate::ui::constant::WIDTH;
 
 pub fn backlight() -> u16 {
     display::backlight(-1) as u16
@@ -78,34 +86,223 @@ pub fn fade_backlight(_: u16) {}
 #[cfg(not(feature = "backlight"))]
 pub fn fade_backlight_duration(_: u16, _: u32) {}
 
+#[cfg(not(feature = "framebuffer"))]
 /// Fill a whole rectangle with a specific color.
 pub fn rect_fill(r: Rect, fg_color: Color) {
-    display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
+    let r = r.translate(get_offset());
+    let r = r.clamp(constant::screen());
+
+    set_window(r);
+
+    for _ in r.y0..r.y1 {
+        for _ in r.x0..r.x1 {
+            pixeldata(fg_color.into());
+        }
+    }
+
+    pixeldata_dirty();
+}
+
+#[cfg(feature = "framebuffer")]
+pub fn rect_fill(r: Rect, fg_color: Color) {
+    let r = r.translate(get_offset());
+    let r = r.clamp(constant::screen());
+    set_window(r);
+    dma2d_setup_const();
+    unsafe {
+        dma2d_start_const_multiline(fg_color.into(), r.width(), r.height());
+    }
+    dma2d_wait_for_transfer();
+    pixeldata_dirty();
 }
 
 pub fn rect_stroke(r: Rect, fg_color: Color) {
-    display::bar(r.x0, r.y0, r.width(), 1, fg_color.into());
-    display::bar(r.x0, r.y0 + r.height() - 1, r.width(), 1, fg_color.into());
-    display::bar(r.x0, r.y0, 1, r.height(), fg_color.into());
-    display::bar(r.x0 + r.width() - 1, r.y0, 1, r.height(), fg_color.into());
+    rect_fill(
+        Rect::from_top_left_and_size(Point::new(r.x0, r.y0), Offset::new(r.width(), 1)),
+        fg_color,
+    );
+    rect_fill(
+        Rect::from_top_left_and_size(
+            Point::new(r.x0, r.y0 + r.height() - 1),
+            Offset::new(r.width(), 1),
+        ),
+        fg_color,
+    );
+    rect_fill(
+        Rect::from_top_left_and_size(Point::new(r.x0, r.y0), Offset::new(1, r.height())),
+        fg_color,
+    );
+    rect_fill(
+        Rect::from_top_left_and_size(
+            Point::new(r.x0 + r.width() - 1, r.y0),
+            Offset::new(1, r.height()),
+        ),
+        fg_color,
+    );
 }
 
+const CORNER_RADIUS: usize = 16;
+
+#[rustfmt::skip]
+const CORNER_TABLE: [usize; CORNER_RADIUS * CORNER_RADIUS] = [
+     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  5,  9, 12, 14, 15,
+     0,  0,  0,  0,  0,  0,  0,  0,  3,  9, 15, 15, 15, 15, 15, 15,
+     0,  0,  0,  0,  0,  0,  0,  8, 15, 15, 15, 15, 15, 15, 15, 15,
+     0,  0,  0,  0,  0,  3, 12, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     0,  0,  0,  0,  3, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     0,  0,  0,  3, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     0,  0,  0, 12, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     0,  0,  8, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     0,  3, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     0,  9, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     1, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     5, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+     9, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    12, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+];
+
 /// Draw a rectangle with rounded corners.
+#[cfg(not(feature = "framebuffer"))]
 pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
     if radius == 1 {
         rect_fill_rounded1(r, fg_color, bg_color);
     } else {
         assert!([2, 4, 8, 16].iter().any(|allowed| radius == *allowed));
-        display::bar_radius(
-            r.x0,
-            r.y0,
-            r.width(),
-            r.height(),
-            fg_color.into(),
-            bg_color.into(),
-            radius,
-        );
+
+        let color_table = get_color_table(fg_color, bg_color);
+        let area = r.translate(get_offset());
+        let clamped = area.clamp(constant::screen());
+
+        set_window(clamped);
+
+        let radius = radius as i16;
+        let radius_inv = 16 / radius;
+
+        for y in area.y0..area.y1 {
+            for x in area.x0..area.x1 {
+                if x - r.x0 < radius && y - r.y0 < radius {
+                    let c = CORNER_TABLE[((x - area.x0) * radius_inv
+                        + (y - area.y0) * radius_inv * CORNER_RADIUS as i16)
+                        as usize];
+                    pixeldata(color_table[c]);
+                } else if x - r.x0 < radius && y - r.y0 >= r.height() - radius {
+                    let c = CORNER_TABLE[((x - area.x0) * radius_inv
+                        + (r.height() - 1 - (y - area.y0)) * radius_inv * CORNER_RADIUS as i16)
+                        as usize];
+                    pixeldata(color_table[c]);
+                } else if x - r.x0 >= r.width() - radius && y - r.y0 < radius {
+                    let c = CORNER_TABLE[((r.width() - 1 - (x - area.x0)) * radius_inv
+                        + (y - area.y0) * radius_inv * CORNER_RADIUS as i16)
+                        as usize];
+                    pixeldata(color_table[c]);
+                } else if x - r.x0 >= r.width() - radius && y - r.y0 >= r.height() - radius {
+                    let c = CORNER_TABLE[((r.width() - 1 - (x - area.x0)) * radius_inv
+                        + (r.height() - 1 - (y - area.y0)) * radius_inv * CORNER_RADIUS as i16)
+                        as usize];
+                    pixeldata(color_table[c]);
+                } else {
+                    pixeldata(color_table[15]);
+                }
+            }
+        }
     }
+    pixeldata_dirty();
+}
+
+pub fn rect_fill_rounded_buffer(r: Rect, radius: u8, buffer: &mut BufferText) {
+    if r.height() > r.y0 + buffers::TEXT_BUFFER_HEIGHT as i16 || r.x0 + r.width() > WIDTH {
+        return;
+    }
+
+    assert!([2, 4, 8, 16].iter().any(|allowed| radius == *allowed));
+
+    let radius = radius as i16;
+    let radius_inv = 16 / radius;
+
+    for y in r.y0..r.y1 {
+        for x in r.x0..r.x1 {
+            let c = if x - r.x0 < radius && y - r.y0 < radius {
+                CORNER_TABLE[((x - r.x0) * radius_inv
+                    + (y - r.y0) * radius_inv * CORNER_RADIUS as i16)
+                    as usize]
+            } else if x - r.x0 < radius && y - r.y0 >= r.height() - radius {
+                CORNER_TABLE[((x - r.x0) * radius_inv
+                    + (r.height() - 1 - (y - r.y0)) * radius_inv * CORNER_RADIUS as i16)
+                    as usize]
+            } else if x - r.x0 >= r.width() - radius && y - r.y0 < radius {
+                CORNER_TABLE[((r.width() - 1 - (x - r.x0)) * radius_inv
+                    + (y - r.y0) * radius_inv * CORNER_RADIUS as i16)
+                    as usize]
+            } else if x - r.x0 >= r.width() - radius && y - r.y0 >= r.height() - radius {
+                CORNER_TABLE[((r.width() - 1 - (x - r.x0)) * radius_inv
+                    + (r.height() - 1 - (y - r.y0)) * radius_inv * CORNER_RADIUS as i16)
+                    as usize]
+            } else {
+                15usize
+            };
+            let p = y * WIDTH + x;
+            let b = (p / 2) as usize;
+            if p % 2 != 0 {
+                buffer.buffer[b] |= (c << 4) as u8;
+            } else {
+                buffer.buffer[b] |= c as u8;
+            }
+        }
+    }
+    pixeldata_dirty();
+}
+
+#[cfg(feature = "framebuffer")]
+/// Draw a rectangle with rounded corners.
+pub fn rect_fill_rounded(area: Rect, fg_color: Color, bg_color: Color, radius: u8) {
+    let radius = radius as i16;
+    if radius == 1 {
+        rect_fill_rounded1(area, fg_color, bg_color);
+    } else {
+        assert!([2, 4, 8, 16].iter().any(|allowed| radius == *allowed));
+
+        let r = area.translate(get_offset());
+        let r = r.clamp(constant::screen());
+        let fb = get_fb_addr();
+
+        rect_fill(r, fg_color);
+        let r_inv = 16 / radius;
+        let color_table = get_color_table(fg_color, bg_color);
+
+        for y in 0..radius {
+            for x in 0..radius {
+                let c = CORNER_TABLE[(x * r_inv + y * r_inv * 16) as usize];
+                pixel(fb, r.x0 + x, r.y0 + y, color_table[c].into());
+            }
+        }
+        for y in 0..radius {
+            for x in 0..radius {
+                let c = CORNER_TABLE[((radius - x - 1) * r_inv + y * r_inv * 16) as usize];
+                pixel(fb, r.x1 - radius + x, r.y0 + y, color_table[c].into());
+            }
+        }
+        for y in 0..radius {
+            for x in 0..radius {
+                let c = CORNER_TABLE[(x * r_inv + (radius - y - 1) * r_inv * 16) as usize];
+                pixel(fb, r.x0 + x, r.y1 - radius + y, color_table[c].into());
+            }
+        }
+        for y in 0..radius {
+            for x in 0..radius {
+                let c = CORNER_TABLE
+                    [((radius - x - 1) * r_inv + (radius - y - 1) * r_inv * 16) as usize];
+                pixel(
+                    fb,
+                    r.x1 - radius + x,
+                    r.y1 - radius + y,
+                    color_table[c].into(),
+                );
+            }
+        }
+    }
+    pixeldata_dirty();
 }
 
 /// Filling a rectangle with a rounding of 1 pixel - removing the corners.
@@ -137,7 +334,10 @@ pub fn rect_outline_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u
 pub fn rect_fill_corners(r: Rect, fg_color: Color) {
     for p in r.corner_points().iter() {
         // This draws a 1x1 rectangle at the given point.
-        display::bar(p.x, p.y, 1, 1, fg_color.into());
+        rect_fill(
+            Rect::from_top_left_and_size(*p, Offset::uniform(1)),
+            fg_color,
+        );
     }
 }
 
@@ -860,7 +1060,10 @@ pub fn marquee(area: Rect, text: &str, offset: i16, font: Font, fg: Color, bg: C
 
 pub fn dotted_line(start: Point, width: i16, color: Color, step: i16) {
     for x in (start.x..width).step_by(step as usize) {
-        display::bar(x, start.y, 1, 1, color.into());
+        rect_fill(
+            Rect::from_top_left_and_size(Point::new(x, start.y), Offset::new(1, 1)),
+            color,
+        );
     }
 }
 

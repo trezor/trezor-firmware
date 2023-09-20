@@ -123,7 +123,7 @@ void ui_screen_boot(const vendor_header *const vhdr,
 
 #endif
 
-  PIXELDATA_DIRTY();
+  display_pixeldata_dirty();
   display_refresh();
 }
 
@@ -134,7 +134,7 @@ void ui_screen_boot_wait(int wait_seconds) {
               boot_background);
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5, wait_str, -1,
                       FONT_NORMAL, COLOR_BL_BG, boot_background);
-  PIXELDATA_DIRTY();
+  display_pixeldata_dirty();
   display_refresh();
 }
 
@@ -182,7 +182,7 @@ void ui_screen_boot_click(void) {
   display_bar(0, BOOT_WAIT_Y_TOP, DISPLAY_RESX, BOOT_WAIT_HEIGHT,
               boot_background);
   bld_continue_label(boot_background);
-  PIXELDATA_DIRTY();
+  display_pixeldata_dirty();
   display_refresh();
   ui_click();
 }

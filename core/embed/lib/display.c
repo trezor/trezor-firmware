@@ -51,6 +51,9 @@ static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0,
 }
 
 void display_clear(void) {
+#ifdef DISPLAY_EFFICIENT_CLEAR
+  display_efficient_clear();
+#else
   const int saved_orientation = display_get_orientation();
 
   display_reset_state();
@@ -68,7 +71,8 @@ void display_clear(void) {
   // if valid, go back to the saved orientation
   display_orientation(saved_orientation);
   // flag display for refresh
-  PIXELDATA_DIRTY();
+#endif
+  display_pixeldata_dirty();
 }
 
 void display_bar(int x, int y, int w, int h, uint16_t c) {
@@ -80,104 +84,7 @@ void display_bar(int x, int y, int w, int h, uint16_t c) {
   for (int i = 0; i < (x1 - x0 + 1) * (y1 - y0 + 1); i++) {
     PIXELDATA(c);
   }
-  PIXELDATA_DIRTY();
-}
-
-#define CORNER_RADIUS 16
-
-static const uint8_t cornertable[CORNER_RADIUS * CORNER_RADIUS] = {
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  5,  9,  12, 14, 15, 0,  0,  0,
-    0,  0,  0,  0,  0,  3,  9,  15, 15, 15, 15, 15, 15, 0,  0,  0,  0,  0,  0,
-    0,  8,  15, 15, 15, 15, 15, 15, 15, 15, 0,  0,  0,  0,  0,  3,  12, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 0,  0,  0,  0,  3,  14, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 0,  0,  0,  3,  14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 0,  0,  0,  12, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 0,  0,
-    8,  15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 0,  3,  15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 0,  9,  15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 1,  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 5,  15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 9,  15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 12,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 14, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15,
-};
-
-void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
-                        uint8_t r) {
-  if (r != 2 && r != 4 && r != 8 && r != 16) {
-    return;
-  } else {
-    r = 16 / r;
-  }
-  uint16_t colortable[16] = {0};
-  set_color_table(colortable, c, b);
-  x += DISPLAY_OFFSET.x;
-  y += DISPLAY_OFFSET.y;
-  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-  clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
-  display_set_window(x0, y0, x1, y1);
-  for (int j = y0; j <= y1; j++) {
-    for (int i = x0; i <= x1; i++) {
-      int rx = i - x;
-      int ry = j - y;
-      if (rx < CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
-        uint8_t c = cornertable[rx * r + ry * r * CORNER_RADIUS];
-        PIXELDATA(colortable[c]);
-      } else if (rx < CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
-        uint8_t c = cornertable[rx * r + (h - 1 - ry) * r * CORNER_RADIUS];
-        PIXELDATA(colortable[c]);
-      } else if (rx >= w - CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
-        uint8_t c = cornertable[(w - 1 - rx) * r + ry * r * CORNER_RADIUS];
-        PIXELDATA(colortable[c]);
-      } else if (rx >= w - CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
-        uint8_t c =
-            cornertable[(w - 1 - rx) * r + (h - 1 - ry) * r * CORNER_RADIUS];
-        PIXELDATA(colortable[c]);
-      } else {
-        PIXELDATA(c);
-      }
-    }
-  }
-  PIXELDATA_DIRTY();
-}
-
-void display_bar_radius_buffer(int x, int y, int w, int h, uint8_t r,
-                               buffer_text_t *buffer) {
-  if (h > TEXT_BUFFER_HEIGHT) {
-    return;
-  }
-  if (r != 2 && r != 4 && r != 8 && r != 16) {
-    return;
-  } else {
-    r = 16 / r;
-  }
-  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-  clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
-  for (int j = y0; j <= y1; j++) {
-    for (int i = x0; i <= x1; i++) {
-      int rx = i - x;
-      int ry = j - y;
-      int p = j * DISPLAY_RESX + i;
-      uint8_t c = 0;
-      if (rx < CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
-        c = cornertable[rx * r + ry * r * CORNER_RADIUS];
-      } else if (rx < CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
-        c = cornertable[rx * r + (h - 1 - ry) * r * CORNER_RADIUS];
-      } else if (rx >= w - CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
-        c = cornertable[(w - 1 - rx) * r + ry * r * CORNER_RADIUS];
-      } else if (rx >= w - CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
-        c = cornertable[(w - 1 - rx) * r + (h - 1 - ry) * r * CORNER_RADIUS];
-      } else {
-        c = 15;
-      }
-      int b = p / 2;
-      if (p % 2) {
-        buffer->buffer[b] |= c << 4;
-      } else {
-        buffer->buffer[b] |= (c);
-      }
-    }
-  }
+  display_pixeldata_dirty();
 }
 
 void display_text_render_buffer(const char *text, int textlen, int font,
@@ -357,7 +264,7 @@ void display_print(const char *text, int textlen) {
       PIXELDATA(display_print_bgcolor);
     }
   }
-  PIXELDATA_DIRTY();
+  display_pixeldata_dirty();
   display_refresh();
 }
 
@@ -384,6 +291,67 @@ void display_printf(const char *fmt, ...) {
 
 #endif  // TREZOR_PRINT_DISABLE
 
+#ifdef FRAMEBUFFER
+static void display_text_render(int x, int y, const char *text, int textlen,
+                                int font, uint16_t fgcolor, uint16_t bgcolor) {
+  // determine text length if not provided
+  if (textlen < 0) {
+    textlen = strlen(text);
+  }
+
+  int total_adv = 0;
+
+  uint32_t *fb = display_get_fb_addr();
+
+  uint16_t colortable[16] = {0};
+  set_color_table(colortable, fgcolor, bgcolor);
+
+  // render glyphs
+  for (int c_idx = 0; c_idx < textlen; c_idx++) {
+    const uint8_t *g = font_get_glyph(font, (uint8_t)text[c_idx]);
+    if (!g) continue;
+    const uint8_t w = g[0];      // width
+    const uint8_t h = g[1];      // height
+    const uint8_t adv = g[2];    // advance
+    const uint8_t bearX = g[3];  // bearingX
+    const uint8_t bearY = g[4];  // bearingY
+    if (w && h) {
+      for (int j = 0; j < h; j++) {
+        for (int i = 0; i < w; i++) {
+          const int a = i + j * w;
+#if TREZOR_FONT_BPP == 1
+          const uint8_t c = ((g[5 + a / 8] >> (7 - (a % 8) * 1)) & 0x01) * 15;
+#elif TREZOR_FONT_BPP == 2
+          const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
+#elif TREZOR_FONT_BPP == 4
+          const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+#elif TREZOR_FONT_BPP == 8
+#error Rendering into buffer not supported when using TREZOR_FONT_BPP = 8
+          // const uint8_t c = g[5 + a / 1] >> 4;
+#else
+#error Unsupported TREZOR_FONT_BPP value
+#endif
+
+          int x_pos = x + i + total_adv + bearX;
+          int y_pos = y + j - bearY;
+
+          if (y_pos < 0) continue;
+
+          if (x_pos >= DISPLAY_FRAMEBUFFER_WIDTH || x_pos < 0 ||
+              y_pos >= DISPLAY_FRAMEBUFFER_HEIGHT || y_pos < 0) {
+            continue;
+          }
+
+          display_pixel((uint8_t *)fb, x_pos, y_pos, colortable[c]);
+        }
+      }
+    }
+    total_adv += adv;
+  }
+  display_pixeldata_dirty();
+}
+
+#else
 static void display_text_render(int x, int y, const char *text, int textlen,
                                 int font, uint16_t fgcolor, uint16_t bgcolor) {
   // determine text length if not provided
@@ -431,8 +399,9 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     }
     x += adv;
   }
-  PIXELDATA_DIRTY();
+  display_pixeldata_dirty();
 }
+#endif
 
 void display_text(int x, int y, const char *text, int textlen, int font,
                   uint16_t fgcolor, uint16_t bgcolor) {
@@ -552,7 +521,7 @@ void display_qrcode(int x, int y, const char *data, uint8_t scale) {
       }
     }
   }
-  PIXELDATA_DIRTY();
+  display_pixeldata_dirty();
 }
 
 #endif
@@ -610,5 +579,3 @@ void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
   *out_start = buf_start + i_start;
   *out_len = i - i_start;
 }
-
-void display_pixeldata_dirty(void) { PIXELDATA_DIRTY(); }

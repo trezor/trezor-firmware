@@ -24,15 +24,28 @@
 #include "common.h"
 #include TREZOR_BOARD
 
+#ifndef DISPLAY_FRAMEBUFFER_OFFSET_Y
+#define DISPLAY_FRAMEBUFFER_OFFSET_Y 0
+#endif
+
+#ifndef DISPLAY_FRAMEBUFFER_OFFSET_X
+#define DISPLAY_FRAMEBUFFER_OFFSET_X 0
+#endif
+
+#ifndef DISPLAY_FRAMEBUFFER_WIDTH
+#define DISPLAY_FRAMEBUFFER_WIDTH 0
+#endif
+
+#ifndef DISPLAY_FRAMEBUFFER_HEIGHT
+#define DISPLAY_FRAMEBUFFER_HEIGHT 0
+#endif
+
 #ifndef PIXELDATA
 #define PIXELDATA(c) display_pixeldata(c)
 #endif
 
 void display_pixeldata(uint16_t c);
-
-#ifndef PIXELDATA_DIRTY
-#define PIXELDATA_DIRTY()
-#endif
+void display_pixeldata_dirty(void);
 
 void display_reset_state();
 
@@ -47,5 +60,11 @@ void display_sync(void);
 void display_refresh(void);
 const char *display_save(const char *prefix);
 void display_clear_save(void);
+
+void display_efficient_clear(void);
+uint32_t *display_get_fb_addr(void);
+uint8_t *display_get_wr_addr(void);
+void display_shift_window(uint16_t pixels);
+uint16_t display_get_window_offset(void);
 
 #endif  //_DISPLAY_INTERFACE_H

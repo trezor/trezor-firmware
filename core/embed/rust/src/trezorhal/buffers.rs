@@ -5,6 +5,8 @@ use core::{
 
 use super::ffi;
 
+pub use ffi::TEXT_BUFFER_HEIGHT;
+
 macro_rules! buffer_wrapper {
     ($rust_name: ident, $type: ident, $get: ident, $free: ident) => {
         pub struct $rust_name(ptr::NonNull<ffi::$type>);

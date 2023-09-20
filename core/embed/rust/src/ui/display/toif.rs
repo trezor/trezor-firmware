@@ -6,7 +6,7 @@ use crate::{
     ui::{
         component::image::Image,
         constant,
-        display::{get_color_table, get_offset, pixeldata, pixeldata_dirty, set_window},
+        display::{get_offset, pixeldata_dirty, set_window},
         geometry::{Alignment2D, Offset, Point, Rect},
     },
 };
@@ -20,6 +20,12 @@ use crate::{
     ui::display::process_buffer,
 };
 
+#[cfg(not(feature = "framebuffer"))]
+use crate::ui::display::{get_color_table, pixeldata};
+
+#[cfg(feature = "framebuffer")]
+use crate::trezorhal::{buffers::BufferLine4bpp, dma2d::dma2d_setup_4bpp};
+
 use super::Color;
 
 const TOIF_HEADER_LENGTH: usize = 12;
@@ -28,6 +34,7 @@ pub fn render_icon(icon: &Icon, center: Point, fg_color: Color, bg_color: Color)
     render_toif(&icon.toif, center, fg_color, bg_color);
 }
 
+#[cfg(not(feature = "framebuffer"))]
 pub fn render_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color) {
     let r = Rect::from_center_and_size(center, toif.size());
     let area = r.translate(get_offset());
@@ -60,6 +67,34 @@ pub fn render_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color)
         }
     }
 
+    pixeldata_dirty();
+}
+
+#[cfg(feature = "framebuffer")]
+pub fn render_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color) {
+    let r = Rect::from_center_and_size(center, toif.size());
+    let area = r.translate(get_offset());
+
+    set_window(area);
+
+    let mut b1 = BufferLine4bpp::get_cleared();
+    let mut b2 = BufferLine4bpp::get_cleared();
+
+    let mut window = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx = toif.decompression_context(Some(&mut window));
+
+    dma2d_setup_4bpp(fg_color.into(), bg_color.into());
+
+    for y in area.y0..area.y1 {
+        let img_buffer_used = if y % 2 == 0 { &mut b1 } else { &mut b2 };
+
+        unwrap!(ctx.uncompress(&mut (&mut img_buffer_used.buffer)[0..(area.width() / 2) as usize]));
+
+        dma2d_wait_for_transfer();
+        unsafe { dma2d_start(&img_buffer_used.buffer, area.width()) };
+    }
+
+    dma2d_wait_for_transfer();
     pixeldata_dirty();
 }
 

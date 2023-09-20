@@ -2,7 +2,6 @@ use crate::{
     trezorhal::{
         buffers::{BufferBlurring, BufferJpeg, BufferLine16bpp, BufferLine4bpp, BufferText},
         display,
-        display::bar_radius_buffer,
         dma2d::{dma2d_setup_4bpp_over_16bpp, dma2d_start_blend, dma2d_wait_for_transfer},
         uzlib::UzlibContext,
     },
@@ -10,7 +9,7 @@ use crate::{
         component::text::TextStyle,
         constant::{screen, HEIGHT, WIDTH},
         display::{
-            position_buffer, set_window,
+            position_buffer, rect_fill_rounded_buffer, set_window,
             tjpgd::{BufferInput, BufferOutput, JDEC},
             Color, Icon,
         },
@@ -645,11 +644,11 @@ pub fn homescreen(
 
     let mut next_text_idx = 0;
     let mut text_info = if let Some(notification) = notification {
-        bar_radius_buffer(
-            NOTIFICATION_BORDER,
-            0,
-            WIDTH - NOTIFICATION_BORDER * 2,
-            NOTIFICATION_HEIGHT,
+        rect_fill_rounded_buffer(
+            Rect::from_top_left_and_size(
+                Point::new(NOTIFICATION_BORDER, 0),
+                Offset::new(WIDTH - NOTIFICATION_BORDER * 2, NOTIFICATION_HEIGHT),
+            ),
             2,
             &mut text_buffer,
         );

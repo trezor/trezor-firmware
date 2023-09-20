@@ -7,7 +7,4 @@
 #define DISPLAY_RESY 64
 #define TREZOR_FONT_BPP 1
 
-void pixeldata_dirty(void);
-#define PIXELDATA_DIRTY() pixeldata_dirty();
-
 #endif  //_VG_2864KSWEG01_H
