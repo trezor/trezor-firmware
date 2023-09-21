@@ -783,7 +783,7 @@
 "TR_test_pin.py::test_pin_short": "20acadc34173f58ce9eb9d712e47732f1c8b03868f0f197be4213b314832ee4c",
 "TR_test_pin.py::test_wipe_code_same_as_pin": "17bb952006f42c3948370d1257618be76cf39d2892fd5c491488d9544cdc205d",
 "TR_test_pin.py::test_wipe_code_setup": "2f1d097810aa38ff87acef79133ccc735a9523118a1d83420efb84db21a05d97",
-"TR_test_recovery.py::test_recovery_bip39": "ec9e8ef343bba729d4fe5cab796ddb6408f54ccd7f3f4f3569ec07e8db66105c",
+"TR_test_recovery.py::test_recovery_bip39": "92c26b0e97c8e950c568bc8c7f71177a6e9338c950d6d6abb129dc217dc57c3a",
 "TR_test_recovery.py::test_recovery_slip39_basic": "ccfd227ca8dcd1abf0dc7b5827167279461b7151c810c2a587893d7016d38f01",
 "TR_test_reset_bip39.py::test_reset_bip39": "7dee2da63f3d220b4a1466b59da6c89a623d1a55c3d5300efe37761d064435db",
 "TR_test_reset_slip39_advanced.py::test_reset_slip39_advanced[16of16]": "0442794f3b952b6362d6569eaf15af002e7af5ccd3fedcf5339a9e75a61cb6e7",
