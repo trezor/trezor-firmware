@@ -16,7 +16,7 @@
 
 import secrets
 import sys
-from typing import TYPE_CHECKING, Optional, Sequence
+from typing import TYPE_CHECKING, Optional, Sequence, BinaryIO
 
 import click
 
@@ -336,8 +336,9 @@ def set_busy(
 
 @cli.command()
 @click.argument("hex_challenge", required=False)
+@click.option("-R", "--root", type=click.File("rb"), help="Root certificate.")
 @with_client
-def authenticate(client: "TrezorClient", hex_challenge: Optional[str]) -> None:
+def authenticate(client: "TrezorClient", hex_challenge: Optional[str], root: Optional[BinaryIO]) -> None:
     """Get information to verify the authenticity of the device."""
     if hex_challenge is None:
         hex_challenge = secrets.token_hex(32)
@@ -348,3 +349,25 @@ def authenticate(client: "TrezorClient", hex_challenge: Optional[str]) -> None:
     click.echo(f"Device certificate: {msg.certificates[0].hex()}")
     for cert in msg.certificates[1:]:
         click.echo(f"CA certificate: {cert.hex()}")
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    CHALLENGE_HEADER = b"AuthenticateDevice:"
+    challenge_bytes = len(CHALLENGE_HEADER).to_bytes(1, "big") + CHALLENGE_HEADER + len(challenge).to_bytes(1, "big") + challenge
+
+    first_cert = x509.load_der_x509_certificate(msg.certificates[0])
+    first_cert.public_key().verify(msg.signature, challenge_bytes, ec.ECDSA(hashes.SHA256()))
+    click.echo("Challenge verified successfully.")
+
+    for issuer in msg.certificates[1:]:
+        cert = x509.load_der_x509_certificate(issuer)
+        cert.public_key().verify(first_cert.signature, first_cert.tbs_certificate_bytes, first_cert.signature_algorithm_parameters)
+        click.echo(f"Certificate {first_cert.subject.rfc4514_string()} verified successfully.")
+        first_cert = cert
+
+    if root is not None:
+        root_cert = x509.load_der_x509_certificate(root.read())
+        root_cert.public_key().verify(first_cert.signature, first_cert.tbs_certificate_bytes, first_cert.signature_algorithm_parameters)
+        click.echo(f"Certificate {first_cert.subject.rfc4514_string()} belongs to Trezor root.")
