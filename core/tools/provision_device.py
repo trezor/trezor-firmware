@@ -93,7 +93,7 @@ class Connection:
 
 
 def provision_request(
-    optiga_id: bytes, cpu_id: bytes, device_cert: bytes
+    optiga_id: bytes, cpu_id: bytes, device_cert: bytes, url: str
 ) -> ProvisioningResult:
     request = {
         "tester_id": SERVER_TOKEN,
@@ -103,7 +103,7 @@ def provision_request(
         "cert": device_cert.hex(),
         "model": "T2B1",
     }
-    resp = requests.post(SERVER_URL, json=request)
+    resp = requests.post(url, json=request)
     if resp.status_code == 400:
         print("Server returned error:", resp.text)
     resp.raise_for_status()
@@ -111,7 +111,7 @@ def provision_request(
     return ProvisioningResult.from_json(resp_json)
 
 
-def prodtest(connection: Connection) -> None:
+def prodtest(connection: Connection, url: str) -> None:
     connection.command("PING")
 
     cpu_id = connection.command("CPUID READ")
@@ -121,7 +121,7 @@ def prodtest(connection: Connection) -> None:
     assert cpu_id is not None
     assert cert_bytes is not None
 
-    result = provision_request(optiga_id, cpu_id, cert_bytes)
+    result = provision_request(optiga_id, cpu_id, cert_bytes, url)
 
     connection.command("CERTDEV WRITE", result.device_cert)
     cert_dev = connection.command("CERTDEV READ")
@@ -154,7 +154,7 @@ def main(url, device) -> None:
     if SERVER_TOKEN is None:
         raise click.ClickException("SERVER_TOKEN environment variable is not set")
     connection = Connection(device)
-    prodtest(connection)
+    prodtest(connection, url)
 
 
 if __name__ == "__main__":
