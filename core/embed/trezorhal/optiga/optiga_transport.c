@@ -175,8 +175,10 @@ static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {
     }
     if (HAL_OK == i2c_transmit(OPTIGA_I2C_INSTANCE, OPTIGA_ADDRESS,
                                (uint8_t *)data, data_size, I2C_TIMEOUT)) {
+      hal_delay_us(1000);
       return OPTIGA_SUCCESS;
     }
+    hal_delay_us(1000);
   }
   return OPTIGA_ERR_I2C_WRITE;
 }
