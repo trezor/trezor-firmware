@@ -171,7 +171,7 @@ secbool flash_area_erase(const flash_area_t *area,
         }
       }
       done_pages++;
-      if (progress) {
+      if (progress && done_pages % 16 == 0) {
         progress(done_pages, total_pages);
       }
     }
@@ -276,6 +276,48 @@ secbool flash_write_quadword(uint16_t sector, uint32_t offset,
   return sectrue;
 }
 
+secbool flash_write_burst(uint16_t sector, uint32_t offset,
+                          const uint32_t *data) {
+  uint32_t address =
+      (uint32_t)flash_get_address(sector, offset, 8 * 4 * sizeof(uint32_t));
+  if (address == 0) {
+    return secfalse;
+  }
+  if (offset %
+      (8 * 4 * sizeof(uint32_t))) {  // we write only at 16-byte boundary
+    return secfalse;
+  }
+
+  for (int i = 0; i < 8 * 4; i++) {
+    if (data[i] != (data[i] & *((const uint32_t *)address + i))) {
+      return secfalse;
+    }
+  }
+
+  secbool all_match = sectrue;
+  for (int i = 0; i < 8 * 4; i++) {
+    if (data[i] != *((const uint32_t *)address + i)) {
+      all_match = secfalse;
+      break;
+    }
+  }
+  if (all_match == sectrue) {
+    return sectrue;
+  }
+
+  if (HAL_OK !=
+      HAL_FLASH_Program(FLASH_TYPEPROGRAM_BURST, address, (uint32_t)data)) {
+    return secfalse;
+  }
+
+  for (int i = 0; i < 8 * 4; i++) {
+    if (data[i] != *((const uint32_t *)address + i)) {
+      return secfalse;
+    }
+  }
+  return sectrue;
+}
+
 secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
                                   const uint32_t *data) {
   uint32_t tmp_offset = offset;
@@ -302,6 +344,37 @@ secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
       }
       // in correct sector
       return flash_write_quadword(sector, tmp_offset, data);
+    }
+  }
+  return secfalse;
+}
+
+secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
+                               const uint32_t *data) {
+  uint32_t tmp_offset = offset;
+  for (int i = 0; i < area->num_subareas; i++) {
+    uint16_t sector = area->subarea[i].first_sector;
+
+    uint32_t sub_size = flash_subarea_get_size(&area->subarea[i]);
+    if (tmp_offset >= sub_size) {
+      tmp_offset -= sub_size;
+      continue;
+    }
+
+    // in correct subarea
+    for (int s = 0; s < area->subarea[i].num_sectors; s++) {
+      const uint32_t sector_size = flash_sector_size(sector);
+      if (tmp_offset >= sector_size) {
+        tmp_offset -= sector_size;
+        sector++;
+
+        if (s == area->subarea[i].num_sectors - 1) {
+          return secfalse;
+        }
+        continue;
+      }
+      // in correct sector
+      return flash_write_burst(sector, tmp_offset, data);
     }
   }
   return secfalse;

@@ -671,11 +671,11 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
   const uint32_t *const src = (const uint32_t *const)CHUNK_BUFFER_PTR;
 
-  for (int i = 0; i < chunk_size / (sizeof(uint32_t) * 4); i++) {
-    ensure(flash_area_write_quadword(
+  for (int i = 0; i < chunk_size / (sizeof(uint32_t) * 8 * 4); i++) {
+    ensure(flash_area_write_burst(
                &FIRMWARE_AREA,
-               firmware_block * IMAGE_CHUNK_SIZE + i * 4 * sizeof(uint32_t),
-               &src[4 * i]),
+               firmware_block * IMAGE_CHUNK_SIZE + i * 8 * 4 * sizeof(uint32_t),
+               &src[8 * 4 * i]),
            NULL);
   }
 
