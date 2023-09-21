@@ -281,18 +281,21 @@ static optiga_result optiga_ensure_ready(void) {
         return ret;
       }
 
-      if ((frame_buffer[0] & I2C_STATE_BYTE1_BUSY) == 0) {
+      if ((frame_buffer[0] & I2C_STATE_BYTE1_RESP_RDY) != 0) {
+        // There is a response that needs to be flushed out.
         break;
+      }
+
+      if ((frame_buffer[0] & I2C_STATE_BYTE1_BUSY) == 0) {
+        // Not busy and no response that would need to be flushed out.
+        return OPTIGA_SUCCESS;
       }
       ret = OPTIGA_ERR_BUSY;
     }
 
     if (ret != OPTIGA_SUCCESS) {
+      // Optiga is busy even after maximum retries at reading the I2C state.
       return ret;
-    }
-
-    if ((frame_buffer[0] & I2C_STATE_BYTE1_RESP_RDY) == 0) {
-      return OPTIGA_SUCCESS;
     }
 
     // Flush out the previous response.
@@ -403,6 +406,13 @@ static optiga_result optiga_read(void) {
       frame_size = size - 2;
 
       return OPTIGA_SUCCESS;
+    }
+
+    if ((frame_buffer[0] & I2C_STATE_BYTE1_BUSY) == 0) {
+      // Optiga has no response ready and is not busy. This shouldn't happen if
+      // we are expecting to read a response, but Optiga occasionally fails to
+      // give any response to a command.
+      return OPTIGA_ERR_UNEXPECTED;
     }
   }
 
