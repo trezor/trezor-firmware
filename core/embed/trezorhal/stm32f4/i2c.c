@@ -171,9 +171,19 @@ HAL_StatusTypeDef i2c_transmit(uint16_t idx, uint8_t addr, uint8_t *data,
                                uint16_t len, uint32_t timeout) {
   return HAL_I2C_Master_Transmit(&i2c_handle[idx], addr, data, len, timeout);
 }
+
 HAL_StatusTypeDef i2c_receive(uint16_t idx, uint8_t addr, uint8_t *data,
                               uint16_t len, uint32_t timeout) {
-  return HAL_I2C_Master_Receive(&i2c_handle[idx], addr, data, len, timeout);
+  HAL_StatusTypeDef ret =
+      HAL_I2C_Master_Receive(&i2c_handle[idx], addr, data, len, timeout);
+#ifdef USE_OPTIGA
+  if (idx == OPTIGA_I2C_INSTANCE) {
+    // apply GUARD_TIME as specified by the OPTIGA datasheet
+    // (only applies to the I2C bus to which the OPTIGA is connected)
+    hal_delay_us(50);
+  }
+#endif
+  return ret;
 }
 
 HAL_StatusTypeDef i2c_mem_write(uint16_t idx, uint8_t addr, uint16_t mem_addr,

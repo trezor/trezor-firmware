@@ -76,6 +76,7 @@ void show_pin_too_many_screen(void);
 
 void hal_delay(uint32_t ms);
 uint32_t hal_ticks_ms();
+void hal_delay_us(uint16_t delay_us);
 
 void collect_hw_entropy(void);
 #define HW_ENTROPY_LEN (12 + 32)
