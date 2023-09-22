@@ -20,6 +20,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.ripple import get_address
 from trezorlib.tools import parse_path
 
+from ...input_flows import InputFlowShowAddressQRCode
+
 CUSTOM_MNEMONIC = (
     "armed bundle pudding lazy strategy impulse where identify "
     "submit weekend physical antenna flight social acoustic absurd "
@@ -32,15 +34,31 @@ pytestmark = [
     pytest.mark.skip_t1,  # T1 support is not planned
 ]
 
+# data from https://iancoleman.io/bip39/
+TEST_VECTORS = [
+    ("m/44h/144h/0h/0/0", "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H"),
+    ("m/44h/144h/0h/0/1", "rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws"),
+    ("m/44h/144h/1h/0/0", "rJX2KwzaLJDyFhhtXKi3htaLfaUH2tptEX"),
+]
 
-def test_ripple_get_address(client: Client):
-    # data from https://iancoleman.io/bip39/
-    address = get_address(client, parse_path("m/44h/144h/0h/0/0"))
-    assert address == "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H"
-    address = get_address(client, parse_path("m/44h/144h/0h/0/1"))
-    assert address == "rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws"
-    address = get_address(client, parse_path("m/44h/144h/1h/0/0"))
-    assert address == "rJX2KwzaLJDyFhhtXKi3htaLfaUH2tptEX"
+
+@pytest.mark.parametrize("path, expected_address", TEST_VECTORS)
+def test_ripple_get_address(client: Client, path: str, expected_address: str):
+    address = get_address(client, parse_path(path), show_display=True)
+    assert address == expected_address
+
+
+@pytest.mark.parametrize("path, expected_address", TEST_VECTORS)
+def test_ripple_get_address_chunkify_details(
+    client: Client, path: str, expected_address: str
+):
+    with client:
+        IF = InputFlowShowAddressQRCode(client)
+        client.set_input_flow(IF.get())
+        address = get_address(
+            client, parse_path(path), show_display=True, chunkify=True
+        )
+        assert address == expected_address
 
 
 @pytest.mark.setup_client(mnemonic=CUSTOM_MNEMONIC)

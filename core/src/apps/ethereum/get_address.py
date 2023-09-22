@@ -32,8 +32,14 @@ async def get_address(
     address = address_from_bytes(node.ethereum_pubkeyhash(), defs.network)
 
     if msg.show_display:
+        slip44_id = address_n[1]  # it depends on the network (ETH vs ETC...)
         await show_address(
-            address, path=paths.address_n_to_str(address_n), chunkify=bool(msg.chunkify)
+            address,
+            path=paths.address_n_to_str(address_n),
+            account=paths.get_account_name(
+                "ETH", address_n, PATTERNS_ADDRESS, slip44_id
+            ),
+            chunkify=bool(msg.chunkify),
         )
 
     return EthereumAddress(address=address)
