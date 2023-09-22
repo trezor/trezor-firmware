@@ -80,6 +80,7 @@ where
     fadeout();
     display::sync();
     frame.paint();
+    display::refresh();
     fadein();
 
     loop {
@@ -264,6 +265,8 @@ fn screen_progress(
     if initialize {
         fadein();
     }
+
+    display::refresh();
 }
 
 #[no_mangle]
@@ -340,6 +343,7 @@ extern "C" fn screen_boot_empty(fading: bool) {
     } else {
         display::set_backlight(BACKLIGHT_NORMAL);
     }
+    display::refresh();
 }
 
 #[no_mangle]
