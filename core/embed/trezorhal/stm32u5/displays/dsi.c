@@ -1633,6 +1633,7 @@ uint16_t display_get_window_height(void) { return window_y1 - window_y0 + 1; }
 
 void display_shift_window(uint16_t pixels) {
   uint16_t w = display_get_window_width();
+  uint16_t h = display_get_window_height();
 
   uint16_t line_rem = w - (cursor_x - window_x0);
 
@@ -1647,10 +1648,8 @@ void display_shift_window(uint16_t pixels) {
   cursor_y++;
 
   // add the rest of pixels
-  cursor_y += pixels / w;
+  cursor_y = window_y0 + (((cursor_y - window_y0) + (pixels / w)) % h);
   cursor_x += pixels % w;
-
-  // todo check if we are out of bounds height wise
 }
 
 uint16_t display_get_window_offset(void) {
