@@ -10,6 +10,7 @@ use crate::{
         geometry::{Alignment2D, Offset, Point, Rect},
     },
 };
+use core::cmp::max;
 
 #[cfg(feature = "dma2d")]
 use crate::{
@@ -74,8 +75,9 @@ pub fn render_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color)
 pub fn render_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color) {
     let r = Rect::from_center_and_size(center, toif.size());
     let area = r.translate(get_offset());
+    let clamped = area.clamp(constant::screen()).ensure_even_width();
 
-    set_window(area);
+    set_window(clamped);
 
     let mut b1 = BufferLine4bpp::get_cleared();
     let mut b2 = BufferLine4bpp::get_cleared();
@@ -85,13 +87,23 @@ pub fn render_toif(toif: &Toif, center: Point, fg_color: Color, bg_color: Color)
 
     dma2d_setup_4bpp(fg_color.into(), bg_color.into());
 
-    for y in area.y0..area.y1 {
+    let x_shift = max(0, clamped.x0 - area.x0);
+
+    for y in area.y0..clamped.y1 {
         let img_buffer_used = if y % 2 == 0 { &mut b1 } else { &mut b2 };
 
-        unwrap!(ctx.uncompress(&mut (&mut img_buffer_used.buffer)[0..(area.width() / 2) as usize]));
+        unwrap!(ctx.uncompress(&mut (&mut img_buffer_used.buffer)[..(area.width() / 2) as usize]));
 
-        dma2d_wait_for_transfer();
-        unsafe { dma2d_start(&img_buffer_used.buffer, area.width()) };
+        if y >= clamped.y0 {
+            dma2d_wait_for_transfer();
+            unsafe {
+                dma2d_start(
+                    &img_buffer_used.buffer
+                        [(x_shift / 2) as usize..((clamped.width() + x_shift) / 2) as usize],
+                    clamped.width(),
+                )
+            };
+        }
     }
 
     dma2d_wait_for_transfer();
