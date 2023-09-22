@@ -49,8 +49,8 @@ int\
 int\
 % elif type == "i64":
 int\
-% elif type == "pubkey":
-bytes\
+% elif type in ("pubKey", "authority"):
+Account\
 % elif type == "string":
 str\
 % else:
@@ -107,13 +107,13 @@ if TYPE_CHECKING:
         INSTRUCTION_ID = ${getInstructionIdText(instruction)}
 
         ## generates properties for instruction parameters
-        % for parameter in instruction["parameters"]:
-        ${parameter["name"]}: ${getPythonType(parameter["type"])}
+        % for name, parameter in instruction["parameters"].items():
+        ${name}: ${getPythonType(parameter["type"])}
         % endfor
 
         ## generates properties for reference accounts
-        % for reference in instruction["references"]:
-        ${getReferenceName(reference)}: bytes${getReferenceOptionalType(reference)}
+        % for name, reference in instruction["references"].items():
+        ${name}: Account${getReferenceOptionalType(reference)}
         % endfor
 
         @classmethod
@@ -145,8 +145,8 @@ def get_instruction(
                 ${getInstructionIdText(instruction)},
                 ${instruction["parameters"]},
                 ${instruction["references"]},
-                ${instruction["ui"]["elements"]["parameter_indexes"]},
-                ${instruction["ui"]["elements"]["account_indexes"]},
+                ${instruction["ui"]["elements"]["parameters"]},
+                ${instruction["ui"]["elements"]["accounts"]},
                 ## "${getInstructionUiIdentifier(instruction)}",
                 "${instruction["ui"]["template"]}",
                 "${instruction["name"]}"

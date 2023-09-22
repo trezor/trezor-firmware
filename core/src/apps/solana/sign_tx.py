@@ -15,6 +15,7 @@ async def sign_tx(
     msg: SolanaSignTx,
     keychain: Keychain,
 ) -> SolanaTxSignature:
+    from apps.common import seed
     from trezor.crypto.curve import ed25519
     from trezor.messages import SolanaTxSignature
     from trezor.utils import BufferReader
@@ -35,7 +36,11 @@ async def sign_tx(
         if instruction.ui_identifier == "ui_confirm":
             from .ui import show_confirm
 
-            await show_confirm((num_instructions, i + 1), instruction)
+            await show_confirm(
+                (num_instructions, i + 1),
+                instruction,
+                seed.remove_ed25519_prefix(node.public_key()),
+            )
         else:
             # TODO SOL: handle other UI templates
             pass

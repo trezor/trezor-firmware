@@ -1,935 +1,226 @@
 {
-    "complex_ui": [
+  "grouped_instructions": [
+    {
+      "instructions": [
         {
-            "instructions": [
-                {
-                    "program_id": "111111",
-                    "instruction_id": 0
-                },{
-                    "program_id": "111111",
-                    "instruction_id": 1
-                },{
-                    "program_id": "111111",
-                    "instruction_id": 2
-                }
-            ],
-            "ui": {
-                "template": "ui_confirm",
-                "elements": {
-                    "parameter_indexes": [[0, 0]],
-                    "account_indexes": [[0, 0]]
-                }
+          "program_id": "11111111111111111111111111111111",
+          "instruction_id": 0
+        },
+        {
+          "program_id": "Stake11111111111111111111111111111111111111",
+          "instruction_id": 0
+        }
+      ],
+      "ui": {
+        "template": "ui_confirm",
+        "elements": {
+          "parameter_indexes": [[0, 0]],
+          "account_indexes": [[0, 0]]
+        }
+      }
+    }
+  ],
+  "programs": [
+    {
+      "id": "11111111111111111111111111111111",
+      "name": "System program",
+      "instructions": [
+        {
+          "id": 0,
+          "name": "Create Account",
+          "parameters": {
+            "lamports": {
+              "ui_name": "Lamports",
+              "type": "u64",
+              "optional": false
+            },
+            "space": {
+              "ui_name": "Space",
+              "type": "u64",
+              "optional": false
+            },
+            "owner": {
+              "ui_name": "Owner",
+              "type": "authority",
+              "optional": false
             }
-        }
-    ],
-    "programs": [
+          },
+          "references": {
+            "funding_account": {
+              "ui_name": "Funding account",
+              "is_authority": true,
+              "optional": false
+            },
+            "new_account": {
+              "ui_name": "New account",
+              "is_authority": false,
+              "optional": false
+            }
+          },
+          "ui": {
+            "template": "ui_confirm",
+            "elements": {
+              "parameters": ["lamports", "owner"],
+              "accounts": ["funding_account"]
+            }
+          }
+        },
         {
-            "id": "11111111111111111111111111111111",
-            "name": "System program",
-            "instructions": [
-                {
-                    "id": 0,
-                    "name": "Create Account",
-                    "parameters": [
-                        {
-                            "name": "lamports",
-                            "type": "u64",
-                            "optional": false
-                        },{
-                            "name": "space",
-                            "type": "u64",
-                            "optional": false
-                        },{
-                            "name": "owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Funding account",
-                            "access": "w",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "New account",
-                            "access": "w",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0, 2],
-                            "account_indexes": [0]
-                        }
-                    }
-                },{
-                    "id": 1,
-                    "name": "Assign",
-                    "parameters": [
-                        {
-                            "name": "owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Assigned account",
-                            "access": "w",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": [0]
-                        }
-                    }
-                },{
-                    "id": 2,
-                    "name": "Transfer",
-                    "parameters": [
-                        {
-                            "name": "lamports",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Funding account",
-                            "access": "w",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "Recipient account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": [0, 1]
-                        }
-                    }
-                },{
-                    "id": 3,
-                    "name": "Create Account With Seed",
-                    "parameters": [
-                        {
-                            "name": "base",
-                            "type": "pubkey",
-                            "optional": false
-                        },{
-                            "name": "seed",
-                            "type": "string",
-                            "optional": false
-                        },
-                        {
-                            "name": "lamports",
-                            "type": "u64",
-                            "optional": false
-                        },{
-                            "name": "space",
-                            "type": "u64",
-                            "optional": false
-                        },{
-                            "name": "owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Funding account",
-                            "access": "w",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "Created account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Base account",
-                            "access": "",
-                            "signer": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0, 2, 3],
-                            "account_indexes": [0, 2]
-                        }
-                    }
-                },{
-                    "id": 8,
-                    "name": "Allocate",
-                    "parameters": [
-                        {
-                            "name": "space",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "New account",
-                            "access": "w",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": [0]
-                        }
-                    }
-                },{
-                    "id": 9,
-                    "name": "Allocate With Seed",
-                    "parameters": [
-                        {
-                            "name": "base",
-                            "type": "pubkey",
-                            "optional": false
-                        },{
-                            "name": "seed",
-                            "type": "string",
-                            "optional": false
-                        },{
-                            "name": "space",
-                            "type": "u64",
-                            "optional": false
-                        },{
-                            "name": "owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Allocated account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Base account",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0, 2],
-                            "account_indexes": [0, 1]
-                        }
-                    }
-                },{
-                    "id": 10,
-                    "name": "Assign With Seed",
-                    "parameters": [
-                        {
-                            "name": "base",
-                            "type": "pubkey",
-                            "optional": false
-                        },{
-                            "name": "seed",
-                            "type": "string",
-                            "optional": false
-                        },{
-                            "name": "owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Assigned account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Base account",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0, 2],
-                            "account_indexes": [0, 1]
-                        }
-                    }
-                }
-            ]
-        }, {
-            "id": "Stake11111111111111111111111111111111111111",
-            "name": "Stake program",
-            "instructions": [
-                {
-                    "id": 0,
-                    "name": "Initialize",
-                    "parameters": [
-                        {
-                            "name": "staker",
-                            "type": "pubkey",
-                            "optional": false
-                        },{
-                            "name": "withdrawer",
-                            "type": "pubkey",
-                            "optional": false
-                        },{
-                            "name": "unix_timestamp",
-                            "type": "i64",
-                            "optional": false
-                        }, {
-                            "name": "epoch",
-                            "type": "u64",
-                            "optional": false
-                        }, {
-                            "name": "custodian",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Uninitialized stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Rent sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0, 2, 3, 4],
-                            "account_indexes": [0, 1]
-                        }
-                    }
-                },{
-                    "id": 1,
-                    "name": "Authorize",
-                    "parameters": [
-                        {
-                            "name": "pubkey",
-                            "type": "pubkey",
-                            "optional": false
-                        },{
-                            "name": "stakeauthorize",
-                            "type": "StakeAuthorize",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Clock sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "stake or withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "Lockup authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": [0, 1, 2, 3]
-                        }
-                    }
-                },{
-                    "id": 2,
-                    "name": "Delegate Stake",
-                    "parameters": [],
-                    "references": [
-                        {
-                            "name": "Initialized stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Vote account",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Clock sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Stake history sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "config account",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Stake authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [],
-                            "account_indexes": [0, 2, 3, 4, 5]
-                        }
-                    }
-                },{
-                    "id": 3,
-                    "name": "Split",
-                    "parameters": [
-                        {
-                            "name": "lamports",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Uninitialized stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Stake authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": [2]
-                        }
-                    }
-                },{
-                    "id": 4,
-                    "name": "Withdraw",
-                    "parameters": [
-                        {
-                            "name": "lamports",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Recipient account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Clock sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Stake history sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "Lockup authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": [0, 1]
-                        }
-                    }
-                },{
-                    "id": 5,
-                    "name": "Deactivate",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                            "name": "Delegated stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Clock sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Stake authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [],
-                            "account_indexes": [0, 1, 2]
-                        }
-                    }
-                },{
-                    "id": 6,
-                    "name": "Set Lockup",
-                    "parameters": [
-                        {
-                            "name": "unix_timestamp",
-                            "type": "i64",
-                            "optional": true
-                        },{
-                            "name": "epoch",
-                            "type": "u64",
-                            "optional": true
-                        },{
-                            "name": "custodian",
-                            "type": "pubkey",
-                            "optional": true
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Initialized stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Lockup authority or withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0,2],
-                            "account_indexes": [0]
-                        }
-                    }
-                },{
-                    "id": 7,
-                    "name": "Merge",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                            "name": "Destination stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Source stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Clock sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Stake history sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Stake authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [],
-                            "account_indexes": [0]
-                        }
-                    }
-                },{
-                    "id": 8,
-                    "name": "Authorize With Seed",
-                    "parameters": [
-                        {
-                            "name": "new_authorized_pubkey",
-                            "type": "pubkey",
-                            "optional": false
-                        },{
-                            "name": "stake_authorize",
-                            "type": "StakeAuthorize",
-                            "optional": false
-                        },{
-                            "name": "authority_seed",
-                            "type": "string",
-                            "optional": false
-                        },{
-                            "name": "authority_owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "stake or withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "Clock sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Lockup authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0, 2],
-                            "account_indexes": [0]
-                        }
-                    }
-                },{
-                    "id": 9,
-                    "name": "Initialize Checked",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                            "name": "Uninitialized stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Rent sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "stake authority",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [],
-                            "account_indexes": [0, 1, 2, 3]
-                        }
-                    }
-                },{
-                    "id": 10,
-                    "name": "Authorize Checked",
-                    "parameters": [
-                        {
-                            "name": "stakeauthorize",
-                            "type": "StakeAuthorize",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Clock sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "stake or withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "new stake or withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "Lockup authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": [0, 1, 2]
-                        }
-                    }
-                },{
-                    "id": 11,
-                    "name": "Authorize Checked With Seed",
-                    "parameters": [
-                        {
-                            "name": "stake_authorize",
-                            "type": "StakeAuthorize",
-                            "optional": false
-                        },{
-                            "name": "authority_seed",
-                            "type": "string",
-                            "optional": false
-                        },{
-                            "name": "authority_owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "Stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "stake or withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "Clock sysvar",
-                            "access": "",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "new stake or withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "Lockup authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0, 2],
-                            "account_indexes": [0]
-                        }
-                    }
-                },{
-                    "id": 12,
-                    "name": "Set Lockup Checked",
-                    "parameters": [
-                        {
-                            "name": "unix_timestamp",
-                            "type": "i64",
-                            "optional": true
-                        },{
-                            "name": "epoch",
-                            "type": "u64",
-                            "optional": true
-                        }
-                    ],
-                    "references": [
-                        {
-                            "name": "stake account",
-                            "access": "w",
-                            "signer": false,
-                            "optional": false
-                        },{
-                            "name": "Lockup authority or withdraw authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": false
-                        },{
-                            "name": "New lockup authority",
-                            "access": "",
-                            "signer": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0, 1],
-                            "account_indexes": [0]
-                        }
-                    }
-                }
-            ]
-        }, {
-            "id": "ComputeBudget111111111111111111111111111111",
-            "name": "Compute budget program",
-            "instructions": [
-                {
-                    "id": 1,
-                    "name": "Request Heap Frame",
-                    "parameters": [
-                        {
-                            "name": "bytes",
-                            "type": "u32",
-                            "optional": false
-                        }
-                    ],
-                    "references": [ ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": []
-                        }
-                    }
-                },{
-                    "id": 2,
-                    "name": "Set Compute Unit Limit",
-                    "parameters": [
-                        {
-                            "name": "units",
-                            "type": "u32",
-                            "optional": false
-                        }
-                    ],
-                    "references": [ ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": []
-                        }
-                    }
-                },{
-                    "id": 3,
-                    "name": "Set Compute Unit Price",
-                    "parameters": [
-                        {
-                            "name": "lamports",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [ ],
-                    "ui": {
-                        "template": "ui_confirm",
-                        "elements": {
-                            "parameter_indexes": [0],
-                            "account_indexes": []
-                        }
-                    }
-                }
-            ]
-        }, {
-            "id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-            "name": "Token program",
-            "instructions": []
-        }
-    ],
-    "parameters": [
+          "id": 1,
+          "name": "Assign",
+          "parameters": {
+            "owner": {
+              "ui_name": "Owner",
+              "type": "authority",
+              "optional": false
+            }
+          },
+          "references": {
+            "assigned_account": {
+              "ui_name": "Assigned account",
+              "is_authority": true,
+              "optional": false
+            }
+          },
+          "ui": {
+            "template": "ui_confirm",
+            "elements": {
+              "parameters": ["owner"],
+              "accounts": ["assigned_account"]
+            }
+          }
+        },
         {
-            "name": "u32",
-            "family": "basic"
-        },{
-            "name": "i32",
-            "family": "basic"
-        },{
-            "name": "u64",
-            "family": "basic"
-        },{
-            "name": "i64",
-            "family": "basic"
-        },{
-            "name": "String",
-            "family": "basic"
-        },{
-            "name": "Pubkey",
-            "family": "basic"
-        },{
-            "name": "StakeAuthorize",
-            "family": "enum",
-            "fields": [
-                {
-                    "name": "Staker",
-                    "value": 0
-                },{
-                    "name": "Withdrawer",
-                    "value": 1
-                }
-            ]
+          "id": 2,
+          "name": "Transfer",
+          "parameters": {
+            "lamports": {
+              "ui_name": "Lamports",
+              "type": "u64",
+              "optional": false
+            }
+          },
+          "references": {
+            "funding_account": {
+              "ui_name": "Funding account",
+              "is_authority": true,
+              "optional": false
+            },
+            "recipient_account": {
+              "ui_name": "Recipient account",
+              "is_authority": false,
+              "optional": false
+            }
+          },
+          "ui": {
+            "template": "ui_confirm",
+            "elements": {
+              "parameters": ["lamports"],
+              "accounts": ["funding_account", "recipient_account"]
+            }
+          }
         }
-    ]
+      ]
+    },
+    {
+      "id": "Stake11111111111111111111111111111111111111",
+      "name": "Stake program",
+      "instructions": [
+        {
+          "id": 0,
+          "name": "Initialize",
+          "parameters": {
+            "staker": {
+              "ui_name": "Staker",
+              "type": "authority",
+              "optional": false
+            },
+            "withdrawer": {
+              "ui_name": "Withdrawer",
+              "type": "authority",
+              "optional": false
+            },
+            "unix_timestamp": {
+              "ui_name": "Unix timestamp",
+              "type": "i64",
+              "optional": false
+            },
+            "epoch": {
+              "ui_name": "Epoch",
+              "type": "u64",
+              "optional": false
+            },
+            "custodian": {
+              "ui_name": "Custodian",
+              "type": "authority",
+              "optional": false
+            }
+          },
+          "references": {
+            "uninitialized_stake_account": {
+              "ui_name": "Uninitialized stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            "rent_sysvar": {
+              "ui_name": "Rent sysvar",
+              "is_authority": false,
+              "optional": false
+            }
+          },
+          "ui": {
+            "template": "ui_confirm",
+            "elements": {
+              "parameters": ["staker", "unix_timestamp", "epoch", "custodian"],
+              "accounts": ["uninitialized_stake_account", "rent_sysvar"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "parameters": [
+    {
+      "name": "u32",
+      "family": "basic"
+    },
+    {
+      "name": "i32",
+      "family": "basic"
+    },
+    {
+      "name": "u64",
+      "family": "basic"
+    },
+    {
+      "name": "i64",
+      "family": "basic"
+    },
+    {
+      "name": "String",
+      "family": "basic"
+    },
+    {
+      "name": "Pubkey",
+      "family": "basic"
+    },
+    {
+      "name": "Authority",
+      "family": "basic"
+    },
+    {
+      "name": "StakeAuthorize",
+      "family": "enum",
+      "fields": [
+        {
+          "name": "Staker",
+          "value": 0
+        },
+        {
+          "name": "Withdrawer",
+          "value": 1
+        }
+      ]
+    }
+  ]
 }

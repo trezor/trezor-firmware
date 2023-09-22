@@ -10,14 +10,13 @@ if TYPE_CHECKING:
     from ..types import Account
 
     class PropertyTemplate(TypedDict):
-        name: str
+        ui_name: str
         type: str
         optional: bool
 
-    class AccountsTemplate(TypedDict):
-        name: str
-        access: str
-        signer: bool
+    class AccountTemplate(TypedDict):
+        ui_name: str
+        is_authority: bool
         optional: bool
 
 
@@ -28,8 +27,8 @@ class Instruction:
     program_id: bytes
     instruction_id: int
 
-    property_templates: list[PropertyTemplate]
-    accounts_template: list[AccountsTemplate]
+    property_templates: dict[str, PropertyTemplate]
+    accounts_template: dict[str, AccountTemplate]
 
     # name of the UI template to be used derived from the template
     ui_identifier: str
@@ -55,10 +54,10 @@ class Instruction:
         program_id: bytes,
         accounts: list[Account],
         instruction_id: int,
-        property_templates: list[PropertyTemplate],
-        accounts_template: list[AccountsTemplate],
-        ui_parameter_list: list[int],
-        ui_account_list: list[int],
+        property_templates: dict[str, PropertyTemplate],
+        accounts_template: dict[str, AccountTemplate],
+        ui_parameter_list: list[str],
+        ui_account_list: list[str],
         ui_identifier: str,
         ui_name: str,
     ) -> None:
@@ -79,34 +78,27 @@ class Instruction:
 
         reader = BufferReader(instruction_data)
 
-        for property_template in property_templates:
+        for name, property_template in property_templates.items():
             self.set_property(
-                property_template["name"],
+                name,
                 parseProperty(reader, property_template["type"]),
             )
 
-        for i, account_template in enumerate(accounts_template):
+        for i, (name, account_template) in enumerate(accounts_template.items()):
             if i >= len(accounts):
                 if account_template["optional"]:
                     continue
                 else:
                     raise ValueError("Missing account")
 
-            self.set_account(account_template["name"], accounts[i])
+            self.set_account(name, accounts[i])
 
-        for parameter_index in ui_parameter_list:
-            self.ui_parameter_list.append(property_templates[parameter_index]["name"])
+        for parameter in ui_parameter_list:
+            self.ui_parameter_list.append(parameter)
 
-        for account_index in ui_account_list:
-            if account_index >= len(accounts):
-                if self.accounts_template[account_index]["optional"]:
-                    continue
-                else:
-                    raise ValueError("Missing account")
-
-            self.ui_account_list.append(
-                (accounts_template[account_index]["name"], accounts[account_index])
-            )
+        for account in ui_account_list:
+            account_index = list(accounts_template.keys()).index(account)
+            self.ui_account_list.append((account, accounts[account_index]))
 
     def __getattr__(self, attr: str) -> Any:
         assert self.parsed_data is not None
@@ -126,15 +118,6 @@ class Instruction:
     def set_account(self, account: str, value: Account) -> None:
         assert self.parsed_accounts is not None
         self.parsed_accounts[account] = value
-
-    # TODO SOL: maybe property template could be a dict[name, prop] instead of a list[prop]
-    def get_property_type(self, property: str) -> str:
-        for property_template in self.property_templates:
-            print(property_template, property)
-            if property_template["name"] == property:
-                return property_template["type"]
-
-        raise ValueError(f"Property {property} not found")
 
     @classmethod
     def is_type_of(cls, ins: Any) -> TypeGuard["Instruction"]:
