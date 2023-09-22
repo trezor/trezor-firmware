@@ -21,29 +21,45 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
+from ...input_flows import InputFlowShowAddressQRCode
+
+TEST_VECTORS = [
+    (
+        "m/44h/128h/0h",
+        b"4Ahp23WfMrMFK3wYL2hLWQFGt87ZTeRkufS6JoQZu6MEFDokAQeGWmu9MA3GFq1yVLSJQbKJqVAn9F9DLYGpRzRAEXqAXKM",
+    ),
+    (
+        "m/44h/128h/1h",
+        b"44iAazhoAkv5a5RqLNVyh82a1n3ceNggmN4Ho7bUBJ14WkEVR8uFTe9f7v5rNnJ2kEbVXxfXiRzsD5Jtc6NvBi4D6WNHPie",
+    ),
+    (
+        "m/44h/128h/2h",
+        b"47ejhmbZ4wHUhXaqA4b7PN667oPMkokf4ZkNdWrMSPy9TNaLVr7vLqVUQHh2MnmaAEiyrvLsX8xUf99q3j1iAeMV8YvSFcH",
+    ),
+]
+
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.monero,
+    pytest.mark.skip_t1,
+    pytest.mark.setup_client(mnemonic=MNEMONIC12),
+]
 
 
-@pytest.mark.altcoin
-@pytest.mark.monero
-@pytest.mark.skip_t1
-@pytest.mark.setup_client(mnemonic=MNEMONIC12)
-@pytest.mark.parametrize("chunkify", (True, False))
-def test_monero_getaddress(client: Client, chunkify: bool):
-    assert (
-        monero.get_address(
-            client, parse_path("m/44h/128h/0h"), show_display=True, chunkify=chunkify
+@pytest.mark.parametrize("path, expected_address", TEST_VECTORS)
+def test_monero_getaddress(client: Client, path: str, expected_address: bytes):
+    address = monero.get_address(client, parse_path(path), show_display=True)
+    assert address == expected_address
+
+
+@pytest.mark.parametrize("path, expected_address", TEST_VECTORS)
+def test_monero_getaddress_chunkify_details(
+    client: Client, path: str, expected_address: bytes
+):
+    with client:
+        IF = InputFlowShowAddressQRCode(client)
+        client.set_input_flow(IF.get())
+        address = monero.get_address(
+            client, parse_path(path), show_display=True, chunkify=True
         )
-        == b"4Ahp23WfMrMFK3wYL2hLWQFGt87ZTeRkufS6JoQZu6MEFDokAQeGWmu9MA3GFq1yVLSJQbKJqVAn9F9DLYGpRzRAEXqAXKM"
-    )
-    assert (
-        monero.get_address(
-            client, parse_path("m/44h/128h/1h"), show_display=True, chunkify=chunkify
-        )
-        == b"44iAazhoAkv5a5RqLNVyh82a1n3ceNggmN4Ho7bUBJ14WkEVR8uFTe9f7v5rNnJ2kEbVXxfXiRzsD5Jtc6NvBi4D6WNHPie"
-    )
-    assert (
-        monero.get_address(
-            client, parse_path("m/44h/128h/2h"), show_display=True, chunkify=chunkify
-        )
-        == b"47ejhmbZ4wHUhXaqA4b7PN667oPMkokf4ZkNdWrMSPy9TNaLVr7vLqVUQHh2MnmaAEiyrvLsX8xUf99q3j1iAeMV8YvSFcH"
-    )
+        assert address == expected_address

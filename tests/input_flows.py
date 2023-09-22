@@ -273,7 +273,15 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_tr(self) -> BRGeneratorType:
-        yield
+        # Find out the page-length of the address
+        br = yield
+        if br.pages is not None:
+            address_swipes = br.pages - 1
+        else:
+            address_swipes = 0
+        for _ in range(address_swipes):
+            self.debug.press_right()
+
         # Go into details
         self.debug.press_right()
         # Go through details and back
@@ -281,6 +289,8 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         self.debug.press_left()
         self.debug.press_left()
         # Confirm
+        for _ in range(address_swipes):
+            self.debug.press_right()
         self.debug.press_middle()
 
 

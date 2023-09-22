@@ -26,6 +26,10 @@ async def get_public_key(msg: TezosGetPublicKey, keychain: Keychain) -> TezosPub
     pk_prefixed = helpers.base58_encode_check(pk, helpers.TEZOS_PUBLICKEY_PREFIX)
 
     if msg.show_display:
-        await show_pubkey(pk_prefixed)
+        from . import PATTERNS, SLIP44_ID
+
+        account = paths.get_account_name("XTZ", msg.address_n, PATTERNS, SLIP44_ID)
+        path = paths.address_n_to_str(msg.address_n)
+        await show_pubkey(pk_prefixed, account=account, path=path)
 
     return TezosPublicKey(public_key=pk_prefixed)

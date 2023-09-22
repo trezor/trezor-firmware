@@ -24,7 +24,13 @@ async def get_public_key(
     pubkey = node.public_key()
 
     if msg.show_display:
+        from . import PATTERN, SLIP44_ID
+
         path = paths.address_n_to_str(msg.address_n)
-        await show_pubkey(hexlify(pubkey).decode(), path=path)
+        await show_pubkey(
+            hexlify(pubkey).decode(),
+            account=paths.get_account_name("BNB", msg.address_n, PATTERN, SLIP44_ID),
+            path=path,
+        )
 
     return BinancePublicKey(public_key=pubkey)

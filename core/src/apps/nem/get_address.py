@@ -15,7 +15,7 @@ async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
     from trezor.messages import NEMAddress
     from trezor.ui.layouts import show_address
 
-    from apps.common.paths import address_n_to_str, validate_path
+    from apps.common import paths
 
     from .helpers import check_path, get_network_str
     from .validators import validate_network
@@ -24,16 +24,19 @@ async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
     network = msg.network  # local_cache_attribute
 
     validate_network(network)
-    await validate_path(keychain, address_n, check_path(address_n, network))
+    await paths.validate_path(keychain, address_n, check_path(address_n, network))
 
     node = keychain.derive(address_n)
     address = node.nem_address(network)
 
     if msg.show_display:
+        from . import PATTERNS, SLIP44_ID
+
         await show_address(
             address,
             case_sensitive=False,
-            path=address_n_to_str(address_n),
+            path=paths.address_n_to_str(address_n),
+            account=paths.get_account_name("NEM", msg.address_n, PATTERNS, SLIP44_ID),
             network=get_network_str(network),
             chunkify=bool(msg.chunkify),
         )
