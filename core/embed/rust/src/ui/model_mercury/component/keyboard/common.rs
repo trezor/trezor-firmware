@@ -90,7 +90,7 @@ impl MultiTapKeyboard {
 
         // If the key has more then one character, we need to set it as pending, so we
         // can cycle through on the repeated clicks. We also request a timer so we can
-        // reset the pending state after a deadline.
+        // reset the pending state after a timeout.
         //
         // Note: It might seem that we should make sure to `request_paint` in case we
         // progress into a pending state (to display the pending marker), but such
