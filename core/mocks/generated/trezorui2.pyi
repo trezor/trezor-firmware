@@ -11,7 +11,7 @@ class LayoutObj(Generic[T]):
     def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> None:
         """Attach a timer setter function.
         The layout object can call the timer setter with two arguments,
-        `token` and `deadline`. When `deadline` is reached, the layout object
+        `token` and `duration_ms`. When `duration_ms` is reached, the layout object
         expects a callback to `self.timer(token)`.
         """
     if utils.USE_TOUCH:
@@ -27,7 +27,7 @@ class LayoutObj(Generic[T]):
     def timer(self, token: int) -> T | None:
         """Callback for the timer set by `attach_timer_fn`.
         This function should be called by the executor after the corresponding
-        deadline is reached.
+        duration has expired.
         """
     def paint(self) -> bool:
         """Paint the layout object on screen.
@@ -1118,7 +1118,7 @@ class LayoutObj(Generic[T]):
     def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> None:
         """Attach a timer setter function.
         The layout object can call the timer setter with two arguments,
-        `token` and `deadline`. When `deadline` is reached, the layout object
+        `token` and `duration`. When `duration` elapses, the layout object
         expects a callback to `self.timer(token)`.
         """
     if utils.USE_TOUCH:
@@ -1134,7 +1134,7 @@ class LayoutObj(Generic[T]):
     def timer(self, token: int) -> T | None:
         """Callback for the timer set by `attach_timer_fn`.
         This function should be called by the executor after the corresponding
-        deadline is reached.
+        duration elapses.
         """
     def paint(self) -> bool:
         """Paint the layout object on screen.

@@ -40,7 +40,7 @@ class RustProgress:
             ui.refresh()
         ui.backlight_fade(ui.BacklightLevels.NORMAL)
 
-    def set_timer(self, token: int, deadline: int) -> None:
+    def set_timer(self, token: int, duration_ms: int) -> None:
         raise RuntimeError  # progress layouts should not set timers
 
     def report(self, value: int, description: str | None = None):
