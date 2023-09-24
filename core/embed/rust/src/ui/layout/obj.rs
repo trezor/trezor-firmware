@@ -173,7 +173,7 @@ impl LayoutObjInner {
     }
 
     /// Timer callback is expected to be a callable object of the following
-    /// form: `def timer(token: int, deadline_in_ms: int)`.
+    /// form: `def timer(token: int, duration_ms: int)`.
     fn obj_set_timer_fn(&mut self, timer_fn: Obj) {
         self.timer_fn = timer_fn;
     }
@@ -226,13 +226,13 @@ impl LayoutObjInner {
         // painting by now, and we're prepared for a paint pass.
 
         // Drain any pending timers into the callback.
-        while let Some((token, deadline)) = self.event_ctx.pop_timer() {
+        while let Some((token, duration)) = self.event_ctx.pop_timer() {
             let token = token.try_into();
-            let deadline = deadline.try_into();
-            if let (Ok(token), Ok(deadline)) = (token, deadline) {
-                self.timer_fn.call_with_n_args(&[token, deadline])?;
+            let duration = duration.try_into();
+            if let (Ok(token), Ok(duration)) = (token, duration) {
+                self.timer_fn.call_with_n_args(&[token, duration])?;
             } else {
-                // Failed to convert token or deadline into `Obj`, skip.
+                // Failed to convert token or duration into `Obj`, skip.
             }
         }
 

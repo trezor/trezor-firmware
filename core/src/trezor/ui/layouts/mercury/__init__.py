@@ -46,8 +46,8 @@ class RustLayout(ui.Layout):
     def __del__(self):
         self.layout.__del__()
 
-    def set_timer(self, token: int, deadline: int) -> None:
-        self.timer.schedule(deadline, token)
+    def set_timer(self, token: int, duration: int) -> None:
+        self.timer.schedule(duration, token)
 
     def request_complete_repaint(self) -> None:
         msg = self.layout.request_complete_repaint()
@@ -270,7 +270,7 @@ class RustLayout(ui.Layout):
 
 def draw_simple(layout: Any) -> None:
     # Simple drawing not supported for layouts that set timers.
-    def dummy_set_timer(token: int, deadline: int) -> None:
+    def dummy_set_timer(token: int, duration: int) -> None:
         raise RuntimeError
 
     layout.attach_timer_fn(dummy_set_timer, None)
