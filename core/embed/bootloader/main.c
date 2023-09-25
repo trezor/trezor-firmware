@@ -86,6 +86,10 @@ typedef enum {
   RETURN_TO_MENU = 0x55667788,
 } usb_result_t;
 
+volatile secbool dont_optimize_out_true = sectrue;
+void failed_jump_to_firmware(void);
+volatile void (*firmware_jump_fn)(void) = failed_jump_to_firmware;
+
 static void usb_init_all(secbool usb21_landing) {
   usb_dev_info_t dev_info = {
       .device_class = 0x00,
@@ -294,6 +298,79 @@ static void check_bootloader_version(void) {
 
 #endif
 
+void failed_jump_to_firmware(void) {
+  error_shutdown("INTERNAL ERROR", "(glitch)");
+}
+
+void real_jump_to_firmware(void) {
+  const image_header *hdr = NULL;
+  vendor_header vhdr = {0};
+
+  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr),
+         "Firmware is corrupted");
+
+  ensure(check_vendor_header_keys(&vhdr), "Firmware is corrupted");
+
+  ensure(check_vendor_header_lock(&vhdr), "Unauthorized vendor keys");
+
+  hdr =
+      read_image_header((const uint8_t *)(size_t)(FIRMWARE_START + vhdr.hdrlen),
+                        FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+
+  ensure(hdr == (const image_header *)(size_t)(FIRMWARE_START + vhdr.hdrlen)
+             ? sectrue
+             : secfalse,
+         "Firmware is corrupted");
+
+  ensure(check_image_model(hdr), "Wrong firmware model");
+
+  ensure(check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub),
+         "Firmware is corrupted");
+
+  ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
+                              &FIRMWARE_AREA),
+         "Firmware is corrupted");
+
+#ifdef USE_OPTIGA
+  if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
+    ui_screen_install_restricted();
+    trezor_shutdown();
+  }
+#endif
+
+  // if all VTRUST flags are unset = ultimate trust => skip the procedure
+  if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
+    ui_fadeout();
+    ui_screen_boot(&vhdr, hdr);
+    ui_fadein();
+
+    int delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
+    if (delay > 1) {
+      while (delay > 0) {
+        ui_screen_boot_wait(delay);
+        hal_delay(1000);
+        delay--;
+      }
+    } else if (delay == 1) {
+      hal_delay(1000);
+    }
+
+    if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
+      ui_screen_boot_click();
+    }
+
+    ui_screen_boot_empty(false);
+  }
+
+  ensure_compatible_settings();
+
+  // mpu_config_firmware();
+  // jump_to_unprivileged(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+
+  mpu_config_off();
+  jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+}
+
 #ifndef TREZOR_EMULATOR
 int main(void) {
   // grab "stay in bootloader" flag as soon as possible
@@ -332,6 +409,7 @@ int bootloader_main(void) {
   volatile secbool model_ok = secfalse;
   volatile secbool header_present = secfalse;
   volatile secbool firmware_present = secfalse;
+  volatile secbool firmware_present_backup = secfalse;
 
   vhdr_present = read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr);
 
@@ -362,6 +440,7 @@ int bootloader_main(void) {
   if (sectrue == header_present) {
     firmware_present = check_image_contents(
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
+    firmware_present_backup = firmware_present;
   }
 
 #if defined TREZOR_MODEL_T
@@ -402,6 +481,9 @@ int bootloader_main(void) {
     stay_in_bootloader = sectrue;
   }
 
+  ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
+         NULL);
+
   // delay to detect touch or skip if we know we are staying in bootloader
   // anyway
   uint32_t touched = 0;
@@ -425,6 +507,9 @@ int bootloader_main(void) {
     touched = 1;
   }
 #endif
+
+  ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
+         NULL);
 
   // start the bootloader ...
   // ... if user touched the screen on start
@@ -455,7 +540,8 @@ int bootloader_main(void) {
     }
 
     while (true) {
-      secbool continue_to_firmware = secfalse;
+      volatile secbool continue_to_firmware = secfalse;
+      volatile secbool continue_to_firmware_backup = secfalse;
       uint32_t ui_result = 0;
 
       switch (screen) {
@@ -467,6 +553,7 @@ int bootloader_main(void) {
           switch (bootloader_usb_loop(NULL, NULL)) {
             case CONTINUE_TO_FIRMWARE:
               continue_to_firmware = sectrue;
+              continue_to_firmware_backup = sectrue;
               break;
             case RETURN_TO_MENU:
               break;
@@ -494,6 +581,7 @@ int bootloader_main(void) {
           if (ui_result == 0x11223344) {  // reboot
             ui_screen_boot_empty(true);
             continue_to_firmware = firmware_present;
+            continue_to_firmware_backup = firmware_present_backup;
           }
           if (ui_result == 0x55667788) {  // wipe
             screen = SCREEN_WIPE_CONFIRM;
@@ -522,6 +610,7 @@ int bootloader_main(void) {
           switch (bootloader_usb_loop(&vhdr, hdr)) {
             case CONTINUE_TO_FIRMWARE:
               continue_to_firmware = sectrue;
+              continue_to_firmware_backup = sectrue;
               break;
             case RETURN_TO_MENU:
               screen = SCREEN_INTRO;
@@ -537,75 +626,29 @@ int bootloader_main(void) {
           break;
       }
 
+      if (continue_to_firmware != continue_to_firmware_backup) {
+        // erase storage if we saw flips randomly flip, most likely due to
+        // glitch
+        ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
+               NULL);
+      }
+      ensure(dont_optimize_out_true *
+                 (continue_to_firmware == continue_to_firmware_backup),
+             NULL);
       if (sectrue == continue_to_firmware) {
+        firmware_jump_fn = real_jump_to_firmware;
         break;
       }
     }
   }
 
-  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr),
-         "Firmware is corrupted");
-
-  ensure(check_vendor_header_keys(&vhdr), "Firmware is corrupted");
-
-  ensure(check_vendor_header_lock(&vhdr), "Unauthorized vendor keys");
-
-  hdr =
-      read_image_header((const uint8_t *)(size_t)(FIRMWARE_START + vhdr.hdrlen),
-                        FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
-
-  ensure(hdr == (const image_header *)(size_t)(FIRMWARE_START + vhdr.hdrlen)
-             ? sectrue
-             : secfalse,
-         "Firmware is corrupted");
-
-  ensure(check_image_model(hdr), "Wrong firmware model");
-
-  ensure(check_image_header_sig(hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub),
-         "Firmware is corrupted");
-
-  ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
-                              &FIRMWARE_AREA),
-         "Firmware is corrupted");
-
-#ifdef USE_OPTIGA
-  if (((vhdr.vtrust & VTRUST_SECRET) != 0) && (sectrue != secret_wiped())) {
-    ui_screen_install_restricted();
-    return 1;
-  }
-#endif
-
-  // if all VTRUST flags are unset = ultimate trust => skip the procedure
-  if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
-    ui_fadeout();
-    ui_screen_boot(&vhdr, hdr);
-    ui_fadein();
-
-    int delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
-    if (delay > 1) {
-      while (delay > 0) {
-        ui_screen_boot_wait(delay);
-        hal_delay(1000);
-        delay--;
-      }
-    } else if (delay == 1) {
-      hal_delay(1000);
-    }
-
-    if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
-      ui_screen_boot_click();
-    }
-
-    ui_screen_boot_empty(false);
+  ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
+         NULL);
+  if (sectrue == firmware_present) {
+    firmware_jump_fn = real_jump_to_firmware;
   }
 
-  ensure_compatible_settings();
-
-  // mpu_config_firmware();
-  // jump_to_unprivileged(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
-
-  mpu_config_off();
-  jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+  firmware_jump_fn();
 
   return 0;
 }
