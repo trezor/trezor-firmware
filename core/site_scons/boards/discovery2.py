@@ -80,12 +80,14 @@ def configure(
     defines += [
         "USE_DMA2D",
         "FRAMEBUFFER"
+        "FRAMEBUFFER32BIT"
     ]
     sources += [
         "embed/trezorhal/stm32u5/dma2d.c",
     ]
     features_available.append("dma2d")
     features_available.append("framebuffer")
+    features_available.append("framebuffer32bit")
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu
