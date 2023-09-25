@@ -6,6 +6,12 @@ use crate::trezorhal::buffers::BufferText;
 
 pub use ffi::{DISPLAY_RESX, DISPLAY_RESY};
 
+#[cfg(feature = "framebuffer")]
+pub use ffi::{
+    DISPLAY_FRAMEBUFFER_HEIGHT, DISPLAY_FRAMEBUFFER_OFFSET_X, DISPLAY_FRAMEBUFFER_OFFSET_Y,
+    DISPLAY_FRAMEBUFFER_WIDTH,
+};
+
 #[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
 pub enum ToifFormat {
     FullColorBE = ffi::toif_format_t_TOIF_FULL_COLOR_BE as _,
@@ -97,14 +103,28 @@ pub fn pixeldata(c: u16) {
 }
 
 #[inline(always)]
-#[cfg(feature = "framebuffer")]
+#[cfg(all(feature = "framebuffer", not(feature = "framebuffer32bit")))]
 pub fn pixel(fb: u32, x: i16, y: i16, c: u16) {
     unsafe {
-        let addr = fb + (y as u32 * DISPLAY_RESX + x as u32) * ffi::DISPLAY_FB_BPP;
-        let ptr1 = addr as *mut u8;
-        let ptr2 = (addr + 1) as *mut u8;
-        ptr1.write_volatile((c & 0xff) as u8);
-        ptr2.write_volatile((c >> 8) as u8);
+        let addr = fb
+            + ((y as u32 + DISPLAY_FRAMEBUFFER_OFFSET_Y) as u32 * DISPLAY_FRAMEBUFFER_WIDTH
+                + (x as u32 + DISPLAY_FRAMEBUFFER_OFFSET_X) as u32)
+                * 2;
+        let ptr = addr as *mut u16;
+        ptr.write_volatile(c);
+    }
+}
+
+#[inline(always)]
+#[cfg(all(feature = "framebuffer", feature = "framebuffer32bit"))]
+pub fn pixel(fb: u32, x: i16, y: i16, c: u32) {
+    unsafe {
+        let addr = fb
+            + ((y as u32 + DISPLAY_FRAMEBUFFER_OFFSET_Y) as u32 * DISPLAY_FRAMEBUFFER_WIDTH
+                + (x as u32 + DISPLAY_FRAMEBUFFER_OFFSET_X) as u32)
+                * 4;
+        let ptr = addr as *mut u32;
+        ptr.write_volatile(c);
     }
 }
 
