@@ -20,21 +20,11 @@ import sys
 import tarfile
 from decimal import Decimal
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    NoReturn,
-    Optional,
-    Sequence,
-    TextIO,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, TextIO
 
 import click
 
-from .. import definitions, ethereum, tools
+from .. import _rlp, definitions, ethereum, tools
 from ..messages import EthereumDefinitions
 from . import with_client
 
@@ -162,7 +152,7 @@ def _erc20_contract(token_address: str, to_address: str, amount: int) -> str:
 
 def _format_access_list(
     access_list: List[ethereum.messages.EthereumAccessList],
-) -> List[Tuple[bytes, Sequence[bytes]]]:
+) -> "_rlp.RLPItem":
     return [
         (ethereum.decode_hex(item.address), item.storage_keys) for item in access_list
     ]
@@ -386,11 +376,6 @@ def sign_tx(
     try to connect to an ethereum node and auto-fill these values. You can configure
     the connection with WEB3_PROVIDER_URI environment variable.
     """
-    try:
-        import rlp
-    except ImportError:
-        _print_eth_dependencies_and_die()
-
     is_eip1559 = eip2718_type == 2
     if (
         (not is_eip1559 and gas_price is None)
@@ -490,8 +475,6 @@ def sign_tx(
 
     to = ethereum.decode_hex(to_address)
 
-    # NOTE: rlp.encode needs a list input to iterate through all its items,
-    # it does not work with a tuple
     if is_eip1559:
         transaction_items = [
             chain_id,
@@ -518,7 +501,7 @@ def sign_tx(
             data_bytes,
             *sig,
         ]
-    transaction = rlp.encode(transaction_items)
+    transaction = _rlp.encode(transaction_items)
 
     if eip2718_type is not None:
         eip2718_prefix = f"{eip2718_type:02x}"

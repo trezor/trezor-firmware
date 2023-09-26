@@ -6,5 +6,4 @@ libusb1>=1.6.4
 construct>=2.9,!=2.10.55
 typing_extensions>=3.10
 dataclasses ; python_version<'3.7'
-simple-rlp>=0.1.2 ; python_version>='3.7'
 construct-classes>=0.1.2
