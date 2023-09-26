@@ -93,10 +93,9 @@ where
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            PageMsg::Content(_) => Err(Error::TypeError),
-            PageMsg::Controls(true) => Ok(CONFIRMED.as_obj()),
-            PageMsg::Controls(false) => Ok(CANCELLED.as_obj()),
-            PageMsg::Aux(_) => Err(Error::TypeError),
+            PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+            PageMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            _ => Err(Error::TypeError),
         }
     }
 }

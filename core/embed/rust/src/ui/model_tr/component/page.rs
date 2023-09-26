@@ -162,7 +162,7 @@ where
     T: Component + Paginate,
     U: StringType + Clone,
 {
-    type Msg = PageMsg<T::Msg, bool>;
+    type Msg = PageMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
@@ -191,7 +191,7 @@ where
                         self.change_page(ctx);
                     } else {
                         // Clicked CANCEL. Send result.
-                        return Some(PageMsg::Controls(false));
+                        return Some(PageMsg::Cancelled);
                     }
                 }
                 ButtonPos::Right => {
@@ -201,7 +201,7 @@ where
                         self.change_page(ctx);
                     } else {
                         // Clicked CONFIRM. Send result.
-                        return Some(PageMsg::Controls(true));
+                        return Some(PageMsg::Confirmed);
                     }
                 }
                 _ => {}

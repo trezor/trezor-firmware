@@ -1173,6 +1173,7 @@ async def confirm_signverify(
         title,
         message,
         "Confirm message:",
+        hold=not verify,
         br_code=BR_TYPE_OTHER,
     )
 

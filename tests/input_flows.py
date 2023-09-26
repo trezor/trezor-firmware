@@ -262,7 +262,7 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         yield
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
-        self.debug.synchronize_at("HorizontalPage")
+        self.debug.synchronize_at("SimplePage")
 
         self.debug.swipe_left(wait=True)
         self.debug.swipe_right(wait=True)
@@ -302,7 +302,7 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         yield
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
-        self.debug.synchronize_at("HorizontalPage")
+        self.debug.synchronize_at("SimplePage")
 
         self.debug.swipe_left(wait=True)
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
@@ -427,7 +427,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
 
         self.debug.click(buttons.CORNER_BUTTON, wait=True)
         # synchronize; TODO get rid of this once we have single-global-layout
-        self.debug.synchronize_at("HorizontalPage")
+        self.debug.synchronize_at("SimplePage")
 
         self.debug.swipe_left(wait=True)
         self.debug.swipe_right(wait=True)
