@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import zlib
 from pathlib import Path
 
 from boards import (
@@ -120,3 +121,51 @@ def get_defs_for_cmake(defs: list[str | tuple[str, str]]) -> list[str]:
         else:
             result.append(d)
     return result
+
+
+def _compress(data: bytes) -> bytes:
+    z = zlib.compressobj(level=9, wbits=-10)
+    return z.compress(data) + z.flush()
+
+
+def embed_binary(obj_program, env, section, target_, file):
+    _in = f"embedded_{section}.bin.deflated"
+
+    def redefine_sym(name):
+        src = (
+            "_binary_build_firmware_"
+            + _in.replace("/", "_").replace(".", "_")
+            + "_"
+            + name
+        )
+        dest = (
+            "_binary_"
+            + target_.replace("/", "_").replace(".o", "_bin_deflated")
+            + "_"
+            + name
+        )
+        return f" --redefine-sym {src}={dest}"
+
+    def compress_action(target, source, env):
+        srcf = Path(str(source[0]))
+        dstf = Path(str(target[0]))
+        compressed = _compress(srcf.read_bytes())
+        dstf.write_bytes(compressed)
+        return 0
+
+    compress = env.Command(target=_in, source=file, action=compress_action)
+
+    obj_program.extend(
+        env.Command(
+            target=target_,
+            source=_in,
+            action="$OBJCOPY -I binary -O elf32-littlearm -B arm"
+            f" --rename-section .data=.{section}"
+            + redefine_sym("start")
+            + redefine_sym("end")
+            + redefine_sym("size")
+            + " $SOURCE $TARGET",
+        )
+    )
+
+    env.Depends(obj_program, compress)

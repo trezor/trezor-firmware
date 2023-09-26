@@ -24,11 +24,15 @@
 #include "common.h"
 #include "flash.h"
 #include "image.h"
+#include "memzero.h"
 #include "model.h"
+#include "uzlib.h"
 
 // symbols from bootloader.bin => bootloader.o
-extern const void _binary_embed_firmware_bootloader_bin_start;
-extern const void _binary_embed_firmware_bootloader_bin_size;
+extern const void
+    _binary_embed_firmware_bootloaders_bootloader_bin_deflated_start;
+extern const void
+    _binary_embed_firmware_bootloaders_bootloader_bin_deflated_size;
 
 /*
 static secbool known_bootloader(const uint8_t *hash, int len) {
@@ -111,11 +115,31 @@ static secbool latest_bootloader(const uint8_t *hash, int len) {
 }
 #endif
 
+#define UZLIB_WINDOW_SIZE (1 << 10)
+
+#if PRODUCTION || BOOTLOADER_QA
+static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
+                          const void *src, uint32_t srcsize, void *dest,
+                          uint32_t destsize) {
+  memzero(decomp, sizeof(struct uzlib_uncomp));
+  if (window) {
+    memzero(window, UZLIB_WINDOW_SIZE);
+  }
+  memzero(dest, destsize);
+  decomp->source = (const uint8_t *)src;
+  decomp->source_limit = decomp->source + srcsize;
+  decomp->dest = (uint8_t *)dest;
+  decomp->dest_limit = decomp->dest + destsize;
+  uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
+}
+#endif
+
 void check_and_replace_bootloader(void) {
 #if PRODUCTION || BOOTLOADER_QA
+
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
-  const uint32_t bl_len = 128 * 1024;
+  const uint32_t bl_len = flash_area_get_size(&BOOTLOADER_AREA);
   const void *bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
   blake2s(bl_data, bl_len, hash, BLAKE2S_DIGEST_LENGTH);
 
@@ -130,14 +154,25 @@ void check_and_replace_bootloader(void) {
 
   // replace bootloader with the latest one
   const uint32_t *data =
-      (const uint32_t *)&_binary_embed_firmware_bootloader_bin_start;
+      (const uint32_t
+           *)&_binary_embed_firmware_bootloaders_bootloader_bin_deflated_start;
   const uint32_t len =
-      (const uint32_t)&_binary_embed_firmware_bootloader_bin_size;
+      (const uint32_t)&_binary_embed_firmware_bootloaders_bootloader_bin_deflated_size;
+
+  struct uzlib_uncomp decomp = {0};
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
+  uint32_t decomp_out[IMAGE_HEADER_SIZE / sizeof(uint32_t)] = {0};
+
+  uzlib_prepare(&decomp, decomp_window, data, len, decomp_out,
+                sizeof(decomp_out));
+
+  ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
+         "Bootloader header decompression failed");
 
   const image_header *new_bld_hdr = read_image_header(
-      (uint8_t *)data, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE);
+      (uint8_t *)decomp_out, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE);
 
-  ensure(new_bld_hdr == (const image_header *)data ? sectrue : secfalse,
+  ensure(new_bld_hdr == (const image_header *)decomp_out ? sectrue : secfalse,
          "Invalid embedded bootloader");
 
   ensure(check_image_model(new_bld_hdr), "Incompatible embedded bootloader");
@@ -177,16 +212,32 @@ void check_and_replace_bootloader(void) {
 
   ensure(flash_area_erase(&BOOTLOADER_AREA, NULL), NULL);
   ensure(flash_unlock_write(), NULL);
-  for (int i = 0; i < len / sizeof(uint32_t); i++) {
-    ensure(
-        flash_area_write_word(&BOOTLOADER_AREA, i * sizeof(uint32_t), data[i]),
-        NULL);
+
+  uint32_t offset = 0;
+
+  do {
+    uint32_t *p = decomp_out;
+    uint32_t last_whole_word_addr = (((uint32_t)decomp.dest) & ~3);
+    while ((uint32_t)p < last_whole_word_addr) {
+      ensure(flash_area_write_word(&BOOTLOADER_AREA, offset, *p++), NULL);
+      offset += sizeof(uint32_t);
+    }
+    if ((uint8_t *)p < decomp.dest) {
+      // last few bytes in case of unaligned data
+      uint32_t d = 0;
+      memcpy(&d, p, (uint32_t)decomp.dest - (uint32_t)p);
+      ensure(flash_area_write_word(&BOOTLOADER_AREA, offset, d), NULL);
+      offset += sizeof(uint32_t);
+    }
+    decomp.dest = (uint8_t *)decomp_out;
+  } while (uzlib_uncompress(&decomp) >= 0);
+
+  // fill the rest of the bootloader area with 0x00
+  while (offset < bl_len) {
+    ensure(flash_area_write_word(&BOOTLOADER_AREA, offset, 0x00000000), NULL);
+    offset += sizeof(uint32_t);
   }
-  for (int i = len / sizeof(uint32_t); i < 128 * 1024 / sizeof(uint32_t); i++) {
-    ensure(flash_area_write_word(&BOOTLOADER_AREA, i * sizeof(uint32_t),
-                                 0x00000000),
-           NULL);
-  }
+
   ensure(flash_lock_write(), NULL);
 #endif
 }
