@@ -24,7 +24,7 @@ pub use map::MsgMap;
 pub use marquee::Marquee;
 pub use maybe::Maybe;
 pub use pad::Pad;
-pub use paginated::{AuxPageMsg, PageMsg, Paginate};
+pub use paginated::{PageMsg, Paginate};
 pub use painter::Painter;
 pub use placed::{FixedHeightBar, Floating, GridPlaced, Split};
 pub use qr_code::Qr;

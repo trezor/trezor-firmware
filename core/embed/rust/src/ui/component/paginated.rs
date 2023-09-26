@@ -1,26 +1,19 @@
-pub enum AuxPageMsg {
-    /// Page component was instantiated with BACK button on every page and it
-    /// was pressed.
-    GoBack,
+/// Common message type for pagination components.
+pub enum PageMsg<T> {
+    /// Pass-through from paged component.
+    Content(T),
+
+    /// Confirmed using page controls.
+    Confirmed,
+
+    /// Cancelled using page controls.
+    Cancelled,
 
     /// Page component was configured to react to swipes and user swiped left.
     SwipeLeft,
 
     /// Page component was configured to react to swipes and user swiped right.
     SwipeRight,
-}
-
-/// Common message type for pagination components.
-pub enum PageMsg<T, U> {
-    /// Pass-through from paged component.
-    Content(T),
-
-    /// Messages from page controls outside the paged component, like
-    /// "OK" and "Cancel" buttons.
-    Controls(U),
-
-    /// Auxilliary events used by exotic pages on touchscreens.
-    Aux(AuxPageMsg),
 }
 
 pub trait Paginate {

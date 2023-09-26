@@ -56,11 +56,17 @@ impl ScrollBar {
     }
 
     pub fn go_to_next_page(&mut self) {
-        self.go_to(self.active_page.saturating_add(1).min(self.page_count - 1));
+        self.go_to_relative(1)
     }
 
     pub fn go_to_previous_page(&mut self) {
-        self.go_to(self.active_page.saturating_sub(1));
+        self.go_to_relative(-1)
+    }
+
+    pub fn go_to_relative(&mut self, step: isize) {
+        self.go_to(
+            (self.active_page as isize + step).clamp(0, self.page_count as isize - 1) as usize,
+        );
     }
 
     pub fn go_to(&mut self, active_page: usize) {

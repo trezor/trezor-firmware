@@ -1,9 +1,7 @@
 use crate::ui::{
-    component::{
-        base::ComponentExt, AuxPageMsg, Component, Event, EventCtx, Never, Pad, PageMsg, Paginate,
-    },
+    component::{base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, Paginate},
     display::{self, Color},
-    geometry::{Insets, Rect},
+    geometry::{Axis, Insets, Rect},
 };
 
 use super::{theme, ScrollBar, Swipe, SwipeDirection};
@@ -11,26 +9,40 @@ use super::{theme, ScrollBar, Swipe, SwipeDirection};
 const SCROLLBAR_HEIGHT: i16 = 18;
 const SCROLLBAR_BORDER: i16 = 4;
 
-pub struct HorizontalPage<T> {
+pub struct SimplePage<T> {
     content: T,
     pad: Pad,
     swipe: Swipe,
     scrollbar: ScrollBar,
+    axis: Axis,
     swipe_right_to_go_back: bool,
     fade: Option<u16>,
 }
 
-impl<T> HorizontalPage<T>
+impl<T> SimplePage<T>
 where
     T: Paginate,
     T: Component,
 {
-    pub fn new(content: T, background: Color) -> Self {
+    pub fn horizontal(content: T, background: Color) -> Self {
         Self {
             content,
             swipe: Swipe::new(),
             pad: Pad::with_background(background),
             scrollbar: ScrollBar::horizontal(),
+            axis: Axis::Horizontal,
+            swipe_right_to_go_back: false,
+            fade: None,
+        }
+    }
+
+    pub fn vertical(content: T, background: Color) -> Self {
+        Self {
+            content,
+            swipe: Swipe::new(),
+            pad: Pad::with_background(background),
+            scrollbar: ScrollBar::vertical(),
+            axis: Axis::Vertical,
             swipe_right_to_go_back: false,
             fade: None,
         }
@@ -46,11 +58,20 @@ where
     }
 
     fn setup_swipe(&mut self) {
-        self.swipe.allow_left = self.scrollbar.has_next_page();
-        self.swipe.allow_right = self.scrollbar.has_previous_page() || self.swipe_right_to_go_back;
+        if self.is_horizontal() {
+            self.swipe.allow_left = self.scrollbar.has_next_page();
+            self.swipe.allow_right =
+                self.scrollbar.has_previous_page() || self.swipe_right_to_go_back;
+        } else {
+            self.swipe.allow_up = self.scrollbar.has_next_page();
+            self.swipe.allow_down = self.scrollbar.has_previous_page();
+            self.swipe.allow_right = self.swipe_right_to_go_back;
+        }
     }
 
-    fn on_page_change(&mut self, ctx: &mut EventCtx) {
+    fn change_page(&mut self, ctx: &mut EventCtx, step: isize) {
+        // Advance scrollbar.
+        self.scrollbar.go_to_relative(step);
         // Adjust the swipe parameters according to the scrollbar.
         self.setup_swipe();
 
@@ -64,23 +85,43 @@ where
         // paint.
         self.fade = Some(theme::BACKLIGHT_NORMAL);
     }
+
+    fn is_horizontal(&self) -> bool {
+        matches!(self.axis, Axis::Horizontal)
+    }
 }
 
-impl<T> Component for HorizontalPage<T>
+impl<T> Component for SimplePage<T>
 where
     T: Paginate,
     T: Component,
 {
-    type Msg = PageMsg<T::Msg, Never>;
+    type Msg = PageMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.swipe.place(bounds);
 
-        let (content, scrollbar) = bounds.split_bottom(SCROLLBAR_HEIGHT + SCROLLBAR_BORDER);
-        self.pad.place(content);
-        self.content.place(content);
-        self.scrollbar
-            .place(scrollbar.inset(Insets::bottom(SCROLLBAR_BORDER)));
+        let (content, scrollbar) = if self.is_horizontal() {
+            bounds.split_bottom(SCROLLBAR_HEIGHT + SCROLLBAR_BORDER)
+        } else {
+            bounds.split_right(SCROLLBAR_HEIGHT + SCROLLBAR_BORDER)
+        };
+
+        self.content.place(bounds);
+        if self.content.page_count() > 1 {
+            self.pad.place(content);
+            self.content.place(content);
+        } else {
+            self.pad.place(bounds);
+        }
+
+        if self.is_horizontal() {
+            self.scrollbar
+                .place(scrollbar.inset(Insets::bottom(SCROLLBAR_BORDER)));
+        } else {
+            self.scrollbar
+                .place(scrollbar.inset(Insets::right(SCROLLBAR_BORDER)));
+        }
 
         self.scrollbar
             .set_count_and_active_page(self.content.page_count(), 0);
@@ -92,18 +133,19 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         ctx.set_page_count(self.scrollbar.page_count);
         if let Some(swipe) = self.swipe.event(ctx, event) {
-            match swipe {
-                SwipeDirection::Left => {
-                    self.scrollbar.go_to_next_page();
-                    self.on_page_change(ctx);
+            match (swipe, self.axis) {
+                (SwipeDirection::Left, Axis::Horizontal) | (SwipeDirection::Up, Axis::Vertical) => {
+                    self.change_page(ctx, 1);
                     return None;
                 }
-                SwipeDirection::Right => {
-                    if self.swipe_right_to_go_back && self.scrollbar.active_page == 0 {
-                        return Some(PageMsg::Aux(AuxPageMsg::GoBack));
-                    }
-                    self.scrollbar.go_to_previous_page();
-                    self.on_page_change(ctx);
+                (SwipeDirection::Right, _)
+                    if self.swipe_right_to_go_back && self.scrollbar.active_page == 0 =>
+                {
+                    return Some(PageMsg::Cancelled);
+                }
+                (SwipeDirection::Right, Axis::Horizontal)
+                | (SwipeDirection::Down, Axis::Vertical) => {
+                    self.change_page(ctx, -1);
                     return None;
                 }
                 _ => {
@@ -117,7 +159,9 @@ where
     fn paint(&mut self) {
         self.pad.paint();
         self.content.paint();
-        self.scrollbar.paint();
+        if self.scrollbar.has_pages() {
+            self.scrollbar.paint();
+        }
         if let Some(val) = self.fade.take() {
             // Note that this is blocking and takes some time.
             display::fade_backlight(val);
@@ -133,12 +177,12 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for HorizontalPage<T>
+impl<T> crate::trace::Trace for SimplePage<T>
 where
     T: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("HorizontalPage");
+        t.component("SimplePage");
         t.int("active_page", self.scrollbar.active_page as i64);
         t.int("page_count", self.scrollbar.page_count as i64);
         t.child("content", &self.content);
