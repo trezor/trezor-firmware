@@ -790,16 +790,14 @@ if TREZOR_MODEL not in ('1',):
             ' $SOURCE $TARGET', ))
 
 if TREZOR_MODEL not in ('DISC1', ):
-    obj_program.extend(
-        env.Command(
-            target='embed/firmware/bootloaders/bootloader.o',
-            source=f'embed/firmware/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-            action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
-            ' --rename-section .data=.bootloader'
-            f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_start=_binary_embed_firmware_bootloader_bin_start'
-            f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_end=_binary_embed_firmware_bootloader_bin_end'
-            f' --redefine-sym _binary_embed_firmware_bootloaders_bootloader_{BOOTLOADER_SUFFIX}_bin_size=_binary_embed_firmware_bootloader_bin_size'
-            ' $SOURCE $TARGET', ))
+    tools.embed_binary(
+            obj_program,
+            env,
+            'bootloader',
+            'embed/firmware/bootloaders/bootloader.o',
+            f'embed/firmware/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+            )
+
 
 env.Depends(obj_program, qstr_generated)
 
