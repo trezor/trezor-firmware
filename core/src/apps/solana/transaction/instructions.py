@@ -32,7 +32,9 @@ def __getattr__(name: str) -> Type[Instruction]:
     class FakeClass(Instruction):
         @classmethod
         def is_type_of(cls, ins: Any):
-            return ins.program_id == id[0] and ins.instruction_id == id[1]
+            return (
+                base58.encode(ins.program_id) == id[0] and ins.instruction_id == id[1]
+            )
 
     return FakeClass
 
@@ -53,7 +55,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["CreateAccountInstruction"]:
             return (
-                ins.program_id == cls.PROGRAM_ID
+                base58.encode(ins.program_id) == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -68,7 +70,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["AssignInstruction"]:
             return (
-                ins.program_id == cls.PROGRAM_ID
+                base58.encode(ins.program_id) == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -84,7 +86,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["TransferInstruction"]:
             return (
-                ins.program_id == cls.PROGRAM_ID
+                base58.encode(ins.program_id) == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -104,7 +106,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["InitializeInstruction"]:
             return (
-                ins.program_id == cls.PROGRAM_ID
+                base58.encode(ins.program_id) == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
