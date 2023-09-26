@@ -136,6 +136,7 @@ if TREZOR_MODEL in ('R', ):
     ]
     SOURCE_TREZORHAL += [
         'embed/trezorhal/unix/secret.c',
+        'embed/trezorhal/unix/optiga_hal.c',
     ]
 
 SOURCE_UNIX = [
