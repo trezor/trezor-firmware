@@ -35,6 +35,9 @@
 #ifdef USE_I2C
 #include "i2c.h"
 #endif
+#ifdef USE_OPTIGA
+#include "optiga_hal.h"
+#endif
 #ifdef USE_TOUCH
 #include "touch.h"
 #endif
@@ -359,6 +362,10 @@ int bootloader_main(void) {
 
 #ifdef USE_I2C
   i2c_init();
+#endif
+
+#ifdef USE_OPTIGA
+  optiga_hal_init();
 #endif
 
 #ifdef USE_TOUCH
