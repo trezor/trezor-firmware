@@ -55,7 +55,6 @@ ed25519 = "^1.4"
 requests = "^2.31"
 termcolor = "*"
 Pillow = "^9"
-simple-rlp = "^0.1.2"
 
 # crypto
 ecdsa = "^0.16"
