@@ -47,17 +47,6 @@ STATIC mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type,
   return MP_OBJ_FROM_PTR(o);
 }
 
-/// def clear(self) -> None:
-///     """
-///     Clear display with black color.
-///     """
-STATIC mp_obj_t mod_trezorui_Display_clear(mp_obj_t self) {
-  display_clear();
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_obj,
-                                 mod_trezorui_Display_clear);
-
 /// def refresh(self) -> None:
 ///     """
 ///     Refresh display (update screen).
@@ -161,7 +150,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_save_obj,
                                  mod_trezorui_Display_clear_save);
 
 STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
-    {MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_trezorui_Display_clear_obj)},
     {MP_ROM_QSTR(MP_QSTR_refresh),
      MP_ROM_PTR(&mod_trezorui_Display_refresh_obj)},
     {MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_trezorui_Display_bar_obj)},

@@ -17,7 +17,7 @@ use crate::{
     },
     time::Duration,
     ui::{
-        component::{Child, Component, Event, EventCtx, Never, TimerToken},
+        component::{Component, Event, EventCtx, Never, Root, TimerToken},
         constant,
         display::sync,
         geometry::Rect,
@@ -49,9 +49,10 @@ pub trait ObjComponent: MaybeTrace {
     fn obj_paint(&mut self) -> bool;
     fn obj_bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
     fn obj_skip_paint(&mut self) {}
+    fn obj_request_clear(&mut self) {}
 }
 
-impl<T> ObjComponent for Child<T>
+impl<T> ObjComponent for Root<T>
 where
     T: ComponentMsgObj + MaybeTrace,
 {
@@ -61,14 +62,14 @@ where
 
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
         if let Some(msg) = self.event(ctx, event) {
-            self.inner().msg_try_into_obj(msg)
+            self.inner().inner().msg_try_into_obj(msg)
         } else {
             Ok(Obj::const_none())
         }
     }
 
     fn obj_paint(&mut self) -> bool {
-        let will_paint = self.will_paint();
+        let will_paint = self.inner().will_paint();
         self.paint();
         will_paint
     }
@@ -80,6 +81,10 @@ where
 
     fn obj_skip_paint(&mut self) {
         self.skip_paint()
+    }
+
+    fn obj_request_clear(&mut self) {
+        self.clear_screen()
     }
 }
 
@@ -102,9 +107,9 @@ struct LayoutObjInner {
 impl LayoutObj {
     /// Create a new `LayoutObj`, wrapping a root component.
     pub fn new(root: impl ComponentMsgObj + MaybeTrace + 'static) -> Result<Gc<Self>, Error> {
-        // Let's wrap the root component into a `Child` to maintain the top-level
+        // Let's wrap the root component into a `Root` to maintain the top-level
         // invalidation logic.
-        let wrapped_root = Child::new(root);
+        let wrapped_root = Root::new(root);
         // SAFETY: We are coercing GC-allocated sized ptr into an unsized one.
         let root =
             unsafe { Gc::from_raw(Gc::into_raw(Gc::new(wrapped_root)?) as *mut dyn ObjComponent) };
@@ -172,6 +177,12 @@ impl LayoutObj {
         }
 
         Ok(msg)
+    }
+
+    fn obj_request_clear(&self) {
+        let mut inner = self.inner.borrow_mut();
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_request_clear();
     }
 
     /// Run a paint pass over the component tree. Returns true if any component
@@ -427,6 +438,7 @@ extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
             #[cfg(feature = "ui_debug")]
             panic!("cannot raise messages during RequestPaint");
         };
+        this.obj_request_clear();
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }

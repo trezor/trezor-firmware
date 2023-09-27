@@ -15,7 +15,6 @@ class RustProgress:
         layout: Any,
     ):
         self.layout = layout
-        ui.display.clear()
         self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
 

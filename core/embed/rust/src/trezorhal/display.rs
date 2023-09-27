@@ -174,3 +174,9 @@ pub fn refresh() {
         ffi::display_refresh();
     }
 }
+
+pub fn clear() {
+    unsafe {
+        ffi::display_clear();
+    }
+}
