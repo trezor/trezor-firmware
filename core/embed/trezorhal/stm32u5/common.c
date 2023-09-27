@@ -41,6 +41,8 @@
 #define COLOR_FATAL_ERROR COLOR_BLACK
 #endif
 
+uint32_t systick_val_copy = 0;
+
 // from util.s
 extern void shutdown_privileged(void);
 
