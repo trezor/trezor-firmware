@@ -703,16 +703,25 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
 
         // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
         // in every paint pass.
-        // SAFETY: We expect no existing mutable reference. Resulting reference is
-        //         discarded before returning to micropython.
-        let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
+        let buffer_func = move || {
+            // SAFETY: We expect no existing mutable reference. Resulting reference is
+            //         discarded before returning to micropython.
+            let buffer = unsafe { unwrap!(get_buffer(data)) };
+            // Incoming data may be empty, meaning we should display default homescreen
+            // image.
+            if buffer.is_empty() {
+                theme::IMAGE_HOMESCREEN
+            } else {
+                buffer
+            }
+        };
 
         let size = match jpeg_info(buffer_func()) {
             Some(info) => info.0,
             _ => return Err(value_error!("Invalid image.")),
         };
 
-        let buttons = Button::cancel_confirm_text(None, Some("CONFIRM"));
+        let buttons = Button::cancel_confirm_text(None, Some("CHANGE"));
         let obj = LayoutObj::new(Frame::centered(
             theme::label_title(),
             title,

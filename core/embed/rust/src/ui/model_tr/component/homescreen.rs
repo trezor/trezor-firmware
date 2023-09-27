@@ -28,6 +28,15 @@ const LABEL_OUTSET: i16 = 3;
 const NOTIFICATION_FONT: Font = Font::NORMAL;
 const NOTIFICATION_ICON: Icon = theme::ICON_WARNING;
 
+fn paint_default_image() {
+    theme::ICON_LOGO.draw(
+        TOP_CENTER + Offset::y(LOGO_ICON_TOP_MARGIN),
+        Alignment2D::TOP_CENTER,
+        theme::FG,
+        theme::BG,
+    );
+}
+
 pub struct Homescreen<T>
 where
     T: StringType,
@@ -58,12 +67,7 @@ where
             let toif_data = unwrap!(Toif::new(user_custom_image.as_ref()));
             toif_data.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
         } else {
-            theme::ICON_LOGO.draw(
-                TOP_CENTER + Offset::y(LOGO_ICON_TOP_MARGIN),
-                Alignment2D::TOP_CENTER,
-                theme::FG,
-                theme::BG,
-            );
+            paint_default_image();
         }
     }
 
@@ -273,8 +277,13 @@ where
 
     fn paint(&mut self) {
         // Drawing the image full-screen first and then other things on top
-        let toif_data = unwrap!(Toif::new((self.buffer_func)()));
-        toif_data.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
+        let buffer = (self.buffer_func)();
+        if buffer.is_empty() {
+            paint_default_image();
+        } else {
+            let toif_data = unwrap!(Toif::new(buffer));
+            toif_data.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
+        };
         // Need to make all the title background black, so the title text is well
         // visible
         let title_area = self.title.inner().area();
