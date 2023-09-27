@@ -9,7 +9,7 @@ pub mod dma2d;
 mod ffi;
 pub mod io;
 pub mod random;
-#[cfg(feature = "model_tr")]
+#[cfg(feature = "rgb_led")]
 pub mod rgb_led;
 pub mod slip39;
 pub mod storage;
@@ -18,6 +18,8 @@ pub mod uzlib;
 pub mod wordlist;
 
 pub mod buffers;
+pub mod secbool;
+
 #[cfg(not(feature = "micropython"))]
 pub mod time;
 

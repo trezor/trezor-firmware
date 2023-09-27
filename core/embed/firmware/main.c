@@ -300,6 +300,9 @@ void SVC_C_Handler(uint32_t *stack) {
       // raising privileges.
       stack[6] = (uintptr_t)reboot_to_bootloader;
       return;
+    case SVC_GET_SYSTICK_VAL: {
+      systick_val_copy = SysTick->VAL;
+    } break;
     default:
       stack[0] = 0xffffffff;
       break;

@@ -22,10 +22,11 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
     account = msg.account  # local_cache_attribute
     minor = msg.minor  # local_cache_attribute
     payment_id = msg.payment_id  # local_cache_attribute
+    address_n = msg.address_n  # local_cache_attribute
 
-    await paths.validate_path(keychain, msg.address_n)
+    await paths.validate_path(keychain, address_n)
 
-    creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
+    creds = misc.get_creds(keychain, address_n, msg.network_type)
     addr = creds.address
 
     have_subaddress = (
@@ -65,10 +66,13 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
         )
 
     if msg.show_display:
+        from . import PATTERN, SLIP44_ID
+
         await show_address(
             addr,
             address_qr="monero:" + addr,
-            path=paths.address_n_to_str(msg.address_n),
+            path=paths.address_n_to_str(address_n),
+            account=paths.get_account_name("XMR", msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
 

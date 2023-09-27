@@ -27,20 +27,22 @@ const EMPTY_PIN_STR: &str = "_";
 
 const CHOICE_LENGTH: usize = 13;
 const NUMBER_START_INDEX: usize = 3;
-const CHOICES: [(&str, PinAction, Option<Icon>); CHOICE_LENGTH] = [
-    ("DELETE", PinAction::Delete, Some(theme::ICON_DELETE)),
-    ("SHOW", PinAction::Show, Some(theme::ICON_EYE)),
-    ("ENTER", PinAction::Enter, Some(theme::ICON_TICK)),
-    ("0", PinAction::Digit('0'), None),
-    ("1", PinAction::Digit('1'), None),
-    ("2", PinAction::Digit('2'), None),
-    ("3", PinAction::Digit('3'), None),
-    ("4", PinAction::Digit('4'), None),
-    ("5", PinAction::Digit('5'), None),
-    ("6", PinAction::Digit('6'), None),
-    ("7", PinAction::Digit('7'), None),
-    ("8", PinAction::Digit('8'), None),
-    ("9", PinAction::Digit('9'), None),
+/// Text, action, icon, without_release
+const CHOICES: [(&str, PinAction, Option<Icon>, bool); CHOICE_LENGTH] = [
+    // DELETE should be triggerable without release (after long-press)
+    ("DELETE", PinAction::Delete, Some(theme::ICON_DELETE), true),
+    ("SHOW", PinAction::Show, Some(theme::ICON_EYE), false),
+    ("ENTER", PinAction::Enter, Some(theme::ICON_TICK), false),
+    ("0", PinAction::Digit('0'), None, false),
+    ("1", PinAction::Digit('1'), None, false),
+    ("2", PinAction::Digit('2'), None, false),
+    ("3", PinAction::Digit('3'), None, false),
+    ("4", PinAction::Digit('4'), None, false),
+    ("5", PinAction::Digit('5'), None, false),
+    ("6", PinAction::Digit('6'), None, false),
+    ("7", PinAction::Digit('7'), None, false),
+    ("8", PinAction::Digit('8'), None, false),
+    ("9", PinAction::Digit('9'), None, false),
 ];
 
 fn get_random_digit_position() -> usize {
@@ -54,7 +56,7 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
     type Item = ChoiceItem<T>;
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
-        let (choice_str, action, icon) = CHOICES[choice_index];
+        let (choice_str, action, icon, without_release) = CHOICES[choice_index];
 
         let mut choice_item = ChoiceItem::new(choice_str, ButtonLayout::default_three_icons());
 
@@ -62,6 +64,11 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryPIN {
         if !matches!(action, PinAction::Digit(_)) {
             let confirm_btn = ButtonDetails::armed_text("CONFIRM".into());
             choice_item.set_middle_btn(Some(confirm_btn));
+        }
+
+        // Making middle button create LongPress events
+        if without_release {
+            choice_item = choice_item.with_middle_action_without_release();
         }
 
         // Adding icons for appropriate items
@@ -240,29 +247,34 @@ where
             }
         }
 
-        match self.choice_page.event(ctx, event) {
-            Some(PinAction::Delete) => {
-                self.textbox.delete_last(ctx);
-                self.update(ctx);
-                None
+        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
+            match action {
+                PinAction::Delete => {
+                    // Deleting all when long-pressed
+                    if long_press {
+                        self.textbox.clear(ctx);
+                    } else {
+                        self.textbox.delete_last(ctx);
+                    }
+                    self.update(ctx);
+                }
+                PinAction::Show => {
+                    self.show_real_pin = true;
+                    self.update(ctx);
+                }
+                PinAction::Enter => return Some(CancelConfirmMsg::Confirmed),
+                PinAction::Digit(ch) if !self.is_full() => {
+                    self.textbox.append(ctx, ch);
+                    // Choosing random digit to be shown next
+                    self.choice_page
+                        .set_page_counter(ctx, get_random_digit_position(), true);
+                    self.show_last_digit = true;
+                    self.update(ctx);
+                }
+                _ => {}
             }
-            Some(PinAction::Show) => {
-                self.show_real_pin = true;
-                self.update(ctx);
-                None
-            }
-            Some(PinAction::Enter) => Some(CancelConfirmMsg::Confirmed),
-            Some(PinAction::Digit(ch)) if !self.is_full() => {
-                self.textbox.append(ctx, ch);
-                // Choosing random digit to be shown next
-                self.choice_page
-                    .set_page_counter(ctx, get_random_digit_position(), true);
-                self.show_last_digit = true;
-                self.update(ctx);
-                None
-            }
-            _ => None,
         }
+        None
     }
 
     fn paint(&mut self) {

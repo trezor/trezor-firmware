@@ -295,6 +295,7 @@ STATIC mp_obj_str_t mod_trezorutils_model_name_obj = {
 /// INTERNAL_MODEL: str
 /// EMULATOR: bool
 /// BITCOIN_ONLY: bool
+/// UI_LAYOUT: str
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
@@ -347,6 +348,13 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_false},
+#endif
+#ifdef UI_LAYOUT_TT
+    {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_TT)},
+#elif UI_LAYOUT_TR
+    {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_TR)},
+#else
+#error Unknown layout
 #endif
 };
 

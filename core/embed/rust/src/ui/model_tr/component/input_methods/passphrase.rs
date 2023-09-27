@@ -43,25 +43,34 @@ const DIGITS_INDEX: usize = 5;
 const SPECIAL_INDEX: usize = 6;
 const SPACE_INDEX: usize = 7;
 
-// Menu text, action, icon data, middle button with CONFIRM
-const MENU: [(&str, PassphraseAction, Option<Icon>, bool); MENU_LENGTH] = [
-    ("SHOW", PassphraseAction::Show, Some(theme::ICON_EYE), true),
+/// Menu text, action, icon data, middle button with CONFIRM, without_release
+const MENU: [(&str, PassphraseAction, Option<Icon>, bool, bool); MENU_LENGTH] = [
+    (
+        "SHOW",
+        PassphraseAction::Show,
+        Some(theme::ICON_EYE),
+        true,
+        false,
+    ),
     (
         "CANCEL_OR_DELETE", // will be chosen dynamically
         PassphraseAction::CancelOrDelete,
         None,
         true,
+        true, // without_release
     ),
     (
         "ENTER",
         PassphraseAction::Enter,
         Some(theme::ICON_TICK),
         true,
+        false,
     ),
     (
         "abc",
         PassphraseAction::Category(ChoiceCategory::LowercaseLetter),
         None,
+        false,
         false,
     ),
     (
@@ -69,11 +78,13 @@ const MENU: [(&str, PassphraseAction, Option<Icon>, bool); MENU_LENGTH] = [
         PassphraseAction::Category(ChoiceCategory::UppercaseLetter),
         None,
         false,
+        false,
     ),
     (
         "123",
         PassphraseAction::Category(ChoiceCategory::Digit),
         None,
+        false,
         false,
     ),
     (
@@ -81,11 +92,13 @@ const MENU: [(&str, PassphraseAction, Option<Icon>, bool); MENU_LENGTH] = [
         PassphraseAction::Category(ChoiceCategory::SpecialSymbol),
         None,
         false,
+        false,
     ),
     (
         "SPACE",
         PassphraseAction::Character(' '),
         Some(theme::ICON_SPACE),
+        false,
         false,
     ),
 ];
@@ -164,7 +177,7 @@ impl ChoiceFactoryPassphrase {
         choice_index: usize,
     ) -> (ChoiceItem<T>, PassphraseAction) {
         // More options for CANCEL/DELETE button
-        let (mut text, action, mut icon, show_confirm) = MENU[choice_index];
+        let (mut text, action, mut icon, show_confirm, without_release) = MENU[choice_index];
         if matches!(action, PassphraseAction::CancelOrDelete) {
             if self.is_empty {
                 text = "CANCEL";
@@ -181,6 +194,11 @@ impl ChoiceFactoryPassphrase {
         if show_confirm {
             let confirm_btn = ButtonDetails::armed_text("CONFIRM".into());
             menu_item.set_middle_btn(Some(confirm_btn));
+        }
+
+        // Making middle button create LongPress events
+        if without_release {
+            menu_item = menu_item.with_middle_action_without_release();
         }
 
         if let Some(icon) = icon {
@@ -291,6 +309,10 @@ where
         self.textbox.delete_last(ctx);
     }
 
+    fn delete_all_digits(&mut self, ctx: &mut EventCtx) {
+        self.textbox.clear(ctx);
+    }
+
     /// Displaying the MENU
     fn show_menu_page(&mut self, ctx: &mut EventCtx) {
         let menu_choices = ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, self.is_empty());
@@ -359,13 +381,18 @@ where
             }
         }
 
-        if let Some(action) = self.choice_page.event(ctx, event) {
+        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
             match action {
                 PassphraseAction::CancelOrDelete => {
                     if self.is_empty() {
                         return Some(CancelConfirmMsg::Cancelled);
                     } else {
-                        self.delete_last_digit(ctx);
+                        // Deleting all when long-pressed
+                        if long_press {
+                            self.delete_all_digits(ctx);
+                        } else {
+                            self.delete_last_digit(ctx);
+                        }
                         self.update_passphrase_dots(ctx);
                         if self.is_empty() {
                             // Allowing for DELETE/CANCEL change

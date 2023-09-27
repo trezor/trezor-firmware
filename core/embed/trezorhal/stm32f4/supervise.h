@@ -6,10 +6,14 @@
 #define SVC_SHUTDOWN 4
 #define SVC_REBOOT_TO_BOOTLOADER 5
 #define SVC_REBOOT_COPY_IMAGE_HEADER 6
+#define SVC_GET_SYSTICK_VAL 7
 
 #include <string.h>
 #include "common.h"
 #include "image.h"
+
+// from common.c
+extern uint32_t systick_val_copy;
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -85,5 +89,15 @@ static inline void svc_reboot_copy_image_header(const uint8_t *image_address) {
     copy_image_header_for_bootloader(image_address);
     ensure_compatible_settings();
     reboot_to_bootloader();
+  }
+}
+
+static inline uint32_t svc_get_systick_val(void) {
+  if (is_mode_unprivileged() && !is_mode_handler()) {
+    __asm__ __volatile__("svc %0" ::"i"(SVC_GET_SYSTICK_VAL) : "memory");
+    return systick_val_copy;
+  } else {
+    systick_val_copy = SysTick->VAL;
+    return systick_val_copy;
   }
 }

@@ -443,12 +443,17 @@ async def confirm_path_warning(
 async def confirm_homescreen(
     image: bytes,
 ) -> None:
-    # TODO: show homescreen preview?
-    await confirm_action(
-        "set_homescreen",
-        "Set homescreen",
-        description="Do you really want to set new homescreen image?",
-        br_code=ButtonRequestType.ProtectCall,
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(
+                trezorui2.confirm_homescreen(
+                    title="CHANGE HOMESCREEN?",
+                    image=image,
+                )
+            ),
+            "set_homesreen",
+            ButtonRequestType.ProtectCall,
+        )
     )
 
 

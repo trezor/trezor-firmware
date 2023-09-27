@@ -5,8 +5,10 @@ use crate::ui::{
     geometry::{Alignment2D, Offset, Point, Rect},
 };
 
-const MESSAGE_AREA_START: i16 = 26;
-const FOOTER_AREA_START: i16 = 40;
+const MESSAGE_AREA_START: i16 = 24 + 11;
+const MESSAGE_AREA_START_2L: i16 = 24 + 7;
+const FOOTER_AREA_START: i16 = MESSAGE_AREA_START + 10;
+const FOOTER_AREA_START_2L: i16 = MESSAGE_AREA_START_2L + 10;
 const ICON_TOP: i16 = 12;
 
 pub struct ResultScreen<'a> {
@@ -53,15 +55,36 @@ impl<'a> Component for ResultScreen<'a> {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bg.place(bounds);
 
-        self.message_top.place(Rect::new(
-            Point::new(0, MESSAGE_AREA_START),
-            Point::new(WIDTH, FOOTER_AREA_START),
-        ));
-
         let bottom_area = Rect::new(Point::new(0, FOOTER_AREA_START), Point::new(WIDTH, HEIGHT));
 
-        self.small_pad.place(bottom_area);
         self.message_bottom.place(bottom_area);
+        let h = self.message_bottom.inner().text_height(WIDTH);
+
+        if h > 8 {
+            self.message_top.place(Rect::new(
+                Point::new(0, MESSAGE_AREA_START_2L),
+                Point::new(WIDTH, FOOTER_AREA_START_2L),
+            ));
+
+            let bottom_area = Rect::new(
+                Point::new(0, FOOTER_AREA_START_2L),
+                Point::new(WIDTH, FOOTER_AREA_START_2L + h),
+            );
+            self.message_bottom.place(bottom_area);
+        } else {
+            self.message_top.place(Rect::new(
+                Point::new(0, MESSAGE_AREA_START),
+                Point::new(WIDTH, FOOTER_AREA_START),
+            ));
+
+            let bottom_area = Rect::new(
+                Point::new(0, FOOTER_AREA_START),
+                Point::new(WIDTH, FOOTER_AREA_START + h),
+            );
+            self.message_bottom.place(bottom_area);
+        }
+
+        self.small_pad.place(bottom_area);
 
         bounds
     }

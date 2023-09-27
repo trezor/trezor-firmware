@@ -1,11 +1,14 @@
 #[cfg(feature = "ui_debug")]
 use crate::trace::{Trace, Tracer};
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Pad},
-    constant::screen,
-    display,
-    display::{Font, Icon},
-    geometry::{Alignment2D, Offset, Point, Rect},
+use crate::{
+    trezorhal::secbool::{secbool, sectrue},
+    ui::{
+        component::{Child, Component, Event, EventCtx, Pad},
+        constant::screen,
+        display,
+        display::{Font, Icon},
+        geometry::{Alignment2D, Offset, Point, Rect},
+    },
 };
 
 use super::{
@@ -17,9 +20,9 @@ use super::{
 #[repr(u32)]
 #[derive(Copy, Clone)]
 pub enum MenuMsg {
-    Close = 1,
-    Reboot = 2,
-    FactoryReset = 3,
+    Close = 0xAABBCCDD,
+    Reboot = 0x11223344,
+    FactoryReset = 0x55667788,
 }
 impl ReturnToC for MenuMsg {
     fn return_to_c(self) -> u32 {
@@ -74,17 +77,19 @@ impl Trace for MenuChoice {
     }
 }
 
-pub struct MenuChoiceFactory;
+pub struct MenuChoiceFactory {
+    firmware_present: secbool,
+}
 
 impl MenuChoiceFactory {
     const CHOICES: [(&'static str, &'static str, Icon); CHOICE_LENGTH] = [
         ("Factory", "reset", ICON_TRASH),
-        ("Reboot", "Trezor", ICON_REDO),
         ("Exit", "menu", ICON_EXIT),
+        ("Reboot", "Trezor", ICON_REDO),
     ];
 
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(firmware_present: secbool) -> Self {
+        Self { firmware_present }
     }
 }
 
@@ -93,7 +98,11 @@ impl ChoiceFactory<&'static str> for MenuChoiceFactory {
     type Item = MenuChoice;
 
     fn count(&self) -> usize {
-        CHOICE_LENGTH
+        if self.firmware_present == sectrue {
+            CHOICE_LENGTH
+        } else {
+            CHOICE_LENGTH - 1
+        }
     }
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
@@ -104,8 +113,8 @@ impl ChoiceFactory<&'static str> for MenuChoiceFactory {
         );
         let action = match choice_index {
             0 => MenuMsg::FactoryReset,
-            1 => MenuMsg::Reboot,
-            2 => MenuMsg::Close,
+            1 => MenuMsg::Close,
+            2 if self.firmware_present == sectrue => MenuMsg::Reboot,
             _ => unreachable!(),
         };
         (choice_item, action)
@@ -118,8 +127,8 @@ pub struct Menu {
 }
 
 impl Menu {
-    pub fn new() -> Self {
-        let choices = MenuChoiceFactory::new();
+    pub fn new(firmware_present: secbool) -> Self {
+        let choices = MenuChoiceFactory::new(firmware_present);
         Self {
             pad: Pad::with_background(BLD_BG).with_clear(),
             choice_page: Child::new(
@@ -141,7 +150,7 @@ impl Component for Menu {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.choice_page.event(ctx, event)
+        self.choice_page.event(ctx, event).map(|evt| evt.0)
     }
 
     fn paint(&mut self) {

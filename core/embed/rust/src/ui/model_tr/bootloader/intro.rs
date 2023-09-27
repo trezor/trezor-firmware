@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Pad},
-    geometry::{Alignment2D, Rect},
+    geometry::{Alignment, Alignment2D, Rect},
 };
 
 use super::{
@@ -32,10 +32,11 @@ pub struct Intro<'a> {
     title: Child<Label<&'a str>>,
     buttons: Child<ButtonController<&'static str>>,
     text: Child<Label<&'a str>>,
+    warn: Option<Child<Label<&'a str>>>,
 }
 
 impl<'a> Intro<'a> {
-    pub fn new(title: &'a str, content: &'a str) -> Self {
+    pub fn new(title: &'a str, content: &'a str, fw_ok: bool) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(Label::centered(title, TEXT_NORMAL).vertically_centered()),
@@ -44,6 +45,10 @@ impl<'a> Intro<'a> {
                 RIGHT_BUTTON_TEXT,
             ))),
             text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
+            warn: (!fw_ok).then_some(Child::new(
+                Label::new("FIRMWARE CORRUPTED", Alignment::Start, TEXT_NORMAL)
+                    .vertically_centered(),
+            )),
         }
     }
 }
@@ -61,16 +66,25 @@ impl<'a> Component for Intro<'a> {
         self.title.place(title_area);
         self.buttons.place(buttons_area);
         self.text.place(text_area);
+
+        if self.warn.is_some() {
+            let (warn_area, text_area) = text_area.split_top(10);
+            self.warn.place(warn_area);
+            self.text.place(text_area);
+        } else {
+            self.text.place(text_area);
+        }
+
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = self.buttons.event(ctx, event);
 
-        if let Some(Triggered(ButtonPos::Left)) = msg {
+        if let Some(Triggered(ButtonPos::Left, _)) = msg {
             return Some(Self::Msg::InstallFirmware);
         };
-        if let Some(Triggered(ButtonPos::Right)) = msg {
+        if let Some(Triggered(ButtonPos::Right, _)) = msg {
             return Some(Self::Msg::GoToMenu);
         };
         None
@@ -82,6 +96,7 @@ impl<'a> Component for Intro<'a> {
         let area = self.bg.area;
         ICON_WARN_TITLE.draw(area.top_left(), Alignment2D::TOP_LEFT, BLD_FG, BLD_BG);
         ICON_WARN_TITLE.draw(area.top_right(), Alignment2D::TOP_RIGHT, BLD_FG, BLD_BG);
+        self.warn.paint();
         self.text.paint();
         self.buttons.paint();
     }
@@ -89,6 +104,7 @@ impl<'a> Component for Intro<'a> {
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.title.bounds(sink);
+        self.warn.bounds(sink);
         self.text.bounds(sink);
         self.buttons.bounds(sink);
     }

@@ -204,7 +204,7 @@ where
         };
 
         let button_event = self.buttons.event(ctx, event);
-        if let Some(ButtonControllerMsg::Triggered(button)) = button_event {
+        if let Some(ButtonControllerMsg::Triggered(button, _)) = button_event {
             if self.is_in_subpage() {
                 match button {
                     ButtonPos::Left => {

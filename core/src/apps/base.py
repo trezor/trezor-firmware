@@ -80,6 +80,7 @@ def get_features() -> Features:
             Capability.Crypto,
             Capability.Shamir,
             Capability.ShamirGroups,
+            Capability.PassphraseEntry,
         ]
     else:
         f.capabilities = [

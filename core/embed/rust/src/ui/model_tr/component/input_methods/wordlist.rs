@@ -95,7 +95,8 @@ impl<T: StringType + Clone> ChoiceFactory<T> for ChoiceFactoryWordlist {
         if choice_index == DELETE_INDEX {
             return (
                 ChoiceItem::new("DELETE", ButtonLayout::arrow_armed_arrow("CONFIRM".into()))
-                    .with_icon(theme::ICON_DELETE),
+                    .with_icon(theme::ICON_DELETE)
+                    .with_middle_action_without_release(),
                 WordlistAction::Delete,
             );
         }
@@ -156,19 +157,49 @@ where
         ChoiceFactoryWordlist::new(self.wordlist_type, self.textbox.content())
     }
 
+    fn get_last_textbox_letter(&self) -> Option<char> {
+        self.textbox.content().chars().last()
+    }
+
+    fn get_new_page_counter(&self, new_choices: &ChoiceFactoryWordlist) -> usize {
+        // Starting at the random position in case of letters and at the beginning in
+        // case of words.
+        if self.offer_words {
+            INITIAL_PAGE_COUNTER
+        } else {
+            let choices_count = <ChoiceFactoryWordlist as ChoiceFactory<T>>::count(new_choices);
+            // There should be always DELETE and at least one letter
+            assert!(choices_count > 1);
+            if choices_count == 2 {
+                // In case there is only DELETE and one letter, starting on that letter
+                // (regardless of the last letter in the textbox)
+                return INITIAL_PAGE_COUNTER;
+            }
+            // We do not want to end up at the same letter as the last one in the textbox
+            loop {
+                let random_position = get_random_position(choices_count);
+                let current_action =
+                    <ChoiceFactoryWordlist as ChoiceFactory<T>>::get(new_choices, random_position)
+                        .1;
+                if let WordlistAction::Letter(current_letter) = current_action {
+                    if let Some(last_letter) = self.get_last_textbox_letter() {
+                        if current_letter == last_letter {
+                            // Randomly trying again when the last and current letter match
+                            continue;
+                        }
+                    }
+                }
+                break random_position;
+            }
+        }
+    }
+
     /// Updates the whole page.
     fn update(&mut self, ctx: &mut EventCtx) {
         self.update_chosen_letters(ctx);
         let new_choices = self.get_current_choices();
         self.offer_words = new_choices.offer_words;
-        // Starting at the random position in case of letters and at the beginning in
-        // case of words
-        let new_page_counter = if self.offer_words {
-            INITIAL_PAGE_COUNTER
-        } else {
-            let choices_count = <ChoiceFactoryWordlist as ChoiceFactory<T>>::count(&new_choices);
-            get_random_position(choices_count)
-        };
+        let new_page_counter = self.get_new_page_counter(&new_choices);
         // Not using carousel in case of words, as that looks weird in case
         // there is only one word to choose from.
         self.choice_page
@@ -201,19 +232,25 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match self.choice_page.event(ctx, event) {
-            Some(WordlistAction::Delete) => {
-                self.textbox.delete_last(ctx);
-                self.update(ctx);
+        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
+            match action {
+                WordlistAction::Delete => {
+                    // Deleting all when long-pressed
+                    if long_press {
+                        self.textbox.clear(ctx);
+                    } else {
+                        self.textbox.delete_last(ctx);
+                    }
+                    self.update(ctx);
+                }
+                WordlistAction::Letter(letter) => {
+                    self.textbox.append(ctx, letter);
+                    self.update(ctx);
+                }
+                WordlistAction::Word(word) => {
+                    return Some(word);
+                }
             }
-            Some(WordlistAction::Letter(letter)) => {
-                self.textbox.append(ctx, letter);
-                self.update(ctx);
-            }
-            Some(WordlistAction::Word(word)) => {
-                return Some(word);
-            }
-            _ => {}
         }
         None
     }

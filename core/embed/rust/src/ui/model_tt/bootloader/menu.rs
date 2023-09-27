@@ -1,15 +1,18 @@
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Label, Pad},
-    constant::{screen, WIDTH},
-    display::Icon,
-    geometry::{Insets, Point, Rect},
-    model_tt::{
-        bootloader::theme::{
-            button_bld, button_bld_menu, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
-            CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TEXT_TITLE,
-            TITLE_AREA, X32,
+use crate::{
+    trezorhal::secbool::{secbool, sectrue},
+    ui::{
+        component::{Child, Component, Event, EventCtx, Label, Pad},
+        constant::{screen, WIDTH},
+        display::Icon,
+        geometry::{Insets, Point, Rect},
+        model_tt::{
+            bootloader::theme::{
+                button_bld, button_bld_menu, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
+                CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TEXT_TITLE,
+                TITLE_AREA, X32,
+            },
+            component::{Button, ButtonMsg::Clicked, IconText},
         },
-        component::{Button, ButtonMsg::Clicked, IconText},
     },
 };
 
@@ -19,9 +22,9 @@ const BUTTON_SPACING: i16 = 8;
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]
 pub enum MenuMsg {
-    Close = 1,
-    Reboot = 2,
-    FactoryReset = 3,
+    Close = 0xAABBCCDD,
+    Reboot = 0x11223344,
+    FactoryReset = 0x55667788,
 }
 
 pub struct Menu {
@@ -33,7 +36,7 @@ pub struct Menu {
 }
 
 impl Menu {
-    pub fn new() -> Self {
+    pub fn new(firmware_present: secbool) -> Self {
         let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
         let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
 
@@ -45,7 +48,11 @@ impl Menu {
                     .styled(button_bld_menu())
                     .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
             ),
-            reboot: Child::new(Button::with_icon_and_text(content_reboot).styled(button_bld())),
+            reboot: Child::new(
+                Button::with_icon_and_text(content_reboot)
+                    .styled(button_bld())
+                    .initially_enabled(sectrue == firmware_present),
+            ),
             reset: Child::new(Button::with_icon_and_text(content_reset).styled(button_bld())),
         };
         instance.bg.clear();

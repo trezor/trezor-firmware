@@ -256,7 +256,7 @@ where
 
         // Do something when a button was triggered
         // and we have some action connected with it
-        if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
+        if let Some(ButtonControllerMsg::Triggered(pos, _)) = button_event {
             // When there is a previous or next screen in the current flow,
             // handle that first and in case it triggers, then do not continue
             if self.event_consumed_by_current_choice(ctx, pos) {

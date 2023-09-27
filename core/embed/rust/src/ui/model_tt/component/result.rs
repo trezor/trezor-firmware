@@ -48,10 +48,10 @@ pub struct ResultFooter<'a, T> {
 }
 
 impl<'a, T: AsRef<str>> ResultFooter<'a, T> {
-    pub fn new(text: T, style: &'a ResultStyle) -> Self {
+    pub fn new(text: Label<T>, style: &'a ResultStyle) -> Self {
         Self {
             style,
-            text: Label::centered(text, style.title_style()).vertically_centered(),
+            text,
             area: Rect::zero(),
         }
     }
@@ -101,7 +101,7 @@ pub struct ResultScreen<'a, T> {
     style: &'a ResultStyle,
     icon: Icon,
     message: Child<Label<T>>,
-    footer: Child<ResultFooter<'a, T>>,
+    footer: Child<ResultFooter<'a, &'a str>>,
 }
 
 impl<'a, T: StringType> ResultScreen<'a, T> {
@@ -109,7 +109,7 @@ impl<'a, T: StringType> ResultScreen<'a, T> {
         style: &'a ResultStyle,
         icon: Icon,
         message: T,
-        footer: T,
+        footer: Label<&'a str>,
         complete_draw: bool,
     ) -> Self {
         let mut instance = Self {
@@ -130,13 +130,13 @@ impl<'a, T: StringType> ResultScreen<'a, T> {
     }
 }
 
-impl<T: StringType> Component for ResultScreen<'_, T> {
+impl<'a, T: StringType> Component for ResultScreen<'a, T> {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
         self.bg.place(screen());
 
-        let (main_area, footer_area) = ResultFooter::<T>::split_bounds();
+        let (main_area, footer_area) = ResultFooter::<&'a str>::split_bounds();
 
         self.footer_pad.place(footer_area);
         self.footer.place(footer_area);

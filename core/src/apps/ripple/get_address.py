@@ -18,16 +18,21 @@ async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddres
 
     from .helpers import address_from_public_key
 
-    await paths.validate_path(keychain, msg.address_n)
+    address_n = msg.address_n  # local_cache_attribute
 
-    node = keychain.derive(msg.address_n)
+    await paths.validate_path(keychain, address_n)
+
+    node = keychain.derive(address_n)
     pubkey = node.public_key()
     address = address_from_public_key(pubkey)
 
     if msg.show_display:
+        from . import PATTERN, SLIP44_ID
+
         await show_address(
             address,
-            path=paths.address_n_to_str(msg.address_n),
+            path=paths.address_n_to_str(address_n),
+            account=paths.get_account_name("XRP", msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
 

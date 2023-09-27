@@ -649,6 +649,15 @@ class DebugLink:
             physical_button=messages.DebugPhysicalButton.MIDDLE_BTN, wait=wait
         )
 
+    def press_middle_htc(
+        self, hold_ms: int, extra_ms: int = 200
+    ) -> Optional[LayoutContent]:
+        return self.press_htc(
+            button=messages.DebugPhysicalButton.MIDDLE_BTN,
+            hold_ms=hold_ms,
+            extra_ms=extra_ms,
+        )
+
     @overload
     def press_right(self) -> None:
         ...
@@ -665,9 +674,18 @@ class DebugLink:
     def press_right_htc(
         self, hold_ms: int, extra_ms: int = 200
     ) -> Optional[LayoutContent]:
+        return self.press_htc(
+            button=messages.DebugPhysicalButton.RIGHT_BTN,
+            hold_ms=hold_ms,
+            extra_ms=extra_ms,
+        )
+
+    def press_htc(
+        self, button: messages.DebugPhysicalButton, hold_ms: int, extra_ms: int = 200
+    ) -> Optional[LayoutContent]:
         hold_ms = hold_ms + extra_ms  # safety margin
         result = self.input(
-            physical_button=messages.DebugPhysicalButton.RIGHT_BTN,
+            physical_button=button,
             hold_ms=hold_ms,
         )
         # sleeping little longer for UI to update

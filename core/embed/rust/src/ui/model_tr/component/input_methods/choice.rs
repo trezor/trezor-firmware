@@ -29,6 +29,12 @@ pub trait Choice<T: StringType> {
     fn btn_layout(&self) -> ButtonLayout<T> {
         ButtonLayout::default_three_icons()
     }
+
+    /// Whether it is possible to do the middle action event without
+    /// releasing the button - after long-press duration is reached.
+    fn trigger_middle_without_release(&self) -> bool {
+        false
+    }
 }
 
 /// Interface for a specific component efficiently giving
@@ -130,7 +136,7 @@ where
     /// Need to update the initial button layout.
     pub fn with_initial_page_counter(mut self, page_counter: usize) -> Self {
         self.page_counter = page_counter;
-        let initial_btn_layout = self.get_current_choice().0.btn_layout();
+        let initial_btn_layout = self.get_current_item().btn_layout();
         self.buttons = Child::new(
             ButtonController::new(initial_btn_layout)
                 .with_ignore_btn_delay(constant::IGNORE_OTHER_BTN_MS),
@@ -235,7 +241,7 @@ where
         }
 
         // Getting the remaining left and right areas.
-        let center_width = self.get_current_choice().0.width_center();
+        let center_width = self.get_current_item().width_center();
         let (left_area, _center_area, right_area) = center_row_area.split_center(center_width);
 
         // Possibly drawing on the left side.
@@ -277,14 +283,23 @@ where
     }
 
     /// Getting the choice on the current index
-    pub fn get_current_choice(&self) -> (<F as ChoiceFactory<T>>::Item, A) {
+    fn get_current_choice(&self) -> (<F as ChoiceFactory<T>>::Item, A) {
         self.choices.get(self.page_counter)
+    }
+
+    /// Getting the current item
+    pub fn get_current_item(&self) -> <F as ChoiceFactory<T>>::Item {
+        self.get_current_choice().0
+    }
+
+    /// Getting the current action
+    pub fn get_current_action(&self) -> A {
+        self.get_current_choice().1
     }
 
     /// Display the current choice in the middle.
     fn show_current_choice(&mut self, area: Rect) {
-        self.get_current_choice()
-            .0
+        self.get_current_item()
             .paint_center(area, self.inverse_selected_item);
 
         // Color inversion is just one-time thing.
@@ -406,7 +421,7 @@ where
     /// If defined in the current choice, setting their text,
     /// whether they are long-pressed, and painting them.
     fn set_buttons(&mut self, ctx: &mut EventCtx) {
-        let btn_layout = self.get_current_choice().0.btn_layout();
+        let btn_layout = self.get_current_item().btn_layout();
         self.buttons.mutate(ctx, |ctx, buttons| {
             buttons.set(btn_layout);
             // When user holds one of the buttons, highlighting it.
@@ -474,7 +489,7 @@ where
     F: ChoiceFactory<T, Action = A>,
     T: StringType + Clone,
 {
-    type Msg = A;
+    type Msg = (A, bool);
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
@@ -516,7 +531,7 @@ where
             // Stopping the automatic movement when the released button is the same as the
             // direction we were moving, or when the pressed button is the
             // opposite one (user does middle-click).
-            if matches!(button_event, Some(ButtonControllerMsg::Triggered(pos)) if pos == moving_direction)
+            if matches!(button_event, Some(ButtonControllerMsg::Triggered(pos, _)) if pos == moving_direction)
                 || matches!(button_event, Some(ButtonControllerMsg::Pressed(pos)) if pos != moving_direction)
             {
                 self.holding_mover.stop_moving();
@@ -534,7 +549,7 @@ where
         }
 
         // There was a legitimate button event - doing some action
-        if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
+        if let Some(ButtonControllerMsg::Triggered(pos, long_press)) = button_event {
             match pos {
                 ButtonPos::Left => {
                     // Clicked BACK. Decrease the page counter.
@@ -547,10 +562,22 @@ where
                     self.move_right(ctx);
                 }
                 ButtonPos::Middle => {
-                    // Clicked SELECT. Send current choice index
+                    // Clicked SELECT. Send current choice index with information about long-press
                     self.clear_and_repaint(ctx);
-                    return Some(self.get_current_choice().1);
+                    return Some((self.get_current_action(), long_press));
                 }
+            }
+        };
+        // The middle button was pressed for longer time - sending the Event with long
+        // press. Also resetting the functional and visual state of the buttons.
+        // Only doing this when the item is configured to do so
+        if let Some(ButtonControllerMsg::LongPressed(ButtonPos::Middle)) = button_event {
+            if self.get_current_item().trigger_middle_without_release() {
+                self.buttons.mutate(ctx, |ctx, buttons| {
+                    buttons.reset_state(ctx);
+                });
+                self.clear_and_repaint(ctx);
+                return Some((self.get_current_action(), true));
             }
         };
         // The middle button was pressed, highlighting the current choice by color

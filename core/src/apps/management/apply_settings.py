@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import trezorui2
 from trezor import utils
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action, confirm_homescreen, confirm_single
+from trezor.ui.layouts import confirm_action
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
@@ -151,6 +151,8 @@ async def apply_settings(msg: ApplySettings) -> Success:
 
 
 async def _require_confirm_change_homescreen(homescreen: bytes) -> None:
+    from trezor.ui.layouts import confirm_homescreen
+
     if homescreen == b"":
         await confirm_action(
             "set_homescreen",
@@ -159,12 +161,12 @@ async def _require_confirm_change_homescreen(homescreen: bytes) -> None:
             br_code=BRT_PROTECT_CALL,
         )
     else:
-        await confirm_homescreen(
-            homescreen,
-        )
+        await confirm_homescreen(homescreen)
 
 
 async def _require_confirm_change_label(label: str) -> None:
+    from trezor.ui.layouts import confirm_single
+
     await confirm_single(
         "set_label",
         "Device name",

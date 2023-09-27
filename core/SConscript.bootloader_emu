@@ -136,6 +136,7 @@ if TREZOR_MODEL in ('R', ):
     ]
     SOURCE_TREZORHAL += [
         'embed/trezorhal/unix/secret.c',
+        'embed/trezorhal/unix/optiga_hal.c',
     ]
 
 SOURCE_UNIX = [
@@ -206,7 +207,7 @@ env.Replace(
         'TREZOR_EMULATOR',
         CPU_MODEL,
         'HW_MODEL=' + MODEL_AS_NUMBER,
-        'HW_REVISION=' + ('6' if TREZOR_MODEL in ('R',) else '0'),
+        'HW_REVISION=' + ('10' if TREZOR_MODEL in ('R',) else '0'),
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'TREZOR_BOARD=\\"boards/board-unix.h\\"',
         'MCU_TYPE='+CPU_MODEL,

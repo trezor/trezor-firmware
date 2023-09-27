@@ -12,7 +12,7 @@ use crate::{
 
 use super::{
     super::constant, common::display_center, theme, ButtonController, ButtonControllerMsg,
-    ButtonLayout,
+    ButtonLayout, ButtonPos, CancelConfirmMsg,
 };
 
 const AREA: Rect = constant::screen();
@@ -144,7 +144,7 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
         // HTC press of any button will lock the device
-        if let Some(ButtonControllerMsg::Triggered(_)) = self.invisible_buttons.event(ctx, event) {
+        if let Some(ButtonControllerMsg::Triggered(..)) = self.invisible_buttons.event(ctx, event) {
             return Some(());
         }
         None
@@ -202,7 +202,7 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Press of any button will unlock the device
-        if let Some(ButtonControllerMsg::Triggered(_)) = self.invisible_buttons.event(ctx, event) {
+        if let Some(ButtonControllerMsg::Triggered(..)) = self.invisible_buttons.event(ctx, event) {
             return Some(());
         }
         None
@@ -217,6 +217,70 @@ where
         );
         self.instruction.paint();
         self.label.paint();
+    }
+}
+
+pub struct ConfirmHomescreen<T, F>
+where
+    T: StringType,
+{
+    title: Child<Label<T>>,
+    buffer_func: F,
+    buttons: Child<ButtonController<T>>,
+}
+
+impl<T, F> ConfirmHomescreen<T, F>
+where
+    T: StringType + Clone,
+{
+    pub fn new(title: T, buffer_func: F) -> Self {
+        let btn_layout = ButtonLayout::cancel_none_text("CHANGE".into());
+        ConfirmHomescreen {
+            title: Child::new(Label::centered(title, theme::TEXT_BOLD)),
+            buffer_func,
+            buttons: Child::new(ButtonController::new(btn_layout)),
+        }
+    }
+}
+
+impl<'a, T, F> Component for ConfirmHomescreen<T, F>
+where
+    T: StringType + Clone,
+    F: Fn() -> &'a [u8],
+{
+    type Msg = CancelConfirmMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
+        let title_height = theme::TEXT_BOLD.text_font.line_height();
+        let (title_area, _) = title_content_area.split_top(title_height);
+        self.title.place(title_area);
+        self.buttons.place(button_area);
+        bounds
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Left button cancels, right confirms
+        if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event) {
+            match pos {
+                ButtonPos::Left => return Some(CancelConfirmMsg::Cancelled),
+                ButtonPos::Right => return Some(CancelConfirmMsg::Confirmed),
+                _ => {}
+            }
+        }
+        None
+    }
+
+    fn paint(&mut self) {
+        // Drawing the image full-screen first and then other things on top
+        let toif_data = unwrap!(Toif::new((self.buffer_func)()));
+        toif_data.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
+        // Need to make all the title background black, so the title text is well
+        // visible
+        let title_area = self.title.inner().area();
+        rect_fill(title_area, theme::BG);
+        self.title.paint();
+        self.buttons.paint();
     }
 }
 
@@ -241,5 +305,16 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
         t.child("label", &self.label);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T, F> crate::trace::Trace for ConfirmHomescreen<T, F>
+where
+    T: StringType,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ConfirmHomescreen");
+        t.child("title", &self.title);
     }
 }
