@@ -86,7 +86,7 @@ class Homescreen(HomescreenBase):
 
 class Lockscreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.LOCKSCREEN_ON
-    BACKLIGHT_LEVEL = ui.BACKLIGHT_LOW
+    BACKLIGHT_LEVEL = ui.style.BACKLIGHT_LOW
 
     def __init__(
         self,
@@ -95,7 +95,7 @@ class Lockscreen(HomescreenBase):
     ) -> None:
         self.bootscreen = bootscreen
         if bootscreen:
-            self.BACKLIGHT_LEVEL = ui.BACKLIGHT_NORMAL
+            self.BACKLIGHT_LEVEL = ui.style.BACKLIGHT_NORMAL
 
         skip = (
             not bootscreen and storage_cache.homescreen_shown is self.RENDER_INDICATOR

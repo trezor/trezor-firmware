@@ -16,7 +16,6 @@ class RustProgress:
     ):
         self.layout = layout
         ui.backlight_fade(ui.style.BACKLIGHT_DIM)
-        ui.display.clear()
         self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
         ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)

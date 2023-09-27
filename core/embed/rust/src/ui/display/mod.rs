@@ -341,6 +341,11 @@ pub fn rect_fill_corners(r: Rect, fg_color: Color) {
     }
 }
 
+/// Draw black rectangle over entire screen.
+pub fn clear() {
+    display::clear();
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct TextOverlay<T> {
     area: Rect,

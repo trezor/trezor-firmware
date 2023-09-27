@@ -5,9 +5,6 @@ from trezor.ui import display
 
 class TestDisplay(unittest.TestCase):
 
-    def test_clear(self):
-        display.clear()
-
     def test_refresh(self):
         display.refresh()
 

@@ -194,8 +194,6 @@ class RustLayout(ui.Layout):
             return self.handle_timers(), self.handle_input_and_rendering()
 
     def _first_paint(self) -> None:
-        # Clear the screen of any leftovers.
-        ui.display.clear()
         self._paint()
 
         if __debug__ and self.should_notify_layout_change:
@@ -253,7 +251,6 @@ def draw_simple(layout: Any) -> None:
         raise RuntimeError
 
     layout.attach_timer_fn(dummy_set_timer)
-    ui.display.clear()
     layout.paint()
     ui.refresh()
 

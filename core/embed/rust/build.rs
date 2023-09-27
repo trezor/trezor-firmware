@@ -290,6 +290,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("storage_set_counter")
         .allowlist_function("storage_next_counter")
         // display
+        .allowlist_function("display_clear")
         .allowlist_function("display_offset")
         .allowlist_function("display_refresh")
         .allowlist_function("display_backlight")

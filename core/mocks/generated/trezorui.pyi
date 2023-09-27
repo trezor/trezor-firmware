@@ -18,11 +18,6 @@ class Display:
         Initialize the display.
         """
 
-    def clear(self) -> None:
-        """
-        Clear display with black color.
-        """
-
     def refresh(self) -> None:
         """
         Refresh display (update screen).

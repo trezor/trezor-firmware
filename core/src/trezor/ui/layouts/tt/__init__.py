@@ -30,6 +30,8 @@ if __debug__:
 
 
 class RustLayout(ui.Layout):
+    BACKLIGHT_LEVEL = ui.style.BACKLIGHT_NORMAL
+
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
         self.layout = layout
@@ -160,9 +162,7 @@ class RustLayout(ui.Layout):
             return self.handle_timers(), self.handle_input_and_rendering()
 
     def _first_paint(self) -> None:
-        # Clear the screen of any leftovers.
         ui.backlight_fade(ui.style.BACKLIGHT_NONE)
-        ui.display.clear()
         self._paint()
 
         if __debug__ and self.should_notify_layout_change:
@@ -223,7 +223,6 @@ def draw_simple(layout: Any) -> None:
 
     layout.attach_timer_fn(dummy_set_timer)
     ui.backlight_fade(ui.style.BACKLIGHT_DIM)
-    ui.display.clear()
     layout.paint()
     ui.refresh()
     ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)

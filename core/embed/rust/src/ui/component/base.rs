@@ -6,7 +6,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{maybe::PaintOverlapping, MsgMap},
-        display::Color,
+        display::{self, Color},
         geometry::{Offset, Rect},
     },
 };
@@ -188,6 +188,80 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.component.trace(t)
+    }
+}
+
+/// Same as `Child` but also handles screen clearing when layout is first
+/// painted.
+pub struct Root<T> {
+    inner: Child<T>,
+    marked_for_clear: bool,
+}
+
+impl<T> Root<T> {
+    pub fn new(component: T) -> Self {
+        Self {
+            inner: Child::new(component),
+            marked_for_clear: true,
+        }
+    }
+
+    pub fn inner(&self) -> &Child<T> {
+        &self.inner
+    }
+
+    pub fn skip_paint(&mut self) {
+        self.inner.skip_paint()
+    }
+
+    pub fn clear_screen(&mut self) {
+        self.marked_for_clear = true;
+    }
+}
+
+impl<T> Component for Root<T>
+where
+    T: Component,
+{
+    type Msg = T::Msg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.inner.place(bounds)
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let msg = self.inner.event(ctx, event);
+        if ctx.needs_repaint_root() {
+            self.marked_for_clear = true;
+            let mut dummy_ctx = EventCtx::new();
+            let paint_msg = self.inner.event(&mut dummy_ctx, Event::RequestPaint);
+            assert!(matches!(paint_msg, None));
+            assert!(dummy_ctx.timers.is_empty());
+        }
+        msg
+    }
+
+    fn paint(&mut self) {
+        if self.marked_for_clear && self.inner.will_paint() {
+            self.marked_for_clear = false;
+            display::clear()
+        }
+        self.inner.paint();
+    }
+
+    #[cfg(feature = "ui_bounds")]
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.inner.bounds(sink)
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for Root<T>
+where
+    T: crate::trace::Trace,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.inner.trace(t)
     }
 }
 
@@ -379,6 +453,7 @@ pub struct EventCtx {
     paint_requested: bool,
     anim_frame_scheduled: bool,
     page_count: Option<usize>,
+    root_repaint_requested: bool,
 }
 
 impl EventCtx {
@@ -404,6 +479,7 @@ impl EventCtx {
                                     * `Child::marked_for_paint` being true. */
             anim_frame_scheduled: false,
             page_count: None,
+            root_repaint_requested: false,
         }
     }
 
@@ -442,6 +518,14 @@ impl EventCtx {
         }
     }
 
+    pub fn request_repaint_root(&mut self) {
+        self.root_repaint_requested = true;
+    }
+
+    pub fn needs_repaint_root(&self) -> bool {
+        self.root_repaint_requested
+    }
+
     pub fn set_page_count(&mut self, count: usize) {
         #[cfg(feature = "ui_debug")]
         assert!(self.page_count.is_none());
@@ -461,6 +545,7 @@ impl EventCtx {
         self.paint_requested = false;
         self.anim_frame_scheduled = false;
         self.page_count = None;
+        self.root_repaint_requested = false;
     }
 
     fn register_timer(&mut self, token: TimerToken, deadline: Duration) {
