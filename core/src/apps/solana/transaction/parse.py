@@ -169,7 +169,7 @@ def parseProperty(serialized_tx: BufferReader, type: str) -> str | int | bytes:
         return parseI32(serialized_tx)
     elif type == "i64":
         return parseI64(serialized_tx)
-    elif type == "pubkey":
+    elif type == "pubkey" or type == "authority":
         return parsePubkey(serialized_tx)
     elif type == "enum":
         return parseEnum(serialized_tx)
