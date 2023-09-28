@@ -1,2293 +1,2165 @@
 {
-    "grouped_instructions": [
+  "grouped_instructions": [
+    {
+      "instructions": [
         {
-            "instructions": [
-                {
-                    "program_id": "11111111111111111111111111111111",
-                    "instruction_id": 0
-                },
-                {
-                    "program_id": "Stake11111111111111111111111111111111111111",
-                    "instruction_id": 0
-                }
-            ],
-            "ui": {
-                "ui_identifier": "ui_confirm",
-                "elements": {
-                    "parameter_indexes": [
-                        [
-                            0,
-                            0
-                        ]
-                    ],
-                    "account_indexes": [
-                        [
-                            0,
-                            0
-                        ]
-                    ]
-                }
+          "program_id": "11111111111111111111111111111111",
+          "instruction_id": 0
+        },
+        {
+          "program_id": "Stake11111111111111111111111111111111111111",
+          "instruction_id": 0
+        }
+      ],
+      "ui": {
+        "ui_identifier": "ui_confirm",
+        "elements": {
+          "parameter_indexes": [[0, 0]],
+          "account_indexes": [[0, 0]]
+        }
+      }
+    }
+  ],
+  "programs": [
+    {
+      "id": "11111111111111111111111111111111",
+      "name": "System Program",
+      "instructions": [
+        {
+          "id": 0,
+          "name": "Create Account",
+          "parameters": [
+            {
+              "name": "lamports",
+              "ui_name": "Lamports",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "space",
+              "ui_name": "Space",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "type": "authority",
+              "optional": false
             }
+          ],
+          "references": [
+            {
+              "name": "funding_account",
+              "ui_name": "Funding account",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "new_account",
+              "ui_name": "New account",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["lamports", "space", "owner"],
+              "accounts": ["funding_account", "new_account"]
+            }
+          }
+        },
+        {
+          "id": 1,
+          "name": "Assign",
+          "parameters": [
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "type": "authority",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "assigned_account",
+              "ui_name": "Assigned account",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["owner"],
+              "accounts": ["assigned_account"]
+            }
+          }
+        },
+        {
+          "id": 2,
+          "name": "Transfer",
+          "parameters": [
+            {
+              "name": "lamports",
+              "ui_name": "Lamports",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "funding_account",
+              "ui_name": "Funding account",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "recipient_account",
+              "ui_name": "Recipient account",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["lamports"],
+              "accounts": ["funding_account", "recipient_account"]
+            }
+          }
+        },
+        {
+          "id": 3,
+          "name": "Create Account With Seed",
+          "parameters": [
+            {
+              "name": "base",
+              "ui_name": "Base",
+              "type": "pubkey",
+              "optional": false
+            },
+            {
+              "name": "seed",
+              "ui_name": "Seed",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "lamports",
+              "ui_name": "Lamports",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "space",
+              "ui_name": "Space",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "type": "pubkey",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "funding_account",
+              "ui_name": "Funding account",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "created_account",
+              "ui_name": "Created account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "base_account",
+              "ui_name": "Base account",
+              "is_authority": true,
+              "optional": true
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["base", "seed", "lamports", "space", "owner"],
+              "accounts": [
+                "funding_account",
+                "recipient_account",
+                "base_account"
+              ]
+            }
+          }
+        },
+        {
+          "id": 8,
+          "name": "Allocate",
+          "parameters": [
+            {
+              "name": "space",
+              "ui_name": "Space",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "new_account",
+              "ui_name": "New account",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["space"],
+              "accounts": ["new_account"]
+            }
+          }
+        },
+        {
+          "id": 9,
+          "name": "Allocate With Seed",
+          "parameters": [
+            {
+              "name": "base",
+              "ui_name": "Base",
+              "type": "pubkey",
+              "optional": false
+            },
+            {
+              "name": "seed",
+              "ui_name": "Seed",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "space",
+              "ui_name": "Space",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "type": "pubkey",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "allocated_account",
+              "ui_name": "Allocated account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "base_account",
+              "ui_name": "Base account",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["base", "seed", "space", "owner"],
+              "accounts": ["allocated_account", "base_account"]
+            }
+          }
+        },
+        {
+          "id": 10,
+          "name": "Assign With Seed",
+          "parameters": [
+            {
+              "name": "base",
+              "ui_name": "Base",
+              "type": "pubkey",
+              "optional": false
+            },
+            {
+              "name": "seed",
+              "ui_name": "Seed",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "type": "pubkey",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "assigned_account",
+              "ui_name": "Assigned account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "base_account",
+              "ui_name": "Base account",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["base", "seed", "owner"],
+              "accounts": ["assigned_account", "base_account"]
+            }
+          }
         }
-    ],
-    "programs": [
+      ]
+    },
+    {
+      "id": "Stake11111111111111111111111111111111111111",
+      "name": "Stake Program",
+      "instructions": [
         {
-            "id": "11111111111111111111111111111111",
-            "name": "System Program",
-            "instructions": [
-                {
-                    "id": 0,
-                    "name": "Create Account",
-                    "parameters": [
-                        {
-                            "name": "lamports",
-                            "ui_name": "Lamports",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "space",
-                            "ui_name": "Space",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "type": "authority",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "funding_account",
-                            "ui_name": "Funding account",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "new_account",
-                            "ui_name": "New account",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "lamports",
-                                "space",
-                                "owner"
-                            ],
-                            "accounts": [
-                                "funding_account",
-                                "new_account"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 1,
-                    "name": "Assign",
-                    "parameters": [
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "type": "authority",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "assigned_account",
-                            "ui_name": "Assigned account",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "owner"
-                            ],
-                            "accounts": [
-                                "assigned_account"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 2,
-                    "name": "Transfer",
-                    "parameters": [
-                        {
-                          "name": "lamports",
-                            "ui_name": "Lamports",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "funding_account",
-                            "ui_name": "Funding account",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "recipient_account",
-                            "ui_name": "Recipient account",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "lamports"
-                            ],
-                            "accounts": [
-                                "funding_account",
-                                "recipient_account"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 3,
-                    "name": "Create Account With Seed",
-                    "parameters": [
-                        {
-                          "name": "base",
-                            "ui_name": "Base",
-                            "type": "pubkey",
-                            "optional": false
-                        },
-                        {
-                          "name": "seed",
-                            "ui_name": "Seed",
-                            "type": "string",
-                            "optional": false
-                        },
-                        {
-                          "name": "lamports",
-                            "ui_name": "Lamports",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "space",
-                            "ui_name": "Space",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "funding_account",
-                            "ui_name": "Funding account",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "created_account",
-                            "ui_name": "Created account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "base_account",
-                            "ui_name": "Base account",
-                            "is_authority": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "base",
-                                "seed",
-                                "lamports",
-                                "space",
-                                "owner"
-                            ],
-                            "accounts": [
-                                "funding_account",
-                                "recipient_account",
-                                "base_account"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 8,
-                    "name": "Allocate",
-                    "parameters": [
-                        {
-                          "name": "space",
-                            "ui_name": "Space",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "new_account",
-                            "ui_name": "New account",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "space"
-                            ],
-                            "accounts": [
-                                "new_account"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 9,
-                    "name": "Allocate With Seed",
-                    "parameters": [
-                        {
-                          "name": "base",
-                            "ui_name": "Base",
-                            "type": "pubkey",
-                            "optional": false
-                        },
-                        {
-                          "name": "seed",
-                            "ui_name": "Seed",
-                            "type": "string",
-                            "optional": false
-                        },
-                        {
-                          "name": "space",
-                            "ui_name": "Space",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "allocated_account",
-                            "ui_name": "Allocated account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "base_account",
-                            "ui_name": "Base account",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "base",
-                                "seed",
-                                "space",
-                                "owner"
-                            ],
-                            "accounts": [
-                                "allocated_account",
-                                "base_account"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 10,
-                    "name": "Assign With Seed",
-                    "parameters": [
-                        {
-                          "name": "base",
-                            "ui_name": "Base",
-                            "type": "pubkey",
-                            "optional": false
-                        },
-                        {
-                          "name": "seed",
-                            "ui_name": "Seed",
-                            "type": "string",
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "assigned_account",
-                            "ui_name": "Assigned account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "base_account",
-                            "ui_name": "Base account",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "base",
-                                "seed",
-                                "owner"
-                            ],
-                            "accounts": [
-                                "assigned_account",
-                                "base_account"
-                            ]
-                        }
-                    }
-                }
-            ]
+          "id": 0,
+          "name": "Initialize",
+          "parameters": [
+            {
+              "name": "staker",
+              "ui_name": "Staker",
+              "type": "authority",
+              "optional": false
+            },
+            {
+              "name": "withdrawer",
+              "ui_name": "Withdrawer",
+              "type": "authority",
+              "optional": false
+            },
+            {
+              "name": "unix_timestamp",
+              "ui_name": "Unix timestamp",
+              "type": "i64",
+              "optional": false
+            },
+            {
+              "name": "epoch",
+              "ui_name": "Epoch",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "custodian",
+              "ui_name": "Custodian",
+              "type": "authority",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "uninitialized_stake_account",
+              "ui_name": "Uninitialized stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "rent_sysvar",
+              "ui_name": "Rent sysvar",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [
+                "staker",
+                "withdrawer",
+                "unix_timestamp",
+                "epoch",
+                "custodian"
+              ],
+              "accounts": ["uninitialized_stake_account", "rent_sysvar"]
+            }
+          }
         },
         {
-            "id": "Stake11111111111111111111111111111111111111",
-            "name": "Stake Program",
-            "instructions": [
-                {
-                    "id": 0,
-                    "name": "Initialize",
-                    "parameters": [
-                        {
-                          "name": "staker",
-                            "ui_name": "Staker",
-                            "type": "authority",
-                            "optional": false
-                        },
-                        {
-                          "name": "withdrawer",
-                            "ui_name": "Withdrawer",
-                            "type": "authority",
-                            "optional": false
-                        },
-                        {
-                          "name": "unix_timestamp",
-                            "ui_name": "Unix timestamp",
-                            "type": "i64",
-                            "optional": false
-                        },
-                        {
-                          "name": "epoch",
-                            "ui_name": "Epoch",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "custodian",
-                            "ui_name": "Custodian",
-                            "type": "authority",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "uninitialized_stake_account",
-                            "ui_name": "Uninitialized stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "rent_sysvar",
-                            "ui_name": "Rent sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "staker",
-                                "withdrawer",
-                                "unix_timestamp",
-                                "epoch",
-                                "custodian"
-                            ],
-                            "accounts": [
-                                "uninitialized_stake_account",
-                                "rent_sysvar"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 1,
-                    "name": "Authorize",
-                    "parameters": [
-                        {
-                          "name": "pubkey",
-                            "ui_name": "Pubkey",
-                            "type": "pubkey",
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_authorize",
-                            "ui_name": "Stake authorize",
-                            "type": "StakeAuthorize",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "stake_account",
-                            "ui_name": "Stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "clock_sysvar",
-                            "ui_name": "Clock sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_or_withdraw_authority",
-                            "ui_name": "stake or withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "lockup_authority",
-                            "ui_name": "Lockup authority",
-                            "is_authority": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "pubkey",
-                                "stake_authorize"
-                            ],
-                            "accounts": [
-                                "stake_account",
-                                "clock_sysvar",
-                                "stake_or_withdraw_authority",
-                                "lockup_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 2,
-                    "name": "Delegate Stake",
-                    "parameters": [],
-                    "references": [
-                        {
-                          "name": "initialized_stake_account",
-                            "ui_name": "Initialized stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "vote_account",
-                            "ui_name": "Vote account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "clock_sysvar",
-                            "ui_name": "Clock sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_history_sysvar",
-                            "ui_name": "Stake history sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "config_account",
-                            "ui_name": "Config account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_authority",
-                            "ui_name": "Stake authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "initialized_stake_account",
-                                "vote_account",
-                                "clock_sysvar",
-                                "stake_history_sysvar",
-                                "config_account",
-                                "stake_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 3,
-                    "name": "Split",
-                    "parameters": [
-                        {
-                          "name": "lamports",
-                            "ui_name": "Lamports",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "stake_account",
-                            "ui_name": "Stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "uninitialized_stake_account",
-                            "ui_name": "Uninitialized stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_authority",
-                            "ui_name": "Stake authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "lamports"
-                            ],
-                            "accounts": [
-                                "stake_account",
-                                "uninitialized_stake_account",
-                                "stake_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 4,
-                    "name": "Withdraw",
-                    "parameters": [
-                        {
-                          "name": "lamports",
-                            "ui_name": "lamports",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "stake_account",
-                            "ui_name": "Stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "recipient_account",
-                            "ui_name": "Recipient account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "clock_sysvar",
-                            "ui_name": "Clock sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_history_sysvar",
-                            "ui_name": "Stake history sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "withdrawal_authority",
-                            "ui_name": "Withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "lockup_authority",
-                            "ui_name": "Lockup authority",
-                            "is_authority": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "lamports"
-                            ],
-                            "accounts": [
-                                "stake_account",
-                                "recipient_account",
-                                "clock_sysvar",
-                                "stake_history_sysvar",
-                                "withdrawal_authority",
-                                "lockup_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 5,
-                    "name": "Deactivate",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "delegated_stake_account",
-                            "ui_name": "Delegated stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "clock_sysvar",
-                            "ui_name": "Clock sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_authority",
-                            "ui_name": "Stake authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "delegated_stake_account",
-                                "clock_sysvar",
-                                "stake_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 6,
-                    "name": "Set Lockup",
-                    "parameters": [
-                        {
-                          "name": "unix_timestamp",
-                            "ui_name": "Unix timestamp",
-                            "type": "i64",
-                            "optional": true
-                        },
-                        {
-                          "name": "epoch",
-                            "ui_name": "Epoch",
-                            "type": "u64",
-                            "optional": true
-                        },
-                        {
-                          "name": "custodian",
-                            "ui_name": "Custodian",
-                            "type": "pubkey",
-                            "optional": true
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "initialized_stake_account",
-                            "ui_name": "Initialized stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "lockup_or_withdraw_authority",
-                            "ui_name": "Lockup authority or withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "unix_timestamp",
-                                "epoch",
-                                "custodian"
-                            ],
-                            "accounts": [
-                                "initialized_stake_account",
-                                "lockup_or_withdraw_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 7,
-                    "name": "Merge",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "destination_stake_account",
-                            "ui_name": "Destination stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "source_stake_account",
-                            "ui_name": "Source stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "clock_sysvar",
-                            "ui_name": "Clock sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_history_sysvar",
-                            "ui_name": "Stake history sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_authority",
-                            "ui_name": "Stake authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "destination_stake_account",
-                                "source_stake_account",
-                                "clock_sysvar",
-                                "stake_history_sysvar",
-                                "stake_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 8,
-                    "name": "Authorize With Seed",
-                    "parameters": [
-                        {
-                          "name": "new_authorized_pubkey",
-                            "ui_name": "New authorized pubkey",
-                            "type": "pubkey",
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_authorize",
-                            "ui_name": "Stake authorize",
-                            "type": "StakeAuthorize",
-                            "optional": false
-                        },
-                        {
-                          "name": "authority_seed",
-                            "ui_name": "Authority seed",
-                            "type": "string",
-                            "optional": false
-                        },
-                        {
-                          "name": "authority_owner",
-                            "ui_name": "Authority owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "stake_account",
-                            "ui_name": "Stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_or_withdraw_authority",
-                            "ui_name": "stake or withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "clock_sysvar",
-                            "ui_name": "Clock sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "lockup_authority",
-                            "ui_name": "Lockup authority",
-                            "is_authority": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "new_authorized_pubkey",
-                                "stake_authorize",
-                                "authority_seed",
-                                "authority_owner"
-                            ],
-                            "accounts": [
-                                "stake_account",
-                                "stake_or_withdraw_authority",
-                                "clock_sysvar",
-                                "lockup_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 9,
-                    "name": "Initialize Checked",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "uninitialized_stake_account",
-                            "ui_name": "Uninitialized stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "rent_sysvar",
-                            "ui_name": "Rent sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_authority",
-                            "ui_name": "stake authority",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "withdrawal_authority",
-                            "ui_name": "withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "uninitialized_stake_account",
-                                "rent_sysvar",
-                                "stake_authority",
-                                "withdrawal_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 10,
-                    "name": "Authorize Checked",
-                    "parameters": [
-                        {
-                          "name": "stake_authorize",
-                            "ui_name": "Stake authorize",
-                            "type": "StakeAuthorize",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "stake_account",
-                            "ui_name": "Stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "clock_sysvar",
-                            "ui_name": "Clock sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_or_withdraw_authority",
-                            "ui_name": "stake or withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "new_stake_or_withdraw_authority",
-                            "ui_name": "new stake or withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "lockup_authority",
-                            "ui_name": "Lockup authority",
-                            "is_authority": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "stake_authorize"
-                            ],
-                            "accounts": [
-                                "stake_account",
-                                "clock_sysvar",
-                                "stake_or_withdraw_authority",
-                                "new_stake_or_withdraw_authority",
-                                "lockup_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 11,
-                    "name": "Authorize Checked With Seed",
-                    "parameters": [
-                        {
-                          "name": "stake_authorize",
-                            "ui_name": "Stake authorize",
-                            "type": "StakeAuthorize",
-                            "optional": false
-                        },
-                        {
-                          "name": "authority_seed",
-                            "ui_name": "Authority seed",
-                            "type": "string",
-                            "optional": false
-                        },
-                        {
-                          "name": "authority_owner",
-                            "ui_name": "Authority owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "stake_account",
-                            "ui_name": "Stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "stake_or_withdraw_authority",
-                            "ui_name": "stake or withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "clock_sysvar",
-                            "ui_name": "Clock sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "new_stake_or_withdraw_authority",
-                            "ui_name": "new stake or withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "lockup_authority",
-                            "ui_name": "Lockup authority",
-                            "is_authority": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "stake_authorize",
-                                "authority_seed",
-                                "authority_owner"
-                            ],
-                            "accounts": [
-                                "stake_account",
-                                "stake_or_withdraw_authority",
-                                "clock_sysvar",
-                                "new_stake_or_withdraw_authority",
-                                "lockup_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 12,
-                    "name": "Set Lockup Checked",
-                    "parameters": [
-                        {
-                          "name": "unix_timestamp",
-                            "ui_name": "Unix timestamp",
-                            "type": "i64",
-                            "optional": true
-                        },
-                        {
-                          "name": "epoch",
-                            "ui_name": "Epoch",
-                            "type": "u64",
-                            "optional": true
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "stake_account",
-                            "ui_name": "Stake account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "lockup_or_withdraw_authority",
-                            "ui_name": "Lockup authority or withdraw authority",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "new_lockup_authority",
-                            "ui_name": "New lockup authority",
-                            "is_authority": true,
-                            "optional": true
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "unix_timestamp",
-                                "epoch"
-                            ],
-                            "accounts": [
-                                "stake_account",
-                                "lockup_or_withdraw_authority",
-                                "new_lockup_authority"
-                            ]
-                        }
-                    }
-                }
-            ]
-        }, {
-            "id": "ComputeBudget111111111111111111111111111111",
-            "name": "Compute Budget Program",
-            "instructions": [
-                {
-                    "id": 1,
-                    "name": "Request Heap Frame",
-                    "parameters": [
-                        {
-                          "name": "bytes",
-                            "ui_name": "bytes",
-                            "type": "u32",
-                            "optional": false
-                        }
-                    ],
-                    "references": [ ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "bytes"
-                            ],
-                            "accounts": [ ]
-                        }
-                    }
-                },{
-                    "id": 2,
-                    "name": "Set Compute Unit Limit",
-                    "parameters": [
-                        {
-                          "name": "units",
-                            "ui_name": "units",
-                            "type": "u32",
-                            "optional": false
-                        }
-                    ],
-                    "references": [ ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "units"
-                            ],
-                            "accounts": [ ]
-                        }
-                    }
-                },{
-                    "id": 3,
-                    "name": "Set Compute Unit Price",
-                    "parameters": [
-                        {
-                          "name": "lamports",
-                            "ui_name": "lamports",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [ ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "lamports"
-                            ],
-                            "accounts": [ ]
-                        }
-                    }
-                }
-            ]
-        }, {
-            "id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-            "name": "Token Program",
-            "instructions": [
-                {
-                    "id": 1,
-                    "name": "Initialize Account",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "account_to_initialize",
-                            "ui_name": "Account to initialize",
-                            "is_authority": false,
-                            "optional": false
-                        }, 
-                        {
-                          "name": "mint_account",
-                            "ui_name": "Mint account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "rent_sysvar",
-                            "ui_name": "Rent sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "account_to_initialize",
-                                "mint_account",
-                                "owner",
-                                "rent_sysvar"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 2,
-                    "name": "Initialize Multisig",
-                    "parameters": [
-                        {
-                          "name": "number_of_signers",
-                            "ui_name": "Number of signers",
-                            "type": "u8",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "multisig_account",
-                            "ui_name": "Multisig account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "rent_sysvar",
-                            "ui_name": "Rent sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "signer_accounts",
-                            "ui_name": "Signer accounts",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "number_of_signers"
-                            ],
-                            "accounts": [
-                                "multisig_account",
-                                "rent_sysvar",
-                                "signer_accounts"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 3,
-                    "name": "Transfer",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "amount",
-                            "ui_name": "Amount",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "source_account",
-                            "ui_name": "Source account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "destination_account",
-                            "ui_name": "Destination account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "amount"
-                            ],
-                            "accounts": [
-                                "source_account",
-                                "destination_account",
-                                "owner"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 4,
-                    "name": "Approve",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "amount",
-                            "ui_name": "Amount",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "source_account",
-                            "ui_name": "Source account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "delegate_account",
-                            "ui_name": "Delegate account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "amount"
-                            ],
-                            "accounts": [
-                                "source_account",
-                                "delegate_account",
-                                "owner"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 5,
-                    "name": "Revoke",
-                    "is_multisig": true,
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "source_account",
-                            "ui_name": "Source account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "source_account",
-                                "owner"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 6,
-                    "name": "Set Authority",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "authority_type",
-                            "ui_name": "Authority type",
-                            "type": "AuthorityType",
-                            "optional": false
-                        },
-                        {
-                          "name": "new_authority",
-                            "ui_name": "New authority",
-                            "type": "pubkey",
-                            "optional": true
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "mint_account",
-                            "ui_name": "Mint or account to change",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "current_authority",
-                            "ui_name": "Current authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "authority_type",
-                                "new_authority"
-                            ],
-                            "accounts": [
-                                "mint_account",
-                                "current_authority"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 7,
-                    "name": "Mint to",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "amount",
-                            "ui_name": "Amount",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "mint",
-                            "ui_name": "The mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "account_to_mint",
-                            "ui_name": "Account to mint tokens to",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "minting_authority",
-                            "ui_name": "Minting authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "amount"
-                            ],
-                            "accounts": [
-                                "mint",
-                                "account_to_mint",
-                                "minting_authority"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 8,
-                    "name": "Burn",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "amount",
-                            "ui_name": "Amount",
-                            "type": "u64",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "account_to_burn_from",
-                            "ui_name": "Account to burn from",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint",
-                            "ui_name": "The token mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "amount"
-                            ],
-                            "accounts": [
-                                "account_to_burn_from",
-                                "token_mint",
-                                "owner"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 9,
-                    "name": "Close Account",
-                    "is_multisig": true,
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "account_to_close",
-                            "ui_name": "Account to close",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "destination_account",
-                            "ui_name": "Destination account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "account_to_close",
-                                "destination_account",
-                                "owner"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 10,
-                    "name": "Freeze Account",
-                    "is_multisig": true,
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "account_to_freeze",
-                            "ui_name": "Account to freeze",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint",
-                            "ui_name": "The token mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "freeze_authority",
-                            "ui_name": "Freeze authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "account_to_freeze",
-                                "token_mint",
-                                "freeze_authority"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 11,
-                    "name": "Thaw Account",
-                    "is_multisig": true,
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "account_to_freeze",
-                            "ui_name": "Account to freeze",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint",
-                            "ui_name": "The token mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "freeze_authority",
-                            "ui_name": "Freeze authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "account_to_freeze",
-                                "token_mint",
-                                "freeze_authority"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 12,
-                    "name": "Transfer Checked",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "amount",
-                            "ui_name": "Amount",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "decimals",
-                            "ui_name": "Decimals",
-                            "type": "u8",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "source_account",
-                            "ui_name": "Source account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint",
-                            "ui_name": "The token mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "destination_account",
-                            "ui_name": "Destination account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "amount",
-                                "decimals"
-                            ],
-                            "accounts": [
-                                "source_account",
-                                "token_mint",
-                                "destination_account",
-                                "owner"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 13,
-                    "name": "Approve Checked",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "amount",
-                            "ui_name": "Amount",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "decimals",
-                            "ui_name": "Decimals",
-                            "type": "u8",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "source_account",
-                            "ui_name": "Source account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint",
-                            "ui_name": "The token mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "delegate",
-                            "ui_name": "The delegate",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "amount",
-                                "decimals"
-                            ],
-                            "accounts": [
-                                "source_account",
-                                "token_mint",
-                                "delegate",
-                                "owner"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 14,
-                    "name": "Mint to Checked",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "amount",
-                            "ui_name": "Amount",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "decimals",
-                            "ui_name": "Decimals",
-                            "type": "u8",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "mint",
-                            "ui_name": "The mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "account_to_mint",
-                            "ui_name": "Account to mint tokens to",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "minting_authority",
-                            "ui_name": "Minting authority",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "amount",
-                                "decimals"
-                            ],
-                            "accounts": [
-                                "mint",
-                                "account_to_mint",
-                                "minting_authority"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "id": 15,
-                    "name": "Burn Checked",
-                    "is_multisig": true,
-                    "parameters": [
-                        {
-                          "name": "amount",
-                            "ui_name": "Amount",
-                            "type": "u64",
-                            "optional": false
-                        },
-                        {
-                          "name": "decimals",
-                            "ui_name": "Decimals",
-                            "type": "u8",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "account_to_burn_from",
-                            "ui_name": "Account to burn from",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint",
-                            "ui_name": "The token mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "amount",
-                                "decimals"
-                            ],
-                            "accounts": [
-                                "account_to_burn_from",
-                                "token_mint",
-                                "owner"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 16,
-                    "name": "Initialize Account 2",
-                    "parameters": [
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "account_to_initialize",
-                            "ui_name": "Account to initialize",
-                            "is_authority": false,
-                            "optional": false
-                        }, 
-                        {
-                          "name": "mint_account",
-                            "ui_name": "Mint account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "rent_sysvar",
-                            "ui_name": "Rent sysvar",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "owner"
-                            ],
-                            "accounts": [
-                                "account_to_initialize",
-                                "mint_account",
-                                "rent_sysvar"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 17,
-                    "name": "Sync Native",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "token_account",
-                            "ui_name": "Native token account",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "token_account"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 18,
-                    "name": "Initialize Account 3",
-                    "parameters": [
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "type": "pubkey",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "account_to_initialize",
-                            "ui_name": "Account to initialize",
-                            "is_authority": false,
-                            "optional": false
-                        }, 
-                        {
-                          "name": "mint_account",
-                            "ui_name": "Mint account",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "owner"
-                            ],
-                            "accounts": [
-                                "account_to_initialize",
-                                "mint_account"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 22,
-                    "name": "Initialize Immutable Owner",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "account_to_initialize",
-                            "ui_name": "Account to initialize",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "account_to_initialize"
-                            ]
-                        }
-                    }
-                }
-            ]
-        }, {
-            "id": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
-            "name": "Associated Token Account Program",
-            "instructions": [
-                {
-                    "id": 0,
-                    "name": "Create",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "funding_account",
-                            "ui_name": "Funding account",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "associated_token_account",
-                            "ui_name": "Associated token account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "wallet_address",
-                            "ui_name": "Wallet address",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint",
-                            "ui_name": "The token mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "system_program",
-                            "ui_name": "System program",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "spl_token",
-                            "ui_name": "SPL token program",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "funding_account",
-                                "associated_token_account",
-                                "wallet_address",
-                                "token_mint",
-                                "system_program",
-                                "spl_token"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 1,
-                    "name": "Create Idempotent",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "funding_account",
-                            "ui_name": "Funding account",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "associated_token_account",
-                            "ui_name": "Associated token account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "wallet_address",
-                            "ui_name": "Wallet address",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint",
-                            "ui_name": "The token mint",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "system_program",
-                            "ui_name": "System program",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "spl_token",
-                            "ui_name": "SPL token program",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "funding_account",
-                                "associated_token_account",
-                                "wallet_address",
-                                "token_mint",
-                                "system_program",
-                                "spl_token"
-                            ]
-                        }
-                    }
-                },{
-                    "id": 2,
-                    "name": "Recover Nested",
-                    "parameters": [ ],
-                    "references": [
-                        {
-                          "name": "nested_account",
-                            "ui_name": "Nested associated token account",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint_nested",
-                            "ui_name": "Token mint for the nested account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "associated_token_account",
-                            "ui_name": "Associated token account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "owner",
-                            "ui_name": "Owner",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "token_mint_owner",
-                            "ui_name": "Token mint for the owner account",
-                            "is_authority": false,
-                            "optional": false
-                        },
-                        {
-                          "name": "wallet_address",
-                            "ui_name": "Wallet address",
-                            "is_authority": true,
-                            "optional": false
-                        },
-                        {
-                          "name": "spl_token",
-                            "ui_name": "SPL token program",
-                            "is_authority": false,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [ ],
-                            "accounts": [
-                                "nested_account",
-                                "token_mint_nested",
-                                "associated_token_account",
-                                "owner",
-                                "token_mint_owner",
-                                "wallet_address",
-                                "spl_token"
-                            ]
-                        }
-                    }
-                }
-            ]
-        }, {
-            "id": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
-            "name": "Memo",
-            "instructions": [
-                {
-                    "id": 0,
-                    "name": "Create",
-                    "parameters": [
-                        {
-                          "name": "memo",
-                            "ui_name": "Memo",
-                            "type": "string",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "signer_accounts",
-                            "ui_name": "Signer accounts",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "memo"
-                            ],
-                            "accounts": [
-                                "signer_accounts"
-                            ]
-                        }
-                    }
-                }
-            ]
-        }, {
-            "id": "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo",
-            "name": "Memo Legacy",
-            "instructions": [
-                {
-                    "id": 0,
-                    "name": "Create",
-                    "parameters": [
-                        {
-                          "name": "memo",
-                            "ui_name": "Memo",
-                            "type": "string",
-                            "optional": false
-                        }
-                    ],
-                    "references": [
-                        {
-                          "name": "signer_accounts",
-                            "ui_name": "Signer accounts",
-                            "is_authority": true,
-                            "optional": false
-                        }
-                    ],
-                    "ui": {
-                        "ui_identifier": "ui_confirm",
-                        "elements": {
-                            "parameters": [
-                                "memo"
-                            ],
-                            "accounts": [
-                                "signer_accounts"
-                            ]
-                        }
-                    }
-                }
-            ]
+          "id": 1,
+          "name": "Authorize",
+          "parameters": [
+            {
+              "name": "pubkey",
+              "ui_name": "Pubkey",
+              "type": "pubkey",
+              "optional": false
+            },
+            {
+              "name": "stake_authorize",
+              "ui_name": "Stake authorize",
+              "type": "StakeAuthorize",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "stake_account",
+              "ui_name": "Stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "clock_sysvar",
+              "ui_name": "Clock sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_or_withdraw_authority",
+              "ui_name": "stake or withdraw authority",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "lockup_authority",
+              "ui_name": "Lockup authority",
+              "is_authority": true,
+              "optional": true
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["pubkey", "stake_authorize"],
+              "accounts": [
+                "stake_account",
+                "clock_sysvar",
+                "stake_or_withdraw_authority",
+                "lockup_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 2,
+          "name": "Delegate Stake",
+          "parameters": [],
+          "references": [
+            {
+              "name": "initialized_stake_account",
+              "ui_name": "Initialized stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "vote_account",
+              "ui_name": "Vote account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "clock_sysvar",
+              "ui_name": "Clock sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_history_sysvar",
+              "ui_name": "Stake history sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "config_account",
+              "ui_name": "Config account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_authority",
+              "ui_name": "Stake authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "initialized_stake_account",
+                "vote_account",
+                "clock_sysvar",
+                "stake_history_sysvar",
+                "config_account",
+                "stake_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 3,
+          "name": "Split",
+          "parameters": [
+            {
+              "name": "lamports",
+              "ui_name": "Lamports",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "stake_account",
+              "ui_name": "Stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "uninitialized_stake_account",
+              "ui_name": "Uninitialized stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_authority",
+              "ui_name": "Stake authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["lamports"],
+              "accounts": [
+                "stake_account",
+                "uninitialized_stake_account",
+                "stake_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 4,
+          "name": "Withdraw",
+          "parameters": [
+            {
+              "name": "lamports",
+              "ui_name": "lamports",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "stake_account",
+              "ui_name": "Stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "recipient_account",
+              "ui_name": "Recipient account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "clock_sysvar",
+              "ui_name": "Clock sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_history_sysvar",
+              "ui_name": "Stake history sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "withdrawal_authority",
+              "ui_name": "Withdraw authority",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "lockup_authority",
+              "ui_name": "Lockup authority",
+              "is_authority": true,
+              "optional": true
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["lamports"],
+              "accounts": [
+                "stake_account",
+                "recipient_account",
+                "clock_sysvar",
+                "stake_history_sysvar",
+                "withdrawal_authority",
+                "lockup_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 5,
+          "name": "Deactivate",
+          "parameters": [],
+          "references": [
+            {
+              "name": "delegated_stake_account",
+              "ui_name": "Delegated stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "clock_sysvar",
+              "ui_name": "Clock sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_authority",
+              "ui_name": "Stake authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "delegated_stake_account",
+                "clock_sysvar",
+                "stake_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 6,
+          "name": "Set Lockup",
+          "parameters": [
+            {
+              "name": "unix_timestamp",
+              "ui_name": "Unix timestamp",
+              "type": "i64",
+              "optional": true
+            },
+            {
+              "name": "epoch",
+              "ui_name": "Epoch",
+              "type": "u64",
+              "optional": true
+            },
+            {
+              "name": "custodian",
+              "ui_name": "Custodian",
+              "type": "pubkey",
+              "optional": true
+            }
+          ],
+          "references": [
+            {
+              "name": "initialized_stake_account",
+              "ui_name": "Initialized stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "lockup_or_withdraw_authority",
+              "ui_name": "Lockup authority or withdraw authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["unix_timestamp", "epoch", "custodian"],
+              "accounts": [
+                "initialized_stake_account",
+                "lockup_or_withdraw_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 7,
+          "name": "Merge",
+          "parameters": [],
+          "references": [
+            {
+              "name": "destination_stake_account",
+              "ui_name": "Destination stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "source_stake_account",
+              "ui_name": "Source stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "clock_sysvar",
+              "ui_name": "Clock sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_history_sysvar",
+              "ui_name": "Stake history sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_authority",
+              "ui_name": "Stake authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "destination_stake_account",
+                "source_stake_account",
+                "clock_sysvar",
+                "stake_history_sysvar",
+                "stake_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 8,
+          "name": "Authorize With Seed",
+          "parameters": [
+            {
+              "name": "new_authorized_pubkey",
+              "ui_name": "New authorized pubkey",
+              "type": "pubkey",
+              "optional": false
+            },
+            {
+              "name": "stake_authorize",
+              "ui_name": "Stake authorize",
+              "type": "StakeAuthorize",
+              "optional": false
+            },
+            {
+              "name": "authority_seed",
+              "ui_name": "Authority seed",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "authority_owner",
+              "ui_name": "Authority owner",
+              "type": "pubkey",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "stake_account",
+              "ui_name": "Stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_or_withdraw_authority",
+              "ui_name": "stake or withdraw authority",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "clock_sysvar",
+              "ui_name": "Clock sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "lockup_authority",
+              "ui_name": "Lockup authority",
+              "is_authority": true,
+              "optional": true
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [
+                "new_authorized_pubkey",
+                "stake_authorize",
+                "authority_seed",
+                "authority_owner"
+              ],
+              "accounts": [
+                "stake_account",
+                "stake_or_withdraw_authority",
+                "clock_sysvar",
+                "lockup_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 9,
+          "name": "Initialize Checked",
+          "parameters": [],
+          "references": [
+            {
+              "name": "uninitialized_stake_account",
+              "ui_name": "Uninitialized stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "rent_sysvar",
+              "ui_name": "Rent sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_authority",
+              "ui_name": "stake authority",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "withdrawal_authority",
+              "ui_name": "withdraw authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "uninitialized_stake_account",
+                "rent_sysvar",
+                "stake_authority",
+                "withdrawal_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 10,
+          "name": "Authorize Checked",
+          "parameters": [
+            {
+              "name": "stake_authorize",
+              "ui_name": "Stake authorize",
+              "type": "StakeAuthorize",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "stake_account",
+              "ui_name": "Stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "clock_sysvar",
+              "ui_name": "Clock sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_or_withdraw_authority",
+              "ui_name": "stake or withdraw authority",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "new_stake_or_withdraw_authority",
+              "ui_name": "new stake or withdraw authority",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "lockup_authority",
+              "ui_name": "Lockup authority",
+              "is_authority": true,
+              "optional": true
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["stake_authorize"],
+              "accounts": [
+                "stake_account",
+                "clock_sysvar",
+                "stake_or_withdraw_authority",
+                "new_stake_or_withdraw_authority",
+                "lockup_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 11,
+          "name": "Authorize Checked With Seed",
+          "parameters": [
+            {
+              "name": "stake_authorize",
+              "ui_name": "Stake authorize",
+              "type": "StakeAuthorize",
+              "optional": false
+            },
+            {
+              "name": "authority_seed",
+              "ui_name": "Authority seed",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "authority_owner",
+              "ui_name": "Authority owner",
+              "type": "pubkey",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "stake_account",
+              "ui_name": "Stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "stake_or_withdraw_authority",
+              "ui_name": "stake or withdraw authority",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "clock_sysvar",
+              "ui_name": "Clock sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "new_stake_or_withdraw_authority",
+              "ui_name": "new stake or withdraw authority",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "lockup_authority",
+              "ui_name": "Lockup authority",
+              "is_authority": true,
+              "optional": true
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [
+                "stake_authorize",
+                "authority_seed",
+                "authority_owner"
+              ],
+              "accounts": [
+                "stake_account",
+                "stake_or_withdraw_authority",
+                "clock_sysvar",
+                "new_stake_or_withdraw_authority",
+                "lockup_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 12,
+          "name": "Set Lockup Checked",
+          "parameters": [
+            {
+              "name": "unix_timestamp",
+              "ui_name": "Unix timestamp",
+              "type": "i64",
+              "optional": true
+            },
+            {
+              "name": "epoch",
+              "ui_name": "Epoch",
+              "type": "u64",
+              "optional": true
+            }
+          ],
+          "references": [
+            {
+              "name": "stake_account",
+              "ui_name": "Stake account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "lockup_or_withdraw_authority",
+              "ui_name": "Lockup authority or withdraw authority",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "new_lockup_authority",
+              "ui_name": "New lockup authority",
+              "is_authority": true,
+              "optional": true
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["unix_timestamp", "epoch"],
+              "accounts": [
+                "stake_account",
+                "lockup_or_withdraw_authority",
+                "new_lockup_authority"
+              ]
+            }
+          }
         }
-    ],
-    "parameters": [
+      ]
+    },
+    {
+      "id": "ComputeBudget111111111111111111111111111111",
+      "name": "Compute Budget Program",
+      "instructions": [
         {
-            "name": "u32",
-            "family": "basic"
+          "id": 1,
+          "name": "Request Heap Frame",
+          "parameters": [
+            {
+              "name": "bytes",
+              "ui_name": "bytes",
+              "type": "u32",
+              "optional": false
+            }
+          ],
+          "references": [],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["bytes"],
+              "accounts": []
+            }
+          }
         },
         {
-            "name": "i32",
-            "family": "basic"
+          "id": 2,
+          "name": "Set Compute Unit Limit",
+          "parameters": [
+            {
+              "name": "units",
+              "ui_name": "units",
+              "type": "u32",
+              "optional": false
+            }
+          ],
+          "references": [],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["units"],
+              "accounts": []
+            }
+          }
         },
         {
-            "name": "u64",
-            "family": "basic"
-        },
-        {
-            "name": "i64",
-            "family": "basic"
-        },
-        {
-            "name": "String",
-            "family": "basic"
-        },
-        {
-            "name": "Pubkey",
-            "family": "basic"
-        },
-        {
-            "name": "Authority",
-            "family": "basic"
-        },
-        {
-            "name": "StakeAuthorize",
-            "family": "enum",
-            "fields": [
-                {
-                    "name": "Staker",
-                    "value": 0
-                },
-                {
-                    "name": "Withdrawer",
-                    "value": 1
-                }
-            ]
-        },
-        {
-            "name": "AuthorityType",
-            "family": "enum",
-            "fields": [
-                {
-                    "name": "MintTokens",
-                    "value": 0
-                },
-                {
-                    "name": "FreezeAccount",
-                    "value": 1
-                },
-                {
-                    "name": "AccountOwner",
-                    "value": 2
-                },
-                {
-                    "name": "CloseAccount",
-                    "value": 3
-                }
-            ]
+          "id": 3,
+          "name": "Set Compute Unit Price",
+          "parameters": [
+            {
+              "name": "lamports",
+              "ui_name": "lamports",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["lamports"],
+              "accounts": []
+            }
+          }
         }
-    ]
+      ]
+    },
+    {
+      "id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "name": "Token Program",
+      "instructions": [
+        {
+          "id": 1,
+          "name": "Initialize Account",
+          "parameters": [],
+          "references": [
+            {
+              "name": "account_to_initialize",
+              "ui_name": "Account to initialize",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "mint_account",
+              "ui_name": "Mint account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "rent_sysvar",
+              "ui_name": "Rent sysvar",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "account_to_initialize",
+                "mint_account",
+                "owner",
+                "rent_sysvar"
+              ]
+            }
+          }
+        },
+        {
+          "id": 2,
+          "name": "Initialize Multisig",
+          "parameters": [
+            {
+              "name": "number_of_signers",
+              "ui_name": "Number of signers",
+              "type": "u8",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "multisig_account",
+              "ui_name": "Multisig account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "rent_sysvar",
+              "ui_name": "Rent sysvar",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "signer_accounts",
+              "ui_name": "Signer accounts",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["number_of_signers"],
+              "accounts": ["multisig_account", "rent_sysvar", "signer_accounts"]
+            }
+          }
+        },
+        {
+          "id": 3,
+          "name": "Transfer",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "amount",
+              "ui_name": "Amount",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "source_account",
+              "ui_name": "Source account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "destination_account",
+              "ui_name": "Destination account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["amount"],
+              "accounts": ["source_account", "destination_account", "owner"]
+            }
+          }
+        },
+        {
+          "id": 4,
+          "name": "Approve",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "amount",
+              "ui_name": "Amount",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "source_account",
+              "ui_name": "Source account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "delegate_account",
+              "ui_name": "Delegate account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["amount"],
+              "accounts": ["source_account", "delegate_account", "owner"]
+            }
+          }
+        },
+        {
+          "id": 5,
+          "name": "Revoke",
+          "is_multisig": true,
+          "parameters": [],
+          "references": [
+            {
+              "name": "source_account",
+              "ui_name": "Source account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": ["source_account", "owner"]
+            }
+          }
+        },
+        {
+          "id": 6,
+          "name": "Set Authority",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "authority_type",
+              "ui_name": "Authority type",
+              "type": "AuthorityType",
+              "optional": false
+            },
+            {
+              "name": "new_authority",
+              "ui_name": "New authority",
+              "type": "pubkey",
+              "optional": true
+            }
+          ],
+          "references": [
+            {
+              "name": "mint_account",
+              "ui_name": "Mint or account to change",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "current_authority",
+              "ui_name": "Current authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["authority_type", "new_authority"],
+              "accounts": ["mint_account", "current_authority"]
+            }
+          }
+        },
+        {
+          "id": 7,
+          "name": "Mint to",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "amount",
+              "ui_name": "Amount",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "mint",
+              "ui_name": "The mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "account_to_mint",
+              "ui_name": "Account to mint tokens to",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "minting_authority",
+              "ui_name": "Minting authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["amount"],
+              "accounts": ["mint", "account_to_mint", "minting_authority"]
+            }
+          }
+        },
+        {
+          "id": 8,
+          "name": "Burn",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "amount",
+              "ui_name": "Amount",
+              "type": "u64",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "account_to_burn_from",
+              "ui_name": "Account to burn from",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "ui_name": "The token mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["amount"],
+              "accounts": ["account_to_burn_from", "token_mint", "owner"]
+            }
+          }
+        },
+        {
+          "id": 9,
+          "name": "Close Account",
+          "is_multisig": true,
+          "parameters": [],
+          "references": [
+            {
+              "name": "account_to_close",
+              "ui_name": "Account to close",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "destination_account",
+              "ui_name": "Destination account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": ["account_to_close", "destination_account", "owner"]
+            }
+          }
+        },
+        {
+          "id": 10,
+          "name": "Freeze Account",
+          "is_multisig": true,
+          "parameters": [],
+          "references": [
+            {
+              "name": "account_to_freeze",
+              "ui_name": "Account to freeze",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "ui_name": "The token mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "freeze_authority",
+              "ui_name": "Freeze authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "account_to_freeze",
+                "token_mint",
+                "freeze_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 11,
+          "name": "Thaw Account",
+          "is_multisig": true,
+          "parameters": [],
+          "references": [
+            {
+              "name": "account_to_freeze",
+              "ui_name": "Account to freeze",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "ui_name": "The token mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "freeze_authority",
+              "ui_name": "Freeze authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "account_to_freeze",
+                "token_mint",
+                "freeze_authority"
+              ]
+            }
+          }
+        },
+        {
+          "id": 12,
+          "name": "Transfer Checked",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "amount",
+              "ui_name": "Amount",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "decimals",
+              "ui_name": "Decimals",
+              "type": "u8",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "source_account",
+              "ui_name": "Source account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "ui_name": "The token mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "destination_account",
+              "ui_name": "Destination account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["amount", "decimals"],
+              "accounts": [
+                "source_account",
+                "token_mint",
+                "destination_account",
+                "owner"
+              ]
+            }
+          }
+        },
+        {
+          "id": 13,
+          "name": "Approve Checked",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "amount",
+              "ui_name": "Amount",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "decimals",
+              "ui_name": "Decimals",
+              "type": "u8",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "source_account",
+              "ui_name": "Source account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "ui_name": "The token mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "delegate",
+              "ui_name": "The delegate",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["amount", "decimals"],
+              "accounts": ["source_account", "token_mint", "delegate", "owner"]
+            }
+          }
+        },
+        {
+          "id": 14,
+          "name": "Mint to Checked",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "amount",
+              "ui_name": "Amount",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "decimals",
+              "ui_name": "Decimals",
+              "type": "u8",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "mint",
+              "ui_name": "The mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "account_to_mint",
+              "ui_name": "Account to mint tokens to",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "minting_authority",
+              "ui_name": "Minting authority",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["amount", "decimals"],
+              "accounts": ["mint", "account_to_mint", "minting_authority"]
+            }
+          }
+        },
+        {
+          "id": 15,
+          "name": "Burn Checked",
+          "is_multisig": true,
+          "parameters": [
+            {
+              "name": "amount",
+              "ui_name": "Amount",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "decimals",
+              "ui_name": "Decimals",
+              "type": "u8",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "account_to_burn_from",
+              "ui_name": "Account to burn from",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "ui_name": "The token mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["amount", "decimals"],
+              "accounts": ["account_to_burn_from", "token_mint", "owner"]
+            }
+          }
+        },
+        {
+          "id": 16,
+          "name": "Initialize Account 2",
+          "parameters": [
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "type": "pubkey",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "account_to_initialize",
+              "ui_name": "Account to initialize",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "mint_account",
+              "ui_name": "Mint account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "rent_sysvar",
+              "ui_name": "Rent sysvar",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["owner"],
+              "accounts": [
+                "account_to_initialize",
+                "mint_account",
+                "rent_sysvar"
+              ]
+            }
+          }
+        },
+        {
+          "id": 17,
+          "name": "Sync Native",
+          "parameters": [],
+          "references": [
+            {
+              "name": "token_account",
+              "ui_name": "Native token account",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": ["token_account"]
+            }
+          }
+        },
+        {
+          "id": 18,
+          "name": "Initialize Account 3",
+          "parameters": [
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "type": "pubkey",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "account_to_initialize",
+              "ui_name": "Account to initialize",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "mint_account",
+              "ui_name": "Mint account",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["owner"],
+              "accounts": ["account_to_initialize", "mint_account"]
+            }
+          }
+        },
+        {
+          "id": 22,
+          "name": "Initialize Immutable Owner",
+          "parameters": [],
+          "references": [
+            {
+              "name": "account_to_initialize",
+              "ui_name": "Account to initialize",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": ["account_to_initialize"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "name": "Associated Token Account Program",
+      "instructions": [
+        {
+          "id": 0,
+          "name": "Create",
+          "parameters": [],
+          "references": [
+            {
+              "name": "funding_account",
+              "ui_name": "Funding account",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "associated_token_account",
+              "ui_name": "Associated token account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "wallet_address",
+              "ui_name": "Wallet address",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "ui_name": "The token mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "system_program",
+              "ui_name": "System program",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "spl_token",
+              "ui_name": "SPL token program",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "funding_account",
+                "associated_token_account",
+                "wallet_address",
+                "token_mint",
+                "system_program",
+                "spl_token"
+              ]
+            }
+          }
+        },
+        {
+          "id": 1,
+          "name": "Create Idempotent",
+          "parameters": [],
+          "references": [
+            {
+              "name": "funding_account",
+              "ui_name": "Funding account",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "associated_token_account",
+              "ui_name": "Associated token account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "wallet_address",
+              "ui_name": "Wallet address",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "ui_name": "The token mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "system_program",
+              "ui_name": "System program",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "spl_token",
+              "ui_name": "SPL token program",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "funding_account",
+                "associated_token_account",
+                "wallet_address",
+                "token_mint",
+                "system_program",
+                "spl_token"
+              ]
+            }
+          }
+        },
+        {
+          "id": 2,
+          "name": "Recover Nested",
+          "parameters": [],
+          "references": [
+            {
+              "name": "nested_account",
+              "ui_name": "Nested associated token account",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "token_mint_nested",
+              "ui_name": "Token mint for the nested account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "associated_token_account",
+              "ui_name": "Associated token account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "owner",
+              "ui_name": "Owner",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint_owner",
+              "ui_name": "Token mint for the owner account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "wallet_address",
+              "ui_name": "Wallet address",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "spl_token",
+              "ui_name": "SPL token program",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [],
+              "accounts": [
+                "nested_account",
+                "token_mint_nested",
+                "associated_token_account",
+                "owner",
+                "token_mint_owner",
+                "wallet_address",
+                "spl_token"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+      "name": "Memo",
+      "instructions": [
+        {
+          "id": 0,
+          "name": "Create",
+          "parameters": [
+            {
+              "name": "memo",
+              "ui_name": "Memo",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "signer_accounts",
+              "ui_name": "Signer accounts",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["memo"],
+              "accounts": ["signer_accounts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo",
+      "name": "Memo Legacy",
+      "instructions": [
+        {
+          "id": 0,
+          "name": "Create",
+          "parameters": [
+            {
+              "name": "memo",
+              "ui_name": "Memo",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "signer_accounts",
+              "ui_name": "Signer accounts",
+              "is_authority": true,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["memo"],
+              "accounts": ["signer_accounts"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "parameters": [
+    {
+      "name": "u32",
+      "family": "basic"
+    },
+    {
+      "name": "i32",
+      "family": "basic"
+    },
+    {
+      "name": "u64",
+      "family": "basic"
+    },
+    {
+      "name": "i64",
+      "family": "basic"
+    },
+    {
+      "name": "String",
+      "family": "basic"
+    },
+    {
+      "name": "Pubkey",
+      "family": "basic"
+    },
+    {
+      "name": "Authority",
+      "family": "basic"
+    },
+    {
+      "name": "StakeAuthorize",
+      "family": "enum",
+      "fields": [
+        {
+          "name": "Staker",
+          "value": 0
+        },
+        {
+          "name": "Withdrawer",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "AuthorityType",
+      "family": "enum",
+      "fields": [
+        {
+          "name": "MintTokens",
+          "value": 0
+        },
+        {
+          "name": "FreezeAccount",
+          "value": 1
+        },
+        {
+          "name": "AccountOwner",
+          "value": 2
+        },
+        {
+          "name": "CloseAccount",
+          "value": 3
+        }
+      ]
+    }
+  ]
 }
