@@ -1,6 +1,7 @@
 # generated from __init__.py.mako
 # do not edit manually!
 from typing import TYPE_CHECKING
+
 from trezor.crypto import base58
 from trezor.wire import ProcessError
 
@@ -66,6 +67,7 @@ ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED = 2
 MEMO_ID_INS_CREATE = 0
 MEMO_LEGACY_ID_INS_CREATE = 0
 
+
 def __getattr__(name: str) -> Type[Instruction]:
     ids = {
         "CreateAccountInstruction": ("11111111111111111111111111111111", 0),
@@ -83,16 +85,46 @@ def __getattr__(name: str) -> Type[Instruction]:
         "DeactivateInstruction": ("Stake11111111111111111111111111111111111111", 5),
         "SetLockupInstruction": ("Stake11111111111111111111111111111111111111", 6),
         "MergeInstruction": ("Stake11111111111111111111111111111111111111", 7),
-        "AuthorizeWithSeedInstruction": ("Stake11111111111111111111111111111111111111", 8),
-        "InitializeCheckedInstruction": ("Stake11111111111111111111111111111111111111", 9),
-        "AuthorizeCheckedInstruction": ("Stake11111111111111111111111111111111111111", 10),
-        "AuthorizeCheckedWithSeedInstruction": ("Stake11111111111111111111111111111111111111", 11),
-        "SetLockupCheckedInstruction": ("Stake11111111111111111111111111111111111111", 12),
-        "RequestHeapFrameInstruction": ("ComputeBudget111111111111111111111111111111", 1),
-        "SetComputeUnitLimitInstruction": ("ComputeBudget111111111111111111111111111111", 2),
-        "SetComputeUnitPriceInstruction": ("ComputeBudget111111111111111111111111111111", 3),
-        "InitializeAccountInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 1),
-        "InitializeMultisigInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 2),
+        "AuthorizeWithSeedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            8,
+        ),
+        "InitializeCheckedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            9,
+        ),
+        "AuthorizeCheckedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            10,
+        ),
+        "AuthorizeCheckedWithSeedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            11,
+        ),
+        "SetLockupCheckedInstruction": (
+            "Stake11111111111111111111111111111111111111",
+            12,
+        ),
+        "RequestHeapFrameInstruction": (
+            "ComputeBudget111111111111111111111111111111",
+            1,
+        ),
+        "SetComputeUnitLimitInstruction": (
+            "ComputeBudget111111111111111111111111111111",
+            2,
+        ),
+        "SetComputeUnitPriceInstruction": (
+            "ComputeBudget111111111111111111111111111111",
+            3,
+        ),
+        "InitializeAccountInstruction": (
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            1,
+        ),
+        "InitializeMultisigInstruction": (
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            2,
+        ),
         "TransferInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 3),
         "ApproveInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 4),
         "RevokeInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 5),
@@ -102,16 +134,34 @@ def __getattr__(name: str) -> Type[Instruction]:
         "CloseAccountInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 9),
         "FreezeAccountInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 10),
         "ThawAccountInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 11),
-        "TransferCheckedInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 12),
-        "ApproveCheckedInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 13),
+        "TransferCheckedInstruction": (
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            12,
+        ),
+        "ApproveCheckedInstruction": (
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            13,
+        ),
         "MinttoCheckedInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 14),
         "BurnCheckedInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 15),
-        "InitializeAccount2Instruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 16),
+        "InitializeAccount2Instruction": (
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            16,
+        ),
         "SyncNativeInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 17),
-        "InitializeAccount3Instruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 18),
-        "InitializeImmutableOwnerInstruction": ("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", 22),
+        "InitializeAccount3Instruction": (
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            18,
+        ),
+        "InitializeImmutableOwnerInstruction": (
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            22,
+        ),
         "CreateInstruction": ("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", 0),
-        "CreateIdempotentInstruction": ("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", 1),
+        "CreateIdempotentInstruction": (
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            1,
+        ),
         "RecoverNestedInstruction": ("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", 2),
         "CreateInstruction": ("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr", 0),
         "CreateInstruction": ("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo", 0),
@@ -295,7 +345,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = STAKE_PROGRAM_ID
         INSTRUCTION_ID = STAKE_PROGRAM_ID_INS_DELEGATE_STAKE
 
-
         initialized_stake_account: Account
         vote_account: Account
         clock_sysvar: Account
@@ -351,7 +400,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = STAKE_PROGRAM_ID
         INSTRUCTION_ID = STAKE_PROGRAM_ID_INS_DEACTIVATE
 
-
         delegated_stake_account: Account
         clock_sysvar: Account
         stake_authority: Account
@@ -384,7 +432,6 @@ if TYPE_CHECKING:
     class MergeInstruction(Instruction):
         PROGRAM_ID = STAKE_PROGRAM_ID
         INSTRUCTION_ID = STAKE_PROGRAM_ID_INS_MERGE
-
 
         destination_stake_account: Account
         source_stake_account: Account
@@ -423,7 +470,6 @@ if TYPE_CHECKING:
     class InitializeCheckedInstruction(Instruction):
         PROGRAM_ID = STAKE_PROGRAM_ID
         INSTRUCTION_ID = STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED
-
 
         uninitialized_stake_account: Account
         rent_sysvar: Account
@@ -471,7 +517,9 @@ if TYPE_CHECKING:
         lockup_authority: Account | None
 
         @classmethod
-        def is_type_of(cls, ins: Any) -> TypeGuard["AuthorizeCheckedWithSeedInstruction"]:
+        def is_type_of(
+            cls, ins: Any
+        ) -> TypeGuard["AuthorizeCheckedWithSeedInstruction"]:
             return (
                 ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
@@ -501,7 +549,6 @@ if TYPE_CHECKING:
 
         bytes: int
 
-
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["RequestHeapFrameInstruction"]:
             return (
@@ -514,7 +561,6 @@ if TYPE_CHECKING:
         INSTRUCTION_ID = COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT
 
         units: int
-
 
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["SetComputeUnitLimitInstruction"]:
@@ -529,7 +575,6 @@ if TYPE_CHECKING:
 
         lamports: int
 
-
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["SetComputeUnitPriceInstruction"]:
             return (
@@ -540,7 +585,6 @@ if TYPE_CHECKING:
     class InitializeAccountInstruction(Instruction):
         PROGRAM_ID = TOKEN_PROGRAM_ID
         INSTRUCTION_ID = TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT
-
 
         account_to_initialize: Account
         mint_account: Account
@@ -609,7 +653,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = TOKEN_PROGRAM_ID
         INSTRUCTION_ID = TOKEN_PROGRAM_ID_INS_REVOKE
 
-
         source_account: Account
         owner: Account
 
@@ -675,7 +718,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = TOKEN_PROGRAM_ID
         INSTRUCTION_ID = TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT
 
-
         account_to_close: Account
         destination_account: Account
         owner: Account
@@ -691,7 +733,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = TOKEN_PROGRAM_ID
         INSTRUCTION_ID = TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT
 
-
         account_to_freeze: Account
         token_mint: Account
         freeze_authority: Account
@@ -706,7 +747,6 @@ if TYPE_CHECKING:
     class ThawAccountInstruction(Instruction):
         PROGRAM_ID = TOKEN_PROGRAM_ID
         INSTRUCTION_ID = TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT
-
 
         account_to_freeze: Account
         token_mint: Account
@@ -814,7 +854,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = TOKEN_PROGRAM_ID
         INSTRUCTION_ID = TOKEN_PROGRAM_ID_INS_SYNC_NATIVE
 
-
         token_account: Account
 
         @classmethod
@@ -844,11 +883,12 @@ if TYPE_CHECKING:
         PROGRAM_ID = TOKEN_PROGRAM_ID
         INSTRUCTION_ID = TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER
 
-
         account_to_initialize: Account
 
         @classmethod
-        def is_type_of(cls, ins: Any) -> TypeGuard["InitializeImmutableOwnerInstruction"]:
+        def is_type_of(
+            cls, ins: Any
+        ) -> TypeGuard["InitializeImmutableOwnerInstruction"]:
             return (
                 ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
@@ -857,7 +897,6 @@ if TYPE_CHECKING:
     class CreateInstruction(Instruction):
         PROGRAM_ID = ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
         INSTRUCTION_ID = ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE
-
 
         funding_account: Account
         associated_token_account: Account
@@ -877,7 +916,6 @@ if TYPE_CHECKING:
         PROGRAM_ID = ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
         INSTRUCTION_ID = ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT
 
-
         funding_account: Account
         associated_token_account: Account
         wallet_address: Account
@@ -895,7 +933,6 @@ if TYPE_CHECKING:
     class RecoverNestedInstruction(Instruction):
         PROGRAM_ID = ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
         INSTRUCTION_ID = ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED
-
 
         nested_account: Account
         token_mint_nested: Account
@@ -944,7 +981,10 @@ if TYPE_CHECKING:
 
 
 def get_instruction(
-    program_id: bytes, instruction_id: int, instruction_accounts: list[Account], instruction_data: bytes
+    program_id: bytes,
+    instruction_id: int,
+    instruction_accounts: list[Account],
+    instruction_data: bytes,
 ) -> Instruction:
     if base58.encode(program_id) == SYSTEM_PROGRAM_ID:
         if instruction_id == SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT:
@@ -953,12 +993,35 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
-                {'lamports': {'ui_name': 'Lamports', 'type': 'u64', 'optional': False}, 'space': {'ui_name': 'Space', 'type': 'u64', 'optional': False}, 'owner': {'ui_name': 'Owner', 'type': 'authority', 'optional': False}},
-                {'funding_account': {'ui_name': 'Funding account', 'is_authority': True, 'optional': False}, 'new_account': {'ui_name': 'New account', 'is_authority': False, 'optional': False}},
-                ['lamports', 'space', 'owner'],
-                ['funding_account', 'new_account'],
+                {
+                    "lamports": {
+                        "ui_name": "Lamports",
+                        "type": "u64",
+                        "optional": False,
+                    },
+                    "space": {"ui_name": "Space", "type": "u64", "optional": False},
+                    "owner": {
+                        "ui_name": "Owner",
+                        "type": "authority",
+                        "optional": False,
+                    },
+                },
+                {
+                    "funding_account": {
+                        "ui_name": "Funding account",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "new_account": {
+                        "ui_name": "New account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
+                ["lamports", "space", "owner"],
+                ["funding_account", "new_account"],
                 "ui_confirm",
-                "Create Account"
+                "Create Account",
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN:
             return Instruction(
@@ -966,12 +1029,18 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_ASSIGN,
-                {'owner': {'ui_name': 'Owner', 'type': 'authority', 'optional': False}},
-                {'assigned_account': {'ui_name': 'Assigned account', 'is_authority': True, 'optional': False}},
-                ['owner'],
-                ['assigned_account'],
+                {"owner": {"ui_name": "Owner", "type": "authority", "optional": False}},
+                {
+                    "assigned_account": {
+                        "ui_name": "Assigned account",
+                        "is_authority": True,
+                        "optional": False,
+                    }
+                },
+                ["owner"],
+                ["assigned_account"],
                 "ui_confirm",
-                "Assign"
+                "Assign",
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
@@ -979,12 +1048,23 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_TRANSFER,
-                {'lamports': {'ui_name': 'Lamports', 'type': 'u64', 'optional': False}},
-                {'funding_account': {'ui_name': 'Funding account', 'is_authority': True, 'optional': False}, 'recipient_account': {'ui_name': 'Recipient account', 'is_authority': False, 'optional': False}},
-                ['lamports'],
-                ['funding_account', 'recipient_account'],
+                {"lamports": {"ui_name": "Lamports", "type": "u64", "optional": False}},
+                {
+                    "funding_account": {
+                        "ui_name": "Funding account",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "recipient_account": {
+                        "ui_name": "Recipient account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
+                ["lamports"],
+                ["funding_account", "recipient_account"],
                 "ui_confirm",
-                "Transfer"
+                "Transfer",
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED:
             return Instruction(
@@ -992,12 +1072,38 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
-                {'base': {'ui_name': 'Base', 'type': 'pubkey', 'optional': False}, 'seed': {'ui_name': 'Seed', 'type': 'string', 'optional': False}, 'lamports': {'ui_name': 'Lamports', 'type': 'u64', 'optional': False}, 'space': {'ui_name': 'Space', 'type': 'u64', 'optional': False}, 'owner': {'ui_name': 'Owner', 'type': 'pubkey', 'optional': False}},
-                {'funding_account': {'ui_name': 'Funding account', 'is_authority': True, 'optional': False}, 'created_account': {'ui_name': 'Created account', 'is_authority': False, 'optional': False}, 'base_account': {'ui_name': 'Base account', 'is_authority': True, 'optional': True}},
-                ['base', 'seed', 'lamports', 'space', 'owner'],
-                ['funding_account', 'recipient_account', 'base_account'],
+                {
+                    "base": {"ui_name": "Base", "type": "pubkey", "optional": False},
+                    "seed": {"ui_name": "Seed", "type": "string", "optional": False},
+                    "lamports": {
+                        "ui_name": "Lamports",
+                        "type": "u64",
+                        "optional": False,
+                    },
+                    "space": {"ui_name": "Space", "type": "u64", "optional": False},
+                    "owner": {"ui_name": "Owner", "type": "pubkey", "optional": False},
+                },
+                {
+                    "funding_account": {
+                        "ui_name": "Funding account",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "created_account": {
+                        "ui_name": "Created account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "base_account": {
+                        "ui_name": "Base account",
+                        "is_authority": True,
+                        "optional": True,
+                    },
+                },
+                ["base", "seed", "lamports", "space", "owner"],
+                ["funding_account", "recipient_account", "base_account"],
                 "ui_confirm",
-                "Create Account With Seed"
+                "Create Account With Seed",
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE:
             return Instruction(
@@ -1005,12 +1111,18 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_ALLOCATE,
-                {'space': {'ui_name': 'Space', 'type': 'u64', 'optional': False}},
-                {'new_account': {'ui_name': 'New account', 'is_authority': True, 'optional': False}},
-                ['space'],
-                ['new_account'],
+                {"space": {"ui_name": "Space", "type": "u64", "optional": False}},
+                {
+                    "new_account": {
+                        "ui_name": "New account",
+                        "is_authority": True,
+                        "optional": False,
+                    }
+                },
+                ["space"],
+                ["new_account"],
                 "ui_confirm",
-                "Allocate"
+                "Allocate",
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED:
             return Instruction(
@@ -1018,12 +1130,28 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
-                {'base': {'ui_name': 'Base', 'type': 'pubkey', 'optional': False}, 'seed': {'ui_name': 'Seed', 'type': 'string', 'optional': False}, 'space': {'ui_name': 'Space', 'type': 'u64', 'optional': False}, 'owner': {'ui_name': 'Owner', 'type': 'pubkey', 'optional': False}},
-                {'allocated_account': {'ui_name': 'Allocated account', 'is_authority': False, 'optional': False}, 'base_account': {'ui_name': 'Base account', 'is_authority': True, 'optional': False}},
-                ['base', 'seed', 'space', 'owner'],
-                ['allocated_account', 'base_account'],
+                {
+                    "base": {"ui_name": "Base", "type": "pubkey", "optional": False},
+                    "seed": {"ui_name": "Seed", "type": "string", "optional": False},
+                    "space": {"ui_name": "Space", "type": "u64", "optional": False},
+                    "owner": {"ui_name": "Owner", "type": "pubkey", "optional": False},
+                },
+                {
+                    "allocated_account": {
+                        "ui_name": "Allocated account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "base_account": {
+                        "ui_name": "Base account",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["base", "seed", "space", "owner"],
+                ["allocated_account", "base_account"],
                 "ui_confirm",
-                "Allocate With Seed"
+                "Allocate With Seed",
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED:
             return Instruction(
@@ -1031,12 +1159,27 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED,
-                {'base': {'ui_name': 'Base', 'type': 'pubkey', 'optional': False}, 'seed': {'ui_name': 'Seed', 'type': 'string', 'optional': False}, 'owner': {'ui_name': 'Owner', 'type': 'pubkey', 'optional': False}},
-                {'assigned_account': {'ui_name': 'Assigned account', 'is_authority': False, 'optional': False}, 'base_account': {'ui_name': 'Base account', 'is_authority': True, 'optional': False}},
-                ['base', 'seed', 'owner'],
-                ['assigned_account', 'base_account'],
+                {
+                    "base": {"ui_name": "Base", "type": "pubkey", "optional": False},
+                    "seed": {"ui_name": "Seed", "type": "string", "optional": False},
+                    "owner": {"ui_name": "Owner", "type": "pubkey", "optional": False},
+                },
+                {
+                    "assigned_account": {
+                        "ui_name": "Assigned account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "base_account": {
+                        "ui_name": "Base account",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["base", "seed", "owner"],
+                ["assigned_account", "base_account"],
                 "ui_confirm",
-                "Assign With Seed"
+                "Assign With Seed",
             )
         else:
             raise ProcessError(
@@ -1049,12 +1192,45 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_INITIALIZE,
-                {'staker': {'ui_name': 'Staker', 'type': 'authority', 'optional': False}, 'withdrawer': {'ui_name': 'Withdrawer', 'type': 'authority', 'optional': False}, 'unix_timestamp': {'ui_name': 'Unix timestamp', 'type': 'i64', 'optional': False}, 'epoch': {'ui_name': 'Epoch', 'type': 'u64', 'optional': False}, 'custodian': {'ui_name': 'Custodian', 'type': 'authority', 'optional': False}},
-                {'uninitialized_stake_account': {'ui_name': 'Uninitialized stake account', 'is_authority': False, 'optional': False}, 'rent_sysvar': {'ui_name': 'Rent sysvar', 'is_authority': False, 'optional': False}},
-                ['staker', 'withdrawer', 'unix_timestamp', 'epoch', 'custodian'],
-                ['unitialized_stake_account', 'rent_sysvar'],
+                {
+                    "staker": {
+                        "ui_name": "Staker",
+                        "type": "authority",
+                        "optional": False,
+                    },
+                    "withdrawer": {
+                        "ui_name": "Withdrawer",
+                        "type": "authority",
+                        "optional": False,
+                    },
+                    "unix_timestamp": {
+                        "ui_name": "Unix timestamp",
+                        "type": "i64",
+                        "optional": False,
+                    },
+                    "epoch": {"ui_name": "Epoch", "type": "u64", "optional": False},
+                    "custodian": {
+                        "ui_name": "Custodian",
+                        "type": "authority",
+                        "optional": False,
+                    },
+                },
+                {
+                    "uninitialized_stake_account": {
+                        "ui_name": "Uninitialized stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "rent_sysvar": {
+                        "ui_name": "Rent sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
+                ["staker", "withdrawer", "unix_timestamp", "epoch", "custodian"],
+                ["unitialized_stake_account", "rent_sysvar"],
                 "ui_confirm",
-                "Initialize"
+                "Initialize",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE:
             return Instruction(
@@ -1062,12 +1238,49 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_AUTHORIZE,
-                {'pubkey': {'ui_name': 'Pubkey', 'type': 'pubkey', 'optional': False}, 'stake_authorize': {'ui_name': 'Stake authorize', 'type': 'StakeAuthorize', 'optional': False}},
-                {'stake_account': {'ui_name': 'Stake account', 'is_authority': False, 'optional': False}, 'clock_sysvar': {'ui_name': 'Clock sysvar', 'is_authority': False, 'optional': False}, 'stake_or_withdraw_authority': {'ui_name': 'stake or withdraw authority', 'is_authority': True, 'optional': False}, 'lockup_authority': {'ui_name': 'Lockup authority', 'is_authority': True, 'optional': True}},
-                ['pubkey', 'stake_authorize'],
-                ['stake_account', 'clock_sysvar', 'stake_or_withdraw_authority', 'lockup_authority'],
+                {
+                    "pubkey": {
+                        "ui_name": "Pubkey",
+                        "type": "pubkey",
+                        "optional": False,
+                    },
+                    "stake_authorize": {
+                        "ui_name": "Stake authorize",
+                        "type": "StakeAuthorize",
+                        "optional": False,
+                    },
+                },
+                {
+                    "stake_account": {
+                        "ui_name": "Stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "clock_sysvar": {
+                        "ui_name": "Clock sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_or_withdraw_authority": {
+                        "ui_name": "stake or withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "lockup_authority": {
+                        "ui_name": "Lockup authority",
+                        "is_authority": True,
+                        "optional": True,
+                    },
+                },
+                ["pubkey", "stake_authorize"],
+                [
+                    "stake_account",
+                    "clock_sysvar",
+                    "stake_or_withdraw_authority",
+                    "lockup_authority",
+                ],
                 "ui_confirm",
-                "Authorize"
+                "Authorize",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
             return Instruction(
@@ -1076,11 +1289,49 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_DELEGATE_STAKE,
                 {},
-                {'initialized_stake_account': {'ui_name': 'Initialized stake account', 'is_authority': False, 'optional': False}, 'vote_account': {'ui_name': 'Vote account', 'is_authority': False, 'optional': False}, 'clock_sysvar': {'ui_name': 'Clock sysvar', 'is_authority': False, 'optional': False}, 'stake_history_sysvar': {'ui_name': 'Stake history sysvar', 'is_authority': False, 'optional': False}, 'config_account': {'ui_name': 'Config account', 'is_authority': False, 'optional': False}, 'stake_authority': {'ui_name': 'Stake authority', 'is_authority': True, 'optional': False}},
+                {
+                    "initialized_stake_account": {
+                        "ui_name": "Initialized stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "vote_account": {
+                        "ui_name": "Vote account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "clock_sysvar": {
+                        "ui_name": "Clock sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_history_sysvar": {
+                        "ui_name": "Stake history sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "config_account": {
+                        "ui_name": "Config account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_authority": {
+                        "ui_name": "Stake authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['initialized_stake_account', 'vote_account', 'clock_sysvar', 'stake_history_sysvar', 'config_account', 'stake_authority'],
+                [
+                    "initialized_stake_account",
+                    "vote_account",
+                    "clock_sysvar",
+                    "stake_history_sysvar",
+                    "config_account",
+                    "stake_authority",
+                ],
                 "ui_confirm",
-                "Delegate Stake"
+                "Delegate Stake",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_SPLIT:
             return Instruction(
@@ -1088,12 +1339,28 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_SPLIT,
-                {'lamports': {'ui_name': 'Lamports', 'type': 'u64', 'optional': False}},
-                {'stake_account': {'ui_name': 'Stake account', 'is_authority': False, 'optional': False}, 'uninitialized_stake_account': {'ui_name': 'Uninitialized stake account', 'is_authority': False, 'optional': False}, 'stake_authority': {'ui_name': 'Stake authority', 'is_authority': True, 'optional': False}},
-                ['lamports'],
-                ['stake_account', 'uninitialized_stake_account', 'stake_authority'],
+                {"lamports": {"ui_name": "Lamports", "type": "u64", "optional": False}},
+                {
+                    "stake_account": {
+                        "ui_name": "Stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "uninitialized_stake_account": {
+                        "ui_name": "Uninitialized stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_authority": {
+                        "ui_name": "Stake authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["lamports"],
+                ["stake_account", "uninitialized_stake_account", "stake_authority"],
                 "ui_confirm",
-                "Split"
+                "Split",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_WITHDRAW:
             return Instruction(
@@ -1101,12 +1368,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_WITHDRAW,
-                {'lamports': {'ui_name': 'lamports', 'type': 'u64', 'optional': False}},
-                {'stake_account': {'ui_name': 'Stake account', 'is_authority': False, 'optional': False}, 'recipient_account': {'ui_name': 'Recipient account', 'is_authority': False, 'optional': False}, 'clock_sysvar': {'ui_name': 'Clock sysvar', 'is_authority': False, 'optional': False}, 'stake_history_sysvar': {'ui_name': 'Stake history sysvar', 'is_authority': False, 'optional': False}, 'withdrawal_authority': {'ui_name': 'Withdraw authority', 'is_authority': True, 'optional': False}, 'lockup_authority': {'ui_name': 'Lockup authority', 'is_authority': True, 'optional': True}},
-                ['lamports'],
-                ['stake_account', 'recipient_account', 'clock_sysvar', 'stake_history_sysvar', 'withdrawal_authority', 'lockup_authority'],
+                {"lamports": {"ui_name": "lamports", "type": "u64", "optional": False}},
+                {
+                    "stake_account": {
+                        "ui_name": "Stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "recipient_account": {
+                        "ui_name": "Recipient account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "clock_sysvar": {
+                        "ui_name": "Clock sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_history_sysvar": {
+                        "ui_name": "Stake history sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "withdrawal_authority": {
+                        "ui_name": "Withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "lockup_authority": {
+                        "ui_name": "Lockup authority",
+                        "is_authority": True,
+                        "optional": True,
+                    },
+                },
+                ["lamports"],
+                [
+                    "stake_account",
+                    "recipient_account",
+                    "clock_sysvar",
+                    "stake_history_sysvar",
+                    "withdrawal_authority",
+                    "lockup_authority",
+                ],
                 "ui_confirm",
-                "Withdraw"
+                "Withdraw",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_DEACTIVATE:
             return Instruction(
@@ -1115,11 +1420,27 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_DEACTIVATE,
                 {},
-                {'delegated_stake_account': {'ui_name': 'Delegated stake account', 'is_authority': False, 'optional': False}, 'clock_sysvar': {'ui_name': 'Clock sysvar', 'is_authority': False, 'optional': False}, 'stake_authority': {'ui_name': 'Stake authority', 'is_authority': True, 'optional': False}},
+                {
+                    "delegated_stake_account": {
+                        "ui_name": "Delegated stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "clock_sysvar": {
+                        "ui_name": "Clock sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_authority": {
+                        "ui_name": "Stake authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['delegated_stake_account', 'clock_sysvar', 'stake_authority'],
+                ["delegated_stake_account", "clock_sysvar", "stake_authority"],
                 "ui_confirm",
-                "Deactivate"
+                "Deactivate",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP:
             return Instruction(
@@ -1127,12 +1448,35 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_SET_LOCKUP,
-                {'unix_timestamp': {'ui_name': 'Unix timestamp', 'type': 'i64', 'optional': True}, 'epoch': {'ui_name': 'Epoch', 'type': 'u64', 'optional': True}, 'custodian': {'ui_name': 'Custodian', 'type': 'pubkey', 'optional': True}},
-                {'initialized_stake_account': {'ui_name': 'Initialized stake account', 'is_authority': False, 'optional': False}, 'lockup_or_withdraw_authority': {'ui_name': 'Lockup authority or withdraw authority', 'is_authority': True, 'optional': False}},
-                ['unix_timestamp', 'epoch', 'custodian'],
-                ['initialized_stake_account', 'lockup_or_withdraw_authority'],
+                {
+                    "unix_timestamp": {
+                        "ui_name": "Unix timestamp",
+                        "type": "i64",
+                        "optional": True,
+                    },
+                    "epoch": {"ui_name": "Epoch", "type": "u64", "optional": True},
+                    "custodian": {
+                        "ui_name": "Custodian",
+                        "type": "pubkey",
+                        "optional": True,
+                    },
+                },
+                {
+                    "initialized_stake_account": {
+                        "ui_name": "Initialized stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "lockup_or_withdraw_authority": {
+                        "ui_name": "Lockup authority or withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["unix_timestamp", "epoch", "custodian"],
+                ["initialized_stake_account", "lockup_or_withdraw_authority"],
                 "ui_confirm",
-                "Set Lockup"
+                "Set Lockup",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_MERGE:
             return Instruction(
@@ -1141,11 +1485,43 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_MERGE,
                 {},
-                {'destination_stake_account': {'ui_name': 'Destination stake account', 'is_authority': False, 'optional': False}, 'source_stake_account': {'ui_name': 'Source stake account', 'is_authority': False, 'optional': False}, 'clock_sysvar': {'ui_name': 'Clock sysvar', 'is_authority': False, 'optional': False}, 'stake_history_sysvar': {'ui_name': 'Stake history sysvar', 'is_authority': False, 'optional': False}, 'stake_authority': {'ui_name': 'Stake authority', 'is_authority': True, 'optional': False}},
+                {
+                    "destination_stake_account": {
+                        "ui_name": "Destination stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "source_stake_account": {
+                        "ui_name": "Source stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "clock_sysvar": {
+                        "ui_name": "Clock sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_history_sysvar": {
+                        "ui_name": "Stake history sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_authority": {
+                        "ui_name": "Stake authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['destination_stake_account', 'source_stake_account', 'clock_sysvar', 'stake_history_sysvar', 'stake_authority'],
+                [
+                    "destination_stake_account",
+                    "source_stake_account",
+                    "clock_sysvar",
+                    "stake_history_sysvar",
+                    "stake_authority",
+                ],
                 "ui_confirm",
-                "Merge"
+                "Merge",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED:
             return Instruction(
@@ -1153,12 +1529,64 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED,
-                {'new_authorized_pubkey': {'ui_name': 'New authorized pubkey', 'type': 'pubkey', 'optional': False}, 'stake_authorize': {'ui_name': 'Stake authorize', 'type': 'StakeAuthorize', 'optional': False}, 'authority_seed': {'ui_name': 'Authority seed', 'type': 'string', 'optional': False}, 'authority_owner': {'ui_name': 'Authority owner', 'type': 'pubkey', 'optional': False}},
-                {'stake_account': {'ui_name': 'Stake account', 'is_authority': False, 'optional': False}, 'stake_or_withdraw_authority': {'ui_name': 'stake or withdraw authority', 'is_authority': True, 'optional': False}, 'clock_sysvar': {'ui_name': 'Clock sysvar', 'is_authority': False, 'optional': False}, 'lockup_authority': {'ui_name': 'Lockup authority', 'is_authority': True, 'optional': True}},
-                ['new_authorized_pubkey', 'stake_authorize', 'authority_seed', 'authority_owner'],
-                ['stake_account', 'stake_or_withdraw_authority', 'clock_sysvar', 'lockup_authority'],
+                {
+                    "new_authorized_pubkey": {
+                        "ui_name": "New authorized pubkey",
+                        "type": "pubkey",
+                        "optional": False,
+                    },
+                    "stake_authorize": {
+                        "ui_name": "Stake authorize",
+                        "type": "StakeAuthorize",
+                        "optional": False,
+                    },
+                    "authority_seed": {
+                        "ui_name": "Authority seed",
+                        "type": "string",
+                        "optional": False,
+                    },
+                    "authority_owner": {
+                        "ui_name": "Authority owner",
+                        "type": "pubkey",
+                        "optional": False,
+                    },
+                },
+                {
+                    "stake_account": {
+                        "ui_name": "Stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_or_withdraw_authority": {
+                        "ui_name": "stake or withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "clock_sysvar": {
+                        "ui_name": "Clock sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "lockup_authority": {
+                        "ui_name": "Lockup authority",
+                        "is_authority": True,
+                        "optional": True,
+                    },
+                },
+                [
+                    "new_authorized_pubkey",
+                    "stake_authorize",
+                    "authority_seed",
+                    "authority_owner",
+                ],
+                [
+                    "stake_account",
+                    "stake_or_withdraw_authority",
+                    "clock_sysvar",
+                    "lockup_authority",
+                ],
                 "ui_confirm",
-                "Authorize With Seed"
+                "Authorize With Seed",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
             return Instruction(
@@ -1167,11 +1595,37 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED,
                 {},
-                {'uninitialized_stake_account': {'ui_name': 'Uninitialized stake account', 'is_authority': False, 'optional': False}, 'rent_sysvar': {'ui_name': 'Rent sysvar', 'is_authority': False, 'optional': False}, 'stake_authority': {'ui_name': 'stake authority', 'is_authority': False, 'optional': False}, 'withdrawal_authority': {'ui_name': 'withdraw authority', 'is_authority': True, 'optional': False}},
+                {
+                    "uninitialized_stake_account": {
+                        "ui_name": "Uninitialized stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "rent_sysvar": {
+                        "ui_name": "Rent sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_authority": {
+                        "ui_name": "stake authority",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "withdrawal_authority": {
+                        "ui_name": "withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['uninitialized_stake_account', 'rent_sysvar', 'stake_authority', 'withdrawal_authority'],
+                [
+                    "uninitialized_stake_account",
+                    "rent_sysvar",
+                    "stake_authority",
+                    "withdrawal_authority",
+                ],
                 "ui_confirm",
-                "Initialize Checked"
+                "Initialize Checked",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED:
             return Instruction(
@@ -1179,12 +1633,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED,
-                {'stake_authorize': {'ui_name': 'Stake authorize', 'type': 'StakeAuthorize', 'optional': False}},
-                {'stake_account': {'ui_name': 'Stake account', 'is_authority': False, 'optional': False}, 'clock_sysvar': {'ui_name': 'Clock sysvar', 'is_authority': False, 'optional': False}, 'stake_or_withdraw_authority': {'ui_name': 'stake or withdraw authority', 'is_authority': True, 'optional': False}, 'new_stake_or_withdraw_authority': {'ui_name': 'new stake or withdraw authority', 'is_authority': True, 'optional': False}, 'lockup_authority': {'ui_name': 'Lockup authority', 'is_authority': True, 'optional': True}},
-                ['stake_authorize'],
-                ['stake_account', 'clock_sysvar', 'stake_or_withdraw_authority', 'new_stake_or_withdraw_authority', 'lockup_authority'],
+                {
+                    "stake_authorize": {
+                        "ui_name": "Stake authorize",
+                        "type": "StakeAuthorize",
+                        "optional": False,
+                    }
+                },
+                {
+                    "stake_account": {
+                        "ui_name": "Stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "clock_sysvar": {
+                        "ui_name": "Clock sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_or_withdraw_authority": {
+                        "ui_name": "stake or withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "new_stake_or_withdraw_authority": {
+                        "ui_name": "new stake or withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "lockup_authority": {
+                        "ui_name": "Lockup authority",
+                        "is_authority": True,
+                        "optional": True,
+                    },
+                },
+                ["stake_authorize"],
+                [
+                    "stake_account",
+                    "clock_sysvar",
+                    "stake_or_withdraw_authority",
+                    "new_stake_or_withdraw_authority",
+                    "lockup_authority",
+                ],
                 "ui_confirm",
-                "Authorize Checked"
+                "Authorize Checked",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED:
             return Instruction(
@@ -1192,12 +1684,60 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED,
-                {'stake_authorize': {'ui_name': 'Stake authorize', 'type': 'StakeAuthorize', 'optional': False}, 'authority_seed': {'ui_name': 'Authority seed', 'type': 'string', 'optional': False}, 'authority_owner': {'ui_name': 'Authority owner', 'type': 'pubkey', 'optional': False}},
-                {'stake_account': {'ui_name': 'Stake account', 'is_authority': False, 'optional': False}, 'stake_or_withdraw_authority': {'ui_name': 'stake or withdraw authority', 'is_authority': True, 'optional': False}, 'clock_sysvar': {'ui_name': 'Clock sysvar', 'is_authority': False, 'optional': False}, 'new_stake_or_withdraw_authority': {'ui_name': 'new stake or withdraw authority', 'is_authority': True, 'optional': False}, 'lockup_authority': {'ui_name': 'Lockup authority', 'is_authority': True, 'optional': True}},
-                ['stake_authorize', 'authority_seed', 'authority_owner'],
-                ['stake_account', 'stake_or_withdraw_authority', 'clock_sysvar', 'new_stake_or_withdraw_authority', 'lockup_authority'],
+                {
+                    "stake_authorize": {
+                        "ui_name": "Stake authorize",
+                        "type": "StakeAuthorize",
+                        "optional": False,
+                    },
+                    "authority_seed": {
+                        "ui_name": "Authority seed",
+                        "type": "string",
+                        "optional": False,
+                    },
+                    "authority_owner": {
+                        "ui_name": "Authority owner",
+                        "type": "pubkey",
+                        "optional": False,
+                    },
+                },
+                {
+                    "stake_account": {
+                        "ui_name": "Stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "stake_or_withdraw_authority": {
+                        "ui_name": "stake or withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "clock_sysvar": {
+                        "ui_name": "Clock sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "new_stake_or_withdraw_authority": {
+                        "ui_name": "new stake or withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "lockup_authority": {
+                        "ui_name": "Lockup authority",
+                        "is_authority": True,
+                        "optional": True,
+                    },
+                },
+                ["stake_authorize", "authority_seed", "authority_owner"],
+                [
+                    "stake_account",
+                    "stake_or_withdraw_authority",
+                    "clock_sysvar",
+                    "new_stake_or_withdraw_authority",
+                    "lockup_authority",
+                ],
                 "ui_confirm",
-                "Authorize Checked With Seed"
+                "Authorize Checked With Seed",
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
             return Instruction(
@@ -1205,12 +1745,39 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED,
-                {'unix_timestamp': {'ui_name': 'Unix timestamp', 'type': 'i64', 'optional': True}, 'epoch': {'ui_name': 'Epoch', 'type': 'u64', 'optional': True}},
-                {'stake_account': {'ui_name': 'Stake account', 'is_authority': False, 'optional': False}, 'lockup_or_withdraw_authority': {'ui_name': 'Lockup authority or withdraw authority', 'is_authority': True, 'optional': False}, 'new_lockup_authority': {'ui_name': 'New lockup authority', 'is_authority': True, 'optional': True}},
-                ['unix_timestamp', 'epoch'],
-                ['stake_account', 'lockup_or_withdraw_authority', 'new_lockup_authority'],
+                {
+                    "unix_timestamp": {
+                        "ui_name": "Unix timestamp",
+                        "type": "i64",
+                        "optional": True,
+                    },
+                    "epoch": {"ui_name": "Epoch", "type": "u64", "optional": True},
+                },
+                {
+                    "stake_account": {
+                        "ui_name": "Stake account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "lockup_or_withdraw_authority": {
+                        "ui_name": "Lockup authority or withdraw authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "new_lockup_authority": {
+                        "ui_name": "New lockup authority",
+                        "is_authority": True,
+                        "optional": True,
+                    },
+                },
+                ["unix_timestamp", "epoch"],
+                [
+                    "stake_account",
+                    "lockup_or_withdraw_authority",
+                    "new_lockup_authority",
+                ],
                 "ui_confirm",
-                "Set Lockup Checked"
+                "Set Lockup Checked",
             )
         else:
             raise ProcessError(
@@ -1223,12 +1790,12 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME,
-                {'bytes': {'ui_name': 'bytes', 'type': 'u32', 'optional': False}},
+                {"bytes": {"ui_name": "bytes", "type": "u32", "optional": False}},
                 {},
-                ['bytes'],
+                ["bytes"],
                 [],
                 "ui_confirm",
-                "Request Heap Frame"
+                "Request Heap Frame",
             )
         elif instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT:
             return Instruction(
@@ -1236,12 +1803,12 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
-                {'units': {'ui_name': 'units', 'type': 'u32', 'optional': False}},
+                {"units": {"ui_name": "units", "type": "u32", "optional": False}},
                 {},
-                ['units'],
+                ["units"],
                 [],
                 "ui_confirm",
-                "Set Compute Unit Limit"
+                "Set Compute Unit Limit",
             )
         elif instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE:
             return Instruction(
@@ -1249,12 +1816,12 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
-                {'lamports': {'ui_name': 'lamports', 'type': 'u64', 'optional': False}},
+                {"lamports": {"ui_name": "lamports", "type": "u64", "optional": False}},
                 {},
-                ['lamports'],
+                ["lamports"],
                 [],
                 "ui_confirm",
-                "Set Compute Unit Price"
+                "Set Compute Unit Price",
             )
         else:
             raise ProcessError(
@@ -1268,11 +1835,32 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
                 {},
-                {'account_to_initialize': {'ui_name': 'Account to initialize', 'is_authority': False, 'optional': False}, 'mint_account': {'ui_name': 'Mint account', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': False, 'optional': False}, 'rent_sysvar': {'ui_name': 'Rent sysvar', 'is_authority': False, 'optional': False}},
+                {
+                    "account_to_initialize": {
+                        "ui_name": "Account to initialize",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "mint_account": {
+                        "ui_name": "Mint account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "rent_sysvar": {
+                        "ui_name": "Rent sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['account_to_initialize', 'mint_account', 'owner', 'rent_sysvar'],
+                ["account_to_initialize", "mint_account", "owner", "rent_sysvar"],
                 "ui_confirm",
-                "Initialize Account"
+                "Initialize Account",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
@@ -1280,12 +1868,34 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
-                {'number_of_signers': {'ui_name': 'Number of signers', 'type': 'u8', 'optional': False}},
-                {'multisig_account': {'ui_name': 'Multisig account', 'is_authority': False, 'optional': False}, 'rent_sysvar': {'ui_name': 'Rent sysvar', 'is_authority': False, 'optional': False}, 'signer_accounts': {'ui_name': 'Signer accounts', 'is_authority': False, 'optional': False}},
-                ['number_of_signers'],
-                ['multisig_account', 'rent_sysvar', 'signer_accounts'],
+                {
+                    "number_of_signers": {
+                        "ui_name": "Number of signers",
+                        "type": "u8",
+                        "optional": False,
+                    }
+                },
+                {
+                    "multisig_account": {
+                        "ui_name": "Multisig account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "rent_sysvar": {
+                        "ui_name": "Rent sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "signer_accounts": {
+                        "ui_name": "Signer accounts",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
+                ["number_of_signers"],
+                ["multisig_account", "rent_sysvar", "signer_accounts"],
                 "ui_confirm",
-                "Initialize Multisig"
+                "Initialize Multisig",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
@@ -1293,12 +1903,28 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_TRANSFER,
-                {'amount': {'ui_name': 'Amount', 'type': 'u64', 'optional': False}},
-                {'source_account': {'ui_name': 'Source account', 'is_authority': False, 'optional': False}, 'destination_account': {'ui_name': 'Destination account', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': True, 'optional': False}},
-                ['amount'],
-                ['source_account', 'destination_account', 'owner'],
+                {"amount": {"ui_name": "Amount", "type": "u64", "optional": False}},
+                {
+                    "source_account": {
+                        "ui_name": "Source account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "destination_account": {
+                        "ui_name": "Destination account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["amount"],
+                ["source_account", "destination_account", "owner"],
                 "ui_confirm",
-                "Transfer"
+                "Transfer",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE:
             return Instruction(
@@ -1306,12 +1932,28 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_APPROVE,
-                {'amount': {'ui_name': 'Amount', 'type': 'u64', 'optional': False}},
-                {'source_account': {'ui_name': 'Source account', 'is_authority': False, 'optional': False}, 'delegate_account': {'ui_name': 'Delegate account', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': True, 'optional': False}},
-                ['amount'],
-                ['source_account', 'delegate_account', 'owner'],
+                {"amount": {"ui_name": "Amount", "type": "u64", "optional": False}},
+                {
+                    "source_account": {
+                        "ui_name": "Source account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "delegate_account": {
+                        "ui_name": "Delegate account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["amount"],
+                ["source_account", "delegate_account", "owner"],
                 "ui_confirm",
-                "Approve"
+                "Approve",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_REVOKE:
             return Instruction(
@@ -1320,11 +1962,22 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_REVOKE,
                 {},
-                {'source_account': {'ui_name': 'Source account', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': True, 'optional': False}},
+                {
+                    "source_account": {
+                        "ui_name": "Source account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['source_account', 'owner'],
+                ["source_account", "owner"],
                 "ui_confirm",
-                "Revoke"
+                "Revoke",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_SET_AUTHORITY:
             return Instruction(
@@ -1332,12 +1985,34 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_SET_AUTHORITY,
-                {'authority_type': {'ui_name': 'Authority type', 'type': 'AuthorityType', 'optional': False}, 'new_authority': {'ui_name': 'New authority', 'type': 'pubkey', 'optional': True}},
-                {'mint_account': {'ui_name': 'Mint or account to change', 'is_authority': False, 'optional': False}, 'current_authority': {'ui_name': 'Current authority', 'is_authority': True, 'optional': False}},
-                ['authority_type', 'new_authority'],
-                ['mint_account', 'current_authority'],
+                {
+                    "authority_type": {
+                        "ui_name": "Authority type",
+                        "type": "AuthorityType",
+                        "optional": False,
+                    },
+                    "new_authority": {
+                        "ui_name": "New authority",
+                        "type": "pubkey",
+                        "optional": True,
+                    },
+                },
+                {
+                    "mint_account": {
+                        "ui_name": "Mint or account to change",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "current_authority": {
+                        "ui_name": "Current authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["authority_type", "new_authority"],
+                ["mint_account", "current_authority"],
                 "ui_confirm",
-                "Set Authority"
+                "Set Authority",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO:
             return Instruction(
@@ -1345,12 +2020,28 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_MINT_TO,
-                {'amount': {'ui_name': 'Amount', 'type': 'u64', 'optional': False}},
-                {'mint': {'ui_name': 'The mint', 'is_authority': False, 'optional': False}, 'account_to_mint': {'ui_name': 'Account to mint tokens to', 'is_authority': False, 'optional': False}, 'minting_authority': {'ui_name': 'Minting authority', 'is_authority': True, 'optional': False}},
-                ['amount'],
-                ['mint', 'account_to_mint', 'minting_authority'],
+                {"amount": {"ui_name": "Amount", "type": "u64", "optional": False}},
+                {
+                    "mint": {
+                        "ui_name": "The mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "account_to_mint": {
+                        "ui_name": "Account to mint tokens to",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "minting_authority": {
+                        "ui_name": "Minting authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["amount"],
+                ["mint", "account_to_mint", "minting_authority"],
                 "ui_confirm",
-                "Mint to"
+                "Mint to",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_BURN:
             return Instruction(
@@ -1358,12 +2049,28 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_BURN,
-                {'amount': {'ui_name': 'Amount', 'type': 'u64', 'optional': False}},
-                {'account_to_burn_from': {'ui_name': 'Account to burn from', 'is_authority': False, 'optional': False}, 'token_mint': {'ui_name': 'The token mint', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': True, 'optional': False}},
-                ['amount'],
-                ['account_to_burn_from', 'token_mint', 'owner'],
+                {"amount": {"ui_name": "Amount", "type": "u64", "optional": False}},
+                {
+                    "account_to_burn_from": {
+                        "ui_name": "Account to burn from",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint": {
+                        "ui_name": "The token mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["amount"],
+                ["account_to_burn_from", "token_mint", "owner"],
                 "ui_confirm",
-                "Burn"
+                "Burn",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT:
             return Instruction(
@@ -1372,11 +2079,27 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT,
                 {},
-                {'account_to_close': {'ui_name': 'Account to close', 'is_authority': False, 'optional': False}, 'destination_account': {'ui_name': 'Destination account', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': True, 'optional': False}},
+                {
+                    "account_to_close": {
+                        "ui_name": "Account to close",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "destination_account": {
+                        "ui_name": "Destination account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['account_to_close', 'destination_account', 'owner'],
+                ["account_to_close", "destination_account", "owner"],
                 "ui_confirm",
-                "Close Account"
+                "Close Account",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT:
             return Instruction(
@@ -1385,11 +2108,27 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT,
                 {},
-                {'account_to_freeze': {'ui_name': 'Account to freeze', 'is_authority': False, 'optional': False}, 'token_mint': {'ui_name': 'The token mint', 'is_authority': False, 'optional': False}, 'freeze_authority': {'ui_name': 'Freeze authority', 'is_authority': True, 'optional': False}},
+                {
+                    "account_to_freeze": {
+                        "ui_name": "Account to freeze",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint": {
+                        "ui_name": "The token mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "freeze_authority": {
+                        "ui_name": "Freeze authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['account_to_freeze', 'token_mint', 'freeze_authority'],
+                ["account_to_freeze", "token_mint", "freeze_authority"],
                 "ui_confirm",
-                "Freeze Account"
+                "Freeze Account",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT:
             return Instruction(
@@ -1398,11 +2137,27 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT,
                 {},
-                {'account_to_freeze': {'ui_name': 'Account to freeze', 'is_authority': False, 'optional': False}, 'token_mint': {'ui_name': 'The token mint', 'is_authority': False, 'optional': False}, 'freeze_authority': {'ui_name': 'Freeze authority', 'is_authority': True, 'optional': False}},
+                {
+                    "account_to_freeze": {
+                        "ui_name": "Account to freeze",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint": {
+                        "ui_name": "The token mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "freeze_authority": {
+                        "ui_name": "Freeze authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['account_to_freeze', 'token_mint', 'freeze_authority'],
+                ["account_to_freeze", "token_mint", "freeze_authority"],
                 "ui_confirm",
-                "Thaw Account"
+                "Thaw Account",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED:
             return Instruction(
@@ -1410,12 +2165,40 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED,
-                {'amount': {'ui_name': 'Amount', 'type': 'u64', 'optional': False}, 'decimals': {'ui_name': 'Decimals', 'type': 'u8', 'optional': False}},
-                {'source_account': {'ui_name': 'Source account', 'is_authority': False, 'optional': False}, 'token_mint': {'ui_name': 'The token mint', 'is_authority': False, 'optional': False}, 'destination_account': {'ui_name': 'Destination account', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': True, 'optional': False}},
-                ['amount', 'decimals'],
-                ['source_account', 'token_mint', 'destination_account', 'owner'],
+                {
+                    "amount": {"ui_name": "Amount", "type": "u64", "optional": False},
+                    "decimals": {
+                        "ui_name": "Decimals",
+                        "type": "u8",
+                        "optional": False,
+                    },
+                },
+                {
+                    "source_account": {
+                        "ui_name": "Source account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint": {
+                        "ui_name": "The token mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "destination_account": {
+                        "ui_name": "Destination account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["amount", "decimals"],
+                ["source_account", "token_mint", "destination_account", "owner"],
                 "ui_confirm",
-                "Transfer Checked"
+                "Transfer Checked",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED:
             return Instruction(
@@ -1423,12 +2206,40 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED,
-                {'amount': {'ui_name': 'Amount', 'type': 'u64', 'optional': False}, 'decimals': {'ui_name': 'Decimals', 'type': 'u8', 'optional': False}},
-                {'source_account': {'ui_name': 'Source account', 'is_authority': False, 'optional': False}, 'token_mint': {'ui_name': 'The token mint', 'is_authority': False, 'optional': False}, 'delegate': {'ui_name': 'The delegate', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': True, 'optional': False}},
-                ['amount', 'decimals'],
-                ['source_account', 'token_mint', 'delegate', 'owner'],
+                {
+                    "amount": {"ui_name": "Amount", "type": "u64", "optional": False},
+                    "decimals": {
+                        "ui_name": "Decimals",
+                        "type": "u8",
+                        "optional": False,
+                    },
+                },
+                {
+                    "source_account": {
+                        "ui_name": "Source account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint": {
+                        "ui_name": "The token mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "delegate": {
+                        "ui_name": "The delegate",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["amount", "decimals"],
+                ["source_account", "token_mint", "delegate", "owner"],
                 "ui_confirm",
-                "Approve Checked"
+                "Approve Checked",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED:
             return Instruction(
@@ -1436,12 +2247,35 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED,
-                {'amount': {'ui_name': 'Amount', 'type': 'u64', 'optional': False}, 'decimals': {'ui_name': 'Decimals', 'type': 'u8', 'optional': False}},
-                {'mint': {'ui_name': 'The mint', 'is_authority': False, 'optional': False}, 'account_to_mint': {'ui_name': 'Account to mint tokens to', 'is_authority': False, 'optional': False}, 'minting_authority': {'ui_name': 'Minting authority', 'is_authority': True, 'optional': False}},
-                ['amount', 'decimals'],
-                ['mint', 'account_to_mint', 'minting_authority'],
+                {
+                    "amount": {"ui_name": "Amount", "type": "u64", "optional": False},
+                    "decimals": {
+                        "ui_name": "Decimals",
+                        "type": "u8",
+                        "optional": False,
+                    },
+                },
+                {
+                    "mint": {
+                        "ui_name": "The mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "account_to_mint": {
+                        "ui_name": "Account to mint tokens to",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "minting_authority": {
+                        "ui_name": "Minting authority",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["amount", "decimals"],
+                ["mint", "account_to_mint", "minting_authority"],
                 "ui_confirm",
-                "Mint to Checked"
+                "Mint to Checked",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_BURN_CHECKED:
             return Instruction(
@@ -1449,12 +2283,35 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_BURN_CHECKED,
-                {'amount': {'ui_name': 'Amount', 'type': 'u64', 'optional': False}, 'decimals': {'ui_name': 'Decimals', 'type': 'u8', 'optional': False}},
-                {'account_to_burn_from': {'ui_name': 'Account to burn from', 'is_authority': False, 'optional': False}, 'token_mint': {'ui_name': 'The token mint', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': True, 'optional': False}},
-                ['amount', 'decimals'],
-                ['account_to_burn_from', 'token_mint', 'owner'],
+                {
+                    "amount": {"ui_name": "Amount", "type": "u64", "optional": False},
+                    "decimals": {
+                        "ui_name": "Decimals",
+                        "type": "u8",
+                        "optional": False,
+                    },
+                },
+                {
+                    "account_to_burn_from": {
+                        "ui_name": "Account to burn from",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint": {
+                        "ui_name": "The token mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                },
+                ["amount", "decimals"],
+                ["account_to_burn_from", "token_mint", "owner"],
                 "ui_confirm",
-                "Burn Checked"
+                "Burn Checked",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
             return Instruction(
@@ -1462,12 +2319,28 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
-                {'owner': {'ui_name': 'Owner', 'type': 'pubkey', 'optional': False}},
-                {'account_to_initialize': {'ui_name': 'Account to initialize', 'is_authority': False, 'optional': False}, 'mint_account': {'ui_name': 'Mint account', 'is_authority': False, 'optional': False}, 'rent_sysvar': {'ui_name': 'Rent sysvar', 'is_authority': False, 'optional': False}},
-                ['owner'],
-                ['account_to_initialize', 'mint_account', 'rent_sysvar'],
+                {"owner": {"ui_name": "Owner", "type": "pubkey", "optional": False}},
+                {
+                    "account_to_initialize": {
+                        "ui_name": "Account to initialize",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "mint_account": {
+                        "ui_name": "Mint account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "rent_sysvar": {
+                        "ui_name": "Rent sysvar",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
+                ["owner"],
+                ["account_to_initialize", "mint_account", "rent_sysvar"],
                 "ui_confirm",
-                "Initialize Account 2"
+                "Initialize Account 2",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
@@ -1476,11 +2349,17 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_SYNC_NATIVE,
                 {},
-                {'token_account': {'ui_name': 'Native token account', 'is_authority': False, 'optional': False}},
+                {
+                    "token_account": {
+                        "ui_name": "Native token account",
+                        "is_authority": False,
+                        "optional": False,
+                    }
+                },
                 [],
-                ['token_account'],
+                ["token_account"],
                 "ui_confirm",
-                "Sync Native"
+                "Sync Native",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
             return Instruction(
@@ -1488,12 +2367,23 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
-                {'owner': {'ui_name': 'Owner', 'type': 'pubkey', 'optional': False}},
-                {'account_to_initialize': {'ui_name': 'Account to initialize', 'is_authority': False, 'optional': False}, 'mint_account': {'ui_name': 'Mint account', 'is_authority': False, 'optional': False}},
-                ['owner'],
-                ['account_to_initialize', 'mint_account'],
+                {"owner": {"ui_name": "Owner", "type": "pubkey", "optional": False}},
+                {
+                    "account_to_initialize": {
+                        "ui_name": "Account to initialize",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "mint_account": {
+                        "ui_name": "Mint account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
+                ["owner"],
+                ["account_to_initialize", "mint_account"],
                 "ui_confirm",
-                "Initialize Account 3"
+                "Initialize Account 3",
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
             return Instruction(
@@ -1502,11 +2392,17 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
                 {},
-                {'account_to_initialize': {'ui_name': 'Account to initialize', 'is_authority': False, 'optional': False}},
+                {
+                    "account_to_initialize": {
+                        "ui_name": "Account to initialize",
+                        "is_authority": False,
+                        "optional": False,
+                    }
+                },
                 [],
-                ['account_to_initialize'],
+                ["account_to_initialize"],
                 "ui_confirm",
-                "Initialize Immutable Owner"
+                "Initialize Immutable Owner",
             )
         else:
             raise ProcessError(
@@ -1520,24 +2416,102 @@ def get_instruction(
                 instruction_accounts,
                 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
                 {},
-                {'funding_account': {'ui_name': 'Funding account', 'is_authority': True, 'optional': False}, 'associated_token_account': {'ui_name': 'Associated token account', 'is_authority': False, 'optional': False}, 'wallet_address': {'ui_name': 'Wallet address', 'is_authority': False, 'optional': False}, 'token_mint': {'ui_name': 'The token mint', 'is_authority': False, 'optional': False}, 'system_program': {'ui_name': 'System program', 'is_authority': False, 'optional': False}, 'spl_token': {'ui_name': 'SPL tokeen program', 'is_authority': False, 'optional': False}},
+                {
+                    "funding_account": {
+                        "ui_name": "Funding account",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "associated_token_account": {
+                        "ui_name": "Associated token account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "wallet_address": {
+                        "ui_name": "Wallet address",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint": {
+                        "ui_name": "The token mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "system_program": {
+                        "ui_name": "System program",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "spl_token": {
+                        "ui_name": "SPL tokeen program",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['funding_account', 'associated_token_account', 'wallet_address', 'token_mint', 'system_program', 'spl_token'],
+                [
+                    "funding_account",
+                    "associated_token_account",
+                    "wallet_address",
+                    "token_mint",
+                    "system_program",
+                    "spl_token",
+                ],
                 "ui_confirm",
-                "Create"
+                "Create",
             )
-        elif instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT:
+        elif (
+            instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT
+        ):
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
                 {},
-                {'funding_account': {'ui_name': 'Funding account', 'is_authority': True, 'optional': False}, 'associated_token_account': {'ui_name': 'Associated token account', 'is_authority': False, 'optional': False}, 'wallet_address': {'ui_name': 'Wallet address', 'is_authority': False, 'optional': False}, 'token_mint': {'ui_name': 'The token mint', 'is_authority': False, 'optional': False}, 'system_program': {'ui_name': 'System program', 'is_authority': False, 'optional': False}, 'spl_token': {'ui_name': 'SPL tokeen program', 'is_authority': False, 'optional': False}},
+                {
+                    "funding_account": {
+                        "ui_name": "Funding account",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "associated_token_account": {
+                        "ui_name": "Associated token account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "wallet_address": {
+                        "ui_name": "Wallet address",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint": {
+                        "ui_name": "The token mint",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "system_program": {
+                        "ui_name": "System program",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "spl_token": {
+                        "ui_name": "SPL tokeen program",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['funding_account', 'associated_token_account', 'wallet_address', 'token_mint', 'system_program', 'spl_token'],
+                [
+                    "funding_account",
+                    "associated_token_account",
+                    "wallet_address",
+                    "token_mint",
+                    "system_program",
+                    "spl_token",
+                ],
                 "ui_confirm",
-                "Create Idempotent"
+                "Create Idempotent",
             )
         elif instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED:
             return Instruction(
@@ -1546,11 +2520,55 @@ def get_instruction(
                 instruction_accounts,
                 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED,
                 {},
-                {'nested_account': {'ui_name': 'Nested associated token account', 'is_authority': True, 'optional': False}, 'token_mint_nested': {'ui_name': 'Token mint for the nested account', 'is_authority': False, 'optional': False}, 'associated_token_account': {'ui_name': 'Associated token account', 'is_authority': False, 'optional': False}, 'owner': {'ui_name': 'Owner', 'is_authority': False, 'optional': False}, 'token_mint_owner': {'ui_name': 'Token mint for the owner account', 'is_authority': False, 'optional': False}, 'wallet_address': {'ui_name': 'Wallet address', 'is_authority': True, 'optional': False}, 'spl_token': {'ui_name': 'SPL tokeen program', 'is_authority': False, 'optional': False}},
+                {
+                    "nested_account": {
+                        "ui_name": "Nested associated token account",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "token_mint_nested": {
+                        "ui_name": "Token mint for the nested account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "associated_token_account": {
+                        "ui_name": "Associated token account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "owner": {
+                        "ui_name": "Owner",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "token_mint_owner": {
+                        "ui_name": "Token mint for the owner account",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                    "wallet_address": {
+                        "ui_name": "Wallet address",
+                        "is_authority": True,
+                        "optional": False,
+                    },
+                    "spl_token": {
+                        "ui_name": "SPL tokeen program",
+                        "is_authority": False,
+                        "optional": False,
+                    },
+                },
                 [],
-                ['nested_account', 'token_mint_nested', 'associated_token_account', 'owner', 'token_mint_owner', 'wallet_address', 'spl_token'],
+                [
+                    "nested_account",
+                    "token_mint_nested",
+                    "associated_token_account",
+                    "owner",
+                    "token_mint_owner",
+                    "wallet_address",
+                    "spl_token",
+                ],
                 "ui_confirm",
-                "Recover Nested"
+                "Recover Nested",
             )
         else:
             raise ProcessError(
@@ -1563,12 +2581,18 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 MEMO_ID_INS_CREATE,
-                {'memo': {'ui_name': 'Memo', 'type': 'string', 'optional': False}},
-                {'signer_accounts': {'ui_name': 'Signer accounts', 'is_authority': True, 'optional': False}},
-                ['memo'],
-                ['signer_accounts'],
+                {"memo": {"ui_name": "Memo", "type": "string", "optional": False}},
+                {
+                    "signer_accounts": {
+                        "ui_name": "Signer accounts",
+                        "is_authority": True,
+                        "optional": False,
+                    }
+                },
+                ["memo"],
+                ["signer_accounts"],
                 "ui_confirm",
-                "Create"
+                "Create",
             )
         else:
             raise ProcessError(
@@ -1581,18 +2605,22 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 MEMO_LEGACY_ID_INS_CREATE,
-                {'memo': {'ui_name': 'Memo', 'type': 'string', 'optional': False}},
-                {'signer_accounts': {'ui_name': 'Signer accounts', 'is_authority': True, 'optional': False}},
-                ['memo'],
-                ['signer_accounts'],
+                {"memo": {"ui_name": "Memo", "type": "string", "optional": False}},
+                {
+                    "signer_accounts": {
+                        "ui_name": "Signer accounts",
+                        "is_authority": True,
+                        "optional": False,
+                    }
+                },
+                ["memo"],
+                ["signer_accounts"],
                 "ui_confirm",
-                "Create"
+                "Create",
             )
         else:
             raise ProcessError(
                 f"Unknown instruction type: {program_id} {instruction_id}"
             )
     else:
-        raise ProcessError(
-            f"Unknown instruction type: {program_id} {instruction_id}"
-        )
+        raise ProcessError(f"Unknown instruction type: {program_id} {instruction_id}")
