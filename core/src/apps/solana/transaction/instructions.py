@@ -1471,7 +1471,7 @@ def get_instruction(
                     },
                 ],
                 ["staker", "withdrawer", "unix_timestamp", "epoch", "custodian"],
-                ["unitialized_stake_account", "rent_sysvar"],
+                ["uninitialized_stake_account", "rent_sysvar"],
                 "ui_confirm",
                 "Initialize",
             )
@@ -2922,7 +2922,7 @@ def get_instruction(
                     },
                     {
                         "name": "spl_token",
-                        "ui_name": "SPL tokeen program",
+                        "ui_name": "SPL token program",
                         "is_authority": False,
                         "optional": False,
                     },

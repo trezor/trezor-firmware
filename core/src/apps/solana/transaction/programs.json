@@ -433,7 +433,7 @@
                                 "custodian"
                             ],
                             "accounts": [
-                                "unitialized_stake_account",
+                                "uninitialized_stake_account",
                                 "rent_sysvar"
                             ]
                         }
@@ -2010,7 +2010,7 @@
                         },
                         {
                           "name": "spl_token",
-                            "ui_name": "SPL tokeen program",
+                            "ui_name": "SPL token program",
                             "is_authority": false,
                             "optional": false
                         }
