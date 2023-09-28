@@ -4,7 +4,7 @@ from trezor.crypto import base58
 from trezor.strings import format_amount
 from trezor.ui import layouts
 
-from ..transaction.instructions import Instruction, TransferInstruction
+from ..transaction.instructions import Instruction
 
 if TYPE_CHECKING:
     from typing import Any
@@ -18,20 +18,11 @@ def format_property(value: Any, type: str) -> str | bytes | None:
 
     return value
 
+
 async def show_confirm(
     count: tuple[int, int], instruction: Instruction, signer: bytes
 ) -> None:
     from trezor.ui.layouts import confirm_properties
-
-    # if TransferInstruction.is_type_of(instruction):
-    #     print(instruction.funding_account, signer)
-    #     if instruction.funding_account[0] != signer:
-    #         raise ValueError("Invalid funding account")
-
-    #     return await layouts.confirm_output(
-    #         base58.encode(instruction.recipient_account[0]),
-    #         f"{format_amount(instruction.lamports, 8)} SOL",
-    #     )
 
     # assertions for pyright
     assert instruction.parsed_data is not None
@@ -41,24 +32,25 @@ async def show_confirm(
 
     datas = []
     for property in instruction.ui_parameter_list:
-        ui_name = instruction.property_templates[property]["ui_name"]
+        property_template = instruction.get_property_template(property)
+        ui_name = property_template["ui_name"]
         value = instruction.parsed_data[property]
-        _type = instruction.property_templates[property]["type"]
-
-        # if _type == "authority":
-        #     if signer == value:
-        #         continue
+        _type = property_template["type"]
+        if _type == "authority":
+            if signer == value:
+                continue
 
         datas.append((ui_name, format_property(value, _type)))
 
     accounts = []
     for account in instruction.ui_account_list:
-        ui_name = instruction.accounts_template[account[0]]["ui_name"]
-        # is_authority = instruction.accounts_template[account[0]]["is_authority"]
+        account_template = instruction.get_account_template(account[0])[1]
+        ui_name = account_template["ui_name"]
+        is_authority = account_template["is_authority"]
         account_value = instruction.parsed_accounts[account[0]]
 
-        # if is_authority and account_value[0] == signer:
-        #     continue
+        if is_authority and account_value[0] == signer:
+            continue
 
         if len(account_value) == 2:
             accounts.append((ui_name, base58.encode(account_value[0])))

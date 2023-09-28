@@ -33,7 +33,7 @@
     "programs": [
         {
             "id": "11111111111111111111111111111111",
-            "name": "System program",
+            "name": "System Program",
             "instructions": [
                 {
                     "id": 0,
@@ -371,7 +371,7 @@
         },
         {
             "id": "Stake11111111111111111111111111111111111111",
-            "name": "Stake program",
+            "name": "Stake Program",
             "instructions": [
                 {
                     "id": 0,
@@ -1095,7 +1095,7 @@
             ]
         }, {
             "id": "ComputeBudget111111111111111111111111111111",
-            "name": "Compute budget program",
+            "name": "Compute Budget Program",
             "instructions": [
                 {
                     "id": 1,
@@ -1164,7 +1164,7 @@
             ]
         }, {
             "id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-            "name": "Token program",
+            "name": "Token Program",
             "instructions": [
                 {
                     "id": 1,
@@ -1971,7 +1971,7 @@
             ]
         }, {
             "id": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
-            "name": "Associated token account program",
+            "name": "Associated Token Account Program",
             "instructions": [
                 {
                     "id": 0,
@@ -2066,7 +2066,7 @@
                         },
                         {
                           "name": "spl_token",
-                            "ui_name": "SPL tokeen program",
+                            "ui_name": "SPL token program",
                             "is_authority": false,
                             "optional": false
                         }
@@ -2128,7 +2128,7 @@
                         },
                         {
                           "name": "spl_token",
-                            "ui_name": "SPL tokeen program",
+                            "ui_name": "SPL token program",
                             "is_authority": false,
                             "optional": false
                         }

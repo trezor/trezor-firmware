@@ -10,11 +10,13 @@ if TYPE_CHECKING:
     from ..types import Account
 
     class PropertyTemplate(TypedDict):
+        name: str
         ui_name: str
         type: str
         optional: bool
 
     class AccountTemplate(TypedDict):
+        name: str
         ui_name: str
         is_authority: bool
         optional: bool
@@ -27,8 +29,8 @@ class Instruction:
     program_id: bytes
     instruction_id: int
 
-    property_templates: dict[str, PropertyTemplate]
-    accounts_template: dict[str, AccountTemplate]
+    property_templates: list[PropertyTemplate]
+    accounts_template: list[AccountTemplate]
 
     # name of the UI template to be used derived from the template
     ui_identifier: str
@@ -54,8 +56,8 @@ class Instruction:
         program_id: bytes,
         accounts: list[Account],
         instruction_id: int,
-        property_templates: dict[str, PropertyTemplate],
-        accounts_template: dict[str, AccountTemplate],
+        property_templates: list[PropertyTemplate],
+        accounts_template: list[AccountTemplate],
         ui_parameter_list: list[str],
         ui_account_list: list[str],
         ui_identifier: str,
@@ -78,26 +80,26 @@ class Instruction:
 
         reader = BufferReader(instruction_data)
 
-        for name, property_template in property_templates.items():
+        for property_template in property_templates:
             self.set_property(
-                name,
+                property_template["name"],
                 parseProperty(reader, property_template["type"]),
             )
 
-        for i, (name, account_template) in enumerate(accounts_template.items()):
+        for i, account_template in enumerate(accounts_template):
             if i >= len(accounts):
                 if account_template["optional"]:
                     continue
                 else:
                     raise ValueError("Missing account")
 
-            self.set_account(name, accounts[i])
+            self.set_account(account_template["name"], accounts[i])
 
         for parameter in ui_parameter_list:
             self.ui_parameter_list.append(parameter)
 
         for account in ui_account_list:
-            account_index = list(accounts_template.keys()).index(account)
+            account_index = self.get_account_template(account)[0]
             self.ui_account_list.append((account, accounts[account_index]))
 
     def __getattr__(self, attr: str) -> Any:
@@ -118,6 +120,20 @@ class Instruction:
     def set_account(self, account: str, value: Account) -> None:
         assert self.parsed_accounts is not None
         self.parsed_accounts[account] = value
+
+    def get_property_template(self, property: str) -> str:
+        for property_template in self.property_templates:
+            if property_template["name"] == property:
+                return property_template
+
+        raise ValueError(f"Property {property} not found")
+
+    def get_account_template(self, account_name: str) -> tuple[int, AccountTemplate]:
+        for i, template in enumerate(self.accounts_template):
+            if template["name"] == account_name:
+                return i, template
+
+        raise ValueError(f"Account {account_name} not found")
 
     @classmethod
     def is_type_of(cls, ins: Any) -> TypeGuard["Instruction"]:

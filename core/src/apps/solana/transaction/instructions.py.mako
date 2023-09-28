@@ -8,7 +8,7 @@
 ## getInstructionUiIdentifier(instruction) <<-- generates UI identifier for show function
 ## <%def name="getInstructionUiIdentifier(instruction)">${"_".join(instruction["name"].lower().split(" "))}</%def>\
 ## getClassName(instruction) <<-- generates class name from instruction name
-<%def name="getClassName(instruction)">${instruction["name"].replace(" ", "")}Instruction</%def>\
+<%def name="getClassName(program, instruction)">${program["name"].replace(" ", "")}${instruction["name"].replace(" ", "")}Instruction</%def>\
 ## getReferenceName(reference) <<-- formatting reference account name
 <%def name="getReferenceName(reference)">${"_".join(reference["name"].lower().split(" "))}</%def>\
 <%def name="getReferenceOptionalType(reference)">\
@@ -83,7 +83,7 @@ def __getattr__(name: str) -> Type[Instruction]:
     ids = {
         %for program in programs["programs"]:
             %for instruction in program["instructions"]:
-        "${getClassName(instruction)}": ("${program["id"]}", ${instruction["id"]}),
+        "${getClassName(program, instruction)}": ("${program["id"]}", ${instruction["id"]}),
             %endfor
         %endfor
     }
@@ -102,22 +102,22 @@ if TYPE_CHECKING:
 % for program in programs["programs"]:
     ## generates classes for instructions
     % for instruction in program["instructions"]:
-    class ${getClassName(instruction)}(Instruction):
+    class ${getClassName(program, instruction)}(Instruction):
         PROGRAM_ID = ${getProgramId(program)}
         INSTRUCTION_ID = ${getInstructionIdText(program, instruction)}
 
         ## generates properties for instruction parameters
-        % for name, parameter in instruction["parameters"].items():
-        ${name}: ${getPythonType(parameter["type"])}
+        % for parameter in instruction["parameters"]:
+        ${parameter["name"]}: ${getPythonType(parameter["type"])}
         % endfor
 
         ## generates properties for reference accounts
-        % for name, reference in instruction["references"].items():
-        ${name}: Account${getReferenceOptionalType(reference)}
+        % for reference in instruction["references"]:
+        ${getReferenceName(reference)}: Account${getReferenceOptionalType(reference)}
         % endfor
 
         @classmethod
-        def is_type_of(cls, ins: Any) -> TypeGuard["${getClassName(instruction)}"]:
+        def is_type_of(cls, ins: Any) -> TypeGuard["${getClassName(program, instruction)}"]:
             return (
                 base58.encode(ins.program_id) == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
