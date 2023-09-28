@@ -25,8 +25,6 @@ async def sign_tx(
 
     node = keychain.derive(address_n)
 
-    signature = ed25519.sign(node.private_key(), serialized_tx)
-
     transaction: Transaction = Transaction(BufferReader(serialized_tx))
 
     # Show instructions on UI
@@ -48,6 +46,9 @@ async def sign_tx(
     # signer_pub_key = seed.remove_ed25519_prefix(node.public_key())
 
     # TODO SOL: final confirmation screen, include blockhash
+
+    # Generate signature
+    signature = ed25519.sign(node.private_key(), serialized_tx)
 
     # TODO SOL: only one signature per request?
     return SolanaTxSignature(signature=signature)

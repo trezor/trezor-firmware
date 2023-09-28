@@ -3,7 +3,7 @@
 ## getProgramId(program) <<-- generates program id text
 <%def name="getProgramId(program)">${"_".join(program["name"].upper().split(" ") + ["ID"])}</%def>\
 ## getInstructionIdText(instruction) <<-- generates instruction ID text
-<%def name="getInstructionIdText(instruction)">${"_".join(["INS"] + instruction["name"].upper().split(" "))}</%def>\
+<%def name="getInstructionIdText(program, instruction)">${"_".join([getProgramId(program)] + ["INS"] + instruction["name"].upper().split(" "))}</%def>\
 ## TODO SOL: getInstructionUiIdentifier hs been replaced wwith UI template
 ## getInstructionUiIdentifier(instruction) <<-- generates UI identifier for show function
 ## <%def name="getInstructionUiIdentifier(instruction)">${"_".join(instruction["name"].lower().split(" "))}</%def>\
@@ -75,7 +75,7 @@ ${getProgramId(program)} = "${program["id"]}"
 ## generates instruction identifiers with values
 % for program in programs["programs"]:
     % for instruction in program["instructions"]:
-${getInstructionIdText(instruction)} = ${instruction["id"]}
+${getInstructionIdText(program, instruction)} = ${instruction["id"]}
     % endfor
 % endfor
 
@@ -104,7 +104,7 @@ if TYPE_CHECKING:
     % for instruction in program["instructions"]:
     class ${getClassName(instruction)}(Instruction):
         PROGRAM_ID = ${getProgramId(program)}
-        INSTRUCTION_ID = ${getInstructionIdText(instruction)}
+        INSTRUCTION_ID = ${getInstructionIdText(program, instruction)}
 
         ## generates properties for instruction parameters
         % for name, parameter in instruction["parameters"].items():
@@ -134,21 +134,21 @@ def get_instruction(
     if base58.encode(program_id) == ${getProgramId(program)}:
     % for instruction in program["instructions"]:
         % if instruction == program["instructions"][0]:
-        if instruction_id == ${getInstructionIdText(instruction)}:
+        if instruction_id == ${getInstructionIdText(program, instruction)}:
         % else:
-        elif instruction_id == ${getInstructionIdText(instruction)}:
+        elif instruction_id == ${getInstructionIdText(program, instruction)}:
         % endif
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                ${getInstructionIdText(instruction)},
+                ${getInstructionIdText(program, instruction)},
                 ${instruction["parameters"]},
                 ${instruction["references"]},
                 ${instruction["ui"]["elements"]["parameters"]},
                 ${instruction["ui"]["elements"]["accounts"]},
                 ## "${getInstructionUiIdentifier(instruction)}",
-                "${instruction["ui"]["template"]}",
+                "${instruction["ui"]["ui_identifier"]}",
                 "${instruction["name"]}"
             )
     % endfor
