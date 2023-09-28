@@ -40,16 +40,19 @@
                     "name": "Create Account",
                     "parameters": {
                         "lamports": {
+                            "name": "lamports",
                             "ui_name": "Lamports",
                             "type": "u64",
                             "optional": false
                         },
                         "space": {
+                          "name": "space",
                             "ui_name": "Space",
                             "type": "u64",
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "type": "authority",
                             "optional": false
@@ -57,11 +60,13 @@
                     },
                     "references": {
                         "funding_account": {
+                          "name": "funding_account",
                             "ui_name": "Funding account",
                             "is_authority": true,
                             "optional": false
                         },
                         "new_account": {
+                          "name": "new_account",
                             "ui_name": "New account",
                             "is_authority": false,
                             "optional": false
@@ -87,6 +92,7 @@
                     "name": "Assign",
                     "parameters": {
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "type": "authority",
                             "optional": false
@@ -94,6 +100,7 @@
                     },
                     "references": {
                         "assigned_account": {
+                          "name": "assigned_account",
                             "ui_name": "Assigned account",
                             "is_authority": true,
                             "optional": false
@@ -116,6 +123,7 @@
                     "name": "Transfer",
                     "parameters": {
                         "lamports": {
+                          "name": "lamports",
                             "ui_name": "Lamports",
                             "type": "u64",
                             "optional": false
@@ -123,11 +131,13 @@
                     },
                     "references": {
                         "funding_account": {
+                          "name": "funding_account",
                             "ui_name": "Funding account",
                             "is_authority": true,
                             "optional": false
                         },
                         "recipient_account": {
+                          "name": "recipient_account",
                             "ui_name": "Recipient account",
                             "is_authority": false,
                             "optional": false
@@ -150,43 +160,51 @@
                     "name": "Create Account With Seed",
                     "parameters": {
                         "base": {
+                          "name": "base",
                             "ui_name": "Base",
                             "type": "pubkey",
                             "optional": false
                         },
                         "seed": {
+                          "name": "seed",
                             "ui_name": "Seed",
                             "type": "string",
                             "optional": false
                         },
                         "lamports": {
+                          "name": "lamports",
                             "ui_name": "Lamports",
                             "type": "u64",
                             "optional": false
                         },
                         "space": {
+                          "name": "space",
                             "ui_name": "Space",
                             "type": "u64",
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "type": "pubkey",
                             "optional": false
                         }
                     },
                     "references": {
-                        "funding_account":{
+                        "funding_account": {
+                          "name": "funding_account",
                             "ui_name": "Funding account",
                             "is_authority": true,
                             "optional": false
                         },
                         "created_account": {
+                          "name": "created_account",
                             "ui_name": "Created account",
                             "is_authority": false,
                             "optional": false
                         },
                         "base_account": {
+                          "name": "base_account",
                             "ui_name": "Base account",
                             "is_authority": true,
                             "optional": true
@@ -214,6 +232,7 @@
                     "name": "Allocate",
                     "parameters": {
                         "space": {
+                          "name": "space",
                             "ui_name": "Space",
                             "type": "u64",
                             "optional": false
@@ -221,6 +240,7 @@
                     },
                     "references": {
                         "new_account": {
+                          "name": "new_account",
                             "ui_name": "New account",
                             "is_authority": true,
                             "optional": false
@@ -242,21 +262,25 @@
                     "name": "Allocate With Seed",
                     "parameters": {
                         "base": {
+                          "name": "base",
                             "ui_name": "Base",
                             "type": "pubkey",
                             "optional": false
                         },
                         "seed": {
+                          "name": "seed",
                             "ui_name": "Seed",
                             "type": "string",
                             "optional": false
                         },
                         "space": {
+                          "name": "space",
                             "ui_name": "Space",
                             "type": "u64",
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "type": "pubkey",
                             "optional": false
@@ -264,11 +288,13 @@
                     },
                     "references": {
                         "allocated_account": {
+                          "name": "allocated_account",
                             "ui_name": "Allocated account",
                             "is_authority": false,
                             "optional": false
                         },
                         "base_account": {
+                          "name": "base_account",
                             "ui_name": "Base account",
                             "is_authority": true,
                             "optional": false
@@ -294,16 +320,19 @@
                     "name": "Assign With Seed",
                     "parameters": {
                         "base": {
+                          "name": "base",
                             "ui_name": "Base",
                             "type": "pubkey",
                             "optional": false
                         },
                         "seed": {
+                          "name": "seed",
                             "ui_name": "Seed",
                             "type": "string",
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "type": "pubkey",
                             "optional": false
@@ -311,11 +340,13 @@
                     },
                     "references": {
                         "assigned_account": {
+                          "name": "assigned_account",
                             "ui_name": "Assigned account",
                             "is_authority": false,
                             "optional": false
                         },
                         "base_account": {
+                          "name": "base_account",
                             "ui_name": "Base account",
                             "is_authority": true,
                             "optional": false
@@ -347,26 +378,31 @@
                     "name": "Initialize",
                     "parameters": {
                         "staker": {
+                          "name": "staker",
                             "ui_name": "Staker",
                             "type": "authority",
                             "optional": false
                         },
                         "withdrawer": {
+                          "name": "withdrawer",
                             "ui_name": "Withdrawer",
                             "type": "authority",
                             "optional": false
                         },
                         "unix_timestamp": {
+                          "name": "unix_timestamp",
                             "ui_name": "Unix timestamp",
                             "type": "i64",
                             "optional": false
                         },
                         "epoch": {
+                          "name": "epoch",
                             "ui_name": "Epoch",
                             "type": "u64",
                             "optional": false
                         },
                         "custodian": {
+                          "name": "custodian",
                             "ui_name": "Custodian",
                             "type": "authority",
                             "optional": false
@@ -374,11 +410,13 @@
                     },
                     "references": {
                         "uninitialized_stake_account": {
+                          "name": "uninitialized_stake_account",
                             "ui_name": "Uninitialized stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "rent_sysvar": {
+                          "name": "rent_sysvar",
                             "ui_name": "Rent sysvar",
                             "is_authority": false,
                             "optional": false
@@ -405,11 +443,13 @@
                     "name": "Authorize",
                     "parameters": {
                         "pubkey": {
+                          "name": "pubkey",
                             "ui_name": "Pubkey",
                             "type": "pubkey",
                             "optional": false
                         },
                         "stake_authorize": {
+                          "name": "stake_authorize",
                             "ui_name": "Stake authorize",
                             "type": "StakeAuthorize",
                             "optional": false
@@ -417,21 +457,25 @@
                     },
                     "references": {
                         "stake_account": {
+                          "name": "stake_account",
                             "ui_name": "Stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "clock_sysvar": {
+                          "name": "clock_sysvar",
                             "ui_name": "Clock sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_or_withdraw_authority": {
+                          "name": "stake_or_withdraw_authority",
                             "ui_name": "stake or withdraw authority",
                             "is_authority": true,
                             "optional": false
                         },
                         "lockup_authority": {
+                          "name": "lockup_authority",
                             "ui_name": "Lockup authority",
                             "is_authority": true,
                             "optional": true
@@ -458,31 +502,37 @@
                     "parameters": {},
                     "references": {
                         "initialized_stake_account": {
+                          "name": "initialized_stake_account",
                             "ui_name": "Initialized stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "vote_account": {
+                          "name": "vote_account",
                             "ui_name": "Vote account",
                             "is_authority": false,
                             "optional": false
                         },
                         "clock_sysvar": {
+                          "name": "clock_sysvar",
                             "ui_name": "Clock sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_history_sysvar": {
+                          "name": "stake_history_sysvar",
                             "ui_name": "Stake history sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "config_account": {
+                          "name": "config_account",
                             "ui_name": "Config account",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_authority": {
+                          "name": "stake_authority",
                             "ui_name": "Stake authority",
                             "is_authority": true,
                             "optional": false
@@ -507,6 +557,7 @@
                     "name": "Split",
                     "parameters": {
                         "lamports": {
+                          "name": "lamports",
                             "ui_name": "Lamports",
                             "type": "u64",
                             "optional": false
@@ -514,16 +565,19 @@
                     },
                     "references": {
                         "stake_account": {
+                          "name": "stake_account",
                             "ui_name": "Stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "uninitialized_stake_account": {
+                          "name": "uninitialized_stake_account",
                             "ui_name": "Uninitialized stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_authority": {
+                          "name": "stake_authority",
                             "ui_name": "Stake authority",
                             "is_authority": true,
                             "optional": false
@@ -547,6 +601,7 @@
                     "name": "Withdraw",
                     "parameters": {
                         "lamports": {
+                          "name": "lamports",
                             "ui_name": "lamports",
                             "type": "u64",
                             "optional": false
@@ -554,31 +609,37 @@
                     },
                     "references": {
                         "stake_account": {
+                          "name": "stake_account",
                             "ui_name": "Stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "recipient_account": {
+                          "name": "recipient_account",
                             "ui_name": "Recipient account",
                             "is_authority": false,
                             "optional": false
                         },
                         "clock_sysvar": {
+                          "name": "clock_sysvar",
                             "ui_name": "Clock sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_history_sysvar": {
+                          "name": "stake_history_sysvar",
                             "ui_name": "Stake history sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "withdrawal_authority": {
+                          "name": "withdrawal_authority",
                             "ui_name": "Withdraw authority",
                             "is_authority": true,
                             "optional": false
                         },
                         "lockup_authority": {
+                          "name": "lockup_authority",
                             "ui_name": "Lockup authority",
                             "is_authority": true,
                             "optional": true
@@ -606,16 +667,19 @@
                     "parameters": { },
                     "references": {
                         "delegated_stake_account": {
+                          "name": "delegated_stake_account",
                             "ui_name": "Delegated stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "clock_sysvar": {
+                          "name": "clock_sysvar",
                             "ui_name": "Clock sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_authority": {
+                          "name": "stake_authority",
                             "ui_name": "Stake authority",
                             "is_authority": true,
                             "optional": false
@@ -637,16 +701,19 @@
                     "name": "Set Lockup",
                     "parameters": {
                         "unix_timestamp": {
+                          "name": "unix_timestamp",
                             "ui_name": "Unix timestamp",
                             "type": "i64",
                             "optional": true
                         },
                         "epoch": {
+                          "name": "epoch",
                             "ui_name": "Epoch",
                             "type": "u64",
                             "optional": true
                         },
                         "custodian": {
+                          "name": "custodian",
                             "ui_name": "Custodian",
                             "type": "pubkey",
                             "optional": true
@@ -654,11 +721,13 @@
                     },
                     "references": {
                         "initialized_stake_account": {
+                          "name": "initialized_stake_account",
                             "ui_name": "Initialized stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "lockup_or_withdraw_authority": {
+                          "name": "lockup_or_withdraw_authority",
                             "ui_name": "Lockup authority or withdraw authority",
                             "is_authority": true,
                             "optional": false
@@ -684,26 +753,31 @@
                     "parameters": { },
                     "references": {
                         "destination_stake_account": {
+                          "name": "destination_stake_account",
                             "ui_name": "Destination stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "source_stake_account": {
+                          "name": "source_stake_account",
                             "ui_name": "Source stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "clock_sysvar": {
+                          "name": "clock_sysvar",
                             "ui_name": "Clock sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_history_sysvar": {
+                          "name": "stake_history_sysvar",
                             "ui_name": "Stake history sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_authority": {
+                          "name": "stake_authority",
                             "ui_name": "Stake authority",
                             "is_authority": true,
                             "optional": false
@@ -727,21 +801,25 @@
                     "name": "Authorize With Seed",
                     "parameters": {
                         "new_authorized_pubkey": {
+                          "name": "new_authorized_pubkey",
                             "ui_name": "New authorized pubkey",
                             "type": "pubkey",
                             "optional": false
                         },
                         "stake_authorize": {
+                          "name": "stake_authorize",
                             "ui_name": "Stake authorize",
                             "type": "StakeAuthorize",
                             "optional": false
                         },
                         "authority_seed": {
+                          "name": "authority_seed",
                             "ui_name": "Authority seed",
                             "type": "string",
                             "optional": false
                         },
                         "authority_owner": {
+                          "name": "authority_owner",
                             "ui_name": "Authority owner",
                             "type": "pubkey",
                             "optional": false
@@ -749,21 +827,25 @@
                     },
                     "references": {
                         "stake_account": {
+                          "name": "stake_account",
                             "ui_name": "Stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_or_withdraw_authority": {
+                          "name": "stake_or_withdraw_authority",
                             "ui_name": "stake or withdraw authority",
                             "is_authority": true,
                             "optional": false
                         },
                         "clock_sysvar": {
+                          "name": "clock_sysvar",
                             "ui_name": "Clock sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "lockup_authority": {
+                          "name": "lockup_authority",
                             "ui_name": "Lockup authority",
                             "is_authority": true,
                             "optional": true
@@ -792,21 +874,25 @@
                     "parameters": { },
                     "references": {
                         "uninitialized_stake_account": {
+                          "name": "uninitialized_stake_account",
                             "ui_name": "Uninitialized stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "rent_sysvar": {
+                          "name": "rent_sysvar",
                             "ui_name": "Rent sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_authority": {
+                          "name": "stake_authority",
                             "ui_name": "stake authority",
                             "is_authority": false,
                             "optional": false
                         },
                         "withdrawal_authority": {
+                          "name": "withdrawal_authority",
                             "ui_name": "withdraw authority",
                             "is_authority": true,
                             "optional": false
@@ -829,6 +915,7 @@
                     "name": "Authorize Checked",
                     "parameters": {
                         "stake_authorize": {
+                          "name": "stake_authorize",
                             "ui_name": "Stake authorize",
                             "type": "StakeAuthorize",
                             "optional": false
@@ -836,26 +923,31 @@
                     },
                     "references": {
                         "stake_account": {
+                          "name": "stake_account",
                             "ui_name": "Stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "clock_sysvar": {
+                          "name": "clock_sysvar",
                             "ui_name": "Clock sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_or_withdraw_authority": {
+                          "name": "stake_or_withdraw_authority",
                             "ui_name": "stake or withdraw authority",
                             "is_authority": true,
                             "optional": false
                         },
                         "new_stake_or_withdraw_authority": {
+                          "name": "new_stake_or_withdraw_authority",
                             "ui_name": "new stake or withdraw authority",
                             "is_authority": true,
                             "optional": false
                         },
                         "lockup_authority": {
+                          "name": "lockup_authority",
                             "ui_name": "Lockup authority",
                             "is_authority": true,
                             "optional": true
@@ -881,16 +973,19 @@
                     "name": "Authorize Checked With Seed",
                     "parameters": {
                         "stake_authorize": {
+                          "name": "stake_authorize",
                             "ui_name": "Stake authorize",
                             "type": "StakeAuthorize",
                             "optional": false
                         },
                         "authority_seed": {
+                          "name": "authority_seed",
                             "ui_name": "Authority seed",
                             "type": "string",
                             "optional": false
                         },
                         "authority_owner": {
+                          "name": "authority_owner",
                             "ui_name": "Authority owner",
                             "type": "pubkey",
                             "optional": false
@@ -898,26 +993,31 @@
                     },
                     "references": {
                         "stake_account": {
+                          "name": "stake_account",
                             "ui_name": "Stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "stake_or_withdraw_authority": {
+                          "name": "stake_or_withdraw_authority",
                             "ui_name": "stake or withdraw authority",
                             "is_authority": true,
                             "optional": false
                         },
                         "clock_sysvar": {
+                          "name": "clock_sysvar",
                             "ui_name": "Clock sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "new_stake_or_withdraw_authority": {
+                          "name": "new_stake_or_withdraw_authority",
                             "ui_name": "new stake or withdraw authority",
                             "is_authority": true,
                             "optional": false
                         },
                         "lockup_authority": {
+                          "name": "lockup_authority",
                             "ui_name": "Lockup authority",
                             "is_authority": true,
                             "optional": true
@@ -945,11 +1045,13 @@
                     "name": "Set Lockup Checked",
                     "parameters": {
                         "unix_timestamp": {
+                          "name": "unix_timestamp",
                             "ui_name": "Unix timestamp",
                             "type": "i64",
                             "optional": true
                         },
                         "epoch": {
+                          "name": "epoch",
                             "ui_name": "Epoch",
                             "type": "u64",
                             "optional": true
@@ -957,16 +1059,19 @@
                     },
                     "references": {
                         "stake_account": {
+                          "name": "stake_account",
                             "ui_name": "Stake account",
                             "is_authority": false,
                             "optional": false
                         },
                         "lockup_or_withdraw_authority": {
+                          "name": "lockup_or_withdraw_authority",
                             "ui_name": "Lockup authority or withdraw authority",
                             "is_authority": true,
                             "optional": false
                         },
                         "new_lockup_authority": {
+                          "name": "new_lockup_authority",
                             "ui_name": "New lockup authority",
                             "is_authority": true,
                             "optional": true
@@ -997,6 +1102,7 @@
                     "name": "Request Heap Frame",
                     "parameters": {
                         "bytes": {
+                          "name": "bytes",
                             "ui_name": "bytes",
                             "type": "u32",
                             "optional": false
@@ -1017,6 +1123,7 @@
                     "name": "Set Compute Unit Limit",
                     "parameters": {
                         "units": {
+                          "name": "units",
                             "ui_name": "units",
                             "type": "u32",
                             "optional": false
@@ -1037,6 +1144,7 @@
                     "name": "Set Compute Unit Price",
                     "parameters": {
                         "lamports": {
+                          "name": "lamports",
                             "ui_name": "lamports",
                             "type": "u64",
                             "optional": false
@@ -1064,21 +1172,25 @@
                     "parameters": { },
                     "references": {
                         "account_to_initialize": {
+                          "name": "account_to_initialize",
                             "ui_name": "Account to initialize",
                             "is_authority": false,
                             "optional": false
                         }, 
                         "mint_account": {
+                          "name": "mint_account",
                             "ui_name": "Mint account",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": false,
                             "optional": false
                         },
                         "rent_sysvar": {
+                          "name": "rent_sysvar",
                             "ui_name": "Rent sysvar",
                             "is_authority": false,
                             "optional": false
@@ -1101,6 +1213,7 @@
                     "name": "Initialize Multisig",
                     "parameters": {
                         "number_of_signers": {
+                          "name": "number_of_signers",
                             "ui_name": "Number of signers",
                             "type": "u8",
                             "optional": false
@@ -1108,16 +1221,19 @@
                     },
                     "references": {
                         "multisig_account": {
+                          "name": "multisig_account",
                             "ui_name": "Multisig account",
                             "is_authority": false,
                             "optional": false
                         },
                         "rent_sysvar": {
+                          "name": "rent_sysvar",
                             "ui_name": "Rent sysvar",
                             "is_authority": false,
                             "optional": false
                         },
                         "signer_accounts": {
+                          "name": "signer_accounts",
                             "ui_name": "Signer accounts",
                             "is_authority": false,
                             "optional": false
@@ -1142,6 +1258,7 @@
                     "is_multisig": true,
                     "parameters": {
                         "amount": {
+                          "name": "amount",
                             "ui_name": "Amount",
                             "type": "u64",
                             "optional": false
@@ -1149,16 +1266,19 @@
                     },
                     "references": {
                         "source_account": {
+                          "name": "source_account",
                             "ui_name": "Source account",
                             "is_authority": false,
                             "optional": false
                         },
                         "destination_account": {
+                          "name": "destination_account",
                             "ui_name": "Destination account",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": true,
                             "optional": false
@@ -1183,6 +1303,7 @@
                     "is_multisig": true,
                     "parameters": {
                         "amount": {
+                          "name": "amount",
                             "ui_name": "Amount",
                             "type": "u64",
                             "optional": false
@@ -1190,16 +1311,19 @@
                     },
                     "references": {
                         "source_account": {
+                          "name": "source_account",
                             "ui_name": "Source account",
                             "is_authority": false,
                             "optional": false
                         },
                         "delegate_account": {
+                          "name": "delegate_account",
                             "ui_name": "Delegate account",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": true,
                             "optional": false
@@ -1225,11 +1349,13 @@
                     "parameters": { },
                     "references": {
                         "source_account": {
+                          "name": "source_account",
                             "ui_name": "Source account",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": true,
                             "optional": false
@@ -1251,11 +1377,13 @@
                     "is_multisig": true,
                     "parameters": {
                         "authority_type": {
+                          "name": "authority_type",
                             "ui_name": "Authority type",
                             "type": "AuthorityType",
                             "optional": false
                         },
                         "new_authority": {
+                          "name": "new_authority",
                             "ui_name": "New authority",
                             "type": "pubkey",
                             "optional": true
@@ -1263,11 +1391,13 @@
                     },
                     "references": {
                         "mint_account": {
+                          "name": "mint_account",
                             "ui_name": "Mint or account to change",
                             "is_authority": false,
                             "optional": false
                         },
                         "current_authority": {
+                          "name": "current_authority",
                             "ui_name": "Current authority",
                             "is_authority": true,
                             "optional": false
@@ -1292,6 +1422,7 @@
                     "is_multisig": true,
                     "parameters": {
                         "amount": {
+                          "name": "amount",
                             "ui_name": "Amount",
                             "type": "u64",
                             "optional": false
@@ -1299,16 +1430,19 @@
                     },
                     "references": {
                         "mint": {
+                          "name": "mint",
                             "ui_name": "The mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "account_to_mint": {
+                          "name": "account_to_mint",
                             "ui_name": "Account to mint tokens to",
                             "is_authority": false,
                             "optional": false
                         },
                         "minting_authority": {
+                          "name": "minting_authority",
                             "ui_name": "Minting authority",
                             "is_authority": true,
                             "optional": false
@@ -1334,6 +1468,7 @@
                     "is_multisig": true,
                     "parameters": {
                         "amount": {
+                          "name": "amount",
                             "ui_name": "Amount",
                             "type": "u64",
                             "optional": false
@@ -1341,16 +1476,19 @@
                     },
                     "references": {
                         "account_to_burn_from": {
+                          "name": "account_to_burn_from",
                             "ui_name": "Account to burn from",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint": {
+                          "name": "token_mint",
                             "ui_name": "The token mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": true,
                             "optional": false
@@ -1377,16 +1515,19 @@
                     "parameters": { },
                     "references": {
                         "account_to_close": {
+                          "name": "account_to_close",
                             "ui_name": "Account to close",
                             "is_authority": false,
                             "optional": false
                         },
                         "destination_account": {
+                          "name": "destination_account",
                             "ui_name": "Destination account",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": true,
                             "optional": false
@@ -1411,16 +1552,19 @@
                     "parameters": { },
                     "references": {
                         "account_to_freeze": {
+                          "name": "account_to_freeze",
                             "ui_name": "Account to freeze",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint": {
+                          "name": "token_mint",
                             "ui_name": "The token mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "freeze_authority": {
+                          "name": "freeze_authority",
                             "ui_name": "Freeze authority",
                             "is_authority": true,
                             "optional": false
@@ -1445,16 +1589,19 @@
                     "parameters": { },
                     "references": {
                         "account_to_freeze": {
+                          "name": "account_to_freeze",
                             "ui_name": "Account to freeze",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint": {
+                          "name": "token_mint",
                             "ui_name": "The token mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "freeze_authority": {
+                          "name": "freeze_authority",
                             "ui_name": "Freeze authority",
                             "is_authority": true,
                             "optional": false
@@ -1478,11 +1625,13 @@
                     "is_multisig": true,
                     "parameters": {
                         "amount": {
+                          "name": "amount",
                             "ui_name": "Amount",
                             "type": "u64",
                             "optional": false
                         },
                         "decimals": {
+                          "name": "decimals",
                             "ui_name": "Decimals",
                             "type": "u8",
                             "optional": false
@@ -1490,21 +1639,25 @@
                     },
                     "references": {
                         "source_account": {
+                          "name": "source_account",
                             "ui_name": "Source account",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint": {
+                          "name": "token_mint",
                             "ui_name": "The token mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "destination_account": {
+                          "name": "destination_account",
                             "ui_name": "Destination account",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": true,
                             "optional": false
@@ -1532,11 +1685,13 @@
                     "is_multisig": true,
                     "parameters": {
                         "amount": {
+                          "name": "amount",
                             "ui_name": "Amount",
                             "type": "u64",
                             "optional": false
                         },
                         "decimals": {
+                          "name": "decimals",
                             "ui_name": "Decimals",
                             "type": "u8",
                             "optional": false
@@ -1544,21 +1699,25 @@
                     },
                     "references": {
                         "source_account": {
+                          "name": "source_account",
                             "ui_name": "Source account",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint": {
+                          "name": "token_mint",
                             "ui_name": "The token mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "delegate": {
+                          "name": "delegate",
                             "ui_name": "The delegate",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": true,
                             "optional": false
@@ -1586,11 +1745,13 @@
                     "is_multisig": true,
                     "parameters": {
                         "amount": {
+                          "name": "amount",
                             "ui_name": "Amount",
                             "type": "u64",
                             "optional": false
                         },
                         "decimals": {
+                          "name": "decimals",
                             "ui_name": "Decimals",
                             "type": "u8",
                             "optional": false
@@ -1598,16 +1759,19 @@
                     },
                     "references": {
                         "mint": {
+                          "name": "mint",
                             "ui_name": "The mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "account_to_mint": {
+                          "name": "account_to_mint",
                             "ui_name": "Account to mint tokens to",
                             "is_authority": false,
                             "optional": false
                         },
                         "minting_authority": {
+                          "name": "minting_authority",
                             "ui_name": "Minting authority",
                             "is_authority": true,
                             "optional": false
@@ -1634,11 +1798,13 @@
                     "is_multisig": true,
                     "parameters": {
                         "amount": {
+                          "name": "amount",
                             "ui_name": "Amount",
                             "type": "u64",
                             "optional": false
                         },
                         "decimals": {
+                          "name": "decimals",
                             "ui_name": "Decimals",
                             "type": "u8",
                             "optional": false
@@ -1646,16 +1812,19 @@
                     },
                     "references": {
                         "account_to_burn_from": {
+                          "name": "account_to_burn_from",
                             "ui_name": "Account to burn from",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint": {
+                          "name": "token_mint",
                             "ui_name": "The token mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": true,
                             "optional": false
@@ -1680,6 +1849,7 @@
                     "name": "Initialize Account 2",
                     "parameters": {
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "type": "pubkey",
                             "optional": false
@@ -1687,16 +1857,19 @@
                     },
                     "references": {
                         "account_to_initialize": {
+                          "name": "account_to_initialize",
                             "ui_name": "Account to initialize",
                             "is_authority": false,
                             "optional": false
                         }, 
                         "mint_account": {
+                          "name": "mint_account",
                             "ui_name": "Mint account",
                             "is_authority": false,
                             "optional": false
                         },
                         "rent_sysvar": {
+                          "name": "rent_sysvar",
                             "ui_name": "Rent sysvar",
                             "is_authority": false,
                             "optional": false
@@ -1721,6 +1894,7 @@
                     "parameters": { },
                     "references": {
                         "token_account": {
+                          "name": "token_account",
                             "ui_name": "Native token account",
                             "is_authority": false,
                             "optional": false
@@ -1740,6 +1914,7 @@
                     "name": "Initialize Account 3",
                     "parameters": {
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "type": "pubkey",
                             "optional": false
@@ -1747,11 +1922,13 @@
                     },
                     "references": {
                         "account_to_initialize": {
+                          "name": "account_to_initialize",
                             "ui_name": "Account to initialize",
                             "is_authority": false,
                             "optional": false
                         }, 
                         "mint_account": {
+                          "name": "mint_account",
                             "ui_name": "Mint account",
                             "is_authority": false,
                             "optional": false
@@ -1775,6 +1952,7 @@
                     "parameters": { },
                     "references": {
                         "account_to_initialize": {
+                          "name": "account_to_initialize",
                             "ui_name": "Account to initialize",
                             "is_authority": false,
                             "optional": false
@@ -1801,31 +1979,37 @@
                     "parameters": { },
                     "references": {
                         "funding_account": {
+                          "name": "funding_account",
                             "ui_name": "Funding account",
                             "is_authority": true,
                             "optional": false
                         },
                         "associated_token_account": {
+                          "name": "associated_token_account",
                             "ui_name": "Associated token account",
                             "is_authority": false,
                             "optional": false
                         },
                         "wallet_address": {
+                          "name": "wallet_address",
                             "ui_name": "Wallet address",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint": {
+                          "name": "token_mint",
                             "ui_name": "The token mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "system_program": {
+                          "name": "system_program",
                             "ui_name": "System program",
                             "is_authority": false,
                             "optional": false
                         },
                         "spl_token": {
+                          "name": "spl_token",
                             "ui_name": "SPL tokeen program",
                             "is_authority": false,
                             "optional": false
@@ -1851,31 +2035,37 @@
                     "parameters": { },
                     "references": {
                         "funding_account": {
+                          "name": "funding_account",
                             "ui_name": "Funding account",
                             "is_authority": true,
                             "optional": false
                         },
                         "associated_token_account": {
+                          "name": "associated_token_account",
                             "ui_name": "Associated token account",
                             "is_authority": false,
                             "optional": false
                         },
                         "wallet_address": {
+                          "name": "wallet_address",
                             "ui_name": "Wallet address",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint": {
+                          "name": "token_mint",
                             "ui_name": "The token mint",
                             "is_authority": false,
                             "optional": false
                         },
                         "system_program": {
+                          "name": "system_program",
                             "ui_name": "System program",
                             "is_authority": false,
                             "optional": false
                         },
                         "spl_token": {
+                          "name": "spl_token",
                             "ui_name": "SPL tokeen program",
                             "is_authority": false,
                             "optional": false
@@ -1901,36 +2091,43 @@
                     "parameters": { },
                     "references": {
                         "nested_account": {
+                          "name": "nested_account",
                             "ui_name": "Nested associated token account",
                             "is_authority": true,
                             "optional": false
                         },
                         "token_mint_nested": {
+                          "name": "token_mint_nested",
                             "ui_name": "Token mint for the nested account",
                             "is_authority": false,
                             "optional": false
                         },
                         "associated_token_account": {
+                          "name": "associated_token_account",
                             "ui_name": "Associated token account",
                             "is_authority": false,
                             "optional": false
                         },
                         "owner": {
+                          "name": "owner",
                             "ui_name": "Owner",
                             "is_authority": false,
                             "optional": false
                         },
                         "token_mint_owner": {
+                          "name": "token_mint_owner",
                             "ui_name": "Token mint for the owner account",
                             "is_authority": false,
                             "optional": false
                         },
                         "wallet_address": {
+                          "name": "wallet_address",
                             "ui_name": "Wallet address",
                             "is_authority": true,
                             "optional": false
                         },
                         "spl_token": {
+                          "name": "spl_token",
                             "ui_name": "SPL tokeen program",
                             "is_authority": false,
                             "optional": false
@@ -1962,6 +2159,7 @@
                     "name": "Create",
                     "parameters": {
                         "memo": {
+                          "name": "memo",
                             "ui_name": "Memo",
                             "type": "string",
                             "optional": false
@@ -1969,6 +2167,7 @@
                     },
                     "references": {
                         "signer_accounts": {
+                          "name": "signer_accounts",
                             "ui_name": "Signer accounts",
                             "is_authority": true,
                             "optional": false
@@ -1996,6 +2195,7 @@
                     "name": "Create",
                     "parameters": {
                         "memo": {
+                          "name": "memo",
                             "ui_name": "Memo",
                             "type": "string",
                             "optional": false
@@ -2003,6 +2203,7 @@
                     },
                     "references": {
                         "signer_accounts": {
+                          "name": "signer_accounts",
                             "ui_name": "Signer accounts",
                             "is_authority": true,
                             "optional": false
