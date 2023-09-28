@@ -21,6 +21,8 @@ const MAX_LENGTH: usize = 8;
 
 pub struct Bip39Input {
     button: Button<&'static str>,
+    // used only to keep track of suggestion text color
+    button_suggestion: Button<&'static str>,
     textbox: TextBox<MAX_LENGTH>,
     multi_tap: MultiTapKeyboard,
     options_num: Option<usize>,
@@ -83,10 +85,12 @@ impl Component for Bip39Input {
     type Msg = MnemonicInputMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.button.place(bounds)
+        self.button.place(bounds);
+        self.button_suggestion.place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.button_suggestion.event(ctx, event);
         if self.multi_tap.is_timeout_event(event) {
             self.on_timeout(ctx)
         } else if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
@@ -120,11 +124,12 @@ impl Component for Bip39Input {
         // Paint the rest of the suggested dictionary word.
         if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
             let word_baseline = text_baseline + Offset::new(width, 0);
+            let style = self.button_suggestion.style();
             display::text_left(
                 word_baseline,
                 word,
                 style.font,
-                theme::GREY_LIGHT,
+                style.text_color,
                 style.button_color,
             );
         }
@@ -162,6 +167,7 @@ impl Bip39Input {
             multi_tap: MultiTapKeyboard::new(),
             options_num: None,
             suggested_word: None,
+            button_suggestion: Button::empty(),
         }
     }
 
@@ -223,6 +229,8 @@ impl Bip39Input {
                 self.button.set_stylesheet(ctx, theme::button_pin_confirm());
                 self.button
                     .set_content(ctx, ButtonContent::Icon(theme::ICON_LIST_CHECK));
+                self.button_suggestion
+                    .set_stylesheet(ctx, theme::button_suggestion_confirm());
             } else {
                 // Auto-complete button.
                 self.button.enable(ctx);
@@ -230,6 +238,8 @@ impl Bip39Input {
                     .set_stylesheet(ctx, theme::button_pin_autocomplete());
                 self.button
                     .set_content(ctx, ButtonContent::Icon(theme::ICON_CLICK));
+                self.button_suggestion
+                    .set_stylesheet(ctx, theme::button_suggestion_autocomplete());
             }
         } else {
             // Disabled button.

@@ -2015,7 +2015,7 @@
 "TT_test_autolock.py::test_autolock_interrupts_passphrase": "679b31036355620e3cce93a214e371b19db503ecd0d9b23765a0cea109f9eef2",
 "TT_test_autolock.py::test_autolock_interrupts_signing": "a22c666a77b97de8a95cf43e87e9f9b632627f07099988964781c497795e69e2",
 "TT_test_autolock.py::test_autolock_passphrase_keyboard": "1c017178b42ab6e0aa011e26403e5d3361648fef95354abee8820b92f196bad3",
-"TT_test_autolock.py::test_dryrun_enter_word_slowly": "14e01ad290726b5a5314eeac164555906436ae9e9f3ae8d5d89cc2f6156cb4c3",
+"TT_test_autolock.py::test_dryrun_enter_word_slowly": "36d94eecc597db90fe869a824a88c28c3ba8e362fee5b8df9a4f1c972582b0fa",
 "TT_test_autolock.py::test_dryrun_locks_at_number_of_words": "808fa669aba9edf9b9f210703ec0d5ae7323043ffe1936f49586a01a8df3b672",
 "TT_test_autolock.py::test_dryrun_locks_at_word_entry": "8d351542bfc92803d0a11c06f9a2e586a0cf47bf0f777e9040ae5ba9c763256c",
 "TT_test_lock.py::test_hold_to_lock": "2c2157587d8e8b59c785374056d6be5e7405f4dd4015b84b1d9a2155ded97b3b",
@@ -2047,8 +2047,8 @@
 "TT_test_pin.py::test_pin_short": "0f7d5bd47f9f61133fbba9a1db1486e48dfd53d71d1b7a7d4a22d7062e7ade52",
 "TT_test_pin.py::test_wipe_code_same_as_pin": "b558003f3030a5a05db685d32c44ecac0ee9adb43c9fe005b2181ad95e0f08e9",
 "TT_test_pin.py::test_wipe_code_setup": "4e82e1a6b33bdfa2b468de4f69a8511ce3be86fb5758005c36644b3960c010f2",
-"TT_test_recovery.py::test_recovery_bip39": "13e3f91705759b0c3c5cba1038527daf1f20a1dd3b14c9ac6cd733f492409991",
-"TT_test_recovery.py::test_recovery_slip39_basic": "bc5100676562b6089472c293e02ca3af36bebf9a695787061d2be39c08273b3b",
+"TT_test_recovery.py::test_recovery_bip39": "76c60a0e977422845e5ad79962eac84d2fd9da82e32cfd0f16c10a53133f7a9a",
+"TT_test_recovery.py::test_recovery_slip39_basic": "95c988d380c1085d412b30bb727c3a49a878e7a08eab32b60a0fc49a0305fbbe",
 "TT_test_reset_bip39.py::test_reset_bip39": "c9fbd319d9129d9c2ea6a385f6eed4dc8346e09e9eec0438a183fe3f491f05b9",
 "TT_test_reset_slip39_advanced.py::test_reset_slip39_advanced[16of16]": "8b1f872d8d1d1ef711b977c7775c93f120b59cbeba176913aac0cf7e13d24076",
 "TT_test_reset_slip39_advanced.py::test_reset_slip39_advanced[2of2]": "c25c0073737e3c5ee5218d992e6c2e22b3c8e1a26ad91ce01725339dadffac6d",
@@ -3347,9 +3347,9 @@
 "TT_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "9e7540c5d792d6728289354b23ada645b35ab948684770cb4cfe1d61f50f11f9",
 "TT_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "dc62cf266023ef9f64cf7d2a1303431fdd419d34c74fccc42e9ac6faa0c61400",
 "TT_test_shamir_persistence.py::test_abort": "2ea0b055da3fafc814f8262a00e8f705f14ed4663fef66d778bc50736cc7984c",
-"TT_test_shamir_persistence.py::test_recovery_multiple_resets": "39267f234331d17428269bf9cd7f5aa006b64101d42e3cd62a6822c88265eb20",
-"TT_test_shamir_persistence.py::test_recovery_on_old_wallet": "018259a317cf20b473a60f5c70ef79ee106c5975c0e9123d7769344423d206d2",
-"TT_test_shamir_persistence.py::test_recovery_single_reset": "4ddbbadb69a1778bca816bf928f63c1d92dde8c5ac31a301c15dda0659e32ca2",
+"TT_test_shamir_persistence.py::test_recovery_multiple_resets": "ac8d9ece45b1abbb62d48e1ec8a69e883b34c679924b257be97edbecd111ffee",
+"TT_test_shamir_persistence.py::test_recovery_on_old_wallet": "9316efb79e39d5f51f5204a75f5ff266945e1fffbca3a37acaf736c7f1974146",
+"TT_test_shamir_persistence.py::test_recovery_single_reset": "1725ad629a32c256463f512016cf46f6a607240320aef768b38b38becaf307e9",
 "TT_test_wipe_code.py::test_wipe_code_activate_core": "e21fade21796834c53895529765c143252dcb84713f968df04a33a1061cc2962"
 }
 }
