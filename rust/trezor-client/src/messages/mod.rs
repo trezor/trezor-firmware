@@ -16,11 +16,11 @@ pub trait TrezorMessage: protobuf::Message + std::fmt::Debug {
 
 /// This macro provides the TrezorMessage trait for a protobuf message.
 macro_rules! trezor_message_impl {
-	($($struct:ident => $mtype:expr),+ $(,)?) => {$(
-		impl TrezorMessage for $struct {
-			const MESSAGE_TYPE: MessageType = $mtype;
-		}
-	)+};
+    ($($struct:ident => $mtype:expr),+ $(,)?) => {$(
+        impl TrezorMessage for $struct {
+            const MESSAGE_TYPE: MessageType = $mtype;
+        }
+    )+};
 }
 
 include!("./generated.rs");
