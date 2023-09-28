@@ -10,6 +10,24 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
 
+def show_instructions(transaction: Transaction) -> None:
+    from apps.common import seed
+    
+    num_instructions = len(transaction.instructions)
+    for i, instruction in enumerate(transaction.instructions):
+        # Check template id. Template id is derived from program.json
+        if instruction.ui_identifier == "ui_confirm":
+            from .ui import show_confirm
+
+            await show_confirm(
+                (num_instructions, i + 1),
+                instruction,
+                seed.remove_ed25519_prefix(node.public_key()),
+            )
+        else:
+            # TODO SOL: handle other UI templates
+            pass
+
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(
     msg: SolanaSignTx,
@@ -28,20 +46,7 @@ async def sign_tx(
     transaction: Transaction = Transaction(BufferReader(serialized_tx))
 
     # Show instructions on UI
-    num_instructions = len(transaction.instructions)
-    for i, instruction in enumerate(transaction.instructions):
-        # Check template id. Template id is derived from program.json
-        if instruction.ui_identifier == "ui_confirm":
-            from .ui import show_confirm
-
-            await show_confirm(
-                (num_instructions, i + 1),
-                instruction,
-                seed.remove_ed25519_prefix(node.public_key()),
-            )
-        else:
-            # TODO SOL: handle other UI templates
-            pass
+    show_instructions(transaction)
 
     # signer_pub_key = seed.remove_ed25519_prefix(node.public_key())
 
