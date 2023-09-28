@@ -1,8 +1,6 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
-from trezor.strings import format_amount
-from trezor.ui import layouts
 
 from ..transaction.instructions import Instruction
 
@@ -11,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def format_property(value: Any, type: str) -> str | bytes | None:
-    if type == "pubkey" or type == "authority":
+    if type in ("pubkey", "authority"):
         return base58.encode(value)
     elif isinstance(value, int):
         return str(value)

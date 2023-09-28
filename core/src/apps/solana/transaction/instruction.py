@@ -121,7 +121,7 @@ class Instruction:
         assert self.parsed_accounts is not None
         self.parsed_accounts[account] = value
 
-    def get_property_template(self, property: str) -> str:
+    def get_property_template(self, property: str) -> PropertyTemplate:
         for property_template in self.property_templates:
             if property_template["name"] == property:
                 return property_template

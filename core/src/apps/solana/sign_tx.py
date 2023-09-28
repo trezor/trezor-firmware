@@ -15,7 +15,6 @@ async def sign_tx(
     msg: SolanaSignTx,
     keychain: Keychain,
 ) -> SolanaTxSignature:
-    from apps.common import seed
     from trezor.crypto.curve import ed25519
     from trezor.messages import SolanaTxSignature
     from trezor.utils import BufferReader
