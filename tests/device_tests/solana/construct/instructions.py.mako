@@ -30,6 +30,7 @@ from .custom_constructs import (
     InstructionData,
     InstructionProgramId,
     PublicKey,
+    _STRING,
 )
 
 class Program:
@@ -50,8 +51,8 @@ ${getProgramAccountsName(program)} = Switch(
     {
     % for instruction in program["instructions"]:
         ${getProgramInstructionsEnumName(program)}.${getInstructionIdText(instruction)}: Accounts(
-        % for name, reference in instruction["references"].items():
-            "${name}" / AccountReference(),
+        % for reference in instruction["references"]:
+            "${reference["name"]}" / AccountReference(),
         % endfor
         ),
     %endfor
@@ -68,8 +69,8 @@ ${getProgramParamsName(program)} = InstructionData(
         {
         % for instruction in program["instructions"]:
             ${getProgramInstructionsEnumName(program)}.${getInstructionIdText(instruction)}: Struct(
-            % for name, parameter in instruction["parameters"].items():
-                "${name}" / ${getConstructType(parameter["type"])},
+            % for parameter in instruction["parameters"]:
+                "${parameter["name"]}" / ${getConstructType(parameter["type"])},
             % endfor
             ),
         %endfor
