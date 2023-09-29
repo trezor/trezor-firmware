@@ -8,6 +8,7 @@ pub mod display;
 pub mod dma2d;
 mod ffi;
 pub mod io;
+pub mod model;
 pub mod random;
 #[cfg(feature = "rgb_led")]
 pub mod rgb_led;

@@ -84,6 +84,7 @@ fn prepare_bindings() -> bindgen::Builder {
         "-I../../vendor/micropython/lib/uzlib",
         "-I../lib",
         "-I../trezorhal",
+        "-I../models",
         format!("-D{}", mcu_type()).as_str(),
         format!("-DTREZOR_MODEL_{}", model()).as_str(),
         format!("-DTREZOR_BOARD=\"{}\"", board()).as_str(),
@@ -259,6 +260,9 @@ fn generate_trezorhal_bindings() {
 
     let bindings = prepare_bindings()
         .header("trezorhal.h")
+        // model
+        .allowlist_var("MODEL_INTERNAL_NAME")
+        .allowlist_var("MODEL_FULL_NAME")
         // common
         .allowlist_var("HW_ENTROPY_DATA")
         // secbool
