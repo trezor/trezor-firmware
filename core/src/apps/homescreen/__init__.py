@@ -14,12 +14,10 @@ async def busyscreen() -> None:
 
 
 async def homescreen() -> None:
-    from trezor import utils
-
     if storage.device.is_initialized():
         label = storage.device.get_label()
     else:
-        label = utils.MODEL_FULL_NAME
+        label = None
 
     notification = None
     notification_is_error = False
