@@ -5,6 +5,7 @@ from trezorutils import (  # noqa: F401
     EMULATOR,
     INTERNAL_MODEL,
     MODEL,
+    MODEL_FULL_NAME,
     SCM_REVISION,
     UI_LAYOUT,
     USE_BACKLIGHT,

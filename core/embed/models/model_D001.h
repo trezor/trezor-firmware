@@ -2,6 +2,7 @@
 #define MODELS_MODEL_D001_H_
 
 #define MODEL_NAME "T"
+#define MODEL_FULL_NAME "Trezor Model T"
 #define MODEL_INTERNAL_NAME "D001"
 #define MODEL_INTERNAL_NAME_TOKEN T
 #define MODEL_NAME_QSTR MP_QSTR_T

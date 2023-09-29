@@ -2,6 +2,7 @@
 #define MODELS_MODEL_T1B1_H_
 
 #define MODEL_NAME "1"
+#define MODEL_FULL_NAME "Trezor Model One"
 #define MODEL_INTERNAL_NAME "T1B1"
 #define MODEL_INTERNAL_NAME_TOKEN T1B1
 #define MODEL_NAME_QSTR MP_QSTR_1
