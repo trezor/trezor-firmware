@@ -10,7 +10,6 @@ use crate::{
     },
 };
 
-const MILLIS_PER_LETTER_M: u32 = 300;
 const ANIMATION_DURATION_MS: u32 = 2000;
 const PAUSE_DURATION_MS: u32 = 1000;
 
@@ -141,22 +140,6 @@ where
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let base_width = self.font.text_width("M");
-        let text_width = self.font.text_width(self.text.as_ref());
-        let area_width = bounds.width();
-
-        let shift_width = if area_width > text_width {
-            area_width - text_width
-        } else {
-            text_width - area_width
-        };
-
-        let mut duration = (MILLIS_PER_LETTER_M * shift_width as u32) / base_width as u32;
-        if duration < MILLIS_PER_LETTER_M {
-            duration = MILLIS_PER_LETTER_M;
-        }
-
-        self.duration = Duration::from_millis(duration);
         self.area = bounds;
         self.area
     }

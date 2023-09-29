@@ -284,18 +284,38 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 STATIC mp_obj_str_t mod_trezorutils_model_name_obj = {
     {&mp_type_str}, 0, sizeof(MODEL_NAME) - 1, (const byte *)MODEL_NAME};
 
+STATIC mp_obj_str_t mod_trezorutils_full_name_obj = {
+    {&mp_type_str},
+    0,
+    sizeof(MODEL_FULL_NAME) - 1,
+    (const byte *)MODEL_FULL_NAME};
+
 /// SCM_REVISION: bytes
+/// """Git commit hash of the firmware."""
 /// VERSION_MAJOR: int
+/// """Major version."""
 /// VERSION_MINOR: int
+/// """Minor version."""
 /// VERSION_PATCH: int
+/// """Patch version."""
 /// USE_SD_CARD: bool
+/// """Whether the hardware supports SD card."""
 /// USE_BACKLIGHT: bool
+/// """Whether the hardware supports backlight brightness control."""
 /// USE_OPTIGA: bool
+/// """Whether the hardware supports Optiga secure element."""
 /// MODEL: str
+/// """Model name."""
+/// MODEL_FULL_NAME: str
+/// """Full name including Trezor prefix."""
 /// INTERNAL_MODEL: str
+/// """Internal model code."""
 /// EMULATOR: bool
+/// """Whether the firmware is running in the emulator."""
 /// BITCOIN_ONLY: bool
+/// """Whether the firmware is Bitcoin-only."""
 /// UI_LAYOUT: str
+/// """UI layout identifier ("tt" for model T, "tr" for models One and R)."""
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
@@ -336,6 +356,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_OPTIGA), mp_const_false},
 #endif
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_PTR(&mod_trezorutils_model_name_obj)},
+    {MP_ROM_QSTR(MP_QSTR_MODEL_FULL_NAME),
+     MP_ROM_PTR(&mod_trezorutils_full_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_INTERNAL_MODEL),
      MP_ROM_QSTR(MODEL_INTERNAL_NAME_QSTR)},
 #ifdef TREZOR_EMULATOR

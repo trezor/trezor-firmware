@@ -30,9 +30,11 @@ typedef enum {
   OPTIGA_OID_COPROC_UID = 0xE0C2,      // Coprocessor UID.
   OPTIGA_OID_CERT = 0xE0E0,            // Public key certificates [1-4].
   OPTIGA_OID_CA_CERT = 0xE0E8,         // Root CA public key certificates [1-2].
-  OPTIGA_OID_COUNTER = 0xE120,         // Monotonic counters [1-4].
   OPTIGA_OID_ECC_KEY = 0xE0F0,         // Private ECC keys [1-4].
+  OPTIGA_OID_SESSION_CTX = 0xE100,     // Session contexts [1-4].
+  OPTIGA_OID_COUNTER = 0xE120,         // Monotonic counters [1-4].
   OPTIGA_OID_PTFBIND_SECRET = 0xE140,  // Shared platform binding secret.
+  OPTIGA_OID_SYM_KEY = 0xE200,         // Device symmetric key.
   OPTIGA_OID_ERROR_CODE = 0xF1C2,      // Command error code.
   OPTIGA_OID_DATA = 0xF1D0,            // Arbitrary 140 B data objects [1-12].
   OPTIGA_OID_BIG_DATA = 0xF1E0,        // Arbitrary 1500 B data objects [1-2].
@@ -131,9 +133,11 @@ typedef struct {
 #define OPTIGA_ACCESS_CONDITION(ac_id, oid) \
   { (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 }
 
-extern const optiga_metadata_item OPTIGA_LCS_OPERATIONAL;
-extern const optiga_metadata_item OPTIGA_ACCESS_ALWAYS;
-extern const optiga_metadata_item OPTIGA_ACCESS_NEVER;
+// Commonly used data object access conditions.
+extern const optiga_metadata_item OPTIGA_META_LCS_OPERATIONAL;
+extern const optiga_metadata_item OPTIGA_META_ACCESS_ALWAYS;
+extern const optiga_metadata_item OPTIGA_META_ACCESS_NEVER;
+extern const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE;
 
 optiga_result optiga_parse_metadata(const uint8_t *serialized,
                                     size_t serialized_size,

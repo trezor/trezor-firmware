@@ -1,7 +1,4 @@
 /**
- * Copyright (c) 2013-2014 Tomas Dzetkulic
- * Copyright (c) 2013-2014 Pavol Rusnak
- *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -21,18 +18,15 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __RAND_H__
-#define __RAND_H__
+#ifndef __HASH_TO_CURVE_H__
+#define __HASH_TO_CURVE_H__
 
-#include <stdint.h>
-#include <stdlib.h>
+#include "ecdsa.h"
 
-void random_reseed(const uint32_t value);
-uint32_t random32(void);
-void random_buffer(uint8_t *buf, size_t len);
-void random_xor(uint8_t *buf, size_t len);
-
-uint32_t random_uniform(uint32_t n);
-void random_permute(char *buf, size_t len);
-
+bool expand_message_xmd_sha256(const uint8_t *msg, size_t msg_len,
+                               const uint8_t *dst, size_t dst_len,
+                               uint8_t *output, size_t output_len);
+bool hash_to_curve_p256(const uint8_t *msg, size_t msg_len, const uint8_t *dst,
+                        size_t dst_len, curve_point *point);
+bool hash_to_curve_optiga(const uint8_t input[32], uint8_t public_key[65]);
 #endif

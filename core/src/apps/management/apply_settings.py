@@ -153,15 +153,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
 async def _require_confirm_change_homescreen(homescreen: bytes) -> None:
     from trezor.ui.layouts import confirm_homescreen
 
-    if homescreen == b"":
-        await confirm_action(
-            "set_homescreen",
-            "Set homescreen",
-            description="Do you really want to set default homescreen image?",
-            br_code=BRT_PROTECT_CALL,
-        )
-    else:
-        await confirm_homescreen(homescreen)
+    await confirm_homescreen(homescreen)
 
 
 async def _require_confirm_change_label(label: str) -> None:

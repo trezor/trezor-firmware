@@ -9,8 +9,10 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     from trezor.crypto import optiga
     from trezor.crypto.der import read_length
     from trezor.crypto.hashlib import sha256
+    from trezor.loop import sleep
     from trezor.messages import AuthenticityProof
     from trezor.ui.layouts import confirm_action
+    from trezor.ui.layouts.progress import progress
     from trezor.utils import BufferReader, bootloader_locked
 
     from apps.common.writers import write_compact_size
@@ -21,7 +23,8 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     await confirm_action(
         "authenticate_device",
         "Authenticate device",
-        description="Do you wish to verify the authenticity of your device?",
+        description=f"Allow connected computer to confirm your {utils.MODEL_FULL_NAME} is genuine?",
+        verb="Allow",
     )
 
     header = b"AuthenticateDevice:"
@@ -30,6 +33,9 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     h.extend(header)
     write_compact_size(h, len(msg.challenge))
     h.extend(msg.challenge)
+
+    spinner = progress("", description="Checking authenticity...")
+    spinner.report(0)
 
     try:
         signature = optiga.sign(optiga.DEVICE_ECC_KEY_INDEX, h.get_digest())
@@ -46,6 +52,14 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
         cert_len = r.offset - cert_begin + n
         r.seek(cert_begin)
         certificates.append(r.read_memoryview(cert_len))
+
+    if not utils.DISABLE_ANIMATION:
+        frame_delay = sleep(60)
+        for i in range(1, 20):
+            spinner.report(i * 50)
+            await frame_delay
+
+        spinner.report(1000)
 
     return AuthenticityProof(
         certificates=certificates,

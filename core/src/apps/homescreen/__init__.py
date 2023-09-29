@@ -14,15 +14,10 @@ async def busyscreen() -> None:
 
 
 async def homescreen() -> None:
-    from trezor import utils
-
     if storage.device.is_initialized():
         label = storage.device.get_label()
     else:
-        if utils.INTERNAL_MODEL in ("T1B1", "T2T1"):
-            label = f"Trezor Model {utils.MODEL}"
-        else:
-            label = f"Trezor {utils.MODEL}"
+        label = None
 
     notification = None
     notification_is_error = False

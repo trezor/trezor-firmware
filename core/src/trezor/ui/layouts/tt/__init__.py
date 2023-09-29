@@ -393,7 +393,7 @@ async def confirm_homescreen(
         interact(
             RustLayout(
                 trezorui2.confirm_homescreen(
-                    title="SET HOMESCREEN",
+                    title="CHANGE HOMESCREEN",
                     image=image,
                 )
             ),

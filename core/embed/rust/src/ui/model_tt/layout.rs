@@ -15,6 +15,7 @@ use crate::{
         util,
     },
     strutil::StringType,
+    trezorhal::model,
     ui::{
         component::{
             base::ComponentExt,
@@ -703,16 +704,25 @@ extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *m
 
         // Layout needs to hold the Obj to play nice with GC. Obj is resolved to &[u8]
         // in every paint pass.
-        // SAFETY: We expect no existing mutable reference. Resulting reference is
-        //         discarded before returning to micropython.
-        let buffer_func = move || unsafe { unwrap!(get_buffer(data)) };
+        let buffer_func = move || {
+            // SAFETY: We expect no existing mutable reference. Resulting reference is
+            //         discarded before returning to micropython.
+            let buffer = unsafe { unwrap!(get_buffer(data)) };
+            // Incoming data may be empty, meaning we should display default homescreen
+            // image.
+            if buffer.is_empty() {
+                theme::IMAGE_HOMESCREEN
+            } else {
+                buffer
+            }
+        };
 
         let size = match jpeg_info(buffer_func()) {
             Some(info) => info.0,
             _ => return Err(value_error!("Invalid image.")),
         };
 
-        let buttons = Button::cancel_confirm_text(None, Some("CONFIRM"));
+        let buttons = Button::cancel_confirm_text(None, Some("CHANGE"));
         let obj = LayoutObj::new(Frame::centered(
             theme::label_title(),
             title,
@@ -1587,7 +1597,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let label: StrBuffer = kwargs
             .get(Qstr::MP_QSTR_label)?
             .try_into_option()?
-            .unwrap_or_else(|| constant::MODEL_NAME.into());
+            .unwrap_or_else(|| model::FULL_NAME.into());
         let notification: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
@@ -1609,7 +1619,7 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let label: StrBuffer = kwargs
             .get(Qstr::MP_QSTR_label)?
             .try_into_option()?
-            .unwrap_or_else(|| constant::MODEL_NAME.into());
+            .unwrap_or_else(|| model::FULL_NAME.into());
         let bootscreen: bool = kwargs.get(Qstr::MP_QSTR_bootscreen)?.try_into()?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 

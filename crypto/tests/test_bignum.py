@@ -24,10 +24,13 @@ lib = ctypes.cdll.LoadLibrary(os.path.join(dir, "libtrezor-crypto.so"))
 limbs_number = 9
 bits_per_limb = 29
 
+secp256k1_prime = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+p256_prime = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF
 
-@pytest.fixture()
+
+@pytest.fixture(params=[secp256k1_prime, p256_prime])
 def prime(request):
-    return 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+    return request.param
 
 
 @pytest.fixture(params=range(limbs_number * bits_per_limb))
@@ -66,15 +69,23 @@ def uint32_p():
 limb_type = c_uint32
 
 
-def bignum(limbs_number=limbs_number):
+def bignum(limbs_number):
     return (limbs_number * limb_type)()
+
+
+def bignum256():
+    return bignum(limbs_number)
+
+
+def bignum512():
+    return bignum(2 * limbs_number)
 
 
 def limbs_to_bignum(limbs):
     return (limbs_number * limb_type)(*limbs)
 
 
-def int_to_bignum(number, limbs_number=limbs_number):
+def int_to_bignum(number, limbs_number):
     assert number >= 0
     assert number.bit_length() <= limbs_number * bits_per_limb
 
@@ -86,7 +97,15 @@ def int_to_bignum(number, limbs_number=limbs_number):
     return bn
 
 
-def bignum_to_int(bignum, limbs_number=limbs_number):
+def int_to_bignum256(number):
+    return int_to_bignum(number, limbs_number)
+
+
+def int_to_bignum512(number):
+    return int_to_bignum(number, 2 * limbs_number)
+
+
+def bignum_to_int(bignum, limbs_number):
     number = 0
 
     for i in reversed(range(limbs_number)):
@@ -96,16 +115,40 @@ def bignum_to_int(bignum, limbs_number=limbs_number):
     return number
 
 
-def raw_number():
-    return (32 * c_uint8)()
+def bignum256_to_int(bignum):
+    return bignum_to_int(bignum, limbs_number)
+
+
+def bignum512_to_int(bignum):
+    return bignum_to_int(bignum, 2 * limbs_number)
+
+
+def raw_number(byte_size):
+    return (byte_size * c_uint8)()
+
+
+def raw_number256():
+    return raw_number(32)
+
+
+def raw_number512():
+    return raw_number(64)
 
 
 def raw_number_to_integer(raw_number, endianess):
     return int.from_bytes(raw_number, endianess)
 
 
-def integer_to_raw_number(number, endianess):
-    return (32 * c_uint8)(*number.to_bytes(32, endianess))
+def integer_to_raw_number(number, endianess, byte_size):
+    return (byte_size * c_uint8)(*number.to_bytes(byte_size, endianess))
+
+
+def integer_to_raw_number256(number, endianess):
+    return integer_to_raw_number(number, endianess, 32)
+
+
+def integer_to_raw_number512(number, endianess):
+    return integer_to_raw_number(number, endianess, 64)
 
 
 def bignum_is_normalised(bignum):
@@ -130,6 +173,9 @@ class Random(random.Random):
     def rand_int_256(self):
         return self.randrange(0, 2**256)
 
+    def rand_int_512(self):
+        return self.randrange(0, 2**512)
+
     def rand_int_reduced(self, p):
         return self.randrange(0, 2 * p)
 
@@ -139,35 +185,61 @@ class Random(random.Random):
     def rand_bit_index(self):
         return self.randrange(0, limbs_number * bits_per_limb)
 
-    def rand_bignum(self, limbs_number=limbs_number):
+    def rand_bignum(self, limbs_number):
         return (limb_type * limbs_number)(
             *[self.randrange(0, 256**4) for _ in range(limbs_number)]
         )
 
+    def rand_bignum256(self):
+        return self.rand_bignum(limbs_number)
+
+    def rand_bignum512(self):
+        return self.rand_bignum(2 * limbs_number)
+
+
+def assert_bn_copy_lower(x):
+    x_number = int_to_bignum512(x)
+    y_number = bignum256()
+    lib.bn_copy_lower(x_number, y_number)
+    y = bignum256_to_int(y_number)
+
+    assert bignum_is_normalised(y_number)
+    assert y == x
+
 
 def assert_bn_read_be(in_number):
-    raw_in_number = integer_to_raw_number(in_number, "big")
-    bn_out_number = bignum()
+    raw_in_number = integer_to_raw_number256(in_number, "big")
+    bn_out_number = bignum256()
     lib.bn_read_be(raw_in_number, bn_out_number)
-    out_number = bignum_to_int(bn_out_number)
+    out_number = bignum256_to_int(bn_out_number)
+
+    assert bignum_is_normalised(bn_out_number)
+    assert out_number == in_number
+
+
+def assert_bn_read_be_512(in_number):
+    raw_in_number = integer_to_raw_number512(in_number, "big")
+    bn_out_number = bignum512()
+    lib.bn_read_be_512(raw_in_number, bn_out_number)
+    out_number = bignum512_to_int(bn_out_number)
 
     assert bignum_is_normalised(bn_out_number)
     assert out_number == in_number
 
 
 def assert_bn_read_le(in_number):
-    raw_in_number = integer_to_raw_number(in_number, "little")
-    bn_out_number = bignum()
+    raw_in_number = integer_to_raw_number256(in_number, "little")
+    bn_out_number = bignum256()
     lib.bn_read_le(raw_in_number, bn_out_number)
-    out_number = bignum_to_int(bn_out_number)
+    out_number = bignum256_to_int(bn_out_number)
 
     assert bignum_is_normalised(bn_out_number)
     assert out_number == in_number
 
 
 def assert_bn_write_be(in_number):
-    bn_in_number = int_to_bignum(in_number)
-    raw_out_number = raw_number()
+    bn_in_number = int_to_bignum256(in_number)
+    raw_out_number = raw_number256()
     lib.bn_write_be(bn_in_number, raw_out_number)
     out_number = raw_number_to_integer(raw_out_number, "big")
 
@@ -175,8 +247,8 @@ def assert_bn_write_be(in_number):
 
 
 def assert_bn_write_le(in_number):
-    bn_in_number = int_to_bignum(in_number)
-    raw_out_number = raw_number()
+    bn_in_number = int_to_bignum256(in_number)
+    raw_out_number = raw_number256()
     lib.bn_write_le(bn_in_number, raw_out_number)
     out_number = raw_number_to_integer(raw_out_number, "little")
 
@@ -184,100 +256,100 @@ def assert_bn_write_le(in_number):
 
 
 def assert_bn_read_uint32(x):
-    bn_out_number = bignum()
+    bn_out_number = bignum256()
     lib.bn_read_uint32(c_uint32(x), bn_out_number)
-    out_number = bignum_to_int(bn_out_number)
+    out_number = bignum256_to_int(bn_out_number)
 
     assert bignum_is_normalised(bn_out_number)
     assert out_number == x
 
 
 def assert_bn_read_uint64(x):
-    bn_out_number = bignum()
+    bn_out_number = bignum256()
     lib.bn_read_uint64(c_uint64(x), bn_out_number)
-    out_number = bignum_to_int(bn_out_number)
+    out_number = bignum256_to_int(bn_out_number)
 
     assert bignum_is_normalised(bn_out_number)
     assert out_number == x
 
 
 def assert_bn_bitcount(x):
-    bn_x = int_to_bignum(x)
+    bn_x = int_to_bignum256(x)
     return_value = lib.bn_bitcount(bn_x)
 
     assert return_value == x.bit_length()
 
 
 def assert_bn_digitcount(x):
-    bn_x = int_to_bignum(x)
+    bn_x = int_to_bignum256(x)
     return_value = lib.bn_digitcount(bn_x)
 
     assert return_value == len(str(x))
 
 
 def assert_bn_zero():
-    bn_x = bignum()
+    bn_x = bignum256()
     lib.bn_zero(bn_x)
-    x = bignum_to_int(bn_x)
+    x = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert x == 0
 
 
 def assert_bn_one():
-    bn_x = bignum()
+    bn_x = bignum256()
     lib.bn_one(bn_x)
-    x = bignum_to_int(bn_x)
+    x = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert x == 1
 
 
 def assert_bn_is_zero(x):
-    bn_x = int_to_bignum(x)
+    bn_x = int_to_bignum256(x)
     return_value = lib.bn_is_zero(bn_x)
 
     assert return_value == (x == 0)
 
 
 def assert_bn_is_one(x):
-    bn_x = int_to_bignum(x)
+    bn_x = int_to_bignum256(x)
     return_value = lib.bn_is_one(bn_x)
 
     assert return_value == (x == 1)
 
 
 def assert_bn_is_less(x, y):
-    bn_x = int_to_bignum(x)
-    bn_y = int_to_bignum(y)
+    bn_x = int_to_bignum256(x)
+    bn_y = int_to_bignum256(y)
     return_value = lib.bn_is_less(bn_x, bn_y)
 
     assert return_value == (x < y)
 
 
 def assert_bn_is_equal(x, y):
-    bn_x = int_to_bignum(x)
-    bn_y = int_to_bignum(y)
+    bn_x = int_to_bignum256(x)
+    bn_y = int_to_bignum256(y)
     return_value = lib.bn_is_equal(bn_x, bn_y)
 
     assert return_value == (x == y)
 
 
 def assert_bn_cmov(cond, truecase, falsecase):
-    bn_res = bignum()
-    bn_truecase = int_to_bignum(truecase)
-    bn_falsecase = int_to_bignum(falsecase)
+    bn_res = bignum256()
+    bn_truecase = int_to_bignum256(truecase)
+    bn_falsecase = int_to_bignum256(falsecase)
     lib.bn_cmov(bn_res, c_uint32(cond), bn_truecase, bn_falsecase)
-    res = bignum_to_int(bn_res)
+    res = bignum256_to_int(bn_res)
 
     assert res == truecase if cond else falsecase
 
 
 def assert_bn_cnegate(cond, x_old, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_cnegate(c_uint32(cond), bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_partly_reduced(x_new, prime)
@@ -285,63 +357,63 @@ def assert_bn_cnegate(cond, x_old, prime):
 
 
 def assert_bn_lshift(x_old):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     lib.bn_lshift(bn_x)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert x_new == (x_old << 1)
 
 
 def assert_bn_rshift(x_old):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     lib.bn_rshift(bn_x)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert x_new == (x_old >> 1)
 
 
 def assert_bn_setbit(x_old, i):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     lib.bn_setbit(bn_x, c_uint16(i))
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert x_new == x_old | (1 << i)
 
 
 def assert_bn_clearbit(x_old, i):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     lib.bn_clearbit(bn_x, c_uint16(i))
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert x_new == x_old & ~(1 << i)
 
 
 def assert_bn_testbit(x_old, i):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     return_value = lib.bn_testbit(bn_x, c_uint16(i))
 
     assert return_value == x_old >> i & 1
 
 
 def assert_bn_xor(x, y):
-    bn_res = bignum()
-    bn_x = int_to_bignum(x)
-    bn_y = int_to_bignum(y)
+    bn_res = bignum256()
+    bn_x = int_to_bignum256(x)
+    bn_y = int_to_bignum256(y)
     lib.bn_xor(bn_res, bn_x, bn_y)
-    res = bignum_to_int(bn_res)
+    res = bignum256_to_int(bn_res)
 
     assert res == x ^ y
 
 
 def assert_bn_mult_half(x_old, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_mult_half(bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert implication(
         number_is_partly_reduced(x_old, prime), number_is_partly_reduced(x_new, prime)
@@ -350,10 +422,10 @@ def assert_bn_mult_half(x_old, prime):
 
 
 def assert_bn_mult_k(x_old, k, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_mult_k(bn_x, c_uint8(k), bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_partly_reduced(x_new, prime)
@@ -361,10 +433,10 @@ def assert_bn_mult_k(x_old, k, prime):
 
 
 def assert_bn_mod(x_old, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_mod(bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_fully_reduced(x_new, prime)
@@ -372,42 +444,53 @@ def assert_bn_mod(x_old, prime):
 
 
 def assert_bn_multiply_long(k_old, x_old):
-    bn_k = int_to_bignum(k_old)
-    bn_x = int_to_bignum(x_old)
-    bn_res = bignum(2 * limbs_number)
+    bn_k = int_to_bignum256(k_old)
+    bn_x = int_to_bignum256(x_old)
+    bn_res = bignum512()
     lib.bn_multiply_long(bn_k, bn_x, bn_res)
-    res = bignum_to_int(bn_res, 2 * limbs_number)
+    res = bignum512_to_int(bn_res)
 
     assert res == k_old * x_old
 
 
 def assert_bn_multiply_reduce_step(res_old, prime, d):
-    bn_res = int_to_bignum(res_old, 2 * limbs_number)
-    bn_prime = int_to_bignum(prime)
+    bn_res = int_to_bignum512(res_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_multiply_reduce_step(bn_res, bn_prime, d)
-    res_new = bignum_to_int(bn_res, 2 * limbs_number)
+    res_new = bignum512_to_int(bn_res)
 
     assert bignum_is_normalised(bn_res)
     assert res_new < 2 * prime * 2 ** (d * bits_per_limb)
 
 
 def assert_bn_multiply(k, x_old, prime):
-    bn_k = int_to_bignum(k)
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_k = int_to_bignum256(k)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_multiply(bn_k, bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_partly_reduced(x_new, prime)
-    assert x_new == (k * x_old) % prime
+    assert x_new % prime == (k * x_old) % prime
+
+
+def assert_bn_reduce(x_old, prime):
+    bn_x = int_to_bignum512(x_old)
+    bn_prime = int_to_bignum256(prime)
+    lib.bn_reduce(bn_x, bn_prime)
+    x_new = bignum256_to_int(bn_x)
+
+    assert bignum_is_normalised(bn_x)
+    assert number_is_partly_reduced(x_new, prime)
+    assert x_new % prime == x_old % prime
 
 
 def assert_bn_fast_mod(x_old, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_fast_mod(bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_partly_reduced(x_new, prime)
@@ -416,10 +499,10 @@ def assert_bn_fast_mod(x_old, prime):
 
 def assert_bn_fast_mod_bn(bn_x, prime):
     bn_x
-    x_old = bignum_to_int(bn_x)
-    bn_prime = int_to_bignum(prime)
+    x_old = bignum256_to_int(bn_x)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_fast_mod(bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_partly_reduced(x_new, prime)
@@ -427,12 +510,12 @@ def assert_bn_fast_mod_bn(bn_x, prime):
 
 
 def assert_bn_power_mod(x, e, prime):
-    bn_x = int_to_bignum(x)
-    bn_e = int_to_bignum(e)
-    bn_prime = int_to_bignum(prime)
-    bn_res_new = bignum()
+    bn_x = int_to_bignum256(x)
+    bn_e = int_to_bignum256(e)
+    bn_prime = int_to_bignum256(prime)
+    bn_res_new = bignum256()
     lib.bn_power_mod(bn_x, bn_e, bn_prime, bn_res_new)
-    res_new = bignum_to_int(bn_res_new)
+    res_new = bignum256_to_int(bn_res_new)
 
     assert bignum_is_normalised(bn_res_new)
     assert number_is_partly_reduced(res_new, prime)
@@ -440,10 +523,10 @@ def assert_bn_power_mod(x, e, prime):
 
 
 def assert_bn_sqrt(x_old, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_sqrt(bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_fully_reduced(x_new, prime)
@@ -457,10 +540,10 @@ def assert_inverse_mod_power_two(x, m):
 
 
 def assert_bn_divide_base(x_old, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_divide_base(bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert implication(
         number_is_fully_reduced(x_old, prime), number_is_fully_reduced(x_new, prime)
@@ -472,10 +555,10 @@ def assert_bn_divide_base(x_old, prime):
 
 
 def assert_bn_inverse(x_old, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_inverse(bn_x, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_fully_reduced(x_new, prime)
@@ -483,31 +566,31 @@ def assert_bn_inverse(x_old, prime):
 
 
 def assert_bn_normalize(bn_x):
-    x_old = bignum_to_int(bn_x)
+    x_old = bignum256_to_int(bn_x)
     lib.bn_normalize(bn_x)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert x_new == x_old % 2 ** (bits_per_limb * limbs_number)
     assert bignum_is_normalised(bn_x)
 
 
 def assert_bn_add(x_old, y):
-    bn_x = int_to_bignum(x_old)
-    bn_y = int_to_bignum(y)
+    bn_x = int_to_bignum256(x_old)
+    bn_y = int_to_bignum256(y)
     lib.bn_add(bn_x, bn_y)
-    x_new = bignum_to_int(bn_x)
-    y = bignum_to_int(bn_y)
+    x_new = bignum256_to_int(bn_x)
+    y = bignum256_to_int(bn_y)
 
     assert bignum_is_normalised(bn_x)
     assert x_new == x_old + y
 
 
 def assert_bn_addmod(x_old, y, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_y = int_to_bignum(y)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_y = int_to_bignum256(y)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_addmod(bn_x, bn_y, bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert number_is_partly_reduced(x_new, prime)
@@ -515,19 +598,19 @@ def assert_bn_addmod(x_old, y, prime):
 
 
 def assert_bn_addi(x_old, y):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     lib.bn_addi(bn_x, c_uint32(y))
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert x_new == x_old + y
 
 
 def assert_bn_subi(x_old, y, prime):
-    bn_x = int_to_bignum(x_old)
-    bn_prime = int_to_bignum(prime)
+    bn_x = int_to_bignum256(x_old)
+    bn_prime = int_to_bignum256(prime)
     lib.bn_subi(bn_x, c_uint32(y), bn_prime)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
 
     assert bignum_is_normalised(bn_x)
     assert implication(
@@ -537,35 +620,50 @@ def assert_bn_subi(x_old, y, prime):
 
 
 def assert_bn_subtractmod(x, y, prime):
-    bn_x = int_to_bignum(x)
-    bn_y = int_to_bignum(y)
-    bn_prime = int_to_bignum(prime)
-    bn_res = bignum()
+    bn_x = int_to_bignum256(x)
+    bn_y = int_to_bignum256(y)
+    bn_prime = int_to_bignum256(prime)
+    bn_res = bignum256()
     lib.bn_subtractmod(bn_x, bn_y, bn_res, bn_prime)
-    res = bignum_to_int(bn_res)
+    res = bignum256_to_int(bn_res)
 
     assert bignum_is_normalised(bn_x)
     assert res % prime == (x - y) % prime
 
 
+def legendre(x, prime):
+    res = pow(x, (prime - 1) // 2, prime)
+    if res == prime - 1:
+        return -1
+    return res
+
+
+def assert_bn_legendre(x, prime):
+    bn_x = int_to_bignum256(x)
+    bn_prime = int_to_bignum256(prime)
+    return_value = lib.bn_legendre(bn_x, bn_prime)
+
+    assert return_value == legendre(x, prime)
+
+
 def assert_bn_subtract(x, y):
-    bn_x = int_to_bignum(x)
-    bn_y = int_to_bignum(y)
-    bn_res = bignum()
+    bn_x = int_to_bignum256(x)
+    bn_y = int_to_bignum256(y)
+    bn_res = bignum256()
     lib.bn_subtract(bn_x, bn_y, bn_res)
-    res = bignum_to_int(bn_res)
+    res = bignum256_to_int(bn_res)
 
     assert bignum_is_normalised(bn_x)
     assert res == x - y
 
 
 def assert_bn_long_division(x, d):
-    bn_x = int_to_bignum(x)
-    bn_q = bignum()
+    bn_x = int_to_bignum256(x)
+    bn_q = bignum256()
     uint32_p_r = uint32_p()
     lib.bn_long_division(bn_x, d, bn_q, uint32_p_r)
     r = uint32_p_to_int(uint32_p_r)
-    q = bignum_to_int(bn_q)
+    q = bignum256_to_int(bn_q)
 
     assert bignum_is_normalised(bn_q)
     assert q == x // d
@@ -573,10 +671,10 @@ def assert_bn_long_division(x, d):
 
 
 def assert_bn_divmod58(x_old):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     uint32_p_r = uint32_p()
     lib.bn_divmod58(bn_x, uint32_p_r)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
     r = uint32_p_to_int(uint32_p_r)
 
     assert bignum_is_normalised(bn_x)
@@ -585,10 +683,10 @@ def assert_bn_divmod58(x_old):
 
 
 def assert_bn_divmod1000(x_old):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     uint32_p_r = uint32_p()
     lib.bn_divmod1000(bn_x, uint32_p_r)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
     r = uint32_p_to_int(uint32_p_r)
 
     assert bignum_is_normalised(bn_x)
@@ -597,10 +695,10 @@ def assert_bn_divmod1000(x_old):
 
 
 def assert_bn_divmod10(x_old):
-    bn_x = int_to_bignum(x_old)
+    bn_x = int_to_bignum256(x_old)
     uint32_p_r = uint32_p()
     lib.bn_divmod10(bn_x, uint32_p_r)
-    x_new = bignum_to_int(bn_x)
+    x_new = bignum256_to_int(bn_x)
     r = uint32_p_to_int(uint32_p_r)
 
     assert bignum_is_normalised(bn_x)
@@ -636,7 +734,7 @@ def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing, thousands)
     def char_p_to_string(pointer):
         return str(pointer.value, "ascii")
 
-    bn_x = int_to_bignum(x)
+    bn_x = int_to_bignum256(x)
     output_length = 100
     output = string_to_char_p("?" * output_length)
     return_value = lib.bn_format(
@@ -661,8 +759,16 @@ def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing, thousands)
     assert return_value == correct_return_value
 
 
+def test_bn_copy_lower(r):
+    assert_bn_copy_lower(r.rand_int_bitsize(261))
+
+
 def test_bn_read_be(r):
     assert_bn_read_be(r.rand_int_256())
+
+
+def test_bn_read_be_512(r):
+    assert_bn_read_be_512(r.rand_int_512())
 
 
 def test_bn_read_le(r):
@@ -846,6 +952,11 @@ def test_bn_multiply_reduce_step(r, prime):
     assert_bn_multiply_reduce_step(res, prime, k)
 
 
+def test_bn_reduce(r, prime):
+    x = r.rand_int_bitsize(519)
+    assert_bn_reduce(x, prime)
+
+
 def test_bn_multiply(r, prime):
     x = r.randrange(floor(sqrt(2**519)))
     k = r.randrange(floor(sqrt(2**519)))
@@ -857,7 +968,7 @@ def test_bn_fast_mod_1(r, prime):
 
 
 def test_bn_fast_mod_2(r, prime):
-    bn_x = r.rand_bignum()
+    bn_x = r.rand_bignum256()
     assert_bn_fast_mod_bn(bn_x, prime)
 
 
@@ -911,7 +1022,7 @@ def test_bn_inverse_2(r, prime):
 
 
 def test_bn_normalize(r):
-    assert_bn_normalize(r.rand_bignum())
+    assert_bn_normalize(r.rand_bignum256())
 
 
 def test_bn_add_1(r):
@@ -1000,6 +1111,11 @@ def test_bn_subtract_2(r):
     if a < b:
         a, b = b, a
     assert_bn_subtract(a, b)
+
+
+def test_bn_legendre(r, prime):
+    x = r.rand_int_bitsize(259)
+    assert_bn_legendre(x, prime)
 
 
 def test_bn_long_division(r):
