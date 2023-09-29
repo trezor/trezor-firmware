@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from trezor.crypto import base58
 
 from ..constants import (
     ADDRESS_READ_ONLY,
@@ -99,6 +100,8 @@ def parseBlockHash(serialized_tx: BufferReader) -> bytes:
 
 
 def parseInstructions(
+    addresses: list[Address],
+    program_instruction_id_lengths: dict[str, int],
     serialized_tx: BufferReader,
     # [program_index, instruction_id, accounts, instruction_data]
 ) -> list[tuple[int, int, list[int], bytes]]:
@@ -108,16 +111,24 @@ def parseInstructions(
 
     for _ in range(num_of_instructions):
         program_index = serialized_tx.get()
+        program_id = base58.encode(addresses[program_index][0])
         num_of_accounts = parseVarInt(serialized_tx)
         accounts: list[int] = []
         for _ in range(num_of_accounts):
             assert serialized_tx.remaining_count() > 0
             account_index = serialized_tx.get()
             accounts.append(account_index)
+
         data_length = parseVarInt(serialized_tx)
-        assert data_length >= 4
-        instruction_id: int = int.from_bytes(serialized_tx.read(4), "little")
-        instruction_data: bytes = serialized_tx.read(data_length - 4)
+        instruction_id_length = program_instruction_id_lengths[program_id]
+        if data_length <= instruction_id_length:
+            instruction_id = 0
+        else:
+            instruction_id = int.from_bytes(
+                serialized_tx.read(instruction_id_length), "little"
+            )
+
+        instruction_data = serialized_tx.read(data_length - instruction_id_length)
 
         instructions.append((program_index, instruction_id, accounts, instruction_data))
 
@@ -161,23 +172,31 @@ def parseString(serialized_tx: BufferReader) -> str:
     return serialized_tx.read(length).decode("utf-8")
 
 
-def parseProperty(serialized_tx: BufferReader, type: str) -> str | int | bytes:
-    if type == "u32":
-        return parseU32(serialized_tx)
+def parseMemo(serialized_tx: BufferReader) -> str:
+    return serialized_tx.read(serialized_tx.remaining_count()).decode("utf-8")
+
+
+def parseProperty(reader: BufferReader, type: str) -> str | int | bytes:
+    if type == "u8":
+        return reader.get()
+    elif type == "u32":
+        return parseU32(reader)
     elif type == "u64":
-        return parseU64(serialized_tx)
+        return parseU64(reader)
     elif type == "i32":
-        return parseI32(serialized_tx)
+        return parseI32(reader)
     elif type == "i64":
-        return parseI64(serialized_tx)
+        return parseI64(reader)
     elif type in ("pubkey", "authority"):
-        return parsePubkey(serialized_tx)
+        return parsePubkey(reader)
     elif type == "enum":
-        return parseEnum(serialized_tx)
+        return parseEnum(reader)
     elif type == "string":
-        return parseString(serialized_tx)
+        return parseString(reader)
+    elif type == "memo":
+        return parseMemo(reader)
     else:
-        return parseEnum(serialized_tx)
+        return parseEnum(reader)
         # raise NotImplementedError
 
 

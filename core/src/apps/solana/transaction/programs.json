@@ -3,6 +3,7 @@
     {
       "id": "11111111111111111111111111111111",
       "name": "System Program",
+      "instruction_id_length": 4,
       "instructions": [
         {
           "id": 0,
@@ -300,6 +301,7 @@
     {
       "id": "Stake11111111111111111111111111111111111111",
       "name": "Stake Program",
+      "instruction_id_length": 4,
       "instructions": [
         {
           "id": 0,
@@ -1018,6 +1020,7 @@
     {
       "id": "ComputeBudget111111111111111111111111111111",
       "name": "Compute Budget Program",
+      "instruction_id_length": 4,
       "instructions": [
         {
           "id": 1,
@@ -1084,6 +1087,7 @@
     {
       "id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
       "name": "Token Program",
+      "instruction_id_length": 1,
       "instructions": [
         {
           "id": 1,
@@ -1823,6 +1827,7 @@
     {
       "id": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
       "name": "Associated Token Account Program",
+      "instruction_id_length": 0,
       "instructions": [
         {
           "id": 0,
@@ -2007,6 +2012,7 @@
     {
       "id": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
       "name": "Memo",
+      "instruction_id_length": 0,
       "instructions": [
         {
           "id": 0,
@@ -2015,7 +2021,7 @@
             {
               "name": "memo",
               "ui_name": "Memo",
-              "type": "string",
+              "type": "memo",
               "optional": false
             }
           ],
@@ -2040,6 +2046,7 @@
     {
       "id": "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo",
       "name": "Memo Legacy",
+      "instruction_id_length": 0,
       "instructions": [
         {
           "id": 0,
@@ -2048,7 +2055,7 @@
             {
               "name": "memo",
               "ui_name": "Memo",
-              "type": "string",
+              "type": "memo",
               "optional": false
             }
           ],

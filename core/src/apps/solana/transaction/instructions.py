@@ -1116,6 +1116,17 @@ if TYPE_CHECKING:
             )
 
 
+INSTRUCTION_ID_LENGTHS = {
+    SYSTEM_PROGRAM_ID: 4,
+    STAKE_PROGRAM_ID: 4,
+    COMPUTE_BUDGET_PROGRAM_ID: 4,
+    TOKEN_PROGRAM_ID: 1,
+    ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: 0,
+    MEMO_ID: 0,
+    MEMO_LEGACY_ID: 0,
+}
+
+
 def get_instruction(
     program_id: bytes,
     instruction_id: int,
@@ -1416,7 +1427,7 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id} {instruction_id}"
+                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
             )
     if base58.encode(program_id) == STAKE_PROGRAM_ID:
         if instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE:
@@ -2112,7 +2123,7 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id} {instruction_id}"
+                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
             )
     if base58.encode(program_id) == COMPUTE_BUDGET_PROGRAM_ID:
         if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME:
@@ -2177,7 +2188,7 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id} {instruction_id}"
+                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
             )
     if base58.encode(program_id) == TOKEN_PROGRAM_ID:
         if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT:
@@ -2880,7 +2891,7 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id} {instruction_id}"
+                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
             )
     if base58.encode(program_id) == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
         if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE:
@@ -3065,7 +3076,7 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id} {instruction_id}"
+                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
             )
     if base58.encode(program_id) == MEMO_ID:
         if instruction_id == MEMO_ID_INS_CREATE:
@@ -3078,7 +3089,7 @@ def get_instruction(
                     {
                         "name": "memo",
                         "ui_name": "Memo",
-                        "type": "string",
+                        "type": "memo",
                         "optional": False,
                     }
                 ],
@@ -3097,7 +3108,7 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id} {instruction_id}"
+                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
             )
     if base58.encode(program_id) == MEMO_LEGACY_ID:
         if instruction_id == MEMO_LEGACY_ID_INS_CREATE:
@@ -3110,7 +3121,7 @@ def get_instruction(
                     {
                         "name": "memo",
                         "ui_name": "Memo",
-                        "type": "string",
+                        "type": "memo",
                         "optional": False,
                     }
                 ],
@@ -3129,7 +3140,9 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id} {instruction_id}"
+                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
             )
     else:
-        raise ProcessError(f"Unknown instruction type: {program_id} {instruction_id}")
+        raise ProcessError(
+            f"Unknown program type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+        )

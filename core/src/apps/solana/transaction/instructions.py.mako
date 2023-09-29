@@ -41,17 +41,11 @@ ADDRESS_READ_ONLY\
 % endif
 </%def>\
 <%def name="getPythonType(type)">\
-% if type == "u32":
-int\
-% elif type == "u64":
-int\
-% elif type == "i32":
-int\
-% elif type == "i64":
+% if type in ("u32", "u64", "i32", "i64"):
 int\
 % elif type in ("pubKey", "authority"):
 Account\
-% elif type == "string":
+% elif type in ("string", "memo"):
 str\
 % else:
 int\
@@ -126,6 +120,13 @@ if TYPE_CHECKING:
     % endfor
 % endfor
 
+INSTRUCTION_ID_LENGTHS = {
+% for program in programs["programs"]:
+    ${getProgramId(program)}: ${program["instruction_id_length"]},
+% endfor
+}
+
+
 def get_instruction(
     program_id: bytes, instruction_id: int, instruction_accounts: list[Account], instruction_data: bytes
 ) -> Instruction:
@@ -154,11 +155,11 @@ def get_instruction(
     % endfor
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id} {instruction_id}"
+                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
             )
 % endif
 % endfor
     else:
         raise ProcessError(
-            f"Unknown instruction type: {program_id} {instruction_id}"
+            f"Unknown program type: {program_id}({base58.encode(program_id)}) {instruction_id}"
         )

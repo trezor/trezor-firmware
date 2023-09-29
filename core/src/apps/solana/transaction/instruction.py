@@ -107,6 +107,8 @@ class Instruction:
                 else:
                     raise ValueError(f"Account {account_template['name']} is missing")
 
+            self.ui_account_list.append((account, accounts[account_index]))
+
     def __getattr__(self, attr: str) -> Any:
         assert self.parsed_data is not None
         assert self.parsed_accounts is not None
