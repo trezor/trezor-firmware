@@ -7,6 +7,7 @@ from .transaction import Transaction
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaSignTx, SolanaTxSignature
+
     from apps.common.keychain import Keychain
 
 

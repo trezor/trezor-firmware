@@ -9,6 +9,7 @@ from .instruction import Instruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
+
     from ..types import Account
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"

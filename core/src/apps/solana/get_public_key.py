@@ -9,6 +9,7 @@ from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaGetPublicKey, SolanaPublicKey
+
     from apps.common.keychain import Keychain
 
 
@@ -16,8 +17,8 @@ if TYPE_CHECKING:
 async def get_public_key(
     msg: SolanaGetPublicKey, keychain: Keychain
 ) -> SolanaPublicKey:
-    from trezor.ui.layouts import show_pubkey
     from trezor.messages import SolanaPublicKey
+    from trezor.ui.layouts import show_pubkey
 
     public_key = derive_public_key(keychain, msg.address_n)
 

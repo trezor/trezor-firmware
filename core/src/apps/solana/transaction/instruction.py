@@ -7,6 +7,7 @@ from .parse import parseProperty
 
 if TYPE_CHECKING:
     from typing import Any, TypedDict, TypeGuard
+
     from ..types import Account
 
     class PropertyTemplate(TypedDict):

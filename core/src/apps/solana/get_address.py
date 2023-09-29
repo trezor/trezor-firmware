@@ -7,7 +7,7 @@ from apps.common.keychain import with_slip44_keychain
 from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
-    from trezor.messages import SolanaGetAddress, SolanaAddress
+    from trezor.messages import SolanaAddress, SolanaGetAddress
 
     from apps.common.keychain import Keychain
 
@@ -19,7 +19,9 @@ async def get_address(
 ) -> SolanaAddress:
     from trezor.messages import SolanaAddress
     from trezor.ui.layouts import show_address
+
     from apps.common import paths
+
     from .get_public_key import derive_public_key
 
     public_key = derive_public_key(keychain, msg.address_n)

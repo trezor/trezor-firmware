@@ -10,6 +10,7 @@ from ..constants import (
 
 if TYPE_CHECKING:
     from trezor.utils import BufferReader
+
     from ..types import Address, AddressReference
 
 
