@@ -118,11 +118,13 @@ icons: ## generate FIDO service icons
 icons_check: ## generate FIDO service icons
 	python3 core/tools/build_icons.py --check
 
-protobuf: ## generate python protobuf headers
+protobuf: ## generate python and rust protobuf headers
 	./tools/build_protobuf
+	./rust/trezor-client/scripts/build_protos
 
 protobuf_check: ## check that generated protobuf headers are up to date
 	./tools/build_protobuf --check
+	./rust/trezor-client/scripts/build_protos --check
 
 ci_docs: ## generate CI documentation
 	./tools/generate_ci_docs.py

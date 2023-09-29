@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Generates the `trezor_message_impl!` macro calls for the `src/messages.rs` file.
+# Generates the `trezor_message_impl!` macro calls for the `src/messages/mod.rs` file.
 
 from os import path
 
@@ -30,7 +30,7 @@ FEATURES = {
     "WebAuthn": "webauthn",
 }
 MACRO = "trezor_message_impl"
-INDENT = "\t"
+INDENT = "    "
 
 
 def main():
