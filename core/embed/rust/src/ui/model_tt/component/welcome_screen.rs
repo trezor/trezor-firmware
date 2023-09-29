@@ -11,7 +11,7 @@ const ICON_TOP_MARGIN: i16 = 48;
 #[cfg(not(feature = "bootloader"))]
 const MODEL_NAME_FONT: display::Font = display::Font::DEMIBOLD;
 #[cfg(not(feature = "bootloader"))]
-use crate::ui::{constant::MODEL_NAME, display};
+use crate::{trezorhal::model, ui::display};
 
 pub struct WelcomeScreen {
     area: Rect,
@@ -54,7 +54,7 @@ impl Component for WelcomeScreen {
         #[cfg(not(feature = "bootloader"))]
         display::text_center(
             self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
-            MODEL_NAME,
+            model::FULL_NAME,
             MODEL_NAME_FONT,
             theme::FG,
             theme::BG,
@@ -74,6 +74,6 @@ impl crate::trace::Trace for WelcomeScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("WelcomeScreen");
         #[cfg(not(feature = "bootloader"))]
-        t.string("model", MODEL_NAME);
+        t.string("model", model::FULL_NAME);
     }
 }

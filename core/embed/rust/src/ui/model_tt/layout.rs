@@ -15,6 +15,7 @@ use crate::{
         util,
     },
     strutil::StringType,
+    trezorhal::model,
     ui::{
         component::{
             base::ComponentExt,
@@ -1596,7 +1597,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let label: StrBuffer = kwargs
             .get(Qstr::MP_QSTR_label)?
             .try_into_option()?
-            .unwrap_or_else(|| constant::MODEL_NAME.into());
+            .unwrap_or_else(|| model::FULL_NAME.into());
         let notification: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
@@ -1618,7 +1619,7 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let label: StrBuffer = kwargs
             .get(Qstr::MP_QSTR_label)?
             .try_into_option()?
-            .unwrap_or_else(|| constant::MODEL_NAME.into());
+            .unwrap_or_else(|| model::FULL_NAME.into());
         let bootscreen: bool = kwargs.get(Qstr::MP_QSTR_bootscreen)?.try_into()?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
