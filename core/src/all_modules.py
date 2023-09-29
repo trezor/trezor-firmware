@@ -383,8 +383,6 @@ apps.solana.transaction.instructions
 import apps.solana.transaction.instructions
 apps.solana.transaction.parse
 import apps.solana.transaction.parse
-apps.solana.transaction.trezor_mako
-import apps.solana.transaction.trezor_mako
 apps.solana.types
 import apps.solana.types
 apps.solana.ui

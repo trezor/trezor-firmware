@@ -1,25 +1,4 @@
 {
-  "grouped_instructions": [
-    {
-      "instructions": [
-        {
-          "program_id": "11111111111111111111111111111111",
-          "instruction_id": 0
-        },
-        {
-          "program_id": "Stake11111111111111111111111111111111111111",
-          "instruction_id": 0
-        }
-      ],
-      "ui": {
-        "ui_identifier": "ui_confirm",
-        "elements": {
-          "parameter_indexes": [[0, 0]],
-          "account_indexes": [[0, 0]]
-        }
-      }
-    }
-  ],
   "programs": [
     {
       "id": "11111111111111111111111111111111",
@@ -189,11 +168,7 @@
             "ui_identifier": "ui_confirm",
             "elements": {
               "parameters": ["base", "seed", "lamports", "space", "owner"],
-              "accounts": [
-                "funding_account",
-                "created_account",
-                "base_account"
-              ]
+              "accounts": ["funding_account", "created_account", "base_account"]
             }
           }
         },
