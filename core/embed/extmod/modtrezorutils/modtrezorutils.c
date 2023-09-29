@@ -281,6 +281,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_bootloader_locked_obj,
 STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION) - 1, (const byte *)SCM_REVISION};
 
+STATIC mp_obj_str_t mod_trezorutils_full_name_obj = {
+    {&mp_type_str},
+    0,
+    sizeof(MODEL_FULL_NAME) - 1,
+    (const byte *)MODEL_FULL_NAME};
+
 /// SCM_REVISION: bytes
 /// VERSION_MAJOR: int
 /// VERSION_MINOR: int
@@ -289,6 +295,7 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 /// USE_BACKLIGHT: bool
 /// USE_OPTIGA: bool
 /// MODEL: str
+/// MODEL_FULL_NAME: str
 /// INTERNAL_MODEL: str
 /// EMULATOR: bool
 /// BITCOIN_ONLY: bool
@@ -333,6 +340,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_OPTIGA), mp_const_false},
 #endif
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MODEL_NAME_QSTR)},
+    {MP_ROM_QSTR(MP_QSTR_MODEL_FULL_NAME),
+     MP_ROM_PTR(&mod_trezorutils_full_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_INTERNAL_MODEL),
      MP_ROM_QSTR(MODEL_INTERNAL_NAME_QSTR)},
 #ifdef TREZOR_EMULATOR
