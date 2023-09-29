@@ -59,6 +59,20 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "rust-src" "clippy" "rustfmt" ];
   };
+  openocd-stm = (nixpkgs.openocd.overrideAttrs (oldAttrs: {
+    src = nixpkgs.fetchFromGitHub {
+      owner = "STMicroelectronics";
+      repo = "OpenOCD";
+      rev = "openocd-cubeide-v1.12.0";
+      sha256 = "7REQi9pcT6pn8yiAMpQpRQ+0ouMQelcciMAHyUonkVA=";
+    };
+    version = "stm-cubeide-v1.12.0";
+    nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ nixpkgs.autoreconfHook ];
+
+    # following two lines can be removed after bumping nixpkgs to newer than c58e6fbf258df1572b535ac1868ec42faf7675dd
+    buildInputs = oldAttrs.buildInputs ++ [ nixpkgs.jimtcl nixpkgs.libjaylink ];
+    configureFlags = oldAttrs.configureFlags ++ [ "--disable-internal-jimtcl" "--disable-internal-libjaylink" ];
+  }));
   llvmPackages = nixpkgs.llvmPackages_14;
   # see pyright/README.md for update procedure
   pyright = nixpkgs.callPackage ./pyright {};
@@ -125,7 +139,7 @@ stdenvNoCC.mkDerivation ({
     dejavu_fonts
   ] ++ lib.optionals devTools [
     gdb
-    openocd
+    openocd-stm
   ] ++ lib.optionals (devTools && acceptJlink) [
     nrfutil
     nrfconnect
