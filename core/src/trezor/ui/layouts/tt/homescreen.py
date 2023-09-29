@@ -62,7 +62,7 @@ class Homescreen(HomescreenBase):
         skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_homescreen(
-                label=label or "My Trezor",
+                label=label,
                 notification=notification,
                 notification_level=level,
                 hold=hold_to_lock,
@@ -102,7 +102,7 @@ class Lockscreen(HomescreenBase):
         )
         super().__init__(
             layout=trezorui2.show_lockscreen(
-                label=label or "My Trezor",
+                label=label,
                 bootscreen=bootscreen,
                 skip_first_paint=skip,
             ),
