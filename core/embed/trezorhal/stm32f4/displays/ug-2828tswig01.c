@@ -371,3 +371,5 @@ void display_reinit(void) {}
 const char *display_save(const char *prefix) { return NULL; }
 
 void display_clear_save(void) {}
+void display_enter_qr_mode(void) {}
+void display_exit_qr_mode(void) {}

@@ -57,3 +57,13 @@ class Display:
         """
         Clears buffers in display saving.
         """
+
+    def enter_qr_mode(self) -> None:
+        """
+        Enters display QR mode
+        """
+
+    def exit_qr_mode(self) -> None:
+        """
+        Exits display QR mode
+        """

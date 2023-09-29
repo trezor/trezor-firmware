@@ -160,6 +160,28 @@ STATIC mp_obj_t mod_trezorui_Display_clear_save(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_save_obj,
                                  mod_trezorui_Display_clear_save);
 
+/// def enter_qr_mode(self) -> None:
+///     """
+///     Enters display QR mode
+///     """
+STATIC mp_obj_t mod_trezorui_Display_enter_qr_mode(mp_obj_t self) {
+  display_enter_qr_mode();
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_enter_qr_mode_obj,
+                                 mod_trezorui_Display_enter_qr_mode);
+
+/// def exit_qr_mode(self) -> None:
+///     """
+///     Exits display QR mode
+///     """
+STATIC mp_obj_t mod_trezorui_Display_exit_qr_mode(mp_obj_t self) {
+  display_exit_qr_mode();
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_exit_qr_mode_obj,
+                                 mod_trezorui_Display_exit_qr_mode);
+
 STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_trezorui_Display_clear_obj)},
     {MP_ROM_QSTR(MP_QSTR_refresh),
@@ -172,6 +194,10 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_trezorui_Display_save_obj)},
     {MP_ROM_QSTR(MP_QSTR_clear_save),
      MP_ROM_PTR(&mod_trezorui_Display_clear_save_obj)},
+    {MP_ROM_QSTR(MP_QSTR_enter_qr_mode),
+     MP_ROM_PTR(&mod_trezorui_Display_enter_qr_mode_obj)},
+    {MP_ROM_QSTR(MP_QSTR_exit_qr_mode),
+     MP_ROM_PTR(&mod_trezorui_Display_exit_qr_mode_obj)},
     {MP_ROM_QSTR(MP_QSTR_WIDTH), MP_ROM_INT(DISPLAY_RESX)},
     {MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_ROM_INT(DISPLAY_RESY)},
     {MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_ROM_INT(FONT_NORMAL)},

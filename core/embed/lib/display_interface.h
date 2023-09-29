@@ -47,5 +47,7 @@ void display_sync(void);
 void display_refresh(void);
 const char *display_save(const char *prefix);
 void display_clear_save(void);
+void display_enter_qr_mode(void);
+void display_exit_qr_mode(void);
 
 #endif  //_DISPLAY_INTERFACE_H

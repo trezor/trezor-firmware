@@ -513,6 +513,8 @@ async def show_address(
                 result += " (YOURS)" if i == multisig_index else " (COSIGNER)"
                 return result
 
+            ui.display.enter_qr_mode()
+
             result = await ctx_wait(
                 RustLayout(
                     trezorui2.show_address_details(
@@ -526,6 +528,9 @@ async def show_address(
                     )
                 ),
             )
+
+            ui.display.exit_qr_mode()
+
             # Can only go back from the address details.
             assert result is CANCELLED
 

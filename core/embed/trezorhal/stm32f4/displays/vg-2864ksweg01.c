@@ -141,7 +141,8 @@ static inline void spi_send(const uint8_t *data, int len) {
 
 void display_handle_init(void) {
   spi_handle.Instance = OLED_SPI;
-  spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  spi_handle.State = HAL_SPI_STATE_READY;
+  spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
   spi_handle.Init.CLKPhase = SPI_PHASE_1EDGE;
   spi_handle.Init.CLKPolarity = SPI_POLARITY_LOW;
@@ -241,7 +242,10 @@ void display_init(void) {
   display_refresh();
 }
 
-void display_reinit(void) { display_handle_init(); }
+void display_reinit(void) {
+  display_handle_init();
+  HAL_SPI_Init(&spi_handle);
+}
 
 static inline uint8_t reverse_byte(uint8_t b) {
   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
@@ -295,3 +299,23 @@ void display_refresh(void) {
 const char *display_save(const char *prefix) { return NULL; }
 
 void display_clear_save(void) {}
+
+void display_enter_qr_mode(void) {
+  static const uint8_t s[] = {OLED_SETDISPLAYCLOCKDIV, 0xF0, OLED_SETCONTRAST,
+                              0xFF, OLED_DISPLAYON};
+  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);  // set to CMD
+  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
+  HAL_Delay(1);
+  spi_send(s, sizeof(s));
+  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);  // SPI deselect
+}
+
+void display_exit_qr_mode(void) {
+  static const uint8_t s[] = {OLED_SETDISPLAYCLOCKDIV, 0x80, OLED_SETCONTRAST,
+                              0xCF, OLED_DISPLAYON};
+  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);  // set to CMD
+  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
+  HAL_Delay(1);
+  spi_send(s, sizeof(s));
+  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);  // SPI deselect
+}

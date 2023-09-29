@@ -332,3 +332,6 @@ void display_clear_save(void) {
   SDL_FreeSurface(PREV_SAVED);
   PREV_SAVED = NULL;
 }
+
+void display_enter_qr_mode(void) {}
+void display_exit_qr_mode(void) {}
