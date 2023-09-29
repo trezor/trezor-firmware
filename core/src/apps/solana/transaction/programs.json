@@ -191,7 +191,7 @@
               "parameters": ["base", "seed", "lamports", "space", "owner"],
               "accounts": [
                 "funding_account",
-                "recipient_account",
+                "created_account",
                 "base_account"
               ]
             }

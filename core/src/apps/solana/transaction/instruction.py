@@ -91,7 +91,7 @@ class Instruction:
                 if account_template["optional"]:
                     continue
                 else:
-                    raise ValueError("Missing account")
+                    raise ValueError(f"Account {account_template['name']} is missing")
 
             self.set_account(account_template["name"], accounts[i])
 
@@ -99,8 +99,12 @@ class Instruction:
             self.ui_parameter_list.append(parameter)
 
         for account in ui_account_list:
-            account_index = self.get_account_template(account)[0]
-            self.ui_account_list.append((account, accounts[account_index]))
+            account_index, account_template = self.get_account_template(account)
+            if account_index >= len(accounts):
+                if account_template["optional"]:
+                    continue
+                else:
+                    raise ValueError(f"Account {account_template['name']} is missing")
 
     def __getattr__(self, attr: str) -> Any:
         assert self.parsed_data is not None

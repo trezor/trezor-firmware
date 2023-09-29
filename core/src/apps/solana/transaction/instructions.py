@@ -1286,7 +1286,7 @@ def get_instruction(
                     },
                 ],
                 ["base", "seed", "lamports", "space", "owner"],
-                ["funding_account", "recipient_account", "base_account"],
+                ["funding_account", "created_account", "base_account"],
                 "ui_confirm",
                 "Create Account With Seed",
             )
