@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.2] (internal release)
+
+### Added
+- [T2B1] Integrate Optiga into PIN verification.  [#3296]
+
+
 ## [2.6.1] (internal release)
 
 ### Added
@@ -792,3 +798,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3237]: https://github.com/trezor/trezor-firmware/pull/3237
 [#3255]: https://github.com/trezor/trezor-firmware/pull/3255
 [#3256]: https://github.com/trezor/trezor-firmware/pull/3256
+[#3296]: https://github.com/trezor/trezor-firmware/pull/3296
