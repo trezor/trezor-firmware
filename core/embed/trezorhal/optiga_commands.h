@@ -137,6 +137,7 @@ typedef struct {
 extern const optiga_metadata_item OPTIGA_META_LCS_OPERATIONAL;
 extern const optiga_metadata_item OPTIGA_META_ACCESS_ALWAYS;
 extern const optiga_metadata_item OPTIGA_META_ACCESS_NEVER;
+extern const optiga_metadata_item OPTIGA_META_KEY_USE_ENC;
 extern const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE;
 
 optiga_result optiga_parse_metadata(const uint8_t *serialized,

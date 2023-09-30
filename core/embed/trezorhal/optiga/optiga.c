@@ -293,6 +293,7 @@ static bool optiga_pin_init_metadata(void) {
   metadata.change = OPTIGA_META_ACCESS_ALWAYS;
   metadata.read = OPTIGA_META_ACCESS_NEVER;
   metadata.execute = ACCESS_PIN_STRETCH_COUNTER;
+  metadata.key_usage = OPTIGA_META_KEY_USE_ENC;
   if (!optiga_set_metadata(OID_PIN_CMAC, &metadata)) {
     return false;
   }
