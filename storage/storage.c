@@ -593,39 +593,50 @@ static void derive_kek_optiga(
 }
 #endif
 
-static void derive_kek_set(const uint8_t *pin, size_t pin_len,
-                           const uint8_t *storage_salt, const uint8_t *ext_salt,
-                           uint8_t kek[SHA256_DIGEST_LENGTH],
-                           uint8_t keiv[SHA256_DIGEST_LENGTH]) {
+static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
+                                    const uint8_t *storage_salt,
+                                    const uint8_t *ext_salt,
+                                    uint8_t kek[SHA256_DIGEST_LENGTH],
+                                    uint8_t keiv[SHA256_DIGEST_LENGTH]) {
 #if USE_OPTIGA
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
+  bool ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
+  if (!ret) {
+    memzero(optiga_secret, sizeof(optiga_secret));
+    return secfalse;
+  }
   derive_kek_optiga(optiga_secret, kek, keiv);
   memzero(optiga_secret, sizeof(optiga_secret));
 #else
   derive_kek(pin, pin_len, storage_salt, ext_salt, kek, keiv);
 #endif
+  return sectrue;
 }
 
-static void derive_kek_unlock(const uint8_t *pin, size_t pin_len,
-                              const uint8_t *storage_salt,
-                              const uint8_t *ext_salt,
-                              uint8_t kek[SHA256_DIGEST_LENGTH],
-                              uint8_t keiv[SHA256_DIGEST_LENGTH]) {
+static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
+                                       const uint8_t *storage_salt,
+                                       const uint8_t *ext_salt,
+                                       uint8_t kek[SHA256_DIGEST_LENGTH],
+                                       uint8_t keiv[SHA256_DIGEST_LENGTH]) {
 #if USE_OPTIGA
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
+  bool ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
+  if (!ret) {
+    memzero(optiga_secret, sizeof(optiga_secret));
+    return secfalse;
+  }
   derive_kek_optiga(optiga_secret, kek, keiv);
   memzero(optiga_secret, sizeof(optiga_secret));
 #else
   derive_kek(pin, pin_len, storage_salt, ext_salt, kek, keiv);
 #endif
+  return sectrue;
 }
 
 static secbool set_pin(const uint8_t *pin, size_t pin_len,
@@ -641,7 +652,8 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
   chacha20poly1305_ctx ctx = {0};
   random_buffer(rand_salt, STORAGE_SALT_SIZE);
   ui_progress(0);
-  derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek, keiv);
+  ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek, keiv),
+         "derive_kek_set failed");
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
   memzero(keiv, sizeof(keiv));
@@ -1157,23 +1169,6 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     hal_delay(100);
   }
 
-  // Read the random salt from EDEK_PVC_KEY and use it to derive the KEK and
-  // KEIV from the PIN.
-  const void *rand_salt = NULL;
-  uint16_t len = 0;
-  if (sectrue != initialized ||
-      sectrue != norcow_get(EDEK_PVC_KEY, &rand_salt, &len) ||
-      len != STORAGE_SALT_SIZE + KEYS_SIZE + PVC_SIZE) {
-    memzero(&legacy_pin, sizeof(legacy_pin));
-    handle_fault("no EDEK");
-    return secfalse;
-  }
-  uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
-  derive_kek_unlock(unlock_pin, unlock_pin_len, (const uint8_t *)rand_salt,
-                    ext_salt, kek, keiv);
-  memzero(&legacy_pin, sizeof(legacy_pin));
-
   // First, we increase PIN fail counter in storage, even before checking the
   // PIN.  If the PIN is correct, we reset the counter afterwards.  If not, we
   // check if this is the last allowed attempt.
@@ -1187,6 +1182,26 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     handle_fault("PIN counter increment");
     return secfalse;
   }
+
+  // Read the random salt from EDEK_PVC_KEY and use it to derive the KEK and
+  // KEIV from the PIN.
+  const void *rand_salt = NULL;
+  uint16_t len = 0;
+  if (sectrue != initialized ||
+      sectrue != norcow_get(EDEK_PVC_KEY, &rand_salt, &len) ||
+      len != STORAGE_SALT_SIZE + KEYS_SIZE + PVC_SIZE) {
+    memzero(&legacy_pin, sizeof(legacy_pin));
+    handle_fault("no EDEK");
+    return secfalse;
+  }
+  uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
+  if (sectrue != derive_kek_unlock(unlock_pin, unlock_pin_len,
+                                   (const uint8_t *)rand_salt, ext_salt, kek,
+                                   keiv)) {
+    return secfalse;
+  }
+  memzero(&legacy_pin, sizeof(legacy_pin));
 
   // Check whether the entered PIN is correct.
   if (sectrue != decrypt_dek(kek, keiv)) {
