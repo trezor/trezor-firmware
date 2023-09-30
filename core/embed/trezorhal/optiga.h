@@ -41,22 +41,23 @@
 
 typedef secbool (*OPTIGA_UI_PROGRESS)(uint32_t elapsed_ms);
 
-int optiga_sign(uint8_t index, const uint8_t *digest, size_t digest_size,
-                uint8_t *signature, size_t max_sig_size, size_t *sig_size);
+int __wur optiga_sign(uint8_t index, const uint8_t *digest, size_t digest_size,
+                      uint8_t *signature, size_t max_sig_size,
+                      size_t *sig_size);
 
-bool optiga_cert_size(uint8_t index, size_t *cert_size);
+bool __wur optiga_cert_size(uint8_t index, size_t *cert_size);
 
-bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
-                      size_t *cert_size);
+bool __wur optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
+                            size_t *cert_size);
 
-bool optiga_random_buffer(uint8_t *dest, size_t size);
+bool __wur optiga_random_buffer(uint8_t *dest, size_t size);
 
-bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
-                    const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
-                    uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
+bool __wur optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
+                          const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+                          uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
 
-bool optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
-                       const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
-                       uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
+bool __wur optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
+                             const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+                             uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]);
 
 #endif
