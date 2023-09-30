@@ -42,6 +42,8 @@ const optiga_metadata_item OPTIGA_META_ACCESS_ALWAYS = {
     (const uint8_t[]){OPTIGA_ACCESS_COND_ALW}, 1};
 const optiga_metadata_item OPTIGA_META_ACCESS_NEVER = {
     (const uint8_t[]){OPTIGA_ACCESS_COND_NEV}, 1};
+const optiga_metadata_item OPTIGA_META_KEY_USE_ENC = {
+    (const uint8_t[]){OPTIGA_KEY_USAGE_ENC}, 1};
 const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE = {
     (const uint8_t[]){OPTIGA_KEY_USAGE_KEYAGREE}, 1};
 static const optiga_metadata_item OPTIGA_META_VERSION_DEFAULT = {
