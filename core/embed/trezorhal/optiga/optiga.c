@@ -340,12 +340,12 @@ static bool optiga_pin_init_metadata(void) {
   return true;
 }
 
-static bool optiga_pin_init_stretch(void) {
+static int optiga_pin_init_stretch(void) {
   // Generate a new key in OID_PIN_CMAC.
   optiga_result res =
       optiga_gen_sym_key(OPTIGA_AES_256, OPTIGA_KEY_USAGE_ENC, OID_PIN_CMAC);
   if (res != OPTIGA_SUCCESS) {
-    return false;
+    return res;
   }
 
   // Generate a new key in OID_PIN_ECDH.
@@ -355,14 +355,14 @@ static bool optiga_pin_init_stretch(void) {
       optiga_gen_key_pair(OPTIGA_CURVE_P256, OPTIGA_KEY_USAGE_KEYAGREE,
                           OID_PIN_ECDH, public_key, sizeof(public_key), &size);
   if (res != OPTIGA_SUCCESS) {
-    return false;
+    return res;
   }
 
-  return true;
+  return OPTIGA_SUCCESS;
 }
 
-static bool optiga_pin_stretch_secret(OPTIGA_UI_PROGRESS ui_progress,
-                                      uint8_t secret[OPTIGA_PIN_SECRET_SIZE]) {
+static int optiga_pin_stretch_secret(OPTIGA_UI_PROGRESS ui_progress,
+                                     uint8_t secret[OPTIGA_PIN_SECRET_SIZE]) {
   // This step hardens the PIN verification process in case an attacker is able
   // to extract the secret value of a data object in Optiga that has a
   // particular configuration, but does not allow secret extraction for other
@@ -399,7 +399,7 @@ static bool optiga_pin_stretch_secret(OPTIGA_UI_PROGRESS ui_progress,
       memzero(buffer, sizeof(buffer));
       memzero(result, sizeof(result));
       memzero(&ctx, sizeof(ctx));
-      return false;
+      return res;
     }
 
     hmac_sha256_Update(&ctx, buffer, size);
@@ -411,7 +411,7 @@ static bool optiga_pin_stretch_secret(OPTIGA_UI_PROGRESS ui_progress,
       memzero(buffer, sizeof(buffer));
       memzero(result, sizeof(result));
       memzero(&ctx, sizeof(ctx));
-      return false;
+      return res;
     }
 
     hmac_sha256_Update(&ctx, buffer, size);
@@ -424,7 +424,7 @@ static bool optiga_pin_stretch_secret(OPTIGA_UI_PROGRESS ui_progress,
       memzero(buffer, sizeof(buffer));
       memzero(result, sizeof(result));
       memzero(&ctx, sizeof(ctx));
-      return false;
+      return -1;
     }
     res =
         optiga_calc_ssec(OPTIGA_CURVE_P256, OID_PIN_ECDH, encoded_point,
@@ -434,7 +434,7 @@ static bool optiga_pin_stretch_secret(OPTIGA_UI_PROGRESS ui_progress,
       memzero(buffer, sizeof(buffer));
       memzero(result, sizeof(result));
       memzero(&ctx, sizeof(ctx));
-      return false;
+      return res;
     }
 
     hmac_sha256_Update(&ctx, buffer, size);
@@ -448,15 +448,21 @@ static bool optiga_pin_stretch_secret(OPTIGA_UI_PROGRESS ui_progress,
   memzero(buffer, sizeof(buffer));
   memzero(result, sizeof(result));
   memzero(&ctx, sizeof(ctx));
-  return true;
+  return OPTIGA_SUCCESS;
 }
 
-bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
-                    const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
-                    uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
-  if (!optiga_pin_init_metadata() || !optiga_pin_init_stretch()) {
-    return false;
+int optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
+                   const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+                   uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
+  if (!optiga_pin_init_metadata()) {
+    return -1;
   }
+
+  optiga_result res = optiga_pin_init_stretch();
+  if (res != OPTIGA_SUCCESS) {
+    return res;
+  }
+
   ui_progress(200);
 
   // Process the PIN-derived secret using a one-way function before sending it
@@ -469,16 +475,17 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
   // Combine the result with stretching secrets from the Optiga. This step
   // ensures that if an attacker extracts the value of OID_STRETCHED_PIN, then
   // it cannot be used to conduct an offline brute-force search for the PIN.
-  if (!optiga_pin_stretch_secret(ui_progress, stretched_pin)) {
+  res = optiga_pin_stretch_secret(ui_progress, stretched_pin);
+  if (res != OPTIGA_SUCCESS) {
     memzero(stretched_pin, sizeof(stretched_pin));
-    return false;
+    return res;
   }
 
   // Generate and store the master secret / PIN counter reset key.
-  optiga_result res = optiga_get_random(out_secret, OPTIGA_PIN_SECRET_SIZE);
+  res = optiga_get_random(out_secret, OPTIGA_PIN_SECRET_SIZE);
   if (res != OPTIGA_SUCCESS) {
     memzero(stretched_pin, sizeof(stretched_pin));
-    return false;
+    return res;
   }
   random_xor(out_secret, OPTIGA_PIN_SECRET_SIZE);
 
@@ -486,7 +493,7 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
                                OPTIGA_PIN_SECRET_SIZE);
   if (res != OPTIGA_SUCCESS) {
     memzero(stretched_pin, sizeof(stretched_pin));
-    return false;
+    return res;
   }
 
   // Authorise using OID_PIN_SECRET so that we can write to OID_PIN_COUNTER and
@@ -495,7 +502,7 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
                               out_secret, OPTIGA_PIN_SECRET_SIZE);
   if (res != OPTIGA_SUCCESS) {
     memzero(stretched_pin, sizeof(stretched_pin));
-    return false;
+    return res;
   }
 
   // Set the stretched PIN.
@@ -504,7 +511,7 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
   memzero(stretched_pin, sizeof(stretched_pin));
   if (res != OPTIGA_SUCCESS) {
     optiga_clear_auto_state(OID_PIN_SECRET);
-    return false;
+    return res;
   }
 
   // Initialize the PIN counter.
@@ -512,7 +519,7 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
                                sizeof(COUNTER_RESET));
   optiga_clear_auto_state(OID_PIN_SECRET);
   if (res != OPTIGA_SUCCESS) {
-    return false;
+    return res;
   }
 
   ui_progress(200);
@@ -523,8 +530,9 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
   // offline brute-force search for the PIN.
   hmac_sha256(pin_secret, OPTIGA_PIN_SECRET_SIZE, out_secret,
               OPTIGA_PIN_SECRET_SIZE, out_secret);
-  if (!optiga_pin_stretch_secret(ui_progress, out_secret)) {
-    return false;
+  res = optiga_pin_stretch_secret(ui_progress, out_secret);
+  if (res != OPTIGA_SUCCESS) {
+    return res;
   }
 
   // Combine the stretched master secret with the PIN-derived secret to obtain
@@ -544,30 +552,36 @@ bool optiga_pin_set(OPTIGA_UI_PROGRESS ui_progress,
   // security of their device any more than if the Optiga was not integrated
   // into the device in the first place.
 
-  return true;
+  return OPTIGA_SUCCESS;
 }
 
-bool optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
-                       const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
-                       uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
+int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
+                      const uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE],
+                      uint8_t out_secret[OPTIGA_PIN_SECRET_SIZE]) {
   // Process the PIN-derived secret using a one-way function before sending it
   // to the Optiga.
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   hmac_sha256(pin_secret, OPTIGA_PIN_SECRET_SIZE, NULL, 0, stretched_pin);
 
   // Combine the result with stretching secrets from the Optiga.
-  if (!optiga_pin_stretch_secret(ui_progress, stretched_pin)) {
+  optiga_result res = optiga_pin_stretch_secret(ui_progress, stretched_pin);
+  if (res != OPTIGA_SUCCESS) {
     memzero(stretched_pin, sizeof(stretched_pin));
-    return false;
+    return res;
   }
 
   // Authorise using OID_STRETCHED_PIN so that we can read from OID_PIN_SECRET.
-  optiga_result res =
-      optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN,
-                            stretched_pin, sizeof(stretched_pin));
+  res = optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN,
+                              stretched_pin, sizeof(stretched_pin));
   memzero(stretched_pin, sizeof(stretched_pin));
+  if (res == OPTIGA_ERR_CMD) {
+    uint8_t error_code = 0;
+    optiga_get_error_code(&error_code);
+    return error_code + OPTIGA_COMMAND_ERROR_OFFSET;
+  }
+
   if (res != OPTIGA_SUCCESS) {
-    return false;
+    return res;
   }
 
   // Read the master secret from OID_PIN_SECRET.
@@ -575,8 +589,12 @@ bool optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
   res = optiga_get_data_object(OID_PIN_SECRET, false, out_secret,
                                OPTIGA_PIN_SECRET_SIZE, &size);
   optiga_clear_auto_state(OID_STRETCHED_PIN);
-  if (res != OPTIGA_SUCCESS || size != OPTIGA_PIN_SECRET_SIZE) {
-    return false;
+  if (res != OPTIGA_SUCCESS) {
+    return res;
+  }
+
+  if (size != OPTIGA_PIN_SECRET_SIZE) {
+    return OPTIGA_ERR_SIZE;
   }
 
   ui_progress(200);
@@ -585,7 +603,7 @@ bool optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
   res = optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_PIN_SECRET,
                               out_secret, OPTIGA_PIN_SECRET_SIZE);
   if (res != OPTIGA_SUCCESS) {
-    return false;
+    return res;
   }
 
   // Reset the PIN counter.
@@ -593,7 +611,7 @@ bool optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
                                sizeof(COUNTER_RESET));
   optiga_clear_auto_state(OID_PIN_SECRET);
   if (res != OPTIGA_SUCCESS) {
-    return false;
+    return res;
   }
 
   ui_progress(200);
@@ -602,13 +620,14 @@ bool optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
   // stretching secrets from the Optiga.
   hmac_sha256(pin_secret, OPTIGA_PIN_SECRET_SIZE, out_secret,
               OPTIGA_PIN_SECRET_SIZE, out_secret);
-  if (!optiga_pin_stretch_secret(ui_progress, out_secret)) {
-    return false;
+  res = optiga_pin_stretch_secret(ui_progress, out_secret);
+  if (res != OPTIGA_SUCCESS) {
+    return res;
   }
 
   // Combine the stretched master secret with the PIN-derived secret to derive
   // the output secret.
   hmac_sha256(pin_secret, OPTIGA_PIN_SECRET_SIZE, out_secret,
               OPTIGA_PIN_SECRET_SIZE, out_secret);
-  return true;
+  return OPTIGA_SUCCESS;
 }
