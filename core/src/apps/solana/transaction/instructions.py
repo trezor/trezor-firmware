@@ -1116,15 +1116,23 @@ if TYPE_CHECKING:
             )
 
 
-INSTRUCTION_ID_LENGTHS = {
-    SYSTEM_PROGRAM_ID: 4,
-    STAKE_PROGRAM_ID: 4,
-    COMPUTE_BUDGET_PROGRAM_ID: 4,
-    TOKEN_PROGRAM_ID: 1,
-    ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: 0,
-    MEMO_ID: 0,
-    MEMO_LEGACY_ID: 0,
-}
+def get_instruction_id_length(program_id: str) -> int:
+    if program_id == SYSTEM_PROGRAM_ID:
+        return 4
+    if program_id == STAKE_PROGRAM_ID:
+        return 4
+    if program_id == COMPUTE_BUDGET_PROGRAM_ID:
+        return 4
+    if program_id == TOKEN_PROGRAM_ID:
+        return 1
+    if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
+        return 0
+    if program_id == MEMO_ID:
+        return 0
+    if program_id == MEMO_LEGACY_ID:
+        return 0
+
+    raise ValueError(f"Unknown program id: {program_id}")
 
 
 def get_instruction(

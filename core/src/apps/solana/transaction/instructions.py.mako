@@ -120,11 +120,14 @@ if TYPE_CHECKING:
     % endfor
 % endfor
 
-INSTRUCTION_ID_LENGTHS = {
+def get_instruction_id_length(program_id: str) -> int:
 % for program in programs["programs"]:
-    ${getProgramId(program)}: ${program["instruction_id_length"]},
+    if program_id == ${getProgramId(program)}:
+        return ${program["instruction_id_length"]}
 % endfor
-}
+
+    raise ValueError(f"Unknown program id: {program_id}")
+
 
 
 def get_instruction(

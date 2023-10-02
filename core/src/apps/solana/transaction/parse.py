@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+
 from trezor.crypto import base58
 
 from ..constants import (
@@ -10,6 +11,8 @@ from ..constants import (
 )
 
 if TYPE_CHECKING:
+    from typing import Callable
+
     from trezor.utils import BufferReader
 
     from ..types import Address, AddressReference
@@ -101,7 +104,7 @@ def parseBlockHash(serialized_tx: BufferReader) -> bytes:
 
 def parseInstructions(
     addresses: list[Address],
-    program_instruction_id_lengths: dict[str, int],
+    get_instruction_id_length: Callable[[str], int],
     serialized_tx: BufferReader,
     # [program_index, instruction_id, accounts, instruction_data]
 ) -> list[tuple[int, int, list[int], bytes]]:
@@ -120,7 +123,10 @@ def parseInstructions(
             accounts.append(account_index)
 
         data_length = parseVarInt(serialized_tx)
-        instruction_id_length = program_instruction_id_lengths[program_id]
+
+        instruction_id_length = get_instruction_id_length(program_id)
+        # some programs e.g. Associated Token Account Program don't include the instruction
+        # id in the data for instruction id 0 but they include for the other instructions.
         if data_length <= instruction_id_length:
             instruction_id = 0
         else:
@@ -128,7 +134,9 @@ def parseInstructions(
                 serialized_tx.read(instruction_id_length), "little"
             )
 
-        instruction_data = serialized_tx.read(data_length - instruction_id_length)
+        instruction_data = serialized_tx.read(
+            max(0, data_length - instruction_id_length)
+        )
 
         instructions.append((program_index, instruction_id, accounts, instruction_data))
 

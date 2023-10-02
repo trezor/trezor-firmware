@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor.utils import BufferReader
 
 from .instruction import Instruction
-from .instructions import INSTRUCTION_ID_LENGTHS, get_instruction
+from .instructions import get_instruction, get_instruction_id_length
 from .parse import (
     parseAddresses,
     parseBlockHash,
@@ -54,7 +54,7 @@ class Transaction:
         self.blockhash = parseBlockHash(serialized_tx)
 
         raw_instructions = parseInstructions(
-            self.addresses, INSTRUCTION_ID_LENGTHS, serialized_tx
+            self.addresses, get_instruction_id_length, serialized_tx
         )
 
         addresses_and_luts: list[Account] = []
