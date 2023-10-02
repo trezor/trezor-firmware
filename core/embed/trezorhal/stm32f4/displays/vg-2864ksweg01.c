@@ -141,7 +141,8 @@ static inline void spi_send(const uint8_t *data, int len) {
 
 void display_handle_init(void) {
   spi_handle.Instance = OLED_SPI;
-  spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  spi_handle.State = HAL_SPI_STATE_RESET;
+  spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
   spi_handle.Init.CLKPhase = SPI_PHASE_1EDGE;
   spi_handle.Init.CLKPolarity = SPI_POLARITY_LOW;
@@ -241,7 +242,10 @@ void display_init(void) {
   display_refresh();
 }
 
-void display_reinit(void) { display_handle_init(); }
+void display_reinit(void) {
+  display_handle_init();
+  HAL_SPI_Init(&spi_handle);
+}
 
 static inline uint8_t reverse_byte(uint8_t b) {
   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
