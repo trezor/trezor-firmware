@@ -1027,7 +1027,7 @@
       "id": "ComputeBudget111111111111111111111111111111",
       "name": "Compute Budget Program",
       "instruction_id_format": {
-        "length": 4,
+        "length": 1,
         "is_included_if_zero": true
       },
       "instructions": [

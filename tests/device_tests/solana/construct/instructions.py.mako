@@ -7,8 +7,10 @@
 <%def name="getProgramAccountsName(program)">_${program["name"].upper().replace(" ", "_")}_ACCOUNTS</%def>\
 <%def name="getProgramParamsName(program)">_${program["name"].upper().replace(" ", "_")}_PARAMETERS</%def>\
 <%def name="getConstructType(type)">\
-% if type in ("u32", "u64", "i32", "i64"):
+% if type in ("u64", "i64"):
 Int64ul\
+% elif type in ("u32", "i32"):
+Int32ul\
 % elif type in ("pubKey", "authority"):
 PublicKey()\
 % elif type == "string":
@@ -21,6 +23,7 @@ Int64ul\
 </%def>\
 from enum import IntEnum
 from construct import (
+    Int32ul,
     Int64ul,
     Struct,
     Switch,

@@ -1122,7 +1122,7 @@ def get_instruction_id_length(program_id: str) -> InstructionIdFormat:
     if program_id == STAKE_PROGRAM_ID:
         return {"length": 4, "is_included_if_zero": True}
     if program_id == COMPUTE_BUDGET_PROGRAM_ID:
-        return {"length": 4, "is_included_if_zero": True}
+        return {"length": 1, "is_included_if_zero": True}
     if program_id == TOKEN_PROGRAM_ID:
         return {"length": 1, "is_included_if_zero": True}
     if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:

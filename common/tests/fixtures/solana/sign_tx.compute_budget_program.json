@@ -1,0 +1,68 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "description": "Transfer with compute budget",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": "legacy",
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_id": "COMPUTE_BUDGET_PROGRAM_ID",
+              "instruction_accounts": {},
+              "data": {
+                "instruction_id": "INS_SET_COMPUTE_UNIT_LIMIT",
+                "parameters": {
+                  "units": 200000
+                }
+              }
+            },
+            {
+              "program_id": "COMPUTE_BUDGET_PROGRAM_ID",
+              "instruction_accounts": {},
+              "data": {
+                "instruction_id": "INS_SET_COMPUTE_UNIT_PRICE",
+                "parameters": {
+                  "lamports": 8000
+                }
+              }
+            },
+            {
+              "program_id": "SYSTEM_PROGRAM_ID",
+              "instruction_accounts": {
+                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "recipient_account": "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF"
+              },
+              "data": {
+                "instruction_id": "INS_TRANSFER",
+                "parameters": {
+                  "lamports": 20000000
+                }
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "742baf7a4e92f2d8e617512cb75b8698dd44cff6568a29c288767b31403879424ec16c0642b12081995a727f4a936ba49fc1797e900431a8c66297ba0da3c708"
+      }
+    }
+  ]
+}

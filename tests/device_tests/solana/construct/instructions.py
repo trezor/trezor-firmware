@@ -3,7 +3,7 @@
 
 from enum import IntEnum
 
-from construct import Int64ul, Struct, Switch
+from construct import Int32ul, Int64ul, Struct, Switch
 
 from .custom_constructs import (
     _STRING,
@@ -462,10 +462,10 @@ _COMPUTE_BUDGET_PROGRAM_PARAMETERS = InstructionData(
         lambda this: this.instruction_id,
         {
             ComputeBudgetProgramInstruction.INS_REQUEST_HEAP_FRAME: Struct(
-                "bytes" / Int64ul,
+                "bytes" / Int32ul,
             ),
             ComputeBudgetProgramInstruction.INS_SET_COMPUTE_UNIT_LIMIT: Struct(
-                "units" / Int64ul,
+                "units" / Int32ul,
             ),
             ComputeBudgetProgramInstruction.INS_SET_COMPUTE_UNIT_PRICE: Struct(
                 "lamports" / Int64ul,
@@ -570,7 +570,7 @@ _MEMO_LEGACY_PROGRAM_PARAMETERS = InstructionData(
 INSTRUCTION_ID_FORMATS = {
     Program.SYSTEM_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
     Program.STAKE_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
-    Program.COMPUTE_BUDGET_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
+    Program.COMPUTE_BUDGET_PROGRAM_ID: {"length": 1, "is_included_if_zero": True},
     Program.TOKEN_PROGRAM_ID: {"length": 1, "is_included_if_zero": True},
     Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: {
         "length": 1,
