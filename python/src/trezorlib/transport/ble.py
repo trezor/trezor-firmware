@@ -213,6 +213,23 @@ class BleAsync:
         ].acquire()
         self.current = address
 
+    async def disconnect(self):
+        if self.current is None:
+            return
+        ble_device = self.devices[self.current]
+        if ble_device.connected:
+            LOG.info(
+                "Disconnecting from %s (%s)..." % (ble_device.name, ble_device.address)
+            )
+            await ble_device.disconnect()
+        else:
+            LOG.info(
+                "Disconnected from %s (%s)." % (ble_device.name, ble_device.address)
+            )
+        self.current = None
+        self.rx = None
+        self.tx = None
+
     async def read(self):
         assert self.tx is not None
         await ready(self.tx)
