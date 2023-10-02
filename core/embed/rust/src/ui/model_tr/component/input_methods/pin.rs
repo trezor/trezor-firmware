@@ -262,7 +262,10 @@ where
                     self.show_real_pin = true;
                     self.update(ctx);
                 }
-                PinAction::Enter => return Some(CancelConfirmMsg::Confirmed),
+                PinAction::Enter if !self.is_empty() => {
+                    // ENTER is not valid when the PIN is empty
+                    return Some(CancelConfirmMsg::Confirmed);
+                }
                 PinAction::Digit(ch) if !self.is_full() => {
                     self.textbox.append(ctx, ch);
                     // Choosing random digit to be shown next
