@@ -127,7 +127,7 @@ def parseInstructions(
         instruction_id_length = get_instruction_id_length(program_id)
         # some programs e.g. Associated Token Account Program don't include the instruction
         # id in the data for instruction id 0 but they include for the other instructions.
-        if data_length <= instruction_id_length:
+        if data_length < instruction_id_length:
             instruction_id = 0
         else:
             instruction_id = int.from_bytes(
