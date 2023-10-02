@@ -2,7 +2,6 @@
 # do not edit manually!
 from typing import TYPE_CHECKING
 
-from trezor.crypto import base58
 from trezor.wire import ProcessError
 
 from .instruction import Instruction
@@ -253,9 +252,7 @@ def __getattr__(name: str) -> Type[Instruction]:
     class FakeClass(Instruction):
         @classmethod
         def is_type_of(cls, ins: Any):
-            return (
-                base58.encode(ins.program_id) == id[0] and ins.instruction_id == id[1]
-            )
+            return ins.program_id == id[0] and ins.instruction_id == id[1]
 
     return FakeClass
 
@@ -278,7 +275,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["SystemProgramCreateAccountInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -293,7 +290,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["SystemProgramAssignInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -309,7 +306,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["SystemProgramTransferInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -332,7 +329,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["SystemProgramCreateAccountWithSeedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -347,7 +344,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["SystemProgramAllocateInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -368,7 +365,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["SystemProgramAllocateWithSeedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -388,7 +385,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["SystemProgramAssignWithSeedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -408,7 +405,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["StakeProgramInitializeInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -427,7 +424,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["StakeProgramAuthorizeInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -447,7 +444,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["StakeProgramDelegateStakeInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -464,7 +461,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["StakeProgramSplitInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -484,7 +481,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["StakeProgramWithdrawInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -499,7 +496,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["StakeProgramDeactivateInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -517,7 +514,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["StakeProgramSetLockupInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -534,7 +531,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["StakeProgramMergeInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -557,7 +554,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["StakeProgramAuthorizeWithSeedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -575,7 +572,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["StakeProgramInitializeCheckedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -596,7 +593,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["StakeProgramAuthorizeCheckedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -619,7 +616,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["StakeProgramAuthorizeCheckedWithSeedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -639,7 +636,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["StakeProgramSetLockupCheckedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -654,7 +651,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["ComputeBudgetProgramRequestHeapFrameInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -669,7 +666,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["ComputeBudgetProgramSetComputeUnitLimitInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -684,7 +681,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["ComputeBudgetProgramSetComputeUnitPriceInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -702,7 +699,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramInitializeAccountInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -721,7 +718,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramInitializeMultisigInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -738,7 +735,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["TokenProgramTransferInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -755,7 +752,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["TokenProgramApproveInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -769,7 +766,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["TokenProgramRevokeInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -788,7 +785,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramSetAuthorityInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -805,7 +802,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["TokenProgramMinttoInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -822,7 +819,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["TokenProgramBurnInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -839,7 +836,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramCloseAccountInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -856,7 +853,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramFreezeAccountInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -873,7 +870,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramThawAccountInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -894,7 +891,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramTransferCheckedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -915,7 +912,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramApproveCheckedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -935,7 +932,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramMinttoCheckedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -955,7 +952,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramBurnCheckedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -974,7 +971,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramInitializeAccount2Instruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -987,7 +984,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["TokenProgramSyncNativeInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -1005,7 +1002,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramInitializeAccount3Instruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -1020,7 +1017,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["TokenProgramInitializeImmutableOwnerInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -1040,7 +1037,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["AssociatedTokenAccountProgramCreateInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -1060,7 +1057,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["AssociatedTokenAccountProgramCreateIdempotentInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -1081,7 +1078,7 @@ if TYPE_CHECKING:
             cls, ins: Any
         ) -> TypeGuard["AssociatedTokenAccountProgramRecoverNestedInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -1096,7 +1093,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["MemoCreateInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -1111,7 +1108,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["MemoLegacyCreateInstruction"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -1136,12 +1133,12 @@ def get_instruction_id_length(program_id: str) -> int:
 
 
 def get_instruction(
-    program_id: bytes,
+    program_id: str,
     instruction_id: int,
     instruction_accounts: list[Account],
     instruction_data: bytes,
 ) -> Instruction:
-    if base58.encode(program_id) == SYSTEM_PROGRAM_ID:
+    if program_id == SYSTEM_PROGRAM_ID:
         if instruction_id == SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT:
             return Instruction(
                 instruction_data,
@@ -1435,9 +1432,9 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+                f"Unknown instruction type: {program_id} - {instruction_id}"
             )
-    if base58.encode(program_id) == STAKE_PROGRAM_ID:
+    if program_id == STAKE_PROGRAM_ID:
         if instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE:
             return Instruction(
                 instruction_data,
@@ -2131,9 +2128,9 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+                f"Unknown instruction type: {program_id} - {instruction_id}"
             )
-    if base58.encode(program_id) == COMPUTE_BUDGET_PROGRAM_ID:
+    if program_id == COMPUTE_BUDGET_PROGRAM_ID:
         if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME:
             return Instruction(
                 instruction_data,
@@ -2196,9 +2193,9 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+                f"Unknown instruction type: {program_id} - {instruction_id}"
             )
-    if base58.encode(program_id) == TOKEN_PROGRAM_ID:
+    if program_id == TOKEN_PROGRAM_ID:
         if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT:
             return Instruction(
                 instruction_data,
@@ -2899,9 +2896,9 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+                f"Unknown instruction type: {program_id} - {instruction_id}"
             )
-    if base58.encode(program_id) == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
+    if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
         if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE:
             return Instruction(
                 instruction_data,
@@ -3084,9 +3081,9 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+                f"Unknown instruction type: {program_id} - {instruction_id}"
             )
-    if base58.encode(program_id) == MEMO_ID:
+    if program_id == MEMO_ID:
         if instruction_id == MEMO_ID_INS_CREATE:
             return Instruction(
                 instruction_data,
@@ -3116,9 +3113,9 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+                f"Unknown instruction type: {program_id} - {instruction_id}"
             )
-    if base58.encode(program_id) == MEMO_LEGACY_ID:
+    if program_id == MEMO_LEGACY_ID:
         if instruction_id == MEMO_LEGACY_ID_INS_CREATE:
             return Instruction(
                 instruction_data,
@@ -3148,9 +3145,7 @@ def get_instruction(
             )
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+                f"Unknown instruction type: {program_id} - {instruction_id}"
             )
     else:
-        raise ProcessError(
-            f"Unknown program type: {program_id}({base58.encode(program_id)}) {instruction_id}"
-        )
+        raise ProcessError(f"Unknown program type: {program_id} - {instruction_id}")

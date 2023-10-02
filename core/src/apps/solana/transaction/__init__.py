@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor.crypto import base58
 from trezor.utils import BufferReader
 
 from .instruction import Instruction
@@ -74,7 +75,7 @@ class Transaction:
             accounts,
             instruction_data,
         ) in raw_instructions:
-            program_id = self.addresses[program_index][0]
+            program_id = base58.encode(self.addresses[program_index][0])
             instruction_accounts = [
                 addresses_and_luts[account_index] for account_index in accounts
             ]

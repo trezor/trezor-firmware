@@ -52,7 +52,6 @@ int\
 % endif
 </%def>\
 from typing import TYPE_CHECKING
-from trezor.crypto import base58
 from trezor.wire import ProcessError
 
 from .instruction import Instruction
@@ -86,7 +85,7 @@ def __getattr__(name: str) -> Type[Instruction]:
     class FakeClass(Instruction):
         @classmethod
         def is_type_of(cls, ins: Any):
-            return base58.encode(ins.program_id) == id[0] and ins.instruction_id == id[1]
+            return ins.program_id == id[0] and ins.instruction_id == id[1]
 
     return FakeClass
 
@@ -113,7 +112,7 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, ins: Any) -> TypeGuard["${getClassName(program, instruction)}"]:
             return (
-                base58.encode(ins.program_id) == cls.PROGRAM_ID
+                ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
@@ -131,11 +130,11 @@ def get_instruction_id_length(program_id: str) -> int:
 
 
 def get_instruction(
-    program_id: bytes, instruction_id: int, instruction_accounts: list[Account], instruction_data: bytes
+    program_id: str, instruction_id: int, instruction_accounts: list[Account], instruction_data: bytes
 ) -> Instruction:
 % for program in programs["programs"]:
 % if len(program["instructions"]) > 0:
-    if base58.encode(program_id) == ${getProgramId(program)}:
+    if program_id == ${getProgramId(program)}:
     % for instruction in program["instructions"]:
         % if instruction == program["instructions"][0]:
         if instruction_id == ${getInstructionIdText(program, instruction)}:
@@ -158,11 +157,11 @@ def get_instruction(
     % endfor
         else:
             raise ProcessError(
-                f"Unknown instruction type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+                f"Unknown instruction type: {program_id} - {instruction_id}"
             )
 % endif
 % endfor
     else:
         raise ProcessError(
-            f"Unknown program type: {program_id}({base58.encode(program_id)}) {instruction_id}"
+            f"Unknown program type: {program_id} - {instruction_id}"
         )

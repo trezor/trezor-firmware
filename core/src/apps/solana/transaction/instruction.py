@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor.crypto import base58
 from trezor.utils import BufferReader
 
 from .parse import parseProperty
@@ -27,7 +26,7 @@ class Instruction:
     PROGRAM_ID: str
     INSTRUCTION_ID: int
 
-    program_id: bytes
+    program_id: str
     instruction_id: int
 
     property_templates: list[PropertyTemplate]
@@ -54,7 +53,7 @@ class Instruction:
     def __init__(
         self,
         instruction_data: bytes,
-        program_id: bytes,
+        program_id: str,
         accounts: list[Account],
         instruction_id: int,
         property_templates: list[PropertyTemplate],
@@ -145,6 +144,6 @@ class Instruction:
     @classmethod
     def is_type_of(cls, ins: Any) -> TypeGuard["Instruction"]:
         return (
-            base58.encode(ins.program_id) == cls.PROGRAM_ID
+            ins.program_id == cls.PROGRAM_ID
             and ins.instruction_id == cls.INSTRUCTION_ID
         )
