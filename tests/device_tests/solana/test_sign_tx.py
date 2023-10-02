@@ -21,7 +21,7 @@ from trezorlib.solana import sign_tx
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
-from .construct.instructions import replace_account_placeholders
+from .construct.instructions import INSTRUCTION_ID_FORMATS, replace_account_placeholders
 from .construct.transaction import MESSAGE
 
 pytestmark = [
@@ -34,11 +34,16 @@ pytestmark = [
 @parametrize_using_common_fixtures(
     "solana/sign_tx.system_program.json",
     "solana/sign_tx.stake_program.json",
+    "solana/sign_tx.associated_token_account_program.json",
+    "solana/sign_tx.memo_program.json",
 )
 def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
 
-    serialized_tx = MESSAGE.build(replace_account_placeholders(parameters["construct"]))
+    serialized_tx = MESSAGE.build(
+        replace_account_placeholders(parameters["construct"]),
+        instruction_id_formats=INSTRUCTION_ID_FORMATS,
+    )
 
     actual_result = sign_tx(
         client,

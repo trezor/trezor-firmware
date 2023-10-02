@@ -13,13 +13,14 @@ Int64ul\
 PublicKey()\
 % elif type == "string":
 _STRING\
+% elif type == "memo":
+Memo()\
 % else:
 Int64ul\
 % endif
 </%def>\
 from enum import IntEnum
 from construct import (
-    Int32ul,
     Int64ul,
     Struct,
     Switch,
@@ -28,7 +29,9 @@ from .custom_constructs import (
     AccountReference,
     Accounts,
     InstructionData,
+    InstructionId,
     InstructionProgramId,
+    Memo,
     PublicKey,
     _STRING,
 )
@@ -62,7 +65,7 @@ ${getProgramAccountsName(program)} = Switch(
 
 % for program in programs["programs"]:
 ${getProgramParamsName(program)} = InstructionData(
-    "instruction_id" / Int32ul,
+    "instruction_id" / InstructionId(),
     "parameters"
     / Switch(
         lambda this: this.instruction_id,
@@ -78,6 +81,12 @@ ${getProgramParamsName(program)} = InstructionData(
     )
 )
 %endfor
+
+INSTRUCTION_ID_FORMATS = {
+% for program in programs["programs"]:
+    Program.${getProgramId(program)}: ${program["instruction_id_format"]},
+% endfor
+}
 
 _INSTRUCTION = Struct(
     "program_id" / InstructionProgramId(),

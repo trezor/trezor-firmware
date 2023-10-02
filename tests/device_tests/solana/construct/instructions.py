@@ -3,14 +3,16 @@
 
 from enum import IntEnum
 
-from construct import Int32ul, Int64ul, Struct, Switch
+from construct import Int64ul, Struct, Switch
 
 from .custom_constructs import (
     _STRING,
     AccountReference,
     Accounts,
     InstructionData,
+    InstructionId,
     InstructionProgramId,
+    Memo,
     PublicKey,
 )
 
@@ -21,8 +23,8 @@ class Program:
     COMPUTE_BUDGET_PROGRAM_ID = "ComputeBudget111111111111111111111111111111"
     TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
     ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-    MEMO_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
-    MEMO_LEGACY_ID = "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"
+    MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+    MEMO_LEGACY_PROGRAM_ID = "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"
 
 
 class SystemProgramInstruction(IntEnum):
@@ -85,12 +87,12 @@ class AssociatedTokenAccountProgramInstruction(IntEnum):
     INS_RECOVER_NESTED = 2
 
 
-class MemoInstruction(IntEnum):
-    INS_CREATE = 0
+class MemoProgramInstruction(IntEnum):
+    INS_MEMO = 0
 
 
-class MemoLegacyInstruction(IntEnum):
-    INS_CREATE = 0
+class MemoLegacyProgramInstruction(IntEnum):
+    INS_MEMO = 0
 
 
 _SYSTEM_PROGRAM_ACCOUNTS = Switch(
@@ -342,25 +344,25 @@ _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ACCOUNTS = Switch(
         ),
     },
 )
-_MEMO_ACCOUNTS = Switch(
+_MEMO_PROGRAM_ACCOUNTS = Switch(
     lambda this: this.data["instruction_id"],
     {
-        MemoInstruction.INS_CREATE: Accounts(
+        MemoProgramInstruction.INS_MEMO: Accounts(
             "signer_accounts" / AccountReference(),
         ),
     },
 )
-_MEMO_LEGACY_ACCOUNTS = Switch(
+_MEMO_LEGACY_PROGRAM_ACCOUNTS = Switch(
     lambda this: this.data["instruction_id"],
     {
-        MemoLegacyInstruction.INS_CREATE: Accounts(
+        MemoLegacyProgramInstruction.INS_MEMO: Accounts(
             "signer_accounts" / AccountReference(),
         ),
     },
 )
 
 _SYSTEM_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / Int32ul,
+    "instruction_id" / InstructionId(),
     "parameters"
     / Switch(
         lambda this: this.instruction_id,
@@ -401,7 +403,7 @@ _SYSTEM_PROGRAM_PARAMETERS = InstructionData(
     ),
 )
 _STAKE_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / Int32ul,
+    "instruction_id" / InstructionId(),
     "parameters"
     / Switch(
         lambda this: this.instruction_id,
@@ -454,7 +456,7 @@ _STAKE_PROGRAM_PARAMETERS = InstructionData(
     ),
 )
 _COMPUTE_BUDGET_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / Int32ul,
+    "instruction_id" / InstructionId(),
     "parameters"
     / Switch(
         lambda this: this.instruction_id,
@@ -472,7 +474,7 @@ _COMPUTE_BUDGET_PROGRAM_PARAMETERS = InstructionData(
     ),
 )
 _TOKEN_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / Int32ul,
+    "instruction_id" / InstructionId(),
     "parameters"
     / Switch(
         lambda this: this.instruction_id,
@@ -529,7 +531,7 @@ _TOKEN_PROGRAM_PARAMETERS = InstructionData(
     ),
 )
 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / Int32ul,
+    "instruction_id" / InstructionId(),
     "parameters"
     / Switch(
         lambda this: this.instruction_id,
@@ -540,30 +542,43 @@ _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_PARAMETERS = InstructionData(
         },
     ),
 )
-_MEMO_PARAMETERS = InstructionData(
-    "instruction_id" / Int32ul,
+_MEMO_PROGRAM_PARAMETERS = InstructionData(
+    "instruction_id" / InstructionId(),
     "parameters"
     / Switch(
         lambda this: this.instruction_id,
         {
-            MemoInstruction.INS_CREATE: Struct(
-                "memo" / _STRING,
+            MemoProgramInstruction.INS_MEMO: Struct(
+                "memo" / Memo(),
             ),
         },
     ),
 )
-_MEMO_LEGACY_PARAMETERS = InstructionData(
-    "instruction_id" / Int32ul,
+_MEMO_LEGACY_PROGRAM_PARAMETERS = InstructionData(
+    "instruction_id" / InstructionId(),
     "parameters"
     / Switch(
         lambda this: this.instruction_id,
         {
-            MemoLegacyInstruction.INS_CREATE: Struct(
-                "memo" / _STRING,
+            MemoLegacyProgramInstruction.INS_MEMO: Struct(
+                "memo" / Memo(),
             ),
         },
     ),
 )
+
+INSTRUCTION_ID_FORMATS = {
+    Program.SYSTEM_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
+    Program.STAKE_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
+    Program.COMPUTE_BUDGET_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
+    Program.TOKEN_PROGRAM_ID: {"length": 1, "is_included_if_zero": True},
+    Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: {
+        "length": 1,
+        "is_included_if_zero": False,
+    },
+    Program.MEMO_PROGRAM_ID: {"length": 0, "is_included_if_zero": False},
+    Program.MEMO_LEGACY_PROGRAM_ID: {"length": 0, "is_included_if_zero": False},
+}
 
 _INSTRUCTION = Struct(
     "program_id" / InstructionProgramId(),
@@ -576,8 +591,8 @@ _INSTRUCTION = Struct(
             Program.COMPUTE_BUDGET_PROGRAM_ID: _COMPUTE_BUDGET_PROGRAM_ACCOUNTS,
             Program.TOKEN_PROGRAM_ID: _TOKEN_PROGRAM_ACCOUNTS,
             Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ACCOUNTS,
-            Program.MEMO_ID: _MEMO_ACCOUNTS,
-            Program.MEMO_LEGACY_ID: _MEMO_LEGACY_ACCOUNTS,
+            Program.MEMO_PROGRAM_ID: _MEMO_PROGRAM_ACCOUNTS,
+            Program.MEMO_LEGACY_PROGRAM_ID: _MEMO_LEGACY_PROGRAM_ACCOUNTS,
         },
     ),
     "data"
@@ -589,8 +604,8 @@ _INSTRUCTION = Struct(
             Program.COMPUTE_BUDGET_PROGRAM_ID: _COMPUTE_BUDGET_PROGRAM_PARAMETERS,
             Program.TOKEN_PROGRAM_ID: _TOKEN_PROGRAM_PARAMETERS,
             Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_PARAMETERS,
-            Program.MEMO_ID: _MEMO_PARAMETERS,
-            Program.MEMO_LEGACY_ID: _MEMO_LEGACY_PARAMETERS,
+            Program.MEMO_PROGRAM_ID: _MEMO_PROGRAM_PARAMETERS,
+            Program.MEMO_LEGACY_PROGRAM_ID: _MEMO_LEGACY_PROGRAM_PARAMETERS,
         },
     ),
 )
@@ -621,12 +636,12 @@ def replace_account_placeholders(construct):
             ] = AssociatedTokenAccountProgramInstruction.__dict__[
                 ins["data"]["instruction_id"]
             ].value
-        elif program_id == Program.MEMO_ID:
-            ins["data"]["instruction_id"] = MemoInstruction.__dict__[
+        elif program_id == Program.MEMO_PROGRAM_ID:
+            ins["data"]["instruction_id"] = MemoProgramInstruction.__dict__[
                 ins["data"]["instruction_id"]
             ].value
-        elif program_id == Program.MEMO_LEGACY_ID:
-            ins["data"]["instruction_id"] = MemoLegacyInstruction.__dict__[
+        elif program_id == Program.MEMO_LEGACY_PROGRAM_ID:
+            ins["data"]["instruction_id"] = MemoLegacyProgramInstruction.__dict__[
                 ins["data"]["instruction_id"]
             ].value
 

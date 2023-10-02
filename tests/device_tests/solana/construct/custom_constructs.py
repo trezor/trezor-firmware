@@ -89,6 +89,29 @@ class InstructionData(Struct):
         return obj
 
 
+class InstructionId(Construct):
+    def _build(self, obj, stream, context, path):
+        instruction_id_formats = _find_in_context(context, "instruction_id_formats")
+        program_id = _find_in_context(context, "program_id")
+
+        instruction_id_format = instruction_id_formats[program_id]
+
+        if obj == 0 and not instruction_id_format["is_included_if_zero"]:
+            return obj
+
+        length = instruction_id_format["length"]
+        if length == 0:
+            return obj
+        elif length == 1:
+            stream.write(bytes([obj]))
+        elif length == 4:
+            Int32ul._build(obj, stream, context, path)
+        else:
+            raise ValueError("Invalid instruction ID length")
+
+        return obj
+
+
 class AccountReference(Construct):
     def _build(self, obj, stream, context, path):
         if obj.startswith("LUT"):
@@ -113,6 +136,12 @@ class AccountReference(Construct):
 
         stream.write(bytes([account_index]))
 
+        return obj
+
+
+class Memo(Construct):
+    def _build(self, obj, stream, context, path):
+        stream.write(obj.encode("utf-8"))
         return obj
 
 
