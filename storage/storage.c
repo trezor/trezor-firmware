@@ -602,9 +602,9 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  bool ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
+  int ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
-  if (!ret) {
+  if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
     return secfalse;
   }
@@ -625,10 +625,17 @@ static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-  bool ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
+  int ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
-  if (!ret) {
+  if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
+    if (ret == OPTIGA_ERR_COUNTER_EXCEEDED) {
+      // Unreachable code. Wipe should have already been triggered in unlock().
+      storage_wipe();
+      show_pin_too_many_screen();
+    }
+    ensure(ret == OPTIGA_ERR_AUTH_FAIL ? sectrue : secfalse,
+           "optiga_pin_verify failed");
     return secfalse;
   }
   derive_kek_optiga(optiga_secret, kek, keiv);
@@ -1196,15 +1203,13 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   }
   uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
   uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
-  if (sectrue != derive_kek_unlock(unlock_pin, unlock_pin_len,
-                                   (const uint8_t *)rand_salt, ext_salt, kek,
-                                   keiv)) {
-    return secfalse;
-  }
-  memzero(&legacy_pin, sizeof(legacy_pin));
 
   // Check whether the entered PIN is correct.
-  if (sectrue != decrypt_dek(kek, keiv)) {
+  if (sectrue != derive_kek_unlock(unlock_pin, unlock_pin_len,
+                                   (const uint8_t *)rand_salt, ext_salt, kek,
+                                   keiv) ||
+      sectrue != decrypt_dek(kek, keiv)) {
+    memzero(&legacy_pin, sizeof(legacy_pin));
     // Wipe storage if too many failures
     wait_random();
     if (ctr + 1 >= PIN_MAX_TRIES) {
@@ -1213,6 +1218,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     }
     return secfalse;
   }
+  memzero(&legacy_pin, sizeof(legacy_pin));
   memzero(kek, sizeof(kek));
   memzero(keiv, sizeof(keiv));
 

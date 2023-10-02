@@ -30,8 +30,14 @@
 #define OPTIGA_DEVICE_ECC_KEY_INDEX 0
 #define OPTIGA_COMMAND_ERROR_OFFSET 0x100
 
-// Error code 7: Access conditions not satisfied
+// Error code 0x07: Access conditions not satisfied
 #define OPTIGA_ERR_ACCESS_COND_NOT_SAT (OPTIGA_COMMAND_ERROR_OFFSET + 0x07)
+
+// Error code 0x0E: Counter threshold limit exceeded
+#define OPTIGA_ERR_COUNTER_EXCEEDED (OPTIGA_COMMAND_ERROR_OFFSET + 0x0E)
+
+// Error code 0x2F: Authorization failure
+#define OPTIGA_ERR_AUTH_FAIL (OPTIGA_COMMAND_ERROR_OFFSET + 0x2F)
 
 // Size of secrets used in PIN processing, e.g. salted PIN, master secret etc.
 #define OPTIGA_PIN_SECRET_SIZE 32
