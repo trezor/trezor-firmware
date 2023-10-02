@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
     from trezor.utils import BufferReader
 
-    from ..types import Address, AddressReference
+    from ..types import Address, AddressReference, InstructionIdFormat
 
 
 def parseHeader(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]:
@@ -104,7 +104,7 @@ def parseBlockHash(serialized_tx: BufferReader) -> bytes:
 
 def parseInstructions(
     addresses: list[Address],
-    get_instruction_id_length: Callable[[str], int],
+    get_instruction_id_format: Callable[[str], InstructionIdFormat],
     serialized_tx: BufferReader,
     # [program_index, instruction_id, accounts, instruction_data]
 ) -> list[tuple[int, int, list[int], bytes]]:
@@ -124,10 +124,14 @@ def parseInstructions(
 
         data_length = parseVarInt(serialized_tx)
 
-        instruction_id_length = get_instruction_id_length(program_id)
+        instruction_id_format = get_instruction_id_format(program_id)
+        instruction_id_length = instruction_id_format["length"]
         # some programs e.g. Associated Token Account Program don't include the instruction
         # id in the data for instruction id 0 but they include for the other instructions.
         if data_length < instruction_id_length:
+            if instruction_id_format["is_included_if_zero"]:
+                raise ValueError("Invalid instruction data")
+
             instruction_id = 0
         else:
             instruction_id = int.from_bytes(

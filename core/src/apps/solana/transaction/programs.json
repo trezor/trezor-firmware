@@ -3,7 +3,10 @@
     {
       "id": "11111111111111111111111111111111",
       "name": "System Program",
-      "instruction_id_length": 4,
+      "instruction_id_format": {
+        "length": 4,
+        "is_included_if_zero": true
+      },
       "instructions": [
         {
           "id": 0,
@@ -301,7 +304,10 @@
     {
       "id": "Stake11111111111111111111111111111111111111",
       "name": "Stake Program",
-      "instruction_id_length": 4,
+      "instruction_id_format": {
+        "length": 4,
+        "is_included_if_zero": true
+      },
       "instructions": [
         {
           "id": 0,
@@ -1020,7 +1026,10 @@
     {
       "id": "ComputeBudget111111111111111111111111111111",
       "name": "Compute Budget Program",
-      "instruction_id_length": 4,
+      "instruction_id_format": {
+        "length": 4,
+        "is_included_if_zero": true
+      },
       "instructions": [
         {
           "id": 1,
@@ -1087,7 +1096,10 @@
     {
       "id": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
       "name": "Token Program",
-      "instruction_id_length": 1,
+      "instruction_id_format": {
+        "length": 1,
+        "is_included_if_zero": true
+      },
       "instructions": [
         {
           "id": 1,
@@ -1827,7 +1839,10 @@
     {
       "id": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
       "name": "Associated Token Account Program",
-      "instruction_id_length": 1,
+      "instruction_id_format": {
+        "length": 1,
+        "is_included_if_zero": false
+      },
       "instructions": [
         {
           "id": 0,
@@ -2012,7 +2027,10 @@
     {
       "id": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
       "name": "Memo",
-      "instruction_id_length": 0,
+      "instruction_id_format": {
+        "length": 0,
+        "is_included_if_zero": false
+      },
       "instructions": [
         {
           "id": 0,
@@ -2046,7 +2064,10 @@
     {
       "id": "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo",
       "name": "Memo Legacy",
-      "instruction_id_length": 0,
+      "instruction_id_format": {
+        "length": 0,
+        "is_included_if_zero": false
+      },
       "instructions": [
         {
           "id": 0,

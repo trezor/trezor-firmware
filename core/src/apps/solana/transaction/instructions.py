@@ -9,7 +9,7 @@ from .instruction import Instruction
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
 
-    from ..types import Account
+    from ..types import Account, InstructionIdFormat
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
@@ -1113,21 +1113,21 @@ if TYPE_CHECKING:
             )
 
 
-def get_instruction_id_length(program_id: str) -> int:
+def get_instruction_id_length(program_id: str) -> InstructionIdFormat:
     if program_id == SYSTEM_PROGRAM_ID:
-        return 4
+        return {"length": 4, "is_included_if_zero": True}
     if program_id == STAKE_PROGRAM_ID:
-        return 4
+        return {"length": 4, "is_included_if_zero": True}
     if program_id == COMPUTE_BUDGET_PROGRAM_ID:
-        return 4
+        return {"length": 4, "is_included_if_zero": True}
     if program_id == TOKEN_PROGRAM_ID:
-        return 1
+        return {"length": 1, "is_included_if_zero": True}
     if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
-        return 1
+        return {"length": 1, "is_included_if_zero": False}
     if program_id == MEMO_ID:
-        return 0
+        return {"length": 0, "is_included_if_zero": False}
     if program_id == MEMO_LEGACY_ID:
-        return 0
+        return {"length": 0, "is_included_if_zero": False}
 
     raise ValueError(f"Unknown program id: {program_id}")
 

@@ -58,7 +58,7 @@ from .instruction import Instruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
-    from ..types import Account
+    from ..types import Account, InstructionIdFormat
 
 ## creates the program identifier with address from the template
 % for program in programs["programs"]:
@@ -119,10 +119,13 @@ if TYPE_CHECKING:
     % endfor
 % endfor
 
-def get_instruction_id_length(program_id: str) -> int:
+def get_instruction_id_length(program_id: str) -> InstructionIdFormat:
 % for program in programs["programs"]:
     if program_id == ${getProgramId(program)}:
-        return ${program["instruction_id_length"]}
+        return {
+            "length": ${program["instruction_id_format"]["length"]},
+            "is_included_if_zero": ${program["instruction_id_format"]["is_included_if_zero"]}
+        }
 % endfor
 
     raise ValueError(f"Unknown program id: {program_id}")
