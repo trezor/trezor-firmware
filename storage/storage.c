@@ -1523,11 +1523,32 @@ uint32_t storage_get_pin_rem(void) {
     return 0;
   }
 
-  uint32_t ctr = 0;
-  if (sectrue != pin_get_fails(&ctr)) {
+  uint32_t ctr_mcu = 0;
+  if (sectrue != pin_get_fails(&ctr_mcu)) {
     return 0;
   }
-  return PIN_MAX_TRIES - ctr;
+
+#if USE_OPTIGA
+  // Synchronize counters in case they diverged.
+  uint32_t ctr_optiga = 0;
+  ensure(
+      optiga_pin_get_fails(&ctr_optiga) == OPTIGA_SUCCESS ? sectrue : secfalse,
+      "optiga_pin_get_fails failed");
+
+  while (ctr_mcu < ctr_optiga) {
+    storage_pin_fails_increase();
+    ctr_mcu++;
+  }
+
+  if (ctr_optiga < ctr_mcu) {
+    ensure(optiga_pin_fails_increase(ctr_mcu - ctr_optiga) == OPTIGA_SUCCESS
+               ? sectrue
+               : secfalse,
+           "optiga_pin_fails_increase failed");
+  }
+#endif
+
+  return PIN_MAX_TRIES - ctr_mcu;
 }
 
 secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
