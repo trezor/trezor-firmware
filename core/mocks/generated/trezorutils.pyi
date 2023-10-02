@@ -97,12 +97,14 @@ VERSION_PATCH: int
 """Patch version."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
-USE_TOUCH: bool
-USE_BUTTON: bool
 USE_BACKLIGHT: bool
 """Whether the hardware supports backlight brightness control."""
 USE_OPTIGA: bool
 """Whether the hardware supports Optiga secure element."""
+USE_TOUCH: bool
+"""Whether the hardware supports touch layer."""
+USE_BUTTON: bool
+"""Whether the hardware supports  physical buttons."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str
