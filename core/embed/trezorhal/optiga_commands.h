@@ -157,6 +157,7 @@ optiga_result optiga_get_data_object(uint16_t oid, bool get_metadata,
                                      size_t *data_size);
 optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
                                      const uint8_t *data, size_t data_size);
+optiga_result optiga_count_data_object(uint16_t oid, uint8_t count);
 optiga_result optiga_get_random(uint8_t *random, size_t random_size);
 optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
                                  const uint8_t *input, size_t input_size,

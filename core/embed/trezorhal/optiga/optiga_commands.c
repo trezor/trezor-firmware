@@ -339,6 +339,39 @@ optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
 }
 
 /*
+ * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#setdataobject
+ */
+optiga_result optiga_count_data_object(uint16_t oid, uint8_t count) {
+  if (count == 0) {
+    return OPTIGA_SUCCESS;
+  }
+
+  tx_size = 9;
+  if (tx_size > sizeof(tx_buffer)) {
+    return OPTIGA_ERR_PARAM;
+  }
+
+  uint8_t *ptr = tx_buffer;
+  *(ptr++) = 0x82;  // command code
+  *(ptr++) = 0x02;  // count data object
+  write_uint16(&ptr, tx_size - 4);
+
+  write_uint16(&ptr, oid);
+  write_uint16(&ptr, 0);  // offset
+
+  *(ptr++) = count;
+
+  optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
+                                             sizeof(tx_buffer), &tx_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
+
+  ret = process_output_fixedlen(NULL, 0);
+  return ret;
+}
+
+/*
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#getrandom
  */
 optiga_result optiga_get_random(uint8_t *random, size_t random_size) {

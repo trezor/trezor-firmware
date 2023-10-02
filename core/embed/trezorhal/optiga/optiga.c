@@ -631,3 +631,36 @@ int optiga_pin_verify(OPTIGA_UI_PROGRESS ui_progress,
               OPTIGA_PIN_SECRET_SIZE, out_secret);
   return OPTIGA_SUCCESS;
 }
+
+static int optiga_get_counter(uint16_t oid, uint32_t *ctr) {
+  uint8_t counter[8] = {0};
+  size_t counter_size = 0;
+  optiga_result res = optiga_get_data_object(oid, false, counter,
+                                             sizeof(counter), &counter_size);
+  if (res != OPTIGA_SUCCESS) {
+    return res;
+  }
+
+  if (counter_size != sizeof(counter)) {
+    return OPTIGA_ERR_SIZE;
+  }
+
+  *ctr = counter[0];
+  *ctr = (*ctr << 8) + counter[1];
+  *ctr = (*ctr << 8) + counter[2];
+  *ctr = (*ctr << 8) + counter[3];
+
+  return OPTIGA_SUCCESS;
+}
+
+int optiga_pin_get_fails(uint32_t *ctr) {
+  return optiga_get_counter(OID_PIN_COUNTER, ctr);
+}
+
+int optiga_pin_fails_increase(uint32_t count) {
+  if (count > 0xff) {
+    return OPTIGA_ERR_PARAM;
+  }
+
+  return optiga_count_data_object(OID_PIN_COUNTER, count);
+}
