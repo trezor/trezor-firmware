@@ -224,6 +224,13 @@ def test_pin_long(device_handler: "BackgroundDeviceHandler"):
         _input_see_confirm(debug, PIN24)
 
 
+@pytest.mark.setup_client(pin=PIN4)
+def test_pin_empty_cannot_send(device_handler: "BackgroundDeviceHandler"):
+    with prepare(device_handler) as debug:
+        _input_see_confirm(debug, "")
+        _input_see_confirm(debug, PIN4)
+
+
 @pytest.mark.setup_client(pin=PIN24)
 def test_pin_long_delete(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
