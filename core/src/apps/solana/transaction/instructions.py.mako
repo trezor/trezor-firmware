@@ -1,22 +1,14 @@
 # generated from __init__.py.mako
 # do not edit manually!
-## getProgramId(program) <<-- generates program id text
 <%def name="getProgramId(program)">${"_".join(program["name"].upper().split(" ") + ["ID"])}</%def>\
-## getInstructionIdText(instruction) <<-- generates instruction ID text
 <%def name="getInstructionIdText(program, instruction)">${"_".join([getProgramId(program)] + ["INS"] + instruction["name"].upper().split(" "))}</%def>\
-## TODO SOL: getInstructionUiIdentifier hs been replaced wwith UI template
-## getInstructionUiIdentifier(instruction) <<-- generates UI identifier for show function
-## <%def name="getInstructionUiIdentifier(instruction)">${"_".join(instruction["name"].lower().split(" "))}</%def>\
-## getClassName(instruction) <<-- generates class name from instruction name
 <%def name="getClassName(program, instruction)">${program["name"].replace(" ", "")}${instruction["name"].replace(" ", "")}Instruction</%def>\
-## getReferenceName(reference) <<-- formatting reference account name
 <%def name="getReferenceName(reference)">${"_".join(reference["name"].lower().split(" "))}</%def>\
 <%def name="getReferenceOptionalType(reference)">\
 % if reference["optional"]:
  | None\
 % endif
 </%def>\
-## getReferenceTypeTemplate(reference) <<-- generates reference account type based on access and signer properties
 <%def name="getReferenceTypeTemplate(reference)">\
 % if reference["signer"]:
     % if reference["access"] == "w":
@@ -32,7 +24,6 @@ ADDRESS_READ_ONLY\
     % endif
 % endif
 </%def>\
-## getReferenceOptionalTemplate(reference) <<-- if a reference account is optional shall return (, True)
 <%def name="getReferenceOptionalTemplate(reference)">\
 % if reference["optional"]:
 , True\
@@ -60,12 +51,10 @@ if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
     from ..types import Account, InstructionIdFormat
 
-## creates the program identifier with address from the template
 % for program in programs["programs"]:
 ${getProgramId(program)} = "${program["id"]}"
 % endfor
 
-## generates instruction identifiers with values
 % for program in programs["programs"]:
     % for instruction in program["instructions"]:
 ${getInstructionIdText(program, instruction)} = ${instruction["id"]}

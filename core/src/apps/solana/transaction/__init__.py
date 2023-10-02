@@ -21,18 +21,12 @@ class Transaction:
     is_legacy: bool
     version: int
 
-    # tuple[bytes, int] where int is the the address type derived from types.py:
-    # 0 - ADDRESS_SIG
-    # 1 - ADDRESS_SIG_READ_ONLY
-    # 2 - ADDRESS_READ_ONLY
-    # 3 - ADDRESS_RW
     addresses: list[Address]
 
     blockhash: bytes
 
     instructions: list[Instruction] = []
 
-    # LUT parsing result comes here in case of non-legacy transaction
     lut_rw_addresses: list[AddressReference] | None = None
     lut_ro_addresses: list[AddressReference] | None = None
 

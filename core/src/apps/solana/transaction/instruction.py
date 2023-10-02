@@ -32,19 +32,10 @@ class Instruction:
     property_templates: list[PropertyTemplate]
     accounts_template: list[AccountTemplate]
 
-    # name of the UI template to be used derived from the template
     ui_identifier: str
-    # Name to be displayed on the UI
     ui_name: str
 
-    # There is no separate field for UI display name, so the property name is used
-    # for that purpose. The values within this list shall be used to display on the
-    # UI and to retrieve the value by calling the __getattr__ function.
     ui_parameter_list: list[str] | None = None
-    # Here, a tuple is used where the first item is the UI Display name and the
-    # second item is the account name that can be used to retrieve the value
-    # by using the __getattr__ function or access directly from the parsed_accounts
-    # list.
     ui_account_list: list[tuple[str, Account]] | None = None
 
     parsed_data: dict[str, Any] | None = None
