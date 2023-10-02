@@ -16,8 +16,8 @@ STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
 COMPUTE_BUDGET_PROGRAM_ID = "ComputeBudget111111111111111111111111111111"
 TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-MEMO_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
-MEMO_LEGACY_ID = "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"
+MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+MEMO_LEGACY_PROGRAM_ID = "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"
 
 SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT = 0
 SYSTEM_PROGRAM_ID_INS_ASSIGN = 1
@@ -64,8 +64,8 @@ TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER = 22
 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE = 0
 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT = 1
 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED = 2
-MEMO_ID_INS_CREATE = 0
-MEMO_LEGACY_ID_INS_CREATE = 0
+MEMO_PROGRAM_ID_INS_MEMO = 0
+MEMO_LEGACY_PROGRAM_ID_INS_MEMO = 0
 
 
 def __getattr__(name: str) -> Type[Instruction]:
@@ -241,8 +241,11 @@ def __getattr__(name: str) -> Type[Instruction]:
             "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
             2,
         ),
-        "MemoCreateInstruction": ("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr", 0),
-        "MemoLegacyCreateInstruction": (
+        "MemoProgramMemoInstruction": (
+            "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+            0,
+        ),
+        "MemoLegacyProgramMemoInstruction": (
             "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo",
             0,
         ),
@@ -1082,31 +1085,31 @@ if TYPE_CHECKING:
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
-    class MemoCreateInstruction(Instruction):
-        PROGRAM_ID = MEMO_ID
-        INSTRUCTION_ID = MEMO_ID_INS_CREATE
+    class MemoProgramMemoInstruction(Instruction):
+        PROGRAM_ID = MEMO_PROGRAM_ID
+        INSTRUCTION_ID = MEMO_PROGRAM_ID_INS_MEMO
 
         memo: str
 
         signer_accounts: Account
 
         @classmethod
-        def is_type_of(cls, ins: Any) -> TypeGuard["MemoCreateInstruction"]:
+        def is_type_of(cls, ins: Any) -> TypeGuard["MemoProgramMemoInstruction"]:
             return (
                 ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
             )
 
-    class MemoLegacyCreateInstruction(Instruction):
-        PROGRAM_ID = MEMO_LEGACY_ID
-        INSTRUCTION_ID = MEMO_LEGACY_ID_INS_CREATE
+    class MemoLegacyProgramMemoInstruction(Instruction):
+        PROGRAM_ID = MEMO_LEGACY_PROGRAM_ID
+        INSTRUCTION_ID = MEMO_LEGACY_PROGRAM_ID_INS_MEMO
 
         memo: str
 
         signer_accounts: Account
 
         @classmethod
-        def is_type_of(cls, ins: Any) -> TypeGuard["MemoLegacyCreateInstruction"]:
+        def is_type_of(cls, ins: Any) -> TypeGuard["MemoLegacyProgramMemoInstruction"]:
             return (
                 ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
@@ -1124,9 +1127,9 @@ def get_instruction_id_length(program_id: str) -> InstructionIdFormat:
         return {"length": 1, "is_included_if_zero": True}
     if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
         return {"length": 1, "is_included_if_zero": False}
-    if program_id == MEMO_ID:
+    if program_id == MEMO_PROGRAM_ID:
         return {"length": 0, "is_included_if_zero": False}
-    if program_id == MEMO_LEGACY_ID:
+    if program_id == MEMO_LEGACY_PROGRAM_ID:
         return {"length": 0, "is_included_if_zero": False}
 
     raise ValueError(f"Unknown program id: {program_id}")
@@ -3083,13 +3086,13 @@ def get_instruction(
             raise ProcessError(
                 f"Unknown instruction type: {program_id} - {instruction_id}"
             )
-    if program_id == MEMO_ID:
-        if instruction_id == MEMO_ID_INS_CREATE:
+    if program_id == MEMO_PROGRAM_ID:
+        if instruction_id == MEMO_PROGRAM_ID_INS_MEMO:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                MEMO_ID_INS_CREATE,
+                MEMO_PROGRAM_ID_INS_MEMO,
                 [
                     {
                         "name": "memo",
@@ -3109,19 +3112,19 @@ def get_instruction(
                 ["memo"],
                 ["signer_accounts"],
                 "ui_confirm",
-                "Create",
+                "Memo",
             )
         else:
             raise ProcessError(
                 f"Unknown instruction type: {program_id} - {instruction_id}"
             )
-    if program_id == MEMO_LEGACY_ID:
-        if instruction_id == MEMO_LEGACY_ID_INS_CREATE:
+    if program_id == MEMO_LEGACY_PROGRAM_ID:
+        if instruction_id == MEMO_LEGACY_PROGRAM_ID_INS_MEMO:
             return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
-                MEMO_LEGACY_ID_INS_CREATE,
+                MEMO_LEGACY_PROGRAM_ID_INS_MEMO,
                 [
                     {
                         "name": "memo",
@@ -3141,7 +3144,7 @@ def get_instruction(
                 ["memo"],
                 ["signer_accounts"],
                 "ui_confirm",
-                "Create",
+                "Memo",
             )
         else:
             raise ProcessError(

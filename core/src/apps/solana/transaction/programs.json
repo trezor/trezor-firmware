@@ -2026,7 +2026,7 @@
     },
     {
       "id": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
-      "name": "Memo",
+      "name": "Memo Program",
       "instruction_id_format": {
         "length": 0,
         "is_included_if_zero": false
@@ -2034,7 +2034,7 @@
       "instructions": [
         {
           "id": 0,
-          "name": "Create",
+          "name": "Memo",
           "parameters": [
             {
               "name": "memo",
@@ -2063,7 +2063,7 @@
     },
     {
       "id": "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo",
-      "name": "Memo Legacy",
+      "name": "Memo Legacy Program",
       "instruction_id_format": {
         "length": 0,
         "is_included_if_zero": false
@@ -2071,7 +2071,7 @@
       "instructions": [
         {
           "id": 0,
-          "name": "Create",
+          "name": "Memo",
           "parameters": [
             {
               "name": "memo",
