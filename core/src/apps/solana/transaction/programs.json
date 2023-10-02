@@ -1827,7 +1827,7 @@
     {
       "id": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
       "name": "Associated Token Account Program",
-      "instruction_id_length": 0,
+      "instruction_id_length": 1,
       "instructions": [
         {
           "id": 0,

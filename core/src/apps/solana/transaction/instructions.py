@@ -1126,7 +1126,7 @@ def get_instruction_id_length(program_id: str) -> int:
     if program_id == TOKEN_PROGRAM_ID:
         return 1
     if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
-        return 0
+        return 1
     if program_id == MEMO_ID:
         return 0
     if program_id == MEMO_LEGACY_ID:
