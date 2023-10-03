@@ -21,15 +21,12 @@
 [submodule "vendor/fido2-tests"]
 	path = vendor/fido2-tests
 	url = https://github.com/trezor/fido2-tests.git
-[submodule "vendor/stm32f4_cmsis"]
-	path = vendor/stm32f4-cmsis
-	url = https://github.com/STMicroelectronics/cmsis_device_f4.git
-[submodule "vendor/stm32u5_hal"]
-	path = vendor/stm32u5-drivers
+[submodule "vendor/stm32u5-hal"]
+	path = vendor/stm32u5-hal-drivers
 	url = https://github.com/STMicroelectronics/stm32u5xx_hal_driver.git
-[submodule "vendor/stm32f4_hal"]
-	path = vendor/stm32f4-drivers
-	url = https://github.com/STMicroelectronics/stm32f4xx_hal_driver.git
-[submodule "vendor/stm32u5_cmsis"]
-	path = vendor/stm32u5-cmsis
+[submodule "vendor/stm32u5-cmsis"]
+	path = vendor/stm32u5-cmsis-device
 	url = https://github.com/STMicroelectronics/cmsis_device_u5.git
+[submodule "vendor/stm32xx-lib"]
+	path = vendor/stm32xx-lib
+	url = https://github.com/micropython/stm32lib.git

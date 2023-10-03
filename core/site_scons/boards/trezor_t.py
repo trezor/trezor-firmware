@@ -64,9 +64,7 @@ def configure(
         sources += ["embed/trezorhal/stm32f4/sdcard.c"]
         sources += ["embed/extmod/modtrezorio/ff.c"]
         sources += ["embed/extmod/modtrezorio/ffunicode.c"]
-        sources += [
-            "vendor/stm32f4-drivers/Src/stm32f4xx_hal_dma.c"
-        ]
+        sources += ["vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"]
         features_available.append("sd_card")
 
     if "sbu" in features_wanted:
@@ -80,16 +78,14 @@ def configure(
             "embed/trezorhal/stm32f4/usbd_core.c",
             "embed/trezorhal/stm32f4/usbd_ctlreq.c",
             "embed/trezorhal/stm32f4/usbd_ioreq.c",
-            "vendor/stm32f4-drivers/Src/stm32f4xx_ll_usb.c",
+            "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")
 
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D"]
         sources += ["embed/trezorhal/stm32f4/dma2d.c"]
-        sources += [
-            "vendor/stm32f4-drivers/Src/stm32f4xx_hal_dma2d.c"
-        ]
+        sources += ["vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"]
         features_available.append("dma2d")
 
     env.get("ENV")["TREZOR_BOARD"] = board

@@ -8,31 +8,30 @@ def stm32f4_common_files(env, defines, sources, paths):
 
     paths += [
         "embed/trezorhal/stm32f4",
-        "vendor/stm32f4-drivers/Inc",
-        "vendor/stm32f4-cmsis/Include",
-    ]
-
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Inc",
+        "vendor/stm32xx-lib/CMSIS/STM32F4xx/Include"
+    ] 
     sources += [
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_cortex.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_flash.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_flash_ex.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_gpio.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_i2c.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_ltdc.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_pcd.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_pcd_ex.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_pwr.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_rcc.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_rcc_ex.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_sd.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_spi.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_sram.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_sdram.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_tim.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_hal_tim_ex.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_ll_fmc.c",
-        "vendor/stm32f4-drivers/Src/stm32f4xx_ll_sdmmc.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_ltdc.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sd.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sdram.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fmc.c",
+        "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c",
     ]
 
     sources += [
@@ -62,7 +61,7 @@ def stm32f4_common_files(env, defines, sources, paths):
 
     env.get("ENV")["RUST_INCLUDES"] = (
         "-I../trezorhal/stm32f4;"
-        "-I../../vendor/stm32f4-drivers/Inc;"
-        "-I../../vendor/stm32f4-cmsis/Include;"
+        "-I../../vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Inc;"
+        "-I../../vendor/stm32xx-lib/CMSIS/STM32F4xx/Include;"
         "-DSTM32_HAL_H=<stm32f4xx.h>"
     )
