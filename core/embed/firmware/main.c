@@ -59,6 +59,7 @@
 #ifdef USE_DMA2D
 #include "dma2d.h"
 #endif
+#include "quickmath.h"
 #ifdef USE_BUTTON
 #include "button.h"
 #endif
@@ -169,6 +170,8 @@ int main(void) {
   sdcard_init();
 #endif
 
+  quickmath_init();
+
 #ifdef USE_OPTIGA
   optiga_init();
   optiga_open_application();
@@ -196,6 +199,11 @@ int main(void) {
   static mp_obj_t pystack[1024];
   mp_pystack_init(pystack, &pystack[MP_ARRAY_SIZE(pystack)]);
 #endif
+
+  //quickmath_performance_test();
+  //quickmath_test();
+
+
 
   // GC init
   printf("CORE: Starting GC\n");

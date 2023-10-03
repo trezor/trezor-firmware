@@ -46,6 +46,7 @@ def stm32u5_common_files(env, defines, sources, paths):
     sources += [
         "embed/trezorhal/stm32u5/board_capabilities.c",
         "embed/trezorhal/stm32u5/common.c",
+        "embed/trezorhal/stm32u5/quickmath.c",
         "embed/trezorhal/stm32u5/flash.c",
         "embed/trezorhal/stm32u5/lowlevel.c",
         "embed/trezorhal/stm32u5/mpu.c",
