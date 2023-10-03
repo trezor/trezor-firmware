@@ -157,6 +157,7 @@ const uint8_t WIPE_CODE_EMPTY[] = {0, 0, 0, 0};
 const char *const VERIFYING_PIN_MSG = "Verifying PIN";
 const char *const PROCESSING_MSG = "Processing";
 const char *const STARTING_MSG = "Starting up";
+const char *const WRONG_PIN_MSG = "Wrong PIN";
 
 static secbool initialized = secfalse;
 static secbool unlocked = secfalse;
@@ -1216,6 +1217,16 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
       storage_wipe();
       show_pin_too_many_screen();
     }
+
+    // Finish the countdown. Check for ui_rem underflow.
+    while (0 < ui_rem && ui_rem < ui_total) {
+      ui_message = WRONG_PIN_MSG;
+      if (sectrue == ui_progress(100)) {
+        return secfalse;
+      }
+      hal_delay(100);
+    }
+
     return secfalse;
   }
   memzero(&legacy_pin, sizeof(legacy_pin));
