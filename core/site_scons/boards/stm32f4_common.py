@@ -9,8 +9,8 @@ def stm32f4_common_files(env, defines, sources, paths):
     paths += [
         "embed/trezorhal/stm32f4",
         "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Inc",
-        "vendor/stm32xx-lib/CMSIS/STM32F4xx/Include"
-    ] 
+        "vendor/stm32xx-lib/CMSIS/STM32F4xx/Include",
+    ]
     sources += [
         "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c",
         "vendor/stm32xx-lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c",
