@@ -52,7 +52,7 @@ def configure(
     if "consumption_mask" in features_wanted:
         sources += ["embed/trezorhal/stm32f4/consumption_mask.c"]
         sources += [
-            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
+            "vendor/stm32f4-drivers/Src/stm32f4xx_hal_dma.c"
         ]
     if "usb" in features_wanted:
         sources += [
@@ -61,7 +61,7 @@ def configure(
             "embed/trezorhal/stm32f4/usbd_core.c",
             "embed/trezorhal/stm32f4/usbd_ctlreq.c",
             "embed/trezorhal/stm32f4/usbd_ioreq.c",
-            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
+            "vendor/stm32f4-drivers/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")
 
