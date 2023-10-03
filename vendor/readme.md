@@ -19,11 +19,11 @@ This repository houses a QR Code generator library.
 secp256k1-zkp is an optimized C library tailored for ECDSA signatures and secret/public key operations on the secp256k1 curve.
 
 ## stm32u5-cmsis-device
-The STM32U5 CMSIS device module for the STM32U5 family of microcontrollers. 
-    
+The STM32U5 CMSIS device module for the STM32U5 family of microcontrollers.
+
 ## stm32u5-hal-drivers
 This repository contains STM32U5 HAL/LL (Hardware Abstraction Layer/Low-Level) drivers developed for the STM32U5 family.
 
-## stm32xx-lib 
+## stm32xx-lib
 This repository holds a portion of STMicroelectronics' STM32 Cube firmware library.
-It's maintaned by MicroPython team and it is quite outdated. We use this library for products based on STM32F4xx devices, currently limited to the T model. 
+It's maintaned by MicroPython team and it is quite outdated. We use this library for products based on STM32F4xx devices, currently limited to the T model.
