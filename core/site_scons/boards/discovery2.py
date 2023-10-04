@@ -73,15 +73,11 @@ def configure(
             "embed/trezorhal/stm32u5/usbd_core.c",
             "embed/trezorhal/stm32u5/usbd_ctlreq.c",
             "embed/trezorhal/stm32u5/usbd_ioreq.c",
-            "vendor/micropython/lib/stm32lib/STM32U5xx_HAL_Driver/Src/stm32u5xx_ll_usb.c",
+            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_ll_usb.c",
         ]
         features_available.append("usb")
 
-    defines += [
-        "USE_DMA2D",
-        "FRAMEBUFFER"
-        "FRAMEBUFFER32BIT"
-    ]
+    defines += ["USE_DMA2D", "FRAMEBUFFER" "FRAMEBUFFER32BIT"]
     sources += [
         "embed/trezorhal/stm32u5/dma2d.c",
     ]

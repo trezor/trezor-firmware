@@ -440,7 +440,6 @@ env.Replace(
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
-        'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
         'FIRMWARE',

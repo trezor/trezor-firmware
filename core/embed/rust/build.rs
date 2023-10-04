@@ -103,7 +103,6 @@ fn prepare_bindings() -> bindgen::Builder {
         clang_args.push("-nostdinc");
         clang_args.push("-I../firmware");
         clang_args.push("-I../../build/firmware");
-        clang_args.push("-I../../vendor/micropython/lib/cmsis/inc");
         clang_args.push("-DUSE_HAL_DRIVER");
         bindings = bindings.clang_args(&clang_args);
 
