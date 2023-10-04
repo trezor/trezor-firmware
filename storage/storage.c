@@ -1006,6 +1006,36 @@ static secbool pin_get_fails(uint32_t *ctr) {
   return sectrue;
 }
 
+static secbool pin_get_fails_sync(uint32_t *ctr) {
+  uint32_t ctr_mcu = 0;
+  if (sectrue != pin_get_fails(&ctr_mcu)) {
+    return secfalse;
+  }
+
+#if USE_OPTIGA
+  // Synchronize counters in case they diverged.
+  uint32_t ctr_optiga = 0;
+  ensure(
+      optiga_pin_get_fails(&ctr_optiga) == OPTIGA_SUCCESS ? sectrue : secfalse,
+      "optiga_pin_get_fails failed");
+
+  while (ctr_mcu < ctr_optiga) {
+    storage_pin_fails_increase();
+    ctr_mcu++;
+  }
+
+  if (ctr_optiga < ctr_mcu) {
+    ensure(optiga_pin_fails_increase(ctr_mcu - ctr_optiga) == OPTIGA_SUCCESS
+               ? sectrue
+               : secfalse,
+           "optiga_pin_fails_increase failed");
+  }
+#endif
+
+  *ctr = ctr_mcu;
+  return sectrue;
+}
+
 secbool storage_is_unlocked(void) {
   if (sectrue != initialized) {
     return secfalse;
@@ -1149,9 +1179,11 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   // Now we can check for wipe code.
   ensure_not_wipe_code(unlock_pin, unlock_pin_len);
 
-  // Get the pin failure counter
+  // Get the pin failure counter. To ensure correct exponential backoff,
+  // synchronize counters in case they diverged. However, we are unaware of any
+  // way how the Optiga counter could be ahead of the MCU counter.
   uint32_t ctr = 0;
-  if (sectrue != pin_get_fails(&ctr)) {
+  if (sectrue != pin_get_fails_sync(&ctr)) {
     memzero(&legacy_pin, sizeof(legacy_pin));
     return secfalse;
   }
@@ -1534,32 +1566,12 @@ uint32_t storage_get_pin_rem(void) {
     return 0;
   }
 
-  uint32_t ctr_mcu = 0;
-  if (sectrue != pin_get_fails(&ctr_mcu)) {
+  uint32_t ctr = 0;
+  if (sectrue != pin_get_fails_sync(&ctr)) {
     return 0;
   }
 
-#if USE_OPTIGA
-  // Synchronize counters in case they diverged.
-  uint32_t ctr_optiga = 0;
-  ensure(
-      optiga_pin_get_fails(&ctr_optiga) == OPTIGA_SUCCESS ? sectrue : secfalse,
-      "optiga_pin_get_fails failed");
-
-  while (ctr_mcu < ctr_optiga) {
-    storage_pin_fails_increase();
-    ctr_mcu++;
-  }
-
-  if (ctr_optiga < ctr_mcu) {
-    ensure(optiga_pin_fails_increase(ctr_mcu - ctr_optiga) == OPTIGA_SUCCESS
-               ? sectrue
-               : secfalse,
-           "optiga_pin_fails_increase failed");
-  }
-#endif
-
-  return PIN_MAX_TRIES - ctr_mcu;
+  return PIN_MAX_TRIES - ctr;
 }
 
 secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
