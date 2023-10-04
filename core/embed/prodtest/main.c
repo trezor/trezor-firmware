@@ -148,6 +148,15 @@ static void draw_border(int width, int padding) {
   display_refresh();
 }
 
+static void draw_welcome_screen(void) {
+#if TREZOR_MODEL_R
+  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, 0xFFFF);
+  display_refresh();
+#else
+  draw_border(1, 3);
+#endif
+}
+
 static void test_border(void) {
   draw_border(2, 0);
   vcp_println("OK");
@@ -562,7 +571,7 @@ int main(void) {
   drop_privileges();
 
   display_clear();
-  draw_border(1, 3);
+  draw_welcome_screen();
 
   char dom[32];
   // format: TREZOR2-YYMMDD
