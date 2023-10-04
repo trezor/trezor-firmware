@@ -87,6 +87,9 @@
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
+#if USE_TAMPERS
+#include "tamper.h"
+#endif
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -163,6 +166,10 @@ int main(void) {
 
 #ifdef USE_TOUCH
   touch_init();
+#endif
+
+#if USE_TAMPERS
+  tamper_init();
 #endif
 
 #ifdef USE_SD_CARD

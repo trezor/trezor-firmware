@@ -2,9 +2,7 @@ from __future__ import annotations
 
 
 def stm32u5_common_files(env, defines, sources, paths):
-    defines += [
-        ("STM32_HAL_H", '"<stm32u5xx.h>"'),
-    ]
+    defines += [("STM32_HAL_H", '"<stm32u5xx.h>"'), "USE_TAMPERS"]
 
     paths += [
         "embed/trezorhal/stm32u5",
@@ -34,6 +32,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pwr_ex.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rcc.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rcc_ex.c",
+        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rtc.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_sd.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_spi.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_sram.c",
@@ -53,6 +52,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/systick.c",
         "embed/trezorhal/stm32u5/random_delays.c",
         "embed/trezorhal/stm32u5/rng.c",
+        "embed/trezorhal/stm32u5/tamper.c",
         "embed/trezorhal/stm32u5/vectortable.s",
     ]
 
