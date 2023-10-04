@@ -116,7 +116,6 @@ env.Replace(
         'embed/models',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
-        'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
         'TREZOR_MODEL_'+TREZOR_MODEL,
