@@ -8,6 +8,7 @@ def stm32f4_common_files(env, defines, sources, paths):
 
     paths += [
         "embed/trezorhal/stm32f4",
+        "vendor/micropython/lib/cmsis/inc",
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
         "vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
     ]
@@ -64,5 +65,6 @@ def stm32f4_common_files(env, defines, sources, paths):
         "-I../trezorhal/stm32f4;"
         "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc;"
         "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include;"
+        "-I../../vendor/micropython/lib/cmsis/inc;"
         "-DSTM32_HAL_H=<stm32f4xx.h>"
     )
