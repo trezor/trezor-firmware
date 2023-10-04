@@ -71,4 +71,6 @@ int __wur optiga_pin_get_fails(uint32_t *ctr);
 
 int __wur optiga_pin_fails_increase(uint32_t count);
 
+bool optiga_pin_wipe(void);
+
 #endif
