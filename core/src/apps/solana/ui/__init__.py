@@ -2,7 +2,13 @@ from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
 
-from ..transaction.instructions import Instruction
+from ..transaction.instructions import Instruction, UnsupportedInstruction
+from ..constants import (
+    ADDRESS_SIG,
+    ADDRESS_SIG_READ_ONLY,
+    ADDRESS_READ_ONLY,
+    ADDRESS_RW
+)
 
 if TYPE_CHECKING:
     from typing import Any
@@ -69,3 +75,64 @@ async def show_confirm(
         f"{count[0]}/{count[1]}: {instruction.ui_name}",
         props,
     )
+
+
+def get_address_type(address_type: int) -> str:
+    if ADDRESS_SIG == address_type:
+        return "(Writable, Signer)"
+    elif ADDRESS_SIG_READ_ONLY == address_type:
+        return "(Signer)"
+    elif ADDRESS_READ_ONLY == address_type:
+        return ""
+    elif ADDRESS_RW == address_type:
+        return "(Writable)"
+    else:
+        raise ValueError(f"Invalid address type {address_type}")
+
+def get_unknown_instruction_properties(instruction: UnsupportedInstruction) -> list[tuple[str, str | bytes]]:
+    datas: list[tuple[str, str | bytes]] = []
+    if len(instruction.instruction_data) == 0:
+        datas.append(("Instruction data:", "not set"))
+    # elif len(instruction.instruction_data) > 32:
+    #     datas.append(("Instruction data:", instruction.instruction_data[:32]))
+    else:
+        datas.append(("Instruction data:", instruction.instruction_data))
+
+    accounts = []
+    for i, account in enumerate(instruction.accounts):
+        accounts.append((f"Account {i + 1} {get_address_type(account[1])}:", base58.encode(account[0])))
+
+    props = datas + accounts
+
+    return props
+
+async def show_unsupported_instruction_confirm(
+    count: tuple[int, int], instruction: UnsupportedInstruction, signer: bytes
+) -> None:
+    from trezor.ui.layouts import confirm_properties
+
+    return await confirm_properties(
+        instruction.ui_identifier,
+        f"{count[0]}/{count[1]}: {instruction.ui_name}: instruction id ({instruction.instruction_id})",
+        get_unknown_instruction_properties(instruction)
+    )
+
+
+async def show_unsupported_program_confirm(
+    count: tuple[int, int], instruction: UnsupportedInstruction, signer: bytes
+) -> None:
+    from trezor.ui.layouts import confirm_properties
+
+    return await confirm_properties(
+        instruction.ui_identifier,
+        f"{count[0]}/{count[1]}: {instruction.ui_name}",
+        [("Program", instruction.program_id)] + get_unknown_instruction_properties(instruction)
+    )
+
+
+async def show_final_confirmation(blockhash: bytes, fee: int) -> None:
+    from trezor.ui.layouts import confirm_signverify
+
+    await confirm_signverify("SOL", f"{fee} lamports", "address", verify=False)
+
+

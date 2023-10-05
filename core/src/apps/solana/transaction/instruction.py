@@ -22,6 +22,31 @@ if TYPE_CHECKING:
         optional: bool
 
 
+class UnsupportedInstruction:
+    program_id: bytes
+    instruction_id: int
+    instruction_data: bytes
+    accounts: list[Account]
+
+    def __init__(
+        self,
+        instruction_data: bytes,
+        program_id: bytes,
+        accounts: list[Account],
+        instruction_id: int,
+        ui_identifier: str,
+        ui_name: str,
+    ) -> None:
+        self.program_id = program_id
+        self.instruction_id = instruction_id
+
+        self.ui_identifier = ui_identifier
+        self.ui_name = ui_name
+
+        self.instruction_data = instruction_data
+        self.accounts = accounts
+
+
 class Instruction:
     PROGRAM_ID: str
     INSTRUCTION_ID: int

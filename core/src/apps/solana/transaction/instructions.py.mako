@@ -45,7 +45,7 @@ int\
 from typing import TYPE_CHECKING
 from trezor.wire import ProcessError
 
-from .instruction import Instruction
+from .instruction import Instruction, UnsupportedInstruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
@@ -117,7 +117,10 @@ def get_instruction_id_length(program_id: str) -> InstructionIdFormat:
         }
 % endfor
 
-    raise ValueError(f"Unknown program id: {program_id}")
+    return {
+        "length": 0,
+        "is_included_if_zero": False
+    }
 
 
 
@@ -144,16 +147,26 @@ def get_instruction(
                 ${instruction["ui"]["elements"]["accounts"]},
                 ## "${getInstructionUiIdentifier(instruction)}",
                 "${instruction["ui"]["ui_identifier"]}",
-                "${instruction["name"]}"
+                "${program["name"]}: ${instruction["name"]}"
             )
     % endfor
         else:
-            raise ProcessError(
-                f"Unknown instruction type: {program_id} - {instruction_id}"
+            return UnsupportedInstruction(
+                instruction_data,
+                program_id,
+                instruction_accounts,
+                instruction_id,
+                "ui_unsupported_instruction",
+                "${program["name"]}"
             )
 % endif
 % endfor
     else:
-        raise ProcessError(
-            f"Unknown program type: {program_id} - {instruction_id}"
+        return UnsupportedInstruction(
+            instruction_data,
+            program_id,
+            instruction_accounts,
+            0,
+            "ui_unsupported_program",
+            "Unsupported program"
         )
