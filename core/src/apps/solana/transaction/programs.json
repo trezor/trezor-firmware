@@ -2048,7 +2048,7 @@
               "name": "signer_accounts",
               "ui_name": "Signer accounts",
               "is_authority": true,
-              "optional": false
+              "optional": true
             }
           ],
           "ui": {
@@ -2085,7 +2085,7 @@
               "name": "signer_accounts",
               "ui_name": "Signer accounts",
               "is_authority": true,
-              "optional": false
+              "optional": true
             }
           ],
           "ui": {
