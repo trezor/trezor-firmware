@@ -46,6 +46,10 @@
 // optiga_pin_verify().
 #define OPTIGA_PIN_DERIVE_MS 1200
 
+// The number of milliseconds it takes to execute optiga_pin_verify() for an
+// invalid PIN.
+#define OPTIGA_PIN_DERIVE_INVALID_MS 400
+
 typedef secbool (*OPTIGA_UI_PROGRESS)(uint32_t elapsed_ms);
 
 int __wur optiga_sign(uint8_t index, const uint8_t *digest, size_t digest_size,
