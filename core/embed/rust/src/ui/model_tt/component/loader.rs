@@ -2,7 +2,7 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         animation::Animation,
-        component::{Component, Event, EventCtx},
+        component::{Component, Event, EventCtx, Pad},
         display::{self, toif::Icon, Color},
         geometry::{Offset, Rect},
         model_tt::constant,
@@ -27,7 +27,7 @@ enum State {
 }
 
 pub struct Loader {
-    offset_y: i16,
+    pub pad: Pad,
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
@@ -38,12 +38,13 @@ impl Loader {
     pub const SIZE: Offset = Offset::new(120, 120);
 
     pub fn new() -> Self {
+        let styles = theme::loader_default();
         Self {
-            offset_y: 0,
+            pad: Pad::with_background(styles.normal.background_color),
             state: State::Initial,
             growing_duration: Duration::from_millis(GROWING_DURATION_MS),
             shrinking_duration: Duration::from_millis(SHRINKING_DURATION_MS),
-            styles: theme::loader_default(),
+            styles,
         }
     }
 
@@ -130,13 +131,8 @@ impl Component for Loader {
     type Msg = LoaderMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // Current loader API only takes Y-offset relative to screen center, which we
-        // compute from the bounds center point.
-        // NOTE: SwipeHoldPage relies on Loader being X-centered regardless of bounds.
-        // If this changes then SwipeHoldPage needs to be changed too.
-        let screen_center = constant::screen().center();
-        self.offset_y = bounds.center().y - screen_center.y;
-        Rect::from_center_and_size(screen_center + Offset::y(self.offset_y), Self::SIZE)
+        self.pad.place(bounds);
+        Rect::from_center_and_size(bounds.center(), Self::SIZE)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -177,9 +173,15 @@ impl Component for Loader {
                 self.styles.active
             };
 
+            // Current loader API only takes Y-offset relative to screen center, which we
+            // compute from the bounds center point.
+            let screen_center = constant::screen().center();
+            let offset_y = self.pad.area.center().y - screen_center.y;
+
+            self.pad.paint();
             display::loader(
                 progress,
-                self.offset_y,
+                offset_y,
                 style.loader_color,
                 style.background_color,
                 style.icon,
