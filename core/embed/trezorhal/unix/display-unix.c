@@ -50,12 +50,19 @@
 #define TOUCH_OFFSET_Y 110
 #endif
 
-#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+#elif defined TREZOR_MODEL_1
 
 #define WINDOW_WIDTH 200
 #define WINDOW_HEIGHT 340
 #define TOUCH_OFFSET_X 36
 #define TOUCH_OFFSET_Y 92
+
+#elif defined TREZOR_MODEL_R
+
+#define WINDOW_WIDTH 193
+#define WINDOW_HEIGHT 339
+#define TOUCH_OFFSET_X 32
+#define TOUCH_OFFSET_Y 84
 
 #else
 #error Unknown Trezor model
@@ -198,10 +205,14 @@ void display_init(void) {
 #include "background_T.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
-#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+#elif defined TREZOR_MODEL_1
 #include "background_1.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
+#elif defined TREZOR_MODEL_R
+#include "background_T2B1.h"
+  BACKGROUND = IMG_LoadTexture_RW(
+      RENDERER, SDL_RWFromMem(background_T2B1_png, background_T2B1_png_len), 0);
 #endif
 #endif
   if (BACKGROUND) {
