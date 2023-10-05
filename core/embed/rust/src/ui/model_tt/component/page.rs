@@ -2,6 +2,7 @@ use crate::{
     time::Instant,
     ui::{
         component::{paginated::PageMsg, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
+        constant,
         display::{self, Color},
         geometry::{Insets, Rect},
         util::animation_disabled,
@@ -153,6 +154,14 @@ where
         self.cancel_from_any_page || !self.scrollbar.has_previous_page()
     }
 
+    /// Area for drawing loader (and black rectangle behind it). Can be outside
+    /// bounds as we repaint entire UI tree after hiding the loader.
+    const fn loader_area() -> Rect {
+        constant::screen()
+            .inset(theme::borders())
+            .inset(Insets::bottom(theme::BUTTON_HEIGHT + theme::BUTTON_SPACING))
+    }
+
     fn handle_swipe(
         &mut self,
         ctx: &mut EventCtx,
@@ -225,12 +234,12 @@ where
         let now = Instant::now();
 
         if let Some(LoaderMsg::ShrunkCompletely) = loader.event(ctx, event) {
-            // Clear the remnants of the loader.
-            self.pad.clear();
             // Switch it to the initial state, so we stop painting it.
             loader.reset();
             // Re-draw the whole content tree.
             self.content.request_complete_repaint(ctx);
+            // Loader overpainted our bounds, repaint entire screen from scratch.
+            ctx.request_repaint_root()
             // This can be a result of an animation frame event, we should take
             // care to not short-circuit here and deliver the event to the
             // content as well.
@@ -238,7 +247,7 @@ where
         match button_msg {
             Some(ButtonMsg::Pressed) => {
                 loader.start_growing(ctx, now);
-                self.pad.clear(); // Clear the remnants of the content.
+                loader.pad.clear(); // Clear the remnants of the content.
             }
             Some(ButtonMsg::Released) => {
                 loader.start_shrinking(ctx, now);
@@ -313,8 +322,7 @@ where
         self.scrollbar.set_count_and_active_page(page_count, 0);
         self.setup_swipe();
 
-        let content_area = layout.content_single_page.union(layout.scrollbar);
-        self.loader.place(content_area);
+        self.loader.place(Self::loader_area());
         bounds
     }
 
