@@ -215,7 +215,8 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
     }
   }
 
-  // If the metadata aren't locked, then lock them.
+#if PRODUCTION
+  // If the metadata aren't locked, then lock them in production builds.
   optiga_metadata metadata_locked = {0};
   metadata_locked.lcso = OPTIGA_META_LCS_OPERATIONAL;
   if (!optiga_compare_metadata(&metadata_locked, &metadata_stored)) {
@@ -231,6 +232,7 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
       return false;
     }
   }
+#endif
 
   return true;
 }
