@@ -636,7 +636,18 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, pbkdf2_iterations,
                      stretched_pin);
-  int ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
+  int ret = OPTIGA_SUCCESS;
+#if !PYOPT
+  // Skip usage of Optiga for empty PIN in debug builds to avoid excessive wear
+  // of Optiga counters.
+  if (pin_len == PIN_EMPTY_LEN) {
+    memcpy(optiga_secret, stretched_pin, sizeof(stretched_pin));
+    ui_progress(OPTIGA_PIN_DERIVE_MS);
+  } else
+#endif
+  {
+    ret = optiga_pin_set(ui_progress, stretched_pin, optiga_secret);
+  }
   memzero(stretched_pin, sizeof(stretched_pin));
   if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
@@ -662,7 +673,18 @@ static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
   stretch_pin_optiga(pin, pin_len, storage_salt, ext_salt, pbkdf2_iterations,
                      stretched_pin);
-  int ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
+  int ret = OPTIGA_SUCCESS;
+#if !PYOPT
+  // Skip usage of Optiga for empty PIN in debug builds to avoid excessive wear
+  // of Optiga counters.
+  if (pin_len == PIN_EMPTY_LEN) {
+    memcpy(optiga_secret, stretched_pin, sizeof(stretched_pin));
+    ui_progress(OPTIGA_PIN_DERIVE_MS);
+  } else
+#endif
+  {
+    ret = optiga_pin_verify(ui_progress, stretched_pin, optiga_secret);
+  }
   memzero(stretched_pin, sizeof(stretched_pin));
   if (ret != OPTIGA_SUCCESS) {
     memzero(optiga_secret, sizeof(optiga_secret));
