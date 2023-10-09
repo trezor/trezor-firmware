@@ -43,7 +43,6 @@ int\
 % endif
 </%def>\
 from typing import TYPE_CHECKING
-from trezor.wire import ProcessError
 
 from .instruction import Instruction
 

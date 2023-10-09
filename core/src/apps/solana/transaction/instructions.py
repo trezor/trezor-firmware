@@ -2,8 +2,6 @@
 # do not edit manually!
 from typing import TYPE_CHECKING
 
-from trezor.wire import ProcessError
-
 from .instruction import Instruction
 
 if TYPE_CHECKING:
