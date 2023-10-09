@@ -112,10 +112,10 @@ templates: icons ## rebuild coin lists from definitions in common
 templates_check: ## check that coin lists are up to date
 	./core/tools/build_templates --check
 
-solana_templates:
+solana_templates: ## rebuild Solana instruction template file
 	./core/tools/build_solana_templates
 
-solana_templates_check:
+solana_templates_check: ## check that Solana instruction template file is up to date
 	./core/tools/build_solana_templates --check
 
 icons: ## generate FIDO service icons
