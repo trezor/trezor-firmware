@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor.crypto import base58
 from trezor.utils import BufferReader
 
-from .instruction import Instruction, UnsupportedInstruction
+from .instruction import Instruction
 from .instructions import get_instruction, get_instruction_id_length
 from .parse import (
     parseAddresses,
@@ -27,7 +27,7 @@ class Transaction:
 
     blockhash: bytes
 
-    instructions: list[Instruction | UnsupportedInstruction] = []
+    instructions: list[Instruction] = []
 
     lut_rw_addresses: list[AddressReference] | None = None
     lut_ro_addresses: list[AddressReference] | None = None
@@ -82,7 +82,7 @@ class Transaction:
                 instruction_data,
             )
 
-            if isinstance(instruction, UnsupportedInstruction):
+            if not instruction.is_program_supported or not instruction.is_instruction_supported:
                 self.blind_signing = True
 
             self.instructions.append(instruction)

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
 
-from ..transaction.instructions import Instruction, UnsupportedInstruction
+from ..transaction.instructions import Instruction
 from ..constants import (
     ADDRESS_SIG,
     ADDRESS_SIG_READ_ONLY,
@@ -72,7 +72,7 @@ async def show_confirm(
 
     return await confirm_properties(
         instruction.ui_identifier,
-        f"{count[0]}/{count[1]}: {instruction.ui_name}",
+        f"{count[1]}/{count[0]}: {instruction.ui_name}",
         props,
     )
 
@@ -89,7 +89,7 @@ def get_address_type(address_type: int) -> str:
     else:
         raise ValueError(f"Invalid address type {address_type}")
 
-def get_unknown_instruction_properties(instruction: UnsupportedInstruction) -> list[tuple[str, str | bytes]]:
+def get_unknown_instruction_properties(instruction: Instruction) -> list[tuple[str, str | bytes]]:
     datas: list[tuple[str, str | bytes]] = []
     if len(instruction.instruction_data) == 0:
         datas.append(("Instruction data:", "not set"))
@@ -107,25 +107,25 @@ def get_unknown_instruction_properties(instruction: UnsupportedInstruction) -> l
     return props
 
 async def show_unsupported_instruction_confirm(
-    count: tuple[int, int], instruction: UnsupportedInstruction, signer: bytes
+    count: tuple[int, int], instruction: Instruction, signer: bytes
 ) -> None:
     from trezor.ui.layouts import confirm_properties
 
     return await confirm_properties(
         instruction.ui_identifier,
-        f"{count[0]}/{count[1]}: {instruction.ui_name}: instruction id ({instruction.instruction_id})",
+        f"{count[1]}/{count[0]}: {instruction.ui_name}: instruction id ({instruction.instruction_id})",
         get_unknown_instruction_properties(instruction)
     )
 
 
 async def show_unsupported_program_confirm(
-    count: tuple[int, int], instruction: UnsupportedInstruction, signer: bytes
+    count: tuple[int, int], instruction: Instruction, signer: bytes
 ) -> None:
     from trezor.ui.layouts import confirm_properties
 
     return await confirm_properties(
         instruction.ui_identifier,
-        f"{count[0]}/{count[1]}: {instruction.ui_name}",
+        f"{count[1]}/{count[0]}: {instruction.ui_name}",
         [("Program", instruction.program_id)] + get_unknown_instruction_properties(instruction)
     )
 

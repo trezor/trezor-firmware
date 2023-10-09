@@ -22,31 +22,6 @@ if TYPE_CHECKING:
         optional: bool
 
 
-class UnsupportedInstruction:
-    program_id: bytes
-    instruction_id: int
-    instruction_data: bytes
-    accounts: list[Account]
-
-    def __init__(
-        self,
-        instruction_data: bytes,
-        program_id: bytes,
-        accounts: list[Account],
-        instruction_id: int,
-        ui_identifier: str,
-        ui_name: str,
-    ) -> None:
-        self.program_id = program_id
-        self.instruction_id = instruction_id
-
-        self.ui_identifier = ui_identifier
-        self.ui_name = ui_name
-
-        self.instruction_data = instruction_data
-        self.accounts = accounts
-
-
 class Instruction:
     PROGRAM_ID: str
     INSTRUCTION_ID: int
@@ -66,6 +41,11 @@ class Instruction:
     parsed_data: dict[str, Any] | None = None
     parsed_accounts: dict[str, Account] | None = None
 
+    is_program_supported: bool
+    is_instruction_supported: bool
+    instruction_data: bytes = None
+    accounts: list[Account] = None
+
     def __init__(
         self,
         instruction_data: bytes,
@@ -78,6 +58,8 @@ class Instruction:
         ui_account_list: list[str],
         ui_identifier: str,
         ui_name: str,
+        is_program_supported: bool = True,
+        is_instruction_supported: bool = True
     ) -> None:
         self.program_id = program_id
         self.instruction_id = instruction_id
@@ -93,6 +75,13 @@ class Instruction:
 
         self.parsed_data = {}
         self.parsed_accounts = {}
+
+        self.is_program_supported = is_program_supported
+        self.is_instruction_supported = is_instruction_supported
+
+        if not is_instruction_supported:
+            self.instruction_data = instruction_data
+            self.accounts = accounts
 
         reader = BufferReader(instruction_data)
 

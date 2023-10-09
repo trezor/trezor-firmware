@@ -33,8 +33,7 @@ async def sign_tx(
     if transaction.blind_signing:
         await show_warning(
             "warning_blind_signing",
-            "Unsupported instructions.",
-            "Do you want to blindly sing the message?"
+            "Transaction contains unknown instructions."
         )
 
     await show_instructions(node.public_key(), transaction)
@@ -81,7 +80,7 @@ async def show_instructions(public_key: bytes, transaction: Transaction) -> None
             pass
 
 def calculate_fee(transaction: Transaction) -> int:
-    from .constants import SOLANA_BASE_FEE_LAMPORTS, SOLANA_CU_LIMIT, ADDRESS_READ_ONLY
+    from .constants import SOLANA_BASE_FEE_LAMPORTS, SOLANA_COMPUTE_UNIT_LIMIT, ADDRESS_READ_ONLY
     from .transaction.instructions import (
         COMPUTE_BUDGET_PROGRAM_ID, 
         COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT, 
@@ -96,7 +95,7 @@ def calculate_fee(transaction: Transaction) -> int:
     base_fee = SOLANA_BASE_FEE_LAMPORTS * number_of_signers
 
     unit_price: int | None = None
-    unit_limit: int = SOLANA_CU_LIMIT
+    unit_limit: int = SOLANA_COMPUTE_UNIT_LIMIT
 
     for instruction in transaction.instructions:
         if instruction.program_id == COMPUTE_BUDGET_PROGRAM_ID:

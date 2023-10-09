@@ -45,7 +45,7 @@ int\
 from typing import TYPE_CHECKING
 from trezor.wire import ProcessError
 
-from .instruction import Instruction, UnsupportedInstruction
+from .instruction import Instruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
@@ -151,22 +151,34 @@ def get_instruction(
             )
     % endfor
         else:
-            return UnsupportedInstruction(
+            return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 instruction_id,
+                [],
+                [],
+                [],
+                [],
                 "ui_unsupported_instruction",
-                "${program["name"]}"
+                "${program["name"]}",
+                True,
+                False
             )
 % endif
 % endfor
     else:
-        return UnsupportedInstruction(
+        return Instruction(
             instruction_data,
             program_id,
             instruction_accounts,
             0,
+            [],
+            [],
+            [],
+            [],
             "ui_unsupported_program",
-            "Unsupported program"
+            "Unsupported program",
+            False,
+            False
         )

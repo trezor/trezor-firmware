@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 from trezor.wire import ProcessError
 
-from .instruction import Instruction, UnsupportedInstruction
+from .instruction import Instruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
@@ -1080,13 +1080,19 @@ def get_instruction(
                 "System Program: Assign With Seed"
             )
         else:
-            return UnsupportedInstruction(
+            return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 instruction_id,
+                [],
+                [],
+                [],
+                [],
                 "ui_unsupported_instruction",
-                "System Program"
+                "System Program",
+                True,
+                False
             )
     if program_id == STAKE_PROGRAM_ID:
         if instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE:
@@ -1259,13 +1265,19 @@ def get_instruction(
                 "Stake Program: Set Lockup Checked"
             )
         else:
-            return UnsupportedInstruction(
+            return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 instruction_id,
+                [],
+                [],
+                [],
+                [],
                 "ui_unsupported_instruction",
-                "Stake Program"
+                "Stake Program",
+                True,
+                False
             )
     if program_id == COMPUTE_BUDGET_PROGRAM_ID:
         if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME:
@@ -1308,13 +1320,19 @@ def get_instruction(
                 "Compute Budget Program: Set Compute Unit Price"
             )
         else:
-            return UnsupportedInstruction(
+            return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 instruction_id,
+                [],
+                [],
+                [],
+                [],
                 "ui_unsupported_instruction",
-                "Compute Budget Program"
+                "Compute Budget Program",
+                True,
+                False
             )
     if program_id == TOKEN_PROGRAM_ID:
         if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT:
@@ -1565,13 +1583,19 @@ def get_instruction(
                 "Token Program: Initialize Immutable Owner"
             )
         else:
-            return UnsupportedInstruction(
+            return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 instruction_id,
+                [],
+                [],
+                [],
+                [],
                 "ui_unsupported_instruction",
-                "Token Program"
+                "Token Program",
+                True,
+                False
             )
     if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
         if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE:
@@ -1614,13 +1638,19 @@ def get_instruction(
                 "Associated Token Account Program: Recover Nested"
             )
         else:
-            return UnsupportedInstruction(
+            return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 instruction_id,
+                [],
+                [],
+                [],
+                [],
                 "ui_unsupported_instruction",
-                "Associated Token Account Program"
+                "Associated Token Account Program",
+                True,
+                False
             )
     if program_id == MEMO_PROGRAM_ID:
         if instruction_id == MEMO_PROGRAM_ID_INS_MEMO:
@@ -1637,13 +1667,19 @@ def get_instruction(
                 "Memo Program: Memo"
             )
         else:
-            return UnsupportedInstruction(
+            return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 instruction_id,
+                [],
+                [],
+                [],
+                [],
                 "ui_unsupported_instruction",
-                "Memo Program"
+                "Memo Program",
+                True,
+                False
             )
     if program_id == MEMO_LEGACY_PROGRAM_ID:
         if instruction_id == MEMO_LEGACY_PROGRAM_ID_INS_MEMO:
@@ -1660,20 +1696,32 @@ def get_instruction(
                 "Memo Legacy Program: Memo"
             )
         else:
-            return UnsupportedInstruction(
+            return Instruction(
                 instruction_data,
                 program_id,
                 instruction_accounts,
                 instruction_id,
+                [],
+                [],
+                [],
+                [],
                 "ui_unsupported_instruction",
-                "Memo Legacy Program"
+                "Memo Legacy Program",
+                True,
+                False
             )
     else:
-        return UnsupportedInstruction(
+        return Instruction(
             instruction_data,
             program_id,
             instruction_accounts,
             0,
+            [],
+            [],
+            [],
+            [],
             "ui_unsupported_program",
-            "Unsupported program"
+            "Unsupported program",
+            False,
+            False
         )
