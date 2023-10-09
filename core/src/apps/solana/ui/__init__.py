@@ -131,8 +131,13 @@ async def show_unsupported_program_confirm(
 
 
 async def show_final_confirmation(blockhash: bytes, fee: int) -> None:
-    from trezor.ui.layouts import confirm_signverify
+    from trezor.ui.layouts import confirm_properties
 
-    await confirm_signverify("SOL", f"{fee} lamports", "address", verify=False)
-
-
+    await confirm_properties(
+        "sign_message", 
+        "Sign message",
+        [
+            ("Blockhash", base58.encode(blockhash)),
+            ("Fee", f"{fee} lamports")
+        ]
+    )
