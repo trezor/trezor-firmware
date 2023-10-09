@@ -20,7 +20,6 @@ async def sign_tx(
     from trezor.messages import SolanaTxSignature
     from trezor.utils import BufferReader
     from trezor.ui.layouts import show_warning
-    from trezor.ui.layouts import confirm_signverify
     from .ui import show_final_confirmation
 
     address_n = msg.address_n
