@@ -189,8 +189,7 @@ secbool usb_configured(void) {
 
 secbool usb_configured_now(void) {
   const USBD_HandleTypeDef *pdev = &usb_dev_handle;
-  if (pdev->dev_state == USBD_STATE_SUSPENDED &&
-      pdev->dev_old_state == USBD_STATE_CONFIGURED) {
+  if (pdev->dev_state == USBD_STATE_CONFIGURED) {
     return sectrue;
   }
   return secfalse;
