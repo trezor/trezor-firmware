@@ -16,6 +16,7 @@ def stm32u5_common_files(env, defines, sources, paths):
     sources += [
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c",
+        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cryp.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_dma.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_dma2d.c",
         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_dsi.c",
@@ -50,6 +51,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32u5/lowlevel.c",
         "embed/trezorhal/stm32u5/mpu.c",
         "embed/trezorhal/stm32u5/platform.c",
+        "embed/trezorhal/stm32u5/secure_aes.c",
         "embed/trezorhal/stm32u5/systick.c",
         "embed/trezorhal/stm32u5/random_delays.c",
         "embed/trezorhal/stm32u5/rng.c",

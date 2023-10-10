@@ -47,6 +47,7 @@
 #include "model.h"
 #include "mpu.h"
 #include "random_delays.h"
+#include "secure_aes.h"
 
 #include TREZOR_BOARD
 
@@ -164,6 +165,10 @@ int main(void) {
 #ifdef USE_TOUCH
   touch_init();
 #endif
+
+  secure_aes_init();
+
+  secure_aes_test();
 
 #ifdef USE_SD_CARD
   sdcard_init();
