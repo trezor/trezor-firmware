@@ -6,7 +6,7 @@ authors = ["SatoshiLabs <info@satoshilabs.com>"]
 
 [tool.poetry.dependencies]
 # all
-python = "^3.7"
+python = "^3.8"
 trezor = {path = "./python", develop = true}
 scons = "*"
 protobuf = "*"
@@ -54,7 +54,7 @@ click = "^8"
 ed25519 = "^1.4"
 requests = "^2.31"
 termcolor = "*"
-Pillow = "^9"
+Pillow = ">=10.0.1"
 
 # crypto
 ecdsa = "^0.16"
