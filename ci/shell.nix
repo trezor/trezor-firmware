@@ -85,6 +85,7 @@ stdenvNoCC.mkDerivation ({
     # install other python versions for tox testing
     # NOTE: running e.g. "python3" in the shell runs the first version in the following list,
     #       and poetry uses the default version (currently 3.10)
+    python311
     python310
     python39
     python38
