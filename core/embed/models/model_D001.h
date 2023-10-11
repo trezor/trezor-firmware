@@ -5,7 +5,6 @@
 #define MODEL_FULL_NAME "Trezor Model T"
 #define MODEL_INTERNAL_NAME "D001"
 #define MODEL_INTERNAL_NAME_TOKEN T
-#define MODEL_NAME_QSTR MP_QSTR_T
 #define MODEL_INTERNAL_NAME_QSTR MP_QSTR_D001
 
 /*** Discovery uses DEV keys in any build variant ***/

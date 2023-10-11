@@ -7,6 +7,7 @@ trap "rm -r $CHECK_OUTPUT" EXIT
 
 $HERE/cointool.py check > $CHECK_OUTPUT/pre.txt
 
+$HERE/cointool.py new-definitions -v
 $HERE/support.py release
 
 $HERE/cointool.py check > $CHECK_OUTPUT/post.txt
