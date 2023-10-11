@@ -14,12 +14,15 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import warnings
+
 import pytest
 
 try:
     from stellar_sdk import (
         Account,
         Asset,
+        AuthorizationFlag,
         MuxedAccount,
         Network,
         TransactionBuilder,
@@ -39,7 +42,7 @@ BASE_FEE = 200
 
 
 def make_default_tx(default_op: bool = False, **kwargs) -> TransactionBuilder:
-    source_account = Account(account_id=TX_SOURCE, sequence=SEQUENCE)
+    source_account = Account(account=TX_SOURCE, sequence=SEQUENCE)
     default_params = {
         "source_account": source_account,
         "network_passphrase": Network.TESTNET_NETWORK_PASSPHRASE,
@@ -126,7 +129,10 @@ def test_memo_return_hash():
 def test_time_bounds_missing():
     tx = make_default_tx(default_op=True)
     tx.time_bounds = None
-    envelope = tx.build()
+    with warnings.catch_warnings():
+        # ignore warning about missing time bounds
+        warnings.filterwarnings("ignore", message=r".*TimeBounds.*")
+        envelope = tx.build()
 
     with pytest.raises(ValueError):
         stellar.from_envelope(envelope)
@@ -150,8 +156,7 @@ def test_multiple_operations():
         .append_payment_op(
             destination=destination,
             amount=amount,
-            asset_code=asset_code,
-            asset_issuer=asset_issuer,
+            asset=Asset(asset_code, asset_issuer),
             source=operation2_source,
         )
         .build()
@@ -214,8 +219,7 @@ def test_payment_native_asset():
     envelope = tx.append_payment_op(
         destination=destination,
         amount=amount,
-        asset_code=asset_code,
-        asset_issuer=asset_issuer,
+        asset=Asset(asset_code, asset_issuer),
         source=operation_source,
     ).build()
 
@@ -241,8 +245,7 @@ def test_payment_alpha4_asset():
     envelope = tx.append_payment_op(
         destination=destination,
         amount=amount,
-        asset_code=asset_code,
-        asset_issuer=asset_issuer,
+        asset=Asset(asset_code, asset_issuer),
         source=operation_source,
     ).build()
 
@@ -268,8 +271,7 @@ def test_payment_alpha12_asset():
     envelope = tx.append_payment_op(
         destination=destination,
         amount=amount,
-        asset_code=asset_code,
-        asset_issuer=asset_issuer,
+        asset=Asset(asset_code, asset_issuer),
         source=operation_source,
     ).build()
 
@@ -303,11 +305,9 @@ def test_path_payment_strict_receive():
 
     envelope = tx.append_path_payment_strict_receive_op(
         destination=destination,
-        send_code=send_code,
-        send_issuer=send_issuer,
+        send_asset=Asset(send_code, send_issuer),
         send_max=send_max,
-        dest_code=dest_code,
-        dest_issuer=dest_issuer,
+        dest_asset=Asset(dest_code, dest_issuer),
         dest_amount=dest_amount,
         path=[path_asset1, path_asset2],
         source=operation_source,
@@ -345,10 +345,8 @@ def test_manage_sell_offer_new_offer():
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
     envelope = tx.append_manage_sell_offer_op(
-        selling_code=selling_code,
-        selling_issuer=selling_issuer,
-        buying_code=buying_code,
-        buying_issuer=buying_issuer,
+        selling=Asset(selling_code, selling_issuer),
+        buying=Asset(buying_code, buying_issuer),
         amount=amount,
         price=price,
         source=operation_source,
@@ -380,10 +378,8 @@ def test_manage_sell_offer_update_offer():
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
     envelope = tx.append_manage_sell_offer_op(
-        selling_code=selling_code,
-        selling_issuer=selling_issuer,
-        buying_code=buying_code,
-        buying_issuer=buying_issuer,
+        selling=Asset(selling_code, selling_issuer),
+        buying=Asset(buying_code, buying_issuer),
         amount=amount,
         price=price,
         offer_id=offer_id,
@@ -415,10 +411,8 @@ def test_create_passive_sell_offer():
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
     envelope = tx.append_create_passive_sell_offer_op(
-        selling_code=selling_code,
-        selling_issuer=selling_issuer,
-        buying_code=buying_code,
-        buying_issuer=buying_issuer,
+        selling=Asset(selling_code, selling_issuer),
+        buying=Asset(buying_code, buying_issuer),
         amount=amount,
         price=price,
         source=operation_source,
@@ -441,8 +435,11 @@ def test_set_options():
     tx = make_default_tx()
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
     inflation_dest = "GAXN7HZQTHIPW7N2HGPAXMR42LPJ5VLYXMCCOX4D3JC4CQZGID3UYUPF"
-    clear_flags = 1
-    set_flags = 6
+    clear_flags = AuthorizationFlag.AUTHORIZATION_REQUIRED
+    set_flags = (
+        AuthorizationFlag.AUTHORIZATION_IMMUTABLE
+        | AuthorizationFlag.AUTHORIZATION_REVOCABLE
+    )
     master_weight = 255
     low_threshold = 10
     med_threshold = 20
@@ -553,8 +550,7 @@ def test_change_trust():
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
     envelope = tx.append_change_trust_op(
-        asset_code=asset_code,
-        asset_issuer=asset_issuer,
+        asset=Asset(asset_code, asset_issuer),
         limit=limit,
         source=operation_source,
     ).build()
@@ -575,12 +571,17 @@ def test_allow_trust():
     trustor = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = tx.append_allow_trust_op(
-        trustor=trustor,
-        asset_code=asset_code,
-        authorize=TrustLineEntryFlag.AUTHORIZED_FLAG,
-        source=operation_source,
-    ).build()
+    with warnings.catch_warnings():
+        # ignore warnings about append_trust_line_flags being a deprecated op,
+        # Trezor doesn't currently support the alternative
+        warnings.filterwarnings("ignore", message=r".*append_set_trust_line_flags_op.*")
+        warnings.filterwarnings("ignore", message=r".*SetTrustLineFlags.*")
+        envelope = tx.append_allow_trust_op(
+            trustor=trustor,
+            asset_code=asset_code,
+            authorize=TrustLineEntryFlag.AUTHORIZED_FLAG,
+            source=operation_source,
+        ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -671,10 +672,8 @@ def test_manage_buy_offer_new_offer():
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
     envelope = tx.append_manage_buy_offer_op(
-        selling_code=selling_code,
-        selling_issuer=selling_issuer,
-        buying_code=buying_code,
-        buying_issuer=buying_issuer,
+        selling=Asset(selling_code, selling_issuer),
+        buying=Asset(buying_code, buying_issuer),
         amount=amount,
         price=price,
         source=operation_source,
@@ -706,10 +705,8 @@ def test_manage_buy_offer_update_offer():
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
     envelope = tx.append_manage_buy_offer_op(
-        selling_code=selling_code,
-        selling_issuer=selling_issuer,
-        buying_code=buying_code,
-        buying_issuer=buying_issuer,
+        selling=Asset(selling_code, selling_issuer),
+        buying=Asset(buying_code, buying_issuer),
         amount=amount,
         price=price,
         offer_id=offer_id,
@@ -749,11 +746,9 @@ def test_path_payment_strict_send():
 
     envelope = tx.append_path_payment_strict_send_op(
         destination=destination,
-        send_code=send_code,
-        send_issuer=send_issuer,
+        send_asset=Asset(send_code, send_issuer),
         send_amount=send_amount,
-        dest_code=dest_code,
-        dest_issuer=dest_issuer,
+        dest_asset=Asset(dest_code, dest_issuer),
         dest_min=dest_min,
         path=[path_asset1, path_asset2],
         source=operation_source,
@@ -793,8 +788,7 @@ def test_payment_muxed_account_not_support_raise():
     envelope = tx.append_payment_op(
         destination=destination,
         amount=amount,
-        asset_code=asset_code,
-        asset_issuer=asset_issuer,
+        asset=Asset(asset_code, asset_issuer),
         source=operation_source,
     ).build()
 
@@ -823,11 +817,9 @@ def test_path_payment_strict_send_muxed_account_not_support_raise():
 
     envelope = tx.append_path_payment_strict_send_op(
         destination=destination,
-        send_code=send_code,
-        send_issuer=send_issuer,
+        send_asset=Asset(send_code, send_issuer),
         send_amount=send_amount,
-        dest_code=dest_code,
-        dest_issuer=dest_issuer,
+        dest_asset=Asset(dest_code, dest_issuer),
         dest_min=dest_min,
         path=[path_asset1, path_asset2],
         source=operation_source,
@@ -858,11 +850,9 @@ def test_path_payment_strict_receive_muxed_account_not_support_raise():
 
     envelope = tx.append_path_payment_strict_receive_op(
         destination=destination,
-        send_code=send_code,
-        send_issuer=send_issuer,
+        send_asset=Asset(send_code, send_issuer),
         send_max=send_max,
-        dest_code=dest_code,
-        dest_issuer=dest_issuer,
+        dest_asset=Asset(dest_code, dest_issuer),
         dest_amount=dest_amount,
         path=[path_asset1, path_asset2],
         source=operation_source,
@@ -900,8 +890,7 @@ def test_op_source_muxed_account_not_support_raise():
     envelope = tx.append_payment_op(
         destination=destination,
         amount=amount,
-        asset_code=asset_code,
-        asset_issuer=asset_issuer,
+        asset=Asset(asset_code, asset_issuer),
         source=operation_source,
     ).build()
 
@@ -910,9 +899,7 @@ def test_op_source_muxed_account_not_support_raise():
 
 
 def test_tx_source_muxed_account_not_support_raise():
-    source_account = Account(
-        account_id=MuxedAccount(TX_SOURCE, 123456), sequence=SEQUENCE
-    )
+    source_account = Account(account=MuxedAccount(TX_SOURCE, 123456), sequence=SEQUENCE)
     destination = "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6"
     amount = "50.0111"
     asset_code = "XLM"
@@ -929,8 +916,7 @@ def test_tx_source_muxed_account_not_support_raise():
         .append_payment_op(
             destination=destination,
             amount=amount,
-            asset_code=asset_code,
-            asset_issuer=asset_issuer,
+            asset=Asset(asset_code, asset_issuer),
             source=operation_source,
         )
         .build()
