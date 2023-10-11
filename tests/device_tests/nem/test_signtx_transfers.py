@@ -33,7 +33,7 @@ pytestmark = [
 # assertion data from T1
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_nem_signtx_simple(client: Client, chunkify: bool):
-    is_core = client.features.model in ("T", "R")
+    is_core = client.features.model in ("T", "Safe 3")
     with client:
         client.set_expected_responses(
             [
@@ -85,7 +85,7 @@ def test_nem_signtx_simple(client: Client, chunkify: bool):
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_nem_signtx_encrypted_payload(client: Client):
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 # Confirm transfer and network fee

@@ -93,7 +93,7 @@ def test_cancel_on_paginated(client: Client):
 
     # In TR, confirm message is no longer paginated by default,
     # user needs to click info button
-    if client.debug.model == "R":
+    if client.debug.model == "Safe 3":
         client._raw_write(m.ButtonAck())
         client.debug.press_right()
         resp = client._raw_read()

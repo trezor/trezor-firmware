@@ -127,7 +127,7 @@ def test_one_one_fee(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -181,7 +181,7 @@ def test_testnet_one_two_fee(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -232,7 +232,7 @@ def test_testnet_fee_high_warning(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -285,7 +285,7 @@ def test_one_two_fee(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -348,7 +348,7 @@ def test_one_three_fee(client: Client, chunkify: bool):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -420,7 +420,7 @@ def test_two_two(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -565,7 +565,7 @@ def test_lots_of_change(client: Client):
     request_change_outputs = [request_output(i + 1) for i in range(cnt)]
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -617,7 +617,7 @@ def test_fee_high_warning(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -706,7 +706,7 @@ def test_not_enough_funds(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -737,7 +737,7 @@ def test_p2sh(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -825,7 +825,7 @@ def test_attack_change_outputs(client: Client):
 
     # Test if the transaction can be signed normally
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -993,7 +993,7 @@ def test_attack_change_input_address(client: Client):
 
     # Now run the attack, must trigger the exception
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
@@ -1045,7 +1045,7 @@ def test_spend_coinbase(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -1104,7 +1104,7 @@ def test_two_changes(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -1164,7 +1164,7 @@ def test_change_on_main_chain_allowed(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -1429,7 +1429,7 @@ def test_lock_time(client: Client, lock_time: int, sequence: int):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),

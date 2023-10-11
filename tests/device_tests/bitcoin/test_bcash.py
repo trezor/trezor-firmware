@@ -72,7 +72,7 @@ def test_send_bch_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -125,7 +125,7 @@ def test_send_bch_nochange(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -184,7 +184,7 @@ def test_send_bch_oldaddr(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -255,7 +255,7 @@ def test_attack_change_input(client: Client):
         return msg
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
@@ -331,7 +331,7 @@ def test_send_bch_multisig_wrongchange(client: Client):
         amount=23_000,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -400,7 +400,7 @@ def test_send_bch_multisig_change(client: Client):
         amount=24_000,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -502,7 +502,7 @@ def test_send_bch_external_presigned(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),

@@ -83,7 +83,7 @@ def test_2_of_3(client: Client, chunkify: bool):
     )
 
     # Expected responses are the same for both two signings
-    is_core = client.features.model in ("T", "R")
+    is_core = client.features.model in ("T", "Safe 3")
     expected_responses = [
         request_input(0),
         request_output(0),

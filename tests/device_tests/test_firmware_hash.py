@@ -8,7 +8,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 FIRMWARE_LENGTHS = {
     "1": 7 * 128 * 1024 + 64 * 1024,
     "T": 13 * 128 * 1024,
-    "R": 13 * 128 * 1024,
+    "Safe 3": 13 * 128 * 1024,
 }
 
 

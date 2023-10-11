@@ -36,7 +36,7 @@ def show_details_input_flow(client: Client):
     if client.features.model == "T":
         SHOW_ALL_BUTTON_POSITION = (143, 167)
         client.debug.click(SHOW_ALL_BUTTON_POSITION)
-    elif client.features.model == "R":
+    elif client.features.model == "Safe 3":
         client.debug.press_yes()
     # reset ui flow to continue "automatically"
     client.ui.input_flow = None

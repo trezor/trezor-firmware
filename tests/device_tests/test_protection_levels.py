@@ -140,7 +140,7 @@ def test_change_pin_t2(client: Client):
                 messages.ButtonRequest,
                 _pin_request(client),
                 _pin_request(client),
-                (client.debug.model == "R", messages.ButtonRequest),
+                (client.debug.model == "Safe 3", messages.ButtonRequest),
                 _pin_request(client),
                 messages.ButtonRequest,
                 messages.Success,
@@ -362,7 +362,7 @@ def test_signtx(client: Client):
 
     _assert_protection(client)
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [

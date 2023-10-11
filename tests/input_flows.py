@@ -61,7 +61,7 @@ class InputFlowBase:
             return getattr(self, "input_flow_common")
         elif self.model() == "T":
             return self.input_flow_tt
-        elif self.model() == "R":
+        elif self.model() == "Safe 3":
             return self.input_flow_tr
         else:
             raise ValueError("Unknown model")
@@ -97,7 +97,7 @@ class InputFlowSetupDevicePINWIpeCode(InputFlowBase):
         yield  # do you want to set/change the wipe code?
         self.debug.press_yes()
 
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             yield from swipe_if_necessary(self.debug)  # wipe code info
             self.debug.press_yes()
 
@@ -126,7 +126,7 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         yield  # do you want to set/change the pin/wipe code?
         self.debug.press_yes()
 
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             yield from swipe_if_necessary(self.debug)  # code info
             self.debug.press_yes()
 
@@ -751,7 +751,7 @@ class InputFlowEIP712ShowMore(InputFlowBase):
         """Model-specific, either clicks a screen or presses a button."""
         if self.model() == "T":
             self.debug.click(self.SHOW_MORE)
-        elif self.model() == "R":
+        elif self.model() == "Safe 3":
             self.debug.press_right()
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1565,7 +1565,7 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
         assert "New wallet created" in self.text_content()
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             self.debug.press_right()
         self.debug.press_no()
         yield  # Confirm skip backup

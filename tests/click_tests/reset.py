@@ -15,7 +15,7 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
     assert layout.title().startswith("CREATE WALLET")
     if debug.model == "T":
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         debug.press_right(wait=True)
         debug.press_right(wait=True)
 
@@ -43,7 +43,7 @@ def confirm_read(debug: "DebugLink", title: str, middle_r: bool = False) -> None
 
     if debug.model == "T":
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         if layout.page_count() > 1:
             debug.press_right(wait=True)
         if middle_r:
@@ -58,7 +58,7 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
         for _ in range(diff):
             debug.click(button)
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         layout = debug.read_layout()
         if layout.title() in ("NUMBER OF SHARES", "THRESHOLD"):
             # Special info screens
@@ -86,7 +86,7 @@ def read_words(
             assert layout.title().startswith("RECOVERY SHARE #")
         else:
             assert layout.title() == "RECOVERY SEED"
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         if backup_type == messages.BackupType.Slip39_Advanced:
             assert "SHARE" in layout.title()
         elif backup_type == messages.BackupType.Slip39_Basic:
@@ -109,7 +109,7 @@ def read_words(
     if do_htc:
         if debug.model == "T":
             debug.click_hold(buttons.OK, hold_ms=1500)
-        elif debug.model == "R":
+        elif debug.model == "Safe 3":
             debug.press_right_htc(1200)
     else:
         # It would take a very long time to test 16-of-16 with doing 1500 ms HTC after
@@ -134,7 +134,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
             layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         assert "Select the correct word" in layout.text_content()
         layout = debug.press_right(wait=True)
         for _ in range(3):

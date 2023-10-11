@@ -87,7 +87,7 @@ def prepare(
         assert "Turn on" in debug.wait_layout().text_content()
         if debug.model == "T":
             go_next(debug)
-        elif debug.model == "R":
+        elif debug.model == "Safe 3":
             go_next(debug, wait=True)
             go_next(debug, wait=True)
             go_next(debug, wait=True)
@@ -106,7 +106,7 @@ def prepare(
             _input_see_confirm(debug, old_pin)
         assert "Turn on" in debug.wait_layout().text_content()
         go_next(debug, wait=True)
-        if debug.model == "R":
+        if debug.model == "Safe 3":
             go_next(debug, wait=True)
             go_next(debug, wait=True)
             go_next(debug, wait=True)
@@ -136,7 +136,7 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
             digit_index = digits_order.index(digit)
             coords = buttons.pin_passphrase_index(digit_index)
             debug.click(coords, wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         for digit in pin:
             navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
 
@@ -149,7 +149,7 @@ def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
     if debug.model == "T":
         debug.click(buttons.TOP_ROW, wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         navigate_to_action_and_press(debug, "SHOW", TR_PIN_ACTIONS)
 
 
@@ -161,7 +161,7 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
     for _ in range(digits_to_delete):
         if debug.model == "T":
             debug.click(buttons.pin_passphrase_grid(9), wait=True)
-        elif debug.model == "R":
+        elif debug.model == "Safe 3":
             navigate_to_action_and_press(debug, "DELETE", TR_PIN_ACTIONS)
 
     if check:
@@ -173,7 +173,7 @@ def _delete_all(debug: "DebugLink", check: bool = True) -> None:
     """Navigate to "DELETE" and hold it until all digits are deleted"""
     if debug.model == "T":
         debug.click_hold(buttons.pin_passphrase_grid(9), hold_ms=1500)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         navigate_to_action_and_press(debug, "DELETE", TR_PIN_ACTIONS, hold_ms=1000)
 
     if check:
@@ -192,7 +192,7 @@ def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""
     if debug.model == "T":
         debug.click(buttons.pin_passphrase_grid(11), wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         navigate_to_action_and_press(debug, "ENTER", TR_PIN_ACTIONS)
 
 
@@ -205,7 +205,7 @@ def _input_see_confirm(debug: "DebugLink", pin: str) -> None:
 def _enter_two_times(debug: "DebugLink", pin1: str, pin2: str) -> None:
     _input_see_confirm(debug, pin1)
 
-    if debug.model == "R":
+    if debug.model == "Safe 3":
         # Please re-enter
         go_next(debug, wait=True)
 
@@ -298,7 +298,7 @@ def test_pin_setup_mismatch(device_handler: "BackgroundDeviceHandler"):
         if debug.model == "T":
             go_next(debug)
             _cancel_pin(debug)
-        elif debug.model == "R":
+        elif debug.model == "Safe 3":
             debug.press_middle()
             debug.press_no()
 

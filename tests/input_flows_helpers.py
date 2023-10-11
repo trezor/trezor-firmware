@@ -17,7 +17,7 @@ class PinFlow:
         yield  # Enter PIN
         assert "PinKeyboard" in self.debug.wait_layout().all_components()
         self.debug.input(pin)
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             yield  # Reenter PIN
             assert "re-enter PIN" in self.debug.wait_layout().text_content()
             self.debug.press_yes()
@@ -37,7 +37,7 @@ class BackupFlow:
     def confirm_new_wallet(self) -> BRGeneratorType:
         yield
         assert "By continuing you agree" in self.debug.wait_layout().text_content()
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             self.debug.press_right()
         self.debug.press_yes()
 
@@ -50,7 +50,7 @@ class RecoveryFlow:
     def confirm_recovery(self) -> BRGeneratorType:
         yield
         assert "By continuing you agree" in self.debug.wait_layout().text_content()
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             self.debug.press_right()
         self.debug.press_yes()
 
@@ -60,13 +60,13 @@ class RecoveryFlow:
         self.debug.press_yes()
 
     def setup_slip39_recovery(self, num_words: int) -> BRGeneratorType:
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             yield from self.tr_recovery_homescreen()
         yield from self.input_number_of_words(num_words)
         yield from self.enter_any_share()
 
     def setup_bip39_recovery(self, num_words: int) -> BRGeneratorType:
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             yield from self.tr_recovery_homescreen()
         yield from self.input_number_of_words(num_words)
         yield from self.enter_your_backup()
@@ -80,7 +80,7 @@ class RecoveryFlow:
         yield
         assert "Enter your backup" in self.debug.wait_layout().text_content()
         if (
-            self.debug.model == "R"
+            self.debug.model == "Safe 3"
             and "BACKUP CHECK" not in self.debug.wait_layout().title()
         ):
             # Normal recovery has extra info (not dry run)
@@ -92,7 +92,7 @@ class RecoveryFlow:
         yield
         assert "Enter any share" in self.debug.wait_layout().text_content()
         if (
-            self.debug.model == "R"
+            self.debug.model == "Safe 3"
             and "BACKUP CHECK" not in self.debug.wait_layout().title()
         ):
             # Normal recovery has extra info (not dry run)
@@ -102,7 +102,7 @@ class RecoveryFlow:
 
     def abort_recovery(self, confirm: bool) -> BRGeneratorType:
         yield
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             assert "number of words" in self.debug.wait_layout().text_content()
         else:
             assert "Enter any share" in self.debug.wait_layout().text_content()
@@ -110,7 +110,7 @@ class RecoveryFlow:
 
         yield
         assert "cancel the recovery" in self.debug.wait_layout().text_content()
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             self.debug.press_right()
         if confirm:
             self.debug.press_yes()
@@ -120,7 +120,7 @@ class RecoveryFlow:
     def input_number_of_words(self, num_words: int) -> BRGeneratorType:
         br = yield
         assert br.code == B.MnemonicWordCount
-        if self.debug.model == "R":
+        if self.debug.model == "Safe 3":
             assert "NUMBER OF WORDS" in self.debug.wait_layout().title()
         else:
             assert "number of words" in self.debug.wait_layout().text_content()
@@ -214,7 +214,7 @@ class RecoveryFlow:
         assert br.code == B.MnemonicInput
         assert "MnemonicKeyboard" in self.debug.wait_layout().all_components()
         for index, word in enumerate(mnemonic):
-            if self.debug.model == "R":
+            if self.debug.model == "Safe 3":
                 assert f"WORD {index + 1}" in self.debug.wait_layout().title()
             else:
                 assert (

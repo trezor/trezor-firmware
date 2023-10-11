@@ -79,7 +79,7 @@ def test_send_p2tr(client: Client, chunkify: bool):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -134,7 +134,7 @@ def test_send_two_with_change(client: Client):
         amount=6_800 + 13_000 - 200 - 15_000,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -224,8 +224,8 @@ def test_send_mixed(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 # process inputs
@@ -358,8 +358,8 @@ def test_attack_script_type(client: Client):
         return msg
 
     with client:
-        is_core = client.features.model in ("T", "R")
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [

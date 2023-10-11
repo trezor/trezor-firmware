@@ -45,7 +45,7 @@ def get_char_category(char: str) -> PassphraseCategory:
 def go_next(debug: "DebugLink", wait: bool = False) -> "LayoutContent" | None:
     if debug.model == "T":
         return debug.click(buttons.OK, wait=wait)  # type: ignore
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         return debug.press_right(wait=wait)  # type: ignore
     else:
         raise RuntimeError("Unknown model")
@@ -56,7 +56,7 @@ def go_back(
 ) -> "LayoutContent" | None:
     if debug.model == "T":
         return debug.click(buttons.CANCEL, wait=wait)  # type: ignore
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         if r_middle:
             return debug.press_middle(wait=wait)  # type: ignore
         else:

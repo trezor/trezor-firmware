@@ -162,7 +162,7 @@ def read_and_confirm_mnemonic(
     # TODO: these are very similar, reuse some code
     if debug.model == "T":
         mnemonic = yield from read_and_confirm_mnemonic_tt(debug, choose_wrong)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         mnemonic = yield from read_and_confirm_mnemonic_tr(debug, choose_wrong)
     else:
         raise ValueError(f"Unknown model: {debug.model}")

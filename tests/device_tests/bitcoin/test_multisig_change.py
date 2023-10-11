@@ -145,7 +145,7 @@ def _responses(
     change: int = 0,
     foreign: bool = False,
 ):
-    is_core = client.features.model in ("T", "R")
+    is_core = client.features.model in ("T", "Safe 3")
     resp = [
         request_input(0),
         request_input(1),

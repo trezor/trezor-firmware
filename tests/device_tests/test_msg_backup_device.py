@@ -59,7 +59,7 @@ def test_backup_bip39(client: Client):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_basic(client: Client, click_info: bool):
-    if click_info and client.features.model == "R":
+    if click_info and client.features.model == "Safe 3":
         pytest.skip("click_info not implemented on TR")
 
     assert client.features.needs_backup is True
@@ -87,7 +87,7 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_advanced(client: Client, click_info: bool):
-    if click_info and client.features.model == "R":
+    if click_info and client.features.model == "Safe 3":
         pytest.skip("click_info not implemented on TR")
 
     assert client.features.needs_backup is True

@@ -95,7 +95,7 @@ def test_spend_v4_input(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -144,7 +144,7 @@ def test_send_to_multisig(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -192,7 +192,7 @@ def test_spend_v5_input(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -246,7 +246,7 @@ def test_one_two(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -305,7 +305,7 @@ def test_unified_address(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -370,7 +370,7 @@ def test_external_presigned(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -483,7 +483,7 @@ def test_spend_multisig(client: Client):
     )
 
     # Expected responses are the same for both two signings
-    is_core = client.features.model in ("T", "R")
+    is_core = client.features.model in ("T", "Safe 3")
     expected_responses = [
         request_input(0),
         request_output(0),

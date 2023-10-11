@@ -16,7 +16,7 @@ def enter_word(
             debug.click(coords)
 
         return debug.click(buttons.CONFIRM_WORD, wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         letter_index = 0
         layout = debug.read_layout()
 
@@ -43,7 +43,7 @@ def confirm_recovery(debug: "DebugLink") -> None:
     if debug.model == "T":
         assert layout.title().startswith(("RECOVER WALLET", "BACKUP CHECK"))
         debug.click(buttons.OK, wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         assert layout.title() == "RECOVER WALLET"
         debug.press_right(wait=True)
         debug.press_right()
@@ -69,7 +69,7 @@ def select_number_of_words(
         )  # raises if num of words is invalid
         coords = buttons.grid34(index % 3, index // 3)
         layout = debug.click(coords, wait=True)
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         assert "number of words" in debug.read_layout().text_content()
         layout = debug.press_right(wait=True)
 
@@ -101,7 +101,7 @@ def enter_share(
             layout = enter_word(debug, word, is_slip39=True)
 
         return layout
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         assert "RECOVER WALLET" in debug.wait_layout().title()
         layout = debug.press_right(wait=True)
         if is_first:
@@ -134,7 +134,7 @@ def enter_seed(debug: "DebugLink", seed_words: list[str]) -> None:
     if debug.model == "T":
         layout = debug.click(buttons.OK, wait=True)
         assert layout.main_component() == "MnemonicKeyboard"
-    elif debug.model == "R":
+    elif debug.model == "Safe 3":
         layout = debug.press_right(wait=True)
         assert "RECOVER WALLET" in layout.title()
         debug.press_right()

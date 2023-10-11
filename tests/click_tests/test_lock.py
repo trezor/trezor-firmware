@@ -36,7 +36,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     lock_duration = 3500 if debug.model == "T" else 1200
 
     def hold(duration: int, wait: bool = True) -> None:
-        if debug.model == "R":
+        if debug.model == "Safe 3":
             debug.press_right_htc(hold_ms=duration)
         else:
             debug.input(x=13, y=37, hold_ms=duration, wait=wait)
@@ -63,7 +63,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     assert device_handler.features().unlocked is False
 
     # unlock by touching
-    if debug.model == "R":
+    if debug.model == "Safe 3":
         # Doing a short HTC to simulate a click
         debug.press_right_htc(hold_ms=100)
         layout = debug.wait_layout()

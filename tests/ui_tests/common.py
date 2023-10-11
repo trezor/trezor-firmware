@@ -223,9 +223,13 @@ class TestCase:
 
     @classmethod
     def build(cls, client: Client, request: pytest.FixtureRequest) -> Self:
+        model = client.features.model
+        # FIXME
+        if model == "Safe 3":
+            model = "R"
         name, group = _get_test_name_and_group(request.node.nodeid)
         return cls(
-            model=f"T{client.features.model}",
+            model=f"T{model}",
             name=name,
             group=group,
         )

@@ -66,7 +66,7 @@ def test_send_p2sh(client: Client, chunkify: bool):
         amount=123_456_789 - 11_000 - 12_300_000,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -125,7 +125,7 @@ def test_send_p2sh_change(client: Client):
         amount=123_456_789 - 11_000 - 12_300_000,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -181,7 +181,7 @@ def test_testnet_segwit_big_amount(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -239,7 +239,7 @@ def test_send_multisig_1(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    is_core = client.features.model in ("T", "R")
+    is_core = client.features.model in ("T", "Safe 3")
     expected_responses = [
         request_input(0),
         request_output(0),
@@ -307,7 +307,7 @@ def test_attack_change_input_address(client: Client):
 
     # Test if the transaction can be signed normally.
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -387,7 +387,7 @@ def test_attack_mixed_inputs(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    is_core = client.features.model in ("T", "R")
+    is_core = client.features.model in ("T", "Safe 3")
     expected_responses = [
         request_input(0),
         request_input(1),

@@ -61,7 +61,7 @@ def test_one_one_fee_sapling(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -126,7 +126,7 @@ def test_one_one_rewards_claim(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),

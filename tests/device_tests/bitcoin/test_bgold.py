@@ -71,7 +71,7 @@ def test_send_bitcoin_gold_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -125,7 +125,7 @@ def test_send_bitcoin_gold_nochange(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -195,7 +195,7 @@ def test_attack_change_input(client: Client):
         return msg
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
@@ -257,7 +257,7 @@ def test_send_btg_multisig_change(client: Client):
         amount=1_252_382_934 - 24_000 - 1_000,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -351,7 +351,7 @@ def test_send_p2sh(client: Client):
         amount=1_252_382_934 - 11_000 - 12_300_000,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -405,7 +405,7 @@ def test_send_p2sh_witness_change(client: Client):
         amount=1_252_382_934 - 11_000 - 12_300_000,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -466,7 +466,7 @@ def test_send_multisig_1(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -584,7 +584,7 @@ def test_send_btg_external_presigned(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),

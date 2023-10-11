@@ -72,7 +72,7 @@ def test_send_decred(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -194,7 +194,7 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -276,7 +276,7 @@ def test_send_decred_change(client: Client):
     )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 request_input(0),
@@ -383,7 +383,7 @@ def test_decred_multisig_change(client: Client):
         )
 
         with client:
-            is_core = client.features.model in ("T", "R")
+            is_core = client.features.model in ("T", "Safe 3")
             client.set_expected_responses(
                 [
                     request_input(0),

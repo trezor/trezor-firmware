@@ -453,7 +453,7 @@ def test_sign_tx_spend(client: Client):
         )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
@@ -528,7 +528,7 @@ def test_sign_tx_migration(client: Client):
         )
 
     with client:
-        is_core = client.features.model in ("T", "R")
+        is_core = client.features.model in ("T", "Safe 3")
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),

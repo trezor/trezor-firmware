@@ -452,7 +452,7 @@ class DebugLink:
 
     def reset_debug_events(self) -> None:
         # Only supported on TT and above certain version
-        if self.model in ("T", "R") and not self.legacy_debug:
+        if self.model in ("T", "Safe 3") and not self.legacy_debug:
             return self._call(messages.DebugLinkResetDebugEvents())
         return None
 
@@ -703,7 +703,7 @@ class DebugLink:
     ) -> None:
         self.screenshot_recording_dir = directory
         # Different recording logic between core and legacy
-        if self.model in ("T", "R"):
+        if self.model in ("T", "Safe 3"):
             self._call(
                 messages.DebugLinkRecordScreen(
                     target_directory=directory, refresh_index=refresh_index
@@ -717,7 +717,7 @@ class DebugLink:
     def stop_recording(self) -> None:
         self.screenshot_recording_dir = None
         # Different recording logic between TT and T1
-        if self.model in ("T", "R"):
+        if self.model in ("T", "Safe 3"):
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
         else:
             self.t1_take_screenshots = False
