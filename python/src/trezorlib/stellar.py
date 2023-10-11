@@ -52,6 +52,7 @@ try:
         CreatePassiveSellOffer,
         HashMemo,
         IdMemo,
+        LiquidityPoolAsset,
         ManageBuyOffer,
         ManageData,
         ManageSellOffer,
@@ -69,7 +70,6 @@ try:
         TransactionEnvelope,
         TrustLineEntryFlag,
     )
-    from stellar_sdk.xdr.signer_key_type import SignerKeyType
 
     HAVE_STELLAR_SDK = True
     DEFAULT_NETWORK_PASSPHRASE = Network.PUBLIC_NETWORK_PASSPHRASE
@@ -92,7 +92,7 @@ def from_envelope(
         raise RuntimeError("Stellar SDK not available")
 
     parsed_tx = envelope.transaction
-    if parsed_tx.time_bounds is None:
+    if parsed_tx.preconditions is None or parsed_tx.preconditions.time_bounds is None:
         raise ValueError("Timebounds are mandatory")
 
     memo_type = messages.StellarMemoType.NONE
@@ -122,8 +122,8 @@ def from_envelope(
         source_account=parsed_tx.source.account_id,
         fee=parsed_tx.fee,
         sequence_number=parsed_tx.sequence,
-        timebounds_start=parsed_tx.time_bounds.min_time,
-        timebounds_end=parsed_tx.time_bounds.max_time,
+        timebounds_start=parsed_tx.preconditions.time_bounds.min_time,
+        timebounds_end=parsed_tx.preconditions.time_bounds.max_time,
         memo_type=memo_type,
         memo_text=memo_text,
         memo_id=memo_id,
@@ -202,20 +202,14 @@ def _read_operation(op: "Operation") -> "StellarMessageType":
             home_domain=op.home_domain,
         )
         if op.signer:
-            signer_type = op.signer.signer_key.signer_key.type
-            if signer_type == SignerKeyType.SIGNER_KEY_TYPE_ED25519:
-                signer_key = op.signer.signer_key.signer_key.ed25519.uint256
-            elif signer_type == SignerKeyType.SIGNER_KEY_TYPE_HASH_X:
-                signer_key = op.signer.signer_key.signer_key.hash_x.uint256
-            elif signer_type == SignerKeyType.SIGNER_KEY_TYPE_PRE_AUTH_TX:
-                signer_key = op.signer.signer_key.signer_key.pre_auth_tx.uint256
-            else:
-                raise ValueError("Unsupported signer key type")
+            signer_type = op.signer.signer_key.signer_key_type
             operation.signer_type = messages.StellarSignerType(signer_type.value)
-            operation.signer_key = signer_key
+            operation.signer_key = op.signer.signer_key.signer_key
             operation.signer_weight = op.signer.weight
         return operation
     if isinstance(op, ChangeTrust):
+        if isinstance(op.asset, LiquidityPoolAsset):
+            raise ValueError("Liquidity pool assets are not supported")
         return messages.StellarChangeTrustOp(
             source_account=source_account,
             asset=_read_asset(op.asset),
