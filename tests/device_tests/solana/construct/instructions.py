@@ -3,17 +3,14 @@
 
 from enum import IntEnum
 
-from construct import Int32ul, Int64ul, Struct, Switch
+from construct import Byte, GreedyBytes, Int32ul, Int64ul, Struct, Switch
 
 from .custom_constructs import (
-    _STRING,
-    AccountReference,
-    Accounts,
-    InstructionData,
-    InstructionId,
-    InstructionProgramId,
+    CompactStruct,
+    InstructionIdAdapter,
     Memo,
     PublicKey,
+    String,
 )
 
 
@@ -27,6 +24,23 @@ class Program:
     MEMO_LEGACY_PROGRAM_ID = "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"
 
 
+INSTRUCTION_ID_FORMATS = {
+    Program.SYSTEM_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
+    Program.STAKE_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
+    Program.COMPUTE_BUDGET_PROGRAM_ID: {"length": 1, "is_included_if_zero": True},
+    Program.TOKEN_PROGRAM_ID: {"length": 1, "is_included_if_zero": True},
+    Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: {
+        "length": 1,
+        "is_included_if_zero": False,
+    },
+    Program.MEMO_PROGRAM_ID: {"length": 0, "is_included_if_zero": False},
+    Program.MEMO_LEGACY_PROGRAM_ID: {"length": 0, "is_included_if_zero": False},
+}
+
+
+# System Program begin
+
+
 class SystemProgramInstruction(IntEnum):
     INS_CREATE_ACCOUNT = 0
     INS_ASSIGN = 1
@@ -35,6 +49,133 @@ class SystemProgramInstruction(IntEnum):
     INS_ALLOCATE = 8
     INS_ALLOCATE_WITH_SEED = 9
     INS_ASSIGN_WITH_SEED = 10
+
+
+SystemProgram_CreateAccount_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "funding_account" / Byte,
+        "new_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "lamports" / Int64ul,
+        "space" / Int64ul,
+        "owner" / PublicKey,
+    ),
+)
+
+SystemProgram_Assign_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "assigned_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "owner" / PublicKey,
+    ),
+)
+
+SystemProgram_Transfer_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "funding_account" / Byte,
+        "recipient_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "lamports" / Int64ul,
+    ),
+)
+
+SystemProgram_CreateAccountWithSeed_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "funding_account" / Byte,
+        "created_account" / Byte,
+        "base_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "base" / Int64ul,
+        "seed" / String,
+        "lamports" / Int64ul,
+        "space" / Int64ul,
+        "owner" / Int64ul,
+    ),
+)
+
+SystemProgram_Allocate_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "new_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "space" / Int64ul,
+    ),
+)
+
+SystemProgram_AllocateWithSeed_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "allocated_account" / Byte,
+        "base_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "base" / Int64ul,
+        "seed" / String,
+        "space" / Int64ul,
+        "owner" / Int64ul,
+    ),
+)
+
+SystemProgram_AssignWithSeed_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "assigned_account" / Byte,
+        "base_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "base" / Int64ul,
+        "seed" / String,
+        "owner" / Int64ul,
+    ),
+)
+
+
+SystemProgram_Instruction = Switch(
+    lambda this: this.instruction_id,
+    {
+        SystemProgramInstruction.INS_CREATE_ACCOUNT: SystemProgram_CreateAccount_Instruction,
+        SystemProgramInstruction.INS_ASSIGN: SystemProgram_Assign_Instruction,
+        SystemProgramInstruction.INS_TRANSFER: SystemProgram_Transfer_Instruction,
+        SystemProgramInstruction.INS_CREATE_ACCOUNT_WITH_SEED: SystemProgram_CreateAccountWithSeed_Instruction,
+        SystemProgramInstruction.INS_ALLOCATE: SystemProgram_Allocate_Instruction,
+        SystemProgramInstruction.INS_ALLOCATE_WITH_SEED: SystemProgram_AllocateWithSeed_Instruction,
+        SystemProgramInstruction.INS_ASSIGN_WITH_SEED: SystemProgram_AssignWithSeed_Instruction,
+    },
+)
+
+# System Program end
+
+# Stake Program begin
 
 
 class StakeProgramInstruction(IntEnum):
@@ -53,10 +194,297 @@ class StakeProgramInstruction(IntEnum):
     INS_SET_LOCKUP_CHECKED = 12
 
 
+StakeProgram_Initialize_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "uninitialized_stake_account" / Byte,
+        "rent_sysvar" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "staker" / PublicKey,
+        "withdrawer" / PublicKey,
+        "unix_timestamp" / Int64ul,
+        "epoch" / Int64ul,
+        "custodian" / PublicKey,
+    ),
+)
+
+StakeProgram_Authorize_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "stake_account" / Byte,
+        "clock_sysvar" / Byte,
+        "stake_or_withdraw_authority" / Byte,
+        "lockup_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "pubkey" / Int64ul,
+        "stake_authorize" / Int64ul,
+    ),
+)
+
+StakeProgram_DelegateStake_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "initialized_stake_account" / Byte,
+        "vote_account" / Byte,
+        "clock_sysvar" / Byte,
+        "stake_history_sysvar" / Byte,
+        "config_account" / Byte,
+        "stake_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+StakeProgram_Split_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "stake_account" / Byte,
+        "uninitialized_stake_account" / Byte,
+        "stake_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "lamports" / Int64ul,
+    ),
+)
+
+StakeProgram_Withdraw_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "stake_account" / Byte,
+        "recipient_account" / Byte,
+        "clock_sysvar" / Byte,
+        "stake_history_sysvar" / Byte,
+        "withdrawal_authority" / Byte,
+        "lockup_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "lamports" / Int64ul,
+    ),
+)
+
+StakeProgram_Deactivate_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "delegated_stake_account" / Byte,
+        "clock_sysvar" / Byte,
+        "stake_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+StakeProgram_SetLockup_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "initialized_stake_account" / Byte,
+        "lockup_or_withdraw_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "unix_timestamp" / Int64ul,
+        "epoch" / Int64ul,
+        "custodian" / Int64ul,
+    ),
+)
+
+StakeProgram_Merge_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "destination_stake_account" / Byte,
+        "source_stake_account" / Byte,
+        "clock_sysvar" / Byte,
+        "stake_history_sysvar" / Byte,
+        "stake_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+StakeProgram_AuthorizeWithSeed_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "stake_account" / Byte,
+        "stake_or_withdraw_authority" / Byte,
+        "clock_sysvar" / Byte,
+        "lockup_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "new_authorized_pubkey" / Int64ul,
+        "stake_authorize" / Int64ul,
+        "authority_seed" / String,
+        "authority_owner" / Int64ul,
+    ),
+)
+
+StakeProgram_InitializeChecked_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "uninitialized_stake_account" / Byte,
+        "rent_sysvar" / Byte,
+        "stake_authority" / Byte,
+        "withdrawal_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+StakeProgram_AuthorizeChecked_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "stake_account" / Byte,
+        "clock_sysvar" / Byte,
+        "stake_or_withdraw_authority" / Byte,
+        "new_stake_or_withdraw_authority" / Byte,
+        "lockup_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "stake_authorize" / Int64ul,
+    ),
+)
+
+StakeProgram_AuthorizeCheckedWithSeed_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "stake_account" / Byte,
+        "stake_or_withdraw_authority" / Byte,
+        "clock_sysvar" / Byte,
+        "new_stake_or_withdraw_authority" / Byte,
+        "lockup_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "stake_authorize" / Int64ul,
+        "authority_seed" / String,
+        "authority_owner" / Int64ul,
+    ),
+)
+
+StakeProgram_SetLockupChecked_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "stake_account" / Byte,
+        "lockup_or_withdraw_authority" / Byte,
+        "new_lockup_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "unix_timestamp" / Int64ul,
+        "epoch" / Int64ul,
+    ),
+)
+
+
+StakeProgram_Instruction = Switch(
+    lambda this: this.instruction_id,
+    {
+        StakeProgramInstruction.INS_INITIALIZE: StakeProgram_Initialize_Instruction,
+        StakeProgramInstruction.INS_AUTHORIZE: StakeProgram_Authorize_Instruction,
+        StakeProgramInstruction.INS_DELEGATE_STAKE: StakeProgram_DelegateStake_Instruction,
+        StakeProgramInstruction.INS_SPLIT: StakeProgram_Split_Instruction,
+        StakeProgramInstruction.INS_WITHDRAW: StakeProgram_Withdraw_Instruction,
+        StakeProgramInstruction.INS_DEACTIVATE: StakeProgram_Deactivate_Instruction,
+        StakeProgramInstruction.INS_SET_LOCKUP: StakeProgram_SetLockup_Instruction,
+        StakeProgramInstruction.INS_MERGE: StakeProgram_Merge_Instruction,
+        StakeProgramInstruction.INS_AUTHORIZE_WITH_SEED: StakeProgram_AuthorizeWithSeed_Instruction,
+        StakeProgramInstruction.INS_INITIALIZE_CHECKED: StakeProgram_InitializeChecked_Instruction,
+        StakeProgramInstruction.INS_AUTHORIZE_CHECKED: StakeProgram_AuthorizeChecked_Instruction,
+        StakeProgramInstruction.INS_AUTHORIZE_CHECKED_WITH_SEED: StakeProgram_AuthorizeCheckedWithSeed_Instruction,
+        StakeProgramInstruction.INS_SET_LOCKUP_CHECKED: StakeProgram_SetLockupChecked_Instruction,
+    },
+)
+
+# Stake Program end
+
+# Compute Budget Program begin
+
+
 class ComputeBudgetProgramInstruction(IntEnum):
     INS_REQUEST_HEAP_FRAME = 1
     INS_SET_COMPUTE_UNIT_LIMIT = 2
     INS_SET_COMPUTE_UNIT_PRICE = 3
+
+
+ComputeBudgetProgram_RequestHeapFrame_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts" / CompactStruct(),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "bytes" / Int32ul,
+    ),
+)
+
+ComputeBudgetProgram_SetComputeUnitLimit_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts" / CompactStruct(),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "units" / Int32ul,
+    ),
+)
+
+ComputeBudgetProgram_SetComputeUnitPrice_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts" / CompactStruct(),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "lamports" / Int64ul,
+    ),
+)
+
+
+ComputeBudgetProgram_Instruction = Switch(
+    lambda this: this.instruction_id,
+    {
+        ComputeBudgetProgramInstruction.INS_REQUEST_HEAP_FRAME: ComputeBudgetProgram_RequestHeapFrame_Instruction,
+        ComputeBudgetProgramInstruction.INS_SET_COMPUTE_UNIT_LIMIT: ComputeBudgetProgram_SetComputeUnitLimit_Instruction,
+        ComputeBudgetProgramInstruction.INS_SET_COMPUTE_UNIT_PRICE: ComputeBudgetProgram_SetComputeUnitPrice_Instruction,
+    },
+)
+
+# Compute Budget Program end
+
+# Token Program begin
 
 
 class TokenProgramInstruction(IntEnum):
@@ -81,570 +509,456 @@ class TokenProgramInstruction(IntEnum):
     INS_INITIALIZE_IMMUTABLE_OWNER = 22
 
 
+TokenProgram_InitializeAccount_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_initialize" / Byte,
+        "mint_account" / Byte,
+        "owner" / Byte,
+        "rent_sysvar" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+TokenProgram_InitializeMultisig_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "multisig_account" / Byte,
+        "rent_sysvar" / Byte,
+        "signer_accounts" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "number_of_signers" / Int64ul,
+    ),
+)
+
+TokenProgram_Transfer_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "source_account" / Byte,
+        "destination_account" / Byte,
+        "owner" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "amount" / Int64ul,
+    ),
+)
+
+TokenProgram_Approve_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "source_account" / Byte,
+        "delegate_account" / Byte,
+        "owner" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "amount" / Int64ul,
+    ),
+)
+
+TokenProgram_Revoke_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "source_account" / Byte,
+        "owner" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+TokenProgram_SetAuthority_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "mint_account" / Byte,
+        "current_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "authority_type" / Int64ul,
+        "new_authority" / Int64ul,
+    ),
+)
+
+TokenProgram_Mintto_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "mint" / Byte,
+        "account_to_mint" / Byte,
+        "minting_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "amount" / Int64ul,
+    ),
+)
+
+TokenProgram_Burn_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_burn_from" / Byte,
+        "token_mint" / Byte,
+        "owner" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "amount" / Int64ul,
+    ),
+)
+
+TokenProgram_CloseAccount_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_close" / Byte,
+        "destination_account" / Byte,
+        "owner" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+TokenProgram_FreezeAccount_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_freeze" / Byte,
+        "token_mint" / Byte,
+        "freeze_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+TokenProgram_ThawAccount_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_freeze" / Byte,
+        "token_mint" / Byte,
+        "freeze_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+TokenProgram_TransferChecked_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "source_account" / Byte,
+        "token_mint" / Byte,
+        "destination_account" / Byte,
+        "owner" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "amount" / Int64ul,
+        "decimals" / Int64ul,
+    ),
+)
+
+TokenProgram_ApproveChecked_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "source_account" / Byte,
+        "token_mint" / Byte,
+        "delegate" / Byte,
+        "owner" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "amount" / Int64ul,
+        "decimals" / Int64ul,
+    ),
+)
+
+TokenProgram_MinttoChecked_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "mint" / Byte,
+        "account_to_mint" / Byte,
+        "minting_authority" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "amount" / Int64ul,
+        "decimals" / Int64ul,
+    ),
+)
+
+TokenProgram_BurnChecked_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_burn_from" / Byte,
+        "token_mint" / Byte,
+        "owner" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "amount" / Int64ul,
+        "decimals" / Int64ul,
+    ),
+)
+
+TokenProgram_InitializeAccount2_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_initialize" / Byte,
+        "mint_account" / Byte,
+        "rent_sysvar" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "owner" / Int64ul,
+    ),
+)
+
+TokenProgram_SyncNative_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "token_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+TokenProgram_InitializeAccount3_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_initialize" / Byte,
+        "mint_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "owner" / Int64ul,
+    ),
+)
+
+TokenProgram_InitializeImmutableOwner_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "account_to_initialize" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+
+TokenProgram_Instruction = Switch(
+    lambda this: this.instruction_id,
+    {
+        TokenProgramInstruction.INS_INITIALIZE_ACCOUNT: TokenProgram_InitializeAccount_Instruction,
+        TokenProgramInstruction.INS_INITIALIZE_MULTISIG: TokenProgram_InitializeMultisig_Instruction,
+        TokenProgramInstruction.INS_TRANSFER: TokenProgram_Transfer_Instruction,
+        TokenProgramInstruction.INS_APPROVE: TokenProgram_Approve_Instruction,
+        TokenProgramInstruction.INS_REVOKE: TokenProgram_Revoke_Instruction,
+        TokenProgramInstruction.INS_SET_AUTHORITY: TokenProgram_SetAuthority_Instruction,
+        TokenProgramInstruction.INS_MINT_TO: TokenProgram_Mintto_Instruction,
+        TokenProgramInstruction.INS_BURN: TokenProgram_Burn_Instruction,
+        TokenProgramInstruction.INS_CLOSE_ACCOUNT: TokenProgram_CloseAccount_Instruction,
+        TokenProgramInstruction.INS_FREEZE_ACCOUNT: TokenProgram_FreezeAccount_Instruction,
+        TokenProgramInstruction.INS_THAW_ACCOUNT: TokenProgram_ThawAccount_Instruction,
+        TokenProgramInstruction.INS_TRANSFER_CHECKED: TokenProgram_TransferChecked_Instruction,
+        TokenProgramInstruction.INS_APPROVE_CHECKED: TokenProgram_ApproveChecked_Instruction,
+        TokenProgramInstruction.INS_MINT_TO_CHECKED: TokenProgram_MinttoChecked_Instruction,
+        TokenProgramInstruction.INS_BURN_CHECKED: TokenProgram_BurnChecked_Instruction,
+        TokenProgramInstruction.INS_INITIALIZE_ACCOUNT_2: TokenProgram_InitializeAccount2_Instruction,
+        TokenProgramInstruction.INS_SYNC_NATIVE: TokenProgram_SyncNative_Instruction,
+        TokenProgramInstruction.INS_INITIALIZE_ACCOUNT_3: TokenProgram_InitializeAccount3_Instruction,
+        TokenProgramInstruction.INS_INITIALIZE_IMMUTABLE_OWNER: TokenProgram_InitializeImmutableOwner_Instruction,
+    },
+)
+
+# Token Program end
+
+# Associated Token Account Program begin
+
+
 class AssociatedTokenAccountProgramInstruction(IntEnum):
     INS_CREATE = 0
     INS_CREATE_IDEMPOTENT = 1
     INS_RECOVER_NESTED = 2
 
 
+AssociatedTokenAccountProgram_Create_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "funding_account" / Byte,
+        "associated_token_account" / Byte,
+        "wallet_address" / Byte,
+        "token_mint" / Byte,
+        "system_program" / Byte,
+        "spl_token" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+AssociatedTokenAccountProgram_CreateIdempotent_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "funding_account" / Byte,
+        "associated_token_account" / Byte,
+        "wallet_address" / Byte,
+        "token_mint" / Byte,
+        "system_program" / Byte,
+        "spl_token" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+AssociatedTokenAccountProgram_RecoverNested_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "nested_account" / Byte,
+        "token_mint_nested" / Byte,
+        "associated_token_account" / Byte,
+        "owner" / Byte,
+        "token_mint_owner" / Byte,
+        "wallet_address" / Byte,
+        "spl_token" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
+
+AssociatedTokenAccountProgram_Instruction = Switch(
+    lambda this: this.instruction_id,
+    {
+        AssociatedTokenAccountProgramInstruction.INS_CREATE: AssociatedTokenAccountProgram_Create_Instruction,
+        AssociatedTokenAccountProgramInstruction.INS_CREATE_IDEMPOTENT: AssociatedTokenAccountProgram_CreateIdempotent_Instruction,
+        AssociatedTokenAccountProgramInstruction.INS_RECOVER_NESTED: AssociatedTokenAccountProgram_RecoverNested_Instruction,
+    },
+)
+
+# Associated Token Account Program end
+
+# Memo Program begin
+
+
 class MemoProgramInstruction(IntEnum):
     INS_MEMO = 0
+
+
+MemoProgram_Memo_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "signer_accounts" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "memo" / Memo,
+    ),
+)
+
+
+MemoProgram_Instruction = Switch(
+    lambda this: this.instruction_id,
+    {
+        MemoProgramInstruction.INS_MEMO: MemoProgram_Memo_Instruction,
+    },
+)
+
+# Memo Program end
+
+# Memo Legacy Program begin
 
 
 class MemoLegacyProgramInstruction(IntEnum):
     INS_MEMO = 0
 
 
-_SYSTEM_PROGRAM_ACCOUNTS = Switch(
-    lambda this: this.data["instruction_id"],
-    {
-        SystemProgramInstruction.INS_CREATE_ACCOUNT: Accounts(
-            "funding_account" / AccountReference(),
-            "new_account" / AccountReference(),
-        ),
-        SystemProgramInstruction.INS_ASSIGN: Accounts(
-            "assigned_account" / AccountReference(),
-        ),
-        SystemProgramInstruction.INS_TRANSFER: Accounts(
-            "funding_account" / AccountReference(),
-            "recipient_account" / AccountReference(),
-        ),
-        SystemProgramInstruction.INS_CREATE_ACCOUNT_WITH_SEED: Accounts(
-            "funding_account" / AccountReference(),
-            "created_account" / AccountReference(),
-            "base_account" / AccountReference(),
-        ),
-        SystemProgramInstruction.INS_ALLOCATE: Accounts(
-            "new_account" / AccountReference(),
-        ),
-        SystemProgramInstruction.INS_ALLOCATE_WITH_SEED: Accounts(
-            "allocated_account" / AccountReference(),
-            "base_account" / AccountReference(),
-        ),
-        SystemProgramInstruction.INS_ASSIGN_WITH_SEED: Accounts(
-            "assigned_account" / AccountReference(),
-            "base_account" / AccountReference(),
-        ),
-    },
-)
-_STAKE_PROGRAM_ACCOUNTS = Switch(
-    lambda this: this.data["instruction_id"],
-    {
-        StakeProgramInstruction.INS_INITIALIZE: Accounts(
-            "uninitialized_stake_account" / AccountReference(),
-            "rent_sysvar" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_AUTHORIZE: Accounts(
-            "stake_account" / AccountReference(),
-            "clock_sysvar" / AccountReference(),
-            "stake_or_withdraw_authority" / AccountReference(),
-            "lockup_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_DELEGATE_STAKE: Accounts(
-            "initialized_stake_account" / AccountReference(),
-            "vote_account" / AccountReference(),
-            "clock_sysvar" / AccountReference(),
-            "stake_history_sysvar" / AccountReference(),
-            "config_account" / AccountReference(),
-            "stake_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_SPLIT: Accounts(
-            "stake_account" / AccountReference(),
-            "uninitialized_stake_account" / AccountReference(),
-            "stake_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_WITHDRAW: Accounts(
-            "stake_account" / AccountReference(),
-            "recipient_account" / AccountReference(),
-            "clock_sysvar" / AccountReference(),
-            "stake_history_sysvar" / AccountReference(),
-            "withdrawal_authority" / AccountReference(),
-            "lockup_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_DEACTIVATE: Accounts(
-            "delegated_stake_account" / AccountReference(),
-            "clock_sysvar" / AccountReference(),
-            "stake_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_SET_LOCKUP: Accounts(
-            "initialized_stake_account" / AccountReference(),
-            "lockup_or_withdraw_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_MERGE: Accounts(
-            "destination_stake_account" / AccountReference(),
-            "source_stake_account" / AccountReference(),
-            "clock_sysvar" / AccountReference(),
-            "stake_history_sysvar" / AccountReference(),
-            "stake_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_AUTHORIZE_WITH_SEED: Accounts(
-            "stake_account" / AccountReference(),
-            "stake_or_withdraw_authority" / AccountReference(),
-            "clock_sysvar" / AccountReference(),
-            "lockup_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_INITIALIZE_CHECKED: Accounts(
-            "uninitialized_stake_account" / AccountReference(),
-            "rent_sysvar" / AccountReference(),
-            "stake_authority" / AccountReference(),
-            "withdrawal_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_AUTHORIZE_CHECKED: Accounts(
-            "stake_account" / AccountReference(),
-            "clock_sysvar" / AccountReference(),
-            "stake_or_withdraw_authority" / AccountReference(),
-            "new_stake_or_withdraw_authority" / AccountReference(),
-            "lockup_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_AUTHORIZE_CHECKED_WITH_SEED: Accounts(
-            "stake_account" / AccountReference(),
-            "stake_or_withdraw_authority" / AccountReference(),
-            "clock_sysvar" / AccountReference(),
-            "new_stake_or_withdraw_authority" / AccountReference(),
-            "lockup_authority" / AccountReference(),
-        ),
-        StakeProgramInstruction.INS_SET_LOCKUP_CHECKED: Accounts(
-            "stake_account" / AccountReference(),
-            "lockup_or_withdraw_authority" / AccountReference(),
-            "new_lockup_authority" / AccountReference(),
-        ),
-    },
-)
-_COMPUTE_BUDGET_PROGRAM_ACCOUNTS = Switch(
-    lambda this: this.data["instruction_id"],
-    {
-        ComputeBudgetProgramInstruction.INS_REQUEST_HEAP_FRAME: Accounts(),
-        ComputeBudgetProgramInstruction.INS_SET_COMPUTE_UNIT_LIMIT: Accounts(),
-        ComputeBudgetProgramInstruction.INS_SET_COMPUTE_UNIT_PRICE: Accounts(),
-    },
-)
-_TOKEN_PROGRAM_ACCOUNTS = Switch(
-    lambda this: this.data["instruction_id"],
-    {
-        TokenProgramInstruction.INS_INITIALIZE_ACCOUNT: Accounts(
-            "account_to_initialize" / AccountReference(),
-            "mint_account" / AccountReference(),
-            "owner" / AccountReference(),
-            "rent_sysvar" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_INITIALIZE_MULTISIG: Accounts(
-            "multisig_account" / AccountReference(),
-            "rent_sysvar" / AccountReference(),
-            "signer_accounts" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_TRANSFER: Accounts(
-            "source_account" / AccountReference(),
-            "destination_account" / AccountReference(),
-            "owner" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_APPROVE: Accounts(
-            "source_account" / AccountReference(),
-            "delegate_account" / AccountReference(),
-            "owner" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_REVOKE: Accounts(
-            "source_account" / AccountReference(),
-            "owner" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_SET_AUTHORITY: Accounts(
-            "mint_account" / AccountReference(),
-            "current_authority" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_MINT_TO: Accounts(
-            "mint" / AccountReference(),
-            "account_to_mint" / AccountReference(),
-            "minting_authority" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_BURN: Accounts(
-            "account_to_burn_from" / AccountReference(),
-            "token_mint" / AccountReference(),
-            "owner" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_CLOSE_ACCOUNT: Accounts(
-            "account_to_close" / AccountReference(),
-            "destination_account" / AccountReference(),
-            "owner" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_FREEZE_ACCOUNT: Accounts(
-            "account_to_freeze" / AccountReference(),
-            "token_mint" / AccountReference(),
-            "freeze_authority" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_THAW_ACCOUNT: Accounts(
-            "account_to_freeze" / AccountReference(),
-            "token_mint" / AccountReference(),
-            "freeze_authority" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_TRANSFER_CHECKED: Accounts(
-            "source_account" / AccountReference(),
-            "token_mint" / AccountReference(),
-            "destination_account" / AccountReference(),
-            "owner" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_APPROVE_CHECKED: Accounts(
-            "source_account" / AccountReference(),
-            "token_mint" / AccountReference(),
-            "delegate" / AccountReference(),
-            "owner" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_MINT_TO_CHECKED: Accounts(
-            "mint" / AccountReference(),
-            "account_to_mint" / AccountReference(),
-            "minting_authority" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_BURN_CHECKED: Accounts(
-            "account_to_burn_from" / AccountReference(),
-            "token_mint" / AccountReference(),
-            "owner" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_INITIALIZE_ACCOUNT_2: Accounts(
-            "account_to_initialize" / AccountReference(),
-            "mint_account" / AccountReference(),
-            "rent_sysvar" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_SYNC_NATIVE: Accounts(
-            "token_account" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_INITIALIZE_ACCOUNT_3: Accounts(
-            "account_to_initialize" / AccountReference(),
-            "mint_account" / AccountReference(),
-        ),
-        TokenProgramInstruction.INS_INITIALIZE_IMMUTABLE_OWNER: Accounts(
-            "account_to_initialize" / AccountReference(),
-        ),
-    },
-)
-_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ACCOUNTS = Switch(
-    lambda this: this.data["instruction_id"],
-    {
-        AssociatedTokenAccountProgramInstruction.INS_CREATE: Accounts(
-            "funding_account" / AccountReference(),
-            "associated_token_account" / AccountReference(),
-            "wallet_address" / AccountReference(),
-            "token_mint" / AccountReference(),
-            "system_program" / AccountReference(),
-            "spl_token" / AccountReference(),
-        ),
-        AssociatedTokenAccountProgramInstruction.INS_CREATE_IDEMPOTENT: Accounts(
-            "funding_account" / AccountReference(),
-            "associated_token_account" / AccountReference(),
-            "wallet_address" / AccountReference(),
-            "token_mint" / AccountReference(),
-            "system_program" / AccountReference(),
-            "spl_token" / AccountReference(),
-        ),
-        AssociatedTokenAccountProgramInstruction.INS_RECOVER_NESTED: Accounts(
-            "nested_account" / AccountReference(),
-            "token_mint_nested" / AccountReference(),
-            "associated_token_account" / AccountReference(),
-            "owner" / AccountReference(),
-            "token_mint_owner" / AccountReference(),
-            "wallet_address" / AccountReference(),
-            "spl_token" / AccountReference(),
-        ),
-    },
-)
-_MEMO_PROGRAM_ACCOUNTS = Switch(
-    lambda this: this.data["instruction_id"],
-    {
-        MemoProgramInstruction.INS_MEMO: Accounts(
-            "signer_accounts" / AccountReference(),
-        ),
-    },
-)
-_MEMO_LEGACY_PROGRAM_ACCOUNTS = Switch(
-    lambda this: this.data["instruction_id"],
-    {
-        MemoLegacyProgramInstruction.INS_MEMO: Accounts(
-            "signer_accounts" / AccountReference(),
-        ),
-    },
-)
-
-_SYSTEM_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / InstructionId(),
-    "parameters"
-    / Switch(
-        lambda this: this.instruction_id,
-        {
-            SystemProgramInstruction.INS_CREATE_ACCOUNT: Struct(
-                "lamports" / Int64ul,
-                "space" / Int64ul,
-                "owner" / PublicKey(),
-            ),
-            SystemProgramInstruction.INS_ASSIGN: Struct(
-                "owner" / PublicKey(),
-            ),
-            SystemProgramInstruction.INS_TRANSFER: Struct(
-                "lamports" / Int64ul,
-            ),
-            SystemProgramInstruction.INS_CREATE_ACCOUNT_WITH_SEED: Struct(
-                "base" / Int64ul,
-                "seed" / _STRING,
-                "lamports" / Int64ul,
-                "space" / Int64ul,
-                "owner" / Int64ul,
-            ),
-            SystemProgramInstruction.INS_ALLOCATE: Struct(
-                "space" / Int64ul,
-            ),
-            SystemProgramInstruction.INS_ALLOCATE_WITH_SEED: Struct(
-                "base" / Int64ul,
-                "seed" / _STRING,
-                "space" / Int64ul,
-                "owner" / Int64ul,
-            ),
-            SystemProgramInstruction.INS_ASSIGN_WITH_SEED: Struct(
-                "base" / Int64ul,
-                "seed" / _STRING,
-                "owner" / Int64ul,
-            ),
-        },
-    ),
-)
-_STAKE_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / InstructionId(),
-    "parameters"
-    / Switch(
-        lambda this: this.instruction_id,
-        {
-            StakeProgramInstruction.INS_INITIALIZE: Struct(
-                "staker" / PublicKey(),
-                "withdrawer" / PublicKey(),
-                "unix_timestamp" / Int64ul,
-                "epoch" / Int64ul,
-                "custodian" / PublicKey(),
-            ),
-            StakeProgramInstruction.INS_AUTHORIZE: Struct(
-                "pubkey" / Int64ul,
-                "stake_authorize" / Int64ul,
-            ),
-            StakeProgramInstruction.INS_DELEGATE_STAKE: Struct(),
-            StakeProgramInstruction.INS_SPLIT: Struct(
-                "lamports" / Int64ul,
-            ),
-            StakeProgramInstruction.INS_WITHDRAW: Struct(
-                "lamports" / Int64ul,
-            ),
-            StakeProgramInstruction.INS_DEACTIVATE: Struct(),
-            StakeProgramInstruction.INS_SET_LOCKUP: Struct(
-                "unix_timestamp" / Int64ul,
-                "epoch" / Int64ul,
-                "custodian" / Int64ul,
-            ),
-            StakeProgramInstruction.INS_MERGE: Struct(),
-            StakeProgramInstruction.INS_AUTHORIZE_WITH_SEED: Struct(
-                "new_authorized_pubkey" / Int64ul,
-                "stake_authorize" / Int64ul,
-                "authority_seed" / _STRING,
-                "authority_owner" / Int64ul,
-            ),
-            StakeProgramInstruction.INS_INITIALIZE_CHECKED: Struct(),
-            StakeProgramInstruction.INS_AUTHORIZE_CHECKED: Struct(
-                "stake_authorize" / Int64ul,
-            ),
-            StakeProgramInstruction.INS_AUTHORIZE_CHECKED_WITH_SEED: Struct(
-                "stake_authorize" / Int64ul,
-                "authority_seed" / _STRING,
-                "authority_owner" / Int64ul,
-            ),
-            StakeProgramInstruction.INS_SET_LOCKUP_CHECKED: Struct(
-                "unix_timestamp" / Int64ul,
-                "epoch" / Int64ul,
-            ),
-        },
-    ),
-)
-_COMPUTE_BUDGET_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / InstructionId(),
-    "parameters"
-    / Switch(
-        lambda this: this.instruction_id,
-        {
-            ComputeBudgetProgramInstruction.INS_REQUEST_HEAP_FRAME: Struct(
-                "bytes" / Int32ul,
-            ),
-            ComputeBudgetProgramInstruction.INS_SET_COMPUTE_UNIT_LIMIT: Struct(
-                "units" / Int32ul,
-            ),
-            ComputeBudgetProgramInstruction.INS_SET_COMPUTE_UNIT_PRICE: Struct(
-                "lamports" / Int64ul,
-            ),
-        },
-    ),
-)
-_TOKEN_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / InstructionId(),
-    "parameters"
-    / Switch(
-        lambda this: this.instruction_id,
-        {
-            TokenProgramInstruction.INS_INITIALIZE_ACCOUNT: Struct(),
-            TokenProgramInstruction.INS_INITIALIZE_MULTISIG: Struct(
-                "number_of_signers" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_TRANSFER: Struct(
-                "amount" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_APPROVE: Struct(
-                "amount" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_REVOKE: Struct(),
-            TokenProgramInstruction.INS_SET_AUTHORITY: Struct(
-                "authority_type" / Int64ul,
-                "new_authority" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_MINT_TO: Struct(
-                "amount" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_BURN: Struct(
-                "amount" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_CLOSE_ACCOUNT: Struct(),
-            TokenProgramInstruction.INS_FREEZE_ACCOUNT: Struct(),
-            TokenProgramInstruction.INS_THAW_ACCOUNT: Struct(),
-            TokenProgramInstruction.INS_TRANSFER_CHECKED: Struct(
-                "amount" / Int64ul,
-                "decimals" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_APPROVE_CHECKED: Struct(
-                "amount" / Int64ul,
-                "decimals" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_MINT_TO_CHECKED: Struct(
-                "amount" / Int64ul,
-                "decimals" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_BURN_CHECKED: Struct(
-                "amount" / Int64ul,
-                "decimals" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_INITIALIZE_ACCOUNT_2: Struct(
-                "owner" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_SYNC_NATIVE: Struct(),
-            TokenProgramInstruction.INS_INITIALIZE_ACCOUNT_3: Struct(
-                "owner" / Int64ul,
-            ),
-            TokenProgramInstruction.INS_INITIALIZE_IMMUTABLE_OWNER: Struct(),
-        },
-    ),
-)
-_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / InstructionId(),
-    "parameters"
-    / Switch(
-        lambda this: this.instruction_id,
-        {
-            AssociatedTokenAccountProgramInstruction.INS_CREATE: Struct(),
-            AssociatedTokenAccountProgramInstruction.INS_CREATE_IDEMPOTENT: Struct(),
-            AssociatedTokenAccountProgramInstruction.INS_RECOVER_NESTED: Struct(),
-        },
-    ),
-)
-_MEMO_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / InstructionId(),
-    "parameters"
-    / Switch(
-        lambda this: this.instruction_id,
-        {
-            MemoProgramInstruction.INS_MEMO: Struct(
-                "memo" / Memo(),
-            ),
-        },
-    ),
-)
-_MEMO_LEGACY_PROGRAM_PARAMETERS = InstructionData(
-    "instruction_id" / InstructionId(),
-    "parameters"
-    / Switch(
-        lambda this: this.instruction_id,
-        {
-            MemoLegacyProgramInstruction.INS_MEMO: Struct(
-                "memo" / Memo(),
-            ),
-        },
-    ),
-)
-
-INSTRUCTION_ID_FORMATS = {
-    Program.SYSTEM_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
-    Program.STAKE_PROGRAM_ID: {"length": 4, "is_included_if_zero": True},
-    Program.COMPUTE_BUDGET_PROGRAM_ID: {"length": 1, "is_included_if_zero": True},
-    Program.TOKEN_PROGRAM_ID: {"length": 1, "is_included_if_zero": True},
-    Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: {
-        "length": 1,
-        "is_included_if_zero": False,
-    },
-    Program.MEMO_PROGRAM_ID: {"length": 0, "is_included_if_zero": False},
-    Program.MEMO_LEGACY_PROGRAM_ID: {"length": 0, "is_included_if_zero": False},
-}
-
-_INSTRUCTION = Struct(
-    "program_id" / InstructionProgramId(),
-    "instruction_accounts"
-    / Switch(
-        lambda this: this.program_id,
-        {
-            Program.SYSTEM_PROGRAM_ID: _SYSTEM_PROGRAM_ACCOUNTS,
-            Program.STAKE_PROGRAM_ID: _STAKE_PROGRAM_ACCOUNTS,
-            Program.COMPUTE_BUDGET_PROGRAM_ID: _COMPUTE_BUDGET_PROGRAM_ACCOUNTS,
-            Program.TOKEN_PROGRAM_ID: _TOKEN_PROGRAM_ACCOUNTS,
-            Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ACCOUNTS,
-            Program.MEMO_PROGRAM_ID: _MEMO_PROGRAM_ACCOUNTS,
-            Program.MEMO_LEGACY_PROGRAM_ID: _MEMO_LEGACY_PROGRAM_ACCOUNTS,
-        },
+MemoLegacyProgram_Memo_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "signer_accounts" / Byte,
     ),
     "data"
-    / Switch(
-        lambda this: this.program_id,
-        {
-            Program.SYSTEM_PROGRAM_ID: _SYSTEM_PROGRAM_PARAMETERS,
-            Program.STAKE_PROGRAM_ID: _STAKE_PROGRAM_PARAMETERS,
-            Program.COMPUTE_BUDGET_PROGRAM_ID: _COMPUTE_BUDGET_PROGRAM_PARAMETERS,
-            Program.TOKEN_PROGRAM_ID: _TOKEN_PROGRAM_PARAMETERS,
-            Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_PARAMETERS,
-            Program.MEMO_PROGRAM_ID: _MEMO_PROGRAM_PARAMETERS,
-            Program.MEMO_LEGACY_PROGRAM_ID: _MEMO_LEGACY_PROGRAM_PARAMETERS,
-        },
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "memo" / Memo,
     ),
 )
 
 
-def replace_account_placeholders(construct):
-    for ins in construct["instructions"]:
-        program_id = Program.__dict__[ins["program_id"]]
-        if program_id == Program.SYSTEM_PROGRAM_ID:
-            ins["data"]["instruction_id"] = SystemProgramInstruction.__dict__[
-                ins["data"]["instruction_id"]
-            ].value
-        elif program_id == Program.STAKE_PROGRAM_ID:
-            ins["data"]["instruction_id"] = StakeProgramInstruction.__dict__[
-                ins["data"]["instruction_id"]
-            ].value
-        elif program_id == Program.COMPUTE_BUDGET_PROGRAM_ID:
-            ins["data"]["instruction_id"] = ComputeBudgetProgramInstruction.__dict__[
-                ins["data"]["instruction_id"]
-            ].value
-        elif program_id == Program.TOKEN_PROGRAM_ID:
-            ins["data"]["instruction_id"] = TokenProgramInstruction.__dict__[
-                ins["data"]["instruction_id"]
-            ].value
-        elif program_id == Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
-            ins["data"][
-                "instruction_id"
-            ] = AssociatedTokenAccountProgramInstruction.__dict__[
-                ins["data"]["instruction_id"]
-            ].value
-        elif program_id == Program.MEMO_PROGRAM_ID:
-            ins["data"]["instruction_id"] = MemoProgramInstruction.__dict__[
-                ins["data"]["instruction_id"]
-            ].value
-        elif program_id == Program.MEMO_LEGACY_PROGRAM_ID:
-            ins["data"]["instruction_id"] = MemoLegacyProgramInstruction.__dict__[
-                ins["data"]["instruction_id"]
-            ].value
+MemoLegacyProgram_Instruction = Switch(
+    lambda this: this.instruction_id,
+    {
+        MemoLegacyProgramInstruction.INS_MEMO: MemoLegacyProgram_Memo_Instruction,
+    },
+)
 
-        ins["program_id"] = program_id
+# Memo Legacy Program end
 
-    return construct
+
+Instruction = Switch(
+    lambda this: this.program_id,
+    {
+        Program.SYSTEM_PROGRAM_ID: SystemProgram_Instruction,
+        Program.STAKE_PROGRAM_ID: StakeProgram_Instruction,
+        Program.COMPUTE_BUDGET_PROGRAM_ID: ComputeBudgetProgram_Instruction,
+        Program.TOKEN_PROGRAM_ID: TokenProgram_Instruction,
+        Program.ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: AssociatedTokenAccountProgram_Instruction,
+        Program.MEMO_PROGRAM_ID: MemoProgram_Instruction,
+        Program.MEMO_LEGACY_PROGRAM_ID: MemoLegacyProgram_Instruction,
+    },
+)

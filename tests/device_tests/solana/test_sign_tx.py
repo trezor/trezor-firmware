@@ -21,8 +21,8 @@ from trezorlib.solana import sign_tx
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
-from .construct.instructions import INSTRUCTION_ID_FORMATS, replace_account_placeholders
-from .construct.transaction import MESSAGE
+from .construct.instructions import INSTRUCTION_ID_FORMATS, Instruction
+from .construct.transaction import Message
 
 pytestmark = [
     pytest.mark.altcoin,
@@ -41,9 +41,29 @@ pytestmark = [
 def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
 
-    serialized_tx = MESSAGE.build(
-        replace_account_placeholders(parameters["construct"]),
-        instruction_id_formats=INSTRUCTION_ID_FORMATS,
+    tx_construct = parameters["construct"]
+
+    serialized_instructions = [
+        Instruction.build(
+            instruction,
+            program_id=tx_construct["accounts"][instruction["program_index"]],
+            instruction_id=instruction["data"]["instruction_id"],
+            instruction_id_formats=INSTRUCTION_ID_FORMATS,
+        )
+        for instruction in tx_construct["instructions"]
+    ]
+
+    message_construct = {
+        "version": tx_construct["version"],
+        "header": tx_construct["header"],
+        "accounts": tx_construct["accounts"],
+        "blockhash": tx_construct["blockhash"],
+        "instructions": serialized_instructions,
+        "luts": tx_construct["luts"],
+    }
+
+    serialized_tx = Message.build(
+        message_construct,
     )
 
     actual_result = sign_tx(

@@ -26,24 +26,22 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID",
-              "instruction_accounts": {
-                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "associated_token_account": "FUqrjRRtF1LiptdFqaFxipE8R3YfCE4k56xwm5n1piqX",
-                "wallet_address": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "token_mint": "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
-                "system_program": "11111111111111111111111111111111",
-                "spl_token": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+              "program_index": 4,
+              "accounts": {
+                "funding_account": 0,
+                "associated_token_account": 1,
+                "wallet_address": 0,
+                "token_mint": 3,
+                "system_program": 2,
+                "spl_token": 5
               },
               "data": {
-                "instruction_id": "INS_CREATE",
-                "parameters": {
-                  "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                  "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                  "unix_timestamp": 20,
-                  "epoch": 330,
-                  "custodian": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
-                }
+                "instruction_id": 0,
+                "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "unix_timestamp": 20,
+                "epoch": 330,
+                "custodian": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
               }
             }
           ],

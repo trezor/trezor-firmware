@@ -22,15 +22,13 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "MEMO_PROGRAM_ID",
-              "instruction_accounts": {
-                "signer_accounts": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
+              "program_index": 1,
+              "accounts": {
+                "signer_accounts": 0
               },
               "data": {
-                "instruction_id": "INS_MEMO",
-                "parameters": {
-                  "memo": "Hello World"
-                }
+                "instruction_id": 0,
+                "memo": "Hello World"
               }
             }
           ],

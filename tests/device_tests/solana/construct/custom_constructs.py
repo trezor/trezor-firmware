@@ -1,14 +1,17 @@
-import io
-
-from base58 import b58decode
+from base58 import b58decode, b58encode
 from construct import (
+    Adapter,
+    Bytes,
     Construct,
-    Int32ul,
-    ListContainer,
+    GreedyBytes,
+    GreedyString,
+    Int64ul,
     PaddedString,
-    Padding,
+    Prefixed,
+    PrefixedArray,
     Struct,
-    Subconstruct,
+    Validator,
+    VarInt,
     this,
 )
 
@@ -22,129 +25,72 @@ def _find_in_context(context, key):
         return None
 
 
-class Version(Construct):
-    def _build(self, obj, stream, context, path):
+class VersionAdapter(Adapter):
+    def _decode(self, obj, context, path):
+        if obj & 0x80:
+            return obj - 0x80
+
+        return "legacy"
+
+    def _encode(self, obj, context, path):
         if obj != "legacy":
-            stream.write(bytes([obj | 0x80]))
+            return bytes([obj | 0x80])
 
+        return bytes()
+
+
+Version = VersionAdapter(GreedyBytes)
+
+
+class CompactU16Validator(Validator):
+    def _validate(self, obj, context, path):
+        return obj < 0x1_0000
+
+
+CompactU16 = CompactU16Validator(VarInt)
+
+
+def CompactArray(subcon: Construct):
+    return PrefixedArray(CompactU16, subcon)
+
+
+def CompactStruct(*subcons, **subconskw):
+    return Prefixed(CompactU16, Struct(*subcons, **subconskw))
+
+
+class B58Adapter(Adapter):
+    def _decode(self, obj, context, path):
+        # decode/encode is flipped because we are deserializing ("decoding") by representing ("encoding") the bytes in Base58
+        return b58encode(obj)
+
+    def _encode(self, obj, context, path):
+        # decode/encode is flipped because we are serializing ("encoding") by parsing ("decoding") the Base58 string
+        return b58decode(obj)
+
+
+PublicKey = B58Adapter(Bytes(32))
+
+
+class InstructionIdAdapter(Adapter):
+    def _decode(self, obj, context, path):
+        # TODO solana
         return obj
 
-
-class CompactU16(Construct):
-    def _build(self, obj, stream, context, path):
-        value = obj
-        while True:
-            B = value & 0x7F
-            value >>= 7
-            if value == 0:
-                stream.write(bytes([B]))
-                break
-
-            stream.write(bytes([B | 0x80]))
-
-        return obj
-
-
-class PublicKey(Construct):
-    def _build(self, obj, stream, context, path):
-        stream.write(b58decode(obj))
-        return obj
-
-
-class CompactArray(Subconstruct):
-    def _build(self, obj, stream, context, path):
-        CompactU16()._build(len(obj), stream, context, path)
-
-        retlist = ListContainer()
-        for i, e in enumerate(obj):
-            context._index = i
-            retlist.append(self.subcon._build(e, stream, context, path))
-
-        return retlist
-
-
-class InstructionProgramId(Construct):
-    def _build(self, obj, stream, context, path):
-        program_index = context._["accounts"].index(obj)
-        stream.write(bytes([program_index]))
-        return obj
-
-
-class Accounts(Struct):
-    def _build(self, obj, stream, context, path):
-        CompactU16()._build(len(obj), stream, context, path)
-        super()._build(obj, stream, context, path)
-        return obj
-
-
-class InstructionData(Struct):
-    def _build(self, obj, stream, context, path):
-        size_stream = io.BytesIO()
-        super()._build(obj, size_stream, context, path)
-        size = len(size_stream.getvalue())
-
-        CompactU16()._build(size, stream, context, path)
-        super()._build(obj, stream, context, path)
-
-        return obj
-
-
-class InstructionId(Construct):
-    def _build(self, obj, stream, context, path):
+    def _encode(self, obj, context, path):
         instruction_id_formats = _find_in_context(context, "instruction_id_formats")
         program_id = _find_in_context(context, "program_id")
 
         instruction_id_format = instruction_id_formats[program_id]
 
         if obj == 0 and not instruction_id_format["is_included_if_zero"]:
-            return obj
+            return bytes()
 
         length = instruction_id_format["length"]
-        if length == 0:
-            return obj
-        elif length == 1:
-            stream.write(bytes([obj]))
-        elif length == 4:
-            Int32ul._build(obj, stream, context, path)
-        else:
-            raise ValueError("Invalid instruction ID length")
-
-        return obj
+        return obj.to_bytes(length, "little")
 
 
-class AccountReference(Construct):
-    def _build(self, obj, stream, context, path):
-        if obj.startswith("LUT"):
-            split_account = obj.split("-")
-            lut_index = int(split_account[1])
-            lut_account_index = int(split_account[2])
+InstructionId = InstructionIdAdapter(GreedyBytes)
 
-            accounts = _find_in_context(context, "accounts")
-            luts = _find_in_context(context, "luts")
+Memo = GreedyString("utf8")
 
-            account_index = len(accounts)
-            for i, lut in enumerate(luts):
-                if i == lut_index:
-                    account_index += lut_account_index
-                    break
-
-                account_index += len(lut["readwrite"])
-                account_index += len(lut["readonly"])
-        else:
-            accounts = _find_in_context(context, "accounts")
-            account_index = accounts.index(obj)
-
-        stream.write(bytes([account_index]))
-
-        return obj
-
-
-class Memo(Construct):
-    def _build(self, obj, stream, context, path):
-        stream.write(obj.encode("utf-8"))
-        return obj
-
-
-_STRING = Struct(
-    "length" / Int32ul, Padding(4), "chars" / PaddedString(this.length, "utf-8")
-)
+String = Struct("length" / Int64ul, "chars" / PaddedString(this.length, "utf-8"))

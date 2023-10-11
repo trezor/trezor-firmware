@@ -1,30 +1,29 @@
-from construct import If, Int8ul, Struct, this
+from construct import GreedyBytes, If, Int8ul, Struct, this
 
 from .custom_constructs import CompactArray, PublicKey, Version
-from .instructions import _INSTRUCTION
 
-_HEADER = Struct(
+Header = Struct(
     "signers" / Int8ul,
     "readonly_signers" / Int8ul,
     "readonly_non_signers" / Int8ul,
 )
 
-_ACCOUNTS = CompactArray(PublicKey())
+Accounts = CompactArray(PublicKey)
 
 
-_LUT = Struct(
-    "account" / PublicKey(),
+Lut = Struct(
+    "account" / PublicKey,
     "readwrite" / CompactArray(Int8ul),
     "readonly" / CompactArray(Int8ul),
 )
 
-_LUTS = CompactArray(_LUT)
+Luts = CompactArray(Lut)
 
-MESSAGE = Struct(
-    "version" / Version(),
-    "header" / _HEADER,
-    "accounts" / _ACCOUNTS,
-    "blockhash" / PublicKey(),
-    "instructions" / CompactArray(_INSTRUCTION),
-    "luts" / If(this.version != "legacy", _LUTS),
+Message = Struct(
+    "version" / Version,
+    "header" / Header,
+    "accounts" / Accounts,
+    "blockhash" / PublicKey,
+    "instructions" / CompactArray(GreedyBytes),
+    "luts" / If(this.version != "legacy", Luts),
 )

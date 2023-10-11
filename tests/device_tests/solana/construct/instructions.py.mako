@@ -4,39 +4,38 @@
 <%def name="getProgramId(program)">${"_".join(program["name"].upper().split(" ") + ["ID"])}</%def>\
 <%def name="getInstructionIdText(instruction)">${"_".join(["INS"] + instruction["name"].upper().split(" "))}</%def>\
 <%def name="getProgramInstructionsEnumName(program)">${program["name"].replace(" ", "")}Instruction</%def>\
-<%def name="getProgramAccountsName(program)">_${program["name"].upper().replace(" ", "_")}_ACCOUNTS</%def>\
-<%def name="getProgramParamsName(program)">_${program["name"].upper().replace(" ", "_")}_PARAMETERS</%def>\
+<%def name="getProgramInstructionsConstructName(program)">${program["name"].replace(" ","")}_Instruction</%def>\
+<%def name="getInstructionConstructName(program, instruction)">${program["name"].replace(" ","")}_${instruction["name"].replace(" ", "")}_Instruction</%def>\
 <%def name="getConstructType(type)">\
 % if type in ("u64", "i64"):
 Int64ul\
 % elif type in ("u32", "i32"):
 Int32ul\
 % elif type in ("pubKey", "authority"):
-PublicKey()\
+PublicKey\
 % elif type == "string":
-_STRING\
+String\
 % elif type == "memo":
-Memo()\
+Memo\
 % else:
 Int64ul\
 % endif
 </%def>\
 from enum import IntEnum
 from construct import (
+    Byte,
+    GreedyBytes,
     Int32ul,
     Int64ul,
     Struct,
     Switch,
 )
 from .custom_constructs import (
-    AccountReference,
-    Accounts,
-    InstructionData,
-    InstructionId,
-    InstructionProgramId,
+    CompactStruct,
+    InstructionIdAdapter,
     Memo,
     PublicKey,
-    _STRING,
+    String,
 )
 
 class Program:
@@ -44,90 +43,56 @@ class Program:
     ${getProgramId(program)} = "${program["id"]}"
 % endfor
 
-% for program in programs["programs"]:
-class ${getProgramInstructionsEnumName(program)}(IntEnum):
-    % for instruction in program["instructions"]:
-    ${getInstructionIdText(instruction)} = ${instruction["id"]}
-    % endfor
-% endfor
-
-% for program in programs["programs"]:
-${getProgramAccountsName(program)} = Switch(
-    lambda this: this.data["instruction_id"],
-    {
-    % for instruction in program["instructions"]:
-        ${getProgramInstructionsEnumName(program)}.${getInstructionIdText(instruction)}: Accounts(
-        % for reference in instruction["references"]:
-            "${reference["name"]}" / AccountReference(),
-        % endfor
-        ),
-    %endfor
-    }
-)
-%endfor
-
-% for program in programs["programs"]:
-${getProgramParamsName(program)} = InstructionData(
-    "instruction_id" / InstructionId(),
-    "parameters"
-    / Switch(
-        lambda this: this.instruction_id,
-        {
-        % for instruction in program["instructions"]:
-            ${getProgramInstructionsEnumName(program)}.${getInstructionIdText(instruction)}: Struct(
-            % for parameter in instruction["parameters"]:
-                "${parameter["name"]}" / ${getConstructType(parameter["type"])},
-            % endfor
-            ),
-        %endfor
-        }
-    )
-)
-%endfor
-
 INSTRUCTION_ID_FORMATS = {
 % for program in programs["programs"]:
     Program.${getProgramId(program)}: ${program["instruction_id_format"]},
 % endfor
 }
 
-_INSTRUCTION = Struct(
-    "program_id" / InstructionProgramId(),
-    "instruction_accounts"
-    / Switch(
-        lambda this: this.program_id,
-        {
 % for program in programs["programs"]:
-            Program.${getProgramId(program)}: ${getProgramAccountsName(program)},
-%endfor
-        }
+
+${"#"} ${program["name"]} begin
+
+class ${getProgramInstructionsEnumName(program)}(IntEnum):
+    % for instruction in program["instructions"]:
+    ${getInstructionIdText(instruction)} = ${instruction["id"]}
+    % endfor
+
+    % for instruction in program["instructions"]:
+${getInstructionConstructName(program, instruction)} = Struct(
+    "program_index" / Byte,
+    "accounts" / CompactStruct(
+        % for reference in instruction["references"]:
+        "${reference["name"]}" / Byte,
+        % endfor
     ),
-    "data"
-    / Switch(
-        lambda this: this.program_id,
-        {
-% for program in programs["programs"]:
-            Program.${getProgramId(program)}: ${getProgramParamsName(program)},
-%endfor
-        }
-    )
+    "data" / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        % for parameter in instruction["parameters"]:
+        "${parameter["name"]}" / ${getConstructType(parameter["type"])},
+        % endfor
+    ),
 )
 
+    % endfor
 
-def replace_account_placeholders(construct):
-    for ins in construct["instructions"]:
-        program_id = Program.__dict__[ins["program_id"]]
+${getProgramInstructionsConstructName(program)} = Switch(
+    lambda this: this.instruction_id,
+    {
+    %for instruction in program["instructions"]:
+        ${getProgramInstructionsEnumName(program)}.${getInstructionIdText(instruction)}: ${getInstructionConstructName(program, instruction)},
+    %endfor
+    },
+)
+
+${"#"} ${program["name"]} end
+% endfor
+
+Instruction = Switch(
+    lambda this: this.program_id,
+    {
 % for program in programs["programs"]:
-    % if program == programs["programs"][0]:
-        if program_id == Program.${getProgramId(program)}:
-    % else:
-        elif program_id == Program.${getProgramId(program)}:
-    %endif
-            ins["data"]["instruction_id"] = ${getProgramInstructionsEnumName(program)}.__dict__[
-                ins["data"]["instruction_id"]
-            ].value
+        Program.${getProgramId(program)}: ${getProgramInstructionsConstructName(program)},
 %endfor
-
-        ins["program_id"] = program_id
-
-    return construct
+    }
+)

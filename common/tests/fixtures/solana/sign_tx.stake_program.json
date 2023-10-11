@@ -24,20 +24,18 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "STAKE_PROGRAM_ID",
-              "instruction_accounts": {
-                "uninitialized_stake_account": "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
-                "rent_sysvar": "SysvarRent111111111111111111111111111111111"
+              "program_index": 2,
+              "accounts": {
+                "uninitialized_stake_account": 1,
+                "rent_sysvar": 3
               },
               "data": {
-                "instruction_id": "INS_INITIALIZE",
-                "parameters": {
-                  "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                  "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                  "unix_timestamp": 20,
-                  "epoch": 330,
-                  "custodian": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
-                }
+                "instruction_id": 0,
+                "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "unix_timestamp": 20,
+                "epoch": 330,
+                "custodian": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
               }
             }
           ],
@@ -69,35 +67,31 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "SYSTEM_PROGRAM_ID",
-              "instruction_accounts": {
-                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "new_account": "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv"
+              "program_index": 2,
+              "accounts": {
+                "funding_account": 0,
+                "new_account": 1
               },
               "data": {
-                "instruction_id": "INS_CREATE_ACCOUNT",
-                "parameters": {
-                  "lamports": 20000000,
-                  "space": 1000,
-                  "owner": "Stake11111111111111111111111111111111111111"
-                }
+                "instruction_id": 0,
+                "lamports": 20000000,
+                "space": 1000,
+                "owner": "Stake11111111111111111111111111111111111111"
               }
             },
             {
-              "program_id": "STAKE_PROGRAM_ID",
-              "instruction_accounts": {
-                "uninitialized_stake_account": "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
-                "rent_sysvar": "SysvarRent111111111111111111111111111111111"
+              "program_index": 3,
+              "accounts": {
+                "uninitialized_stake_account": 1,
+                "rent_sysvar": 4
               },
               "data": {
-                "instruction_id": "INS_INITIALIZE",
-                "parameters": {
-                  "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                  "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                  "unix_timestamp": 0,
-                  "epoch": 0,
-                  "custodian": "11111111111111111111111111111111"
-                }
+                "instruction_id": 0,
+                "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "unix_timestamp": 0,
+                "epoch": 0,
+                "custodian": "11111111111111111111111111111111"
               }
             }
           ],

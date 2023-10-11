@@ -23,18 +23,16 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "SYSTEM_PROGRAM_ID",
-              "instruction_accounts": {
-                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "new_account": "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq"
+              "program_index": 2,
+              "accounts": {
+                "funding_account": 0,
+                "new_account": 1
               },
               "data": {
-                "instruction_id": "INS_CREATE_ACCOUNT",
-                "parameters": {
-                  "lamports": 20000000,
-                  "space": 1000,
-                  "owner": "11111111111111111111111111111111"
-                }
+                "instruction_id": 0,
+                "lamports": 20000000,
+                "space": 1000,
+                "owner": "11111111111111111111111111111111"
               }
             }
           ],
@@ -63,15 +61,13 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "SYSTEM_PROGRAM_ID",
-              "instruction_accounts": {
-                "assigned_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
+              "program_index": 1,
+              "accounts": {
+                "assigned_account": 0
               },
               "data": {
-                "instruction_id": "INS_ASSIGN",
-                "parameters": {
-                  "owner": "11111111111111111111111111111111"
-                }
+                "instruction_id": 1,
+                "owner": "11111111111111111111111111111111"
               }
             }
           ],
@@ -101,16 +97,14 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "SYSTEM_PROGRAM_ID",
-              "instruction_accounts": {
-                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "recipient_account": "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq"
+              "program_index": 2,
+              "accounts": {
+                "funding_account": 0,
+                "recipient_account": 1
               },
               "data": {
-                "instruction_id": "INS_TRANSFER",
-                "parameters": {
-                  "lamports": 20000000
-                }
+                "instruction_id": 2,
+                "lamports": 20000000
               }
             }
           ],
@@ -139,42 +133,36 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "SYSTEM_PROGRAM_ID",
-              "instruction_accounts": {
-                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "recipient_account": "LUT-0-0"
+              "program_index": 1,
+              "accounts": {
+                "funding_account": 0,
+                "recipient_account": 2
               },
               "data": {
-                "instruction_id": "INS_TRANSFER",
-                "parameters": {
-                  "lamports": 20000000
-                }
+                "instruction_id": 2,
+                "lamports": 20000000
               }
             },
             {
-              "program_id": "SYSTEM_PROGRAM_ID",
-              "instruction_accounts": {
-                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "recipient_account": "LUT-0-1"
+              "program_index": 1,
+              "accounts": {
+                "funding_account": 0,
+                "recipient_account": 3
               },
               "data": {
-                "instruction_id": "INS_TRANSFER",
-                "parameters": {
-                  "lamports": 30000000
-                }
+                "instruction_id": 2,
+                "lamports": 30000000
               }
             },
             {
-              "program_id": "SYSTEM_PROGRAM_ID",
-              "instruction_accounts": {
-                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "recipient_account": "LUT-1-0"
+              "program_index": 1,
+              "accounts": {
+                "funding_account": 0,
+                "recipient_account": 4
               },
               "data": {
-                "instruction_id": "INS_TRANSFER",
-                "parameters": {
-                  "lamports": 40000000
-                }
+                "instruction_id": 2,
+                "lamports": 40000000
               }
             }
           ],

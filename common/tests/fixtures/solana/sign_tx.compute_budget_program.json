@@ -24,36 +24,30 @@
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
             {
-              "program_id": "COMPUTE_BUDGET_PROGRAM_ID",
-              "instruction_accounts": {},
+              "program_index": 3,
+              "accounts": {},
               "data": {
-                "instruction_id": "INS_SET_COMPUTE_UNIT_LIMIT",
-                "parameters": {
-                  "units": 200000
-                }
+                "instruction_id": 2,
+                "units": 200000
               }
             },
             {
-              "program_id": "COMPUTE_BUDGET_PROGRAM_ID",
-              "instruction_accounts": {},
+              "program_index": 3,
+              "accounts": {},
               "data": {
-                "instruction_id": "INS_SET_COMPUTE_UNIT_PRICE",
-                "parameters": {
-                  "lamports": 8000
-                }
+                "instruction_id": 3,
+                "lamports": 8000
               }
             },
             {
-              "program_id": "SYSTEM_PROGRAM_ID",
-              "instruction_accounts": {
-                "funding_account": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
-                "recipient_account": "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF"
+              "program_index": 2,
+              "accounts": {
+                "funding_account": 0,
+                "recipient_account": 1
               },
               "data": {
-                "instruction_id": "INS_TRANSFER",
-                "parameters": {
-                  "lamports": 20000000
-                }
+                "instruction_id": 2,
+                "lamports": 20000000
               }
             }
           ],
