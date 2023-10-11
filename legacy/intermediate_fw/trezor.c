@@ -107,7 +107,7 @@ int main(void) {
   setupApp();
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
-  oledInit();
+
   if (is_mode_unprivileged()) {
     layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Cannot update", NULL,
                  NULL, "Unprivileged mode", "Unsigned firmware", NULL);
