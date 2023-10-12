@@ -1184,6 +1184,9 @@ def get_instruction(
                 ["funding_account", "new_account"],
                 "ui_confirm",
                 "System Program: Create Account",
+                True,
+                True,
+                False,
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN:
             return Instruction(
@@ -1211,6 +1214,9 @@ def get_instruction(
                 ["assigned_account"],
                 "ui_confirm",
                 "System Program: Assign",
+                True,
+                True,
+                False,
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
@@ -1244,6 +1250,9 @@ def get_instruction(
                 ["funding_account", "recipient_account"],
                 "ui_confirm",
                 "System Program: Transfer",
+                True,
+                True,
+                False,
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED:
             return Instruction(
@@ -1307,6 +1316,9 @@ def get_instruction(
                 ["funding_account", "created_account", "base_account"],
                 "ui_confirm",
                 "System Program: Create Account With Seed",
+                True,
+                True,
+                False,
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE:
             return Instruction(
@@ -1334,6 +1346,9 @@ def get_instruction(
                 ["new_account"],
                 "ui_confirm",
                 "System Program: Allocate",
+                True,
+                True,
+                False,
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED:
             return Instruction(
@@ -1385,6 +1400,9 @@ def get_instruction(
                 ["allocated_account", "base_account"],
                 "ui_confirm",
                 "System Program: Allocate With Seed",
+                True,
+                True,
+                False,
             )
         elif instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED:
             return Instruction(
@@ -1430,6 +1448,9 @@ def get_instruction(
                 ["assigned_account", "base_account"],
                 "ui_confirm",
                 "System Program: Assign With Seed",
+                True,
+                True,
+                False,
             )
         else:
             return Instruction(
@@ -1444,6 +1465,7 @@ def get_instruction(
                 "ui_unsupported_instruction",
                 "System Program",
                 True,
+                False,
                 False,
             )
     if program_id == STAKE_PROGRAM_ID:
@@ -1503,6 +1525,9 @@ def get_instruction(
                 ["uninitialized_stake_account", "rent_sysvar"],
                 "ui_confirm",
                 "Stake Program: Initialize",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE:
             return Instruction(
@@ -1559,6 +1584,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Authorize",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
             return Instruction(
@@ -1616,6 +1644,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Delegate Stake",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_SPLIT:
             return Instruction(
@@ -1655,6 +1686,9 @@ def get_instruction(
                 ["stake_account", "uninitialized_stake_account", "stake_authority"],
                 "ui_confirm",
                 "Stake Program: Split",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_WITHDRAW:
             return Instruction(
@@ -1719,6 +1753,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Withdraw",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_DEACTIVATE:
             return Instruction(
@@ -1751,6 +1788,9 @@ def get_instruction(
                 ["delegated_stake_account", "clock_sysvar", "stake_authority"],
                 "ui_confirm",
                 "Stake Program: Deactivate",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP:
             return Instruction(
@@ -1796,6 +1836,9 @@ def get_instruction(
                 ["initialized_stake_account", "lockup_or_withdraw_authority"],
                 "ui_confirm",
                 "Stake Program: Set Lockup",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_MERGE:
             return Instruction(
@@ -1846,6 +1889,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Merge",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED:
             return Instruction(
@@ -1919,6 +1965,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Authorize With Seed",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
             return Instruction(
@@ -1962,6 +2011,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Initialize Checked",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED:
             return Instruction(
@@ -2019,6 +2071,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Authorize Checked",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED:
             return Instruction(
@@ -2088,6 +2143,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Authorize Checked With Seed",
+                True,
+                True,
+                False,
             )
         elif instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
             return Instruction(
@@ -2137,6 +2195,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Stake Program: Set Lockup Checked",
+                True,
+                True,
+                False,
             )
         else:
             return Instruction(
@@ -2151,6 +2212,7 @@ def get_instruction(
                 "ui_unsupported_instruction",
                 "Stake Program",
                 True,
+                False,
                 False,
             )
     if program_id == COMPUTE_BUDGET_PROGRAM_ID:
@@ -2173,6 +2235,9 @@ def get_instruction(
                 [],
                 "ui_confirm",
                 "Compute Budget Program: Request Heap Frame",
+                True,
+                True,
+                False,
             )
         elif instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT:
             return Instruction(
@@ -2193,6 +2258,9 @@ def get_instruction(
                 [],
                 "ui_confirm",
                 "Compute Budget Program: Set Compute Unit Limit",
+                True,
+                True,
+                False,
             )
         elif instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE:
             return Instruction(
@@ -2213,6 +2281,9 @@ def get_instruction(
                 [],
                 "ui_confirm",
                 "Compute Budget Program: Set Compute Unit Price",
+                True,
+                True,
+                False,
             )
         else:
             return Instruction(
@@ -2227,6 +2298,7 @@ def get_instruction(
                 "ui_unsupported_instruction",
                 "Compute Budget Program",
                 True,
+                False,
                 False,
             )
     if program_id == TOKEN_PROGRAM_ID:
@@ -2267,6 +2339,9 @@ def get_instruction(
                 ["account_to_initialize", "mint_account", "owner", "rent_sysvar"],
                 "ui_confirm",
                 "Token Program: Initialize Account",
+                True,
+                True,
+                False,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
@@ -2306,6 +2381,9 @@ def get_instruction(
                 ["multisig_account", "rent_sysvar", "signer_accounts"],
                 "ui_confirm",
                 "Token Program: Initialize Multisig",
+                True,
+                True,
+                False,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
@@ -2345,6 +2423,9 @@ def get_instruction(
                 ["source_account", "destination_account", "owner"],
                 "ui_confirm",
                 "Token Program: Transfer",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE:
             return Instruction(
@@ -2384,6 +2465,9 @@ def get_instruction(
                 ["source_account", "delegate_account", "owner"],
                 "ui_confirm",
                 "Token Program: Approve",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_REVOKE:
             return Instruction(
@@ -2410,6 +2494,9 @@ def get_instruction(
                 ["source_account", "owner"],
                 "ui_confirm",
                 "Token Program: Revoke",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_SET_AUTHORITY:
             return Instruction(
@@ -2449,6 +2536,9 @@ def get_instruction(
                 ["mint_account", "current_authority"],
                 "ui_confirm",
                 "Token Program: Set Authority",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO:
             return Instruction(
@@ -2488,6 +2578,9 @@ def get_instruction(
                 ["mint", "account_to_mint", "minting_authority"],
                 "ui_confirm",
                 "Token Program: Mint to",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_BURN:
             return Instruction(
@@ -2527,6 +2620,9 @@ def get_instruction(
                 ["account_to_burn_from", "token_mint", "owner"],
                 "ui_confirm",
                 "Token Program: Burn",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT:
             return Instruction(
@@ -2559,6 +2655,9 @@ def get_instruction(
                 ["account_to_close", "destination_account", "owner"],
                 "ui_confirm",
                 "Token Program: Close Account",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT:
             return Instruction(
@@ -2591,6 +2690,9 @@ def get_instruction(
                 ["account_to_freeze", "token_mint", "freeze_authority"],
                 "ui_confirm",
                 "Token Program: Freeze Account",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT:
             return Instruction(
@@ -2623,6 +2725,9 @@ def get_instruction(
                 ["account_to_freeze", "token_mint", "freeze_authority"],
                 "ui_confirm",
                 "Token Program: Thaw Account",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED:
             return Instruction(
@@ -2674,6 +2779,9 @@ def get_instruction(
                 ["source_account", "token_mint", "destination_account", "owner"],
                 "ui_confirm",
                 "Token Program: Transfer Checked",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED:
             return Instruction(
@@ -2725,6 +2833,9 @@ def get_instruction(
                 ["source_account", "token_mint", "delegate", "owner"],
                 "ui_confirm",
                 "Token Program: Approve Checked",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED:
             return Instruction(
@@ -2770,6 +2881,9 @@ def get_instruction(
                 ["mint", "account_to_mint", "minting_authority"],
                 "ui_confirm",
                 "Token Program: Mint to Checked",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_BURN_CHECKED:
             return Instruction(
@@ -2815,6 +2929,9 @@ def get_instruction(
                 ["account_to_burn_from", "token_mint", "owner"],
                 "ui_confirm",
                 "Token Program: Burn Checked",
+                True,
+                True,
+                True,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
             return Instruction(
@@ -2854,6 +2971,9 @@ def get_instruction(
                 ["account_to_initialize", "mint_account", "rent_sysvar"],
                 "ui_confirm",
                 "Token Program: Initialize Account 2",
+                True,
+                True,
+                False,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
@@ -2874,6 +2994,9 @@ def get_instruction(
                 ["token_account"],
                 "ui_confirm",
                 "Token Program: Sync Native",
+                True,
+                True,
+                False,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
             return Instruction(
@@ -2907,6 +3030,9 @@ def get_instruction(
                 ["account_to_initialize", "mint_account"],
                 "ui_confirm",
                 "Token Program: Initialize Account 3",
+                True,
+                True,
+                False,
             )
         elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
             return Instruction(
@@ -2927,6 +3053,9 @@ def get_instruction(
                 ["account_to_initialize"],
                 "ui_confirm",
                 "Token Program: Initialize Immutable Owner",
+                True,
+                True,
+                False,
             )
         else:
             return Instruction(
@@ -2941,6 +3070,7 @@ def get_instruction(
                 "ui_unsupported_instruction",
                 "Token Program",
                 True,
+                False,
                 False,
             )
     if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
@@ -3000,6 +3130,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Associated Token Account Program: Create",
+                True,
+                True,
+                False,
             )
         elif (
             instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT
@@ -3059,6 +3192,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Associated Token Account Program: Create Idempotent",
+                True,
+                True,
+                False,
             )
         elif instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED:
             return Instruction(
@@ -3123,6 +3259,9 @@ def get_instruction(
                 ],
                 "ui_confirm",
                 "Associated Token Account Program: Recover Nested",
+                True,
+                True,
+                False,
             )
         else:
             return Instruction(
@@ -3137,6 +3276,7 @@ def get_instruction(
                 "ui_unsupported_instruction",
                 "Associated Token Account Program",
                 True,
+                False,
                 False,
             )
     if program_id == MEMO_PROGRAM_ID:
@@ -3166,6 +3306,9 @@ def get_instruction(
                 ["signer_accounts"],
                 "ui_confirm",
                 "Memo Program: Memo",
+                True,
+                True,
+                False,
             )
         else:
             return Instruction(
@@ -3180,6 +3323,7 @@ def get_instruction(
                 "ui_unsupported_instruction",
                 "Memo Program",
                 True,
+                False,
                 False,
             )
     if program_id == MEMO_LEGACY_PROGRAM_ID:
@@ -3209,6 +3353,9 @@ def get_instruction(
                 ["signer_accounts"],
                 "ui_confirm",
                 "Memo Legacy Program: Memo",
+                True,
+                True,
+                False,
             )
         else:
             return Instruction(
@@ -3224,6 +3371,7 @@ def get_instruction(
                 "Memo Legacy Program",
                 True,
                 False,
+                False,
             )
     else:
         return Instruction(
@@ -3237,6 +3385,7 @@ def get_instruction(
             [],
             "ui_unsupported_program",
             "Unsupported program",
+            False,
             False,
             False,
         )

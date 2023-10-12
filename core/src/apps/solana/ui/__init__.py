@@ -26,7 +26,7 @@ def format_property(value: Any, type: str) -> str | bytes | None:
 async def show_confirm(
     count: tuple[int, int], instruction: Instruction, signer: bytes
 ) -> None:
-    from trezor.ui.layouts import confirm_properties
+    from trezor.ui.layouts import confirm_properties, RustLayout
 
     # assertions for pyright
     assert instruction.parsed_data is not None
@@ -45,6 +45,13 @@ async def show_confirm(
                 continue
 
         datas.append((ui_name, format_property(value, _type)))
+    
+    if len(datas) > 0:
+        await confirm_properties(
+            instruction.ui_identifier,
+            f"{count[1]}/{count[0]}: {instruction.ui_name}",
+            datas
+        )
 
     accounts = []
     for account in instruction.ui_account_list:
@@ -67,14 +74,34 @@ async def show_confirm(
             )
         else:
             raise ValueError("Invalid account value")
+    
+    if len(accounts) > 0:
+        await confirm_properties(
+            instruction.ui_identifier,
+            f"{count[1]}/{count[0]}: {instruction.ui_name}",
+            accounts
+        )
+    
+    if instruction.is_multisig:
+        import trezorui2
 
-    props = datas + accounts
-
-    return await confirm_properties(
-        instruction.ui_identifier,
-        f"{count[1]}/{count[0]}: {instruction.ui_name}",
-        props,
-    )
+        await RustLayout(
+            trezorui2.show_info(
+                title="Information",
+                description="The instruction requires multiple signers that increases the fee",
+                allow_cancel=False,
+            )
+        )
+        
+        signers = []
+        for i, signer in enumerate(instruction.signers, 1):
+            signers.append((f"Signer {i}", base58.encode(signer[0])))
+        
+        await confirm_properties(
+            instruction.ui_identifier,
+            f"{count[1]}/{count[0]}: {instruction.ui_name}",
+            signers,
+        )
 
 
 def get_address_type(address_type: int) -> str:
@@ -89,55 +116,115 @@ def get_address_type(address_type: int) -> str:
     else:
         raise ValueError(f"Invalid address type {address_type}")
 
-def get_unknown_instruction_properties(instruction: Instruction) -> list[tuple[str, str | bytes]]:
-    datas: list[tuple[str, str | bytes]] = []
-    if len(instruction.instruction_data) == 0:
-        datas.append(("Instruction data:", "not set"))
-    # elif len(instruction.instruction_data) > 32:
-    #     datas.append(("Instruction data:", instruction.instruction_data[:32]))
-    else:
-        datas.append(("Instruction data:", instruction.instruction_data))
+async def show_unsupported_instruction_details(instruction: Instruction, title: str) -> None:
+    from trezor.ui.layouts import should_show_more
+    from trezor.ui.layouts import confirm_properties
+    from trezor.ui import DEMIBOLD, NORMAL
 
-    accounts = []
-    for i, account in enumerate(instruction.accounts):
-        accounts.append((f"Account {i + 1} {get_address_type(account[1])}:", base58.encode(account[0])))
+    assert(instruction.instruction_data is not None)
 
-    props = datas + accounts
+    result = True
 
-    return props
+    if len(instruction.instruction_data) > 32:
+        result = await should_show_more(
+            title,
+            (
+                (
+                    NORMAL,
+                    f"Instruction data is {len(instruction.instruction_data)} byte long"
+                ),
+            ),
+            "Show data",
+            confirm="Continue"
+        )
+    
+    if result and len(instruction.instruction_data) > 0:
+        await confirm_properties(
+            "instruction_data",
+            title,
+            (
+                (
+                    "Instruction data",
+                    instruction.instruction_data
+                ),
+            ),
+        )
+    
+    result = True
+    if len(instruction.accounts) > 5:
+        result = await should_show_more(
+            title,
+            (
+                (
+                    NORMAL,
+                    f"The instruction contains {len(instruction.accounts)} accounts"
+                ),
+            ),
+            "Show all",
+            confirm="Continue"
+        )
+    
+    if result:
+        accounts = []
+        for i, account in enumerate(instruction.accounts, 1):
+            accounts.append((f"Account {i} {get_address_type(account[1])}:", base58.encode(account[0])))
+        
+        await confirm_properties(
+            "accounts",
+            title,
+            accounts,
+        )
 
 async def show_unsupported_instruction_confirm(
-    count: tuple[int, int], instruction: Instruction, signer: bytes
+    count: tuple[int, int], instruction: Instruction
 ) -> None:
     from trezor.ui.layouts import confirm_properties
 
-    return await confirm_properties(
-        instruction.ui_identifier,
-        f"{count[1]}/{count[0]}: {instruction.ui_name}: instruction id ({instruction.instruction_id})",
-        get_unknown_instruction_properties(instruction)
-    )
+    title = f"{count[1]}/{count[0]}: {instruction.ui_name}: instruction id ({instruction.instruction_id})"
 
+    return await show_unsupported_instruction_details(instruction, title)
 
 async def show_unsupported_program_confirm(
-    count: tuple[int, int], instruction: Instruction, signer: bytes
+    count: tuple[int, int], instruction: Instruction
 ) -> None:
     from trezor.ui.layouts import confirm_properties
 
-    return await confirm_properties(
-        instruction.ui_identifier,
-        f"{count[1]}/{count[0]}: {instruction.ui_name}",
-        [("Program", instruction.program_id)] + get_unknown_instruction_properties(instruction)
+    title = f"{count[1]}/{count[0]}: {instruction.ui_name}"
+
+    return await show_unsupported_instruction_details(instruction, title)
+
+
+async def show_final_confirmation(signer_path: str, address: str, blockhash: bytes, fee: int) -> None:
+    from trezor.ui.layouts import confirm_properties
+
+    await confirm_properties(
+        "sign_message_path", 
+        "Sign message",
+        [
+            ("Signer Path", signer_path)
+        ]
     )
 
-
-async def show_final_confirmation(blockhash: bytes, fee: int) -> None:
-    from trezor.ui.layouts import confirm_properties
+    await confirm_properties(
+        "sign_message_address", 
+        "Sign message",
+        [
+            ("Address", address)
+        ]
+    )
 
     await confirm_properties(
         "sign_message", 
         "Sign message",
         [
-            ("Blockhash", base58.encode(blockhash)),
+            ("Blockhash", base58.encode(blockhash))
+        ]
+    )
+
+    await confirm_properties(
+        "sign_message", 
+        "Sign message",
+        [
             ("Fee", f"{fee} lamports")
         ]
     )

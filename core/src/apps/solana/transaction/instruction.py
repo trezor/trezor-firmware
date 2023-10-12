@@ -46,6 +46,9 @@ class Instruction:
     instruction_data: bytes = None
     accounts: list[Account] = None
 
+    is_multisig: bool = False
+    multisig_signers: list[Account] = None
+
     def __init__(
         self,
         instruction_data: bytes,
@@ -59,7 +62,8 @@ class Instruction:
         ui_identifier: str,
         ui_name: str,
         is_program_supported: bool = True,
-        is_instruction_supported: bool = True
+        is_instruction_supported: bool = True,
+        supports_multisig = False
     ) -> None:
         self.program_id = program_id
         self.instruction_id = instruction_id
@@ -79,11 +83,13 @@ class Instruction:
         self.is_program_supported = is_program_supported
         self.is_instruction_supported = is_instruction_supported
 
-        if not is_instruction_supported:
-            self.instruction_data = instruction_data
-            self.accounts = accounts
+        # self.is_multisig = is_multisig
 
         reader = BufferReader(instruction_data)
+
+        if not is_instruction_supported:
+            self.instruction_data = reader.read()
+            self.accounts = accounts
 
         for property_template in property_templates:
             self.set_property(
@@ -99,6 +105,10 @@ class Instruction:
                     raise ValueError(f"Account {account_template['name']} is missing")
 
             self.set_account(account_template["name"], accounts[i])
+        
+        if supports_multisig and len(accounts) > len(accounts_template):
+            self.is_multisig = True
+            self.multisig_signers = accounts[len(accounts_template):]
 
         for parameter in ui_parameter_list:
             self.ui_parameter_list.append(parameter)
@@ -112,6 +122,8 @@ class Instruction:
                     raise ValueError(f"Account {account_template['name']} is missing")
 
             self.ui_account_list.append((account, accounts[account_index]))
+        
+        assert(reader.remaining_count() == 0)
 
     def __getattr__(self, attr: str) -> Any:
         assert self.parsed_data is not None
@@ -119,10 +131,12 @@ class Instruction:
 
         if attr in self.parsed_data:
             return self.parsed_data[attr]
-        elif attr in self.parsed_accounts:
+        if attr in self.parsed_accounts:
             return self.parsed_accounts[attr]
-        else:
-            raise AttributeError(f"Attribute {attr} not found")
+        if attr == "signers" and self.is_multisig:
+            return self.multisig_signers
+        
+        raise AttributeError(f"Attribute {attr} not found")
 
     def set_property(self, attr: str, value: Any) -> None:
         assert self.parsed_data is not None

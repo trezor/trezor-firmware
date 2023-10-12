@@ -146,7 +146,10 @@ def get_instruction(
                 ${instruction["ui"]["elements"]["accounts"]},
                 ## "${getInstructionUiIdentifier(instruction)}",
                 "${instruction["ui"]["ui_identifier"]}",
-                "${program["name"]}: ${instruction["name"]}"
+                "${program["name"]}: ${instruction["name"]}",
+                True,
+                True,
+                ${instruction["is_multisig"]}
             )
     % endfor
         else:
@@ -162,6 +165,7 @@ def get_instruction(
                 "ui_unsupported_instruction",
                 "${program["name"]}",
                 True,
+                False,
                 False
             )
 % endif
@@ -178,6 +182,7 @@ def get_instruction(
             [],
             "ui_unsupported_program",
             "Unsupported program",
+            False,
             False,
             False
         )
