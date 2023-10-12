@@ -1188,7 +1188,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN:
+        if instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1218,7 +1218,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == SYSTEM_PROGRAM_ID_INS_TRANSFER:
+        if instruction_id == SYSTEM_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1254,7 +1254,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED:
+        if instruction_id == SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1320,7 +1320,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE:
+        if instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1350,7 +1350,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED:
+        if instruction_id == SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1404,7 +1404,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED:
+        if instruction_id == SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1452,22 +1452,21 @@ def get_instruction(
                 True,
                 False,
             )
-        else:
-            return Instruction(
-                instruction_data,
-                program_id,
-                instruction_accounts,
-                instruction_id,
-                [],
-                [],
-                [],
-                [],
-                "ui_unsupported_instruction",
-                "System Program",
-                True,
-                False,
-                False,
-            )
+        return Instruction(
+            instruction_data,
+            program_id,
+            instruction_accounts,
+            instruction_id,
+            [],
+            [],
+            [],
+            [],
+            "ui_unsupported_instruction",
+            "System Program",
+            True,
+            False,
+            False,
+        )
     if program_id == STAKE_PROGRAM_ID:
         if instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE:
             return Instruction(
@@ -1529,7 +1528,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE:
+        if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1588,7 +1587,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
+        if instruction_id == STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1648,7 +1647,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_SPLIT:
+        if instruction_id == STAKE_PROGRAM_ID_INS_SPLIT:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1690,7 +1689,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_WITHDRAW:
+        if instruction_id == STAKE_PROGRAM_ID_INS_WITHDRAW:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1757,7 +1756,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_DEACTIVATE:
+        if instruction_id == STAKE_PROGRAM_ID_INS_DEACTIVATE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1792,7 +1791,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP:
+        if instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1840,7 +1839,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_MERGE:
+        if instruction_id == STAKE_PROGRAM_ID_INS_MERGE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1893,7 +1892,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED:
+        if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -1969,7 +1968,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
+        if instruction_id == STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2015,7 +2014,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED:
+        if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2075,7 +2074,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED:
+        if instruction_id == STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2147,7 +2146,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
+        if instruction_id == STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2199,22 +2198,21 @@ def get_instruction(
                 True,
                 False,
             )
-        else:
-            return Instruction(
-                instruction_data,
-                program_id,
-                instruction_accounts,
-                instruction_id,
-                [],
-                [],
-                [],
-                [],
-                "ui_unsupported_instruction",
-                "Stake Program",
-                True,
-                False,
-                False,
-            )
+        return Instruction(
+            instruction_data,
+            program_id,
+            instruction_accounts,
+            instruction_id,
+            [],
+            [],
+            [],
+            [],
+            "ui_unsupported_instruction",
+            "Stake Program",
+            True,
+            False,
+            False,
+        )
     if program_id == COMPUTE_BUDGET_PROGRAM_ID:
         if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME:
             return Instruction(
@@ -2239,7 +2237,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT:
+        if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2262,7 +2260,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE:
+        if instruction_id == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2285,22 +2283,21 @@ def get_instruction(
                 True,
                 False,
             )
-        else:
-            return Instruction(
-                instruction_data,
-                program_id,
-                instruction_accounts,
-                instruction_id,
-                [],
-                [],
-                [],
-                [],
-                "ui_unsupported_instruction",
-                "Compute Budget Program",
-                True,
-                False,
-                False,
-            )
+        return Instruction(
+            instruction_data,
+            program_id,
+            instruction_accounts,
+            instruction_id,
+            [],
+            [],
+            [],
+            [],
+            "ui_unsupported_instruction",
+            "Compute Budget Program",
+            True,
+            False,
+            False,
+        )
     if program_id == TOKEN_PROGRAM_ID:
         if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT:
             return Instruction(
@@ -2343,7 +2340,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2385,7 +2382,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2427,7 +2424,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2469,7 +2466,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_REVOKE:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_REVOKE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2498,7 +2495,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_SET_AUTHORITY:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_SET_AUTHORITY:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2540,7 +2537,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2582,7 +2579,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_BURN:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_BURN:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2624,7 +2621,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2659,7 +2656,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2694,7 +2691,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2729,7 +2726,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2783,7 +2780,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2837,7 +2834,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2885,7 +2882,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_BURN_CHECKED:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_BURN_CHECKED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2933,7 +2930,7 @@ def get_instruction(
                 True,
                 True,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2975,7 +2972,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -2998,7 +2995,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -3034,7 +3031,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
+        if instruction_id == TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -3057,22 +3054,21 @@ def get_instruction(
                 True,
                 False,
             )
-        else:
-            return Instruction(
-                instruction_data,
-                program_id,
-                instruction_accounts,
-                instruction_id,
-                [],
-                [],
-                [],
-                [],
-                "ui_unsupported_instruction",
-                "Token Program",
-                True,
-                False,
-                False,
-            )
+        return Instruction(
+            instruction_data,
+            program_id,
+            instruction_accounts,
+            instruction_id,
+            [],
+            [],
+            [],
+            [],
+            "ui_unsupported_instruction",
+            "Token Program",
+            True,
+            False,
+            False,
+        )
     if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
         if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE:
             return Instruction(
@@ -3134,9 +3130,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif (
-            instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT
-        ):
+        if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -3196,7 +3190,7 @@ def get_instruction(
                 True,
                 False,
             )
-        elif instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED:
+        if instruction_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED:
             return Instruction(
                 instruction_data,
                 program_id,
@@ -3263,22 +3257,21 @@ def get_instruction(
                 True,
                 False,
             )
-        else:
-            return Instruction(
-                instruction_data,
-                program_id,
-                instruction_accounts,
-                instruction_id,
-                [],
-                [],
-                [],
-                [],
-                "ui_unsupported_instruction",
-                "Associated Token Account Program",
-                True,
-                False,
-                False,
-            )
+        return Instruction(
+            instruction_data,
+            program_id,
+            instruction_accounts,
+            instruction_id,
+            [],
+            [],
+            [],
+            [],
+            "ui_unsupported_instruction",
+            "Associated Token Account Program",
+            True,
+            False,
+            False,
+        )
     if program_id == MEMO_PROGRAM_ID:
         if instruction_id == MEMO_PROGRAM_ID_INS_MEMO:
             return Instruction(
@@ -3310,22 +3303,21 @@ def get_instruction(
                 True,
                 False,
             )
-        else:
-            return Instruction(
-                instruction_data,
-                program_id,
-                instruction_accounts,
-                instruction_id,
-                [],
-                [],
-                [],
-                [],
-                "ui_unsupported_instruction",
-                "Memo Program",
-                True,
-                False,
-                False,
-            )
+        return Instruction(
+            instruction_data,
+            program_id,
+            instruction_accounts,
+            instruction_id,
+            [],
+            [],
+            [],
+            [],
+            "ui_unsupported_instruction",
+            "Memo Program",
+            True,
+            False,
+            False,
+        )
     if program_id == MEMO_LEGACY_PROGRAM_ID:
         if instruction_id == MEMO_LEGACY_PROGRAM_ID_INS_MEMO:
             return Instruction(
@@ -3357,35 +3349,33 @@ def get_instruction(
                 True,
                 False,
             )
-        else:
-            return Instruction(
-                instruction_data,
-                program_id,
-                instruction_accounts,
-                instruction_id,
-                [],
-                [],
-                [],
-                [],
-                "ui_unsupported_instruction",
-                "Memo Legacy Program",
-                True,
-                False,
-                False,
-            )
-    else:
         return Instruction(
             instruction_data,
             program_id,
             instruction_accounts,
-            0,
+            instruction_id,
             [],
             [],
             [],
             [],
-            "ui_unsupported_program",
-            "Unsupported program",
-            False,
+            "ui_unsupported_instruction",
+            "Memo Legacy Program",
+            True,
             False,
             False,
         )
+    return Instruction(
+        instruction_data,
+        program_id,
+        instruction_accounts,
+        0,
+        [],
+        [],
+        [],
+        [],
+        "ui_unsupported_program",
+        "Unsupported program",
+        False,
+        False,
+        False,
+    )

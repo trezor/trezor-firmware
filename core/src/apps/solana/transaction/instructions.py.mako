@@ -130,11 +130,7 @@ def get_instruction(
 % if len(program["instructions"]) > 0:
     if program_id == ${getProgramId(program)}:
     % for instruction in program["instructions"]:
-        % if instruction == program["instructions"][0]:
         if instruction_id == ${getInstructionIdText(program, instruction)}:
-        % else:
-        elif instruction_id == ${getInstructionIdText(program, instruction)}:
-        % endif
             return Instruction(
                 instruction_data,
                 program_id,
@@ -152,37 +148,35 @@ def get_instruction(
                 ${instruction["is_multisig"]}
             )
     % endfor
-        else:
-            return Instruction(
-                instruction_data,
-                program_id,
-                instruction_accounts,
-                instruction_id,
-                [],
-                [],
-                [],
-                [],
-                "ui_unsupported_instruction",
-                "${program["name"]}",
-                True,
-                False,
-                False
-            )
-% endif
-% endfor
-    else:
         return Instruction(
             instruction_data,
             program_id,
             instruction_accounts,
-            0,
+            instruction_id,
             [],
             [],
             [],
             [],
-            "ui_unsupported_program",
-            "Unsupported program",
-            False,
+            "ui_unsupported_instruction",
+            "${program["name"]}",
+            True,
             False,
             False
         )
+% endif
+% endfor
+    return Instruction(
+        instruction_data,
+        program_id,
+        instruction_accounts,
+        0,
+        [],
+        [],
+        [],
+        [],
+        "ui_unsupported_program",
+        "Unsupported program",
+        False,
+        False,
+        False
+    )
