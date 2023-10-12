@@ -157,7 +157,7 @@ async def show_unsupported_instruction_details(instruction: Instruction, title: 
             (
                 (
                     NORMAL,
-                    f"The instruction contains {len(instruction.accounts)} accounts"
+                    f"The instruction requires {len(instruction.accounts)} accounts"
                 ),
             ),
             "Show all",
