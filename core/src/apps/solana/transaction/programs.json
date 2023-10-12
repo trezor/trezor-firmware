@@ -11,6 +11,7 @@
         {
           "id": 0,
           "name": "Create Account",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "lamports",
@@ -56,6 +57,7 @@
         {
           "id": 1,
           "name": "Assign",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "owner",
@@ -83,6 +85,7 @@
         {
           "id": 2,
           "name": "Transfer",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "lamports",
@@ -116,6 +119,7 @@
         {
           "id": 3,
           "name": "Create Account With Seed",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "base",
@@ -179,6 +183,7 @@
         {
           "id": 8,
           "name": "Allocate",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "space",
@@ -206,6 +211,7 @@
         {
           "id": 9,
           "name": "Allocate With Seed",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "base",
@@ -257,6 +263,7 @@
         {
           "id": 10,
           "name": "Assign With Seed",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "base",
@@ -312,6 +319,7 @@
         {
           "id": 0,
           "name": "Initialize",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "staker",
@@ -375,6 +383,7 @@
         {
           "id": 1,
           "name": "Authorize",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "pubkey",
@@ -431,6 +440,7 @@
         {
           "id": 2,
           "name": "Delegate Stake",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -488,6 +498,7 @@
         {
           "id": 3,
           "name": "Split",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "lamports",
@@ -531,6 +542,7 @@
         {
           "id": 4,
           "name": "Withdraw",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "lamports",
@@ -595,6 +607,7 @@
         {
           "id": 5,
           "name": "Deactivate",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -631,6 +644,7 @@
         {
           "id": 6,
           "name": "Set Lockup",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "unix_timestamp",
@@ -679,6 +693,7 @@
         {
           "id": 7,
           "name": "Merge",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -729,6 +744,7 @@
         {
           "id": 8,
           "name": "Authorize With Seed",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "new_authorized_pubkey",
@@ -802,6 +818,7 @@
         {
           "id": 9,
           "name": "Initialize Checked",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -845,6 +862,7 @@
         {
           "id": 10,
           "name": "Authorize Checked",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "stake_authorize",
@@ -902,6 +920,7 @@
         {
           "id": 11,
           "name": "Authorize Checked With Seed",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "stake_authorize",
@@ -975,6 +994,7 @@
         {
           "id": 12,
           "name": "Set Lockup Checked",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "unix_timestamp",
@@ -1034,6 +1054,7 @@
         {
           "id": 1,
           "name": "Request Heap Frame",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "bytes",
@@ -1054,6 +1075,7 @@
         {
           "id": 2,
           "name": "Set Compute Unit Limit",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "units",
@@ -1074,6 +1096,7 @@
         {
           "id": 3,
           "name": "Set Compute Unit Price",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "lamports",
@@ -1104,6 +1127,7 @@
         {
           "id": 1,
           "name": "Initialize Account",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -1147,6 +1171,7 @@
         {
           "id": 2,
           "name": "Initialize Multisig",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "number_of_signers",
@@ -1721,6 +1746,7 @@
         {
           "id": 16,
           "name": "Initialize Account 2",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "owner",
@@ -1764,6 +1790,7 @@
         {
           "id": 17,
           "name": "Sync Native",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -1784,6 +1811,7 @@
         {
           "id": 18,
           "name": "Initialize Account 3",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "owner",
@@ -1817,6 +1845,7 @@
         {
           "id": 22,
           "name": "Initialize Immutable Owner",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -1847,6 +1876,7 @@
         {
           "id": 0,
           "name": "Create",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -1904,6 +1934,7 @@
         {
           "id": 1,
           "name": "Create Idempotent",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -1961,6 +1992,7 @@
         {
           "id": 2,
           "name": "Recover Nested",
+          "is_multisig": false,
           "parameters": [],
           "references": [
             {
@@ -2035,6 +2067,7 @@
         {
           "id": 0,
           "name": "Memo",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "memo",
@@ -2072,6 +2105,7 @@
         {
           "id": 0,
           "name": "Memo",
+          "is_multisig": false,
           "parameters": [
             {
               "name": "memo",
