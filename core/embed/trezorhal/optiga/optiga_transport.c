@@ -134,11 +134,11 @@ static uint8_t sec_chan_buffer[OPTIGA_MAX_APDU_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
     {0};
 static size_t sec_chan_size = 0;
 
-#ifdef NDEBUG
+#if PRODUCTION
 #define OPTIGA_LOG(prefix, data, data_size)
 #else
 static optiga_log_hex_t log_hex = NULL;
-void optiga_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
+void optiga_transport_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
 #define OPTIGA_LOG(prefix, data, data_size)                                  \
   if (log_hex != NULL) {                                                     \
     static uint8_t prev_data[4];                                             \
