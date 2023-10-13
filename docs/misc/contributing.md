@@ -47,8 +47,8 @@ means that **our team will not be accepting any requests to add new
 cryptocurrencies.**
 
   [trezor-firmware]: https://github.com/trezor/trezor-firmware
-  [common/defs/bitcoin]: https://github.com/trezor/trezor-firmware/tree/master/common/defs/bitcoin
+  [common/defs/bitcoin]: https://github.com/trezor/trezor-firmware/tree/main/common/defs/bitcoin
   [ethereum-lists/chains]: https://github.com/ethereum-lists/chains
   [ethereum-lists/tokens]: https://github.com/ethereum-lists/tokens
-  [common/defs/nem/nem_mosaics.json]: https://github.com/trezor/trezor-firmware/tree/master/common/defs/nem/nem_mosaics.json
-  [common/defs/misc/misc.json]: https://github.com/trezor/trezor-firmware/tree/master/common/defs/misc/misc.json
+  [common/defs/nem/nem_mosaics.json]: https://github.com/trezor/trezor-firmware/tree/main/common/defs/nem/nem_mosaics.json
+  [common/defs/misc/misc.json]: https://github.com/trezor/trezor-firmware/tree/main/common/defs/misc/misc.json
