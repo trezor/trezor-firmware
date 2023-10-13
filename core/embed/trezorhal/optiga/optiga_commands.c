@@ -50,6 +50,17 @@ const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE = {
 const optiga_metadata_item OPTIGA_META_VERSION_DEFAULT = {
     (const uint8_t[]){0x00, 0x00}, 2};
 
+#ifdef NDEBUG
+#define OPTIGA_LOG(prefix, data, data_size)
+#else
+static optiga_log_hex_t log_hex = NULL;
+void optiga_set_command_log_hex(optiga_log_hex_t f) { log_hex = f; }
+#define OPTIGA_LOG(prefix, data, data_size) \
+  if (log_hex != NULL) {                    \
+    log_hex(prefix, data, data_size);       \
+  }
+#endif
+
 static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
   // Check that there is no trailing output data in the response.
   if (tx_size < 4 || (tx_buffer[2] << 8) + tx_buffer[3] != tx_size - 4) {
@@ -58,11 +69,13 @@ static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
 
   // Check response status code.
   if (tx_buffer[0] != 0) {
+    OPTIGA_LOG("FAILED", NULL, 0)
     return OPTIGA_ERR_CMD;
   }
 
   *out_data = tx_buffer + 4;
   *out_size = tx_size - 4;
+  OPTIGA_LOG("SUCCESS ", *out_data, *out_size)
   return OPTIGA_SUCCESS;
 }
 
@@ -270,6 +283,7 @@ optiga_result optiga_open_application(void) {
       0x65, 0x6E, 0x41, 0x75, 0x74, 0x68, 0x41, 0x70, 0x70, 0x6C,
   };
 
+  OPTIGA_LOG(__func__, OPEN_APP, sizeof(OPEN_APP))
   optiga_result ret = optiga_execute_command(
       OPEN_APP, sizeof(OPEN_APP), tx_buffer, sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -288,6 +302,7 @@ optiga_result optiga_get_error_code(uint8_t *error_code) {
 
   write_uint16(&ptr, OPTIGA_OID_ERROR_CODE);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -311,6 +326,7 @@ optiga_result optiga_get_data_object(uint16_t oid, bool get_metadata,
 
   write_uint16(&ptr, oid);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -342,6 +358,7 @@ optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
     memcpy(ptr, data, data_size);
   }
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -404,6 +421,7 @@ optiga_result optiga_get_random(uint8_t *random, size_t random_size) {
 
   write_uint16(&ptr, random_size);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -436,6 +454,7 @@ optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
   *(ptr++) = 0x01;  // start and final data block
   write_prefixed_data(&ptr, input, input_size);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret == OPTIGA_SUCCESS) {
@@ -465,6 +484,7 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   *(ptr++) = 0x41;  // pre-pending optional data tag
   write_uint16(&ptr, 0);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
 
@@ -491,6 +511,7 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   write_uint16(&ptr, SHA256_DIGEST_LENGTH);
   hmac_sha256(key, key_size, nonce, sizeof(nonce), ptr);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer),
                                &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -515,6 +536,7 @@ optiga_result optiga_clear_auto_state(uint16_t key_oid) {
   *(ptr++) = 0x43;        // verification value tag
   write_uint16(&ptr, 0);  // verification value length
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -554,6 +576,7 @@ optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
   write_uint16(&ptr, 2);
   write_uint16(&ptr, oid);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -621,6 +644,7 @@ optiga_result optiga_verify_sign(optiga_curve curve, const uint8_t *public_key,
   *(ptr++) = 0x06;  // public key tag
   write_prefixed_data(&ptr, public_key, public_key_size);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -653,6 +677,7 @@ optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
   write_uint16(&ptr, 1);
   *(ptr++) = usage;
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -682,6 +707,7 @@ optiga_result optiga_gen_sym_key(optiga_aes algorithm, optiga_key_usage usage,
   write_uint16(&ptr, 1);
   *(ptr++) = usage;
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -726,6 +752,7 @@ optiga_result optiga_calc_ssec(optiga_curve curve, uint16_t oid,
   *(ptr++) = 0x07;  // export tag
   write_uint16(&ptr, 0);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -779,6 +806,7 @@ optiga_result optiga_derive_key(optiga_key_derivation deriv, uint16_t oid,
   *(ptr++) = 0x07;  // export tag
   write_uint16(&ptr, 0);
 
+  OPTIGA_LOG(__func__, tx_buffer, tx_size)
   optiga_result ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer,
                                              sizeof(tx_buffer), &tx_size);
   if (ret == OPTIGA_SUCCESS) {
@@ -907,6 +935,7 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
     return OPTIGA_ERR_PROCESS;
   }
 
+  OPTIGA_LOG(__func__, sop_cmd1, sizeof(sop_cmd1))
   ret = optiga_execute_command(sop_cmd1, sizeof(sop_cmd1), tx_buffer,
                                sizeof(tx_buffer), &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -920,6 +949,7 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
     return ret;
   }
 
+  OPTIGA_LOG(__func__, sop_cmd2, sizeof(sop_cmd2))
   ret = optiga_execute_command(sop_cmd2, sizeof(sop_cmd2), tx_buffer,
                                sizeof(tx_buffer), &tx_size);
   memzero(sop_cmd2, sizeof(sop_cmd2));
