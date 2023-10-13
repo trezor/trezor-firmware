@@ -528,6 +528,14 @@ void keyfido_write(char *data) {
     return;
   }
 
+  // Set the data type of OID 0xE0E8 to trust anchor, so that we can use it to
+  // write the FIDO key.
+  memzero(&metadata, sizeof(metadata));
+  metadata.data_type = OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_TA);
+  if (!set_metadata(OID_TRUST_ANCHOR, &metadata)) {
+    return;
+  }
+
   // Write trust anchor certificate to OID 0xE0E8
   ret = optiga_set_trust_anchor();
   if (OPTIGA_SUCCESS != ret) {
