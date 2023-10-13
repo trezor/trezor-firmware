@@ -105,6 +105,14 @@ typedef enum {
   OPTIGA_ACCESS_COND_NEV = 0xFF,   // Never.
 } optiga_access_cond;
 
+// Life cycle status.
+typedef enum {
+  OPTIGA_LCS_CR = 0x01,  // Creation state.
+  OPTIGA_LCS_IN = 0x03,  // Initialization state.
+  OPTIGA_LCS_OP = 0x07,  // Operational state.
+  OPTIGA_LCS_TE = 0x0f,  // Termination state.
+} optiga_lcs;
+
 typedef struct {
   const uint8_t *ptr;
   uint16_t len;
@@ -132,8 +140,14 @@ typedef struct {
 #define OPTIGA_RANDOM_MAX_SIZE 256
 #define OPTIGA_MAX_CERT_SIZE 1728
 
-#define OPTIGA_ACCESS_CONDITION(ac_id, oid) \
-  { (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 }
+#define OPTIGA_ACCESS_CONDITION(ac_id, oid)           \
+  (const optiga_metadata_item) {                      \
+    (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 \
+  }
+
+// Single-byte value of optiga_metadata_item.
+#define OPTIGA_META_VALUE(val) \
+  (const optiga_metadata_item) { (const uint8_t[]){val}, 1 }
 
 // Commonly used data object access conditions.
 extern const optiga_metadata_item OPTIGA_META_LCS_OPERATIONAL;
