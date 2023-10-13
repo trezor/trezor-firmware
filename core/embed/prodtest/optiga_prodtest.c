@@ -55,10 +55,10 @@ static optiga_pairing optiga_pairing_state = OPTIGA_PAIRING_UNPAIRED;
 // Data object access conditions.
 static const optiga_metadata_item ACCESS_PAIRED =
     OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_CONF, OID_KEY_PAIRING);
-static const optiga_metadata_item KEY_USE_SIGN = {
-    (const uint8_t[]){OPTIGA_KEY_USAGE_SIGN}, 1};
-static const optiga_metadata_item TYPE_PTFBIND = {
-    (const uint8_t[]){OPTIGA_DATA_TYPE_PTFBIND}, 1};
+static const optiga_metadata_item KEY_USE_SIGN =
+    OPTIGA_META_VALUE(OPTIGA_KEY_USAGE_SIGN);
+static const optiga_metadata_item TYPE_PTFBIND =
+    OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_PTFBIND);
 
 // Identifier of context-specific constructed tag 3, which is used for
 // extensions in X.509.
@@ -539,8 +539,8 @@ void keyfido_write(char *data) {
   // Set change access condition for the FIDO key to Int(0xE0E8), so that we
   // can write the FIDO key using the trust anchor in OID 0xE0E8.
   memzero(&metadata, sizeof(metadata));
-  metadata.change = (const optiga_metadata_item)OPTIGA_ACCESS_CONDITION(
-      OPTIGA_ACCESS_COND_INT, OID_TRUST_ANCHOR);
+  metadata.change =
+      OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_INT, OID_TRUST_ANCHOR);
   metadata.version = OPTIGA_META_VERSION_DEFAULT;
   if (!set_metadata(OID_KEY_FIDO, &metadata)) {
     return;
