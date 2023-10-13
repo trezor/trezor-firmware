@@ -28,10 +28,10 @@
 #include "secp256k1.h"
 #include "zkp_context.h"
 
-#include "vendor/secp256k1-zkp/include/secp256k1.h"
-#include "vendor/secp256k1-zkp/include/secp256k1_extrakeys.h"
-#include "vendor/secp256k1-zkp/include/secp256k1_preallocated.h"
-#include "vendor/secp256k1-zkp/include/secp256k1_recovery.h"
+#include "secp256k1.h"
+#include "secp256k1_extrakeys.h"
+#include "secp256k1_preallocated.h"
+#include "secp256k1_recovery.h"
 
 #include "zkp_ecdsa.h"
 

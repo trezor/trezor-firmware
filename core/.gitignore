@@ -8,6 +8,6 @@ tests/trezor_monero_tests*
 .coverage.*
 htmlcov/
 mypy_report
-/CMakeLists.txt
-/cmake-build-debug/
+/cmake-build*/
+/cmake_build*/
 tools/gdb_scripts/*.log

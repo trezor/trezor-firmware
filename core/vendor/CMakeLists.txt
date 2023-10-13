@@ -1,0 +1,6 @@
+include(secp256k1-zkp.cmake)
+include(micropython.cmake)
+include(stm32cube-f4.cmake)
+include(trezor-crypto.cmake)
+include(trezor-storage.cmake)
+include(nanopb.cmake)

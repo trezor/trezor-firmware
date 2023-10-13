@@ -100,7 +100,7 @@ int main(void) {
 
   // reinitialize HAL for Trezor One
 #if defined TREZOR_MODEL_1
-  HAL_Init();
+  HAL_Init(); 
 #endif
 
   collect_hw_entropy();

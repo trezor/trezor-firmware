@@ -115,6 +115,8 @@ stdenvNoCC.mkDerivation ({
     (mkBinOnlyWrapper rustNightly)
     wget
     zlib
+    cmake
+    ninja
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
     autoPatchelfHook

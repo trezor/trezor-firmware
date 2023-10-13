@@ -47,11 +47,17 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .flash2 : ALIGN(512) {
-    build/firmware/frozen_mpy.o(.rodata*);
+    *libfrozen_mpy.a(.rodata*);
+    *secp256k1c.o(.rodata*);
+    *precomputed_ecmult.o(.rodata*);
+    *precomputed_ecmult_gen.o(.rodata*);
+    *aestab.o(.rodata*);
+
+    /*build/firmware/frozen_mpy.o(.rodata*);
     build/firmware/vendor/secp256k1-zkp/src/secp256k1.o(.rodata*);
     build/firmware/vendor/secp256k1-zkp/src/precomputed_ecmult.o(.rodata*);
     build/firmware/vendor/secp256k1-zkp/src/precomputed_ecmult_gen.o(.rodata*);
-    build/firmware/vendor/trezor-crypto/aes/aestab.o(.rodata*);
+    build/firmware/vendor/trezor-crypto/aes/aestab.o(.rodata*);*/
     . = ALIGN(4);
     */libtrezor_lib.a:(.text*);
     . = ALIGN(4);
@@ -70,6 +76,14 @@ SECTIONS {
     *(.bootloader*);
     . = ALIGN(512);
   } >FLASH AT>FLASH
+
+    /* For C++ exception handling */
+    .ARM :
+    {
+        __exidx_start = .;
+        *(.ARM.exidx*)
+        __exidx_end = .;
+    } >FLASH
 
   .stack : ALIGN(8) {
     . = 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */

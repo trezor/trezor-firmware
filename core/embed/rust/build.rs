@@ -94,7 +94,9 @@ fn prepare_bindings() -> bindgen::Builder {
     if is_firmware() {
         let mut clang_args: Vec<&str> = Vec::new();
 
-        let includes = env::var("RUST_INCLUDES").unwrap();
+        //let includes = //env::var("RUST_INCLUDES").unwrap();
+        let includes = "-I../trezorhal/stm32f4;-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc;-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include;-DSTM32_HAL_H=<stm32f4xx.h>";
+
         let args = includes.split(';');
 
         for arg in args {
@@ -381,8 +383,9 @@ fn generate_trezorhal_bindings() {
 }
 
 fn is_firmware() -> bool {
-    let target = env::var("TARGET").unwrap();
-    target.starts_with("thumbv7")
+    true
+    //let target = env::var("TARGET").unwrap();
+    //target.starts_with("thumbv7")
 }
 
 #[cfg(feature = "test")]
