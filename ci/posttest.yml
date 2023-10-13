@@ -33,7 +33,7 @@ core unix coverage posttest:
 unix ui changes:
   stage: posttest
   except:
-    - master
+    - main
   <<: *gitlab_caching
   needs:
     - core click test

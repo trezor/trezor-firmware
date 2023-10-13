@@ -26,7 +26,7 @@ GITSUBREPO_TEMPLATE = """\
 ;
 [subrepo]
 	remote = git+ssh://git@github.com/trezor/{remote}
-	branch = master
+	branch = main
 	commit = {remote_head}
 	parent = {current_head}
 	method = rebase
@@ -45,22 +45,22 @@ def git(args):
 
 def move_to_subtree(remote, dst):
     os.makedirs(dst, exist_ok=True)
-    for fn in lines(git(f"ls-tree --name-only remotes/{remote}/master")):
+    for fn in lines(git(f"ls-tree --name-only remotes/{remote}/main")):
         if fn == ".gitmodules":
             continue
         git(f"mv {fn} {dst}/{fn}")
 
 
 def rewrite_gitmodules(remote, dst):
-    master_gitmodules = git("show master:.gitmodules")
+    main_gitmodules = git("show main:.gitmodules")
     try:
-        gitmodules = git(f"show {remote}/master:.gitmodules")
+        gitmodules = git(f"show {remote}/main:.gitmodules")
     except:
         # no gitmodules
         return
     gitmodules = gitmodules.replace('submodule "', f'submodule "{dst}/')
     with open(".gitmodules", "w") as f:
-        f.write(master_gitmodules + gitmodules)
+        f.write(main_gitmodules + gitmodules)
     git("add .gitmodules")
 
 
@@ -68,7 +68,7 @@ def merge_remote(remote, dst):
     git(f"remote add {remote} {TREZOR_REPO}/{remote}")
     git(f"fetch {remote}")
     try:
-        git(f"merge --no-commit --allow-unrelated-histories {remote}/master")
+        git(f"merge --no-commit --allow-unrelated-histories {remote}/main")
     except:
         # this might fail because of .gitmodules conflict
         pass
@@ -86,8 +86,8 @@ def retag_remote(remote, dst):
 
 
 def generate_subrepo_file(remote):
-    current_head = git("rev-parse master").strip()
-    remote_head = git(f"rev-parse {remote}/master").strip()
+    current_head = git("rev-parse main").strip()
+    remote_head = git(f"rev-parse {remote}/main").strip()
     dst = SUBREPOS[remote]
     with open(f"{dst}/.gitrepo", "w") as f:
         f.write(GITSUBREPO_TEMPLATE.format(remote=remote, current_head=current_head, remote_head=remote_head))
@@ -106,7 +106,7 @@ def main():
 
         if remote in PUBLISHED_SUBREPOS:
             with open(f"{dst}/.gitmodules", "w") as f:
-                f.write(git(f"show {remote}/master:.gitmodules"))
+                f.write(git(f"show {remote}/main:.gitmodules"))
             git(f"add {dst}/.gitmodules")
 
         git(f"commit -m 'MONOREPO MERGE {remote}'")
