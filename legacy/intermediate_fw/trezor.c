@@ -35,6 +35,8 @@
 #include "timer.h"
 #include "util.h"
 
+const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size);
+
 // legacy storage magic
 #define LEGACY_STORAGE_SECTOR 2
 static const uint32_t META_MAGIC_V10 = 0x525a5254;  // 'TRZR'
