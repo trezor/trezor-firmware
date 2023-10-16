@@ -73,8 +73,7 @@ PublicKey = B58Adapter(Bytes(32))
 
 class InstructionIdAdapter(Adapter):
     def _decode(self, obj, context, path):
-        # TODO solana
-        return obj
+        return int.from_bytes(obj, "little")
 
     def _encode(self, obj, context, path):
         instruction_id_formats = _find_in_context(context, "instruction_id_formats")
