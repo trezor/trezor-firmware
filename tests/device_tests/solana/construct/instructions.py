@@ -3,7 +3,16 @@
 
 from enum import IntEnum
 
-from construct import Byte, GreedyBytes, Int32ul, Int64ul, Struct, Switch
+from construct import (
+    Byte,
+    GreedyBytes,
+    GreedyRange,
+    Int32ul,
+    Int64ul,
+    Optional,
+    Struct,
+    Switch,
+)
 
 from .custom_constructs import (
     CompactStruct,
@@ -535,7 +544,7 @@ TokenProgram_InitializeMultisig_Instruction = Struct(
     "data"
     / CompactStruct(
         "instruction_id" / InstructionIdAdapter(GreedyBytes),
-        "number_of_signers" / Int64ul,
+        "number_of_signers" / Byte,
     ),
 )
 
@@ -546,6 +555,7 @@ TokenProgram_Transfer_Instruction = Struct(
         "source_account" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -561,6 +571,7 @@ TokenProgram_Approve_Instruction = Struct(
         "source_account" / Byte,
         "delegate_account" / Byte,
         "owner" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -575,6 +586,7 @@ TokenProgram_Revoke_Instruction = Struct(
     / CompactStruct(
         "source_account" / Byte,
         "owner" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -588,6 +600,7 @@ TokenProgram_SetAuthority_Instruction = Struct(
     / CompactStruct(
         "mint_account" / Byte,
         "current_authority" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -604,6 +617,7 @@ TokenProgram_Mintto_Instruction = Struct(
         "mint" / Byte,
         "account_to_mint" / Byte,
         "minting_authority" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -619,6 +633,7 @@ TokenProgram_Burn_Instruction = Struct(
         "account_to_burn_from" / Byte,
         "token_mint" / Byte,
         "owner" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -634,6 +649,7 @@ TokenProgram_CloseAccount_Instruction = Struct(
         "account_to_close" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -648,6 +664,7 @@ TokenProgram_FreezeAccount_Instruction = Struct(
         "account_to_freeze" / Byte,
         "token_mint" / Byte,
         "freeze_authority" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -662,6 +679,7 @@ TokenProgram_ThawAccount_Instruction = Struct(
         "account_to_freeze" / Byte,
         "token_mint" / Byte,
         "freeze_authority" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
@@ -677,12 +695,13 @@ TokenProgram_TransferChecked_Instruction = Struct(
         "token_mint" / Byte,
         "destination_account" / Byte,
         "owner" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
         "instruction_id" / InstructionIdAdapter(GreedyBytes),
         "amount" / Int64ul,
-        "decimals" / Int64ul,
+        "decimals" / Byte,
     ),
 )
 
@@ -694,12 +713,13 @@ TokenProgram_ApproveChecked_Instruction = Struct(
         "token_mint" / Byte,
         "delegate" / Byte,
         "owner" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
         "instruction_id" / InstructionIdAdapter(GreedyBytes),
         "amount" / Int64ul,
-        "decimals" / Int64ul,
+        "decimals" / Byte,
     ),
 )
 
@@ -710,12 +730,13 @@ TokenProgram_MinttoChecked_Instruction = Struct(
         "mint" / Byte,
         "account_to_mint" / Byte,
         "minting_authority" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
         "instruction_id" / InstructionIdAdapter(GreedyBytes),
         "amount" / Int64ul,
-        "decimals" / Int64ul,
+        "decimals" / Byte,
     ),
 )
 
@@ -726,12 +747,13 @@ TokenProgram_BurnChecked_Instruction = Struct(
         "account_to_burn_from" / Byte,
         "token_mint" / Byte,
         "owner" / Byte,
+        "multisig_signers" / Optional(GreedyRange(Byte)),
     ),
     "data"
     / CompactStruct(
         "instruction_id" / InstructionIdAdapter(GreedyBytes),
         "amount" / Int64ul,
-        "decimals" / Int64ul,
+        "decimals" / Byte,
     ),
 )
 
@@ -948,7 +970,6 @@ MemoLegacyProgram_Instruction = Switch(
 )
 
 # Memo Legacy Program end
-
 
 Instruction = Switch(
     lambda this: this.program_id,

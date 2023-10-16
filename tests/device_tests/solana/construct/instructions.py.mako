@@ -11,6 +11,8 @@
 Int64ul\
 % elif type in ("u32", "i32"):
 Int32ul\
+% elif type == "u8":
+Byte\
 % elif type in ("pubKey", "authority"):
 PublicKey\
 % elif type == "string":
@@ -25,8 +27,10 @@ from enum import IntEnum
 from construct import (
     Byte,
     GreedyBytes,
+    GreedyRange,
     Int32ul,
     Int64ul,
+    Optional,
     Struct,
     Switch,
 )
@@ -65,6 +69,9 @@ ${getInstructionConstructName(program, instruction)} = Struct(
         % for reference in instruction["references"]:
         "${reference["name"]}" / Byte,
         % endfor
+        % if instruction["is_multisig"]:
+        "multisig_signers" / Optional(GreedyRange(Byte))
+        % endif
     ),
     "data" / CompactStruct(
         "instruction_id" / InstructionIdAdapter(GreedyBytes),
