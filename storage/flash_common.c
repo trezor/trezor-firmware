@@ -1,5 +1,11 @@
 #include "flash.h"
 
+secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data);
+
+secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data);
+
+const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size);
+
 static uint32_t flash_subarea_get_size(const flash_subarea_t *subarea) {
   uint32_t size = 0;
   for (int s = 0; s < subarea->num_sectors; s++) {

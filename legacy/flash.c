@@ -95,7 +95,7 @@ uint32_t flash_sector_size(uint16_t sector) {
   return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
 }
 
-secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data) {
+secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
   uint8_t *address = (uint8_t *)flash_get_address(sector, offset, 1);
   if (address == NULL) {
     return secfalse;
@@ -115,7 +115,7 @@ secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data) {
   return sectrue;
 }
 
-secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data) {
+secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   uint32_t *address = (uint32_t *)flash_get_address(sector, offset, 4);
   if (address == NULL) {
     return secfalse;

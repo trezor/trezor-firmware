@@ -48,6 +48,8 @@
 #include "secret.h"
 #endif
 
+#define FW_HASHING_CHUNK_SIZE 1024
+
 static void ui_progress(mp_obj_t ui_wait_callback, uint32_t current,
                         uint32_t total) {
   if (mp_obj_is_callable(ui_wait_callback)) {
@@ -172,19 +174,26 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
     ui_wait_callback = args[1];
   }
 
-  uint16_t firmware_sectors = flash_total_sectors(&FIRMWARE_AREA);
+  uint32_t firmware_size = flash_area_get_size(&FIRMWARE_AREA);
+  uint32_t chunks = firmware_size / FW_HASHING_CHUNK_SIZE;
 
-  ui_progress(ui_wait_callback, 0, firmware_sectors);
-  for (int i = 0; i < firmware_sectors; i++) {
-    uint8_t sector = flash_get_sector_num(&FIRMWARE_AREA, i);
-    uint32_t size = flash_sector_size(sector);
-    const void *data = flash_get_address(sector, 0, size);
+  ensure((firmware_size % FW_HASHING_CHUNK_SIZE == 0) * sectrue,
+         "Cannot compute FW hash.");
+
+  ui_progress(ui_wait_callback, 0, chunks);
+  for (int i = 0; i < chunks; i++) {
+    const void *data = flash_area_get_address(
+        &FIRMWARE_AREA, i * FW_HASHING_CHUNK_SIZE, FW_HASHING_CHUNK_SIZE);
     if (data == NULL) {
       mp_raise_msg(&mp_type_RuntimeError, "Failed to read firmware.");
     }
-    blake2s_Update(&ctx, data, size);
-    ui_progress(ui_wait_callback, i + 1, firmware_sectors);
+    blake2s_Update(&ctx, data, FW_HASHING_CHUNK_SIZE);
+    if (i % 128 == 0) {
+      ui_progress(ui_wait_callback, i + 1, chunks);
+    }
   }
+
+  ui_progress(ui_wait_callback, chunks, chunks);
 
   vstr_t vstr = {0};
   vstr_init_len(&vstr, BLAKE2S_DIGEST_LENGTH);
@@ -207,9 +216,7 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
   return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)"EMULATOR", 8);
 #else
   vendor_header vhdr = {0};
-  uint32_t size = flash_sector_size(FIRMWARE_AREA.subarea[0].first_sector);
-  const void *data =
-      flash_get_address(FIRMWARE_AREA.subarea[0].first_sector, 0, size);
+  const void *data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
   if (data == NULL || sectrue != read_vendor_header(data, &vhdr)) {
     mp_raise_msg(&mp_type_RuntimeError, "Failed to read vendor header.");
   }
