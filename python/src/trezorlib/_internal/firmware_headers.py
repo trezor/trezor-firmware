@@ -405,7 +405,7 @@ class LegacyFirmware(firmware.LegacyFirmware):
     def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None:
         if not 0 <= slot < firmware.V1_SIGNATURE_SLOTS:
             raise ValueError("Invalid slot number")
-        if not 0 < key_index <= len(fw_models.TREZOR_ONE_V1V2.firmware_keys):
+        if not 0 < key_index <= len(fw_models.LEGACY_V1V2.firmware_keys):
             raise ValueError("Invalid key index")
         self.key_indexes[slot] = key_index
         self.signatures[slot] = signature
@@ -427,9 +427,9 @@ class LegacyFirmware(firmware.LegacyFirmware):
         self, dev_keys: bool = False, signature_version: int = 2
     ) -> t.Sequence[bytes]:
         if dev_keys:
-            return fw_models.TREZOR_ONE_V1V2_DEV.firmware_keys
+            return fw_models.LEGACY_V1V2_DEV.firmware_keys
         else:
-            return fw_models.TREZOR_ONE_V1V2.firmware_keys
+            return fw_models.LEGACY_V1V2.firmware_keys
 
     def slots(self) -> t.Iterable[int]:
         return self.key_indexes
@@ -467,10 +467,10 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
         self, dev_keys: bool = False, signature_version: int = 3
     ) -> t.Sequence[bytes]:
         keymap: t.Dict[t.Tuple[int, bool], fw_models.ModelKeys] = {
-            (3, False): fw_models.TREZOR_ONE_V3,
-            (3, True): fw_models.TREZOR_ONE_V3_DEV,
-            (2, False): fw_models.TREZOR_ONE_V1V2,
-            (2, True): fw_models.TREZOR_ONE_V1V2_DEV,
+            (3, False): fw_models.LEGACY_V3,
+            (3, True): fw_models.LEGACY_V3_DEV,
+            (2, False): fw_models.LEGACY_V1V2,
+            (2, True): fw_models.LEGACY_V1V2_DEV,
         }
         if not (signature_version, dev_keys) in keymap:
             raise ValueError("Unsupported signature version")

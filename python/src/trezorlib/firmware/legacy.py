@@ -108,24 +108,24 @@ class LegacyV2Firmware(FirmwareImage):
 
     def verify_v2(self, dev_keys: bool) -> None:
         if not dev_keys:
-            public_keys = models.TREZOR_ONE_V1V2.firmware_keys
+            public_keys = models.LEGACY_V1V2.firmware_keys
         else:
-            public_keys = models.TREZOR_ONE_V1V2_DEV.firmware_keys
+            public_keys = models.LEGACY_V1V2_DEV.firmware_keys
 
         self.validate_code_hashes()
         check_sig_v1(
             self.digest(),
             self.header.v1_key_indexes,
             self.header.v1_signatures,
-            models.TREZOR_ONE_V1V2.firmware_sigs_needed,
+            models.LEGACY_V1V2.firmware_sigs_needed,
             public_keys,
         )
 
     def verify_v3(self, dev_keys: bool) -> None:
         if not dev_keys:
-            model_keys = models.TREZOR_ONE_V3
+            model_keys = models.LEGACY_V3
         else:
-            model_keys = models.TREZOR_ONE_V3_DEV
+            model_keys = models.LEGACY_V3_DEV
 
         self.validate_code_hashes()
         check_sig_signmessage(
@@ -191,9 +191,9 @@ class LegacyFirmware(Struct):
 
     def verify(self, dev_keys: bool = False) -> None:
         if not dev_keys:
-            model_keys = models.TREZOR_ONE_V1V2
+            model_keys = models.LEGACY_V1V2
         else:
-            model_keys = models.TREZOR_ONE_V1V2_DEV
+            model_keys = models.LEGACY_V1V2_DEV
         check_sig_v1(
             self.digest(),
             self.key_indexes,

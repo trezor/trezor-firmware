@@ -23,17 +23,22 @@ if t.TYPE_CHECKING:
 
 
 class Model(Enum):
-    ONE = b"T1B1"
-    T = b"T2T1"
-    R = b"T2B1"
+    T1B1 = b"T1B1"
+    T2T1 = b"T2T1"
+    T2B1 = b"T2B1"
     DISC1 = b"D001"
+
+    # legacy aliases
+    ONE = T1B1
+    T = T2T1
+    R = T2B1
 
     @classmethod
     def from_hw_model(cls, hw_model: t.Union["Self", bytes]) -> "Self":
         if isinstance(hw_model, cls):
             return hw_model
         if hw_model == b"\x00\x00\x00\x00":
-            return cls.T
+            return cls.T2T1
         raise ValueError(f"Unknown hardware model: {hw_model}")
 
     def model_keys(self, dev_keys: bool = False) -> "ModelKeys":
@@ -57,7 +62,7 @@ class ModelKeys:
     firmware_sigs_needed: int
 
 
-TREZOR_ONE_V1V2 = ModelKeys(
+LEGACY_V1V2 = ModelKeys(
     production=True,
     boardloader_keys=(),
     boardloader_sigs_needed=-1,
@@ -76,7 +81,7 @@ TREZOR_ONE_V1V2 = ModelKeys(
     firmware_sigs_needed=3,
 )
 
-TREZOR_ONE_V1V2_DEV = ModelKeys(
+LEGACY_V1V2_DEV = ModelKeys(
     production=False,
     boardloader_keys=(),
     boardloader_sigs_needed=-1,
@@ -95,7 +100,7 @@ TREZOR_ONE_V1V2_DEV = ModelKeys(
     firmware_sigs_needed=3,
 )
 
-TREZOR_ONE_V3 = ModelKeys(
+LEGACY_V3 = ModelKeys(
     production=True,
     boardloader_keys=(),
     boardloader_sigs_needed=-1,
@@ -112,7 +117,7 @@ TREZOR_ONE_V3 = ModelKeys(
     firmware_sigs_needed=2,
 )
 
-TREZOR_ONE_V3_DEV = ModelKeys(
+LEGACY_V3_DEV = ModelKeys(
     production=False,
     boardloader_keys=(),
     boardloader_sigs_needed=-1,
@@ -129,7 +134,7 @@ TREZOR_ONE_V3_DEV = ModelKeys(
     firmware_sigs_needed=2,
 )
 
-TREZOR_T = ModelKeys(
+T2T1 = ModelKeys(
     production=True,
     boardloader_keys=[
         bytes.fromhex(key)
@@ -153,7 +158,7 @@ TREZOR_T = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
-TREZOR_T_DEV = ModelKeys(
+TREZOR_CORE_DEV = ModelKeys(
     production=False,
     boardloader_keys=[
         bytes.fromhex(key)
@@ -177,7 +182,7 @@ TREZOR_T_DEV = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
-TREZOR_R = ModelKeys(
+T2B1 = ModelKeys(
     production=True,
     boardloader_keys=[
         bytes.fromhex(key)
@@ -201,20 +206,31 @@ TREZOR_R = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
-TREZOR_R_DEV = TREZOR_T_DEV
-DISC1 = TREZOR_T_DEV
-DISC1_DEV = TREZOR_T_DEV
-
 MODEL_MAP = {
-    Model.ONE: TREZOR_ONE_V3,
-    Model.T: TREZOR_T,
-    Model.R: TREZOR_R,
-    Model.DISC1: DISC1,
+    Model.T1B1: LEGACY_V3,
+    Model.T2T1: T2T1,
+    Model.T2B1: T2B1,
+    Model.DISC1: TREZOR_CORE_DEV,
 }
 
 MODEL_MAP_DEV = {
-    Model.ONE: TREZOR_ONE_V3_DEV,
-    Model.T: TREZOR_T_DEV,
-    Model.R: TREZOR_R_DEV,
-    Model.DISC1: DISC1_DEV,
+    Model.T1B1: LEGACY_V3_DEV,
+    Model.T2T1: TREZOR_CORE_DEV,
+    Model.T2B1: TREZOR_CORE_DEV,
+    Model.DISC1: TREZOR_CORE_DEV,
 }
+
+# aliases
+
+TREZOR_ONE_V1V2 = LEGACY_V1V2
+TREZOR_ONE_V1V2_DEV = LEGACY_V1V2_DEV
+TREZOR_ONE_V3 = LEGACY_V3
+TREZOR_ONE_V3_DEV = LEGACY_V3_DEV
+
+TREZOR_T = T2T1
+TREZOR_R = T2B1
+TREZOR_T_DEV = TREZOR_CORE_DEV
+TREZOR_R_DEV = TREZOR_CORE_DEV
+
+DISC1 = TREZOR_CORE_DEV
+DISC1_DEV = TREZOR_CORE_DEV

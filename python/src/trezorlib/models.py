@@ -34,7 +34,9 @@ class TrezorModel:
     default_mapping: mapping.ProtobufMapping
 
 
-TREZOR_ONE = TrezorModel(
+# ==== internal names ====
+
+T1B1 = TrezorModel(
     name="1",
     internal_name="T1B1",
     minimum_version=(1, 8, 0),
@@ -43,7 +45,7 @@ TREZOR_ONE = TrezorModel(
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
-TREZOR_T = TrezorModel(
+T2T1 = TrezorModel(
     name="T",
     internal_name="T2T1",
     minimum_version=(2, 1, 0),
@@ -52,7 +54,7 @@ TREZOR_T = TrezorModel(
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
-TREZOR_R = TrezorModel(
+T2B1 = TrezorModel(
     name="Safe 3",
     internal_name="T2B1",
     minimum_version=(2, 1, 0),
@@ -61,7 +63,7 @@ TREZOR_R = TrezorModel(
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
-TREZOR_DISC1 = TrezorModel(
+DISC1 = TrezorModel(
     name="DISC1",
     internal_name="D001",
     minimum_version=(2, 1, 0),
@@ -70,12 +72,20 @@ TREZOR_DISC1 = TrezorModel(
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
-TREZORS = {TREZOR_ONE, TREZOR_T, TREZOR_R, TREZOR_DISC1}
+# ==== model based names ====
+
+TREZOR_ONE = T1B1
+TREZOR_T = T2T1
+TREZOR_R = T2B1
+TREZOR_SAFE3 = T2B1
+TREZOR_DISC1 = DISC1
+
+TREZORS = {T1B1, T2T1, T2B1, DISC1}
 
 
 def by_name(name: Optional[str]) -> Optional[TrezorModel]:
     if name is None:
-        return TREZOR_ONE
+        return T1B1
     for model in TREZORS:
         if model.name == name:
             return model
