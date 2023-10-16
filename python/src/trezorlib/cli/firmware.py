@@ -251,6 +251,9 @@ def find_best_firmware_version(
 
     f = client.features
 
+    if f.unit_btconly:
+        bitcoin_only = True
+
     releases = get_all_firmware_releases(bitcoin_only, beta, f.major_version)
     highest_version = releases[0]["version"]
 
