@@ -22,11 +22,11 @@
 
 #include <stdint.h>
 #include "flash.h"
+#include "model.h"
 #include "secbool.h"
 
 #define IMAGE_HEADER_SIZE 0x400  // size of the bootloader or firmware header
 #define IMAGE_SIG_SIZE 65
-#define IMAGE_CHUNK_SIZE (128 * 1024)
 #define IMAGE_INIT_CHUNK_SIZE (16 * 1024)
 
 #define BOOTLOADER_IMAGE_MAGIC 0x425A5254  // TRZB

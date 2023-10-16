@@ -24,6 +24,7 @@ from construct_classes import Struct, subcon
 
 from . import consts, models, util
 from .core import FirmwareImage
+from .models import Model
 
 __all__ = [
     "LegacyFirmware",
@@ -98,13 +99,10 @@ def check_sig_signmessage(
 class LegacyV2Firmware(FirmwareImage):
     """Firmware image in the format used by Trezor One 1.8.0 and newer."""
 
-    HASH_PARAMS = util.FirmwareHashParameters(
-        hash_function=hashlib.sha256,
-        chunk_size=consts.ONEV2_CHUNK_SIZE,
-        padding_byte=b"\xff",
-    )
-
     V3_FIRST_VERSION = (1, 12, 0)
+
+    def get_hash_params(self) -> "util.FirmwareHashParameters":
+        return Model.ONE.hash_params()
 
     def verify_v2(self, dev_keys: bool) -> None:
         if not dev_keys:

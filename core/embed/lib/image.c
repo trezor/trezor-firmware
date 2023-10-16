@@ -224,12 +224,13 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
     return secfalse;
   }
 
-  const void *data =
-      flash_area_get_address(area, firstskip, IMAGE_CHUNK_SIZE - firstskip);
+  int remaining = hdr->codelen;
+
+  const void *data = flash_area_get_address(
+      area, firstskip, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip));
   if (!data) {
     return secfalse;
   }
-  int remaining = hdr->codelen;
   if (sectrue !=
       check_single_hash(hdr->hashes, data,
                         MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
@@ -242,7 +243,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 
   while (remaining > 0) {
     data = flash_area_get_address(area, chunk * IMAGE_CHUNK_SIZE,
-                                  IMAGE_CHUNK_SIZE);
+                                  MIN(remaining, IMAGE_CHUNK_SIZE));
     if (!data) {
       return secfalse;
     }

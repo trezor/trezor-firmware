@@ -18,10 +18,6 @@ from . import models
 
 V1_SIGNATURE_SLOTS = 3
 
-ONEV2_CHUNK_SIZE = 1024 * 64
-V2_CHUNK_SIZE = 1024 * 128
-
-
 # === KEYS KEPT FOR COMPATIBILITY ===
 # use `trezorlib.firmware.models` directly
 

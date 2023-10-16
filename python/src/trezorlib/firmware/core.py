@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import hashlib
 import typing as t
 from copy import copy
 from enum import Enum
@@ -117,11 +116,8 @@ class FirmwareImage(Struct):
         c.Terminated,
     )
 
-    HASH_PARAMS = util.FirmwareHashParameters(
-        hash_function=hashlib.blake2s,
-        chunk_size=consts.V2_CHUNK_SIZE,
-        padding_byte=None,
-    )
+    def get_hash_params(self) -> "util.FirmwareHashParameters":
+        return Model.from_hw_model(self.header.hw_model).hash_params()
 
     def code_hashes(self) -> t.List[bytes]:
         """Calculate hashes of chunks of `code`.
@@ -129,26 +125,23 @@ class FirmwareImage(Struct):
         Assume that the first `code_offset` bytes of `code` are taken up by the header.
         """
         hashes = []
+
+        hash_params = self.get_hash_params()
+
         # End offset for each chunk. Normally this would be (i+1)*chunk_size for i-th chunk,
         # but the first chunk is shorter by code_offset, so all end offsets are shifted.
-        ends = [
-            (i + 1) * self.HASH_PARAMS.chunk_size - self._code_offset for i in range(16)
-        ]
+        ends = [(i + 1) * hash_params.chunk_size - self._code_offset for i in range(16)]
         start = 0
         for end in ends:
             chunk = self.code[start:end]
             # padding for last non-empty chunk
-            if (
-                self.HASH_PARAMS.padding_byte is not None
-                and start < len(self.code)
-                and end > len(self.code)
-            ):
-                chunk += self.HASH_PARAMS.padding_byte[0:1] * (end - start - len(chunk))
+            if hash_params.padding_byte is not None and start < len(self.code) < end:
+                chunk += hash_params.padding_byte[0:1] * (end - start - len(chunk))
 
             if not chunk:
                 hashes.append(b"\0" * 32)
             else:
-                hashes.append(self.HASH_PARAMS.hash_function(chunk).digest())
+                hashes.append(hash_params.hash_function(chunk).digest())
 
             start = end
 
@@ -159,13 +152,16 @@ class FirmwareImage(Struct):
             raise util.FirmwareIntegrityError("Invalid firmware data.")
 
     def digest(self) -> bytes:
+
+        hash_params = self.get_hash_params()
+
         header = copy(self.header)
         header.hashes = self.code_hashes()
         header.signature = b"\x00" * 64
         header.sigmask = 0
         header.v1_key_indexes = [0] * consts.V1_SIGNATURE_SLOTS
         header.v1_signatures = [b"\x00" * 64] * consts.V1_SIGNATURE_SLOTS
-        return self.HASH_PARAMS.hash_function(header.build()).digest()
+        return hash_params.hash_function(header.build()).digest()
 
 
 class VendorFirmware(Struct):
