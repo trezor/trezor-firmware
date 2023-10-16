@@ -14,9 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import hashlib
 import typing as t
 from dataclasses import dataclass
 from enum import Enum
+
+from .util import FirmwareHashParameters
 
 if t.TYPE_CHECKING:
     from typing_extensions import Self
@@ -26,12 +29,13 @@ class Model(Enum):
     T1B1 = b"T1B1"
     T2T1 = b"T2T1"
     T2B1 = b"T2B1"
-    DISC1 = b"D001"
+    D001 = b"D001"
 
     # legacy aliases
     ONE = T1B1
     T = T2T1
     R = T2B1
+    DISC1 = D001
 
     @classmethod
     def from_hw_model(cls, hw_model: t.Union["Self", bytes]) -> "Self":
@@ -47,6 +51,9 @@ class Model(Enum):
         else:
             model_map = MODEL_MAP
         return model_map[self]
+
+    def hash_params(self) -> "FirmwareHashParameters":
+        return MODEL_HASH_PARAMS_MAP[self]
 
 
 @dataclass
@@ -206,18 +213,38 @@ T2B1 = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
+
+LEGACY_HASH_PARAMS = FirmwareHashParameters(
+    hash_function=hashlib.sha256,
+    chunk_size=1024 * 64,
+    padding_byte=b"\xff",
+)
+
+T2T1_HASH_PARAMS = FirmwareHashParameters(
+    hash_function=hashlib.blake2s,
+    chunk_size=1024 * 128,
+    padding_byte=None,
+)
+
 MODEL_MAP = {
     Model.T1B1: LEGACY_V3,
     Model.T2T1: T2T1,
     Model.T2B1: T2B1,
-    Model.DISC1: TREZOR_CORE_DEV,
+    Model.D001: TREZOR_CORE_DEV,
 }
 
 MODEL_MAP_DEV = {
     Model.T1B1: LEGACY_V3_DEV,
     Model.T2T1: TREZOR_CORE_DEV,
     Model.T2B1: TREZOR_CORE_DEV,
-    Model.DISC1: TREZOR_CORE_DEV,
+    Model.D001: TREZOR_CORE_DEV,
+}
+
+MODEL_HASH_PARAMS_MAP = {
+    Model.T1B1: LEGACY_HASH_PARAMS,
+    Model.T2T1: T2T1_HASH_PARAMS,
+    Model.T2B1: T2T1_HASH_PARAMS,
+    Model.D001: T2T1_HASH_PARAMS,
 }
 
 # aliases
@@ -234,3 +261,5 @@ TREZOR_R_DEV = TREZOR_CORE_DEV
 
 DISC1 = TREZOR_CORE_DEV
 DISC1_DEV = TREZOR_CORE_DEV
+D001 = TREZOR_CORE_DEV
+D001_DEV = TREZOR_CORE_DEV
