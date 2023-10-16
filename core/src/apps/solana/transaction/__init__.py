@@ -6,11 +6,11 @@ from trezor.utils import BufferReader
 from .instruction import Instruction
 from .instructions import get_instruction, get_instruction_id_length
 from .parse import (
-    parseAddresses,
-    parseBlockHash,
-    parseHeader,
-    parseInstructions,
-    parseLut,
+    parse_addresses,
+    parse_block_hash,
+    parse_header,
+    parse_instructions,
+    parse_lut,
 )
 
 if TYPE_CHECKING:
@@ -39,18 +39,18 @@ class Transaction:
             num_required_signatures,
             num_signature_read_only_addresses,
             num_read_only_addresses,
-        ) = parseHeader(serialized_tx)
+        ) = parse_header(serialized_tx)
 
-        self.addresses = parseAddresses(
+        self.addresses = parse_addresses(
             serialized_tx,
             num_required_signatures,
             num_signature_read_only_addresses,
             num_read_only_addresses,
         )
 
-        self.blockhash = parseBlockHash(serialized_tx)
+        self.blockhash = parse_block_hash(serialized_tx)
 
-        raw_instructions = parseInstructions(
+        raw_instructions = parse_instructions(
             self.addresses, get_instruction_id_length, serialized_tx
         )
 
@@ -59,7 +59,7 @@ class Transaction:
             addresses_and_luts.append(address)
 
         if not self.is_legacy:
-            self.lut_rw_addresses, self.lut_ro_addresses = parseLut(serialized_tx)
+            self.lut_rw_addresses, self.lut_ro_addresses = parse_lut(serialized_tx)
             for lut_rw_address in self.lut_rw_addresses:
                 addresses_and_luts.append(lut_rw_address)
             for lut_ro_address in self.lut_ro_addresses:

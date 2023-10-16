@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from ..types import Address, AddressReference, InstructionIdFormat
 
 
-def parseHeader(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]:
+def parse_header(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]:
     assert serialized_tx.remaining_count() > 3
 
     isLegacy: bool = True
@@ -43,7 +43,7 @@ def parseHeader(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]:
         num_read_only_addresses,
     )
 
-def parseAddresses(
+def parse_addresses(
     serialized_tx: BufferReader,
     num_required_signatures: int,
     num_signature_read_only_addresses: int,
@@ -76,22 +76,19 @@ def parseAddresses(
         else:
             type = ADDRESS_READ_ONLY
 
-        address = parsePubkey(serialized_tx)
+        address = parse_pubkey(serialized_tx)
 
         addresses.append((address, type))
 
     return addresses
 
 
-# data = r.read_memoryview(4)
-# return int.from_bytes(data, "little")
-
-def parseBlockHash(serialized_tx: BufferReader) -> bytes:
+def parse_block_hash(serialized_tx: BufferReader) -> bytes:
     assert serialized_tx.remaining_count() >= 32
     return bytes(serialized_tx.read_memoryview(32))
 
 
-def parseInstructions(
+def parse_instructions(
     addresses: list[Address],
     get_instruction_id_format: Callable[[str], InstructionIdFormat],
     serialized_tx: BufferReader,
@@ -134,28 +131,28 @@ def parseInstructions(
     return instructions
 
 
-def parsePubkey(serialized_tx: BufferReader) -> bytes:
+def parse_pubkey(serialized_tx: BufferReader) -> bytes:
     assert serialized_tx.remaining_count() >= 32
     return bytes(serialized_tx.read_memoryview(32))
 
 
-def parseEnum(serialized_tx: BufferReader) -> int:
+def parse_enum(serialized_tx: BufferReader) -> int:
     assert serialized_tx.remaining_count() >= 1
     return serialized_tx.get()
 
 
-def parseString(serialized_tx: BufferReader) -> str:
+def parse_string(serialized_tx: BufferReader) -> str:
     # TODO SOL: validation shall be checked (length is less than 2^32 or even less)
     length = read_uint64_le(serialized_tx)
     assert serialized_tx.remaining_count() >= length
     return bytes(serialized_tx.read_memoryview(length)).decode("utf-8")
 
 
-def parseMemo(serialized_tx: BufferReader) -> str:
+def parse_memo(serialized_tx: BufferReader) -> str:
     return bytes(serialized_tx.read_memoryview(serialized_tx.remaining_count())).decode("utf-8")
 
 
-def parseProperty(reader: BufferReader, type: str) -> str | int | bytes:
+def parse_property(reader: BufferReader, type: str) -> str | int | bytes:
     if type == "u8":
         return reader.get()
     elif type == "u32":
@@ -167,19 +164,19 @@ def parseProperty(reader: BufferReader, type: str) -> str | int | bytes:
     elif type == "i64":
         return read_uint64_le(reader)
     elif type in ("pubkey", "authority"):
-        return parsePubkey(reader)
+        return parse_pubkey(reader)
     elif type == "enum":
-        return parseEnum(reader)
+        return parse_enum(reader)
     elif type == "string":
-        return parseString(reader)
+        return parse_string(reader)
     elif type == "memo":
-        return parseMemo(reader)
+        return parse_memo(reader)
     else:
-        return parseEnum(reader)
+        return parse_enum(reader)
         # raise NotImplementedError
 
 
-def parseLut(
+def parse_lut(
     serialized_tx: BufferReader,
 ) -> tuple[list[AddressReference], list[AddressReference]]:
     address_table_lookup_rw_addresses = []
@@ -187,7 +184,7 @@ def parseLut(
 
     address_table_lookups_count = read_compact_size(serialized_tx)
     for _ in range(address_table_lookups_count):
-        account = parsePubkey(serialized_tx)
+        account = parse_pubkey(serialized_tx)
 
         table_rw_indexes_count = read_compact_size(serialized_tx)
         for _ in range(table_rw_indexes_count):

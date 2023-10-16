@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.utils import BufferReader
 
-from .parse import parseProperty
+from .parse import parse_property
 
 if TYPE_CHECKING:
     from typing import Any, TypedDict, TypeGuard
@@ -94,7 +94,7 @@ class Instruction:
         for property_template in property_templates:
             self.set_property(
                 property_template["name"],
-                parseProperty(reader, property_template["type"]),
+                parse_property(reader, property_template["type"]),
             )
 
         for i, account_template in enumerate(accounts_template):
