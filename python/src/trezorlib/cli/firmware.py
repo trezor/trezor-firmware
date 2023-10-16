@@ -16,13 +16,24 @@
 
 import os
 import sys
-from typing import TYPE_CHECKING, Any, BinaryIO, Dict, Iterable, List, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    BinaryIO,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 from urllib.parse import urlparse
 
 import click
 import requests
 
 from .. import exceptions, firmware
+from ..firmware import models as fw_models
 from . import with_client
 
 if TYPE_CHECKING:
@@ -58,6 +69,23 @@ def _get_file_name_from_url(url: str) -> str:
     return os.path.basename(full_path)
 
 
+def _print_firmware_model(hw_model: Union[bytes, fw_models.Model]) -> None:
+    try:
+        model_name = fw_models.Model.from_hw_model(hw_model).name
+        click.echo(f"{model_name} firmware image.")
+        return
+    except ValueError:
+        pass
+
+    assert isinstance(hw_model, bytes)
+    if all(0x20 <= b < 0x80 for b in hw_model):  # isascii
+        model_name = hw_model.decode("ascii")
+        click.echo(f"Unknown hardware model: {model_name}")
+        return
+
+    click.echo(f"Suspicious hardware model code: {hw_model.hex()} ({hw_model!r})")
+
+
 def print_firmware_version(fw: "firmware.FirmwareType") -> None:
     """Print out the firmware version and details."""
     if isinstance(fw, firmware.LegacyFirmware):
@@ -70,7 +98,7 @@ def print_firmware_version(fw: "firmware.FirmwareType") -> None:
         click.echo("Trezor One v2 firmware (1.8.0 or later)")
         _print_version(fw.header.version)
     elif isinstance(fw, firmware.VendorFirmware):
-        click.echo(f"{fw.vendor_header.hw_model} firmware image.")
+        _print_firmware_model(fw.vendor_header.hw_model)
         vendor = fw.vendor_header.text
         vendor_version = "{}.{}".format(*fw.vendor_header.version)
         click.echo(f"Vendor header from {vendor}, version {vendor_version}")
