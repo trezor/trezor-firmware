@@ -24,7 +24,10 @@ def format_property(value: Any, type: str) -> str | bytes | None:
 
 
 async def show_confirm(
-    count: tuple[int, int], instruction: Instruction, signer: bytes
+    instruction: Instruction,
+    signer: bytes,
+    instructions_count: int,
+    instruction_index: int,
 ) -> None:
     from trezor.ui.layouts import RustLayout, confirm_properties
 
@@ -49,7 +52,7 @@ async def show_confirm(
     if len(datas) > 0:
         await confirm_properties(
             instruction.ui_identifier,
-            f"{count[1]}/{count[0]}: {instruction.ui_name}",
+            f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
             datas,
         )
 
@@ -78,7 +81,7 @@ async def show_confirm(
     if len(accounts) > 0:
         await confirm_properties(
             instruction.ui_identifier,
-            f"{count[1]}/{count[0]}: {instruction.ui_name}",
+            f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
             accounts,
         )
 
@@ -99,7 +102,7 @@ async def show_confirm(
 
         await confirm_properties(
             instruction.ui_identifier,
-            f"{count[1]}/{count[0]}: {instruction.ui_name}",
+            f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
             signers,
         )
 
@@ -180,17 +183,21 @@ async def show_unsupported_instruction_details(
 
 
 async def show_unsupported_instruction_confirm(
-    count: tuple[int, int], instruction: Instruction
+    instruction: Instruction,
+    instructions_count: int,
+    instruction_index: int,
 ) -> None:
-    title = f"{count[1]}/{count[0]}: {instruction.ui_name}: instruction id ({instruction.instruction_id})"
+    title = f"{instruction_index}/{instructions_count}: {instruction.ui_name}: instruction id ({instruction.instruction_id})"
 
     return await show_unsupported_instruction_details(instruction, title)
 
 
 async def show_unsupported_program_confirm(
-    count: tuple[int, int], instruction: Instruction
+    instruction: Instruction,
+    instructions_count: int,
+    instruction_index: int,
 ) -> None:
-    title = f"{count[1]}/{count[0]}: {instruction.ui_name}"
+    title = f"{instruction_index}/{instructions_count}: {instruction.ui_name}"
 
     return await show_unsupported_instruction_details(instruction, title)
 

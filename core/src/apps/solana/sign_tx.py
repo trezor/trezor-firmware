@@ -58,27 +58,34 @@ async def sign_tx(
 async def show_instructions(public_key: bytes, transaction: Transaction) -> None:
     from apps.common import seed
 
-    num_instructions = len(transaction.instructions)
-    for i, instruction in enumerate(transaction.instructions, 1):
+    instructions_count = len(transaction.instructions)
+    for instruction_index, instruction in enumerate(transaction.instructions, 1):
         # Check template id. Template id is derived from program.json
         if instruction.ui_identifier == "ui_confirm":
             from .ui import show_confirm
 
             await show_confirm(
-                (num_instructions, i),
                 instruction,
                 seed.remove_ed25519_prefix(public_key),
+                instructions_count,
+                instruction_index,
             )
         elif instruction.ui_identifier == "ui_unsupported_instruction":
             from .ui import show_unsupported_instruction_confirm
 
             await show_unsupported_instruction_confirm(
-                (num_instructions, i), instruction
+                instruction,
+                instructions_count,
+                instruction_index,
             )
         elif instruction.ui_identifier == "ui_unsupported_program":
             from .ui import show_unsupported_program_confirm
 
-            await show_unsupported_program_confirm((num_instructions, i), instruction)
+            await show_unsupported_program_confirm(
+                instruction,
+                instructions_count,
+                instruction_index,
+            )
         else:
             # TODO SOL: handle other UI templates
             pass
