@@ -762,14 +762,22 @@ cmake_gen = env.Command(
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
 if BOOTLOADER_QA:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
-    BOOTLOADER_SUFFIX = MODEL_IDENTIFIER + '_qa'
-elif PRODUCTION:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_satoshilabs_signed_prod.bin'
-elif BOOTLOADER_DEVEL:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
+    BOOTLOADER_SUFFIX += '_qa'
+
+# select vendor header
+if BOOTLOADER_QA or BOOTLOADER_DEVEL:
+    vendor = "dev_DO_NOT_SIGN_signed_dev"
+elif not PRODUCTION:
+    vendor = "unsafe_signed_prod"
 else:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_unsafe_signed_prod.bin'
+    if TREZOR_MODEL in ('T',):
+        vendor = "satoshilabs_signed_prod"
+    elif BITCOIN_ONLY == '1':
+        vendor = "trezor_btconly_signed_prod"
+    else:
+        vendor = "trezor_signed_prod"
+
+VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_{vendor}.bin'
 
 
 if TREZOR_MODEL not in ('1',):
