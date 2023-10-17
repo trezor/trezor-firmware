@@ -32,7 +32,7 @@ from urllib.parse import urlparse
 import click
 import requests
 
-from .. import exceptions, firmware
+from .. import exceptions, firmware, messages
 from ..firmware import models as fw_models
 from . import with_client
 
@@ -259,11 +259,25 @@ def find_specified_firmware_version(
     sys.exit(1)
 
 
+def _should_use_bitcoin_only(features: messages.Features) -> bool:
+    # in bootloader, decide by unit indicator
+    # TODO determine by fw vendor if installed?
+    if features.bootloader_mode:
+        return bool(features.unit_btconly)
+
+    # in firmware, check whether current firmware is bitcoin-only
+    if messages.Capability.Bitcoin_like not in features.capabilities:
+        return True
+
+    # universal firmware by default
+    return False
+
+
 def find_best_firmware_version(
     client: "TrezorClient",
     version: Optional[str],
     beta: bool,
-    bitcoin_only: bool,
+    bitcoin_only: Optional[bool],
 ) -> Tuple[str, str]:
     """Get the url from which to download the firmware and its expected fingerprint.
 
@@ -273,6 +287,8 @@ def find_best_firmware_version(
     If the specified version is not found, prints the closest available version
     (higher than the specified one, if existing).
     """
+    if bitcoin_only is None:
+        bitcoin_only = _should_use_bitcoin_only(client.features)
 
     def version_str(version: Iterable[int]) -> str:
         return ".".join(map(str, version))
@@ -491,7 +507,7 @@ def verify(
 @click.option("-v", "--version", help="Which version to download")
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
 @click.option("--beta", is_flag=True, help="Use firmware from BETA channel")
-@click.option("--bitcoin-only", is_flag=True, help="Use bitcoin-only firmware (if possible)")
+@click.option("--bitcoin-only/--universal", is_flag=True, default=None, help="Download bitcoin-only or universal firmware (defaults to universal)")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
 @click.pass_obj
 # fmt: on
@@ -502,7 +518,7 @@ def download(
     skip_check: bool,
     fingerprint: Optional[str],
     beta: bool,
-    bitcoin_only: bool,
+    bitcoin_only: Optional[bool],
 ) -> None:
     """Download and save the firmware image.
 
@@ -513,7 +529,7 @@ def download(
     #   (and we will not be checking device when validating)
     if version:
         url, fp = find_specified_firmware_version(
-            version=version, beta=beta, bitcoin_only=bitcoin_only
+            version=version, beta=beta, bitcoin_only=bool(bitcoin_only)
         )
         bootloader_onev2 = None
         trezor_major_version = None
@@ -553,7 +569,7 @@ def download(
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
 @click.option("-n", "--dry-run", is_flag=True, help="Perform all steps but do not actually upload the firmware")
 @click.option("--beta", is_flag=True, help="Use firmware from BETA channel")
-@click.option("--bitcoin-only", is_flag=True, help="Use bitcoin-only firmware (if possible)")
+@click.option("--bitcoin-only/--universal", is_flag=True, default=None, help="Download bitcoin-only or universal firmware (defaults to universal)")
 @click.option("--raw", is_flag=True, help="Push raw firmware data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
 # fmt: on
@@ -568,7 +584,7 @@ def update(
     raw: bool,
     dry_run: bool,
     beta: bool,
-    bitcoin_only: bool,
+    bitcoin_only: Optional[bool],
 ) -> None:
     """Upload new firmware to device.
 
