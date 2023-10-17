@@ -49,7 +49,7 @@
           "ui": {
             "ui_identifier": "ui_confirm",
             "elements": {
-              "parameters": ["lamports", "space", "owner"],
+              "parameters": ["lamports"],
               "accounts": ["funding_account", "new_account"]
             }
           }
@@ -175,8 +175,8 @@
           "ui": {
             "ui_identifier": "ui_confirm",
             "elements": {
-              "parameters": ["base", "seed", "lamports", "space", "owner"],
-              "accounts": ["funding_account", "created_account", "base_account"]
+              "parameters": ["lamports"],
+              "accounts": ["funding_account", "created_account"]
             }
           }
         },
@@ -255,8 +255,8 @@
           "ui": {
             "ui_identifier": "ui_confirm",
             "elements": {
-              "parameters": ["base", "seed", "space", "owner"],
-              "accounts": ["allocated_account", "base_account"]
+              "parameters": ["space"],
+              "accounts": ["allocated_account"]
             }
           }
         },
@@ -301,8 +301,81 @@
           "ui": {
             "ui_identifier": "ui_confirm",
             "elements": {
-              "parameters": ["base", "seed", "owner"],
-              "accounts": ["assigned_account", "base_account"]
+              "parameters": ["owner"],
+              "accounts": ["assigned_account"]
+            }
+          }
+        },
+        {
+          "id": 11,
+          "name": "Transfer With Seed",
+          "is_multisig": false,
+          "parameters": [
+            {
+              "name": "lamports",
+              "ui_name": "Lamports",
+              "type": "u64",
+              "optional": false
+            },
+            {
+              "name": "from_seed",
+              "ui_name": "From seed",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "from_owner",
+              "ui_name": "From owner",
+              "type": "pubkey",
+              "optional": false
+            }
+          ],
+          "references": [
+            {
+              "name": "funding_account",
+              "ui_name": "Funding account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "base_account",
+              "ui_name": "Base account",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "recipient_account",
+              "ui_name": "Recipient account",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": ["lamports"],
+              "accounts": ["funding_account", "recipient_account"]
+            }
+          }
+        },
+        {
+          "id": 12,
+          "name": "Upgrade Nonce Account",
+          "is_multisig": false,
+          "parameters": [ ],
+          "references": [
+            {
+              "name": "nonce_account",
+              "ui_name": "Nonce account",
+              "is_authority": false,
+              "optional": false
+            }
+          ],
+          "ui": {
+            "ui_identifier": "ui_confirm",
+            "elements": {
+              "parameters": [ ],
+              "accounts": ["nonce_account"]
             }
           }
         }
@@ -372,11 +445,9 @@
               "parameters": [
                 "staker",
                 "withdrawer",
-                "unix_timestamp",
-                "epoch",
                 "custodian"
               ],
-              "accounts": ["uninitialized_stake_account", "rent_sysvar"]
+              "accounts": ["uninitialized_stake_account"]
             }
           }
         },
@@ -427,10 +498,9 @@
           "ui": {
             "ui_identifier": "ui_confirm",
             "elements": {
-              "parameters": ["pubkey", "stake_authorize"],
+              "parameters": ["pubkey"],
               "accounts": [
                 "stake_account",
-                "clock_sysvar",
                 "stake_or_withdraw_authority",
                 "lockup_authority"
               ]
@@ -487,9 +557,6 @@
               "accounts": [
                 "initialized_stake_account",
                 "vote_account",
-                "clock_sysvar",
-                "stake_history_sysvar",
-                "config_account",
                 "stake_authority"
               ]
             }
@@ -596,10 +663,7 @@
               "accounts": [
                 "stake_account",
                 "recipient_account",
-                "clock_sysvar",
-                "stake_history_sysvar",
-                "withdrawal_authority",
-                "lockup_authority"
+                "withdrawal_authority"
               ]
             }
           }
@@ -635,7 +699,6 @@
               "parameters": [],
               "accounts": [
                 "delegated_stake_account",
-                "clock_sysvar",
                 "stake_authority"
               ]
             }
@@ -734,8 +797,6 @@
               "accounts": [
                 "destination_stake_account",
                 "source_stake_account",
-                "clock_sysvar",
-                "stake_history_sysvar",
                 "stake_authority"
               ]
             }
@@ -801,15 +862,11 @@
             "ui_identifier": "ui_confirm",
             "elements": {
               "parameters": [
-                "new_authorized_pubkey",
-                "stake_authorize",
-                "authority_seed",
-                "authority_owner"
+                "new_authorized_pubkey"
               ],
               "accounts": [
                 "stake_account",
                 "stake_or_withdraw_authority",
-                "clock_sysvar",
                 "lockup_authority"
               ]
             }
@@ -852,7 +909,6 @@
               "parameters": [],
               "accounts": [
                 "uninitialized_stake_account",
-                "rent_sysvar",
                 "stake_authority",
                 "withdrawal_authority"
               ]
@@ -906,13 +962,11 @@
           "ui": {
             "ui_identifier": "ui_confirm",
             "elements": {
-              "parameters": ["stake_authorize"],
+              "parameters": [],
               "accounts": [
                 "stake_account",
-                "clock_sysvar",
                 "stake_or_withdraw_authority",
-                "new_stake_or_withdraw_authority",
-                "lockup_authority"
+                "new_stake_or_withdraw_authority"
               ]
             }
           }
@@ -1162,8 +1216,7 @@
               "accounts": [
                 "account_to_initialize",
                 "mint_account",
-                "owner",
-                "rent_sysvar"
+                "owner"
               ]
             }
           }
@@ -1203,8 +1256,8 @@
           "ui": {
             "ui_identifier": "ui_confirm",
             "elements": {
-              "parameters": ["number_of_signers"],
-              "accounts": ["multisig_account", "rent_sysvar", "signer_accounts"]
+              "parameters": [ ],
+              "accounts": ["multisig_account", "signer_accounts"]
             }
           }
         },
@@ -1350,7 +1403,7 @@
           "ui": {
             "ui_identifier": "ui_confirm",
             "elements": {
-              "parameters": ["authority_type", "new_authority"],
+              "parameters": [ ],
               "accounts": ["mint_account", "current_authority"]
             }
           }
@@ -1499,7 +1552,6 @@
               "parameters": [],
               "accounts": [
                 "account_to_freeze",
-                "token_mint",
                 "freeze_authority"
               ]
             }
@@ -1536,7 +1588,6 @@
               "parameters": [],
               "accounts": [
                 "account_to_freeze",
-                "token_mint",
                 "freeze_authority"
               ]
             }
@@ -1781,8 +1832,7 @@
               "parameters": ["owner"],
               "accounts": [
                 "account_to_initialize",
-                "mint_account",
-                "rent_sysvar"
+                "mint_account"
               ]
             }
           }
@@ -1924,9 +1974,7 @@
                 "funding_account",
                 "associated_token_account",
                 "wallet_address",
-                "token_mint",
-                "system_program",
-                "spl_token"
+                "token_mint"
               ]
             }
           }
@@ -1982,9 +2030,7 @@
                 "funding_account",
                 "associated_token_account",
                 "wallet_address",
-                "token_mint",
-                "system_program",
-                "spl_token"
+                "token_mint"
               ]
             }
           }
