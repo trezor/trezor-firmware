@@ -25,12 +25,15 @@ def format_property(value: Any, type: str) -> str | bytes | None:
 
 async def show_confirm(
     instruction: Instruction,
-    signer: bytes,
     instructions_count: int,
     instruction_index: int,
+    signer_path: list[int],
+    signer_public_key: bytes,
 ) -> None:
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_metadata, confirm_properties
+
+    from apps.common.paths import address_n_to_str
 
     # assertions for pyright
     assert instruction.parsed_data is not None
@@ -45,7 +48,7 @@ async def show_confirm(
         value = instruction.parsed_data[property]
         _type = property_template.type
         if _type == "authority":
-            if signer == value:
+            if signer_public_key == value:
                 continue
 
         datas.append((ui_name, format_property(value, _type)))
@@ -64,7 +67,7 @@ async def show_confirm(
         is_authority = account_template.is_authority
         account_value = instruction.parsed_accounts[account[0]]
 
-        if is_authority and account_value[0] == signer:
+        if is_authority and account_value[0] == signer_public_key:
             continue
 
         if len(account_value) == 2:
@@ -98,7 +101,15 @@ async def show_confirm(
 
         signers: list[tuple[str, str]] = []
         for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
-            signers.append((f"Signer {i}", base58.encode(multisig_signer[0])))
+            multisig_signer_public_key = multisig_signer[0]
+
+            path_str = ""
+            if multisig_signer_public_key == signer_public_key:
+                path_str = f" ({address_n_to_str(signer_path)})"
+
+            signers.append(
+                (f"Signer {i}{path_str}:", base58.encode(multisig_signer[0]))
+            )
 
         await confirm_properties(
             "confirm_instruction",

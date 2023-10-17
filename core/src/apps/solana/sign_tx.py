@@ -32,6 +32,7 @@ async def sign_tx(
     serialized_tx = msg.serialized_tx
 
     node = keychain.derive(address_n)
+    signer_public_key = seed.remove_ed25519_prefix(node.public_key())
 
     transaction: Transaction = Transaction(BufferReader(serialized_tx))
 
@@ -48,7 +49,7 @@ async def sign_tx(
             br_code=ButtonRequestType.Other,
         )
 
-    await show_instructions(node.public_key(), transaction)
+    await show_instructions(address_n, signer_public_key, transaction)
 
     signer_address = base58.encode(seed.remove_ed25519_prefix(node.public_key()))
 
@@ -64,9 +65,9 @@ async def sign_tx(
     return SolanaTxSignature(signature=signature)
 
 
-async def show_instructions(public_key: bytes, transaction: Transaction) -> None:
-    from apps.common import seed
-
+async def show_instructions(
+    signer_path: list[int], signer_public_key: bytes, transaction: Transaction
+) -> None:
     instructions_count = len(transaction.instructions)
     for instruction_index, instruction in enumerate(transaction.instructions, 1):
         if not instruction.is_program_supported:
@@ -90,9 +91,10 @@ async def show_instructions(public_key: bytes, transaction: Transaction) -> None
 
             await show_confirm(
                 instruction,
-                seed.remove_ed25519_prefix(public_key),
                 instructions_count,
                 instruction_index,
+                signer_path,
+                signer_public_key,
             )
 
 
