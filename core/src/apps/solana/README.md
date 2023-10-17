@@ -57,31 +57,37 @@ A compact-u16 is a multi-byte encoding of 16 bits. The first byte contains the l
 
 A message contains a header, followed by a compact-array of account addresses, followed by a recent blockhash, followed by a compact-array of instructions.
 
+```
 +----------------------------------------------------------------------------+
 |                                Message format                              |
 +-------------+------------------------+-----------------+-------------------+
 | header (3B) | account addresses (CA) | blockhash (32B) | instructions (CA) |
 +-------------+------------------------+-----------------+-------------------+
+```
 
 ### Message Header Format
 
 The message header contains three unsigned 8-bit values. The first value is the number of required signatures in the containing transaction. The second value is the number of those corresponding account addresses that are read-only. The third value in the message header is the number of read-only account addresses not requiring signatures.
 
+```
 +--------------------------------------------------------------------------------------+
 |                                     Header format                                    |
 +--------------------------+---------------------------------+-------------------------+
 | required signatures (1B) | read-only signing accounts (1B) | read-only accounts (1B) |
 +--------------------------+---------------------------------+-------------------------+ 
+```
 
 ### Account Addresses Format
 
 The addresses that require signatures appear at the beginning of the account address array, with addresses requesting read-write access first, and read-only accounts following. The addresses that do not require signatures follow the addresses that do, again with read-write accounts first and read-only accounts following.
 
+```
 +-------------------------------------------------------------------------+
 |                             Account addresses                           |
 +---------------------------+-------------------- ... --------------------+
 | Number of accounts (C-16) | account_1 (32B)    .....    account_n (32B) |
 +---------------------------+-------------------- ... --------------------+
+```
 
 ### Blockhash Format
 
@@ -91,11 +97,13 @@ A blockhash contains a 32-byte SHA-256 hash. It is used to indicate when a clien
 
 An instruction contains a program id index, followed by a compact-array of account address indexes, followed by a compact-array of opaque 8-bit data. The program id index is used to identify an on-chain program that can interpret the opaque data. The program id index is an unsigned 8-bit index to an account address in the message's array of account addresses. The account address indexes are each an unsigned 8-bit index into that same array.
 
+```
 +------------------------------------------------------------------------------+
 |                              Instruction format                              |
 +-----------------------+------------------------------+-----------------------+
 | Program id index (1B) | Account address indexes (CA) | Instruction data (CA) |
 +-----------------------+------------------------------+-----------------------+
+```
 
 
 ### Program Id
@@ -114,22 +122,26 @@ Messages transmitted to Solana validators must not exceed the IPv6 MTU size to e
 
 The new transaction format must be distinguished from the legacy transaction format. Legacy transactions can fit at most 19 signatures (64-bytes each) but the message header encodes num_required_signatures as a u8. Since the upper bit of the u8 will never be set for a valid transaction, we can enable it to denote whether a transaction should be decoded with the versioned format or not.
 
+```
 +-------------------------------------------------------------------------------+
 |                             Versioned message format                          |
 +-------------------------------+-----------------------+----------------+------+
 | Versioned flag + version (1B) | Legacy message format | # OF LUTS (1B) | LUTs |
 +-------------------------------+-----------------------+----------------+------+
+```
 
 ### LUT format
+```
 +-----------------------------------------------------------------------------------------------------------+
 |                                                Look up table                                              |
 +---------------+---------------------------+-----------------+---------------------------+-----------------+
 | Account (32B) | # of rw acc. indexes (1B) | rw acc. indexes | # of ro acc. indexes (1B) | ro acc. indexes |
 +---------------+---------------------------+-----------------+---------------------------+-----------------+
-
+```
 
 ## Solana app directory structure
 
+```
 solana/                          - Solana program root directory
 ├─ transaction/                    - Transaction directory
 │  ├─ __init__.py                    - Transaction class
@@ -147,7 +159,7 @@ solana/                          - Solana program root directory
 ├─ README.md                       - This file
 ├─ sign_tx.py                      - sign_tx and calculate_fee functions
 ├─ types.py                        - 
-
+```
 
 ## Solana app basic concept and software architecture
 
