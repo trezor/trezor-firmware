@@ -15,7 +15,9 @@ from construct import (
 )
 
 from .custom_constructs import (
+    CompactArray,
     CompactStruct,
+    HexStringAdapter,
     InstructionIdAdapter,
     Memo,
     PublicKey,
@@ -982,4 +984,10 @@ Instruction = Switch(
         Program.MEMO_PROGRAM_ID: MemoProgram_Instruction,
         Program.MEMO_LEGACY_PROGRAM_ID: MemoLegacyProgram_Instruction,
     },
+    # unknown instruction
+    Struct(
+        "program_index" / Byte,
+        "accounts" / CompactArray(Byte),
+        "data" / HexStringAdapter(GreedyBytes),
+    ),
 )

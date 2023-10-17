@@ -38,6 +38,7 @@ pytestmark = [
     "solana/sign_tx.memo_program.json",
     "solana/sign_tx.compute_budget_program.json",
     "solana/sign_tx.token_program.json",
+    "solana/sign_tx.unknown_instructions.json",
 )
 def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
@@ -58,7 +59,9 @@ def _serialize_tx(tx_construct):
         Instruction.build(
             instruction,
             program_id=tx_construct["accounts"][instruction["program_index"]],
-            instruction_id=instruction["data"]["instruction_id"],
+            instruction_id=instruction["data"]["instruction_id"]
+            if "instruction_id" in instruction["data"]
+            else -1,
             instruction_id_formats=INSTRUCTION_ID_FORMATS,
         )
         for instruction in tx_construct["instructions"]

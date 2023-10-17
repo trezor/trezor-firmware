@@ -71,6 +71,14 @@ class B58Adapter(Adapter):
 PublicKey = B58Adapter(Bytes(32))
 
 
+class HexStringAdapter(Adapter):
+    def _decode(self, obj, context, path):
+        return obj.hex()
+
+    def _encode(self, obj, context, path):
+        return bytes.fromhex(obj)
+
+
 class InstructionIdAdapter(Adapter):
     def _decode(self, obj, context, path):
         return int.from_bytes(obj, "little")

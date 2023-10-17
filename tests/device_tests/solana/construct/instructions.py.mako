@@ -35,7 +35,9 @@ from construct import (
     Switch,
 )
 from .custom_constructs import (
+    CompactArray,
     CompactStruct,
+    HexStringAdapter,
     InstructionIdAdapter,
     Memo,
     PublicKey,
@@ -101,5 +103,11 @@ Instruction = Switch(
 % for program in programs["programs"]:
         Program.${getProgramId(program)}: ${getProgramInstructionsConstructName(program)},
 %endfor
-    }
+    },
+    # unknown instruction
+    Struct(
+        "program_index" / Byte,
+        "accounts" / CompactArray(Byte),
+        "data" / HexStringAdapter(GreedyBytes),
+    )
 )
