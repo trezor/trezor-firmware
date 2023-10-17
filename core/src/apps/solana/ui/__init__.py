@@ -29,7 +29,8 @@ async def show_confirm(
     instructions_count: int,
     instruction_index: int,
 ) -> None:
-    from trezor.ui.layouts import RustLayout, confirm_properties
+    from trezor.enums import ButtonRequestType
+    from trezor.ui.layouts import confirm_metadata, confirm_properties
 
     # assertions for pyright
     assert instruction.parsed_data is not None
@@ -86,14 +87,11 @@ async def show_confirm(
         )
 
     if instruction.is_multisig:
-        import trezorui2
-
-        await RustLayout(
-            trezorui2.show_info(
-                title="Information",
-                description="The instruction requires multiple signers that increases the fee",
-                allow_cancel=False,
-            )
+        await confirm_metadata(
+            "confirm_multisig",
+            "Confirm multisig",
+            "The following instruction is a multisig instruction.",
+            br_code=ButtonRequestType.Other,
         )
 
         assert instruction.multisig_signers is not None
