@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
+from trezor.wire import ProcessError
 
 from apps.common.readers import read_compact_size, read_uint32_le, read_uint64_le
 
@@ -20,8 +21,13 @@ if TYPE_CHECKING:
     from ..types import Address, AddressReference, InstructionIdFormat
 
 
+def assert_cond(condition: bool, message: str = "") -> None:
+    if not condition:
+        raise ProcessError(message)
+
+
 def parse_header(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]:
-    assert serialized_tx.remaining_count() > 3
+    assert_cond(serialized_tx.remaining_count() > 3)
 
     isLegacy: bool = True
     version: int = 0
@@ -31,7 +37,8 @@ def parse_header(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]
         version = serialized_tx.get() & 0b01111111
         # only version 0 is supported
         # less or equal is used in order to support future versions
-        assert version <= 0
+        assert_cond(version <= 0, "Unsupported transaction version")
+
     num_required_signatures: int = serialized_tx.get()
     num_signature_read_only_addresses: int = serialized_tx.get()
     num_read_only_addresses: int = serialized_tx.get()
@@ -53,7 +60,7 @@ def parse_addresses(
 ) -> list[Address]:
     num_of_addresses = read_compact_size(serialized_tx)
 
-    assert (
+    assert_cond(
         num_of_addresses
         >= num_required_signatures
         + num_signature_read_only_addresses
@@ -62,7 +69,7 @@ def parse_addresses(
 
     addresses: list[Address] = []
     for i in range(num_of_addresses):
-        assert ADDRESS_SIZE <= serialized_tx.remaining_count()
+        assert_cond(ADDRESS_SIZE <= serialized_tx.remaining_count())
 
         if i < num_required_signatures:
             type = ADDRESS_SIG
@@ -86,7 +93,7 @@ def parse_addresses(
 
 
 def parse_block_hash(serialized_tx: BufferReader) -> bytes:
-    assert serialized_tx.remaining_count() >= 32
+    assert_cond(serialized_tx.remaining_count() >= 32)
     return bytes(serialized_tx.read_memoryview(32))
 
 
@@ -106,7 +113,7 @@ def parse_instructions(
         num_of_accounts = read_compact_size(serialized_tx)
         accounts: list[int] = []
         for _ in range(num_of_accounts):
-            assert serialized_tx.remaining_count() > 0
+            assert_cond(serialized_tx.remaining_count() > 0)
             account_index = serialized_tx.get()
             accounts.append(account_index)
 
@@ -135,25 +142,25 @@ def parse_instructions(
 
         instructions.append((program_index, instruction_id, accounts, instruction_data))
 
-    assert serialized_tx.remaining_count() == 0
+    assert_cond(serialized_tx.remaining_count() == 0)
 
     return instructions
 
 
 def parse_pubkey(serialized_tx: BufferReader) -> bytes:
-    assert serialized_tx.remaining_count() >= 32
+    assert_cond(serialized_tx.remaining_count() >= 32)
     return bytes(serialized_tx.read_memoryview(32))
 
 
 def parse_enum(serialized_tx: BufferReader) -> int:
-    assert serialized_tx.remaining_count() >= 1
+    assert_cond(serialized_tx.remaining_count() >= 1)
     return serialized_tx.get()
 
 
 def parse_string(serialized_tx: BufferReader) -> str:
     # TODO SOL: validation shall be checked (length is less than 2^32 or even less)
     length = read_uint64_le(serialized_tx)
-    assert serialized_tx.remaining_count() >= length
+    assert_cond(serialized_tx.remaining_count() >= length)
     return bytes(serialized_tx.read_memoryview(length)).decode("utf-8")
 
 

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.utils import BufferReader
+from trezor.wire import ProcessError
 
 from .parse import parse_property
 
@@ -123,7 +124,8 @@ class Instruction:
 
             self.ui_account_list.append((account, accounts[account_index]))
 
-        assert reader.remaining_count() == 0
+        if reader.remaining_count() != 0:
+            raise ProcessError("Invalid transaction")
 
     def __getattr__(self, attr: str) -> Any:
         assert self.parsed_data is not None

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
 from trezor.utils import BufferReader
+from trezor.wire import ProcessError
 
 from .instruction import Instruction
 from .instructions import get_instruction, get_instruction_id_length
@@ -90,4 +91,5 @@ class Transaction:
 
             self.instructions.append(instruction)
 
-        assert serialized_tx.remaining_count() == 0
+        if serialized_tx.remaining_count() != 0:
+            raise ProcessError("Invalid transaction")
