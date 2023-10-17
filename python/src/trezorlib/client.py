@@ -80,6 +80,12 @@ class TrezorClient(Generic[UI]):
     (send a cancel message, initialize or clear a session, ping the device).
     """
 
+    model: models.TrezorModel
+    transport: "Transport"
+    session_id: Optional[bytes]
+    ui: UI
+    features: messages.Features
+
     def __init__(
         self,
         transport: "Transport",
@@ -115,7 +121,9 @@ class TrezorClient(Generic[UI]):
         might be removed at any time.
         """
         LOG.info(f"creating client instance for device: {transport.get_path()}")
-        self.model = model
+        # Here, self.model could be set to None. Unless _init_device is False, it will
+        # get correctly reconfigured as part of the init_device flow.
+        self.model = model  # type: ignore [Type "None" cannot be assigned]
         if self.model:
             self.mapping = self.model.default_mapping
         else:
@@ -266,11 +274,12 @@ class TrezorClient(Generic[UI]):
 
         if not self.model:
             # Trezor Model One bootloader 1.8.0 or older does not send model name
-            self.model = models.by_internal_name(features.internal_model)
-            if self.model is None:
-                self.model = models.by_name(features.model or "1")
-            if self.model is None:
+            model = models.by_internal_name(features.internal_model)
+            if model is None:
+                model = models.by_name(features.model or "1")
+            if model is None:
                 raise RuntimeError("Unsupported Trezor model")
+            self.model = model
 
         if features.vendor not in self.model.vendors:
             raise RuntimeError("Unsupported device")
@@ -371,8 +380,6 @@ class TrezorClient(Generic[UI]):
     def is_outdated(self) -> bool:
         if self.features.bootloader_mode:
             return False
-
-        assert self.model is not None  # should happen in _refresh_features
         return self.version < self.model.minimum_version
 
     def check_firmware_version(self, warn_only: bool = False) -> None:
