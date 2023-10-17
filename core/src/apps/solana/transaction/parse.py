@@ -142,8 +142,6 @@ def parse_instructions(
 
         instructions.append((program_index, instruction_id, accounts, instruction_data))
 
-    assert_cond(serialized_tx.remaining_count() == 0)
-
     return instructions
 
 
