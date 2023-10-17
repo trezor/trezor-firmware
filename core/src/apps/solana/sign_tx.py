@@ -60,8 +60,23 @@ async def show_instructions(public_key: bytes, transaction: Transaction) -> None
 
     instructions_count = len(transaction.instructions)
     for instruction_index, instruction in enumerate(transaction.instructions, 1):
-        # Check template id. Template id is derived from program.json
-        if instruction.ui_identifier == "ui_confirm":
+        if not instruction.is_program_supported:
+            from .ui import show_unsupported_program_confirm
+
+            await show_unsupported_program_confirm(
+                instruction,
+                instructions_count,
+                instruction_index,
+            )
+        elif not instruction.is_instruction_supported:
+            from .ui import show_unsupported_instruction_confirm
+
+            await show_unsupported_instruction_confirm(
+                instruction,
+                instructions_count,
+                instruction_index,
+            )
+        else:
             from .ui import show_confirm
 
             await show_confirm(
@@ -70,25 +85,6 @@ async def show_instructions(public_key: bytes, transaction: Transaction) -> None
                 instructions_count,
                 instruction_index,
             )
-        elif instruction.ui_identifier == "ui_unsupported_instruction":
-            from .ui import show_unsupported_instruction_confirm
-
-            await show_unsupported_instruction_confirm(
-                instruction,
-                instructions_count,
-                instruction_index,
-            )
-        elif instruction.ui_identifier == "ui_unsupported_program":
-            from .ui import show_unsupported_program_confirm
-
-            await show_unsupported_program_confirm(
-                instruction,
-                instructions_count,
-                instruction_index,
-            )
-        else:
-            # TODO SOL: handle other UI templates
-            pass
 
 
 def calculate_fee(transaction: Transaction) -> int:

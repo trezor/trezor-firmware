@@ -51,7 +51,7 @@ async def show_confirm(
 
     if len(datas) > 0:
         await confirm_properties(
-            instruction.ui_identifier,
+            "confirm_instruction",
             f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
             datas,
         )
@@ -80,7 +80,7 @@ async def show_confirm(
 
     if len(accounts) > 0:
         await confirm_properties(
-            instruction.ui_identifier,
+            "confirm_instruction",
             f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
             accounts,
         )
@@ -101,7 +101,7 @@ async def show_confirm(
             signers.append((f"Signer {i}", base58.encode(signer)))
 
         await confirm_properties(
-            instruction.ui_identifier,
+            "confirm_instruction",
             f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
             signers,
         )
