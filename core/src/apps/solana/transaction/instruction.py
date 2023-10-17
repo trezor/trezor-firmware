@@ -21,7 +21,6 @@ class Instruction:
     property_templates: list[PropertyTemplate]
     accounts_template: list[AccountTemplate]
 
-    ui_identifier: str
     ui_name: str
 
     ui_parameter_list: list[str] | None = None
@@ -48,7 +47,6 @@ class Instruction:
         accounts_template: list[AccountTemplate],
         ui_parameter_list: list[str],
         ui_account_list: list[str],
-        ui_identifier: str,
         ui_name: str,
         is_program_supported: bool = True,
         is_instruction_supported: bool = True,
@@ -60,7 +58,6 @@ class Instruction:
         self.property_templates = property_templates
         self.accounts_template = accounts_template
 
-        self.ui_identifier = ui_identifier
         self.ui_name = ui_name
 
         self.ui_parameter_list = []

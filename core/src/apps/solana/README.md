@@ -199,7 +199,6 @@ The "programs.json" file serves as a structured configuration file in the Solana
       - "is_authority": A boolean specifying whether the account is considered an authority for this instruction.
       - "optional": Indicates whether the account is optional.
     - "ui": Contains user interface-related information for this instruction.
-      - "ui_identifier": A unique identifier for the user interface component associated with this instruction.
       - "elements": Specifies which parameters and accounts are used in the user interface for confirmation.
 
 
