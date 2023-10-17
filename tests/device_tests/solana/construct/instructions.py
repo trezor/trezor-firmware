@@ -60,6 +60,8 @@ class SystemProgramInstruction(IntEnum):
     INS_ALLOCATE = 8
     INS_ALLOCATE_WITH_SEED = 9
     INS_ASSIGN_WITH_SEED = 10
+    INS_TRANSFER_WITH_SEED = 11
+    INS_UPGRADE_NONCE_ACCOUNT = 12
 
 
 SystemProgram_CreateAccount_Instruction = Struct(
@@ -170,6 +172,35 @@ SystemProgram_AssignWithSeed_Instruction = Struct(
     ),
 )
 
+SystemProgram_TransferWithSeed_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "funding_account" / Byte,
+        "base_account" / Byte,
+        "recipient_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+        "lamports" / Int64ul,
+        "from_seed" / String,
+        "from_owner" / Int64ul,
+    ),
+)
+
+SystemProgram_UpgradeNonceAccount_Instruction = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "nonce_account" / Byte,
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / InstructionIdAdapter(GreedyBytes),
+    ),
+)
+
 
 SystemProgram_Instruction = Switch(
     lambda this: this.instruction_id,
@@ -181,6 +212,8 @@ SystemProgram_Instruction = Switch(
         SystemProgramInstruction.INS_ALLOCATE: SystemProgram_Allocate_Instruction,
         SystemProgramInstruction.INS_ALLOCATE_WITH_SEED: SystemProgram_AllocateWithSeed_Instruction,
         SystemProgramInstruction.INS_ASSIGN_WITH_SEED: SystemProgram_AssignWithSeed_Instruction,
+        SystemProgramInstruction.INS_TRANSFER_WITH_SEED: SystemProgram_TransferWithSeed_Instruction,
+        SystemProgramInstruction.INS_UPGRADE_NONCE_ACCOUNT: SystemProgram_UpgradeNonceAccount_Instruction,
     },
 )
 

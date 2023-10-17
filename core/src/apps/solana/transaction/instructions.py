@@ -25,6 +25,8 @@ SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED = 3
 SYSTEM_PROGRAM_ID_INS_ALLOCATE = 8
 SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED = 9
 SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED = 10
+SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED = 11
+SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT = 12
 STAKE_PROGRAM_ID_INS_INITIALIZE = 0
 STAKE_PROGRAM_ID_INS_AUTHORIZE = 1
 STAKE_PROGRAM_ID_INS_DELEGATE_STAKE = 2
@@ -87,6 +89,14 @@ def __getattr__(name: str) -> Type[Instruction]:
         "SystemProgramAssignWithSeedInstruction": (
             "11111111111111111111111111111111",
             10,
+        ),
+        "SystemProgramTransferWithSeedInstruction": (
+            "11111111111111111111111111111111",
+            11,
+        ),
+        "SystemProgramUpgradeNonceAccountInstruction": (
+            "11111111111111111111111111111111",
+            12,
         ),
         "StakeProgramInitializeInstruction": (
             "Stake11111111111111111111111111111111111111",
@@ -386,6 +396,42 @@ if TYPE_CHECKING:
         def is_type_of(
             cls, ins: Any
         ) -> TypeGuard["SystemProgramAssignWithSeedInstruction"]:
+            return (
+                ins.program_id == cls.PROGRAM_ID
+                and ins.instruction_id == cls.INSTRUCTION_ID
+            )
+
+    class SystemProgramTransferWithSeedInstruction(Instruction):
+        PROGRAM_ID = SYSTEM_PROGRAM_ID
+        INSTRUCTION_ID = SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED
+
+        lamports: int
+        from_seed: str
+        from_owner: int
+
+        funding_account: Account
+        base_account: Account
+        recipient_account: Account
+
+        @classmethod
+        def is_type_of(
+            cls, ins: Any
+        ) -> TypeGuard["SystemProgramTransferWithSeedInstruction"]:
+            return (
+                ins.program_id == cls.PROGRAM_ID
+                and ins.instruction_id == cls.INSTRUCTION_ID
+            )
+
+    class SystemProgramUpgradeNonceAccountInstruction(Instruction):
+        PROGRAM_ID = SYSTEM_PROGRAM_ID
+        INSTRUCTION_ID = SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT
+
+        nonce_account: Account
+
+        @classmethod
+        def is_type_of(
+            cls, ins: Any
+        ) -> TypeGuard["SystemProgramUpgradeNonceAccountInstruction"]:
             return (
                 ins.program_id == cls.PROGRAM_ID
                 and ins.instruction_id == cls.INSTRUCTION_ID
@@ -1181,7 +1227,7 @@ def get_instruction(
                         False,
                     ),
                 ],
-                ["lamports", "space", "owner"],
+                ["lamports"],
                 ["funding_account", "new_account"],
                 "ui_confirm",
                 "System Program: Create Account",
@@ -1313,8 +1359,8 @@ def get_instruction(
                         True,
                     ),
                 ],
-                ["base", "seed", "lamports", "space", "owner"],
-                ["funding_account", "created_account", "base_account"],
+                ["lamports"],
+                ["funding_account", "created_account"],
                 "ui_confirm",
                 "System Program: Create Account With Seed",
                 True,
@@ -1397,8 +1443,8 @@ def get_instruction(
                         False,
                     ),
                 ],
-                ["base", "seed", "space", "owner"],
-                ["allocated_account", "base_account"],
+                ["space"],
+                ["allocated_account"],
                 "ui_confirm",
                 "System Program: Allocate With Seed",
                 True,
@@ -1445,10 +1491,87 @@ def get_instruction(
                         False,
                     ),
                 ],
-                ["base", "seed", "owner"],
-                ["assigned_account", "base_account"],
+                ["owner"],
+                ["assigned_account"],
                 "ui_confirm",
                 "System Program: Assign With Seed",
+                True,
+                True,
+                False,
+            )
+        if instruction_id == SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED:
+            return Instruction(
+                instruction_data,
+                program_id,
+                instruction_accounts,
+                SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED,
+                [
+                    PropertyTemplate(
+                        "lamports",
+                        "Lamports",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "from_seed",
+                        "From seed",
+                        "string",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "from_owner",
+                        "From owner",
+                        "pubkey",
+                        False,
+                    ),
+                ],
+                [
+                    AccountTemplate(
+                        "funding_account",
+                        "Funding account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "base_account",
+                        "Base account",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "recipient_account",
+                        "Recipient account",
+                        False,
+                        False,
+                    ),
+                ],
+                ["lamports"],
+                ["funding_account", "recipient_account"],
+                "ui_confirm",
+                "System Program: Transfer With Seed",
+                True,
+                True,
+                False,
+            )
+        if instruction_id == SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT:
+            return Instruction(
+                instruction_data,
+                program_id,
+                instruction_accounts,
+                SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT,
+                [],
+                [
+                    AccountTemplate(
+                        "nonce_account",
+                        "Nonce account",
+                        False,
+                        False,
+                    ),
+                ],
+                [],
+                ["nonce_account"],
+                "ui_confirm",
+                "System Program: Upgrade Nonce Account",
                 True,
                 True,
                 False,
@@ -1521,8 +1644,8 @@ def get_instruction(
                         False,
                     ),
                 ],
-                ["staker", "withdrawer", "unix_timestamp", "epoch", "custodian"],
-                ["uninitialized_stake_account", "rent_sysvar"],
+                ["staker", "withdrawer", "custodian"],
+                ["uninitialized_stake_account"],
                 "ui_confirm",
                 "Stake Program: Initialize",
                 True,
@@ -1575,13 +1698,8 @@ def get_instruction(
                         True,
                     ),
                 ],
-                ["pubkey", "stake_authorize"],
-                [
-                    "stake_account",
-                    "clock_sysvar",
-                    "stake_or_withdraw_authority",
-                    "lockup_authority",
-                ],
+                ["pubkey"],
+                ["stake_account", "stake_or_withdraw_authority", "lockup_authority"],
                 "ui_confirm",
                 "Stake Program: Authorize",
                 True,
@@ -1634,14 +1752,7 @@ def get_instruction(
                     ),
                 ],
                 [],
-                [
-                    "initialized_stake_account",
-                    "vote_account",
-                    "clock_sysvar",
-                    "stake_history_sysvar",
-                    "config_account",
-                    "stake_authority",
-                ],
+                ["initialized_stake_account", "vote_account", "stake_authority"],
                 "ui_confirm",
                 "Stake Program: Delegate Stake",
                 True,
@@ -1743,14 +1854,7 @@ def get_instruction(
                     ),
                 ],
                 ["lamports"],
-                [
-                    "stake_account",
-                    "recipient_account",
-                    "clock_sysvar",
-                    "stake_history_sysvar",
-                    "withdrawal_authority",
-                    "lockup_authority",
-                ],
+                ["stake_account", "recipient_account", "withdrawal_authority"],
                 "ui_confirm",
                 "Stake Program: Withdraw",
                 True,
@@ -1785,7 +1889,7 @@ def get_instruction(
                     ),
                 ],
                 [],
-                ["delegated_stake_account", "clock_sysvar", "stake_authority"],
+                ["delegated_stake_account", "stake_authority"],
                 "ui_confirm",
                 "Stake Program: Deactivate",
                 True,
@@ -1883,8 +1987,6 @@ def get_instruction(
                 [
                     "destination_stake_account",
                     "source_stake_account",
-                    "clock_sysvar",
-                    "stake_history_sysvar",
                     "stake_authority",
                 ],
                 "ui_confirm",
@@ -1951,18 +2053,8 @@ def get_instruction(
                         True,
                     ),
                 ],
-                [
-                    "new_authorized_pubkey",
-                    "stake_authorize",
-                    "authority_seed",
-                    "authority_owner",
-                ],
-                [
-                    "stake_account",
-                    "stake_or_withdraw_authority",
-                    "clock_sysvar",
-                    "lockup_authority",
-                ],
+                ["new_authorized_pubkey"],
+                ["stake_account", "stake_or_withdraw_authority", "lockup_authority"],
                 "ui_confirm",
                 "Stake Program: Authorize With Seed",
                 True,
@@ -2005,7 +2097,6 @@ def get_instruction(
                 [],
                 [
                     "uninitialized_stake_account",
-                    "rent_sysvar",
                     "stake_authority",
                     "withdrawal_authority",
                 ],
@@ -2061,13 +2152,11 @@ def get_instruction(
                         True,
                     ),
                 ],
-                ["stake_authorize"],
+                [],
                 [
                     "stake_account",
-                    "clock_sysvar",
                     "stake_or_withdraw_authority",
                     "new_stake_or_withdraw_authority",
-                    "lockup_authority",
                 ],
                 "ui_confirm",
                 "Stake Program: Authorize Checked",
@@ -2334,7 +2423,7 @@ def get_instruction(
                     ),
                 ],
                 [],
-                ["account_to_initialize", "mint_account", "owner", "rent_sysvar"],
+                ["account_to_initialize", "mint_account", "owner"],
                 "ui_confirm",
                 "Token Program: Initialize Account",
                 True,
@@ -2375,8 +2464,8 @@ def get_instruction(
                         False,
                     ),
                 ],
-                ["number_of_signers"],
-                ["multisig_account", "rent_sysvar", "signer_accounts"],
+                [],
+                ["multisig_account", "signer_accounts"],
                 "ui_confirm",
                 "Token Program: Initialize Multisig",
                 True,
@@ -2530,7 +2619,7 @@ def get_instruction(
                         False,
                     ),
                 ],
-                ["authority_type", "new_authority"],
+                [],
                 ["mint_account", "current_authority"],
                 "ui_confirm",
                 "Token Program: Set Authority",
@@ -2685,7 +2774,7 @@ def get_instruction(
                     ),
                 ],
                 [],
-                ["account_to_freeze", "token_mint", "freeze_authority"],
+                ["account_to_freeze", "freeze_authority"],
                 "ui_confirm",
                 "Token Program: Freeze Account",
                 True,
@@ -2720,7 +2809,7 @@ def get_instruction(
                     ),
                 ],
                 [],
-                ["account_to_freeze", "token_mint", "freeze_authority"],
+                ["account_to_freeze", "freeze_authority"],
                 "ui_confirm",
                 "Token Program: Thaw Account",
                 True,
@@ -2966,7 +3055,7 @@ def get_instruction(
                     ),
                 ],
                 ["owner"],
-                ["account_to_initialize", "mint_account", "rent_sysvar"],
+                ["account_to_initialize", "mint_account"],
                 "ui_confirm",
                 "Token Program: Initialize Account 2",
                 True,
@@ -3122,8 +3211,6 @@ def get_instruction(
                     "associated_token_account",
                     "wallet_address",
                     "token_mint",
-                    "system_program",
-                    "spl_token",
                 ],
                 "ui_confirm",
                 "Associated Token Account Program: Create",
@@ -3182,8 +3269,6 @@ def get_instruction(
                     "associated_token_account",
                     "wallet_address",
                     "token_mint",
-                    "system_program",
-                    "spl_token",
                 ],
                 "ui_confirm",
                 "Associated Token Account Program: Create Idempotent",
