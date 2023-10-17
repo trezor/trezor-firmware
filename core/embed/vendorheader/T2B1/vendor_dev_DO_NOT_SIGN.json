@@ -1,9 +1,9 @@
 {
-    "header_len": 4608,
+    "header_len": 512,
     "text": "DEV ONLY, DO NOT USE!",
     "hw_model": "T2B1",
     "expiry": 0,
-    "version": [0, 0],
+    "version": [0, 1],
     "sig_m": 2,
     "trust": {
         "allow_run_with_secret": true,
