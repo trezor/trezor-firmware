@@ -60,7 +60,6 @@ async def show_confirm(
             datas,
         )
 
-    accounts = []
     for account in instruction.ui_account_list:
         account_template = instruction.get_account_template(account[0])[1]
         ui_name = account_template.ui_name
@@ -70,23 +69,22 @@ async def show_confirm(
         if is_authority and account_value[0] == signer_public_key:
             continue
 
+        account_data = []
         if len(account_value) == 2:
-            accounts.append((ui_name, base58.encode(account_value[0])))
+            account_data.append((ui_name, base58.encode(account_value[0])))
         elif len(account_value) == 3:
-            accounts.append(
-                (
-                    ui_name,
-                    f"LUT: {base58.encode(account_value[0])}, index: {account_value[1]}",
-                )
+            account_data.append((f"{ui_name} is provided via a lookup table.", ""))
+            account_data.append(
+                ("Lookup table address:", base58.encode(account_value[0]))
             )
+            account_data.append(("Account index:", f"{account_value[1]}"))
         else:
             raise ValueError("Invalid account value")
 
-    if len(accounts) > 0:
         await confirm_properties(
             "confirm_instruction",
             f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
-            accounts,
+            account_data,
         )
 
     if instruction.is_multisig:
