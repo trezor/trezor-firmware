@@ -19,7 +19,6 @@ void flash_init(void);
 secbool __wur flash_unlock_write(void);
 secbool __wur flash_lock_write(void);
 
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size);
 uint32_t flash_sector_size(uint16_t sector);
 uint16_t flash_total_sectors(const flash_area_t *area);
 int32_t flash_get_sector_num(const flash_area_t *area,

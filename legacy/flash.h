@@ -39,7 +39,4 @@
   (FLASH_SR_RDERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR | FLASH_SR_PGAERR | \
    FLASH_SR_WRPERR | FLASH_SR_SOP | FLASH_SR_EOP)
 
-secbool __wur flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data);
-secbool __wur flash_write_word(uint8_t sector, uint32_t offset, uint32_t data);
-
 #endif  // FLASH_H

@@ -51,10 +51,6 @@
 
 void flash_init(void);
 
-secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data);
-
-secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data);
-
 uint32_t flash_wait_and_clear_status_flags(void);
 
 secbool __wur flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
