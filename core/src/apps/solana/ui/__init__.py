@@ -208,17 +208,12 @@ async def show_final_confirmation(
     from trezor.ui.layouts import confirm_properties
 
     await confirm_properties(
-        "sign_message_path", "Sign message", [("Signer Path", signer_path)]
-    )
-
-    await confirm_properties(
-        "sign_message_address", "Sign message", [("Address", address)]
-    )
-
-    await confirm_properties(
-        "sign_message", "Sign message", [("Blockhash", base58.encode(blockhash))]
-    )
-
-    await confirm_properties(
-        "sign_message", "Sign message", [("Fee", f"{fee} lamports")]
+        "confirm_transaction",
+        "Confirm transaction",
+        [
+            ("Fee:", f"{fee} lamports"),
+            ("Blockhash:", base58.encode(blockhash)),
+            ("Signer Path:", signer_path),
+            ("Signer Address:", address),
+        ],
     )
