@@ -108,7 +108,7 @@ async def continue_recovery(
 
     if show_info:
         # Show this just one-time
-        description = "You'll only have to select the first 2-3 letters of each word."
+        description = "You'll only have to select the first 2-4 letters of each word."
     else:
         description = subtext or ""
 

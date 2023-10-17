@@ -1435,7 +1435,7 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let mut paragraphs = ParagraphVecShort::new();
         paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, description));
         if show_info {
-            let first = "You'll only have to select the first 2-3 letters of each word.";
+            let first = "You'll only have to select the first 2-4 letters of each word.";
             let second =
                 "Position of the cursor will change between entries for enhanced security.";
             paragraphs
