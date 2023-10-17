@@ -15,7 +15,7 @@ from .parse import (
 )
 
 if TYPE_CHECKING:
-    from ..types import Account, Address, AddressReference
+    from ..types import Account, Address, AddressReference, RawInstruction
 
 
 class Transaction:
@@ -28,7 +28,7 @@ class Transaction:
 
     blockhash: bytes
 
-    raw_instructions: list[tuple[int, int, list[int], bytes]]
+    raw_instructions: list[RawInstruction]
     instructions: list[Instruction] = []
 
     address_lookup_tables_rw_addresses: list[AddressReference] = []

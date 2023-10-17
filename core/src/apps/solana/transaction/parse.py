@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from trezor.utils import BufferReader
 
-    from ..types import Address, AddressReference, InstructionIdFormat
+    from ..types import Address, AddressReference, InstructionIdFormat, RawInstruction
 
 
 def assert_cond(condition: bool, message: str = "") -> None:
@@ -102,10 +102,10 @@ def parse_instructions(
     get_instruction_id_format: Callable[[str], InstructionIdFormat],
     serialized_tx: BufferReader,
     # [program_index, instruction_id, accounts, instruction_data]
-) -> list[tuple[int, int, list[int], bytes]]:
+) -> list[RawInstruction]:
     num_of_instructions = read_compact_size(serialized_tx)
 
-    instructions: list[tuple[int, int, list[int], bytes]] = []
+    instructions: list[RawInstruction] = []
 
     for _ in range(num_of_instructions):
         program_index = serialized_tx.get()
