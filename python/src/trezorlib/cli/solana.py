@@ -25,7 +25,6 @@ def get_public_key(
 ) -> messages.SolanaPublicKey:
     """Get Solana public key."""
     address_n = tools.parse_path(address)
-    client.init_device()
     return solana.get_public_key(client, address_n)
 
 
@@ -40,7 +39,6 @@ def get_address(
 ) -> messages.SolanaAddress:
     """Get Solana public key."""
     address_n = tools.parse_path(address)
-    client.init_device()
     return solana.get_address(client, address_n, show_display)
 
 
@@ -55,5 +53,4 @@ def sign_tx(
 ) -> messages.SolanaTxSignature:
     """Sign Solana transaction."""
     address_n = tools.parse_path(address)
-    client.init_device()
     return solana.sign_tx(client, address_n, bytes.fromhex(serialized_tx))
