@@ -37,7 +37,7 @@ def get_address(
     address: str,
     show_display: bool,
 ) -> messages.SolanaAddress:
-    """Get Solana public key."""
+    """Get Solana address."""
     address_n = tools.parse_path(address)
     return solana.get_address(client, address_n, show_display)
 
