@@ -28,6 +28,8 @@
 #define FLASH_OPTION_BYTES_1 (*(const uint64_t *)0x1FFFC000)
 #define FLASH_OPTION_BYTES_2 (*(const uint64_t *)0x1FFFC008)
 
+const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size);
+
 void memory_protect(void) {
 #if PRODUCTION
 #if BOOTLOADER_QA
