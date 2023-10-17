@@ -135,8 +135,6 @@ class Instruction:
             return self.parsed_data[attr]
         if attr in self.parsed_accounts:
             return self.parsed_accounts[attr]
-        if attr == "signers" and self.is_multisig:
-            return self.multisig_signers
 
         raise AttributeError(f"Attribute {attr} not found")
 

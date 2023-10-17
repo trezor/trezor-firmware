@@ -96,9 +96,11 @@ async def show_confirm(
             )
         )
 
+        assert instruction.multisig_signers is not None
+
         signers: list[tuple[str, str]] = []
-        for i, signer in enumerate(instruction.signers, 1):
-            signers.append((f"Signer {i}", base58.encode(signer)))
+        for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
+            signers.append((f"Signer {i}", base58.encode(multisig_signer[0])))
 
         await confirm_properties(
             "confirm_instruction",
