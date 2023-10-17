@@ -82,7 +82,10 @@ class Transaction:
                 instruction_data,
             )
 
-            if not instruction.is_program_supported or not instruction.is_instruction_supported:
+            if (
+                not instruction.is_program_supported
+                or not instruction.is_instruction_supported
+            ):
                 self.blind_signing = True
 
             self.instructions.append(instruction)

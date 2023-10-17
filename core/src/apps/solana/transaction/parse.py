@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
-from apps.common.readers import read_uint32_le, read_uint64_le, read_compact_size
+
+from apps.common.readers import read_compact_size, read_uint32_le, read_uint64_le
 
 from ..constants import (
     ADDRESS_READ_ONLY,
@@ -42,6 +43,7 @@ def parse_header(serialized_tx: BufferReader) -> tuple[bool, int, int, int, int]
         num_signature_read_only_addresses,
         num_read_only_addresses,
     )
+
 
 def parse_addresses(
     serialized_tx: BufferReader,
@@ -127,9 +129,13 @@ def parse_instructions(
                 serialized_tx.read_memoryview(instruction_id_length), "little"
             )
 
-        instruction_data = serialized_tx.read_memoryview(data_length - instruction_id_length)
+        instruction_data = serialized_tx.read_memoryview(
+            data_length - instruction_id_length
+        )
 
         instructions.append((program_index, instruction_id, accounts, instruction_data))
+
+    assert serialized_tx.remaining_count() == 0
 
     return instructions
 
@@ -152,7 +158,9 @@ def parse_string(serialized_tx: BufferReader) -> str:
 
 
 def parse_memo(serialized_tx: BufferReader) -> str:
-    return bytes(serialized_tx.read_memoryview(serialized_tx.remaining_count())).decode("utf-8")
+    return bytes(serialized_tx.read_memoryview(serialized_tx.remaining_count())).decode(
+        "utf-8"
+    )
 
 
 def parse_property(reader: BufferReader, type: str) -> str | int | bytes:
