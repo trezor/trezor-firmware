@@ -192,26 +192,26 @@ def parse_property(reader: BufferReader, type: str) -> str | int | bytes:
         # raise NotImplementedError
 
 
-def parse_lut(
+def parse_address_lookup_tables(
     serialized_tx: BufferReader,
 ) -> tuple[list[AddressReference], list[AddressReference]]:
-    address_table_lookup_rw_addresses = []
-    address_table_lookup_ro_addresses = []
+    address_lookup_tables_rw_addresses = []
+    address_lookup_tables_ro_addresses = []
 
-    address_table_lookups_count = read_compact_size(serialized_tx)
-    for _ in range(address_table_lookups_count):
+    address_lookup_tables_count = read_compact_size(serialized_tx)
+    for _ in range(address_lookup_tables_count):
         account = parse_pubkey(serialized_tx)
 
         table_rw_indexes_count = read_compact_size(serialized_tx)
         for _ in range(table_rw_indexes_count):
-            address_table_lookup_rw_addresses.append(
-                (account, serialized_tx.get(), ADDRESS_RW)
-            )
+            index = serialized_tx.get()
+            address_lookup_tables_rw_addresses.append((account, index, ADDRESS_RW))
 
         table_ro_indexes_count = read_compact_size(serialized_tx)
         for _ in range(table_ro_indexes_count):
-            address_table_lookup_ro_addresses.append(
-                (account, serialized_tx.get(), ADDRESS_READ_ONLY)
+            index = serialized_tx.get()
+            address_lookup_tables_ro_addresses.append(
+                (account, index, ADDRESS_READ_ONLY)
             )
 
-    return address_table_lookup_rw_addresses, address_table_lookup_ro_addresses
+    return address_lookup_tables_rw_addresses, address_lookup_tables_ro_addresses

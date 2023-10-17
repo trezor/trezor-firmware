@@ -7,11 +7,11 @@ from trezor.wire import ProcessError
 from .instruction import Instruction
 from .instructions import get_instruction, get_instruction_id_length
 from .parse import (
+    parse_address_lookup_tables,
     parse_addresses,
     parse_block_hash,
     parse_header,
     parse_instructions,
-    parse_lut,
 )
 
 if TYPE_CHECKING:
@@ -28,12 +28,18 @@ class Transaction:
 
     blockhash: bytes
 
+    raw_instructions: list[tuple[int, int, list[int], bytes]]
     instructions: list[Instruction] = []
 
-    lut_rw_addresses: list[AddressReference] | None = None
-    lut_ro_addresses: list[AddressReference] | None = None
+    address_lookup_tables_rw_addresses: list[AddressReference] = []
+    address_lookup_tables_ro_addresses: list[AddressReference] = []
 
     def __init__(self, serialized_tx: BufferReader) -> None:
+        self._parse_transaction(serialized_tx)
+        self._create_instructions()
+        self._determine_if_blind_signing()
+
+    def _parse_transaction(self, serialized_tx):
         (
             self.is_legacy,
             self.version,
@@ -51,30 +57,47 @@ class Transaction:
 
         self.blockhash = parse_block_hash(serialized_tx)
 
-        raw_instructions = parse_instructions(
+        self.raw_instructions = parse_instructions(
             self.addresses, get_instruction_id_length, serialized_tx
         )
 
-        addresses_and_luts: list[Account] = []
-        for address in self.addresses:
-            addresses_and_luts.append(address)
-
         if not self.is_legacy:
-            self.lut_rw_addresses, self.lut_ro_addresses = parse_lut(serialized_tx)
-            for lut_rw_address in self.lut_rw_addresses:
-                addresses_and_luts.append(lut_rw_address)
-            for lut_ro_address in self.lut_ro_addresses:
-                addresses_and_luts.append(lut_ro_address)
+            (
+                self.address_lookup_tables_rw_addresses,
+                self.address_lookup_tables_ro_addresses,
+            ) = parse_address_lookup_tables(serialized_tx)
+
+        if serialized_tx.remaining_count() != 0:
+            raise ProcessError("Invalid transaction")
+
+    def _get_combined_accounts(self):
+        """
+        Combine accounts from transaction's accounts field with accounts from address lookup tables.
+        Instructions reference accounts by index in this combined list.
+        """
+        accounts: list[Account] = []
+        for address in self.addresses:
+            accounts.append(address)
+
+        for rw_address in self.address_lookup_tables_rw_addresses:
+            accounts.append(rw_address)
+        for ro_address in self.address_lookup_tables_ro_addresses:
+            accounts.append(ro_address)
+
+        return accounts
+
+    def _create_instructions(self):
+        combined_accounts = self._get_combined_accounts()
 
         for (
             program_index,
             instruction_id,
             accounts,
             instruction_data,
-        ) in raw_instructions:
+        ) in self.raw_instructions:
             program_id = base58.encode(self.addresses[program_index][0])
             instruction_accounts = [
-                addresses_and_luts[account_index] for account_index in accounts
+                combined_accounts[account_index] for account_index in accounts
             ]
             instruction = get_instruction(
                 program_id,
@@ -83,13 +106,13 @@ class Transaction:
                 instruction_data,
             )
 
+            self.instructions.append(instruction)
+
+    def _determine_if_blind_signing(self):
+        for instruction in self.instructions:
             if (
                 not instruction.is_program_supported
                 or not instruction.is_instruction_supported
             ):
                 self.blind_signing = True
-
-            self.instructions.append(instruction)
-
-        if serialized_tx.remaining_count() != 0:
-            raise ProcessError("Invalid transaction")
+                break
