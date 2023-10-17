@@ -51,10 +51,6 @@
 
 void flash_init(void);
 
-secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data);
-
-secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data);
-
 uint32_t flash_wait_and_clear_status_flags(void);
 
 // Erases the single sector in the designated flash area
