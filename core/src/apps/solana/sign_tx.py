@@ -18,8 +18,9 @@ async def sign_tx(
 ) -> SolanaTxSignature:
     from trezor.crypto import base58
     from trezor.crypto.curve import ed25519
+    from trezor.enums import ButtonRequestType
     from trezor.messages import SolanaTxSignature
-    from trezor.ui.layouts import show_warning
+    from trezor.ui.layouts import confirm_metadata, show_warning
     from trezor.utils import BufferReader
 
     from apps.common import seed
@@ -37,6 +38,14 @@ async def sign_tx(
     if transaction.blind_signing:
         await show_warning(
             "warning_blind_signing", "Transaction contains unknown instructions."
+        )
+
+    if transaction.required_signers_count > 1:
+        await confirm_metadata(
+            "multiple_signers",
+            "Multiple signers",
+            f"Transaction requires {transaction.required_signers_count} signers which increases the fee.",
+            br_code=ButtonRequestType.Other,
         )
 
     await show_instructions(node.public_key(), transaction)

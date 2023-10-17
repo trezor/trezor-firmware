@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 class Transaction:
     blind_signing = False
+    required_signers_count = 0
 
     is_legacy: bool
     version: int
@@ -47,6 +48,8 @@ class Transaction:
             num_signature_read_only_addresses,
             num_read_only_addresses,
         ) = parse_header(serialized_tx)
+
+        self.required_signers_count = num_required_signatures
 
         self.addresses = parse_addresses(
             serialized_tx,
