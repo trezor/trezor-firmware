@@ -1,0 +1,20 @@
+{
+    "header_len": 512,
+    "text": "Trezor Bitcoin-only",
+    "hw_model": "T2B1",
+    "expiry": 0,
+    "version": [0, 0],
+    "sig_m": 2,
+    "trust": {
+        "allow_run_with_secret": true,
+        "show_vendor_string": false,
+        "require_user_click": false,
+        "red_background": false,
+        "delay": 0
+    },
+    "pubkeys": [
+        "5356eb7e6efc91af67d3821bdd4d30402e92dbbc6c37024ad5b64daf93587ea5",
+        "8c50584cc3669cbb597135087daf6e3e072531d866b505812056069695be1b5e",
+        "7e0727439e635e36636661c9f37b481495ad9c0dd82d50c2366b1d4f4ae00b05"
+    ]
+}
