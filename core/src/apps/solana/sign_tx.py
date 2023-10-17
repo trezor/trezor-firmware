@@ -77,6 +77,8 @@ async def show_instructions(
                 instruction,
                 instructions_count,
                 instruction_index,
+                signer_path,
+                signer_public_key,
             )
         elif not instruction.is_instruction_supported:
             from .ui import show_unsupported_instruction_confirm
@@ -85,6 +87,8 @@ async def show_instructions(
                 instruction,
                 instructions_count,
                 instruction_index,
+                signer_path,
+                signer_public_key,
             )
         else:
             from .ui import show_confirm

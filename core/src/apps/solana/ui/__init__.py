@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
 
+from apps.common.paths import address_n_to_str
+
 from ..constants import (
     ADDRESS_READ_ONLY,
     ADDRESS_RW,
@@ -32,8 +34,6 @@ async def show_confirm(
 ) -> None:
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_metadata, confirm_properties
-
-    from apps.common.paths import address_n_to_str
 
     # assertions for pyright
     assert instruction.parsed_data is not None
@@ -132,7 +132,10 @@ def get_address_type(address_type: int) -> str:
 
 
 async def show_unsupported_instruction_details(
-    instruction: Instruction, title: str
+    instruction: Instruction,
+    title: str,
+    signer_path: list[int],
+    signer_public_key: bytes,
 ) -> None:
     from trezor.ui import NORMAL
     from trezor.ui.layouts import confirm_properties, should_show_more
@@ -140,49 +143,38 @@ async def show_unsupported_instruction_details(
     assert instruction.instruction_data is not None
     assert instruction.accounts is not None
 
-    result = True
-
-    if len(instruction.instruction_data) > 32:
-        result = await should_show_more(
-            title,
+    should_show_instruction_details = await should_show_more(
+        title,
+        (
             (
-                (
-                    NORMAL,
-                    f"Instruction data is {len(instruction.instruction_data)} byte long",
-                ),
+                NORMAL,
+                f"Instruction contains {len(instruction.accounts)} accounts and its data is {len(instruction.instruction_data)} bytes long.",
             ),
-            "Show data",
-            confirm="Continue",
-        )
+        ),
+        "Show details",
+        confirm="Continue",
+    )
 
-    if result and len(instruction.instruction_data) > 0:
+    if should_show_instruction_details:
         await confirm_properties(
             "instruction_data",
             title,
-            (("Instruction data", instruction.instruction_data),),
+            (("Instruction data:", instruction.instruction_data),),
         )
 
-    result = True
-    if len(instruction.accounts) > 5:
-        result = await should_show_more(
-            title,
-            (
-                (
-                    NORMAL,
-                    f"The instruction requires {len(instruction.accounts)} accounts",
-                ),
-            ),
-            "Show all",
-            confirm="Continue",
-        )
-
-    if result:
         accounts = []
         for i, account in enumerate(instruction.accounts, 1):
+            account_public_key = account[0]
+            address_type = get_address_type(account[1])
+
+            path_str = ""
+            if account_public_key == signer_public_key:
+                path_str = f" ({address_n_to_str(signer_path)})"
+
             accounts.append(
                 (
-                    f"Account {i} {get_address_type(account[1])}:",
-                    base58.encode(account[0]),
+                    f"Account {i}{path_str} {address_type}:",
+                    base58.encode(account_public_key),
                 )
             )
 
@@ -197,20 +189,28 @@ async def show_unsupported_instruction_confirm(
     instruction: Instruction,
     instructions_count: int,
     instruction_index: int,
+    signer_path: list[int],
+    signer_public_key: bytes,
 ) -> None:
     title = f"{instruction_index}/{instructions_count}: {instruction.ui_name}: instruction id ({instruction.instruction_id})"
 
-    return await show_unsupported_instruction_details(instruction, title)
+    return await show_unsupported_instruction_details(
+        instruction, title, signer_path, signer_public_key
+    )
 
 
 async def show_unsupported_program_confirm(
     instruction: Instruction,
     instructions_count: int,
     instruction_index: int,
+    signer_path: list[int],
+    signer_public_key: bytes,
 ) -> None:
     title = f"{instruction_index}/{instructions_count}: {instruction.ui_name}"
 
-    return await show_unsupported_instruction_details(instruction, title)
+    return await show_unsupported_instruction_details(
+        instruction, title, signer_path, signer_public_key
+    )
 
 
 async def show_final_confirmation(
