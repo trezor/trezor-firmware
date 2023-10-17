@@ -6,21 +6,9 @@ from trezor.wire import ProcessError
 from .parse import parse_property
 
 if TYPE_CHECKING:
-    from typing import Any, TypedDict, TypeGuard
+    from typing import Any, TypeGuard
 
-    from ..types import Account
-
-    class PropertyTemplate(TypedDict):
-        name: str
-        ui_name: str
-        type: str
-        optional: bool
-
-    class AccountTemplate(TypedDict):
-        name: str
-        ui_name: str
-        is_authority: bool
-        optional: bool
+    from ..types import Account, AccountTemplate, PropertyTemplate
 
 
 class Instruction:
@@ -94,18 +82,18 @@ class Instruction:
 
         for property_template in property_templates:
             self.set_property(
-                property_template["name"],
-                parse_property(reader, property_template["type"]),
+                property_template.name,
+                parse_property(reader, property_template.type),
             )
 
         for i, account_template in enumerate(accounts_template):
             if i >= len(accounts):
-                if account_template["optional"]:
+                if account_template.optional:
                     continue
                 else:
-                    raise ValueError(f"Account {account_template['name']} is missing")
+                    raise ValueError(f"Account {account_template.name} is missing")
 
-            self.set_account(account_template["name"], accounts[i])
+            self.set_account(account_template.name, accounts[i])
 
         if supports_multisig and len(accounts) > len(accounts_template):
             self.is_multisig = True
@@ -117,10 +105,10 @@ class Instruction:
         for account in ui_account_list:
             account_index, account_template = self.get_account_template(account)
             if account_index >= len(accounts):
-                if account_template["optional"]:
+                if account_template.optional:
                     continue
                 else:
-                    raise ValueError(f"Account {account_template['name']} is missing")
+                    raise ValueError(f"Account {account_template.name} is missing")
 
             self.ui_account_list.append((account, accounts[account_index]))
 
@@ -148,14 +136,14 @@ class Instruction:
 
     def get_property_template(self, property: str) -> PropertyTemplate:
         for property_template in self.property_templates:
-            if property_template["name"] == property:
+            if property_template.name == property:
                 return property_template
 
         raise ValueError(f"Property {property} not found")
 
     def get_account_template(self, account_name: str) -> tuple[int, AccountTemplate]:
         for i, template in enumerate(self.accounts_template):
-            if template["name"] == account_name:
+            if template.name == account_name:
                 return i, template
 
         raise ValueError(f"Account {account_name} not found")

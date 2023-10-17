@@ -2,12 +2,13 @@
 # do not edit manually!
 from typing import TYPE_CHECKING
 
+from ..types import AccountTemplate, InstructionIdFormat, PropertyTemplate
 from .instruction import Instruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
 
-    from ..types import Account, InstructionIdFormat
+    from ..types import Account
 
 SYSTEM_PROGRAM_ID = "11111111111111111111111111111111"
 STAKE_PROGRAM_ID = "Stake11111111111111111111111111111111111111"
@@ -1116,21 +1117,21 @@ if TYPE_CHECKING:
 
 def get_instruction_id_length(program_id: str) -> InstructionIdFormat:
     if program_id == SYSTEM_PROGRAM_ID:
-        return {"length": 4, "is_included_if_zero": True}
+        return InstructionIdFormat(4, True)
     if program_id == STAKE_PROGRAM_ID:
-        return {"length": 4, "is_included_if_zero": True}
+        return InstructionIdFormat(4, True)
     if program_id == COMPUTE_BUDGET_PROGRAM_ID:
-        return {"length": 1, "is_included_if_zero": True}
+        return InstructionIdFormat(1, True)
     if program_id == TOKEN_PROGRAM_ID:
-        return {"length": 1, "is_included_if_zero": True}
+        return InstructionIdFormat(1, True)
     if program_id == ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
-        return {"length": 1, "is_included_if_zero": False}
+        return InstructionIdFormat(1, False)
     if program_id == MEMO_PROGRAM_ID:
-        return {"length": 0, "is_included_if_zero": False}
+        return InstructionIdFormat(0, False)
     if program_id == MEMO_LEGACY_PROGRAM_ID:
-        return {"length": 0, "is_included_if_zero": False}
+        return InstructionIdFormat(0, False)
 
-    return {"length": 0, "is_included_if_zero": False}
+    return InstructionIdFormat(0, False)
 
 
 def get_instruction(
@@ -1147,38 +1148,38 @@ def get_instruction(
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
                 [
-                    {
-                        "name": "lamports",
-                        "ui_name": "Lamports",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "space",
-                        "ui_name": "Space",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "type": "authority",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "lamports",
+                        "Lamports",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "space",
+                        "Space",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "owner",
+                        "Owner",
+                        "authority",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "funding_account",
-                        "ui_name": "Funding account",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "new_account",
-                        "ui_name": "New account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "funding_account",
+                        "Funding account",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "new_account",
+                        "New account",
+                        False,
+                        False,
+                    ),
                 ],
                 ["lamports", "space", "owner"],
                 ["funding_account", "new_account"],
@@ -1195,20 +1196,20 @@ def get_instruction(
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_ASSIGN,
                 [
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "type": "authority",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "owner",
+                        "Owner",
+                        "authority",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "assigned_account",
-                        "ui_name": "Assigned account",
-                        "is_authority": True,
-                        "optional": False,
-                    }
+                    AccountTemplate(
+                        "assigned_account",
+                        "Assigned account",
+                        True,
+                        False,
+                    ),
                 ],
                 ["owner"],
                 ["assigned_account"],
@@ -1225,26 +1226,26 @@ def get_instruction(
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_TRANSFER,
                 [
-                    {
-                        "name": "lamports",
-                        "ui_name": "Lamports",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "lamports",
+                        "Lamports",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "funding_account",
-                        "ui_name": "Funding account",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "recipient_account",
-                        "ui_name": "Recipient account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "funding_account",
+                        "Funding account",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "recipient_account",
+                        "Recipient account",
+                        False,
+                        False,
+                    ),
                 ],
                 ["lamports"],
                 ["funding_account", "recipient_account"],
@@ -1261,56 +1262,56 @@ def get_instruction(
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
                 [
-                    {
-                        "name": "base",
-                        "ui_name": "Base",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
-                    {
-                        "name": "seed",
-                        "ui_name": "Seed",
-                        "type": "string",
-                        "optional": False,
-                    },
-                    {
-                        "name": "lamports",
-                        "ui_name": "Lamports",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "space",
-                        "ui_name": "Space",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "base",
+                        "Base",
+                        "pubkey",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "seed",
+                        "Seed",
+                        "string",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "lamports",
+                        "Lamports",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "space",
+                        "Space",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "owner",
+                        "Owner",
+                        "pubkey",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "funding_account",
-                        "ui_name": "Funding account",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "created_account",
-                        "ui_name": "Created account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "base_account",
-                        "ui_name": "Base account",
-                        "is_authority": True,
-                        "optional": True,
-                    },
+                    AccountTemplate(
+                        "funding_account",
+                        "Funding account",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "created_account",
+                        "Created account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "base_account",
+                        "Base account",
+                        True,
+                        True,
+                    ),
                 ],
                 ["base", "seed", "lamports", "space", "owner"],
                 ["funding_account", "created_account", "base_account"],
@@ -1327,20 +1328,20 @@ def get_instruction(
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_ALLOCATE,
                 [
-                    {
-                        "name": "space",
-                        "ui_name": "Space",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "space",
+                        "Space",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "new_account",
-                        "ui_name": "New account",
-                        "is_authority": True,
-                        "optional": False,
-                    }
+                    AccountTemplate(
+                        "new_account",
+                        "New account",
+                        True,
+                        False,
+                    ),
                 ],
                 ["space"],
                 ["new_account"],
@@ -1357,44 +1358,44 @@ def get_instruction(
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
                 [
-                    {
-                        "name": "base",
-                        "ui_name": "Base",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
-                    {
-                        "name": "seed",
-                        "ui_name": "Seed",
-                        "type": "string",
-                        "optional": False,
-                    },
-                    {
-                        "name": "space",
-                        "ui_name": "Space",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "base",
+                        "Base",
+                        "pubkey",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "seed",
+                        "Seed",
+                        "string",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "space",
+                        "Space",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "owner",
+                        "Owner",
+                        "pubkey",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "allocated_account",
-                        "ui_name": "Allocated account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "base_account",
-                        "ui_name": "Base account",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "allocated_account",
+                        "Allocated account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "base_account",
+                        "Base account",
+                        True,
+                        False,
+                    ),
                 ],
                 ["base", "seed", "space", "owner"],
                 ["allocated_account", "base_account"],
@@ -1411,38 +1412,38 @@ def get_instruction(
                 instruction_accounts,
                 SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED,
                 [
-                    {
-                        "name": "base",
-                        "ui_name": "Base",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
-                    {
-                        "name": "seed",
-                        "ui_name": "Seed",
-                        "type": "string",
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "base",
+                        "Base",
+                        "pubkey",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "seed",
+                        "Seed",
+                        "string",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "owner",
+                        "Owner",
+                        "pubkey",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "assigned_account",
-                        "ui_name": "Assigned account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "base_account",
-                        "ui_name": "Base account",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "assigned_account",
+                        "Assigned account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "base_account",
+                        "Base account",
+                        True,
+                        False,
+                    ),
                 ],
                 ["base", "seed", "owner"],
                 ["assigned_account", "base_account"],
@@ -1475,50 +1476,50 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_INITIALIZE,
                 [
-                    {
-                        "name": "staker",
-                        "ui_name": "Staker",
-                        "type": "authority",
-                        "optional": False,
-                    },
-                    {
-                        "name": "withdrawer",
-                        "ui_name": "Withdrawer",
-                        "type": "authority",
-                        "optional": False,
-                    },
-                    {
-                        "name": "unix_timestamp",
-                        "ui_name": "Unix timestamp",
-                        "type": "i64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "epoch",
-                        "ui_name": "Epoch",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "custodian",
-                        "ui_name": "Custodian",
-                        "type": "authority",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "staker",
+                        "Staker",
+                        "authority",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "withdrawer",
+                        "Withdrawer",
+                        "authority",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "unix_timestamp",
+                        "Unix timestamp",
+                        "i64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "epoch",
+                        "Epoch",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "custodian",
+                        "Custodian",
+                        "authority",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "uninitialized_stake_account",
-                        "ui_name": "Uninitialized stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "rent_sysvar",
-                        "ui_name": "Rent sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "uninitialized_stake_account",
+                        "Uninitialized stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "rent_sysvar",
+                        "Rent sysvar",
+                        False,
+                        False,
+                    ),
                 ],
                 ["staker", "withdrawer", "unix_timestamp", "epoch", "custodian"],
                 ["uninitialized_stake_account", "rent_sysvar"],
@@ -1535,44 +1536,44 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_AUTHORIZE,
                 [
-                    {
-                        "name": "pubkey",
-                        "ui_name": "Pubkey",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_authorize",
-                        "ui_name": "Stake authorize",
-                        "type": "StakeAuthorize",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "pubkey",
+                        "Pubkey",
+                        "pubkey",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "stake_authorize",
+                        "Stake authorize",
+                        "StakeAuthorize",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "stake_account",
-                        "ui_name": "Stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "clock_sysvar",
-                        "ui_name": "Clock sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_or_withdraw_authority",
-                        "ui_name": "stake or withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "lockup_authority",
-                        "ui_name": "Lockup authority",
-                        "is_authority": True,
-                        "optional": True,
-                    },
+                    AccountTemplate(
+                        "stake_account",
+                        "Stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "clock_sysvar",
+                        "Clock sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_or_withdraw_authority",
+                        "stake or withdraw authority",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "lockup_authority",
+                        "Lockup authority",
+                        True,
+                        True,
+                    ),
                 ],
                 ["pubkey", "stake_authorize"],
                 [
@@ -1595,42 +1596,42 @@ def get_instruction(
                 STAKE_PROGRAM_ID_INS_DELEGATE_STAKE,
                 [],
                 [
-                    {
-                        "name": "initialized_stake_account",
-                        "ui_name": "Initialized stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "vote_account",
-                        "ui_name": "Vote account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "clock_sysvar",
-                        "ui_name": "Clock sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_history_sysvar",
-                        "ui_name": "Stake history sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "config_account",
-                        "ui_name": "Config account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_authority",
-                        "ui_name": "Stake authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "initialized_stake_account",
+                        "Initialized stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "vote_account",
+                        "Vote account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "clock_sysvar",
+                        "Clock sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_history_sysvar",
+                        "Stake history sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "config_account",
+                        "Config account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_authority",
+                        "Stake authority",
+                        True,
+                        False,
+                    ),
                 ],
                 [],
                 [
@@ -1654,32 +1655,32 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_SPLIT,
                 [
-                    {
-                        "name": "lamports",
-                        "ui_name": "Lamports",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "lamports",
+                        "Lamports",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "stake_account",
-                        "ui_name": "Stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "uninitialized_stake_account",
-                        "ui_name": "Uninitialized stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_authority",
-                        "ui_name": "Stake authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "stake_account",
+                        "Stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "uninitialized_stake_account",
+                        "Uninitialized stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_authority",
+                        "Stake authority",
+                        True,
+                        False,
+                    ),
                 ],
                 ["lamports"],
                 ["stake_account", "uninitialized_stake_account", "stake_authority"],
@@ -1696,50 +1697,50 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_WITHDRAW,
                 [
-                    {
-                        "name": "lamports",
-                        "ui_name": "lamports",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "lamports",
+                        "lamports",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "stake_account",
-                        "ui_name": "Stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "recipient_account",
-                        "ui_name": "Recipient account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "clock_sysvar",
-                        "ui_name": "Clock sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_history_sysvar",
-                        "ui_name": "Stake history sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "withdrawal_authority",
-                        "ui_name": "Withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "lockup_authority",
-                        "ui_name": "Lockup authority",
-                        "is_authority": True,
-                        "optional": True,
-                    },
+                    AccountTemplate(
+                        "stake_account",
+                        "Stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "recipient_account",
+                        "Recipient account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "clock_sysvar",
+                        "Clock sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_history_sysvar",
+                        "Stake history sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "withdrawal_authority",
+                        "Withdraw authority",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "lockup_authority",
+                        "Lockup authority",
+                        True,
+                        True,
+                    ),
                 ],
                 ["lamports"],
                 [
@@ -1764,24 +1765,24 @@ def get_instruction(
                 STAKE_PROGRAM_ID_INS_DEACTIVATE,
                 [],
                 [
-                    {
-                        "name": "delegated_stake_account",
-                        "ui_name": "Delegated stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "clock_sysvar",
-                        "ui_name": "Clock sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_authority",
-                        "ui_name": "Stake authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "delegated_stake_account",
+                        "Delegated stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "clock_sysvar",
+                        "Clock sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_authority",
+                        "Stake authority",
+                        True,
+                        False,
+                    ),
                 ],
                 [],
                 ["delegated_stake_account", "clock_sysvar", "stake_authority"],
@@ -1798,38 +1799,38 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_SET_LOCKUP,
                 [
-                    {
-                        "name": "unix_timestamp",
-                        "ui_name": "Unix timestamp",
-                        "type": "i64",
-                        "optional": True,
-                    },
-                    {
-                        "name": "epoch",
-                        "ui_name": "Epoch",
-                        "type": "u64",
-                        "optional": True,
-                    },
-                    {
-                        "name": "custodian",
-                        "ui_name": "Custodian",
-                        "type": "pubkey",
-                        "optional": True,
-                    },
+                    PropertyTemplate(
+                        "unix_timestamp",
+                        "Unix timestamp",
+                        "i64",
+                        True,
+                    ),
+                    PropertyTemplate(
+                        "epoch",
+                        "Epoch",
+                        "u64",
+                        True,
+                    ),
+                    PropertyTemplate(
+                        "custodian",
+                        "Custodian",
+                        "pubkey",
+                        True,
+                    ),
                 ],
                 [
-                    {
-                        "name": "initialized_stake_account",
-                        "ui_name": "Initialized stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "lockup_or_withdraw_authority",
-                        "ui_name": "Lockup authority or withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "initialized_stake_account",
+                        "Initialized stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "lockup_or_withdraw_authority",
+                        "Lockup authority or withdraw authority",
+                        True,
+                        False,
+                    ),
                 ],
                 ["unix_timestamp", "epoch", "custodian"],
                 ["initialized_stake_account", "lockup_or_withdraw_authority"],
@@ -1847,36 +1848,36 @@ def get_instruction(
                 STAKE_PROGRAM_ID_INS_MERGE,
                 [],
                 [
-                    {
-                        "name": "destination_stake_account",
-                        "ui_name": "Destination stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "source_stake_account",
-                        "ui_name": "Source stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "clock_sysvar",
-                        "ui_name": "Clock sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_history_sysvar",
-                        "ui_name": "Stake history sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_authority",
-                        "ui_name": "Stake authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "destination_stake_account",
+                        "Destination stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "source_stake_account",
+                        "Source stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "clock_sysvar",
+                        "Clock sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_history_sysvar",
+                        "Stake history sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_authority",
+                        "Stake authority",
+                        True,
+                        False,
+                    ),
                 ],
                 [],
                 [
@@ -1899,56 +1900,56 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED,
                 [
-                    {
-                        "name": "new_authorized_pubkey",
-                        "ui_name": "New authorized pubkey",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_authorize",
-                        "ui_name": "Stake authorize",
-                        "type": "StakeAuthorize",
-                        "optional": False,
-                    },
-                    {
-                        "name": "authority_seed",
-                        "ui_name": "Authority seed",
-                        "type": "string",
-                        "optional": False,
-                    },
-                    {
-                        "name": "authority_owner",
-                        "ui_name": "Authority owner",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "new_authorized_pubkey",
+                        "New authorized pubkey",
+                        "pubkey",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "stake_authorize",
+                        "Stake authorize",
+                        "StakeAuthorize",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "authority_seed",
+                        "Authority seed",
+                        "string",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "authority_owner",
+                        "Authority owner",
+                        "pubkey",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "stake_account",
-                        "ui_name": "Stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_or_withdraw_authority",
-                        "ui_name": "stake or withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "clock_sysvar",
-                        "ui_name": "Clock sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "lockup_authority",
-                        "ui_name": "Lockup authority",
-                        "is_authority": True,
-                        "optional": True,
-                    },
+                    AccountTemplate(
+                        "stake_account",
+                        "Stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_or_withdraw_authority",
+                        "stake or withdraw authority",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "clock_sysvar",
+                        "Clock sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "lockup_authority",
+                        "Lockup authority",
+                        True,
+                        True,
+                    ),
                 ],
                 [
                     "new_authorized_pubkey",
@@ -1976,30 +1977,30 @@ def get_instruction(
                 STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED,
                 [],
                 [
-                    {
-                        "name": "uninitialized_stake_account",
-                        "ui_name": "Uninitialized stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "rent_sysvar",
-                        "ui_name": "Rent sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_authority",
-                        "ui_name": "stake authority",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "withdrawal_authority",
-                        "ui_name": "withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "uninitialized_stake_account",
+                        "Uninitialized stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "rent_sysvar",
+                        "Rent sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_authority",
+                        "stake authority",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "withdrawal_authority",
+                        "withdraw authority",
+                        True,
+                        False,
+                    ),
                 ],
                 [],
                 [
@@ -2021,44 +2022,44 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED,
                 [
-                    {
-                        "name": "stake_authorize",
-                        "ui_name": "Stake authorize",
-                        "type": "StakeAuthorize",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "stake_authorize",
+                        "Stake authorize",
+                        "StakeAuthorize",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "stake_account",
-                        "ui_name": "Stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "clock_sysvar",
-                        "ui_name": "Clock sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_or_withdraw_authority",
-                        "ui_name": "stake or withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "new_stake_or_withdraw_authority",
-                        "ui_name": "new stake or withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "lockup_authority",
-                        "ui_name": "Lockup authority",
-                        "is_authority": True,
-                        "optional": True,
-                    },
+                    AccountTemplate(
+                        "stake_account",
+                        "Stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "clock_sysvar",
+                        "Clock sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_or_withdraw_authority",
+                        "stake or withdraw authority",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "new_stake_or_withdraw_authority",
+                        "new stake or withdraw authority",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "lockup_authority",
+                        "Lockup authority",
+                        True,
+                        True,
+                    ),
                 ],
                 ["stake_authorize"],
                 [
@@ -2081,56 +2082,56 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED,
                 [
-                    {
-                        "name": "stake_authorize",
-                        "ui_name": "Stake authorize",
-                        "type": "StakeAuthorize",
-                        "optional": False,
-                    },
-                    {
-                        "name": "authority_seed",
-                        "ui_name": "Authority seed",
-                        "type": "string",
-                        "optional": False,
-                    },
-                    {
-                        "name": "authority_owner",
-                        "ui_name": "Authority owner",
-                        "type": "pubkey",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "stake_authorize",
+                        "Stake authorize",
+                        "StakeAuthorize",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "authority_seed",
+                        "Authority seed",
+                        "string",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "authority_owner",
+                        "Authority owner",
+                        "pubkey",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "stake_account",
-                        "ui_name": "Stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "stake_or_withdraw_authority",
-                        "ui_name": "stake or withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "clock_sysvar",
-                        "ui_name": "Clock sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "new_stake_or_withdraw_authority",
-                        "ui_name": "new stake or withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "lockup_authority",
-                        "ui_name": "Lockup authority",
-                        "is_authority": True,
-                        "optional": True,
-                    },
+                    AccountTemplate(
+                        "stake_account",
+                        "Stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "stake_or_withdraw_authority",
+                        "stake or withdraw authority",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "clock_sysvar",
+                        "Clock sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "new_stake_or_withdraw_authority",
+                        "new stake or withdraw authority",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "lockup_authority",
+                        "Lockup authority",
+                        True,
+                        True,
+                    ),
                 ],
                 ["stake_authorize", "authority_seed", "authority_owner"],
                 [
@@ -2153,38 +2154,38 @@ def get_instruction(
                 instruction_accounts,
                 STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED,
                 [
-                    {
-                        "name": "unix_timestamp",
-                        "ui_name": "Unix timestamp",
-                        "type": "i64",
-                        "optional": True,
-                    },
-                    {
-                        "name": "epoch",
-                        "ui_name": "Epoch",
-                        "type": "u64",
-                        "optional": True,
-                    },
+                    PropertyTemplate(
+                        "unix_timestamp",
+                        "Unix timestamp",
+                        "i64",
+                        True,
+                    ),
+                    PropertyTemplate(
+                        "epoch",
+                        "Epoch",
+                        "u64",
+                        True,
+                    ),
                 ],
                 [
-                    {
-                        "name": "stake_account",
-                        "ui_name": "Stake account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "lockup_or_withdraw_authority",
-                        "ui_name": "Lockup authority or withdraw authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "new_lockup_authority",
-                        "ui_name": "New lockup authority",
-                        "is_authority": True,
-                        "optional": True,
-                    },
+                    AccountTemplate(
+                        "stake_account",
+                        "Stake account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "lockup_or_withdraw_authority",
+                        "Lockup authority or withdraw authority",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "new_lockup_authority",
+                        "New lockup authority",
+                        True,
+                        True,
+                    ),
                 ],
                 ["unix_timestamp", "epoch"],
                 [
@@ -2221,12 +2222,12 @@ def get_instruction(
                 instruction_accounts,
                 COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME,
                 [
-                    {
-                        "name": "bytes",
-                        "ui_name": "bytes",
-                        "type": "u32",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "bytes",
+                        "bytes",
+                        "u32",
+                        False,
+                    ),
                 ],
                 [],
                 ["bytes"],
@@ -2244,12 +2245,12 @@ def get_instruction(
                 instruction_accounts,
                 COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
                 [
-                    {
-                        "name": "units",
-                        "ui_name": "units",
-                        "type": "u32",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "units",
+                        "units",
+                        "u32",
+                        False,
+                    ),
                 ],
                 [],
                 ["units"],
@@ -2267,12 +2268,12 @@ def get_instruction(
                 instruction_accounts,
                 COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
                 [
-                    {
-                        "name": "lamports",
-                        "ui_name": "lamports",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "lamports",
+                        "lamports",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [],
                 ["lamports"],
@@ -2307,30 +2308,30 @@ def get_instruction(
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
                 [],
                 [
-                    {
-                        "name": "account_to_initialize",
-                        "ui_name": "Account to initialize",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "mint_account",
-                        "ui_name": "Mint account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "rent_sysvar",
-                        "ui_name": "Rent sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "account_to_initialize",
+                        "Account to initialize",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "mint_account",
+                        "Mint account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "rent_sysvar",
+                        "Rent sysvar",
+                        False,
+                        False,
+                    ),
                 ],
                 [],
                 ["account_to_initialize", "mint_account", "owner", "rent_sysvar"],
@@ -2347,32 +2348,32 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
                 [
-                    {
-                        "name": "number_of_signers",
-                        "ui_name": "Number of signers",
-                        "type": "u8",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "number_of_signers",
+                        "Number of signers",
+                        "u8",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "multisig_account",
-                        "ui_name": "Multisig account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "rent_sysvar",
-                        "ui_name": "Rent sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "signer_accounts",
-                        "ui_name": "Signer accounts",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "multisig_account",
+                        "Multisig account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "rent_sysvar",
+                        "Rent sysvar",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "signer_accounts",
+                        "Signer accounts",
+                        False,
+                        False,
+                    ),
                 ],
                 ["number_of_signers"],
                 ["multisig_account", "rent_sysvar", "signer_accounts"],
@@ -2389,32 +2390,32 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_TRANSFER,
                 [
-                    {
-                        "name": "amount",
-                        "ui_name": "Amount",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "amount",
+                        "Amount",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "source_account",
-                        "ui_name": "Source account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "destination_account",
-                        "ui_name": "Destination account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "source_account",
+                        "Source account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "destination_account",
+                        "Destination account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        True,
+                        False,
+                    ),
                 ],
                 ["amount"],
                 ["source_account", "destination_account", "owner"],
@@ -2431,32 +2432,32 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_APPROVE,
                 [
-                    {
-                        "name": "amount",
-                        "ui_name": "Amount",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "amount",
+                        "Amount",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "source_account",
-                        "ui_name": "Source account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "delegate_account",
-                        "ui_name": "Delegate account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "source_account",
+                        "Source account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "delegate_account",
+                        "Delegate account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        True,
+                        False,
+                    ),
                 ],
                 ["amount"],
                 ["source_account", "delegate_account", "owner"],
@@ -2474,18 +2475,18 @@ def get_instruction(
                 TOKEN_PROGRAM_ID_INS_REVOKE,
                 [],
                 [
-                    {
-                        "name": "source_account",
-                        "ui_name": "Source account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "source_account",
+                        "Source account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        True,
+                        False,
+                    ),
                 ],
                 [],
                 ["source_account", "owner"],
@@ -2502,32 +2503,32 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_SET_AUTHORITY,
                 [
-                    {
-                        "name": "authority_type",
-                        "ui_name": "Authority type",
-                        "type": "AuthorityType",
-                        "optional": False,
-                    },
-                    {
-                        "name": "new_authority",
-                        "ui_name": "New authority",
-                        "type": "pubkey",
-                        "optional": True,
-                    },
+                    PropertyTemplate(
+                        "authority_type",
+                        "Authority type",
+                        "AuthorityType",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "new_authority",
+                        "New authority",
+                        "pubkey",
+                        True,
+                    ),
                 ],
                 [
-                    {
-                        "name": "mint_account",
-                        "ui_name": "Mint or account to change",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "current_authority",
-                        "ui_name": "Current authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "mint_account",
+                        "Mint or account to change",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "current_authority",
+                        "Current authority",
+                        True,
+                        False,
+                    ),
                 ],
                 ["authority_type", "new_authority"],
                 ["mint_account", "current_authority"],
@@ -2544,32 +2545,32 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_MINT_TO,
                 [
-                    {
-                        "name": "amount",
-                        "ui_name": "Amount",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "amount",
+                        "Amount",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "mint",
-                        "ui_name": "The mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "account_to_mint",
-                        "ui_name": "Account to mint tokens to",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "minting_authority",
-                        "ui_name": "Minting authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "mint",
+                        "The mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "account_to_mint",
+                        "Account to mint tokens to",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "minting_authority",
+                        "Minting authority",
+                        True,
+                        False,
+                    ),
                 ],
                 ["amount"],
                 ["mint", "account_to_mint", "minting_authority"],
@@ -2586,32 +2587,32 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_BURN,
                 [
-                    {
-                        "name": "amount",
-                        "ui_name": "Amount",
-                        "type": "u64",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "amount",
+                        "Amount",
+                        "u64",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "account_to_burn_from",
-                        "ui_name": "Account to burn from",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint",
-                        "ui_name": "The token mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "account_to_burn_from",
+                        "Account to burn from",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        "The token mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        True,
+                        False,
+                    ),
                 ],
                 ["amount"],
                 ["account_to_burn_from", "token_mint", "owner"],
@@ -2629,24 +2630,24 @@ def get_instruction(
                 TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT,
                 [],
                 [
-                    {
-                        "name": "account_to_close",
-                        "ui_name": "Account to close",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "destination_account",
-                        "ui_name": "Destination account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "account_to_close",
+                        "Account to close",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "destination_account",
+                        "Destination account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        True,
+                        False,
+                    ),
                 ],
                 [],
                 ["account_to_close", "destination_account", "owner"],
@@ -2664,24 +2665,24 @@ def get_instruction(
                 TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT,
                 [],
                 [
-                    {
-                        "name": "account_to_freeze",
-                        "ui_name": "Account to freeze",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint",
-                        "ui_name": "The token mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "freeze_authority",
-                        "ui_name": "Freeze authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "account_to_freeze",
+                        "Account to freeze",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        "The token mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "freeze_authority",
+                        "Freeze authority",
+                        True,
+                        False,
+                    ),
                 ],
                 [],
                 ["account_to_freeze", "token_mint", "freeze_authority"],
@@ -2699,24 +2700,24 @@ def get_instruction(
                 TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT,
                 [],
                 [
-                    {
-                        "name": "account_to_freeze",
-                        "ui_name": "Account to freeze",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint",
-                        "ui_name": "The token mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "freeze_authority",
-                        "ui_name": "Freeze authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "account_to_freeze",
+                        "Account to freeze",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        "The token mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "freeze_authority",
+                        "Freeze authority",
+                        True,
+                        False,
+                    ),
                 ],
                 [],
                 ["account_to_freeze", "token_mint", "freeze_authority"],
@@ -2733,44 +2734,44 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED,
                 [
-                    {
-                        "name": "amount",
-                        "ui_name": "Amount",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "decimals",
-                        "ui_name": "Decimals",
-                        "type": "u8",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "amount",
+                        "Amount",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "decimals",
+                        "Decimals",
+                        "u8",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "source_account",
-                        "ui_name": "Source account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint",
-                        "ui_name": "The token mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "destination_account",
-                        "ui_name": "Destination account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "source_account",
+                        "Source account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        "The token mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "destination_account",
+                        "Destination account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        True,
+                        False,
+                    ),
                 ],
                 ["amount", "decimals"],
                 ["source_account", "token_mint", "destination_account", "owner"],
@@ -2787,44 +2788,44 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED,
                 [
-                    {
-                        "name": "amount",
-                        "ui_name": "Amount",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "decimals",
-                        "ui_name": "Decimals",
-                        "type": "u8",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "amount",
+                        "Amount",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "decimals",
+                        "Decimals",
+                        "u8",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "source_account",
-                        "ui_name": "Source account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint",
-                        "ui_name": "The token mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "delegate",
-                        "ui_name": "The delegate",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "source_account",
+                        "Source account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        "The token mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "delegate",
+                        "The delegate",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        True,
+                        False,
+                    ),
                 ],
                 ["amount", "decimals"],
                 ["source_account", "token_mint", "delegate", "owner"],
@@ -2841,38 +2842,38 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED,
                 [
-                    {
-                        "name": "amount",
-                        "ui_name": "Amount",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "decimals",
-                        "ui_name": "Decimals",
-                        "type": "u8",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "amount",
+                        "Amount",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "decimals",
+                        "Decimals",
+                        "u8",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "mint",
-                        "ui_name": "The mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "account_to_mint",
-                        "ui_name": "Account to mint tokens to",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "minting_authority",
-                        "ui_name": "Minting authority",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "mint",
+                        "The mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "account_to_mint",
+                        "Account to mint tokens to",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "minting_authority",
+                        "Minting authority",
+                        True,
+                        False,
+                    ),
                 ],
                 ["amount", "decimals"],
                 ["mint", "account_to_mint", "minting_authority"],
@@ -2889,38 +2890,38 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_BURN_CHECKED,
                 [
-                    {
-                        "name": "amount",
-                        "ui_name": "Amount",
-                        "type": "u64",
-                        "optional": False,
-                    },
-                    {
-                        "name": "decimals",
-                        "ui_name": "Decimals",
-                        "type": "u8",
-                        "optional": False,
-                    },
+                    PropertyTemplate(
+                        "amount",
+                        "Amount",
+                        "u64",
+                        False,
+                    ),
+                    PropertyTemplate(
+                        "decimals",
+                        "Decimals",
+                        "u8",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "account_to_burn_from",
-                        "ui_name": "Account to burn from",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint",
-                        "ui_name": "The token mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": True,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "account_to_burn_from",
+                        "Account to burn from",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        "The token mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        True,
+                        False,
+                    ),
                 ],
                 ["amount", "decimals"],
                 ["account_to_burn_from", "token_mint", "owner"],
@@ -2937,32 +2938,32 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
                 [
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "type": "pubkey",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "owner",
+                        "Owner",
+                        "pubkey",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "account_to_initialize",
-                        "ui_name": "Account to initialize",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "mint_account",
-                        "ui_name": "Mint account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "rent_sysvar",
-                        "ui_name": "Rent sysvar",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "account_to_initialize",
+                        "Account to initialize",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "mint_account",
+                        "Mint account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "rent_sysvar",
+                        "Rent sysvar",
+                        False,
+                        False,
+                    ),
                 ],
                 ["owner"],
                 ["account_to_initialize", "mint_account", "rent_sysvar"],
@@ -2980,12 +2981,12 @@ def get_instruction(
                 TOKEN_PROGRAM_ID_INS_SYNC_NATIVE,
                 [],
                 [
-                    {
-                        "name": "token_account",
-                        "ui_name": "Native token account",
-                        "is_authority": False,
-                        "optional": False,
-                    }
+                    AccountTemplate(
+                        "token_account",
+                        "Native token account",
+                        False,
+                        False,
+                    ),
                 ],
                 [],
                 ["token_account"],
@@ -3002,26 +3003,26 @@ def get_instruction(
                 instruction_accounts,
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
                 [
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "type": "pubkey",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "owner",
+                        "Owner",
+                        "pubkey",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "account_to_initialize",
-                        "ui_name": "Account to initialize",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "mint_account",
-                        "ui_name": "Mint account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "account_to_initialize",
+                        "Account to initialize",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "mint_account",
+                        "Mint account",
+                        False,
+                        False,
+                    ),
                 ],
                 ["owner"],
                 ["account_to_initialize", "mint_account"],
@@ -3039,12 +3040,12 @@ def get_instruction(
                 TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
                 [],
                 [
-                    {
-                        "name": "account_to_initialize",
-                        "ui_name": "Account to initialize",
-                        "is_authority": False,
-                        "optional": False,
-                    }
+                    AccountTemplate(
+                        "account_to_initialize",
+                        "Account to initialize",
+                        False,
+                        False,
+                    ),
                 ],
                 [],
                 ["account_to_initialize"],
@@ -3078,42 +3079,42 @@ def get_instruction(
                 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
                 [],
                 [
-                    {
-                        "name": "funding_account",
-                        "ui_name": "Funding account",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "associated_token_account",
-                        "ui_name": "Associated token account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "wallet_address",
-                        "ui_name": "Wallet address",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint",
-                        "ui_name": "The token mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "system_program",
-                        "ui_name": "System program",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "spl_token",
-                        "ui_name": "SPL token program",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "funding_account",
+                        "Funding account",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "associated_token_account",
+                        "Associated token account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "wallet_address",
+                        "Wallet address",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        "The token mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "system_program",
+                        "System program",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "spl_token",
+                        "SPL token program",
+                        False,
+                        False,
+                    ),
                 ],
                 [],
                 [
@@ -3138,42 +3139,42 @@ def get_instruction(
                 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
                 [],
                 [
-                    {
-                        "name": "funding_account",
-                        "ui_name": "Funding account",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "associated_token_account",
-                        "ui_name": "Associated token account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "wallet_address",
-                        "ui_name": "Wallet address",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint",
-                        "ui_name": "The token mint",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "system_program",
-                        "ui_name": "System program",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "spl_token",
-                        "ui_name": "SPL token program",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "funding_account",
+                        "Funding account",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "associated_token_account",
+                        "Associated token account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "wallet_address",
+                        "Wallet address",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        "The token mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "system_program",
+                        "System program",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "spl_token",
+                        "SPL token program",
+                        False,
+                        False,
+                    ),
                 ],
                 [],
                 [
@@ -3198,48 +3199,48 @@ def get_instruction(
                 ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED,
                 [],
                 [
-                    {
-                        "name": "nested_account",
-                        "ui_name": "Nested associated token account",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint_nested",
-                        "ui_name": "Token mint for the nested account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "associated_token_account",
-                        "ui_name": "Associated token account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "owner",
-                        "ui_name": "Owner",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "token_mint_owner",
-                        "ui_name": "Token mint for the owner account",
-                        "is_authority": False,
-                        "optional": False,
-                    },
-                    {
-                        "name": "wallet_address",
-                        "ui_name": "Wallet address",
-                        "is_authority": True,
-                        "optional": False,
-                    },
-                    {
-                        "name": "spl_token",
-                        "ui_name": "SPL token program",
-                        "is_authority": False,
-                        "optional": False,
-                    },
+                    AccountTemplate(
+                        "nested_account",
+                        "Nested associated token account",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint_nested",
+                        "Token mint for the nested account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "associated_token_account",
+                        "Associated token account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "owner",
+                        "Owner",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint_owner",
+                        "Token mint for the owner account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "wallet_address",
+                        "Wallet address",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "spl_token",
+                        "SPL token program",
+                        False,
+                        False,
+                    ),
                 ],
                 [],
                 [
@@ -3280,20 +3281,20 @@ def get_instruction(
                 instruction_accounts,
                 MEMO_PROGRAM_ID_INS_MEMO,
                 [
-                    {
-                        "name": "memo",
-                        "ui_name": "Memo",
-                        "type": "memo",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "memo",
+                        "Memo",
+                        "memo",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "signer_accounts",
-                        "ui_name": "Signer accounts",
-                        "is_authority": True,
-                        "optional": True,
-                    }
+                    AccountTemplate(
+                        "signer_accounts",
+                        "Signer accounts",
+                        True,
+                        True,
+                    ),
                 ],
                 ["memo"],
                 ["signer_accounts"],
@@ -3326,20 +3327,20 @@ def get_instruction(
                 instruction_accounts,
                 MEMO_LEGACY_PROGRAM_ID_INS_MEMO,
                 [
-                    {
-                        "name": "memo",
-                        "ui_name": "Memo",
-                        "type": "memo",
-                        "optional": False,
-                    }
+                    PropertyTemplate(
+                        "memo",
+                        "Memo",
+                        "memo",
+                        False,
+                    ),
                 ],
                 [
-                    {
-                        "name": "signer_accounts",
-                        "ui_name": "Signer accounts",
-                        "is_authority": True,
-                        "optional": True,
-                    }
+                    AccountTemplate(
+                        "signer_accounts",
+                        "Signer accounts",
+                        True,
+                        True,
+                    ),
                 ],
                 ["memo"],
                 ["signer_accounts"],

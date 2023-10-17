@@ -120,13 +120,13 @@ def parse_instructions(
         data_length = read_compact_size(serialized_tx)
 
         instruction_id_format = get_instruction_id_format(program_id)
-        instruction_id_length = instruction_id_format["length"]
+        instruction_id_length = instruction_id_format.length
         # Some programs e.g. Associated Token Account Program don't include the instruction
         # id in the data for instruction id 0 but they include it for the other instructions.
         # Instructions with such optional instruction id also don't contain any other instruction
         # data (otherwise parsing would be impossible).
         if data_length < instruction_id_length:
-            if instruction_id_format["is_included_if_zero"]:
+            if instruction_id_format.is_included_if_zero:
                 raise ValueError("Invalid instruction data")
 
             instruction_id = 0

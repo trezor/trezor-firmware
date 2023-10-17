@@ -41,9 +41,9 @@ async def show_confirm(
     datas = []
     for property in instruction.ui_parameter_list:
         property_template = instruction.get_property_template(property)
-        ui_name = property_template["ui_name"]
+        ui_name = property_template.ui_name
         value = instruction.parsed_data[property]
-        _type = property_template["type"]
+        _type = property_template.type
         if _type == "authority":
             if signer == value:
                 continue
@@ -60,8 +60,8 @@ async def show_confirm(
     accounts = []
     for account in instruction.ui_account_list:
         account_template = instruction.get_account_template(account[0])[1]
-        ui_name = account_template["ui_name"]
-        is_authority = account_template["is_authority"]
+        ui_name = account_template.ui_name
+        is_authority = account_template.is_authority
         account_value = instruction.parsed_accounts[account[0]]
 
         if is_authority and account_value[0] == signer:

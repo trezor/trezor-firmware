@@ -44,11 +44,12 @@ int\
 </%def>\
 from typing import TYPE_CHECKING
 
+from ..types import AccountTemplate, InstructionIdFormat, PropertyTemplate
 from .instruction import Instruction
 
 if TYPE_CHECKING:
     from typing import Any, Type, TypeGuard
-    from ..types import Account, InstructionIdFormat
+    from ..types import Account
 
 % for program in programs["programs"]:
 ${getProgramId(program)} = "${program["id"]}"
@@ -110,16 +111,10 @@ if TYPE_CHECKING:
 def get_instruction_id_length(program_id: str) -> InstructionIdFormat:
 % for program in programs["programs"]:
     if program_id == ${getProgramId(program)}:
-        return {
-            "length": ${program["instruction_id_format"]["length"]},
-            "is_included_if_zero": ${program["instruction_id_format"]["is_included_if_zero"]}
-        }
+        return InstructionIdFormat(${program["instruction_id_format"]["length"]}, ${program["instruction_id_format"]["is_included_if_zero"]})
 % endfor
 
-    return {
-        "length": 0,
-        "is_included_if_zero": False
-    }
+    return InstructionIdFormat(0, False)
 
 
 
@@ -136,11 +131,28 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 ${getInstructionIdText(program, instruction)},
-                ${instruction["parameters"]},
-                ${instruction["references"]},
+                [
+                % for parameter in instruction["parameters"]:
+                    PropertyTemplate(
+                        "${parameter["name"]}",
+                        "${parameter["ui_name"]}",
+                        "${parameter["type"]}",
+                        ${parameter["optional"]},
+                    ),
+                % endfor
+                ],
+                [
+                % for reference in instruction["references"]:
+                    AccountTemplate(
+                        "${reference["name"]}",
+                        "${reference["ui_name"]}",
+                        ${reference["is_authority"]},
+                        ${reference["optional"]},
+                    ),
+                % endfor
+                ],
                 ${instruction["ui"]["elements"]["parameters"]},
                 ${instruction["ui"]["elements"]["accounts"]},
-                ## "${getInstructionUiIdentifier(instruction)}",
                 "${instruction["ui"]["ui_identifier"]}",
                 "${program["name"]}: ${instruction["name"]}",
                 True,
