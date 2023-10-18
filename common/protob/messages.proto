@@ -366,4 +366,6 @@ enum MessageType {
     // Solana
     MessageType_SolanaGetPublicKey = 900 [(wire_in) = true];
     MessageType_SolanaPublicKey = 901 [(wire_out) = true];
+    MessageType_SolanaGetAddress = 902 [(wire_in) = true];
+    MessageType_SolanaAddress = 903 [(wire_out) = true];
 }
