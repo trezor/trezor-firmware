@@ -494,6 +494,10 @@ pub enum MessageType {
     MessageType_WebAuthnAddResidentCredential = 802,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WebAuthnRemoveResidentCredential)
     MessageType_WebAuthnRemoveResidentCredential = 803,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaGetPublicKey)
+    MessageType_SolanaGetPublicKey = 900,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaPublicKey)
+    MessageType_SolanaPublicKey = 901,
 }
 
 impl ::protobuf::Enum for MessageType {
@@ -738,6 +742,8 @@ impl ::protobuf::Enum for MessageType {
             801 => ::std::option::Option::Some(MessageType::MessageType_WebAuthnCredentials),
             802 => ::std::option::Option::Some(MessageType::MessageType_WebAuthnAddResidentCredential),
             803 => ::std::option::Option::Some(MessageType::MessageType_WebAuthnRemoveResidentCredential),
+            900 => ::std::option::Option::Some(MessageType::MessageType_SolanaGetPublicKey),
+            901 => ::std::option::Option::Some(MessageType::MessageType_SolanaPublicKey),
             _ => ::std::option::Option::None
         }
     }
@@ -977,6 +983,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_WebAuthnCredentials" => ::std::option::Option::Some(MessageType::MessageType_WebAuthnCredentials),
             "MessageType_WebAuthnAddResidentCredential" => ::std::option::Option::Some(MessageType::MessageType_WebAuthnAddResidentCredential),
             "MessageType_WebAuthnRemoveResidentCredential" => ::std::option::Option::Some(MessageType::MessageType_WebAuthnRemoveResidentCredential),
+            "MessageType_SolanaGetPublicKey" => ::std::option::Option::Some(MessageType::MessageType_SolanaGetPublicKey),
+            "MessageType_SolanaPublicKey" => ::std::option::Option::Some(MessageType::MessageType_SolanaPublicKey),
             _ => ::std::option::Option::None
         }
     }
@@ -1215,6 +1223,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_WebAuthnCredentials,
         MessageType::MessageType_WebAuthnAddResidentCredential,
         MessageType::MessageType_WebAuthnRemoveResidentCredential,
+        MessageType::MessageType_SolanaGetPublicKey,
+        MessageType::MessageType_SolanaPublicKey,
     ];
 }
 
@@ -1459,6 +1469,8 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_WebAuthnCredentials => 230,
             MessageType::MessageType_WebAuthnAddResidentCredential => 231,
             MessageType::MessageType_WebAuthnRemoveResidentCredential => 232,
+            MessageType::MessageType_SolanaGetPublicKey => 233,
+            MessageType::MessageType_SolanaPublicKey => 234,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1508,7 +1520,7 @@ pub mod exts {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\x20google/protobuf/de\
-    scriptor.proto*\xd3P\n\x0bMessageType\x12(\n\x16MessageType_Initialize\
+    scriptor.proto*\xa6Q\n\x0bMessageType\x12(\n\x16MessageType_Initialize\
     \x10\0\x1a\x0c\x80\xa6\x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\
     \x10MessageType_Ping\x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\
     %\n\x13MessageType_Success\x10\x02\x1a\x0c\x80\xa6\x1d\x01\xa8\xb5\x18\
@@ -1771,29 +1783,31 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_WebAuthnCredentials\x10\xa1\
     \x06\x1a\x04\x98\xb5\x18\x01\x124\n)MessageType_WebAuthnAddResidentCrede\
     ntial\x10\xa2\x06\x1a\x04\x90\xb5\x18\x01\x127\n,MessageType_WebAuthnRem\
-    oveResidentCredential\x10\xa3\x06\x1a\x04\x90\xb5\x18\x01\x1a\x04\xc8\
-    \xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08r\x10z\"\x06\x08\xac\x02\x10\xb0\
-    \x02\"\x06\x08\xb5\x02\x10\xb8\x02:<\n\x07wire_in\x18\xd2\x86\x03\x20\
-    \x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x06wireIn:>\n\x08wire_o\
-    ut\x18\xd3\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\
-    \x07wireOut:G\n\rwire_debug_in\x18\xd4\x86\x03\x20\x01(\x08\x12!.google.\
-    protobuf.EnumValueOptionsR\x0bwireDebugIn:I\n\x0ewire_debug_out\x18\xd5\
-    \x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0cwireDebu\
-    gOut:@\n\twire_tiny\x18\xd6\x86\x03\x20\x01(\x08\x12!.google.protobuf.En\
-    umValueOptionsR\x08wireTiny:L\n\x0fwire_bootloader\x18\xd7\x86\x03\x20\
-    \x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0ewireBootloader:C\n\
-    \x0bwire_no_fsm\x18\xd8\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumVa\
-    lueOptionsR\twireNoFsm:F\n\x0cbitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\
-    \x12!.google.protobuf.EnumValueOptionsR\x0bbitcoinOnly:U\n\x17has_bitcoi\
-    n_only_values\x18\xb9\x8e\x03\x20\x01(\x08\x12\x1c.google.protobuf.EnumO\
-    ptionsR\x14hasBitcoinOnlyValues:T\n\x14experimental_message\x18\xa1\x96\
-    \x03\x20\x01(\x08\x12\x1f.google.protobuf.MessageOptionsR\x13experimenta\
-    lMessage:>\n\twire_type\x18\xa2\x96\x03\x20\x01(\r\x12\x1f.google.protob\
-    uf.MessageOptionsR\x08wireType:N\n\x12experimental_field\x18\x89\x9e\x03\
-    \x20\x01(\x08\x12\x1d.google.protobuf.FieldOptionsR\x11experimentalField\
-    :U\n\x17include_in_bitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12\x1c.goo\
-    gle.protobuf.FileOptionsR\x14includeInBitcoinOnlyB8\n#com.satoshilabs.tr\
-    ezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    oveResidentCredential\x10\xa3\x06\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMess\
+    ageType_SolanaGetPublicKey\x10\x84\x07\x1a\x04\x90\xb5\x18\x01\x12&\n\
+    \x1bMessageType_SolanaPublicKey\x10\x85\x07\x1a\x04\x98\xb5\x18\x01\x1a\
+    \x04\xc8\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08r\x10z\"\x06\x08\xac\x02\
+    \x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02:<\n\x07wire_in\x18\xd2\x86\
+    \x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x06wireIn:>\n\
+    \x08wire_out\x18\xd3\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValue\
+    OptionsR\x07wireOut:G\n\rwire_debug_in\x18\xd4\x86\x03\x20\x01(\x08\x12!\
+    .google.protobuf.EnumValueOptionsR\x0bwireDebugIn:I\n\x0ewire_debug_out\
+    \x18\xd5\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0c\
+    wireDebugOut:@\n\twire_tiny\x18\xd6\x86\x03\x20\x01(\x08\x12!.google.pro\
+    tobuf.EnumValueOptionsR\x08wireTiny:L\n\x0fwire_bootloader\x18\xd7\x86\
+    \x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x0ewireBootload\
+    er:C\n\x0bwire_no_fsm\x18\xd8\x86\x03\x20\x01(\x08\x12!.google.protobuf.\
+    EnumValueOptionsR\twireNoFsm:F\n\x0cbitcoin_only\x18\xe0\xd4\x03\x20\x01\
+    (\x08\x12!.google.protobuf.EnumValueOptionsR\x0bbitcoinOnly:U\n\x17has_b\
+    itcoin_only_values\x18\xb9\x8e\x03\x20\x01(\x08\x12\x1c.google.protobuf.\
+    EnumOptionsR\x14hasBitcoinOnlyValues:T\n\x14experimental_message\x18\xa1\
+    \x96\x03\x20\x01(\x08\x12\x1f.google.protobuf.MessageOptionsR\x13experim\
+    entalMessage:>\n\twire_type\x18\xa2\x96\x03\x20\x01(\r\x12\x1f.google.pr\
+    otobuf.MessageOptionsR\x08wireType:N\n\x12experimental_field\x18\x89\x9e\
+    \x03\x20\x01(\x08\x12\x1d.google.protobuf.FieldOptionsR\x11experimentalF\
+    ield:U\n\x17include_in_bitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12\x1c\
+    .google.protobuf.FileOptionsR\x14includeInBitcoinOnlyB8\n#com.satoshilab\
+    s.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
