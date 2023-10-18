@@ -193,6 +193,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         # solana
         if msg_type == MessageType.SolanaGetPublicKey:
             return "apps.solana.get_public_key"
+        if msg_type == MessageType.SolanaGetAddress:
+            return "apps.solana.get_address"
 
     raise ValueError
 

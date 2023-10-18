@@ -81,6 +81,8 @@ trezor_message_impl! {
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
     SolanaGetPublicKey => MessageType_SolanaGetPublicKey,
     SolanaPublicKey => MessageType_SolanaPublicKey,
+    SolanaGetAddress => MessageType_SolanaGetAddress,
+    SolanaAddress => MessageType_SolanaAddress,
 }
 
 #[cfg(feature = "binance")]

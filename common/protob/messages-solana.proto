@@ -22,3 +22,23 @@ message SolanaPublicKey {
     required bytes public_key = 1;
 }
 
+/**
+ * Request: Ask device for Solana address
+ * @start
+ * @next SolanaAddress
+ * @next Failure
+ */
+message SolanaGetAddress {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bool show_display = 2; // optionally show on display before sending the result
+    optional bool chunkify = 3;     // display the address in chunks of 4 characters
+}
+
+/**
+ * Response: Contains a Solana address derived from device private seed
+ * @end
+ */
+message SolanaAddress {
+    required string address = 1; // Solana address as Base58 encoded string
+}
+
