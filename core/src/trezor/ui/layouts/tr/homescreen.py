@@ -80,6 +80,7 @@ class Lockscreen(HomescreenBase):
         self,
         label: str | None,
         bootscreen: bool = False,
+        coinjoin_authorized: bool = False,
     ) -> None:
         self.bootscreen = bootscreen
         skip = (
@@ -90,6 +91,7 @@ class Lockscreen(HomescreenBase):
                 label=label,
                 bootscreen=bootscreen,
                 skip_first_paint=skip,
+                coinjoin_authorized=coinjoin_authorized,
             ),
         )
 

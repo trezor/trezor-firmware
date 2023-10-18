@@ -51,7 +51,10 @@ async def lockscreen() -> None:
 
     # Only show the lockscreen UI if the device can in fact be locked.
     if can_lock_device():
-        await Lockscreen(label=storage.device.get_label())
+        await Lockscreen(
+            label=storage.device.get_label(),
+            coinjoin_authorized=is_set_any_session(MessageType.AuthorizeCoinJoin),
+        )
     # Otherwise proceed directly to unlock() call. If the device is already unlocked,
     # it should be a no-op storage-wise, but it resets the internal configuration
     # to an unlocked state.

@@ -80,6 +80,7 @@ include_icon!(
     "model_tr/res/cancel.toif",
     empty_right_col = true
 ); // 7*7
+include_icon!(ICON_COINJOIN, "model_tr/res/coinjoin.toif"); // 12*12
 include_icon!(
     ICON_DELETE,
     "model_tr/res/delete.toif",

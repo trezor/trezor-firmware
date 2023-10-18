@@ -737,7 +737,7 @@
 },
 "TR": {
 "click_tests": {
-"TR_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "b96ab80af28b6d5e13ef32a8cc19812445c6258a2ad64f15870c7490a37edc06",
+"TR_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "22f65f6d9edc7659e5c54bdda6bd38c68c96637d2eb1f8475a536c9f49423b30",
 "TR_test_autolock.py::test_autolock_does_not_interrupt_signing": "3d0833002f39256a15ee5008af9d2cd304c61bc2932cb6dc844c027bfed3ed1d",
 "TR_test_autolock.py::test_autolock_interrupts_passphrase": "1ab8da65492ade3e6301f784b818d355959c665ea4b91e38f6dd2de8c8b21c84",
 "TR_test_autolock.py::test_autolock_interrupts_signing": "5f26a18a711ec7d17c035cc60478249281edeeac512d4561e55bd7a3c2d2ef94",
@@ -795,8 +795,8 @@
 "TR_bitcoin-test_authorize_coinjoin.py::test_get_address": "a96bebc82d5aff9c6a8583ddb354e6427689a3be4fddf082c3cd0e8722e54d46",
 "TR_bitcoin-test_authorize_coinjoin.py::test_get_public_key": "4c2bba305bab30de2fcff0cec5ab1192f2e4d826d86f91f7172dfa624f5f3139",
 "TR_bitcoin-test_authorize_coinjoin.py::test_multisession_authorization": "5f70b535406a6254113ed2a5f780ba98b8205abf6425eb7038d22395953aa560",
-"TR_bitcoin-test_authorize_coinjoin.py::test_sign_tx[False]": "76fe57750f0bfbaa84aaa99f67329dc93e505d51521c2a2490d523996b403aa3",
-"TR_bitcoin-test_authorize_coinjoin.py::test_sign_tx[True]": "76fe57750f0bfbaa84aaa99f67329dc93e505d51521c2a2490d523996b403aa3",
+"TR_bitcoin-test_authorize_coinjoin.py::test_sign_tx[False]": "ebe4ac22942f10915507491103d1151b2416ffebfd6c3ca6f2b28be8b35d4262",
+"TR_bitcoin-test_authorize_coinjoin.py::test_sign_tx[True]": "ebe4ac22942f10915507491103d1151b2416ffebfd6c3ca6f2b28be8b35d4262",
 "TR_bitcoin-test_authorize_coinjoin.py::test_sign_tx_large": "4f275de439c812363140d3839ebddd9243e2bb34d80d02a487361148b2bbab71",
 "TR_bitcoin-test_authorize_coinjoin.py::test_sign_tx_migration": "4cf48d6bb48a9efbff9e2949d657fde4dea7ae9e92f47cafdfcd11d7765d76b8",
 "TR_bitcoin-test_authorize_coinjoin.py::test_sign_tx_spend": "db453154c6d8318befea7230eb2a9639fece5bdfd83c62fbb7a1e9195b77ac1b",
@@ -2017,7 +2017,7 @@
 },
 "TT": {
 "click_tests": {
-"TT_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "a46dce1eef3df4b242e90af5f6c6a1f2acdb27e7b56a1af0ab0982483bc0d9b7",
+"TT_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "521b6ce07207c262b832fb4e78477f89211dc02a4b6e02a6fe8d389a2be909cf",
 "TT_test_autolock.py::test_autolock_does_not_interrupt_signing": "e8ff223f44e97a98fbef62c2ed314bdc2d3a2f160d0396d09733847ce103494d",
 "TT_test_autolock.py::test_autolock_interrupts_passphrase": "15ce8ca8c46be745296ad39b2df4e4503f1b3208c3f5b3e3f48d7bd172779605",
 "TT_test_autolock.py::test_autolock_interrupts_signing": "a9b983a624b6ca20fd976fc59b570e0bfebc847a448a1db63717932d96cde15c",
@@ -2078,8 +2078,8 @@
 "TT_bitcoin-test_authorize_coinjoin.py::test_get_address": "f4de0499dac628067619c6081d4ebdba0ad196af7bf9662c5387386eba9e9729",
 "TT_bitcoin-test_authorize_coinjoin.py::test_get_public_key": "38a7eac0cf0be45770fb28da9c2f74bac6404e85f2a3801acdd4b0107d99f2ff",
 "TT_bitcoin-test_authorize_coinjoin.py::test_multisession_authorization": "d39b3290ddfecd5a3ceaf249543eaccb2b71c21eb2dbeabef94fe866ad7ce6a8",
-"TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx[False]": "a5601b1f876c598cfe9361b4203a0b2908e860bef93d3fcc1a4fd2f89eeddfec",
-"TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx[True]": "a5601b1f876c598cfe9361b4203a0b2908e860bef93d3fcc1a4fd2f89eeddfec",
+"TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx[False]": "00f8d6cc8ad60877dc4629295e438f29912456f0767997ce3ba9277d1e1bbf22",
+"TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx[True]": "00f8d6cc8ad60877dc4629295e438f29912456f0767997ce3ba9277d1e1bbf22",
 "TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx_large": "312fca890a6e93da6c3705e3b3c97ba38dd336374634dbed9134362420273380",
 "TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx_migration": "a0757616e39b5883ccfba01af3b386d1fc2d4a00517b2c3d79519ce0f60bc5cd",
 "TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx_spend": "b8ca0b72adfb0cfa1ff653c83a0995517b71f8bfc217753e16aab49dd82a3a65",
