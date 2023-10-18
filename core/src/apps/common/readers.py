@@ -55,3 +55,8 @@ def read_uint16_le(r: BufferReader) -> int:
 def read_uint32_le(r: BufferReader) -> int:
     data = r.read_memoryview(4)
     return int.from_bytes(data, "little")
+
+
+def read_uint64_le(r: BufferReader) -> int:
+    data = r.read_memoryview(8)
+    return int.from_bytes(data, "little")
