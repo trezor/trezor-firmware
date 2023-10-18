@@ -31,6 +31,24 @@ pytestmark = [
 ]
 
 
+# TODO: remove at the end of review process
+@parametrize_using_common_fixtures(
+    "solana/sign_tx.tmp.json",
+)
+def test_solana_tx_tmp(client: Client, parameters, result):
+    client.init_device(new_session=True)
+
+    serialized_tx = parameters["tx"]
+
+    actual_result = sign_tx(
+        client,
+        address_n=parse_path("m/44'/501'/0'/0'"),
+        serialized_tx=bytes.fromhex(serialized_tx),
+    )
+
+    assert actual_result.signature == bytes.fromhex(result["signature"])
+
+
 @parametrize_using_common_fixtures(
     "solana/sign_tx.system_program.json",
     "solana/sign_tx.stake_program.json",
