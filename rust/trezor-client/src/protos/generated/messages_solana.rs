@@ -708,6 +708,349 @@ impl ::protobuf::reflect::ProtobufValue for SolanaAddress {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.solana.SolanaSignTx)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SolanaSignTx {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignTx.address_n)
+    pub address_n: ::std::vec::Vec<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignTx.serialized_tx)
+    pub serialized_tx: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaSignTx.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SolanaSignTx {
+    fn default() -> &'a SolanaSignTx {
+        <SolanaSignTx as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SolanaSignTx {
+    pub fn new() -> SolanaSignTx {
+        ::std::default::Default::default()
+    }
+
+    // required bytes serialized_tx = 2;
+
+    pub fn serialized_tx(&self) -> &[u8] {
+        match self.serialized_tx.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_serialized_tx(&mut self) {
+        self.serialized_tx = ::std::option::Option::None;
+    }
+
+    pub fn has_serialized_tx(&self) -> bool {
+        self.serialized_tx.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_serialized_tx(&mut self, v: ::std::vec::Vec<u8>) {
+        self.serialized_tx = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_serialized_tx(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.serialized_tx.is_none() {
+            self.serialized_tx = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.serialized_tx.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_serialized_tx(&mut self) -> ::std::vec::Vec<u8> {
+        self.serialized_tx.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "address_n",
+            |m: &SolanaSignTx| { &m.address_n },
+            |m: &mut SolanaSignTx| { &mut m.address_n },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "serialized_tx",
+            |m: &SolanaSignTx| { &m.serialized_tx },
+            |m: &mut SolanaSignTx| { &mut m.serialized_tx },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaSignTx>(
+            "SolanaSignTx",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SolanaSignTx {
+    const NAME: &'static str = "SolanaSignTx";
+
+    fn is_initialized(&self) -> bool {
+        if self.serialized_tx.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    is.read_repeated_packed_uint32_into(&mut self.address_n)?;
+                },
+                8 => {
+                    self.address_n.push(is.read_uint32()?);
+                },
+                18 => {
+                    self.serialized_tx = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.address_n {
+            my_size += ::protobuf::rt::uint32_size(1, *value);
+        };
+        if let Some(v) = self.serialized_tx.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.address_n {
+            os.write_uint32(1, *v)?;
+        };
+        if let Some(v) = self.serialized_tx.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SolanaSignTx {
+        SolanaSignTx::new()
+    }
+
+    fn clear(&mut self) {
+        self.address_n.clear();
+        self.serialized_tx = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SolanaSignTx {
+        static instance: SolanaSignTx = SolanaSignTx {
+            address_n: ::std::vec::Vec::new(),
+            serialized_tx: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SolanaSignTx {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SolanaSignTx").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SolanaSignTx {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SolanaSignTx {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.solana.SolanaTxSignature)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SolanaTxSignature {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaTxSignature.signature)
+    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaTxSignature.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SolanaTxSignature {
+    fn default() -> &'a SolanaTxSignature {
+        <SolanaTxSignature as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SolanaTxSignature {
+    pub fn new() -> SolanaTxSignature {
+        ::std::default::Default::default()
+    }
+
+    // required bytes signature = 1;
+
+    pub fn signature(&self) -> &[u8] {
+        match self.signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signature(&mut self) {
+        self.signature = ::std::option::Option::None;
+    }
+
+    pub fn has_signature(&self) -> bool {
+        self.signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature.is_none() {
+            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature",
+            |m: &SolanaTxSignature| { &m.signature },
+            |m: &mut SolanaTxSignature| { &mut m.signature },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaTxSignature>(
+            "SolanaTxSignature",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SolanaTxSignature {
+    const NAME: &'static str = "SolanaTxSignature";
+
+    fn is_initialized(&self) -> bool {
+        if self.signature.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.signature.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SolanaTxSignature {
+        SolanaTxSignature::new()
+    }
+
+    fn clear(&mut self) {
+        self.signature = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SolanaTxSignature {
+        static instance: SolanaTxSignature = SolanaTxSignature {
+            signature: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SolanaTxSignature {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SolanaTxSignature").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SolanaTxSignature {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SolanaTxSignature {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-solana.proto\x12\x19hw.trezor.messages.solana\x1a\x15mess\
     ages-common.proto\"T\n\x12SolanaGetPublicKey\x12\x1b\n\taddress_n\x18\
@@ -717,7 +1060,10 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\
     \x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\x08R\x08chun\
     kify\")\n\rSolanaAddress\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07add\
-    ress\
+    ress\"P\n\x0cSolanaSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08ad\
+    dressN\x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\x0cserializedTx\"1\n\
+    \x11SolanaTxSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignat\
+    ure\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -736,11 +1082,13 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(4);
+            let mut messages = ::std::vec::Vec::with_capacity(6);
             messages.push(SolanaGetPublicKey::generated_message_descriptor_data());
             messages.push(SolanaPublicKey::generated_message_descriptor_data());
             messages.push(SolanaGetAddress::generated_message_descriptor_data());
             messages.push(SolanaAddress::generated_message_descriptor_data());
+            messages.push(SolanaSignTx::generated_message_descriptor_data());
+            messages.push(SolanaTxSignature::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

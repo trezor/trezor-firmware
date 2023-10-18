@@ -45,3 +45,17 @@ def get_address(
     """Get Solana address."""
     address_n = tools.parse_path(address)
     return solana.get_address(client, address_n, show_display, chunkify)
+
+
+@cli.command()
+@click.argument("serialized_tx", type=str)
+@click.option("-n", "--address", default=DEFAULT_PATH, help=PATH_HELP)
+@with_client
+def sign_tx(
+    client: "TrezorClient",
+    address: str,
+    serialized_tx: str,
+) -> messages.SolanaTxSignature:
+    """Sign Solana transaction."""
+    address_n = tools.parse_path(address)
+    return solana.sign_tx(client, address_n, bytes.fromhex(serialized_tx))

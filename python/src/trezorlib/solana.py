@@ -33,3 +33,17 @@ def get_address(
             chunkify=chunkify,
         )
     )
+
+
+@expect(messages.SolanaTxSignature)
+def sign_tx(
+    client: "TrezorClient",
+    address_n: List[int],
+    serialized_tx: bytes,
+) -> "MessageType":
+    return client.call(
+        messages.SolanaSignTx(
+            address_n=address_n,
+            serialized_tx=serialized_tx,
+        )
+    )
