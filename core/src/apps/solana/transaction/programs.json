@@ -16,7 +16,7 @@
             {
               "name": "lamports",
               "ui_name": "Lamports",
-              "type": "u64",
+              "type": "lamports",
               "optional": false
             },
             {
@@ -88,7 +88,7 @@
             {
               "name": "lamports",
               "ui_name": "Lamports",
-              "type": "u64",
+              "type": "lamports",
               "optional": false
             }
           ],
@@ -133,7 +133,7 @@
             {
               "name": "lamports",
               "ui_name": "Lamports",
-              "type": "u64",
+              "type": "lamports",
               "optional": false
             },
             {
@@ -307,7 +307,7 @@
             {
               "name": "lamports",
               "ui_name": "Lamports",
-              "type": "u64",
+              "type": "lamports",
               "optional": false
             },
             {
@@ -558,7 +558,7 @@
             {
               "name": "lamports",
               "ui_name": "Lamports",
-              "type": "u64",
+              "type": "lamports",
               "optional": false
             }
           ],
@@ -601,7 +601,7 @@
             {
               "name": "lamports",
               "ui_name": "lamports",
-              "type": "u64",
+              "type": "lamports",
               "optional": false
             }
           ],
@@ -1131,7 +1131,7 @@
             {
               "name": "lamports",
               "ui_name": "lamports",
-              "type": "u64",
+              "type": "lamports",
               "optional": false
             }
           ],
@@ -2149,6 +2149,10 @@
     },
     {
       "name": "i64",
+      "family": "basic"
+    },
+    {
+      "name": "lamports",
       "family": "basic"
     },
     {
