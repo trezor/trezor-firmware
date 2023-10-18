@@ -166,6 +166,12 @@ templates: ## render Mako templates (for lists of coins, tokens, etc.)
 templates_check: ## check that Mako-rendered files match their templates
 	./tools/build_templates --check
 
+solana_templates: ## rebuild Solana instruction template file
+	./tools/build_solana_templates
+
+solana_templates_check: ## check that Solana instruction template file is up to date
+	./tools/build_solana_templates --check
+
 ## build commands:
 
 build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all
