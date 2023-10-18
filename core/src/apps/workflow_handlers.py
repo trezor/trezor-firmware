@@ -190,6 +190,10 @@ def _find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.BinanceSignTx:
             return "apps.binance.sign_tx"
 
+        # solana
+        if msg_type == MessageType.SolanaGetPublicKey:
+            return "apps.solana.get_public_key"
+
     raise ValueError
 
 

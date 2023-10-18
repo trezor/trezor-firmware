@@ -679,6 +679,10 @@ if not utils.BITCOIN_ONLY:
     import apps.ripple.serialize
     apps.ripple.sign_tx
     import apps.ripple.sign_tx
+    apps.solana
+    import apps.solana
+    apps.solana.get_public_key
+    import apps.solana.get_public_key
     apps.stellar
     import apps.stellar
     apps.stellar.consts
