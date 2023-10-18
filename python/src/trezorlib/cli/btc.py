@@ -233,7 +233,7 @@ def get_address(
 
 @cli.command()
 @click.option("-c", "--coin", default=DEFAULT_COIN)
-@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/0'/0'")
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44h/0h/0h")
 @click.option("-e", "--curve")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS))
 @click.option("-d", "--show-display", is_flag=True)
@@ -313,10 +313,10 @@ def _get_descriptor(
     else:
         raise ValueError("Unsupported coin")
 
-    path = f"m/{purpose}'/{coin_type}'/{account}'"
+    path = f"m/{purpose}h/{coin_type}h/{account}h"
     if purpose == PURPOSE_SLIP25:
         if script_type == messages.InputScriptType.SPENDTAPROOT:
-            path += "/1'"
+            path += "/1h"
         else:
             raise ValueError("Unsupported SLIP25 script type")
 

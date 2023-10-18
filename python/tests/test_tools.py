@@ -14,35 +14,38 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import tools
 
+VECTORS = (  # descriptor, checksum
+    (
+        "pkh([5c9e228d/44h/0h/0h]xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy/0/*)",
+        "lnrxp640",
+    ),
+    (
+        "pkh([5c9e228d/44h/0h/0h]xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy/1/*)",
+        "w8x8u09h",
+    ),
+    (
+        "sh(wpkh([5c9e228d/49h/0h/0h]xpub6CVKsQYXc9awxgV1tWbG4foDvdcnieK2JkbpPEBKB5WwAPKBZ1mstLbKVB4ov7QzxzjaxNK6EfmNY5Jsk2cG26EVcEkycGW4tchT2dyUhrx/0/*))",
+        "kx6mu23v",
+    ),
+    (
+        "sh(wpkh([5c9e228d/49h/0h/0h]xpub6CVKsQYXc9awxgV1tWbG4foDvdcnieK2JkbpPEBKB5WwAPKBZ1mstLbKVB4ov7QzxzjaxNK6EfmNY5Jsk2cG26EVcEkycGW4tchT2dyUhrx/1/*))",
+        "r85dy4yn",
+    ),
+    (
+        "wpkh([5c9e228d/84h/0h/0h]xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/0/*)",
+        "vyj8qz0q",
+    ),
+    (
+        "wpkh([5c9e228d/84h/0h/0h]xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/1/*)",
+        "ashxahlc",
+    ),
+)
 
-def test_descriptor_checksum():
-    VECTOR = [
-        (
-            "pkh([5c9e228d/44'/0'/0']xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy/0/*)",
-            "vzuemqzv",
-        ),
-        (
-            "pkh([5c9e228d/44'/0'/0']xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy/1/*)",
-            "akecx4j5",
-        ),
-        (
-            "sh(wpkh([5c9e228d/49'/0'/0']xpub6CVKsQYXc9awxgV1tWbG4foDvdcnieK2JkbpPEBKB5WwAPKBZ1mstLbKVB4ov7QzxzjaxNK6EfmNY5Jsk2cG26EVcEkycGW4tchT2dyUhrx/0/*))",
-            "jkfqtdfw",
-        ),
-        (
-            "sh(wpkh([5c9e228d/49'/0'/0']xpub6CVKsQYXc9awxgV1tWbG4foDvdcnieK2JkbpPEBKB5WwAPKBZ1mstLbKVB4ov7QzxzjaxNK6EfmNY5Jsk2cG26EVcEkycGW4tchT2dyUhrx/1/*))",
-            "8h8knju3",
-        ),
-        (
-            "wpkh([5c9e228d/84'/0'/0']xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/0/*)",
-            "l4dc6ccr",
-        ),
-        (
-            "wpkh([5c9e228d/84'/0'/0']xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/1/*)",
-            "wpge8dgm",
-        ),
-    ]
-    for d, c in VECTOR:
-        assert tools.descriptor_checksum(d) == c
+
+@pytest.mark.parametrize("descriptor, checksum", VECTORS)
+def test_descriptor_checksum(descriptor, checksum):
+    assert tools.descriptor_checksum(descriptor) == checksum
