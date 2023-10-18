@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import datetime
 import fnmatch
-import glob
 import json
 import logging
 import os
@@ -11,6 +10,7 @@ import re
 import sys
 from collections import defaultdict
 from hashlib import sha256
+from pathlib import Path
 from typing import Any, Callable, Iterator, TextIO, cast
 
 import click
@@ -133,13 +133,13 @@ MAKO_FILTERS = {
 
 
 def render_file(
-    src: str, dst: TextIO, coins: CoinsInfo, support_info: SupportInfo
+    src: Path, dst: Path, coins: CoinsInfo, support_info: SupportInfo
 ) -> None:
     """Renders `src` template into `dst`.
 
     `src` is a filename, `dst` is an open file object.
     """
-    template = mako.template.Template(filename=src)
+    template = mako.template.Template(filename=str(src.resolve()))
     eth_defs_date = datetime.datetime.fromisoformat(
         DEFINITIONS_TIMESTAMP_PATH.read_text().strip()
     )
@@ -150,7 +150,9 @@ def render_file(
         **coins,
         **MAKO_FILTERS,
     )
-    dst.write(result)
+    dst.write_text(str(result))
+    src_stat = src.stat()
+    os.utime(dst, ns=(src_stat.st_atime_ns, src_stat.st_mtime_ns))
 
 
 # ====== validation functions ======
@@ -840,13 +842,13 @@ def dump(
 
 @cli.command()
 # fmt: off
-@click.argument("paths", metavar="[path]...", nargs=-1)
-@click.option("-o", "--outfile", type=click.File("w"), help="Alternate output file")
+@click.argument("paths", type=click.Path(path_type=Path), metavar="[path]...", nargs=-1)
+@click.option("-o", "--outfile", type=click.Path(dir_okay=False, writable=True, path_type=Path), help="Alternate output file")
 @click.option("-v", "--verbose", is_flag=True, help="Print rendered file names")
 @click.option("-b", "--bitcoin-only", is_flag=True, help="Accept only Bitcoin coins")
 # fmt: on
 def render(
-    paths: tuple[str, ...], outfile: TextIO, verbose: bool, bitcoin_only: bool
+    paths: tuple[Path, ...], outfile: Path, verbose: bool, bitcoin_only: bool
 ) -> None:
     """Generate source code from Mako templates.
 
@@ -882,7 +884,7 @@ def render(
     for key, value in support_info.items():
         support_info[key] = Munch(value)
 
-    def do_render(src: str, dst: TextIO) -> None:
+    def do_render(src: Path, dst: Path) -> None:
         if verbose:
             click.echo(f"Rendering {src} => {dst.name}")
         render_file(src, dst, defs, support_info)
@@ -894,25 +896,23 @@ def render(
 
     # find files in directories
     if not paths:
-        paths = (".",)
+        paths = (Path(),)
 
-    files: list[str] = []
+    files: list[Path] = []
     for path in paths:
-        if not os.path.exists(path):
+        if not path.exists():
             click.echo(f"Path {path} does not exist")
-        elif os.path.isdir(path):
-            files += glob.glob(os.path.join(path, "*.mako"))
+        elif path.is_dir():
+            files.extend(path.glob("*.mako"))
         else:
             files.append(path)
 
     # render each file
     for file in files:
-        if not file.endswith(".mako"):
+        if not file.suffix == ".mako":
             click.echo(f"File {file} does not end with .mako")
         else:
-            target = file[: -len(".mako")]
-            with open(target, "w") as dst:
-                do_render(file, dst)
+            do_render(file, file.parent / file.stem)
 
 
 @cli.command()
