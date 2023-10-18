@@ -661,6 +661,7 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/enums/Monero*.py',
             SOURCE_PY_DIR + 'trezor/enums/NEM*.py',
             SOURCE_PY_DIR + 'trezor/enums/Ripple*.py',
+            SOURCE_PY_DIR + 'trezor/enums/Solana*.py',
             SOURCE_PY_DIR + 'trezor/enums/Stellar*.py',
             SOURCE_PY_DIR + 'trezor/enums/Tezos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Zcash*.py',
@@ -722,6 +723,10 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ripple*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/solana/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/solana/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Solana*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*/*.py'))
