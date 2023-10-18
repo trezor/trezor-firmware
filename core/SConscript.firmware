@@ -72,6 +72,8 @@ CPPDEFINES_MOD += [
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
     ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL != "R") else '0'),
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL != "R") else '0'),
+    # TODO SOL: maybe "and TREZOR_MODEL != "R"" should be included?
+    ('USE_SOLANA', '1' if EVERYTHING else '0'),
 ]
 SOURCE_MOD += [
     'embed/extmod/trezorobj.c',
@@ -579,6 +581,7 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/enums/Monero*.py',
             SOURCE_PY_DIR + 'trezor/enums/NEM*.py',
             SOURCE_PY_DIR + 'trezor/enums/Ripple*.py',
+            SOURCE_PY_DIR + 'trezor/enums/Solana*.py',
             SOURCE_PY_DIR + 'trezor/enums/Stellar*.py',
             SOURCE_PY_DIR + 'trezor/enums/Tezos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Zcash*.py',
@@ -638,6 +641,10 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ripple*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/solana/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/solana/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Solana*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*/*.py'))
