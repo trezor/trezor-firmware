@@ -689,6 +689,8 @@ if not utils.BITCOIN_ONLY:
     import apps.solana.get_public_key
     apps.solana.sign_tx
     import apps.solana.sign_tx
+    apps.solana.transaction.instructions
+    import apps.solana.transaction.instructions
     apps.stellar
     import apps.stellar
     apps.stellar.consts

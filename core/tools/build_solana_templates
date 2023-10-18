@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -e
+
+CWD=`dirname "$0"`
+RENDER="python3 $CWD/build_solana_templates.py"
+
+PROGRAMS_FILE_PATH="$CWD/../src/apps/solana/transaction/programs.json"
+
+FW_PATH="$CWD/../src/apps/solana/transaction"
+FW_TEMPLATE_PATH="$FW_PATH/instructions.py.mako"
+FW_OUTPUT_PATH="$FW_PATH/instructions.py"
+
+TESTS_PATH="$CWD/../../tests/device_tests/solana/construct"
+TESTS_TEMPLATE_PATH="$TESTS_PATH/instructions.py.mako"
+TESTS_OUTPUT_PATH="$TESTS_PATH/instructions.py"
+
+format() {
+	isort $1 -q
+	black $1 -q
+	flake8 $1 -q
+}
+
+check_results() {
+    TEMPLATE_PATH=$1
+    OUTPUT_PATH=$2
+
+    CHECK_FAIL=0
+
+    TMP="./core/tools/solana_template_check$(date +%s).py"
+    touch $TMP
+
+    TARGET=$OUTPUT_PATH
+    $RENDER $TEMPLATE_PATH -p $PROGRAMS_FILE_PATH -o $TMP
+    format $TMP
+
+    if ! diff -u "$TARGET" "$TMP"; then
+        CHECK_FAIL=1
+    fi
+
+    rm $TMP
+
+    exit $CHECK_FAIL
+}
+
+set_output_timestamp() {
+    TEMPLATE_PATH=$1
+    OUTPUT_PATH=$2
+
+    PROGRAMS_FILE_TIMESTAMP=$(date -r $PROGRAMS_FILE_PATH)
+    TEMPLATE_TIMESTAMP=$(date -r $TEMPLATE_PATH)
+
+    if [[ "$PROGRAMS_FILE_TIMESTAMP" > "$TEMPLATE_TIMESTAMP" ]]; then
+        touch $OUTPUT_PATH -r $PROGRAMS_FILE_PATH
+    else
+        touch $OUTPUT_PATH -r $TEMPLATE_PATH
+    fi
+}
+
+if [ "$1" = "--check" ]; then
+    check_results $FW_PATH $FW_OUTPUT_PATH
+    check_results $TESTS_PATH $TESTS_OUTPUT_PATH
+else
+    $RENDER $FW_PATH -p $PROGRAMS_FILE_PATH -o $FW_OUTPUT_PATH
+    format $FW_OUTPUT_PATH
+    set_output_timestamp $FW_TEMPLATE_PATH $FW_OUTPUT_PATH
+
+    $RENDER $TESTS_PATH -p "$PROGRAMS_FILE_PATH" -o $TESTS_OUTPUT_PATH
+    format $TESTS_OUTPUT_PATH
+    set_output_timestamp $TESTS_TEMPLATE_PATH $TESTS_OUTPUT_PATH
+fi
