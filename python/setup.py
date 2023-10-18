@@ -27,10 +27,10 @@ install_requires = (CWD / "requirements.txt").read_text().splitlines()
 
 extras_require = {
     "hidapi": ["hidapi>=0.7.99.post20"],
-    "ethereum": ["rlp>=1.1.0 ; python_version<'3.7'", "web3>=4.8"],
+    "ethereum": ["rlp>=1.1.0 ; python_version<'3.7'", "web3>=5"],
     "qt-widgets": ["PyQt5"],
     "extra": ["Pillow"],
-    "stellar": ["stellar-sdk>=4.0.0,<6.0.0"],
+    "stellar": ["stellar-sdk>=6"],
 }
 
 extras_require["full"] = sum(extras_require.values(), [])

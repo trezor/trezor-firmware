@@ -20,7 +20,7 @@ import sys
 import tarfile
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, TextIO
+from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, TextIO, cast
 
 import click
 
@@ -30,6 +30,8 @@ from . import with_client
 
 if TYPE_CHECKING:
     import web3
+    from eth_typing import ChecksumAddress  # noqa: I900
+    from web3.types import Wei
 
     from ..client import TrezorClient
 
@@ -133,7 +135,9 @@ def _list_units(ctx: click.Context, param: Any, value: bool) -> None:
     ctx.exit()
 
 
-def _erc20_contract(token_address: str, to_address: str, amount: int) -> str:
+def _erc20_contract(
+    token_address: "ChecksumAddress", to_address: str, amount: int
+) -> str:
     min_abi = [
         {
             "name": "transfer",
@@ -381,7 +385,7 @@ def sign_tx(
         (not is_eip1559 and gas_price is None)
         or any(x is None for x in (gas_limit, nonce))
         or publish
-    ) and not _get_web3().isConnected():
+    ) and not _get_web3().is_connected():
         click.echo("Failed to connect to Ethereum node.")
         click.echo(
             "If you want to sign offline, make sure you provide --gas-price, "
@@ -400,7 +404,7 @@ def sign_tx(
     )
 
     if token:
-        data = _erc20_contract(token, to_address, amount)
+        data = _erc20_contract(cast("ChecksumAddress", token), to_address, amount)
         to_address = token
         amount = 0
 
@@ -416,17 +420,19 @@ def sign_tx(
         data_bytes = b""
 
     if gas_limit is None:
-        gas_limit = _get_web3().eth.estimateGas(
+        gas_limit = _get_web3().eth.estimate_gas(
             {
                 "to": to_address,
                 "from": from_address,
-                "value": amount,
-                "data": f"0x{data_bytes.hex()}",
+                "value": cast("Wei", amount),
+                "data": data_bytes,
             }
         )
 
     if nonce is None:
-        nonce = _get_web3().eth.getTransactionCount(from_address)
+        nonce = _get_web3().eth.get_transaction_count(
+            cast("ChecksumAddress", from_address)
+        )
 
     assert gas_limit is not None
     assert nonce is not None
@@ -456,7 +462,7 @@ def sign_tx(
         )
     else:
         if gas_price is None:
-            gas_price = _get_web3().eth.gasPrice
+            gas_price = _get_web3().eth.gas_price
         assert gas_price is not None
         sig = ethereum.sign_tx(
             client,
@@ -504,16 +510,16 @@ def sign_tx(
     transaction = _rlp.encode(transaction_items)
 
     if eip2718_type is not None:
-        eip2718_prefix = f"{eip2718_type:02x}"
+        eip2718_prefix = eip2718_type.to_bytes(1, "big")
     else:
-        eip2718_prefix = ""
-    tx_hex = f"0x{eip2718_prefix}{transaction.hex()}"
+        eip2718_prefix = b""
+    tx_bytes = eip2718_prefix + transaction
 
     if publish:
-        tx_hash = _get_web3().eth.sendRawTransaction(tx_hex).hex()
-        return f"Transaction published with ID: {tx_hash}"
+        tx_hash = _get_web3().eth.send_raw_transaction(tx_bytes).hex()
+        return f"Transaction published with ID: 0x{tx_hash}"
     else:
-        return f"Signed raw transaction:\n{tx_hex}"
+        return f"Signed raw transaction:\n0x{tx_bytes.hex()}"
 
 
 @cli.command()
