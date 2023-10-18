@@ -262,6 +262,8 @@ class MessageType(IntEnum):
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    SolanaGetPublicKey = 900
+    SolanaPublicKey = 901
 
 
 class FailureType(IntEnum):
@@ -6643,6 +6645,37 @@ class RipplePayment(protobuf.MessageType):
         self.amount = amount
         self.destination = destination
         self.destination_tag = destination_tag
+
+
+class SolanaGetPublicKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 900
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.show_display = show_display
+
+
+class SolanaPublicKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 901
+    FIELDS = {
+        1: protobuf.Field("public_key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        public_key: "bytes",
+    ) -> None:
+        self.public_key = public_key
 
 
 class StellarAsset(protobuf.MessageType):
