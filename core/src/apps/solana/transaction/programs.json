@@ -1238,6 +1238,7 @@
           "id": 3,
           "name": "Transfer",
           "is_multisig": true,
+          "is_deprecated_warning": "Warning: Instruction is deprecated. Token decimals unknown.",
           "parameters": [
             {
               "name": "amount",
@@ -1277,6 +1278,7 @@
           "id": 4,
           "name": "Approve",
           "is_multisig": true,
+          "is_deprecated_warning": "Warning: Instruction is deprecated. Token decimals unknown.",
           "parameters": [
             {
               "name": "amount",
@@ -1381,6 +1383,7 @@
           "id": 7,
           "name": "Mint to",
           "is_multisig": true,
+          "is_deprecated_warning": "Warning: Instruction is deprecated. Token decimals unknown.",
           "parameters": [
             {
               "name": "amount",
@@ -1420,6 +1423,7 @@
           "id": 8,
           "name": "Burn",
           "is_multisig": true,
+          "is_deprecated_warning": "Warning: Instruction is deprecated. Token decimals unknown.",
           "parameters": [
             {
               "name": "amount",
