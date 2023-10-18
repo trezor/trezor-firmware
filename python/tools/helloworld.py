@@ -29,7 +29,7 @@ def main() -> None:
     print(client.features)
 
     # Get the first address of first BIP44 account
-    bip32_path = parse_path("44'/0'/0'/0/0")
+    bip32_path = parse_path("44h/0h/0h/0/0")
     address = btc.get_address(client, "Bitcoin", bip32_path, True)
     print("Bitcoin address:", address)
 

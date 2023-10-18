@@ -25,7 +25,7 @@ from . import ChoiceType, with_client
 if TYPE_CHECKING:
     from ..client import TrezorClient
 
-PATH_HELP = "BIP-32 path to key, e.g. m/44'/1815'/0'/0/0"
+PATH_HELP = "BIP-32 path to key, e.g. m/44h/1815h/0h/0/0"
 
 TESTNET_CHOICES = {
     "preprod": "testnet_preprod",

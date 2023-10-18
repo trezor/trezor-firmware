@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from .. import messages
     from ..client import TrezorClient
 
-PATH_HELP = "BIP-32 path, e.g. m/10018'/0'"
+PATH_HELP = "BIP-32 path, e.g. m/10018h/0h"
 
 
 @click.group(name="cosi")

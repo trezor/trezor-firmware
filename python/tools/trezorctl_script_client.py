@@ -84,7 +84,7 @@ def get_passphrase_from_user(available_on_device: bool = False) -> str:
 
 def get_address() -> str:
     args = """
-        trezorctl --script get-address -n "m/49'/0'/0'/0/0"
+        trezorctl --script get-address -n "m/49h/0h/0h/0/0"
     """.strip()
     p = subprocess.Popen(  # type: ignore [No overloads for "__new__" match the provided arguments]
         args,

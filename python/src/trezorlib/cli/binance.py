@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from ..client import TrezorClient
 
 
-PATH_HELP = "BIP-32 path to key, e.g. m/44'/714'/0'/0/0"
+PATH_HELP = "BIP-32 path to key, e.g. m/44h/714h/0h/0/0"
 
 
 @click.group(name="binance")

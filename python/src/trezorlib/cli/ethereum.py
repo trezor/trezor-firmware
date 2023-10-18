@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
     from ..client import TrezorClient
 
-PATH_HELP = "BIP-32 path, e.g. m/44'/60'/0'/0/0"
+PATH_HELP = "BIP-32 path, e.g. m/44h/60h/0h/0/0"
 
 # fmt: off
 ETHER_UNITS = {

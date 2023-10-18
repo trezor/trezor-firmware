@@ -49,7 +49,7 @@ def get_entropy(client: "TrezorClient", size: int) -> str:
 
 
 @cli.command()
-@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/10016'/0")
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/10016h/0")
 @click.option(
     "-p", "--prompt", type=PROMPT_TYPE, default="always", help="Prompt for passphrase"
 )
@@ -85,7 +85,7 @@ def encrypt_keyvalue(
 
 
 @cli.command()
-@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/10016'/0")
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/10016h/0")
 @click.option(
     "-p", "--prompt", type=PROMPT_TYPE, default="always", help="Prompt for passphrase"
 )

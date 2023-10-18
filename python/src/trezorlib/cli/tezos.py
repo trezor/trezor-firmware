@@ -25,7 +25,7 @@ from . import with_client
 if TYPE_CHECKING:
     from ..client import TrezorClient
 
-PATH_HELP = "BIP-32 path, e.g. m/44'/1729'/0'"
+PATH_HELP = "BIP-32 path, e.g. m/44h/1729h/0h"
 
 
 @click.group(name="tezos")

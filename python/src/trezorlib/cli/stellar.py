@@ -34,7 +34,7 @@ try:
 except ImportError:
     pass
 
-PATH_HELP = "BIP32 path. Always use hardened paths and the m/44'/148'/ prefix"
+PATH_HELP = "BIP32 path. Always use hardened paths and the m/44h/148h/ prefix"
 
 
 @click.group(name="stellar")

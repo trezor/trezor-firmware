@@ -24,7 +24,7 @@ from . import ChoiceType, with_client
 if TYPE_CHECKING:
     from ..client import TrezorClient
 
-PATH_HELP = "BIP-32 path, e.g. m/44'/128'/0'"
+PATH_HELP = "BIP-32 path, e.g. m/44h/128h/0h"
 
 
 @click.group(name="monero")

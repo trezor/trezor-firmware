@@ -191,17 +191,17 @@ The JSON below encodes a transaction with the following inputs:
 
 * [e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a](https://btc5.trezor.io/tx/e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a)
   output **0** (P2PKH address 1Jw5FrKhi2aWbbF4h3QRWLog5AjsJYGswv)
-  at derivation path **m/44'/0'/0'/0/282**
+  at derivation path **m/44h/0h/0h/0/282**
   amount **85 170** sat
 * [1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155](https://btc5.trezor.io/tx/1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155)
   output **0** (P2SH-SegWit address 3DEAk9KGrgvj2gHQ1hyfCXus9hZr9K8Beh)
-  at derivation path **m/49'/0'/0'/0/55**
+  at derivation path **m/49h/0h/0h/0/55**
   amount **500 000** sat
 
 And the following outputs:
 
 * **12 345** sat to address **3DDEgt7quAq7XqoG6PjVXi1eeAea4rfWck**
-* **562 825** sat to a P2SH-SegWit change address at derivation path **m/49'/0'/0'/1/99**
+* **562 825** sat to a P2SH-SegWit change address at derivation path **m/49h/0h/0h/1/99**
 * fee of 10 000 sat
 
 (Note that Trezor does not support change addresses when mixing input types. The example
