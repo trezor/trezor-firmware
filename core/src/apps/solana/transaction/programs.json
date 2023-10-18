@@ -46,12 +46,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["lamports"],
-              "accounts": ["funding_account", "new_account"]
+          "ui_properties": [
+            {
+              "parameter": "lamports",
+              "display_name": "Lamports"
+            },
+            {
+              "account": "funding_account",
+              "display_name": "Funding account"
+            },
+            {
+              "account": "new_account",
+              "display_name": "New account"
             }
-          }
+          ]
         },
         {
           "id": 1,
@@ -73,12 +81,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["owner"],
-              "accounts": ["assigned_account"]
+          "ui_properties": [
+            {
+              "parameter": "owner",
+              "display_name": "Owner"
+            },
+            {
+              "account": "assigned_account",
+              "display_name": "Assigned account"
             }
-          }
+          ]
         },
         {
           "id": 2,
@@ -106,12 +118,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["lamports"],
-              "accounts": ["funding_account", "recipient_account"]
+          "ui_properties": [
+            {
+              "parameter": "lamports",
+              "display_name": "Lamports"
+            },
+            {
+              "account": "funding_account",
+              "display_name": "Funding account"
+            },
+            {
+              "account": "recipient_account",
+              "display_name": "Recipient account"
             }
-          }
+          ]
         },
         {
           "id": 3,
@@ -169,12 +189,20 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["lamports"],
-              "accounts": ["funding_account", "created_account"]
+          "ui_properties": [
+            {
+              "parameter": "lamports",
+              "display_name": "Lamports"
+            },
+            {
+              "account": "funding_account",
+              "display_name": "Funding account"
+            },
+            {
+              "account": "created_account",
+              "display_name": "Created account"
             }
-          }
+          ]
         },
         {
           "id": 8,
@@ -196,12 +224,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["space"],
-              "accounts": ["new_account"]
+          "ui_properties": [
+            {
+              "parameter": "space",
+              "display_name": "Space"
+            },
+            {
+              "account": "new_account",
+              "display_name": "New account"
             }
-          }
+          ]
         },
         {
           "id": 9,
@@ -247,12 +279,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["space"],
-              "accounts": ["allocated_account"]
+          "ui_properties": [
+            {
+              "parameter": "space",
+              "display_name": "Space"
+            },
+            {
+              "account": "allocated_account",
+              "display_name": "Allocated account"
             }
-          }
+          ]
         },
         {
           "id": 10,
@@ -292,12 +328,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["owner"],
-              "accounts": ["assigned_account"]
+          "ui_properties": [
+            {
+              "parameter": "owner",
+              "display_name": "Owner"
+            },
+            {
+              "account": "assigned_account",
+              "display_name": "Assigned account"
             }
-          }
+          ]
         },
         {
           "id": 11,
@@ -343,12 +383,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["lamports"],
-              "accounts": ["funding_account", "recipient_account"]
+          "ui_properties": [
+            {
+              "parameter": "lamports",
+              "display_name": "Lamports"
+            },
+            {
+              "account": "funding_account",
+              "display_name": "Funding account"
+            },
+            {
+              "account": "recipient_account",
+              "display_name": "Recipient account"
             }
-          }
+          ]
         },
         {
           "id": 12,
@@ -363,12 +411,12 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [ ],
-              "accounts": ["nonce_account"]
+          "ui_properties": [
+            {
+              "account": "nonce_account",
+              "display_name": "Nonce account"
             }
-          }
+          ]
         }
       ]
     },
@@ -430,16 +478,24 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [
-                "staker",
-                "withdrawer",
-                "custodian"
-              ],
-              "accounts": ["uninitialized_stake_account"]
+          "ui_properties": [
+            {
+              "parameter": "staker",
+              "display_name": "Staker"
+            },
+            {
+              "parameter": "withdrawer",
+              "display_name": "Withdrawer"
+            },
+            {
+              "parameter": "custodian",
+              "display_name": "Custodian"
+            },
+            {
+              "account": "uninitialized_stake_account",
+              "display_name": ""
             }
-          }
+          ]
         },
         {
           "id": 1,
@@ -485,16 +541,24 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["pubkey"],
-              "accounts": [
-                "stake_account",
-                "stake_or_withdraw_authority",
-                "lockup_authority"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "pubkey",
+              "display_name": "Pubkey"
+            },
+            {
+              "account": "stake_account",
+              "display_name": "Stake account"
+            },
+            {
+              "account": "stake_or_withdraw_authority",
+              "display_name": "Stake or withdraw authority"
+            },
+            {
+              "account": "lockup_authority",
+              "display_name": "Lockup authority"
             }
-          }
+          ]
         },
         {
           "id": 2,
@@ -539,16 +603,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "initialized_stake_account",
-                "vote_account",
-                "stake_authority"
-              ]
+          "ui_properties": [
+            {
+              "account": "initialized_stake_account",
+              "display_name": "Initialized stake account"
+            },
+            {
+              "account": "vote_account",
+              "display_name": "Vote account"
+            },
+            {
+              "account": "stake_authority",
+              "display_name": "Stake authority"
             }
-          }
+          ]
         },
         {
           "id": 3,
@@ -582,16 +650,24 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["lamports"],
-              "accounts": [
-                "stake_account",
-                "uninitialized_stake_account",
-                "stake_authority"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "lamports",
+              "display_name": "Lamports"
+            },
+            {
+              "account": "stake_account",
+              "display_name": "Stake account"
+            },
+            {
+              "account": "uninitialized_stake_account",
+              "display_name": "Uninitialized stake account"
+            },
+            {
+              "account": "stake_authority",
+              "display_name": "Stake authority"
             }
-          }
+          ]
         },
         {
           "id": 4,
@@ -643,16 +719,24 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["lamports"],
-              "accounts": [
-                "stake_account",
-                "recipient_account",
-                "withdrawal_authority"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "lamports",
+              "display_name": "Lamports"
+            },
+            {
+              "account": "stake_account",
+              "display_name": "Stake account"
+            },
+            {
+              "account": "recipient_account",
+              "display_name": "Recipient account"
+            },
+            {
+              "account": "withdrawal_authority",
+              "display_name": "Withdrawal authority"
             }
-          }
+          ]
         },
         {
           "id": 5,
@@ -679,15 +763,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "delegated_stake_account",
-                "stake_authority"
-              ]
+          "ui_properties": [
+            {
+              "account": "delegated_stake_account",
+              "display_name": "Delegated stake account"
+            },
+            {
+              "account": "stake_authority",
+              "display_name": "Stake authority"
             }
-          }
+          ]
         },
         {
           "id": 6,
@@ -727,15 +812,28 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["unix_timestamp", "epoch", "custodian"],
-              "accounts": [
-                "initialized_stake_account",
-                "lockup_or_withdraw_authority"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "unix_timestamp",
+              "display_name": "Unix timestamp"
+            },
+            {
+              "parameter": "epoch",
+              "display_name": "Epoch"
+            },
+            {
+              "parameter": "custodian",
+              "display_name": "Custodian"
+            },
+            {
+              "account": "initialized_stake_account",
+              "display_name": "Initialized stake account"
+            },
+            {
+              "account": "lockup_or_withdraw_authority",
+              "display_name": "Lockup or withdraw authority"
             }
-          }
+          ]
         },
         {
           "id": 7,
@@ -774,16 +872,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "destination_stake_account",
-                "source_stake_account",
-                "stake_authority"
-              ]
+          "ui_properties": [
+            {
+              "account": "destination_stake_account",
+              "display_name": "Destination stake account"
+            },
+            {
+              "account": "source_stake_account",
+              "display_name": "Source stake account"
+            },
+            {
+              "account": "stake_authority",
+              "display_name": "Stake authority"
             }
-          }
+          ]
         },
         {
           "id": 8,
@@ -841,18 +943,24 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [
-                "new_authorized_pubkey"
-              ],
-              "accounts": [
-                "stake_account",
-                "stake_or_withdraw_authority",
-                "lockup_authority"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "new_authorized_pubkey",
+              "display_name": "New authorized pubkey"
+            },
+            {
+              "account": "stake_account",
+              "display_name": "Stake account"
+            },
+            {
+              "account": "stake_or_withdraw_authority",
+              "display_name": "Stake or withdraw authority"
+            },
+            {
+              "account": "lockup_authority",
+              "display_name": "Lockup authority"
             }
-          }
+          ]
         },
         {
           "id": 9,
@@ -885,16 +993,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "uninitialized_stake_account",
-                "stake_authority",
-                "withdrawal_authority"
-              ]
+          "ui_properties": [
+            {
+              "account": "uninitialized_stake_account",
+              "display_name": "Uninitialized stake account"
+            },
+            {
+              "account": "stake_authority",
+              "display_name": "Stake authority"
+            },
+            {
+              "account": "withdrawal_authority",
+              "display_name": "Withdrawal authority"
             }
-          }
+          ]
         },
         {
           "id": 10,
@@ -940,16 +1052,20 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "stake_account",
-                "stake_or_withdraw_authority",
-                "new_stake_or_withdraw_authority"
-              ]
+          "ui_properties": [
+            {
+              "account": "stake_account",
+              "display_name": "Stake account"
+            },
+            {
+              "account": "stake_or_withdraw_authority",
+              "display_name": "Stake or withdraw authority"
+            },
+            {
+              "account": "new_stake_or_withdraw_authority",
+              "display_name": "New stake or withdraw authority"
             }
-          }
+          ]
         },
         {
           "id": 11,
@@ -1007,22 +1123,40 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [
-                "stake_authorize",
-                "authority_seed",
-                "authority_owner"
-              ],
-              "accounts": [
-                "stake_account",
-                "stake_or_withdraw_authority",
-                "clock_sysvar",
-                "new_stake_or_withdraw_authority",
-                "lockup_authority"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "stake_authorize",
+              "display_name": "Stake authorize"
+            },
+            {
+              "parameter": "authority_seed",
+              "display_name": "Authority seed"
+            },
+            {
+              "parameter": "authority_owner",
+              "display_name": "Authority owner"
+            },
+            {
+              "account": "stake_account",
+              "display_name": "Stake account"
+            },
+            {
+              "account": "stake_or_withdraw_authority",
+              "display_name": "Stake or withdraw authority"
+            },
+            {
+              "account": "clock_sysvar",
+              "display_name": "Clock sysvar"
+            },
+            {
+              "account": "new_stake_or_withdraw_authority",
+              "display_name": "New stake or withdraw authority"
+            },
+            {
+              "account": "lockup_authority",
+              "display_name": "Lockup authority"
             }
-          }
+          ]
         },
         {
           "id": 12,
@@ -1062,16 +1196,28 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["unix_timestamp", "epoch"],
-              "accounts": [
-                "stake_account",
-                "lockup_or_withdraw_authority",
-                "new_lockup_authority"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "unix_timestamp",
+              "display_name": "Unix timestamp"
+            },
+            {
+              "parameter": "epoch",
+              "display_name": "Epoch"
+            },
+            {
+              "account": "stake_account",
+              "display_name": "Stake account"
+            },
+            {
+              "account": "lockup_or_withdraw_authority",
+              "display_name": "Lockup or withdraw authority"
+            },
+            {
+              "account": "new_lockup_authority",
+              "display_name": "New lockup authority"
             }
-          }
+          ]
         }
       ]
     },
@@ -1096,12 +1242,12 @@
             }
           ],
           "references": [],
-          "ui": {
-            "elements": {
-              "parameters": ["bytes"],
-              "accounts": []
+          "ui_properties": [
+            {
+              "parameter": "bytes",
+              "display_name": "Bytes"
             }
-          }
+          ]
         },
         {
           "id": 2,
@@ -1116,12 +1262,12 @@
             }
           ],
           "references": [],
-          "ui": {
-            "elements": {
-              "parameters": ["units"],
-              "accounts": []
+          "ui_properties": [
+            {
+              "parameter": "units",
+              "display_name": "Units"
             }
-          }
+          ]
         },
         {
           "id": 3,
@@ -1136,12 +1282,12 @@
             }
           ],
           "references": [],
-          "ui": {
-            "elements": {
-              "parameters": ["lamports"],
-              "accounts": []
+          "ui_properties": [
+            {
+              "parameter": "lamports",
+              "display_name": "Lamports"
             }
-          }
+          ]
         }
       ]
     },
@@ -1184,16 +1330,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "account_to_initialize",
-                "mint_account",
-                "owner"
-              ]
+          "ui_properties": [
+            {
+              "account": "account_to_initialize",
+              "display_name": "Account to initialize"
+            },
+            {
+              "account": "mint_account",
+              "display_name": "Mint account"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 2,
@@ -1227,12 +1377,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [ ],
-              "accounts": ["multisig_account", "signer_accounts"]
+          "ui_properties": [
+            {
+              "account": "multisig_account",
+              "display_name": "Multisig account"
+            },
+            {
+              "account": "signer_accounts",
+              "display_name": "Signer accounts"
             }
-          }
+          ]
         },
         {
           "id": 3,
@@ -1267,12 +1421,24 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["amount"],
-              "accounts": ["source_account", "destination_account", "owner"]
+          "ui_properties": [
+            {
+              "parameter": "amount",
+              "display_name": "Amount"
+            },
+            {
+              "account": "source_account",
+              "display_name": "Source account"
+            },
+            {
+              "account": "destination_account",
+              "display_name": "Destination account"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 4,
@@ -1307,12 +1473,24 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["amount"],
-              "accounts": ["source_account", "delegate_account", "owner"]
+          "ui_properties": [
+            {
+              "parameter": "amount",
+              "display_name": "Amount"
+            },
+            {
+              "account": "source_account",
+              "display_name": "Source account"
+            },
+            {
+              "account": "delegate_account",
+              "display_name": "Delegate account"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 5,
@@ -1333,12 +1511,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": ["source_account", "owner"]
+          "ui_properties": [
+            {
+              "account": "source_account",
+              "display_name": "Source account"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 6,
@@ -1372,12 +1554,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [ ],
-              "accounts": ["mint_account", "current_authority"]
+          "ui_properties": [
+            {
+              "account": "mint_account",
+              "display_name": "Mint account"
+            },
+            {
+              "account": "current_authority",
+              "display_name": "Current authority"
             }
-          }
+          ]
         },
         {
           "id": 7,
@@ -1412,12 +1598,24 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["amount"],
-              "accounts": ["mint", "account_to_mint", "minting_authority"]
+          "ui_properties": [
+            {
+              "parameter": "amount",
+              "display_name": "Amount"
+            },
+            {
+              "account": "mint",
+              "display_name": "Mint"
+            },
+            {
+              "account": "account_to_mint",
+              "display_name": "Account to mint"
+            },
+            {
+              "account": "minting_authority",
+              "display_name": "Minting authority"
             }
-          }
+          ]
         },
         {
           "id": 8,
@@ -1452,12 +1650,24 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["amount"],
-              "accounts": ["account_to_burn_from", "token_mint", "owner"]
+          "ui_properties": [
+            {
+              "parameter": "amount",
+              "display_name": "Amount"
+            },
+            {
+              "account": "account_to_burn_from",
+              "display_name": "Account to burn from"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "Token mint"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 9,
@@ -1484,12 +1694,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": ["account_to_close", "destination_account", "owner"]
+          "ui_properties": [
+            {
+              "account": "account_to_close",
+              "display_name": "Account to close"
+            },
+            {
+              "account": "destination_account",
+              "display_name": "Destination account"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 10,
@@ -1516,15 +1734,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "account_to_freeze",
-                "freeze_authority"
-              ]
+          "ui_properties": [
+            {
+              "account": "account_to_freeze",
+              "display_name": "Account to freeze"
+            },
+            {
+              "account": "freeze_authority",
+              "display_name": "Freeze authority"
             }
-          }
+          ]
         },
         {
           "id": 11,
@@ -1551,15 +1770,16 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "account_to_freeze",
-                "freeze_authority"
-              ]
+          "ui_properties": [
+            {
+              "account": "account_to_freeze",
+              "display_name": "Account to freeze"
+            },
+            {
+              "account": "freeze_authority",
+              "display_name": "Freeze authority"
             }
-          }
+          ]
         },
         {
           "id": 12,
@@ -1605,17 +1825,32 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["amount", "decimals"],
-              "accounts": [
-                "source_account",
-                "token_mint",
-                "destination_account",
-                "owner"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "amount",
+              "display_name": "Amount"
+            },
+            {
+              "parameter": "decimals",
+              "display_name": "Decimals"
+            },
+            {
+              "account": "source_account",
+              "display_name": "Source account"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "Token mint"
+            },
+            {
+              "account": "destination_account",
+              "display_name": "Destination account"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 13,
@@ -1661,12 +1896,32 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["amount", "decimals"],
-              "accounts": ["source_account", "token_mint", "delegate", "owner"]
+          "ui_properties": [
+            {
+              "parameter": "amount",
+              "display_name": "Amount"
+            },
+            {
+              "parameter": "decimals",
+              "display_name": "Decimals"
+            },
+            {
+              "account": "source_account",
+              "display_name": "Source account"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "Token mint"
+            },
+            {
+              "account": "delegate",
+              "display_name": "Delegate"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 14,
@@ -1706,12 +1961,28 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["amount", "decimals"],
-              "accounts": ["mint", "account_to_mint", "minting_authority"]
+          "ui_properties": [
+            {
+              "parameter": "amount",
+              "display_name": "Amount"
+            },
+            {
+              "parameter": "decimals",
+              "display_name": "Decimals"
+            },
+            {
+              "account": "mint",
+              "display_name": "Mint"
+            },
+            {
+              "account": "account_to_mint",
+              "display_name": "Account to mint"
+            },
+            {
+              "account": "minting_authority",
+              "display_name": "Minting authority"
             }
-          }
+          ]
         },
         {
           "id": 15,
@@ -1751,12 +2022,28 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["amount", "decimals"],
-              "accounts": ["account_to_burn_from", "token_mint", "owner"]
+          "ui_properties": [
+            {
+              "parameter": "amount",
+              "display_name": "Amount"
+            },
+            {
+              "parameter": "decimals",
+              "display_name": "Decimals"
+            },
+            {
+              "account": "account_to_burn_from",
+              "display_name": "Account to burn from"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "Token mint"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
             }
-          }
+          ]
         },
         {
           "id": 16,
@@ -1790,15 +2077,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["owner"],
-              "accounts": [
-                "account_to_initialize",
-                "mint_account"
-              ]
+          "ui_properties": [
+            {
+              "parameter": "owner",
+              "display_name": "Owner"
+            },
+            {
+              "account": "account_to_initialize",
+              "display_name": "Account to initialize"
+            },
+            {
+              "account": "mint_account",
+              "display_name": "Mint account"
             }
-          }
+          ]
         },
         {
           "id": 17,
@@ -1813,12 +2105,12 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": ["token_account"]
+          "ui_properties": [
+            {
+              "account": "token_account",
+              "display_name": "Native token account"
             }
-          }
+          ]
         },
         {
           "id": 18,
@@ -1846,12 +2138,20 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["owner"],
-              "accounts": ["account_to_initialize", "mint_account"]
+          "ui_properties": [
+            {
+              "parameter": "owner",
+              "display_name": "Owner"
+            },
+            {
+              "account": "account_to_initialize",
+              "display_name": "Account to initialize"
+            },
+            {
+              "account": "mint_account",
+              "display_name": "Mint account"
             }
-          }
+          ]
         },
         {
           "id": 22,
@@ -1866,12 +2166,12 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": ["account_to_initialize"]
+          "ui_properties": [
+            {
+              "account": "account_to_initialize",
+              "display_name": "Account to initialize"
             }
-          }
+          ]
         }
       ]
     },
@@ -1926,17 +2226,24 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "funding_account",
-                "associated_token_account",
-                "wallet_address",
-                "token_mint"
-              ]
+          "ui_properties": [
+            {
+              "account": "funding_account",
+              "display_name": "Funding account"
+            },
+            {
+              "account": "associated_token_account",
+              "display_name": "Associated token account"
+            },
+            {
+              "account": "wallet_address",
+              "display_name": "Wallet address"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "Token mint"
             }
-          }
+          ]
         },
         {
           "id": 1,
@@ -1981,17 +2288,24 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "funding_account",
-                "associated_token_account",
-                "wallet_address",
-                "token_mint"
-              ]
+          "ui_properties": [
+            {
+              "account": "funding_account",
+              "display_name": "Funding account"
+            },
+            {
+              "account": "associated_token_account",
+              "display_name": "Associated token account"
+            },
+            {
+              "account": "wallet_address",
+              "display_name": "Wallet address"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "Token mint"
             }
-          }
+          ]
         },
         {
           "id": 2,
@@ -2042,20 +2356,36 @@
               "optional": false
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": [],
-              "accounts": [
-                "nested_account",
-                "token_mint_nested",
-                "associated_token_account",
-                "owner",
-                "token_mint_owner",
-                "wallet_address",
-                "spl_token"
-              ]
+          "ui_properties": [
+            {
+              "account": "nested_account",
+              "display_name": "Nested associated token account"
+            },
+            {
+              "account": "token_mint_nested",
+              "display_name": "Token mint for the nested account"
+            },
+            {
+              "account": "associated_token_account",
+              "display_name": "Associated token account"
+            },
+            {
+              "account": "owner",
+              "display_name": "Owner"
+            },
+            {
+              "account": "token_mint_owner",
+              "display_name": "Token mint for the owner account"
+            },
+            {
+              "account": "wallet_address",
+              "display_name": "Wallet address"
+            },
+            {
+              "account": "spl_token",
+              "display_name": "SPL token program"
             }
-          }
+          ]
         }
       ]
     },
@@ -2087,12 +2417,16 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["memo"],
-              "accounts": ["signer_accounts"]
+          "ui_properties": [
+            {
+              "parameter": "memo",
+              "display_name": "Memo"
+            },
+            {
+              "account": "signer_accounts",
+              "display_name": "Signer accounts"
             }
-          }
+          ]
         }
       ]
     },
@@ -2124,12 +2458,16 @@
               "optional": true
             }
           ],
-          "ui": {
-            "elements": {
-              "parameters": ["memo"],
-              "accounts": ["signer_accounts"]
+          "ui_properties": [
+            {
+              "parameter": "memo",
+              "display_name": "Memo"
+            },
+            {
+              "account": "signer_accounts",
+              "display_name": "Signer accounts"
             }
-          }
+          ]
         }
       ]
     }
