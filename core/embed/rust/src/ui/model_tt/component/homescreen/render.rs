@@ -230,9 +230,11 @@ fn homescreen_position_text(
 
     let text_top = screen().y0 + text.offset.y - font_max_height + font_baseline;
     let text_bottom = screen().y0 + text.offset.y + font_baseline;
-    let icon_left = screen().center().x - (text_width_clamped + icon_size.x + TEXT_ICON_SPACE) / 2;
+
+    let total_width = text_width_clamped + icon_size.x + TEXT_ICON_SPACE;
+    let icon_left = screen().center().x + text.offset.x - total_width / 2;
     let text_left = icon_left + icon_size.x + TEXT_ICON_SPACE;
-    let text_right = screen().center().x + (text_width_clamped + icon_size.x + TEXT_ICON_SPACE) / 2;
+    let text_right = screen().center().x + text.offset.x + total_width / 2;
 
     let text_area = Rect::new(
         Point::new(text_left, text_top),

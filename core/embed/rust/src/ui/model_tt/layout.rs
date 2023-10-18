@@ -1557,9 +1557,10 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
             .try_into_option()?
             .unwrap_or_else(|| model::FULL_NAME.into());
         let bootscreen: bool = kwargs.get(Qstr::MP_QSTR_bootscreen)?.try_into()?;
+        let coinjoin_authorized: bool = kwargs.get_or(Qstr::MP_QSTR_coinjoin_authorized, false)?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
-        let obj = LayoutObj::new(Lockscreen::new(label, bootscreen))?;
+        let obj = LayoutObj::new(Lockscreen::new(label, bootscreen, coinjoin_authorized))?;
         if skip_first_paint {
             obj.skip_first_paint();
         }
@@ -1988,6 +1989,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     label: str | None,
     ///     bootscreen: bool,
     ///     skip_first_paint: bool,
+    ///     coinjoin_authorized: bool = False,
     /// ) -> CANCELLED:
     ///     """Homescreen for locked device."""
     Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),

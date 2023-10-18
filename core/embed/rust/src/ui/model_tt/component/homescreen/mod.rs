@@ -36,6 +36,7 @@ const LABEL_Y: i16 = HEIGHT - 18;
 const LOCKED_Y: i16 = HEIGHT / 2 - 13;
 const TAP_Y: i16 = HEIGHT / 2 + 14;
 const HOLD_Y: i16 = 35;
+const COINJOIN_Y: i16 = 30;
 const LOADER_OFFSET: Offset = Offset::y(-10);
 const LOADER_DELAY: Duration = Duration::from_millis(500);
 const LOADER_DURATION: Duration = Duration::from_millis(2000);
@@ -198,7 +199,7 @@ where
             let text = HomescreenText {
                 text: self.label.as_ref(),
                 style: label_style,
-                offset: Offset::new(10, LABEL_Y),
+                offset: Offset::y(LABEL_Y),
                 icon: None,
             };
 
@@ -266,11 +267,16 @@ impl<T: AsRef<str>> crate::trace::Trace for Homescreen<T> {
 pub struct Lockscreen<T> {
     label: T,
     bootscreen: bool,
+    coinjoin_authorized: bool,
 }
 
 impl<T> Lockscreen<T> {
-    pub fn new(label: T, bootscreen: bool) -> Self {
-        Lockscreen { label, bootscreen }
+    pub fn new(label: T, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+        Lockscreen {
+            label,
+            bootscreen,
+            coinjoin_authorized,
+        }
     }
 }
 
@@ -301,26 +307,36 @@ where
         let mut label_style = theme::TEXT_DEMIBOLD;
         label_style.text_color = theme::GREY_LIGHT;
 
-        let texts: [HomescreenText; 3] = [
+        let mut texts: &[HomescreenText] = &[
+            HomescreenText {
+                text: "",
+                style: theme::TEXT_NORMAL,
+                offset: Offset::new(2, COINJOIN_Y),
+                icon: Some(theme::ICON_COINJOIN),
+            },
             HomescreenText {
                 text: locked,
                 style: theme::TEXT_BOLD,
-                offset: Offset::new(10, LOCKED_Y),
+                offset: Offset::y(LOCKED_Y),
                 icon: Some(theme::ICON_LOCK),
             },
             HomescreenText {
                 text: tap,
                 style: theme::TEXT_NORMAL,
-                offset: Offset::new(10, TAP_Y),
+                offset: Offset::y(TAP_Y),
                 icon: None,
             },
             HomescreenText {
                 text: self.label.as_ref(),
                 style: label_style,
-                offset: Offset::new(10, LABEL_Y),
+                offset: Offset::y(LABEL_Y),
                 icon: None,
             },
         ];
+
+        if !self.coinjoin_authorized {
+            texts = &texts[1..];
+        }
 
         let res = get_user_custom_image();
         let mut show_default = true;
@@ -330,14 +346,14 @@ where
                 let mut input = BufferInput(data.as_ref());
                 let mut pool = BufferJpegWork::get_cleared();
                 let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
-                homescreen_blurred(&mut hs_img, &texts);
+                homescreen_blurred(&mut hs_img, texts);
                 show_default = false;
             } else if is_image_toif(data.as_ref()) {
                 let input = unwrap!(Toif::new(data.as_ref()));
                 let mut window = [0; UZLIB_WINDOW_SIZE];
                 let mut hs_img =
                     HomescreenToif::new(input.decompression_context(Some(&mut window)));
-                homescreen_blurred(&mut hs_img, &texts);
+                homescreen_blurred(&mut hs_img, texts);
                 show_default = false;
             }
         }
@@ -346,7 +362,7 @@ where
             let mut input = BufferInput(IMAGE_HOMESCREEN);
             let mut pool = BufferJpegWork::get_cleared();
             let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
-            homescreen_blurred(&mut hs_img, &texts);
+            homescreen_blurred(&mut hs_img, texts);
         }
     }
 }
