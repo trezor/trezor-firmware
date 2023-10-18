@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-base_branch=master
+base_branch=main
 fail=0
 subdirs="core core/embed/boardloader core/embed/bootloader core/embed/bootloader_ci legacy/bootloader legacy/firmware legacy/intermediate_fw python"
 

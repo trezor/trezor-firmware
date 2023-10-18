@@ -352,7 +352,7 @@ core unix frozen debug build arm:
   <<: *gitlab_caching
   needs: []
   only:
-    - master
+    - main
     - tags
     - /^release\//
     - /^secfix\//
@@ -535,7 +535,7 @@ legacy emu regular debug build arm:
   <<: *gitlab_caching
   needs: []
   only:
-    - master
+    - main
     - tags
     - /^release\//
     - /^secfix\//
