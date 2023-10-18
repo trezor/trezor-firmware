@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from apps.common.keychain import with_slip44_keychain
 
 from . import CURVE, PATTERNS, SLIP44_ID
+from .transaction import Transaction
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaSignTx, SolanaTxSignature
@@ -15,13 +16,127 @@ async def sign_tx(
     msg: SolanaSignTx,
     keychain: Keychain,
 ) -> SolanaTxSignature:
+    from trezor.crypto import base58
     from trezor.crypto.curve import ed25519
+    from trezor.enums import ButtonRequestType
     from trezor.messages import SolanaTxSignature
+    from trezor.ui.layouts import confirm_metadata, show_warning
+    from trezor.utils import BufferReader
+
+    from apps.common import seed
+
+    from .ui import show_final_confirmation
 
     address_n = msg.address_n
     serialized_tx = msg.serialized_tx
 
     node = keychain.derive(address_n)
+    signer_public_key = seed.remove_ed25519_prefix(node.public_key())
+
+    transaction: Transaction = Transaction(BufferReader(serialized_tx))
+
+    if transaction.blind_signing:
+        await show_warning(
+            "warning_blind_signing", "Transaction contains unknown instructions."
+        )
+
+    if transaction.required_signers_count > 1:
+        await confirm_metadata(
+            "multiple_signers",
+            "Multiple signers",
+            f"Transaction requires {transaction.required_signers_count} signers which increases the fee.",
+            br_code=ButtonRequestType.Other,
+        )
+
+    await show_instructions(address_n, signer_public_key, transaction)
+
+    signer_address = base58.encode(seed.remove_ed25519_prefix(node.public_key()))
+
+    await show_final_confirmation(
+        address_n,
+        signer_address,
+        transaction.blockhash,
+        calculate_fee(transaction),
+    )
+
     signature = ed25519.sign(node.private_key(), serialized_tx)
 
     return SolanaTxSignature(signature=signature)
+
+
+async def show_instructions(
+    signer_path: list[int], signer_public_key: bytes, transaction: Transaction
+) -> None:
+    instructions_count = len(transaction.instructions)
+    for instruction_index, instruction in enumerate(transaction.instructions, 1):
+        if not instruction.is_program_supported:
+            from .ui import show_unsupported_program_confirm
+
+            await show_unsupported_program_confirm(
+                instruction,
+                instructions_count,
+                instruction_index,
+                signer_path,
+                signer_public_key,
+            )
+        elif not instruction.is_instruction_supported:
+            from .ui import show_unsupported_instruction_confirm
+
+            await show_unsupported_instruction_confirm(
+                instruction,
+                instructions_count,
+                instruction_index,
+                signer_path,
+                signer_public_key,
+            )
+        else:
+            from .ui import show_confirm
+
+            await show_confirm(
+                instruction,
+                instructions_count,
+                instruction_index,
+                signer_path,
+                signer_public_key,
+            )
+
+
+def calculate_fee(transaction: Transaction) -> int:
+    from .constants import (
+        ADDRESS_SIG,
+        SOLANA_BASE_FEE_LAMPORTS,
+        SOLANA_COMPUTE_UNIT_LIMIT,
+    )
+    from .transaction.instructions import (
+        COMPUTE_BUDGET_PROGRAM_ID,
+        COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
+        COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+    )
+
+    number_of_signers = 0
+    for address in transaction.addresses:
+        if address[1] == ADDRESS_SIG:
+            number_of_signers += 1
+
+    base_fee = SOLANA_BASE_FEE_LAMPORTS * number_of_signers
+
+    unit_price: int | None = None
+    unit_limit: int = SOLANA_COMPUTE_UNIT_LIMIT
+
+    for instruction in transaction.instructions:
+        if instruction.program_id == COMPUTE_BUDGET_PROGRAM_ID:
+            if (
+                instruction.instruction_id
+                == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT
+            ):
+                unit_limit = instruction.units
+            elif (
+                instruction.instruction_id
+                == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE
+            ):
+                unit_price = instruction.lamports
+
+    if unit_price is None:
+        return base_fee
+
+    return int(base_fee + unit_price * unit_limit / 1000000)
