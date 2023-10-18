@@ -79,6 +79,8 @@ trezor_message_impl! {
     DebugLinkEraseSdCard => MessageType_DebugLinkEraseSdCard,
     DebugLinkWatchLayout => MessageType_DebugLinkWatchLayout,
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
+    SolanaGetPublicKey => MessageType_SolanaGetPublicKey,
+    SolanaPublicKey => MessageType_SolanaPublicKey,
 }
 
 #[cfg(feature = "binance")]

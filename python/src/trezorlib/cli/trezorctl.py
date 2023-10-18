@@ -46,6 +46,7 @@ from . import (
     nem,
     ripple,
     settings,
+    solana,
     stellar,
     tezos,
     with_client,
@@ -76,6 +77,7 @@ COMMAND_ALIASES = {
     "bnb": binance.cli,
     "eth": ethereum.cli,
     "ada": cardano.cli,
+    "sol": solana.cli,
     "xmr": monero.cli,
     "xrp": ripple.cli,
     "xlm": stellar.cli,
@@ -410,6 +412,7 @@ cli.add_command(monero.cli)
 cli.add_command(nem.cli)
 cli.add_command(ripple.cli)
 cli.add_command(settings.cli)
+cli.add_command(solana.cli)
 cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
 
