@@ -1,0 +1,70 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "description": "Transfer With Compute Budget",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 3,
+              "accounts": {},
+              "data": {
+                "instruction_id": 1,
+                "bytes": 2048
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {},
+              "data": {
+                "instruction_id": 2,
+                "units": 200000
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "funding_account": 0,
+                "recipient_account": 1
+              },
+              "data": {
+                "instruction_id": 2,
+                "lamports": 20000000
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "682ba0889bcf9061ce0560fb7f300bfce25ff8ecdc65f1904a3fced1895de5145cf3c73352a811021d930bd224d4789b3c263acc1f1ae0fb48959d8332cc1702"
+      }
+    }
+  ]
+}
