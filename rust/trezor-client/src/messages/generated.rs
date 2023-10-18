@@ -83,6 +83,8 @@ trezor_message_impl! {
     SolanaPublicKey => MessageType_SolanaPublicKey,
     SolanaGetAddress => MessageType_SolanaGetAddress,
     SolanaAddress => MessageType_SolanaAddress,
+    SolanaSignTx => MessageType_SolanaSignTx,
+    SolanaTxSignature => MessageType_SolanaTxSignature,
 }
 
 #[cfg(feature = "binance")]

@@ -5236,6 +5236,36 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["SolanaAddress"]:
             return isinstance(msg, cls)
 
+    class SolanaSignTx(protobuf.MessageType):
+        address_n: "list[int]"
+        serialized_tx: "bytes"
+
+        def __init__(
+            self,
+            *,
+            serialized_tx: "bytes",
+            address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaSignTx"]:
+            return isinstance(msg, cls)
+
+    class SolanaTxSignature(protobuf.MessageType):
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            signature: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaTxSignature"]:
+            return isinstance(msg, cls)
+
     class StellarAsset(protobuf.MessageType):
         type: "StellarAssetType"
         code: "str | None"
