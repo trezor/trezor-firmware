@@ -48,16 +48,16 @@
           ],
           "ui_properties": [
             {
+              "account": "new_account",
+              "display_name": "Create account"
+            },
+            {
               "parameter": "lamports",
-              "display_name": "Lamports"
+              "display_name": "Deposit"
             },
             {
               "account": "funding_account",
-              "display_name": "Funding account"
-            },
-            {
-              "account": "new_account",
-              "display_name": "New account"
+              "display_name": "From"
             }
           ]
         },
@@ -83,12 +83,12 @@
           ],
           "ui_properties": [
             {
-              "parameter": "owner",
-              "display_name": "Owner"
-            },
-            {
               "account": "assigned_account",
               "display_name": "Assigned account"
+            },
+            {
+              "parameter": "owner",
+              "display_name": "To program"
             }
           ]
         },
@@ -121,15 +121,15 @@
           "ui_properties": [
             {
               "parameter": "lamports",
-              "display_name": "Lamports"
+              "display_name": "Transfer"
             },
             {
               "account": "funding_account",
-              "display_name": "Funding account"
+              "display_name": "(auth) Sender"
             },
             {
               "account": "recipient_account",
-              "display_name": "Recipient account"
+              "display_name": "Recipient"
             }
           ]
         },
@@ -191,16 +191,16 @@
           ],
           "ui_properties": [
             {
+              "account": "created_account",
+              "display_name": "Create account"
+            },
+            {
               "parameter": "lamports",
-              "display_name": "Lamports"
+              "display_name": "Deposit"
             },
             {
               "account": "funding_account",
-              "display_name": "Funding account"
-            },
-            {
-              "account": "created_account",
-              "display_name": "Created account"
+              "display_name": "(auth) From"
             }
           ]
         },
@@ -226,12 +226,12 @@
           ],
           "ui_properties": [
             {
-              "parameter": "space",
-              "display_name": "Space"
+              "account": "new_account",
+              "display_name": "Allocate account"
             },
             {
-              "account": "new_account",
-              "display_name": "New account"
+              "parameter": "space",
+              "display_name": "Data size"
             }
           ]
         },
@@ -281,12 +281,12 @@
           ],
           "ui_properties": [
             {
-              "parameter": "space",
-              "display_name": "Space"
+              "account": "allocated_account",
+              "display_name": "Allocate account"
             },
             {
-              "account": "allocated_account",
-              "display_name": "Allocated account"
+              "parameter": "space",
+              "display_name": "Data size"
             }
           ]
         },
@@ -330,12 +330,12 @@
           ],
           "ui_properties": [
             {
-              "parameter": "owner",
-              "display_name": "Owner"
+              "account": "assigned_account",
+              "display_name": "Assigne account"
             },
             {
-              "account": "assigned_account",
-              "display_name": "Assigned account"
+              "parameter": "owner",
+              "display_name": "To program"
             }
           ]
         },
@@ -386,15 +386,15 @@
           "ui_properties": [
             {
               "parameter": "lamports",
-              "display_name": "Lamports"
+              "display_name": "Transfer"
             },
             {
               "account": "funding_account",
-              "display_name": "Funding account"
+              "display_name": "(auth) Sender"
             },
             {
               "account": "recipient_account",
-              "display_name": "Recipient account"
+              "display_name": "Recipient"
             }
           ]
         },
@@ -414,7 +414,7 @@
           "ui_properties": [
             {
               "account": "nonce_account",
-              "display_name": "Nonce account"
+              "display_name": "Upgrade nonce account"
             }
           ]
         }
@@ -480,20 +480,28 @@
           ],
           "ui_properties": [
             {
+              "account": "uninitialized_stake_account",
+              "display_name": "Init stake account"
+            },
+            {
               "parameter": "staker",
-              "display_name": "Staker"
+              "display_name": "New stake authority"
             },
             {
               "parameter": "withdrawer",
-              "display_name": "Withdrawer"
+              "display_name": "New withdraw authority"
+            },
+            {
+              "parameter": "unix_timestamp",
+              "display_name": "Lockup time"
+            },
+            {
+              "parameter": "epoch",
+              "display_name": "Lockup epoch"
             },
             {
               "parameter": "custodian",
-              "display_name": "Custodian"
-            },
-            {
-              "account": "uninitialized_stake_account",
-              "display_name": ""
+              "display_name": "Lockup authority"
             }
           ]
         },
@@ -543,20 +551,20 @@
           ],
           "ui_properties": [
             {
-              "parameter": "pubkey",
-              "display_name": "Pubkey"
+              "account": "stake_account",
+              "display_name": "Set stake account"
             },
             {
-              "account": "stake_account",
-              "display_name": "Stake account"
+              "parameter": "pubkey",
+              "display_name": "New (stake/withdraw/nothing) authority"
             },
             {
               "account": "stake_or_withdraw_authority",
-              "display_name": "Stake or withdraw authority"
+              "display_name": "(auth) Authorized by"
             },
             {
               "account": "lockup_authority",
-              "display_name": "Lockup authority"
+              "display_name": "(auth) Custodian"
             }
           ]
         },
@@ -606,15 +614,15 @@
           "ui_properties": [
             {
               "account": "initialized_stake_account",
-              "display_name": "Initialized stake account"
+              "display_name": "Delegate from"
+            },
+            {
+              "account": "stake_authority",
+              "display_name": "(auth) Authorized by"
             },
             {
               "account": "vote_account",
               "display_name": "Vote account"
-            },
-            {
-              "account": "stake_authority",
-              "display_name": "Stake authority"
             }
           ]
         },
@@ -653,19 +661,19 @@
           "ui_properties": [
             {
               "parameter": "lamports",
-              "display_name": "Lamports"
+              "display_name": "Split stake"
             },
             {
               "account": "stake_account",
-              "display_name": "Stake account"
+              "display_name": "From"
             },
             {
               "account": "uninitialized_stake_account",
-              "display_name": "Uninitialized stake account"
+              "display_name": "To"
             },
             {
               "account": "stake_authority",
-              "display_name": "Stake authority"
+              "display_name": "(auth) Authorized by"
             }
           ]
         },
@@ -722,19 +730,19 @@
           "ui_properties": [
             {
               "parameter": "lamports",
-              "display_name": "Lamports"
+              "display_name": "Stake withdraw"
             },
             {
               "account": "stake_account",
-              "display_name": "Stake account"
+              "display_name": "From"
             },
             {
               "account": "recipient_account",
-              "display_name": "Recipient account"
+              "display_name": "To"
             },
             {
               "account": "withdrawal_authority",
-              "display_name": "Withdrawal authority"
+              "display_name": "(auth) Authorized by"
             }
           ]
         },
@@ -766,11 +774,11 @@
           "ui_properties": [
             {
               "account": "delegated_stake_account",
-              "display_name": "Delegated stake account"
+              "display_name": "Deactivate stake"
             },
             {
               "account": "stake_authority",
-              "display_name": "Stake authority"
+              "display_name": "(auth) Authorized by"
             }
           ]
         },
@@ -814,24 +822,24 @@
           ],
           "ui_properties": [
             {
+              "parameter": "Set lockup",
+              "display_name": "Custodian"
+            },
+            {
               "parameter": "unix_timestamp",
-              "display_name": "Unix timestamp"
+              "display_name": "Time"
             },
             {
               "parameter": "epoch",
               "display_name": "Epoch"
             },
             {
-              "parameter": "custodian",
-              "display_name": "Custodian"
-            },
-            {
               "account": "initialized_stake_account",
-              "display_name": "Initialized stake account"
+              "display_name": "New authority"
             },
             {
               "account": "lockup_or_withdraw_authority",
-              "display_name": "Lockup or withdraw authority"
+              "display_name": "(auth) Authorized by"
             }
           ]
         },
@@ -874,16 +882,15 @@
           ],
           "ui_properties": [
             {
-              "account": "destination_stake_account",
-              "display_name": "Destination stake account"
-            },
-            {
               "account": "source_stake_account",
-              "display_name": "Source stake account"
+              "display_name": "Merge"
+            },{
+              "account": "destination_stake_account",
+              "display_name": "Into"
             },
             {
               "account": "stake_authority",
-              "display_name": "Stake authority"
+              "display_name": "(auth) Authorized by"
             }
           ]
         },
@@ -945,20 +952,20 @@
           ],
           "ui_properties": [
             {
-              "parameter": "new_authorized_pubkey",
-              "display_name": "New authorized pubkey"
+              "account": "stake_account",
+              "display_name": "Set stake auth"
             },
             {
-              "account": "stake_account",
-              "display_name": "Stake account"
+              "parameter": "new_authorized_pubkey",
+              "display_name": "New (stake/withdraw) auth"
             },
             {
               "account": "stake_or_withdraw_authority",
-              "display_name": "Stake or withdraw authority"
+              "display_name": "(auth) Authorized by"
             },
             {
               "account": "lockup_authority",
-              "display_name": "Lockup authority"
+              "display_name": "(auth) Custodian"
             }
           ]
         },
@@ -1000,11 +1007,11 @@
             },
             {
               "account": "stake_authority",
-              "display_name": "Stake authority"
+              "display_name": "New stake authority"
             },
             {
               "account": "withdrawal_authority",
-              "display_name": "Withdrawal authority"
+              "display_name": "New withdraw authority"
             }
           ]
         },
@@ -1055,7 +1062,7 @@
           "ui_properties": [
             {
               "account": "stake_account",
-              "display_name": "Stake account"
+              "display_name": "Set stake auth"
             },
             {
               "account": "stake_or_withdraw_authority",
@@ -1145,10 +1152,6 @@
               "display_name": "Stake or withdraw authority"
             },
             {
-              "account": "clock_sysvar",
-              "display_name": "Clock sysvar"
-            },
-            {
               "account": "new_stake_or_withdraw_authority",
               "display_name": "New stake or withdraw authority"
             },
@@ -1198,16 +1201,16 @@
           ],
           "ui_properties": [
             {
+              "account": "stake_account",
+              "display_name": "Stake account"
+            },
+            {
               "parameter": "unix_timestamp",
-              "display_name": "Unix timestamp"
+              "display_name": "Time"
             },
             {
               "parameter": "epoch",
               "display_name": "Epoch"
-            },
-            {
-              "account": "stake_account",
-              "display_name": "Stake account"
             },
             {
               "account": "lockup_or_withdraw_authority",
@@ -1333,15 +1336,15 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Account to initialize"
-            },
-            {
-              "account": "mint_account",
-              "display_name": "Mint account"
+              "display_name": "Init account"
             },
             {
               "account": "owner",
               "display_name": "Owner"
+            },
+            {
+              "account": "mint_account",
+              "display_name": "Mint"
             }
           ]
         },
@@ -1380,11 +1383,11 @@
           "ui_properties": [
             {
               "account": "multisig_account",
-              "display_name": "Multisig account"
+              "display_name": "Init multisig"
             },
             {
               "account": "signer_accounts",
-              "display_name": "Signer accounts"
+              "display_name": "Required signers"
             }
           ]
         },
@@ -1424,19 +1427,19 @@
           "ui_properties": [
             {
               "parameter": "amount",
-              "display_name": "Amount"
+              "display_name": "Transfer tokens"
             },
             {
               "account": "source_account",
-              "display_name": "Source account"
+              "display_name": "From"
             },
             {
               "account": "destination_account",
-              "display_name": "Destination account"
+              "display_name": "To"
             },
             {
               "account": "owner",
-              "display_name": "Owner"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -1475,20 +1478,16 @@
           ],
           "ui_properties": [
             {
-              "parameter": "amount",
-              "display_name": "Amount"
-            },
-            {
-              "account": "source_account",
-              "display_name": "Source account"
-            },
-            {
               "account": "delegate_account",
-              "display_name": "Delegate account"
+              "display_name": "Approve delegate"
+            },
+            {
+              "parameter": "amount",
+              "display_name": "Allowance"
             },
             {
               "account": "owner",
-              "display_name": "Owner"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -1514,11 +1513,11 @@
           "ui_properties": [
             {
               "account": "source_account",
-              "display_name": "Source account"
+              "display_name": "Rewoke delegate"
             },
             {
               "account": "owner",
-              "display_name": "Owner"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -1556,12 +1555,20 @@
           ],
           "ui_properties": [
             {
+              "parameter": "new_authority",
+              "display_name": "Set authority"
+            },
+            {
+              "parameter": "authority_type",
+              "display_name": "Type"
+            },
+            {
               "account": "mint_account",
-              "display_name": "Mint account"
+              "display_name": "(multisig) (auth) Owner"
             },
             {
               "account": "current_authority",
-              "display_name": "Current authority"
+              "display_name": "(multisig) Signers"
             }
           ]
         },
@@ -1601,19 +1608,15 @@
           "ui_properties": [
             {
               "parameter": "amount",
-              "display_name": "Amount"
-            },
-            {
-              "account": "mint",
-              "display_name": "Mint"
+              "display_name": "Mint tokens"
             },
             {
               "account": "account_to_mint",
-              "display_name": "Account to mint"
+              "display_name": "To"
             },
             {
               "account": "minting_authority",
-              "display_name": "Minting authority"
+              "display_name": "(multisig) (auth) Mint authority"
             }
           ]
         },
@@ -1653,19 +1656,15 @@
           "ui_properties": [
             {
               "parameter": "amount",
-              "display_name": "Amount"
+              "display_name": "Burn tokens"
             },
             {
               "account": "account_to_burn_from",
-              "display_name": "Account to burn from"
-            },
-            {
-              "account": "token_mint",
-              "display_name": "Token mint"
+              "display_name": "From"
             },
             {
               "account": "owner",
-              "display_name": "Owner"
+              "display_name": "(multisig) (auth) Mint authority"
             }
           ]
         },
@@ -1697,15 +1696,15 @@
           "ui_properties": [
             {
               "account": "account_to_close",
-              "display_name": "Account to close"
+              "display_name": "Close account"
             },
             {
               "account": "destination_account",
-              "display_name": "Destination account"
+              "display_name": "Withdraw to"
             },
             {
               "account": "owner",
-              "display_name": "Owner"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -1737,11 +1736,11 @@
           "ui_properties": [
             {
               "account": "account_to_freeze",
-              "display_name": "Account to freeze"
+              "display_name": "Freeze account"
             },
             {
               "account": "freeze_authority",
-              "display_name": "Freeze authority"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -1773,11 +1772,11 @@
           "ui_properties": [
             {
               "account": "account_to_freeze",
-              "display_name": "Account to freeze"
+              "display_name": "Thaw account"
             },
             {
               "account": "freeze_authority",
-              "display_name": "Freeze authority"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -1828,27 +1827,19 @@
           "ui_properties": [
             {
               "parameter": "amount",
-              "display_name": "Amount"
-            },
-            {
-              "parameter": "decimals",
-              "display_name": "Decimals"
+              "display_name": "Transfer tokens"
             },
             {
               "account": "source_account",
-              "display_name": "Source account"
-            },
-            {
-              "account": "token_mint",
-              "display_name": "Token mint"
+              "display_name": "From"
             },
             {
               "account": "destination_account",
-              "display_name": "Destination account"
+              "display_name": "To"
             },
             {
               "account": "owner",
-              "display_name": "Owner"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -1898,28 +1889,20 @@
           ],
           "ui_properties": [
             {
-              "parameter": "amount",
-              "display_name": "Amount"
+              "account": "delegate",
+              "display_name": "Approve delegate"
             },
             {
-              "parameter": "decimals",
-              "display_name": "Decimals"
+              "parameter": "amount",
+              "display_name": "Allowance"
             },
             {
               "account": "source_account",
-              "display_name": "Source account"
-            },
-            {
-              "account": "token_mint",
-              "display_name": "Token mint"
-            },
-            {
-              "account": "delegate",
-              "display_name": "Delegate"
+              "display_name": "From"
             },
             {
               "account": "owner",
-              "display_name": "Owner"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -1964,23 +1947,15 @@
           "ui_properties": [
             {
               "parameter": "amount",
-              "display_name": "Amount"
-            },
-            {
-              "parameter": "decimals",
-              "display_name": "Decimals"
-            },
-            {
-              "account": "mint",
-              "display_name": "Mint"
+              "display_name": "Mint tokens"
             },
             {
               "account": "account_to_mint",
-              "display_name": "Account to mint"
+              "display_name": "To"
             },
             {
               "account": "minting_authority",
-              "display_name": "Minting authority"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -2025,23 +2000,15 @@
           "ui_properties": [
             {
               "parameter": "amount",
-              "display_name": "Amount"
-            },
-            {
-              "parameter": "decimals",
-              "display_name": "Decimals"
+              "display_name": "Burn tokens"
             },
             {
               "account": "account_to_burn_from",
-              "display_name": "Account to burn from"
-            },
-            {
-              "account": "token_mint",
-              "display_name": "Token mint"
+              "display_name": "From"
             },
             {
               "account": "owner",
-              "display_name": "Owner"
+              "display_name": "(multisig) (auth) Owner"
             }
           ]
         },
@@ -2079,16 +2046,16 @@
           ],
           "ui_properties": [
             {
+              "account": "account_to_initialize",
+              "display_name": "Init account"
+            },
+            {
               "parameter": "owner",
               "display_name": "Owner"
             },
             {
-              "account": "account_to_initialize",
-              "display_name": "Account to initialize"
-            },
-            {
               "account": "mint_account",
-              "display_name": "Mint account"
+              "display_name": "Mint"
             }
           ]
         },
@@ -2108,7 +2075,7 @@
           "ui_properties": [
             {
               "account": "token_account",
-              "display_name": "Native token account"
+              "display_name": "Sync native account"
             }
           ]
         },
@@ -2140,16 +2107,16 @@
           ],
           "ui_properties": [
             {
+              "account": "account_to_initialize",
+              "display_name": "Init account"
+            },
+            {
               "parameter": "owner",
               "display_name": "Owner"
             },
             {
-              "account": "account_to_initialize",
-              "display_name": "Account to initialize"
-            },
-            {
               "account": "mint_account",
-              "display_name": "Mint account"
+              "display_name": "Mint"
             }
           ]
         },
@@ -2169,7 +2136,7 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Account to initialize"
+              "display_name": "Init account"
             }
           ]
         }
@@ -2228,21 +2195,22 @@
           ],
           "ui_properties": [
             {
-              "account": "funding_account",
-              "display_name": "Funding account"
-            },
-            {
               "account": "associated_token_account",
-              "display_name": "Associated token account"
-            },
-            {
-              "account": "wallet_address",
-              "display_name": "Wallet address"
+              "display_name": "Create token account"
             },
             {
               "account": "token_mint",
-              "display_name": "Token mint"
+              "display_name": "From mint"
+            },
+            {
+              "account": "wallet_address",
+              "display_name": "Owned by"
+            },
+            {
+              "account": "funding_account",
+              "display_name": "Funded by"
             }
+            
           ]
         },
         {
@@ -2290,20 +2258,20 @@
           ],
           "ui_properties": [
             {
-              "account": "funding_account",
-              "display_name": "Funding account"
-            },
-            {
               "account": "associated_token_account",
-              "display_name": "Associated token account"
-            },
-            {
-              "account": "wallet_address",
-              "display_name": "Wallet address"
+              "display_name": "Create token account"
             },
             {
               "account": "token_mint",
-              "display_name": "Token mint"
+              "display_name": "From mint"
+            },
+            {
+              "account": "wallet_address",
+              "display_name": "Owned by"
+            },
+            {
+              "account": "funding_account",
+              "display_name": "Funded by"
             }
           ]
         },
