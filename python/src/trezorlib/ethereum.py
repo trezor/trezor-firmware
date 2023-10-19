@@ -303,12 +303,14 @@ def sign_message(
     n: "Address",
     message: AnyStr,
     encoded_network: Optional[bytes] = None,
+    chunkify: bool = False,
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignMessage(
             address_n=n,
             message=prepare_message_bytes(message),
             encoded_network=encoded_network,
+            chunkify=chunkify,
         )
     )
 
@@ -389,7 +391,11 @@ def sign_typed_data(
 
 
 def verify_message(
-    client: "TrezorClient", address: str, signature: bytes, message: AnyStr
+    client: "TrezorClient",
+    address: str,
+    signature: bytes,
+    message: AnyStr,
+    chunkify: bool = False,
 ) -> bool:
     try:
         resp = client.call(
@@ -397,6 +403,7 @@ def verify_message(
                 address=address,
                 signature=signature,
                 message=prepare_message_bytes(message),
+                chunkify=chunkify,
             )
         )
     except exceptions.TrezorFailure:

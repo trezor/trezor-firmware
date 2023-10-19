@@ -426,6 +426,7 @@ def sign_tx(client: "TrezorClient", json_file: TextIO, chunkify: bool) -> None:
     is_flag=True,
     help="Generate Electrum-compatible signature",
 )
+@click.option("-C", "--chunkify", is_flag=True)
 @click.argument("message")
 @with_client
 def sign_message(
@@ -435,13 +436,20 @@ def sign_message(
     message: str,
     script_type: Optional[messages.InputScriptType],
     electrum_compat: bool,
+    chunkify: bool,
 ) -> Dict[str, str]:
     """Sign message using address of given path."""
     address_n = tools.parse_path(address)
     if script_type is None:
         script_type = guess_script_type_from_path(address_n)
     res = btc.sign_message(
-        client, coin, address_n, message, script_type, electrum_compat
+        client,
+        coin,
+        address_n,
+        message,
+        script_type,
+        electrum_compat,
+        chunkify=chunkify,
     )
     return {
         "message": message,
@@ -452,16 +460,24 @@ def sign_message(
 
 @cli.command()
 @click.option("-c", "--coin", default=DEFAULT_COIN)
+@click.option("-C", "--chunkify", is_flag=True)
 @click.argument("address")
 @click.argument("signature")
 @click.argument("message")
 @with_client
 def verify_message(
-    client: "TrezorClient", coin: str, address: str, signature: str, message: str
+    client: "TrezorClient",
+    coin: str,
+    address: str,
+    signature: str,
+    message: str,
+    chunkify: bool,
 ) -> bool:
     """Verify message."""
     signature_bytes = base64.b64decode(signature)
-    return btc.verify_message(client, coin, address, signature_bytes, message)
+    return btc.verify_message(
+        client, coin, address, signature_bytes, message, chunkify=chunkify
+    )
 
 
 #

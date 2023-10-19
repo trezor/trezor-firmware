@@ -524,13 +524,16 @@ def sign_tx(
 
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option("-C", "--chunkify", is_flag=True)
 @click.argument("message")
 @with_client
-def sign_message(client: "TrezorClient", address: str, message: str) -> Dict[str, str]:
+def sign_message(
+    client: "TrezorClient", address: str, message: str, chunkify: bool
+) -> Dict[str, str]:
     """Sign message with Ethereum address."""
     address_n = tools.parse_path(address)
     network = ethereum.network_from_address_n(address_n, DEFINITIONS_SOURCE)
-    ret = ethereum.sign_message(client, address_n, message, network)
+    ret = ethereum.sign_message(client, address_n, message, network, chunkify=chunkify)
     output = {
         "message": message,
         "address": ret.address,
@@ -576,16 +579,23 @@ def sign_typed_data(
 
 
 @cli.command()
+@click.option("-C", "--chunkify", is_flag=True)
 @click.argument("address")
 @click.argument("signature")
 @click.argument("message")
 @with_client
 def verify_message(
-    client: "TrezorClient", address: str, signature: str, message: str
+    client: "TrezorClient",
+    address: str,
+    signature: str,
+    message: str,
+    chunkify: bool,
 ) -> bool:
     """Verify message signed with Ethereum address."""
     signature_bytes = ethereum.decode_hex(signature)
-    return ethereum.verify_message(client, address, signature_bytes, message)
+    return ethereum.verify_message(
+        client, address, signature_bytes, message, chunkify=chunkify
+    )
 
 
 @cli.command()
