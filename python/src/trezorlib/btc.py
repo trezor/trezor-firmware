@@ -234,6 +234,7 @@ def sign_message(
     message: AnyStr,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     no_script_type: bool = False,
+    chunkify: bool = False,
 ) -> "MessageType":
     return client.call(
         messages.SignMessage(
@@ -242,6 +243,7 @@ def sign_message(
             message=prepare_message_bytes(message),
             script_type=script_type,
             no_script_type=no_script_type,
+            chunkify=chunkify,
         )
     )
 
@@ -252,6 +254,7 @@ def verify_message(
     address: str,
     signature: bytes,
     message: AnyStr,
+    chunkify: bool = False,
 ) -> bool:
     try:
         resp = client.call(
@@ -260,6 +263,7 @@ def verify_message(
                 signature=signature,
                 message=prepare_message_bytes(message),
                 coin_name=coin_name,
+                chunkify=chunkify,
             )
         )
     except exceptions.TrezorFailure:
