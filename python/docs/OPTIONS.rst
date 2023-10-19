@@ -208,6 +208,7 @@ Device management commands - setup, recover seed, wipe, etc.
     --help  Show this message and exit.
 
   Commands:
+    authenticate          Get information to verify the authenticity of the device.
     backup                Perform device seed backup.
     load                  Upload seed and custom configuration to the device.
     reboot-to-bootloader  Reboot device into bootloader mode.
@@ -217,6 +218,7 @@ Device management commands - setup, recover seed, wipe, etc.
     set-busy              Show a "Do not disconnect" dialog.
     setup                 Perform device setup and generate new seed.
     tutorial              Show on-device tutorial.
+    unlock-bootloader     Unlocks bootloader.
     wipe                  Reset device to factory defaults and remove all private data.
 
 EOS commands.
