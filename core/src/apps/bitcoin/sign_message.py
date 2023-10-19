@@ -19,11 +19,14 @@ async def sign_message(
     from trezor.messages import MessageSignature
     from trezor.ui.layouts import confirm_signverify
 
-    from apps.common.paths import validate_path
+    from apps.common.paths import address_n_to_str, validate_path
     from apps.common.signverify import decode_message, message_digest
 
     from .addresses import address_short, get_address
-    from .keychain import validate_path_against_script_type
+    from .keychain import (
+        address_n_to_name_or_unknown,
+        validate_path_against_script_type,
+    )
 
     message = msg.message
     address_n = msg.address_n
@@ -35,11 +38,15 @@ async def sign_message(
 
     node = keychain.derive(address_n)
     address = get_address(script_type, coin, node)
+    path = address_n_to_str(address_n)
+    account = address_n_to_name_or_unknown(coin, address_n, script_type)
     await confirm_signverify(
-        coin.coin_shortcut,
         decode_message(message),
         address_short(coin, address),
         verify=False,
+        account=account,
+        path=path,
+        chunkify=bool(msg.chunkify),
     )
 
     seckey = node.private_key()

@@ -824,12 +824,13 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
+        let verb: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_verb, "CONFIRM".into())?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let get_page = move |page_index| {
             assert!(page_index == 0);
 
-            let btn_layout = ButtonLayout::cancel_armed_info("CONFIRM".into());
+            let btn_layout = ButtonLayout::cancel_armed_info(verb.clone());
             let btn_actions = ButtonActions::cancel_confirm_info();
             let style = if chunkify {
                 // Chunkifying the address into smaller pieces when requested
@@ -1671,6 +1672,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     data: str,
     ///     description: str | None,  # unused on TR
     ///     extra: str | None,  # unused on TR
+    ///     verb: str = "CONFIRM",
     ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm address."""

@@ -21,9 +21,10 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import message_filters
+from trezorlib.exceptions import Cancelled
 from trezorlib.tools import parse_path
 
-from ...input_flows import InputFlowSignMessagePagination
+from ...input_flows import InputFlowSignMessageInfo, InputFlowSignMessagePagination
 
 S = messages.InputScriptType
 
@@ -303,14 +304,47 @@ def test_signmessage(
     assert sig.signature.hex() == signature
 
 
+@pytest.mark.skip_t1
+@pytest.mark.skip_tr
+@pytest.mark.parametrize(
+    "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
+)
+def test_signmessage_info(
+    client: Client,
+    coin_name: str,
+    path: str,
+    script_type: messages.InputScriptType,
+    no_script_type: bool,
+    address: str,
+    message: str,
+    signature: str,
+):
+    with client, pytest.raises(Cancelled):
+        IF = InputFlowSignMessageInfo(client)
+        client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            client,
+            coin_name=coin_name,
+            n=parse_path(path),
+            script_type=script_type,
+            no_script_type=no_script_type,
+            message=message,
+            chunkify=True,
+        )
+        assert sig.address == address
+        assert sig.signature.hex() == signature
+
+
 MESSAGE_LENGTHS = (
     pytest.param("This is a very long message. " * 16, id="normal_text"),
     pytest.param("ThisIsAMessageWithoutSpaces" * 16, id="no_spaces"),
     pytest.param("ThisIsAMessageWithLongWords " * 16, id="long_words"),
-    pytest.param("This\nmessage\nhas\nnewlines\nafter\nevery\nword", id="newlines"),
+    pytest.param(
+        "This\nmessage\nhas\nnewlines\nafter\nevery\nsingle\nword", id="newlines"
+    ),
     pytest.param("Příšerně žluťoučký kůň úpěl ďábelské ódy. " * 16, id="utf_text"),
     pytest.param("PříšerněŽluťoučkýKůňÚpělĎábelskéÓdy" * 16, id="utf_nospace"),
-    pytest.param("1\n2\n3\n4\n5\n6", id="single_line_over"),
+    pytest.param("1\n2\n3\n4\n5\n6\n7", id="single_line_over"),
 )
 
 
@@ -330,9 +364,7 @@ def test_signmessage_pagination(client: Client, message: str):
     # We cannot differentiate between a newline and space in the message read from Trezor.
     # TODO: do the check also for model R
     if client.features.model == "T":
-        expected_message = (
-            ("Confirm message: " + message).replace("\n", "").replace(" ", "")
-        )
+        expected_message = message.replace("\n", "").replace(" ", "")
         message_read = IF.message_read.replace(" ", "").replace("...", "")
         assert expected_message == message_read
 
@@ -340,7 +372,7 @@ def test_signmessage_pagination(client: Client, message: str):
 @pytest.mark.skip_t1
 @pytest.mark.skip_tr(reason="Different screen size")
 def test_signmessage_pagination_trailing_newline(client: Client):
-    message = "THIS\nMUST NOT\nBE\nPAGINATED\n"
+    message = "THIS\nMUST\nNOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.
     # The UI must be a single dialog without pagination.
     with client:

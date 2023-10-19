@@ -637,20 +637,20 @@ pub struct LinearPlacement {
 }
 
 impl LinearPlacement {
-    pub const fn horizontal() -> Self {
+    pub const fn new(axis: Axis) -> Self {
         Self {
-            axis: Axis::Horizontal,
+            axis,
             align: Alignment::Start,
             spacing: 0,
         }
     }
 
+    pub const fn horizontal() -> Self {
+        Self::new(Axis::Horizontal)
+    }
+
     pub const fn vertical() -> Self {
-        Self {
-            axis: Axis::Vertical,
-            align: Alignment::Start,
-            spacing: 0,
-        }
+        Self::new(Axis::Vertical)
     }
 
     pub const fn align_at_start(self) -> Self {

@@ -455,3 +455,19 @@ def address_n_to_name(
             return name
 
     return None
+
+
+def address_n_to_name_or_unknown(
+    coin: coininfo.CoinInfo,
+    address_n: Bip32Path,
+    script_type: InputScriptType | None = None,
+    account_level: bool = False,
+    show_account_str: bool = False,
+) -> str:
+    account_name = address_n_to_name(coin, address_n, script_type)
+    if account_name is None:
+        return "Unknown path"
+    elif account_name == "":
+        return coin.coin_shortcut
+    else:
+        return f"{coin.coin_shortcut} {account_name}"

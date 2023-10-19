@@ -60,6 +60,7 @@ def confirm_address(
     data: str,
     description: str | None,  # unused on TR
     extra: str | None,  # unused on TR
+    verb: str = "CONFIRM",
     chunkify: bool = False,
 ) -> object:
     """Confirm address."""
@@ -517,6 +518,7 @@ def confirm_address(
     title: str,
     data: str | bytes,
     description: str | None,
+    verb: str | None = "CONFIRM",
     extra: str | None,
     chunkify: bool = False,
 ) -> object:
@@ -563,8 +565,9 @@ def show_info_with_cancel(
     *,
     title: str,
     items: Iterable[Tuple[str, str]],
+    horizontal: bool = False,
 ) -> object:
-    """Show metadata when for outgoing transaction."""
+    """Show metadata for outgoing transaction."""
 
 
 # rust/src/ui/model_tt/layout.rs

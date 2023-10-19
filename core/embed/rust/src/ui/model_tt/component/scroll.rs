@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::toif::Icon,
-    geometry::{Alignment2D, LinearPlacement, Offset, Rect},
+    geometry::{Alignment2D, Axis, LinearPlacement, Offset, Rect},
 };
 
 use super::theme;
@@ -21,7 +21,8 @@ impl ScrollBar {
     /// Center to center.
     const DOT_INTERVAL: i16 = 18;
 
-    fn new(layout: LinearPlacement) -> Self {
+    pub fn new(axis: Axis) -> Self {
+        let layout = LinearPlacement::new(axis);
         Self {
             area: Rect::zero(),
             layout: layout.align_at_center().with_spacing(Self::DOT_INTERVAL),
@@ -31,11 +32,11 @@ impl ScrollBar {
     }
 
     pub fn vertical() -> Self {
-        Self::new(LinearPlacement::vertical())
+        Self::new(Axis::Vertical)
     }
 
     pub fn horizontal() -> Self {
-        Self::new(LinearPlacement::horizontal())
+        Self::new(Axis::Horizontal)
     }
 
     pub fn set_count_and_active_page(&mut self, page_count: usize, active_page: usize) {
