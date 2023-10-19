@@ -1139,7 +1139,12 @@ async def confirm_sign_identity(
 
 
 async def confirm_signverify(
-    coin: str, message: str, address: str, verify: bool
+    message: str,
+    address: str,
+    verify: bool,
+    path: str | None = None,
+    account: str | None = None,
+    chunkify: bool = False,
 ) -> None:
     br_type = "verify_message" if verify else "sign_message"
 

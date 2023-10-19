@@ -135,6 +135,7 @@ message EthereumSignMessage {
     repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
     required bytes message = 2;         // message to be signed
     optional bytes encoded_network = 3; // encoded Ethereum network, see ethereum-definitions.md for details
+    optional bool chunkify = 4;         // display the address in chunks of 4 characters
 }
 
 /**
@@ -156,6 +157,7 @@ message EthereumVerifyMessage {
     required bytes signature = 2;       // signature to verify
     required bytes message = 3;         // message to verify
     required string address = 4;        // address to verify
+    optional bool chunkify = 5;         // display the address in chunks of 4 characters
 }
 
 /**

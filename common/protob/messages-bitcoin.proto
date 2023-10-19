@@ -155,6 +155,7 @@ message SignMessage {
     optional string coin_name = 3 [default='Bitcoin'];                  // coin to use for signing
     optional InputScriptType script_type = 4 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional bool no_script_type = 5;                                   // don't include script type information in the recovery byte of the signature, same as in Bitcoin Core
+    optional bool chunkify = 6;                                         // display the address in chunks of 4 characters
 }
 
 /**
@@ -177,6 +178,7 @@ message VerifyMessage {
     required bytes signature = 2;                       // signature to verify
     required bytes message = 3;                         // message to verify
     optional string coin_name = 4 [default='Bitcoin'];  // coin to use for verifying
+    optional bool chunkify = 5;                         // display the address in chunks of 4 characters
 }
 
 /**

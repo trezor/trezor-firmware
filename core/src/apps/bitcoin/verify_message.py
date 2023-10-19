@@ -111,7 +111,6 @@ async def verify_message(msg: VerifyMessage) -> Success:
         raise ProcessError("Invalid signature")
 
     await confirm_signverify(
-        coin.coin_shortcut,
         decode_message(message),
         address_short(coin, address),
         verify=True,

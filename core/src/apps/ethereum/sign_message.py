@@ -41,7 +41,10 @@ async def sign_message(
 
     node = keychain.derive(msg.address_n)
     address = address_from_bytes(node.ethereum_pubkeyhash(), defs.network)
-    await confirm_signverify("ETH", decode_message(msg.message), address, verify=False)
+    path = paths.address_n_to_str(msg.address_n)
+    await confirm_signverify(
+        decode_message(msg.message), address, account="ETH", path=path, verify=False
+    )
 
     signature = secp256k1.sign(
         node.private_key(),

@@ -34,7 +34,7 @@ async def verify_message(msg: EthereumVerifyMessage) -> Success:
 
     address = address_from_bytes(address_bytes)
 
-    await confirm_signverify("ETH", decode_message(msg.message), address, verify=True)
+    await confirm_signverify(decode_message(msg.message), address, verify=True)
 
     await show_success("verify_message", "The signature is valid.")
     return Success(message="Message verified")

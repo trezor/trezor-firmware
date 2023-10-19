@@ -542,6 +542,7 @@ if TYPE_CHECKING:
         coin_name: "str"
         script_type: "InputScriptType"
         no_script_type: "bool | None"
+        chunkify: "bool | None"
 
         def __init__(
             self,
@@ -551,6 +552,7 @@ if TYPE_CHECKING:
             coin_name: "str | None" = None,
             script_type: "InputScriptType | None" = None,
             no_script_type: "bool | None" = None,
+            chunkify: "bool | None" = None,
         ) -> None:
             pass
 
@@ -579,6 +581,7 @@ if TYPE_CHECKING:
         signature: "bytes"
         message: "bytes"
         coin_name: "str"
+        chunkify: "bool | None"
 
         def __init__(
             self,
@@ -587,6 +590,7 @@ if TYPE_CHECKING:
             signature: "bytes",
             message: "bytes",
             coin_name: "str | None" = None,
+            chunkify: "bool | None" = None,
         ) -> None:
             pass
 
@@ -3804,6 +3808,7 @@ if TYPE_CHECKING:
         address_n: "list[int]"
         message: "bytes"
         encoded_network: "bytes | None"
+        chunkify: "bool | None"
 
         def __init__(
             self,
@@ -3811,6 +3816,7 @@ if TYPE_CHECKING:
             message: "bytes",
             address_n: "list[int] | None" = None,
             encoded_network: "bytes | None" = None,
+            chunkify: "bool | None" = None,
         ) -> None:
             pass
 
@@ -3838,6 +3844,7 @@ if TYPE_CHECKING:
         signature: "bytes"
         message: "bytes"
         address: "str"
+        chunkify: "bool | None"
 
         def __init__(
             self,
@@ -3845,6 +3852,7 @@ if TYPE_CHECKING:
             signature: "bytes",
             message: "bytes",
             address: "str",
+            chunkify: "bool | None" = None,
         ) -> None:
             pass
 

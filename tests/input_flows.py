@@ -254,6 +254,28 @@ class InputFlowSignMessagePagination(InputFlowBase):
         self.debug.press_yes()
 
 
+class InputFlowSignMessageInfo(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_tt(self) -> BRGeneratorType:
+        yield
+        # show address/message info
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.click(buttons.CORNER_BUTTON, wait=True)
+        self.debug.press_no(wait=True)
+        self.debug.synchronize_at("mismatch")
+        # address mismatch?
+        self.debug.press_no()
+        yield
+        self.debug.press_yes()
+        yield
+        self.debug.press_no()
+        yield
+        self.debug.press_no(wait=True)
+        self.debug.press_yes(wait=True)
+
+
 class InputFlowShowAddressQRCode(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)

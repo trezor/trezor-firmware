@@ -75,6 +75,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee_rate_amount;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
+  MP_QSTR_horizontal;
   MP_QSTR_icon_name;
   MP_QSTR_image;
   MP_QSTR_indeterminate;

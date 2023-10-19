@@ -24,28 +24,24 @@ where
     T: Paginate,
     T: Component,
 {
-    pub fn horizontal(content: T, background: Color) -> Self {
+    pub fn new(content: T, axis: Axis, background: Color) -> Self {
         Self {
             content,
             swipe: Swipe::new(),
             pad: Pad::with_background(background),
-            scrollbar: ScrollBar::horizontal(),
-            axis: Axis::Horizontal,
+            scrollbar: ScrollBar::new(axis),
+            axis,
             swipe_right_to_go_back: false,
             fade: None,
         }
     }
 
+    pub fn horizontal(content: T, background: Color) -> Self {
+        Self::new(content, Axis::Horizontal, background)
+    }
+
     pub fn vertical(content: T, background: Color) -> Self {
-        Self {
-            content,
-            swipe: Swipe::new(),
-            pad: Pad::with_background(background),
-            scrollbar: ScrollBar::vertical(),
-            axis: Axis::Vertical,
-            swipe_right_to_go_back: false,
-            fade: None,
-        }
+        Self::new(content, Axis::Vertical, background)
     }
 
     pub fn with_swipe_right_to_go_back(mut self) -> Self {
