@@ -1,1 +1,0 @@
-trezorctl: support unlocking bootloader via `trezorctl device unlock-bootloader`.

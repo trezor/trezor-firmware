@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.8] (2023-10-19)
+[0.13.8]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.7...python/v0.13.8
+
+### Added
+- Added full support for Trezor Safe 3 (T2B1).
+- Added support for STM32F429I-DISC1 board  [#2989]
+- Add support for address chunkification in Receive and Sign flow.  [#3237]
+- Implement device authenticate command.  [#3255]
+- trezorctl: support unlocking bootloader via `trezorctl device unlock-bootloader`.
+
+### Changed
+- Use 'h' character for hardened BIP-32 components in help texts.  [#3037]
+- trezorctl: Use 'h' character in generated descriptors.  [#3037]
+- ClickUI: notify user in terminal that they should enter PIN or passphrase on Trezor.  [#3203]
+- Internal names are used consistently in constants and names. Original model-based names are kept as aliases for backwards compatibility.
+- Trezor model detection will try to use the `internal_name` field.
+
+### Fixed
+- Drop simple-rlp dependency and use internal copy  [#3045]
+- Fixed printing Trezor model when validating firmware image  [#3227]
+- Corrected vendor header signing keys for Safe 3 (T2B1).
+
+
 ## [0.13.7] (2023-06-02)
 [0.13.7]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.6...python/v0.13.7
 
@@ -765,4 +788,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2833]: https://github.com/trezor/trezor-firmware/pull/2833
 [#2880]: https://github.com/trezor/trezor-firmware/pull/2880
 [#2967]: https://github.com/trezor/trezor-firmware/pull/2967
+[#2989]: https://github.com/trezor/trezor-firmware/pull/2989
+[#3037]: https://github.com/trezor/trezor-firmware/pull/3037
+[#3045]: https://github.com/trezor/trezor-firmware/pull/3045
 [#3048]: https://github.com/trezor/trezor-firmware/pull/3048
+[#3203]: https://github.com/trezor/trezor-firmware/pull/3203
+[#3227]: https://github.com/trezor/trezor-firmware/pull/3227
+[#3237]: https://github.com/trezor/trezor-firmware/pull/3237
+[#3255]: https://github.com/trezor/trezor-firmware/pull/3255
