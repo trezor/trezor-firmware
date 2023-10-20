@@ -89,11 +89,11 @@ def check_firmware_header(
     header : bytes
 ) -> dict | None:
     """
-    Checks firmware image and vendor header and returns 
-       { "version": (major, minor, patch), 
+    Checks firmware image and vendor header and returns
+       { "version": (major, minor, patch),
          "vendor": string,
          "fingerprint": bytes,
-         "hash": bytes 
+         "hash": bytes
        }
     """
 
