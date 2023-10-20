@@ -14,4 +14,4 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-__version__ = "0.13.8"
+__version__ = "0.13.9"
