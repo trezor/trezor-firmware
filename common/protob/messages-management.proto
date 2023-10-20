@@ -486,6 +486,13 @@ message CancelAuthorization {
  * @next Success
  */
 message RebootToBootloader {
+    optional BootCommand bootCommand = 1 [default=STOP_AND_WAIT];
+    optional bytes bootArgs = 2;
+
+    enum BootCommand {
+        STOP_AND_WAIT = 0;
+        INSTALL_UPGRADE = 1;
+    }
 }
 
 /**
