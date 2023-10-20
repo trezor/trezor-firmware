@@ -8372,6 +8372,11 @@ impl ::protobuf::reflect::ProtobufValue for CancelAuthorization {
 #[derive(PartialEq,Clone,Default,Debug)]
 // @@protoc_insertion_point(message:hw.trezor.messages.management.RebootToBootloader)
 pub struct RebootToBootloader {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.boot_command)
+    pub boot_command: ::std::option::Option<::protobuf::EnumOrUnknown<reboot_to_bootloader::BootCommand>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_header)
+    pub firmware_header: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.RebootToBootloader.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -8388,9 +8393,77 @@ impl RebootToBootloader {
         ::std::default::Default::default()
     }
 
+    // optional .hw.trezor.messages.management.RebootToBootloader.BootCommand boot_command = 1;
+
+    pub fn boot_command(&self) -> reboot_to_bootloader::BootCommand {
+        match self.boot_command {
+            Some(e) => e.enum_value_or(reboot_to_bootloader::BootCommand::STOP_AND_WAIT),
+            None => reboot_to_bootloader::BootCommand::STOP_AND_WAIT,
+        }
+    }
+
+    pub fn clear_boot_command(&mut self) {
+        self.boot_command = ::std::option::Option::None;
+    }
+
+    pub fn has_boot_command(&self) -> bool {
+        self.boot_command.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_boot_command(&mut self, v: reboot_to_bootloader::BootCommand) {
+        self.boot_command = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // optional bytes firmware_header = 2;
+
+    pub fn firmware_header(&self) -> &[u8] {
+        match self.firmware_header.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_firmware_header(&mut self) {
+        self.firmware_header = ::std::option::Option::None;
+    }
+
+    pub fn has_firmware_header(&self) -> bool {
+        self.firmware_header.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_firmware_header(&mut self, v: ::std::vec::Vec<u8>) {
+        self.firmware_header = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_firmware_header(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.firmware_header.is_none() {
+            self.firmware_header = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.firmware_header.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_firmware_header(&mut self) -> ::std::vec::Vec<u8> {
+        self.firmware_header.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "boot_command",
+            |m: &RebootToBootloader| { &m.boot_command },
+            |m: &mut RebootToBootloader| { &mut m.boot_command },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "firmware_header",
+            |m: &RebootToBootloader| { &m.firmware_header },
+            |m: &mut RebootToBootloader| { &mut m.firmware_header },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RebootToBootloader>(
             "RebootToBootloader",
             fields,
@@ -8409,6 +8482,12 @@ impl ::protobuf::Message for RebootToBootloader {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
+                8 => {
+                    self.boot_command = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    self.firmware_header = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -8421,12 +8500,24 @@ impl ::protobuf::Message for RebootToBootloader {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.boot_command {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.firmware_header.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.boot_command {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.firmware_header.as_ref() {
+            os.write_bytes(2, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -8444,11 +8535,15 @@ impl ::protobuf::Message for RebootToBootloader {
     }
 
     fn clear(&mut self) {
+        self.boot_command = ::std::option::Option::None;
+        self.firmware_header = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static RebootToBootloader {
         static instance: RebootToBootloader = RebootToBootloader {
+            boot_command: ::std::option::Option::None,
+            firmware_header: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -8470,6 +8565,63 @@ impl ::std::fmt::Display for RebootToBootloader {
 
 impl ::protobuf::reflect::ProtobufValue for RebootToBootloader {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `RebootToBootloader`
+pub mod reboot_to_bootloader {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.management.RebootToBootloader.BootCommand)
+    pub enum BootCommand {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.RebootToBootloader.BootCommand.STOP_AND_WAIT)
+        STOP_AND_WAIT = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.RebootToBootloader.BootCommand.INSTALL_UPGRADE)
+        INSTALL_UPGRADE = 1,
+    }
+
+    impl ::protobuf::Enum for BootCommand {
+        const NAME: &'static str = "BootCommand";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<BootCommand> {
+            match value {
+                0 => ::std::option::Option::Some(BootCommand::STOP_AND_WAIT),
+                1 => ::std::option::Option::Some(BootCommand::INSTALL_UPGRADE),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [BootCommand] = &[
+            BootCommand::STOP_AND_WAIT,
+            BootCommand::INSTALL_UPGRADE,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for BootCommand {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("RebootToBootloader.BootCommand").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for BootCommand {
+        fn default() -> Self {
+            BootCommand::STOP_AND_WAIT
+        }
+    }
+
+    impl BootCommand {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<BootCommand>("RebootToBootloader.BootCommand")
+        }
+    }
 }
 
 #[derive(PartialEq,Clone,Default,Debug)]
@@ -9585,18 +9737,23 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\"1\n\
     \x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCoun\
     ter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\x15\n\
-    \x13CancelAuthorization\"\x14\n\x12RebootToBootloader\"\x10\n\x08GetNonc\
-    e:\x04\x88\xb2\x19\x01\"#\n\x05Nonce\x12\x14\n\x05nonce\x18\x01\x20\x02(\
-    \x0cR\x05nonce:\x04\x88\xb2\x19\x01\";\n\nUnlockPath\x12\x1b\n\taddress_\
-    n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\
-    \x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x01(\
-    \x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBootloader*>\
-    \n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\
-    \x12\x13\n\x0fSlip39_Advanced\x10\x02*G\n\x10SafetyCheckLevel\x12\n\n\
-    \x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\x15\n\x11PromptTe\
-    mporarily\x10\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toif\x10\x01\x12\
-    \x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03BB\n#com.satoshilabs.tre\
-    zor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\x01\
+    \x13CancelAuthorization\"\xe5\x01\n\x12RebootToBootloader\x12o\n\x0cboot\
+    _command\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.management.RebootToBo\
+    otloader.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ffirmware_\
+    header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBootCommand\x12\
+    \x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01\"\x10\n\
+    \x08GetNonce:\x04\x88\xb2\x19\x01\"#\n\x05Nonce\x12\x14\n\x05nonce\x18\
+    \x01\x20\x02(\x0cR\x05nonce:\x04\x88\xb2\x19\x01\";\n\nUnlockPath\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\
+    \x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\
+    \x18\x01\x20\x01(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10U\
+    nlockBootloader*>\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip\
+    39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02*G\n\x10SafetyCheck\
+    Level\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\x15\
+    \n\x11PromptTemporarily\x10\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toi\
+    f\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03BB\n#com.sa\
+    toshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\
+    \x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -9657,7 +9814,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(UnlockedPathRequest::generated_message_descriptor_data());
             messages.push(ShowDeviceTutorial::generated_message_descriptor_data());
             messages.push(UnlockBootloader::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(7);
+            let mut enums = ::std::vec::Vec::with_capacity(8);
             enums.push(BackupType::generated_enum_descriptor_data());
             enums.push(SafetyCheckLevel::generated_enum_descriptor_data());
             enums.push(HomescreenFormat::generated_enum_descriptor_data());
@@ -9665,6 +9822,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             enums.push(sd_protect::SdProtectOperationType::generated_enum_descriptor_data());
             enums.push(recovery_device::RecoveryDeviceType::generated_enum_descriptor_data());
             enums.push(word_request::WordRequestType::generated_enum_descriptor_data());
+            enums.push(reboot_to_bootloader::BootCommand::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
                 deps,
