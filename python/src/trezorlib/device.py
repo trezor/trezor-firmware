@@ -238,8 +238,14 @@ def unlock_path(client: "TrezorClient", n: "Address") -> "MessageType":
 
 @session
 @expect(messages.Success, field="message", ret_type=str)
-def reboot_to_bootloader(client: "TrezorClient") -> "MessageType":
-    return client.call(messages.RebootToBootloader())
+def reboot_to_bootloader(
+    client: "TrezorClient",
+    bootCommand: messages.BootCommand = None,
+    bootArgs: bytes = None,
+) -> "MessageType":
+    return client.call(
+        messages.RebootToBootloader(bootCommand=bootCommand, bootArgs=bootArgs)
+    )
 
 
 @session

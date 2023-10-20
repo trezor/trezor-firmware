@@ -16,6 +16,7 @@
 
 import os
 import sys
+import time
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -32,7 +33,7 @@ from urllib.parse import urlparse
 import click
 import requests
 
-from .. import exceptions, firmware, messages, models
+from .. import device, exceptions, firmware, messages, models
 from ..firmware import models as fw_models
 from ..models import TrezorModel
 from . import ChoiceType, with_client
@@ -460,6 +461,36 @@ def upload_firmware_into_device(
         sys.exit(3)
 
 
+def _is_ilu_supported(client: "TrezorClient") -> bool:
+    """Check if the firmware supports interaction-less update."""
+    f = client.features
+    version = (f.major_version, f.minor_version, f.patch_version)
+    return version >= (2, 6, 3)
+
+
+def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
+    """Check if the firmware is from the same vendor and the
+    firmware is newer than the currently installed firmware.
+    """
+    try:
+        fw = firmware.parse(firmware_data)
+    except Exception as e:
+        click.echo(e)
+        sys.exit(2)
+
+    if isinstance(fw, firmware.VendorFirmware):
+        new_version = fw.firmware.header.version
+        new_vendor = fw.vendor_header.text
+
+        f = client.features
+        cur_version = (f.major_version, f.minor_version, f.patch_version, 0)
+        cur_vendor = f.fw_vendor
+
+        return new_vendor == cur_vendor and new_version > cur_version
+
+    return False
+
+
 @click.group(name="firmware")
 def cli() -> None:
     """Firmware commands."""
@@ -580,10 +611,11 @@ def download(
 @click.option("--bitcoin-only/--universal", is_flag=True, default=None, help="Download bitcoin-only or universal firmware (defaults to universal)")
 @click.option("--raw", is_flag=True, help="Push raw firmware data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
+@click.option("--ilu/--no-ilu", is_flag=True, default=None, help="Force/Disable interaction-less upgrade")
 # fmt: on
-@with_client
+@click.pass_obj
 def update(
-    client: "TrezorClient",
+    obj: "TrezorConnection",
     filename: Optional[BinaryIO],
     url: Optional[str],
     version: Optional[str],
@@ -593,10 +625,9 @@ def update(
     dry_run: bool,
     beta: bool,
     bitcoin_only: Optional[bool],
+    ilu: Optional[bool],
 ) -> None:
     """Upload new firmware to device.
-
-    Device must be in bootloader mode.
 
     You can specify a filename or URL from which the firmware can be downloaded.
     You can also explicitly specify a firmware version that you want.
@@ -607,25 +638,22 @@ def update(
     against downloaded firmware fingerprint. Otherwise fingerprint is checked
     against data.trezor.io information, if available.
     """
-    if sum(bool(x) for x in (filename, url, version)) > 1:
-        click.echo("You can use only one of: filename, url, version.")
-        sys.exit(1)
+    with obj.client_context() as client:
+        if sum(bool(x) for x in (filename, url, version)) > 1:
+            click.echo("You can use only one of: filename, url, version.")
+            sys.exit(1)
 
-    if not dry_run and not client.features.bootloader_mode:
-        click.echo("Please switch your device to bootloader mode.")
-        sys.exit(1)
+        if filename:
+            firmware_data = filename.read()
+        else:
+            if not url:
+                url, fp = find_best_firmware_version(
+                    client=client, version=version, beta=beta, bitcoin_only=bitcoin_only
+                )
+                if not fingerprint:
+                    fingerprint = fp
 
-    if filename:
-        firmware_data = filename.read()
-    else:
-        if not url:
-            url, fp = find_best_firmware_version(
-                client=client, version=version, beta=beta, bitcoin_only=bitcoin_only
-            )
-            if not fingerprint:
-                fingerprint = fp
-
-        firmware_data = download_firmware_data(url)
+            firmware_data = download_firmware_data(url)
 
     if not raw and not skip_check:
         validate_firmware(
@@ -635,15 +663,57 @@ def update(
             model=client.model,
         )
 
-    if not raw:
-        firmware_data = extract_embedded_fw(
-            firmware_data=firmware_data,
-            bootloader_onev2=_is_bootloader_onev2(client),
-        )
+        if not raw:
+            firmware_data = extract_embedded_fw(
+                firmware_data=firmware_data,
+                bootloader_onev2=_is_bootloader_onev2(client),
+            )
 
     if dry_run:
         click.echo("Dry run. Not uploading firmware to device.")
-    else:
+        return
+
+    print(ilu)
+
+    if ilu is False:
+        strict_upgrade = _is_strict_update(client, firmware_data)
+        ilu_supported = _is_ilu_supported(client)
+
+        if ilu is True:
+            if client.features.bootloader_mode:
+                click.echo(
+                    "Interaction-less update can not be started from bootloader mode."
+                )
+                exit(1)
+            elif not ilu_supported:
+                click.echo(
+                    "Interaction-less upgrade is not supported by the current firmware version."
+                )
+                exit(1)
+            elif not strict_upgrade:
+                click.echo(
+                    "Interaction-less upgrade accepts only newer firmware from the same vendor."
+                )
+                exit(1)
+
+        if not client.features.bootloader_mode and ilu_supported and strict_upgrade:
+
+            with obj.client_context() as client:
+                device.reboot_to_bootloader(
+                    client,
+                    bootCommand=messages.BootCommand.INSTALL_UPGRADE,
+                    bootArgs=firmware_data[
+                        : 6 * 1024
+                    ],  # TODO!@#: How many bytes should we send ?
+                )
+                time.sleep(3)  # TODO!@#: How to wait properly ?
+
+    with obj.client_context() as client:
+
+        if not client.features.bootloader_mode:
+            click.echo("Please switch your device to bootloader mode.")
+            sys.exit(1)
+
         upload_firmware_into_device(client=client, firmware_data=firmware_data)
 
 
