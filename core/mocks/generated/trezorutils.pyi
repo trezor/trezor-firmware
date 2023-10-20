@@ -75,9 +75,26 @@ def unit_btconly() -> bool | None:
 
 
 # extmod/modtrezorutils/modtrezorutils.c
-def reboot_to_bootloader() -> None:
+def reboot_to_bootloader(
+    boot_command : BootCommand | None = None,
+    boot_args : bytes | None = None,
+) -> None:
     """
     Reboots to bootloader.
+    """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def check_firmware_header(
+    header : bytes
+) -> dict | None:
+    """
+    Checks firmware image and vendor header and returns 
+       { "version": (major, minor, patch), 
+         "vendor": string,
+         "fingerprint": bytes,
+         "hash": bytes 
+       }
     """
 
 

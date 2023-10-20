@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from trezor.enums import BinanceOrderSide  # noqa: F401
     from trezor.enums import BinanceOrderType  # noqa: F401
     from trezor.enums import BinanceTimeInForce  # noqa: F401
+    from trezor.enums import BootCommand  # noqa: F401
     from trezor.enums import ButtonRequestType  # noqa: F401
     from trezor.enums import Capability  # noqa: F401
     from trezor.enums import CardanoAddressType  # noqa: F401
@@ -2613,6 +2614,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class RebootToBootloader(protobuf.MessageType):
+        bootCommand: "BootCommand"
+        bootArgs: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            bootCommand: "BootCommand | None" = None,
+            bootArgs: "bytes | None" = None,
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["RebootToBootloader"]:

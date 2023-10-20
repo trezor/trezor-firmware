@@ -450,6 +450,10 @@ if TYPE_CHECKING:
         Matrix9 = 1
         Matrix6 = 2
 
+    class BootCommand(IntEnum):
+        STOP_AND_WAIT = 0
+        INSTALL_UPGRADE = 1
+
     class DebugSwipeDirection(IntEnum):
         UP = 0
         DOWN = 1

@@ -22,8 +22,9 @@ data_size = SIZEOF(.data);
 ccmram_start = ORIGIN(CCMRAM);
 ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
 
-/* IMAGE_HEADER_SIZE is 0x400, this is for interaction-less firmware update start */
-firmware_header_start = ccmram_end - 0x400;
+/* reserve 256 bytes for bootloader arguments */
+boot_args_end = ccmram_end;
+boot_args_start = boot_args_end - 0x100;
 
 /* used by the startup code to wipe memory */
 sram_start = ORIGIN(SRAM);

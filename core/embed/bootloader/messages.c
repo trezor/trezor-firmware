@@ -24,6 +24,7 @@
 #include <pb_encode.h>
 #include "messages.pb.h"
 
+#include "boot_internal.h"
 #include "common.h"
 #include "flash.h"
 #include "image.h"
@@ -426,8 +427,6 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
   return true;
 }
 
-secbool check_vendor_header_keys(const vendor_header *const vhdr);
-
 static int version_compare(uint32_t vera, uint32_t verb) {
   int a, b;
   a = vera & 0xFF;
@@ -448,11 +447,12 @@ static void detect_installation(const vendor_header *current_vhdr,
                                 const image_header *current_hdr,
                                 const vendor_header *const new_vhdr,
                                 const image_header *const new_hdr,
-                                secbool *is_new, secbool *is_upgrade,
-                                secbool *is_newvendor) {
+                                secbool *is_new, secbool *keep_seed,
+                                secbool *is_newvendor, secbool *is_upgrade) {
   *is_new = secfalse;
-  *is_upgrade = secfalse;
+  *keep_seed = secfalse;
   *is_newvendor = secfalse;
+  *is_upgrade = secfalse;
   if (sectrue != check_vendor_header_keys(current_vhdr)) {
     *is_new = sectrue;
     return;
@@ -477,7 +477,11 @@ static void detect_installation(const vendor_header *current_vhdr,
   if (version_compare(new_hdr->version, current_hdr->fix_version) < 0) {
     return;
   }
-  *is_upgrade = sectrue;
+  if (version_compare(new_hdr->version, current_hdr->version) > 0) {
+    *is_upgrade = sectrue;
+  }
+
+  *keep_seed = sectrue;
 }
 
 static int firmware_upload_chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT;
@@ -577,9 +581,42 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       secbool should_keep_seed = secfalse;
       secbool is_newvendor = secfalse;
+      secbool is_upgrade = secfalse;
       if (is_new == secfalse) {
         detect_installation(&current_vhdr, current_hdr, &vhdr, &hdr, &is_new,
-                            &should_keep_seed, &is_newvendor);
+                            &should_keep_seed, &is_newvendor, &is_upgrade);
+      }
+
+      if (g_boot_command == BOOT_COMMAND_INSTALL_UPGRADE) {
+        BLAKE2S_CTX ctx;
+        uint8_t hash[BLAKE2S_DIGEST_LENGTH];
+        blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
+        blake2s_Update(&ctx, CHUNK_BUFFER_PTR,
+                       vhdr.hdrlen + received_hdr->hdrlen);
+        blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+
+        // firmware must have be the same as confirmed by the user
+        extern uint8_t boot_args_start;
+        if (memcmp(&boot_args_start, hash, sizeof(hash)) != 0) {
+          MSG_SEND_INIT(Failure);
+          MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+          MSG_SEND_ASSIGN_STRING(message, "Firmware mismatch");
+          MSG_SEND(Failure);
+          return UPLOAD_ERR_FIRMWARE_MISMATCH;
+        }
+
+        // firmware must be from the same vendor
+        // firmware must be newer
+        if (is_upgrade != sectrue || is_newvendor != secfalse) {
+          MSG_SEND_INIT(Failure);
+          MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+          MSG_SEND_ASSIGN_STRING(message, "Not a firmware upgrade");
+          MSG_SEND(Failure);
+          return UPLOAD_ERR_NOT_FIRMWARE_UPGRADE;
+        }
+
+        // upload firmware without confirmation
+        is_new = sectrue;
       }
 
 #ifdef USE_OPTIGA
@@ -594,7 +631,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       uint32_t response = INPUT_CANCEL;
       if (sectrue == is_new) {
-        // new installation - auto confirm
+        // new installation or interaction less updated - auto confirm
         response = INPUT_CONFIRM;
       } else {
         int version_cmp = version_compare(hdr.version, current_hdr->version);

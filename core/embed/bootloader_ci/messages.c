@@ -402,8 +402,6 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
   return true;
 }
 
-secbool check_vendor_header_keys(const vendor_header *const vhdr);
-
 static int version_compare(uint32_t vera, uint32_t verb) {
   int a, b;
   a = vera & 0xFF;
