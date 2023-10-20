@@ -1,9 +1,9 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
-    display::{self, Font},
+    display::{self, Color, Font},
     geometry::{Offset, Rect},
-    model_tt::bootloader::theme::{BLD_BG, BLD_TITLE_COLOR},
+    model_tt::theme::bootloader::BLD_TITLE_COLOR,
 };
 
 pub struct Connect {
@@ -12,9 +12,9 @@ pub struct Connect {
 }
 
 impl Connect {
-    pub fn new(message: &'static str) -> Self {
+    pub fn new(message: &'static str, bg: Color) -> Self {
         let mut instance = Self {
-            bg: Pad::with_background(BLD_BG),
+            bg: Pad::with_background(bg),
             message,
         };
 
@@ -44,7 +44,7 @@ impl Component for Connect {
             self.message,
             Font::NORMAL,
             BLD_TITLE_COLOR,
-            BLD_BG,
+            self.bg.color,
         );
     }
 }

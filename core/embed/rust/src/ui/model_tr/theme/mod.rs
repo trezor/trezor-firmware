@@ -9,6 +9,8 @@ use crate::ui::{
 
 use num_traits::FromPrimitive;
 
+pub mod bootloader;
+
 // Color palette.
 pub const WHITE: Color = Color::white();
 pub const BLACK: Color = Color::black();

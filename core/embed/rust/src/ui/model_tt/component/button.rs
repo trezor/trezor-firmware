@@ -357,7 +357,7 @@ pub enum ButtonContent<T> {
     IconBlend(Icon, Icon, Offset),
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub struct ButtonStyleSheet {
     pub normal: &'static ButtonStyle,
     pub active: &'static ButtonStyle,

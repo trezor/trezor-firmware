@@ -93,6 +93,8 @@ trezor.enums.AmountUnit
 import trezor.enums.AmountUnit
 trezor.enums.BackupType
 import trezor.enums.BackupType
+trezor.enums.BootCommand
+import trezor.enums.BootCommand
 trezor.enums.ButtonRequestType
 import trezor.enums.ButtonRequestType
 trezor.enums.Capability

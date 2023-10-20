@@ -6,9 +6,11 @@ use crate::ui::{
 use super::{
     super::{
         component::{ButtonController, ButtonControllerMsg::Triggered, ButtonLayout, ButtonPos},
-        theme::{BUTTON_HEIGHT, ICON_WARN_TITLE, TITLE_AREA_HEIGHT},
+        theme::{
+            bootloader::{BLD_BG, BLD_FG, TEXT_NORMAL},
+            BUTTON_HEIGHT, ICON_WARN_TITLE, TITLE_AREA_HEIGHT,
+        },
     },
-    theme::{BLD_BG, BLD_FG, TEXT_NORMAL},
     ReturnToC,
 };
 

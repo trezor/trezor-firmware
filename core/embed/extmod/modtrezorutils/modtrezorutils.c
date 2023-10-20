@@ -23,6 +23,7 @@
 #include "supervise.h"
 #endif
 
+#include "image.h"
 #include "version.h"
 
 #if MICROPY_PY_TREZORUTILS
@@ -245,18 +246,90 @@ STATIC mp_obj_t mod_trezorutils_unit_btconly(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_btconly_obj,
                                  mod_trezorutils_unit_btconly);
 
-/// def reboot_to_bootloader() -> None:
+/// def reboot_to_bootloader(
+///     boot_command : int = 0,
+///     boot_args : bytes | None = None,
+/// ) -> None:
 ///     """
 ///     Reboots to bootloader.
 ///     """
-STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader() {
+STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader(size_t n_args,
+                                                     const mp_obj_t *args) {
 #ifndef TREZOR_EMULATOR
-  svc_reboot_to_bootloader();
+  boot_command_t boot_command = BOOT_COMMAND_NONE;
+  mp_buffer_info_t boot_args = {0};
+
+  if (n_args > 0 && args[0] != mp_const_none) {
+    mp_int_t value = mp_obj_get_int(args[0]);
+
+    switch (value) {
+      case 0:
+        boot_command = BOOT_COMMAND_STOP_AND_WAIT;
+        break;
+      case 1:
+        boot_command = BOOT_COMMAND_INSTALL_UPGRADE;
+        break;
+      default:
+        mp_raise_ValueError("Invalid value.");
+        break;
+    }
+  }
+
+  if (n_args > 1 && args[1] != mp_const_none) {
+    mp_get_buffer_raise(args[1], &boot_args, MP_BUFFER_READ);
+  }
+
+  svc_reboot_to_bootloader(boot_command, boot_args.buf, boot_args.len);
 #endif
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_to_bootloader_obj,
-                                 mod_trezorutils_reboot_to_bootloader);
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorutils_reboot_to_bootloader_obj, 0, 2,
+    mod_trezorutils_reboot_to_bootloader);
+
+/// def check_firmware_header(
+///     header : bytes
+/// ) -> dict:
+///     """
+///     Checks firmware image and vendor header and returns
+///        { "version": (major, minor, patch),
+///          "vendor": string,
+///          "fingerprint": bytes,
+///          "hash": bytes
+///        }
+///     """
+STATIC mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {
+  mp_buffer_info_t header_buf = {0};
+  mp_get_buffer_raise(header, &header_buf, MP_BUFFER_READ);
+
+  firmware_header_info_t info;
+
+  if (sectrue == check_firmware_header(header_buf.buf, header_buf.len, &info)) {
+    mp_obj_t version[3] = {mp_obj_new_int(info.ver_major),
+                           mp_obj_new_int(info.ver_minor),
+                           mp_obj_new_int(info.ver_patch)};
+
+    mp_obj_t result = mp_obj_new_dict(4);
+    mp_obj_dict_store(result, MP_ROM_QSTR(MP_QSTR_version),
+                      mp_obj_new_tuple(MP_ARRAY_SIZE(version), version));
+    mp_obj_dict_store(
+        result, MP_ROM_QSTR(MP_QSTR_vendor),
+        mp_obj_new_str_copy(&mp_type_str, info.vstr, info.vstr_len));
+    mp_obj_dict_store(
+        result, MP_ROM_QSTR(MP_QSTR_fingerprint),
+        mp_obj_new_bytes(info.fingerprint, sizeof(info.fingerprint)));
+    mp_obj_dict_store(result, MP_ROM_QSTR(MP_QSTR_hash),
+                      mp_obj_new_bytes(info.hash, sizeof(info.hash)));
+
+    return result;
+  }
+
+  mp_raise_ValueError("Invalid value.");
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_firmware_header_obj,
+                                 mod_trezorutils_check_firmware_header);
 
 /// def bootloader_locked() -> bool | None:
 ///     """
@@ -328,6 +401,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
      MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
+    {MP_ROM_QSTR(MP_QSTR_check_firmware_header),
+     MP_ROM_PTR(&mod_trezorutils_check_firmware_header_obj)},
     {MP_ROM_QSTR(MP_QSTR_bootloader_locked),
      MP_ROM_PTR(&mod_trezorutils_bootloader_locked_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_color),

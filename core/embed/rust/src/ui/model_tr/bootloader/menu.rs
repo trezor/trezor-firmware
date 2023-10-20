@@ -12,8 +12,10 @@ use crate::{
 };
 
 use super::{
-    super::component::{Choice, ChoiceFactory, ChoicePage},
-    theme::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
+    super::{
+        component::{Choice, ChoiceFactory, ChoicePage},
+        theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
+    },
     ReturnToC,
 };
 

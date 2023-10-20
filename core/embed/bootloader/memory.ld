@@ -3,9 +3,10 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = 0x08020000, LENGTH = 128K
-  CCMRAM (wal) : ORIGIN = 0x10000000, LENGTH = 64K
-  SRAM   (wal) : ORIGIN = 0x20000000, LENGTH = 192K
+  FLASH  (rx)     : ORIGIN = 0x08020000, LENGTH = 128K
+  CCMRAM (wal)    : ORIGIN = 0x10000000, LENGTH = 64K - 0x100
+  BOOT_ARGS (wal) : ORIGIN = 0x1000FF00, LENGTH = 0x100
+  SRAM   (wal)    : ORIGIN = 0x20000000, LENGTH = 192K
 }
 
 main_stack_base = ORIGIN(CCMRAM) + SIZEOF(.stack) ; /* 8-byte aligned full descending stack */
@@ -23,8 +24,10 @@ ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
 sram_start = ORIGIN(SRAM);
 sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 
-/* IMAGE_HEADER_SIZE is 0x400, this is for interaction-less firmware update start */
-firmware_header_start = ccmram_end - 0x400;
+/* reserve 256 bytes for bootloader arguments */
+boot_args_start = ORIGIN(BOOT_ARGS);
+boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
+g_boot_args = boot_args_start;
 
 _codelen = SIZEOF(.flash) + SIZEOF(.data);
 

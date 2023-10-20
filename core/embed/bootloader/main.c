@@ -20,6 +20,7 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include "boot_internal.h"
 #include "common.h"
 #include "display.h"
 #include "flash.h"
@@ -67,19 +68,6 @@
 #include "mpu.h"
 #include "platform.h"
 #endif
-
-const uint8_t BOOTLOADER_KEY_M = 2;
-const uint8_t BOOTLOADER_KEY_N = 3;
-static const uint8_t * const BOOTLOADER_KEYS[] = {
-#if !PRODUCTION
-    /*** DEVEL/QA KEYS  ***/
-    (const uint8_t *)"\xd7\x59\x79\x3b\xbc\x13\xa2\x81\x9a\x82\x7c\x76\xad\xb6\xfb\xa8\xa4\x9a\xee\x00\x7f\x49\xf2\xd0\x99\x2d\x99\xb8\x25\xad\x2c\x48",
-    (const uint8_t *)"\x63\x55\x69\x1c\x17\x8a\x8f\xf9\x10\x07\xa7\x47\x8a\xfb\x95\x5e\xf7\x35\x2c\x63\xe7\xb2\x57\x03\x98\x4c\xf7\x8b\x26\xe2\x1a\x56",
-    (const uint8_t *)"\xee\x93\xa4\xf6\x6f\x8d\x16\xb8\x19\xbb\x9b\xeb\x9f\xfc\xcd\xfc\xdc\x14\x12\xe8\x7f\xee\x6a\x32\x4c\x2a\x99\xa1\xe0\xe6\x71\x48",
-#else
-    MODEL_BOOTLOADER_KEYS
-#endif
-};
 
 #define USB_IFACE_NUM 0
 
@@ -251,11 +239,6 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
   }
 }
 
-secbool check_vendor_header_keys(const vendor_header *const vhdr) {
-  return check_vendor_header_sig(vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N,
-                                 BOOTLOADER_KEYS);
-}
-
 static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
   uint8_t lock[FLASH_OTP_BLOCK_SIZE];
   ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK, 0, lock,
@@ -376,12 +359,10 @@ void real_jump_to_firmware(void) {
 
 #ifndef TREZOR_EMULATOR
 int main(void) {
-  // grab "stay in bootloader" flag as soon as possible
-  register uint32_t r11 __asm__("r11");
-  volatile uint32_t stay_in_bootloader_flag = r11;
 #else
 int bootloader_main(void) {
 #endif
+  secbool stay_in_bootloader = secfalse;
 
   random_delays_init();
   // display_init_seq();
@@ -413,6 +394,7 @@ int bootloader_main(void) {
   volatile secbool header_present = secfalse;
   volatile secbool firmware_present = secfalse;
   volatile secbool firmware_present_backup = secfalse;
+  volatile secbool auto_upgrade = secfalse;
 
   vhdr_present = read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr);
 
@@ -482,10 +464,19 @@ int bootloader_main(void) {
   check_bootloader_version();
 #endif
 
-  // was there reboot with request to stay in bootloader?
-  secbool stay_in_bootloader = secfalse;
-  if (stay_in_bootloader_flag == STAY_IN_BOOTLOADER_FLAG) {
-    stay_in_bootloader = sectrue;
+  switch (g_boot_command) {
+    case BOOT_COMMAND_STOP_AND_WAIT:
+      // firmare requested to stay in bootloader
+      stay_in_bootloader = sectrue;
+      break;
+    case BOOT_COMMAND_INSTALL_UPGRADE:
+      if (firmware_present == sectrue) {
+        // continue without user interaction
+        auto_upgrade = sectrue;
+      }
+      break;
+    default:
+      break;
   }
 
   ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
@@ -521,20 +512,26 @@ int bootloader_main(void) {
   // start the bootloader ...
   // ... if user touched the screen on start
   // ... or we have stay_in_bootloader flag to force it
+  // ... or strict upgrade was confirmed in the firmware (auto_upgrade flag)
   // ... or there is no valid firmware
-  if (touched || stay_in_bootloader == sectrue || firmware_present != sectrue) {
+  if (touched || stay_in_bootloader == sectrue || firmware_present != sectrue ||
+      auto_upgrade == sectrue) {
     screen_t screen;
+    ui_set_initial_setup(true);
     if (header_present == sectrue) {
-      ui_set_initial_setup(false);
-      screen = SCREEN_INTRO;
+      if (auto_upgrade == sectrue) {
+        screen = SCREEN_WAIT_FOR_HOST;
+      } else {
+        ui_set_initial_setup(false);
+        screen = SCREEN_INTRO;
+      }
+
     } else {
       screen = SCREEN_WELCOME;
 
       // erase storage
       ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
              NULL);
-
-      ui_set_initial_setup(true);
 
       // keep the model screen up for a while
 #ifndef USE_BACKLIGHT
@@ -613,7 +610,7 @@ int bootloader_main(void) {
           }
           break;
         case SCREEN_WAIT_FOR_HOST:
-          screen_connect();
+          screen_connect(auto_upgrade == sectrue);
           switch (bootloader_usb_loop(&vhdr, hdr)) {
             case CONTINUE_TO_FIRMWARE:
               continue_to_firmware = sectrue;

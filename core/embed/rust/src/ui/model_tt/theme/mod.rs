@@ -1,3 +1,5 @@
+pub mod bootloader;
+
 use crate::{
     time::Duration,
     ui::{

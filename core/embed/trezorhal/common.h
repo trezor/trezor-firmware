@@ -51,12 +51,7 @@
   })
 #endif
 
-#define STAY_IN_BOOTLOADER_FLAG 0x0FC35A96
 
-// from linker script
-extern uint8_t firmware_header_start;
-extern uint8_t ccmram_start;
-extern uint8_t ccmram_end;
 
 void __attribute__((noreturn)) trezor_shutdown(void);
 

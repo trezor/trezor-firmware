@@ -46,6 +46,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_ethereum_tx;
   MP_QSTR_confirm_fido;
+  MP_QSTR_confirm_firmware_update;
   MP_QSTR_confirm_homescreen;
   MP_QSTR_confirm_joint_total;
   MP_QSTR_confirm_modify_fee;
@@ -73,6 +74,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee_amount;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
+  MP_QSTR_fingerprint;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
   MP_QSTR_horizontal;

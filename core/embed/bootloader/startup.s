@@ -7,7 +7,7 @@
 reset_handler:
   // setup environment for subsequent stage of code
   ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
-  ldr r1, =firmware_header_start   // r1 - point to byte where firmware image header might start
+  ldr r1, =ccmram_end   // r1 - point to byte where BOOT_ARGS region starts
   ldr r2, =0            // r2 - the word-sized value to be written
   bl memset_reg
 
@@ -33,9 +33,22 @@ reset_handler:
   // subsequent operations, it is not necessary to insert a memory barrier instruction."
   cpsie f
 
+  // r11 contains argument passed to reboot_to_bootloader()
+  // function called when the firmware rebooted to the bootloader
+  ldr r0, =g_boot_command
+  str r11, [r0]
+
   // enter the application code
   bl main
 
   b shutdown_privileged
 
+  .bss
+
+  .global g_boot_command
+g_boot_command:
+  .word  0
+
+
   .end
+

@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include TREZOR_BOARD
+#include "boot_internal.h"
 #include "bootui.h"
 #include "common.h"
 #include "display.h"
@@ -17,7 +18,12 @@
 #undef FIRMWARE_START
 
 uint8_t *FIRMWARE_START = 0;
-uint32_t stay_in_bootloader_flag;
+
+// Simulation of a boot command normally grabbed during reset processing
+boot_command_t g_boot_command = BOOT_COMMAND_NONE;
+// Simulation of a boot args normally sitting at the BOOT_ARGS region
+uint8_t g_boot_args[BOOT_ARGS_SIZE];
+
 
 void set_core_clock(int) {}
 
@@ -47,7 +53,7 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
   if (argc == 2) {
     if (argv[1][0] == 's') {
       // Run the firmware
-      stay_in_bootloader_flag = STAY_IN_BOOTLOADER_FLAG;
+      g_boot_command = BOOT_COMMAND_STOP_AND_WAIT;
     }
 #ifdef USE_OPTIGA
     else if (argv[1][0] == 'l') {

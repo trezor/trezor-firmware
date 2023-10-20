@@ -21,6 +21,7 @@
 #define __TREZORHAL_IMAGE_H__
 
 #include <stdint.h>
+#include "blake2s.h"
 #include "flash.h"
 #include "model.h"
 #include "secbool.h"
@@ -78,6 +79,21 @@ typedef struct {
   const uint8_t *origin;  // pointer to the underlying data
 } vendor_header;
 
+typedef struct {
+  // vendor string
+  uint8_t vstr[64];
+  // vendor string length
+  size_t vstr_len;
+  // firmware version
+  uint8_t ver_major;
+  uint8_t ver_minor;
+  uint8_t ver_patch;
+  // firmware fingerprint
+  uint8_t fingerprint[BLAKE2S_DIGEST_LENGTH];
+  // hash of vendor and image header
+  uint8_t hash[BLAKE2S_DIGEST_LENGTH];
+} firmware_header_info_t;
+
 const image_header *read_image_header(const uint8_t *const data,
                                       const uint32_t magic,
                                       const uint32_t maxsize);
@@ -95,6 +111,8 @@ secbool __wur check_vendor_header_sig(const vendor_header *const vhdr,
                                       uint8_t key_m, uint8_t key_n,
                                       const uint8_t *const *keys);
 
+secbool check_vendor_header_keys(const vendor_header *const vhdr);
+
 void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash);
 
 secbool __wur check_single_hash(const uint8_t *const hash,
@@ -105,5 +123,8 @@ secbool __wur check_image_contents(const image_header *const hdr,
                                    const flash_area_t *area);
 
 void get_image_fingerprint(const image_header *const hdr, uint8_t *const out);
+
+secbool check_firmware_header(const uint8_t *header, size_t header_size,
+                              firmware_header_info_t *info);
 
 #endif

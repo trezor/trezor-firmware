@@ -4,12 +4,12 @@ use crate::ui::{
     display::Icon,
     geometry::{Alignment, Insets, Point, Rect},
     model_tt::{
-        bootloader::theme::{
-            button_bld, button_bld_menu, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
-            CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_TITLE, TEXT_WARNING, TITLE_AREA,
-        },
         component::{Button, ButtonMsg::Clicked},
         constant::WIDTH,
+        theme::bootloader::{
+            button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
+            CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
+        },
     },
 };
 
@@ -33,7 +33,7 @@ impl<'a> Intro<'a> {
     pub fn new(title: &'a str, content: &'a str, fw_ok: bool) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
-            title: Child::new(Label::left_aligned(title, TEXT_TITLE).vertically_centered()),
+            title: Child::new(Label::left_aligned(title, text_title(BLD_BG)).vertically_centered()),
             menu: Child::new(
                 Button::with_icon(Icon::new(MENU32))
                     .styled(button_bld_menu())

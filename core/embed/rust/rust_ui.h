@@ -15,7 +15,7 @@ uint32_t screen_intro(const char* bld_version_str, const char* vendor_str,
                       uint8_t vendor_str_len, const char* version_str,
                       bool fw_ok);
 uint32_t screen_menu(secbool firmware_present);
-void screen_connect(void);
+void screen_connect(bool initial_setup);
 void screen_fatal_error_rust(const char* title, const char* msg,
                              const char* footer);
 void screen_wipe_success(void);

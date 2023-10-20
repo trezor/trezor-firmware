@@ -445,6 +445,7 @@ env.Replace(
         'FIRMWARE',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'USE_HAL_DRIVER',
+        'ARM_USER_MODE',
         UI_LAYOUT,
     ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
     ASFLAGS=env.get('ENV')['CPU_ASFLAGS'],

@@ -2,7 +2,6 @@
 #define __EMULATOR_H__
 
 #define CLOCK_180_MHZ 0
-#define STAY_IN_BOOTLOADER_FLAG 0x0FC35A96
 #define mini_snprintf snprintf
 
 #undef FIRMWARE_START
@@ -11,7 +10,6 @@
 #include <stdio.h>
 
 extern uint8_t *FIRMWARE_START;
-extern uint32_t stay_in_bootloader_flag;
 
 void emulator_poll_events(void);
 void set_core_clock(int);

@@ -1,16 +1,15 @@
-use crate::ui::{
-    component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
-    display::{self, Color, Font},
-    geometry::{Point, Rect},
+use crate::{
+    strutil::StringType,
+    ui::{
+        component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
+        display::{self, Color, Font},
+        geometry::{Point, Rect},
+    },
 };
 
 use super::{
-    super::{
-        component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos},
-        theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT},
-    },
-    theme::WHITE,
-    ReturnToC,
+    theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT, WHITE},
+    ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
 };
 
 const ALERT_AREA_START: i16 = 39;
@@ -21,38 +20,36 @@ pub enum ConfirmMsg {
     Confirm = 2,
 }
 
-impl ReturnToC for ConfirmMsg {
-    fn return_to_c(self) -> u32 {
-        self as u32
-    }
-}
-
-pub struct Confirm<'a> {
+pub struct Confirm<T: StringType, U> {
     bg: Pad,
     bg_color: Color,
     title: &'static str,
-    message: Child<Label<&'a str>>,
-    alert: Option<Label<&'a str>>,
-    info_title: Option<&'static str>,
-    info_text: Option<Label<&'a str>>,
-    button_text: &'static str,
-    buttons: ButtonController<&'static str>,
+    message: Child<Label<U>>,
+    alert: Option<Label<T>>,
+    info_title: Option<T>,
+    info_text: Option<Label<U>>,
+    button_text: T,
+    buttons: ButtonController<T>,
     /// Whether we are on the info screen (optional extra screen)
     showing_info_screen: bool,
     two_btn_confirm: bool,
 }
 
-impl<'a> Confirm<'a> {
+impl<T, U> Confirm<T, U>
+where
+    T: StringType + Clone,
+    U: AsRef<str>,
+{
     pub fn new(
         bg_color: Color,
         title: &'static str,
-        message: Label<&'a str>,
-        alert: Option<Label<&'a str>>,
-        button_text: &'static str,
+        message: Label<U>,
+        alert: Option<Label<T>>,
+        button_text: T,
         two_btn_confirm: bool,
     ) -> Self {
         let btn_layout =
-            Self::get_button_layout_general(false, button_text, false, two_btn_confirm);
+            Self::get_button_layout_general(false, button_text.clone(), false, two_btn_confirm);
         Self {
             bg: Pad::with_background(bg_color).with_clear(),
             bg_color,
@@ -69,7 +66,7 @@ impl<'a> Confirm<'a> {
     }
 
     /// Adding optional info screen
-    pub fn with_info_screen(mut self, info_title: &'static str, info_text: Label<&'a str>) -> Self {
+    pub fn with_info_screen(mut self, info_title: T, info_text: Label<U>) -> Self {
         self.info_title = Some(info_title);
         self.info_text = Some(info_text);
         self.buttons = ButtonController::new(self.get_button_layout());
@@ -80,10 +77,10 @@ impl<'a> Confirm<'a> {
         self.info_title.is_some()
     }
 
-    fn get_button_layout(&self) -> ButtonLayout<&'static str> {
+    fn get_button_layout(&self) -> ButtonLayout<T> {
         Self::get_button_layout_general(
             self.showing_info_screen,
-            self.button_text,
+            self.button_text.clone(),
             self.has_info_screen(),
             self.two_btn_confirm,
         )
@@ -92,10 +89,10 @@ impl<'a> Confirm<'a> {
     /// Not relying on self here, to call it in constructor.
     fn get_button_layout_general(
         showing_info_screen: bool,
-        button_text: &'static str,
+        button_text: T,
         has_info_screen: bool,
         two_btn_confirm: bool,
-    ) -> ButtonLayout<&'static str> {
+    ) -> ButtonLayout<T> {
         if showing_info_screen {
             ButtonLayout::arrow_none_none()
         } else if has_info_screen {
@@ -124,7 +121,11 @@ impl<'a> Confirm<'a> {
     }
 }
 
-impl<'a> Component for Confirm<'a> {
+impl<T, U> Component for Confirm<T, U>
+where
+    T: StringType + Clone,
+    U: AsRef<str>,
+{
     type Msg = ConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -209,7 +210,7 @@ impl<'a> Component for Confirm<'a> {
 
         // We are either on the info screen or on the "main" screen
         if self.showing_info_screen {
-            display_top_left(unwrap!(self.info_title));
+            display_top_left(unwrap!(self.info_title.clone()).as_ref());
             self.info_text.paint();
         } else {
             display_top_left(self.title);
@@ -222,5 +223,16 @@ impl<'a> Component for Confirm<'a> {
     #[cfg(feature = "ui_bounds")]
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.buttons.bounds(sink);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T, U> crate::trace::Trace for Confirm<T, U>
+where
+    T: StringType + Clone,
+    U: AsRef<str>,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("BlConfirm");
     }
 }
