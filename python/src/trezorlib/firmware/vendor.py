@@ -70,6 +70,14 @@ class VendorTrust(Struct):
         2,
     )
 
+    def is_full_trust(self) -> bool:
+        return (
+            not self.show_vendor_string
+            and not self.require_user_click
+            and not self.red_background
+            and self.delay == 0
+        )
+
 
 class VendorHeader(Struct):
     header_len: int

@@ -485,6 +485,11 @@ class WordRequestType(IntEnum):
     Matrix6 = 2
 
 
+class BootCommand(IntEnum):
+    STOP_AND_WAIT = 0
+    INSTALL_UPGRADE = 1
+
+
 class DebugSwipeDirection(IntEnum):
     UP = 0
     DOWN = 1
@@ -3746,6 +3751,19 @@ class CancelAuthorization(protobuf.MessageType):
 
 class RebootToBootloader(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 87
+    FIELDS = {
+        1: protobuf.Field("boot_command", "BootCommand", repeated=False, required=False, default=BootCommand.STOP_AND_WAIT),
+        2: protobuf.Field("firmware_header", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        boot_command: Optional["BootCommand"] = BootCommand.STOP_AND_WAIT,
+        firmware_header: Optional["bytes"] = None,
+    ) -> None:
+        self.boot_command = boot_command
+        self.firmware_header = firmware_header
 
 
 class GetNonce(protobuf.MessageType):
