@@ -30,11 +30,13 @@ async def require_confirm_tx(
     gas_limit: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
+    chunkify: bool,
 ) -> None:
     if to_bytes:
         to_str = address_from_bytes(to_bytes, network)
     else:
         to_str = "new contract?"
+        chunkify = False
 
     total_amount = format_ethereum_amount(value, token, network)
     maximum_fee = format_ethereum_amount(gas_price * gas_limit, None, network)
@@ -46,7 +48,9 @@ async def require_confirm_tx(
         ("Gas price:", gas_price_str),
     )
 
-    await confirm_ethereum_tx(to_str, total_amount, maximum_fee, items)
+    await confirm_ethereum_tx(
+        to_str, total_amount, maximum_fee, items, chunkify=chunkify
+    )
 
 
 async def require_confirm_tx_eip1559(
@@ -57,12 +61,14 @@ async def require_confirm_tx_eip1559(
     gas_limit: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
+    chunkify: bool,
 ) -> None:
 
     if to_bytes:
         to_str = address_from_bytes(to_bytes, network)
     else:
         to_str = "new contract?"
+        chunkify = False
 
     total_amount = format_ethereum_amount(value, token, network)
     maximum_fee = format_ethereum_amount(max_gas_fee * gas_limit, None, network)
@@ -76,7 +82,9 @@ async def require_confirm_tx_eip1559(
         ("Priority fee:", max_priority_fee_str),
     )
 
-    await confirm_ethereum_tx(to_str, total_amount, maximum_fee, items)
+    await confirm_ethereum_tx(
+        to_str, total_amount, maximum_fee, items, chunkify=chunkify
+    )
 
 
 def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:

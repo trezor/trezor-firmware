@@ -349,6 +349,14 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
+
+        let style = if chunkify {
+            // Chunkifying the address into smaller pieces when requested
+            &theme::TEXT_MONO_ADDRESS_CHUNKS
+        } else {
+            &theme::TEXT_MONO_DATA
+        };
 
         let paragraphs = ConfirmBlob {
             description: description.unwrap_or_else(StrBuffer::empty),
@@ -356,7 +364,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             data: data.try_into()?,
             description_font: &theme::TEXT_BOLD,
             extra_font: &theme::TEXT_NORMAL,
-            data_font: &theme::TEXT_MONO_DATA,
+            data_font: style,
         }
         .into_paragraphs();
 
@@ -740,6 +748,7 @@ extern "C" fn new_confirm_ethereum_tx(n_args: usize, args: *const Obj, kwargs: *
         let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
         let maximum_fee: StrBuffer = kwargs.get(Qstr::MP_QSTR_maximum_fee)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let get_page = move |page_index| {
             match page_index {
@@ -748,7 +757,14 @@ extern "C" fn new_confirm_ethereum_tx(n_args: usize, args: *const Obj, kwargs: *
                     let btn_layout = ButtonLayout::cancel_none_text("CONTINUE".into());
                     let btn_actions = ButtonActions::cancel_none_next();
 
-                    let ops = OpTextLayout::new(theme::TEXT_MONO_DATA).text_mono(recipient.clone());
+                    let style = if chunkify {
+                        // Chunkifying the address into smaller pieces when requested
+                        theme::TEXT_MONO_ADDRESS_CHUNKS
+                    } else {
+                        theme::TEXT_MONO_DATA
+                    };
+
+                    let ops = OpTextLayout::new(style).text_mono(recipient.clone());
 
                     let formatted = FormattedText::new(ops).vertically_centered();
                     Page::new(btn_layout, btn_actions, formatted).with_title("RECIPIENT".into())
@@ -1643,6 +1659,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     verb: str = "CONFIRM",
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
@@ -1758,6 +1775,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     total_amount: str,
     ///     maximum_fee: str,
     ///     items: Iterable[Tuple[str, str]],
+    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm details about Ethereum transaction."""
     Qstr::MP_QSTR_confirm_ethereum_tx => obj_fn_kw!(0, new_confirm_ethereum_tx).as_obj(),

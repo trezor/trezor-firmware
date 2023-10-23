@@ -48,6 +48,7 @@ def confirm_blob(
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
+    chunkify: bool = False,
 ) -> object:
     """Confirm byte sequence data."""
 
@@ -174,6 +175,7 @@ def confirm_ethereum_tx(
     total_amount: str,
     maximum_fee: str,
     items: Iterable[Tuple[str, str]],
+    chunkify: bool = False,
 ) -> object:
     """Confirm details about Ethereum transaction."""
 
@@ -503,6 +505,7 @@ def confirm_blob(
     verb: str | None = None,
     verb_cancel: str | None = None,
     hold: bool = False,
+    chunkify: bool = False,
 ) -> object:
     """Confirm byte sequence data."""
 
