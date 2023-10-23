@@ -491,6 +491,20 @@ def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
     return False
 
 
+def _get_firmware_header_size(firmware_data: bytes) -> int:
+    """Returns size of vendor and image headers"""
+    try:
+        fw = firmware.parse(firmware_data)
+    except Exception as e:
+        click.echo(e)
+        sys.exit(2)
+
+    if isinstance(fw, firmware.VendorFirmware):
+        return fw.firmware.header.header_len + fw.vendor_header.header_len
+
+    return 0
+
+
 @click.group(name="firmware")
 def cli() -> None:
     """Firmware commands."""
@@ -697,12 +711,11 @@ def update(
         if not client.features.bootloader_mode and ilu_supported and strict_upgrade:
 
             with obj.client_context() as client:
+                header_size = _get_firmware_header_size(firmware_data)
                 device.reboot_to_bootloader(
                     client,
                     bootCommand=messages.BootCommand.INSTALL_UPGRADE,
-                    bootArgs=firmware_data[
-                        : 6 * 1024
-                    ],  # TODO!@#: How many bytes should we send ?
+                    bootArgs=firmware_data[:header_size],
                 )
                 time.sleep(3)  # TODO!@#: How to wait properly ?
 
