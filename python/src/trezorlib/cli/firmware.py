@@ -673,9 +673,7 @@ def update(
         click.echo("Dry run. Not uploading firmware to device.")
         return
 
-    print(ilu)
-
-    if ilu is False:
+    if ilu is not False:
         strict_upgrade = _is_strict_update(client, firmware_data)
         ilu_supported = _is_ilu_supported(client)
 
