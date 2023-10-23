@@ -587,6 +587,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                             &should_keep_seed, &is_newvendor, &is_upgrade);
       }
 
+      secbool is_ilu = secfalse;  // interaction-less update
+
       if (g_boot_command == BOOT_COMMAND_INSTALL_UPGRADE) {
         BLAKE2S_CTX ctx;
         uint8_t hash[BLAKE2S_DIGEST_LENGTH];
@@ -595,8 +597,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                        vhdr.hdrlen + received_hdr->hdrlen);
         blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
-        // firmware must have be the same as confirmed by the user
-        extern uint8_t boot_args_start;
+        // the firmware must be the same as confirmed by the user
         if (memcmp(&boot_args_start, hash, sizeof(hash)) != 0) {
           MSG_SEND_INIT(Failure);
           MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
@@ -605,8 +606,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
           return UPLOAD_ERR_FIRMWARE_MISMATCH;
         }
 
-        // firmware must be from the same vendor
-        // firmware must be newer
+        // the firmware must be from the same vendor
+        // the firmware must be newer
         if (is_upgrade != sectrue || is_newvendor != secfalse) {
           MSG_SEND_INIT(Failure);
           MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
@@ -615,8 +616,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
           return UPLOAD_ERR_NOT_FIRMWARE_UPGRADE;
         }
 
-        // upload firmware without confirmation
-        is_new = sectrue;
+        // upload the firmware without confirmation
+        is_ilu = sectrue;
       }
 
 #ifdef USE_OPTIGA
@@ -630,7 +631,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 #endif
 
       uint32_t response = INPUT_CANCEL;
-      if (sectrue == is_new) {
+      if (sectrue == is_new || sectrue == is_ilu) {
         // new installation or interaction less updated - auto confirm
         response = INPUT_CONFIRM;
       } else {
