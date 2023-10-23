@@ -178,7 +178,9 @@ where
     T: StringType + Clone,
 {
     pub fn new(label: T, bootscreen: bool) -> Self {
-        let invisible_btn_layout = ButtonLayout::text_none_text("".into(), "".into());
+        // Buttons will not be visible, we only need all three of them to be present,
+        // so that even middle-click triggers the event.
+        let invisible_btn_layout = ButtonLayout::arrow_armed_arrow("".into());
         let instruction_str = if bootscreen {
             "Click to Connect"
         } else {
