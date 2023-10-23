@@ -109,7 +109,7 @@ tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BIG', FONT_BIG, CPPDEFINES_MOD, SOURCE_MOD)
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')), CONSTRAINTS=["limited_util_s"])
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
@@ -151,6 +151,7 @@ env.Replace(
     CPPDEFINES=[
         'TREZOR_PRODTEST',
         'TREZOR_MODEL_'+TREZOR_MODEL,
+        'ARM_USER_MODE',
         'USE_HAL_DRIVER',
     ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
     ASFLAGS=env.get('ENV')['CPU_ASFLAGS'],

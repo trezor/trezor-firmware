@@ -667,28 +667,4 @@ int main(void) {
   return 0;
 }
 
-void SVC_C_Handler(uint32_t *stack) {
-  uint8_t svc_number = ((uint8_t *)stack[6])[-2];
-  switch (svc_number) {
-    case SVC_GET_SYSTICK_VAL: {
-      systick_val_copy = SysTick->VAL;
-    } break;
-    default:
-      stack[0] = 0xffffffff;
-      break;
-  }
-}
-
-__attribute__((naked)) void SVC_Handler(void) {
-  __asm volatile(
-      " tst lr, #4    \n"  // Test Bit 3 to see which stack pointer we should
-      // use.
-      " ite eq        \n"  // Tell the assembler that the nest 2 instructions
-      // are if-then-else
-      " mrseq r0, msp \n"    // Make R0 point to main stack pointer
-      " mrsne r0, psp \n"    // Make R0 point to process stack pointer
-      " b SVC_C_Handler \n"  // Off to C land
-  );
-}
-
 void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(HF)"); }

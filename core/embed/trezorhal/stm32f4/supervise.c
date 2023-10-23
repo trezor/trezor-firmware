@@ -6,7 +6,7 @@
 #include "common.h"
 #include "supervise.h"
 
-#ifdef FIRMWARE
+#ifdef ARM_USER_MODE
 
 // Saves extra parameters for the bootloader
 static void _copy_boot_args(const void *args, size_t args_size) {
@@ -103,4 +103,4 @@ __attribute__((naked)) void SVC_Handler(void) {
   );
 }
 
-#endif  // FIRMWARE
+#endif  // ARM_USER_MODE
