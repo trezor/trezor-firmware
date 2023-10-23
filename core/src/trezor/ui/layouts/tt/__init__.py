@@ -749,6 +749,7 @@ async def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     ask_pagination: bool = False,
+    chunkify: bool = False,
 ) -> None:
     title = title.upper()
     description = description or ""
@@ -761,6 +762,7 @@ async def confirm_blob(
             hold=hold,
             verb=verb,
             verb_cancel=verb_cancel,
+            chunkify=chunkify,
         )
     )
 
@@ -935,6 +937,7 @@ async def confirm_ethereum_tx(
     items: Iterable[tuple[str, str]],
     br_type: str = "confirm_ethereum_tx",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    chunkify: bool = False,
 ) -> None:
     total_layout = RustLayout(
         trezorui2.confirm_total(
@@ -961,6 +964,7 @@ async def confirm_ethereum_tx(
             "RECIPIENT",
             recipient,
             verb="CONTINUE",
+            chunkify=chunkify,
         )
 
         try:

@@ -59,6 +59,7 @@ async def sign_tx(
         int.from_bytes(msg.gas_limit, "big"),
         defs.network,
         token,
+        bool(msg.chunkify),
     )
 
     data = bytearray()

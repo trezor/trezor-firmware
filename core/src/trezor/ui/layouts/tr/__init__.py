@@ -771,6 +771,7 @@ async def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     ask_pagination: bool = False,
+    chunkify: bool = False,
 ) -> None:
     title = title.upper()
     description = description or ""
@@ -783,6 +784,7 @@ async def confirm_blob(
             verb=verb,
             verb_cancel=verb_cancel,
             hold=hold,
+            chunkify=chunkify,
         )
     )
 
@@ -996,6 +998,7 @@ async def confirm_ethereum_tx(
     items: Iterable[tuple[str, str]],
     br_type: str = "confirm_ethereum_tx",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    chunkify: bool = False,
 ) -> None:
     await raise_if_not_confirmed(
         interact(
@@ -1005,6 +1008,7 @@ async def confirm_ethereum_tx(
                     total_amount=total_amount,
                     maximum_fee=maximum_fee,
                     items=items,
+                    chunkify=chunkify,
                 )
             ),
             br_type,

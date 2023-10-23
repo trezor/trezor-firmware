@@ -71,6 +71,7 @@ async def sign_tx_eip1559(
         int.from_bytes(gas_limit, "big"),
         defs.network,
         token,
+        bool(msg.chunkify),
     )
 
     data = bytearray()
