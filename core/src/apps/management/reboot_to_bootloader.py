@@ -13,7 +13,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     from trezor.ui.layouts import confirm_action
     from trezor.wire.context import get_context
 
-    if msg.bootCommand is None or msg.bootCommand == BootCommand.STOP_AND_WAIT:
+    if msg.boot_command is None or msg.boot_command == BootCommand.STOP_AND_WAIT:
         await confirm_action(
             "reboot",
             "Go to bootloader",
@@ -27,9 +27,12 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
         utils.reboot_to_bootloader(BootCommand.STOP_AND_WAIT)
         raise RuntimeError
 
-    elif msg.bootCommand == BootCommand.INSTALL_UPGRADE and msg.bootArgs is not None:
+    elif (
+        msg.boot_command == BootCommand.INSTALL_UPGRADE
+        and msg.firmware_header is not None
+    ):
         # check and parse received firmware header
-        hdr = utils.check_firmware_header(msg.bootArgs)
+        hdr = utils.check_firmware_header(msg.firmware_header)
         if hdr is None:
             raise wire.ProcessError("Invalid firmware header.")
         else:

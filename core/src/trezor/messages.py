@@ -2614,14 +2614,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class RebootToBootloader(protobuf.MessageType):
-        bootCommand: "BootCommand"
-        bootArgs: "bytes | None"
+        boot_command: "BootCommand"
+        firmware_header: "bytes | None"
 
         def __init__(
             self,
             *,
-            bootCommand: "BootCommand | None" = None,
-            bootArgs: "bytes | None" = None,
+            boot_command: "BootCommand | None" = None,
+            firmware_header: "bytes | None" = None,
         ) -> None:
             pass
 
