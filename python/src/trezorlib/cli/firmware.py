@@ -714,8 +714,8 @@ def update(
                 header_size = _get_firmware_header_size(firmware_data)
                 device.reboot_to_bootloader(
                     client,
-                    bootCommand=messages.BootCommand.INSTALL_UPGRADE,
-                    bootArgs=firmware_data[:header_size],
+                    boot_command=messages.BootCommand.INSTALL_UPGRADE,
+                    firmware_header=firmware_data[:header_size],
                 )
                 time.sleep(3)  # TODO!@#: How to wait properly ?
 
