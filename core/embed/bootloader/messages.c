@@ -349,13 +349,17 @@ void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   MSG_SEND(Success);
 }
 
-static uint32_t firmware_remaining, firmware_block, chunk_requested;
+static uint32_t firmware_remaining;
+static uint32_t firmware_block;
+static uint32_t chunk_requested;
+static uint32_t erase_offset;
 
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
                                uint8_t *buf) {
   firmware_remaining = 0;
   firmware_block = 0;
   chunk_requested = 0;
+  erase_offset = 0;
 
   MSG_RECV_INIT(FirmwareErase);
   MSG_RECV(FirmwareErase);
@@ -411,8 +415,8 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
     // update loader but skip first block
     if (firmware_block > 0) {
       ui_screen_install_progress_upload(
-          250 + 750 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) /
-                    (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining));
+          1000 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) /
+          (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining));
     }
     // read data
     if (!pb_read(
@@ -660,8 +664,6 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
                NULL);
       }
-      ensure(flash_area_erase(&FIRMWARE_AREA, ui_screen_install_progress_erase),
-             NULL);
 
       headers_offset = IMAGE_HEADER_SIZE + vhdr.hdrlen;
       read_offset = IMAGE_INIT_CHUNK_SIZE;
@@ -713,22 +715,60 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
     return UPLOAD_ERR_INVALID_CHUNK_HASH;
   }
 
-  ensure(flash_unlock_write(), NULL);
+  // buffer with the received data
+  const uint32_t *quadword_ptr = (const uint32_t *)CHUNK_BUFFER_PTR;
+  // number of received bytes
+  uint32_t bytes_remaining = chunk_size;
+  // offset into the FIRMWARE_AREA part of the flash 
+  uint32_t write_offset = firmware_block * IMAGE_CHUNK_SIZE;
 
-  const uint32_t *const src = (const uint32_t *const)CHUNK_BUFFER_PTR;
+  while (bytes_remaining > 0) {
+    // erase flash before writing
+    uint32_t bytes_erased = 0; 
+    
+    if (write_offset >= erase_offset) {
+      // erase the next flash section
+      ensure(
+          flash_area_erase_partial(&FIRMWARE_AREA, erase_offset, &bytes_erased),
+          NULL);
+      erase_offset += bytes_erased;
+    } else {
+      // some erased space left from the previous round => use it
+      bytes_erased = erase_offset - write_offset;
+    }
+  
+    // write the received data
+    uint32_t bytes_to_write = MIN(bytes_erased, bytes_remaining);
+    uint32_t write_end = write_offset + bytes_to_write;
 
-  for (int i = 0; i < chunk_size / (sizeof(uint32_t) * 4); i++) {
-    ensure(flash_area_write_quadword(
-               &FIRMWARE_AREA,
-               firmware_block * IMAGE_CHUNK_SIZE + i * 4 * sizeof(uint32_t),
-               &src[4 * i]),
-           NULL);
+    ensure(flash_unlock_write(), NULL);
+    while (write_offset < write_end) {
+      // write a quad word (16 bytes) to the flash
+      ensure(
+          flash_area_write_quadword(&FIRMWARE_AREA, write_offset, quadword_ptr),
+          NULL);
+      write_offset += 4 * sizeof(uint32_t);
+      quadword_ptr += 4;
+    }
+    ensure(flash_lock_write(), NULL);
+
+    bytes_remaining -= bytes_to_write;
   }
 
-  ensure(flash_lock_write(), NULL);
+  firmware_remaining -= chunk_requested;
+
+  if (firmware_remaining == 0) {
+    // erase the rest (unused part) of the FIRMWARE_AREA
+    uint32_t bytes_erased = 0;
+    do {
+      ensure(
+          flash_area_erase_partial(&FIRMWARE_AREA, erase_offset, &bytes_erased),
+          NULL);
+      erase_offset += bytes_erased;
+    } while (bytes_erased > 0);
+  }
 
   headers_offset = 0;
-  firmware_remaining -= chunk_requested;
   firmware_block++;
   firmware_upload_chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT;
 

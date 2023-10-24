@@ -167,6 +167,50 @@ secbool flash_area_erase_bulk(const flash_area_t *area, int count,
   return sectrue;
 }
 
+secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
+                                 uint32_t *bytes_erased) {
+  uint32_t sector_offset = 0;
+  *bytes_erased = 0;
+
+  for (int s = 0; s < area->num_subareas; s++) {
+    for (int i = 0; i < area->subarea[s].num_sectors; i++) {
+      uint32_t sector_index = area->subarea[s].first_sector + i;
+      uint32_t sector_size = FLASH_SECTOR_TABLE[sector_index + 1] -
+                             FLASH_SECTOR_TABLE[sector_index];
+
+      if (offset == sector_offset) {
+        ensure(flash_unlock_write(), NULL);
+
+        FLASH_EraseInitTypeDef erase_init = {
+            .TypeErase = FLASH_TYPEERASE_SECTORS,
+            .VoltageRange = FLASH_VOLTAGE_RANGE_3,
+            .Sector = sector_index,
+            .NbSectors = 1};
+
+        uint32_t sector_error;
+
+        if (HAL_FLASHEx_Erase(&erase_init, &sector_error) != HAL_OK) {
+          ensure(flash_lock_write(), NULL);
+          return secfalse;
+        }
+
+        ensure(flash_lock_write(), NULL);
+
+        *bytes_erased = sector_size;
+        return sectrue;
+      }
+
+      sector_offset += sector_size;
+    }
+  }
+
+  if (offset == sector_offset) {
+    return sectrue;
+  }
+
+  return secfalse;
+}
+
 secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
   uint32_t address = (uint32_t)flash_get_address(sector, offset, 1);
   if (address == 0) {

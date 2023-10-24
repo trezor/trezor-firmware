@@ -190,6 +190,36 @@ secbool flash_area_erase_bulk(const flash_area_t *area, int count,
   return sectrue;
 }
 
+secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
+                                 uint32_t *bytes_erased) {
+  uint32_t sector_offset = 0;
+  *bytes_erased = 0;
+
+  for (int s = 0; s < area->num_subareas; s++) {
+    for (int i = 0; i < area->subarea[s].num_sectors; i++) {
+      uint32_t sector_index = area->subarea[s].first_sector + i;
+      uint32_t sector_size = FLASH_SECTOR_TABLE[sector_index + 1] -
+                             FLASH_SECTOR_TABLE[sector_index];
+
+      if (offset == sector_offset) {
+        uint8_t *flash =
+            (uint8_t *)flash_get_address(sector_index, 0, sector_size);
+        memset(flash, 0xFF, sector_size);
+        *bytes_erased = sector_size;
+        return sectrue;
+      }
+
+      sector_offset += sector_size;
+    }
+  }
+
+  if (offset == sector_offset) {
+    return sectrue;
+  }
+
+  return secfalse;
+}
+
 secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
   uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, 1);
   if (!flash) {
