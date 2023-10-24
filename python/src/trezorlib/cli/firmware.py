@@ -479,7 +479,7 @@ def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
         sys.exit(2)
 
     if not isinstance(fw, firmware.VendorFirmware):
-        return false
+        return False
 
     new_version = fw.firmware.header.version
     new_vendor = fw.vendor_header.text
@@ -625,7 +625,6 @@ def download(
 @click.option("--bitcoin-only/--universal", is_flag=True, default=None, help="Download bitcoin-only or universal firmware (defaults to universal)")
 @click.option("--raw", is_flag=True, help="Push raw firmware data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
-@click.option("--ilu/--no-ilu", is_flag=True, default=None, help="Force/Disable interaction-less upgrade")
 # fmt: on
 @click.pass_obj
 def update(
@@ -639,7 +638,6 @@ def update(
     dry_run: bool,
     beta: bool,
     bitcoin_only: Optional[bool],
-    ilu: Optional[bool],
 ) -> None:
     """Upload new firmware to device.
 
@@ -669,55 +667,44 @@ def update(
 
             firmware_data = download_firmware_data(url)
 
-    if not raw and not skip_check:
-        validate_firmware(
-            firmware_data=firmware_data,
-            fingerprint=fingerprint,
-            bootloader_onev2=_is_bootloader_onev2(client),
-            model=client.model,
-        )
-
-        if not raw:
-            firmware_data = extract_embedded_fw(
+        if not raw and not skip_check:
+            validate_firmware(
                 firmware_data=firmware_data,
+                fingerprint=fingerprint,
                 bootloader_onev2=_is_bootloader_onev2(client),
+                model=client.model,
             )
 
-    if dry_run:
-        click.echo("Dry run. Not uploading firmware to device.")
-        return
+            if not raw:
+                firmware_data = extract_embedded_fw(
+                    firmware_data=firmware_data,
+                    bootloader_onev2=_is_bootloader_onev2(client),
+                )
 
-    if ilu is not False:
+        if dry_run:
+            click.echo("Dry run. Not uploading firmware to device.")
+            return
+
         strict_upgrade = _is_strict_update(client, firmware_data)
         ilu_supported = _is_ilu_supported(client)
 
-        if ilu is True:
-            if client.features.bootloader_mode:
-                click.echo(
-                    "Interaction-less update can not be started from bootloader mode."
-                )
-                exit(1)
-            elif not ilu_supported:
-                click.echo(
-                    "Interaction-less upgrade is not supported by the current firmware version."
-                )
-                exit(1)
-            elif not strict_upgrade:
-                click.echo(
-                    "Interaction-less upgrade accepts only newer firmware from the same vendor."
-                )
-                exit(1)
-
         if not client.features.bootloader_mode and ilu_supported and strict_upgrade:
 
-            with obj.client_context() as client:
-                header_size = _get_firmware_header_size(firmware_data)
-                device.reboot_to_bootloader(
-                    client,
-                    boot_command=messages.BootCommand.INSTALL_UPGRADE,
-                    firmware_header=firmware_data[:header_size],
-                )
-                time.sleep(3)  # TODO!@#: How to wait properly ?
+            header_size = _get_firmware_header_size(firmware_data)
+            device.reboot_to_bootloader(
+                client,
+                boot_command=messages.BootCommand.INSTALL_UPGRADE,
+                firmware_header=firmware_data[:header_size],
+            )
+
+            click.echo("Waiting for bootloader...")
+            while True:
+                time.sleep(0.5)
+                try:
+                    obj.get_transport()
+                    break
+                except Exception:
+                    pass
 
     with obj.client_context() as client:
 
