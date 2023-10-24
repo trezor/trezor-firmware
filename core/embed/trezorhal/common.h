@@ -53,7 +53,7 @@
 
 // Defines special boot action for reboot_to_bootloader() function
 typedef enum {
-  // Normal flow, like after power on
+  // Normal boot sequence
   BOOT_COMMAND_NONE = 0x00000000,
   // Stop and wait for further instructions
   BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
