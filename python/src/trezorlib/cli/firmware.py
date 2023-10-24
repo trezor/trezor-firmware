@@ -461,13 +461,6 @@ def upload_firmware_into_device(
         sys.exit(3)
 
 
-def _is_ilu_supported(client: "TrezorClient") -> bool:
-    """Check if the firmware supports interaction-less update."""
-    f = client.features
-    version = (f.major_version, f.minor_version, f.patch_version)
-    return version >= (2, 6, 3)
-
-
 def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
     """Check if the firmware is from the same vendor and the
     firmware is newer than the currently installed firmware.
@@ -685,17 +678,17 @@ def update(
             click.echo("Dry run. Not uploading firmware to device.")
             return
 
-        strict_upgrade = _is_strict_update(client, firmware_data)
-        ilu_supported = _is_ilu_supported(client)
+        if not client.features.bootloader_mode:
 
-        if not client.features.bootloader_mode and ilu_supported and strict_upgrade:
-
-            header_size = _get_firmware_header_size(firmware_data)
-            device.reboot_to_bootloader(
-                client,
-                boot_command=messages.BootCommand.INSTALL_UPGRADE,
-                firmware_header=firmware_data[:header_size],
-            )
+            if _is_strict_update(client, firmware_data):
+                header_size = _get_firmware_header_size(firmware_data)
+                device.reboot_to_bootloader(
+                    client,
+                    boot_command=messages.BootCommand.INSTALL_UPGRADE,
+                    firmware_header=firmware_data[:header_size],
+                )
+            else:
+                device.reboot_to_bootloader(client)
 
             click.echo("Waiting for bootloader...")
             while True:
