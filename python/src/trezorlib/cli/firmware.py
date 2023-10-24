@@ -478,17 +478,17 @@ def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
         click.echo(e)
         sys.exit(2)
 
-    if isinstance(fw, firmware.VendorFirmware):
-        new_version = fw.firmware.header.version
-        new_vendor = fw.vendor_header.text
+    if not isinstance(fw, firmware.VendorFirmware):
+        return false
 
-        f = client.features
-        cur_version = (f.major_version, f.minor_version, f.patch_version, 0)
-        cur_vendor = f.fw_vendor
+    new_version = fw.firmware.header.version
+    new_vendor = fw.vendor_header.text
 
-        return new_vendor == cur_vendor and new_version > cur_version
+    f = client.features
+    cur_version = (f.major_version, f.minor_version, f.patch_version, 0)
+    cur_vendor = f.fw_vendor
 
-    return False
+    return new_vendor == cur_vendor and new_version > cur_version
 
 
 def _get_firmware_header_size(firmware_data: bytes) -> int:
