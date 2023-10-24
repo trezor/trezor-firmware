@@ -517,11 +517,12 @@ int bootloader_main(void) {
   if (touched || stay_in_bootloader == sectrue || firmware_present != sectrue ||
       auto_upgrade == sectrue) {
     screen_t screen;
+    ui_set_initial_setup(true);
     if (header_present == sectrue) {
-      ui_set_initial_setup(false);
       if (auto_upgrade == sectrue) {
         screen = SCREEN_WAIT_FOR_HOST;
       } else {
+        ui_set_initial_setup(false);
         screen = SCREEN_INTRO;
       }
 
@@ -531,8 +532,6 @@ int bootloader_main(void) {
       // erase storage
       ensure(flash_area_erase_bulk(STORAGE_AREAS, STORAGE_AREAS_COUNT, NULL),
              NULL);
-
-      ui_set_initial_setup(true);
 
       // keep the model screen up for a while
 #ifndef USE_BACKLIGHT
