@@ -270,12 +270,14 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 
   if (offset < end_offset) {
     // Use the first byte in the checked area as the expected padding byte
-    // Firmware is always padded with 0xFF, while the bootloader might be 
+    // Firmware is always padded with 0xFF, while the bootloader might be
     // padded with 0x00 as well
     uint8_t expected_byte = *(
         (const uint8_t *)flash_area_get_address(area, offset, sizeof(uint8_t)));
 
-    ensure(sectrue * (expected_byte == 0x00 || expected_byte == 0xFF), NULL);
+    if (expected_byte != 0x00 && expected_byte != 0xFF) {
+      return secfalse;
+    }
 
     while (offset < end_offset) {
       size_t bytes_to_check = MIN(
