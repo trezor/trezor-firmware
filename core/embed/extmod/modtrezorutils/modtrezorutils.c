@@ -247,7 +247,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_btconly_obj,
                                  mod_trezorutils_unit_btconly);
 
 /// def reboot_to_bootloader(
-///     boot_command : BootCommand | None = None,
+///     boot_command : int = 0,
 ///     boot_args : bytes | None = None,
 /// ) -> None:
 ///     """
@@ -290,7 +290,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 
 /// def check_firmware_header(
 ///     header : bytes
-/// ) -> dict | None:
+/// ) -> dict:
 ///     """
 ///     Checks firmware image and vendor header and returns
 ///        { "version": (major, minor, patch),
@@ -323,8 +323,9 @@ STATIC mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {
                       mp_obj_new_bytes(info.hash, sizeof(info.hash)));
 
     return result;
-  } else
-    return mp_const_none;
+  }
+
+  mp_raise_ValueError("Invalid value.");
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_firmware_header_obj,
