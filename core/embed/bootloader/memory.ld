@@ -4,7 +4,8 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = 0x08020000, LENGTH = 128K
-  CCMRAM (wal)    : ORIGIN = 0x10000000, LENGTH = 64K
+  CCMRAM (wal)    : ORIGIN = 0x10000000, LENGTH = 64K - 0x100
+  BOOT_ARGS (wal) : ORIGIN = 0x1000FF00, LENGTH = 0x100
   SRAM   (wal)    : ORIGIN = 0x20000000, LENGTH = 192K
 }
 
@@ -22,6 +23,10 @@ ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
 /* used by the startup code to wipe memory */
 sram_start = ORIGIN(SRAM);
 sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
+
+/* reserve 256 bytes for bootloader arguments */
+boot_args_start = ORIGIN(BOOT_ARGS);
+boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
 
 _codelen = SIZEOF(.flash) + SIZEOF(.data);
 
