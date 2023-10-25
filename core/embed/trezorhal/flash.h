@@ -63,7 +63,7 @@ uint32_t flash_wait_and_clear_status_flags(void);
 // 'bytes_erased' is set to 0 otherwise, 'bytes_erased' is set to the size of
 // the erased sector
 secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
-                                 uint32_t *_bytes_erased);
+                                 uint32_t *bytes_erased);
 
 secbool __wur flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
                              uint8_t datalen);
