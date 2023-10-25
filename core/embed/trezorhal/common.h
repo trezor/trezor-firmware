@@ -51,21 +51,7 @@
   })
 #endif
 
-// Defines special boot action for reboot_to_bootloader() function
-typedef enum {
-  // Normal boot sequence
-  BOOT_COMMAND_NONE = 0x00000000,
-  // Stop and wait for further instructions
-  BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
-  // Do not ask anything, install an upgrade
-  BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
-} boot_command_t;
 
-// from linker script
-extern uint8_t boot_args_start;
-extern uint8_t boot_args_end;
-extern uint8_t ccmram_start;
-extern uint8_t ccmram_end;
 
 void __attribute__((noreturn)) trezor_shutdown(void);
 

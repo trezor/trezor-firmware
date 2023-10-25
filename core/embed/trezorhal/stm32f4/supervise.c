@@ -8,8 +8,14 @@
 
 #ifdef ARM_USER_MODE
 
+
 // Saves extra parameters for the bootloader
 static void _copy_boot_args(const void *args, size_t args_size) {
+
+  // symbols imported from the linker script
+  extern uint8_t boot_args_start;
+  extern uint8_t boot_args_end;
+
   uint8_t *p = &boot_args_start;
 
   if (args != NULL && args_size > 0) {

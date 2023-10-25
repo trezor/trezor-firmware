@@ -19,8 +19,11 @@
 
 uint8_t *FIRMWARE_START = 0;
 
-// Simulation of g_boot_command normally grabbed during reset processing
+// Simulation of a boot command normally grabbed during reset processing
 boot_command_t g_boot_command = BOOT_COMMAND_NONE;
+// Simulation of a boot args normally sitting at the BOOT_ARGS region
+uint8_t g_boot_args[BOOT_ARGS_SIZE];
+
 
 void set_core_clock(int) {}
 

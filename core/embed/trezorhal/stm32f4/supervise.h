@@ -8,6 +8,7 @@
 #define SVC_GET_SYSTICK_VAL 6
 
 #include <string.h>
+#include "boot_args.h"
 #include "common.h"
 #include "image.h"
 
@@ -67,8 +68,8 @@ static inline void svc_shutdown(void) {
   }
 }
 
-void svc_reboot_to_bootloader(boot_command_t boot_command, const void* params,
-                              size_t params_size);
+void svc_reboot_to_bootloader(boot_command_t boot_command, const void* args,
+                              size_t args_size);
 
 static inline uint32_t svc_get_systick_val(void) {
   if (is_mode_unprivileged() && !is_mode_handler()) {

@@ -602,7 +602,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
         // the firmware must be the same as confirmed by the user
-        if (memcmp(&boot_args_start, hash, sizeof(hash)) != 0) {
+        if (memcmp(&g_boot_args[0], hash, sizeof(hash)) != 0) {
           MSG_SEND_INIT(Failure);
           MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
           MSG_SEND_ASSIGN_STRING(message, "Firmware mismatch");
