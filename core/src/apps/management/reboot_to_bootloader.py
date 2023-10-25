@@ -34,11 +34,11 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
         # check and parse received firmware header
         hdr = utils.check_firmware_header(msg.firmware_header)
         if hdr is None:
-            raise wire.ProcessError("Invalid firmware header.")
+            raise wire.DataError("Invalid firmware header.")
         else:
             # vendor must be the same
             if hdr["vendor"] != utils.firmware_vendor():
-                raise wire.ProcessError("Different firmware vendor.")
+                raise wire.DataError("Different firmware vendor.")
 
             current_version = (
                 int(utils.VERSION_MAJOR),
@@ -48,7 +48,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
 
             # firmware must be newer
             if hdr["version"] <= current_version:
-                raise wire.ProcessError("Not a firmware upgrade.")
+                raise wire.DataError("Not a firmware upgrade.")
 
             version_str = ".".join(map(str, hdr["version"]))
 
@@ -68,4 +68,4 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
             raise RuntimeError
 
     else:
-        raise wire.ProcessError("Invalid message data.")
+        raise wire.DataError("Invalid message data.")
