@@ -243,34 +243,56 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
     return secfalse;
   }
 
-  const void *data =
-      flash_area_get_address(area, firstskip, IMAGE_CHUNK_SIZE - firstskip);
-  if (!data) {
-    return secfalse;
-  }
-  int remaining = hdr->codelen;
-  if (sectrue !=
-      check_single_hash(hdr->hashes, data,
-                        MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
-    return secfalse;
-  }
+  // Check the firmware integrity, calculate and compare hashes
+  size_t offset = firstskip;
+  size_t end_offset = offset + hdr->codelen;
 
-  remaining -= IMAGE_CHUNK_SIZE - firstskip;
+  while (offset < end_offset) {
+    size_t bytes_to_check = MIN(IMAGE_CHUNK_SIZE - (offset % IMAGE_CHUNK_SIZE),
+                                end_offset - offset);
 
-  int chunk = 1;
-
-  while (remaining > 0) {
-    data = flash_area_get_address(area, chunk * IMAGE_CHUNK_SIZE,
-                                  IMAGE_CHUNK_SIZE);
+    const void *data = flash_area_get_address(area, offset, bytes_to_check);
     if (!data) {
       return secfalse;
     }
-    if (sectrue != check_single_hash(hdr->hashes + chunk * 32, data,
-                                     MIN(remaining, IMAGE_CHUNK_SIZE))) {
+
+    size_t hash_offset = (offset / IMAGE_CHUNK_SIZE) * 32;
+    if (sectrue !=
+        check_single_hash(hdr->hashes + hash_offset, data, bytes_to_check)) {
       return secfalse;
     }
-    chunk++;
-    remaining -= IMAGE_CHUNK_SIZE;
+
+    offset += bytes_to_check;
+  }
+
+  // Check the padding to the end of the area
+  end_offset = flash_area_get_size(area);
+
+  if (offset < end_offset) {
+    // Use the first byte in the checked area as the expected padding byte
+    // Firmware is padded with 0xFF, while the bootloader itself is padded with
+    // 0x00
+    uint8_t expected_byte = *(
+        (const uint8_t *)flash_area_get_address(area, offset, sizeof(uint8_t)));
+
+    while (offset < end_offset) {
+      size_t bytes_to_check = MIN(
+          IMAGE_CHUNK_SIZE - (offset % IMAGE_CHUNK_SIZE), end_offset - offset);
+
+      const uint8_t *data =
+          (const uint8_t *)flash_area_get_address(area, offset, bytes_to_check);
+      if (!data) {
+        return secfalse;
+      }
+
+      for (size_t i = 0; i < bytes_to_check; i++) {
+        if (data[i] != expected_byte) {
+          return secfalse;
+        }
+      }
+
+      offset += bytes_to_check;
+    }
   }
 
   return sectrue;
