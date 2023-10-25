@@ -191,9 +191,9 @@ secbool flash_area_erase_bulk(const flash_area_t *area, int count,
 }
 
 secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
-                                 uint32_t *_bytes_erased) {
+                                 uint32_t *bytes_erased) {
   uint32_t sector_offset = 0;
-  *_bytes_erased = 0;
+  *bytes_erased = 0;
 
   for (int s = 0; s < area->num_subareas; s++) {
     for (int i = 0; i < area->subarea[s].num_sectors; i++) {
@@ -203,7 +203,7 @@ secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
 
       if (offset == sector_offset) {
         memset(FLASH_BUFFER + sector_offset, 0xFF, sector_size);
-        *_bytes_erased = sector_size;
+        *bytes_erased = sector_size;
         return sectrue;
       }
 
