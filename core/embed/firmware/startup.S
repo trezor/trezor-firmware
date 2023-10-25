@@ -28,6 +28,11 @@ reset_handler:
   ldr r2, =0            // r2 - the word-sized value to be written
   bl memset_reg
 
+  ldr r0, =boot_args_start // r0 - point to beginning of BOOT_ARGS
+  ldr r1, =boot_args_end   // r1 - point to byte after the end of BOOT_ARGS
+  ldr r2, =0            // r2 - the word-sized value to be written
+  bl memset_reg
+
   ldr r0, =sram_start   // r0 - point to beginning of SRAM
   ldr r1, =sram_end     // r1 - point to byte after the end of SRAM
   ldr r2, =0            // r2 - the word-sized value to be written
