@@ -707,25 +707,35 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
     return UPLOAD_ERR_INVALID_CHUNK_HASH;
   }
 
+  // buffer with the received data
   const uint32_t *quadword_ptr = (const uint32_t *)CHUNK_BUFFER_PTR;
+  // number of received bytes
   uint32_t bytes_remaining = chunk_size;
+  // offset into the FIRMWARE_AREA part of the flash 
   uint32_t write_offset = firmware_block * IMAGE_CHUNK_SIZE;
 
   while (bytes_remaining > 0) {
-    uint32_t bytes_erased = 0;
+    // erase flash before writing
+    uint32_t bytes_erased = 0; 
+    
     if (write_offset >= erase_offset) {
+      // erase the next flash section
       ensure(
           flash_area_erase_partial(&FIRMWARE_AREA, erase_offset, &bytes_erased),
           NULL);
       erase_offset += bytes_erased;
     } else {
+      // some erased space left from the previous round => use it
       bytes_erased = erase_offset - write_offset;
     }
+  
+    // write the received data
     uint32_t bytes_to_write = MIN(bytes_erased, bytes_remaining);
     uint32_t write_end = write_offset + bytes_to_write;
+
     ensure(flash_unlock_write(), NULL);
     while (write_offset < write_end) {
-      // write quad word (16 bytes) to the flash
+      // write a quad word (16 bytes) to the flash
       ensure(
           flash_area_write_quadword(&FIRMWARE_AREA, write_offset, quadword_ptr),
           NULL);
@@ -733,13 +743,14 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       quadword_ptr += 4;
     }
     ensure(flash_lock_write(), NULL);
+
     bytes_remaining -= bytes_to_write;
   }
 
   firmware_remaining -= chunk_requested;
 
   if (firmware_remaining == 0) {
-    // erase unused part of the FIRMWARE_AREA
+    // erase the rest (unused part) of the FIRMWARE_AREA
     uint32_t bytes_erased = 0;
     do {
       ensure(
