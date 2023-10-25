@@ -60,7 +60,7 @@ uint32_t flash_wait_and_clear_status_flags(void);
 // Erases the single sector in the designated flash area
 // The 'offset' parameter must indicate the relative sector offset within the
 // flash area If 'offset' is outside the bounds of the flash area,
-// '_bytes_erase' is set to 0 otherwise, '_bytes_erased' is set to the size of
+// 'bytes_erased' is set to 0 otherwise, 'bytes_erased' is set to the size of
 // the erased sector
 secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
                                  uint32_t *_bytes_erased);
