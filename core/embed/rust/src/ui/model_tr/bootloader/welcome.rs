@@ -4,7 +4,7 @@ use crate::ui::{
     geometry::{Offset, Rect},
 };
 
-use super::theme::{BLD_BG, BLD_FG};
+use super::super::theme::bootloader::{BLD_BG, BLD_FG};
 
 pub struct Welcome {
     bg: Pad,

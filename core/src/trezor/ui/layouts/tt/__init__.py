@@ -1313,3 +1313,17 @@ async def confirm_set_new_pin(
             br_code,
         )
     )
+
+
+async def confirm_firmware_update(description: str, fingerprint: str) -> None:
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(
+                trezorui2.confirm_firmware_update(
+                    description=description, fingerprint=fingerprint
+                )
+            ),
+            "firmware_update",
+            BR_TYPE_OTHER,
+        )
+    )

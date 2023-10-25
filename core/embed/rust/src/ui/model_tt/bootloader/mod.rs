@@ -8,19 +8,22 @@ use crate::{
         event::TouchEvent,
         geometry::Point,
         model_tt::{
-            bootloader::{
-                confirm::ConfirmTitle,
-                connect::Connect,
-                theme::{
-                    button_bld, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
-                    BLD_FG, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32, FIRE40,
-                    TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
-                },
-                welcome::Welcome,
+            bootloader::{connect::Connect, welcome::Welcome},
+            component::{
+                bl_confirm::{Confirm, ConfirmTitle},
+                Button, ResultScreen, WelcomeScreen,
             },
-            component::{Button, ResultScreen, WelcomeScreen},
             constant,
-            theme::{BACKLIGHT_DIM, BACKLIGHT_NORMAL, FG, WHITE},
+            theme::{
+                bootloader::{
+                    button_bld, button_bld_menu, button_confirm, button_wipe_cancel,
+                    button_wipe_confirm, BLD_BG, BLD_FG, BLD_WIPE_COLOR, CHECK24, CHECK40,
+                    DOWNLOAD32, FIRE32, FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE,
+                    TEXT_BOLD, TEXT_NORMAL, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40,
+                    WELCOME_COLOR, X24,
+                },
+                BACKLIGHT_DIM, BACKLIGHT_NORMAL, FG, WHITE,
+            },
         },
         util::{from_c_array, from_c_str},
     },
@@ -28,19 +31,14 @@ use crate::{
 use heapless::String;
 use num_traits::ToPrimitive;
 
-pub mod confirm;
 mod connect;
 pub mod intro;
 pub mod menu;
-pub mod theme;
 pub mod welcome;
 
 use crate::{trezorhal::secbool::secbool, ui::model_tt::theme::BLACK};
-use confirm::Confirm;
 use intro::Intro;
 use menu::Menu;
-
-use self::theme::{RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE};
 
 pub type BootloaderString = String<128>;
 
@@ -163,12 +161,10 @@ extern "C" fn screen_install_confirm(
     } else {
         "DOWNGRADE FW"
     };
-    let title = Label::left_aligned(title_str, theme::TEXT_BOLD).vertically_centered();
-    let msg = Label::left_aligned(version_str.as_ref(), theme::TEXT_NORMAL);
-    let alert = (!should_keep_seed).then_some(Label::left_aligned(
-        "SEED WILL BE ERASED!",
-        theme::TEXT_BOLD,
-    ));
+    let title = Label::left_aligned(title_str, TEXT_BOLD).vertically_centered();
+    let msg = Label::left_aligned(version_str.as_ref(), TEXT_NORMAL);
+    let alert =
+        (!should_keep_seed).then_some(Label::left_aligned("SEED WILL BE ERASED!", TEXT_BOLD));
 
     let (left, right) = if should_keep_seed {
         let l = Button::with_text("CANCEL").styled(button_bld());
@@ -184,6 +180,7 @@ extern "C" fn screen_install_confirm(
         BLD_BG,
         left,
         right,
+        button_bld_menu(),
         ConfirmTitle::Text(title),
         msg,
         alert,
@@ -210,6 +207,7 @@ extern "C" fn screen_wipe_confirm() -> u32 {
         BLD_WIPE_COLOR,
         left,
         right,
+        button_bld_menu(),
         ConfirmTitle::Icon(icon),
         msg,
         Some(alert),
@@ -298,15 +296,16 @@ extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
         "Resetting Trezor",
         progress,
         initialize,
-        theme::BLD_FG,
+        BLD_FG,
         BLD_WIPE_COLOR,
-        Some((Icon::new(FIRE32), theme::BLD_FG)),
+        Some((Icon::new(FIRE32), BLD_FG)),
     )
 }
 
 #[no_mangle]
-extern "C" fn screen_connect() {
-    let mut frame = Connect::new("Waiting for host...");
+extern "C" fn screen_connect(initial_setup: bool) {
+    let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
+    let mut frame = Connect::new("Waiting for host...", bg);
     show(&mut frame, true);
 }
 

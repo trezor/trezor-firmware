@@ -1,4 +1,5 @@
 mod address_details;
+pub mod bl_confirm;
 mod button;
 mod coinjoin_progress;
 mod dialog;

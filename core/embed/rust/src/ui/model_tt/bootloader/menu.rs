@@ -6,12 +6,12 @@ use crate::{
         display::Icon,
         geometry::{Insets, Point, Rect},
         model_tt::{
-            bootloader::theme::{
-                button_bld, button_bld_menu, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
-                CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TEXT_TITLE,
-                TITLE_AREA, X32,
-            },
             component::{Button, ButtonMsg::Clicked, IconText},
+            theme::bootloader::{
+                button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
+                CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TITLE_AREA,
+                X32,
+            },
         },
     },
 };
@@ -42,7 +42,9 @@ impl Menu {
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
-            title: Child::new(Label::left_aligned("BOOTLOADER", TEXT_TITLE).vertically_centered()),
+            title: Child::new(
+                Label::left_aligned("BOOTLOADER", text_title(BLD_BG)).vertically_centered(),
+            ),
             close: Child::new(
                 Button::with_icon(Icon::new(X32))
                     .styled(button_bld_menu())

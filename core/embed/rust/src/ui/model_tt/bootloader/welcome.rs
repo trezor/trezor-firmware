@@ -3,9 +3,9 @@ use crate::ui::{
     constant::screen,
     display::{self, Font, Icon},
     geometry::{Alignment2D, Offset, Rect},
-    model_tt::{
-        bootloader::theme::{START_URL, WELCOME_COLOR},
-        theme::{BLACK, GREY_MEDIUM, WHITE},
+    model_tt::theme::{
+        bootloader::{START_URL, WELCOME_COLOR},
+        BLACK, GREY_MEDIUM, WHITE,
     },
 };
 

@@ -31,7 +31,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, Empty, FormattedText, Never, Qr, Timeout,
+            Border, Component, Empty, FormattedText, Label, Never, Qr, Timeout,
         },
         display::{self, tjpgd::jpeg_info},
         geometry,
@@ -360,6 +360,18 @@ where
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!();
+    }
+}
+
+impl<T> ComponentMsgObj for super::component::bl_confirm::Confirm<T>
+where
+    T: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            super::component::bl_confirm::ConfirmMsg::Cancel => Ok(CANCELLED.as_obj()),
+            super::component::bl_confirm::ConfirmMsg::Confirm => Ok(CONFIRMED.as_obj()),
+        }
     }
 }
 
@@ -1577,6 +1589,39 @@ extern "C" fn draw_welcome_screen() -> Obj {
 }
 
 #[no_mangle]
+extern "C" fn new_confirm_firmware_update(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    use super::component::bl_confirm::{Confirm, ConfirmTitle};
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let fingerprint: StrBuffer = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
+
+        let title_str = StrBuffer::from("UPDATE FIRMWARE");
+        let title = Label::left_aligned(title_str, theme::TEXT_BOLD).vertically_centered();
+        let msg = Label::left_aligned(description, theme::TEXT_NORMAL);
+
+        let left = Button::with_text("CANCEL").styled(theme::button_default());
+        let right = Button::with_text("INSTALL").styled(theme::button_confirm());
+
+        let obj = LayoutObj::new(Confirm::new(
+            theme::BG,
+            left,
+            right,
+            theme::button_moreinfo(),
+            ConfirmTitle::Text(title),
+            msg,
+            None,
+            Some(("FW FINGERPRINT".into(), fingerprint)),
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
 
@@ -1992,6 +2037,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def draw_welcome_screen() -> None:
     ///     """Show logo icon with the model name at the bottom and return."""
     Qstr::MP_QSTR_draw_welcome_screen => obj_fn_0!(draw_welcome_screen).as_obj(),
+
+    /// def confirm_firmware_update(
+    ///     *,
+    ///     description: str,
+    ///     fingerprint: str,
+    /// ) -> None:
+    ///     """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
+    Qstr::MP_QSTR_confirm_firmware_update => obj_fn_kw!(0, new_confirm_firmware_update).as_obj(),
 };
 
 #[cfg(test)]

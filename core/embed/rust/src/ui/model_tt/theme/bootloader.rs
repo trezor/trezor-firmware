@@ -231,13 +231,15 @@ pub fn button_bld() -> ButtonStyleSheet {
     }
 }
 
-pub const TEXT_TITLE: TextStyle = TextStyle::new(
-    Font::BOLD,
-    BLD_TITLE_COLOR,
-    BLD_BG,
-    BLD_TITLE_COLOR,
-    BLD_TITLE_COLOR,
-);
+pub const fn text_title(bg: Color) -> TextStyle {
+    TextStyle::new(
+        Font::BOLD,
+        BLD_TITLE_COLOR,
+        bg,
+        BLD_TITLE_COLOR,
+        BLD_TITLE_COLOR,
+    )
+}
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
 pub const TEXT_WARNING: TextStyle = TextStyle::new(
@@ -247,9 +249,9 @@ pub const TEXT_WARNING: TextStyle = TextStyle::new(
     BLD_WARN_COLOR,
     BLD_WARN_COLOR,
 );
-pub const TEXT_FINGERPRINT: TextStyle =
-    TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG)
-        .with_line_breaking(BreakWordsNoHyphen);
+pub const fn text_fingerprint(bg: Color) -> TextStyle {
+    TextStyle::new(Font::NORMAL, BLD_FG, bg, BLD_FG, BLD_FG).with_line_breaking(BreakWordsNoHyphen)
+}
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
 pub const TEXT_WIPE_BOLD: TextStyle = TextStyle::new(
     Font::BOLD,

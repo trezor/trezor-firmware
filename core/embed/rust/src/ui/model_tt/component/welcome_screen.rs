@@ -4,7 +4,7 @@ use crate::ui::{
     model_tt::theme,
 };
 #[cfg(feature = "bootloader")]
-use crate::ui::{display::Icon, model_tt::bootloader::theme::DEVICE_NAME};
+use crate::ui::{display::Icon, model_tt::theme::bootloader::DEVICE_NAME};
 
 const TEXT_BOTTOM_MARGIN: i16 = 24; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 48;

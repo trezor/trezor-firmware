@@ -610,7 +610,7 @@ int bootloader_main(void) {
           }
           break;
         case SCREEN_WAIT_FOR_HOST:
-          screen_connect();
+          screen_connect(auto_upgrade == sectrue);
           switch (bootloader_usb_loop(&vhdr, hdr)) {
             case CONTINUE_TO_FIRMWARE:
               continue_to_firmware = sectrue;

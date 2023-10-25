@@ -5,7 +5,7 @@ use crate::ui::{
 
 pub struct Pad {
     pub area: Rect,
-    color: Color,
+    pub color: Color,
     clear: bool,
 }
 

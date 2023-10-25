@@ -438,6 +438,15 @@ def show_lockscreen(
 # rust/src/ui/model_tr/layout.rs
 def draw_welcome_screen() -> None:
     """Show logo icon with the model name at the bottom and return."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_firmware_update(
+    *,
+    description: str,
+    fingerprint: str,
+) -> None:
+    """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object
@@ -887,3 +896,12 @@ def show_lockscreen(
 # rust/src/ui/model_tt/layout.rs
 def draw_welcome_screen() -> None:
     """Show logo icon with the model name at the bottom and return."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def confirm_firmware_update(
+    *,
+    description: str,
+    fingerprint: str,
+) -> None:
+    """Ask whether to update firmware, optionally show fingerprint. Shared with bootloader."""

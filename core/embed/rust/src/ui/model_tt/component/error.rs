@@ -15,7 +15,7 @@ const TITLE_AREA_START: i16 = 70;
 const MESSAGE_AREA_START: i16 = 116;
 
 #[cfg(feature = "bootloader")]
-const STYLE: &ResultStyle = &crate::ui::model_tt::bootloader::theme::RESULT_WIPE;
+const STYLE: &ResultStyle = &crate::ui::model_tt::theme::bootloader::RESULT_WIPE;
 #[cfg(not(feature = "bootloader"))]
 const STYLE: &ResultStyle = &super::theme::RESULT_ERROR;
 
