@@ -46,10 +46,48 @@ void usage(void) {
   printf("  -e MESSAGE [TITLE [FOOTER]]  display error screen and stop\n");
   printf("  -c COLOR_VARIANT  set color variant\n");
   printf("  -b BITCOIN_ONLY  set bitcoin only flag\n");
+  printf(
+      "  -f FIRMWARE  run interaction-less update for the specified image\n");
 #ifdef USE_OPTIGA
   printf("  -l  lock bootloader\n");
 #endif
   printf("  -h  show this help\n");
+}
+
+bool load_firmware(const char *filename) {
+  // read the first 6 kB of firmware file into a buffer
+  FILE *file = fopen(filename, "rb");
+  if (!file) {
+    printf("Failed to open file '%s'\n", filename);
+    return false;
+  }
+  uint8_t buffer[6 * 1024];
+  size_t read = fread(buffer, 1, sizeof(buffer), file);
+  fclose(file);
+  if (read != sizeof(buffer)) {
+    printf("File '%s' does not contain a valid firmware image.\n");
+    return false;
+  }
+
+  // read vendor and image header
+  vendor_header vhdr;
+  if (sectrue != read_vendor_header(buffer, &vhdr)) {
+    printf("File '%s' does not contain a valid vendor header.\n");
+    return false;
+  }
+  const image_header *hdr = read_image_header(
+      buffer + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
+  if (hdr != (const image_header *)(buffer + vhdr.hdrlen)) {
+    printf("File '%s' does not contain a valid firmware image.\n");
+    return false;
+  }
+
+  // hash it into boot_args
+  BLAKE2S_CTX ctx;
+  blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
+  blake2s_Update(&ctx, buffer, vhdr.hdrlen + hdr->hdrlen);
+  blake2s_Final(&ctx, g_boot_args, BLAKE2S_DIGEST_LENGTH);
+  return true;
 }
 
 __attribute__((noreturn)) void display_error_and_die(const char *message,
@@ -89,7 +127,7 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "hslec:b:")) != -1) {
+  while ((opt = getopt(argc, argv, "hslec:b:f:")) != -1) {
     switch (opt) {
       case 's':
         g_boot_command = BOOT_COMMAND_STOP_AND_WAIT;
@@ -104,6 +142,12 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
       case 'b':
         set_variant = 1;
         bitcoin_only = atoi(optarg);
+        break;
+      case 'f':
+        g_boot_command = BOOT_COMMAND_INSTALL_UPGRADE;
+        if (!load_firmware(optarg)) {
+          exit(1);
+        }
         break;
 #ifdef USE_OPTIGA
       case 'l':
