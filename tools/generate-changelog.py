@@ -13,6 +13,10 @@ ISSUE_URL = "https://github.com/trezor/trezor-firmware/pull/{issue}"
 VERSION_HEADER_RE = re.compile(r"## \[([.0-9]+)\]")
 DIFF_LINK = "[{new}]: https://github.com/trezor/trezor-firmware/compare/{tag_prefix}{old}...{tag_prefix}{new}\n"
 
+MODELS_RE = re.compile(r"\[([A-Z0-9]{4})(,[A-Z0-9]{4})*\][ ]?")
+INTERNAL_MODELS = ("T2T1", "T2B1", "D001")
+INTERNAL_MODELS_SKIP = ("D001",)
+
 
 def linkify_changelog(changelog_file, only_check=False):
     links = {}
@@ -94,6 +98,24 @@ def current_date(project):
         return today.strftime(f"%-d{daysuffix} %B %Y")
 
 
+def filter_changelog(changelog_file, internal_name):
+    def filter_line(line):
+        m = MODELS_RE.search(line)
+        if not m:
+            return line
+        if internal_name in m[0]:
+            return MODELS_RE.sub("", line, count=1)
+        else:
+            return None
+
+    destination_file = changelog_file.with_suffix(f".{internal_name}.md")
+    with open(changelog_file, "r") as changelog, open(destination_file, "w") as destination:
+        for line in changelog:
+            res = filter_line(line)
+            if res is not None:
+                destination.write(res)
+
+
 @click.command()
 @click.argument(
     "project",
@@ -144,6 +166,13 @@ def cli(project, version, date, check):
         # python changelog has links to github diffs
         if project.parts[-1] == "python":
             linkify_gh_diff(changelog, tag_prefix="python/v")
+
+        # core changelog for each model
+        if project.parts[-1] == "core":
+            for internal_name in INTERNAL_MODELS:
+                if internal_name in INTERNAL_MODELS_SKIP:
+                    continue
+                filter_changelog(changelog, internal_name)
 
         # towncrier calls git add before we do linkification, stage the changes too
         subprocess.run(["git", "add", changelog], check=True)

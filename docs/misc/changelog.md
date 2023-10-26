@@ -48,6 +48,13 @@ type you can add numeral suffix, e.g. `1234.fixed.1`, `1234.fixed.2`, etc.
 You can also add this entry using your `$VISUAL` editor by running `towncrier
 create --edit 1234.fixed` in the `core` directory.
 
+### Changes that only affect a subset of hardware models
+
+If an entry is only relevant for certain model, put the internal name in square
+brackets at the beginning of the entry. If there are multiple relevant models,
+separate them by comas. Examples: `[T2T1] Fix some bug.`, `[T2T1,T2W1] Fix all
+bugs.`.
+
 ## Not adding changelog entry
 
 If you don't add an entry for changes in your branch, the `changelog prebuild`
