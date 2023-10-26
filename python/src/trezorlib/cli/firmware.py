@@ -151,9 +151,13 @@ def validate_signatures(
         click.echo("Unsigned firmware looking OK.")
 
     except firmware.FirmwareIntegrityError as e:
-        click.echo(e)
-        click.echo("Firmware validation failed, aborting.")
-        sys.exit(4)
+        try:
+            fw.verify(dev_keys=True)
+            click.echo("WARNING: Firmware for development kit only.")
+        except firmware.FirmwareIntegrityError:
+            click.echo(e)
+            click.echo("Firmware validation failed, aborting.")
+            sys.exit(4)
 
 
 def validate_fingerprint(
