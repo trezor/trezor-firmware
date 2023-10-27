@@ -432,18 +432,23 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
 }
 
 static int version_compare(uint32_t vera, uint32_t verb) {
+  /* Explicit casts so that we control how compiler does the unsigned shift
+   * and correctly then promote uint8_t to int without possibility of
+   * having implementation-defined right shift on negative int
+   * in case compiler promoted the wrong unsinged int
+   */
   int a, b;
-  a = vera & 0xFF;
-  b = verb & 0xFF;
+  a = (uint8_t)vera & 0xFF;
+  b = (uint8_t)verb & 0xFF;
   if (a != b) return a - b;
-  a = (vera >> 8) & 0xFF;
-  b = (verb >> 8) & 0xFF;
+  a = (uint8_t)(vera >> 8) & 0xFF;
+  b = (uint8_t)(verb >> 8) & 0xFF;
   if (a != b) return a - b;
-  a = (vera >> 16) & 0xFF;
-  b = (verb >> 16) & 0xFF;
+  a = (uint8_t)(vera >> 16) & 0xFF;
+  b = (uint8_t)(verb >> 16) & 0xFF;
   if (a != b) return a - b;
-  a = (vera >> 24) & 0xFF;
-  b = (verb >> 24) & 0xFF;
+  a = (uint8_t)(vera >> 24) & 0xFF;
+  b = (uint8_t)(verb >> 24) & 0xFF;
   return a - b;
 }
 
