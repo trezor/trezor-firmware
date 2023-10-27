@@ -389,7 +389,7 @@ static uint32_t chunk_size = 0;
 
 __attribute__((section(".buf"))) uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 
-#define CHUNK_BUFFER_PTR ((const uint8_t *const)&chunk_buffer)
+#define CHUNK_BUFFER_PTR ((const uint8_t *const) & chunk_buffer)
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
@@ -724,13 +724,13 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   const uint32_t *quadword_ptr = (const uint32_t *)CHUNK_BUFFER_PTR;
   // number of received bytes
   uint32_t bytes_remaining = chunk_size;
-  // offset into the FIRMWARE_AREA part of the flash 
+  // offset into the FIRMWARE_AREA part of the flash
   uint32_t write_offset = firmware_block * IMAGE_CHUNK_SIZE;
 
   while (bytes_remaining > 0) {
     // erase flash before writing
-    uint32_t bytes_erased = 0; 
-    
+    uint32_t bytes_erased = 0;
+
     if (write_offset >= erase_offset) {
       // erase the next flash section
       ensure(
@@ -741,7 +741,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       // some erased space left from the previous round => use it
       bytes_erased = erase_offset - write_offset;
     }
-  
+
     // write the received data
     uint32_t bytes_to_write = MIN(bytes_erased, bytes_remaining);
     uint32_t write_end = write_offset + bytes_to_write;
