@@ -15,9 +15,17 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     from trezor.ui.layouts import confirm_action, confirm_firmware_update
     from trezor.wire.context import get_context
 
+    # Bootloader will only allow the INSTALL_UPGRADE flow for official images.
+    # This is to prevent a problematic custom signed firmware from self-updating
+    # through this code path.
+    # For convenience, we block unofficial firmwares from jumping to bootloader
+    # this way, so that the user doesn't get mysterious "install failed" errors.
+    # (It would be somewhat nicer if this was a compile-time flag, but oh well.)
+    is_official = utils.firmware_vendor() != "UNSAFE, DO NOT USE!"
     if (
         msg.boot_command == BootCommand.INSTALL_UPGRADE
         and msg.firmware_header is not None
+        and is_official
     ):
         # check and parse received firmware header
         hdr = utils.check_firmware_header(msg.firmware_header)
