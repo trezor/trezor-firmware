@@ -32,7 +32,6 @@ workflow.start_default()
 
 
 mutex.add(usb.iface_wire.iface_num())
-mutex.add(usb.iface_debug.iface_num())
 
 # initialize the wire codec
 wire.setup(usb.iface_wire, WIRE_BUFFER, wire.common_find_handler, mutex=mutex)
@@ -41,6 +40,7 @@ if __debug__:
     PROTOBUF_BUFFER_SIZE_DEBUG = 1024
     WIRE_BUFFER_DEBUG = bytearray(PROTOBUF_BUFFER_SIZE_DEBUG)
 
+    mutex.add(usb.iface_debug.iface_num())
     wire.setup(
         usb.iface_debug,
         WIRE_BUFFER_DEBUG,
