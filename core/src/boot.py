@@ -56,8 +56,8 @@ ignore_nonpin_loader_messages()
 
 config.init(show_pin_timeout)
 
-if __debug__ and not utils.EMULATOR:
-    config.wipe()
+# if __debug__ and not utils.EMULATOR:
+#     config.wipe()
 
 loop.schedule(bootscreen())
 loop.run()
