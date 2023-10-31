@@ -24,7 +24,7 @@
 #include <pb_encode.h>
 #include "messages.pb.h"
 
-#include "boot_internal.h"
+#include "boot_args.h"
 #include "common.h"
 #include "flash.h"
 #include "image.h"
@@ -598,7 +598,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       secbool is_ilu = secfalse;  // interaction-less update
 
-      if (g_boot_command == BOOT_COMMAND_INSTALL_UPGRADE) {
+      if (bootargs_get_command() == BOOT_COMMAND_INSTALL_UPGRADE) {
         BLAKE2S_CTX ctx;
         uint8_t hash[BLAKE2S_DIGEST_LENGTH];
         blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
@@ -607,7 +607,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
         // the firmware must be the same as confirmed by the user
-        if (memcmp(&g_boot_args[0], hash, sizeof(hash)) != 0) {
+        if (memcmp(bootargs_get_args()->hash, hash, sizeof(hash)) != 0) {
           MSG_SEND_INIT(Failure);
           MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
           MSG_SEND_ASSIGN_STRING(message, "Firmware mismatch");

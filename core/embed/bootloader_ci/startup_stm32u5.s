@@ -49,15 +49,6 @@ reset_handler:
   ldr r1, = __stack_chk_guard
   str r0, [r1]
 
-  //
-  ldr r0, =g_boot_flag
-  ldr r1, [r0]
-  ldr r0, =g_boot_command
-  str r1, [r0]
-  ldr r0, =g_boot_flag
-  mov r1, #0
-  str r1, [r0]
-
   // re-enable exceptions
   // according to "ARM Cortex-M Programming Guide to Memory Barrier Instructions" Application Note 321, section 4.7:
   // "If it is not necessary to ensure that a pended interrupt is recognized immediately before
@@ -68,11 +59,5 @@ reset_handler:
   bl main
 
   b shutdown_privileged
-
-  .bss
-
-  .global g_boot_command
-g_boot_command:
-  .word  0
 
   .end

@@ -49,12 +49,12 @@ reset_handler:
   ldr r1, = __stack_chk_guard
   str r0, [r1]
 
-  //
-  ldr r0, =g_boot_flag
-  ldr r1, [r0]
+  // copy & clear g_boot_command
   ldr r0, =g_boot_command
+  ldr r1, [r0]
+  ldr r0, =g_boot_command_shadow
   str r1, [r0]
-  ldr r0, =g_boot_flag
+  ldr r0, =g_boot_command
   mov r1, #0
   str r1, [r0]
 
@@ -68,11 +68,5 @@ reset_handler:
   bl main
 
   b shutdown_privileged
-
-  .bss
-
-  .global g_boot_command
-g_boot_command:
-  .word  0
 
   .end

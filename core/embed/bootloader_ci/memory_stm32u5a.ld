@@ -4,8 +4,8 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)  : ORIGIN = 0x0C010000, LENGTH = 128K
-  SRAM1  (wal) : ORIGIN = 0x30000000, LENGTH =  768K - (0x100 + 4)
-  BOOT_ARGS  (wal) : ORIGIN = 0x300BFEFC, LENGTH =  (0x100 + 4)
+  SRAM1  (wal) : ORIGIN = 0x30000000, LENGTH =  768K - 0x100
+  BOOT_ARGS  (wal) : ORIGIN = 0x300BFF00, LENGTH =  0x100
   SRAM2  (wal) : ORIGIN = 0x300C0000, LENGTH =  64K
   SRAM3  (wal) : ORIGIN = 0x300D0000, LENGTH =  832K
   SRAM5  (wal) : ORIGIN = 0x301A0000, LENGTH =  832K
@@ -44,8 +44,6 @@ sram6_end = ORIGIN(SRAM6) + LENGTH(SRAM6);
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
 boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
-g_boot_args = (boot_args_start + 4);
-g_boot_flag = boot_args_start;
 
 _codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.sensitive);
 
@@ -104,4 +102,11 @@ SECTIONS {
    __fb_end = .;
     . = ALIGN(4);
   } >SRAM5
+
+  .boot_args : ALIGN(8) {
+    *(.boot_command*);
+    . = ALIGN(8);
+    *(.boot_args*);
+    . = ALIGN(8);
+  } >BOOT_ARGS
 }

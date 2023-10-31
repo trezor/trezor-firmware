@@ -29,7 +29,6 @@ sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 /* reserve 256 bytes for bootloader arguments */
 boot_args_start = ORIGIN(BOOT_ARGS);
 boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
-g_boot_args = boot_args_start;
 
 _codelen = SIZEOF(.flash) + SIZEOF(.data);
 
@@ -69,5 +68,10 @@ SECTIONS {
     *(.buf*);
     . = ALIGN(4);
   } >SRAM
+
+  .boot_args : ALIGN(8) {
+    *(.boot_args*);
+    . = ALIGN(8);
+  } >BOOT_ARGS
 
 }
