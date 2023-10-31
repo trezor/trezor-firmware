@@ -1616,16 +1616,13 @@ extern "C" fn new_confirm_firmware_update(
         let left = Button::with_text("CANCEL").styled(theme::button_default());
         let right = Button::with_text("INSTALL").styled(theme::button_confirm());
 
-        let obj = LayoutObj::new(Confirm::new(
-            theme::BG,
-            left,
-            right,
-            theme::button_moreinfo(),
-            ConfirmTitle::Text(title),
-            msg,
-            None,
-            Some(("FW FINGERPRINT".into(), fingerprint)),
-        ))?;
+        let obj = LayoutObj::new(
+            Confirm::new(theme::BG, left, right, ConfirmTitle::Text(title), msg).with_info(
+                "FW FINGERPRINT".into(),
+                fingerprint,
+                theme::button_moreinfo(),
+            ),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

@@ -64,11 +64,8 @@ where
         bg_color: Color,
         left_button: Button<&'static str>,
         right_button: Button<&'static str>,
-        menu_button: ButtonStyleSheet,
         title: ConfirmTitle<T>,
         message: Label<T>,
-        alert: Option<Label<T>>,
-        info: Option<(T, T)>,
     ) -> Self {
         Self {
             bg: Pad::with_background(bg_color).with_clear(),
@@ -76,29 +73,39 @@ where
             bg_color,
             title,
             message: Child::new(message.vertically_centered()),
-            alert: alert.map(|alert| Child::new(alert.vertically_centered())),
             left_button: Child::new(left_button),
             right_button: Child::new(right_button),
-            info: info.map(|(title, text)| ConfirmInfo {
-                title: Child::new(
-                    Label::left_aligned(title, text_title(bg_color)).vertically_centered(),
-                ),
-                text: Child::new(
-                    Label::left_aligned(text, text_fingerprint(bg_color)).vertically_centered(),
-                ),
-                info_button: Child::new(
-                    Button::with_icon(Icon::new(INFO32))
-                        .styled(menu_button)
-                        .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-                ),
-                close_button: Child::new(
-                    Button::with_icon(Icon::new(X32))
-                        .styled(menu_button)
-                        .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-                ),
-            }),
+            alert: None,
+            info: None,
             show_info: false,
         }
+    }
+
+    pub fn with_alert(mut self, alert: Label<T>) -> Self {
+        self.alert = Some(Child::new(alert.vertically_centered()));
+        self
+    }
+
+    pub fn with_info(mut self, title: T, text: T, menu_button: ButtonStyleSheet) -> Self {
+        self.info = Some(ConfirmInfo {
+            title: Child::new(
+                Label::left_aligned(title, text_title(self.bg_color)).vertically_centered(),
+            ),
+            text: Child::new(
+                Label::left_aligned(text, text_fingerprint(self.bg_color)).vertically_centered(),
+            ),
+            info_button: Child::new(
+                Button::with_icon(Icon::new(INFO32))
+                    .styled(menu_button)
+                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
+            ),
+            close_button: Child::new(
+                Button::with_icon(Icon::new(X32))
+                    .styled(menu_button)
+                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
+            ),
+        });
+        self
     }
 }
 

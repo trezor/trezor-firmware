@@ -1,7 +1,6 @@
 #ifndef TREZORHAL_BOOT_ARGS_H
 #define TREZORHAL_BOOT_ARGS_H
 
-
 // Defines boot command for 'svc_reboot_to_bootloader()' function
 typedef enum {
   // Normal boot sequence
@@ -12,9 +11,8 @@ typedef enum {
   BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
 } boot_command_t;
 
-// Maximum size of extra arguments passed to 
+// Maximum size of extra arguments passed to
 // 'svc_reboot_to_bootloader()' function
 #define BOOT_ARGS_SIZE 256
 
-
-#endif // TREZORHAL_BOOT_ARGS_H
+#endif  // TREZORHAL_BOOT_ARGS_H

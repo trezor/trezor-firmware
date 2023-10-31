@@ -92,7 +92,6 @@ def check_firmware_header(
     Checks firmware image and vendor header and returns
        { "version": (major, minor, patch),
          "vendor": string,
-         "full_trust": bool,
          "fingerprint": bytes,
          "hash": bytes
        }

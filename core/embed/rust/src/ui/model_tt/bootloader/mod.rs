@@ -176,16 +176,15 @@ extern "C" fn screen_install_confirm(
         (l, r)
     };
 
-    let mut frame = Confirm::new(
-        BLD_BG,
-        left,
-        right,
+    let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg).with_info(
+        "FW FINGERPRINT",
+        fingerprint_str,
         button_bld_menu(),
-        ConfirmTitle::Text(title),
-        msg,
-        alert,
-        Some(("FW FINGERPRINT", fingerprint_str)),
     );
+
+    if let Some(alert) = alert {
+        frame = frame.with_alert(alert);
+    }
 
     run(&mut frame)
 }
@@ -203,16 +202,8 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     let right = Button::with_text("RESET").styled(button_wipe_confirm());
     let left = Button::with_text("CANCEL").styled(button_wipe_cancel());
 
-    let mut frame = Confirm::new(
-        BLD_WIPE_COLOR,
-        left,
-        right,
-        button_bld_menu(),
-        ConfirmTitle::Icon(icon),
-        msg,
-        Some(alert),
-        None,
-    );
+    let mut frame =
+        Confirm::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg).with_alert(alert);
 
     run(&mut frame)
 }
