@@ -20,7 +20,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "boot_internal.h"
+#include "boot_args.h"
 #include "common.h"
 #include "display.h"
 #include "display_utils.h"
@@ -513,7 +513,7 @@ int bootloader_main(void) {
   check_bootloader_version();
 #endif
 
-  switch (g_boot_command) {
+  switch (bootargs_get_command()) {
     case BOOT_COMMAND_STOP_AND_WAIT:
       // firmare requested to stay in bootloader
       stay_in_bootloader = sectrue;
