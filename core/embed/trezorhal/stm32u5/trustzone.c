@@ -135,7 +135,12 @@ void trustzone_run(void) {
   HAL_GTZC_MPCBB_ConfigMem(SRAM2_BASE, &MPCBB_desc);
   HAL_GTZC_MPCBB_ConfigMem(SRAM3_BASE, &MPCBB_desc);
   HAL_GTZC_MPCBB_ConfigMem(SRAM4_BASE, &MPCBB_desc);
+#if defined STM32U5A9xx | defined STM32U5G9xx
   HAL_GTZC_MPCBB_ConfigMem(SRAM5_BASE, &MPCBB_desc);
+#endif
+#if defined STM32U5G9xx
+  HAL_GTZC_MPCBB_ConfigMem(SRAM6_BASE, &MPCBB_desc);
+#endif
 
   /* -------------------------------------------------------------------------*/
   /* Internal Flash */
@@ -172,12 +177,14 @@ void trustzone_run(void) {
   /* non-secure (GPIO (secured by default))                                   */
   /* -------------------------------------------------------------------------*/
 
+#if defined STM32U5A9xx | defined STM32U5G9xx
   HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_LTDC, GTZC_TZSC_PERIPH_SEC);
   HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_DSI, GTZC_TZSC_PERIPH_SEC);
   HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_GFXMMU,
                                        GTZC_TZSC_PERIPH_SEC);
   HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_GFXMMU_REG,
                                        GTZC_TZSC_PERIPH_SEC);
+#endif
   HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_DMA2D, GTZC_TZSC_PERIPH_SEC);
 
   /* Clear all illegal access flags in GTZC TZIC */
