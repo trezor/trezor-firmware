@@ -125,6 +125,7 @@ SOURCE_BOOTLOADER = [
 ]
 
 SOURCE_TREZORHAL = [
+    'embed/trezorhal/unix/boot_args.c',
     'embed/trezorhal/unix/display-unix.c',
     'embed/trezorhal/unix/flash.c',
     'embed/trezorhal/unix/common.c',
