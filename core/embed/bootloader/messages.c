@@ -389,7 +389,7 @@ static uint32_t chunk_size = 0;
 
 __attribute__((section(".buf"))) uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 
-#define CHUNK_BUFFER_PTR ((const uint8_t *const) & chunk_buffer)
+#define CHUNK_BUFFER_PTR ((const uint8_t *const)&chunk_buffer)
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,

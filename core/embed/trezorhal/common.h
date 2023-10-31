@@ -51,8 +51,6 @@
   })
 #endif
 
-
-
 void __attribute__((noreturn)) trezor_shutdown(void);
 
 void __attribute__((noreturn))
