@@ -1,0 +1,557 @@
+name: Core
+
+on: [pull_request]
+
+jobs:
+  core_firmware:
+    name: Build firmware
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        model: [T2T1, T2B1]
+        coins: [universal, btconly]
+        type: ${{ fromJSON(github.event_name == 'schedule' && '["normal", "debuglink", "production"]' || '["normal", "debuglink"]') }}
+        include:
+          - model: D001
+            coins: universal
+            type: normal
+    env:
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
+      PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core build_boardloader"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "poetry run make -C core build_bootloader"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "poetry run make -C core build_bootloader_ci"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink' && matrix.model == 'T2T1'
+      - run: nix-shell --run "poetry run make -C core build_prodtest"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "poetry run make -C core build_firmware"
+      - run: nix-shell --run "poetry run make -C core sizecheck"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}
+          path: |
+            core/build/boardloader/*.bin
+            core/build/bootloader/*.bin
+            core/build/bootloader_ci/*.bin
+            core/build/prodtest/*.bin
+            core/build/firmware/firmware.elf
+            core/build/firmware/firmware-*.bin
+          retention-days: 7
+
+  core_emu:
+    name: Build emu
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        model: [T2T1, T2B1]
+        coins: [universal, btconly]
+        # type: [normal, debuglink]
+        type: [debuglink]
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        exclude:
+          - type: normal
+            asan: asan
+    env:
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+      RUSTC_BOOTSTRAP: ${{ matrix.asan == 'asan' && '1' || '0' }}
+      RUSTFLAGS: ${{ matrix.asan == 'asan' && '-Z sanitizer=address' || '' }}
+      LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
+        if: matrix.coins == 'universal'
+      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
+          path: |
+            core/build/unix/trezor-emu-core
+            core/build/bootloader_emu/bootloader.elf
+          retention-days: 7
+
+  core_unit_python_test:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        model: [T2T1]  # FIXME T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+      LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core build_unix"
+      - run: nix-shell --run "poetry run make -C core test"
+
+  core_unit_rust_test:
+    name: Rust unit tests
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1]  # FIXME: T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+      RUSTC_BOOTSTRAP: ${{ matrix.asan == 'asan' && '1' || '0' }}
+      RUSTFLAGS: ${{ matrix.asan == 'asan' && '-Z sanitizer=address' || '' }}
+      LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: nix-shell --run "poetry run make -C core clippy"
+      - run: nix-shell --run "poetry run make -C core test_rust"
+
+  core_rust_client_test:
+    name: Rust trezor-client tests
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1]  # FIXME: T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run core/emu.py --headless -q --temporary-profile --slip0014 --command cargo test --manifest-path rust/trezor-client/Cargo.toml"
+
+  # Device tests for Core. Running device tests and also comparing screens
+  # with the expected UI result.
+  # See artifacts for a comprehensive report of UI.
+  # See [docs/tests/ui-tests](../tests/ui-tests.md) for more info.
+  core_device_test:
+    name: Device tests
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [T2T1, T2B1]
+        coins: [universal, btconly]
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+        # T2B1 fails due to https://github.com/trezor/trezor-firmware/issues/3280
+        # remove after single global layout is implemented (or bug above fixed):
+        exclude:
+          - model: T2B1
+    env:
+      TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
+      # MULTICORE: 4  # more could interfere with other jobs
+      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+      PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core test_emu_ui_multicore"  # TODO: can-fail or whatisit
+        if: ${{ matrix.asan == 'noasan' && matrix.coins == 'universal' }}
+      - run: nix-shell --run "poetry run make -C core test_emu"
+        if: ${{ matrix.asan != 'noasan' || matrix.coins != 'universal' }}
+      - run: tail -n20 tests/trezor.log || true
+        if: ${{ failure() }}
+      - uses: ./.github/actions/ui-report
+        with:
+          artifact-name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.asan }}
+        if: ${{ always() }}
+      - run: mv core/src/.coverage.* core || true  # there will be more coverage files (one per core)
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-coverage-${{ matrix.model }}
+          path: core/.coverage.*
+          retention-days: 7
+
+  # Click tests - UI.
+  # See [docs/tests/click-tests](../tests/click-tests.md) for more info.
+  core_click_test:
+    name: Click tests
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1, T2B1]
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
+      # MULTICORE: 4  # more could interfere with other jobs
+      PYTEST_TIMEOUT: 400
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core test_emu_click_ui"
+        if: ${{ matrix.asan == 'noasan' }}
+      - run: nix-shell --run "poetry run make -C core test_emu_click"
+        if: ${{ matrix.asan == 'asan' }}
+      - uses: ./.github/actions/ui-report
+        with:
+          artifact-name: core-test-click-${{ matrix.model }}-${{ matrix.asan }}
+      - run: mv core/src/.coverage core/.coverage.test_click || true
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-coverage-${{ matrix.model }}
+          path: core/.coverage.*
+          retention-days: 7
+
+  # Upgrade tests.
+  # See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
+  core_upgrade_test:
+    name: Upgrade tests
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1]  # FIXME: T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_UPGRADE_TEST: core
+      PYTEST_TIMEOUT: 400
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "tests/download_emulators.sh"
+      - run: nix-shell --run "poetry run pytest tests/upgrade_tests"
+
+
+  # Persistence tests - UI.
+  core_persitence_test:
+    name: Persistence tests
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1]  # TODO T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
+      PYTEST_TIMEOUT: 400
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core test_emu_persistence_ui"
+        if: ${{ matrix.asan == 'noasan' }}
+      - run: nix-shell --run "poetry run make -C core test_emu_persistence"
+        if: ${{ matrix.asan == 'asan' }}
+      - uses: ./.github/actions/ui-report
+        with:
+          artifact-name: core-test-persistence-${{ matrix.model }}-${{ matrix.asan }}
+      - run: mv core/src/.coverage core/.coverage.test_persistence || true
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-coverage-${{ matrix.model }}
+          path: core/.coverage.*
+          retention-days: 7
+
+  core_hwi_test:
+    name: HWI tests
+    if: false  # XXX currently failing
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1]  # TODO T2B1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment  # XXX poetry maybe not needed
+      - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
+      # see python_test for explanation of _PYTHON_SYSCONFIGDATA_NAME
+      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-test-hwi-${{ matrix.model }}
+          path: HWI/trezor-t-emulator.stdout
+          retention-days: 7
+
+  core_memory_profile:
+    name: Memory allocation report
+    if: false  # NOTE manual job, comment out to run
+    runs-on: ubuntu-latest
+    env:
+      TREZOR_MODEL: T
+      TREZOR_MEMPERF: 1
+      PYOPT: 0
+      PYTEST_TIMEOUT: 900
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: nix-shell --run "poetry run make -C core test_emu"
+      - run: nix-shell --run "mkdir core/prof/memperf-html"
+      - run: nix-shell --run "poetry run core/tools/alloc.py --alloc-data=core/src/alloc_data.txt html core/prof/memperf-html"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-memperf-${{ matrix.model }}
+          path: |
+            tests/trezor.log
+            core/prof/memperf-html
+          retention-days: 7
+
+  # Flash size profiling
+
+  # Finds out how much flash space we have left in the firmware build
+  # Fails if the free space is less than certain threshold
+  core_flash_size_check:
+    name: Flash size check
+    runs-on: ubuntu-latest
+    needs: core_firmware
+    strategy:
+      matrix:
+        model: [T2T1, T2B1]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-firmware-${{ matrix.model }}-universal-normal  # FIXME: s/normal/debuglink/
+          path: core/build
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run core/tools/size/checker.py core/build/firmware/firmware.elf"
+
+  # Compares the current flash space with the situation in the current master
+  # Fails if the new binary is significantly larger than the master one
+  # (the threshold is defined in the script, currently 5kb).
+  # Also generates a report with the current situation
+  core_flash_size_compare:
+    name: Flash size comparison
+    runs-on: ubuntu-latest
+    needs: core_firmware
+    strategy:
+      matrix:
+        model: [T2T1, T2B1]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-firmware-${{ matrix.model }}-universal-normal
+          path: core/build
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run core/tools/size/compare_master.py core/build/firmware/firmware.elf -r firmware_elf_size_report.txt"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-test-flash-size-${{ matrix.model }}
+          path: firmware_elf_size_report.txt
+          retention-days: 7
+
+  # Monero tests.
+  core_monero_test:
+    name: Monero test
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1, T2B1]
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
+      PYTEST_TIMEOUT: 400
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: cachix/install-nix-action@v23
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      # see python_test job for _PYTHON_SYSCONFIGDATA_NAME explanation
+      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && poetry install"
+      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && poetry run make -C core test_emu_monero"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-test-monero-${{ matrix.model }}-${{ matrix.asan }}
+          path: |
+            tests/trezor.log
+            core/tests/trezor_monero_tests.log
+          retention-days: 7
+      - run: mv core/src/.coverage core/.coverage.test_emu_monero || true
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-coverage-${{ matrix.model }}
+          path: core/.coverage.*
+          retention-days: 7
+
+  # Tests for U2F and HID.
+  core_u2f_test:
+    name: U2F test
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1, T2B1]
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
+      PYTEST_TIMEOUT: 400
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid"
+      - run: nix-shell --run "poetry run make -C core test_emu_u2f"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}
+          path: tests/trezor.log
+          retention-days: 7
+      - run: mv core/src/.coverage core/.coverage.test_emu_u2f || true
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-coverage-${{ matrix.model }}
+          path: core/.coverage.*
+          retention-days: 7
+
+  # FIDO2 device tests.
+  core_fido2_test:
+    name: FIDO2 test
+    runs-on: ubuntu-latest
+    needs: core_emu
+    strategy:
+      matrix:
+        model: [T2T1]  # XXX T2B1 https://github.com/trezor/trezor-firmware/issues/2724
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
+      PYTEST_TIMEOUT: 400
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          path: core/build
+      - run: chmod +x core/build/unix/trezor-emu-core*
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core test_emu_fido2"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}
+          path: |
+            tests/trezor.log
+          retention-days: 7
+      - run: mv core/src/.coverage core/.coverage.test_emu_fido2 || true
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-coverage-${{ matrix.model }}
+          path: core/.coverage.*
+          retention-days: 7
+
+  core_coverage_report:
+    name: Coverage report
+    runs-on: ubuntu-latest
+    needs:
+      - core_click_test
+      - core_persitence_test
+      - core_device_test
+      - core_monero_test
+      - core_u2f_test
+      - core_fido2_test
+    strategy:
+      matrix:
+        model: [T2T1, T2B1]
+        # T2B1 fails due to https://github.com/trezor/trezor-firmware/issues/3280
+        # remove after single global layout is implemented (or bug above fixed):
+        exclude:
+          - model: T2B1
+    env:
+      COVERAGE_THRESHOLD: ${{ matrix.model == 'T2T1' && 78 || 77 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: core-coverage-${{ matrix.model }}
+          path: core
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core coverage"
+      # TODO fail if too little
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-coverage-${{ matrix.model }}
+          path: core/htmlcov
+          retention-days: 7
+
+
+  # Connect
+  # TODO: core_connect_test

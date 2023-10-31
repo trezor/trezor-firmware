@@ -1,0 +1,126 @@
+name: Legacy
+
+on: [pull_request]
+
+jobs:
+  legacy_firmware:
+    name: Firmware
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        coins: [universal, btconly]
+        # type: [normal, debuglink]
+        type: [debuglink]
+    env:
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "export PRODUCTION=1 && poetry run legacy/script/cibuild"
+      - run: nix-shell --run "poetry run legacy/script/setup"
+      - run: nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
+      - run: nix-shell --run "poetry run make -C legacy/demo"
+        if: matrix.coins == 'universal' && matrix.type == 'normal'
+      - uses: actions/upload-artifact@v3
+        with:
+          name: legacy-firmware-${{ matrix.coins }}-${{ matrix.type }}
+          path: legacy/firmware/firmware-*.bin
+          retention-days: 7
+
+  legacy_emu:
+    name: Emulator
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        coins: [universal, btconly]
+        # type: [normal, debuglink]
+        type: [debuglink]
+        arch: [x86_64]
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      EMULATOR: 1
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: legacy-emu-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
+          path: legacy/firmware/*.elf
+          retention-days: 7
+
+  legacy_device_test:
+    name: Device test
+    runs-on: ubuntu-latest
+    needs: legacy_emu
+    strategy:
+      matrix:
+        coins: [universal, btconly]
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      EMULATOR: 1
+      TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'universal' && '0' || '1' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: legacy-emu-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
+          path: legacy/firmware
+      - run: chmod +x legacy/firmware/*.elf
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C legacy test_emu"
+        # if: matrix.coins == 'universal' && matrix.type == 'normal'
+
+  legacy_upgrade_test:
+    name: Upgrade test
+    runs-on: ubuntu-latest
+    needs: legacy_emu
+    strategy:
+      matrix:
+        asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
+    env:
+      TREZOR_UPGRADE_TEST: legacy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: legacy-emu-universal-debuglink-${{ matrix.asan }}
+          path: legacy/firmware
+      - run: chmod +x legacy/firmware/*.elf
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "tests/download_emulators.sh"
+      - run: nix-shell --run "poetry run pytest tests/upgrade_tests"
+
+  legacy_hwi_test:
+    name: HWI test
+    if: false  # XXX currently failing
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    needs: legacy_emu
+    env:
+      EMULATOR: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v3
+        with:
+          name: legacy-emu-universal-debuglink-noasan
+          path: legacy/firmware
+      - run: chmod +x legacy/firmware/*.elf
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
+      # see python_test for explanation of _PYTHON_SYSCONFIGDATA_NAME
+      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
