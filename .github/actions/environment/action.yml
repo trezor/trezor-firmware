@@ -1,0 +1,20 @@
+name: 'Download dependencies'
+description: 'Nixpkgs and poetry'
+inputs:
+  full-deps:
+    description: 'Pass --arg fullDeps true to nix-shell?'
+    required: false
+    default: false
+runs:
+  using: "composite"
+  steps:
+    - name: Install nix
+      uses: cachix/install-nix-action@v23
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: Dependencies nixpkgs
+      run: nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
+      shell: sh
+    - name: Dependencies poetry
+      run: nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "poetry install"
+      shell: sh

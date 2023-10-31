@@ -1,0 +1,33 @@
+name: 'UI report'
+description: 'Prepare and upload HTML report of UI test results'
+inputs:
+  artifact-name:
+    description: 'Name of the uploaded artifact'
+    required: true
+    default: ui-report
+runs:
+  using: composite
+  steps:
+    - run: mv tests/ui_tests/reports/test/ test_ui_report || true
+      shell: sh
+    - run: nix-shell --run "poetry run python ci/prepare_ui_artifacts.py || true"
+      shell: sh
+    - run: diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json || true
+      shell: sh
+    - run: tar -cf test_ui_report.tar test_ui_report/ || true
+      shell: sh
+    - run: tar -cf tests/ui_tests/screens.tar tests/ui_tests/screens/ || true
+      shell: sh
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          ci/ui_test_records/
+          # test_ui_report/  # can't have :: on ntfs
+          # tests/ui_tests/screens/  # can't have :: on ntfs
+          test_ui_report.tar
+          tests/ui_tests/screens.tar
+          tests/ui_tests/fixtures.suggestion.json
+          tests/ui_tests/fixtures.results.json
+          tests/trezor.log
+        retention-days: 7

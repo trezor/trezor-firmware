@@ -1,0 +1,113 @@
+name: Common
+
+on: [pull_request]
+
+jobs:
+  crypto_build:
+    name: Crypto library
+    runs-on: ubuntu-latest
+    env:
+      CC: gcc
+      ADDRESS_SANITIZER: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: cachix/install-nix-action@v23
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - run: nix-shell --run "poetry install"
+      - run: cp -r crypto crypto_noasan
+      - run: nix-shell --run "poetry run make -C crypto"
+      - run: nix-shell --run "export ADDRESS_SANITIZER=0; poetry run make -C crypto_noasan"
+      - run: mv crypto_noasan/tests/test_check crypto/tests/test_check_noasan
+      - uses: actions/upload-artifact@v3
+        with:
+          name: crypto-build
+          path: |
+            crypto/tests/aestst
+            crypto/tests/libtrezor-crypto.so
+            crypto/tests/test_check
+            crypto/tests/test_check_noasan
+            crypto/tests/test_openssl
+          retention-days: 7
+
+  crypto_test:
+    name: Crypto test
+    needs: [crypto_build]
+    runs-on: ubuntu-latest
+    env:
+      ASAN_OPTIONS: "verify_asan_link_order=0"
+      CK_TIMEOUT_MULTIPLIER: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: cachix/install-nix-action@v23
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - run: nix-shell --run "poetry install"
+      - uses: actions/download-artifact@v3
+        with:
+          name: crypto-build
+          path: crypto/tests
+      - run: chmod +x crypto/tests/*
+      - run: ./crypto/tests/aestst
+      - run: ./crypto/tests/test_check
+      - run: ./crypto/tests/test_openssl 1000
+      - run: nix-shell --run "cd crypto && ITERS=10 poetry run pytest tests"
+      - run: nix-shell --run "CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./crypto/tests/test_check_noasan"
+
+  python_test:
+    name: Python test
+    runs-on: ubuntu-latest
+    env:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: cachix/install-nix-action@v23
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - run: nix-shell --run "poetry install"
+      # Workaround for nixpkgs+tox integration failure which results in:
+      #     ModuleNotFoundError: No module named '_sysconfigdata__linux_x86_64-linux-gnu'
+      # The value of _PYTHON_SYSCONFIGDATA_NAME has changed between python 3.7 and 3.8 and with
+      # multiple versions in your environment the older pythons don't seem to work under tox.
+      # When the variable is unset the interpreter seems to do the right thing. Can be removed in
+      # july 2023 when python 3.7 is EOLed.
+      # See also:
+      # https://github.com/NixOS/nixpkgs/blob/b00c7c2d1d905eb63c81a0917f1a94b763a7843b/pkgs/development/interpreters/python/cpython/default.nix#L103
+      # https://github.com/NixOS/nixpkgs/pull/98915
+      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd python && poetry run tox"
+
+  python_support_test:
+    name: Python support test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: cachix/install-nix-action@v23
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - run: nix-shell --run "poetry install"
+      - run: nix-shell --run "poetry run make python_support_check"
+
+  storage_test:
+    name: Storage test
+    # TODO: only for changes in storage/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: cachix/install-nix-action@v23
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - run: nix-shell --run "poetry install"
+      - run: unset PYTEST_TIMEOUT
+      - run: nix-shell --run "poetry run make -C storage/tests build"
+      - run: nix-shell --run "poetry run make -C storage/tests tests_all"
