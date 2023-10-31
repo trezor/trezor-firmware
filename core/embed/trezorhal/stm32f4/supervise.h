@@ -68,8 +68,7 @@ static inline void svc_shutdown(void) {
   }
 }
 
-void svc_reboot_to_bootloader(boot_command_t boot_command, const void* args,
-                              size_t args_size);
+void svc_reboot_to_bootloader(void);
 
 static inline uint32_t svc_get_systick_val(void) {
   if (is_mode_unprivileged() && !is_mode_handler()) {

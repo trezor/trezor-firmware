@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include TREZOR_BOARD
-#include "boot_internal.h"
+#include "boot_args.h"
 #include "bootui.h"
 #include "common.h"
 #include "display.h"
@@ -18,11 +18,6 @@
 #undef FIRMWARE_START
 
 uint8_t *FIRMWARE_START = 0;
-
-// Simulation of a boot command normally grabbed during reset processing
-boot_command_t g_boot_command = BOOT_COMMAND_NONE;
-// Simulation of a boot args normally sitting at the BOOT_ARGS region
-uint8_t g_boot_args[BOOT_ARGS_SIZE];
 
 void set_core_clock(int) {}
 
@@ -55,7 +50,7 @@ void usage(void) {
   printf("  -h  show this help\n");
 }
 
-bool load_firmware(const char *filename) {
+bool load_firmware(const char *filename, uint8_t *hash) {
   // read the first 6 kB of firmware file into a buffer
   FILE *file = fopen(filename, "rb");
   if (!file) {
@@ -87,7 +82,8 @@ bool load_firmware(const char *filename) {
   BLAKE2S_CTX ctx;
   blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
   blake2s_Update(&ctx, buffer, vhdr.hdrlen + hdr->hdrlen);
-  blake2s_Final(&ctx, g_boot_args, BLAKE2S_DIGEST_LENGTH);
+  blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+
   return true;
 }
 
@@ -131,7 +127,7 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
   while ((opt = getopt(argc, argv, "hslec:b:f:")) != -1) {
     switch (opt) {
       case 's':
-        g_boot_command = BOOT_COMMAND_STOP_AND_WAIT;
+        bootargs_set(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
         break;
       case 'e':
         display_error = true;
@@ -145,10 +141,11 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
         bitcoin_only = atoi(optarg);
         break;
       case 'f':
-        g_boot_command = BOOT_COMMAND_INSTALL_UPGRADE;
-        if (!load_firmware(optarg)) {
+        uint8_t hash[BLAKE2S_DIGEST_LENGTH];
+        if (!load_firmware(optarg, hash)) {
           exit(1);
         }
+        bootargs_set(BOOT_COMMAND_INSTALL_UPGRADE, hash, sizeof(hash));
         break;
 #ifdef USE_OPTIGA
       case 'l':

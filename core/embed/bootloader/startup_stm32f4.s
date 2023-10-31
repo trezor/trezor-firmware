@@ -33,22 +33,15 @@ reset_handler:
   // subsequent operations, it is not necessary to insert a memory barrier instruction."
   cpsie f
 
-  // r11 contains argument passed to reboot_to_bootloader()
+  // r11 contains the command passed to bootargs_set()
   // function called when the firmware rebooted to the bootloader
-  ldr r0, =g_boot_command
+  ldr r0, =g_boot_command_shadow
   str r11, [r0]
 
   // enter the application code
   bl main
 
   b shutdown_privileged
-
-  .bss
-
-  .global g_boot_command
-g_boot_command:
-  .word  0
-
 
   .end
 
