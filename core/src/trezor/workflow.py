@@ -107,30 +107,32 @@ def start_default() -> None:
     autolock_interrupts_workflow = True
 
 
-def set_default(constructor: Callable[[], loop.Task]) -> None:
+def set_default(constructor: Callable[[], loop.Task], restart: bool = False) -> None:
     """Configure a default workflow, which will be started next time it is needed."""
     global default_constructor
     if __debug__:
         log.debug(__name__, "setting a new default: %s", constructor)
     default_constructor = constructor
+    if restart:
+        # XXX should this be the default (or only) behavior?
+        kill_default()
 
 
-if False:  # noqa
+def kill_default() -> None:
+    """Forcefully shut down default task.
 
-    def kill_default() -> None:
-        """Forcefully shut down default task.
+    If called while a workflow is running, the default task is stopped. This can be used
+    to prevent the default task from interfering with a synchronous layout-less workflow
+    (e.g., the progress bar in `mnemonic.get_seed`).
 
-        The purpose of the call is to prevent the default task from interfering with
-        a synchronous layout-less workflow (e.g., the progress bar in `mnemonic.get_seed`).
-
-        This function should only be called from a workflow registered with `on_start`.
-        Otherwise the default will be restarted immediately.
-        """
-        if default_task:
-            if __debug__:
-                log.debug(__name__, "close default")
-            # We let the `_finalize_default` reset the global.
-            default_task.close()
+    If called when no workflow is running, the default task will automatically be
+    restarted. This can be used to replace the default with a different workflow.
+    """
+    if default_task:
+        if __debug__:
+            log.debug(__name__, "close default")
+        # We let the `_finalize_default` reset the global.
+        default_task.close()
 
 
 def close_others() -> None:

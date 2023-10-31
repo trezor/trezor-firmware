@@ -24,6 +24,9 @@ if TYPE_CHECKING:
     )
 
 
+_SCREENSAVER_IS_ON = False
+
+
 def busy_expiry_ms() -> int:
     """
     Returns the time left until the busy state expires or 0 if the device is not in the busy state.
@@ -319,6 +322,11 @@ def set_homescreen() -> None:
 
         set_default(lockscreen)
 
+    elif _SCREENSAVER_IS_ON:
+        from apps.homescreen import screensaver
+
+        set_default(screensaver, restart=True)
+
     elif storage_recovery.is_in_progress():
         from apps.management.recovery_device.homescreen import recovery_homescreen
 
@@ -340,7 +348,16 @@ def lock_device(interrupt_workflow: bool = True) -> None:
 
 
 def lock_device_if_unlocked() -> None:
-    if config.is_unlocked():
+    from apps.common.request_pin import can_lock_device
+
+    if not utils.USE_BACKLIGHT and not can_lock_device():
+        # on OLED devices without PIN, trigger screensaver
+        global _SCREENSAVER_IS_ON
+
+        _SCREENSAVER_IS_ON = True
+        set_homescreen()
+
+    elif config.is_unlocked():
         lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
 
 
@@ -352,10 +369,13 @@ async def unlock_device() -> None:
     """
     from apps.common.request_pin import verify_user_pin
 
+    global _SCREENSAVER_IS_ON
+
     if not config.is_unlocked():
         # verify_user_pin will raise if the PIN was invalid
         await verify_user_pin()
 
+    _SCREENSAVER_IS_ON = False
     set_homescreen()
     wire.find_handler = workflow_handlers.find_registered_handler
 
