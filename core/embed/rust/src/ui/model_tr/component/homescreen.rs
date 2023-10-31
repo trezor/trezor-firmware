@@ -174,6 +174,8 @@ where
     invisible_buttons: Child<ButtonController<T>>,
     /// Display coinjoin icon?
     coinjoin_icon: Option<Icon>,
+    /// Screensaver mode (keep screen black)
+    screensaver: bool,
 }
 
 impl<T> Lockscreen<T>
@@ -194,6 +196,7 @@ where
             instruction: Child::new(Label::centered(instruction_str.into(), theme::TEXT_NORMAL)),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
             coinjoin_icon: coinjoin_authorized.then_some(theme::ICON_COINJOIN),
+            screensaver: !bootscreen,
         }
     }
 }
@@ -219,6 +222,10 @@ where
     }
 
     fn paint(&mut self) {
+        if self.screensaver {
+            // keep screen blank
+            return;
+        }
         theme::ICON_LOCK.draw(
             TOP_CENTER + Offset::y(LOCK_ICON_TOP_MARGIN),
             Alignment2D::TOP_CENTER,

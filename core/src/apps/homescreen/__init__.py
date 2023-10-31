@@ -1,3 +1,5 @@
+from typing import Coroutine
+
 import storage
 import storage.cache
 import storage.device
@@ -45,12 +47,13 @@ async def homescreen() -> None:
     lock_device()
 
 
-async def lockscreen() -> None:
+async def _lockscreen(screensaver: bool = False) -> None:
     from apps.base import unlock_device
     from apps.common.request_pin import can_lock_device
 
-    # Only show the lockscreen UI if the device can in fact be locked.
-    if can_lock_device():
+    # Only show the lockscreen UI if the device can in fact be locked, or if it is
+    # and OLED device (in which case the lockscreen is a screensaver).
+    if can_lock_device() or screensaver:
         await Lockscreen(
             label=storage.device.get_label(),
             coinjoin_authorized=is_set_any_session(MessageType.AuthorizeCoinJoin),
@@ -62,3 +65,11 @@ async def lockscreen() -> None:
         await unlock_device()
     except wire.PinCancelled:
         pass
+
+
+def lockscreen() -> Coroutine[None, None, None]:
+    return _lockscreen()
+
+
+def screensaver() -> Coroutine[None, None, None]:
+    return _lockscreen(screensaver=True)
