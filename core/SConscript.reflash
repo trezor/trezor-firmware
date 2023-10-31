@@ -77,6 +77,7 @@ env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('
 FEATURES_AVAILABLE = tools.configure_board(TREZOR_MODEL, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
+LINKER_SCRIPT_SUFFIX= env.get('ENV')['SCRIPT_SUFFIX']
 
 SOURCE_REFLASH = [
     f'embed/reflash/startup_{FILE_SUFFIX}.s',
@@ -110,7 +111,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS=f'-T embed/reflash/memory_{FILE_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/reflash/reflash.map -Wl,--warn-common',
+    LINKFLAGS=f'-T embed/reflash/memory_{LINKER_SCRIPT_SUFFIX}.ld -Wl,--gc-sections -Wl,-Map=build/reflash/reflash.map -Wl,--warn-common',
     CPPPATH=[
         'embed/reflash',
         'embed/lib',

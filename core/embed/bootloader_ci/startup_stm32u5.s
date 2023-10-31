@@ -28,6 +28,10 @@ reset_handler:
   ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
   bl memset_reg
 
+  ldr r0, =sram6_start   // r0 - point to beginning of SRAM
+  ldr r1, =sram6_end     // r1 - point to byte after the end of SRAM
+  bl memset_reg
+
   // copy data in from flash
   ldr r0, =data_vma     // dst addr
   ldr r1, =data_lma     // src addr

@@ -74,3 +74,4 @@ def stm32f4_common_files(env, defines, sources, paths):
     )
 
     env.get("ENV")["SUFFIX"] = "stm32f4"
+    env.get("ENV")["LINKER_SCRIPT"] = "stm32f4"

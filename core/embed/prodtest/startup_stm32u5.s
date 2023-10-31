@@ -20,6 +20,10 @@ reset_handler:
   ldr r1, =sram4_end     // r1 - point to byte after the end of SRAM
   bl memset_reg
 
+  ldr r0, =sram6_start   // r0 - point to beginning of SRAM
+  ldr r1, =sram6_end     // r1 - point to byte after the end of SRAM
+  bl memset_reg
+
   ldr r0, =boot_args_start   // r0 - point to beginning of boot args
   ldr r1, =boot_args_end     // r1 - point to byte after the end of boot args
   bl memset_reg
