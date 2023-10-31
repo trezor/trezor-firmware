@@ -18,6 +18,7 @@ def configure(
     hw_revision = 0
 
     mcu = "STM32U5A9xx"
+    linker_script = "stm32u5a"
 
     stm32u5_common_files(env, defines, sources, paths)
 
@@ -89,5 +90,6 @@ def configure(
 
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu
+    env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
     return features_available
