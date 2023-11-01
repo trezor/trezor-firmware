@@ -18,7 +18,7 @@
  */
 
 #include <stdbool.h>
-#include "flash_common.h"
+#include "flash_area.h"
 
 #define COUNTER_TAIL_WORDS 0
 // Small items are encoded more efficiently.

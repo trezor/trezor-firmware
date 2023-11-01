@@ -40,6 +40,7 @@
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "genhdr/mpversion.h"
 #include "input.h"
 #include "py/builtin.h"
@@ -482,6 +483,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   // Map trezor.flash to memory.
   flash_init();
+  flash_otp_init();
 
 #if MICROPY_ENABLE_GC
   char *heap = malloc(heap_size);

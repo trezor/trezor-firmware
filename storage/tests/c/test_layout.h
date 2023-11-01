@@ -3,7 +3,7 @@
 
 #define STORAGE_AREAS_COUNT 2
 
-#include "flash_common.h"
+#include "flash_area.h"
 
 extern const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT];
 

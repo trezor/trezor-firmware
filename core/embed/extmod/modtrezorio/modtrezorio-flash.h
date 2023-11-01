@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "flash.h"
+#include "flash_otp.h"
 
 #include "embed/extmod/trezorobj.h"
 
