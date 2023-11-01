@@ -23,6 +23,7 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "image.h"
 #include "mini_printf.h"
 #include "mpu.h"

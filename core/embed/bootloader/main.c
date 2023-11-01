@@ -26,6 +26,7 @@
 #include "display_utils.h"
 #include "fault_handlers.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "image.h"
 #include "lowlevel.h"
 #include "messages.pb.h"
