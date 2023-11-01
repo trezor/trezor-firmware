@@ -28,8 +28,6 @@
 #define FLASH_OPTION_BYTES_1 (*(const uint64_t *)0x1FFFC000)
 #define FLASH_OPTION_BYTES_2 (*(const uint64_t *)0x1FFFC008)
 
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size);
-
 void memory_protect(void) {
 #if PRODUCTION
 #if BOOTLOADER_QA
@@ -110,7 +108,7 @@ int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
   }
 
   for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
-    uint32_t size = flash_sector_size(i);
+    uint32_t size = flash_sector_size(i, 1);
     const void *data = flash_get_address(i, 0, size);
     if (data == NULL) {
       return 1;

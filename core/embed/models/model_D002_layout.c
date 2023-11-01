@@ -4,7 +4,6 @@
 const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT] = {
     {
         .num_subareas = 1,
-        .secure_area = true,
         .subarea[0] =
             {
                 .first_sector = 0x18,
@@ -13,7 +12,6 @@ const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT] = {
     },
     {
         .num_subareas = 1,
-        .secure_area = true,
         .subarea[0] =
             {
                 .first_sector = 0x20,
@@ -24,7 +22,6 @@ const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT] = {
 
 const flash_area_t BOARDLOADER_AREA = {
     .num_subareas = 1,
-    .secure_area = true,
     .subarea[0] =
         {
             .first_sector = 1,
@@ -34,7 +31,6 @@ const flash_area_t BOARDLOADER_AREA = {
 
 const flash_area_t BOOTLOADER_AREA = {
     .num_subareas = 1,
-    .secure_area = true,
     .subarea[0] =
         {
             .first_sector = 0x08,
@@ -44,7 +40,6 @@ const flash_area_t BOOTLOADER_AREA = {
 
 const flash_area_t FIRMWARE_AREA = {
     .num_subareas = 1,
-    .secure_area = true,
     .subarea[0] =
         {
             .first_sector = 0x28,
@@ -54,7 +49,6 @@ const flash_area_t FIRMWARE_AREA = {
 
 const flash_area_t SECRET_AREA = {
     .num_subareas = 1,
-    .secure_area = true,
     .subarea[0] =
         {
             .first_sector = 0,
@@ -64,7 +58,6 @@ const flash_area_t SECRET_AREA = {
 
 const flash_area_t BHK_AREA = {
     .num_subareas = 1,
-    .secure_area = true,
     .subarea[0] =
         {
             .first_sector = 1,
@@ -74,7 +67,6 @@ const flash_area_t BHK_AREA = {
 
 const flash_area_t WIPE_AREA = {
     .num_subareas = 1,
-    .secure_area = true,
     .subarea[0] =
         {
             .first_sector = 0x18,
@@ -84,7 +76,6 @@ const flash_area_t WIPE_AREA = {
 
 const flash_area_t ALL_WIPE_AREA = {
     .num_subareas = 1,
-    .secure_area = true,
     .subarea[0] =
         {
             .first_sector = 0x08,

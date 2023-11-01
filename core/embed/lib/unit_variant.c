@@ -1,5 +1,5 @@
 #include "unit_variant.h"
-#include "flash.h"
+#include "flash_otp.h"
 #include "model.h"
 
 static uint8_t unit_variant_color = 0;
