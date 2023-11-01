@@ -42,6 +42,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/common.c",
         "embed/trezorhal/stm32f4/fault_handlers.c",
         "embed/trezorhal/stm32f4/flash.c",
+        "embed/trezorhal/stm32f4/flash_otp.c",
         "embed/trezorhal/stm32f4/lowlevel.c",
         "embed/trezorhal/stm32f4/mpu.c",
         "embed/trezorhal/stm32f4/platform.c",
@@ -50,7 +51,6 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/trezorhal/stm32f4/random_delays.c",
         "embed/trezorhal/stm32f4/rng.c",
         "embed/trezorhal/stm32f4/vectortable.s",
-        "vendor/trezor-storage/flash_common_f4.c",
     ]
 
     # boardloader needs separate assembler for some function unencumbered by various FW+bootloader hacks

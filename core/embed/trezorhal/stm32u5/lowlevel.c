@@ -22,6 +22,7 @@
 #include "lowlevel.h"
 #include "common.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "model.h"
 #include TREZOR_BOARD
 
@@ -83,6 +84,27 @@
   (SEC_AREA_2_PAGE_START << FLASH_SECWM1R1_SECWM1_PSTRT_Pos | \
    SEC_AREA_2_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos | 0xFF00FF00)
 #define FLASH_SECWM2R2_VALUE (0x7F007F00)
+
+#define FLASH_STATUS_ALL_FLAGS \
+  (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
+
+static uint32_t flash_wait_and_clear_status_flags(void) {
+  while (FLASH->NSSR & FLASH_NSSR_BSY)
+    ;  // wait for all previous flash operations to complete
+
+  uint32_t result =
+      FLASH->NSSR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
+  FLASH->NSSR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
+
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+  while (FLASH->SECSR & FLASH_SECSR_BSY)
+    ;  // wait for all previous flash operations to complete
+  result |=
+      FLASH->SECSR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
+  FLASH->SECSR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
+#endif
+  return result;
+}
 
 secbool flash_check_option_bytes(void) {
   flash_wait_and_clear_status_flags();

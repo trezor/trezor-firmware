@@ -20,7 +20,7 @@
 #ifndef __NORCOW_CONFIG_H__
 #define __NORCOW_CONFIG_H__
 
-#include "flash.h"
+#include "flash_area.h"
 
 #define NORCOW_SECTOR_COUNT 2
 #define NORCOW_SECTOR_SIZE (16 * 1024)

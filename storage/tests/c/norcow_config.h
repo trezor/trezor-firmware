@@ -21,6 +21,7 @@
 #define __NORCOW_CONFIG_H__
 
 #include "flash.h"
+#include "test_layout.h"
 
 #define NORCOW_SECTOR_COUNT 2
 #define NORCOW_SECTOR_SIZE (64 * 1024)
