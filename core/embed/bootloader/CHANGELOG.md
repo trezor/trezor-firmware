@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.4 [November 2023]
+
+### Added
+- Minimize risk of losing seed when upgrading firmware.  [#2794]
+- Support interaction-less upgrade.  [#2919]
+
+
 ## 2.1.3 [September 2023]
 
 ### Changed
@@ -98,8 +105,10 @@ Internal only release for Model R prototypes.
 [#2587]: https://github.com/trezor/trezor-firmware/pull/2587
 [#2595]: https://github.com/trezor/trezor-firmware/pull/2595
 [#2623]: https://github.com/trezor/trezor-firmware/pull/2623
+[#2794]: https://github.com/trezor/trezor-firmware/pull/2794
 [#2879]: https://github.com/trezor/trezor-firmware/pull/2879
 [#2896]: https://github.com/trezor/trezor-firmware/pull/2896
+[#2919]: https://github.com/trezor/trezor-firmware/pull/2919
 [#2941]: https://github.com/trezor/trezor-firmware/pull/2941
 [#2955]: https://github.com/trezor/trezor-firmware/pull/2955
 [#2989]: https://github.com/trezor/trezor-firmware/pull/2989
