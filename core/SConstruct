@@ -1,4 +1,7 @@
 # pylint: disable=E0602
+Decider('content-timestamp')
+SetOption('max_drift', 10)
+SetOption('implicit_cache', 1)
 
 SConscript('SConscript.boardloader', variant_dir='build/boardloader', duplicate=False)
 SConscript('SConscript.bootloader', variant_dir='build/bootloader', duplicate=False)
