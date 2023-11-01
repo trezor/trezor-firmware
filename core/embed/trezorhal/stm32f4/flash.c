@@ -78,13 +78,41 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 #endif
 };
 
-uint32_t flash_wait_and_clear_status_flags(void) {
-  while (FLASH->SR & FLASH_SR_BSY)
-    ;  // wait for all previous flash operations to complete
-  const uint32_t result =
-      FLASH->SR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
-  FLASH->SR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
-  return result;
+const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
+  if (sector >= FLASH_SECTOR_COUNT) {
+    return NULL;
+  }
+  const uint32_t addr = FLASH_SECTOR_TABLE[sector] + offset;
+  const uint32_t next = FLASH_SECTOR_TABLE[sector + 1];
+  if (addr + size > next) {
+    return NULL;
+  }
+  return (const void *)addr;
+}
+
+uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count) {
+  if (first_sector + sector_count > FLASH_SECTOR_COUNT) {
+    return 0;
+  }
+  return FLASH_SECTOR_TABLE[first_sector + sector_count] -
+         FLASH_SECTOR_TABLE[first_sector];
+}
+
+uint16_t flash_sector_find(uint16_t first_sector, uint32_t offset) {
+  uint16_t sector = first_sector;
+
+  while (sector < FLASH_SECTOR_COUNT) {
+    uint32_t sector_size =
+        FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+
+    if (offset < sector_size) {
+      break;
+    }
+    offset -= sector_size;
+    sector++;
+  }
+
+  return sector;
 }
 
 secbool flash_unlock_write(void) {
@@ -98,117 +126,35 @@ secbool flash_lock_write(void) {
   return sectrue;
 }
 
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
+secbool flash_sector_erase(uint16_t sector) {
   if (sector >= FLASH_SECTOR_COUNT) {
-    return NULL;
+    return secfalse;
   }
-  const uint32_t addr = FLASH_SECTOR_TABLE[sector] + offset;
-  const uint32_t next = FLASH_SECTOR_TABLE[sector + 1];
-  if (addr + size > next) {
-    return NULL;
+
+  FLASH_EraseInitTypeDef EraseInitStruct = {
+      .TypeErase = FLASH_TYPEERASE_SECTORS,
+      .VoltageRange = FLASH_VOLTAGE_RANGE_3,
+      .Sector = sector,
+      .NbSectors = 1,
+  };
+
+  uint32_t sector_error;
+
+  if (HAL_FLASHEx_Erase(&EraseInitStruct, &sector_error) != HAL_OK) {
+    return secfalse;
   }
-  return (const void *)addr;
-}
 
-uint32_t flash_sector_size(uint16_t sector) {
-  if (sector >= FLASH_SECTOR_COUNT) {
-    return 0;
-  }
-  return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
-}
+  // check whether the sector was really deleted (contains only 0xFF)
+  uint32_t addr_start = FLASH_SECTOR_TABLE[sector];
+  uint32_t addr_end = FLASH_SECTOR_TABLE[sector + 1];
 
-secbool flash_area_erase_bulk(const flash_area_t *area, int count,
-                              void (*progress)(int pos, int len)) {
-  ensure(flash_unlock_write(), NULL);
-  FLASH_EraseInitTypeDef EraseInitStruct = {0};
-  EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-  EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-  EraseInitStruct.NbSectors = 1;
-
-  int total_sectors = 0;
-  int done_sectors = 0;
-  for (int a = 0; a < count; a++) {
-    for (int i = 0; i < area[a].num_subareas; i++) {
-      total_sectors += area[a].subarea[i].num_sectors;
+  for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
+    if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
+      return secfalse;
     }
   }
-  if (progress) {
-    progress(0, total_sectors);
-  }
 
-  for (int a = 0; a < count; a++) {
-    for (int s = 0; s < area[a].num_subareas; s++) {
-      for (int i = 0; i < area[a].subarea[s].num_sectors; i++) {
-        int sector = area[a].subarea[s].first_sector + i;
-
-        EraseInitStruct.Sector = sector;
-        uint32_t SectorError;
-        if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
-          ensure(flash_lock_write(), NULL);
-          return secfalse;
-        }
-        // check whether the sector was really deleted (contains only 0xFF)
-        const uint32_t addr_start = FLASH_SECTOR_TABLE[sector],
-                       addr_end = FLASH_SECTOR_TABLE[sector + 1];
-        for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
-          if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
-            ensure(flash_lock_write(), NULL);
-            return secfalse;
-          }
-        }
-        done_sectors++;
-        if (progress) {
-          progress(done_sectors, total_sectors);
-        }
-      }
-    }
-  }
-  ensure(flash_lock_write(), NULL);
   return sectrue;
-}
-
-secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
-                                 uint32_t *bytes_erased) {
-  uint32_t sector_offset = 0;
-  *bytes_erased = 0;
-
-  for (int s = 0; s < area->num_subareas; s++) {
-    for (int i = 0; i < area->subarea[s].num_sectors; i++) {
-      uint32_t sector_index = area->subarea[s].first_sector + i;
-      uint32_t sector_size = FLASH_SECTOR_TABLE[sector_index + 1] -
-                             FLASH_SECTOR_TABLE[sector_index];
-
-      if (offset == sector_offset) {
-        ensure(flash_unlock_write(), NULL);
-
-        FLASH_EraseInitTypeDef erase_init = {
-            .TypeErase = FLASH_TYPEERASE_SECTORS,
-            .VoltageRange = FLASH_VOLTAGE_RANGE_3,
-            .Sector = sector_index,
-            .NbSectors = 1};
-
-        uint32_t sector_error;
-
-        if (HAL_FLASHEx_Erase(&erase_init, &sector_error) != HAL_OK) {
-          ensure(flash_lock_write(), NULL);
-          return secfalse;
-        }
-
-        ensure(flash_lock_write(), NULL);
-
-        *bytes_erased = sector_size;
-        return sectrue;
-      }
-
-      sector_offset += sector_size;
-    }
-  }
-
-  if (offset == sector_offset) {
-    return sectrue;
-  }
-
-  return secfalse;
 }
 
 secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
@@ -246,52 +192,4 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
     return secfalse;
   }
   return sectrue;
-}
-
-#define FLASH_OTP_LOCK_BASE 0x1FFF7A00U
-
-secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
-                       uint8_t datalen) {
-  if (block >= FLASH_OTP_NUM_BLOCKS ||
-      offset + datalen > FLASH_OTP_BLOCK_SIZE) {
-    return secfalse;
-  }
-  for (uint8_t i = 0; i < datalen; i++) {
-    data[i] = *(__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE +
-                                offset + i);
-  }
-  return sectrue;
-}
-
-secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
-                        uint8_t datalen) {
-  if (block >= FLASH_OTP_NUM_BLOCKS ||
-      offset + datalen > FLASH_OTP_BLOCK_SIZE) {
-    return secfalse;
-  }
-  ensure(flash_unlock_write(), NULL);
-  for (uint8_t i = 0; i < datalen; i++) {
-    uint32_t address =
-        FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i;
-    ensure(sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,
-                                                  address, data[i])),
-           NULL);
-  }
-  ensure(flash_lock_write(), NULL);
-  return sectrue;
-}
-
-secbool flash_otp_lock(uint8_t block) {
-  if (block >= FLASH_OTP_NUM_BLOCKS) {
-    return secfalse;
-  }
-  ensure(flash_unlock_write(), NULL);
-  HAL_StatusTypeDef ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,
-                                            FLASH_OTP_LOCK_BASE + block, 0x00);
-  ensure(flash_lock_write(), NULL);
-  return sectrue * (ret == HAL_OK);
-}
-
-secbool flash_otp_is_locked(uint8_t block) {
-  return sectrue * (0x00 == *(__IO uint8_t *)(FLASH_OTP_LOCK_BASE + block));
 }

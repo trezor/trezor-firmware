@@ -89,12 +89,8 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
+    'vendor/trezor-storage/flash_area.c',
 ]
-
-if TREZOR_MODEL in ('1', 'T', 'R', 'DISC1'):
-    SOURCE_MOD += [
-        'vendor/trezor-storage/flash_common_f4.c',
-    ]
 
 if TREZOR_MODEL in ('1', ):
     SOURCE_MOD += [
@@ -129,6 +125,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/unix/display-unix.c',
     'embed/trezorhal/unix/fault_handlers.c',
     'embed/trezorhal/unix/flash.c',
+    'embed/trezorhal/unix/flash_otp.c',
     'embed/trezorhal/unix/common.c',
     'embed/trezorhal/unix/touch/touch.c',
     'embed/trezorhal/unix/rng.c',

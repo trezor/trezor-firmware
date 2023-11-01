@@ -27,7 +27,7 @@
 #define FLASH_BYTE_ACCESS 1
 #define FLASH_SECTOR_COUNT 24
 
-#include "flash_common.h"
+#include "flash_ll.h"
 
 // note: FLASH_SR_RDERR is STM32F42xxx and STM32F43xxx specific (STM32F427)
 // (reference RM0090 section 3.7.5)

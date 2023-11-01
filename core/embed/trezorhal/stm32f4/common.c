@@ -28,7 +28,7 @@
 #ifdef FANCY_FATAL_ERROR
 #include "rust_ui.h"
 #endif
-#include "flash.h"
+#include "flash_otp.h"
 #include "platform.h"
 #include "rand.h"
 #include "supervise.h"

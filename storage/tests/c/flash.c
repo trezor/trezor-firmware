@@ -63,11 +63,29 @@ secbool flash_unlock_write(void) { return sectrue; }
 
 secbool flash_lock_write(void) { return sectrue; }
 
-uint32_t flash_sector_size(uint16_t sector) {
-  if (sector >= FLASH_SECTOR_COUNT) {
+uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count) {
+  if (first_sector + sector_count >= FLASH_SECTOR_COUNT) {
     return 0;
   }
-  return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+  return FLASH_SECTOR_TABLE[first_sector + sector_count] -
+         FLASH_SECTOR_TABLE[first_sector];
+}
+
+uint16_t flash_sector_find(uint16_t first_sector, uint32_t offset) {
+  uint16_t sector = first_sector;
+
+  while (sector < FLASH_SECTOR_COUNT) {
+    uint32_t sector_size =
+        FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+
+    if (offset < sector_size) {
+      break;
+    }
+    offset -= sector_size;
+    sector++;
+  }
+
+  return sector;
 }
 
 const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
@@ -82,67 +100,56 @@ const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   return FLASH_BUFFER + addr - FLASH_SECTOR_TABLE[0];
 }
 
-secbool flash_area_erase_bulk(const flash_area_t *area, int count,
-                              void (*progress)(int pos, int len)) {
-  ensure(flash_unlock_write(), NULL);
+secbool flash_sector_erase(uint16_t sector) {
+  if (sector >= FLASH_SECTOR_COUNT) {
+    return secfalse;
+  }
+  const uint32_t offset = FLASH_SECTOR_TABLE[sector] - FLASH_SECTOR_TABLE[0];
+  const uint32_t size =
+      FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+  memset(FLASH_BUFFER + offset, 0xFF, size);
+  return sectrue;
+}
 
-  int total_sectors = 0;
-  int done_sectors = 0;
-  for (int a = 0; a < count; a++) {
-    for (int i = 0; i < area[a].num_subareas; i++) {
-      total_sectors += area[a].subarea[i].num_sectors;
+static secbool flash_write(uint16_t sector, uint32_t offset,
+                           const uint8_t *data, size_t data_size) {
+  // check proper alignment
+  if ((offset % data_size) != 0) {
+    return secfalse;
+  }
+
+  uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, data_size);
+
+  if (flash == NULL) {
+    return secfalse;
+  }
+
+  // check if not writing ones to zeroes
+  for (size_t i = 0; i < data_size; i++) {
+    if (data[i] != (data[i] & flash[i])) {
+      return secfalse;
     }
   }
 
-  if (progress) {
-    progress(0, total_sectors);
-  }
+  memcpy(flash, data, data_size);
 
-  for (int a = 0; a < count; a++) {
-    for (int s = 0; s < area[a].num_subareas; s++) {
-      for (int i = 0; i < area[a].subarea[s].num_sectors; i++) {
-        int sector = area[a].subarea[s].first_sector + i;
-
-        const uint32_t offset =
-            FLASH_SECTOR_TABLE[sector] - FLASH_SECTOR_TABLE[0];
-        const uint32_t size =
-            FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
-        memset(FLASH_BUFFER + offset, 0xFF, size);
-
-        done_sectors++;
-        if (progress) {
-          progress(done_sectors, total_sectors);
-        }
-      }
-    }
-  }
-  ensure(flash_lock_write(), NULL);
   return sectrue;
 }
 
 secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
-  uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, 1);
-  if (!flash) {
-    return secfalse;
-  }
-  if ((flash[0] & data) != data) {
-    return secfalse;  // we cannot change zeroes to ones
-  }
-  flash[0] = data;
-  return sectrue;
+  return flash_write(sector, offset, (uint8_t *)&data, sizeof(uint8_t));
 }
 
 secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
-  if (offset % 4) {  // we write only at 4-byte boundary
-    return secfalse;
-  }
-  uint32_t *flash = (uint32_t *)flash_get_address(sector, offset, sizeof(data));
-  if (!flash) {
-    return secfalse;
-  }
-  if ((flash[0] & data) != data) {
-    return secfalse;  // we cannot change zeroes to ones
-  }
-  flash[0] = data;
-  return sectrue;
+  return flash_write(sector, offset, (uint8_t *)&data, sizeof(uint32_t));
+}
+
+secbool flash_write_quadword(uint16_t sector, uint32_t offset,
+                             const uint32_t *data) {
+  return flash_write(sector, offset, (uint8_t *)data, 4 * sizeof(uint32_t));
+}
+
+secbool flash_write_burst(uint16_t sector, uint32_t offset,
+                          const uint32_t *data) {
+  return flash_write(sector, offset, (uint8_t *)data, 32 * sizeof(uint32_t));
 }

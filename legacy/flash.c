@@ -22,6 +22,7 @@
 
 #include "common.h"
 #include "flash.h"
+#include "flash_area.h"
 #include "memory.h"
 #include "supervise.h"
 
@@ -88,11 +89,29 @@ const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   return (const void *)FLASH_PTR(addr);
 }
 
-uint32_t flash_sector_size(uint16_t sector) {
-  if (sector >= FLASH_SECTOR_COUNT) {
+uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count) {
+  if (first_sector + sector_count >= FLASH_SECTOR_COUNT) {
     return 0;
   }
-  return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+  return FLASH_SECTOR_TABLE[first_sector + sector_count] -
+         FLASH_SECTOR_TABLE[first_sector];
+}
+
+uint16_t flash_sector_find(uint16_t first_sector, uint32_t offset) {
+  uint16_t sector = first_sector;
+
+  while (sector < FLASH_SECTOR_COUNT) {
+    uint32_t sector_size =
+        FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+
+    if (offset < sector_size) {
+      break;
+    }
+    offset -= sector_size;
+    sector++;
+  }
+
+  return sector;
 }
 
 secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
@@ -139,42 +158,7 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   return sectrue;
 }
 
-secbool flash_area_erase_bulk(const flash_area_t *area, int count,
-                              void (*progress)(int pos, int len)) {
-  ensure(flash_unlock_write(), NULL);
-
-  int total_sectors = 0;
-  int done_sectors = 0;
-  for (int a = 0; a < count; a++) {
-    for (int i = 0; i < area[a].num_subareas; i++) {
-      total_sectors += area[a].subarea[i].num_sectors;
-    }
-  }
-  if (progress) {
-    progress(0, total_sectors);
-  }
-
-  for (int a = 0; a < count; a++) {
-    for (int s = 0; s < area[a].num_subareas; s++) {
-      for (int i = 0; i < area[a].subarea[s].num_sectors; i++) {
-        int sector = area[a].subarea[s].first_sector + i;
-        svc_flash_erase_sector(sector);
-        // check whether the sector was really deleted (contains only 0xFF)
-        const uint32_t addr_start = FLASH_SECTOR_TABLE[sector],
-                       addr_end = FLASH_SECTOR_TABLE[sector + 1];
-        for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
-          if (*((const uint32_t *)FLASH_PTR(addr)) != 0xFFFFFFFF) {
-            ensure(flash_lock_write(), NULL);
-            return secfalse;
-          }
-        }
-        done_sectors++;
-        if (progress) {
-          progress(done_sectors, total_sectors);
-        }
-      }
-    }
-  }
-  ensure(flash_lock_write(), NULL);
+secbool flash_sector_erase(uint16_t sector) {
+  svc_flash_erase_sector(sector);
   return sectrue;
 }
