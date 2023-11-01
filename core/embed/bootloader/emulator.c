@@ -7,6 +7,7 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "model.h"
 #include "rust_ui.h"
 #ifdef USE_OPTIGA
@@ -111,6 +112,8 @@ __attribute__((noreturn)) void display_error_and_die(const char *message,
 
 __attribute__((noreturn)) int main(int argc, char **argv) {
   flash_init();
+  flash_otp_init();
+
   FIRMWARE_START = (uint8_t *)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
   // simulate non-empty storage so that we know whether it was erased or not

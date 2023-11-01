@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "common.h"
-#include "flash.h"
+#include "flash_area.h"
 #include "norcow.h"
 
 // NRC2 = 4e524332

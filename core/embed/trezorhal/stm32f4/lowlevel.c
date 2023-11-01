@@ -20,7 +20,7 @@
 #include STM32_HAL_H
 
 #include "lowlevel.h"
-#include "flash.h"
+#include "flash_otp.h"
 
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
@@ -56,6 +56,19 @@
 #define OPTION_BYTES_RDP_USER (*(volatile uint16_t* const)0x1FFFC000U)
 #define OPTION_BYTES_BANK1_WRP (*(volatile uint16_t* const)0x1FFFC008U)
 #define OPTION_BYTES_BANK2_WRP (*(volatile uint16_t* const)0x1FFEC008U)
+
+#define FLASH_STATUS_ALL_FLAGS                                            \
+  (FLASH_SR_RDERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR | FLASH_SR_PGAERR | \
+   FLASH_SR_WRPERR | FLASH_SR_SOP | FLASH_SR_EOP)
+
+static uint32_t flash_wait_and_clear_status_flags(void) {
+  while (FLASH->SR & FLASH_SR_BSY)
+    ;  // wait for all previous flash operations to complete
+  const uint32_t result =
+      FLASH->SR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
+  FLASH->SR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
+  return result;
+}
 
 secbool flash_check_option_bytes(void) {
   flash_wait_and_clear_status_flags();

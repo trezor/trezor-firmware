@@ -1,7 +1,7 @@
 #ifndef LAYOUT_COMMON_H
 #define LAYOUT_COMMON_H
 
-#include "flash.h"
+#include "flash_area.h"
 
 // OTP blocks allocation
 #define FLASH_OTP_BLOCK_BATCH 0

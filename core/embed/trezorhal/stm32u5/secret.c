@@ -1,4 +1,5 @@
 #include "secret.h"
+#include <stdbool.h>
 #include <string.h>
 #include "common.h"
 #include "flash.h"
