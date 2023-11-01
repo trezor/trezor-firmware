@@ -29,6 +29,7 @@
 #include "display_utils.h"
 #include "fault_handlers.h"
 #include "flash.h"
+#include "flash_otp.h"
 #include "i2c.h"
 #include "model.h"
 #include "mpu.h"

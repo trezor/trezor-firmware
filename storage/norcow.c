@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "common.h"
-#include "flash.h"
+#include "flash_area.h"
 #include "memzero.h"
 #include "norcow.h"
 #include "storage_utils.h"
