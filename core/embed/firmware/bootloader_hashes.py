@@ -83,7 +83,7 @@ def main():
                 break
 
         # write bootloader definitions
-        for file in BOOTLOADERS.glob("bootloader*.bin"):
+        for file in sorted(BOOTLOADERS.glob("bootloader*.bin")):
             bl_check_new.append(bootloader_str(file))
 
         # consume up to auto-end
