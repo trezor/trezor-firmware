@@ -1,6 +1,12 @@
 .PHONY: vendor
 
-JOBS = 4
+# get the number of CPU cores in a "portable" manner
+# (accounting for darwin and big.LITTLE archs)
+JOBS = $(shell sysctl -n hw.perflevel0.physicalcpu 2>/dev/null ||\
+               sysctl -n hw.physicalcpu            2>/dev/null ||\
+               sysctl -n hw.ncpu                   2>/dev/null ||\
+               nproc                               2>/dev/null ||\
+               echo 4)
 MAKE = make -j $(JOBS)
 SCONS = scons -Q -j $(JOBS)
 
