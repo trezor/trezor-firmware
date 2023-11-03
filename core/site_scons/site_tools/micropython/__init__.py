@@ -8,9 +8,14 @@ def generate(env):
         MODULECOL="site_scons/site_tools/micropython/moduledefs.py",
     )
 
+    env["BUILDERS"]["MicroPyDefines"] = SCons.Builder.Builder(
+        action="$CC -E $CCFLAGS_QSTR $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCE > $TARGET",
+        suffix=".upydef",
+        single_source=True,
+    )
+
     env["BUILDERS"]["CollectQstr"] = SCons.Builder.Builder(
-        action="$CC -E $CCFLAGS_QSTR $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES"
-        " | $PYTHON $QSTRCOL > $TARGET"
+        action="cat $SOURCES | perl -nle 'print \"Q($1)\" while /MP_QSTR_(\\w+)/g' > $TARGET"
     )
 
     env["BUILDERS"]["PreprocessQstr"] = SCons.Builder.Builder(
@@ -25,8 +30,9 @@ def generate(env):
     )
 
     env["BUILDERS"]["CollectModules"] = SCons.Builder.Builder(
-        action="$CC -E $CCFLAGS_QSTR $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES"
-        " | $PYTHON $MODULECOL > $TARGET"
+        action="grep ^MP_REGISTER_MODULE $SOURCES > $TARGET"
+        # action="$CC -E $CCFLAGS_QSTR $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES"
+        # " | $PYTHON $MODULECOL > $TARGET"
     )
 
     def generate_frozen_module(source, target, env, for_signature):

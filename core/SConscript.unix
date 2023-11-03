@@ -564,8 +564,10 @@ qstr_protobuf = env.Command(
 
 qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
 
+micropy_defines = env.MicroPyDefines(source=SOURCE_QSTR)
+
 qstr_collected = env.CollectQstr(
-    target='genhdr/qstrdefs.collected.h', source=SOURCE_QSTR)
+    target='genhdr/qstrdefs.collected.h', source=micropy_defines)
 
 qstr_preprocessed = env.PreprocessQstr(
     target='genhdr/qstrdefs.preprocessed.h',
@@ -581,7 +583,7 @@ env.Ignore(qstr_collected, qstr_generated)
 #
 
 moduledefs_collected = env.CollectModules(
-    target='genhdr/moduledefs.collected.h', source=SOURCE_QSTR)
+    target='genhdr/moduledefs.collected.h', source=micropy_defines)
 
 
 hdr_moduledefs = env.Command(
@@ -602,10 +604,10 @@ hdr_version = env.Command(
     source='',
     action='$MAKEVERSIONHDR $TARGET', )
 
-env.Ignore(hdr_moduledefs, hdr_moduledefs)
-env.Ignore(hdr_moduledefs, qstr_collected)
-env.Ignore(hdr_moduledefs, qstr_preprocessed)
-env.Ignore(hdr_moduledefs, qstr_generated)
+env.Ignore(micropy_defines, hdr_moduledefs)
+env.Ignore(micropy_defines, qstr_collected)
+env.Ignore(micropy_defines, qstr_preprocessed)
+env.Ignore(micropy_defines, qstr_generated)
 
 #
 # Frozen modules
