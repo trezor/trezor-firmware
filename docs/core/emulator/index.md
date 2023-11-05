@@ -21,7 +21,7 @@ Any other usage of the emulator is discouraged. Doing so runs the risk of losing
    - either enter `poetry shell` first, and then use `./emu.py`
    - or always use `poetry run ./emu.py`
 3. start the bridge:
-   - to initalise the [bridge](https://github.com/trezor/trezord-go) with emulator support, start it with `trezord-go -e 21324`
+   - to initialise the [bridge](https://github.com/trezor/trezord-go) with emulator support, start it with `trezord-go -e 21324`
    - alternatively, launch the [desktop suite](https://suite.trezor.io/) from the command line with the argument `--bridge-dev`
 
 Now you can use the emulator the same way as you use the device, for example you can use [Trezor Suite](https://suite.trezor.io), use our Python CLI tool (`trezorctl`), etc. Simply click to emulate screen touches.
@@ -96,7 +96,7 @@ file with `--output`.
 
 ### Running subcommands with the emulator
 
-In scripts, it is often necessary to start the emulator, run a commmand while it is
+In scripts, it is often necessary to start the emulator, run a command while it is
 available, and then stop it. The following command runs the device test suite using the
 emulator:
 

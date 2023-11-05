@@ -329,9 +329,9 @@ signatures.
 
 A replacement transaction in Trezor must satisfy the following requirements:
 
-* All inputs of the original transactions must be inputs of the replacement transation.
+* All inputs of the original transactions must be inputs of the replacement transaction.
 * All _external_ outputs of the original transactions must be outputs of the replacement
-  transation.
+  transaction.
 * The value of an external output may be decreased only if there are no new external
   inputs. This should only be used to bump the fee if the original transaction transfers
   the entire account balance and there is no other source available to bump the fee.
