@@ -18,241 +18,161 @@
  */
 
 #include STM32_HAL_H
+#include <stdbool.h>
 #include "common.h"
-#include "flash.h"
-#include "model.h"
 #include "stm32u5xx_ll_cortex.h"
 
-#define ATTR_IDX_FLASH (0 << 1)
-#define ATTR_IDX_FLASH_NON_CACHABLE (3 << 1)
-#define ATTR_IDX_SRAM (1 << 1)
-#define ATTR_IDX_PERIPH (2 << 1)
-#define REGION_END(x) (((x) & ~0x1F) | 0x01)
+// region type
+#define MPUX_TYPE_FLASH_CODE 0
+#define MPUX_TYPE_SRAM 1
+#define MPUX_TYPE_PERIPHERAL 2
+#define MPUX_TYPE_FLASH_DATA 3
 
-#define SHAREABILITY_FLASH (LL_MPU_ACCESS_NOT_SHAREABLE)
-#define SHAREABILITY_SRAM \
-  (LL_MPU_ACCESS_INNER_SHAREABLE | LL_MPU_ACCESS_OUTER_SHAREABLE)
+const static struct {
+  uint32_t xn;    // executable
+  uint32_t attr;  // attribute index
+  uint32_t sh;    // shareable
+} mpu_region_lookup[] = {
 
-void mpu_config_off(void) {
-  // Disable MPU
-  HAL_MPU_Disable();
+    // 0 - FLASH_CODE
+    {
+        .xn = LL_MPU_INSTRUCTION_ACCESS_ENABLE,
+        .attr = LL_MPU_ATTRIBUTES_NUMBER0,
+        .sh = LL_MPU_ACCESS_NOT_SHAREABLE,
+    },
+    // 1 - SRAM
+    {
+        .xn = LL_MPU_INSTRUCTION_ACCESS_DISABLE,
+        .attr = LL_MPU_ATTRIBUTES_NUMBER1,
+        .sh = LL_MPU_ACCESS_INNER_SHAREABLE,
+    },
+    // 2 - PERIPHERAL
+    {
+        .xn = LL_MPU_INSTRUCTION_ACCESS_DISABLE,
+        .attr = LL_MPU_ATTRIBUTES_NUMBER2,
+        .sh = LL_MPU_ACCESS_NOT_SHAREABLE,
+    },
+    // 3 - FLASH_DATA
+    {
+        .xn = LL_MPU_INSTRUCTION_ACCESS_DISABLE,
+        .attr = LL_MPU_ATTRIBUTES_NUMBER3,
+        .sh = LL_MPU_ACCESS_NOT_SHAREABLE,
+    },
+};
+
+static inline uint32_t mpu_permission_lookup(bool write, bool unpriv) {
+  if (write) {
+    return unpriv ? LL_MPU_REGION_ALL_RW : LL_MPU_REGION_PRIV_RW;
+  } else {
+    return unpriv ? LL_MPU_REGION_ALL_RO : LL_MPU_REGION_PRIV_RO;
+  }
 }
 
-static uint32_t area_start(const flash_area_t* area) {
-  return (uint32_t)flash_area_get_address(area, 0, 0);
-}
+#define MPUX_FLAG_NO 0
+#define MPUX_FLAG_YES 1
 
-static uint32_t area_end(const flash_area_t* area) {
-  uint32_t start = area_start(area);
-  uint32_t size = flash_area_get_size(area);
-  return start + size;
-}
+#define SET_REGION(region, start, size, type, write, unpriv) \
+  do {                                                       \
+    uint32_t _type = MPUX_TYPE_##type;                       \
+    uint32_t _write = MPUX_FLAG_##write;                     \
+    uint32_t _unpriv = MPUX_FLAG_##unpriv;                   \
+    MPU->RNR = LL_MPU_REGION_NUMBER##region;                 \
+    uint32_t _start = (start) & (~0x1F);                     \
+    uint32_t _sh = mpu_region_lookup[_type].sh;              \
+    uint32_t _ap = mpu_permission_lookup(_write, _unpriv);   \
+    uint32_t _xn = mpu_region_lookup[_type].xn;              \
+    MPU->RBAR = _start | _sh | _ap | _xn;                    \
+    uint32_t _limit = (_start + (size)-1) & (~0x1F);         \
+    uint32_t _attr = mpu_region_lookup[_type].attr << 1;     \
+    uint32_t _enable = LL_MPU_REGION_ENABLE;                 \
+    MPU->RLAR = _limit | _attr | _enable;                    \
+  } while (0)
 
-void mpu_config_boardloader(void) {
-  // Disable MPU
-  HAL_MPU_Disable();
+#define DIS_REGION(region)                   \
+  do {                                       \
+    MPU->RNR = LL_MPU_REGION_NUMBER##region; \
+    MPU->RBAR = 0;                           \
+    MPU->RLAR = 0;                           \
+  } while (0)
 
-  // flash memory
+static void mpu_set_attributes() {
+  // Attr[0] - FLASH - Not-Transient, Write-Through, Read Allocation
   MPU->MAIR0 = 0xAA;
-  // internal ram
-  MPU->MAIR0 |= 0xAA << 8;
-  // peripherals
+  // Attr[1] - SRAM - Non-cacheable
+  MPU->MAIR0 |= 0x44 << 8;
+  // Attr[2] - Peripherals - nGnRnE
   MPU->MAIR0 |= 0x00 << 16;
-  // non-cachable flash
+  // Attr[3] - FLASH - Non-cacheable
   MPU->MAIR0 |= 0x44 << 24;
+}
 
-  // Secret
-  MPU->RNR = MPU_REGION_NUMBER0;
-  MPU->RBAR = FLASH_BASE_S | LL_MPU_REGION_ALL_RW | SHAREABILITY_FLASH |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU->RLAR = REGION_END(BOARDLOADER_START - 1) | ATTR_IDX_FLASH_NON_CACHABLE;
+#define GFXMMU_BUFFERS_S GFXMMU_VIRTUAL_BUFFERS_BASE_S
 
-  // Flash boardloader (read-write)
-  MPU->RNR = MPU_REGION_NUMBER1;
-  MPU->RBAR = BOARDLOADER_START | LL_MPU_REGION_ALL_RW | SHAREABILITY_FLASH;
-  MPU->RLAR = REGION_END(BOOTLOADER_START - 1) | ATTR_IDX_FLASH;
+#define SIZE_16K (16 * 1024)
+#define SIZE_48K (48 * 1024)
+#define SIZE_64K (64 * 1024)
+#define SIZE_128K (128 * 1024)
+#define SIZE_192K (192 * 1024)
+#define SIZE_320K (320 * 1024)
+#define SIZE_768K (768 * 1024)
+#define SIZE_1728K ((832 * 2 + 64) * 1024)
+#define SIZE_3776K ((4096 - 320) * 1024)
+#define SIZE_3904K ((4096 - 192) * 1024)
+#define SIZE_4032K ((4096 - 64) * 1024)
+#define SIZE_4M (4 * 1024 * 1024)
+#define SIZE_16M (16 * 1024 * 1024)
+#define SIZE_256M (256 * 1024 * 1024)
+#define SIZE_512M (512 * 1024 * 1024)
 
-  // Flash rest
-  MPU->RNR = MPU_REGION_NUMBER2;
-  MPU->RBAR = BOOTLOADER_START | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_FLASH;
-  MPU->RLAR =
-      REGION_END(FLASH_BASE_S + 0x400000 - 1) | ATTR_IDX_FLASH_NON_CACHABLE;
-
-  // RAM  (read-write, execute never) (SRAM1)
-  MPU->RNR = MPU_REGION_NUMBER3;
-  MPU->RBAR = SRAM1_BASE_S | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR = REGION_END(SRAM1_BASE_S + 0xC0000 - 1) | ATTR_IDX_SRAM;
-
-  // RAM  (read-write, execute never) (SRAM2, 3, 5, 6)
-  // reserve 256 bytes for stack overflow detection
-  MPU->RNR = MPU_REGION_NUMBER4;
-  MPU->RBAR = (SRAM2_BASE_S + 0x100) | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR = REGION_END(SRAM1_BASE_S + 0x2F0000 - 1) | ATTR_IDX_SRAM;
-
-  // GFXMMU_VIRTUAL_BUFFERS (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER5;
-  MPU->RBAR = GFXMMU_VIRTUAL_BUFFERS_BASE_S | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR =
-      REGION_END(GFXMMU_VIRTUAL_BUFFERS_BASE_S + 0x1000000 - 1) | ATTR_IDX_SRAM;
-
-  // Peripherals (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER6;
-  MPU->RBAR =
-      PERIPH_BASE_NS | LL_MPU_REGION_ALL_RW | LL_MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU->RLAR = REGION_END(PERIPH_BASE_NS + 0x20000000 - 1) | ATTR_IDX_PERIPH;
-
-  // OTP (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER7;
-  MPU->RBAR = FLASH_OTP_BASE | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_FLASH;
-  MPU->RLAR = REGION_END(FLASH_OTP_BASE + FLASH_OTP_SIZE - 1) |
-              ATTR_IDX_FLASH_NON_CACHABLE;
-
-  // Non-secure Flash
-  MPU->RNR = MPU_REGION_NUMBER7;
-  MPU->RBAR = FLASH_BASE_NS | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_FLASH;
-  MPU->RLAR =
-      REGION_END(FLASH_BASE_NS + 0x400000 - 1) | ATTR_IDX_FLASH_NON_CACHABLE;
-
-  // Enable MPU
+void mpu_config_boardloader() {
+  HAL_MPU_Disable();
+  mpu_set_attributes();
+  // clang-format off
+  //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
+  SET_REGION( 0, FLASH_BASE_S,             SIZE_16K,           FLASH_DATA,  YES,   YES ); // Secret
+  SET_REGION( 1, FLASH_BASE_S + SIZE_16K,  SIZE_48K,           FLASH_CODE,   NO,   YES ); // Boardloader code
+  SET_REGION( 2, FLASH_BASE_S + SIZE_64K,  SIZE_4032K,         FLASH_DATA,  YES,   YES ); // Bootloader + Storage + Firmware
+  SET_REGION( 3, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,   YES ); // SRAM1
+  SET_REGION( 4, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,   YES ); // SRAM2/3/5 + stack guard
+  SET_REGION( 5, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,   YES ); // Frame buffer
+  SET_REGION( 6, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,   YES ); // Peripherals
+  SET_REGION( 7, FLASH_BASE_NS,            SIZE_4M,            FLASH_DATA,  YES,   YES ); //
+  // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
 
-void mpu_config_bootloader(void) {
-  // Disable MPU
+void mpu_config_bootloader() {
   HAL_MPU_Disable();
-
-  // flash memory
-  MPU->MAIR0 = 0xAA;
-  // internal ram
-  MPU->MAIR0 |= 0xAA << 8;
-  // peripherals
-  MPU->MAIR0 |= 0x00 << 16;
-  // non-cachable flash
-  MPU->MAIR0 |= 0x44 << 24;
-
-  // Secret + boardloader
-  MPU->RNR = MPU_REGION_NUMBER0;
-  MPU->RBAR = FLASH_BASE_S | LL_MPU_REGION_ALL_RW | SHAREABILITY_FLASH;
-  MPU->RLAR = REGION_END(BOOTLOADER_START - 1) | ATTR_IDX_FLASH_NON_CACHABLE;
-
-  // Bootloader (read-write)
-  MPU->RNR = MPU_REGION_NUMBER1;
-  MPU->RBAR = BOOTLOADER_START | LL_MPU_REGION_ALL_RW | SHAREABILITY_FLASH;
-  MPU->RLAR = REGION_END(area_start(&STORAGE_AREAS[0]) - 1) | ATTR_IDX_FLASH;
-
-  // Flash firmware + storage (read-write, execute never), till flash end
-  MPU->RNR = MPU_REGION_NUMBER2;
-  MPU->RBAR = area_start(&STORAGE_AREAS[0]) | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_FLASH;
-  MPU->RLAR =
-      REGION_END(FLASH_BASE_S + 0x400000 - 1) | ATTR_IDX_FLASH_NON_CACHABLE;
-
-  // RAM  (read-write, execute never) (SRAM1)
-  MPU->RNR = MPU_REGION_NUMBER3;
-  MPU->RBAR = SRAM1_BASE_S | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR = REGION_END(SRAM1_BASE_S + 0xC0000 - 1) | ATTR_IDX_SRAM;
-
-  // RAM  (read-write, execute never) (SRAM2, 3, 5, 6)
-  // reserve 256 bytes for stack overflow detection
-  MPU->RNR = MPU_REGION_NUMBER4;
-  MPU->RBAR = (SRAM2_BASE_S + 0x100) | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR = REGION_END(SRAM1_BASE_S + 0x2F0000 - 1) | ATTR_IDX_SRAM;
-
-  // GFXMMU_VIRTUAL_BUFFERS (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER5;
-  MPU->RBAR = GFXMMU_VIRTUAL_BUFFERS_BASE_S | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR =
-      REGION_END(GFXMMU_VIRTUAL_BUFFERS_BASE_S + 0x1000000 - 1) | ATTR_IDX_SRAM;
-
-  // Peripherals (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER6;
-  MPU->RBAR =
-      PERIPH_BASE_S | LL_MPU_REGION_ALL_RW | LL_MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU->RLAR = REGION_END(PERIPH_BASE_S + 0x10000000 - 1) | ATTR_IDX_PERIPH;
-
-  // OTP (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER7;
-  MPU->RBAR = FLASH_OTP_BASE | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_FLASH;
-  MPU->RLAR = REGION_END(FLASH_OTP_BASE + FLASH_OTP_SIZE - 1) |
-              ATTR_IDX_FLASH_NON_CACHABLE;
-
-  // Enable MPU
+  mpu_set_attributes();
+  // clang-format off
+  //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
+  SET_REGION( 0, FLASH_BASE_S,             SIZE_64K,           FLASH_DATA,  YES,   YES ); // Secret + Boardloader
+  SET_REGION( 1, FLASH_BASE_S + SIZE_64K,  SIZE_128K,          FLASH_CODE,  NO,    YES ); // Bootloader code
+  SET_REGION( 2, FLASH_BASE_S + SIZE_192K, SIZE_3904K,         FLASH_DATA,  YES,   YES ); // Storage + Firmware
+  SET_REGION( 3, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,   YES ); // SRAM1
+  SET_REGION( 4, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,   YES ); // SRAM2/3/5 + stack guard
+  SET_REGION( 5, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,   YES ); // Frame buffer
+  SET_REGION( 6, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,   YES ); // Peripherals
+  SET_REGION( 7, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,   YES ); // OTP
+  // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
 
-void mpu_config_firmware(void) {
-  // Disable MPU
+void mpu_config_firmware() {
   HAL_MPU_Disable();
-
-  // flash memory
-  MPU->MAIR0 = 0xAA;
-  // internal ram
-  MPU->MAIR0 |= 0xAA << 8;
-  // peripherals
-  MPU->MAIR0 |= 0x00 << 16;
-  // non-cachable flash
-  MPU->MAIR0 |= 0x44 << 24;
-
-  // bootloader + boardloader: no access, execute never: need to do everything
-  // before turning on MPU
-
-  // Storage (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER0;
-  MPU->RBAR = area_start(&STORAGE_AREAS[0]) | LL_MPU_REGION_ALL_RW |
-              SHAREABILITY_FLASH | LL_MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU->RLAR = REGION_END(FIRMWARE_START - 1) | ATTR_IDX_FLASH_NON_CACHABLE;
-
-  // Flash firmware (read-write)
-  MPU->RNR = MPU_REGION_NUMBER1;
-  MPU->RBAR = (FIRMWARE_START) | LL_MPU_REGION_ALL_RO | SHAREABILITY_FLASH;
-  MPU->RLAR = REGION_END(area_end(&FIRMWARE_AREA) - 1) | ATTR_IDX_FLASH;
-
-  // RAM  (read-write, execute never) (SRAM1)
-  MPU->RNR = MPU_REGION_NUMBER2;
-  MPU->RBAR = SRAM1_BASE_S | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR = REGION_END(SRAM1_BASE_S + 0xC0000 - 1) | ATTR_IDX_SRAM;
-
-  // RAM  (read-write, execute never) (SRAM2, 3, 5, 6)
-  // reserve 256 bytes for stack overflow detection
-  MPU->RNR = MPU_REGION_NUMBER3;
-  MPU->RBAR = (SRAM2_BASE_S + 0x100) | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR = REGION_END(SRAM1_BASE_S + 0x2F0000 - 1) | ATTR_IDX_SRAM;
-
-  // GFXMMU_VIRTUAL_BUFFERS (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER4;
-  MPU->RBAR = GFXMMU_VIRTUAL_BUFFERS_BASE_S | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_SRAM;
-  MPU->RLAR =
-      REGION_END(GFXMMU_VIRTUAL_BUFFERS_BASE_S + 0x1000000 - 1) | ATTR_IDX_SRAM;
-
-  // Peripherals (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER5;
-  MPU->RBAR =
-      PERIPH_BASE_S | LL_MPU_REGION_ALL_RW | LL_MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU->RLAR = REGION_END(PERIPH_BASE_S + 0x10000000 - 1) | ATTR_IDX_PERIPH;
-
-  // OTP (read-write, execute never)
-  MPU->RNR = MPU_REGION_NUMBER6;
-  MPU->RBAR = FLASH_OTP_BASE | LL_MPU_REGION_ALL_RW |
-              LL_MPU_INSTRUCTION_ACCESS_DISABLE | SHAREABILITY_FLASH;
-  MPU->RLAR = REGION_END(FLASH_OTP_BASE + FLASH_OTP_SIZE - 1) |
-              ATTR_IDX_FLASH_NON_CACHABLE;
-
-  // Enable MPU
+  mpu_set_attributes();
+  // clang-format off
+  //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
+  SET_REGION( 0, FLASH_BASE_S + SIZE_192K, SIZE_128K,          FLASH_DATA,  YES,   YES ); // Storage
+  SET_REGION( 1, FLASH_BASE_S + SIZE_320K, SIZE_3776K,         FLASH_CODE,   NO,   YES ); // Firmware
+  SET_REGION( 2, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,   YES ); // SRAM1
+  SET_REGION( 3, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,   YES ); // SRAM2/3/5 + stack guard
+  SET_REGION( 4, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,   YES ); // Frame buffer
+  SET_REGION( 5, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,   YES ); // Peripherals
+  SET_REGION( 6, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,   YES ); // OTP
+  DIS_REGION( 7 );
+  // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
-
-  __asm__ volatile("dsb");
-  __asm__ volatile("isb");
 }
+
+void mpu_config_off(void) { HAL_MPU_Disable(); }
