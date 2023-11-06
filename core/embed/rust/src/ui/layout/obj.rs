@@ -128,6 +128,7 @@ where
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 enum Repaint {
     None,
     Partial,
@@ -158,14 +159,22 @@ impl LayoutObjInner {
     pub fn new(root: impl ObjComponent + 'static) -> Result<Self, Error> {
         let root = GcBox::new(root)?;
 
-        Ok(Self {
+        let mut new = Self {
             root: Some(gc::coerce!(ObjComponent, root)),
             event_ctx: EventCtx::new(),
             timer_fn: Obj::const_none(),
             page_count: 1,
             repaint: Repaint::Full,
             transition_out: AttachType::Initial,
-        })
+        };
+
+        // invoke the initial placement
+        new.root_mut().obj_place(constant::screen());
+        // cause a repaint pass to update the number of pages
+        let msg = new.obj_event(Event::RequestPaint);
+        assert!(matches!(msg, Ok(s) if s == Obj::const_none()));
+
+        Ok(new)
     }
 
     fn obj_delete(&mut self) {
@@ -188,14 +197,14 @@ impl LayoutObjInner {
 
     fn obj_request_repaint(&mut self) {
         self.repaint = Repaint::Full;
-        let mut dummy_ctx = EventCtx::new();
+        let mut event_ctx = EventCtx::new();
         let paint_msg = self
             .root_mut()
-            .obj_event(&mut dummy_ctx, Event::RequestPaint);
+            .obj_event(&mut event_ctx, Event::RequestPaint);
         // paint_msg must not be an error and it must not return a result
         assert!(matches!(paint_msg, Ok(s) if s == Obj::const_none()));
         // there must be no timers set
-        assert!(dummy_ctx.pop_timer().is_none());
+        assert!(event_ctx.pop_timer().is_none());
     }
 
     /// Run an event pass over the component tree. After the traversal, any
@@ -204,21 +213,22 @@ impl LayoutObjInner {
     /// an error, `Ok` with the message otherwise.
     fn obj_event(&mut self, event: Event) -> Result<Obj, Error> {
         let root = unwrap!(self.root.as_mut());
-        // Place the root component on the screen in case it was previously requested.
-        if self.event_ctx.needs_place() {
-            root.obj_place(constant::screen());
-        }
 
-        // Clear the leftover flags from the previous event pass.
+        // Get the event context ready for a new event
         self.event_ctx.clear();
 
         // Send the event down the component tree. Bail out in case of failure.
         let msg = root.obj_event(&mut self.event_ctx, event)?;
 
+        // Place the root component on the screen in case it was requested.
+        if self.event_ctx.needs_place() {
+            root.obj_place(constant::screen());
+        }
+
         // Check if we should repaint next time
         if self.event_ctx.needs_repaint_root() {
             self.obj_request_repaint();
-        } else if self.event_ctx.needs_repaint() {
+        } else if self.event_ctx.needs_repaint() && self.repaint == Repaint::None {
             self.repaint = Repaint::Partial;
         }
 
@@ -236,10 +246,12 @@ impl LayoutObjInner {
             }
         }
 
+        // Update page count if it changed
         if let Some(count) = self.event_ctx.page_count() {
             self.page_count = count as u16;
         }
 
+        // Update outgoing transition if set
         if let Some(t) = self.event_ctx.get_transition_out() {
             self.transition_out = t;
         }
@@ -252,11 +264,6 @@ impl LayoutObjInner {
     fn obj_paint_if_requested(&mut self) -> bool {
         if self.repaint == Repaint::Full {
             display::clear();
-        }
-
-        // Place the root component on the screen in case it was previously requested.
-        if self.event_ctx.needs_place() {
-            self.root_mut().obj_place(constant::screen());
         }
 
         display::sync();
