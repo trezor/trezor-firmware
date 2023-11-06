@@ -142,7 +142,7 @@ where
             // Handle the internal invalidation event here, so components don't have to. We
             // still pass it inside, so the event propagates correctly to all components in
             // the sub-tree.
-            if let Event::RequestPaint = event {
+            if matches!(event, Event::RequestPaint | Event::Attach(_)) {
                 ctx.request_paint();
             }
             c.event(ctx, event)
@@ -370,8 +370,9 @@ pub enum Event {
     Timer(TimerToken),
     /// Advance progress bar. Progress screens only.
     Progress(u16, TString<'static>),
-    /// Component has been attached to component tree. This event is sent once
-    /// before any other events.
+    /// Component has been attached to component tree, all children should
+    /// prepare for painting and/or start their timers.
+    /// This event is sent once before any other events.
     Attach(AttachType),
     /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
     /// get scheduled for painting.
@@ -443,9 +444,8 @@ impl EventCtx {
         Self {
             timers: Vec::new(),
             next_token: Self::STARTING_TIMER_TOKEN,
-            place_requested: true, // We need to perform a place pass in the beginning.
-            paint_requested: false, /* We also need to paint, but this is supplemented by
-                                    * `Child::marked_for_paint` being true. */
+            place_requested: false,
+            paint_requested: false,
             anim_frame_scheduled: false,
             page_count: None,
             button_request: None,
@@ -548,17 +548,13 @@ impl EventCtx {
     }
 
     pub fn clear(&mut self) {
-        self.place_requested = false;
-        self.paint_requested = false;
-        self.anim_frame_scheduled = false;
-        self.page_count = None;
         #[cfg(feature = "ui_debug")]
         assert!(self.button_request.is_none());
-        self.button_request = None;
-        self.root_repaint_requested = false;
-        self.swipe_disable_req = false;
-        self.swipe_enable_req = false;
-        self.transition_out = None;
+        // replace self with a new instance, keeping only the fields we care about
+        *self = Self {
+            next_token: self.next_token,
+            ..Self::new()
+        }
     }
 
     fn register_timer(&mut self, token: TimerToken, duration: Duration) {
