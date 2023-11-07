@@ -1000,21 +1000,36 @@ async def confirm_ethereum_tx(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     chunkify: bool = False,
 ) -> None:
-    await raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_ethereum_tx(
-                    recipient=recipient,
-                    total_amount=total_amount,
-                    maximum_fee=maximum_fee,
-                    items=items,
-                    chunkify=chunkify,
-                )
-            ),
-            br_type,
-            br_code,
+    summary_layout = RustLayout(
+        trezorui2.ethereum_tx_summary(
+            total_amount=total_amount,
+            maximum_fee=maximum_fee,
+            items=items,
         )
     )
+
+    while True:
+        # Allowing going back and forth between recipient and summary/details
+        await confirm_blob(
+            br_type,
+            "RECIPIENT",
+            recipient,
+            verb="CONTINUE",
+            chunkify=chunkify,
+        )
+
+        try:
+            summary_layout.request_complete_repaint()
+            await raise_if_not_confirmed(
+                interact(
+                    summary_layout,
+                    br_type,
+                    br_code,
+                )
+            )
+            break
+        except ActionCancelled:
+            continue
 
 
 async def confirm_joint_total(spending_amount: str, total_amount: str) -> None:

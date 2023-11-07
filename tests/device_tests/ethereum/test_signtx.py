@@ -187,12 +187,14 @@ def test_data_streaming(client: Client):
     """
     with client:
         is_t1 = client.features.model == "1"
-        is_tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 (is_t1, messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)),
-                (is_tt, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
+                (
+                    not is_t1,
+                    messages.ButtonRequest(code=messages.ButtonRequestType.Other),
+                ),
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 message_filters.EthereumTxRequest(
                     data_length=1_024,
