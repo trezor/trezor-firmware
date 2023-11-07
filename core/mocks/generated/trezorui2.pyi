@@ -128,12 +128,11 @@ def confirm_joint_total(
 # rust/src/ui/model_tr/layout.rs
 def confirm_modify_output(
     *,
-    address: str,
     sign: int,
     amount_change: str,
     amount_new: str,
 ) -> object:
-    """Decrease or increase amount for given address."""
+    """Decrease or increase output amount."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -597,12 +596,11 @@ def confirm_total(
 # rust/src/ui/model_tt/layout.rs
 def confirm_modify_output(
     *,
-    address: str,  # ignored
     sign: int,
     amount_change: str,
     amount_new: str,
 ) -> object:
-    """Decrease or increase amount for given address."""
+    """Decrease or increase output amount."""
 
 
 # rust/src/ui/model_tt/layout.rs

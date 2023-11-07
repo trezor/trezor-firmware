@@ -683,6 +683,7 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         self.debug.press_right()
         self.debug.press_right()
         self.debug.press_right()
+        yield
 
 
 def lock_time_input_flow_tt(

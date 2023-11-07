@@ -1766,12 +1766,11 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def confirm_modify_output(
     ///     *,
-    ///     address: str,  # ignored
     ///     sign: int,
     ///     amount_change: str,
     ///     amount_new: str,
     /// ) -> object:
-    ///     """Decrease or increase amount for given address."""
+    ///     """Decrease or increase output amount."""
     Qstr::MP_QSTR_confirm_modify_output => obj_fn_kw!(0, new_confirm_modify_output).as_obj(),
 
     /// def confirm_modify_fee(
