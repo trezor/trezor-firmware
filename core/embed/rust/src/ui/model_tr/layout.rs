@@ -578,7 +578,6 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
 
 extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
         let sign: i32 = kwargs.get(Qstr::MP_QSTR_sign)?.try_into()?;
         let amount_change: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_change)?.try_into()?;
         let amount_new: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_new)?.try_into()?;
@@ -590,8 +589,6 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         };
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, "Address:".into()),
-            Paragraph::new(&theme::TEXT_MONO, address).break_after(),
             Paragraph::new(&theme::TEXT_NORMAL, description.into()),
             Paragraph::new(&theme::TEXT_MONO, amount_change).break_after(),
             Paragraph::new(&theme::TEXT_BOLD, "New amount:".into()),
@@ -1759,12 +1756,11 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def confirm_modify_output(
     ///     *,
-    ///     address: str,
     ///     sign: int,
     ///     amount_change: str,
     ///     amount_new: str,
     /// ) -> object:
-    ///     """Decrease or increase amount for given address."""
+    ///     """Decrease or increase output amount."""
     Qstr::MP_QSTR_confirm_modify_output => obj_fn_kw!(0, new_confirm_modify_output).as_obj(),
 
     /// def confirm_output_address(

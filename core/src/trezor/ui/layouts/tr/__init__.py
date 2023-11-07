@@ -1080,20 +1080,45 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    await raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_modify_output(
-                    address=address,
-                    sign=sign,
-                    amount_change=amount_change,
-                    amount_new=amount_new,
-                )
-            ),
-            "modify_output",
-            ButtonRequestType.ConfirmOutput,
+    address_layout = RustLayout(
+        trezorui2.confirm_blob(
+            title="MODIFY AMOUNT",
+            data=address,
+            verb="CONTINUE",
+            verb_cancel=None,
+            description="Address:",
+            extra=None,
         )
     )
+    modify_layout = RustLayout(
+        trezorui2.confirm_modify_output(
+            sign=sign,
+            amount_change=amount_change,
+            amount_new=amount_new,
+        )
+    )
+
+    send_button_request = True
+    while True:
+        if send_button_request:
+            await button_request(
+                "modify_output",
+                ButtonRequestType.ConfirmOutput,
+                address_layout.page_count(),
+            )
+        await raise_if_not_confirmed(ctx_wait(address_layout))
+
+        if send_button_request:
+            send_button_request = False
+            await button_request(
+                "modify_output",
+                ButtonRequestType.ConfirmOutput,
+                modify_layout.page_count(),
+            )
+        result = await ctx_wait(modify_layout)
+
+        if result is CONFIRMED:
+            break
 
 
 async def confirm_modify_fee(
