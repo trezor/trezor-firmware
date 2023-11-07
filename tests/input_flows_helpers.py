@@ -316,6 +316,7 @@ class EthereumFlow:
                 self.debug.press_left()
             else:
                 self.debug.press_right()
+                yield
                 assert "Maximum fee:" in self.debug.wait_layout().text_content()
                 if info:
                     self.debug.press_right(wait=True)

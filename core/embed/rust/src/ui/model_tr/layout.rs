@@ -754,34 +754,15 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_ethereum_tx(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_ethereum_tx_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let recipient: StrBuffer = kwargs.get(Qstr::MP_QSTR_recipient)?.try_into()?;
         let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
         let maximum_fee: StrBuffer = kwargs.get(Qstr::MP_QSTR_maximum_fee)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let get_page = move |page_index| {
             match page_index {
                 0 => {
-                    // RECIPIENT
-                    let btn_layout = ButtonLayout::cancel_none_text("CONTINUE".into());
-                    let btn_actions = ButtonActions::cancel_none_next();
-
-                    let style = if chunkify {
-                        // Chunkifying the address into smaller pieces when requested
-                        theme::TEXT_MONO_ADDRESS_CHUNKS
-                    } else {
-                        theme::TEXT_MONO_DATA
-                    };
-
-                    let ops = OpTextLayout::new(style).text_mono(recipient.clone());
-
-                    let formatted = FormattedText::new(ops).vertically_centered();
-                    Page::new(btn_layout, btn_actions, formatted).with_title("RECIPIENT".into())
-                }
-                1 => {
                     // Total amount + fee
                     let btn_layout = ButtonLayout::up_arrow_armed_info("CONFIRM".into());
                     let btn_actions = ButtonActions::prev_confirm_next();
@@ -797,7 +778,7 @@ extern "C" fn new_confirm_ethereum_tx(n_args: usize, args: *const Obj, kwargs: *
                     let formatted = FormattedText::new(ops);
                     Page::new(btn_layout, btn_actions, formatted).with_title("Amount:".into())
                 }
-                2 => {
+                1 => {
                     // Fee information
                     let btn_layout = ButtonLayout::arrow_none_none();
                     let btn_actions = ButtonActions::prev_none_none();
@@ -824,7 +805,7 @@ extern "C" fn new_confirm_ethereum_tx(n_args: usize, args: *const Obj, kwargs: *
                 _ => unreachable!(),
             }
         };
-        let pages = FlowPages::new(get_page, 3);
+        let pages = FlowPages::new(get_page, 2);
 
         let obj = LayoutObj::new(Flow::new(pages).with_scrollbar(false))?;
         Ok(obj.into())
@@ -1816,16 +1797,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
 
-    /// def confirm_ethereum_tx(
+    /// def ethereum_tx_summary(
     ///     *,
-    ///     recipient: str,
     ///     total_amount: str,
     ///     maximum_fee: str,
     ///     items: Iterable[Tuple[str, str]],
-    ///     chunkify: bool = False,
     /// ) -> object:
     ///     """Confirm details about Ethereum transaction."""
-    Qstr::MP_QSTR_confirm_ethereum_tx => obj_fn_kw!(0, new_confirm_ethereum_tx).as_obj(),
+    Qstr::MP_QSTR_ethereum_tx_summary => obj_fn_kw!(0, new_ethereum_tx_summary).as_obj(),
 
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""

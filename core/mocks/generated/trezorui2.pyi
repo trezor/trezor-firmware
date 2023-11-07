@@ -170,13 +170,11 @@ def confirm_total(
 
 
 # rust/src/ui/model_tr/layout.rs
-def confirm_ethereum_tx(
+def ethereum_tx_summary(
     *,
-    recipient: str,
     total_amount: str,
     maximum_fee: str,
     items: Iterable[Tuple[str, str]],
-    chunkify: bool = False,
 ) -> object:
     """Confirm details about Ethereum transaction."""
 
