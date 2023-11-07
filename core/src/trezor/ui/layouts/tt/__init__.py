@@ -744,7 +744,7 @@ async def confirm_blob(
     br_type: str,
     title: str,
     data: bytes | str,
-    description: str | None = None,
+    description: str = "",
     verb: str = "CONFIRM",
     verb_cancel: str | None = None,
     hold: bool = False,
@@ -753,7 +753,6 @@ async def confirm_blob(
     chunkify: bool = False,
 ) -> None:
     title = title.upper()
-    description = description or ""
     layout = RustLayout(
         trezorui2.confirm_blob(
             title=title,
@@ -1019,11 +1018,11 @@ async def confirm_metadata(
 
 async def confirm_replacement(title: str, txid: str) -> None:
     await confirm_blob(
-        title=title.upper(),
-        data=txid,
-        description="Transaction ID:",
-        verb="CONTINUE",
-        br_type="confirm_replacement",
+        "confirm_replacement",
+        title.upper(),
+        txid,
+        "Transaction ID:",
+        "CONTINUE",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -1148,10 +1147,10 @@ async def confirm_sign_identity(
     proto: str, identity: str, challenge_visual: str | None
 ) -> None:
     await confirm_blob(
-        title=f"Sign {proto}",
-        data=identity,
-        description=challenge_visual + "\n" if challenge_visual else "",
-        br_type="sign_identity",
+        "sign_identity",
+        f"Sign {proto}",
+        identity,
+        challenge_visual + "\n" if challenge_visual else "",
         br_code=BR_TYPE_OTHER,
     )
 

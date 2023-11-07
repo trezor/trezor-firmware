@@ -765,7 +765,7 @@ async def confirm_blob(
     br_type: str,
     title: str,
     data: bytes | str,
-    description: str | None = None,
+    description: str = "",
     verb: str = "CONFIRM",
     verb_cancel: str | None = "",  # icon
     hold: bool = False,
@@ -774,7 +774,6 @@ async def confirm_blob(
     chunkify: bool = False,
 ) -> None:
     title = title.upper()
-    description = description or ""
     layout = RustLayout(
         trezorui2.confirm_blob(
             title=title,
@@ -848,7 +847,7 @@ async def _confirm_ask_pagination(
 def confirm_address(
     title: str,
     address: str,
-    description: str | None = "Address:",
+    description: str = "Address:",
     br_type: str = "confirm_address",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Awaitable[None]:
