@@ -33,7 +33,7 @@ async def get_ecdh_session_key(msg: GetECDHSessionKey) -> ECDHSessionKey:
     await confirm_address(
         f"Decrypt {proto}",
         serialize_identity_without_proto(msg_identity),
-        None,
+        "",
     )
     # END require_confirm_ecdh_session_key
 
