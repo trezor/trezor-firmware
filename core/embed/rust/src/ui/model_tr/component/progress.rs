@@ -127,6 +127,9 @@ impl Component for Progress {
                     self.description_pad.clear();
                 }
             });
+        } else {
+            self.title.event(ctx, event);
+            self.description.event(ctx, event);
         }
         None
     }
