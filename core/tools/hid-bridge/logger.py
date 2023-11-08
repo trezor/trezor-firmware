@@ -9,7 +9,7 @@ def __get_timestamp():
 
 
 def __log_message(message):
-    if log_timestamps == True:
+    if log_timestamps is True:
         print(f"{__get_timestamp()}\t{message}")
     else:
         print(message)

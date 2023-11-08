@@ -113,6 +113,7 @@ stdenvNoCC.mkDerivation ({
     poetry
     protobuf3_19
     pyright
+    ruff
     (mkBinOnlyWrapper rustNightly)
     wget
     zlib
