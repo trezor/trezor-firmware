@@ -1,3 +1,4 @@
+#include "display_interface.h"
 #include "displays/st7789v.h"
 
 void tf15411a_init_seq(void) {
@@ -90,4 +91,68 @@ void tf15411a_init_seq(void) {
   DATA(0x35);
   DATA(0x37);
   DATA(0x8F);
+}
+
+void tf15411a_rotate(int degrees, display_padding_t* padding) {
+  uint16_t shift = 0;
+  char BX = 0, BY = 0;
+
+#define RGB (1 << 3)
+#define ML (1 << 4)  // vertical refresh order
+#define MH (1 << 2)  // horizontal refresh order
+#define MV (1 << 5)
+#define MX (1 << 6)
+#define MY (1 << 7)
+  // MADCTL: Memory Data Access Control - reference:
+  // section 9.3 in the ILI9341 manual
+  // section 6.2.18 in the GC9307 manual
+  // section 8.12 in the ST7789V manual
+  uint8_t display_command_parameter = 0;
+  switch (degrees) {
+    case 0:
+      display_command_parameter = 0;
+      BY = 1;
+      break;
+    case 90:
+      display_command_parameter = MV | MX | MH | ML;
+      BX = 0;
+      shift = 1;
+      break;
+    case 180:
+      display_command_parameter = MX | MY | MH | ML;
+      BY = 1;
+      shift = 1;
+      break;
+    case 270:
+      display_command_parameter = MV | MY;
+      BX = 0;
+      break;
+  }
+
+  display_command_parameter ^= RGB | MY;  // XOR RGB and MY settings
+
+  CMD(0x36);
+  DATA(display_command_parameter);
+
+  if (shift) {
+    // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is
+    // gate 80.; gate scan direction 319 -> 0
+    CMD(0xE4);
+    DATA(0x1D);
+    DATA(0x00);
+    DATA(0x11);
+  } else {
+    // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is
+    // gate 80.; gate scan direction 319 -> 0
+    CMD(0xE4);
+    DATA(0x1D);
+    DATA(0x0A);
+    DATA(0x11);
+  }
+
+  // reset the column and page extents
+  display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+
+  padding->x = BX ? (MAX_DISPLAY_RESY - DISPLAY_RESY) : 0;
+  padding->y = BY ? (MAX_DISPLAY_RESY - DISPLAY_RESY) : 0;
 }
