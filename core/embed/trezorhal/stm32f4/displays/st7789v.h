@@ -2,6 +2,12 @@
 #define _ST7789V_H
 
 #include STM32_HAL_H
+
+typedef struct {
+  uint16_t x;
+  uint16_t y;
+} display_padding_t;
+
 #include TREZOR_BOARD
 
 // ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution

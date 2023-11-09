@@ -67,10 +67,13 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 #define DISPLAY_ID_ILI9341V 0x009341U
 
 static int DISPLAY_ORIENTATION = -1;
+static display_padding_t DISPLAY_PADDING = {0};
 
 void display_pixeldata(uint16_t c) { PIXELDATA(c); }
 
 void display_pixeldata_dirty(void) {}
+
+#ifdef DISPLAY_IDENTIFY
 
 static uint32_t read_display_id(uint8_t command) {
   volatile uint8_t c = 0;
@@ -107,6 +110,9 @@ static uint32_t display_identify(void) {
   id_set = 1;
   return id;
 }
+#else
+static uint32_t display_identify(void) { return DISPLAY_ID_ST7789V; }
+#endif
 
 bool display_is_inverted() {
   bool inv_on = false;
@@ -151,13 +157,11 @@ static void display_unsleep(void) {
   }
 }
 
-static struct { uint16_t x, y; } BUFFER_OFFSET;
-
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
-  x0 += BUFFER_OFFSET.x;
-  x1 += BUFFER_OFFSET.x;
-  y0 += BUFFER_OFFSET.y;
-  y1 += BUFFER_OFFSET.y;
+  x0 += DISPLAY_PADDING.x;
+  x1 += DISPLAY_PADDING.x;
+  y0 += DISPLAY_PADDING.y;
+  y1 += DISPLAY_PADDING.y;
   uint32_t id = display_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
       (id == DISPLAY_ID_ST7789V)) {
@@ -185,70 +189,16 @@ int display_orientation(int degrees) {
         // 2 bytes per pixel because we're using RGB 5-6-5 format
         PIXELDATA(0x0000);
       }
-
-      uint16_t shift = 0;
-      char BX = 0, BY = 0;
+#ifdef TREZOR_MODEL_T
       uint32_t id = display_identify();
-      if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
-          (id == DISPLAY_ID_ST7789V)) {
-#define RGB (1 << 3)
-#define ML (1 << 4)  // vertical refresh order
-#define MH (1 << 2)  // horizontal refresh order
-#define MV (1 << 5)
-#define MX (1 << 6)
-#define MY (1 << 7)
-        // MADCTL: Memory Data Access Control - reference:
-        // section 9.3 in the ILI9341 manual
-        // section 6.2.18 in the GC9307 manual
-        // section 8.12 in the ST7789V manual
-        uint8_t display_command_parameter = 0;
-        switch (degrees) {
-          case 0:
-            display_command_parameter = 0;
-            BY = (id == DISPLAY_ID_GC9307);
-            break;
-          case 90:
-            display_command_parameter = MV | MX | MH | ML;
-            BX = (id != DISPLAY_ID_GC9307);
-            shift = 1;
-            break;
-          case 180:
-            display_command_parameter = MX | MY | MH | ML;
-            BY = (id == DISPLAY_ID_GC9307);
-            shift = 1;
-            break;
-          case 270:
-            display_command_parameter = MV | MY;
-            BX = (id != DISPLAY_ID_GC9307);
-            break;
-        }
-        if (id == DISPLAY_ID_GC9307) {
-          display_command_parameter ^= RGB | MY;  // XOR RGB and MY settings
-        }
-        CMD(0x36);
-        DATA(display_command_parameter);
-
-        if (shift) {
-          // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is
-          // gate 80.; gate scan direction 319 -> 0
-          CMD(0xE4);
-          DATA(0x1D);
-          DATA(0x00);
-          DATA(0x11);
-        } else {
-          // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is
-          // gate 80.; gate scan direction 319 -> 0
-          CMD(0xE4);
-          DATA(0x1D);
-          DATA(0x0A);
-          DATA(0x11);
-        }
-
-        // reset the column and page extents
-        display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+      if (id == DISPLAY_ID_GC9307) {
+        tf15411a_rotate(degrees, &DISPLAY_PADDING);
+      } else {
+        lx154a2422_rotate(degrees, &DISPLAY_PADDING);
       }
-      BUFFER_OFFSET.x = BX ? (MAX_DISPLAY_RESY - DISPLAY_RESY) : 0;
-      BUFFER_OFFSET.y = BY ? (MAX_DISPLAY_RESY - DISPLAY_RESY) : 0;
+#else
+      DISPLAY_PANEL_ROTATE(degrees, &BUFFER_OFFSET);
+#endif
     }
   }
   return DISPLAY_ORIENTATION;
@@ -357,13 +307,15 @@ void display_init(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
   HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-  // LCD_FMARK/PD12 (tearing effect)
+#ifdef DISPLAY_TE_PIN
+  // LCD_FMARK (tearing effect)
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStructure.Alternate = 0;
-  GPIO_InitStructure.Pin = GPIO_PIN_12;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = DISPLAY_TE_PIN;
+  HAL_GPIO_Init(DISPLAY_TE_PORT, &GPIO_InitStructure);
+#endif
 
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
@@ -422,15 +374,18 @@ void display_reinit(void) {
 }
 
 void display_sync(void) {
+#ifdef DISPLAY_TE_PIN
   uint32_t id = display_identify();
   if (id && (id != DISPLAY_ID_GC9307)) {
     // synchronize with the panel synchronization signal
     // in order to avoid visual tearing effects
-    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
+    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
     }
-    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
+    while (GPIO_PIN_RESET ==
+           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
     }
   }
+#endif
 }
 
 void display_refresh(void) {}
