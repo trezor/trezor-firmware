@@ -1,5 +1,5 @@
-#ifndef TT_OLD3_H_
-#define TT_OLD3_H_
+#ifndef LX154A2411_H_
+#define LX154A2411_H_
 
 // ST7789_V IC controller
 void lx154a2411_gamma(void);
