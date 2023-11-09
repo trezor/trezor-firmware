@@ -47,15 +47,14 @@
 
 static void touch_default_pin_state(void) {
   // set power off and other pins as per section 3.5 of FT6236 datasheet
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10,
-                    GPIO_PIN_SET);  // CTP_ON/PB10 (active low) i.e.- CTPM power
+  HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN,
+                    GPIO_PIN_SET);  // CTP_ON (active low) i.e.- CTPM power
                                     // off when set/high/log 1
-  HAL_GPIO_WritePin(
-      GPIOC, GPIO_PIN_4,
-      GPIO_PIN_RESET);  // CTP_INT/PC4 normally an input, but drive low as an
-                        // output while powered off
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5,
-                    GPIO_PIN_RESET);  // CTP_REST/PC5 (active low) i.e.- CTPM
+  HAL_GPIO_WritePin(TOUCH_INT_PORT, TOUCH_INT_PIN,
+                    GPIO_PIN_RESET);  // CTP_INT normally an input, but drive
+                                      // low as an output while powered off
+  HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN,
+                    GPIO_PIN_RESET);  // CTP_REST (active low) i.e.- CTPM
                                       // held in reset until released
 
   // set above pins to OUTPUT / NOPULL
@@ -64,10 +63,12 @@ static void touch_default_pin_state(void) {
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = GPIO_PIN_10;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = GPIO_PIN_4 | GPIO_PIN_5;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = TOUCH_INT_PIN;
+  HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = TOUCH_RST_PIN;
+  HAL_GPIO_Init(TOUCH_RST_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = TOUCH_ON_PIN;
+  HAL_GPIO_Init(TOUCH_ON_PORT, &GPIO_InitStructure);
 
   // in-case power was on, or CTPM was active make sure to wait long enough
   // for these changes to take effect. a reset needs to be low for
@@ -77,20 +78,21 @@ static void touch_default_pin_state(void) {
 }
 
 static void touch_active_pin_state(void) {
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);  // CTP_ON/PB10
+  HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN, GPIO_PIN_RESET);  // CTP_ON
   HAL_Delay(10);  // we need to wait until the circuit fully kicks-in
 
   GPIO_InitTypeDef GPIO_InitStructure;
 
-  // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
+  // capacitive touch panel module (CTPM) interrupt (INT) input
   GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = GPIO_PIN_4;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_4);
+  GPIO_InitStructure.Pin = TOUCH_INT_PIN;
+  HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
+  __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
 
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);  // release CTPM reset
+  HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN,
+                    GPIO_PIN_SET);  // release CTPM reset
   HAL_Delay(310);  // "Time of starting to report point after resetting" min is
                    // 300ms, giving an extra 10ms
 }
@@ -115,6 +117,7 @@ void touch_power_on(void) {
 
   // turn on CTP circuitry
   touch_active_pin_state();
+
   HAL_Delay(50);
 }
 
@@ -131,12 +134,12 @@ void touch_init(void) {
   GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = GPIO_PIN_4;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_4);
+  GPIO_InitStructure.Pin = TOUCH_INT_PIN;
+  HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
+  __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
 
   touch_set_mode();
-  touch_sensitivity(0x06);
+  touch_sensitivity(TOUCH_SENSITIVITY);
 }
 
 void touch_sensitivity(uint8_t value) {
@@ -161,9 +164,9 @@ uint32_t touch_is_detected(void) {
   // Reference section 1.2 of "Application Note for FT6x06 CTPM". we
   // configure the touch controller to use "interrupt trigger mode".
 
-  uint32_t event = __HAL_GPIO_EXTI_GET_FLAG(GPIO_PIN_4);
+  uint32_t event = __HAL_GPIO_EXTI_GET_FLAG(TOUCH_INT_PIN);
   if (event != 0) {
-    __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_4);
+    __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
   }
 
   return event;
@@ -239,8 +242,8 @@ uint32_t touch_read(void) {
                              // first touch) (tested with FT6206)
   const uint32_t event_flag = touch_data[3] & 0xC0;
   if (touch_data[1] == GESTURE_NO_GESTURE) {
-    xy = touch_pack_xy((X_POS_MSB << 8) | X_POS_LSB,
-                       (Y_POS_MSB << 8) | Y_POS_LSB);
+    xy = TRANSFORM_TOUCH_COORDS((X_POS_MSB << 8) | X_POS_LSB,
+                                (Y_POS_MSB << 8) | Y_POS_LSB);
     if ((number_of_touch_points == 1) && (event_flag == EVENT_PRESS_DOWN)) {
       touching = 1;
       return TOUCH_START | xy;
