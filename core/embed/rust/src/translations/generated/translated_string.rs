@@ -1239,6 +1239,18 @@ pub enum TranslatedString {
     storage_msg__wrong_pin = 844,  // "Wrong PIN"
     reset__create_x_of_y_multi_share_backup_template = 845,  // "Do you want to create a {0} of {1} multi-share backup?"
     reset__title_shamir_backup = 846,  // "Multi-share backup"
+    #[cfg(feature = "universal_fw")]
+    cardano__always_abstain = 847,  // "Always Abstain"
+    #[cfg(feature = "universal_fw")]
+    cardano__always_no_confidence = 848,  // "Always No Confidence"
+    #[cfg(feature = "universal_fw")]
+    cardano__delegating_to_key_hash = 849,  // "Delegating to key hash:"
+    #[cfg(feature = "universal_fw")]
+    cardano__delegating_to_script = 850,  // "Delegating to script:"
+    #[cfg(feature = "universal_fw")]
+    cardano__deposit = 851,  // "Deposit:"
+    #[cfg(feature = "universal_fw")]
+    cardano__vote_delegation = 852,  // "Vote delegation"
 }
 
 impl TranslatedString {
@@ -2473,6 +2485,18 @@ impl TranslatedString {
             Self::storage_msg__wrong_pin => "Wrong PIN",
             Self::reset__create_x_of_y_multi_share_backup_template => "Do you want to create a {0} of {1} multi-share backup?",
             Self::reset__title_shamir_backup => "Multi-share backup",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__always_abstain => "Always Abstain",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__always_no_confidence => "Always No Confidence",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__delegating_to_key_hash => "Delegating to key hash:",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__delegating_to_script => "Delegating to script:",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__deposit => "Deposit:",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__vote_delegation => "Vote delegation",
         }
     }
 
@@ -3708,6 +3732,18 @@ impl TranslatedString {
             Qstr::MP_QSTR_storage_msg__wrong_pin => Some(Self::storage_msg__wrong_pin),
             Qstr::MP_QSTR_reset__create_x_of_y_multi_share_backup_template => Some(Self::reset__create_x_of_y_multi_share_backup_template),
             Qstr::MP_QSTR_reset__title_shamir_backup => Some(Self::reset__title_shamir_backup),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__always_abstain => Some(Self::cardano__always_abstain),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__always_no_confidence => Some(Self::cardano__always_no_confidence),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__delegating_to_key_hash => Some(Self::cardano__delegating_to_key_hash),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__delegating_to_script => Some(Self::cardano__delegating_to_script),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__deposit => Some(Self::cardano__deposit),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__vote_delegation => Some(Self::cardano__vote_delegation),
             _ => None,
         }
     }

@@ -410,6 +410,16 @@ class CardanoCertificateType(IntEnum):
     STAKE_DEREGISTRATION = 1
     STAKE_DELEGATION = 2
     STAKE_POOL_REGISTRATION = 3
+    STAKE_REGISTRATION_CONWAY = 7
+    STAKE_DEREGISTRATION_CONWAY = 8
+    VOTE_DELEGATION = 9
+
+
+class CardanoDRepType(IntEnum):
+    KEY_HASH = 0
+    SCRIPT_HASH = 1
+    ABSTAIN = 2
+    NO_CONFIDENCE = 3
 
 
 class CardanoPoolRelayType(IntEnum):
@@ -2648,6 +2658,26 @@ class CardanoPoolParametersType(protobuf.MessageType):
         self.metadata = metadata
 
 
+class CardanoDRep(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "CardanoDRepType", repeated=False, required=True),
+        2: protobuf.Field("key_hash", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("script_hash", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "CardanoDRepType",
+        key_hash: Optional["bytes"] = None,
+        script_hash: Optional["bytes"] = None,
+    ) -> None:
+        self.type = type
+        self.key_hash = key_hash
+        self.script_hash = script_hash
+
+
 class CardanoTxCertificate(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 325
     FIELDS = {
@@ -2657,6 +2687,8 @@ class CardanoTxCertificate(protobuf.MessageType):
         4: protobuf.Field("pool_parameters", "CardanoPoolParametersType", repeated=False, required=False, default=None),
         5: protobuf.Field("script_hash", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("key_hash", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("deposit", "uint64", repeated=False, required=False, default=None),
+        8: protobuf.Field("drep", "CardanoDRep", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2668,6 +2700,8 @@ class CardanoTxCertificate(protobuf.MessageType):
         pool_parameters: Optional["CardanoPoolParametersType"] = None,
         script_hash: Optional["bytes"] = None,
         key_hash: Optional["bytes"] = None,
+        deposit: Optional["int"] = None,
+        drep: Optional["CardanoDRep"] = None,
     ) -> None:
         self.path: Sequence["int"] = path if path is not None else []
         self.type = type
@@ -2675,6 +2709,8 @@ class CardanoTxCertificate(protobuf.MessageType):
         self.pool_parameters = pool_parameters
         self.script_hash = script_hash
         self.key_hash = key_hash
+        self.deposit = deposit
+        self.drep = drep
 
 
 class CardanoTxWithdrawal(protobuf.MessageType):
