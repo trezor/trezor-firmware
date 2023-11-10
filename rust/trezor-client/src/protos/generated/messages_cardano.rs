@@ -5895,6 +5895,261 @@ impl ::protobuf::reflect::ProtobufValue for CardanoPoolParametersType {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.cardano.CardanoDRep)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CardanoDRep {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoDRep.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<CardanoDRepType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoDRep.key_hash)
+    pub key_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoDRep.script_hash)
+    pub script_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.cardano.CardanoDRep.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CardanoDRep {
+    fn default() -> &'a CardanoDRep {
+        <CardanoDRep as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CardanoDRep {
+    pub fn new() -> CardanoDRep {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.cardano.CardanoDRepType type = 1;
+
+    pub fn type_(&self) -> CardanoDRepType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(CardanoDRepType::KEY_HASH),
+            None => CardanoDRepType::KEY_HASH,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: CardanoDRepType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // optional bytes key_hash = 2;
+
+    pub fn key_hash(&self) -> &[u8] {
+        match self.key_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_key_hash(&mut self) {
+        self.key_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_key_hash(&self) -> bool {
+        self.key_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_key_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.key_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_key_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.key_hash.is_none() {
+            self.key_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.key_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_key_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.key_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes script_hash = 3;
+
+    pub fn script_hash(&self) -> &[u8] {
+        match self.script_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_script_hash(&mut self) {
+        self.script_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_script_hash(&self) -> bool {
+        self.script_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_script_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.script_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_script_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.script_hash.is_none() {
+            self.script_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.script_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_script_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.script_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &CardanoDRep| { &m.type_ },
+            |m: &mut CardanoDRep| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "key_hash",
+            |m: &CardanoDRep| { &m.key_hash },
+            |m: &mut CardanoDRep| { &mut m.key_hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "script_hash",
+            |m: &CardanoDRep| { &m.script_hash },
+            |m: &mut CardanoDRep| { &mut m.script_hash },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CardanoDRep>(
+            "CardanoDRep",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CardanoDRep {
+    const NAME: &'static str = "CardanoDRep";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    self.key_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.script_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.key_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.script_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.key_hash.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.script_hash.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CardanoDRep {
+        CardanoDRep::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.key_hash = ::std::option::Option::None;
+        self.script_hash = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CardanoDRep {
+        static instance: CardanoDRep = CardanoDRep {
+            type_: ::std::option::Option::None,
+            key_hash: ::std::option::Option::None,
+            script_hash: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CardanoDRep {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CardanoDRep").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CardanoDRep {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CardanoDRep {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.cardano.CardanoTxCertificate)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct CardanoTxCertificate {
@@ -5911,6 +6166,10 @@ pub struct CardanoTxCertificate {
     pub script_hash: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoTxCertificate.key_hash)
     pub key_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoTxCertificate.deposit)
+    pub deposit: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoTxCertificate.drep)
+    pub drep: ::protobuf::MessageField<CardanoDRep>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.cardano.CardanoTxCertificate.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -6057,8 +6316,27 @@ impl CardanoTxCertificate {
         self.key_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional uint64 deposit = 7;
+
+    pub fn deposit(&self) -> u64 {
+        self.deposit.unwrap_or(0)
+    }
+
+    pub fn clear_deposit(&mut self) {
+        self.deposit = ::std::option::Option::None;
+    }
+
+    pub fn has_deposit(&self) -> bool {
+        self.deposit.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_deposit(&mut self, v: u64) {
+        self.deposit = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "type",
@@ -6090,6 +6368,16 @@ impl CardanoTxCertificate {
             |m: &CardanoTxCertificate| { &m.key_hash },
             |m: &mut CardanoTxCertificate| { &mut m.key_hash },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "deposit",
+            |m: &CardanoTxCertificate| { &m.deposit },
+            |m: &mut CardanoTxCertificate| { &mut m.deposit },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CardanoDRep>(
+            "drep",
+            |m: &CardanoTxCertificate| { &m.drep },
+            |m: &mut CardanoTxCertificate| { &mut m.drep },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CardanoTxCertificate>(
             "CardanoTxCertificate",
             fields,
@@ -6106,6 +6394,11 @@ impl ::protobuf::Message for CardanoTxCertificate {
             return false;
         }
         for v in &self.pool_parameters {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.drep {
             if !v.is_initialized() {
                 return false;
             }
@@ -6136,6 +6429,12 @@ impl ::protobuf::Message for CardanoTxCertificate {
                 },
                 50 => {
                     self.key_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                56 => {
+                    self.deposit = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                66 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.drep)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -6168,6 +6467,13 @@ impl ::protobuf::Message for CardanoTxCertificate {
         if let Some(v) = self.key_hash.as_ref() {
             my_size += ::protobuf::rt::bytes_size(6, &v);
         }
+        if let Some(v) = self.deposit {
+            my_size += ::protobuf::rt::uint64_size(7, v);
+        }
+        if let Some(v) = self.drep.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -6192,6 +6498,12 @@ impl ::protobuf::Message for CardanoTxCertificate {
         if let Some(v) = self.key_hash.as_ref() {
             os.write_bytes(6, v)?;
         }
+        if let Some(v) = self.deposit {
+            os.write_uint64(7, v)?;
+        }
+        if let Some(v) = self.drep.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(8, v, os)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -6215,6 +6527,8 @@ impl ::protobuf::Message for CardanoTxCertificate {
         self.pool_parameters.clear();
         self.script_hash = ::std::option::Option::None;
         self.key_hash = ::std::option::Option::None;
+        self.deposit = ::std::option::Option::None;
+        self.drep.clear();
         self.special_fields.clear();
     }
 
@@ -6226,6 +6540,8 @@ impl ::protobuf::Message for CardanoTxCertificate {
             pool_parameters: ::protobuf::MessageField::none(),
             script_hash: ::std::option::Option::None,
             key_hash: ::std::option::Option::None,
+            deposit: ::std::option::Option::None,
+            drep: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -9601,6 +9917,12 @@ pub enum CardanoCertificateType {
     STAKE_DELEGATION = 2,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.cardano.CardanoCertificateType.STAKE_POOL_REGISTRATION)
     STAKE_POOL_REGISTRATION = 3,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.cardano.CardanoCertificateType.STAKE_REGISTRATION_CONWAY)
+    STAKE_REGISTRATION_CONWAY = 7,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.cardano.CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY)
+    STAKE_DEREGISTRATION_CONWAY = 8,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.cardano.CardanoCertificateType.VOTE_DELEGATION)
+    VOTE_DELEGATION = 9,
 }
 
 impl ::protobuf::Enum for CardanoCertificateType {
@@ -9616,6 +9938,9 @@ impl ::protobuf::Enum for CardanoCertificateType {
             1 => ::std::option::Option::Some(CardanoCertificateType::STAKE_DEREGISTRATION),
             2 => ::std::option::Option::Some(CardanoCertificateType::STAKE_DELEGATION),
             3 => ::std::option::Option::Some(CardanoCertificateType::STAKE_POOL_REGISTRATION),
+            7 => ::std::option::Option::Some(CardanoCertificateType::STAKE_REGISTRATION_CONWAY),
+            8 => ::std::option::Option::Some(CardanoCertificateType::STAKE_DEREGISTRATION_CONWAY),
+            9 => ::std::option::Option::Some(CardanoCertificateType::VOTE_DELEGATION),
             _ => ::std::option::Option::None
         }
     }
@@ -9626,6 +9951,9 @@ impl ::protobuf::Enum for CardanoCertificateType {
             "STAKE_DEREGISTRATION" => ::std::option::Option::Some(CardanoCertificateType::STAKE_DEREGISTRATION),
             "STAKE_DELEGATION" => ::std::option::Option::Some(CardanoCertificateType::STAKE_DELEGATION),
             "STAKE_POOL_REGISTRATION" => ::std::option::Option::Some(CardanoCertificateType::STAKE_POOL_REGISTRATION),
+            "STAKE_REGISTRATION_CONWAY" => ::std::option::Option::Some(CardanoCertificateType::STAKE_REGISTRATION_CONWAY),
+            "STAKE_DEREGISTRATION_CONWAY" => ::std::option::Option::Some(CardanoCertificateType::STAKE_DEREGISTRATION_CONWAY),
+            "VOTE_DELEGATION" => ::std::option::Option::Some(CardanoCertificateType::VOTE_DELEGATION),
             _ => ::std::option::Option::None
         }
     }
@@ -9635,6 +9963,9 @@ impl ::protobuf::Enum for CardanoCertificateType {
         CardanoCertificateType::STAKE_DEREGISTRATION,
         CardanoCertificateType::STAKE_DELEGATION,
         CardanoCertificateType::STAKE_POOL_REGISTRATION,
+        CardanoCertificateType::STAKE_REGISTRATION_CONWAY,
+        CardanoCertificateType::STAKE_DEREGISTRATION_CONWAY,
+        CardanoCertificateType::VOTE_DELEGATION,
     ];
 }
 
@@ -9645,7 +9976,15 @@ impl ::protobuf::EnumFull for CardanoCertificateType {
     }
 
     fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
-        let index = *self as usize;
+        let index = match self {
+            CardanoCertificateType::STAKE_REGISTRATION => 0,
+            CardanoCertificateType::STAKE_DEREGISTRATION => 1,
+            CardanoCertificateType::STAKE_DELEGATION => 2,
+            CardanoCertificateType::STAKE_POOL_REGISTRATION => 3,
+            CardanoCertificateType::STAKE_REGISTRATION_CONWAY => 4,
+            CardanoCertificateType::STAKE_DEREGISTRATION_CONWAY => 5,
+            CardanoCertificateType::VOTE_DELEGATION => 6,
+        };
         Self::enum_descriptor().value_by_index(index)
     }
 }
@@ -9659,6 +9998,78 @@ impl ::std::default::Default for CardanoCertificateType {
 impl CardanoCertificateType {
     fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
         ::protobuf::reflect::GeneratedEnumDescriptorData::new::<CardanoCertificateType>("CardanoCertificateType")
+    }
+}
+
+#[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+// @@protoc_insertion_point(enum:hw.trezor.messages.cardano.CardanoDRepType)
+pub enum CardanoDRepType {
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.cardano.CardanoDRepType.KEY_HASH)
+    KEY_HASH = 0,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.cardano.CardanoDRepType.SCRIPT_HASH)
+    SCRIPT_HASH = 1,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.cardano.CardanoDRepType.ABSTAIN)
+    ABSTAIN = 2,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.cardano.CardanoDRepType.NO_CONFIDENCE)
+    NO_CONFIDENCE = 3,
+}
+
+impl ::protobuf::Enum for CardanoDRepType {
+    const NAME: &'static str = "CardanoDRepType";
+
+    fn value(&self) -> i32 {
+        *self as i32
+    }
+
+    fn from_i32(value: i32) -> ::std::option::Option<CardanoDRepType> {
+        match value {
+            0 => ::std::option::Option::Some(CardanoDRepType::KEY_HASH),
+            1 => ::std::option::Option::Some(CardanoDRepType::SCRIPT_HASH),
+            2 => ::std::option::Option::Some(CardanoDRepType::ABSTAIN),
+            3 => ::std::option::Option::Some(CardanoDRepType::NO_CONFIDENCE),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    fn from_str(str: &str) -> ::std::option::Option<CardanoDRepType> {
+        match str {
+            "KEY_HASH" => ::std::option::Option::Some(CardanoDRepType::KEY_HASH),
+            "SCRIPT_HASH" => ::std::option::Option::Some(CardanoDRepType::SCRIPT_HASH),
+            "ABSTAIN" => ::std::option::Option::Some(CardanoDRepType::ABSTAIN),
+            "NO_CONFIDENCE" => ::std::option::Option::Some(CardanoDRepType::NO_CONFIDENCE),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    const VALUES: &'static [CardanoDRepType] = &[
+        CardanoDRepType::KEY_HASH,
+        CardanoDRepType::SCRIPT_HASH,
+        CardanoDRepType::ABSTAIN,
+        CardanoDRepType::NO_CONFIDENCE,
+    ];
+}
+
+impl ::protobuf::EnumFull for CardanoDRepType {
+    fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().enum_by_package_relative_name("CardanoDRepType").unwrap()).clone()
+    }
+
+    fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+        let index = *self as usize;
+        Self::enum_descriptor().value_by_index(index)
+    }
+}
+
+impl ::std::default::Default for CardanoDRepType {
+    fn default() -> Self {
+        CardanoDRepType::KEY_HASH
+    }
+}
+
+impl CardanoDRepType {
+    fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<CardanoDRepType>("CardanoDRepType")
     }
 }
 
@@ -10089,78 +10500,87 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     unt\x18\x07\x20\x02(\tR\rrewardAccount\x12O\n\x08metadata\x18\n\x20\x01(\
     \x0b23.hw.trezor.messages.cardano.CardanoPoolMetadataTypeR\x08metadata\
     \x12!\n\x0cowners_count\x18\x0b\x20\x02(\rR\x0bownersCount\x12!\n\x0crel\
-    ays_count\x18\x0c\x20\x02(\rR\x0brelaysCount\"\xa2\x02\n\x14CardanoTxCer\
-    tificate\x12F\n\x04type\x18\x01\x20\x02(\x0e22.hw.trezor.messages.cardan\
-    o.CardanoCertificateTypeR\x04type\x12\x12\n\x04path\x18\x02\x20\x03(\rR\
-    \x04path\x12\x12\n\x04pool\x18\x03\x20\x01(\x0cR\x04pool\x12^\n\x0fpool_\
-    parameters\x18\x04\x20\x01(\x0b25.hw.trezor.messages.cardano.CardanoPool\
-    ParametersTypeR\x0epoolParameters\x12\x1f\n\x0bscript_hash\x18\x05\x20\
-    \x01(\x0cR\nscriptHash\x12\x19\n\x08key_hash\x18\x06\x20\x01(\x0cR\x07ke\
-    yHash\"}\n\x13CardanoTxWithdrawal\x12\x12\n\x04path\x18\x01\x20\x03(\rR\
-    \x04path\x12\x16\n\x06amount\x18\x02\x20\x02(\x04R\x06amount\x12\x1f\n\
-    \x0bscript_hash\x18\x03\x20\x01(\x0cR\nscriptHash\x12\x19\n\x08key_hash\
-    \x18\x04\x20\x01(\x0cR\x07keyHash\"d\n\"CardanoCVoteRegistrationDelegati\
-    on\x12&\n\x0fvote_public_key\x18\x01\x20\x02(\x0cR\rvotePublicKey\x12\
-    \x16\n\x06weight\x18\x02\x20\x02(\rR\x06weight\"\x8e\x04\n&CardanoCVoteR\
-    egistrationParametersType\x12&\n\x0fvote_public_key\x18\x01\x20\x01(\x0c\
-    R\rvotePublicKey\x12!\n\x0cstaking_path\x18\x02\x20\x03(\rR\x0bstakingPa\
-    th\x12v\n\x1apayment_address_parameters\x18\x03\x20\x01(\x0b28.hw.trezor\
-    .messages.cardano.CardanoAddressParametersTypeR\x18paymentAddressParamet\
-    ers\x12\x14\n\x05nonce\x18\x04\x20\x02(\x04R\x05nonce\x12Y\n\x06format\
-    \x18\x05\x20\x01(\x0e2:.hw.trezor.messages.cardano.CardanoCVoteRegistrat\
-    ionFormat:\x05CIP15R\x06format\x12`\n\x0bdelegations\x18\x06\x20\x03(\
-    \x0b2>.hw.trezor.messages.cardano.CardanoCVoteRegistrationDelegationR\
-    \x0bdelegations\x12%\n\x0evoting_purpose\x18\x07\x20\x01(\x04R\rvotingPu\
-    rpose\x12'\n\x0fpayment_address\x18\x08\x20\x01(\tR\x0epaymentAddress\"\
-    \xb5\x01\n\x16CardanoTxAuxiliaryData\x12\x86\x01\n\x1dcvote_registration\
-    _parameters\x18\x01\x20\x01(\x0b2B.hw.trezor.messages.cardano.CardanoCVo\
-    teRegistrationParametersTypeR\x1bcvoteRegistrationParameters\x12\x12\n\
-    \x04hash\x18\x02\x20\x01(\x0cR\x04hash\"=\n\rCardanoTxMint\x12,\n\x12ass\
-    et_groups_count\x18\x01\x20\x02(\rR\x10assetGroupsCount\"V\n\x18CardanoT\
-    xCollateralInput\x12\x1b\n\tprev_hash\x18\x01\x20\x02(\x0cR\x08prevHash\
-    \x12\x1d\n\nprev_index\x18\x02\x20\x02(\rR\tprevIndex\"O\n\x17CardanoTxR\
-    equiredSigner\x12\x19\n\x08key_hash\x18\x01\x20\x01(\x0cR\x07keyHash\x12\
-    \x19\n\x08key_path\x18\x02\x20\x03(\rR\x07keyPath\"U\n\x17CardanoTxRefer\
-    enceInput\x12\x1b\n\tprev_hash\x18\x01\x20\x02(\x0cR\x08prevHash\x12\x1d\
-    \n\nprev_index\x18\x02\x20\x02(\rR\tprevIndex\"\x12\n\x10CardanoTxItemAc\
-    k\"\xea\x01\n\x20CardanoTxAuxiliaryDataSupplement\x12T\n\x04type\x18\x01\
-    \x20\x02(\x0e2@.hw.trezor.messages.cardano.CardanoTxAuxiliaryDataSupplem\
-    entTypeR\x04type\x12.\n\x13auxiliary_data_hash\x18\x02\x20\x01(\x0cR\x11\
-    auxiliaryDataHash\x12@\n\x1ccvote_registration_signature\x18\x03\x20\x01\
-    (\x0cR\x1acvoteRegistrationSignature\"-\n\x17CardanoTxWitnessRequest\x12\
-    \x12\n\x04path\x18\x01\x20\x03(\rR\x04path\"\xb6\x01\n\x18CardanoTxWitne\
-    ssResponse\x12D\n\x04type\x18\x01\x20\x02(\x0e20.hw.trezor.messages.card\
-    ano.CardanoTxWitnessTypeR\x04type\x12\x17\n\x07pub_key\x18\x02\x20\x02(\
-    \x0cR\x06pubKey\x12\x1c\n\tsignature\x18\x03\x20\x02(\x0cR\tsignature\
-    \x12\x1d\n\nchain_code\x18\x04\x20\x01(\x0cR\tchainCode\"\x12\n\x10Carda\
-    noTxHostAck\",\n\x11CardanoTxBodyHash\x12\x17\n\x07tx_hash\x18\x01\x20\
-    \x02(\x0cR\x06txHash\"\x17\n\x15CardanoSignTxFinished*B\n\x15CardanoDeri\
-    vationType\x12\n\n\x06LEDGER\x10\0\x12\n\n\x06ICARUS\x10\x01\x12\x11\n\r\
-    ICARUS_TREZOR\x10\x02*\xd2\x01\n\x12CardanoAddressType\x12\x08\n\x04BASE\
-    \x10\0\x12\x13\n\x0fBASE_SCRIPT_KEY\x10\x01\x12\x13\n\x0fBASE_KEY_SCRIPT\
-    \x10\x02\x12\x16\n\x12BASE_SCRIPT_SCRIPT\x10\x03\x12\x0b\n\x07POINTER\
-    \x10\x04\x12\x12\n\x0ePOINTER_SCRIPT\x10\x05\x12\x0e\n\nENTERPRISE\x10\
-    \x06\x12\x15\n\x11ENTERPRISE_SCRIPT\x10\x07\x12\t\n\x05BYRON\x10\x08\x12\
-    \n\n\x06REWARD\x10\x0e\x12\x11\n\rREWARD_SCRIPT\x10\x0f*o\n\x17CardanoNa\
-    tiveScriptType\x12\x0b\n\x07PUB_KEY\x10\0\x12\x07\n\x03ALL\x10\x01\x12\
-    \x07\n\x03ANY\x10\x02\x12\n\n\x06N_OF_K\x10\x03\x12\x12\n\x0eINVALID_BEF\
-    ORE\x10\x04\x12\x15\n\x11INVALID_HEREAFTER\x10\x05*K\n$CardanoNativeScri\
-    ptHashDisplayFormat\x12\x08\n\x04HIDE\x10\0\x12\n\n\x06BECH32\x10\x01\
-    \x12\r\n\tPOLICY_ID\x10\x02*G\n\"CardanoTxOutputSerializationFormat\x12\
-    \x10\n\x0cARRAY_LEGACY\x10\0\x12\x0f\n\x0bMAP_BABBAGE\x10\x01*}\n\x16Car\
-    danoCertificateType\x12\x16\n\x12STAKE_REGISTRATION\x10\0\x12\x18\n\x14S\
-    TAKE_DEREGISTRATION\x10\x01\x12\x14\n\x10STAKE_DELEGATION\x10\x02\x12\
-    \x1b\n\x17STAKE_POOL_REGISTRATION\x10\x03*X\n\x14CardanoPoolRelayType\
-    \x12\x12\n\x0eSINGLE_HOST_IP\x10\0\x12\x14\n\x10SINGLE_HOST_NAME\x10\x01\
-    \x12\x16\n\x12MULTIPLE_HOST_NAME\x10\x02*R\n$CardanoTxAuxiliaryDataSuppl\
-    ementType\x12\x08\n\x04NONE\x10\0\x12\x20\n\x1cCVOTE_REGISTRATION_SIGNAT\
-    URE\x10\x01*6\n\x1eCardanoCVoteRegistrationFormat\x12\t\n\x05CIP15\x10\0\
-    \x12\t\n\x05CIP36\x10\x01*\x82\x01\n\x14CardanoTxSigningMode\x12\x18\n\
-    \x14ORDINARY_TRANSACTION\x10\0\x12\x1e\n\x1aPOOL_REGISTRATION_AS_OWNER\
-    \x10\x01\x12\x18\n\x14MULTISIG_TRANSACTION\x10\x02\x12\x16\n\x12PLUTUS_T\
-    RANSACTION\x10\x03*>\n\x14CardanoTxWitnessType\x12\x11\n\rBYRON_WITNESS\
-    \x10\0\x12\x13\n\x0fSHELLEY_WITNESS\x10\x01B;\n#com.satoshilabs.trezor.l\
-    ib.protobufB\x14TrezorMessageCardano\
+    ays_count\x18\x0c\x20\x02(\rR\x0brelaysCount\"\x8a\x01\n\x0bCardanoDRep\
+    \x12?\n\x04type\x18\x01\x20\x02(\x0e2+.hw.trezor.messages.cardano.Cardan\
+    oDRepTypeR\x04type\x12\x19\n\x08key_hash\x18\x02\x20\x01(\x0cR\x07keyHas\
+    h\x12\x1f\n\x0bscript_hash\x18\x03\x20\x01(\x0cR\nscriptHash\"\xf9\x02\n\
+    \x14CardanoTxCertificate\x12F\n\x04type\x18\x01\x20\x02(\x0e22.hw.trezor\
+    .messages.cardano.CardanoCertificateTypeR\x04type\x12\x12\n\x04path\x18\
+    \x02\x20\x03(\rR\x04path\x12\x12\n\x04pool\x18\x03\x20\x01(\x0cR\x04pool\
+    \x12^\n\x0fpool_parameters\x18\x04\x20\x01(\x0b25.hw.trezor.messages.car\
+    dano.CardanoPoolParametersTypeR\x0epoolParameters\x12\x1f\n\x0bscript_ha\
+    sh\x18\x05\x20\x01(\x0cR\nscriptHash\x12\x19\n\x08key_hash\x18\x06\x20\
+    \x01(\x0cR\x07keyHash\x12\x18\n\x07deposit\x18\x07\x20\x01(\x04R\x07depo\
+    sit\x12;\n\x04drep\x18\x08\x20\x01(\x0b2'.hw.trezor.messages.cardano.Car\
+    danoDRepR\x04drep\"}\n\x13CardanoTxWithdrawal\x12\x12\n\x04path\x18\x01\
+    \x20\x03(\rR\x04path\x12\x16\n\x06amount\x18\x02\x20\x02(\x04R\x06amount\
+    \x12\x1f\n\x0bscript_hash\x18\x03\x20\x01(\x0cR\nscriptHash\x12\x19\n\
+    \x08key_hash\x18\x04\x20\x01(\x0cR\x07keyHash\"d\n\"CardanoCVoteRegistra\
+    tionDelegation\x12&\n\x0fvote_public_key\x18\x01\x20\x02(\x0cR\rvotePubl\
+    icKey\x12\x16\n\x06weight\x18\x02\x20\x02(\rR\x06weight\"\x8e\x04\n&Card\
+    anoCVoteRegistrationParametersType\x12&\n\x0fvote_public_key\x18\x01\x20\
+    \x01(\x0cR\rvotePublicKey\x12!\n\x0cstaking_path\x18\x02\x20\x03(\rR\x0b\
+    stakingPath\x12v\n\x1apayment_address_parameters\x18\x03\x20\x01(\x0b28.\
+    hw.trezor.messages.cardano.CardanoAddressParametersTypeR\x18paymentAddre\
+    ssParameters\x12\x14\n\x05nonce\x18\x04\x20\x02(\x04R\x05nonce\x12Y\n\
+    \x06format\x18\x05\x20\x01(\x0e2:.hw.trezor.messages.cardano.CardanoCVot\
+    eRegistrationFormat:\x05CIP15R\x06format\x12`\n\x0bdelegations\x18\x06\
+    \x20\x03(\x0b2>.hw.trezor.messages.cardano.CardanoCVoteRegistrationDeleg\
+    ationR\x0bdelegations\x12%\n\x0evoting_purpose\x18\x07\x20\x01(\x04R\rvo\
+    tingPurpose\x12'\n\x0fpayment_address\x18\x08\x20\x01(\tR\x0epaymentAddr\
+    ess\"\xb5\x01\n\x16CardanoTxAuxiliaryData\x12\x86\x01\n\x1dcvote_registr\
+    ation_parameters\x18\x01\x20\x01(\x0b2B.hw.trezor.messages.cardano.Carda\
+    noCVoteRegistrationParametersTypeR\x1bcvoteRegistrationParameters\x12\
+    \x12\n\x04hash\x18\x02\x20\x01(\x0cR\x04hash\"=\n\rCardanoTxMint\x12,\n\
+    \x12asset_groups_count\x18\x01\x20\x02(\rR\x10assetGroupsCount\"V\n\x18C\
+    ardanoTxCollateralInput\x12\x1b\n\tprev_hash\x18\x01\x20\x02(\x0cR\x08pr\
+    evHash\x12\x1d\n\nprev_index\x18\x02\x20\x02(\rR\tprevIndex\"O\n\x17Card\
+    anoTxRequiredSigner\x12\x19\n\x08key_hash\x18\x01\x20\x01(\x0cR\x07keyHa\
+    sh\x12\x19\n\x08key_path\x18\x02\x20\x03(\rR\x07keyPath\"U\n\x17CardanoT\
+    xReferenceInput\x12\x1b\n\tprev_hash\x18\x01\x20\x02(\x0cR\x08prevHash\
+    \x12\x1d\n\nprev_index\x18\x02\x20\x02(\rR\tprevIndex\"\x12\n\x10Cardano\
+    TxItemAck\"\xea\x01\n\x20CardanoTxAuxiliaryDataSupplement\x12T\n\x04type\
+    \x18\x01\x20\x02(\x0e2@.hw.trezor.messages.cardano.CardanoTxAuxiliaryDat\
+    aSupplementTypeR\x04type\x12.\n\x13auxiliary_data_hash\x18\x02\x20\x01(\
+    \x0cR\x11auxiliaryDataHash\x12@\n\x1ccvote_registration_signature\x18\
+    \x03\x20\x01(\x0cR\x1acvoteRegistrationSignature\"-\n\x17CardanoTxWitnes\
+    sRequest\x12\x12\n\x04path\x18\x01\x20\x03(\rR\x04path\"\xb6\x01\n\x18Ca\
+    rdanoTxWitnessResponse\x12D\n\x04type\x18\x01\x20\x02(\x0e20.hw.trezor.m\
+    essages.cardano.CardanoTxWitnessTypeR\x04type\x12\x17\n\x07pub_key\x18\
+    \x02\x20\x02(\x0cR\x06pubKey\x12\x1c\n\tsignature\x18\x03\x20\x02(\x0cR\
+    \tsignature\x12\x1d\n\nchain_code\x18\x04\x20\x01(\x0cR\tchainCode\"\x12\
+    \n\x10CardanoTxHostAck\",\n\x11CardanoTxBodyHash\x12\x17\n\x07tx_hash\
+    \x18\x01\x20\x02(\x0cR\x06txHash\"\x17\n\x15CardanoSignTxFinished*B\n\
+    \x15CardanoDerivationType\x12\n\n\x06LEDGER\x10\0\x12\n\n\x06ICARUS\x10\
+    \x01\x12\x11\n\rICARUS_TREZOR\x10\x02*\xd2\x01\n\x12CardanoAddressType\
+    \x12\x08\n\x04BASE\x10\0\x12\x13\n\x0fBASE_SCRIPT_KEY\x10\x01\x12\x13\n\
+    \x0fBASE_KEY_SCRIPT\x10\x02\x12\x16\n\x12BASE_SCRIPT_SCRIPT\x10\x03\x12\
+    \x0b\n\x07POINTER\x10\x04\x12\x12\n\x0ePOINTER_SCRIPT\x10\x05\x12\x0e\n\
+    \nENTERPRISE\x10\x06\x12\x15\n\x11ENTERPRISE_SCRIPT\x10\x07\x12\t\n\x05B\
+    YRON\x10\x08\x12\n\n\x06REWARD\x10\x0e\x12\x11\n\rREWARD_SCRIPT\x10\x0f*\
+    o\n\x17CardanoNativeScriptType\x12\x0b\n\x07PUB_KEY\x10\0\x12\x07\n\x03A\
+    LL\x10\x01\x12\x07\n\x03ANY\x10\x02\x12\n\n\x06N_OF_K\x10\x03\x12\x12\n\
+    \x0eINVALID_BEFORE\x10\x04\x12\x15\n\x11INVALID_HEREAFTER\x10\x05*K\n$Ca\
+    rdanoNativeScriptHashDisplayFormat\x12\x08\n\x04HIDE\x10\0\x12\n\n\x06BE\
+    CH32\x10\x01\x12\r\n\tPOLICY_ID\x10\x02*G\n\"CardanoTxOutputSerializatio\
+    nFormat\x12\x10\n\x0cARRAY_LEGACY\x10\0\x12\x0f\n\x0bMAP_BABBAGE\x10\x01\
+    *\xd2\x01\n\x16CardanoCertificateType\x12\x16\n\x12STAKE_REGISTRATION\
+    \x10\0\x12\x18\n\x14STAKE_DEREGISTRATION\x10\x01\x12\x14\n\x10STAKE_DELE\
+    GATION\x10\x02\x12\x1b\n\x17STAKE_POOL_REGISTRATION\x10\x03\x12\x1d\n\
+    \x19STAKE_REGISTRATION_CONWAY\x10\x07\x12\x1f\n\x1bSTAKE_DEREGISTRATION_\
+    CONWAY\x10\x08\x12\x13\n\x0fVOTE_DELEGATION\x10\t*P\n\x0fCardanoDRepType\
+    \x12\x0c\n\x08KEY_HASH\x10\0\x12\x0f\n\x0bSCRIPT_HASH\x10\x01\x12\x0b\n\
+    \x07ABSTAIN\x10\x02\x12\x11\n\rNO_CONFIDENCE\x10\x03*X\n\x14CardanoPoolR\
+    elayType\x12\x12\n\x0eSINGLE_HOST_IP\x10\0\x12\x14\n\x10SINGLE_HOST_NAME\
+    \x10\x01\x12\x16\n\x12MULTIPLE_HOST_NAME\x10\x02*R\n$CardanoTxAuxiliaryD\
+    ataSupplementType\x12\x08\n\x04NONE\x10\0\x12\x20\n\x1cCVOTE_REGISTRATIO\
+    N_SIGNATURE\x10\x01*6\n\x1eCardanoCVoteRegistrationFormat\x12\t\n\x05CIP\
+    15\x10\0\x12\t\n\x05CIP36\x10\x01*\x82\x01\n\x14CardanoTxSigningMode\x12\
+    \x18\n\x14ORDINARY_TRANSACTION\x10\0\x12\x1e\n\x1aPOOL_REGISTRATION_AS_O\
+    WNER\x10\x01\x12\x18\n\x14MULTISIG_TRANSACTION\x10\x02\x12\x16\n\x12PLUT\
+    US_TRANSACTION\x10\x03*>\n\x14CardanoTxWitnessType\x12\x11\n\rBYRON_WITN\
+    ESS\x10\0\x12\x13\n\x0fSHELLEY_WITNESS\x10\x01B;\n#com.satoshilabs.trezo\
+    r.lib.protobufB\x14TrezorMessageCardano\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -10179,7 +10599,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(36);
+            let mut messages = ::std::vec::Vec::with_capacity(37);
             messages.push(CardanoBlockchainPointerType::generated_message_descriptor_data());
             messages.push(CardanoNativeScript::generated_message_descriptor_data());
             messages.push(CardanoGetNativeScriptHash::generated_message_descriptor_data());
@@ -10200,6 +10620,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(CardanoPoolRelayParameters::generated_message_descriptor_data());
             messages.push(CardanoPoolMetadataType::generated_message_descriptor_data());
             messages.push(CardanoPoolParametersType::generated_message_descriptor_data());
+            messages.push(CardanoDRep::generated_message_descriptor_data());
             messages.push(CardanoTxCertificate::generated_message_descriptor_data());
             messages.push(CardanoTxWithdrawal::generated_message_descriptor_data());
             messages.push(CardanoCVoteRegistrationDelegation::generated_message_descriptor_data());
@@ -10216,13 +10637,14 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(CardanoTxHostAck::generated_message_descriptor_data());
             messages.push(CardanoTxBodyHash::generated_message_descriptor_data());
             messages.push(CardanoSignTxFinished::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(11);
+            let mut enums = ::std::vec::Vec::with_capacity(12);
             enums.push(CardanoDerivationType::generated_enum_descriptor_data());
             enums.push(CardanoAddressType::generated_enum_descriptor_data());
             enums.push(CardanoNativeScriptType::generated_enum_descriptor_data());
             enums.push(CardanoNativeScriptHashDisplayFormat::generated_enum_descriptor_data());
             enums.push(CardanoTxOutputSerializationFormat::generated_enum_descriptor_data());
             enums.push(CardanoCertificateType::generated_enum_descriptor_data());
+            enums.push(CardanoDRepType::generated_enum_descriptor_data());
             enums.push(CardanoPoolRelayType::generated_enum_descriptor_data());
             enums.push(CardanoTxAuxiliaryDataSupplementType::generated_enum_descriptor_data());
             enums.push(CardanoCVoteRegistrationFormat::generated_enum_descriptor_data());

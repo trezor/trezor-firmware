@@ -663,6 +663,59 @@
       }
     },
     {
+      "description": "transaction with conway stake registration certificate",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [
+          {
+            "type": 7,
+            "path": "m/1852'/1815'/0'/2/0",
+            "deposit": 2000000
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "e200b2c91f3493a1f3b9cfc8b6c141f70181741025e53941e9d57d22b1470c5c",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "79a357517a08c7256b0fab1e93a92a477386f4c2d72cea7bc68527c0133c32472305f010350665d72e8017bb6c2080b5742680ce7700bbddda561c917f294a07",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
       "description": "transaction with stake registration certificate (no outputs)",
       "parameters": {
         "protocol_magic": 764824073,
@@ -831,6 +884,65 @@
       }
     },
     {
+      "description": "transaction with conway stake deregistration certificate",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [
+          {
+            "type": 8,
+            "path": "m/1852'/1815'/0'/2/0",
+            "deposit": 2000000
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "564ad55097101e1ca85629cffe839f43a19bf33aa1940c99a62eb8f14392eebb",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "a0fa6630498f57249b305824ad4d32157653820e7d651332a58af70a80364df882ee8b0471e76dd7a335eea84a18c52b12c02508779d46b193bc418c22e8a00f",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e",
+            "signature": "5d282fcd2685ee47f3770f84b2badf4046e8e76bfdaa26f74e292ecd16bcf89fb330b99edff13bc9c81e8c6523864f69a3ac7cde29d5a648707724c5cb48730e",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
       "description": "transaction with stake deregistration and withdrawal",
       "parameters": {
         "protocol_magic": 764824073,
@@ -947,6 +1059,252 @@
             "type": 1,
             "pub_key": "d1a07f06b872c68120def0203d0fc3d582ac4ce3897d5eaf448026960875f76d",
             "signature": "b67d2af9de2bdfcf552f92ae12a16ed9f9cce9e34adbfe492ff75917a8a0277e125bac8f0dbdd0c4f11fd95ab6d94cb937a5b708f47ec338a00cab2931ba1403",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "transaction delegating vote to DRep by key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [
+          {
+            "type": 9,
+            "path": "m/1852'/1815'/0'/2/0",
+            "drep": {
+              "type": 0,
+              "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+            }
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "1669062fd6efc4f11ed8ae9511a9c9f4454fa4f64e2043483f99d7c711236664",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "b900968efd7cfed3666a63f11267bb4fdc08684788883b91cf690e37834263387b164d52c770d1bb91578ca0029a954c9ef787ab0d3b9f3f396dedf744baa80b",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e",
+            "signature": "d4fb5ebae0a061afa784df1ecceda5c06955a59ebc1ca4f7c2457f7ba27eacca756b8be9d84584f1b2ea23ce7b8420c73fc447398cf6caa725cb0d5c9b9f700e",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "transaction delegating vote to DRep by script hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [
+          {
+            "type": 9,
+            "path": "m/1852'/1815'/0'/2/0",
+            "drep": {
+              "type": 1,
+              "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+            }
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "fccf753e4f96e20c880e5ea933041ed33509ec6c0dc1aee8b25a1fe3d562b7aa",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "bde0242fee0de5b862d2f02847d789ebe10e8f82bf15837370f115c89c1b413f1b0fa5a470210127af92059c4d3ebff297d39e93143667d3823476f12f0f6f07",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e",
+            "signature": "cd8a2fca634c1aa2c88609042de7e4fce232bf233b1271612b5edc7b806e11ff44e6b6b15feb5b6e76b7e16a8d703e7653d860c00981edf6fe3b1e4cbeaba406",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "transaction delegating vote to predefined DRep 'Abstain'",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [
+          {
+            "type": 9,
+            "path": "m/1852'/1815'/0'/2/0",
+            "drep": {
+              "type": 2
+            }
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "01d0f76fadc899087c5352befac56cbfdc2e868ac715fbfe00230bab3f7fa751",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "52c57d9c0e06fc9883285db4eec1a1504e27726dc5afce943d6f54df22188f05c3eeee06d052375eceb55df83c314237b3718f07fccef6198bda8c20d794b102",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e",
+            "signature": "6de4940ff99738aaf3659ffeb8e4f6f01ff88ddb65c24028d75a847ca684d07af000e32eaa4c915c8031f6d928b2bcbe8c6f57e389299d3eafe213bd0ab1190c",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "transaction delegating vote to predefined DRep 'No Confidence'",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [
+          {
+            "type": 9,
+            "path": "m/1852'/1815'/0'/2/0",
+            "drep": {
+              "type": 3
+            }
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "567e9bd00787190f1ab51879dcf834002b76007130c526b2e4d1bf9a996f5ad0",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "20e3f9ecc3a1b97cbda08cf610b2e72b45d0e0916af2be2ad472d4c8d2be4b13818497818961c8d27379754f0057b00fa286bce0d59f177f24eeee4e2b24940f",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e",
+            "signature": "898fb2cef0c4b954f22c4218fc9a188a5da340ddb5c6d5bba01c67520bbf537f5743814b6d40dd7f299ece7e39d7efb16a1cb597e8d421649a9483f631371703",
             "chain_code": null
           }
         ]

@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor.enums import CardanoCertificateType, CardanoPoolRelayType
+from trezor.enums import CardanoCertificateType, CardanoDRepType, CardanoPoolRelayType
 from trezor.wire import ProcessError
 
 from . import addresses
@@ -51,6 +51,19 @@ def validate(
             ProcessError("Invalid certificate"),
         )
 
+    if certificate.type in (
+        CCT.STAKE_REGISTRATION_CONWAY,
+        CCT.STAKE_DEREGISTRATION_CONWAY,
+    ):
+        if certificate.deposit is None:
+            raise ProcessError("Invalid certificate")
+        validate_stake_credential(
+            certificate.path,
+            certificate.script_hash,
+            certificate.key_hash,
+            ProcessError("Invalid certificate"),
+        )
+
     if certificate.type == CCT.STAKE_DELEGATION:
         if not certificate.pool or len(certificate.pool) != _POOL_HASH_SIZE:
             raise ProcessError("Invalid certificate")
@@ -62,24 +75,45 @@ def validate(
             certificate.pool_parameters, protocol_magic, network_id
         )
 
+    if certificate.type == CCT.VOTE_DELEGATION:
+        if certificate.drep is None:
+            raise ProcessError("Invalid certificate")
+        validate_drep(
+            certificate.drep,
+            ProcessError("Invalid certificate"),
+        )
+        validate_stake_credential(
+            certificate.path,
+            certificate.script_hash,
+            certificate.key_hash,
+            ProcessError("Invalid certificate"),
+        )
+
     account_path_checker.add_certificate(certificate)
 
 
 def _validate_structure(certificate: messages.CardanoTxCertificate) -> None:
     pool = certificate.pool  # local_cache_attribute
     pool_parameters = certificate.pool_parameters  # local_cache_attribute
+    deposit = certificate.deposit
+    drep = certificate.drep
     CCT = CardanoCertificateType  # local_cache_global
 
     fields_to_be_empty: dict[CCT, tuple[Any, ...]] = {
-        CCT.STAKE_REGISTRATION: (pool, pool_parameters),
-        CCT.STAKE_DELEGATION: (pool_parameters,),
-        CCT.STAKE_DEREGISTRATION: (pool, pool_parameters),
+        CCT.STAKE_REGISTRATION: (pool, pool_parameters, deposit, drep),
+        CCT.STAKE_REGISTRATION_CONWAY: (pool, pool_parameters, drep),
+        CCT.STAKE_DELEGATION: (pool_parameters, deposit, drep),
+        CCT.STAKE_DEREGISTRATION: (pool, pool_parameters, deposit, drep),
+        CCT.STAKE_DEREGISTRATION_CONWAY: (pool, pool_parameters, drep),
         CCT.STAKE_POOL_REGISTRATION: (
             certificate.path,
             certificate.script_hash,
             certificate.key_hash,
             pool,
+            deposit,
+            drep,
         ),
+        CCT.VOTE_DELEGATION: (pool, pool_parameters, deposit),
     }
 
     if certificate.type not in fields_to_be_empty or any(
@@ -106,6 +140,20 @@ def cborize(
                 certificate.key_hash,
             ),
         )
+    elif cert_type in (
+        CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
+        CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
+    ):
+        return (
+            cert_type,
+            cborize_stake_credential(
+                keychain,
+                certificate.path,
+                certificate.script_hash,
+                certificate.key_hash,
+            ),
+            certificate.deposit,
+        )
     elif cert_type == CardanoCertificateType.STAKE_DELEGATION:
         return (
             cert_type,
@@ -116,6 +164,18 @@ def cborize(
                 certificate.key_hash,
             ),
             certificate.pool,
+        )
+    elif cert_type == CardanoCertificateType.VOTE_DELEGATION:
+        assert certificate.drep is not None
+        return (
+            cert_type,
+            cborize_stake_credential(
+                keychain,
+                certificate.path,
+                certificate.script_hash,
+                certificate.key_hash,
+            ),
+            cborize_drep(certificate.drep),
         )
     else:
         raise RuntimeError  # should be unreachable
@@ -198,6 +258,32 @@ def _validate_pool_parameters(
         assert_cond(all((32 <= ord(c) < 127) for c in pool_metadata.url))
 
 
+def validate_drep(
+    drep: messages.CardanoDRep,
+    error: ProcessError,
+) -> None:
+    from .helpers import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE
+
+    drep_type = drep.type
+    script_hash = drep.script_hash
+    key_hash = drep.key_hash
+
+    if drep_type == CardanoDRepType.KEY_HASH:
+        if script_hash or not key_hash or len(key_hash) != ADDRESS_KEY_HASH_SIZE:
+            raise error
+    elif drep_type == CardanoDRepType.SCRIPT_HASH:
+        if key_hash or not script_hash or len(script_hash) != SCRIPT_HASH_SIZE:
+            raise error
+    elif drep_type in (
+        CardanoDRepType.ABSTAIN,
+        CardanoDRepType.NO_CONFIDENCE,
+    ):
+        if script_hash or key_hash:
+            raise error
+    else:
+        raise RuntimeError  # should be unreachable
+
+
 def validate_pool_owner(
     owner: messages.CardanoPoolOwner, account_path_checker: AccountPathChecker
 ) -> None:
@@ -233,6 +319,21 @@ def validate_pool_relay(pool_relay: messages.CardanoPoolRelayParameters) -> None
         assert_cond(port is not None and 0 <= port <= _MAX_PORT_NUMBER)
     elif pool_relay.type == CardanoPoolRelayType.MULTIPLE_HOST_NAME:
         assert_cond(host_name is not None and len(host_name) <= _MAX_URL_LENGTH)
+    else:
+        raise RuntimeError  # should be unreachable
+
+
+def cborize_drep(drep: messages.CardanoDRep) -> tuple[int, bytes] | tuple[int]:
+    if drep.type == CardanoDRepType.KEY_HASH:
+        assert drep.key_hash is not None
+        return 0, drep.key_hash
+    elif drep.type == CardanoDRepType.SCRIPT_HASH:
+        assert drep.script_hash is not None
+        return 1, drep.script_hash
+    elif drep.type == CardanoDRepType.ABSTAIN:
+        return (2,)
+    elif drep.type == CardanoDRepType.NO_CONFIDENCE:
+        return (3,)
     else:
         raise RuntimeError  # should be unreachable
 
