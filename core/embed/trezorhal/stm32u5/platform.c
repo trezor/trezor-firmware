@@ -21,6 +21,7 @@
 
 #include "platform.h"
 #include "rng.h"
+#include TREZOR_BOARD
 
 const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U,
                                    1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
@@ -38,13 +39,12 @@ typedef struct {
 } clock_conf_t;
 
 #if defined STM32U5
-// HSE 16MHz
 #define DEFAULT_FREQ 160U
 #define DEFAULT_PLLM 1
-#define DEFAULT_PLLN 10  // mult by 10
-#define DEFAULT_PLLR 1U  // division by 1
-#define DEFAULT_PLLQ 1U  // division by 1
-#define DEFAULT_PLLP 5U  // division by 5
+#define DEFAULT_PLLN (10 * PLLN_COEF)  // mult by 10
+#define DEFAULT_PLLR 1U                // division by 1
+#define DEFAULT_PLLQ 1U                // division by 1
+#define DEFAULT_PLLP 5U                // division by 5
 #else
 #error Unsupported MCU
 #endif
@@ -52,6 +52,13 @@ typedef struct {
 uint32_t SystemCoreClock = DEFAULT_FREQ * 1000000U;
 
 // PLLCLK = ((HSE / PLLM) * PLLN) / PLLR
+#ifdef HSE_16MHZ
+#define PLLN_COEF 1U
+#elif defined HSE_8MHZ
+#define PLLN_COEF 2U
+#else
+#error Unsupported HSE frequency
+#endif
 
 // assuming HSE 16 MHz
 clock_conf_t clock_conf[1] = {
@@ -61,7 +68,7 @@ clock_conf_t clock_conf[1] = {
         .pllp = 1,
         .pllq = 1,
         .pllm = 1,
-        .plln = 10,
+        .plln = 10 * PLLN_COEF,
     },
 };
 
