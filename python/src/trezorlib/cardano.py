@@ -420,6 +420,27 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
             ),
             None,
         )
+    elif certificate_type in (
+        messages.CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
+        messages.CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
+    ):
+        if "deposit" not in certificate:
+            raise CERTIFICATE_MISSING_FIELDS_ERROR
+
+        path, script_hash, key_hash = _parse_credential(
+            certificate, CERTIFICATE_MISSING_FIELDS_ERROR
+        )
+
+        return (
+            messages.CardanoTxCertificate(
+                type=certificate_type,
+                path=path,
+                script_hash=script_hash,
+                key_hash=key_hash,
+                deposit=int(certificate["deposit"]),
+            ),
+            None,
+        )
     elif certificate_type == messages.CardanoCertificateType.STAKE_POOL_REGISTRATION:
         pool_parameters = certificate["pool_parameters"]
 
@@ -464,6 +485,30 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
                 ),
             ),
             (owners, relays),
+        )
+    if certificate_type == messages.CardanoCertificateType.VOTE_DELEGATION:
+        if "drep" not in certificate:
+            raise CERTIFICATE_MISSING_FIELDS_ERROR
+
+        path, script_hash, key_hash = _parse_credential(
+            certificate, CERTIFICATE_MISSING_FIELDS_ERROR
+        )
+
+        return (
+            messages.CardanoTxCertificate(
+                type=certificate_type,
+                path=path,
+                script_hash=script_hash,
+                key_hash=key_hash,
+                drep=messages.CardanoDRep(
+                    type=messages.CardanoDRepType(certificate["drep"]["type"]),
+                    key_hash=parse_optional_bytes(certificate["drep"].get("key_hash")),
+                    script_hash=parse_optional_bytes(
+                        certificate["drep"].get("script_hash")
+                    ),
+                ),
+            ),
+            None,
         )
     else:
         raise ValueError("Unknown certificate type")
@@ -686,6 +731,9 @@ def _get_witness_requests(
                 in (
                     messages.CardanoCertificateType.STAKE_DEREGISTRATION,
                     messages.CardanoCertificateType.STAKE_DELEGATION,
+                    messages.CardanoCertificateType.STAKE_REGISTRATION_CONWAY,
+                    messages.CardanoCertificateType.STAKE_DEREGISTRATION_CONWAY,
+                    messages.CardanoCertificateType.VOTE_DELEGATION,
                 )
                 and certificate.path
             ):

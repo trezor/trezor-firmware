@@ -56,6 +56,16 @@ enum CardanoCertificateType {
     STAKE_DEREGISTRATION = 1;
     STAKE_DELEGATION = 2;
     STAKE_POOL_REGISTRATION = 3;
+    STAKE_REGISTRATION_CONWAY = 7;
+    STAKE_DEREGISTRATION_CONWAY = 8;
+    VOTE_DELEGATION = 9;
+}
+
+enum CardanoDRepType {
+    KEY_HASH = 0;
+    SCRIPT_HASH = 1;
+    ABSTAIN = 2;
+    NO_CONFIDENCE = 3;
 }
 
 enum CardanoPoolRelayType {
@@ -336,6 +346,16 @@ message CardanoPoolParametersType {
 }
 
 /**
+ * DRep delegation parameters
+ * @embed
+*/
+message CardanoDRep {
+    required CardanoDRepType type = 1;  // drep type
+    optional bytes key_hash = 2;        // drep key hash
+    optional bytes script_hash = 3;     // drep script hash
+}
+
+/**
  * Request: Transaction certificate data
  * @next CardanoTxItemAck
  */
@@ -346,6 +366,8 @@ message CardanoTxCertificate {
     optional CardanoPoolParametersType pool_parameters = 4;   // used for stake pool registration certificate
     optional bytes script_hash = 5;                           // stake credential script hash
     optional bytes key_hash = 6;                              // stake credential key hash
+    optional uint64 deposit = 7;                              // used for stake key registration certificate
+    optional CardanoDRep drep = 8;                            // used for vote delegation certificate
 }
 
 /**

@@ -728,7 +728,7 @@ class Signer:
                 certificate.pool_parameters.metadata
             )
         else:
-            await layout.confirm_certificate(certificate)
+            await layout.confirm_certificate(certificate, self.msg.network_id)
 
     # pool owners
 
