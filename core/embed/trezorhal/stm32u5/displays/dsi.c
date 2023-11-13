@@ -167,8 +167,8 @@ ALIGN_32BYTES(uint32_t PhysFrameBuffer0[184320]);
 __attribute__((section(".fb2")))
 ALIGN_32BYTES(uint32_t PhysFrameBuffer1[184320]);
 
-__attribute__((section(".fb1"))) uint32_t gfxmmu_lut[2 * GFXMMU_LUT_SIZE];
-__attribute__((section(".fb1"))) uint32_t act_frame_buffer = 0;
+__attribute__((section(".gfxmmu_table"))) uint32_t gfxmmu_lut[2 * GFXMMU_LUT_SIZE];
+__attribute__((section(".framebuffer_select"))) uint32_t act_frame_buffer = 0;
 
 #if (USE_HAL_GFXMMU_REGISTER_CALLBACKS == 1)
 static uint32_t LcdGfxmmu_IsMspCbValid[LCD_INSTANCES_NBR] = {0};
