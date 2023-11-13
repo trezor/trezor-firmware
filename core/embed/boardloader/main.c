@@ -246,6 +246,8 @@ int main(void) {
     delete_secrets();
     NVIC_SystemReset();
   }
+
+  trustzone_init_boardloader();
 #endif
 
 #ifdef STM32F4
@@ -256,11 +258,6 @@ int main(void) {
 
 #ifdef USE_SDRAM
   sdram_init();
-#endif
-
-#ifdef STM32U5
-  trustzone_init();
-  trustzone_run();
 #endif
 
   display_init();
