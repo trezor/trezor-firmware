@@ -24,7 +24,7 @@ const flash_area_t BOARDLOADER_AREA = {
     .num_subareas = 1,
     .subarea[0] =
         {
-            .first_sector = 1,
+            .first_sector = 2,
             .num_sectors = 6,
         },
 };
@@ -43,7 +43,7 @@ const flash_area_t FIRMWARE_AREA = {
     .subarea[0] =
         {
             .first_sector = 0x28,
-            .num_sectors = 456,
+            .num_sectors = 464,
         },
 };
 

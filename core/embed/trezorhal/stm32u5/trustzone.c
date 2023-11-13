@@ -48,7 +48,7 @@ static void trustzone_configure_sram(void) {
   mpcbb.AttributeConfig.MPCBB_LockConfig_array[0] = 0x00000000U;
 
   // Set all blocks secured & unprivileged
-  for (int index = 0; index < 52; index++) {
+  for (int index = 0; index < GTZC_MPCBB_NB_VCTR_REG_MAX; index++) {
     mpcbb.AttributeConfig.MPCBB_SecConfig_array[index] = 0xFFFFFFFFU;
     mpcbb.AttributeConfig.MPCBB_PrivConfig_array[index] = 0x00000000U;
   }
@@ -63,6 +63,19 @@ static void trustzone_configure_sram(void) {
 #if defined STM32U5G9xx
   HAL_GTZC_MPCBB_ConfigMem(SRAM6_BASE, &mpcbb);
 #endif
+}
+
+static void trustzone_configure_fsmc(void) {
+  __HAL_RCC_FMC_CLK_ENABLE();
+  MPCWM_ConfigTypeDef mpcwm = {0};
+
+  mpcwm.AreaId = GTZC_TZSC_MPCWM_ID1;
+  mpcwm.AreaStatus = ENABLE;
+  mpcwm.Attribute = GTZC_TZSC_MPCWM_REGION_SEC;
+  mpcwm.Length = 128 * 1024;
+  mpcwm.Offset = 0;
+  mpcwm.Lock = GTZC_TZSC_MPCWM_LOCK_OFF;
+  HAL_GTZC_TZSC_MPCWM_ConfigMemAttributes(FMC_BANK1, &mpcwm);
 }
 
 // Configure FLASH security
@@ -96,6 +109,9 @@ void trustzone_init_boardloader(void) {
 
   // Configure FLASH security attributes
   trustzone_configure_flash();
+
+  // Configure FSMC security attributes
+  trustzone_configure_fsmc();
 
   // Make all peripherals secure
   HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC);

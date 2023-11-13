@@ -94,7 +94,11 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+#ifdef STM32U5
+    GPIO_InitStruct.Alternate = GPIO_AF10_USB;
+#else
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
+#endif
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* Configure VBUS Pin */
@@ -118,6 +122,15 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 
     /* Enable USB FS Clocks */
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
+
+#ifdef STM32U5
+
+    /* Enable VDDUSB */
+    __HAL_RCC_PWR_CLK_ENABLE();
+    HAL_PWREx_EnableVddUSB();
+    __HAL_RCC_PWR_CLK_DISABLE();
+
+#endif
 
     /* Set USBFS Interrupt priority */
     svc_setpriority(OTG_FS_IRQn, IRQ_PRI_OTG_FS);
@@ -763,7 +776,11 @@ void  USBD_LL_Delay(uint32_t Delay)
   * @retval None
   */
 #if defined(USE_USB_FS)
+#ifdef STM32U5
+void OTG_HS_IRQHandler(void) {
+#else
 void OTG_FS_IRQHandler(void) {
+#endif
     SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_FS_IRQn);
     if (pcd_fs_handle.Instance) {

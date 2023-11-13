@@ -20,6 +20,7 @@
 #include STM32_HAL_H
 #include <stdbool.h>
 #include "common.h"
+#include "model.h"
 #include "stm32u5xx_ll_cortex.h"
 
 // region type
@@ -108,33 +109,57 @@ static void mpu_set_attributes() {
 
 #define GFXMMU_BUFFERS_S GFXMMU_VIRTUAL_BUFFERS_BASE_S
 
-#define SIZE_16K (16 * 1024)
-#define SIZE_48K (48 * 1024)
-#define SIZE_64K (64 * 1024)
-#define SIZE_128K (128 * 1024)
-#define SIZE_192K (192 * 1024)
-#define SIZE_320K (320 * 1024)
-#define SIZE_2496K (2496 * 1024)
-#define SIZE_3776K ((4096 - 320) * 1024)
-#define SIZE_3904K ((4096 - 192) * 1024)
-#define SIZE_4032K ((4096 - 64) * 1024)
-#define SIZE_4M (4 * 1024 * 1024)
-#define SIZE_16M (16 * 1024 * 1024)
-#define SIZE_256M (256 * 1024 * 1024)
+#define SECRET_START FLASH_BASE_S
+#define SECRET_SIZE SIZE_16K
+#define BOARDLOADER_SIZE SIZE_48K
+#define BOOTLOADER_SIZE BOOTLOADER_IMAGE_MAXSIZE
+#define FIRMWARE_SIZE FIRMWARE_IMAGE_MAXSIZE
+#define STORAGE_START \
+  (FLASH_BASE_S + SECRET_SIZE + BOARDLOADER_SIZE + BOOTLOADER_SIZE)
+#define STORAGE_SIZE NORCOW_SECTOR_SIZE* STORAGE_AREAS_COUNT
+
+#if defined STM32U5A9xx
+#define SRAM_SIZE SIZE_2496K
+#elif defined STM32U5G9xx
+#define SRAM_SIZE (SIZE_2496K + SIZE_512K)
+#elif defined STM32U585xx
+#define SRAM_SIZE SIZE_768K
+#else
+#error "Unknown MCU"
+#endif
+
+#define L1_REST_SIZE (FLASH_SIZE - (BOARDLOADER_SIZE + SECRET_SIZE))
+
+#define L2_PREV_SIZE (SECRET_SIZE + BOARDLOADER_SIZE)
+#define L2_REST_SIZE \
+  (FLASH_SIZE - (BOOTLOADER_SIZE + BOARDLOADER_SIZE + SECRET_SIZE))
+
+#define ASSETS_START (FIRMWARE_START + FIRMWARE_SIZE)
+#define ASSETS_SIZE                                                    \
+  (FLASH_SIZE - (FIRMWARE_START + BOOTLOADER_SIZE + BOARDLOADER_SIZE + \
+                 SECRET_SIZE + STORAGE_SIZE))
+
+#ifdef STM32U585xx
+#define GRAPHICS_START FMC_BANK1
+#define GRAPHICS_SIZE SIZE_16M
+#else
+#define GRAPHICS_START GFXMMU_BUFFERS
+#define GRAPHICS_SIZE SIZE_16M
+#endif
 
 void mpu_config_boardloader() {
   HAL_MPU_Disable();
   mpu_set_attributes();
   // clang-format off
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, FLASH_BASE_S,             SIZE_16K,           FLASH_DATA,  YES,    NO ); // Secret
-  SET_REGION( 1, FLASH_BASE_S + SIZE_16K,  SIZE_48K,           FLASH_CODE,   NO,    NO ); // Boardloader code
-  SET_REGION( 2, FLASH_BASE_S + SIZE_64K,  SIZE_4032K,         FLASH_DATA,  YES,    NO ); // Bootloader + Storage + Firmware
-  SET_REGION( 3, SRAM1_BASE_S,             SIZE_2496K,         SRAM,        YES,    NO ); // SRAM1/2/3/5
-  SET_REGION( 4, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,    NO ); // Frame buffer
-  SET_REGION( 5, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    NO ); // Peripherals
+  SET_REGION( 0, SECRET_START,             SECRET_SIZE,        FLASH_DATA,  YES,    NO ); // Secret
+  SET_REGION( 1, BOARDLOADER_START,        BOARDLOADER_SIZE,   FLASH_CODE,   NO,    NO ); // Boardloader code
+  SET_REGION( 2, BOOTLOADER_START,         L1_REST_SIZE,       FLASH_DATA,  YES,    NO ); // Bootloader + Storage + Firmware
+  SET_REGION( 3, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO ); // SRAM1/2/3/5
+  SET_REGION( 4, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO ); // Frame buffer or display interface
+  SET_REGION( 5, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO ); // Peripherals
   DIS_REGION( 6 );
-  DIS_REGION( 7 );
+  SET_REGION( 7, SRAM4_BASE,               SIZE_16K,           SRAM,        YES,    NO ); // SRAM4
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
@@ -144,14 +169,14 @@ void mpu_config_bootloader() {
   mpu_set_attributes();
   // clang-format off
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, FLASH_BASE_S,             SIZE_64K,           FLASH_DATA,  YES,    NO ); // Secret + Boardloader
-  SET_REGION( 1, FLASH_BASE_S + SIZE_64K,  SIZE_128K,          FLASH_CODE,  NO,     NO ); // Bootloader code
-  SET_REGION( 2, FLASH_BASE_S + SIZE_192K, SIZE_3904K,         FLASH_DATA,  YES,    NO ); // Storage + Firmware
-  SET_REGION( 3, SRAM1_BASE_S,             SIZE_2496K,         SRAM,        YES,    NO ); // SRAM1/2/3/5
-  SET_REGION( 4, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,    NO ); // Frame buffer
-  SET_REGION( 5, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    NO ); // Peripherals
+  SET_REGION( 0, SECRET_START,             L2_PREV_SIZE,       FLASH_DATA,  YES,    NO ); // Secret + Boardloader
+  SET_REGION( 1, BOOTLOADER_START,         BOOTLOADER_SIZE,    FLASH_CODE,  NO,     NO ); // Bootloader code
+  SET_REGION( 2, STORAGE_START,            L2_REST_SIZE,       FLASH_DATA,  YES,    NO ); // Storage + Firmware
+  SET_REGION( 3, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,    NO ); // SRAM1/2/3/5
+  SET_REGION( 4, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,    NO ); // Frame buffer or display interface
+  SET_REGION( 5, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,    NO ); // Peripherals
   SET_REGION( 6, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,    NO ); // OTP
-  DIS_REGION( 7 );
+  SET_REGION( 7, SRAM4_BASE,               SIZE_16K,           SRAM,        YES,    NO ); // SRAM4
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
@@ -161,14 +186,14 @@ void mpu_config_firmware() {
   mpu_set_attributes();
   // clang-format off
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, FLASH_BASE_S + SIZE_192K, SIZE_128K,          FLASH_DATA,  YES,   YES ); // Storage
-  SET_REGION( 1, FLASH_BASE_S + SIZE_320K, SIZE_3776K,         FLASH_CODE,   NO,   YES ); // Firmware
-  SET_REGION( 2, SRAM1_BASE_S,             SIZE_2496K,         SRAM,        YES,   YES ); // SRAM1/2/3/5
-  SET_REGION( 3, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,   YES ); // Frame buffer
-  SET_REGION( 4, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,   YES ); // Peripherals
-  SET_REGION( 5, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,   YES ); // OTP
-  DIS_REGION( 6 );
-  DIS_REGION( 7 );
+  SET_REGION( 0, STORAGE_START,            STORAGE_SIZE,       FLASH_DATA,  YES,   YES ); // Storage
+  SET_REGION( 1, FIRMWARE_START,           FIRMWARE_SIZE,      FLASH_CODE,   NO,   YES ); // Firmware
+  SET_REGION( 2, ASSETS_START,             ASSETS_SIZE,        FLASH_DATA,  YES,   YES ); // Assets
+  SET_REGION( 3, SRAM1_BASE,               SRAM_SIZE,          SRAM,        YES,   YES ); // SRAM1/2/3/5
+  SET_REGION( 4, GRAPHICS_START,           GRAPHICS_SIZE,      SRAM,        YES,   YES ); // Frame buffer or display interface
+  SET_REGION( 5, PERIPH_BASE_NS,           SIZE_512M,          PERIPHERAL,  YES,   YES ); // Peripherals
+  SET_REGION( 6, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,   YES ); // OTP
+  SET_REGION( 7, SRAM4_BASE,               SIZE_16K,           SRAM,        YES,   YES ); // SRAM4
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
