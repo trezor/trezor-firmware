@@ -1,200 +1,114 @@
-#include "trustzone.h"
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#ifdef BOARDLOADER
+#include <trustzone.h>
 
 #include STM32_HAL_H
 
-void trustzone_init(void) {
-#if defined(__SAUREGION_PRESENT) && (__SAUREGION_PRESENT == 1U)
+#ifdef BOARDLOADER
 
-#if defined(SAU_INIT_REGION0) && (SAU_INIT_REGION0 == 1U)
-  SAU_INIT_REGION(0);
+// Configure ARMCortex-M33 SCB and FPU security
+static void trustzone_configure_arm(void) {
+  // Enable FPU in both secure and non-secure modes
+  SCB->NSACR |= SCB_NSACR_CP10_Msk | SCB_NSACR_CP11_Msk;
+
+  // Treat FPU registers as non-secure
+  FPU->FPCCR &= ~FPU_FPCCR_TS_Msk;
+  // CLRONRET field is accessible from both security states
+  FPU->FPCCR &= ~FPU_FPCCR_CLRONRETS_Msk;
+  // FPU registers are cleared on exception return
+  FPU->FPCCR |= FPU_FPCCR_CLRONRET_Msk;
+}
+
+// Configure SRAM security
+static void trustzone_configure_sram(void) {
+  MPCBB_ConfigTypeDef mpcbb = {0};
+
+  // No exceptions on illegal access
+  mpcbb.SecureRWIllegalMode = GTZC_MPCBB_SRWILADIS_DISABLE;
+  // Settings of SRAM clock in RCC is secure
+  mpcbb.InvertSecureState = GTZC_MPCBB_INVSECSTATE_NOT_INVERTED;
+  // Set configuration as unlocked
+  mpcbb.AttributeConfig.MPCBB_LockConfig_array[0] = 0x00000000U;
+
+  // Set all blocks secured & unprivileged
+  for (int index = 0; index < 52; index++) {
+    mpcbb.AttributeConfig.MPCBB_SecConfig_array[index] = 0xFFFFFFFFU;
+    mpcbb.AttributeConfig.MPCBB_PrivConfig_array[index] = 0x00000000U;
+  }
+
+  HAL_GTZC_MPCBB_ConfigMem(SRAM1_BASE, &mpcbb);
+  HAL_GTZC_MPCBB_ConfigMem(SRAM2_BASE, &mpcbb);
+  HAL_GTZC_MPCBB_ConfigMem(SRAM3_BASE, &mpcbb);
+  HAL_GTZC_MPCBB_ConfigMem(SRAM4_BASE, &mpcbb);
+#if defined STM32U5A9xx | defined STM32U5G9xx
+  HAL_GTZC_MPCBB_ConfigMem(SRAM5_BASE, &mpcbb);
 #endif
-
-#if defined(SAU_INIT_REGION1) && (SAU_INIT_REGION1 == 1U)
-  SAU_INIT_REGION(1);
-#endif
-
-#if defined(SAU_INIT_REGION2) && (SAU_INIT_REGION2 == 1U)
-  SAU_INIT_REGION(2);
-#endif
-
-#if defined(SAU_INIT_REGION3) && (SAU_INIT_REGION3 == 1U)
-  SAU_INIT_REGION(3);
-#endif
-
-#if defined(SAU_INIT_REGION4) && (SAU_INIT_REGION4 == 1U)
-  SAU_INIT_REGION(4);
-#endif
-
-#if defined(SAU_INIT_REGION5) && (SAU_INIT_REGION5 == 1U)
-  SAU_INIT_REGION(5);
-#endif
-
-#if defined(SAU_INIT_REGION6) && (SAU_INIT_REGION6 == 1U)
-  SAU_INIT_REGION(6);
-#endif
-
-#if defined(SAU_INIT_REGION7) && (SAU_INIT_REGION7 == 1U)
-  SAU_INIT_REGION(7);
-#endif
-
-  /* repeat this for all possible SAU regions */
-
-#endif /* defined (__SAUREGION_PRESENT) && (__SAUREGION_PRESENT == 1U) */
-
-#if defined(SAU_INIT_CTRL) && (SAU_INIT_CTRL == 1U)
-  SAU->CTRL =
-      ((SAU_INIT_CTRL_ENABLE << SAU_CTRL_ENABLE_Pos) & SAU_CTRL_ENABLE_Msk) |
-      ((SAU_INIT_CTRL_ALLNS << SAU_CTRL_ALLNS_Pos) & SAU_CTRL_ALLNS_Msk);
-#endif
-
-#if defined(SCB_CSR_AIRCR_INIT) && (SCB_CSR_AIRCR_INIT == 1U)
-  SCB->SCR = (SCB->SCR & ~(SCB_SCR_SLEEPDEEPS_Msk)) |
-             ((SCB_CSR_DEEPSLEEPS_VAL << SCB_SCR_SLEEPDEEPS_Pos) &
-              SCB_SCR_SLEEPDEEPS_Msk);
-
-  SCB->AIRCR =
-      (SCB->AIRCR & ~(SCB_AIRCR_VECTKEY_Msk | SCB_AIRCR_SYSRESETREQS_Msk |
-                      SCB_AIRCR_BFHFNMINS_Msk | SCB_AIRCR_PRIS_Msk)) |
-      ((0x05FAU << SCB_AIRCR_VECTKEY_Pos) & SCB_AIRCR_VECTKEY_Msk) |
-      ((SCB_AIRCR_SYSRESETREQS_VAL << SCB_AIRCR_SYSRESETREQS_Pos) &
-       SCB_AIRCR_SYSRESETREQS_Msk) |
-      ((SCB_AIRCR_PRIS_VAL << SCB_AIRCR_PRIS_Pos) & SCB_AIRCR_PRIS_Msk) |
-      ((SCB_AIRCR_BFHFNMINS_VAL << SCB_AIRCR_BFHFNMINS_Pos) &
-       SCB_AIRCR_BFHFNMINS_Msk);
-#endif /* defined (SCB_CSR_AIRCR_INIT) && (SCB_CSR_AIRCR_INIT == 1U) */
-
-#if defined(__FPU_USED) && (__FPU_USED == 1U) && defined(TZ_FPU_NS_USAGE) && \
-    (TZ_FPU_NS_USAGE == 1U)
-
-  SCB->NSACR = (SCB->NSACR & ~(SCB_NSACR_CP10_Msk | SCB_NSACR_CP11_Msk)) |
-               ((SCB_NSACR_CP10_11_VAL << SCB_NSACR_CP10_Pos) &
-                (SCB_NSACR_CP10_Msk | SCB_NSACR_CP11_Msk));
-
-  FPU->FPCCR = (FPU->FPCCR & ~(FPU_FPCCR_TS_Msk | FPU_FPCCR_CLRONRETS_Msk |
-                               FPU_FPCCR_CLRONRET_Msk)) |
-               ((FPU_FPCCR_TS_VAL << FPU_FPCCR_TS_Pos) & FPU_FPCCR_TS_Msk) |
-               ((FPU_FPCCR_CLRONRETS_VAL << FPU_FPCCR_CLRONRETS_Pos) &
-                FPU_FPCCR_CLRONRETS_Msk) |
-               ((FPU_FPCCR_CLRONRET_VAL << FPU_FPCCR_CLRONRET_Pos) &
-                FPU_FPCCR_CLRONRET_Msk);
-#endif
-
-#if defined(NVIC_INIT_ITNS0) && (NVIC_INIT_ITNS0 == 1U)
-  NVIC->ITNS[0] = NVIC_INIT_ITNS0_VAL;
-#endif
-
-#if defined(NVIC_INIT_ITNS1) && (NVIC_INIT_ITNS1 == 1U)
-  NVIC->ITNS[1] = NVIC_INIT_ITNS1_VAL;
-#endif
-
-#if defined(NVIC_INIT_ITNS2) && (NVIC_INIT_ITNS2 == 1U)
-  NVIC->ITNS[2] = NVIC_INIT_ITNS2_VAL;
-#endif
-
-#if defined(NVIC_INIT_ITNS3) && (NVIC_INIT_ITNS3 == 1U)
-  NVIC->ITNS[3] = NVIC_INIT_ITNS3_VAL;
-#endif
-
-#if defined(NVIC_INIT_ITNS4) && (NVIC_INIT_ITNS4 == 1U)
-  NVIC->ITNS[4] = NVIC_INIT_ITNS4_VAL;
+#if defined STM32U5G9xx
+  HAL_GTZC_MPCBB_ConfigMem(SRAM6_BASE, &mpcbb);
 #endif
 }
 
-void trustzone_run(void) {
-  uint32_t index;
-  MPCBB_ConfigTypeDef MPCBB_desc;
+// Configure FLASH security
+static void trustzone_configure_flash(void) {
+  FLASH_BBAttributesTypeDef flash_bb = {0};
 
-  /* Enable GTZC peripheral clock */
+  // Set all blocks as secured
+  for (int index = 0; index < FLASH_BLOCKBASED_NB_REG; index++) {
+    flash_bb.BBAttributes_array[index] = 0xFFFFFFFF;
+  }
+
+  flash_bb.Bank = FLASH_BANK_1;
+  flash_bb.BBAttributesType = FLASH_BB_SEC;
+  HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
+
+  flash_bb.Bank = FLASH_BANK_2;
+  flash_bb.BBAttributesType = FLASH_BB_SEC;
+  HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
+}
+
+void trustzone_init_boardloader(void) {
+  // Configure ARM SCB/FBU security
+  trustzone_configure_arm();
+
+  // Enable GTZC (Global Trust-Zone Controller) peripheral clock
   __HAL_RCC_GTZC1_CLK_ENABLE();
   __HAL_RCC_GTZC2_CLK_ENABLE();
 
-  /* -------------------------------------------------------------------------*/
-  /*                   Memory isolation configuration                         */
-  /* Initializes the memory that secure application books for non secure      */
-  /* -------------------------------------------------------------------------*/
+  // Configure SRAM security attributes
+  trustzone_configure_sram();
 
-  /* -------------------------------------------------------------------------*/
-  /* Internal RAM :                                                  */
-  /* The booking is done through GTZC MPCBB.                         */
-  /* Internal SRAMs are secured by default and configured by block   */
-  /* of 512 bytes.                                                   */
+  // Configure FLASH security attributes
+  trustzone_configure_flash();
 
-  MPCBB_desc.SecureRWIllegalMode = GTZC_MPCBB_SRWILADIS_DISABLE;
-  MPCBB_desc.InvertSecureState = GTZC_MPCBB_INVSECSTATE_NOT_INVERTED;
-  MPCBB_desc.AttributeConfig.MPCBB_LockConfig_array[0] =
-      0x00000000U; /* Unlocked configuration */
+  // Make all peripherals secure
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC);
 
-  for (index = 0; index < 52; index++) {
-    MPCBB_desc.AttributeConfig.MPCBB_SecConfig_array[index] = 0xFFFFFFFFU;
-    MPCBB_desc.AttributeConfig.MPCBB_PrivConfig_array[index] = 0x00000000U;
-  }
-
-  HAL_GTZC_MPCBB_ConfigMem(SRAM1_BASE, &MPCBB_desc);
-  HAL_GTZC_MPCBB_ConfigMem(SRAM2_BASE, &MPCBB_desc);
-  HAL_GTZC_MPCBB_ConfigMem(SRAM3_BASE, &MPCBB_desc);
-  HAL_GTZC_MPCBB_ConfigMem(SRAM4_BASE, &MPCBB_desc);
-#if defined STM32U5A9xx | defined STM32U5G9xx
-  HAL_GTZC_MPCBB_ConfigMem(SRAM5_BASE, &MPCBB_desc);
-#endif
-#if defined STM32U5G9xx
-  HAL_GTZC_MPCBB_ConfigMem(SRAM6_BASE, &MPCBB_desc);
-#endif
-
-  /* -------------------------------------------------------------------------*/
-  /* Internal Flash */
-  /* The booking is done in both IDAU/SAU and FLASH interface */
-
-  /* Flash memory is secured by default and modified with Option Byte Loading */
-  /* Insure SECWM2_PSTRT > SECWM2_PEND in order to have all Bank2 non-secure  */
-
-  /* -------------------------------------------------------------------------*/
-  /* External OctoSPI memory */
-  /* The booking is done in both IDAU/SAU and GTZC MPCWM interface */
-
-  /* Default secure configuration */
-  /* Else need to use HAL_GTZC_TZSC_MPCWM_ConfigMemAttributes() */
-
-  /* -------------------------------------------------------------------------*/
-  /* External NOR/FMC memory */
-  /* The booking is done in both IDAU/SAU and GTZC MPCWM interface */
-
-  /* Default secure configuration */
-  /* Else need to use HAL_GTZC_TZSC_MPCWM_ConfigMemAttributes() */
-
-  /* -------------------------------------------------------------------------*/
-  /* External NAND/FMC memory */
-  /* The booking is done in both IDAU/SAU and GTZC MPCWM interface */
-
-  /* Default secure configuration */
-  /* Else need to use HAL_GTZC_TZSC_MPCWM_ConfigMemAttributes() */
-
-  /* -------------------------------------------------------------------------*/
-  /*                   Peripheral isolation configuration                     */
-  /* Initializes the peripherals and features that secure application books   */
-  /* for secure (RCC, PWR, RTC, EXTI, DMA, OTFDEC, etc..) or leave them to    */
-  /* non-secure (GPIO (secured by default))                                   */
-  /* -------------------------------------------------------------------------*/
-
-#if defined STM32U5A9xx | defined STM32U5G9xx
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_LTDC, GTZC_TZSC_PERIPH_SEC);
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_DSI, GTZC_TZSC_PERIPH_SEC);
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_GFXMMU,
-                                       GTZC_TZSC_PERIPH_SEC);
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_GFXMMU_REG,
-                                       GTZC_TZSC_PERIPH_SEC);
-#endif
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(GTZC_PERIPH_DMA2D, GTZC_TZSC_PERIPH_SEC);
-
-  /* Clear all illegal access flags in GTZC TZIC */
+  // Clear all illegal access flags in GTZC TZIC
   HAL_GTZC_TZIC_ClearFlag(GTZC_PERIPH_ALL);
 
-  /* Enable all illegal access interrupts in GTZC TZIC */
+  // Enable all illegal access interrupts in GTZC TZIC
   HAL_GTZC_TZIC_EnableIT(GTZC_PERIPH_ALL);
 
-  /* Enable GTZC secure interrupt */
-  HAL_NVIC_SetPriority(GTZC_IRQn, 0, 0); /* Highest priority level */
+  // Enable GTZC secure interrupt
+  HAL_NVIC_SetPriority(GTZC_IRQn, 0, 0);  // Highest priority level
   HAL_NVIC_EnableIRQ(GTZC_IRQn);
 }
-#endif
+
+#endif  // BOARDLOADER
