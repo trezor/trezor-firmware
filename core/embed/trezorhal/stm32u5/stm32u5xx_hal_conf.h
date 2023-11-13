@@ -29,8 +29,12 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
+#ifdef STM32U585xx
+#define USE_USB_FS
+#else
 #define USE_USB_HS
 #define USE_USB_HS_INTERNAL_PHY
+#endif
 
 /* ########################## Module Selection ############################## */
 /**
