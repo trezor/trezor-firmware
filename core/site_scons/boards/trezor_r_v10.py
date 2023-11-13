@@ -33,7 +33,6 @@ def configure(
     defines += [f'TREZOR_BOARD=\\"boards/{board}\\"']
     defines += [f"HW_MODEL={hw_model}"]
     defines += [f"HW_REVISION={hw_revision}"]
-    defines += ["USE_OPTIGA=1"]
     sources += [
         "embed/models/model_T2B1_layout.c",
     ]
@@ -66,6 +65,7 @@ def configure(
         features_available.append("usb")
 
     if "optiga" in features_wanted:
+        defines += ["USE_OPTIGA=1"]
         sources += ["embed/trezorhal/stm32f4/optiga_hal.c"]
         sources += ["embed/trezorhal/optiga/optiga.c"]
         sources += ["embed/trezorhal/optiga/optiga_commands.c"]

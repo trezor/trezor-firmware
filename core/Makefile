@@ -201,7 +201,9 @@ build_firmware: templates build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
 		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" \
-		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" $(FIRMWARE_BUILD_DIR)/firmware.bin
+		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
+		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
+		$(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: templates ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
