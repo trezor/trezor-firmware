@@ -46,6 +46,12 @@ jump_to:
   ldr r0, =sram6_start   // r0 - point to beginning of SRAM
   ldr r1, =sram6_end     // r1 - point to byte after the end of SRAM
   bl memset_reg
+  ldr r0, =sram3_start   // r0 - point to beginning of SRAM
+  ldr r1, =__fb_start    // r1 - point to beginning of framebuffer
+  bl memset_reg
+  ldr r0, =__fb_end      // r0 - point to end of framebuffer
+  ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
+  bl memset_reg
   mov lr, r4
   // clear out the general purpose registers before the next stage's code can run (even the NMI exception handler)
   ldr r0, =0
@@ -111,6 +117,12 @@ shutdown_privileged:
   bl memset_reg
   ldr r0, =boot_args_start   // r0 - point to beginning of boot args
   ldr r1, =boot_args_end     // r1 - point to byte after the end of boot args
+  bl memset_reg
+  ldr r0, =sram3_start   // r0 - point to beginning of SRAM
+  ldr r1, =__fb_start    // r1 - point to beginning of framebuffer
+  bl memset_reg
+  ldr r0, =__fb_end      // r0 - point to end of framebuffer
+  ldr r1, =sram5_end     // r1 - point to byte after the end of SRAM
   bl memset_reg
 
   ldr r0, =1

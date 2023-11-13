@@ -92,12 +92,16 @@ SECTIONS {
   } >SRAM2 AT>FLASH
 
   .fb1 : ALIGN(4) {
+   __fb_start = .;
     *(.fb1*);
+    *(.gfxmmu_table*);
+    *(.framebuffer_select*);
     . = ALIGN(4);
   } >SRAM3
 
   .fb2 : ALIGN(4) {
     *(.fb2*);
+   __fb_end = .;
     . = ALIGN(4);
   } >SRAM5
 }
