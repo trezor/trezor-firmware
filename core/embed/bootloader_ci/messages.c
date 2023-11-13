@@ -501,7 +501,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
           read_image_header(chunk_buffer + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC,
                             FIRMWARE_IMAGE_MAXSIZE);
 
-      if (received_hdr != (const image_header *)chunk_buffer + vhdr.hdrlen) {
+      if (received_hdr != (const image_header *)(chunk_buffer + vhdr.hdrlen)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid firmware header");

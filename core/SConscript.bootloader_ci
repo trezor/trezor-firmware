@@ -18,7 +18,7 @@ if TREZOR_MODEL in ('1', 'DISC1'):
              )
     Return()
 
-FEATURES_WANTED = ["input", "usb"]
+FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -152,6 +152,7 @@ env.Replace(
         'vendor/nanopb',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
+        'BOOTLOADER',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'USE_HAL_DRIVER',
         'PB_FIELD_16BIT',
