@@ -39,8 +39,11 @@
 // differencies in the resulting binaries.
 const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 1;
 
-// FSMC/FMC Bank 1 - NOR/PSRAM 1
-#define DISPLAY_MEMORY_BASE 0x60000000
+#ifndef FMC_BANK1
+#define FMC_BANK1 FMC_Bank1
+#endif
+
+#define DISPLAY_MEMORY_BASE FMC_BANK1
 #define DISPLAY_MEMORY_PIN 16
 #ifdef USE_DISP_I8080_16BIT_DW
 #define DISPLAY_ADDR_SHIFT 2
@@ -310,7 +313,6 @@ void display_setup_fmc(void) {
       FMC_BURST_ACCESS_MODE_DISABLE;
   external_display_data_sram.Init.WaitSignalPolarity =
       FMC_WAIT_SIGNAL_POLARITY_LOW;
-  external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
   external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
   external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
   external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;

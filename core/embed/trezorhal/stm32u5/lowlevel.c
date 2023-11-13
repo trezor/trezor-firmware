@@ -49,12 +49,18 @@
 #endif
 
 #if defined STM32U5A9xx | defined STM32U5G9xx
+#define WRP_DEFAULT_VALUE 0xFF00FFFF
+#define SEC_WM1R1_DEFAULT_VALUE 0xFF00FF00
+#define SEC_WM1R2_DEFAULT_VALUE 0x7F007F00
 #define SEC_AREA_1_PAGE_START 0
 #define HDP_AREA_1_PAGE_END 1
 #define SEC_AREA_1_PAGE_END 0x07
 #define SEC_AREA_2_PAGE_START 0xFF
 #define SEC_AREA_2_PAGE_END 0x00
-#elif define STM32U585xx
+#elif defined STM32U585xx
+#define WRP_DEFAULT_VALUE 0xFF80FFFF
+#define SEC_WM1R1_DEFAULT_VALUE 0xFF80FF80
+#define SEC_WM1R2_DEFAULT_VALUE 0x7F807F80
 #define SEC_AREA_1_PAGE_START 0
 #define HDP_AREA_1_PAGE_END 1
 #define SEC_AREA_1_PAGE_END 0x07
@@ -74,16 +80,20 @@
 
 #define FALSH_SECBOOTADD0R_VALUE \
   ((BOARDLOADER_START & 0xFFFFFF80) | FLASH_SECBOOTADD0R_BOOT_LOCK | 0x7C)
+
 #define FLASH_SECWM1R1_VALUE                                  \
   (SEC_AREA_1_PAGE_START << FLASH_SECWM1R1_SECWM1_PSTRT_Pos | \
-   SEC_AREA_1_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos | 0xFF00FF00)
+   SEC_AREA_1_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos |    \
+   SEC_WM1R1_DEFAULT_VALUE)
 #define FLASH_SECWM1R2_VALUE                             \
   (HDP_AREA_1_PAGE_END << FLASH_SECWM1R2_HDP1_PEND_Pos | \
-   FLASH_SECWM1R2_HDP1EN | 0x7F007F00)
+   FLASH_SECWM1R2_HDP1EN | SEC_WM1R2_DEFAULT_VALUE)
+
 #define FLASH_SECWM2R1_VALUE                                  \
   (SEC_AREA_2_PAGE_START << FLASH_SECWM1R1_SECWM1_PSTRT_Pos | \
-   SEC_AREA_2_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos | 0xFF00FF00)
-#define FLASH_SECWM2R2_VALUE (0x7F007F00)
+   SEC_AREA_2_PAGE_END << FLASH_SECWM1R1_SECWM1_PEND_Pos |    \
+   SEC_WM1R1_DEFAULT_VALUE)
+#define FLASH_SECWM2R2_VALUE (SEC_WM1R2_DEFAULT_VALUE)
 
 #define FLASH_STATUS_ALL_FLAGS \
   (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
@@ -119,22 +129,24 @@ secbool flash_check_option_bytes(void) {
   }
 
 #if PRODUCTION
+  // TODO error this wont work, need to add default/reset values
+#error this wont work, need to add default/reset values
   if (FLASH->WRP1AR != (WANT_WRP_PAGE_START | (WANT_WRP_PAGE_END << 16))) {
     return secfalse;
   }
 #else
-  if (FLASH->WRP1AR != 0xFF00FFFF) {
+  if (FLASH->WRP1AR != WRP_DEFAULT_VALUE) {
     return secfalse;
   }
 #endif
 
-  if (FLASH->WRP1BR != 0xFF00FFFF) {
+  if (FLASH->WRP1BR != WRP_DEFAULT_VALUE) {
     return secfalse;
   }
-  if (FLASH->WRP2AR != 0xFF00FFFF) {
+  if (FLASH->WRP2AR != WRP_DEFAULT_VALUE) {
     return secfalse;
   }
-  if (FLASH->WRP2BR != 0xFF00FFFF) {
+  if (FLASH->WRP2BR != WRP_DEFAULT_VALUE) {
     return secfalse;
   }
 
