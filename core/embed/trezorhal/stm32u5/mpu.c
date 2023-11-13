@@ -122,21 +122,20 @@ static void mpu_set_attributes() {
 #define SIZE_4M (4 * 1024 * 1024)
 #define SIZE_16M (16 * 1024 * 1024)
 #define SIZE_256M (256 * 1024 * 1024)
-#define SIZE_512M (512 * 1024 * 1024)
 
 void mpu_config_boardloader() {
   HAL_MPU_Disable();
   mpu_set_attributes();
   // clang-format off
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, FLASH_BASE_S,             SIZE_16K,           FLASH_DATA,  YES,   YES ); // Secret
-  SET_REGION( 1, FLASH_BASE_S + SIZE_16K,  SIZE_48K,           FLASH_CODE,   NO,   YES ); // Boardloader code
-  SET_REGION( 2, FLASH_BASE_S + SIZE_64K,  SIZE_4032K,         FLASH_DATA,  YES,   YES ); // Bootloader + Storage + Firmware
-  SET_REGION( 3, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,   YES ); // SRAM1
-  SET_REGION( 4, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,   YES ); // SRAM2/3/5 + stack guard
-  SET_REGION( 5, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,   YES ); // Frame buffer
-  SET_REGION( 6, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,   YES ); // Peripherals
-  SET_REGION( 7, FLASH_BASE_NS,            SIZE_4M,            FLASH_DATA,  YES,   YES ); //
+  SET_REGION( 0, FLASH_BASE_S,             SIZE_16K,           FLASH_DATA,  YES,    NO ); // Secret
+  SET_REGION( 1, FLASH_BASE_S + SIZE_16K,  SIZE_48K,           FLASH_CODE,   NO,    NO ); // Boardloader code
+  SET_REGION( 2, FLASH_BASE_S + SIZE_64K,  SIZE_4032K,         FLASH_DATA,  YES,    NO ); // Bootloader + Storage + Firmware
+  SET_REGION( 3, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,    NO ); // SRAM1
+  SET_REGION( 4, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,    NO ); // SRAM2/3/5 + stack guard
+  SET_REGION( 5, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,    NO ); // Frame buffer
+  SET_REGION( 6, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    NO ); // Peripherals
+  DIS_REGION( 7 );
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
@@ -146,14 +145,14 @@ void mpu_config_bootloader() {
   mpu_set_attributes();
   // clang-format off
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGION( 0, FLASH_BASE_S,             SIZE_64K,           FLASH_DATA,  YES,   YES ); // Secret + Boardloader
-  SET_REGION( 1, FLASH_BASE_S + SIZE_64K,  SIZE_128K,          FLASH_CODE,  NO,    YES ); // Bootloader code
-  SET_REGION( 2, FLASH_BASE_S + SIZE_192K, SIZE_3904K,         FLASH_DATA,  YES,   YES ); // Storage + Firmware
-  SET_REGION( 3, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,   YES ); // SRAM1
-  SET_REGION( 4, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,   YES ); // SRAM2/3/5 + stack guard
-  SET_REGION( 5, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,   YES ); // Frame buffer
-  SET_REGION( 6, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,   YES ); // Peripherals
-  SET_REGION( 7, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,   YES ); // OTP
+  SET_REGION( 0, FLASH_BASE_S,             SIZE_64K,           FLASH_DATA,  YES,    NO ); // Secret + Boardloader
+  SET_REGION( 1, FLASH_BASE_S + SIZE_64K,  SIZE_128K,          FLASH_CODE,  NO,     NO ); // Bootloader code
+  SET_REGION( 2, FLASH_BASE_S + SIZE_192K, SIZE_3904K,         FLASH_DATA,  YES,    NO ); // Storage + Firmware
+  SET_REGION( 3, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,    NO ); // SRAM1
+  SET_REGION( 4, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,    NO ); // SRAM2/3/5 + stack guard
+  SET_REGION( 5, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,    NO ); // Frame buffer
+  SET_REGION( 6, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    NO ); // Peripherals
+  SET_REGION( 7, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,    NO ); // OTP
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
