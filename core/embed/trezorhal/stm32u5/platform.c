@@ -155,6 +155,7 @@ void SystemInit(void) {
    */
   HAL_PWREx_DisableUCPDDeadBattery();
 
+#ifdef USE_SMPS
   /*
    * Switch to SMPS regulator instead of LDO
    */
@@ -162,6 +163,7 @@ void SystemInit(void) {
   /* Wait until system switch on new regulator */
   while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_REGS))
     ;
+#endif
 
   __HAL_RCC_PWR_CLK_DISABLE();
 
