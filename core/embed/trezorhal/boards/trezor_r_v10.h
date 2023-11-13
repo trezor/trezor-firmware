@@ -5,7 +5,6 @@
 #define USE_SBU 1
 #define USE_I2C 1
 #define USE_CONSUMPTION_MASK 1
-#define USE_OPTIGA 1
 
 #include "displays/vg-2864ksweg01.h"
 
