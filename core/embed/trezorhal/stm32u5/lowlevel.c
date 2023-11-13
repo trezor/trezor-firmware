@@ -50,15 +50,15 @@
 #if defined STM32U5A9xx | defined STM32U5G9xx
 #define SEC_AREA_1_PAGE_START 0
 #define HDP_AREA_1_PAGE_END 1
-#define SEC_AREA_1_PAGE_END 0xFF
-#define SEC_AREA_2_PAGE_START 0
-#define SEC_AREA_2_PAGE_END 0xFF
+#define SEC_AREA_1_PAGE_END 0x07
+#define SEC_AREA_2_PAGE_START 0xFF
+#define SEC_AREA_2_PAGE_END 0x00
 #elif define STM32U585xx
 #define SEC_AREA_1_PAGE_START 0
 #define HDP_AREA_1_PAGE_END 1
-#define SEC_AREA_1_PAGE_END 0x7F
-#define SEC_AREA_2_PAGE_START 0
-#define SEC_AREA_2_PAGE_END 0x7F
+#define SEC_AREA_1_PAGE_END 0x07
+#define SEC_AREA_2_PAGE_START 0x7F
+#define SEC_AREA_2_PAGE_END 0x00
 #else
 #error Unknown MCU
 #endif
