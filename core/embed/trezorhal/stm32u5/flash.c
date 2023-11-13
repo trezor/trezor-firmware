@@ -26,10 +26,13 @@
 #include "flash.h"
 #include "model.h"
 
-#define FLASH_SEC_START_ADDRESS 0x0C000000
-#define FLASH_START_ADDRESS 0x08000000
-
-#define FLASH_SECTOR_COUNT (256 * 2)
+#ifdef STM32U585xx
+#define FLASH_BANK_PAGES 128
+#define FLASH_SECTOR_COUNT (FLASH_BANK_PAGES * 2)
+#else
+#define FLASH_BANK_PAGES 256
+#define FLASH_SECTOR_COUNT (FLASH_BANK_PAGES * 2)
+#endif
 
 #define FLASH_STATUS_ALL_FLAGS \
   (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
@@ -50,8 +53,8 @@ const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
     return NULL;
   }
 
-  uint32_t base_addr = flash_sector_is_secure(sector) ? FLASH_SEC_START_ADDRESS
-                                                      : FLASH_START_ADDRESS;
+  uint32_t base_addr =
+      flash_sector_is_secure(sector) ? FLASH_BASE_S : FLASH_BASE_NS;
 
   return (const void *)(base_addr + FLASH_PAGE_SIZE * sector + offset);
 }
@@ -93,9 +96,9 @@ secbool flash_sector_erase(uint16_t sector) {
       .NbPages = 1,
   };
 
-  if (sector >= 256) {
+  if (sector >= FLASH_BANK_PAGES) {
     EraseInitStruct.Banks = FLASH_BANK_2;
-    EraseInitStruct.Page = sector - 256;
+    EraseInitStruct.Page = sector - FLASH_BANK_PAGES;
   }
 
   if (flash_sector_is_secure(sector)) {
