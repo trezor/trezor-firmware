@@ -26,6 +26,7 @@
 #include "button.h"
 #include "common.h"
 #include "display.h"
+#include "fault_handlers.h"
 #include "flash.h"
 #include "i2c.h"
 #include "model.h"
@@ -569,6 +570,8 @@ int main(void) {
 #endif
 
   mpu_config_prodtest();
+  fault_handlers_init();
+
   drop_privileges();
 
   display_clear();
