@@ -5,6 +5,11 @@
   .global reset_handler
   .type reset_handler, STT_FUNC
 reset_handler:
+  // set the stack protection
+  ldr r0, =_sstack
+  add r0, r0, #16        // padding
+  msr MSPLIM, r0
+
   bl SystemInit
 
   // read the first rng data and save it
