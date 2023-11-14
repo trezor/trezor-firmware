@@ -41,6 +41,7 @@
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
+#include "fault_handlers.h"
 #include "flash.h"
 #include "image.h"
 #include "memzero.h"
@@ -146,10 +147,7 @@ int main(void) {
   // Init peripherals
   pendsv_init();
 
-#if !PRODUCTION
-  // enable BUS fault and USAGE fault handlers
-  SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
-#endif
+  fault_handlers_init();
 
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
