@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.3] (15th November 2023)
+
+### Added
+- Support interaction-less upgrade.  [#2919]
+- Allowed non-zero address index in Cardano staking paths.  [#3242]
+- [T2B1] Turn the screen off when device is locked, to prolong OLED life.  [#3377]
+
+### Changed
+- [T2T1] Adjust buttons used for scrolling multipage content.  [#2888]
+
+### Fixed
+- [T2T1] Fixed backlight flickering at the end of PIN loader animation.  [#3311]
+
+
 ## [2.6.2] (internal release)
 
 ### Added
@@ -786,7 +800,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2818]: https://github.com/trezor/trezor-firmware/pull/2818
 [#2834]: https://github.com/trezor/trezor-firmware/pull/2834
 [#2841]: https://github.com/trezor/trezor-firmware/pull/2841
+[#2888]: https://github.com/trezor/trezor-firmware/pull/2888
 [#2899]: https://github.com/trezor/trezor-firmware/pull/2899
+[#2919]: https://github.com/trezor/trezor-firmware/pull/2919
 [#2937]: https://github.com/trezor/trezor-firmware/pull/2937
 [#2955]: https://github.com/trezor/trezor-firmware/pull/2955
 [#2989]: https://github.com/trezor/trezor-firmware/pull/2989
@@ -796,6 +812,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3216]: https://github.com/trezor/trezor-firmware/pull/3216
 [#3218]: https://github.com/trezor/trezor-firmware/pull/3218
 [#3237]: https://github.com/trezor/trezor-firmware/pull/3237
+[#3242]: https://github.com/trezor/trezor-firmware/pull/3242
 [#3255]: https://github.com/trezor/trezor-firmware/pull/3255
 [#3256]: https://github.com/trezor/trezor-firmware/pull/3256
 [#3296]: https://github.com/trezor/trezor-firmware/pull/3296
+[#3311]: https://github.com/trezor/trezor-firmware/pull/3311
+[#3377]: https://github.com/trezor/trezor-firmware/pull/3377
