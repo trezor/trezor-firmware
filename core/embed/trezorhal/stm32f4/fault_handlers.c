@@ -1,5 +1,10 @@
 #include "common.h"
 
+void fault_handlers_init(void) {
+  // Enable BUS fault and USAGE fault handlers
+  SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
+}
+
 void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR", "(HF)"); }
 
 void MemManage_Handler_MM(void) { error_shutdown("INTERNAL ERROR", "(MM)"); }

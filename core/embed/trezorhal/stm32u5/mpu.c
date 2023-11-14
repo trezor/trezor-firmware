@@ -114,8 +114,7 @@ static void mpu_set_attributes() {
 #define SIZE_128K (128 * 1024)
 #define SIZE_192K (192 * 1024)
 #define SIZE_320K (320 * 1024)
-#define SIZE_768K (768 * 1024)
-#define SIZE_1728K ((832 * 2 + 64) * 1024)
+#define SIZE_2496K (2496 * 1024)
 #define SIZE_3776K ((4096 - 320) * 1024)
 #define SIZE_3904K ((4096 - 192) * 1024)
 #define SIZE_4032K ((4096 - 64) * 1024)
@@ -131,10 +130,10 @@ void mpu_config_boardloader() {
   SET_REGION( 0, FLASH_BASE_S,             SIZE_16K,           FLASH_DATA,  YES,    NO ); // Secret
   SET_REGION( 1, FLASH_BASE_S + SIZE_16K,  SIZE_48K,           FLASH_CODE,   NO,    NO ); // Boardloader code
   SET_REGION( 2, FLASH_BASE_S + SIZE_64K,  SIZE_4032K,         FLASH_DATA,  YES,    NO ); // Bootloader + Storage + Firmware
-  SET_REGION( 3, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,    NO ); // SRAM1
-  SET_REGION( 4, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,    NO ); // SRAM2/3/5 + stack guard
-  SET_REGION( 5, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,    NO ); // Frame buffer
-  SET_REGION( 6, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    NO ); // Peripherals
+  SET_REGION( 3, SRAM1_BASE_S,             SIZE_2496K,         SRAM,        YES,    NO ); // SRAM1/2/3/5
+  SET_REGION( 4, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,    NO ); // Frame buffer
+  SET_REGION( 5, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    NO ); // Peripherals
+  DIS_REGION( 6 );
   DIS_REGION( 7 );
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
@@ -148,11 +147,11 @@ void mpu_config_bootloader() {
   SET_REGION( 0, FLASH_BASE_S,             SIZE_64K,           FLASH_DATA,  YES,    NO ); // Secret + Boardloader
   SET_REGION( 1, FLASH_BASE_S + SIZE_64K,  SIZE_128K,          FLASH_CODE,  NO,     NO ); // Bootloader code
   SET_REGION( 2, FLASH_BASE_S + SIZE_192K, SIZE_3904K,         FLASH_DATA,  YES,    NO ); // Storage + Firmware
-  SET_REGION( 3, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,    NO ); // SRAM1
-  SET_REGION( 4, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,    NO ); // SRAM2/3/5 + stack guard
-  SET_REGION( 5, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,    NO ); // Frame buffer
-  SET_REGION( 6, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    NO ); // Peripherals
-  SET_REGION( 7, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,    NO ); // OTP
+  SET_REGION( 3, SRAM1_BASE_S,             SIZE_2496K,         SRAM,        YES,    NO ); // SRAM1/2/3/5
+  SET_REGION( 4, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,    NO ); // Frame buffer
+  SET_REGION( 5, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    NO ); // Peripherals
+  SET_REGION( 6, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,    NO ); // OTP
+  DIS_REGION( 7 );
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
@@ -164,11 +163,11 @@ void mpu_config_firmware() {
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, FLASH_BASE_S + SIZE_192K, SIZE_128K,          FLASH_DATA,  YES,   YES ); // Storage
   SET_REGION( 1, FLASH_BASE_S + SIZE_320K, SIZE_3776K,         FLASH_CODE,   NO,   YES ); // Firmware
-  SET_REGION( 2, SRAM1_BASE_S,             SIZE_768K,          SRAM,        YES,   YES ); // SRAM1
-  SET_REGION( 3, SRAM2_BASE_S + 0x100,     SIZE_1728K - 0x100, SRAM,        YES,   YES ); // SRAM2/3/5 + stack guard
-  SET_REGION( 4, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,   YES ); // Frame buffer
-  SET_REGION( 5, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,   YES ); // Peripherals
-  SET_REGION( 6, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,   YES ); // OTP
+  SET_REGION( 2, SRAM1_BASE_S,             SIZE_2496K,         SRAM,        YES,   YES ); // SRAM1/2/3/5
+  SET_REGION( 3, GFXMMU_BUFFERS_S,         SIZE_16M,           SRAM,        YES,   YES ); // Frame buffer
+  SET_REGION( 4, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,   YES ); // Peripherals
+  SET_REGION( 5, FLASH_OTP_BASE,           FLASH_OTP_SIZE,     FLASH_DATA,  YES,   YES ); // OTP
+  DIS_REGION( 6 );
   DIS_REGION( 7 );
   // clang-format on
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
