@@ -24,6 +24,7 @@
 #include "common.h"
 #include "display.h"
 #include "display_utils.h"
+#include "fault_handlers.h"
 #include "flash.h"
 #include "image.h"
 #include "lowlevel.h"
@@ -423,6 +424,8 @@ int bootloader_main(void) {
   ui_screen_boot_empty(false);
 
   mpu_config_bootloader();
+
+  fault_handlers_init();
 
 #ifdef TREZOR_EMULATOR
   // wait a bit so that the empty lock icon is visible
