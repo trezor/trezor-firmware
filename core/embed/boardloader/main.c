@@ -24,6 +24,7 @@
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
+#include "fault_handlers.h"
 #include "flash.h"
 #include "image.h"
 #include "model.h"
@@ -255,6 +256,8 @@ int main(void) {
 #endif
 
   mpu_config_boardloader();
+
+  fault_handlers_init();
 
 #ifdef USE_SDRAM
   sdram_init();
