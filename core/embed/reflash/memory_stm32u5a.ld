@@ -14,7 +14,7 @@ MEMORY {
 }
 
 main_stack_base = ORIGIN(SRAM2) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ORIGIN(SRAM2) + 0x100;
+_sstack = ORIGIN(SRAM2);
 _estack = main_stack_base;
 
 /* used by the startup code to populate variables used by the C code */
@@ -97,7 +97,7 @@ SECTIONS {
   } >SRAM1
 
   .stack : ALIGN(8) {
-    . = 16K + 0x100; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
+    . = 16K + 0x100; /* Overflow causes UsageFault */
   } >SRAM2
 
   .sensitive : ALIGN(512) {
