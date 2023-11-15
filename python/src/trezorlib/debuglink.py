@@ -1114,12 +1114,24 @@ class TrezorClientDebugLink(TrezorClient):
         # copy expected/actual responses before clearing them
         expected_responses = self.expected_responses
         actual_responses = self.actual_responses
+
+        # grab a copy of the inputflow generator to raise an exception through it
+        if isinstance(self.ui, DebugUI):
+            input_flow = self.ui.input_flow
+        else:
+            input_flow = None
+
         self.reset_debug_features()
 
         if exc_type is None:
             # If no other exception was raised, evaluate missed responses
             # (raises AssertionError on mismatch)
             self._verify_responses(expected_responses, actual_responses)
+
+        elif isinstance(input_flow, Generator):
+            # Propagate the exception through the input flow, so that we see in
+            # traceback where it is stuck.
+            input_flow.throw(exc_type, value, traceback)
 
     def set_expected_responses(
         self, expected: List[Union["ExpectedMessage", Tuple[bool, "ExpectedMessage"]]]
