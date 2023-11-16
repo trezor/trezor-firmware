@@ -181,8 +181,8 @@ class Layout(Generic[T]):
         """True if the layout is in RUNNING state."""
         return CURRENT_LAYOUT is self
 
-    def is_stopped(self) -> bool:
-        """True if the layout is in STOPPED state."""
+    def is_finished(self) -> bool:
+        """True if the layout is in FINISHED state."""
         return CURRENT_LAYOUT is not self and not self.result_box.is_empty()
 
     def is_layout_attached(self) -> bool:
@@ -191,7 +191,7 @@ class Layout(Generic[T]):
     def start(self) -> None:
         """Start the layout, stopping any other RUNNING layout.
 
-        If the layout is already RUNNING, do nothing. If the layout is STOPPED, fail.
+        If the layout is already RUNNING, do nothing. If the layout is FINISHED, fail.
         """
         global CURRENT_LAYOUT
 
@@ -231,7 +231,7 @@ class Layout(Generic[T]):
         current layout.
 
         The resulting state is either READY (if there is no result to be picked up) or
-        STOPPED.
+        FINISHED.
 
         When called externally, this kills any tasks that wait for the result, assuming
         that the external `stop()` is a kill. When called internally, `_kill_taker` is
@@ -267,7 +267,7 @@ class Layout(Generic[T]):
         """Wait for, and return, the result of this UI layout."""
         if self.is_ready():
             self.start()
-        # else we are (a) still running or (b) already stopped
+        # else we are (a) still running or (b) already finished
         try:
             if self.context is not None and self.result_box.is_empty():
                 self._start_task(self._handle_usb_iface())
@@ -419,6 +419,15 @@ class Layout(Generic[T]):
                     ),
                     ButtonAck,
                 )
+
+                if (
+                    self.button_request_ack_pending
+                    and self.state is LayoutState.TRANSITIONING
+                ):
+                    self.button_request_ack_pending = False
+                    self.state = LayoutState.ATTACHED
+                    if __debug__:
+                        self.notify_debuglink(self)
             except Exception:
                 raise
 
