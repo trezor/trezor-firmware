@@ -28,6 +28,8 @@
 
 #include "flash_ll.h"
 
+#define FLASH_BURST_LENGTH (4 * 8)
+
 void flash_init(void);
 
 #endif  // TREZORHAL_FLASH_H
