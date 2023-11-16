@@ -137,6 +137,8 @@ int main(void) {
   secbool secret_ok = secret_optiga_extract(secret);
 #endif
 
+  mpu_config_firmware_initial();
+
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
 #endif
