@@ -754,8 +754,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       // write a burst (8 * quadword (16 bytes)) to the flash
       ensure(flash_area_write_burst(&FIRMWARE_AREA, write_offset, quadword_ptr),
              NULL);
-      write_offset += 8 * 4 * sizeof(uint32_t);
-      quadword_ptr += 8 * 4;
+      write_offset += FLASH_BURST_LENGTH * sizeof(uint32_t);
+      quadword_ptr += FLASH_BURST_LENGTH;
     }
     ensure(flash_lock_write(), NULL);
 
