@@ -104,6 +104,8 @@ void mpu_config_bootloader(void) {
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }
 
+void mpu_config_firmware_initial(void) {}
+
 void mpu_config_firmware(void) {
   // Disable MPU
   HAL_MPU_Disable();

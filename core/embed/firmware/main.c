@@ -120,6 +120,10 @@ int main(void) {
 
   display_reinit();
 
+#ifdef USE_DMA2D
+  dma2d_init();
+#endif
+
 #if !defined TREZOR_MODEL_1
   parse_boardloader_capabilities();
 
@@ -130,6 +134,8 @@ int main(void) {
   secbool secret_ok = secret_optiga_extract(secret);
 #endif
 
+  mpu_config_firmware_initial();
+
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
 #endif
@@ -139,10 +145,6 @@ int main(void) {
 
   // Init peripherals
   pendsv_init();
-
-#ifdef USE_DMA2D
-  dma2d_init();
-#endif
 
   fault_handlers_init();
 

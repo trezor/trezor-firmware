@@ -23,6 +23,7 @@
 void mpu_config_off(void);
 void mpu_config_boardloader(void);
 void mpu_config_bootloader(void);
+void mpu_config_firmware_initial(void);
 void mpu_config_firmware(void);
 void mpu_config_prodtest(void);
 
