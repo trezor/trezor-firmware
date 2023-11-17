@@ -20,10 +20,6 @@ use crate::{
 };
 use heapless::Vec;
 
-#[cfg(feature = "jpeg")]
-use crate::ui::display::tjpgd::{jpeg_info, jpeg_test};
-use crate::{micropython::buffer::get_buffer, ui::display::toif::Toif};
-
 pub fn iter_into_array<T, E, const N: usize>(iterable: Obj) -> Result<[T; N], Error>
 where
     T: TryFrom<Obj, Error = E>,
@@ -197,52 +193,6 @@ pub extern "C" fn upy_disable_animation(disable: Obj) -> Obj {
         set_animation_disabled(disable.try_into()?);
         Ok(Obj::const_none())
     };
-    unsafe { try_or_raise(block) }
-}
-
-#[cfg(feature = "jpeg")]
-pub extern "C" fn upy_jpeg_info(data: Obj) -> Obj {
-    let block = || {
-        let buffer = unsafe { get_buffer(data) }?;
-
-        if let Some(info) = jpeg_info(buffer) {
-            let w = info.0.x as u16;
-            let h = info.0.y as u16;
-            let mcu_h = info.1 as u16;
-            (w.into(), h.into(), mcu_h.into()).try_into()
-        } else {
-            Err(value_error!("Invalid image format."))
-        }
-    };
-
-    unsafe { try_or_raise(block) }
-}
-
-pub extern "C" fn upy_toif_info(data: Obj) -> Obj {
-    let block = || {
-        let buffer = unsafe { get_buffer(data) }?;
-
-        if let Some(toif) = Toif::new(buffer) {
-            let w = toif.width() as u16;
-            let h = toif.height() as u16;
-            let is_grayscale = toif.is_grayscale();
-            (w.into(), h.into(), is_grayscale.into()).try_into()
-        } else {
-            Err(value_error!("Invalid image format."))
-        }
-    };
-
-    unsafe { try_or_raise(block) }
-}
-
-#[cfg(feature = "jpeg")]
-pub extern "C" fn upy_jpeg_test(data: Obj) -> Obj {
-    let block = || {
-        let buffer = unsafe { get_buffer(data) }?;
-        let result = jpeg_test(buffer);
-        Ok(result.into())
-    };
-
     unsafe { try_or_raise(block) }
 }
 

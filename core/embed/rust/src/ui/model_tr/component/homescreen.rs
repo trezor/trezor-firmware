@@ -1,8 +1,9 @@
 use crate::{
     strutil::StringType,
-    trezorhal::usb::usb_configured,
+    trezorhal::{display::ToifFormat, usb::usb_configured},
     ui::{
         component::{Child, Component, Event, EventCtx, Label},
+        constant::{HEIGHT, WIDTH},
         display::{rect_fill, toif::Toif, Font, Icon},
         event::USBEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
@@ -64,9 +65,13 @@ where
     }
 
     fn paint_homescreen_image(&self) {
-        if let Ok(user_custom_image) = get_user_custom_image() {
-            let toif_data = unwrap!(Toif::new(user_custom_image.as_ref()));
-            toif_data.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
+        let homescreen_bytes = get_user_custom_image().ok();
+        let homescreen = homescreen_bytes
+            .as_ref()
+            .and_then(|data| Toif::new(data.as_ref()).ok())
+            .filter(check_homescreen_format);
+        if let Some(toif) = homescreen {
+            toif.draw(TOP_CENTER, Alignment2D::TOP_CENTER, theme::FG, theme::BG);
         } else {
             paint_default_image();
         }
@@ -312,6 +317,10 @@ where
         self.title.paint();
         self.buttons.paint();
     }
+}
+
+pub fn check_homescreen_format(toif: &Toif) -> bool {
+    toif.format() == ToifFormat::GrayScaleEH && toif.width() == WIDTH && toif.height() == HEIGHT
 }
 
 // DEBUG-ONLY SECTION BELOW

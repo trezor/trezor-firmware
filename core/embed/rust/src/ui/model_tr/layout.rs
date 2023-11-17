@@ -36,10 +36,9 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{
-                iter_into_array, iter_into_vec, upy_disable_animation, upy_toif_info, ConfirmBlob,
-            },
+            util::{iter_into_array, iter_into_vec, upy_disable_animation, ConfirmBlob},
         },
+        model_tr::component::check_homescreen_format,
     },
 };
 
@@ -1649,6 +1648,20 @@ extern "C" fn new_confirm_firmware_update(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
+    let block = || {
+        // SAFETY: buffer does not outlive this function
+        let buffer = unsafe { get_buffer(data) }?;
+
+        Ok(display::toif::Toif::new(buffer)
+            .map(|toif| check_homescreen_format(&toif))
+            .unwrap_or(false)
+            .into())
+    };
+
+    unsafe { util::try_or_raise(block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -1666,9 +1679,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
-    /// def toif_info(data: bytes) -> tuple[int, int, bool]:
-    ///     """Get TOIF image dimensions and format (width: int, height: int, is_grayscale: bool)."""
-    Qstr::MP_QSTR_toif_info => obj_fn_1!(upy_toif_info).as_obj(),
+    /// def check_homescreen_format(data: bytes) -> bool:
+    ///     """Check homescreen format and dimensions."""
+    Qstr::MP_QSTR_check_homescreen_format => obj_fn_1!(upy_check_homescreen_format).as_obj(),
 
     /// def confirm_action(
     ///     *,

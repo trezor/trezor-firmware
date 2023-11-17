@@ -36,6 +36,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_button_event;
   MP_QSTR_cancel_arrow;
   MP_QSTR_case_sensitive;
+  MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
   MP_QSTR_coinjoin_authorized;
   MP_QSTR_confirm_action;
@@ -84,8 +85,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_info_button;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
-  MP_QSTR_jpeg_info;
-  MP_QSTR_jpeg_test;
   MP_QSTR_label;
   MP_QSTR_lines;
   MP_QSTR_max_count;
@@ -140,7 +139,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_time_ms;
   MP_QSTR_timer;
   MP_QSTR_title;
-  MP_QSTR_toif_info;
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
   MP_QSTR_total_label;

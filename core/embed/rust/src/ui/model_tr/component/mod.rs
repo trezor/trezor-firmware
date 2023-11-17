@@ -51,7 +51,7 @@ pub use flow::Flow;
 pub use flow_pages::{FlowPages, Page};
 pub use frame::{Frame, ScrollableContent, ScrollableFrame};
 #[cfg(feature = "micropython")]
-pub use homescreen::{ConfirmHomescreen, Homescreen, Lockscreen};
+pub use homescreen::{check_homescreen_format, ConfirmHomescreen, Homescreen, Lockscreen};
 pub use input_methods::{
     number_input::NumberInput,
     passphrase::PassphraseEntry,

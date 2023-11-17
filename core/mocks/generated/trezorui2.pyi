@@ -10,8 +10,8 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/model_tr/layout.rs
-def toif_info(data: bytes) -> tuple[int, int, bool]:
-    """Get TOIF image dimensions and format (width: int, height: int, is_grayscale: bool)."""
+def check_homescreen_format(data: bytes) -> bool:
+    """Check homescreen format and dimensions."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -462,13 +462,8 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/model_tt/layout.rs
-def jpeg_info(data: bytes) -> tuple[int, int, int]:
-    """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def jpeg_test(data: bytes) -> bool:
-    """Test JPEG image."""
+def check_homescreen_format(data: bytes) -> bool:
+    """Check homescreen format and dimensions."""
 
 
 # rust/src/ui/model_tt/layout.rs
