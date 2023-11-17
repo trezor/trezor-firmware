@@ -32,7 +32,7 @@ pub use error::ErrorScreen;
 pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, FrameMsg};
 #[cfg(feature = "micropython")]
-pub use homescreen::{Homescreen, HomescreenMsg, Lockscreen};
+pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg, Lockscreen};
 pub use keyboard::{
     bip39::Bip39Input,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},

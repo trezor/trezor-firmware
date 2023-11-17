@@ -17,7 +17,10 @@ use crate::{
     trezorhal::{buffers::BufferJpegWork, display::ToifFormat, uzlib::UZLIB_WINDOW_SIZE},
     ui::{
         constant::HEIGHT,
-        display::{tjpgd::BufferInput, toif::Toif},
+        display::{
+            tjpgd::{jpeg_test, BufferInput},
+            toif::Toif,
+        },
         model_tt::component::homescreen::render::{
             HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
         },
@@ -365,6 +368,10 @@ where
             homescreen_blurred(&mut hs_img, texts);
         }
     }
+}
+
+pub fn check_homescreen_format(buffer: &[u8]) -> bool {
+    is_image_jpeg(buffer) && jpeg_test(buffer)
 }
 
 fn is_image_jpeg(buffer: &[u8]) -> bool {

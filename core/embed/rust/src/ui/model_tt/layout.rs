@@ -37,11 +37,9 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{
-                iter_into_array, upy_disable_animation, upy_jpeg_info, upy_jpeg_test, ConfirmBlob,
-                PropsList,
-            },
+            util::{iter_into_array, upy_disable_animation, ConfirmBlob, PropsList},
         },
+        model_tt::component::check_homescreen_format,
     },
 };
 
@@ -1592,6 +1590,16 @@ extern "C" fn draw_welcome_screen() -> Obj {
     Obj::const_none()
 }
 
+pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
+    let block = || {
+        let buffer = unsafe { get_buffer(data) }?;
+
+        Ok(check_homescreen_format(buffer).into())
+    };
+
+    unsafe { util::try_or_raise(block) }
+}
+
 #[no_mangle]
 extern "C" fn new_confirm_firmware_update(
     n_args: usize,
@@ -1639,13 +1647,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
-    /// def jpeg_info(data: bytes) -> tuple[int, int, int]:
-    ///     """Get JPEG image dimensions (width: int, height: int, mcu_height: int)."""
-    Qstr::MP_QSTR_jpeg_info => obj_fn_1!(upy_jpeg_info).as_obj(),
-
-    /// def jpeg_test(data: bytes) -> bool:
-    ///     """Test JPEG image."""
-    Qstr::MP_QSTR_jpeg_test => obj_fn_1!(upy_jpeg_test).as_obj(),
+    /// def check_homescreen_format(data: bytes) -> bool:
+    ///     """Check homescreen format and dimensions."""
+    Qstr::MP_QSTR_check_homescreen_format => obj_fn_1!(upy_check_homescreen_format).as_obj(),
 
     /// def confirm_action(
     ///     *,

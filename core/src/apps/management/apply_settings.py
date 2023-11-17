@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import utils
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action
 from trezor.wire import DataError
@@ -12,38 +11,6 @@ if TYPE_CHECKING:
 
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
-
-if utils.INTERNAL_MODEL in ("T1B1", "T2B1"):
-
-    def _validate_homescreen_model_specific(homescreen: bytes) -> None:
-        from trezor.ui import HEIGHT, WIDTH
-
-        try:
-            w, h, is_grayscale = trezorui2.toif_info(homescreen)
-        except ValueError:
-            raise DataError("Invalid homescreen")
-        if w != WIDTH or h != HEIGHT:
-            raise DataError(f"Homescreen must be {WIDTH}x{HEIGHT} pixel large")
-        if not is_grayscale:
-            raise DataError("Homescreen must be grayscale")
-
-else:
-
-    def _validate_homescreen_model_specific(homescreen: bytes) -> None:
-        from trezor.ui import HEIGHT, WIDTH
-
-        try:
-            w, h, mcu_height = trezorui2.jpeg_info(homescreen)
-        except ValueError:
-            raise DataError("Invalid homescreen")
-        if w != WIDTH or h != HEIGHT:
-            raise DataError(f"Homescreen must be {WIDTH}x{HEIGHT} pixel large")
-        if mcu_height > 16:
-            raise DataError("Unsupported jpeg type")
-        try:
-            trezorui2.jpeg_test(homescreen)
-        except ValueError:
-            raise DataError("Invalid homescreen")
 
 
 def _validate_homescreen(homescreen: bytes) -> None:
@@ -56,8 +23,8 @@ def _validate_homescreen(homescreen: bytes) -> None:
         raise DataError(
             f"Homescreen is too large, maximum size is {storage_device.HOMESCREEN_MAXSIZE} bytes"
         )
-
-    _validate_homescreen_model_specific(homescreen)
+    if not trezorui2.check_homescreen_format(homescreen):
+        raise DataError("Wrong homescreen format")
 
 
 async def apply_settings(msg: ApplySettings) -> Success:
