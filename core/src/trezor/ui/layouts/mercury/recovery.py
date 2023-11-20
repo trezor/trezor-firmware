@@ -102,12 +102,12 @@ async def continue_recovery(
     text: str,
     subtext: str | None,
     recovery_type: RecoveryType,
-    show_info: bool = False,
+    show_instructions: bool = False,
     remaining_shares_info: "RemainingSharesInfo | None" = None,
 ) -> bool:
     result = await interact(
         trezorui2.flow_continue_recovery(
-            first_screen=show_info,
+            first_screen=show_instructions,
             recovery_type=recovery_type,
             text=text,
             subtext=subtext,

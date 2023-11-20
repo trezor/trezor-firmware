@@ -11,6 +11,8 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
 from apps.common import backup_types
 
 if TYPE_CHECKING:
+    from typing import Awaitable, Callable
+
     from trezor.enums import BackupType
 
     # RemainingSharesInfo represents the data structure for remaining shares in SLIP-39 recovery:
@@ -123,11 +125,52 @@ async def show_invalid_mnemonic(word_count: int) -> None:
         )
 
 
+def enter_share(
+    word_count: int | None = None,
+    entered_remaining: tuple[int, int] | None = None,
+    remaining_shares_info: RemainingSharesInfo | None = None,
+) -> Awaitable[None]:
+    from trezor import strings
+
+    show_instructions = False
+
+    if word_count is not None:
+        # First-time entry. Show instructions and word count.
+        text = TR.recovery__enter_any_share
+        subtext = TR.recovery__word_count_template.format(word_count)
+        show_instructions = True
+
+    elif entered_remaining is not None:
+        # Basic Shamir. There is only one group, we report entered/remaining count.
+        entered, remaining = entered_remaining
+        total = entered + remaining
+        text = TR.recovery__x_of_y_entered_template.format(entered, total)
+        subtext = strings.format_plural(
+            TR.recovery__x_more_shares_needed_template_plural,
+            remaining,
+            TR.plurals__x_shares_needed,
+        )
+
+    else:
+        # SuperShamir. We cannot easily show entered/remaining across groups,
+        # the caller provided an info_func that has the details.
+        text = TR.recovery__more_shares_needed
+        subtext = None
+
+    return homescreen_dialog(
+        TR.buttons__enter_share,
+        text,
+        subtext,
+        show_instructions,
+        remaining_shares_info,
+    )
+
+
 async def homescreen_dialog(
     button_label: str,
     text: str,
     subtext: str | None = None,
-    show_info: bool = False,
+    show_instructions: bool = False,
     remaining_shares_info: "RemainingSharesInfo | None" = None,
 ) -> None:
     import storage.recovery as storage_recovery
@@ -141,7 +184,7 @@ async def homescreen_dialog(
         text,
         subtext,
         recovery_type,
-        show_info,
+        show_instructions,
         remaining_shares_info,
     ):
         raise RecoveryAborted

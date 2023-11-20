@@ -648,6 +648,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_homescreen;
   MP_QSTR_show_info;
   MP_QSTR_show_info_with_cancel;
+  MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
   MP_QSTR_show_passphrase;
