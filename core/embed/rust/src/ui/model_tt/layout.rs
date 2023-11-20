@@ -2064,6 +2064,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     recovery_type: RecoveryType,
     ///     info_button: bool = False,
+    ///     show_instructions: bool = False,  # unused on TT
     /// ) -> LayoutObj[UiResult]:
     ///     """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
