@@ -1400,11 +1400,11 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let button: TString<'static> = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let recovery_type: RecoveryType = kwargs.get(Qstr::MP_QSTR_recovery_type)?.try_into()?;
-        let show_info: bool = kwargs.get(Qstr::MP_QSTR_show_info)?.try_into()?;
+        let show_instructions: bool = kwargs.get(Qstr::MP_QSTR_show_instructions)?.try_into()?;
 
         let mut paragraphs = ParagraphVecShort::new();
         paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, description));
-        if show_info {
+        if show_instructions {
             paragraphs
                 .add(Paragraph::new(
                     &theme::TEXT_NORMAL,
@@ -1979,7 +1979,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     recovery_type: RecoveryType,
     ///     info_button: bool,  # unused on TR
-    ///     show_info: bool,
+    ///     show_instructions: bool,
     /// ) -> LayoutObj[UiResult]:
     ///    """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
