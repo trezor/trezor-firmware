@@ -133,7 +133,7 @@ async def continue_recovery(
     text: str,
     subtext: str | None,
     recovery_type: RecoveryType,
-    show_info: bool = False,
+    show_instructions: bool = False,
     remaining_shares_info: "RemainingSharesInfo | None" = None,
 ) -> bool:
     from trezor.enums import RecoveryType
