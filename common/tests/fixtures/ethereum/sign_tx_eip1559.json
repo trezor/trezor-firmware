@@ -129,14 +129,14 @@
                 "chain_id": 1,
                 "nonce": "0x0",
                 "gas_limit": "0xff",
-                "max_gas_fee": "0x15681d9b48e13b1e2",
-                "max_priority_fee": "0x6b14e9f812f366fb9",
+                "max_gas_fee": "0x6b14e9f812f366fb9",
+                "max_priority_fee": "0x15681d9b48e13b1e2",
                 "value": "0xa"
             },
             "result": {
-                "sig_v": 0,
-                "sig_r": "e592ffedd8b802c95b634520f2b700f27e394ed47fe2555f2f378e26cdc2c1ff",
-                "sig_s": "0ad471ea5e6fdc90dc25c4a012f12d48bb3d5679cd5a39ad7d5bbfc26b5d333f"
+                "sig_v": 1,
+                "sig_r": "ece384bf1922afff7b99e017a7326f11f1610c5a08ee87dda7f19572d8019ed9",
+                "sig_s": "4e9e2ecbcd032dbc67fb3fc71e24cb21930f68d8788502383ae4a6fd4397af4f"
             }
         }
     ]
