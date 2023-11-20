@@ -139,7 +139,7 @@ void touch_init(void) {
   __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
 
   touch_set_mode();
-  touch_sensitivity(0x06);
+  touch_sensitivity(TOUCH_SENSITIVITY);
 }
 
 void touch_sensitivity(uint8_t value) {
