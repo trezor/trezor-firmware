@@ -596,6 +596,18 @@ pub const TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET: TextStyle = TEXT_MONO
     .with_line_spacing(5)
     .with_ellipsis_icon(ICON_PAGE_NEXT, -12);
 
+/// Decide the text style of chunkified text according to its length.
+pub fn get_chunkified_text_style(character_length: usize) -> &'static TextStyle {
+    // Longer addresses have smaller x_offset so they fit even with scrollbar
+    // (as they will be shown on more than one page)
+    const FITS_ON_ONE_PAGE: usize = 16 * 4;
+    if character_length <= FITS_ON_ONE_PAGE {
+        &TEXT_MONO_ADDRESS_CHUNKS
+    } else {
+        &TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET
+    }
+}
+
 /// Convert Python-side numeric id to a `TextStyle`.
 pub fn textstyle_number(num: i32) -> &'static TextStyle {
     let font = Font::from_i32(-num);
