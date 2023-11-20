@@ -106,7 +106,7 @@ async def continue_recovery(
     text: str,
     subtext: str | None,
     recovery_type: RecoveryType,
-    show_info: bool = False,
+    show_instructions: bool = False,
     remaining_shares_info: "RemainingSharesInfo | None" = None,  # unused on TR
 ) -> bool:
     # TODO: implement info_func?
@@ -117,7 +117,7 @@ async def continue_recovery(
 
     # Never showing info for dry-run, user already saw it and it is disturbing
     if recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
-        show_info = False
+        show_instructions = False
 
     if subtext:
         text += f"\n\n{subtext}"
@@ -128,7 +128,7 @@ async def continue_recovery(
         button=button_label,
         recovery_type=recovery_type,
         info_button=False,
-        show_info=show_info,  # type: ignore [No parameter named "show_info"]
+        show_instructions=show_instructions,
     )
     while True:
         result = await interact(
