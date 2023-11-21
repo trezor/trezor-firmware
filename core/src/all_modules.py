@@ -345,6 +345,8 @@ apps.management.reset_device
 import apps.management.reset_device
 apps.management.reset_device.layout
 import apps.management.reset_device.layout
+apps.management.sd_backup
+import apps.management.sd_backup
 apps.management.sd_protect
 import apps.management.sd_protect
 apps.management.set_u2f_counter

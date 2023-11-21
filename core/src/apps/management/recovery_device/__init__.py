@@ -21,7 +21,11 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     import storage.recovery as storage_recovery
     from trezor import config, wire, workflow
     from trezor.enums import ButtonRequestType
-    from trezor.ui.layouts import confirm_action, confirm_reset_device
+    from trezor.ui.layouts import (
+        confirm_action,
+        confirm_reset_device,
+        choose_backup_medium,
+    )
 
     from apps.common.request_pin import (
         error_pin_invalid,

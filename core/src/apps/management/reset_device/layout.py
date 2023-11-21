@@ -158,6 +158,12 @@ async def show_backup_success() -> None:
 # BIP39
 # ===
 
+async def bip39_choose_backup_medium() -> str:
+    # TODO this will be general, not only for BIP39
+    from trezor.ui.layouts import choose_backup_medium
+
+    return await choose_backup_medium()
+
 
 async def bip39_show_and_confirm_mnemonic(mnemonic: str) -> None:
     # warn user about mnemonic safety

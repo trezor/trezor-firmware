@@ -575,6 +575,35 @@ async def show_success(
     )
 
 
+async def choose_backup_medium(recovery: bool = False) -> str:
+    # TODO what br type
+    br_type = "br_type"
+    if recovery:
+        br_code: ButtonRequestType = ButtonRequestType.RecoveryHomepage
+        description: str = "Do you have written words or SD card for recovery?"
+    else:
+        br_code: ButtonRequestType = ButtonRequestType.ResetDevice
+        description: str = "You will be able to backup on the 2n medium later."
+
+    result = await interact(
+        RustLayout(
+            trezorui2.confirm_action(
+                title="Backup medium", # TODO naming convention (backup medium?)
+                action="Choose backup medium.",
+                description=description,
+                verb="SD card",
+                verb_cancel="Words",
+            )
+        ),
+        br_type,
+        br_code,
+    )
+    if result is CONFIRMED:
+        return "sdcard"
+    else:
+        return "words"
+
+
 async def confirm_output(
     address: str,
     amount: str,

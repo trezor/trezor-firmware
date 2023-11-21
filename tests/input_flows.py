@@ -913,6 +913,10 @@ class InputFlowBip39Backup(InputFlowBase):
         self.mnemonic = None
 
     def input_flow_common(self) -> BRGeneratorType:
+        # choose Words
+        received = yield
+        self.debug.press_no()
+
         # 1. Confirm Reset
         yield from click_through(self.debug, screens=1, code=B.ResetDevice)
 
