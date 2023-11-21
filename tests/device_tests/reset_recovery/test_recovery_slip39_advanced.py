@@ -75,6 +75,7 @@ def test_secret(client: Client, shares: list[str], secret: str):
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.models(skip="safe3", reason="safe3 does not have info button")
 def test_secret_click_info_button(client: Client, shares: list[str], secret: str):
     _test_secret(client, shares, secret, click_info=True)
 
