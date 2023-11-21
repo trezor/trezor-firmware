@@ -102,11 +102,12 @@ void touch_set_mode(void) {
   // generates a pulse when new data is available
   uint8_t touch_panel_config[] = {0xA4, 0x01};
   for (int i = 0; i < 3; i++) {
-    if (HAL_OK == i2c_transmit(TOUCH_I2C_NUM, TOUCH_ADDRESS, touch_panel_config,
-                               sizeof(touch_panel_config), 10)) {
+    if (HAL_OK == i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS,
+                               touch_panel_config, sizeof(touch_panel_config),
+                               10)) {
       return;
     }
-    i2c_cycle(TOUCH_I2C_NUM);
+    i2c_cycle(TOUCH_I2C_INSTANCE);
   }
 
   ensure(secfalse, "Touch screen panel was not loaded properly.");
@@ -146,12 +147,12 @@ void touch_sensitivity(uint8_t value) {
   // set panel threshold (TH_GROUP) - default value is 0x12
   uint8_t touch_panel_threshold[] = {0x80, value};
   for (int i = 0; i < 3; i++) {
-    if (HAL_OK == i2c_transmit(TOUCH_I2C_NUM, TOUCH_ADDRESS,
+    if (HAL_OK == i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS,
                                touch_panel_threshold,
                                sizeof(touch_panel_threshold), 10)) {
       return;
     }
-    i2c_cycle(TOUCH_I2C_NUM);
+    i2c_cycle(TOUCH_I2C_INSTANCE);
   }
 
   ensure(secfalse, "Touch screen panel was not loaded properly.");
@@ -217,14 +218,14 @@ uint32_t touch_read(void) {
   last_check_time = hal_ticks_ms();
 
   uint8_t outgoing[] = {0x00};  // start reading from address 0x00
-  int result =
-      i2c_transmit(TOUCH_I2C_NUM, TOUCH_ADDRESS, outgoing, sizeof(outgoing), 1);
+  int result = i2c_transmit(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, outgoing,
+                            sizeof(outgoing), 1);
   if (result != HAL_OK) {
-    if (result == HAL_BUSY) i2c_cycle(TOUCH_I2C_NUM);
+    if (result == HAL_BUSY) i2c_cycle(TOUCH_I2C_INSTANCE);
     return 0;
   }
 
-  if (HAL_OK != i2c_receive(TOUCH_I2C_NUM, TOUCH_ADDRESS, touch_data,
+  if (HAL_OK != i2c_receive(TOUCH_I2C_INSTANCE, TOUCH_ADDRESS, touch_data,
                             TOUCH_PACKET_SIZE, 1)) {
     return 0;  // read failure
   }

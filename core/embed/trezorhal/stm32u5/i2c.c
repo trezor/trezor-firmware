@@ -20,6 +20,17 @@ typedef struct {
 
 i2c_instance_t i2c_defs[I2C_COUNT] = {
     {
+        .Instance = I2C_INSTANCE_0,
+        .SclPort = I2C_INSTANCE_0_SCL_PORT,
+        .SdaPort = I2C_INSTANCE_0_SDA_PORT,
+        .SclPin = I2C_INSTANCE_0_SCL_PIN,
+        .SdaPin = I2C_INSTANCE_0_SDA_PIN,
+        .PinAF = I2C_INSTANCE_0_PIN_AF,
+        .ResetReg = I2C_INSTANCE_0_RESET_REG,
+        .ResetBit = I2C_INSTANCE_0_RESET_BIT,
+    },
+#ifdef I2C_INSTANCE_1
+    {
         .Instance = I2C_INSTANCE_1,
         .SclPort = I2C_INSTANCE_1_SCL_PORT,
         .SdaPort = I2C_INSTANCE_1_SDA_PORT,
@@ -28,17 +39,6 @@ i2c_instance_t i2c_defs[I2C_COUNT] = {
         .PinAF = I2C_INSTANCE_1_PIN_AF,
         .ResetReg = I2C_INSTANCE_1_RESET_REG,
         .ResetBit = I2C_INSTANCE_1_RESET_BIT,
-    },
-#ifdef I2C_INSTANCE_2
-    {
-        .Instance = I2C_INSTANCE_2,
-        .SclPort = I2C_INSTANCE_2_SCL_PORT,
-        .SdaPort = I2C_INSTANCE_2_SDA_PORT,
-        .SclPin = I2C_INSTANCE_2_SCL_PIN,
-        .SdaPin = I2C_INSTANCE_2_SDA_PIN,
-        .PinAF = I2C_INSTANCE_2_PIN_AF,
-        .ResetReg = I2C_INSTANCE_2_RESET_REG,
-        .ResetBit = I2C_INSTANCE_2_RESET_BIT,
     },
 #endif
 
@@ -374,21 +374,20 @@ void i2c_init_instance(uint16_t idx, i2c_instance_t *instance) {
 
 void i2c_init(void) {
   // enable I2C clock
+  I2C_INSTANCE_0_CLK_EN();
+  I2C_INSTANCE_0_SCL_CLK_EN();
+  I2C_INSTANCE_0_SDA_CLK_EN();
+  i2c_init_instance(0, &i2c_defs[0]);
+
+#ifdef I2C_INSTANCE_1
   I2C_INSTANCE_1_CLK_EN();
   I2C_INSTANCE_1_SCL_CLK_EN();
   I2C_INSTANCE_1_SDA_CLK_EN();
-  i2c_init_instance(0, &i2c_defs[0]);
-
-#ifdef I2C_INSTANCE_2
-  I2C_INSTANCE_2_CLK_EN();
-  I2C_INSTANCE_2_SCL_CLK_EN();
-  I2C_INSTANCE_2_SDA_CLK_EN();
   i2c_init_instance(1, &i2c_defs[1]);
 #endif
 }
 
 void i2c_deinit(uint16_t idx) {
-  __HAL_RCC_I2C5_FORCE_RESET();
   if (i2c_handle[idx].Instance) {
     HAL_I2C_DeInit(&i2c_handle[idx]);
     i2c_handle[idx].Instance = NULL;
