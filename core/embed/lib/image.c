@@ -264,7 +264,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 
     offset += bytes_to_check;
   }
-
+  /*
   // Check the padding to the end of the area
   end_offset = flash_area_get_size(area);
 
@@ -297,7 +297,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 
       offset += bytes_to_check;
     }
-  }
+  }*/
 
   return sectrue;
 }

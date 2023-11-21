@@ -17,14 +17,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __MPU_H__
-#define __MPU_H__
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
-void mpu_config_off(void);
-void mpu_config_boardloader(void);
-void mpu_config_bootloader(void);
-void mpu_config_firmware(void);
-void mpu_config_prodtest(void);
-void mpu_config_cs(void);
+#include "embed/fw_cs/core_api.h"
+#include <embed/fw_ss/secure_api.h>
 
-#endif
+int main(void) {  // UNPRIVILEGED APPLICATION
+
+  char text[64];
+
+  core_print("Unprivileged application is running...\n");
+
+  // get secret from privileged-world
+  snprintf(text, sizeof(text), "secret = %d\n", core_get_secret());
+  core_print(text);
+
+  // get secret from secure-world directly
+  snprintf(text, sizeof(text), "secret = %d\n", secure_get_secret());
+  core_print(text);
+
+
+  while (1)
+    ;
+
+  return 0;
+}

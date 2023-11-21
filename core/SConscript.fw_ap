@@ -1,0 +1,107 @@
+# pylint: disable=E0602
+# fmt: off
+
+import os
+import tools
+from site_scons.boards import get_hw_model_as_number
+
+PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
+BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
+BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+
+env = Environment(ENV=os.environ, CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)}")
+
+FILE_SUFFIX= env.get('ENV')['SUFFIX']
+
+SOURCE_FIRMWARE = [
+    'embed/fw_ap/main.c',
+    'embed/fw_ap/core_api.S',
+    'embed/fw_ap/libc_syscalls.c',
+    'embed/fw_ap/startup.S',
+]
+
+env.Replace(
+    CAT='cat',
+    DD='dd',
+    CP='cp',
+    SED='sed',
+    AS='arm-none-eabi-as',
+    AR='arm-none-eabi-ar',
+    CC='arm-none-eabi-gcc',
+    LINK='arm-none-eabi-gcc',
+    SIZE='arm-none-eabi-size',
+    STRIP='arm-none-eabi-strip',
+    OBJCOPY='arm-none-eabi-objcopy', )
+
+env.Replace(
+    TREZOR_MODEL=TREZOR_MODEL,)
+
+if TREZOR_MODEL in ('1',):
+    LD_VARIANT  = '' if EVERYTHING else '_min'
+else:
+    LD_VARIANT  = ''
+
+env.Replace(
+    COPT=env.get('ENV').get('OPTIMIZE', '-O0'),
+    CCFLAGS='$COPT '
+    '-g3 '
+    '-nostdlib '
+    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
+    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-ffreestanding '
+    '-fstack-protector-all '
+    +  env.get('ENV')["CPU_CCFLAGS"],
+    LINKFLAGS='-T embed/fw_ap/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/fw_ap/fw_ap.map -Wl,--warn-common build/fw_ss/fw_ss_cmse.o' % LD_VARIANT,
+    CPPPATH=[
+        '.',
+        'embed/fw_ap',
+    ],
+    CPPDEFINES=[
+        'TREZOR_MODEL_'+TREZOR_MODEL,
+        f'HW_MODEL={get_hw_model_as_number("D002")}',
+        'HW_REVISION=0',
+    ],
+    ASFLAGS=env.get('ENV')['CPU_ASFLAGS'],
+    ASPPFLAGS='$CFLAGS $CCFLAGS',
+    )
+
+env.Replace(
+    PYTHON='python',
+)
+
+
+#
+# Program objects
+#
+
+source_files = SOURCE_FIRMWARE
+obj_program = []
+obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
+
+
+MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
+
+program_elf = env.Command(
+    target='fw_ap.elf',
+    source=obj_program,
+    action=
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
+)
+
+BINARY_NAME = f"build/fw_ap/fw_ap-{tools.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME += "-" + tools.get_version('embed/fw_ap/version.h')
+BINARY_NAME += "-" + tools.get_git_revision_short_hash()
+BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
+BINARY_NAME += ".bin"
+
+action_bin=[
+    '$OBJCOPY -O binary -j .flash -j .data $SOURCE ${TARGET}',
+    '$CP $TARGET ' + BINARY_NAME,
+    ]
+
+program_bin = env.Command(
+    target='fw_ap.bin',
+    source=program_elf,
+    action=action_bin,
+)

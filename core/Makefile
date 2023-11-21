@@ -12,6 +12,9 @@ BOOTLOADER_EMU_BUILD_DIR  = $(BUILD_DIR)/bootloader_emu
 PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
 REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
+FW_SS_BUILD_DIR       = $(BUILD_DIR)/fw_ss
+FW_CS_BUILD_DIR       = $(BUILD_DIR)/fw_cs
+FW_AP_BUILD_DIR       = $(BUILD_DIR)/fw_ap
 UNIX_BUILD_DIR        = $(BUILD_DIR)/unix
 RUST_BUILD_DIR        = $(BUILD_DIR)/rust
 
@@ -223,6 +226,32 @@ build_firmware: templates build_cross ## build firmware with frozen modules
 		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
 		$(FIRMWARE_BUILD_DIR)/firmware.bin
 
+build_fw_ss: templates build_cross ## build secure services firmware (experiment)
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
+		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
+		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" \
+		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
+		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
+		$(FW_SS_BUILD_DIR)/fw_ss.bin
+
+build_fw_cs: templates build_cross ## build secure services firmware (experiment)
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
+		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
+		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" \
+		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
+		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
+		$(FW_CS_BUILD_DIR)/fw_cs.bin
+
+build_fw_ap: templates build_cross ## build secure services firmware (experiment)
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
+		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
+		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" \
+		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
+		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
+		$(FW_AP_BUILD_DIR)/fw_ap.bin
+
+build_fw: build_fw_ss build_fw_cs build_fw_ap
+
 build_unix: templates ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
 		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
@@ -268,6 +297,9 @@ clean_reflash: ## clean reflash build
 clean_firmware: ## clean firmware build
 	rm -rf $(FIRMWARE_BUILD_DIR) $(RUST_BUILD_DIR)
 
+clean_fw_ss: ## clean secure services firmware build (experimental)
+	rm -rf $(FW_SS_BUILD_DIR)
+
 clean_unix: ## clean unix build
 	rm -rf $(UNIX_BUILD_DIR) $(RUST_BUILD_DIR)
 
@@ -297,6 +329,17 @@ ifdef FIRMWARE_P2_START
 else
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
 endif
+
+flash_fw_ss: $(FW_SS_BUILD_DIR)/fw_ss.bin ## flash secure service firmware using OpenOCD (experiment)
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x0C050000; exit"
+
+flash_fw_cs: $(FW_CS_BUILD_DIR)/fw_cs.bin ## flash core service firmware using OpenOCD (experiment)
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08090000; exit"
+
+flash_fw_ap: $(FW_AP_BUILD_DIR)/fw_ap.bin ## flash application firmware using OpenOCD (experiment)
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x080D0000; exit"
+
+flash_fw: flash_fw_ss flash_fw_cs flash_fw_ap ## flash ss/cs/ap
 
 flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"

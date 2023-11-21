@@ -39,7 +39,7 @@ void svc_reboot_to_bootloader(void) {
   }
 }
 
-void SVC_C_Handler(uint32_t *stack) {
+/*void SVC_C_Handler(uint32_t *stack) {
   uint8_t svc_number = ((uint8_t *)stack[6])[-2];
   switch (svc_number) {
     case SVC_ENABLE_IRQ:
@@ -95,6 +95,6 @@ __attribute__((naked)) void SVC_Handler(void) {
       " mrsne r0, psp \n"    // Make R0 point to process stack pointer
       " b SVC_C_Handler \n"  // Off to C land
   );
-}
+}*/
 
 #endif  // ARM_USER_MODE

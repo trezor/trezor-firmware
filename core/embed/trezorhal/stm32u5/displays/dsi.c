@@ -1103,7 +1103,7 @@ static int32_t LCD_Init(void) {
             status = BSP_ERROR_PERIPH_FAILURE;
           } else {
             if (MX_LTDC_ConfigLayer(&hlcd_ltdc, LTDC_LAYER_1,
-                                    GFXMMU_VIRTUAL_BUFFER0_BASE_S) != HAL_OK) {
+                                    GFXMMU_VIRTUAL_BUFFER0_BASE) != HAL_OK) {
               status = BSP_ERROR_PERIPH_FAILURE;
             }
           }
@@ -1557,9 +1557,9 @@ void display_pixeldata(uint16_t c) {
   uint32_t address = 0;
 
   if (act_frame_buffer == 0) {
-    address = GFXMMU_VIRTUAL_BUFFER1_BASE_S;
+    address = GFXMMU_VIRTUAL_BUFFER1_BASE;
   } else {
-    address = GFXMMU_VIRTUAL_BUFFER0_BASE_S;
+    address = GFXMMU_VIRTUAL_BUFFER0_BASE;
   }
 
   /* Get the rectangle start address */
@@ -1596,9 +1596,9 @@ uint8_t *display_get_wr_addr(void) {
   uint32_t address = 0;
 
   if (act_frame_buffer == 0) {
-    address = GFXMMU_VIRTUAL_BUFFER1_BASE_S;
+    address = GFXMMU_VIRTUAL_BUFFER1_BASE;
   } else {
-    address = GFXMMU_VIRTUAL_BUFFER0_BASE_S;
+    address = GFXMMU_VIRTUAL_BUFFER0_BASE;
   }
 
   /* Get the rectangle start address */
@@ -1612,9 +1612,9 @@ uint32_t *display_get_fb_addr(void) {
   uint32_t address = 0;
 
   if (act_frame_buffer == 0) {
-    address = GFXMMU_VIRTUAL_BUFFER1_BASE_S;
+    address = GFXMMU_VIRTUAL_BUFFER1_BASE;
   } else {
-    address = GFXMMU_VIRTUAL_BUFFER0_BASE_S;
+    address = GFXMMU_VIRTUAL_BUFFER0_BASE;
   }
 
   return (uint32_t *)address;
@@ -1704,9 +1704,9 @@ void display_reinit(void) {
   MX_LTDC_Reinit(&hlcd_ltdc);
 
   if (act_frame_buffer == 0) {
-    MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, GFXMMU_VIRTUAL_BUFFER0_BASE_S);
+    MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, GFXMMU_VIRTUAL_BUFFER0_BASE);
   } else {
-    MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, GFXMMU_VIRTUAL_BUFFER1_BASE_S);
+    MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, GFXMMU_VIRTUAL_BUFFER1_BASE);
   }
 }
 void display_sync(void) {}
@@ -1714,11 +1714,11 @@ void display_sync(void) {}
 void display_refresh(void) {
   if (act_frame_buffer == 0) {
     act_frame_buffer = 1;
-    MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, GFXMMU_VIRTUAL_BUFFER1_BASE_S);
+    MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, GFXMMU_VIRTUAL_BUFFER1_BASE);
     memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
   } else {
     act_frame_buffer = 0;
-    MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, GFXMMU_VIRTUAL_BUFFER0_BASE_S);
+    MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, GFXMMU_VIRTUAL_BUFFER0_BASE);
     memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
   }
 }

@@ -87,7 +87,7 @@ secbool flash_sector_erase(uint16_t sector) {
   }
 
   FLASH_EraseInitTypeDef EraseInitStruct = {
-      .TypeErase = FLASH_TYPEERASE_PAGES_NS,
+      .TypeErase = FLASH_TYPEERASE_PAGES,
       .Banks = FLASH_BANK_1,
       .Page = sector,
       .NbPages = 1,
@@ -98,9 +98,11 @@ secbool flash_sector_erase(uint16_t sector) {
     EraseInitStruct.Page = sector - 256;
   }
 
-  if (flash_sector_is_secure(sector)) {
-    EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+  if (!flash_sector_is_secure(sector)) {
+    EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES_NS;
   }
+#endif
 
   uint32_t sector_error = 0;
 
