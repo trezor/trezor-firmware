@@ -1,5 +1,6 @@
 from trezorlib import debuglink, device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import message_filters
 
 from ..common import MNEMONIC12
 from ..emulators import Emulator, EmulatorWrapper
@@ -48,9 +49,8 @@ def test_wipe_code_activate_core(core_emulator: Emulator):
     ret = core_emulator.client.call_raw(messages.ButtonAck())
 
     # Enter the wipe code instead of the current PIN
-    assert ret == messages.ButtonRequest(
-        code=messages.ButtonRequestType.PinEntry, name="pin_device"
-    )
+    expected = message_filters.ButtonRequest(code=messages.ButtonRequestType.PinEntry)
+    assert expected.match(ret)
     core_emulator.client._raw_write(messages.ButtonAck())
     core_emulator.client.debug.input(WIPE_CODE)
 

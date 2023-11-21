@@ -21,6 +21,7 @@ import pytest
 from trezorlib import device, messages
 
 from ..common import WITH_MOCK_URANDOM
+from .. import translations as TR
 from . import reset
 from .common import go_next
 
@@ -50,12 +51,21 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_new_wallet(debug)
 
     # confirm back up
+    TR.assert_in_multiple(
+        debug.read_layout().text_content(),
+        ["backup__it_should_be_backed_up", "backup__it_should_be_backed_up_now"],
+    )
     reset.confirm_read(debug)
 
     # confirm backup intro
-    reset.confirm_read(debug, middle_r=True)
+    # parametrized string
+    TR.assert_template(
+        debug.read_layout().text_content(), "backup__info_single_share_backup"
+    )
+    reset.confirm_read(debug)
 
     # confirm backup warning
+    TR.assert_in(debug.read_layout().text_content(), "reset__never_make_digital_copy")
     reset.confirm_read(debug, middle_r=True)
 
     # read words
