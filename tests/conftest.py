@@ -53,6 +53,11 @@ if t.TYPE_CHECKING:
 HERE = Path(__file__).resolve().parent
 CORE = HERE.parent / "core"
 
+# So that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+pytest.register_assert_rewrite("tests.input_flows")
+pytest.register_assert_rewrite("tests.input_flows_helpers")
+
 
 def _emulator_wrapper_main_args() -> list[str]:
     """Look at TREZOR_PROFILING env variable, so that we can generate coverage reports."""

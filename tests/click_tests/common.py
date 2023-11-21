@@ -45,39 +45,36 @@ def get_char_category(char: str) -> PassphraseCategory:
     return PassphraseCategory.SPECIAL
 
 
-def go_next(debug: "DebugLink", wait: bool = False) -> LayoutContent | None:
+def go_next(debug: "DebugLink") -> LayoutContent:
     if debug.layout_type is LayoutType.TT:
-        return debug.click(buttons.OK, wait=wait)  # type: ignore
+        return debug.click(buttons.OK)  # type: ignore
     elif debug.layout_type is LayoutType.TR:
-        return debug.press_right(wait=wait)  # type: ignore
+        return debug.press_right()  # type: ignore
     elif debug.layout_type is LayoutType.Mercury:
-        return debug.swipe_up(wait=wait)
+        return debug.swipe_up()
     else:
         raise RuntimeError("Unknown model")
 
 
-def tap_to_confirm(debug: "DebugLink", wait: bool = False) -> LayoutContent | None:
+def tap_to_confirm(debug: "DebugLink") -> LayoutContent:
     if debug.layout_type is LayoutType.TT:
         return debug.read_layout()  # type: ignore
     elif debug.layout_type is LayoutType.TR:
         return debug.read_layout()  # type: ignore
     elif debug.layout_type is LayoutType.Mercury:
-        return debug.click(buttons.TAP_TO_CONFIRM, wait=wait)
+        return debug.click(buttons.TAP_TO_CONFIRM, )
     else:
         raise RuntimeError("Unknown model")
 
 
-def go_back(
-    debug: "DebugLink", wait: bool = False, r_middle: bool = False
-) -> LayoutContent | None:
+def go_back(debug: "DebugLink", r_middle: bool = False) -> LayoutContent:
     if debug.layout_type in (LayoutType.TT, LayoutType.Mercury):
-        return debug.click(buttons.CANCEL, wait=wait)  # type: ignore
+        return debug.click(buttons.CANCEL)  # type: ignore
     elif debug.layout_type is LayoutType.TR:
-
         if r_middle:
-            return debug.press_middle(wait=wait)  # type: ignore
+            return debug.press_middle()
         else:
-            return debug.press_left(wait=wait)  # type: ignore
+            return debug.press_left()
     else:
         raise RuntimeError("Unknown model")
 
@@ -118,19 +115,16 @@ def navigate_to_action_and_press(
         )
 
     # Press or hold
-    if hold_ms:
-        debug.press_middle_htc(1000)
-    else:
-        debug.press_middle(wait=True)
+    debug.press_middle(hold_ms=hold_ms)
 
 
-def unlock_gesture(debug: "DebugLink", wait: bool = False) -> LayoutContent | None:
+def unlock_gesture(debug: "DebugLink") -> LayoutContent:
     if debug.layout_type is LayoutType.TT:
-        return debug.click(buttons.OK, wait=wait)  # type: ignore
+        return debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.TR:
-        return debug.press_right(wait=wait)  # type: ignore
+        return debug.press_right()
     elif debug.layout_type is LayoutType.Mercury:
-        return debug.click(buttons.TAP_TO_CONFIRM, wait=wait)  # type: ignore
+        return debug.click(buttons.TAP_TO_CONFIRM)
     else:
         raise RuntimeError("Unknown model")
 
@@ -156,7 +150,7 @@ def _move_one_closer(
     current_action: str,
     all_actions: list[str],
     is_carousel: bool,
-) -> "LayoutContent":
+) -> LayoutContent:
     """Pressing either left or right regarding to the current situation"""
     index_diff = _get_action_index(wanted_action, all_actions) - _get_action_index(
         current_action, all_actions
@@ -164,17 +158,17 @@ def _move_one_closer(
     if not is_carousel:
         # Simply move according to the index in a closed list
         if index_diff > 0:
-            return debug.press_right(wait=True)
+            return debug.press_right()
         else:
-            return debug.press_left(wait=True)
+            return debug.press_left()
     else:
         # Carousel can move in a circle - over the edges
         # Always move the shortest way
         action_half = len(all_actions) // 2
         if index_diff > action_half or -action_half < index_diff < 0:
-            return debug.press_left(wait=True)
+            return debug.press_left()
         else:
-            return debug.press_right(wait=True)
+            return debug.press_right()
 
 
 def get_possible_btn_texts(path: str) -> str:

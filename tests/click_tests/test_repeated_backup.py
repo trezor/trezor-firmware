@@ -139,7 +139,7 @@ def test_repeated_backup(
 
     # ... so let's try to do a 2-of-3 backup
 
-    debug.wait_layout()
+    debug.read_layout()
 
     # confirm backup intro
     reset.confirm_read(debug)
