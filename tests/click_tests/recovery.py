@@ -24,8 +24,8 @@ def enter_word(
             debug.click(coords)
         if debug.layout_type is LayoutType.Mercury and not is_slip39 and len(word) > 4:
             # T3T1 (mercury) BIP39 keyboard allows to "confirm" only if the word is fully written, you need to click the word to auto-complete
-            debug.click(buttons.CONFIRM_WORD, wait=True)
-        return debug.click(buttons.CONFIRM_WORD, wait=True)
+            debug.click(buttons.CONFIRM_WORD)
+        return debug.click(buttons.CONFIRM_WORD)
     elif debug.layout_type is LayoutType.TR:
         letter_index = 0
         layout = debug.read_layout()
@@ -34,35 +34,34 @@ def enter_word(
         while layout.find_values_by_key("letter_choices"):
             letter = word[letter_index]
             while not layout.get_middle_choice() == letter:
-                layout = debug.press_right(wait=True)
+                layout = debug.press_right()
 
-            layout = debug.press_middle(wait=True)
+            layout = debug.press_middle()
             letter_index += 1
 
         # Word choices
         while not layout.get_middle_choice() == word:
-            layout = debug.press_right(wait=True)
+            layout = debug.press_right()
 
-        return debug.press_middle(wait=True)
+        return debug.press_middle()
     else:
         raise ValueError("Unknown model")
 
 
 def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None:
-    layout = debug.wait_layout()
+    layout = debug.read_layout()
     TR.assert_equals(layout.title(), title)
     if debug.layout_type is LayoutType.TT:
-        debug.click(buttons.OK, wait=True)
+        debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.Mercury:
-        debug.swipe_up(wait=True)
+        debug.swipe_up()
     elif debug.layout_type is LayoutType.TR:
-        debug.press_right(wait=True)
+        debug.press_right()
 
 
 def select_number_of_words(
     debug: "DebugLink",
     num_of_words: int = 20,
-    wait: bool = True,
     unlock_repeated_backup=False,
 ) -> None:
     def select_tt() -> "LayoutContent":
@@ -80,15 +79,15 @@ def select_number_of_words(
         coords = coords_map.get(num_of_words)
         if coords is None:
             raise ValueError("Invalid num_of_words")
-        return debug.click(coords, wait=True)
+        return debug.click(coords)
 
     def select_tr() -> "LayoutContent":
         # navigate to the number and confirm it
         word_options = (20, 33) if unlock_repeated_backup else (12, 18, 20, 24, 33)
         index = word_options.index(num_of_words)
         for _ in range(index):
-            debug.press_right(wait=True)
-        return debug.press_middle(wait=True)
+            debug.press_right()
+        return debug.press_middle()
 
     def select_mercury() -> "LayoutContent":
         # click the button from ValuePad
@@ -105,16 +104,14 @@ def select_number_of_words(
         coords = coords_map.get(num_of_words)
         if coords is None:
             raise ValueError("Invalid num_of_words")
-        return debug.click(coords, wait=True)
+        return debug.click(coords)
 
-    if wait:
-        debug.wait_layout()
 
     if debug.layout_type is LayoutType.TT:
         TR.assert_equals(debug.read_layout().text_content(), "recovery__num_of_words")
         layout = select_tt()
     elif debug.layout_type is LayoutType.TR:
-        layout = debug.press_right(wait=True)
+        layout = debug.press_right()
         TR.assert_equals(layout.title(), "word_count__title")
         layout = select_tr()
     elif debug.layout_type is LayoutType.Mercury:
@@ -159,14 +156,14 @@ def enter_share(
 ) -> "LayoutContent":
     if debug.layout_type is LayoutType.TR:
         TR.assert_in(debug.read_layout().title(), before_title)
-        layout = debug.wait_layout()
+        layout = debug.read_layout()
         for _ in range(layout.page_count()):
-            layout = debug.press_right(wait=True)
+            layout = debug.press_right()
     elif debug.layout_type is LayoutType.Mercury:
-        layout = debug.swipe_up(wait=True)
+        layout = debug.swipe_up()
     else:
         TR.assert_in(debug.read_layout().title(), before_title)
-        layout = debug.click(buttons.OK, wait=True)
+        layout = debug.click(buttons.OK)
 
     assert "MnemonicKeyboard" in layout.all_components()
 
@@ -241,24 +238,24 @@ def enter_seed_previous_correct(
         if go_back:
             go_back = False
             if debug.layout_type is LayoutType.TT:
-                debug.swipe_right(wait=True)
+                debug.swipe_right()
                 for _ in range(len(bad_word)):
-                    debug.click(buttons.RECOVERY_DELETE, wait=True)
+                    debug.click(buttons.RECOVERY_DELETE)
             elif debug.layout_type is LayoutType.TR:
                 layout = debug.read_layout()
 
                 while layout.get_middle_choice() not in DELETE_BTN_TEXTS:
-                    layout = debug.press_right(wait=True)
-                layout = debug.press_middle(wait=True)
+                    layout = debug.press_right()
+                layout = debug.press_middle()
 
                 for _ in range(len(bad_word)):
                     while layout.get_middle_choice() not in DELETE_BTN_TEXTS:
-                        layout = debug.press_left(wait=True)
-                    layout = debug.press_middle(wait=True)
+                        layout = debug.press_left()
+                    layout = debug.press_middle()
             elif debug.layout_type is LayoutType.Mercury:
-                debug.click(buttons.RECOVERY_DELETE, wait=True)  # Top-left
+                debug.click(buttons.RECOVERY_DELETE)  # Top-left
                 for _ in range(len(bad_word)):
-                    debug.click(buttons.RECOVERY_DELETE, wait=True)
+                    debug.click(buttons.RECOVERY_DELETE)
             continue
 
         if i in bad_indexes:
@@ -286,18 +283,18 @@ def prepare_enter_seed(
         ],
     )
     if debug.layout_type is LayoutType.TT:
-        debug.click(buttons.OK, wait=True)
+        debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.Mercury:
-        debug.swipe_up(wait=True)
-        debug.swipe_up(wait=True)
+        debug.swipe_up()
+        debug.swipe_up()
     elif debug.layout_type is LayoutType.TR:
-        debug.press_right(wait=True)
         debug.press_right()
-        layout = debug.press_right(wait=True)
+        debug.press_right()
+        layout = debug.press_right()
         assert "MnemonicKeyboard" in layout.all_components()
 
 
 def finalize(debug: "DebugLink") -> None:
-    layout = go_next(debug, wait=True)
+    layout = go_next(debug)
     assert layout is not None
     assert layout.main_component() == "Homescreen"
