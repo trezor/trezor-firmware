@@ -47,9 +47,9 @@ def get_char_category(char: str) -> PassphraseCategory:
 
 def go_next(debug: "DebugLink") -> LayoutContent:
     if debug.layout_type is LayoutType.TT:
-        return debug.click(buttons.OK)  # type: ignore
+        return debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.TR:
-        return debug.press_right()  # type: ignore
+        return debug.press_right()
     elif debug.layout_type is LayoutType.Mercury:
         return debug.swipe_up()
     else:
@@ -58,18 +58,18 @@ def go_next(debug: "DebugLink") -> LayoutContent:
 
 def tap_to_confirm(debug: "DebugLink") -> LayoutContent:
     if debug.layout_type is LayoutType.TT:
-        return debug.read_layout()  # type: ignore
+        return debug.read_layout()
     elif debug.layout_type is LayoutType.TR:
-        return debug.read_layout()  # type: ignore
+        return debug.read_layout()
     elif debug.layout_type is LayoutType.Mercury:
-        return debug.click(buttons.TAP_TO_CONFIRM, )
+        return debug.click(buttons.TAP_TO_CONFIRM)
     else:
         raise RuntimeError("Unknown model")
 
 
 def go_back(debug: "DebugLink", r_middle: bool = False) -> LayoutContent:
     if debug.layout_type in (LayoutType.TT, LayoutType.Mercury):
-        return debug.click(buttons.CANCEL)  # type: ignore
+        return debug.click(buttons.CANCEL)
     elif debug.layout_type is LayoutType.TR:
         if r_middle:
             return debug.press_middle()
