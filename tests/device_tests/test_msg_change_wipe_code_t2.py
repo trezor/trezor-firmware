@@ -110,7 +110,7 @@ def test_set_remove_wipe_code(client: Client):
 
 def test_set_wipe_code_mismatch(client: Client):
     with client, pytest.raises(TrezorFailure):
-        IF = InputFlowNewCodeMismatch(client, WIPE_CODE4, WIPE_CODE6)
+        IF = InputFlowNewCodeMismatch(client, WIPE_CODE4, WIPE_CODE6, what="wipe_code")
         client.set_input_flow(IF.get())
 
         device.change_wipe_code(client)

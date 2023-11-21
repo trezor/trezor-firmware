@@ -20,7 +20,7 @@ import json
 import re
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Optional
+from typing import TYPE_CHECKING, Any, Generator, Optional
 from unittest import mock
 
 import pytest
@@ -315,17 +315,17 @@ def check_share(
     return True
 
 
-def click_info_button_tt(debug: "DebugLink"):
+def click_info_button_tt(debug: "DebugLink") -> Generator[Any, Any, ButtonRequest]:
     """Click Shamir backup info button and return back."""
     debug.press_info()
     debug.press_yes()
-    yield
+    return (yield)
 
 
 def click_info_button_mercury(debug: "DebugLink"):
     """Click Shamir backup info button and return back."""
-    debug.click(buttons.CORNER_BUTTON)
-    debug.synchronize_at("VerticalMenu")
+    layout = debug.click(buttons.CORNER_BUTTON)
+    assert "VerticalMenu" in layout.all_components()
     debug.click(buttons.VERTICAL_MENU[0])
     debug.click(buttons.CORNER_BUTTON)
     debug.click(buttons.CORNER_BUTTON)

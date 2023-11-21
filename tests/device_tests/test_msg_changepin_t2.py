@@ -133,7 +133,7 @@ def test_set_failed(client: Client):
     _check_no_pin(client)
 
     with client, pytest.raises(TrezorFailure):
-        IF = InputFlowNewCodeMismatch(client, PIN4, PIN60)
+        IF = InputFlowNewCodeMismatch(client, PIN4, PIN60, what="pin")
         client.set_input_flow(IF.get())
 
         device.change_pin(client)

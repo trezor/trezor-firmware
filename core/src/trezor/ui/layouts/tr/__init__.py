@@ -1191,9 +1191,9 @@ def _confirm_multiple_pages_texts(
 
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
     description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
-    br_code = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
+    br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
     layout = show_warning(
-        br_code,
+        br_name,
         description,
         TR.pin__please_check_again,
         TR.buttons__check_again,

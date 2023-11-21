@@ -1,3 +1,5 @@
+import typing as t
+
 from trezorlib import messages
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -15,18 +17,21 @@ class PinFlow:
         self.debug = self.client.debug
 
     def setup_new_pin(
-        self, pin: str, second_different_pin: str | None = None
+        self,
+        pin: str,
+        second_different_pin: str | None = None,
+        what: str = "pin",
     ) -> BRGeneratorType:
-        yield  # Enter PIN
+        assert (yield).name == "pin_device"  # Enter PIN
         assert "PinKeyboard" in self.debug.read_layout().all_components()
         self.debug.input(pin)
         if self.client.layout_type is LayoutType.TR:
-            yield  # Reenter PIN
+            assert (yield).name == f"reenter_{what}"  # Reenter PIN
             TR.assert_in(
-                self.debug.read_layout().text_content(), "pin__reenter_to_confirm"
+                self.debug.read_layout().text_content(), f"{what}__reenter_to_confirm"
             )
             self.debug.press_yes()
-        yield  # Enter PIN again
+        assert (yield).name == "pin_device"  # Enter PIN again
         assert "PinKeyboard" in self.debug.read_layout().all_components()
         if second_different_pin is not None:
             self.debug.input(second_different_pin)
@@ -57,14 +62,14 @@ class RecoveryFlow:
         return layout.title() + " " + layout.text_content()
 
     def confirm_recovery(self) -> BRGeneratorType:
-        yield
+        assert (yield).name == "recover_device"
         TR.assert_in(self._text_content(), "reset__by_continuing")
         if self.client.layout_type is LayoutType.TR:
             self.debug.press_right()
         self.debug.press_yes()
 
     def confirm_dry_run(self) -> BRGeneratorType:
-        yield
+        assert (yield).name == "confirm_seedcheck"
         TR.assert_in(self._text_content(), "recovery__check_dry_run")
         self.debug.press_yes()
 
@@ -92,7 +97,7 @@ class RecoveryFlow:
         self.debug.press_yes()
 
     def enter_your_backup(self) -> BRGeneratorType:
-        yield
+        assert (yield).name == "recovery"
         if self.debug.layout_type is LayoutType.Mercury:
             TR.assert_in(self._text_content(), "recovery__enter_each_word")
         else:
@@ -108,7 +113,7 @@ class RecoveryFlow:
         self.debug.press_yes()
 
     def enter_any_share(self) -> BRGeneratorType:
-        yield
+        assert (yield).name == "recovery"
         TR.assert_in_multiple(
             self._text_content(),
             ["recovery__enter_any_share", "recovery__enter_each_word"],
@@ -171,9 +176,9 @@ class RecoveryFlow:
             self.debug.click(buttons.CORNER_BUTTON)
             self.debug.synchronize_at("VerticalMenu")
             self.debug.click(buttons.VERTICAL_MENU[0])
-            self.debug.swipe_up()
             assert (yield).name == "abort_recovery"
-            self.debug.synchronize_at("PromptScreen")
+            layout = self.debug.swipe_up()
+            TR.assert_equals(layout.title(), "recovery__title_cancel_recovery")
             self.debug.click(buttons.TAP_TO_CONFIRM)
         else:
             TR.assert_template(
@@ -187,6 +192,7 @@ class RecoveryFlow:
     def input_number_of_words(self, num_words: int) -> BRGeneratorType:
         br = yield
         assert br.code == B.MnemonicWordCount
+        assert br.name == "recovery_word_count"
         if self.client.layout_type is LayoutType.TR:
             TR.assert_in(self.debug.read_layout().title(), "word_count__title")
         else:
@@ -226,7 +232,7 @@ class RecoveryFlow:
         self.debug.press_yes()
 
     def success_share_group_entered(self) -> BRGeneratorType:
-        yield
+        assert (yield).name == "share_success"
         TR.assert_in(self._text_content(), "recovery__you_have_entered")
         self.debug.press_yes()
 
@@ -273,17 +279,20 @@ class RecoveryFlow:
         self.debug.press_yes()
 
     def success_more_shares_needed(
-        self, count_needed: int | None = None
+        self, count_needed: int | None = None, click_ok: bool = True
     ) -> BRGeneratorType:
         br = yield
+        assert br.name == "recovery"
         text = get_text_possible_pagination(self.debug, br)
         if count_needed is not None:
             assert str(count_needed) in text
-        self.debug.press_yes()
+        if click_ok:
+            self.debug.press_yes()
 
     def input_mnemonic(self, mnemonic: list[str]) -> BRGeneratorType:
         br = yield
         assert br.code == B.MnemonicInput
+        assert br.name == "mnemonic"
         assert "MnemonicKeyboard" in self.debug.read_layout().all_components()
         for _, word in enumerate(mnemonic):
             self.debug.input(word)
@@ -301,27 +310,26 @@ class RecoveryFlow:
             if index < len(shares) - 1:
                 if has_groups:
                     yield from self.success_share_group_entered()
+
+                yield from self.success_more_shares_needed(click_ok=not click_info)
                 if click_info:
                     if self.client.layout_type is LayoutType.TT:
                         yield from self.tt_click_info()
                     elif self.client.layout_type is LayoutType.Mercury:
                         yield from self.mercury_click_info()
-                yield from self.success_more_shares_needed()
+                    else:
+                        raise ValueError("Unknown model!")
+                    yield from self.success_more_shares_needed()
 
-    def tt_click_info(
-        self,
-    ) -> BRGeneratorType:
-        # Moving through the INFO button
-        yield
+    def tt_click_info(self) -> t.Generator[t.Any, t.Any, None]:
         self.debug.press_info()
-        self.debug.swipe_up()
+        br = yield
+        assert br.name == "show_shares"
+        for _ in range(br.pages):
+            self.debug.swipe_up()
         self.debug.press_yes()
 
     def mercury_click_info(self) -> BRGeneratorType:
-        # Starting on the homepage, handle the repeated button request
-        br = yield
-        assert br.name == "recovery"
-        assert br.code == B.RecoveryHomepage
         # Moving through the menu into the show_shares screen
         self.debug.click(buttons.CORNER_BUTTON)
         self.debug.synchronize_at("VerticalMenu")
