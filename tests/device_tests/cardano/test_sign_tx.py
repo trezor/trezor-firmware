@@ -33,7 +33,7 @@ pytestmark = [
 
 def show_details_input_flow(client: Client):
     yield
-    client.debug.wait_layout()
+    client.debug.read_layout()
     if client.layout_type is LayoutType.TT:
         SHOW_ALL_BUTTON_POSITION = (143, 167)
         client.debug.click(SHOW_ALL_BUTTON_POSITION)
