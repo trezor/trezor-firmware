@@ -115,13 +115,15 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         client: Client,
         first_code: str,
         second_code: str,
+        what: str,
     ):
         super().__init__(client)
         self.first_code = first_code
         self.second_code = second_code
+        self.what = what
 
     def input_flow_common(self) -> BRGeneratorType:
-        yield  # do you want to set/change the pin/wipe code?
+        assert (yield).name == f"set_{self.what}"
         self.debug.press_yes()
 
         if self.client.layout_type is LayoutType.TR:
@@ -129,19 +131,21 @@ class InputFlowNewCodeMismatch(InputFlowBase):
             self.debug.press_yes()
 
         def input_two_different_pins() -> BRGeneratorType:
-            yield from self.PIN.setup_new_pin(self.first_code, self.second_code)
+            yield from self.PIN.setup_new_pin(
+                self.first_code, self.second_code, what=self.what
+            )
 
         yield from input_two_different_pins()
 
-        yield  # PIN mismatch
+        assert (yield).name == f"{self.what}_mismatch"  # PIN mismatch
         self.debug.press_yes()  # try again
 
         yield from input_two_different_pins()
 
-        yield  # PIN mismatch
+        assert (yield).name == f"{self.what}_mismatch"  # PIN mismatch
         self.debug.press_yes()  # try again
 
-        yield  # PIN entry again
+        assert (yield).name == "pin_device"  # PIN entry again
 
         self.debug.press_no()  # cancel
 
@@ -463,7 +467,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
             expected_title = f"MULTISIG XPUB #{xpub_num + 1}\n" + (
-                "(YOURS)" if self.index == xpub_num else "(COSIGNER)"
+                "(Yours)" if self.index == xpub_num else "(Cosigner)"
             )
             layout = self.debug.swipe_left()
             assert expected_title == layout.title()
@@ -499,7 +503,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
             expected_title = f"MULTISIG XPUB #{xpub_num + 1} " + (
-                "(YOURS)" if self.index == xpub_num else "(COSIGNER)"
+                "(Yours)" if self.index == xpub_num else "(Cosigner)"
             )
             layout = self.debug.press_right()
             assert expected_title in layout.title()
@@ -979,32 +983,17 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         yield  # confirm txid
         self.debug.press_right()
         self.debug.press_right()
-        yield  # confirm address
+        yield  # modify amount - address
+        self.debug.press_right()
+        self.debug.press_right()
+        yield  # modify amount - amount
+        self.debug.press_right()
+        yield  # modify fee
         self.debug.press_right()
         self.debug.press_right()
         self.debug.press_right()
-        yield  # confirm amount
-        self.debug.press_right()
-        self.debug.press_right()
-        self.debug.press_right()
-        yield
 
-    def input_flow_t3t1(self) -> BRGeneratorType:
-        yield  # confirm txid
-        self.debug.press_yes()
-        yield  # confirm address
-        self.debug.press_yes()
-        # go back to address
-        self.debug.press_no()
-        # confirm address
-        self.debug.press_yes()
-        yield  # confirm amount
-        self.debug.press_yes()
-
-        yield  # transaction summary, press info
-        self.debug.click(buttons.CORNER_BUTTON)
-        self.debug.click(buttons.CORNER_BUTTON)
-        self.debug.press_yes()
+    input_flow_t3t1 = input_flow_tt
 
 
 def lock_time_input_flow_tt(
@@ -1428,23 +1417,29 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.repeated = repeated
 
     def input_flow_tt(self) -> BRGeneratorType:
-        yield  # 1. Checklist
+        if self.repeated:
+            assert (yield).name == "confirm_repeated_backup"
+            self.debug.press_yes()
+
+        assert (yield).name == "backup_intro"
         self.debug.press_yes()
-        yield  # 2. Number of shares (5)
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+        assert (yield).name == "slip39_shares"
         if self.click_info:
-            yield from click_info_button_tt(self.debug)
-        yield  # 3. Number of shares (5)
+            br = yield from click_info_button_tt(self.debug)
+            assert br.name == "slip39_shares"
         self.debug.press_yes()
-        yield  # 4. Checklist
+        assert (yield).name == "slip39_checklist"
         self.debug.press_yes()
-        yield  # 4. Threshold (3)
+        assert (yield).name == "slip39_threshold"
         if self.click_info:
-            yield from click_info_button_tt(self.debug)
-        yield  # 5. Threshold (3)
+            br = yield from click_info_button_tt(self.debug)
+            assert br.name == "slip39_threshold"
         self.debug.press_yes()
-        yield  # 6. Checklist
+        assert (yield).name == "slip39_checklist"
         self.debug.press_yes()
-        yield  # 7. Confirm show seeds
+        assert (yield).name == "backup_warning"
         self.debug.press_yes()
 
         # Mnemonic phrases
@@ -1489,26 +1484,26 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
     def input_flow_t3t1(self) -> BRGeneratorType:
         if self.repeated:
             # intro confirmation screen
-            yield
+            assert (yield).name == "confirm_repeated_backup"
             self.debug.press_yes()
 
-        yield  # 1. Backup intro
-        self.debug.read_layout()
+        assert (yield).name == "backup_intro"
         self.debug.swipe_up()
-        yield  # 2. Checklist
-        self.debug.read_layout()
+        assert (yield).name == "slip39_checklist"
         self.debug.swipe_up()
+        assert (yield).name == "slip39_shares"
         if self.click_info:
             click_info_button_mercury(self.debug)
         self.debug.swipe_up()
-        yield  # 4. Checklist
+        assert (yield).name == "slip39_checklist"
         self.debug.swipe_up()
+        assert (yield).name == "slip39_threshold"
         if self.click_info:
             click_info_button_mercury(self.debug)
         self.debug.swipe_up()
-        yield  # 6. Checklist
+        assert (yield).name == "slip39_checklist"
         self.debug.swipe_up()
-        yield  # 7. Confirm show seeds
+        assert (yield).name == "backup_warning"
         self.debug.swipe_up()
 
         # Mnemonic phrases
@@ -1694,34 +1689,36 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         self.click_info = click_info
 
     def input_flow_tt(self) -> BRGeneratorType:
-        yield  # 1. Backup intro
+        assert (yield).name == "backup_intro"
         self.debug.press_yes()
-        yield  # 2. Checklist
+        assert (yield).name == "slip39_checklist"
         self.debug.press_yes()
-        yield  # 2. Set and confirm group count
+        assert (yield).name == "slip39_groups"
         if self.click_info:
-            yield from click_info_button_tt(self.debug)
-        yield  # 3. Set and confirm group count
+            br = yield from click_info_button_tt(self.debug)
+            assert br.name == "slip39_groups"
         self.debug.press_yes()
-        yield  # 4. Checklist
+        assert (yield).name == "slip39_checklist"
         self.debug.press_yes()
-        yield  # 4. Set and confirm group threshold
+        assert (yield).name == "slip39_group_threshold"
         if self.click_info:
-            yield from click_info_button_tt(self.debug)
-        yield  # 5. Set and confirm group threshold
+            br = yield from click_info_button_tt(self.debug)
+            assert br.name == "slip39_group_threshold"
         self.debug.press_yes()
-        yield  # 6. Checklist
+        assert (yield).name == "slip39_checklist"
         self.debug.press_yes()
         for _ in range(5):  # for each of 5 groups
-            yield  # Set & Confirm number of shares
+            assert (yield).name == "slip39_shares"
             if self.click_info:
-                yield from click_info_button_tt(self.debug)
+                br = yield from click_info_button_tt(self.debug)
+                assert br.name == "slip39_shares"
             self.debug.press_yes()
-            yield  # Set & confirm share threshold value
+            assert (yield).name == "slip39_threshold"
             if self.click_info:
-                yield from click_info_button_tt(self.debug)
+                br = yield from click_info_button_tt(self.debug)
+                assert br.name == "slip39_threshold"
             self.debug.press_yes()
-        yield  # Confirm show seeds
+        assert (yield).name == "backup_warning"
         self.debug.press_yes()
 
         # Mnemonic phrases - show & confirm shares for all groups
@@ -2069,7 +2066,7 @@ class InputFlowSlip39BasicRecoveryDryRun(InputFlowBase):
         yield from self.REC.input_all_slip39_shares(self.shares)
         if self.mismatch:
             yield from self.REC.warning_slip39_dryrun_mismatch()
-        else:
+        elif not self.unlock_repeated_backup:
             yield from self.REC.success_slip39_dryrun_valid()
 
 

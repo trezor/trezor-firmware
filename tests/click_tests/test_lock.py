@@ -79,8 +79,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
 
     # unlock by touching
     if debug.layout_type is LayoutType.TR:
-        # Doing a short HTC to simulate a click
-        layout = debug.press_right(hold_ms=100)
+        layout = debug.press_right()
     else:
         layout = debug.click(buttons.INFO)
     assert "PinKeyboard" in layout.all_components()

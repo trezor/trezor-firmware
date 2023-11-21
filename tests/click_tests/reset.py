@@ -19,10 +19,15 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
     elif debug.layout_type is LayoutType.Mercury:
         debug.swipe_up()
         debug.click(buttons.TAP_TO_CONFIRM)
-        debug.swipe_up()  # Wallet created
     elif debug.layout_type is LayoutType.TR:
         debug.press_right()
         debug.press_right()
+    TR.assert_in_multiple(
+        debug.read_layout().text_content(),
+        ["backup__new_wallet_successfully_created", "backup__new_wallet_created"],
+    )
+    if debug.layout_type is LayoutType.Mercury:
+        debug.swipe_up()
 
 
 def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
@@ -109,7 +114,7 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
         if debug.layout_type is LayoutType.TT:
             debug.click(buttons.OK, hold_ms=1500)
         elif debug.layout_type is LayoutType.Mercury:
-            debug.click_hold(buttons.TAP_TO_CONFIRM, hold_ms=1500)
+            debug.click(buttons.TAP_TO_CONFIRM, hold_ms=1500)
         elif debug.layout_type is LayoutType.TR:
             debug.press_right(hold_ms=1200)
     else:
