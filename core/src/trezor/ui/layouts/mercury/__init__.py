@@ -1151,6 +1151,7 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:
     title = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
     description = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new
+    br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
 
     return interact(
         error_popup(
@@ -1158,7 +1159,7 @@ def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:
             description,
             button=TR.buttons__try_again,
         ),
-        "pin_mismatch",
+        br_name,
         BR_CODE_OTHER,
     )
 
