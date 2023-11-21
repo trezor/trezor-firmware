@@ -69,7 +69,7 @@ def client(client: Client) -> Iterator[Client]:
 def _check_ping_screen_texts(client: Client, title: str, right_button: str) -> None:
     def ping_input_flow(client: Client, title: str, right_button: str):
         yield
-        layout = client.debug.wait_layout()
+        layout = client.debug.read_layout()
         assert layout.title().upper() == title.upper()
         assert layout.button_contents()[-1].upper() == right_button.upper()
         client.debug.press_yes()

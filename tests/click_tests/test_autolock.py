@@ -61,18 +61,18 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
 
     device_handler.run(device.apply_settings, auto_lock_delay_ms=delay_ms)  # type: ignore
 
-    assert "PinKeyboard" in debug.wait_layout().all_components()
+    assert "PinKeyboard" in debug.read_layout().all_components()
 
     debug.input("1234")
 
     TR.assert_template(
-        debug.wait_layout().text_content(),
+        debug.read_layout().text_content(),
         "auto_lock__change_template",
     )
 
-    layout = go_next(debug, wait=True)
+    layout = go_next(debug)
     if debug.layout_type is LayoutType.Mercury:
-        layout = tap_to_confirm(debug, wait=True)
+        layout = tap_to_confirm(debug)
     assert layout.main_component() == "Homescreen"
     assert device_handler.result() == "Settings applied"
 
@@ -102,22 +102,22 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
 
     assert (
         "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1"
-        in debug.wait_layout().text_content().replace(" ", "")
+        in debug.read_layout().text_content().replace(" ", "")
     )
 
     if debug.layout_type is LayoutType.TT:
-        debug.click(buttons.OK, wait=True)
-        layout = debug.click(buttons.OK, wait=True)
+        debug.click(buttons.OK)
+        layout = debug.click(buttons.OK)
         TR.assert_in(layout.text_content(), "send__total_amount")
         assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.Mercury:
-        debug.swipe_up(wait=True)
-        layout = debug.swipe_up(wait=True)
+        debug.swipe_up()
+        layout = debug.swipe_up()
         TR.assert_in(layout.text_content(), "send__total_amount")
         assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.TR:
-        debug.press_right(wait=True)
-        layout = debug.press_right(wait=True)
+        debug.press_right()
+        layout = debug.press_right()
         TR.assert_in(layout.text_content(), "send__total_amount")
         assert "0.0039 BTC" in layout.text_content()
 
@@ -154,23 +154,23 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
 
     assert (
         "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1"
-        in debug.wait_layout().text_content().replace(" ", "")
+        in debug.read_layout().text_content().replace(" ", "")
     )
 
     if debug.layout_type is LayoutType.TT:
-        debug.click(buttons.OK, wait=True)
-        layout = debug.click(buttons.OK, wait=True)
+        debug.click(buttons.OK)
+        layout = debug.click(buttons.OK)
         TR.assert_in(layout.text_content(), "send__total_amount")
         assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.Mercury:
-        debug.swipe_up(wait=True)
-        layout = debug.swipe_up(wait=True)
+        debug.swipe_up()
+        layout = debug.swipe_up()
         TR.assert_in(layout.text_content(), "send__total_amount")
         assert "0.0039 BTC" in layout.text_content()
-        debug.swipe_up(wait=True)
+        debug.swipe_up()
     elif debug.layout_type is LayoutType.TR:
-        debug.press_right(wait=True)
-        layout = debug.press_right(wait=True)
+        debug.press_right()
+        layout = debug.press_right()
         TR.assert_in(layout.text_content(), "send__total_amount")
         assert "0.0039 BTC" in layout.text_content()
 
@@ -204,7 +204,7 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     # get address
     device_handler.run(common.get_test_address)  # type: ignore
 
-    assert "PassphraseKeyboard" in debug.wait_layout().all_components()
+    assert "PassphraseKeyboard" in debug.read_layout().all_components()
 
     if debug.layout_type is LayoutType.TR:
         # Going into the selected character category
@@ -228,11 +228,11 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
 
     # Send the passphrase to the client (TT has it clicked already, TR needs to input it)
     if debug.layout_type is LayoutType.TT:
-        debug.click(buttons.OK, wait=True)
+        debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.Mercury:
-        debug.click(buttons.CORNER_BUTTON, wait=True)
+        debug.click(buttons.CORNER_BUTTON)
     elif debug.layout_type is LayoutType.TR:
-        debug.input("j" * 8, wait=True)
+        debug.input("j" * 8)
 
     # address corresponding to "jjjjjjjj" passphrase
     assert device_handler.result() == "mnF4yRWJXmzRB6EuBzuVigqeqTqirQupxJ"
@@ -246,7 +246,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     # get address
     device_handler.run(common.get_test_address)  # type: ignore
 
-    assert "PassphraseKeyboard" in debug.wait_layout().all_components()
+    assert "PassphraseKeyboard" in debug.read_layout().all_components()
 
     if debug.layout_type is LayoutType.TR:
         # Going into the selected character category
@@ -263,17 +263,17 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
     # wait for autolock to kick in
     time.sleep(10.1)
-    assert debug.wait_layout().main_component() == "Lockscreen"
+    assert debug.read_layout().main_component() == "Lockscreen"
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
 
 
 def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
-    TR.assert_in(debug.wait_layout().text_content(), "recovery__check_dry_run")
-    layout = go_next(debug, wait=True)
+    TR.assert_in(debug.read_layout().text_content(), "recovery__check_dry_run")
+    layout = go_next(debug)
     assert "PinKeyboard" in layout.all_components()
 
-    layout = debug.input(PIN4, wait=True)
+    layout = debug.input(PIN4)
     assert layout is not None
     return layout
 
@@ -286,28 +286,28 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     device_handler.run(device.recover, dry_run=True)  # type: ignore
 
     layout = unlock_dry_run(debug)
-    TR.assert_in(debug.wait_layout().text_content(), "recovery__num_of_words")
+    TR.assert_in(debug.read_layout().text_content(), "recovery__num_of_words")
 
     if debug.layout_type is LayoutType.TR:
-        debug.press_right(wait=True)
+        debug.press_right()
 
     # wait for autolock to trigger
     time.sleep(10.1)
-    assert debug.wait_layout().main_component() == "Lockscreen"
+    assert debug.read_layout().main_component() == "Lockscreen"
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
 
     # unlock
     # lockscreen triggered automatically
-    debug.wait_layout(wait_for_external_change=True)
-    layout = unlock_gesture(debug, wait=True)
+    # debug.wait_layout()
+    layout = unlock_gesture(debug)
 
     assert "PinKeyboard" in layout.all_components()
-    layout = debug.input(PIN4, wait=True)
+    layout = debug.input(PIN4)
     assert layout is not None
 
     # we are back at homescreen
-    TR.assert_in(debug.wait_layout().text_content(), "recovery__num_of_words")
+    TR.assert_in(debug.read_layout().text_content(), "recovery__num_of_words")
 
 
 @pytest.mark.setup_client(pin=PIN4)
@@ -323,15 +323,15 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     recovery.select_number_of_words(debug, 20)
 
     if debug.layout_type in (LayoutType.TT, LayoutType.Mercury):
-        layout = go_next(debug, wait=True)
+        layout = go_next(debug)
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.layout_type is LayoutType.TR:
-        layout = debug.press_right(wait=True)
+        layout = debug.press_right()
         assert "MnemonicKeyboard" in layout.all_components()
 
     # make sure keyboard locks
     time.sleep(10.1)
-    assert debug.wait_layout().main_component() == "Lockscreen"
+    assert debug.read_layout().main_component() == "Lockscreen"
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
 
@@ -349,38 +349,43 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     recovery.select_number_of_words(debug, 20)
 
     if debug.layout_type is LayoutType.TT:
-        layout = debug.click(buttons.OK, wait=True)
+        layout = debug.click(buttons.OK)
         assert layout.main_component() == "MnemonicKeyboard"
 
         # type the word OCEAN slowly
         for coords in buttons.type_word("ocea", is_slip39=True):
             time.sleep(9)
             debug.click(coords)
-        layout = debug.click(buttons.CONFIRM_WORD, wait=True)
+        layout = debug.click(buttons.CONFIRM_WORD)
         # should not have locked, even though we took 9 seconds to type each letter
         assert layout.main_component() == "MnemonicKeyboard"
+
     elif debug.layout_type is LayoutType.Mercury:
-        layout = debug.swipe_up(wait=True)
+        layout = debug.swipe_up()
         assert layout.main_component() == "MnemonicKeyboard"
 
         # type the word OCEAN slowly
         for coords in buttons.type_word("ocea", is_slip39=True):
             time.sleep(9)
             debug.click(coords)
-        layout = debug.click(buttons.CONFIRM_WORD, wait=True)
+        layout = debug.click(buttons.CONFIRM_WORD)
         # should not have locked, even though we took 9 seconds to type each letter
         assert layout.main_component() == "MnemonicKeyboard"
+
     elif debug.layout_type is LayoutType.TR:
-        layout = debug.press_right(wait=True)
+        layout = debug.press_right()
         assert "MnemonicKeyboard" in layout.all_components()
 
         # pressing middle button three times
         for _ in range(3):
             time.sleep(9)
             debug.press_middle()
-        layout = debug.wait_layout()
+        layout = debug.read_layout()
         # should not have locked, even though we took 9 seconds to type each letter
         assert "MnemonicKeyboard" in layout.all_components()
+
+    else:
+        raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
@@ -406,7 +411,7 @@ def test_autolock_does_not_interrupt_preauthorized(
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
-    debug.press_yes(wait=True)
+    debug.press_yes()
     device_handler.result()
 
     inputs = [
