@@ -1,8 +1,8 @@
 use std::io::{self, Write};
 
 use bitcoin::{
-    bip32, blockdata::script::Builder, consensus::encode::Decodable, network::constants::Network,
-    psbt, Address, Sequence, Transaction, TxIn, TxOut,
+    bip32, blockdata::script::Builder, consensus::encode::Decodable, network::Network, psbt,
+    transaction::Version, Address, Amount, Sequence, Transaction, TxIn, TxOut,
 };
 
 use trezor_client::{Error, SignTxProgress, TrezorMessage, TrezorResponse};
@@ -33,7 +33,7 @@ fn handle_interaction<T, R: TrezorMessage>(resp: TrezorResponse<T, R>) -> T {
 }
 
 fn tx_progress(
-    psbt: &mut psbt::PartiallySignedTransaction,
+    psbt: &mut psbt::Psbt,
     progress: SignTxProgress,
     raw_tx: &mut Vec<u8>,
 ) -> Result<(), Error> {
@@ -74,9 +74,9 @@ fn main() {
     let addr = Address::p2pkh(&pubkey.to_pub(), Network::Testnet);
     println!("address: {}", addr);
 
-    let mut psbt = psbt::PartiallySignedTransaction {
+    let mut psbt = psbt::Psbt {
         unsigned_tx: Transaction {
-                version: 1,
+                version: Version::ONE,
                 lock_time: bitcoin::absolute::LockTime::from_consensus(0),
                 input: vec![TxIn {
                     previous_output: "c5bdb27907b78ce03f94e4bf2e94f7a39697b9074b79470019e3dbc76a10ecb6:0".parse().unwrap(),
@@ -85,7 +85,7 @@ fn main() {
                     witness: Default::default(),
                 }],
                 output: vec![TxOut {
-                    value: 14245301,
+                    value: Amount::from_sat(14245301),
                     script_pubkey: addr.script_pubkey(),
                 }],
             },

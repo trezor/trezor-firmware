@@ -15,21 +15,12 @@ use crate::{
 use bitcoin::{hashes::sha256d, psbt, Network, Transaction};
 use protos::{
     tx_ack::transaction_type::TxInputType, tx_request::RequestType as TxRequestType,
-    OutputScriptType,
+    InputScriptType, OutputScriptType,
 };
 use tracing::trace;
 
-// Some types with raw protos that we use in the public interface so they have to be exported.
-pub use protos::{
-    ButtonRequest as ButtonRequestType, Features, InputScriptType,
-    PinMatrixRequest as PinMatrixRequestType,
-};
-
 /// Fulfill a TxRequest for TXINPUT.
-fn ack_input_request(
-    req: &protos::TxRequest,
-    psbt: &psbt::PartiallySignedTransaction,
-) -> Result<protos::TxAck> {
+fn ack_input_request(req: &protos::TxRequest, psbt: &psbt::Psbt) -> Result<protos::TxAck> {
     if req.details.is_none() || !req.details.has_request_index() {
         return Err(Error::MalformedTxRequest(req.clone()))
     }
@@ -87,7 +78,7 @@ fn ack_input_request(
 
             if script_pubkey.is_p2pkh() {
                 InputScriptType::SPENDADDRESS
-            } else if script_pubkey.is_v0_p2wpkh() || script_pubkey.is_v0_p2wsh() {
+            } else if script_pubkey.is_p2wpkh() || script_pubkey.is_p2wsh() {
                 InputScriptType::SPENDWITNESS
             } else if script_pubkey.is_p2sh() && psbt_input.witness_script.is_some() {
                 InputScriptType::SPENDP2SHWITNESS
@@ -99,7 +90,7 @@ fn ack_input_request(
         data_input.set_script_type(script_type);
         //TODO(stevenroose) multisig
 
-        data_input.set_amount(txout.value);
+        data_input.set_amount(txout.value.to_sat());
     }
 
     trace!("Prepared input to ack: {:?}", data_input);
@@ -113,7 +104,7 @@ fn ack_input_request(
 /// Fulfill a TxRequest for TXOUTPUT.
 fn ack_output_request(
     req: &protos::TxRequest,
-    psbt: &psbt::PartiallySignedTransaction,
+    psbt: &psbt::Psbt,
     network: Network,
 ) -> Result<protos::TxAck> {
     if req.details.is_none() || !req.details.has_request_index() {
@@ -140,7 +131,7 @@ fn ack_output_request(
         };
 
         let mut bin_output = TxOutputBinType::new();
-        bin_output.set_amount(output.value);
+        bin_output.set_amount(output.value.to_sat());
         bin_output.set_script_pubkey(output.script_pubkey.to_bytes());
 
         trace!("Prepared bin_output to ack: {:?}", bin_output);
@@ -153,7 +144,7 @@ fn ack_output_request(
         let output = opt.ok_or(Error::TxRequestInvalidIndex(output_index))?;
 
         let mut data_output = TxOutputType::new();
-        data_output.set_amount(output.value);
+        data_output.set_amount(output.value.to_sat());
         // Set script type to PAYTOADDRESS unless we find out otherwise from the PSBT.
         data_output.set_script_type(OutputScriptType::PAYTOADDRESS);
         if let Some(addr) = utils::address_from_script(&output.script_pubkey, network) {
@@ -194,10 +185,7 @@ fn ack_output_request(
 }
 
 /// Fulfill a TxRequest for TXMETA.
-fn ack_meta_request(
-    req: &protos::TxRequest,
-    psbt: &psbt::PartiallySignedTransaction,
-) -> Result<protos::TxAck> {
+fn ack_meta_request(req: &protos::TxRequest, psbt: &psbt::Psbt) -> Result<protos::TxAck> {
     if req.details.is_none() {
         return Err(Error::MalformedTxRequest(req.clone()))
     }
@@ -217,7 +205,7 @@ fn ack_meta_request(
     };
 
     let mut txdata = TransactionType::new();
-    txdata.set_version(tx.version as u32);
+    txdata.set_version(tx.version.0 as u32);
     txdata.set_lock_time(tx.lock_time.to_consensus_u32());
     txdata.set_inputs_cnt(tx.input.len() as u32);
     txdata.set_outputs_cnt(tx.output.len() as u32);
@@ -314,7 +302,7 @@ impl<'a> SignTxProgress<'a> {
     /// so it should always be checked in advance.
     pub fn ack_psbt(
         self,
-        psbt: &psbt::PartiallySignedTransaction,
+        psbt: &psbt::Psbt,
         network: Network,
     ) -> Result<TrezorResponse<'a, SignTxProgress<'a>, protos::TxRequest>> {
         assert!(self.req.request_type() != TxRequestType::TXFINISHED);

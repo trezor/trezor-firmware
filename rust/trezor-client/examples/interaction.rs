@@ -1,6 +1,6 @@
 use std::io;
 
-use bitcoin::{bip32, network::constants::Network, Address};
+use bitcoin::{bip32, network::Network, Address};
 use trezor_client::{Error, TrezorMessage, TrezorResponse};
 
 fn handle_interaction<T, R: TrezorMessage>(resp: TrezorResponse<T, R>) -> Result<T, Error> {

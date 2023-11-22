@@ -11,21 +11,23 @@
 //! We use the log package interface, so any logger that supports log can be attached.
 //! Please be aware that `trace` logging can contain sensitive data.
 
-#![warn(rust_2018_idioms)]
+#![warn(unreachable_pub, rustdoc::all)]
+#![cfg_attr(not(test), warn(unused_crate_dependencies))]
+#![deny(unused_must_use, rust_2018_idioms)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 mod messages;
-mod transport;
 
 pub mod client;
 pub mod error;
 pub mod protos;
+pub mod transport;
 #[cfg(feature = "bitcoin")]
 pub mod utils;
 
 mod flows {
     #[cfg(feature = "bitcoin")]
-    pub mod sign_tx;
+    pub(crate) mod sign_tx;
 }
 
 pub use client::{

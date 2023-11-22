@@ -8,10 +8,10 @@ use std::{fmt, net::UdpSocket, result::Result, time::Duration};
 
 // A collection of constants related to the Emulator Ports.
 mod constants {
-    pub const DEFAULT_HOST: &str = "127.0.0.1";
-    pub const DEFAULT_PORT: &str = "21324";
-    pub const DEFAULT_DEBUG_PORT: &str = "21325";
-    pub const LOCAL_LISTENER: &str = "127.0.0.1:0";
+    pub(crate) const DEFAULT_HOST: &str = "127.0.0.1";
+    pub(crate) const DEFAULT_PORT: &str = "21324";
+    pub(crate) const DEFAULT_DEBUG_PORT: &str = "21325";
+    pub(crate) const LOCAL_LISTENER: &str = "127.0.0.1:0";
 }
 
 use constants::{DEFAULT_DEBUG_PORT, DEFAULT_HOST, DEFAULT_PORT, LOCAL_LISTENER};
@@ -37,8 +37,8 @@ impl fmt::Display for AvailableUdpTransport {
 
 /// An actual serial HID USB link to a device over which bytes can be sent.
 struct UdpLink {
-    pub socket: UdpSocket,
-    pub device: (String, String),
+    socket: UdpSocket,
+    device: (String, String),
 }
 // No need to implement drop as every member is owned
 
@@ -68,7 +68,7 @@ impl Link for UdpLink {
 }
 
 impl UdpLink {
-    pub fn open(path: &str) -> Result<UdpLink, Error> {
+    fn open(path: &str) -> Result<UdpLink, Error> {
         let mut parts = path.split(':');
         let link = Self {
             socket: UdpSocket::bind(LOCAL_LISTENER)?,
