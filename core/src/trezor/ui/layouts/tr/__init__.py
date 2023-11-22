@@ -495,6 +495,7 @@ async def show_address(
                 br_code,
                 pages=layout.page_count(),
             )
+        layout.request_complete_repaint()
         result = await ctx_wait(layout)
 
         # User confirmed with middle button.
@@ -1106,6 +1107,7 @@ async def confirm_modify_output(
                 ButtonRequestType.ConfirmOutput,
                 address_layout.page_count(),
             )
+        address_layout.request_complete_repaint()
         await raise_if_not_confirmed(ctx_wait(address_layout))
 
         if send_button_request:
@@ -1115,6 +1117,7 @@ async def confirm_modify_output(
                 ButtonRequestType.ConfirmOutput,
                 modify_layout.page_count(),
             )
+        modify_layout.request_complete_repaint()
         result = await ctx_wait(modify_layout)
 
         if result is CONFIRMED:
