@@ -59,6 +59,8 @@ pub struct Chunks {
     pub chunk_size: usize,
     /// How big will be the space between chunks (in pixels).
     pub x_offset: i16,
+    /// Maximum amount of rows on one page, if any.
+    pub max_rows: Option<usize>,
 }
 
 impl Chunks {
@@ -66,7 +68,13 @@ impl Chunks {
         Chunks {
             chunk_size,
             x_offset,
+            max_rows: None,
         }
+    }
+
+    pub const fn with_max_rows(mut self, max_rows: usize) -> Self {
+        self.max_rows = Some(max_rows);
+        self
     }
 }
 
@@ -238,6 +246,7 @@ impl TextLayout {
     ) -> LayoutFit {
         let init_cursor = *cursor;
         let mut remaining_text = text;
+        let mut num_lines = 1;
 
         // Check if bounding box is high enough for at least one line.
         if cursor.y > self.bottom_y() {
@@ -273,6 +282,15 @@ impl TextLayout {
 
         while !remaining_text.is_empty() {
             let is_last_line = cursor.y + self.style.text_font.line_height() > self.bottom_y();
+            let mut force_next_page = false;
+
+            // Check if we have not reached the maximum number of lines we want to draw.
+            if let Some(max_rows) = self.style.chunks.and_then(|c| c.max_rows) {
+                if num_lines >= max_rows {
+                    force_next_page = true;
+                }
+            }
+
             let line_ending_space = if is_last_line {
                 self.style.ellipsis_width()
             } else {
@@ -325,6 +343,7 @@ impl TextLayout {
 
             if span.advance.y > 0 {
                 // We're advancing to the next line.
+                num_lines += 1;
 
                 // Possibly making a bigger/smaller vertical jump
                 span.advance.y += self.style.line_spacing;
@@ -333,8 +352,9 @@ impl TextLayout {
                 if span.insert_hyphen_before_line_break {
                     sink.hyphen(*cursor, self);
                 }
-                // Check the amount of vertical space we have left.
-                if cursor.y + span.advance.y > self.bottom_y() {
+                // Check the amount of vertical space we have left --- or manually force the
+                // next page.
+                if force_next_page || cursor.y + span.advance.y > self.bottom_y() {
                     // Not enough space on this page.
                     if !remaining_text.is_empty() {
                         // Append ellipsis to indicate more content is available, but only if we
