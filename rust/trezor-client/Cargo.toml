@@ -28,8 +28,8 @@ members = ["build", "."]
 
 [workspace.dependencies]
 # important: keep in sync
-protobuf = "=3.2.0"
-protobuf-codegen = "=3.2.0"
+protobuf = "=3.3.0"
+protobuf-codegen = "=3.3.0"
 
 [dependencies]
 protobuf.workspace = true
