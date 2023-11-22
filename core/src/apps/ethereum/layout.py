@@ -41,7 +41,9 @@ async def require_confirm_tx(
     total_amount = format_ethereum_amount(value, token, network)
     maximum_fee = format_ethereum_amount(gas_price * gas_limit, None, network)
     gas_limit_str = f"{gas_limit} units"
-    gas_price_str = format_ethereum_amount(gas_price, None, network)
+    gas_price_str = format_ethereum_amount(
+        gas_price, None, network, force_unit_gwei=True
+    )
 
     items = (
         ("Gas limit:", gas_limit_str),
@@ -63,7 +65,6 @@ async def require_confirm_tx_eip1559(
     token: EthereumTokenInfo | None,
     chunkify: bool,
 ) -> None:
-
     if to_bytes:
         to_str = address_from_bytes(to_bytes, network)
     else:
@@ -73,8 +74,12 @@ async def require_confirm_tx_eip1559(
     total_amount = format_ethereum_amount(value, token, network)
     maximum_fee = format_ethereum_amount(max_gas_fee * gas_limit, None, network)
     gas_limit_str = f"{gas_limit} units"
-    max_gas_fee_str = format_ethereum_amount(max_gas_fee, None, network)
-    max_priority_fee_str = format_ethereum_amount(max_priority_fee, None, network)
+    max_gas_fee_str = format_ethereum_amount(
+        max_gas_fee, None, network, force_unit_gwei=True
+    )
+    max_priority_fee_str = format_ethereum_amount(
+        max_priority_fee, None, network, force_unit_gwei=True
+    )
 
     items = (
         ("Gas limit:", gas_limit_str),
@@ -243,6 +248,7 @@ def format_ethereum_amount(
     value: int,
     token: EthereumTokenInfo | None,
     network: EthereumNetworkInfo,
+    force_unit_gwei: bool = False,
 ) -> str:
     from trezor.strings import format_amount
 
@@ -253,12 +259,18 @@ def format_ethereum_amount(
         suffix = network.symbol
         decimals = 18
 
-    # Don't want to display wei values for tokens with small decimal numbers
-    if decimals > 9 and value < 10 ** (decimals - 9):
+    if force_unit_gwei:
+        assert token is None
+        assert decimals >= 9
+        decimals = decimals - 9
+        suffix = "Gwei"
+    elif decimals > 9 and value < 10 ** (decimals - 9):
+        # Don't want to display wei values for tokens with small decimal numbers
         suffix = "Wei " + suffix
         decimals = 0
 
-    return f"{format_amount(value, decimals)} {suffix}"
+    amount = format_amount(value, decimals)
+    return f"{amount} {suffix}"
 
 
 def limit_str(s: str, limit: int = 16) -> str:
