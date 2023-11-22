@@ -1,0 +1,2 @@
+rust/trezor-client/src/protos/generated/* linguist-generated
+rust/trezor-client/src/messages/generated.rs linguist-generated
