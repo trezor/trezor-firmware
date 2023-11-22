@@ -1,4 +1,4 @@
-{ pkgs, nodejs-14_x, stdenv, lib, ... }:
+{ pkgs, stdenv, lib, ... }:
 
 let
 
@@ -7,8 +7,6 @@ let
   nodePackages = import ./node-composition.nix {
     inherit pkgs;
     inherit (stdenv.hostPlatform) system;
-    # FIXME: drop after https://github.com/NixOS/nixpkgs/issues/145432 is fixed
-    nodejs = nodejs-14_x;
   };
 in
 nodePackages."${packageName}".override {
