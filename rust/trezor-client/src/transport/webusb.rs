@@ -12,17 +12,15 @@ use std::{fmt, result::Result, time::Duration};
 
 // A collection of constants related to the WebUsb protocol.
 mod constants {
-    pub use crate::transport::constants::*;
+    pub(crate) const CONFIG_ID: u8 = 0;
+    pub(crate) const INTERFACE_DESCRIPTOR: u8 = 0;
+    pub(crate) const LIBUSB_CLASS_VENDOR_SPEC: u8 = 0xff;
 
-    pub const CONFIG_ID: u8 = 0;
-    pub const INTERFACE_DESCRIPTOR: u8 = 0;
-    pub const LIBUSB_CLASS_VENDOR_SPEC: u8 = 0xff;
-
-    pub const INTERFACE: u8 = 0;
-    pub const INTERFACE_DEBUG: u8 = 1;
-    pub const ENDPOINT: u8 = 1;
-    pub const ENDPOINT_DEBUG: u8 = 2;
-    pub const READ_ENDPOINT_MASK: u8 = 0x80;
+    pub(crate) const INTERFACE: u8 = 0;
+    pub(crate) const INTERFACE_DEBUG: u8 = 1;
+    pub(crate) const ENDPOINT: u8 = 1;
+    pub(crate) const ENDPOINT_DEBUG: u8 = 2;
+    pub(crate) const READ_ENDPOINT_MASK: u8 = 0x80;
 }
 
 /// The chunk size for the serial protocol.

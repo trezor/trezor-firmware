@@ -17,10 +17,7 @@ pub fn address_from_script(script: &Script, network: Network) -> Option<address:
 }
 
 /// Find the (first if multiple) PSBT input that refers to the given txid.
-pub fn psbt_find_input(
-    psbt: &psbt::PartiallySignedTransaction,
-    txid: sha256d::Hash,
-) -> Result<&psbt::Input> {
+pub fn psbt_find_input(psbt: &psbt::Psbt, txid: sha256d::Hash) -> Result<&psbt::Input> {
     let inputs = &psbt.unsigned_tx.input;
     let idx = inputs
         .iter()

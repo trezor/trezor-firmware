@@ -1,7 +1,7 @@
 use super::{Trezor, TrezorResponse};
 use crate::{error::Result, flows::sign_tx::SignTxProgress, protos, utils};
 use bitcoin::{
-    address::NetworkUnchecked, bip32, network::constants::Network, psbt,
+    address::NetworkUnchecked, bip32, network::Network, psbt,
     secp256k1::ecdsa::RecoverableSignature, Address,
 };
 
@@ -14,7 +14,7 @@ impl Trezor {
         script_type: InputScriptType,
         network: Network,
         show_display: bool,
-    ) -> Result<TrezorResponse<'_, bip32::ExtendedPubKey, protos::PublicKey>> {
+    ) -> Result<TrezorResponse<'_, bip32::Xpub, protos::PublicKey>> {
         let mut req = protos::GetPublicKey::new();
         req.address_n = utils::convert_path(path);
         req.set_show_display(show_display);
@@ -41,7 +41,7 @@ impl Trezor {
 
     pub fn sign_tx(
         &mut self,
-        psbt: &psbt::PartiallySignedTransaction,
+        psbt: &psbt::Psbt,
         network: Network,
     ) -> Result<TrezorResponse<'_, SignTxProgress<'_>, protos::TxRequest>> {
         let tx = &psbt.unsigned_tx;
@@ -49,7 +49,7 @@ impl Trezor {
         req.set_inputs_count(tx.input.len() as u32);
         req.set_outputs_count(tx.output.len() as u32);
         req.set_coin_name(utils::coin_name(network)?);
-        req.set_version(tx.version as u32);
+        req.set_version(tx.version.0 as u32);
         req.set_lock_time(tx.lock_time.to_consensus_u32());
         self.call(req, Box::new(|c, m| Ok(SignTxProgress::new(c, m))))
     }

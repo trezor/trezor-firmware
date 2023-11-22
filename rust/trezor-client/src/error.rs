@@ -88,5 +88,5 @@ pub enum Error {
     /// Address error.
     #[cfg(feature = "bitcoin")]
     #[error(transparent)]
-    Address(#[from] bitcoin::address::Error),
+    Address(#[from] bitcoin::address::ParseError),
 }

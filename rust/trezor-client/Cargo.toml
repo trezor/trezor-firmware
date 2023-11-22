@@ -41,7 +41,7 @@ thiserror = "1.0"
 tracing = "0.1"
 
 # bitcoin
-bitcoin = { version = "0.30", optional = true }
+bitcoin = { version = "0.31", optional = true }
 unicode-normalization = { version = "0.1.22", optional = true }
 
 # ethereum
