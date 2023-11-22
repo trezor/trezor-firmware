@@ -56,7 +56,7 @@ def main():
         if variants and feature:
             out += "\n"
             out += write_block(variants, feature)
-    print(out)
+    print(out.strip())
 
 
 # Parse feature blocks based on comments in the `messages.proto` file
