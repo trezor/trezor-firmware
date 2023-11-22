@@ -50,6 +50,13 @@ class TestFormatEthereumAmount(unittest.TestCase):
         text = format_ethereum_amount(1000000000000000000000, None, ETH)
         self.assertEqual(text, "1,000 ETH")
 
+    def test_force_units(self):
+        wei_amount = 100_000_000
+        text = format_ethereum_amount(wei_amount, None, ETH)
+        self.assertEqual(text, "100,000,000 Wei ETH")
+        text = format_ethereum_amount(wei_amount, None, ETH, force_unit_gwei=True)
+        self.assertEqual(text, "0.1 Gwei")
+
     def test_precision(self):
         text = format_ethereum_amount(1000000000000000001, None, ETH)
         self.assertEqual(text, "1.000000000000000001 ETH")
