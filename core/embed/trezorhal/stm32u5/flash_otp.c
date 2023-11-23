@@ -50,11 +50,11 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
     return secfalse;
   }
   ensure(flash_unlock_write(), NULL);
-  for (uint8_t i = 0; i < datalen; i++) {
+  for (uint8_t i = 0; i < datalen; i += 16) {
     uint32_t address =
         FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i;
-    ensure(sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD,
-                                                  address, (uint32_t)data)),
+    ensure(sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD_NS,
+                                                  address, (uint32_t)&data[i])),
            NULL);
   }
   ensure(flash_lock_write(), NULL);
