@@ -23,6 +23,22 @@
 
 #ifdef BOARDLOADER
 
+#define SAU_INIT_CTRL_ENABLE 1
+#define SAU_INIT_CTRL_ALLNS 0
+#define SAU_INIT_REGION(n, start, end, sec) \
+  SAU->RNR = ((n)&SAU_RNR_REGION_Msk);      \
+  SAU->RBAR = ((start)&SAU_RBAR_BADDR_Msk); \
+  SAU->RLAR = ((end)&SAU_RLAR_LADDR_Msk) |  \
+              (((sec) << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1U
+
+static void trustzone_configure_sau(void) {
+  SAU_INIT_REGION(0, 0x0BF90000, 0x0BFA8FFF, 0);  // OTP etc
+
+  SAU->CTRL =
+      ((SAU_INIT_CTRL_ENABLE << SAU_CTRL_ENABLE_Pos) & SAU_CTRL_ENABLE_Msk) |
+      ((SAU_INIT_CTRL_ALLNS << SAU_CTRL_ALLNS_Pos) & SAU_CTRL_ALLNS_Msk);
+}
+
 // Configure ARMCortex-M33 SCB and FPU security
 static void trustzone_configure_arm(void) {
   // Enable FPU in both secure and non-secure modes
@@ -99,6 +115,9 @@ static void trustzone_configure_flash(void) {
 void trustzone_init_boardloader(void) {
   // Configure ARM SCB/FBU security
   trustzone_configure_arm();
+
+  // Configure SAU security attributes
+  trustzone_configure_sau();
 
   // Enable GTZC (Global Trust-Zone Controller) peripheral clock
   __HAL_RCC_GTZC1_CLK_ENABLE();
