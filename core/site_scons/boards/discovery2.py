@@ -94,4 +94,7 @@ def configure(
     env.get("ENV")["MCU_TYPE"] = mcu
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
+    defs = env.get("CPPDEFINES_IMPLICIT")
+    defs += ["__ARM_FEATURE_CMSE=3"]
+
     return features_available
