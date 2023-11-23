@@ -328,6 +328,8 @@ void real_jump_to_firmware(void) {
   if (sectrue == secret_optiga_present()) {
     secret_optiga_backup();
     secret_hide();
+  } else {
+    secret_optiga_hide();
   }
 #else
   secret_hide();
