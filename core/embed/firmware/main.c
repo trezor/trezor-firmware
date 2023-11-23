@@ -112,8 +112,6 @@ int main(void) {
   HAL_Init();
 #endif
 
-  collect_hw_entropy();
-
 #ifdef SYSTEM_VIEW
   enable_systemview();
 #endif
@@ -135,6 +133,8 @@ int main(void) {
 #endif
 
   mpu_config_firmware_initial();
+
+  collect_hw_entropy();
 
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
