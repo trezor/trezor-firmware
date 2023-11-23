@@ -48,7 +48,12 @@
 #endif
 
 #include "memzero.h"
+
+#ifdef STM32U5
+#include "stm32u5xx_ll_utils.h"
+#else
 #include "stm32f4xx_ll_utils.h"
+#endif
 
 #ifdef TREZOR_MODEL_T
 #define MODEL_IDENTIFIER "TREZOR2-"
@@ -428,9 +433,10 @@ power_off:
 static void test_wipe(void) {
   // erase start of the firmware (metadata) -> invalidate FW
   ensure(flash_unlock_write(), NULL);
-  for (int i = 0; i < 1024 / sizeof(uint32_t); i++) {
+  for (int i = 0; i < 1024 / (4 * sizeof(uint32_t)); i += 4) {
+    uint32_t data[4] = {0};
     ensure(
-        flash_area_write_word(&FIRMWARE_AREA, i * sizeof(uint32_t), 0x00000000),
+        flash_area_write_quadword(&FIRMWARE_AREA, i * sizeof(uint32_t), data),
         NULL);
   }
   ensure(flash_lock_write(), NULL);
@@ -563,6 +569,8 @@ int main(void) {
   sbu_init();
 #endif
   usb_init_all();
+
+  mpu_config_prodtest_initial();
 
 #ifdef USE_OPTIGA
   optiga_init();

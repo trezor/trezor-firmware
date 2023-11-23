@@ -87,6 +87,15 @@ def configure(
         sources += ["embed/trezorhal/stm32u5/dma2d.c"]
         features_available.append("dma2d")
 
+    if "optiga" in features_wanted:
+        defines += ["USE_OPTIGA=1"]
+        sources += ["embed/trezorhal/stm32u5/optiga_hal.c"]
+        sources += ["embed/trezorhal/optiga/optiga.c"]
+        sources += ["embed/trezorhal/optiga/optiga_commands.c"]
+        sources += ["embed/trezorhal/optiga/optiga_transport.c"]
+        sources += ["vendor/trezor-crypto/hash_to_curve.c"]
+        features_available.append("optiga")
+
     env.get("ENV")["TREZOR_BOARD"] = board
     env.get("ENV")["MCU_TYPE"] = mcu
     env.get("ENV")["LINKER_SCRIPT"] = linker_script

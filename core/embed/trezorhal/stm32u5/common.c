@@ -156,6 +156,17 @@ void __assert_func(const char *file, int line, const char *func,
 
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
 uint32_t hal_ticks_ms() { return HAL_GetTick(); }
+void hal_delay_us(uint16_t delay_us) {
+  uint32_t val = svc_get_systick_val();
+  uint32_t t = hal_ticks_ms() * 1000 +
+               (((SystemCoreClock / 1000) - val) / (SystemCoreClock / 1000000));
+  uint32_t t2 = t;
+  do {
+    val = svc_get_systick_val();
+    t2 = hal_ticks_ms() * 1000 +
+         (((SystemCoreClock / 1000) - val) / (SystemCoreClock / 1000000));
+  } while ((t2 - t) < delay_us);
+}
 
 uint32_t __stack_chk_guard = 0;
 

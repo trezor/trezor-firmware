@@ -200,6 +200,8 @@ void mpu_config_firmware(void) {
   __asm__ volatile("isb");
 }
 
+void mpu_config_prodtest_initial(void) {}
+
 void mpu_config_prodtest(void) {
   // Disable MPU
   HAL_MPU_Disable();

@@ -22,12 +22,11 @@ static secbool verify_header(void) {
 }
 
 secbool secret_bootloader_locked(void) {
-  if (bootloader_locked_set != sectrue) {
-    // Set bootloader_locked.
-    verify_header();
-  }
-
-  return bootloader_locked;
+#ifdef FIRMWARE
+  return TAMP->BKP8R != 0 * sectrue;
+#else
+  return sectrue;
+#endif
 }
 
 void secret_write_header(void) {
@@ -160,4 +159,8 @@ void secret_optiga_hide(void) {
     *reg1 = 0;
     reg1++;
   }
+}
+
+void secret_erase(void) {
+  ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
 }
