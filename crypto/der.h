@@ -41,5 +41,6 @@ typedef struct {
 bool __wur der_read_length(BUFFER_READER *buf, size_t *len);
 bool __wur der_write_length(BUFFER_WRITER *buf, size_t len);
 bool __wur der_read_item(BUFFER_READER *buf, DER_ITEM *item);
+bool __wur der_reencode_int(BUFFER_READER *reader, BUFFER_WRITER *writer);
 
 #endif  // __DER_H

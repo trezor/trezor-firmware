@@ -25,6 +25,7 @@
 
 #include "optiga_commands.h"
 #include <string.h>
+#include "der.h"
 #include "ecdsa.h"
 #include "hmac.h"
 #include "memzero.h"
@@ -49,27 +50,7 @@ const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE = {
 static const optiga_metadata_item OPTIGA_META_VERSION_DEFAULT = {
     (const uint8_t *)"\xC1\x02\x00\x00", 4};
 
-static optiga_result process_output_fixedlen(uint8_t *data, size_t data_size) {
-  // Expecting data_size bytes of output data in the response.
-  if (tx_size != 4 + data_size ||
-      (tx_buffer[2] << 8) + tx_buffer[3] != tx_size - 4) {
-    return OPTIGA_ERR_UNEXPECTED;
-  }
-
-  if (tx_buffer[0] != 0) {
-    return OPTIGA_ERR_CMD;
-  }
-
-  if (data_size != 0) {
-    memcpy(data, tx_buffer + 4, data_size);
-    memzero(tx_buffer, tx_size);
-  }
-
-  return OPTIGA_SUCCESS;
-}
-
-static optiga_result process_output_varlen(uint8_t *data, size_t max_data_size,
-                                           size_t *data_size) {
+static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
   // Check that there is no trailing output data in the response.
   if (tx_size < 4 || (tx_buffer[2] << 8) + tx_buffer[3] != tx_size - 4) {
     return OPTIGA_ERR_UNEXPECTED;
@@ -80,13 +61,48 @@ static optiga_result process_output_varlen(uint8_t *data, size_t max_data_size,
     return OPTIGA_ERR_CMD;
   }
 
-  // Return result.
-  if (tx_size - 4 > max_data_size) {
+  *out_data = tx_buffer + 4;
+  *out_size = tx_size - 4;
+  return OPTIGA_SUCCESS;
+}
+
+static optiga_result process_output_fixedlen(uint8_t *data, size_t data_size) {
+  uint8_t *out_data = NULL;
+  size_t out_size = 0;
+  optiga_result ret = process_output(&out_data, &out_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
+
+  // Expecting data_size bytes of output data in the response.
+  if (out_size != data_size) {
+    return OPTIGA_ERR_UNEXPECTED;
+  }
+
+  if (data_size != 0) {
+    memcpy(data, out_data, data_size);
+    memzero(tx_buffer, tx_size);
+  }
+
+  return OPTIGA_SUCCESS;
+}
+
+static optiga_result process_output_varlen(uint8_t *data, size_t max_data_size,
+                                           size_t *data_size) {
+  uint8_t *out_data = NULL;
+  size_t out_size = 0;
+  optiga_result ret = process_output(&out_data, &out_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
+
+  if (out_size > max_data_size) {
     return OPTIGA_ERR_SIZE;
   }
-  *data_size = tx_size - 4;
-  memcpy(data, tx_buffer + 4, tx_size - 4);
+
+  memcpy(data, out_data, out_size);
   memzero(tx_buffer, tx_size);
+  *data_size = out_size;
 
   return OPTIGA_SUCCESS;
 }
@@ -544,7 +560,33 @@ optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
     return ret;
   }
 
-  return process_output_varlen(signature, max_sig_size, sig_size);
+  uint8_t *out_data = NULL;
+  size_t out_size = 0;
+  ret = process_output(&out_data, &out_size);
+  if (ret != OPTIGA_SUCCESS) {
+    return ret;
+  }
+
+  // On average 1 in every 256 signatures produced by Optiga has an invalid DER
+  // encoding. We reencode the signature to ensure correctness.
+  BUFFER_READER sig_reader = {0};
+  BUFFER_WRITER sig_writer = {0};
+  buffer_reader_init(&sig_reader, out_data, out_size);
+  buffer_writer_init(&sig_writer, signature, max_sig_size);
+
+  for (int i = 0; i < 2; ++i) {
+    if (!der_reencode_int(&sig_reader, &sig_writer)) {
+      return OPTIGA_ERR_PROCESS;
+    }
+  }
+
+  if (buffer_remaining(&sig_reader) != 0) {
+    // Unexpected trailing data.
+    return OPTIGA_ERR_UNEXPECTED;
+  }
+
+  *sig_size = buffer_written_size(&sig_writer);
+  return OPTIGA_SUCCESS;
 }
 
 /*
