@@ -87,6 +87,27 @@ MP_DEFINE_EXCEPTION(NoFilesystem, FatFSError)
     }                                        \
   }
 
+// Define and initialize the VolToPart array
+// For more info, see: http://elm-chan.org/fsw/ff/doc/filename.html#vol
+// Assumption: Trezor always operate with only one Volume
+const PARTITION VolToPart[] = {
+    {0, 1}  // Logical Volume 0 => Physical Disk 0, Partition 1
+};
+
+// Helper function to create a partition spanned over a portition (in
+// percentage) of the card.
+void make_partition(int disk_portion_p100) {
+  if ((disk_portion_p100 <= 0) || (disk_portion_p100 > 100)) {
+    FATFS_RAISE(FatFSError, FR_MKFS_ABORTED);
+  }
+  uint8_t working_buf[FF_MAX_SS] = {0};
+  LBA_t plist[] = {disk_portion_p100, 0};
+  FRESULT res = f_fdisk(0, plist, working_buf);
+  if (res != FR_OK) {
+    FATFS_RAISE(FatFSError, res);
+  }
+}
+
 DSTATUS disk_initialize(BYTE pdrv) { return disk_status(pdrv); }
 
 DSTATUS disk_status(BYTE pdrv) {
@@ -528,24 +549,38 @@ STATIC mp_obj_t mod_trezorio_fatfs_is_mounted() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_is_mounted_obj,
                                  mod_trezorio_fatfs_is_mounted);
 
-/// def mkfs() -> None:
+/// def mkfs(for_sd_backup: bool=False) -> None:
 ///     """
-///     Create a FAT volume on the SD card,
+///     Create a FAT volume on the SD card.
+///     If for_sd_backup is True, the volume consumes only a portion of the
+///     card. Otherwise, the volume is created over the whole card.
 ///     """
-STATIC mp_obj_t mod_trezorio_fatfs_mkfs() {
+STATIC mp_obj_t mod_trezorio_fatfs_mkfs(size_t n_args, const mp_obj_t *args) {
   if (_fatfs_instance_is_mounted()) {
     FATFS_RAISE(FatFSError, FR_LOCKED);
   }
+
+  // create partition
+  if (n_args > 0 && args[0] == mp_const_true) {
+    // for SD card backup: we need small partition and keep the rest unallocated
+    make_partition(60);  // TODO decide on the exact portion
+  } else {
+    // for other use (SD salt): make the partitio over the whole space.
+    make_partition(100);
+  }
+
+  // create FAT volume mapped to the created partition
   MKFS_PARM params = {FM_FAT32, 0, 0, 0, 0};
   uint8_t working_buf[FF_MAX_SS] = {0};
   FRESULT res = f_mkfs("", &params, working_buf, sizeof(working_buf));
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
   }
+
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_mkfs_obj,
-                                 mod_trezorio_fatfs_mkfs);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_fatfs_mkfs_obj, 0, 1,
+                                           mod_trezorio_fatfs_mkfs);
 
 /// def setlabel(label: str) -> None:
 ///     """

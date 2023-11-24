@@ -166,9 +166,11 @@ def is_mounted() -> bool:
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
-def mkfs() -> None:
+def mkfs(for_sd_backup: bool=False) -> None:
     """
-    Create a FAT volume on the SD card,
+    Create a FAT volume on the SD card.
+    If for_sd_backup is True, the volume consumes only a portion of the
+    card. Otherwise, the volume is created over the whole card.
     """
 
 

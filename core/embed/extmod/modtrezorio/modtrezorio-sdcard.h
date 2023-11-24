@@ -78,7 +78,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_capacity_obj,
 ///     """
 ///     Reads blocks starting with block_num from the SD card into buf.
 ///     Number of bytes read is length of buf rounded down to multiply of
-///     SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
+///     SDCARD_BLOCK_SIZE. 
 ///     """
 STATIC mp_obj_t mod_trezorio_sdcard_read(mp_obj_t block_num, mp_obj_t buf) {
   uint32_t block = trezor_obj_get_uint(block_num);
@@ -97,7 +97,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_read_obj,
 ///     """
 ///     Writes blocks starting with block_num from buf to the SD card.
 ///     Number of bytes written is length of buf rounded down to multiply of
-///     SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
+///     SDCARD_BLOCK_SIZE. 
 ///     """
 STATIC mp_obj_t mod_trezorio_sdcard_write(mp_obj_t block_num, mp_obj_t buf) {
   uint32_t block = trezor_obj_get_uint(block_num);
