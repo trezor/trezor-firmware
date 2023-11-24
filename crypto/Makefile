@@ -125,6 +125,7 @@ SRCS  += zkp_bip340.c
 SRCS  += cardano.c
 SRCS  += tls_prf.c
 SRCS  += hash_to_curve.c
+SRCS  += buffer.c der.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o

@@ -91,4 +91,9 @@
 #define CONFIDENTIAL
 #endif
 
+// add way to mark functions whose return value should always be checked
+#ifndef __wur
+#define __wur __attribute__((warn_unused_result))
+#endif
+
 #endif
