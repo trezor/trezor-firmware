@@ -50,9 +50,11 @@
 #include "blake256.h"
 #include "blake2b.h"
 #include "blake2s.h"
+#include "buffer.h"
 #include "cardano.h"
 #include "chacha_drbg.h"
 #include "curves.h"
+#include "der.h"
 #include "ecdsa.h"
 #include "ecdsa_internal.h"
 #include "ed25519-donna/ed25519-donna.h"
@@ -10025,6 +10027,89 @@ START_TEST(test_hash_to_curve_optiga) {
 }
 END_TEST
 
+START_TEST(test_der_length) {
+  static struct {
+    const char *der;
+    const size_t len;
+  } tests[] = {
+      {"00", 0},
+      {"01", 1},
+      {"7f", 127},
+      {"8180", 128},
+      {"81ff", 255},
+      {"820100", 256},
+      {"82ffff", 65535},
+      {"83010000", 65536},
+      {"83ffffff", 16777215},
+      {"8401000000", 16777216},
+      {"8489abcdef", 2309737967},
+  };
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    uint8_t input[5] = {0};
+    uint8_t output[5] = {0};
+    size_t length = 0;
+    size_t input_size = strlen(tests[i].der) / 2;
+    memcpy(input, fromhex(tests[i].der), input_size);
+
+    // Test der_read_length().
+    BUFFER_READER reader = {0};
+    buffer_reader_init(&reader, input, input_size);
+    int res = der_read_length(&reader, &length);
+    ck_assert_int_eq(res, true);
+    ck_assert_uint_eq(length, tests[i].len);
+
+    // Test der_write_length().
+    BUFFER_WRITER writer = {0};
+    buffer_writer_init(&writer, output, sizeof(output));
+    res = der_write_length(&writer, length);
+    ck_assert_int_eq(res, true);
+    ck_assert_uint_eq(buffer_written_size(&writer), input_size);
+    ck_assert_mem_eq(output, input, input_size);
+  }
+}
+END_TEST
+
+START_TEST(test_der_reencode_int) {
+  static struct {
+    const char *input;
+    const char *output;
+  } tests[] = {
+      {"020f000000000000007f01020304050607", "02087f01020304050607"},
+      {"020f000000000000008001020304050607", "0209008001020304050607"},
+      {"02207f0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+       "02207f0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"},
+      {"0220800102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+       "022100800102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1"
+       "f"},
+      {"0220007f0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e",
+       "021f7f0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e"},
+      {"022000800102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e",
+       "022000800102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e"},
+  };
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    uint8_t input[35] = {0};
+    size_t input_size = strlen(tests[i].input) / 2;
+    memcpy(input, fromhex(tests[i].input), input_size);
+    BUFFER_READER reader = {0};
+    buffer_reader_init(&reader, input, input_size);
+
+    uint8_t expected_output[35] = {0};
+    size_t expected_output_size = strlen(tests[i].output) / 2;
+    memcpy(expected_output, fromhex(tests[i].output), expected_output_size);
+
+    uint8_t output[35] = {0};
+    BUFFER_WRITER writer = {0};
+    buffer_writer_init(&writer, output, sizeof(output));
+
+    // Test der_reencode_int().
+    int res = der_reencode_int(&reader, &writer);
+    ck_assert_int_eq(res, true);
+    ck_assert_uint_eq(buffer_written_size(&writer), expected_output_size);
+    ck_assert_mem_eq(output, expected_output, expected_output_size);
+  }
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -10351,6 +10436,11 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_expand_message_xmd_sha256);
   tcase_add_test(tc, test_hash_to_curve_p256);
   tcase_add_test(tc, test_hash_to_curve_optiga);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("der");
+  tcase_add_test(tc, test_der_length);
+  tcase_add_test(tc, test_der_reencode_int);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
