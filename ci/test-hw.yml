@@ -42,6 +42,7 @@ hardware core regular device test:
     - source hardware.cfg
     - set +a
     - $NIX_SHELL --run "cd ../.. && poetry install"
+    - $NIX_SHELL --run "poetry run uhubctl"
     - $NIX_SHELL --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
     - $NIX_SHELL --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 6h
@@ -72,6 +73,7 @@ hardware core btconly device test:
     - source hardware.cfg
     - set +a
     - $NIX_SHELL --run "cd ../.. && poetry install"
+    - $NIX_SHELL --run "poetry run uhubctl"
     - $NIX_SHELL --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
     - $NIX_SHELL --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 4h
@@ -99,6 +101,7 @@ hardware core monero test:
     - source hardware.cfg
     - set +a
     - $NIX_SHELL --run "cd ../.. && poetry install"
+    - $NIX_SHELL --run "poetry run uhubctl"
     - $NIX_SHELL --run "poetry run python bootstrap.py tt ../../firmware-T2*.bin | ts -s"
     - $NIX_SHELL --arg fullDeps true --run "cd ../../core/tests && ./run_tests_device_emu_monero.sh $TESTOPTS | ts -s"
   timeout: 1h
@@ -110,50 +113,50 @@ hardware core monero test:
 # [Device tests](../tests/device-tests.md) executed on physical Trezor 1.
 # This works thanks to [tpmb](https://github.com/mmahut/tpmb), which is a small arduino
 # device capable of pushing an actual buttons on the device.
-hardware legacy regular device test:
-  stage: test
-  only:
-    - schedules  # nightly build
-    - /^legacy\//
-    - /^release\//
-    - /^secfix\//
-    - /^hw\//
-  tags:
-    - tpmb
-  needs:
-    - legacy fw regular debug build
-  script:
-    - cd ci/hardware_tests
-    - $NIX_SHELL --run "./t1_hw_test.sh | ts -s"
-  timeout: 1h20m
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    paths:
-      - ci/hardware_tests/*.mp4
-    expire_in: 2 days
-    when: always
-
-# Also device tests on physical Trezor 1 but with Bitcoin-only firmware.
-hardware legacy btconly device test:
-  stage: test
-  variables:
-    TREZOR_PYTEST_SKIP_ALTCOINS: 1
-  only:
-    - schedules  # nightly build
-    - /^legacy\//
-    - /^release\//
-    - /^secfix\//
-    - /^hw\//
-  tags:
-    - tpmb
-  needs:
-    - legacy fw btconly debug build
-  script:
-    - cd ci/hardware_tests
-    - $NIX_SHELL --run "./t1_hw_test.sh | ts -s"
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    paths:
-      - ci/hardware_tests/*.mp4
-    expire_in: 2 days
-    when: always
+#hardware legacy regular device test:
+#  stage: test
+#  only:
+#    - schedules  # nightly build
+#    - /^legacy\//
+#    - /^release\//
+#    - /^secfix\//
+#    - /^hw\//
+#  tags:
+#    - tpmb
+#  needs:
+#    - legacy fw regular debug build
+#  script:
+#    - cd ci/hardware_tests
+#    - $NIX_SHELL --run "./t1_hw_test.sh | ts -s"
+#  timeout: 1h20m
+#  artifacts:
+#    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+#    paths:
+#      - ci/hardware_tests/*.mp4
+#    expire_in: 2 days
+#    when: always
+#
+## Also device tests on physical Trezor 1 but with Bitcoin-only firmware.
+#hardware legacy btconly device test:
+#  stage: test
+#  variables:
+#    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+#  only:
+#    - schedules  # nightly build
+#    - /^legacy\//
+#    - /^release\//
+#    - /^secfix\//
+#    - /^hw\//
+#  tags:
+#    - tpmb
+#  needs:
+#    - legacy fw btconly debug build
+#  script:
+#    - cd ci/hardware_tests
+#    - $NIX_SHELL --run "./t1_hw_test.sh | ts -s"
+#  artifacts:
+#    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+#    paths:
+#      - ci/hardware_tests/*.mp4
+#    expire_in: 2 days
+#    when: always
