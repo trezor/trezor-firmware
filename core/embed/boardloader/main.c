@@ -116,8 +116,7 @@ struct BoardCapabilities capablities
         .terminator_length = 0};
 
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
-extern uint32_t sram_start[];
-#define sdcard_buf sram_start
+BUFFER_SECTION uint32_t sdcard_buf[IMAGE_HEADER_SIZE / sizeof(uint32_t)];
 
 #if defined USE_SD_CARD
 static uint32_t check_sdcard(void) {
@@ -207,11 +206,14 @@ static secbool copy_sdcard(void) {
 
   for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
     ensure(sdcard_read_blocks(sdcard_buf, i, 1), NULL);
-    for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-      ensure(flash_area_write_word(&BOOTLOADER_AREA,
-                                   i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t),
-                                   sdcard_buf[j]),
-             NULL);
+    for (int j = 0;
+         j < SDCARD_BLOCK_SIZE / (FLASH_BURST_LENGTH * sizeof(uint32_t)); j++) {
+      ensure(
+          flash_area_write_burst(
+              &BOOTLOADER_AREA,
+              i * SDCARD_BLOCK_SIZE + j * FLASH_BURST_LENGTH * sizeof(uint32_t),
+              &sdcard_buf[j * FLASH_BURST_LENGTH]),
+          NULL);
     }
   }
 

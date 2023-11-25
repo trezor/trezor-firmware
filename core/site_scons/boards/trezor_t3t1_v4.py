@@ -58,14 +58,11 @@ def configure(
         ]
         features_available.append("haptic")
 
-    # if "sd_card" in features_wanted:
-    #     sources += ["embed/trezorhal/stm32u5/sdcard.c"]
-    #     sources += ["embed/extmod/modtrezorio/ff.c"]
-    #     sources += ["embed/extmod/modtrezorio/ffunicode.c"]
-    #     sources += [
-    #         "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_dma.c"
-    #     ]
-    #     features_available.append("sd_card")
+    if "sd_card" in features_wanted:
+        sources += ["embed/trezorhal/stm32u5/sdcard.c"]
+        sources += ["embed/extmod/modtrezorio/ff.c"]
+        sources += ["embed/extmod/modtrezorio/ffunicode.c"]
+        features_available.append("sd_card")
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sbu.c"]
