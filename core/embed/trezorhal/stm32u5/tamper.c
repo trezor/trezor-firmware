@@ -97,6 +97,55 @@ HAL_StatusTypeDef lsi_init(void) {
   while (READ_BIT(RCC->BDCR, RCC_BDCR_LSIRDY) == 0U)
     ;
 
+  /* Check for RTC Parameters used to output RTCCLK */
+  assert_param(IS_RCC_RTCCLKSOURCE(pPeriphClkInit->RTCClockSelection));
+  /* Enable Power Clock */
+  if (__HAL_RCC_PWR_IS_CLK_DISABLED()) {
+    __HAL_RCC_PWR_CLK_ENABLE();
+    pwrclkchanged = SET;
+  }
+  /* Enable write access to Backup domain */
+  SET_BIT(PWR->DBPR, PWR_DBPR_DBP);
+
+  /* Wait for Backup domain Write protection disable */
+  tickstart = HAL_GetTick();
+
+  while (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP)) {
+    if ((HAL_GetTick() - tickstart) > RCC_DBP_TIMEOUT_VALUE) {
+      return HAL_TIMEOUT;
+    }
+  }
+  /* Reset the Backup domain only if the RTC Clock source selection is modified
+   * from default */
+  bdcr_temp = READ_BIT(RCC->BDCR, RCC_BDCR_RTCSEL);
+
+  if ((bdcr_temp != RCC_RTCCLKSOURCE_NO_CLK) &&
+      (bdcr_temp != RCC_RTCCLKSOURCE_LSI)) {
+    /* Store the content of BDCR register before the reset of Backup Domain */
+    bdcr_temp = READ_BIT(RCC->BDCR, ~(RCC_BDCR_RTCSEL));
+    /* RTC Clock selection can be changed only if the Backup Domain is reset */
+    __HAL_RCC_BACKUPRESET_FORCE();
+    __HAL_RCC_BACKUPRESET_RELEASE();
+    /* Restore the Content of BDCR register */
+    RCC->BDCR = bdcr_temp;
+  }
+
+  /* Wait for LSE reactivation if LSE was enable prior to Backup Domain reset */
+  if (HAL_IS_BIT_SET(bdcr_temp, RCC_BDCR_LSEON)) {
+    /* Get Start Tick*/
+    tickstart = HAL_GetTick();
+
+    /* Wait till LSE is ready */
+    while (READ_BIT(RCC->BDCR, RCC_BDCR_LSERDY) == 0U) {
+      if ((HAL_GetTick() - tickstart) > RCC_LSE_TIMEOUT_VALUE) {
+        return HAL_TIMEOUT;
+      }
+    }
+  }
+
+  /* Apply new RTC clock source selection */
+  __HAL_RCC_RTC_CONFIG(RCC_PERIPHCLK_RTC);
+
   /* Restore clock configuration if changed */
   if (pwrclkchanged == SET) {
     __HAL_RCC_PWR_CLK_DISABLE();
@@ -105,15 +154,15 @@ HAL_StatusTypeDef lsi_init(void) {
 }
 
 void tamper_init(void) {
-  RCC_PeriphCLKInitTypeDef clk_init_def = {0};
+  //  RCC_PeriphCLKInitTypeDef clk_init_def = {0};
 
   // Enable LSI clock
   lsi_init();
-
-  // Select RTC peripheral clock source
-  clk_init_def.PeriphClockSelection = RCC_PERIPHCLK_RTC;
-  clk_init_def.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
-  HAL_RCCEx_PeriphCLKConfig(&clk_init_def);
+  //
+  //  // Select RTC peripheral clock source
+  //  clk_init_def.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  //  clk_init_def.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  //  HAL_RCCEx_PeriphCLKConfig(&clk_init_def);
 
   // Enable RTC peripheral (tampers are part of it)
   __HAL_RCC_RTC_ENABLE();
@@ -180,38 +229,8 @@ void tamper_init(void) {
 // Interrupt handle for all tamper events
 // It displays an error message
 void TAMP_IRQHandler(void) {
-  const char* reason = "UNKNOWN";
-
   uint32_t sr = TAMP->SR;
   TAMP->SCR = sr;
 
-  if (sr & TAMP_SR_TAMP1F) {
-    reason = "INPUT1";
-  } else if (sr & TAMP_SR_TAMP2F) {
-    reason = "INPUT2";
-  } else if (sr & TAMP_SR_ITAMP1F) {
-    reason = "VOLTAGE";
-  } else if (sr & TAMP_SR_ITAMP2F) {
-    reason = "TEMPERATURE";
-  } else if (sr & TAMP_SR_ITAMP3F) {
-    reason = "LSE CLOCK";
-  } else if (sr & TAMP_SR_ITAMP5F) {
-    reason = "RTC OVERFLOW";
-  } else if (sr & TAMP_SR_ITAMP6F) {
-    reason = "SWD ACCESS";
-  } else if (sr & TAMP_SR_ITAMP7F) {
-    reason = "ANALOG WDG1";
-  } else if (sr & TAMP_SR_ITAMP8F) {
-    reason = "MONO COUNTER";
-  } else if (sr & TAMP_SR_ITAMP9F) {
-    reason = "CRYPTO ERROR";
-  } else if (sr & TAMP_SR_ITAMP11F) {
-    reason = "IWDG";
-  } else if (sr & TAMP_SR_ITAMP12F) {
-    reason = "ANALOG WDG2";
-  } else if (sr & TAMP_SR_ITAMP13F) {
-    reason = "ANALOG WDG3";
-  }
-
-  error_shutdown("INTERNAL TAMPER", reason);
+  error_shutdown("INTERNAL TAMPER", "");
 }
