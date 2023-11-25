@@ -238,4 +238,17 @@ impl Trezor {
         req.set_ecdsa_curve_name(curve);
         self.call(req, Box::new(|_, m| Ok(m.signature().to_owned())))
     }
+
+    pub fn get_ecdh_session_key(
+        &mut self,
+        identity: protos::IdentityType,
+        peer_public_key: Vec<u8>,
+        curve: String,
+    ) -> Result<TrezorResponse<'_, protos::ECDHSessionKey, protos::ECDHSessionKey>> {
+        let mut req = protos::GetECDHSessionKey::new();
+        req.identity = MessageField::some(identity);
+        req.set_peer_public_key(peer_public_key);
+        req.set_ecdsa_curve_name(curve);
+        self.call(req, Box::new(|_, m| Ok(m)))
+    }
 }
