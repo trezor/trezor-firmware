@@ -56,6 +56,10 @@ def configure(
         sources += [
             "embed/trezorhal/stm32u5/haptic/drv2625/drv2625.c",
         ]
+        sources += [
+            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_tim.c",
+            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_tim_ex.c",
+        ]
         features_available.append("haptic")
 
     if "sd_card" in features_wanted:
