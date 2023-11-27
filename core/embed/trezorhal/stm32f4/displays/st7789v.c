@@ -40,7 +40,7 @@
 const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 1;
 
 #ifndef FMC_BANK1
-#define FMC_BANK1 FMC_Bank1
+#define FMC_BANK1 0x60000000U
 #endif
 
 #define DISPLAY_MEMORY_BASE FMC_BANK1
