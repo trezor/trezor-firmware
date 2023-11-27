@@ -3,7 +3,7 @@
 use super::ffi;
 use crate::error::Error;
 use core::ptr;
-use cstr_core::{cstr, CStr};
+use cstr_core::CStr;
 
 /// Result of PIN delay callback.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

@@ -18,7 +18,6 @@ use crate::{
         util::set_animation_disabled,
     },
 };
-use cstr_core::cstr;
 use heapless::Vec;
 
 #[cfg(feature = "jpeg")]
