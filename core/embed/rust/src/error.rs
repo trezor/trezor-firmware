@@ -29,7 +29,7 @@ pub enum Error {
 #[macro_export]
 macro_rules! value_error {
     ($msg:expr) => {
-        Error::ValueError(cstr!($msg))
+        Error::ValueError(cstr_core::cstr!($msg))
     };
 }
 

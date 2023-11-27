@@ -90,8 +90,9 @@ default_features = false
 version = "0.3.3"
 
 [dependencies.cstr_core]
-version = "0.2.4"
-default_features = false
+version = "0.2.6"
+default-features = false
+features = ["nightly"]
 
 # Build dependencies
 

@@ -1,5 +1,4 @@
 use core::{cmp::Ordering, convert::TryInto};
-use cstr_core::cstr;
 
 use crate::{
     error::Error,
