@@ -1,4 +1,5 @@
 use crate::{
+    error::Error,
     trezorhal::{
         display::ToifFormat,
         uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
@@ -198,16 +199,16 @@ pub struct Toif<'i> {
 }
 
 impl<'i> Toif<'i> {
-    pub const fn new(data: &'i [u8]) -> Option<Self> {
+    pub const fn new(data: &'i [u8]) -> Result<Self, Error> {
         if data.len() < TOIF_HEADER_LENGTH || data[0] != b'T' || data[1] != b'O' || data[2] != b'I'
         {
-            return None;
+            return Err(value_error!("Invalid TOIF header."));
         }
         let zdatalen = u32::from_le_bytes([data[8], data[9], data[10], data[11]]) as usize;
         if zdatalen + TOIF_HEADER_LENGTH != data.len() {
-            return None;
+            return Err(value_error!("Invalid TOIF length."));
         }
-        Some(Self {
+        Ok(Self {
             data,
             empty_right_column: false,
         })
@@ -305,8 +306,8 @@ pub struct Icon {
 impl Icon {
     pub const fn new(data: &'static [u8]) -> Self {
         let toif = match Toif::new(data) {
-            Some(t) => t,
-            None => panic!("Invalid image."),
+            Ok(t) => t,
+            _ => panic!("Invalid image."),
         };
         assert!(matches!(toif.format(), ToifFormat::GrayScaleEH));
         Self {

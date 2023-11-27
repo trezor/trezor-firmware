@@ -380,7 +380,7 @@ fn is_image_jpeg(buffer: &[u8]) -> bool {
 
 fn is_image_toif(buffer: &[u8]) -> bool {
     let toif = Toif::new(buffer);
-    if let Some(toif) = toif {
+    if let Ok(toif) = toif {
         if toif.size().x == HOMESCREEN_TOIF_SIZE
             && toif.size().y == HOMESCREEN_TOIF_SIZE
             && toif.format() == ToifFormat::FullColorBE
