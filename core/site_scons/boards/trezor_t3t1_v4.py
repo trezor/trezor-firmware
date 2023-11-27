@@ -60,9 +60,13 @@ def configure(
 
     if "sd_card" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sdcard.c"]
+        sources += ["embed/trezorhal/stm32u5/stm32u5xx_hal_sd.c"]
         sources += ["embed/extmod/modtrezorio/ff.c"]
         sources += ["embed/extmod/modtrezorio/ffunicode.c"]
         features_available.append("sd_card")
+        sources += [
+            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_ll_sdmmc.c"
+        ]
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sbu.c"]
