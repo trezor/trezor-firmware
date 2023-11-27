@@ -46,7 +46,9 @@ void backlight_pwm_init(void) {
   tmpcr1 |= (uint32_t)TIM_CLOCKDIVISION_DIV1;
 
   /* Set the auto-reload preload */
+#ifdef STM32U5
   tmpcr1 |= TIM_AUTORELOAD_PRELOAD_DISABLE;
+#endif
 
   BACKLIGHT_PWM_TIM->CR1 = tmpcr1;
 
@@ -108,8 +110,8 @@ void backlight_pwm_init(void) {
     tmpccer &= ~TIM_CCER_CC1NP;
     /* Set the Output N Polarity */
     tmpccer |= TIM_OCNPOLARITY_HIGH;
-    /* Reset the Output N State */
-    tmpccer &= ~TIM_CCER_CC1NE;
+    /* Set the Output N State */
+    tmpccer |= TIM_CCER_CC1NE;
   }
 
   if (IS_TIM_BREAK_INSTANCE(BACKLIGHT_PWM_TIM)) {
