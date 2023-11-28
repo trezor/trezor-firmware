@@ -74,6 +74,7 @@ vulture = "^2.6"
 # tools
 binsize = "^0.1.3"
 toiftool = {path = "./python/tools/toiftool", develop = true, python = ">=3.8"}
+trezor-pylint-plugin = {path = "./tools/trezor-pylint-plugin", develop = true}
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
