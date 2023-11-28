@@ -73,4 +73,8 @@ SECTIONS {
   .stack : ALIGN(8) {
     . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */
   } >SRAM
+
+  /DISCARD/ : {
+    *(.ARM.exidx*);
+  }
 }

@@ -10,7 +10,6 @@ python = "^3.8"
 trezor = {path = "./python", develop = true}
 scons = "*"
 protobuf = "*"
-pyblake2 = "*"
 nanopb = "^0.4.3"
 
 ## test tools

@@ -4,17 +4,17 @@
  }:
 
 let
-  # the last commit from master as of 2023-04-14
+  # the last commit from master as of 2023-11-22
   rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/db7bf4a2dd295adeeaa809d36387098926a15487.tar.gz";
-    sha256 = "0gk6kag09w8lyn9was8dpjgslxw5p81bx04379m9v6ky09kw482d";
+    url = "https://github.com/oxalica/rust-overlay/archive/7c94410d52d4e8bd72803fc1fe6c51fe179edaf5.tar.gz";
+    sha256 = "1m4awxwvmwmv61fpl9jwfg2ka241hwl37rqffw6lpqb8rj3safff";
   });
   # define this variable and devTools if you want nrf{util,connect}
   acceptJlink = builtins.getEnv "TREZOR_FIRMWARE_ACCEPT_JLINK_LICENSE" == "yes";
-  # the last successful build of nixpkgs-unstable as of 2023-04-14
+  # the last successful build of nixpkgs-unstable as of 2023-11-22
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/c58e6fbf258df1572b535ac1868ec42faf7675dd.tar.gz";
-    sha256 = "18pna0yinvdprhhcmhyanlgrmgf81nwpc0j2z9fy9mc8cqkx3937";
+    url = "https://github.com/NixOS/nixpkgs/archive/51a01a7e5515b469886c120e38db325c96694c2f.tar.gz";
+    sha256 = "1v9ijwflgzjxaaxsxv50dig5ggvfmdvrpnb32almpw9gdh54x65r";
   }) {
     config = {
       allowUnfree = acceptJlink;
@@ -49,7 +49,7 @@ let
       done
     '';
   # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
-  rustProfiles = nixpkgs.rust-bin.nightly."2023-04-14";
+  rustProfiles = nixpkgs.rust-bin.nightly."2023-11-21";
   rustNightly = rustProfiles.minimal.override {
     targets = [
       "thumbv7em-none-eabihf" # TT
@@ -80,17 +80,18 @@ in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
   name = "trezor-firmware-env";
-  buildInputs = lib.optionals fullDeps [
-    bitcoind
+  buildInputs = [
     # install other python versions for tox testing
     # NOTE: running e.g. "python3" in the shell runs the first version in the following list,
     #       and poetry uses the default version (currently 3.10)
     python311
+  ] ++ lib.optionals fullDeps [
     python310
     python39
     python38
     oldPythonNixpkgs.python37
     oldPythonNixpkgs.python36
+    bitcoind
   ] ++ [
     SDL2
     SDL2_image
@@ -109,9 +110,9 @@ stdenvNoCC.mkDerivation ({
     libusb1
     llvmPackages.clang
     openssl
-    pkgconfig
+    pkg-config
     poetry
-    protobuf3_19
+    protobuf3_20
     pyright
     (mkBinOnlyWrapper rustNightly)
     wget
