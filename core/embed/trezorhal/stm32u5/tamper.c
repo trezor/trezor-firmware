@@ -28,7 +28,19 @@
 #define TAMP_CR3_ITAMP7NOER_Msk (0x1UL << TAMP_CR3_ITAMP7NOER_Pos)
 #define TAMP_CR3_ITAMP7NOER TAMP_CR3_ITAMP7NOER_Msk
 
-// more flash efficient function than standard HAL
+/*
+ * This function replaces calls to universal, but flash-wasting
+ * functions HAL_RCC_OscConfig and HAL_RCCEx_PeriphCLKConfig.
+ *
+ * This is the configuration before the optimization:
+ *  osc_init_def.OscillatorType = RCC_OSCILLATORTYPE_LSI;
+ *  osc_init_def.LSIState = RCC_LSI_ON;
+ *  HAL_RCC_OscConfig(&osc_init_def);
+ *
+ *  clk_init_def.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+ *  clk_init_def.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+ *  HAL_RCCEx_PeriphCLKConfig(&clk_init_def);
+ */
 HAL_StatusTypeDef lsi_init(void) {
   uint32_t tickstart = 0U;
 
@@ -154,15 +166,8 @@ HAL_StatusTypeDef lsi_init(void) {
 }
 
 void tamper_init(void) {
-  //  RCC_PeriphCLKInitTypeDef clk_init_def = {0};
-
   // Enable LSI clock
   lsi_init();
-  //
-  //  // Select RTC peripheral clock source
-  //  clk_init_def.PeriphClockSelection = RCC_PERIPHCLK_RTC;
-  //  clk_init_def.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
-  //  HAL_RCCEx_PeriphCLKConfig(&clk_init_def);
 
   // Enable RTC peripheral (tampers are part of it)
   __HAL_RCC_RTC_ENABLE();
@@ -232,5 +237,37 @@ void TAMP_IRQHandler(void) {
   uint32_t sr = TAMP->SR;
   TAMP->SCR = sr;
 
+#ifdef BOARDLOADER
   error_shutdown("INTERNAL TAMPER", "");
+#else
+  const char* reason = "UNKNOWN";
+  if (sr & TAMP_SR_TAMP1F) {
+    reason = "INPUT1";
+  } else if (sr & TAMP_SR_TAMP2F) {
+    reason = "INPUT2";
+  } else if (sr & TAMP_SR_ITAMP1F) {
+    reason = "VOLTAGE";
+  } else if (sr & TAMP_SR_ITAMP2F) {
+    reason = "TEMPERATURE";
+  } else if (sr & TAMP_SR_ITAMP3F) {
+    reason = "LSE CLOCK";
+  } else if (sr & TAMP_SR_ITAMP5F) {
+    reason = "RTC OVERFLOW";
+  } else if (sr & TAMP_SR_ITAMP6F) {
+    reason = "SWD ACCESS";
+  } else if (sr & TAMP_SR_ITAMP7F) {
+    reason = "ANALOG WDG1";
+  } else if (sr & TAMP_SR_ITAMP8F) {
+    reason = "MONO COUNTER";
+  } else if (sr & TAMP_SR_ITAMP9F) {
+    reason = "CRYPTO ERROR";
+  } else if (sr & TAMP_SR_ITAMP11F) {
+    reason = "IWDG";
+  } else if (sr & TAMP_SR_ITAMP12F) {
+    reason = "ANALOG WDG2";
+  } else if (sr & TAMP_SR_ITAMP13F) {
+    reason = "ANALOG WDG3";
+  }
+  error_shutdown("INTERNAL TAMPER", reason);
+#endif
 }
