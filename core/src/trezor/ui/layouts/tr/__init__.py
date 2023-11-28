@@ -845,7 +845,7 @@ async def _confirm_ask_pagination(
     assert False
 
 
-async def confirm_address(
+def confirm_address(
     title: str,
     address: str,
     description: str | None = "Address:",
