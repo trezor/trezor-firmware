@@ -1,0 +1,37 @@
+[MASTER]
+ignore-paths=
+    core/src/all_modules.py,
+    core/src/apps/ethereum/tokens.py,
+    core/src/trezor/res/resources.py,
+    core/src/trezor/messages.py,
+    core/src/trezor/enums,
+    crypto,
+    legacy,
+    storage,
+fail-under=10.0
+jobs=0
+load-plugins=trezor_pylint_plugin
+
+[MESSAGE CONTROL]
+disable=all
+enable=
+    bad-plugin-value,
+    assignment-from-none,
+    chained-comparison,
+    consider-merging-isinstance,
+    consider-using-dict-comprehension,
+    consider-using-dict-items,
+    consider-using-f-string,
+    consider-using-in,
+    dangerous-default-value,
+    inconsistent-return-statements,
+    lost-exception,
+    pointless-string-statement,
+    simplifiable-if-statement,
+    super-init-not-called,
+    superfluous-parens,
+    unused-variable,
+    use-list-literal,
+    useless-else-on-loop,
+    useless-object-inheritance,
+    async-awaitable-return,
