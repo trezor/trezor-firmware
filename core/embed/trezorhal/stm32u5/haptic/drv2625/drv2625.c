@@ -7,7 +7,7 @@
 #include TREZOR_BOARD
 #include HAPTIC_ACTUATOR
 
-#define I2C_ADDRESS (0x5A << 1)
+#define DRV2625_I2C_ADDRESS (0x5A << 1)
 
 #define DRV2625_REG_CHIPID 0x00
 #define DRV2625_REG_STATUS 0x01
@@ -73,14 +73,13 @@
 #error "Must define either LRA or ERM"
 #endif
 
-void set_reg(uint8_t addr, uint8_t value) {
-  uint8_t data[] = {addr, value};
-  i2c_transmit(DRV2625_I2C_INSTANCE, I2C_ADDRESS, data, sizeof(data), 1);
-}
+#define PRESS_EFFECT_AMPLITUDE 25
+#define PRESS_EFFECT_DURATION 10
 
-void read_reg(uint8_t addr, uint8_t *value) {
-  i2c_transmit(DRV2625_I2C_INSTANCE, I2C_ADDRESS, &addr, 1, 1);
-  i2c_receive(DRV2625_I2C_INSTANCE, I2C_ADDRESS, value, 1, 1);
+static void set_reg(uint8_t addr, uint8_t value) {
+  uint8_t data[] = {addr, value};
+  i2c_transmit(DRV2625_I2C_INSTANCE, DRV2625_I2C_ADDRESS, data, sizeof(data),
+               1);
 }
 
 void haptic_calibrate(void) {
@@ -137,10 +136,10 @@ void haptic_init(void) {
   TIM16->BDTR |= TIM_BDTR_MOE;
 }
 
-void haptic_play_RTP(uint8_t value, uint16_t duration_ms) {
+static void haptic_play_RTP(int8_t amplitude, uint16_t duration_ms) {
   set_reg(DRV2625_REG_MODE,
           DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE);
-  set_reg(DRV2625_REG_RTP, value);
+  set_reg(DRV2625_REG_RTP, (uint8_t)amplitude);
 
   if (duration_ms > 6500) {
     duration_ms = 6500;
@@ -152,7 +151,7 @@ void haptic_play_RTP(uint8_t value, uint16_t duration_ms) {
   TIM16->CR1 |= TIM_CR1_CEN;
 }
 
-void haptic_play_lib(lib_effect_t effect) {
+static void haptic_play_lib(lib_effect_t effect) {
   set_reg(DRV2625_REG_MODE, DRV2625_REG_MODE_WAVEFORM);
   set_reg(DRV2625_REG_WAVESEQ1, effect);
   set_reg(DRV2625_REG_WAVESEQ2, 0);
@@ -162,7 +161,7 @@ void haptic_play_lib(lib_effect_t effect) {
 void haptic_play(haptic_effect_t effect) {
   switch (effect) {
     case HAPTIC_BUTTON_PRESS:
-      haptic_play_RTP(25, 10);
+      haptic_play_RTP(PRESS_EFFECT_AMPLITUDE, PRESS_EFFECT_DURATION);
       break;
     case HAPTIC_ALERT:
       haptic_play_lib(ALERT_750MS_100);

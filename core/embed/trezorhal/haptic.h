@@ -1,6 +1,6 @@
 
-#ifndef __HAPTIC_H__
-#define __HAPTIC_H__
+#ifndef TREZORHAL_HAPTIC_H
+#define TREZORHAL_HAPTIC_H
 
 typedef enum {
   HAPTIC_BUTTON_PRESS = 0,
