@@ -128,6 +128,7 @@ SRCS  += cardano.c
 SRCS  += tls_prf.c
 SRCS  += hash_to_curve.c
 SRCS  += buffer.c der.c
+SRCS  += elligator2.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o
