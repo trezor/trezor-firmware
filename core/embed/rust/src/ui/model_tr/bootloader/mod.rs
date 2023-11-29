@@ -378,12 +378,6 @@ extern "C" fn screen_welcome() {
 }
 
 #[no_mangle]
-extern "C" fn screen_welcome_model() {
-    let mut frame = WelcomeScreen::new(false);
-    show(&mut frame);
-}
-
-#[no_mangle]
 extern "C" fn bld_continue_label(bg_color: cty::uint16_t) {
     display::text_center(
         Point::new(constant::WIDTH / 2, HEIGHT - 2),

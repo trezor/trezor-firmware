@@ -67,7 +67,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_description;
   MP_QSTR_details_title;
   MP_QSTR_disable_animation;
-  MP_QSTR_draw_welcome_screen;
   MP_QSTR_dry_run;
   MP_QSTR_encode;
   MP_QSTR_encoded_length;

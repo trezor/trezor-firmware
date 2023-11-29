@@ -440,11 +440,6 @@ def show_lockscreen(
 
 
 # rust/src/ui/model_tr/layout.rs
-def draw_welcome_screen() -> None:
-    """Show logo icon with the model name at the bottom and return."""
-
-
-# rust/src/ui/model_tr/layout.rs
 def confirm_firmware_update(
     *,
     description: str,
@@ -894,11 +889,6 @@ def show_lockscreen(
     coinjoin_authorized: bool = False,
 ) -> CANCELLED:
     """Homescreen for locked device."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def draw_welcome_screen() -> None:
-    """Show logo icon with the model name at the bottom and return."""
 
 
 # rust/src/ui/model_tt/layout.rs
