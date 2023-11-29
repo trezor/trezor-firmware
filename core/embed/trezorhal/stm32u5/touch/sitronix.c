@@ -57,9 +57,9 @@
  * Input         : Register Address, length of buffer
  * Output        : pdata Read
  *******************************************************************************/
-int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
-  return i2c_mem_read(TOUCH_I2C_NUM, TS_I2C_ADDRESS, reg, length, pdata, length,
-                      1000);
+int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uin
+  return i2c_mem_read(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata,
+                      length, 1000);
 }
 
 /*******************************************************************************
@@ -70,7 +70,7 @@ int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
  * Output        : None
  *******************************************************************************/
 int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
-  return i2c_mem_write(TOUCH_I2C_NUM, TS_I2C_ADDRESS, reg, length, pdata,
+  return i2c_mem_write(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata,
                        length, 1000);
 }
 
@@ -82,7 +82,7 @@ int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
  * Output        : pdata Read
  *******************************************************************************/
 int32_t sitronix_read_data(uint8_t *pdata, uint16_t length) {
-  return i2c_receive(TOUCH_I2C_NUM, TS_I2C_ADDRESS, pdata, length, 1000);
+  return i2c_receive(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, pdata, length, 1000);
 }
 
 /* Includes ------------------------------------------------------------------*/
@@ -513,7 +513,7 @@ __attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
 // */
 // static int32_t ReadRegWrap(void *handle, uint8_t Reg, uint8_t *pData,
 //                           uint16_t Length) {
-//  return i2c_mem_read(TOUCH_I2C_NUM, TS_I2C_ADDRESS, Reg, Length, pData,
+//  return i2c_mem_read(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, Reg, Length, pData,
 //  Length, 1000);
 //}
 //
@@ -527,7 +527,7 @@ __attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
 // */
 // static int32_t WriteRegWrap(void *handle, uint8_t Reg, uint8_t *pData,
 //                            uint16_t Length) {
-//  return i2c_mem_write(TOUCH_I2C_NUM, TS_I2C_ADDRESS, Reg, Length, pData,
+//  return i2c_mem_write(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, Reg, Length, pData,
 //  Length, 1000);
 //}
 //
@@ -539,7 +539,7 @@ __attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
 // * @retval Component status.
 // */
 // static int32_t ReadDataWrap(void *handle, uint8_t *pData, uint16_t Length) {
-//  return i2c_receive(TOUCH_I2C_NUM, TS_I2C_ADDRESS, pData, Length, 1000);
+//  return i2c_receive(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, pData, Length, 1000);
 //}
 
 /**
