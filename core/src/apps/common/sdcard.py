@@ -86,7 +86,9 @@ async def confirm_retry_sd(
     )
 
 
-async def ensure_sdcard(ensure_filesystem: bool = True) -> None:
+async def ensure_sdcard(
+    ensure_filesystem: bool = True, for_sd_backup: bool = False
+) -> None:
     """Ensure a SD card is ready for use.
 
     This function runs the UI flow needed to ask the user to insert a SD card if there
@@ -95,6 +97,9 @@ async def ensure_sdcard(ensure_filesystem: bool = True) -> None:
     If `ensure_filesystem` is True (the default), it also tries to mount the SD card
     filesystem, and allows the user to format the card if a filesystem cannot be
     mounted.
+
+    In addition, if 'for_sd_backup' is True (False by default), the card is formatted
+    for SD backup feature.
     """
     from trezor import sdcard
 
@@ -120,9 +125,9 @@ async def ensure_sdcard(ensure_filesystem: bool = True) -> None:
 
             # Proceed to formatting. Failure is caught by the outside OSError handler
             with sdcard.filesystem(mounted=False):
-                fatfs.mkfs()
+                fatfs.mkfs(for_sd_backup)
                 fatfs.mount()
-                fatfs.setlabel("TREZOR")
+                fatfs.setlabel("BACKUP" if for_sd_backup else "TREZOR")
 
             # format and mount succeeded
             return

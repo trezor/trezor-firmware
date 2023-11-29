@@ -175,6 +175,13 @@ def mkfs(for_sd_backup: bool=False) -> None:
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
+def get_capacity() -> int:
+    """
+    Get total filesystem size in bytes.
+    """
+
+
+# extmod/modtrezorio/modtrezorio-fatfs.h
 def setlabel(label: str) -> None:
     """
     Set volume label

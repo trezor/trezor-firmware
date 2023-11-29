@@ -63,6 +63,8 @@ storage.resident_credentials
 import storage.resident_credentials
 storage.sd_salt
 import storage.sd_salt
+storage.sd_seed_backup
+import storage.sd_seed_backup
 trezor
 import trezor
 trezor.crypto
