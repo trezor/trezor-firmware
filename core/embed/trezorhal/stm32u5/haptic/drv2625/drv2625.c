@@ -151,7 +151,7 @@ static void haptic_play_RTP(int8_t amplitude, uint16_t duration_ms) {
   TIM16->CR1 |= TIM_CR1_CEN;
 }
 
-static void haptic_play_lib(lib_effect_t effect) {
+static void haptic_play_lib(drv2625_lib_effect_t effect) {
   set_reg(DRV2625_REG_MODE, DRV2625_REG_MODE_WAVEFORM);
   set_reg(DRV2625_REG_WAVESEQ1, effect);
   set_reg(DRV2625_REG_WAVESEQ2, 0);

@@ -125,6 +125,6 @@ typedef enum {
   SMOOTH_HUM_3_60 = 121,
   SMOOTH_HUM_4_40 = 122,
   SMOOTH_HUM_5_20 = 123,
-} lib_effect_t;
+} drv2625_lib_effect_t;
 
 #endif
