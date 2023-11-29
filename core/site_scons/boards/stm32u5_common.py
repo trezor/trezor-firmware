@@ -8,37 +8,37 @@ def stm32u5_common_files(env, defines, sources, paths):
 
     paths += [
         "embed/trezorhal/stm32u5",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Inc",
-        "vendor/stm32cube-u5/Drivers/CMSIS/Device/ST/STM32U5xx/Include",
-        "vendor/stm32cube-u5/Drivers/CMSIS/Core/Include",
+        "vendor/stm32u5xx_hal_driver/Inc",
+        "vendor/cmsis_device_u5/Include",
+        "vendor/cmsis_5/CMSIS/Core/Include",
     ]
 
     sources += [
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cortex.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_cryp.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_dma2d.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_dsi.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_flash.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_flash_ex.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_gfxmmu.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_gpio.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_gtzc.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_i2c.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_i2c_ex.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_icache.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_ltdc.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_ltdc_ex.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pcd.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pcd_ex.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pwr.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_pwr_ex.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rcc.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rcc_ex.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_rtc.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_spi.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_sram.c",
-        "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_ll_fmc.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_cortex.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_cryp.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_dma2d.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_dsi.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_flash.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_flash_ex.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_gfxmmu.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_gpio.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_gtzc.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_i2c.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_i2c_ex.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_icache.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_ltdc.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_ltdc_ex.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pcd.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pcd_ex.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pwr.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pwr_ex.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rcc.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rcc_ex.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rtc.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_spi.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_sram.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_fmc.c",
     ]
 
     sources += [
@@ -76,9 +76,9 @@ def stm32u5_common_files(env, defines, sources, paths):
 
     env.get("ENV")["RUST_INCLUDES"] = (
         "-I../trezorhal/stm32u5;"
-        "-I../../vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Inc;"
-        "-I../../vendor/stm32cube-u5/Drivers/CMSIS/Device/ST/STM32U5xx/Include;"
-        "-I../../vendor/stm32cube-u5/Drivers/CMSIS/Core/Include;"
+        "-I../../vendor/stm32u5xx_hal_driver/Inc;"
+        "-I../../vendor/cmsis_device_u5/Include;"
+        "-I../../vendor/cmsis_5/CMSIS/Core/Include;"
         "-DSTM32_HAL_H=<stm32u5xx.h>"
         "-DSTM32U5"
     )

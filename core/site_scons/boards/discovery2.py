@@ -78,7 +78,7 @@ def configure(
             "embed/trezorhal/stm32u5/usbd_core.c",
             "embed/trezorhal/stm32u5/usbd_ctlreq.c",
             "embed/trezorhal/stm32u5/usbd_ioreq.c",
-            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_ll_usb.c",
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
         ]
         features_available.append("usb")
 
