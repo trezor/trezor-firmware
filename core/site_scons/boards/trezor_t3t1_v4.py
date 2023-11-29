@@ -57,8 +57,8 @@ def configure(
             "embed/trezorhal/stm32u5/haptic/drv2625/drv2625.c",
         ]
         sources += [
-            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_tim.c",
-            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_tim_ex.c",
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim.c",
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim_ex.c",
         ]
         features_available.append("haptic")
 
@@ -68,9 +68,7 @@ def configure(
         sources += ["embed/extmod/modtrezorio/ff.c"]
         sources += ["embed/extmod/modtrezorio/ffunicode.c"]
         features_available.append("sd_card")
-        sources += [
-            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_ll_sdmmc.c"
-        ]
+        sources += ["vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_sdmmc.c"]
 
     if "sbu" in features_wanted:
         sources += ["embed/trezorhal/stm32u5/sbu.c"]
@@ -83,7 +81,7 @@ def configure(
             "embed/trezorhal/stm32u5/usbd_core.c",
             "embed/trezorhal/stm32u5/usbd_ctlreq.c",
             "embed/trezorhal/stm32u5/usbd_ioreq.c",
-            "vendor/stm32cube-u5/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_ll_usb.c",
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
         ]
         features_available.append("usb")
 
