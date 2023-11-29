@@ -1612,15 +1612,6 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn draw_welcome_screen() -> Obj {
-    // No need of util::try_or_raise, this does not allocate
-    let mut screen = WelcomeScreen::new(false);
-    screen.place(constant::screen());
-    display::sync();
-    screen.paint();
-    Obj::const_none()
-}
-
 extern "C" fn new_confirm_firmware_update(
     n_args: usize,
     args: *const Obj,
@@ -2068,10 +2059,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> CANCELLED:
     ///     """Homescreen for locked device."""
     Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
-
-    /// def draw_welcome_screen() -> None:
-    ///     """Show logo icon with the model name at the bottom and return."""
-    Qstr::MP_QSTR_draw_welcome_screen => obj_fn_0!(draw_welcome_screen).as_obj(),
 
     /// def confirm_firmware_update(
     ///     *,

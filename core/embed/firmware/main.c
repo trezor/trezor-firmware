@@ -47,6 +47,7 @@
 #include "model.h"
 #include "mpu.h"
 #include "random_delays.h"
+#include "rust_ui.h"
 
 #include TREZOR_BOARD
 
@@ -110,6 +111,8 @@ int main(void) {
 #endif
 
   display_reinit();
+
+  screen_boot_full();
 
 #if !defined TREZOR_MODEL_1
   parse_boardloader_capabilities();

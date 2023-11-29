@@ -406,12 +406,6 @@ extern "C" fn screen_install_success(
 }
 
 #[no_mangle]
-extern "C" fn screen_welcome_model() {
-    let mut frame = WelcomeScreen::new(false);
-    show(&mut frame, false);
-}
-
-#[no_mangle]
 extern "C" fn screen_welcome() {
     let mut frame = Welcome::new();
     show(&mut frame, true);
