@@ -48,5 +48,6 @@ void optiga_lock(void);
 optiga_locked_status get_optiga_locked_status(void);
 void check_locked(void);
 void sec_read(void);
+bool check_device_cert_chain(const uint8_t *chain, size_t chain_size);
 
 #endif
