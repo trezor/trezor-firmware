@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -u
+
 base_branch=main
 fail=0
 subdirs="core core/embed/boardloader core/embed/bootloader core/embed/bootloader_ci legacy/bootloader legacy/firmware legacy/intermediate_fw python"
@@ -51,7 +53,11 @@ check_release_branch () {
     fi
 }
 
+# gitlab
 if echo "$CI_COMMIT_BRANCH" | grep -Eq "^(release|secfix)/"; then
+    check_release_branch
+# github, TODO this only makes sense running on branches but not pull requests
+elif $(git branch --show-current) | grep -Eq "^(release|secfix)/"; then
     check_release_branch
 else
     check_feature_branch

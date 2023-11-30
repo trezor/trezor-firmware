@@ -59,7 +59,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: "recursive"
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: "Run changelog check"
         run: ./ci/check_changelog.sh
 
