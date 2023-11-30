@@ -164,6 +164,7 @@ if TYPE_CHECKING:
         StellarBumpSequenceOp = 221
         StellarManageBuyOfferOp = 222
         StellarPathPaymentStrictSendOp = 223
+        StellarClaimClaimableBalanceOp = 225
         StellarSignedTx = 230
         CardanoGetPublicKey = 305
         CardanoPublicKey = 306

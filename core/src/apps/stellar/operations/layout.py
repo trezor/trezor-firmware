@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
 from trezor.ui.layouts import (
     confirm_address,
@@ -12,13 +13,13 @@ from trezor.wire import DataError, ProcessError
 from ..layout import format_amount
 
 if TYPE_CHECKING:
-
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
         StellarAsset,
         StellarBumpSequenceOp,
         StellarChangeTrustOp,
+        StellarClaimClaimableBalanceOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
         StellarManageBuyOfferOp,
@@ -290,6 +291,18 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
             description=description,
             data=data,
         )
+
+
+async def confirm_claim_claimable_balance_op(
+    op: StellarClaimClaimableBalanceOp,
+) -> None:
+    balance_id = hexlify(op.balance_id).decode()
+    await confirm_metadata(
+        "op_claim_claimable_balance",
+        "Claim Claimable Balance",
+        "Balance ID: {}",
+        balance_id,
+    )
 
 
 def _format_flags(flags: int) -> str:

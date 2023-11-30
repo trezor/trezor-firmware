@@ -86,14 +86,27 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
                 if test_id is not None:
                     test_id = test_id.lower().replace(" ", "_")
 
+            skip_models = test.get("skip_models", [])
+            skip_marks = []
+            for skip_model in skip_models:
+                if skip_model == "t1":
+                    skip_marks.append(pytest.mark.skip_t1)
+                if skip_model == "t2":
+                    skip_marks.append(pytest.mark.skip_t2)
+                if skip_model == "tr":
+                    skip_marks.append(pytest.mark.skip_tr)
+
             tests.append(
                 pytest.param(
                     test["parameters"],
                     test["result"],
-                    marks=pytest.mark.setup_client(
-                        passphrase=fixture["setup"]["passphrase"],
-                        mnemonic=fixture["setup"]["mnemonic"],
-                    ),
+                    marks=[
+                        pytest.mark.setup_client(
+                            passphrase=fixture["setup"]["passphrase"],
+                            mnemonic=fixture["setup"]["mnemonic"],
+                        )
+                    ]
+                    + skip_marks,
                     id=test_id,
                 )
             )

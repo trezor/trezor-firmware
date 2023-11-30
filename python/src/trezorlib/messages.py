@@ -172,6 +172,7 @@ class MessageType(IntEnum):
     StellarBumpSequenceOp = 221
     StellarManageBuyOfferOp = 222
     StellarPathPaymentStrictSendOp = 223
+    StellarClaimClaimableBalanceOp = 225
     StellarSignedTx = 230
     CardanoGetPublicKey = 305
     CardanoPublicKey = 306
@@ -7236,6 +7237,23 @@ class StellarBumpSequenceOp(protobuf.MessageType):
         source_account: Optional["str"] = None,
     ) -> None:
         self.bump_to = bump_to
+        self.source_account = source_account
+
+
+class StellarClaimClaimableBalanceOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 225
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("balance_id", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        balance_id: "bytes",
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.balance_id = balance_id
         self.source_account = source_account
 
 

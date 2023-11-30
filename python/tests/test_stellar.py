@@ -924,3 +924,21 @@ def test_tx_source_muxed_account_not_support_raise():
 
     with pytest.raises(ValueError, match="MuxedAccount is not supported"):
         stellar.from_envelope(envelope)
+
+
+def test_claim_claimable_balance():
+    tx = make_default_tx()
+    balance_id = (
+        "00000000178826fbfe339e1f5c53417c6fedfe2c05e8bec14303143ec46b38981b09c3f9"
+    )
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    envelope = tx.append_claim_claimable_balance_op(
+        balance_id=balance_id, source=operation_source
+    ).build()
+
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+    assert isinstance(operations[0], messages.StellarClaimClaimableBalanceOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].balance_id == bytes.fromhex(balance_id)

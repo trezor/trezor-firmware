@@ -19,6 +19,7 @@ if TYPE_CHECKING:
         StellarAsset,
         StellarBumpSequenceOp,
         StellarChangeTrustOp,
+        StellarClaimClaimableBalanceOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
         StellarManageBuyOfferOp,
@@ -180,6 +181,12 @@ def write_set_options_op(w: Writer, msg: StellarSetOptionsOp) -> None:
         write_uint32(w, msg.signer_weight)
 
 
+def write_claim_claimable_balance_op(
+    w: Writer, msg: StellarClaimClaimableBalanceOp
+) -> None:
+    _write_claimable_balance_id(w, msg.balance_id)
+
+
 def write_account(w: Writer, source_account: str | None) -> None:
     if source_account is None:
         write_bool(w, False)
@@ -221,3 +228,11 @@ def _write_asset(w: Writer, asset: StellarAsset) -> None:
     write_uint32(w, asset.type)
     _write_asset_code(w, asset.type, asset.code)
     write_pubkey(w, asset.issuer)
+
+
+def _write_claimable_balance_id(w: Writer, claimable_balance_id: bytes) -> None:
+    if len(claimable_balance_id) != 36:  # 4 bytes type + 32 bytes data
+        raise DataError("Stellar: invalid claimable balance id length")
+    if claimable_balance_id[:4] != b"\x00\x00\x00\x00":  # CLAIMABLE_BALANCE_ID_TYPE_V0
+        raise DataError("Stellar: invalid claimable balance id, unknown type")
+    write_bytes_fixed(w, claimable_balance_id, 36)

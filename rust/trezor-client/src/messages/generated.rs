@@ -267,6 +267,7 @@ trezor_message_impl! {
     StellarBumpSequenceOp => MessageType_StellarBumpSequenceOp,
     StellarManageBuyOfferOp => MessageType_StellarManageBuyOfferOp,
     StellarPathPaymentStrictSendOp => MessageType_StellarPathPaymentStrictSendOp,
+    StellarClaimClaimableBalanceOp => MessageType_StellarClaimClaimableBalanceOp,
     StellarSignedTx => MessageType_StellarSignedTx,
 }
 

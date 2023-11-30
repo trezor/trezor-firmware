@@ -5707,6 +5707,22 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["StellarBumpSequenceOp"]:
             return isinstance(msg, cls)
 
+    class StellarClaimClaimableBalanceOp(protobuf.MessageType):
+        source_account: "str | None"
+        balance_id: "bytes"
+
+        def __init__(
+            self,
+            *,
+            balance_id: "bytes",
+            source_account: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["StellarClaimClaimableBalanceOp"]:
+            return isinstance(msg, cls)
+
     class StellarSignedTx(protobuf.MessageType):
         public_key: "bytes"
         signature: "bytes"
