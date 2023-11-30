@@ -201,32 +201,102 @@ OK
 ```
 
 ### OPTIGAID READ
-TBD
+Returns the coprocessor UID of the Optiga chip as a 27 byte hexadecimal string.
+
+Example:
+```
+OPTIGAID READ
+OK CD16339401001C000100000A023EA600190057006E801010712440
+```
 
 ### CERTINF READ
-TBD
+Returns the X.509 certificate issued by Infineon for the Optiga chip.
+
+Example:
+```
+CERTINF READ
+OK <hexadecimal string>
+```
 
 ### CERTDEV WRITE
-TBD
+Writes the X.509 certificate issued by the Trezor Company for the device.
+
+Example:
+```
+CERTDEV WRITE <hexadecimal string>
+OK
+```
 
 ### CERTDEV READ
-TBD
+Returns the X.509 certificate issued by the Trezor Company for the device.
+
+Example:
+```
+CERTDEV READ
+OK <hexadecimal string>
+```
 
 ### CERTFIDO WRITE
-TBD
+Writes the X.509 certificate issued by the Trezor Company for the FIDO attestation key.
+
+Example:
+```
+CERTFIDO WRITE <hexadecimal string>
+OK
+```
 
 ### CERTFIDO READ
-TBD
+Returns the X.509 certificate issued by the Trezor Company for the FIDO attestation key.
+
+Example:
+```
+CERTFIDO READ
+OK <hexadecimal string>
+```
 
 ### KEYFIDO WRITE
-TBD
+Decrypts and stores an encrypted FIDO attestation private key into Optiga. No return value.
+
+Example:
+```
+KEYFIDO WRITE <hexadecimal string>
+OK
+```
 
 ### KEYFIDO READ
-TBD
+Returns the x-coordinate of the FIDO attestation public key stored in Optiga. Can be executed only before the LOCK command is called.
+
+This command can be used to verify that the FIDO attestation key was decrypted and stored correctly by verifying that the returned string of bytes appears in the FIDO attestation certificate.
+
+Example:
+```
+KEYFIDO READ
+OK 0D35A613358EDAB4CA04D05DD716546CD97973DE58516AF6A8F69BEE89BEFAA1
+```
 
 ### LOCK
-TBD
+Configures the metadata for Optiga's data objects that should be set up during provisioning and locks them. No return value.
+
+Example:
+```
+LOCK
+OK
+```
 
 ### CHECK LOCKED
-TBD
+Returns `YES` if all of Optiga's data objects that should be set up during provisioning are locked. If not, then `NO` is returned.
 
+Example:
+```
+CHECK LOCKED
+OK YES
+```
+
+### SEC READ
+Returns the value of Optiga's security event counter as a 1 byte hexadecimal value.
+
+Example:
+```
+SEC READ
+OK 0E
+```

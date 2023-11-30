@@ -644,6 +644,8 @@ int main(void) {
       optiga_lock();
     } else if (startswith(line, "CHECK LOCKED")) {
       check_locked();
+    } else if (startswith(line, "SEC READ")) {
+      sec_read();
 
 #endif
 

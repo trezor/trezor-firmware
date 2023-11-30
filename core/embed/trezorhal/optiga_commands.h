@@ -28,6 +28,7 @@
 // Data object identifiers.
 typedef enum {
   OPTIGA_OID_COPROC_UID = 0xE0C2,      // Coprocessor UID.
+  OPTIGA_OID_SEC = 0xE0C5,             // Security event counter.
   OPTIGA_OID_CERT = 0xE0E0,            // Public key certificates [1-4].
   OPTIGA_OID_CA_CERT = 0xE0E8,         // Root CA public key certificates [1-2].
   OPTIGA_OID_ECC_KEY = 0xE0F0,         // Private ECC keys [1-4].
