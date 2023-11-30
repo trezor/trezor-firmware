@@ -32,6 +32,7 @@
 
 #define DER_SEQUENCE 0x30
 #define DER_INTEGER 0x02
+#define DER_BIT_STRING 0x03
 
 // Struct representing a DER-encoded ASN.1 data value.
 typedef struct {
