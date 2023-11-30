@@ -139,6 +139,7 @@ stdenvNoCC.mkDerivation ({
     ffmpeg
     dejavu_fonts
   ] ++ lib.optionals devTools [
+    shellcheck
     gdb
     openocd-stm
   ] ++ lib.optionals (devTools && acceptJlink) [
