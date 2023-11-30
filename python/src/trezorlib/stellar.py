@@ -39,6 +39,7 @@ if TYPE_CHECKING:
         messages.StellarPathPaymentStrictSendOp,
         messages.StellarPaymentOp,
         messages.StellarSetOptionsOp,
+        messages.StellarClaimClaimableBalanceOp,
     ]
 
 try:
@@ -48,6 +49,7 @@ try:
         Asset,
         BumpSequence,
         ChangeTrust,
+        ClaimClaimableBalance,
         CreateAccount,
         CreatePassiveSellOffer,
         HashMemo,
@@ -271,6 +273,11 @@ def _read_operation(op: "Operation") -> "StellarMessageType":
             destination_asset=_read_asset(op.dest_asset),
             destination_min=_read_amount(op.dest_min),
             paths=[_read_asset(asset) for asset in op.path],
+        )
+    if isinstance(op, ClaimClaimableBalance):
+        return messages.StellarClaimClaimableBalanceOp(
+            source_account=source_account,
+            balance_id=bytes.fromhex(op.balance_id),
         )
     raise ValueError(f"Unknown operation type: {op.__class__.__name__}")
 

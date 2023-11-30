@@ -270,6 +270,16 @@ message StellarBumpSequenceOp {
 }
 
 /**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarClaimClaimableBalanceOp {
+    optional string source_account = 1; // (optional) source account address
+    required bytes balance_id = 2;      // balance id, 4 bytes of type flag, 32 bytes of data
+}
+
+/**
  * Response: signature for transaction
  * @end
  */

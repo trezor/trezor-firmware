@@ -59,5 +59,8 @@ async def process_operation(w: Writer, op: StellarMessageType) -> None:
     elif messages.StellarSetOptionsOp.is_type_of(op):
         await layout.confirm_set_options_op(op)
         serialize.write_set_options_op(w, op)
+    elif messages.StellarClaimClaimableBalanceOp.is_type_of(op):
+        await layout.confirm_claim_claimable_balance_op(op)
+        serialize.write_claim_claimable_balance_op(w, op)
     else:
         raise ValueError("Unknown operation")

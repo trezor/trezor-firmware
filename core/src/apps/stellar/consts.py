@@ -10,6 +10,7 @@ if TYPE_CHECKING:
         StellarAllowTrustOp,
         StellarBumpSequenceOp,
         StellarChangeTrustOp,
+        StellarClaimClaimableBalanceOp,
         StellarCreateAccountOp,
         StellarCreatePassiveSellOfferOp,
         StellarManageBuyOfferOp,
@@ -35,6 +36,7 @@ if TYPE_CHECKING:
         | StellarPathPaymentStrictSendOp
         | StellarPaymentOp
         | StellarSetOptionsOp
+        | StellarClaimClaimableBalanceOp
     )
 
 
@@ -56,6 +58,7 @@ op_codes: dict[int, int] = {
     MessageType.StellarPathPaymentStrictSendOp: 13,
     MessageType.StellarPaymentOp: 1,
     MessageType.StellarSetOptionsOp: 5,
+    MessageType.StellarClaimClaimableBalanceOp: 15,
 }
 
 

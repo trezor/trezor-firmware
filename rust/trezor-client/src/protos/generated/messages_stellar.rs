@@ -5757,6 +5757,221 @@ impl ::protobuf::reflect::ProtobufValue for StellarBumpSequenceOp {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarClaimClaimableBalanceOp)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarClaimClaimableBalanceOp {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarClaimClaimableBalanceOp.source_account)
+    pub source_account: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarClaimClaimableBalanceOp.balance_id)
+    pub balance_id: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarClaimClaimableBalanceOp.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarClaimClaimableBalanceOp {
+    fn default() -> &'a StellarClaimClaimableBalanceOp {
+        <StellarClaimClaimableBalanceOp as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarClaimClaimableBalanceOp {
+    pub fn new() -> StellarClaimClaimableBalanceOp {
+        ::std::default::Default::default()
+    }
+
+    // optional string source_account = 1;
+
+    pub fn source_account(&self) -> &str {
+        match self.source_account.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_source_account(&mut self) {
+        self.source_account = ::std::option::Option::None;
+    }
+
+    pub fn has_source_account(&self) -> bool {
+        self.source_account.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_source_account(&mut self, v: ::std::string::String) {
+        self.source_account = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_source_account(&mut self) -> &mut ::std::string::String {
+        if self.source_account.is_none() {
+            self.source_account = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.source_account.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_source_account(&mut self) -> ::std::string::String {
+        self.source_account.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required bytes balance_id = 2;
+
+    pub fn balance_id(&self) -> &[u8] {
+        match self.balance_id.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_balance_id(&mut self) {
+        self.balance_id = ::std::option::Option::None;
+    }
+
+    pub fn has_balance_id(&self) -> bool {
+        self.balance_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_balance_id(&mut self, v: ::std::vec::Vec<u8>) {
+        self.balance_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_balance_id(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.balance_id.is_none() {
+            self.balance_id = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.balance_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_balance_id(&mut self) -> ::std::vec::Vec<u8> {
+        self.balance_id.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "source_account",
+            |m: &StellarClaimClaimableBalanceOp| { &m.source_account },
+            |m: &mut StellarClaimClaimableBalanceOp| { &mut m.source_account },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "balance_id",
+            |m: &StellarClaimClaimableBalanceOp| { &m.balance_id },
+            |m: &mut StellarClaimClaimableBalanceOp| { &mut m.balance_id },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarClaimClaimableBalanceOp>(
+            "StellarClaimClaimableBalanceOp",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarClaimClaimableBalanceOp {
+    const NAME: &'static str = "StellarClaimClaimableBalanceOp";
+
+    fn is_initialized(&self) -> bool {
+        if self.balance_id.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.source_account = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.balance_id = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.source_account.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.balance_id.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.source_account.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.balance_id.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarClaimClaimableBalanceOp {
+        StellarClaimClaimableBalanceOp::new()
+    }
+
+    fn clear(&mut self) {
+        self.source_account = ::std::option::Option::None;
+        self.balance_id = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarClaimClaimableBalanceOp {
+        static instance: StellarClaimClaimableBalanceOp = StellarClaimClaimableBalanceOp {
+            source_account: ::std::option::Option::None,
+            balance_id: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarClaimClaimableBalanceOp {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarClaimClaimableBalanceOp").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarClaimClaimableBalanceOp {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarClaimClaimableBalanceOp {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSignedTx)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct StellarSignedTx {
@@ -6137,11 +6352,13 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x03key\x18\x02\x20\x02(\tR\x03key\x12\x14\n\x05value\x18\x03\x20\x01(\
     \x0cR\x05value\"W\n\x15StellarBumpSequenceOp\x12%\n\x0esource_account\
     \x18\x01\x20\x01(\tR\rsourceAccount\x12\x17\n\x07bump_to\x18\x02\x20\x02\
-    (\x04R\x06bumpTo\"N\n\x0fStellarSignedTx\x12\x1d\n\npublic_key\x18\x01\
-    \x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsi\
-    gnature*=\n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANU\
-    M4\x10\x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilabs.trezor.lib.\
-    protobufB\x14TrezorMessageStellar\
+    (\x04R\x06bumpTo\"f\n\x1eStellarClaimClaimableBalanceOp\x12%\n\x0esource\
+    _account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x1d\n\nbalance_id\x18\
+    \x02\x20\x02(\x0cR\tbalanceId\"N\n\x0fStellarSignedTx\x12\x1d\n\npublic_\
+    key\x18\x01\x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsignature\x18\x02\x20\
+    \x02(\x0cR\tsignature*=\n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\
+    \x12\r\n\tALPHANUM4\x10\x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satosh\
+    ilabs.trezor.lib.protobufB\x14TrezorMessageStellar\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -6159,7 +6376,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(19);
+            let mut messages = ::std::vec::Vec::with_capacity(20);
             messages.push(StellarAsset::generated_message_descriptor_data());
             messages.push(StellarGetAddress::generated_message_descriptor_data());
             messages.push(StellarAddress::generated_message_descriptor_data());
@@ -6178,6 +6395,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(StellarAccountMergeOp::generated_message_descriptor_data());
             messages.push(StellarManageDataOp::generated_message_descriptor_data());
             messages.push(StellarBumpSequenceOp::generated_message_descriptor_data());
+            messages.push(StellarClaimClaimableBalanceOp::generated_message_descriptor_data());
             messages.push(StellarSignedTx::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(3);
             enums.push(StellarAssetType::generated_enum_descriptor_data());
