@@ -6776,6 +6776,13 @@ START_TEST(test_ecdsa_der) {
           "0000000000000000000000000000000000000000000000000000000000000000",
           "3006020100020100",
       },
+      {NULL, NULL, "3008020200ee020200ff00"},
+      {NULL, NULL,
+       "304402207f0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1"
+       "f0220800102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"},
+      {NULL, NULL,
+       "30440220007f0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1"
+       "e022000800102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e"},
   };
 
   uint8_t sig[64];
@@ -6784,12 +6791,16 @@ START_TEST(test_ecdsa_der) {
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); ++i) {
     size_t der_len = strlen(vectors[i].der) / 2;
     memcpy(der, fromhex(vectors[i].der), der_len);
-    memcpy(sig, fromhex(vectors[i].r), 32);
-    memcpy(sig + 32, fromhex(vectors[i].s), 32);
-    ck_assert_int_eq(ecdsa_sig_to_der(sig, out), der_len);
-    ck_assert_mem_eq(out, der, der_len);
-    ck_assert_int_eq(ecdsa_sig_from_der(der, der_len, out), 0);
-    ck_assert_mem_eq(out, sig, 64);
+    if (vectors[i].r != NULL) {
+      memcpy(sig, fromhex(vectors[i].r), 32);
+      memcpy(sig + 32, fromhex(vectors[i].s), 32);
+      ck_assert_int_eq(ecdsa_sig_to_der(sig, out), der_len);
+      ck_assert_mem_eq(out, der, der_len);
+      ck_assert_int_eq(ecdsa_sig_from_der(der, der_len, out), 0);
+      ck_assert_mem_eq(out, sig, 64);
+    } else {
+      ck_assert_int_eq(ecdsa_sig_from_der(der, der_len, out), 1);
+    }
   }
 }
 END_TEST

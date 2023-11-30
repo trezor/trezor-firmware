@@ -1204,8 +1204,8 @@ int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der) {
   return *len + 2;
 }
 
-// Parse a DER-encoded signature. We don't check whether the encoded integers
-// satisfy DER requirements regarding leading zeros.
+// Parse a DER-encoded signature. We check whether the encoded integers satisfy
+// DER requirements regarding leading zeros.
 int ecdsa_sig_from_der(const uint8_t *der, size_t der_len, uint8_t sig[64]) {
   memzero(sig, 64);
 
@@ -1229,10 +1229,20 @@ int ecdsa_sig_from_der(const uint8_t *der, size_t der_len, uint8_t sig[64]) {
       return 1;
     }
 
-    // Skip a possible leading zero.
-    if (int_len != 0 && der[pos] == 0) {
+    // Positive integers must not start with an octet that has bit 8 set to 1.
+    if (int_len == 0 || der[pos] > 0x7f) {
+      return 1;
+    }
+
+    // Skip a possible leading null octet.
+    if (int_len > 1 && der[pos] == 0x00) {
       int_len--;
       pos++;
+
+      // Check that integer uses the shortest possible encoding.
+      if (der[pos] < 0x80) {
+        return 1;
+      }
     }
 
     // Copy the integer to the output, making sure it fits.
