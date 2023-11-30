@@ -87,6 +87,7 @@ bool der_write_length(BUFFER_WRITER *buf, size_t len) {
 }
 
 bool der_read_item(BUFFER_READER *buf, DER_ITEM *item) {
+  size_t begin_pos = buf->pos;
   if (!buffer_get(buf, &item->id) || ((item->id & 0x1f) == 0x1f)) {
     // Multi-byte identifiers not supported.
     return false;
@@ -97,7 +98,13 @@ bool der_read_item(BUFFER_READER *buf, DER_ITEM *item) {
     return false;
   }
 
-  return buffer_read_buffer(buf, &item->cont, len);
+  size_t header_size = buf->pos - begin_pos;
+  if (!buffer_seek(buf, begin_pos) ||
+      !buffer_read_buffer(buf, &item->buf, header_size + len)) {
+    return false;
+  }
+
+  return buffer_seek(&item->buf, header_size);
 }
 
 // Reencode a positive integer which violates the encoding rules in Rec. ITU-T
@@ -111,13 +118,13 @@ bool der_reencode_int(BUFFER_READER *reader, BUFFER_WRITER *writer) {
   }
 
   // Strip any leading 0x00 bytes.
-  buffer_lstrip(&item.cont, 0x00);
-  size_t len = buffer_remaining(&item.cont);
+  buffer_lstrip(&item.buf, 0x00);
+  size_t len = buffer_remaining(&item.buf);
 
   // Positive integers should start with one 0x00 byte if and only if the most
   // significant byte is >= 0x80.
   uint8_t msb = 0;
-  bool prepend_null = (!buffer_peek(&item.cont, &msb) || msb >= 0x80);
+  bool prepend_null = (!buffer_peek(&item.buf, &msb) || msb >= 0x80);
   if (prepend_null) {
     len += 1;
   }
@@ -132,5 +139,5 @@ bool der_reencode_int(BUFFER_READER *reader, BUFFER_WRITER *writer) {
     }
   }
 
-  return buffer_write_buffer(writer, &item.cont);
+  return buffer_write_buffer(writer, &item.buf);
 }
