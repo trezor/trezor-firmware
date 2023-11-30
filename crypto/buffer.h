@@ -48,6 +48,7 @@ void buffer_writer_init(BUFFER_WRITER *buf, uint8_t *data, size_t size);
 size_t __wur buffer_remaining(BUFFER_READER *buf);
 bool __wur buffer_peek(const BUFFER_READER *buf, uint8_t *byte);
 bool __wur buffer_get(BUFFER_READER *buf, uint8_t *byte);
+bool __wur buffer_seek(BUFFER_READER *buf, size_t pos);
 bool __wur buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest,
                               size_t size);
 void buffer_lstrip(BUFFER_READER *buf, uint8_t byte);

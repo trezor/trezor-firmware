@@ -64,6 +64,16 @@ bool buffer_get(BUFFER_READER *buf, uint8_t *byte) {
   return true;
 }
 
+bool buffer_seek(BUFFER_READER *buf, size_t pos) {
+  if ((buf->data == NULL) || (pos > buf->size)) {
+    return false;
+  }
+
+  buf->pos = pos;
+
+  return true;
+}
+
 bool buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest, size_t size) {
   if ((src->data == NULL) || (src->pos + size > src->size)) {
     return false;
