@@ -47,5 +47,6 @@ void pubkey_read(uint16_t oid);
 void optiga_lock(void);
 optiga_locked_status get_optiga_locked_status(void);
 void check_locked(void);
+void sec_read(void);
 
 #endif

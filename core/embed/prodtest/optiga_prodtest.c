@@ -494,3 +494,21 @@ void keyfido_write(char *data) {
 
   vcp_println("OK");
 }
+
+void sec_read(void) {
+  if (!optiga_paired()) return;
+
+  uint8_t sec = 0;
+  size_t size = 0;
+
+  optiga_result ret =
+      optiga_get_data_object(OPTIGA_OID_SEC, false, &sec, sizeof(sec), &size);
+  if (OPTIGA_SUCCESS != ret || sizeof(sec) != size) {
+    vcp_println("ERROR optiga_get_data_object error %d for 0x%04x.", ret,
+                OPTIGA_OID_SEC);
+    return;
+  }
+
+  vcp_print("OK ");
+  vcp_println_hex(&sec, sizeof(sec));
+}
