@@ -901,33 +901,48 @@ async def confirm_properties(
 async def confirm_total(
     total_amount: str,
     fee_amount: str,
-    fee_rate_amount: str | None = None,
     title: str = "SUMMARY",
     total_label: str = "Total amount:",
     fee_label: str = "Including fee:",
     account_label: str | None = None,
+    fee_rate_amount: str | None = None,
+    br_type: str = "confirm_total",
+    br_code: ButtonRequestType = ButtonRequestType.SignTx,
+) -> None:
+    items = [
+        (total_label, total_amount),
+        (fee_label, fee_amount),
+    ]
+    info_items = []
+    if account_label:
+        info_items.append(("Sending from account:", account_label))
+    if fee_rate_amount:
+        info_items.append(("Fee rate:", fee_rate_amount))
+
+    await confirm_summary(
+        items, "SUMMARY", info_items, br_type=br_type, br_code=br_code
+    )
+
+
+async def confirm_summary(
+    items: Iterable[tuple[str, str]],
+    title: str = "SUMMARY",
+    info_items: Iterable[tuple[str, str]] | None = None,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
     total_layout = RustLayout(
         trezorui2.confirm_total(
-            title=title,
-            items=[
-                (total_label, total_amount),
-                (fee_label, fee_amount),
-            ],
-            info_button=bool(account_label or fee_rate_amount),
+            title=title.upper(),
+            items=items,
+            info_button=bool(info_items),
         )
     )
-    items: list[tuple[str, str]] = []
-    if account_label:
-        items.append(("Sending from account:", account_label))
-    if fee_rate_amount:
-        items.append(("Fee rate:", fee_rate_amount))
+    info_items = info_items or []
     info_layout = RustLayout(
         trezorui2.show_info_with_cancel(
             title="INFORMATION",
-            items=items,
+            items=info_items,
         )
     )
     await raise_if_not_confirmed(with_info(total_layout, info_layout, br_type, br_code))
@@ -978,6 +993,23 @@ async def confirm_ethereum_tx(
             break
         except ActionCancelled:
             continue
+
+
+async def confirm_solana_tx(
+    amount: str,
+    fee: str,
+    items: Iterable[tuple[str, str]],
+    amount_title="Amount:",
+    fee_title="Fee",
+    br_type: str = "confirm_solana_tx",
+    br_code: ButtonRequestType = ButtonRequestType.SignTx,
+):
+    await confirm_summary(
+        ((amount_title, amount), (fee_title, fee)),
+        info_items=items,
+        br_type=br_type,
+        br_code=br_code,
+    )
 
 
 async def confirm_joint_total(spending_amount: str, total_amount: str) -> None:
