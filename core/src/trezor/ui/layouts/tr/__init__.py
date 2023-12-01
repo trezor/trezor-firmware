@@ -991,6 +991,33 @@ async def confirm_total(
     )
 
 
+async def confirm_solana_tx(
+    amount: str,
+    fee: str,
+    items: Iterable[tuple[str, str]],
+    amount_title="Amount:",
+    fee_title="Fee",
+    br_type: str = "confirm_solana_tx",
+    br_code: ButtonRequestType = ButtonRequestType.SignTx,
+):
+    await raise_if_not_confirmed(
+        interact(
+            RustLayout(
+                trezorui2.altcoin_tx_summary(
+                    amount_title=amount_title,
+                    amount_value=amount,
+                    fee_title=fee_title,
+                    fee_value=fee,
+                    items=items,
+                    cancel_cross=True,
+                )
+            ),
+            br_type=br_type,
+            br_code=br_code,
+        )
+    )
+
+
 async def confirm_ethereum_tx(
     recipient: str,
     total_amount: str,
@@ -1001,9 +1028,11 @@ async def confirm_ethereum_tx(
     chunkify: bool = False,
 ) -> None:
     summary_layout = RustLayout(
-        trezorui2.ethereum_tx_summary(
-            total_amount=total_amount,
-            maximum_fee=maximum_fee,
+        trezorui2.altcoin_tx_summary(
+            amount_title="Amount:",
+            amount_value=total_amount,
+            fee_title="Maximum fee:",
+            fee_value=maximum_fee,
             items=items,
         )
     )

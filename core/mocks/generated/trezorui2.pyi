@@ -169,13 +169,16 @@ def confirm_total(
 
 
 # rust/src/ui/model_tr/layout.rs
-def ethereum_tx_summary(
+def altcoin_tx_summary(
     *,
-    total_amount: str,
-    maximum_fee: str,
+    amount_title: str,
+    amount_value: str,
+    fee_title: str,
+    fee_value: str,
     items: Iterable[Tuple[str, str]],
+    cancel_cross: bool = False,
 ) -> object:
-    """Confirm details about Ethereum transaction."""
+    """Confirm details about altcoin transaction."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -586,7 +589,7 @@ def confirm_value(
 def confirm_total(
     *,
     title: str,
-    items: list[tuple[str, str]],
+    items: Iterable[tuple[str, str]],
     info_button: bool = False,
     cancel_arrow: bool = False,
 ) -> object:
