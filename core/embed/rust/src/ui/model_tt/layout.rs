@@ -749,7 +749,7 @@ extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs:
             let [key, value]: [Obj; 2] = iter_into_array(para)?;
             let key: StrBuffer = key.try_into()?;
             let value: StrBuffer = value.try_into()?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, key));
+            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, key).no_break());
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
 
@@ -812,7 +812,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
         for pair in IterBuf::new().try_iterate(items)? {
             let [label, value]: [StrBuffer; 2] = iter_into_array(pair)?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label));
+            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label).no_break());
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
         let mut page: ButtonPage<_, StrBuffer> =
@@ -1757,7 +1757,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_total(
     ///     *,
     ///     title: str,
-    ///     items: list[tuple[str, str]],
+    ///     items: Iterable[tuple[str, str]],
     ///     info_button: bool = False,
     ///     cancel_arrow: bool = False,
     /// ) -> object:
