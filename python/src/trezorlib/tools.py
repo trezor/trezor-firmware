@@ -126,59 +126,48 @@ __b58chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 __b58base = len(__b58chars)
 
 
+def b58encode_int(i: int) -> str:
+    """Encode an integer using Base58"""
+    digits = []
+    while i:
+        i, idx = divmod(i, __b58base)
+        digits.append(__b58chars[idx])
+    return "".join(reversed(digits))
+
+
 def b58encode(v: bytes) -> str:
     """encode v, which is a string of bytes, to base58."""
+    origlen = len(v)
+    v = v.lstrip(b"\0")
+    newlen = len(v)
 
-    long_value = 0
-    for c in v:
-        long_value = long_value * 256 + c
+    acc = int.from_bytes(v, byteorder="big")  # first byte is most significant
 
-    result = ""
-    while long_value >= __b58base:
-        div, mod = divmod(long_value, __b58base)
-        result = __b58chars[mod] + result
-        long_value = div
-    result = __b58chars[long_value] + result
+    result = b58encode_int(acc)
+    return __b58chars[0] * (origlen - newlen) + result
 
-    # Bitcoin does a little leading-zero-compression:
-    # leading 0-bytes in the input become leading-1s
-    nPad = 0
-    for c in v:
-        if c == 0:
-            nPad += 1
-        else:
-            break
 
-    return (__b58chars[0] * nPad) + result
+def b58decode_int(v: str) -> int:
+    """Decode a Base58 encoded string as an integer"""
+    decimal = 0
+    try:
+        for char in v:
+            decimal = decimal * __b58base + __b58chars.index(char)
+    except KeyError:
+        raise ValueError(f"Invalid character {char!r}") from None  # type: ignore [possibly unbound]
+    return decimal
 
 
 def b58decode(v: AnyStr, length: Optional[int] = None) -> bytes:
     """decode v into a string of len bytes."""
-    str_v = v.decode() if isinstance(v, bytes) else v
+    v_str = v if isinstance(v, str) else v.decode()
+    origlen = len(v_str)
+    v_str = v_str.lstrip(__b58chars[0])
+    newlen = len(v_str)
 
-    for c in str_v:
-        if c not in __b58chars:
-            raise ValueError("invalid Base58 string")
+    acc = b58decode_int(v_str)
 
-    long_value = 0
-    for (i, c) in enumerate(str_v[::-1]):
-        long_value += __b58chars.find(c) * (__b58base**i)
-
-    result = b""
-    while long_value >= 256:
-        div, mod = divmod(long_value, 256)
-        result = struct.pack("B", mod) + result
-        long_value = div
-    result = struct.pack("B", long_value) + result
-
-    nPad = 0
-    for c in str_v:
-        if c == __b58chars[0]:
-            nPad += 1
-        else:
-            break
-
-    result = b"\x00" * nPad + result
+    result = acc.to_bytes(origlen - newlen + (acc.bit_length() + 7) // 8, "big")
     if length is not None and len(result) != length:
         raise ValueError("Result length does not match expected_length")
 
