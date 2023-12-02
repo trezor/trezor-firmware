@@ -693,8 +693,12 @@ if not utils.BITCOIN_ONLY:
     import apps.solana.get_public_key
     apps.solana.layout
     import apps.solana.layout
+    apps.solana.predefined_transaction
+    import apps.solana.predefined_transaction
     apps.solana.sign_tx
     import apps.solana.sign_tx
+    apps.solana.token_account
+    import apps.solana.token_account
     apps.solana.transaction
     import apps.solana.transaction
     apps.solana.transaction.instruction

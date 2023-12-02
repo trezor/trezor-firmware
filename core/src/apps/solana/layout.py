@@ -15,14 +15,7 @@ from apps.common.paths import address_n_to_str
 from .types import AddressType
 
 if TYPE_CHECKING:
-    from trezor.ui.layouts import PropertyType
-
-    from .transaction.instructions import (
-        AssociatedTokenAccountProgramCreateInstruction,
-        Instruction,
-        SystemProgramTransferInstruction,
-        TokenProgramTransferCheckedInstruction,
-    )
+    from .transaction.instructions import Instruction, SystemProgramTransferInstruction
     from .types import AddressReference
 
 
@@ -285,28 +278,30 @@ async def confirm_system_transfer(
 
 
 async def confirm_token_transfer(
-    create_token_account_instruction: AssociatedTokenAccountProgramCreateInstruction
-    | None,
-    transfer_token_instruction: TokenProgramTransferCheckedInstruction,
+    destination_account: bytes,
+    token_account: bytes,
+    token_mint: bytes,
+    amount: int,
+    decimals: int,
     fee: int,
     signer_path: list[int],
     blockhash: bytes,
 ):
-    recipient_props: list[PropertyType] = [
-        ("", base58.encode(transfer_token_instruction.destination_account[0]))
-    ]
-    if create_token_account_instruction is not None:
-        recipient_props.append(("(account will be created)", ""))
-
-    await confirm_properties(
-        "confirm_recipient",
-        "Recipient",
-        recipient_props,
+    await confirm_value(
+        title="Recipient",
+        value=base58.encode(destination_account),
+        description="",
+        br_type="confirm_recipient",
+        br_code=ButtonRequestType.ConfirmOutput,
+        verb="CONTINUE",
+        info_items=(("Associated token account:", base58.encode(token_account)),)
+        if token_account != destination_account
+        else None,
     )
 
     await confirm_value(
         title="Token address",
-        value=base58.encode(transfer_token_instruction.token_mint[0]),
+        value=base58.encode(token_mint),
         description="",
         br_type="confirm_token_address",
         br_code=ButtonRequestType.ConfirmOutput,
@@ -314,8 +309,8 @@ async def confirm_token_transfer(
     )
 
     await confirm_custom_transaction(
-        transfer_token_instruction.amount,
-        transfer_token_instruction.decimals,
+        amount,
+        decimals,
         "[TOKEN]",
         fee,
         signer_path,

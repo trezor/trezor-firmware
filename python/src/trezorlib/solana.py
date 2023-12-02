@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from . import messages
 from .tools import expect
@@ -40,10 +40,12 @@ def sign_tx(
     client: "TrezorClient",
     address_n: List[int],
     serialized_tx: bytes,
+    additional_info: Optional[messages.SolanaTxAdditionalInfo],
 ) -> "MessageType":
     return client.call(
         messages.SolanaSignTx(
             address_n=address_n,
             serialized_tx=serialized_tx,
+            additional_info=additional_info,
         )
     )

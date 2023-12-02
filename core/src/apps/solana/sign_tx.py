@@ -26,6 +26,7 @@ async def sign_tx(
     from apps.common import seed
 
     from .layout import confirm_transaction
+    from .predefined_transaction import try_confirm_predefined_transaction
 
     address_n = msg.address_n  # local_cache_attribute
     serialized_tx = msg.serialized_tx  # local_cache_attribute
@@ -54,7 +55,7 @@ async def sign_tx(
     fee = calculate_fee(transaction)
 
     if not await try_confirm_predefined_transaction(
-        transaction, fee, address_n, transaction.blockhash
+        transaction, fee, address_n, transaction.blockhash, msg.additional_info
     ):
         await confirm_instructions(address_n, signer_public_key, transaction)
         await confirm_transaction(
@@ -66,56 +67,6 @@ async def sign_tx(
     signature = ed25519.sign(node.private_key(), serialized_tx)
 
     return SolanaTxSignature(signature=signature)
-
-
-async def try_confirm_predefined_transaction(
-    transaction: Transaction, fee: int, signer_path: list[int], blockhash: bytes
-) -> bool:
-    from .layout import confirm_system_transfer, confirm_token_transfer
-    from .transaction.instructions import (
-        AssociatedTokenAccountProgramCreateInstruction,
-        SystemProgramTransferInstruction,
-        TokenProgramTransferCheckedInstruction,
-    )
-
-    instructions = transaction.instructions
-    instructions_count = len(instructions)
-
-    if instructions_count == 1:
-        if SystemProgramTransferInstruction.is_type_of(instructions[0]):
-            await confirm_system_transfer(instructions[0], fee, signer_path, blockhash)
-            return True
-
-        if TokenProgramTransferCheckedInstruction.is_type_of(instructions[0]):
-            await confirm_token_transfer(
-                None, instructions[0], fee, signer_path, blockhash
-            )
-            return True
-    elif instructions_count == 2:
-        if AssociatedTokenAccountProgramCreateInstruction.is_type_of(
-            instructions[0]
-        ) and TokenProgramTransferCheckedInstruction.is_type_of(instructions[1]):
-            create_token_account_instruction = instructions[0]
-            transfer_token_instruction = instructions[1]
-
-            # If the account being created is different from the recipient account we need
-            # to display all the instruction information.
-            if (
-                create_token_account_instruction.associated_token_account[0]
-                != transfer_token_instruction.destination_account[0]
-            ):
-                return False
-
-            await confirm_token_transfer(
-                instructions[0],
-                instructions[1],
-                fee,
-                signer_path,
-                blockhash,
-            )
-            return True
-
-    return False
 
 
 async def confirm_instructions(
