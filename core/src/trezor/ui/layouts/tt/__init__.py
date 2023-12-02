@@ -844,7 +844,7 @@ def confirm_value(
     verb: str | None = None,
     subtitle: str | None = None,
     hold: bool = False,
-    info_button: bool = False,
+    info_items: Iterable[tuple[str, str]] | None = None,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
@@ -854,8 +854,16 @@ def confirm_value(
     if verb:
         verb = verb.upper()
 
+    info_items = info_items or []
+    info_layout = RustLayout(
+        trezorui2.show_info_with_cancel(
+            title="INFORMATION",
+            items=info_items,
+        )
+    )
+
     return raise_if_not_confirmed(
-        interact(
+        with_info(
             RustLayout(
                 trezorui2.confirm_value(
                     title=title.upper(),
@@ -864,9 +872,10 @@ def confirm_value(
                     value=value,
                     verb=verb,
                     hold=hold,
-                    info_button=info_button,
+                    info_button=bool(info_items),
                 )
             ),
+            info_layout,
             br_type,
             br_code,
         )
