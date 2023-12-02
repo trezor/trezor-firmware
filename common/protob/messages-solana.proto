@@ -43,6 +43,23 @@ message SolanaAddress {
 }
 
 /**
+ * @embed
+ */
+message SolanaTxTokenAccountInfo {
+    required string base_address = 1;
+    required string token_program = 2;
+    required string token_mint = 3;
+    required string token_account = 4;
+}
+
+/**
+ * @embed
+ */
+message SolanaTxAdditionalInfo {
+    repeated SolanaTxTokenAccountInfo token_accounts_infos = 1;
+}
+
+/**
  * Request: Ask device to sign a Solana transaction
  * @start
  * @next SolanaTxSignature
@@ -51,6 +68,7 @@ message SolanaAddress {
 message SolanaSignTx {
     repeated uint32 address_n = 1;      // BIP-32 path to derive the key to sign with
     required bytes serialized_tx = 2;   // serialized tx to be signed
+    optional SolanaTxAdditionalInfo additional_info = 3;
 }
 
 /**

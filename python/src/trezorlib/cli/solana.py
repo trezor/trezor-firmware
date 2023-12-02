@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING
+import json
+from typing import TYPE_CHECKING, Optional, TextIO
 
 import click
 
@@ -50,12 +51,35 @@ def get_address(
 @cli.command()
 @click.argument("serialized_tx", type=str)
 @click.option("-n", "--address", default=DEFAULT_PATH, help=PATH_HELP)
+@click.option("-a", "--additional-information-file", type=click.File("r"))
 @with_client
 def sign_tx(
     client: "TrezorClient",
     address: str,
     serialized_tx: str,
+    additional_information_file: Optional[TextIO],
 ) -> messages.SolanaTxSignature:
     """Sign Solana transaction."""
     address_n = tools.parse_path(address)
-    return solana.sign_tx(client, address_n, bytes.fromhex(serialized_tx))
+
+    additional_information = None
+    if additional_information_file:
+        raw_additional_information = json.load(additional_information_file)
+        additional_information = messages.SolanaTxAdditionalInfo(
+            token_accounts_infos=[
+                messages.SolanaTxTokenAccountInfo(
+                    base_address=token_account["base_address"],
+                    token_program=token_account["token_program"],
+                    token_mint=token_account["token_mint"],
+                    token_account=token_account["token_account"],
+                )
+                for token_account in raw_additional_information["token_accounts_infos"]
+            ]
+        )
+
+    return solana.sign_tx(
+        client,
+        address_n,
+        bytes.fromhex(serialized_tx),
+        additional_information,
+    )

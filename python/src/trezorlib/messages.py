@@ -6716,11 +6716,49 @@ class SolanaAddress(protobuf.MessageType):
         self.address = address
 
 
+class SolanaTxTokenAccountInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("base_address", "string", repeated=False, required=True),
+        2: protobuf.Field("token_program", "string", repeated=False, required=True),
+        3: protobuf.Field("token_mint", "string", repeated=False, required=True),
+        4: protobuf.Field("token_account", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        base_address: "str",
+        token_program: "str",
+        token_mint: "str",
+        token_account: "str",
+    ) -> None:
+        self.base_address = base_address
+        self.token_program = token_program
+        self.token_mint = token_mint
+        self.token_account = token_account
+
+
+class SolanaTxAdditionalInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("token_accounts_infos", "SolanaTxTokenAccountInfo", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        token_accounts_infos: Optional[Sequence["SolanaTxTokenAccountInfo"]] = None,
+    ) -> None:
+        self.token_accounts_infos: Sequence["SolanaTxTokenAccountInfo"] = token_accounts_infos if token_accounts_infos is not None else []
+
+
 class SolanaSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 904
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("serialized_tx", "bytes", repeated=False, required=True),
+        3: protobuf.Field("additional_info", "SolanaTxAdditionalInfo", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -6728,9 +6766,11 @@ class SolanaSignTx(protobuf.MessageType):
         *,
         serialized_tx: "bytes",
         address_n: Optional[Sequence["int"]] = None,
+        additional_info: Optional["SolanaTxAdditionalInfo"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.serialized_tx = serialized_tx
+        self.additional_info = additional_info
 
 
 class SolanaTxSignature(protobuf.MessageType):
