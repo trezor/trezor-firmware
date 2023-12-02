@@ -926,7 +926,7 @@ async def confirm_properties(
     )
 
 
-def confirm_value(
+async def confirm_value(
     title: str,
     value: str,
     description: str,
@@ -935,7 +935,8 @@ def confirm_value(
     *,
     verb: str | None = None,
     hold: bool = False,
-) -> Awaitable[None]:
+    info_items: Iterable[tuple[str, str]] | None = None,
+) -> None:
     """General confirmation dialog, used by many other confirm_* functions."""
 
     if not verb and not hold:
@@ -944,21 +945,50 @@ def confirm_value(
     if verb:
         verb = verb.upper()
 
-    return raise_if_not_confirmed(
-        interact(
-            RustLayout(
-                trezorui2.confirm_value(  # type: ignore [Argument missing for parameter "subtitle"]
-                    title=title.upper(),
-                    description=description,
-                    value=value,
-                    verb=verb or "HOLD TO CONFIRM",
-                    hold=hold,
-                )
-            ),
-            br_type,
-            br_code,
+    if info_items is None:
+        return await raise_if_not_confirmed(
+            interact(
+                RustLayout(
+                    trezorui2.confirm_value(  # type: ignore [Argument missing for parameter "subtitle"]
+                        title=title.upper(),
+                        description=description,
+                        value=value,
+                        verb=verb or "HOLD TO CONFIRM",
+                        hold=hold,
+                    )
+                ),
+                br_type,
+                br_code,
+            )
         )
-    )
+    else:
+        info_items_list = list(info_items)
+        if len(info_items_list) > 1:
+            raise NotImplementedError("Only one info item is supported")
+
+        while True:
+            should_show_info = await should_show_more(
+                title,
+                para=((ui.NORMAL, value),),
+                button_text="INFO",
+                br_type=br_type,
+                br_code=br_code,
+            )
+
+            if not should_show_info:
+                return
+
+            try:
+                info_title, info_value = info_items_list[0]
+                await confirm_action(
+                    br_type="confirm_value_info",
+                    title=info_title,
+                    action=info_value,
+                    verb="BACK",
+                    verb_cancel="<",
+                )
+            except ActionCancelled:
+                continue
 
 
 async def confirm_total(
