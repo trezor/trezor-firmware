@@ -708,6 +708,466 @@ impl ::protobuf::reflect::ProtobufValue for SolanaAddress {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.solana.SolanaTxTokenAccountInfo)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SolanaTxTokenAccountInfo {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaTxTokenAccountInfo.base_address)
+    pub base_address: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaTxTokenAccountInfo.token_program)
+    pub token_program: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaTxTokenAccountInfo.token_mint)
+    pub token_mint: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaTxTokenAccountInfo.token_account)
+    pub token_account: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaTxTokenAccountInfo.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SolanaTxTokenAccountInfo {
+    fn default() -> &'a SolanaTxTokenAccountInfo {
+        <SolanaTxTokenAccountInfo as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SolanaTxTokenAccountInfo {
+    pub fn new() -> SolanaTxTokenAccountInfo {
+        ::std::default::Default::default()
+    }
+
+    // required string base_address = 1;
+
+    pub fn base_address(&self) -> &str {
+        match self.base_address.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_base_address(&mut self) {
+        self.base_address = ::std::option::Option::None;
+    }
+
+    pub fn has_base_address(&self) -> bool {
+        self.base_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_base_address(&mut self, v: ::std::string::String) {
+        self.base_address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_base_address(&mut self) -> &mut ::std::string::String {
+        if self.base_address.is_none() {
+            self.base_address = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.base_address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_base_address(&mut self) -> ::std::string::String {
+        self.base_address.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string token_program = 2;
+
+    pub fn token_program(&self) -> &str {
+        match self.token_program.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_token_program(&mut self) {
+        self.token_program = ::std::option::Option::None;
+    }
+
+    pub fn has_token_program(&self) -> bool {
+        self.token_program.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_token_program(&mut self, v: ::std::string::String) {
+        self.token_program = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_token_program(&mut self) -> &mut ::std::string::String {
+        if self.token_program.is_none() {
+            self.token_program = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.token_program.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_token_program(&mut self) -> ::std::string::String {
+        self.token_program.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string token_mint = 3;
+
+    pub fn token_mint(&self) -> &str {
+        match self.token_mint.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_token_mint(&mut self) {
+        self.token_mint = ::std::option::Option::None;
+    }
+
+    pub fn has_token_mint(&self) -> bool {
+        self.token_mint.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_token_mint(&mut self, v: ::std::string::String) {
+        self.token_mint = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_token_mint(&mut self) -> &mut ::std::string::String {
+        if self.token_mint.is_none() {
+            self.token_mint = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.token_mint.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_token_mint(&mut self) -> ::std::string::String {
+        self.token_mint.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string token_account = 4;
+
+    pub fn token_account(&self) -> &str {
+        match self.token_account.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_token_account(&mut self) {
+        self.token_account = ::std::option::Option::None;
+    }
+
+    pub fn has_token_account(&self) -> bool {
+        self.token_account.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_token_account(&mut self, v: ::std::string::String) {
+        self.token_account = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_token_account(&mut self) -> &mut ::std::string::String {
+        if self.token_account.is_none() {
+            self.token_account = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.token_account.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_token_account(&mut self) -> ::std::string::String {
+        self.token_account.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "base_address",
+            |m: &SolanaTxTokenAccountInfo| { &m.base_address },
+            |m: &mut SolanaTxTokenAccountInfo| { &mut m.base_address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "token_program",
+            |m: &SolanaTxTokenAccountInfo| { &m.token_program },
+            |m: &mut SolanaTxTokenAccountInfo| { &mut m.token_program },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "token_mint",
+            |m: &SolanaTxTokenAccountInfo| { &m.token_mint },
+            |m: &mut SolanaTxTokenAccountInfo| { &mut m.token_mint },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "token_account",
+            |m: &SolanaTxTokenAccountInfo| { &m.token_account },
+            |m: &mut SolanaTxTokenAccountInfo| { &mut m.token_account },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaTxTokenAccountInfo>(
+            "SolanaTxTokenAccountInfo",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SolanaTxTokenAccountInfo {
+    const NAME: &'static str = "SolanaTxTokenAccountInfo";
+
+    fn is_initialized(&self) -> bool {
+        if self.base_address.is_none() {
+            return false;
+        }
+        if self.token_program.is_none() {
+            return false;
+        }
+        if self.token_mint.is_none() {
+            return false;
+        }
+        if self.token_account.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.base_address = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.token_program = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.token_mint = ::std::option::Option::Some(is.read_string()?);
+                },
+                34 => {
+                    self.token_account = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.base_address.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.token_program.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        if let Some(v) = self.token_mint.as_ref() {
+            my_size += ::protobuf::rt::string_size(3, &v);
+        }
+        if let Some(v) = self.token_account.as_ref() {
+            my_size += ::protobuf::rt::string_size(4, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.base_address.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.token_program.as_ref() {
+            os.write_string(2, v)?;
+        }
+        if let Some(v) = self.token_mint.as_ref() {
+            os.write_string(3, v)?;
+        }
+        if let Some(v) = self.token_account.as_ref() {
+            os.write_string(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SolanaTxTokenAccountInfo {
+        SolanaTxTokenAccountInfo::new()
+    }
+
+    fn clear(&mut self) {
+        self.base_address = ::std::option::Option::None;
+        self.token_program = ::std::option::Option::None;
+        self.token_mint = ::std::option::Option::None;
+        self.token_account = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SolanaTxTokenAccountInfo {
+        static instance: SolanaTxTokenAccountInfo = SolanaTxTokenAccountInfo {
+            base_address: ::std::option::Option::None,
+            token_program: ::std::option::Option::None,
+            token_mint: ::std::option::Option::None,
+            token_account: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SolanaTxTokenAccountInfo {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SolanaTxTokenAccountInfo").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SolanaTxTokenAccountInfo {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SolanaTxTokenAccountInfo {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.solana.SolanaTxAdditionalInfo)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SolanaTxAdditionalInfo {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaTxAdditionalInfo.token_accounts_infos)
+    pub token_accounts_infos: ::std::vec::Vec<SolanaTxTokenAccountInfo>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaTxAdditionalInfo.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SolanaTxAdditionalInfo {
+    fn default() -> &'a SolanaTxAdditionalInfo {
+        <SolanaTxAdditionalInfo as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SolanaTxAdditionalInfo {
+    pub fn new() -> SolanaTxAdditionalInfo {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "token_accounts_infos",
+            |m: &SolanaTxAdditionalInfo| { &m.token_accounts_infos },
+            |m: &mut SolanaTxAdditionalInfo| { &mut m.token_accounts_infos },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaTxAdditionalInfo>(
+            "SolanaTxAdditionalInfo",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SolanaTxAdditionalInfo {
+    const NAME: &'static str = "SolanaTxAdditionalInfo";
+
+    fn is_initialized(&self) -> bool {
+        for v in &self.token_accounts_infos {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.token_accounts_infos.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.token_accounts_infos {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.token_accounts_infos {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SolanaTxAdditionalInfo {
+        SolanaTxAdditionalInfo::new()
+    }
+
+    fn clear(&mut self) {
+        self.token_accounts_infos.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SolanaTxAdditionalInfo {
+        static instance: SolanaTxAdditionalInfo = SolanaTxAdditionalInfo {
+            token_accounts_infos: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SolanaTxAdditionalInfo {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SolanaTxAdditionalInfo").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SolanaTxAdditionalInfo {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SolanaTxAdditionalInfo {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.solana.SolanaSignTx)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct SolanaSignTx {
@@ -716,6 +1176,8 @@ pub struct SolanaSignTx {
     pub address_n: ::std::vec::Vec<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignTx.serialized_tx)
     pub serialized_tx: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignTx.additional_info)
+    pub additional_info: ::protobuf::MessageField<SolanaTxAdditionalInfo>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaSignTx.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -769,7 +1231,7 @@ impl SolanaSignTx {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -780,6 +1242,11 @@ impl SolanaSignTx {
             "serialized_tx",
             |m: &SolanaSignTx| { &m.serialized_tx },
             |m: &mut SolanaSignTx| { &mut m.serialized_tx },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, SolanaTxAdditionalInfo>(
+            "additional_info",
+            |m: &SolanaSignTx| { &m.additional_info },
+            |m: &mut SolanaSignTx| { &mut m.additional_info },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaSignTx>(
             "SolanaSignTx",
@@ -796,6 +1263,11 @@ impl ::protobuf::Message for SolanaSignTx {
         if self.serialized_tx.is_none() {
             return false;
         }
+        for v in &self.additional_info {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -810,6 +1282,9 @@ impl ::protobuf::Message for SolanaSignTx {
                 },
                 18 => {
                     self.serialized_tx = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.additional_info)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -829,6 +1304,10 @@ impl ::protobuf::Message for SolanaSignTx {
         if let Some(v) = self.serialized_tx.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.additional_info.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -840,6 +1319,9 @@ impl ::protobuf::Message for SolanaSignTx {
         };
         if let Some(v) = self.serialized_tx.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.additional_info.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -860,6 +1342,7 @@ impl ::protobuf::Message for SolanaSignTx {
     fn clear(&mut self) {
         self.address_n.clear();
         self.serialized_tx = ::std::option::Option::None;
+        self.additional_info.clear();
         self.special_fields.clear();
     }
 
@@ -867,6 +1350,7 @@ impl ::protobuf::Message for SolanaSignTx {
         static instance: SolanaSignTx = SolanaSignTx {
             address_n: ::std::vec::Vec::new(),
             serialized_tx: ::std::option::Option::None,
+            additional_info: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1060,10 +1544,17 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\
     \x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\x08R\x08chun\
     kify\")\n\rSolanaAddress\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07add\
-    ress\"P\n\x0cSolanaSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08ad\
-    dressN\x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\x0cserializedTx\"1\n\
-    \x11SolanaTxSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignat\
-    ure\
+    ress\"\xa6\x01\n\x18SolanaTxTokenAccountInfo\x12!\n\x0cbase_address\x18\
+    \x01\x20\x02(\tR\x0bbaseAddress\x12#\n\rtoken_program\x18\x02\x20\x02(\t\
+    R\x0ctokenProgram\x12\x1d\n\ntoken_mint\x18\x03\x20\x02(\tR\ttokenMint\
+    \x12#\n\rtoken_account\x18\x04\x20\x02(\tR\x0ctokenAccount\"\x7f\n\x16So\
+    lanaTxAdditionalInfo\x12e\n\x14token_accounts_infos\x18\x01\x20\x03(\x0b\
+    23.hw.trezor.messages.solana.SolanaTxTokenAccountInfoR\x12tokenAccountsI\
+    nfos\"\xac\x01\n\x0cSolanaSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\r\
+    R\x08addressN\x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\x0cserializedT\
+    x\x12Z\n\x0fadditional_info\x18\x03\x20\x01(\x0b21.hw.trezor.messages.so\
+    lana.SolanaTxAdditionalInfoR\x0eadditionalInfo\"1\n\x11SolanaTxSignature\
+    \x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1082,11 +1573,13 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(6);
+            let mut messages = ::std::vec::Vec::with_capacity(8);
             messages.push(SolanaGetPublicKey::generated_message_descriptor_data());
             messages.push(SolanaPublicKey::generated_message_descriptor_data());
             messages.push(SolanaGetAddress::generated_message_descriptor_data());
             messages.push(SolanaAddress::generated_message_descriptor_data());
+            messages.push(SolanaTxTokenAccountInfo::generated_message_descriptor_data());
+            messages.push(SolanaTxAdditionalInfo::generated_message_descriptor_data());
             messages.push(SolanaSignTx::generated_message_descriptor_data());
             messages.push(SolanaTxSignature::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
