@@ -1,0 +1,131 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "description": "Transfer Token - predefined",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "74pZnim7gywyschy4MGkW6eZURv1DBXqwHTCqLRk63wz",
+            "92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx",
+            "GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "26kt5r94ZYdTZY27nAHqjropeDf7dPS19VkZJrta7duL",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {
+                "source_account": 1,
+                "token_mint": 3,
+                "destination_account": 2,
+                "owner": 0,
+                "multisig_signers": []
+              },
+              "data": {
+                "instruction_id": 12,
+                "amount": 11,
+                "decimals": 9
+              }
+            }
+          ],
+          "luts": []
+        },
+        "additional_info": {
+          "token_accounts_infos": [
+            {
+              "base_address": "BkoECWJYM7w9qNZ6EGCoBtnkphWau6nZMPbPqvm4eYF4",
+              "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "token_mint": "GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
+              "token_account": "92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx"
+            }
+          ]
+        }
+      },
+      "result": {
+        "expected_signature": "f03cf48bd421011c5e04affeb52e8aac726d345871b74494acf59c507bda41ce4a3624fad0650312de32bb1b6afe5d22778bbb9eaabd0a16f24189181394290e"
+      }
+    },
+    {
+      "description": "Create Token Account and Transfer Token - predefined",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 5
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "74pZnim7gywyschy4MGkW6eZURv1DBXqwHTCqLRk63wz",
+            "92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx",
+            "11111111111111111111111111111111",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "BkoECWJYM7w9qNZ6EGCoBtnkphWau6nZMPbPqvm4eYF4",
+            "GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {
+                "funding_account": 0,
+                "associated_token_account": 2,
+                "wallet_address": 5,
+                "token_mint": 6,
+                "system_program": 3,
+                "spl_token": 7
+              },
+              "data": {
+                "instruction_id": null
+              }
+            },
+            {
+              "program_index": 7,
+              "accounts": {
+                "source_account": 1,
+                "token_mint": 6,
+                "destination_account": 2,
+                "owner": 0,
+                "multisig_signers": []
+              },
+              "data": {
+                "instruction_id": 12,
+                "amount": 11,
+                "decimals": 9
+              }
+            }
+          ],
+          "luts": []
+        },
+        "additional_info": {
+          "token_accounts_infos": [
+            {
+              "base_address": "BkoECWJYM7w9qNZ6EGCoBtnkphWau6nZMPbPqvm4eYF4",
+              "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "token_mint": "GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
+              "token_account": "92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx"
+            }
+          ]
+        }
+      },
+      "result": {
+        "expected_signature": "2daf55962952b4045f078b4b83fe2a1919fd9cf4f9eb1220f0dfe9c0a108f4375e86d98649ba4e6eb5b9f4741dca69408dcbf990ae5e28cfa4c998ae9d625f08"
+      }
+    }
+  ]
+}

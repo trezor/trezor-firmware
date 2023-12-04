@@ -16,6 +16,7 @@
 
 import pytest
 
+from trezorlib import messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.solana import sign_tx
 from trezorlib.tools import parse_path
@@ -39,6 +40,7 @@ pytestmark = [
     "solana/sign_tx.compute_budget_program.json",
     "solana/sign_tx.token_program.json",
     "solana/sign_tx.unknown_instructions.json",
+    "solana/sign_tx.predefined_transactions.json",
 )
 def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
@@ -49,6 +51,21 @@ def test_solana_sign_tx(client: Client, parameters, result):
         client,
         address_n=parse_path(parameters["address"]),
         serialized_tx=serialized_tx,
+        additional_info=messages.SolanaTxAdditionalInfo(
+            token_accounts_infos=[
+                messages.SolanaTxTokenAccountInfo(
+                    base_address=token_account["base_address"],
+                    token_program=token_account["token_program"],
+                    token_mint=token_account["token_mint"],
+                    token_account=token_account["token_account"],
+                )
+                for token_account in parameters["additional_info"][
+                    "token_accounts_infos"
+                ]
+            ]
+        )
+        if "additional_info" in parameters
+        else None,
     )
 
     assert actual_result.signature == bytes.fromhex(result["expected_signature"])
