@@ -1001,9 +1001,11 @@ async def confirm_ethereum_tx(
     chunkify: bool = False,
 ) -> None:
     summary_layout = RustLayout(
-        trezorui2.ethereum_tx_summary(
-            total_amount=total_amount,
-            maximum_fee=maximum_fee,
+        trezorui2.altcoin_tx_summary(
+            amount_title="Amount:",
+            amount_value=total_amount,
+            fee_title="Maximum fee:",
+            fee_value=maximum_fee,
             items=items,
         )
     )

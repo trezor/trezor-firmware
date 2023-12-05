@@ -24,10 +24,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_address_label;
   MP_QSTR_address_title;
   MP_QSTR_allow_cancel;
+  MP_QSTR_altcoin_tx_summary;
   MP_QSTR_amount;
   MP_QSTR_amount_change;
   MP_QSTR_amount_new;
   MP_QSTR_amount_title;
+  MP_QSTR_amount_value;
   MP_QSTR_app_name;
   MP_QSTR_attach_timer_fn;
   MP_QSTR_bootscreen;
@@ -69,11 +71,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_dry_run;
   MP_QSTR_encode;
   MP_QSTR_encoded_length;
-  MP_QSTR_ethereum_tx_summary;
   MP_QSTR_extra;
   MP_QSTR_fee_amount;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
+  MP_QSTR_fee_title;
+  MP_QSTR_fee_value;
   MP_QSTR_fingerprint;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
@@ -90,7 +93,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
   MP_QSTR_max_rounds;
-  MP_QSTR_maximum_fee;
   MP_QSTR_min_count;
   MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;

@@ -751,32 +751,34 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_ethereum_tx_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
-        let maximum_fee: StrBuffer = kwargs.get(Qstr::MP_QSTR_maximum_fee)?.try_into()?;
+        let amount_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
+        let amount_value: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_value)?.try_into()?;
+        let fee_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_title)?.try_into()?;
+        let fee_value: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_value)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let get_page = move |page_index| {
             match page_index {
                 0 => {
-                    // Total amount + fee
+                    // Amount + fee
                     let btn_layout = ButtonLayout::up_arrow_armed_info("CONFIRM".into());
-                    let btn_actions = ButtonActions::prev_confirm_next();
+                    let btn_actions = ButtonActions::cancel_confirm_next();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_mono(total_amount.clone())
+                        .text_mono(amount_value.clone())
                         .newline()
                         .newline_half()
-                        .text_bold("Maximum fee:".into())
+                        .text_bold(fee_title.clone())
                         .newline()
-                        .text_mono(maximum_fee.clone());
+                        .text_mono(fee_value.clone());
 
                     let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted).with_title("Amount:".into())
+                    Page::new(btn_layout, btn_actions, formatted).with_title(amount_title.clone())
                 }
                 1 => {
-                    // Fee information
+                    // Other information
                     let btn_layout = ButtonLayout::arrow_none_none();
                     let btn_actions = ButtonActions::prev_none_none();
 
@@ -1793,14 +1795,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
 
-    /// def ethereum_tx_summary(
+    /// def altcoin_tx_summary(
     ///     *,
-    ///     total_amount: str,
-    ///     maximum_fee: str,
+    ///     amount_title: str,
+    ///     amount_value: str,
+    ///     fee_title: str,
+    ///     fee_amount: str,
     ///     items: Iterable[Tuple[str, str]],
     /// ) -> object:
-    ///     """Confirm details about Ethereum transaction."""
-    Qstr::MP_QSTR_ethereum_tx_summary => obj_fn_kw!(0, new_ethereum_tx_summary).as_obj(),
+    ///     """Confirm details about altcoin transaction."""
+    Qstr::MP_QSTR_altcoin_tx_summary => obj_fn_kw!(0, new_altcoin_tx_summary).as_obj(),
 
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""
