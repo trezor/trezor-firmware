@@ -757,13 +757,18 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
         let amount_value: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount_value)?.try_into()?;
         let fee_title: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_title)?.try_into()?;
         let fee_value: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_value)?.try_into()?;
+        let cancel_cross: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_cross, false)?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let get_page = move |page_index| {
             match page_index {
                 0 => {
                     // Amount + fee
-                    let btn_layout = ButtonLayout::up_arrow_armed_info("CONFIRM".into());
+                    let btn_layout = if cancel_cross {
+                        ButtonLayout::cancel_armed_info("CONFIRM".into());
+                    } else {
+                        ButtonLayout::up_arrow_armed_info("CONFIRM".into());
+                    };
                     let btn_actions = ButtonActions::cancel_confirm_next();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
@@ -1802,6 +1807,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     fee_title: str,
     ///     fee_amount: str,
     ///     items: Iterable[Tuple[str, str]],
+    ///     cancel_cross: bool = False,
     /// ) -> object:
     ///     """Confirm details about altcoin transaction."""
     Qstr::MP_QSTR_altcoin_tx_summary => obj_fn_kw!(0, new_altcoin_tx_summary).as_obj(),

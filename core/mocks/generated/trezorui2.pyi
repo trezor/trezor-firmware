@@ -176,6 +176,7 @@ def altcoin_tx_summary(
     fee_title: str,
     fee_amount: str,
     items: Iterable[Tuple[str, str]],
+    cancel_cross: bool = False,
 ) -> object:
     """Confirm details about altcoin transaction."""
 

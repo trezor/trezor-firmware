@@ -37,6 +37,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_button;
   MP_QSTR_button_event;
   MP_QSTR_cancel_arrow;
+  MP_QSTR_cancel_cross;
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
