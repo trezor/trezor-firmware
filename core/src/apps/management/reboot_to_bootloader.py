@@ -59,7 +59,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
         await confirm_action(
             "reboot",
             "Go to bootloader",
-            "Do you want to restart Trezor in bootloader mode?",
+            "Trezor will restart in bootloader mode.",
             verb="Restart",
         )
         boot_command = BootCommand.STOP_AND_WAIT
