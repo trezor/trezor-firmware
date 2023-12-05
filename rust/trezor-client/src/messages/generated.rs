@@ -79,12 +79,6 @@ trezor_message_impl! {
     DebugLinkEraseSdCard => MessageType_DebugLinkEraseSdCard,
     DebugLinkWatchLayout => MessageType_DebugLinkWatchLayout,
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
-    SolanaGetPublicKey => MessageType_SolanaGetPublicKey,
-    SolanaPublicKey => MessageType_SolanaPublicKey,
-    SolanaGetAddress => MessageType_SolanaGetAddress,
-    SolanaAddress => MessageType_SolanaAddress,
-    SolanaSignTx => MessageType_SolanaSignTx,
-    SolanaTxSignature => MessageType_SolanaTxSignature,
 }
 
 #[cfg(feature = "binance")]
@@ -242,6 +236,16 @@ trezor_message_impl! {
     RippleAddress => MessageType_RippleAddress,
     RippleSignTx => MessageType_RippleSignTx,
     RippleSignedTx => MessageType_RippleSignedTx,
+}
+
+#[cfg(feature = "solana")]
+trezor_message_impl! {
+    SolanaGetPublicKey => MessageType_SolanaGetPublicKey,
+    SolanaPublicKey => MessageType_SolanaPublicKey,
+    SolanaGetAddress => MessageType_SolanaGetAddress,
+    SolanaAddress => MessageType_SolanaAddress,
+    SolanaSignTx => MessageType_SolanaSignTx,
+    SolanaTxSignature => MessageType_SolanaTxSignature,
 }
 
 #[cfg(feature = "stellar")]

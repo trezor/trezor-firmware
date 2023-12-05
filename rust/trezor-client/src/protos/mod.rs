@@ -32,6 +32,7 @@ mod generated {
         "monero" => messages_monero
         "nem" => messages_nem
         "ripple" => messages_ripple
+        "solana" => messages_solana
         "stellar" => messages_stellar
         "tezos" => messages_tezos
         "webauthn" => messages_webauthn

@@ -25,6 +25,7 @@ FEATURES = {
     "Monero": "monero",
     "NEM": "nem",
     "Ripple": "ripple",
+    "Solana": "solana",
     "Stellar": "stellar",
     "Tezos": "tezos",
     "WebAuthn": "webauthn",
