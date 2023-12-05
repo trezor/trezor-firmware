@@ -834,12 +834,19 @@ class InputFlowEIP712Cancel(InputFlowBase):
 
 
 class InputFlowEthereumSignTxShowFeeInfo(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
+    def __init__(self, client: Client):
         super().__init__(client)
-        self.cancel = cancel
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.ETH.confirm_tx(info=True)
+
+
+class InputFlowEthereumSignTxGoBackFromSummary(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.ETH.confirm_tx(go_back_from_summary=True)
 
 
 class InputFlowEthereumSignTxDataSkip(InputFlowBase):
