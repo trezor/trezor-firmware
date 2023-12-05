@@ -27,6 +27,7 @@ from ...input_flows import (
     InputFlowEthereumSignTxDataGoBack,
     InputFlowEthereumSignTxDataScrollDown,
     InputFlowEthereumSignTxDataSkip,
+    InputFlowEthereumSignTxGoBackFromSummary,
     InputFlowEthereumSignTxShowFeeInfo,
 )
 from .common import encode_network
@@ -90,11 +91,9 @@ def _do_test_signtx(
     assert sig_v == result["sig_v"]
 
 
-@pytest.mark.skip_t1("T1 does not support input flows")
-def test_signtx_fee_info(client: Client):
-    input_flow = InputFlowEthereumSignTxShowFeeInfo(client).get()
-    # Data taken from sign_tx_eip1559.json["tests"][0]
-    parameters = {
+# Data taken from sign_tx_eip1559.json["tests"][0]
+example_input_data = {
+    "parameters": {
         "chain_id": 1,
         "path": "m/44'/60'/0'/0/0",
         "nonce": "0x0",
@@ -104,13 +103,35 @@ def test_signtx_fee_info(client: Client):
         "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
         "tx_type": None,
         "data": "",
-    }
-    result = {
+    },
+    "result": {
         "sig_v": 38,
         "sig_r": "6a6349bddb5749bb8b96ce2566a035ef87a09dbf89b5c7e3dfdf9ed725912f24",
         "sig_s": "4ae58ccd3bacee07cdc4a3e8540544fd009c4311af7048122da60f2054c07ee4",
-    }
-    _do_test_signtx(client, parameters, result, input_flow)
+    },
+}
+
+
+@pytest.mark.skip_t1("T1 does not support input flows")
+def test_signtx_fee_info(client: Client):
+    input_flow = InputFlowEthereumSignTxShowFeeInfo(client).get()
+    _do_test_signtx(
+        client,
+        example_input_data["parameters"],
+        example_input_data["result"],
+        input_flow,
+    )
+
+
+@pytest.mark.skip_t1("T1 does not support input flows")
+def test_signtx_go_back_from_summary(client: Client):
+    input_flow = InputFlowEthereumSignTxGoBackFromSummary(client).get()
+    _do_test_signtx(
+        client,
+        example_input_data["parameters"],
+        example_input_data["result"],
+        input_flow,
+    )
 
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_eip1559.json")

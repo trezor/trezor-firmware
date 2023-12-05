@@ -293,7 +293,12 @@ class EthereumFlow:
             self.debug.press_left()
             self.debug.press_left()
 
-    def confirm_tx(self, cancel: bool = False, info: bool = False) -> BRGeneratorType:
+    def confirm_tx(
+        self,
+        cancel: bool = False,
+        info: bool = False,
+        go_back_from_summary: bool = False,
+    ) -> BRGeneratorType:
         yield
         assert self.debug.wait_layout().title() == "RECIPIENT"
 
@@ -305,6 +310,11 @@ class EthereumFlow:
                 yield
                 assert self.debug.wait_layout().title() == "SUMMARY"
                 assert "Maximum fee:" in self.debug.wait_layout().text_content()
+                if go_back_from_summary:
+                    self.debug.press_no()
+                    yield
+                    self.debug.press_yes()
+                    yield
                 if info:
                     self.debug.press_info(wait=True)
                     assert "Gas limit:" in self.debug.wait_layout().text_content()
@@ -318,6 +328,11 @@ class EthereumFlow:
                 self.debug.press_right()
                 yield
                 assert "Maximum fee:" in self.debug.wait_layout().text_content()
+                if go_back_from_summary:
+                    self.debug.press_left()
+                    yield
+                    self.debug.press_right()
+                    yield
                 if info:
                     self.debug.press_right(wait=True)
                     assert "Gas limit:" in self.debug.wait_layout().text_content()
