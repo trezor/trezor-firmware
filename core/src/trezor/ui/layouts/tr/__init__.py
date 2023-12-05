@@ -966,29 +966,52 @@ async def confirm_value(
         if len(info_items_list) > 1:
             raise NotImplementedError("Only one info item is supported")
 
-        while True:
-            should_show_info = await should_show_more(
-                title,
-                para=((ui.NORMAL, value),),
-                button_text="INFO",
-                br_type=br_type,
-                br_code=br_code,
+        should_show_more_layout = RustLayout(
+            trezorui2.confirm_with_info(
+                title=title.upper(),
+                items=((ui.NORMAL, value),),
+                button="CONFIRM",
+                info_button="INFO",
             )
+        )
 
-            if not should_show_info:
-                return
+        info_title, info_value = info_items_list[0]
+        confirm_action_layout = RustLayout(
+            trezorui2.confirm_action(
+                title=info_title.upper(),
+                action=info_value,
+                description=description,
+                verb="BACK",
+                verb_cancel="<",
+                hold=False,
+                reverse=False,
+            )
+        )
 
-            try:
-                info_title, info_value = info_items_list[0]
-                await confirm_action(
-                    br_type="confirm_value_info",
-                    title=info_title,
-                    action=info_value,
-                    verb="BACK",
-                    verb_cancel="<",
+        send_button_request = True
+        while True:
+            if send_button_request:
+                send_button_request = False
+                await button_request(
+                    br_type,
+                    br_code,
+                    should_show_more_layout.page_count(),
                 )
-            except ActionCancelled:
-                continue
+
+            should_show_more_layout.request_complete_repaint()
+            result = await ctx_wait(should_show_more_layout)
+
+            if result is CONFIRMED:
+                break
+            elif result is INFO:
+                try:
+                    confirm_action_layout.request_complete_repaint()
+                    await ctx_wait(confirm_action_layout)
+                except ActionCancelled:
+                    continue
+            else:
+                assert result is CANCELLED
+                raise ActionCancelled
 
 
 async def confirm_total(
