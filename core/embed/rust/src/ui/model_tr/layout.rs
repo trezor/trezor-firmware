@@ -762,7 +762,7 @@ extern "C" fn new_ethereum_tx_summary(n_args: usize, args: *const Obj, kwargs: *
                 0 => {
                     // Total amount + fee
                     let btn_layout = ButtonLayout::up_arrow_armed_info("CONFIRM".into());
-                    let btn_actions = ButtonActions::prev_confirm_next();
+                    let btn_actions = ButtonActions::cancel_confirm_next();
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
                         .text_mono(total_amount.clone())
