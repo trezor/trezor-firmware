@@ -41,39 +41,57 @@ async def recovery_process() -> Success:
         raise wire.ActionCancelled
 
 
+async def _choose_backup_medium() -> str:
+    from trezor import utils
+
+    if utils.USE_SD_CARD:
+        from apps.management.sd_backup import bip39_choose_backup_medium
+
+        # ask the user for backup type (words/SD card)
+        backup_medium: str = await bip39_choose_backup_medium(recovery=True)
+    else:
+        backup_medium: str = "words"
+    return backup_medium
+
+
 async def _continue_recovery_process() -> Success:
     from trezor import utils
     from trezor.errors import MnemonicError
-    from trezor.ui.layouts import choose_backup_medium
+
+    if utils.USE_SD_CARD:
+        from apps.management.sd_backup import (
+            sdcard_recover_seed,
+        )
 
     # gather the current recovery state from storage
     dry_run = storage_recovery.is_dry_run()
     word_count, backup_type = recover.load_slip39_state()
 
-    # ask the user for backup type (words/SD card)
-    backup_medium: str = await choose_backup_medium(recovery=True)
-    if backup_medium == "sdcard":
-        from apps.management.sd_backup import sdcard_recover_seed
+    # Both word_count and backup_type are derived from the same data. Both will be
+    # either set or unset. We use 'backup_type is None' to detect status of both.
+    # The following variable indicates that we are (re)starting the first recovery step,
+    # which includes word count selection.
+    is_first_step = backup_type is None
 
-        words = await sdcard_recover_seed()
-        if not words:
-            raise wire.ProcessError("SD card backup could not be recovered.")
-        secret, backup_type = await _process_words(words)
-    else:
-        # Both word_count and backup_type are derived from the same data. Both will be
-        # either set or unset. We use 'backup_type is None' to detect status of both.
-        # The following variable indicates that we are (re)starting the first recovery step,
-        # which includes word count selection.
-        is_first_step = backup_type is None
+    if not is_first_step:
+        assert word_count is not None
+        # If we continue recovery, show starting screen with word count immediately.
+        await _request_share_first_screen(word_count)
 
-        if not is_first_step:
-            assert word_count is not None
-            # If we continue recovery, show starting screen with word count immediately.
-            await _request_share_first_screen(word_count)
-
-        secret = None
-        while secret is None:
-            if is_first_step:
+    secret = None
+    while secret is None:
+        if is_first_step:
+            backup_medium: str = await _choose_backup_medium()
+            if backup_medium == "sdcard":
+                # attempt to recover words from sd card
+                words = await sdcard_recover_seed()
+                if words is None:
+                    continue
+                word_count = len(words.split())
+                if word_count not in (12, 24):
+                    await show_warning("Shamir not yet supported for SD")
+                    raise wire.ProcessError("Attempt to recover Shamir from SD card.")
+            else:
                 # If we are starting recovery, ask for word count first...
                 # _request_word_count
                 # For TT, just continuing straight to word count keyboard
@@ -85,23 +103,24 @@ async def _continue_recovery_process() -> Success:
                 word_count = await layout.request_word_count(dry_run)
                 # ...and only then show the starting screen with word count.
                 await _request_share_first_screen(word_count)
-            assert word_count is not None
+        assert word_count is not None
 
+        if backup_medium == "words":
             # ask for mnemonic words one by one
             words = await layout.request_mnemonic(word_count, backup_type)
 
-            # if they were invalid or some checks failed we continue and request them again
-            if not words:
-                continue
+        # if they were invalid or some checks failed we continue and request them again
+        if not words:
+            continue
 
-            try:
-                secret, backup_type = await _process_words(words)
-                # If _process_words succeeded, we now have both backup_type (from
-                # its result) and word_count (from _request_word_count earlier), which means
-                # that the first step is complete.
-                is_first_step = False
-            except MnemonicError:
-                await layout.show_invalid_mnemonic(word_count)
+        try:
+            secret, backup_type = await _process_words(words)
+            # If _process_words succeeded, we now have both backup_type (from
+            # its result) and word_count (from _request_word_count earlier), which means
+            # that the first step is complete.
+            is_first_step = False
+        except MnemonicError:
+            await layout.show_invalid_mnemonic(word_count)
 
     assert backup_type is not None
     if dry_run:

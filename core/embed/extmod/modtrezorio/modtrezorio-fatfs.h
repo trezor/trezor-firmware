@@ -21,6 +21,7 @@
 #include "py/mperrno.h"
 #include "py/obj.h"
 #include "py/objstr.h"
+#include "stdio.h"
 
 // clang-format off
 #include "ff.h"
@@ -559,10 +560,10 @@ STATIC mp_obj_t mod_trezorio_fatfs_mkfs(size_t n_args, const mp_obj_t *args) {
 
   // create partition
   if (n_args > 0 && args[0] == mp_const_true) {
-    // for SD card backup: we make a small partition and keep the rest
-    // unallocated
-    // TODO: seems like not big enough for Windows (problem detected popup)
-    const int n_clusters = 0xFFF5 + 1 + 549;  // MAX_FAT16 + 1 + overhead
+    // for SD card backup: we make a small FAT32 partition and keep the rest
+    // unallocated, FatFS allows smallest size as 0xFFF5 + 550. Windows needs
+    // two more clusters not to complain. MAX_FAT16 + 1 + 551
+    const int n_clusters = 0xFFF5 + 552;
     make_partition(n_clusters);
   } else {
     // for other use (SD salt): make the partition over the whole space.
@@ -589,14 +590,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_fatfs_mkfs_obj, 0, 1,
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_get_capacity() {
   FATFS_ONLY_MOUNTED;
-  /* printf("csize: %d\n", fs_instance.csize); */
-  /* printf("fatent: %d\n", fs_instance.n_fatent); */
-  /* printf("free clusters: %d\n", fs_instance.free_clst); */
-  /* printf("volbase: %d\n", fs_instance.volbase); */
-  /* printf("fatbase: %d\n", fs_instance.fatbase); */
-  /* printf("dirbase: %d\n", fs_instance.dirbase); */
-  /* printf("database: %d\n", fs_instance.database); */
-  /* printf("winsect: %d\n", fs_instance.winsect); */
+  printf("csize: %d\n", fs_instance.csize);
+  printf("fatent: %d\n", fs_instance.n_fatent);
+  printf("free clusters: %d\n", fs_instance.free_clst);
+  printf("volbase: %d\n", fs_instance.volbase);
+  printf("fatbase: %d\n", fs_instance.fatbase);
+  printf("dirbase: %d\n", fs_instance.dirbase);
+  printf("database: %d\n", fs_instance.database);
+  printf("winsect: %d\n", fs_instance.winsect);
   // total number of clusters in the filesystem
   DWORD total_clusters = fs_instance.n_fatent - 2;
   // size of each cluster in bytes

@@ -24,7 +24,6 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     from trezor.ui.layouts import (
         confirm_action,
         confirm_reset_device,
-        choose_backup_medium,
     )
 
     from apps.common.request_pin import (

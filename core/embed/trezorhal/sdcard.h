@@ -50,6 +50,9 @@
 
 // this is a fixed size and should not be changed
 #define SDCARD_BLOCK_SIZE (512)
+// fixed offset for SD seed backup:
+// Maximal size for FAT16 + overhead + start offset (65525 + 552 + 63)
+#define SDCARD_BACKUP_BLOCK_START (66140)
 
 void sdcard_init(void);
 secbool __wur sdcard_power_on(void);

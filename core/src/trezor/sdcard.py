@@ -26,6 +26,11 @@ if TYPE_CHECKING:
     R = TypeVar("R")
 
 
+def is_trz_card() -> bool:
+    sdcard.capacity()
+    pass
+
+
 class FilesystemWrapper:
     _INSTANCE: "FilesystemWrapper" | None = None
 
@@ -75,6 +80,14 @@ def filesystem(mounted: bool = True) -> FilesystemWrapper:
 def with_filesystem(func: Callable[P, R]) -> Callable[P, R]:
     def wrapped_func(*args: P.args, **kwargs: P.kwargs) -> R:
         with filesystem():
+            return func(*args, **kwargs)
+
+    return wrapped_func
+
+
+def with_sdcard(func: Callable[P, R]) -> Callable[P, R]:
+    def wrapped_func(*args: P.args, **kwargs: P.kwargs) -> R:
+        with filesystem(mounted=False):
             return func(*args, **kwargs)
 
     return wrapped_func

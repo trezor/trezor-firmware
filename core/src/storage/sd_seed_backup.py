@@ -3,19 +3,18 @@ from typing import TYPE_CHECKING
 
 import storage.device
 from trezor import io, utils
-from trezor.sdcard import with_filesystem
+from trezor.sdcard import with_filesystem, with_sdcard
 from trezorcrypto import crc
 
 if utils.USE_SD_CARD:
     fatfs = io.fatfs  # global_import_cache
     sdcard = io.sdcard  # global_import_cache
     SDCARD_BLOCK_SIZE_B = sdcard.BLOCK_SIZE  # global_import_cache
-    SDBACKUP_BLOCK_START = 66_138
+    SDBACKUP_BLOCK_START = sdcard.BACKUP_BLOCK_START  # global_import_cache
     SDBACKUP_BLOCK_OFFSET = 130  # TODO arbitrary for now
-    SDBACKUP_MAGIC = b"TRZS"
+    SDBACKUP_N_WRITINGS = 100  # TODO decide between offset/writings
+    SDBACKUP_MAGIC = b"TRZM"
     SDBACKUP_VERSION = b"00"
-
-# TODO with_filesystem can be just with_sdcard, unnecessary to mount FS for recovery
 
 
 @with_filesystem
@@ -29,12 +28,11 @@ def store_seed_on_sdcard(mnemonic_secret: bytes) -> bool:
         return False
 
 
-@with_filesystem
+@with_sdcard
 def recover_seed_from_sdcard() -> str | None:
     return _read_seed_unalloc()
 
 
-@with_filesystem
 def _verify_backup(mnemonic_secret: bytes) -> bool:
     mnemonic_read_plain = _read_seed_plain_text()
     mnemonic_read_unalloc = _read_seed_unalloc()
@@ -49,15 +47,12 @@ def _verify_backup(mnemonic_secret: bytes) -> bool:
     )
 
 
-@with_filesystem
 def _write_seed_unalloc(mnemonic_secret: bytes) -> None:
     block_to_write = _encode_mnemonic_to_backup_block(mnemonic_secret)
     for block_idx in _storage_blocks_gen():
-        # print(f"block_idx: {block_idx}, writing: {block_to_write[10:10+4]}")
         sdcard.write(block_idx, block_to_write)
 
 
-@with_filesystem
 def _read_seed_unalloc() -> str | None:
     block_buffer = bytearray(SDCARD_BLOCK_SIZE_B)
     for block_idx in _storage_blocks_gen():
@@ -66,28 +61,45 @@ def _read_seed_unalloc() -> str | None:
             mnemonic_read = _decode_mnemonic_from_backup_block(block_buffer)
             if mnemonic_read is not None:
                 break
-        except fatfs.FatFSError:
+        except Exception:
             return None
-    # print(f"_read_seed_unalloc: block_read: {block_read}")
+    if mnemonic_read is None:
+        return None
     mnemonic_read_decoded = mnemonic_read.decode("utf-8").rstrip("\x00")
-    # print(f"_read_seed_unalloc: mnemonic_read_decoded: {mnemonic_read_decoded}")
     return mnemonic_read_decoded
 
 
 def _storage_blocks_gen() -> Generator:
+    return _storage_blocks_gen_by_n()
+
+
+def _storage_blocks_gen_by_offset() -> Generator:
     cap = sdcard.capacity()
     if cap == 0:
         raise ProcessError
     BLOCK_END = cap // SDCARD_BLOCK_SIZE_B - 1
     return range(SDBACKUP_BLOCK_START, BLOCK_END, SDBACKUP_BLOCK_OFFSET)
 
+
+def _storage_blocks_gen_by_n() -> Generator:
+    cap = sdcard.capacity()
+    if cap == 0:
+        raise ProcessError
+    BLOCK_END = cap // SDCARD_BLOCK_SIZE_B - 1
+    return (
+        SDBACKUP_BLOCK_START
+        + n * (BLOCK_END - SDBACKUP_BLOCK_START) // (SDBACKUP_N_WRITINGS - 1)
+        for n in range(SDBACKUP_N_WRITINGS)
+    )
+
+
 """
 Backup Memory Block Layout:
 +----------------------+----------------------+----------------------+-------------------------------+
 | SDBACKUP_MAGIC (4B) | SDBACKUP_VERSION (2B)| SEED_LENGTH (4B)      | MNEMONIC (variable length)    |
 +----------------------+----------------------+----------------------+-------------------------------+
-| CHECKSUM (4B)                                                              | Padding (variable)         |
-+----------------------------------------------------------------------------+----------------------------+
+| CHECKSUM (4B)                                                         | Padding (variable)         |
++-----------------------------------------------------------------------+----------------------------+
 
 - SDBACKUP_MAGIC: 4 bytes magic number identifying the backup block
 - SDBACKUP_VERSION: 2 bytes representing the version of the backup format
@@ -147,13 +159,11 @@ def _decode_mnemonic_from_backup_block(block: bytes) -> bytes | None:
         return None
 
 
-@with_filesystem
 def _write_readme() -> None:
     with fatfs.open("README.txt", "w") as f:
         f.write("This is a Trezor backup SD card.")
 
 
-@with_filesystem
 def _write_seed_plain_text(mnemonic_secret: bytes) -> None:
     # TODO to be removed, just for testing purposes
     fatfs.mkdir("/trezor", True)
@@ -161,7 +171,6 @@ def _write_seed_plain_text(mnemonic_secret: bytes) -> None:
         f.write(mnemonic_secret)
 
 
-@with_filesystem
 def _read_seed_plain_text() -> str | None:
     # TODO to be removed, just for testing purposes
     mnemonic_read = bytearray(SDCARD_BLOCK_SIZE_B)
@@ -170,5 +179,4 @@ def _read_seed_plain_text() -> str | None:
             f.read(mnemonic_read)
     except fatfs.FatFSError:
         return None
-    # print(f"_read_seed_plain_text: mnemonic_read: {mnemonic_read}")
     return mnemonic_read.decode("utf-8").rstrip("\x00")

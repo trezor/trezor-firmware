@@ -215,18 +215,26 @@ def _compute_secret_from_entropy(
 
 async def _backup_bip39_sdcard(mnemonic: str) -> None:
     from apps.management.sd_backup import sdcard_backup_seed
+
     backup_success: bool = await sdcard_backup_seed(mnemonic)
     if not backup_success:
         raise ProcessError("SD Card backup could not be verified.")
 
 
 async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
+    from trezor import utils
+
     if backup_type == BAK_T_SLIP39_BASIC:
         await _backup_slip39_basic(mnemonic_secret)
     elif backup_type == BAK_T_SLIP39_ADVANCED:
         await _backup_slip39_advanced(mnemonic_secret)
     else:
-        backup_medium: str = await layout.bip39_choose_backup_medium()
+        if utils.USE_SD_CARD:
+            from apps.management.sd_backup import bip39_choose_backup_medium
+
+            backup_medium: str = await bip39_choose_backup_medium()
+        else:
+            backup_medium: str = "words"
         if backup_medium == "sdcard":
             await _backup_bip39_sdcard(mnemonic_secret)
         elif backup_medium == "words":
