@@ -914,7 +914,7 @@ class InputFlowBip39Backup(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         # choose Words
-        received = yield
+        yield
         self.debug.press_no()
 
         # 1. Confirm Reset

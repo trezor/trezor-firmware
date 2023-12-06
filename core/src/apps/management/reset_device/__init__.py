@@ -213,7 +213,7 @@ def _compute_secret_from_entropy(
     return secret
 
 
-async def _backup_bip39_sdcard(mnemonic: str) -> None:
+async def _backup_bip39_sdcard(mnemonic: bytes) -> None:
     from apps.management.sd_backup import sdcard_backup_seed
 
     backup_success: bool = await sdcard_backup_seed(mnemonic)

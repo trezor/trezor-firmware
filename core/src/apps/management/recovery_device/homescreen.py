@@ -58,10 +58,8 @@ async def _continue_recovery_process() -> Success:
     from trezor import utils
     from trezor.errors import MnemonicError
 
-    if utils.USE_SD_CARD:
-        from apps.management.sd_backup import (
-            sdcard_recover_seed,
-        )
+    # if utils.USE_SD_CARD:
+    from apps.management.sd_backup import sdcard_recover_seed
 
     # gather the current recovery state from storage
     dry_run = storage_recovery.is_dry_run()
@@ -79,17 +77,21 @@ async def _continue_recovery_process() -> Success:
         await _request_share_first_screen(word_count)
 
     secret = None
+    words = None
+    backup_medium = "words"
     while secret is None:
         if is_first_step:
             backup_medium: str = await _choose_backup_medium()
-            if backup_medium == "sdcard":
+            if utils.USE_SD_CARD and backup_medium == "sdcard":
                 # attempt to recover words from sd card
                 words = await sdcard_recover_seed()
                 if words is None:
                     continue
                 word_count = len(words.split())
                 if word_count not in (12, 24):
-                    await show_warning("Shamir not yet supported for SD")
+                    await layout.show_recovery_warning(
+                        "recovery", "Shamir not yet supported for SD"
+                    )
                     raise wire.ProcessError("Attempt to recover Shamir from SD card.")
             else:
                 # If we are starting recovery, ask for word count first...

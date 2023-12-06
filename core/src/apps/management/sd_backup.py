@@ -1,9 +1,9 @@
+from storage.sd_seed_backup import recover_seed_from_sdcard, store_seed_on_sdcard
 from trezor import io, utils
-
-from storage.sd_seed_backup import store_seed_on_sdcard, recover_seed_from_sdcard
 
 if utils.USE_SD_CARD:
     fatfs = io.fatfs  # global_import_cache
+
 
 async def bip39_choose_backup_medium(recovery: bool = False) -> str:
     # TODO this will be general, not only for BIP39

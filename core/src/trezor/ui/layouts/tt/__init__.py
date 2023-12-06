@@ -588,7 +588,7 @@ async def choose_backup_medium(recovery: bool = False) -> str:
     result = await interact(
         RustLayout(
             trezorui2.confirm_action(
-                title="Backup medium", # TODO naming convention (backup medium?)
+                title="Backup medium",  # TODO naming convention (backup medium?)
                 action="Choose backup medium.",
                 description=description,
                 verb="SD card",
