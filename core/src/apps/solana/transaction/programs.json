@@ -74,11 +74,11 @@
           "ui_properties": [
             {
               "account": "assigned_account",
-              "display_name": "Assigned account"
+              "display_name": "Assign account"
             },
             {
               "parameter": "owner",
-              "display_name": "To program"
+              "display_name": "Assign account to program"
             }
           ]
         },
@@ -420,7 +420,7 @@
           "ui_properties": [
             {
               "account": "allocated_account",
-              "display_name": "Allocate account"
+              "display_name": "Allocate data for account"
             },
             {
               "parameter": "space",
@@ -464,11 +464,11 @@
           "ui_properties": [
             {
               "account": "assigned_account",
-              "display_name": "Assigned account"
+              "display_name": "Assign account"
             },
             {
               "parameter": "owner",
-              "display_name": "To program"
+              "display_name": "Assign account to program"
             }
           ]
         },
@@ -664,7 +664,7 @@
           "ui_properties": [
             {
               "account": "stake_account",
-              "display_name": "Set stake authority for"
+              "display_name": "Set authority for"
             },
             {
               "parameter": "pubkey",
@@ -829,7 +829,7 @@
           "ui_properties": [
             {
               "parameter": "lamports",
-              "display_name": "Stake withdraw"
+              "display_name": "Withdraw stake"
             },
             {
               "account": "stake_account",
@@ -870,7 +870,7 @@
           "ui_properties": [
             {
               "account": "delegated_stake_account",
-              "display_name": "Deactivate stake"
+              "display_name": "Deactivate stake account"
             },
             {
               "account": "stake_authority",
@@ -971,7 +971,7 @@
           "ui_properties": [
             {
               "account": "source_stake_account",
-              "display_name": "Merge"
+              "display_name": "Merge stake account"
             },
             {
               "account": "destination_stake_account",
@@ -1034,11 +1034,15 @@
           "ui_properties": [
             {
               "account": "stake_account",
-              "display_name": "Set stake auth"
+              "display_name": "Set authority for"
             },
             {
               "parameter": "new_authorized_pubkey",
-              "display_name": "New (stake/withdraw) auth"
+              "display_name": "New authority"
+            },
+            {
+              "parameter": "stake_authorize",
+              "display_name": "Authority type"
             },
             {
               "account": "stake_or_withdraw_authority",
@@ -1133,15 +1137,23 @@
           "ui_properties": [
             {
               "account": "stake_account",
-              "display_name": "Set stake auth"
-            },
-            {
-              "account": "stake_or_withdraw_authority",
-              "display_name": "Stake or withdraw authority"
+              "display_name": "Set authority for"
             },
             {
               "account": "new_stake_or_withdraw_authority",
-              "display_name": "New stake or withdraw authority"
+              "display_name": "New authority"
+            },
+            {
+              "parameter": "stake_authorize",
+              "display_name": "Authority type"
+            },
+            {
+              "account": "stake_or_withdraw_authority",
+              "display_name": "Authorized by"
+            },
+            {
+              "account": "lockup_authority",
+              "display_name": "Custodian"
             }
           ]
         },
@@ -1196,7 +1208,7 @@
           "ui_properties": [
             {
               "account": "stake_account",
-              "display_name": "Set authority for stake account"
+              "display_name": "Set authority for"
             },
             {
               "account": "new_stake_or_withdraw_authority",
@@ -1375,7 +1387,7 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Init account"
+              "display_name": "Initialize account"
             },
             {
               "account": "owner",
@@ -1383,7 +1395,7 @@
             },
             {
               "account": "mint_account",
-              "display_name": "Mint"
+              "display_name": "For token"
             }
           ]
         },
@@ -1418,7 +1430,7 @@
           "ui_properties": [
             {
               "account": "multisig_account",
-              "display_name": "Init multisig"
+              "display_name": "Initialize multisig"
             },
             {
               "account": "signer_accounts",
@@ -1538,7 +1550,7 @@
           "ui_properties": [
             {
               "account": "source_account",
-              "display_name": "Rewoke delegate"
+              "display_name": "Revoke delegate"
             },
             {
               "account": "owner",
@@ -2041,7 +2053,7 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Init account"
+              "display_name": "Initialize account"
             },
             {
               "parameter": "owner",
@@ -2049,7 +2061,7 @@
             },
             {
               "account": "mint_account",
-              "display_name": "Mint"
+              "display_name": "For token"
             }
           ]
         },
@@ -2098,7 +2110,7 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Init account"
+              "display_name": "Initialize account"
             },
             {
               "parameter": "owner",
@@ -2106,7 +2118,7 @@
             },
             {
               "account": "mint_account",
-              "display_name": "Mint"
+              "display_name": "For token"
             }
           ]
         },
@@ -2166,7 +2178,7 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Init account"
+              "display_name": "Initialize account"
             },
             {
               "account": "owner",
@@ -2174,7 +2186,7 @@
             },
             {
               "account": "mint_account",
-              "display_name": "Mint"
+              "display_name": "For token"
             }
           ]
         },
@@ -2832,7 +2844,7 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Init account"
+              "display_name": "Initialize account"
             },
             {
               "parameter": "owner",
@@ -2840,7 +2852,7 @@
             },
             {
               "account": "mint_account",
-              "display_name": "Mint"
+              "display_name": "For token"
             }
           ]
         },
@@ -2889,7 +2901,7 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Init account"
+              "display_name": "Initialize account"
             },
             {
               "parameter": "owner",
@@ -2897,7 +2909,7 @@
             },
             {
               "account": "mint_account",
-              "display_name": "Mint"
+              "display_name": "For token"
             }
           ]
         },
@@ -2916,7 +2928,7 @@
           "ui_properties": [
             {
               "account": "account_to_initialize",
-              "display_name": "Init account"
+              "display_name": "Initialize immutable owner extension for account"
             }
           ]
         }
@@ -2971,7 +2983,7 @@
             },
             {
               "account": "token_mint",
-              "display_name": "From mint"
+              "display_name": "For token"
             },
             {
               "account": "wallet_address",
@@ -3027,7 +3039,7 @@
             },
             {
               "account": "token_mint",
-              "display_name": "From mint"
+              "display_name": "For token"
             },
             {
               "account": "wallet_addr",
