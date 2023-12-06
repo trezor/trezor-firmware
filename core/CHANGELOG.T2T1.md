@@ -12,9 +12,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Always display Ethereum fees in Gwei.  [#3246]
 
-### Fixed
-- Fix invalid encoding of signatures from Optiga.  [#3411]
-
 
 ## [2.6.3] (15th November 2023)
 
