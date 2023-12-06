@@ -113,7 +113,7 @@ class Transaction:
             data_length = parse_var_int(serialized_tx_reader)
 
             instruction_id_length = get_instruction_id_length(program_id)
-            if instruction_id_length <= data_length:
+            if 0 < instruction_id_length <= data_length:
                 instruction_id = int.from_bytes(
                     serialized_tx_reader.read_memoryview(instruction_id_length),
                     "little",

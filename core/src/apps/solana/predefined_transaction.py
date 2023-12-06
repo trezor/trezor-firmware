@@ -181,6 +181,10 @@ async def try_confirm_predefined_transaction(
     instructions = transaction.instructions
     instructions_count = len(instructions)
 
+    for instruction in instructions:
+        if instruction.multisig_signers:
+            return False
+
     if instructions_count == 1:
         if SystemProgramTransferInstruction.is_type_of(instructions[0]):
             await confirm_system_transfer(instructions[0], fee, signer_path, blockhash)

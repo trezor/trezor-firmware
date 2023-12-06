@@ -59,6 +59,14 @@ async def confirm_instruction(
             br_code=ButtonRequestType.Other,
         )
 
+    if instruction.multisig_signers:
+        await confirm_metadata(
+            "confirm_multisig",
+            "Confirm multisig",
+            "The following instruction is a multisig instruction.",
+            br_code=ButtonRequestType.Other,
+        )
+
     for ui_property in instruction.ui_properties:
         if ui_property.parameter is not None:
             property_template = instruction.get_property_template(ui_property.parameter)
@@ -124,13 +132,6 @@ async def confirm_instruction(
             raise ValueError  # Invalid ui property
 
     if instruction.multisig_signers:
-        await confirm_metadata(
-            "confirm_multisig",
-            "Confirm multisig",
-            "The following instruction is a multisig instruction.",
-            br_code=ButtonRequestType.Other,
-        )
-
         signers: list[tuple[str, str]] = []
         for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
             multisig_signer_public_key = multisig_signer[0]

@@ -918,14 +918,14 @@ def get_instruction(
                     UIProperty(
                         None,
                         "assigned_account",
-                        "Assigned account",
+                        "Assign account",
                         False,
                         None,
                     ),
                     UIProperty(
                         "owner",
                         None,
-                        "To program",
+                        "Assign account to program",
                         False,
                         None,
                     ),
@@ -1411,7 +1411,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "allocated_account",
-                        "Allocate account",
+                        "Allocate data for account",
                         False,
                         None,
                     ),
@@ -1474,14 +1474,14 @@ def get_instruction(
                     UIProperty(
                         None,
                         "assigned_account",
-                        "Assigned account",
+                        "Assign account",
                         False,
                         None,
                     ),
                     UIProperty(
                         "owner",
                         None,
-                        "To program",
+                        "Assign account to program",
                         False,
                         None,
                     ),
@@ -1763,7 +1763,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "stake_account",
-                        "Set stake authority for",
+                        "Set authority for",
                         False,
                         None,
                     ),
@@ -1989,7 +1989,7 @@ def get_instruction(
                     UIProperty(
                         "lamports",
                         None,
-                        "Stake withdraw",
+                        "Withdraw stake",
                         False,
                         None,
                     ),
@@ -2049,7 +2049,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "delegated_stake_account",
-                        "Deactivate stake",
+                        "Deactivate stake account",
                         False,
                         None,
                     ),
@@ -2189,7 +2189,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "source_stake_account",
-                        "Merge",
+                        "Merge stake account",
                         False,
                         None,
                     ),
@@ -2276,14 +2276,21 @@ def get_instruction(
                     UIProperty(
                         None,
                         "stake_account",
-                        "Set stake auth",
+                        "Set authority for",
                         False,
                         None,
                     ),
                     UIProperty(
                         "new_authorized_pubkey",
                         None,
-                        "New (stake/withdraw) auth",
+                        "New authority",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        "stake_authorize",
+                        None,
+                        "Authority type",
                         False,
                         None,
                     ),
@@ -2412,21 +2419,35 @@ def get_instruction(
                     UIProperty(
                         None,
                         "stake_account",
-                        "Set stake auth",
-                        False,
-                        None,
-                    ),
-                    UIProperty(
-                        None,
-                        "stake_or_withdraw_authority",
-                        "Stake or withdraw authority",
+                        "Set authority for",
                         False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "new_stake_or_withdraw_authority",
-                        "New stake or withdraw authority",
+                        "New authority",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        "stake_authorize",
+                        None,
+                        "Authority type",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
+                        "stake_or_withdraw_authority",
+                        "Authorized by",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
+                        "lockup_authority",
+                        "Custodian",
                         False,
                         None,
                     ),
@@ -2497,7 +2518,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "stake_account",
-                        "Set authority for stake account",
+                        "Set authority for",
                         False,
                         None,
                     ),
@@ -2772,7 +2793,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "account_to_initialize",
-                        "Init account",
+                        "Initialize account",
                         False,
                         None,
                     ),
@@ -2786,7 +2807,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "mint_account",
-                        "Mint",
+                        "For token",
                         False,
                         None,
                     ),
@@ -2833,7 +2854,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "multisig_account",
-                        "Init multisig",
+                        "Initialize multisig",
                         False,
                         None,
                     ),
@@ -3003,7 +3024,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "source_account",
-                        "Rewoke delegate",
+                        "Revoke delegate",
                         False,
                         None,
                     ),
@@ -3718,7 +3739,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "account_to_initialize",
-                        "Init account",
+                        "Initialize account",
                         False,
                         None,
                     ),
@@ -3732,7 +3753,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "mint_account",
-                        "Mint",
+                        "For token",
                         False,
                         None,
                     ),
@@ -3803,7 +3824,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "account_to_initialize",
-                        "Init account",
+                        "Initialize account",
                         False,
                         None,
                     ),
@@ -3817,7 +3838,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "mint_account",
-                        "Mint",
+                        "For token",
                         False,
                         None,
                     ),
@@ -3904,7 +3925,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "account_to_initialize",
-                        "Init account",
+                        "Initialize account",
                         False,
                         None,
                     ),
@@ -3918,7 +3939,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "mint_account",
-                        "Mint",
+                        "For token",
                         False,
                         None,
                     ),
@@ -4850,7 +4871,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "account_to_initialize",
-                        "Init account",
+                        "Initialize account",
                         False,
                         None,
                     ),
@@ -4864,7 +4885,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "mint_account",
-                        "Mint",
+                        "For token",
                         False,
                         None,
                     ),
@@ -4935,7 +4956,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "account_to_initialize",
-                        "Init account",
+                        "Initialize account",
                         False,
                         None,
                     ),
@@ -4949,7 +4970,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "mint_account",
-                        "Mint",
+                        "For token",
                         False,
                         None,
                     ),
@@ -4978,7 +4999,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "account_to_initialize",
-                        "Init account",
+                        "Initialize immutable owner extension for account",
                         False,
                         None,
                     ),
@@ -5053,7 +5074,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "token_mint",
-                        "From mint",
+                        "For token",
                         False,
                         None,
                     ),
@@ -5128,7 +5149,7 @@ def get_instruction(
                     UIProperty(
                         None,
                         "token_mint",
-                        "From mint",
+                        "For token",
                         False,
                         None,
                     ),
