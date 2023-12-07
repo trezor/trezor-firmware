@@ -78,13 +78,14 @@ async def _continue_recovery_process() -> Success:
 
     secret = None
     words = None
+    recovered_from_sd = None
     backup_medium = "words"
     while secret is None:
         if is_first_step:
             backup_medium: str = await _choose_backup_medium()
             if utils.USE_SD_CARD and backup_medium == "sdcard":
                 # attempt to recover words from sd card
-                words = await sdcard_recover_seed()
+                words, backup_type = await sdcard_recover_seed()
                 if words is None:
                     continue
                 word_count = len(words.split())

@@ -213,10 +213,10 @@ def _compute_secret_from_entropy(
     return secret
 
 
-async def _backup_bip39_sdcard(mnemonic: bytes) -> None:
+async def _backup_bip39_sdcard(mnemonic: bytes, bak_t: BackupType) -> None:
     from apps.management.sd_backup import sdcard_backup_seed
 
-    backup_success: bool = await sdcard_backup_seed(mnemonic)
+    backup_success: bool = await sdcard_backup_seed(mnemonic, bak_t)
     if not backup_success:
         raise ProcessError("SD Card backup could not be verified.")
 
@@ -236,7 +236,7 @@ async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
         else:
             backup_medium: str = "words"
         if backup_medium == "sdcard":
-            await _backup_bip39_sdcard(mnemonic_secret)
+            await _backup_bip39_sdcard(mnemonic_secret, backup_type)
         elif backup_medium == "words":
             await layout.bip39_show_and_confirm_mnemonic(mnemonic_secret.decode())
         else:

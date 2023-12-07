@@ -21,7 +21,7 @@
 #include "py/mperrno.h"
 #include "py/obj.h"
 #include "py/objstr.h"
-#include "stdio.h"
+/* #include "stdio.h" */
 
 // clang-format off
 #include "ff.h"
@@ -590,14 +590,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_fatfs_mkfs_obj, 0, 1,
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_get_capacity() {
   FATFS_ONLY_MOUNTED;
-  printf("csize: %d\n", fs_instance.csize);
-  printf("fatent: %d\n", fs_instance.n_fatent);
-  printf("free clusters: %d\n", fs_instance.free_clst);
-  printf("volbase: %d\n", fs_instance.volbase);
-  printf("fatbase: %d\n", fs_instance.fatbase);
-  printf("dirbase: %d\n", fs_instance.dirbase);
-  printf("database: %d\n", fs_instance.database);
-  printf("winsect: %d\n", fs_instance.winsect);
+  /* printf("csize: %d\n", fs_instance.csize); */
+  /* printf("fatent: %d\n", fs_instance.n_fatent); */
+  /* printf("free clusters: %d\n", fs_instance.free_clst); */
+  /* printf("volbase: %d\n", fs_instance.volbase); */
+  /* printf("fatbase: %d\n", fs_instance.fatbase); */
+  /* printf("dirbase: %d\n", fs_instance.dirbase); */
+  /* printf("database: %d\n", fs_instance.database); */
+  /* printf("winsect: %d\n", fs_instance.winsect); */
   // total number of clusters in the filesystem
   DWORD total_clusters = fs_instance.n_fatent - 2;
   // size of each cluster in bytes
