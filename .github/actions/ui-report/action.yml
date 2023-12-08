@@ -1,33 +1,41 @@
 name: 'UI report'
 description: 'Prepare and upload HTML report of UI test results'
 inputs:
-  artifact-name:
-    description: 'Name of the uploaded artifact'
+  model:
+    description: 'Internal model name'
     required: true
-    default: ui-report
 runs:
   using: composite
   steps:
-    - run: mv tests/ui_tests/reports/test/ test_ui_report || true
+    - name: Set AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+        aws-region: eu-west-1
+    - run: |
+        MODELJOB=${{ inputs.model }}-${{ github.job }}
+        OUTDIR=${{ github.run_id }}/$MODELJOB
+        mkdir -p $OUTDIR
+        nix-shell --run "poetry run python ci/prepare_ui_artifacts.py || true"
+        mv tests/ui_tests/reports/test/* $OUTDIR || true
+        mv tests/ui_tests/fixtures.*.json $OUTDIR || true
+        mv tests/trezor.log $OUTDIR || true
+        diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json || true
+        tar -cf screens_$MODELJOB.tar tests/ui_tests/screens || true
       shell: sh
-    - run: nix-shell --run "poetry run python ci/prepare_ui_artifacts.py || true"
+    - name: Upload report
+      run: |
+        aws s3 sync ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}
       shell: sh
-    - run: diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json || true
-      shell: sh
-    - run: tar -cf test_ui_report.tar test_ui_report/ || true
-      shell: sh
-    - run: tar -cf tests/ui_tests/screens.tar tests/ui_tests/screens/ || true
+    - name: Upload test screen recording
+      run: |
+        aws s3 sync ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests
+        # TODO: generate directory listing / autoindex
       shell: sh
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ inputs.artifact-name }}
+        name: ui-records
         path: |
-          ci/ui_test_records/
-          # test_ui_report/  # can't have :: on ntfs
-          # tests/ui_tests/screens/  # can't have :: on ntfs
-          test_ui_report.tar
-          tests/ui_tests/screens.tar
-          tests/ui_tests/fixtures.suggestion.json
-          tests/ui_tests/fixtures.results.json
-          tests/trezor.log
-        retention-days: 7
+          # used by core_ui_master
+          screens_${{ inputs.model }}-${{ github.job }}.tar
+        retention-days: 1  # not useful after workflow finishes

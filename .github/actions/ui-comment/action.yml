@@ -1,0 +1,22 @@
+name: 'UI comment links'
+description: 'Post URLs of HTML test reports to pull request discussion'
+runs:
+  using: composite
+  steps:
+    - name: Find Comment
+      uses: peter-evans/find-comment@v2
+      id: fc
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: 'github-actions[bot]'
+        body-includes: ui-comment-${{ github.workflow }}
+
+    - name: Create or update comment
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        comment-id: ${{ steps.fc.outputs.comment-id }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          <!-- ui-comment-${{ github.workflow }} -->
+          ${{ env.PULL_COMMENT }}
+        edit-mode: replace
