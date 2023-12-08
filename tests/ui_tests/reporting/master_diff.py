@@ -104,9 +104,11 @@ def create_dirs() -> None:
     IMAGES_PATH.mkdir(exist_ok=True)
 
 
-def create_reports() -> None:
+def create_reports(models: list[str] | None = None) -> None:
     current = get_current_fixtures()
-    removed_tests, added_tests, diff_tests = get_diff(current, print_to_console=True)
+    removed_tests, added_tests, diff_tests = get_diff(
+        current, print_to_console=True, models=models
+    )
 
     @contextmanager
     def tmpdir():
@@ -131,8 +133,8 @@ def create_reports() -> None:
     generate_master_diff_report(diff_tests, MASTERDIFF_PATH)
 
 
-def main() -> None:
+def main(models: list[str] | None = None) -> None:
     create_dirs()
     html.set_image_dir(IMAGES_PATH)
-    create_reports()
+    create_reports(models)
     index()

@@ -9,8 +9,9 @@ def cli():
 
 
 @cli.command(name="master-diff")
-def do_master_diff():
-    master_diff.main()
+@click.argument("models", nargs=-1)
+def do_master_diff(models: list[str] | None = None):
+    master_diff.main(models=models)
 
 
 if __name__ == "__main__":
