@@ -235,6 +235,7 @@ message CardanoSignTxInit {
     optional uint64 total_collateral = 20;
     optional uint32 reference_inputs_count = 21 [default=0];
     optional bool chunkify = 22;                                // display the address in chunks of 4 characters
+    optional bool tag_cbor_sets = 23 [default=false];           // use tag 258 for sets in cbor
 }
 
 /**

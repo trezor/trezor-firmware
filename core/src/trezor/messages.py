@@ -1393,6 +1393,7 @@ if TYPE_CHECKING:
         total_collateral: "int | None"
         reference_inputs_count: "int"
         chunkify: "bool | None"
+        tag_cbor_sets: "bool"
 
         def __init__(
             self,
@@ -1419,6 +1420,7 @@ if TYPE_CHECKING:
             total_collateral: "int | None" = None,
             reference_inputs_count: "int | None" = None,
             chunkify: "bool | None" = None,
+            tag_cbor_sets: "bool | None" = None,
         ) -> None:
             pass
 
