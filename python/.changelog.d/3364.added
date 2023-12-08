@@ -1,0 +1,1 @@
+trezorctl: support for human-friendly Trezor Safe device authenticity check (requires separate installation of `cryptography` library).

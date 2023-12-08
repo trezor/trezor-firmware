@@ -14,9 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import logging
 import secrets
 import sys
-from typing import TYPE_CHECKING, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, BinaryIO, Optional, Sequence, Tuple
 
 import click
 
@@ -45,6 +46,8 @@ SD_PROTECT_OPERATIONS = {
     "off": messages.SdProtectOperationType.DISABLE,
     "refresh": messages.SdProtectOperationType.REFRESH,
 }
+
+LOG = logging.getLogger(__name__)
 
 
 @click.group(name="device")
@@ -347,15 +350,88 @@ def set_busy(
 
 @cli.command()
 @click.argument("hex_challenge", required=False)
+@click.option("-R", "--root", type=click.File("rb"), help="Custom root certificate.")
+@click.option(
+    "-r", "--raw", is_flag=True, help="Print raw cryptographic data and exit."
+)
+@click.option(
+    "-s",
+    "--skip-whitelist",
+    is_flag=True,
+    help="Do not check intermediate certificates against the whitelist.",
+)
 @with_client
-def authenticate(client: "TrezorClient", hex_challenge: Optional[str]) -> None:
-    """Get information to verify the authenticity of the device."""
+def authenticate(
+    client: "TrezorClient",
+    hex_challenge: Optional[str],
+    root: Optional[BinaryIO],
+    raw: Optional[bool],
+    skip_whitelist: Optional[bool],
+) -> None:
+    """Verify the authenticity of the device.
+
+    Use the --raw option to get the raw challenge, signature, and certificate data.
+
+    Otherwise, trezorctl will attempt to decode the signatures and check their
+    authenticity. By default, it will also check the public keys against a built-in
+    whitelist, and in the future also against a whitelist downloaded from Trezor
+    servers. You can skip this check with the --skip-whitelist option.
+
+    \b
+    When not using --raw, 'cryptography' library is required. You can install it via:
+      pip3 install trezor[authentication]
+    """
     if hex_challenge is None:
         hex_challenge = secrets.token_hex(32)
-    click.echo(f"Challenge: {hex_challenge}")
+
     challenge = bytes.fromhex(hex_challenge)
-    msg = device.authenticate(client, challenge)
-    click.echo(f"Signature of challenge: {msg.signature.hex()}")
-    click.echo(f"Device certificate: {msg.certificates[0].hex()}")
-    for cert in msg.certificates[1:]:
-        click.echo(f"CA certificate: {cert.hex()}")
+
+    if raw:
+        msg = device.authenticate(client, challenge)
+
+        click.echo(f"Challenge: {hex_challenge}")
+        click.echo(f"Signature of challenge: {msg.signature.hex()}")
+        click.echo(f"Device certificate: {msg.certificates[0].hex()}")
+        for cert in msg.certificates[1:]:
+            click.echo(f"CA certificate: {cert.hex()}")
+        return
+
+    try:
+        from .. import authentication
+    except ImportError as e:
+        click.echo("Failed to import the authentication module.")
+        click.echo(f"Error: {e}")
+        click.echo("Make sure you have the required dependencies:")
+        click.echo("  pip3 install trezor[authentication]")
+        sys.exit(4)
+
+    if root is not None:
+        root_bytes = root.read()
+    else:
+        root_bytes = None
+
+    class ColoredFormatter(logging.Formatter):
+        LEVELS = {
+            logging.ERROR: click.style("ERROR", fg="red"),
+            logging.WARNING: click.style("WARNING", fg="yellow"),
+            logging.INFO: click.style("INFO", fg="blue"),
+            logging.DEBUG: click.style("OK", fg="green"),
+        }
+
+        def format(self, record: logging.LogRecord) -> str:
+            prefix = self.LEVELS[record.levelno]
+            bold_args = tuple(
+                click.style(str(arg), bold=True) for arg in record.args or ()
+            )
+            return f"[{prefix}] {record.msg}" % bold_args
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(ColoredFormatter())
+    authentication.LOG.addHandler(handler)
+    authentication.LOG.setLevel(logging.DEBUG)
+
+    try:
+        authentication.authenticate_device(client, challenge, root_pubkey=root_bytes)
+    except authentication.DeviceNotAuthentic:
+        click.echo("Device is not authentic.")
+        sys.exit(5)

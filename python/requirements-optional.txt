@@ -3,3 +3,4 @@ web3>=5
 Pillow>=10
 stellar-sdk>=6
 rlp>=1.1.0 ; python_version<'3.7'
+cryptography>=41
