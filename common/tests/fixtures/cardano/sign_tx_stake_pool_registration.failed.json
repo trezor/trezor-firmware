@@ -58,7 +58,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -121,7 +122,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -181,7 +183,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -241,7 +244,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -322,7 +326,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -365,7 +370,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -430,7 +436,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -490,7 +497,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Stakepool registration transaction can only contain the pool owner witness request"
@@ -549,7 +557,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "ProcessError: Invalid address"
@@ -608,7 +617,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "ProcessError: Invalid address"
@@ -701,7 +711,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid pool owner staking path"
@@ -794,7 +805,8 @@
         "reference_inputs": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -887,7 +899,8 @@
         "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -980,7 +993,8 @@
         "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -1077,7 +1091,8 @@
             "path": "m/1854'/1815'/0'/0/0"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Stakepool registration transaction can only contain the pool owner witness request"
@@ -1174,7 +1189,8 @@
             "path": "m/1855'/1815'/0'/0/0"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Stakepool registration transaction can only contain the pool owner witness request"
@@ -1298,7 +1314,8 @@
             "path": "m/1855'/1815'/0'/0/0"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1377,7 +1394,7 @@
           }
         ],
         "outputs": [
-           {
+          {
             "addressType": 0,
             "path": "m/1852'/1815'/0'/0/0",
             "stakingPath": "m/1852'/1815'/0'/2/0",
@@ -1393,7 +1410,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid output"
@@ -1487,7 +1505,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid output"
@@ -1580,7 +1599,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1679,7 +1699,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1775,7 +1796,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1868,7 +1890,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -1966,7 +1989,8 @@
         ],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -2063,7 +2087,8 @@
         "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Invalid tx signing request"
@@ -2160,7 +2185,8 @@
             "path": "m/1852'/1815'/0'/2/1"
           }
         ],
-        "include_network_id": false
+        "include_network_id": false,
+        "tag_cbor_sets": false
       },
       "result": {
         "error_message": "Stakepool registration transaction can only contain the pool owner witness request"

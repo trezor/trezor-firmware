@@ -90,6 +90,19 @@ class HashBuilderList(HashBuilderCollection, Generic[T]):
         return cbor.create_array_header(self.size)
 
 
+class HashBuilderSet(HashBuilderList, Generic[T]):
+    def __init__(self, size: int, *, tagged: bool) -> None:
+        super().__init__(size)
+        self.tagged = tagged
+
+    def _header_bytes(self) -> bytes:
+        return (
+            cbor.create_tagged_set_header(self.size)
+            if self.tagged
+            else cbor.create_array_header(self.size)
+        )
+
+
 class HashBuilderDict(HashBuilderCollection, Generic[K, V]):
     key_order_error: wire.ProcessError
     previous_encoded_key: bytes

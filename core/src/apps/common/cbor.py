@@ -43,7 +43,11 @@ _CBOR_FALSE = const(0x14)
 _CBOR_TRUE = const(0x15)
 _CBOR_NULL = const(0x16)
 _CBOR_BREAK = const(0x1F)
-_CBOR_RAW_TAG = const(0x18)
+
+
+# See https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml
+_CBOR_RAW_TAG = const(0x18)  # Tag 24
+_CBOR_SET_TAG = const(0x102)  # Tag 258
 
 
 def _header(typ: int, l: int) -> bytes:
@@ -300,6 +304,10 @@ def create_embedded_cbor_bytes_header(size: int) -> bytes:
     https://datatracker.ietf.org/doc/html/rfc7049#section-2.4.4.1
     """
     return _header(_CBOR_TAG, _CBOR_RAW_TAG) + _header(_CBOR_BYTE_STRING, size)
+
+
+def create_tagged_set_header(size: int) -> bytes:
+    return _header(_CBOR_TAG, _CBOR_SET_TAG) + _header(_CBOR_ARRAY, size)
 
 
 def precedes(prev: bytes, curr: bytes) -> bool:

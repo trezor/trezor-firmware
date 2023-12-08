@@ -901,6 +901,7 @@ def sign_tx(
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
     include_network_id: bool = False,
     chunkify: bool = False,
+    tag_cbor_sets: bool = False,
 ) -> Dict[str, Any]:
     UNEXPECTED_RESPONSE_ERROR = exceptions.TrezorException("Unexpected response")
 
@@ -938,6 +939,7 @@ def sign_tx(
             derivation_type=derivation_type,
             include_network_id=include_network_id,
             chunkify=chunkify,
+            tag_cbor_sets=tag_cbor_sets,
         )
     )
     if not isinstance(response, messages.CardanoTxItemAck):

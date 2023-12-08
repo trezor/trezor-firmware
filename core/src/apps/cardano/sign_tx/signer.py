@@ -16,7 +16,11 @@ from apps.common import safety_checks
 from .. import addresses, certificates, layout, seed
 from ..helpers import INPUT_PREV_HASH_SIZE, LOVELACE_MAX_SUPPLY
 from ..helpers.credential import Credential
-from ..helpers.hash_builder_collection import HashBuilderDict, HashBuilderList
+from ..helpers.hash_builder_collection import (
+    HashBuilderDict,
+    HashBuilderList,
+    HashBuilderSet,
+)
 from ..helpers.paths import SCHEMA_STAKING
 from ..helpers.utils import derive_public_key
 
@@ -140,10 +144,13 @@ class Signer:
         msg = self.msg  # local_cache_attribute
         add = self.tx_dict.add  # local_cache_attribute
         HBL = HashBuilderList  # local_cache_global
+        HBS = HashBuilderSet  # local_cache_global
 
-        inputs_list: HashBuilderList[tuple[bytes, int]] = HBL(msg.inputs_count)
-        with add(_TX_BODY_KEY_INPUTS, inputs_list):
-            await self._process_inputs(inputs_list)
+        inputs_set: HashBuilderSet[tuple[bytes, int]] = HBS(
+            msg.inputs_count, tagged=self.msg.tag_cbor_sets
+        )
+        with add(_TX_BODY_KEY_INPUTS, inputs_set):
+            await self._process_inputs(inputs_set)
 
         outputs_list: HashBuilderList = HBL(msg.outputs_count)
         with add(_TX_BODY_KEY_OUTPUTS, outputs_list):
@@ -155,9 +162,11 @@ class Signer:
             add(_TX_BODY_KEY_TTL, msg.ttl)
 
         if msg.certificates_count > 0:
-            certificates_list: HashBuilderList = HBL(msg.certificates_count)
-            with add(_TX_BODY_KEY_CERTIFICATES, certificates_list):
-                await self._process_certificates(certificates_list)
+            certificates_set: HashBuilderSet = HBS(
+                msg.certificates_count, tagged=self.msg.tag_cbor_sets
+            )
+            with add(_TX_BODY_KEY_CERTIFICATES, certificates_set):
+                await self._process_certificates(certificates_set)
 
         if msg.withdrawals_count > 0:
             withdrawals_dict: HashBuilderDict[bytes, int] = HashBuilderDict(
@@ -184,18 +193,18 @@ class Signer:
             await self._process_script_data_hash()
 
         if msg.collateral_inputs_count > 0:
-            collateral_inputs_list: HashBuilderList[tuple[bytes, int]] = HBL(
-                msg.collateral_inputs_count
+            collateral_inputs_set: HashBuilderSet[tuple[bytes, int]] = HBS(
+                msg.collateral_inputs_count, tagged=self.msg.tag_cbor_sets
             )
-            with add(_TX_BODY_KEY_COLLATERAL_INPUTS, collateral_inputs_list):
-                await self._process_collateral_inputs(collateral_inputs_list)
+            with add(_TX_BODY_KEY_COLLATERAL_INPUTS, collateral_inputs_set):
+                await self._process_collateral_inputs(collateral_inputs_set)
 
         if msg.required_signers_count > 0:
-            required_signers_list: HashBuilderList[bytes] = HBL(
-                msg.required_signers_count
+            required_signers_set: HashBuilderSet[bytes] = HBS(
+                msg.required_signers_count, tagged=self.msg.tag_cbor_sets
             )
-            with add(_TX_BODY_KEY_REQUIRED_SIGNERS, required_signers_list):
-                await self._process_required_signers(required_signers_list)
+            with add(_TX_BODY_KEY_REQUIRED_SIGNERS, required_signers_set):
+                await self._process_required_signers(required_signers_set)
 
         if msg.include_network_id:
             add(_TX_BODY_KEY_NETWORK_ID, msg.network_id)
@@ -207,11 +216,11 @@ class Signer:
             add(_TX_BODY_KEY_TOTAL_COLLATERAL, msg.total_collateral)
 
         if msg.reference_inputs_count > 0:
-            reference_inputs_list: HashBuilderList[tuple[bytes, int]] = HBL(
-                msg.reference_inputs_count
+            reference_inputs_set: HashBuilderSet[tuple[bytes, int]] = HBS(
+                msg.reference_inputs_count, tagged=self.msg.tag_cbor_sets
             )
-            with add(_TX_BODY_KEY_REFERENCE_INPUTS, reference_inputs_list):
-                await self._process_reference_inputs(reference_inputs_list)
+            with add(_TX_BODY_KEY_REFERENCE_INPUTS, reference_inputs_set):
+                await self._process_reference_inputs(reference_inputs_set)
 
     def _validate_tx_init(self) -> None:
         from ..helpers.utils import validate_network_info
@@ -658,7 +667,7 @@ class Signer:
 
     # certificates
 
-    async def _process_certificates(self, certificates_list: HashBuilderList) -> None:
+    async def _process_certificates(self, certificates_set: HashBuilderSet) -> None:
         for _ in range(self.msg.certificates_count):
             certificate: messages.CardanoTxCertificate = await ctx_call(
                 CardanoTxItemAck(), messages.CardanoTxCertificate
@@ -673,18 +682,18 @@ class Signer:
                 pool_items_list: HashBuilderList = HashBuilderList(
                     _POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT
                 )
-                with certificates_list.append(pool_items_list):
+                with certificates_set.append(pool_items_list):
                     for item in certificates.cborize_pool_registration_init(
                         certificate
                     ):
                         pool_items_list.append(item)
 
-                    pool_owners_list: HashBuilderList[bytes] = HashBuilderList(
-                        pool_parameters.owners_count
+                    pool_owners_set: HashBuilderSet[bytes] = HashBuilderSet(
+                        pool_parameters.owners_count, tagged=self.msg.tag_cbor_sets
                     )
-                    with pool_items_list.append(pool_owners_list):
+                    with pool_items_list.append(pool_owners_set):
                         await self._process_pool_owners(
-                            pool_owners_list, pool_parameters.owners_count
+                            pool_owners_set, pool_parameters.owners_count
                         )
 
                     relays_list: HashBuilderList[cbor.CborSequence] = HashBuilderList(
@@ -699,7 +708,7 @@ class Signer:
                         certificates.cborize_pool_metadata(pool_parameters.metadata)
                     )
             else:
-                certificates_list.append(
+                certificates_set.append(
                     certificates.cborize(self.keychain, certificate)
                 )
 
@@ -733,7 +742,7 @@ class Signer:
     # pool owners
 
     async def _process_pool_owners(
-        self, pool_owners_list: HashBuilderList[bytes], owners_count: int
+        self, pool_owners_set: HashBuilderSet[bytes], owners_count: int
     ) -> None:
         owners_as_path_count = 0
         for _ in range(owners_count):
@@ -742,7 +751,7 @@ class Signer:
             )
             certificates.validate_pool_owner(owner, self.account_path_checker)
             await self._show_pool_owner(owner)
-            pool_owners_list.append(
+            pool_owners_set.append(
                 certificates.cborize_pool_owner(self.keychain, owner)
             )
 
@@ -933,7 +942,7 @@ class Signer:
     # required signers
 
     async def _process_required_signers(
-        self, required_signers_list: HashBuilderList[bytes]
+        self, required_signers_set: HashBuilderSet[bytes]
     ) -> None:
         from ..helpers.utils import get_public_key_hash
 
@@ -949,7 +958,7 @@ class Signer:
             key_hash = required_signer.key_hash or get_public_key_hash(
                 self.keychain, required_signer.key_path
             )
-            required_signers_list.append(key_hash)
+            required_signers_set.append(key_hash)
 
     def _validate_required_signer(
         self, required_signer: messages.CardanoTxRequiredSigner
