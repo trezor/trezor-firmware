@@ -567,6 +567,15 @@ bool check_device_cert_chain(const uint8_t *chain, size_t chain_size) {
   // certificate belongs to this device. THIS IS NOT A FULL VERIFICATION OF THE
   // CERTIFICATE CHAIN.
 
+  // Enable signing with the device private key.
+  optiga_metadata metadata = {0};
+  metadata.key_usage = KEY_USE_SIGN;
+  metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
+  if (!set_metadata(OID_KEY_DEV, &metadata)) {
+    vcp_println("ERROR check_device_cert_chain, set_metadata.");
+    return false;
+  }
+
   // Generate a P-256 signature using the device private key.
   uint8_t digest[SHA256_DIGEST_LENGTH] = {1};
   uint8_t der_sig[72] = {DER_SEQUENCE};
