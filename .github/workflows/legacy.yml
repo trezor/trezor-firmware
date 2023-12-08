@@ -2,6 +2,11 @@ name: Legacy
 
 on: [pull_request]
 
+env:
+  PULL_COMMENT: |
+    |legacy UI changes|[master diff](https://trezorui.martinmilata.cz/${{ github.run_id }}/master_diff/)|[device test](https://trezorui.martinmilata.cz/${{ github.run_id }}/T1B1-legacy_device_test/)|
+    |-----------------|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+
 jobs:
   legacy_firmware:
     name: Firmware
@@ -78,8 +83,16 @@ jobs:
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C legacy test_emu_ui"
+        if: matrix.coins == 'universal'
       - run: nix-shell --run "poetry run make -C legacy test_emu"
-        # if: matrix.coins == 'universal' && matrix.type == 'normal'
+        if: matrix.coins != 'universal'
+      - uses: ./.github/actions/ui-report
+        with:
+          model: T1B1
+        if: ${{ always() && matrix.coins == 'universal' }}
+      - uses: ./.github/actions/ui-comment
+        if: ${{ failure() && matrix.coins == 'universal' }}
 
   legacy_upgrade_test:
     name: Upgrade test
@@ -124,3 +137,37 @@ jobs:
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
       # see python_test for explanation of _PYTHON_SYSCONFIGDATA_NAME
       - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
+
+  legacy_ui_master:
+    name: UI diff from master
+    runs-on: ubuntu-latest
+    needs:
+      - legacy_device_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v3
+        with:
+          name: ui-records
+      - uses: ./.github/actions/environment
+      - run: "for F in screens_*.tar; do tar xvf $F; done"
+      - run: nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff T1"
+      - run: mv tests/ui_tests/reports/master_diff .
+      - run: |
+          chmod 600 ./ssh-id
+          nix-shell -p rsync -p openssh --run "rsync -av -e 'ssh -i ./ssh-id -o StrictHostKeyChecking=off' master_diff ui@trezorui.martinmilata.cz:ci-storage/${{ github.run_id }}"
+
+  legacy_ui_comment:
+    name: Post comment with UI diff URLs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: |
+          git fetch origin main
+          git diff --quiet origin/main...HEAD -- tests/ui_tests/fixtures.json
+          echo "FIXTURES_CHANGED=$?" >> $GITHUB_OUTPUT
+        id: check-fixtures-changed
+      - uses: ./.github/actions/ui-comment
+        if: ${{ steps.check-fixtures-changed.outputs.FIXTURES_CHANGED == '1' }}

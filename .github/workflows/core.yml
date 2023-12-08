@@ -2,6 +2,13 @@ name: Core
 
 on: [pull_request]
 
+env:
+  PULL_COMMENT: |
+    |core UI changes|[master diff](https://trezorui.martinmilata.cz/${{ github.run_id }}/master_diff/)|    |    |
+    |---------------|---------------------------------------------------------------------------------|----|----|
+    |Model T     |[device test](https://trezorui.martinmilata.cz/${{ github.run_id }}/T2T1-core_device_test/)|[click test](https://trezorui.martinmilata.cz/${{ github.run_id }}/T2T1-core_click_test/)|[persistence test](https://trezorui.martinmilata.cz/${{ github.run_id }}/T2T1-core_persistence_test/)|
+    |Model Safe 3|[device test](https://trezorui.martinmilata.cz/${{ github.run_id }}/T2B1-core_device_test/)|[click test](https://trezorui.martinmilata.cz/${{ github.run_id }}/T2B1-core_click_test/)|[persistence test](https://trezorui.martinmilata.cz/${{ github.run_id }}/T2B1-core_persistence_test/)|
+
 jobs:
   core_firmware:
     name: Build firmware
@@ -171,6 +178,7 @@ jobs:
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
+      ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -181,21 +189,26 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core test_emu_ui_multicore"  # TODO: can-fail or whatisit
-        if: ${{ matrix.asan == 'noasan' && matrix.coins == 'universal' }}
-      - run: nix-shell --run "poetry run make -C core test_emu"
-        if: ${{ matrix.asan != 'noasan' || matrix.coins != 'universal' }}
-      - run: tail -n20 tests/trezor.log || true
-        if: ${{ failure() }}
+      - run: nix-shell --run "poetry run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
+      - run: tail -n50 tests/trezor.log || true
+        if: failure()
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-device-${{ matrix.model }}-${{ matrix.asan }}
+          path: tests/trezor.log
+          retention-days: 7
+        if: always()
       - uses: ./.github/actions/ui-report
         with:
-          artifact-name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.asan }}
-        if: ${{ always() }}
-      - run: mv core/src/.coverage.* core || true  # there will be more coverage files (one per core)
+          model: ${{ matrix.model }}
+        if: ${{ always() && env.ACTIONS_DO_UI_TEST == 'true' }}
+      - uses: ./.github/actions/ui-comment
+        if: ${{ failure() && env.ACTIONS_DO_UI_TEST == 'true' }}
       - uses: actions/upload-artifact@v3
         with:
           name: core-coverage-${{ matrix.model }}
-          path: core/.coverage.*
+          # there will be more coverage files (one per core)
+          path: core/src/.coverage.*
           retention-days: 7
 
   # Click tests - UI.
@@ -226,9 +239,16 @@ jobs:
         if: ${{ matrix.asan == 'noasan' }}
       - run: nix-shell --run "poetry run make -C core test_emu_click"
         if: ${{ matrix.asan == 'asan' }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: core-click-${{ matrix.model }}-${{ matrix.asan }}
+          path: tests/trezor.log
+          retention-days: 7
+        if: always()
       - uses: ./.github/actions/ui-report
         with:
-          artifact-name: core-test-click-${{ matrix.model }}-${{ matrix.asan }}
+          model: ${{ matrix.model }}
+        if: always()
       - run: mv core/src/.coverage core/.coverage.test_click || true
       - uses: actions/upload-artifact@v3
         with:
@@ -264,7 +284,7 @@ jobs:
 
 
   # Persistence tests - UI.
-  core_persitence_test:
+  core_persistence_test:
     name: Persistence tests
     runs-on: ubuntu-latest
     needs: core_emu
@@ -291,7 +311,8 @@ jobs:
         if: ${{ matrix.asan == 'asan' }}
       - uses: ./.github/actions/ui-report
         with:
-          artifact-name: core-test-persistence-${{ matrix.model }}-${{ matrix.asan }}
+          model: ${{ matrix.model }}
+        if: always()
       - run: mv core/src/.coverage core/.coverage.test_persistence || true
       - uses: actions/upload-artifact@v3
         with:
@@ -352,6 +373,7 @@ jobs:
             tests/trezor.log
             core/prof/memperf-html
           retention-days: 7
+        if: always()
 
   # Flash size profiling
 
@@ -437,6 +459,7 @@ jobs:
             tests/trezor.log
             core/tests/trezor_monero_tests.log
           retention-days: 7
+        if: always()
       - run: mv core/src/.coverage core/.coverage.test_emu_monero || true
       - uses: actions/upload-artifact@v3
         with:
@@ -473,6 +496,7 @@ jobs:
           name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}
           path: tests/trezor.log
           retention-days: 7
+        if: always()
       - run: mv core/src/.coverage core/.coverage.test_emu_u2f || true
       - uses: actions/upload-artifact@v3
         with:
@@ -509,6 +533,7 @@ jobs:
           path: |
             tests/trezor.log
           retention-days: 7
+        if: always()
       - run: mv core/src/.coverage core/.coverage.test_emu_fido2 || true
       - uses: actions/upload-artifact@v3
         with:
@@ -521,7 +546,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - core_click_test
-      - core_persitence_test
+      - core_persistence_test
       - core_device_test
       - core_monero_test
       - core_u2f_test
@@ -545,12 +570,72 @@ jobs:
           path: core
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core coverage"
-      # TODO fail if too little
       - uses: actions/upload-artifact@v3
         with:
           name: core-coverage-${{ matrix.model }}
           path: core/htmlcov
           retention-days: 7
+
+  core_ui_master:
+    name: UI diff from master
+    runs-on: ubuntu-latest
+    needs:
+      - core_click_test
+      - core_persistence_test
+      - core_device_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v3
+        with:
+          name: ui-records
+      - uses: ./.github/actions/environment
+      - run: "for F in screens_*.tar; do tar xvf $F; done"
+      - run: nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff TT TR"
+      - run: mv tests/ui_tests/reports/master_diff .
+      - run: |
+          chmod 600 ./ssh-id
+          nix-shell -p rsync -p openssh --run "rsync -av -e 'ssh -i ./ssh-id -o StrictHostKeyChecking=off' master_diff ui@trezorui.martinmilata.cz:ci-storage/${{ github.run_id }}"
+
+  core_ui_comment:
+    name: Post comment with UI diff URLs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: |
+          git fetch origin main
+          git diff --quiet origin/main...HEAD -- tests/ui_tests/fixtures.json || echo "FIXTURES_CHANGED=$?" >> $GITHUB_OUTPUT
+        id: check-fixtures-changed
+      - uses: ./.github/actions/ui-comment
+        if: ${{ steps.check-fixtures-changed.outputs.FIXTURES_CHANGED == '1' }}
+
+  core_ui_deploy:
+    name: Deploy UI fixtures
+    if: false  # NOTE needs fixing first: runs-on, env
+    runs-on: deploy
+    needs:
+      - core_click_test
+      - core_persistence_test
+      - core_device_test
+    env:
+      DEPLOY_PATH: "${DEPLOY_BASE_DIR}/ui_tests/"
+      BUCKET: "data.trezor.io"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v3
+        with:
+          name: ui-records
+      - uses: ./.github/actions/environment
+      - run: "for F in ui_test_records_*.tar; do tar xvf $F; done"
+      - run: |
+          echo "Deploying to $DEPLOY_PATH"
+          rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"
+          source ${AWS_DEPLOY_DATA}
+          aws s3 sync $DEPLOY_PATH s3://$BUCKET/dev/firmware/ui_tests
+          # This "hack" is needed because aws does not have an easy option to generate autoindex. We fetch the one autogenerated by nginx on local server.
+          wget https://firmware.corp.sldev.cz/ui_tests/ -O index.html && aws s3 cp index.html s3://$BUCKET/dev/firmware/ui_tests/
 
 
   # Connect
