@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
+from storage.sd_seed_backup import BackupMedium
 from trezor import wire
 from trezor.messages import Success
 
@@ -41,17 +42,16 @@ async def recovery_process() -> Success:
         raise wire.ActionCancelled
 
 
-async def _choose_backup_medium() -> str:
+async def _choose_backup_medium() -> BackupMedium:
     from trezor import utils
 
     if utils.USE_SD_CARD:
         from apps.management.sd_backup import bip39_choose_backup_medium
 
         # ask the user for backup type (words/SD card)
-        backup_medium: str = await bip39_choose_backup_medium(recovery=True)
+        return await bip39_choose_backup_medium(recovery=True)
     else:
-        backup_medium: str = "words"
-    return backup_medium
+        return BackupMedium.Words
 
 
 async def _continue_recovery_process() -> Success:
@@ -78,12 +78,11 @@ async def _continue_recovery_process() -> Success:
 
     secret = None
     words = None
-    recovered_from_sd = None
-    backup_medium = "words"
+    backup_medium = BackupMedium.Words
     while secret is None:
         if is_first_step:
-            backup_medium: str = await _choose_backup_medium()
-            if utils.USE_SD_CARD and backup_medium == "sdcard":
+            backup_medium = await _choose_backup_medium()
+            if utils.USE_SD_CARD and backup_medium == BackupMedium.SDCard:
                 # attempt to recover words from sd card
                 words, backup_type = await sdcard_recover_seed()
                 if words is None:
@@ -108,7 +107,7 @@ async def _continue_recovery_process() -> Success:
                 await _request_share_first_screen(word_count)
         assert word_count is not None
 
-        if backup_medium == "words":
+        if backup_medium == BackupMedium.Words:
             # ask for mnemonic words one by one
             words = await layout.request_mnemonic(word_count, backup_type)
 

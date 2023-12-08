@@ -27,8 +27,7 @@ if TYPE_CHECKING:
 
 
 def is_trz_card() -> bool:
-    sdcard.capacity()
-    pass
+    return True
 
 
 class FilesystemWrapper:

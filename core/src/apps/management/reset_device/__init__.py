@@ -213,15 +213,16 @@ def _compute_secret_from_entropy(
     return secret
 
 
-async def _backup_bip39_sdcard(mnemonic: bytes, bak_t: BackupType) -> None:
+async def _backup_bip39_sdcard(mnemonic: bytes, backup_type: BackupType) -> None:
     from apps.management.sd_backup import sdcard_backup_seed
 
-    backup_success: bool = await sdcard_backup_seed(mnemonic, bak_t)
+    backup_success: bool = await sdcard_backup_seed(mnemonic, backup_type)
     if not backup_success:
         raise ProcessError("SD Card backup could not be verified.")
 
 
 async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
+    from storage.sd_seed_backup import BackupMedium
     from trezor import utils
 
     if backup_type == BAK_T_SLIP39_BASIC:
@@ -232,12 +233,13 @@ async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
         if utils.USE_SD_CARD:
             from apps.management.sd_backup import bip39_choose_backup_medium
 
-            backup_medium: str = await bip39_choose_backup_medium()
+            backup_medium = await bip39_choose_backup_medium()
         else:
-            backup_medium: str = "words"
-        if backup_medium == "sdcard":
+            backup_medium = BackupMedium.Words
+
+        if backup_medium == BackupMedium.SDCard:
             await _backup_bip39_sdcard(mnemonic_secret, backup_type)
-        elif backup_medium == "words":
+        elif backup_medium == BackupMedium.Words:
             await layout.bip39_show_and_confirm_mnemonic(mnemonic_secret.decode())
         else:
             raise ProcessError("Invalid backup medium.")

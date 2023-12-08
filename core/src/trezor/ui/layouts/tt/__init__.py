@@ -11,6 +11,8 @@ from ..common import button_request, interact
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
+    from storage.sd_seed_backup import BackupMedium
+
     from ..common import ExceptionType, PropertyType
 
     T = TypeVar("T")
@@ -575,8 +577,10 @@ async def show_success(
     )
 
 
-async def choose_backup_medium(recovery: bool = False) -> str:
+async def choose_backup_medium(recovery: bool = False) -> BackupMedium:
     # TODO what br type
+    from storage.sd_seed_backup import BackupMedium
+
     br_type = "br_type"
     if recovery:
         br_code: ButtonRequestType = ButtonRequestType.RecoveryHomepage
@@ -599,9 +603,9 @@ async def choose_backup_medium(recovery: bool = False) -> str:
         br_code,
     )
     if result is CONFIRMED:
-        return "sdcard"
+        return BackupMedium.SDCard
     else:
-        return "words"
+        return BackupMedium.Words
 
 
 async def confirm_output(

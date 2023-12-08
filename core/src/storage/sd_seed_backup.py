@@ -3,13 +3,16 @@ from trezorcrypto import sha256
 from typing import TYPE_CHECKING
 
 from trezor import io, utils
+from trezor.enums import BackupType
 from trezor.sdcard import with_filesystem, with_sdcard
-from trezor.wire import ProcessError
+from trezor.wire import DataError, ProcessError
 
 if TYPE_CHECKING:
+    from enum import IntEnum
     from typing import Generator
-    from trezor.enums import BackupType
-    from trezor.utils import BufferReader
+
+else:
+    IntEnum = object
 
 if utils.USE_SD_CARD:
     fatfs = io.fatfs  # global_import_cache
@@ -20,6 +23,11 @@ if utils.USE_SD_CARD:
     SDBACKUP_N_WRITINGS = 100  # TODO decide between offset/writings
     SDBACKUP_MAGIC = b"TRZM"
     SDBACKUP_VERSION = b"0"
+
+
+class BackupMedium(IntEnum):
+    Words = 0
+    SDCard = 1
 
 
 @with_filesystem
@@ -64,7 +72,6 @@ def _read_seed_unalloc() -> tuple[bytes | None, BackupType | None]:
     if restored_block is None:
         return (None, None)
     decoded_mnemonic, decoded_backup_type = restored_block
-    # decoded_mnemonic_str = decoded_mnemonic.decode("utf-8").rstrip("\x00")
     return (decoded_mnemonic, decoded_backup_type)
 
 
@@ -120,9 +127,7 @@ HASH_LEN = const(32)
 
 
 def _encode_backup_block(mnemonic: bytes, backup_type: BackupType) -> bytes:
-    from trezor.utils import empty_bytearray
-
-    ret = empty_bytearray(SDCARD_BLOCK_SIZE_B)
+    ret = utils.empty_bytearray(SDCARD_BLOCK_SIZE_B)
     ret.extend(SDBACKUP_MAGIC)
     ret.extend(SDBACKUP_VERSION)
     ret.extend(backup_type.to_bytes(BACKUPTYPE_LEN, "big"))
@@ -154,8 +159,14 @@ def _decode_backup_block(block: bytes) -> tuple[bytes, BackupType] | None:
                 MAGIC_LEN + VERSION_LEN + BACKUPTYPE_LEN + SEEDLEN_LEN + seed_len
             )
         ).digest()
-        if blockhash_read == blockhash_expected:
-            return (mnemonic, backup_type)
+        if blockhash_read == blockhash_expected and backup_type in (0, 1, 2):
+            if backup_type == 0:
+                res_bt = BackupType.Bip39
+            elif backup_type == 1:
+                res_bt = BackupType.Slip39_Basic
+            else:
+                res_bt = BackupType.Slip39_Advanced
+            return (mnemonic, res_bt)
         else:
             return None
 
