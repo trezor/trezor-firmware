@@ -10,7 +10,6 @@ from trezor.wire import DataError, ProcessError
 if TYPE_CHECKING:
     from enum import IntEnum
     from typing import Generator
-
 else:
     IntEnum = object
 
@@ -100,25 +99,23 @@ def _storage_blocks_gen_by_n() -> Generator[int, None, None]:
     )
 
 
-"""
-Backup Memory Block Layout:
-+----------------------+------------------------+--------------------+-------------------------------+
-| SDBACKUP_MAGIC (4B)  | SDBACKUP_VERSION (1B)  | BACKUP_TYPE (1B)   | SEED_LENGTH (4B)              |
-+----------------------+------------------------+--------------------+-------------------------------+
-| MNEMONIC (variable length)                    | HASH (32B)         | Padding (variable)            |
-+-----------------------------------------------+--------------------+-------------------------------+
+# Backup Memory Block Layout:
+# +----------------------+------------------------+--------------------+-------------------------------+
+# | SDBACKUP_MAGIC (4B)  | SDBACKUP_VERSION (1B)  | BACKUP_TYPE (1B)   | SEED_LENGTH (4B)              |
+# +----------------------+------------------------+--------------------+-------------------------------+
+# | MNEMONIC (variable length)                    | HASH (32B)         | Padding (variable)            |
+# +-----------------------------------------------+--------------------+-------------------------------+
+#
+# - SDBACKUP_MAGIC: 4 bytes magic number identifying the backup block
+# - SDBACKUP_VERSION: 1 bytes representing the version of the backup format (for future compatibility)
+# - BACKUP_TYPE: 1 bytes representing the version of the backup format
+# - SEED_LENGTH: 4 bytes (big-endian) indicating the length of the mnemonic
+# - MNEMONIC: Variable length field containing the mnemonic
+# - HASH: 32 bytes sha256 hash of all previous fields
+# - Padding: Remaining bytes of the block (if any) are padding
+#
+# The total size of the block is defined by SDCARD_BLOCK_SIZE_B.
 
-- SDBACKUP_MAGIC: 4 bytes magic number identifying the backup block
-- SDBACKUP_VERSION: 1 bytes representing the version of the backup format (for future compatibility)
-- BACKUP_TYPE: 1 bytes representing the version of the backup format
-- SEED_LENGTH: 4 bytes (big-endian) indicating the length of the mnemonic
-- MNEMONIC: Variable length field containing the mnemonic
-- HASH: 32 bytes sha256 hash of all previous fields
-- Padding: Remaining bytes of the block (if any) are padding
-
-The total size of the block is defined by SDCARD_BLOCK_SIZE_B.
-"""
-# Constants lengths
 MAGIC_LEN = const(4)
 VERSION_LEN = const(1)
 BACKUPTYPE_LEN = const(1)
@@ -143,6 +140,8 @@ def _encode_backup_block(mnemonic: bytes, backup_type: BackupType) -> bytes:
 
 
 def _decode_backup_block(block: bytes) -> tuple[bytes, BackupType] | None:
+    from trezor.enums import BackupType
+
     assert len(block) == SDCARD_BLOCK_SIZE_B
     try:
         r = utils.BufferReader(block)
@@ -159,14 +158,12 @@ def _decode_backup_block(block: bytes) -> tuple[bytes, BackupType] | None:
                 MAGIC_LEN + VERSION_LEN + BACKUPTYPE_LEN + SEEDLEN_LEN + seed_len
             )
         ).digest()
-        if blockhash_read == blockhash_expected and backup_type in (0, 1, 2):
-            if backup_type == 0:
-                res_bt = BackupType.Bip39
-            elif backup_type == 1:
-                res_bt = BackupType.Slip39_Basic
-            else:
-                res_bt = BackupType.Slip39_Advanced
-            return (mnemonic, res_bt)
+        if blockhash_read == blockhash_expected and backup_type in (
+            BackupType.Bip39,
+            BackupType.Slip39_Basic,
+            BackupType.Slip39_Advanced,
+        ):
+            return (mnemonic, backup_type)
         else:
             return None
 
