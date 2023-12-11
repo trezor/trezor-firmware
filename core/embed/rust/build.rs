@@ -359,6 +359,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("buffers_free_jpeg_work")
         .allowlist_function("buffers_get_blurring")
         .allowlist_function("buffers_free_blurring")
+        .allowlist_function("buffers_get_blurring_totals")
+        .allowlist_function("buffers_free_blurring_totals")
         .allowlist_var("TEXT_BUFFER_HEIGHT")
         .no_copy("buffer_line_16bpp_t")
         .no_copy("buffer_line_4bpp_t")
@@ -366,6 +368,7 @@ fn generate_trezorhal_bindings() {
         .no_copy("buffer_jpeg_t")
         .no_copy("buffer_jpeg_work_t")
         .no_copy("buffer_blurring_t")
+        .no_copy("buffer_blurring_totals_t")
         //usb
         .allowlist_function("usb_configured")
         // touch
