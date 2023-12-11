@@ -18,8 +18,7 @@ class TestStorageSdSeedBackup(unittest.TestCase):
         io.fatfs.mkfs(True)
         io.fatfs.mount()
 
-        success = store_seed_on_sdcard(self.mnemonic, BackupType.Bip39)
-        self.assertTrue(success)
+        store_seed_on_sdcard(self.mnemonic, BackupType.Bip39)
 
         restored_mnemonic, restored_backup_type = recover_seed_from_sdcard()
         self.assertEqual(restored_mnemonic, self.mnemonic)
@@ -28,10 +27,9 @@ class TestStorageSdSeedBackup(unittest.TestCase):
         io.fatfs.unmount()
         io.sdcard.power_off()
 
-    def test_backup_partlywipe_restore(self):
+    def test_backup_and_partlywipe_then_restore(self):
         with sdcard.filesystem(mounted=True):
-            success = store_seed_on_sdcard(self.mnemonic, BackupType.Bip39)
-            self.assertTrue(success)
+            store_seed_on_sdcard(self.mnemonic, BackupType.Bip39)
 
         # wipe half of the card, restore must succeed
         block_buffer = bytearray(SDCARD_BLOCK_SIZE_B)

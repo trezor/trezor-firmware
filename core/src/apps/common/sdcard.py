@@ -1,4 +1,4 @@
-from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
+from trezor.sdcard import SD_CARD_HOT_SWAPPABLE
 from trezor import io, wire
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 
@@ -111,15 +111,17 @@ async def ensure_sdcard(
     fatfs = io.fatfs  # local_cache_attribute
     while True:
         try:
-            try:
-                with sdcard.filesystem(mounted=False):
-                    fatfs.mount()
-            except fatfs.NoFilesystem:
-                # card not formatted. proceed out of the except clause
-                pass
-            else:
-                # no error when mounting
-                return
+            if not for_sd_backup:
+                # cards for backup must be formatted to keep the unallocated space after partition
+                try:
+                    with sdcard.filesystem(mounted=False):
+                        fatfs.mount()
+                except fatfs.NoFilesystem:
+                    # card not formatted. proceed out of the except clause
+                    pass
+                else:
+                    # no error when mounting
+                    return
 
             await _confirm_format_card()
 

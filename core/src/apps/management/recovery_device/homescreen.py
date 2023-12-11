@@ -42,24 +42,56 @@ async def recovery_process() -> Success:
         raise wire.ActionCancelled
 
 
-async def _choose_backup_medium() -> BackupMedium:
+async def _recover_mnemonic_or_share(
+    is_first_step: bool,
+    word_count: int | None,
+    dry_run: bool,
+    backup_type: BackupType | None,
+) -> tuple[str | None, int | None]:
     from trezor import utils
 
-    if utils.USE_SD_CARD:
-        from apps.management.sd_backup import bip39_choose_backup_medium
+    while True:
+        backup_medium = BackupMedium.Words
+        if utils.USE_SD_CARD:
+            from apps.management.sd_backup import choose_recovery_medium
 
-        # ask the user for backup type (words/SD card)
-        return await bip39_choose_backup_medium(recovery=True)
-    else:
-        return BackupMedium.Words
+            backup_medium = await choose_recovery_medium(word_count in (20, 33), dry_run)
+
+        if backup_medium == BackupMedium.Words:
+            if is_first_step:
+                # If we are starting recovery, ask for word count first...
+                # For TT, just continuing straight to word count keyboard
+                if utils.INTERNAL_MODEL == "T2B1":
+                    await layout.homescreen_dialog(
+                        "Continue", "Select the number of words in your backup."
+                    )
+                # ask for the number of words
+                word_count = await layout.request_word_count(dry_run)
+                await _request_share_first_screen(word_count)
+            words = await layout.request_mnemonic(word_count, backup_type)
+            return words, word_count
+        else:
+            # try to recover from SD card
+            from apps.management.sd_backup import sdcard_recover_seed
+
+            try:
+                mnemonic, _ = await sdcard_recover_seed()  # TODO backup type needed?
+                if mnemonic == None:
+                    # TODO warn and repeat
+                    pass
+                return mnemonic, len(mnemonic.split())
+            except ActionCancelled:
+                # there might have been a backup
+                # TODO show guidance: Pick different card/choose words
+                pass
+            except Exception:
+                # generic exception, let the user choose again
+                pass
 
 
 async def _continue_recovery_process() -> Success:
     from trezor import utils
     from trezor.errors import MnemonicError
-
-    # if utils.USE_SD_CARD:
-    from apps.management.sd_backup import sdcard_recover_seed
 
     # gather the current recovery state from storage
     dry_run = storage_recovery.is_dry_run()
@@ -77,43 +109,15 @@ async def _continue_recovery_process() -> Success:
         await _request_share_first_screen(word_count)
 
     secret = None
-    words = None
-    backup_medium = BackupMedium.Words
     while secret is None:
-        if is_first_step:
-            backup_medium = await _choose_backup_medium()
-            if utils.USE_SD_CARD and backup_medium == BackupMedium.SDCard:
-                # attempt to recover words from sd card
-                words, backup_type = await sdcard_recover_seed()
-                if words is None:
-                    continue
-                word_count = len(words.split())
-                if word_count not in (12, 24):
-                    await layout.show_recovery_warning(
-                        "recovery", "Shamir not yet supported for SD"
-                    )
-                    raise wire.ProcessError("Attempt to recover Shamir from SD card.")
-            else:
-                # If we are starting recovery, ask for word count first...
-                # _request_word_count
-                # For TT, just continuing straight to word count keyboard
-                if utils.INTERNAL_MODEL == "T2B1":
-                    await layout.homescreen_dialog(
-                        "Continue", "Select the number of words in your backup."
-                    )
-                # ask for the number of words
-                word_count = await layout.request_word_count(dry_run)
-                # ...and only then show the starting screen with word count.
-                await _request_share_first_screen(word_count)
-        assert word_count is not None
-
-        if backup_medium == BackupMedium.Words:
-            # ask for mnemonic words one by one
-            words = await layout.request_mnemonic(word_count, backup_type)
+        words, word_count = await _recover_mnemonic_or_share(
+            is_first_step, word_count, dry_run, backup_type
+        )
 
         # if they were invalid or some checks failed we continue and request them again
         if not words:
             continue
+        assert word_count is not None
 
         try:
             secret, backup_type = await _process_words(words)

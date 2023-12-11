@@ -155,59 +155,18 @@ async def show_backup_success() -> None:
     await show_success_backup()
 
 
-# BIP39
-# ===
-
-
-async def bip39_show_and_confirm_mnemonic(mnemonic: str) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning()
-
+async def show_and_confirm_mnemonic(
+    mnemonic: str,
+    share_index: int | None = None,
+    shares_total: int | None = None,
+    group_index: int | None = None,
+    groups_total: int | None = None, # TODO might be unused
+) -> None:
     words = mnemonic.split()
-
     while True:
         # display paginated mnemonic on the screen
-        await show_share_words(words)
+        await show_share_words(words, share_index, group_index)
 
         # make the user confirm some words from the mnemonic
-        if await _share_words_confirmed(None, words):
+        if await _share_words_confirmed(share_index, words, shares_total, group_index):
             break  # mnemonic is confirmed, go next
-
-
-# SLIP39
-# ===
-
-
-async def slip39_basic_show_and_confirm_shares(shares: Sequence[str]) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning(True)
-
-    for index, share in enumerate(shares):
-        share_words = share.split(" ")
-        while True:
-            # display paginated share on the screen
-            await show_share_words(share_words, index)
-
-            # make the user confirm words from the share
-            if await _share_words_confirmed(index, share_words, len(shares)):
-                break  # this share is confirmed, go to next one
-
-
-async def slip39_advanced_show_and_confirm_shares(
-    shares: Sequence[Sequence[str]],
-) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning(True)
-
-    for group_index, group in enumerate(shares):
-        for share_index, share in enumerate(group):
-            share_words = share.split(" ")
-            while True:
-                # display paginated share on the screen
-                await show_share_words(share_words, share_index, group_index)
-
-                # make the user confirm words from the share
-                if await _share_words_confirmed(
-                    share_index, share_words, len(group), group_index
-                ):
-                    break  # this share is confirmed, go to next one

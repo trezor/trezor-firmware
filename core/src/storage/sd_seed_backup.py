@@ -30,18 +30,23 @@ class BackupMedium(IntEnum):
 
 
 @with_filesystem
-def store_seed_on_sdcard(mnemonic_secret: bytes, backup_type: BackupType) -> bool:
+def store_seed_on_sdcard(mnemonic_secret: bytes, backup_type: BackupType):
     _write_seed_unalloc(mnemonic_secret, backup_type)
     if _verify_backup(mnemonic_secret, backup_type):
         _write_readme()
-        return True
     else:
-        return False
+        raise ProcessError("SD card verification failed")
 
 
 @with_sdcard
 def recover_seed_from_sdcard() -> tuple[bytes | None, BackupType | None]:
     return _read_seed_unalloc()
+
+
+@with_sdcard
+def is_backup_present() -> bool:
+    decoded_mnemonic, decoded_backup_type = _read_seed_unalloc()
+    return decoded_mnemonic is not None and decoded_backup_type is not None
 
 
 def _verify_backup(mnemonic_secret: bytes, backup_type: BackupType) -> bool:
