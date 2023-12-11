@@ -79,6 +79,12 @@ buffer_wrapper!(
     buffers_get_blurring,
     buffers_free_blurring
 );
+buffer_wrapper!(
+    BufferBlurringTotals,
+    buffer_blurring_totals_t,
+    buffers_get_blurring_totals,
+    buffers_free_blurring_totals
+);
 #[cfg(feature = "jpeg")]
 buffer_wrapper!(
     BufferJpeg,
