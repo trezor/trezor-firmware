@@ -1,5 +1,8 @@
 StellarAsset.code                                       max_size:13
 StellarAsset.issuer                                     max_size:57
+StellarChangeTrustAsset.code                            max_size:13
+StellarChangeTrustAsset.issuer                          max_size:57
+StellarChangeTrustAsset.liquidity_pool                  type:FT_IGNORE
 StellarGetAddress.address_n                             max_count:10
 
 StellarAddress.address                                  max_size:57
