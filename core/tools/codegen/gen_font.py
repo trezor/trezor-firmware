@@ -10,6 +10,7 @@ import freetype
 
 HERE = Path(__file__).parent
 FONTS_DIR = HERE / "fonts"
+OUT_DIR = HERE / ".." / ".." / "embed" / "lib" / "fonts"
 
 MIN_GLYPH = ord(" ")
 MAX_GLYPH = ord("~")
@@ -17,7 +18,7 @@ MAX_GLYPH = ord("~")
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
 
-def process_bitmap_buffer(buf: list[int], bpp: int) -> list[int]:
+def process_bitmap_buffer(buf: list[int], bpp: int, width: int, height: int) -> list[int]:
     res = buf[:]
     if bpp == 1:
         for _ in range(8 - len(res) % 8):
@@ -45,12 +46,13 @@ def process_bitmap_buffer(buf: list[int], bpp: int) -> list[int]:
             for a, b, c, d in [res[i : i + 4] for i in range(0, len(res), 4)]
         ]
     elif bpp == 4:
-        if len(res) % 2 > 0:
-            res.append(0)
-        res = [
-            ((a & 0xF0) | (b >> 4))
-            for a, b in [res[i : i + 2] for i in range(0, len(res), 2)]
-        ]
+        res = []
+        for y in range(0, height):
+            row = buf[y * width: (y+1) * width]
+            for a, b in zip(row[::2], row[1::2]):
+                res.append(((b & 0xF0) | (a >> 4)))
+            if width & 1 != 0:
+                res.append(row[-1] >> 4)
     elif bpp == 8:
         pass
     else:
@@ -82,7 +84,7 @@ def process_face(
     font_ymin = 0
     font_ymax = 0
 
-    with open("font_%s.c" % fontname, "wt") as f:
+    with open(OUT_DIR /  f"font_{fontname}.c", "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("// clang-format off\n\n")
         f.write("// - the first two bytes are width and height of the glyph\n")
@@ -164,7 +166,7 @@ def process_face(
             if len(buf) > 0:
                 f.write(
                     ", "
-                    + ", ".join(["%d" % x for x in process_bitmap_buffer(buf, bpp)])
+                    + ", ".join(["%d" % x for x in process_bitmap_buffer(buf, bpp, width, rows)])
                 )
             f.write(" };\n")
 
@@ -174,7 +176,7 @@ def process_face(
                     % (name, style, size, width, rows, advance, bearingX, bearingY)
                 )
                 nonprintable += ", " + ", ".join(
-                    ["%d" % (x ^ 0xFF) for x in process_bitmap_buffer(buf, bpp)]
+                    ["%d" % (x ^ 0xFF) for x in process_bitmap_buffer(buf, bpp, width, rows)]
                 )
                 nonprintable += " };\n"
 
@@ -193,7 +195,7 @@ def process_face(
             f.write("    Font_%s_%s_%d_glyph_%d,\n" % (name, style, size, i))
         f.write("};\n")
 
-    with open("font_%s.h" % fontname, "wt") as f:
+    with open(OUT_DIR / f"font_{fontname}.h", "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
         f.write("#error Wrong TREZOR_FONT_BPP (expected %d)\n" % bpp)
