@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from decimal import Decimal
 from typing import TYPE_CHECKING, List, Tuple, Union
 
 from . import exceptions, messages
@@ -40,6 +39,8 @@ if TYPE_CHECKING:
         messages.StellarPaymentOp,
         messages.StellarSetOptionsOp,
         messages.StellarClaimClaimableBalanceOp,
+        messages.StellarLiquidityPoolDepositOp,
+        messages.StellarLiquidityPoolWithdrawOp,
     ]
 
 try:
@@ -55,6 +56,8 @@ try:
         HashMemo,
         IdMemo,
         LiquidityPoolAsset,
+        LiquidityPoolDeposit,
+        LiquidityPoolWithdraw,
         ManageBuyOffer,
         ManageData,
         ManageSellOffer,
@@ -65,7 +68,6 @@ try:
         PathPaymentStrictReceive,
         PathPaymentStrictSend,
         Payment,
-        Price,
         ReturnHashMemo,
         SetOptions,
         TextMemo,
@@ -171,7 +173,7 @@ def _read_operation(op: "Operation") -> "StellarMessageType":
             paths=[_read_asset(asset) for asset in op.path],
         )
     if isinstance(op, ManageSellOffer):
-        price = _read_price(op.price)
+        price = op.price
         return messages.StellarManageSellOfferOp(
             source_account=source_account,
             selling_asset=_read_asset(op.selling),
@@ -182,7 +184,7 @@ def _read_operation(op: "Operation") -> "StellarMessageType":
             offer_id=op.offer_id,
         )
     if isinstance(op, CreatePassiveSellOffer):
-        price = _read_price(op.price)
+        price = op.price
         return messages.StellarCreatePassiveSellOfferOp(
             source_account=source_account,
             selling_asset=_read_asset(op.selling),
@@ -210,11 +212,9 @@ def _read_operation(op: "Operation") -> "StellarMessageType":
             operation.signer_weight = op.signer.weight
         return operation
     if isinstance(op, ChangeTrust):
-        if isinstance(op.asset, LiquidityPoolAsset):
-            raise ValueError("Liquidity pool assets are not supported")
         return messages.StellarChangeTrustOp(
             source_account=source_account,
-            asset=_read_asset(op.asset),
+            asset=_read_change_trust_asset(op.asset),
             limit=_read_amount(op.limit),
         )
     if isinstance(op, AllowTrust):
@@ -253,7 +253,7 @@ def _read_operation(op: "Operation") -> "StellarMessageType":
             source_account=source_account, bump_to=op.bump_to
         )
     if isinstance(op, ManageBuyOffer):
-        price = _read_price(op.price)
+        price = op.price
         return messages.StellarManageBuyOfferOp(
             source_account=source_account,
             selling_asset=_read_asset(op.selling),
@@ -279,6 +279,25 @@ def _read_operation(op: "Operation") -> "StellarMessageType":
             source_account=source_account,
             balance_id=bytes.fromhex(op.balance_id),
         )
+    if isinstance(op, LiquidityPoolDeposit):
+        return messages.StellarLiquidityPoolDepositOp(
+            source_account=source_account,
+            liquidity_pool_id=op.liquidity_pool_id,
+            max_amount_a=_read_amount(op.max_amount_a),
+            max_amount_b=_read_amount(op.max_amount_b),
+            min_price_n=op.min_price.n,
+            min_price_d=op.min_price.d,
+            max_price_n=op.max_price.n,
+            max_price_d=op.max_price.d,
+        )
+    if isinstance(op, LiquidityPoolWithdraw):
+        return messages.StellarLiquidityPoolWithdrawOp(
+            source_account=source_account,
+            liquidity_pool_id=op.liquidity_pool_id,
+            amount=_read_amount(op.amount),
+            min_amount_a=_read_amount(op.min_amount_a),
+            min_amount_b=_read_amount(op.min_amount_b),
+        )
     raise ValueError(f"Unknown operation type: {op.__class__.__name__}")
 
 
@@ -291,14 +310,6 @@ def _raise_if_account_muxed_id_exists(account: "MuxedAccount"):
 
 def _read_amount(amount: str) -> int:
     return Operation.to_xdr_amount(amount)
-
-
-def _read_price(price: Union["Price", str, Decimal]) -> "Price":
-    # In the coming stellar-sdk 6.x, the type of price must be Price,
-    # at that time we can remove this function
-    if isinstance(price, Price):
-        return price
-    return Price.from_raw_price(price)
 
 
 def _read_asset(asset: "Asset") -> messages.StellarAsset:
@@ -318,6 +329,30 @@ def _read_asset(asset: "Asset") -> messages.StellarAsset:
             issuer=asset.issuer,
         )
     raise ValueError("Unsupported asset type")
+
+
+def _read_change_trust_asset(
+    asset: Union["Asset", "LiquidityPoolAsset"]
+) -> messages.StellarChangeTrustAsset:
+    if isinstance(asset, LiquidityPoolAsset):
+        return messages.StellarChangeTrustAsset(
+            type=messages.StellarAssetType.POOL_SHARE,
+            liquidity_pool=messages.StellarLiquidityPoolParameters(
+                type=messages.StellarLiquidityPoolType.LIQUIDITY_POOL_CONSTANT_PRODUCT,
+                constant_product=messages.StellarLiquidityPoolConstantProductParameters(
+                    asset_a=_read_asset(asset.asset_a),
+                    asset_b=_read_asset(asset.asset_b),
+                    fee=asset.fee,
+                ),
+            ),
+        )
+    else:
+        msg_asset = _read_asset(asset)
+        return messages.StellarChangeTrustAsset(
+            type=msg_asset.type,
+            code=msg_asset.code,
+            issuer=msg_asset.issuer,
+        )
 
 
 # ====== Client functions ====== #

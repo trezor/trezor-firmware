@@ -10,6 +10,7 @@ enum StellarAssetType {
     NATIVE = 0;
     ALPHANUM4 = 1;
     ALPHANUM12 = 2;
+    POOL_SHARE = 3;
 }
 
 /**
@@ -20,7 +21,39 @@ message StellarAsset {
     required StellarAssetType type = 1;
     optional string code = 2;       // for non-native assets, string describing the code
     optional string issuer = 3;     // issuing address
+}
 
+enum StellarLiquidityPoolType {
+    LIQUIDITY_POOL_CONSTANT_PRODUCT = 0;
+}
+
+/**
+ * @embed
+ */
+message StellarLiquidityPoolConstantProductParameters {
+    required StellarAsset asset_a = 2;
+    required StellarAsset asset_b = 3;
+    required uint32 fee = 4;  // Fee is in basis points, so the actual rate is (fee/100)%
+}
+
+/**
+ * @embed
+ */
+message StellarLiquidityPoolParameters {
+    required StellarLiquidityPoolType type = 1;
+    optional StellarLiquidityPoolConstantProductParameters constant_product = 2;
+}
+
+/**
+ * Describes a Stellar asset for the change trust operation
+ * https://github.com/stellar/stellar-xdr/blob/bb54e505f814386a3f45172e0b7e95b7badbe969/Stellar-transaction.x#L230
+ * @embed
+*/
+message StellarChangeTrustAsset {
+    required StellarAssetType type = 1;
+    optional string code = 2;       // for non-native assets, string describing the code
+    optional string issuer = 3;     // issuing address
+    optional StellarLiquidityPoolParameters liquidity_pool = 4;
 }
 
 /**
@@ -86,6 +119,9 @@ message StellarSignTx {
  * @next StellarAccountMergeOp
  * @next StellarManageDataOp
  * @next StellarBumpSequenceOp
+ * @next StellarClaimClaimableBalanceOp
+ * @next StellarLiquidityPoolDepositOp
+ * @next StellarLiquidityPoolWithdrawOp
  */
 message StellarTxOpRequest {
 }
@@ -221,7 +257,7 @@ message StellarSetOptionsOp {
  */
 message StellarChangeTrustOp {
     optional string source_account = 1;     // (optional) source account address
-    required StellarAsset asset = 2;
+    required StellarChangeTrustAsset asset = 2;
     required uint64 limit = 3;
 }
 
@@ -277,6 +313,35 @@ message StellarBumpSequenceOp {
 message StellarClaimClaimableBalanceOp {
     optional string source_account = 1; // (optional) source account address
     required bytes balance_id = 2;      // balance id, 4 bytes of type flag, 32 bytes of data
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarLiquidityPoolDepositOp {
+    optional string source_account = 1;    // (optional) source account address
+    required string liquidity_pool_id = 2; //  liquidity pool id, hex-encoded 32 bytes
+    required sint64 max_amount_a = 3;      // maximum amount of first asset to deposit
+    required sint64 max_amount_b = 4;      // maximum amount of second asset to deposit
+    required sint64 min_price_n = 5;       // minimum depositA/depositB (Price numerator)
+    required sint64 min_price_d = 6;       // minimum depositA/depositB (Price denominator)
+    required sint64 max_price_n = 7;       // maximum depositA/depositB (Price numerator)
+    required sint64 max_price_d = 8;       // maximum depositA/depositB (Price denominator)
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarLiquidityPoolWithdrawOp {
+    optional string source_account = 1;    // (optional) source account address
+    required string liquidity_pool_id = 2; // liquidity pool id, hex-encoded 32 bytes
+    required sint64 amount = 3;            // amount of pool shares to withdraw
+    required sint64 min_amount_a = 4;      // minimum amount of first asset to withdraw
+    required sint64 min_amount_b = 5;      // minimum amount of second asset to withdraw
 }
 
 /**

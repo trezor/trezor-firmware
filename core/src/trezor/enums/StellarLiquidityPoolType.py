@@ -2,7 +2,4 @@
 # fmt: off
 # isort:skip_file
 
-NATIVE = 0
-ALPHANUM4 = 1
-ALPHANUM12 = 2
-POOL_SHARE = 3
+LIQUIDITY_POOL_CONSTANT_PRODUCT = 0

@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
+from trezor import strings
+from trezor.messages import StellarAsset
 from trezor.ui.layouts import (
     confirm_address,
     confirm_amount,
@@ -10,13 +12,12 @@ from trezor.ui.layouts import (
 )
 from trezor.wire import DataError, ProcessError
 
-from ..layout import format_amount
+from ..layout import format_amount, format_asset
 
 if TYPE_CHECKING:
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
-        StellarAsset,
         StellarBumpSequenceOp,
         StellarChangeTrustOp,
         StellarClaimClaimableBalanceOp,
@@ -29,7 +30,11 @@ if TYPE_CHECKING:
         StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
         StellarSetOptionsOp,
+        StellarLiquidityPoolDepositOp,
+        StellarLiquidityPoolWithdrawOp,
     )
+
+from trezor.enums import StellarAssetType, StellarLiquidityPoolType
 
 
 async def confirm_source_account(source_account: str) -> None:
@@ -71,13 +76,78 @@ async def confirm_bump_sequence_op(op: StellarBumpSequenceOp) -> None:
 
 
 async def confirm_change_trust_op(op: StellarChangeTrustOp) -> None:
-    await confirm_amount(
-        "Delete trust" if op.limit == 0 else "Add trust",
-        format_amount(op.limit, op.asset),
-        "Limit:",
-        "op_change_trust",
-    )
-    await confirm_asset_issuer(op.asset)
+    title = "Delete trust" if op.limit == 0 else "Add trust"
+    br_code = "op_change_trust"
+    if op.asset.type == StellarAssetType.POOL_SHARE:
+        assert op.asset.liquidity_pool is not None
+        if (
+            op.asset.liquidity_pool.type
+            != StellarLiquidityPoolType.LIQUIDITY_POOL_CONSTANT_PRODUCT
+        ):
+            raise DataError("Stellar: unsupported liquidity pool type")
+        assert op.asset.liquidity_pool.constant_product is not None
+
+        props = [
+            (
+                "Limit: ",
+                f"{format_amount(op.limit)} pool shares",
+            ),
+            (
+                "Asset A",
+                format_asset(op.asset.liquidity_pool.constant_product.asset_a),
+            ),
+        ]
+        if (
+            op.asset.liquidity_pool.constant_product.asset_a.type
+            != StellarAssetType.NATIVE
+        ):
+            props.append(
+                (
+                    "Asset A Issuer",
+                    op.asset.liquidity_pool.constant_product.asset_a.issuer,
+                )
+            )
+        props.append(
+            (
+                "Asset B",
+                format_asset(op.asset.liquidity_pool.constant_product.asset_b),
+            )
+        )
+        if (
+            op.asset.liquidity_pool.constant_product.asset_b.type
+            != StellarAssetType.NATIVE
+        ):
+            props.append(
+                (
+                    "Asset B Issuer",
+                    op.asset.liquidity_pool.constant_product.asset_b.issuer,
+                )
+            )
+        props.append(
+            (
+                "Pool Fee",
+                f"{strings.format_amount(op.asset.liquidity_pool.constant_product.fee, 2)}%",
+            )
+        )
+        await confirm_properties(
+            br_code,
+            title,
+            props,
+        )
+    else:
+        asset = StellarAsset(
+            type=op.asset.type, code=op.asset.code, issuer=op.asset.issuer
+        )
+        await confirm_amount(
+            title,
+            format_amount(
+                op.limit,
+                asset,
+            ),
+            "Limit:",
+            br_code,
+        )
+        await confirm_asset_issuer(asset)
 
 
 async def confirm_create_account_op(op: StellarCreateAccountOp) -> None:
@@ -86,7 +156,13 @@ async def confirm_create_account_op(op: StellarCreateAccountOp) -> None:
         "Create Account",
         (
             ("Account", op.new_account),
-            ("Initial Balance", format_amount(op.starting_balance)),
+            (
+                "Initial Balance",
+                format_amount(
+                    op.starting_balance,
+                    StellarAsset(type=StellarAssetType.NATIVE),
+                ),
+            ),
         ),
     )
 
@@ -302,6 +378,37 @@ async def confirm_claim_claimable_balance_op(
         "Claim Claimable Balance",
         "Balance ID: {}",
         balance_id,
+    )
+
+
+async def confirm_liquidity_pool_deposit_op(op: StellarLiquidityPoolDepositOp) -> None:
+    props = [
+        ("Liquidity Pool ID", op.liquidity_pool_id),
+        ("Maximum Amount A", format_amount(op.max_amount_a)),
+        ("Maximum Amount B", format_amount(op.max_amount_b)),
+        ("Minimum Price", str(op.min_price_n / op.min_price_d)),
+        ("Maximum Price", str(op.max_price_n / op.max_price_d)),
+    ]
+    await confirm_properties(
+        "op_liquidity_pool_deposit",
+        "Liquidity Pool Deposit",
+        props,
+    )
+
+
+async def confirm_liquidity_pool_withdraw_op(
+    op: StellarLiquidityPoolWithdrawOp,
+) -> None:
+    props = [
+        ("Liquidity Pool ID", op.liquidity_pool_id),
+        ("Amount", format_amount(op.amount)),
+        ("Minimum Amount A", format_amount(op.min_amount_a)),
+        ("Minimum Amount B", format_amount(op.min_amount_b)),
+    ]
+    await confirm_properties(
+        "op_liquidity_pool_withdraw",
+        "Liquidity Pool Withdraw",
+        props,
     )
 
 

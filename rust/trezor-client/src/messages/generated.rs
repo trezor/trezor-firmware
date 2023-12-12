@@ -269,6 +269,8 @@ trezor_message_impl! {
     StellarPathPaymentStrictSendOp => MessageType_StellarPathPaymentStrictSendOp,
     StellarClaimClaimableBalanceOp => MessageType_StellarClaimClaimableBalanceOp,
     StellarSignedTx => MessageType_StellarSignedTx,
+    StellarLiquidityPoolDepositOp => MessageType_StellarLiquidityPoolDepositOp,
+    StellarLiquidityPoolWithdrawOp => MessageType_StellarLiquidityPoolWithdrawOp,
 }
 
 #[cfg(feature = "tezos")]

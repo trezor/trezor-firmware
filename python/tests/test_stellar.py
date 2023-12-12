@@ -20,9 +20,11 @@ import pytest
 
 try:
     from stellar_sdk import (
+        LIQUIDITY_POOL_FEE_V18,
         Account,
         Asset,
         AuthorizationFlag,
+        LiquidityPoolAsset,
         MuxedAccount,
         Network,
         TransactionBuilder,
@@ -542,7 +544,7 @@ def test_set_options_hashx_signer():
     assert operations[0].signer_weight == weight
 
 
-def test_change_trust():
+def test_change_trust_asset():
     tx = make_default_tx()
     asset_code = "USD"
     asset_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
@@ -562,6 +564,50 @@ def test_change_trust():
     assert operations[0].asset.type == messages.StellarAssetType.ALPHANUM4
     assert operations[0].asset.code == asset_code
     assert operations[0].asset.issuer == asset_issuer
+    assert operations[0].limit == 10000000000
+
+
+def test_change_trust_liquidity_pool_asset():
+    tx = make_default_tx()
+    limit = "1000"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+    asset_a = Asset.native()
+    asset_b = Asset("USD", "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF")
+
+    envelope = tx.append_change_trust_op(
+        asset=LiquidityPoolAsset(asset_a, asset_b),
+        limit=limit,
+        source=operation_source,
+    ).build()
+
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+    assert isinstance(operations[0], messages.StellarChangeTrustOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].asset.type == messages.StellarAssetType.POOL_SHARE
+    assert (
+        operations[0].asset.liquidity_pool.type
+        == messages.StellarLiquidityPoolType.LIQUIDITY_POOL_CONSTANT_PRODUCT
+    )
+    assert (
+        operations[0].asset.liquidity_pool.constant_product.asset_a.type
+        == messages.StellarAssetType.NATIVE
+    )
+    assert (
+        operations[0].asset.liquidity_pool.constant_product.asset_b.type
+        == messages.StellarAssetType.ALPHANUM4
+    )
+    assert (
+        operations[0].asset.liquidity_pool.constant_product.asset_b.code == asset_b.code
+    )
+    assert (
+        operations[0].asset.liquidity_pool.constant_product.asset_b.issuer
+        == asset_b.issuer
+    )
+    assert (
+        operations[0].asset.liquidity_pool.constant_product.fee
+        == LIQUIDITY_POOL_FEE_V18
+    )
     assert operations[0].limit == 10000000000
 
 
@@ -942,3 +988,61 @@ def test_claim_claimable_balance():
     assert isinstance(operations[0], messages.StellarClaimClaimableBalanceOp)
     assert operations[0].source_account == operation_source
     assert operations[0].balance_id == bytes.fromhex(balance_id)
+
+
+def test_liquidity_pool_deposit():
+    tx = make_default_tx()
+    liquidity_pool_id = (
+        "59fa1dc57433dcfbd2db7319d26cb3da1f28f2d8095a3ec36ad4ef9cadb0013e"
+    )
+    max_amount_a = "1000"
+    max_amount_b = "2000"
+    min_price = "1.5"
+    max_price = "2.5"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+    envelope = tx.append_liquidity_pool_deposit_op(
+        liquidity_pool_id=liquidity_pool_id,
+        max_amount_a=max_amount_a,
+        max_amount_b=max_amount_b,
+        min_price=min_price,
+        max_price=max_price,
+        source=operation_source,
+    ).build()
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+    assert isinstance(operations[0], messages.StellarLiquidityPoolDepositOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].liquidity_pool_id == liquidity_pool_id
+    assert operations[0].max_amount_a == 10000000000
+    assert operations[0].max_amount_b == 20000000000
+    assert operations[0].min_price_n == 3
+    assert operations[0].min_price_d == 2
+    assert operations[0].max_price_n == 5
+    assert operations[0].max_price_d == 2
+
+
+def test_liquidity_pool_withdraw():
+    tx = make_default_tx()
+    liquidity_pool_id = (
+        "59fa1dc57433dcfbd2db7319d26cb3da1f28f2d8095a3ec36ad4ef9cadb0013e"
+    )
+    amount = "1000"
+    min_amount_a = "1200"
+    min_amount_b = "2000"
+
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+    envelope = tx.append_liquidity_pool_withdraw_op(
+        liquidity_pool_id=liquidity_pool_id,
+        amount=amount,
+        min_amount_a=min_amount_a,
+        min_amount_b=min_amount_b,
+        source=operation_source,
+    ).build()
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+    assert isinstance(operations[0], messages.StellarLiquidityPoolWithdrawOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].liquidity_pool_id == liquidity_pool_id
+    assert operations[0].amount == 10000000000
+    assert operations[0].min_amount_a == 12000000000
+    assert operations[0].min_amount_b == 20000000000

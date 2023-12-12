@@ -55,7 +55,9 @@
         "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
         "signature": "r/zQq2INkYDfA//5pbJP1m7OBWA/0sqNFoB+PpEStzfiUouHO6Kct6gQ8tx8p56jhFazEavxM1B6WElxuts5Ag=="
       },
-      "skip_models": ["t1"]
+      "skip_models": [
+        "t1"
+      ]
     },
     {
       "name": "StellarAccountMergeOp",
@@ -294,6 +296,54 @@
       }
     },
     {
+      "name": "StellarChangeTrustOp-add-liquidity-pool-asset",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAABgAAAAMAAAAAAAAAAURFTU8AAAAAXVVkJGaxhbhDFS6eIZFR28WJICfsQBAaUXvtXKAwwuAAAAACVVNEVFRUVAAAAAAAAAAAAPuNvYpHPMehYzcdB/JGKyLVYI9NRgfHb9o0Fmdu+i/hAAAAHgAAAAAdzWUAAAAAAAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 100,
+          "sequence_number": 1000,
+          "timebounds_start": 461535181,
+          "timebounds_end": 1575234180,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarChangeTrustOp",
+            "asset": {
+              "type": "POOL_SHARE",
+              "liquidity_pool": {
+                "type": "LIQUIDITY_POOL_CONSTANT_PRODUCT",
+                "constant_product": {
+                  "asset_a": {
+                    "type": "ALPHANUM4",
+                    "code": "DEMO",
+                    "issuer": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+                  },
+                  "asset_b": {
+                    "type": "ALPHANUM12",
+                    "code": "USDTTTT",
+                    "issuer": "GD5Y3PMKI46MPILDG4OQP4SGFMRNKYEPJVDAPR3P3I2BMZ3O7IX6DB2Y"
+                  },
+                  "fee": 30
+                }
+              }
+            },
+            "limit": 500000000
+          }
+        ]
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "x3XIbmvvcgQdcvBhPvFtHOeVI7zdcZ3C777siQqOy2TGvqtSfSaabqdCSUY2/seVuOsw4zSCk6iulXuP1p+dBQ=="
+      },
+      "skip_models": [
+        "t1"
+      ]
+    },
+    {
       "name": "StellarChangeTrustOp-delete",
       "parameters": {
         "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAABgAAAAJBQkNERUZHSElKS0wAAAAAKYSWAsIOWDZfEjwS2HocpFUNEM0hsK4OGNROPlb9ahUAAAAAAAAAAAAAAAAAAAAA",
@@ -323,6 +373,54 @@
         "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
         "signature": "SE3fsxsnlujJU4OLuJet56br0vEByqZXijWdJ8AVbwPBBe+xm+Ztk/09htlsJ79tcEELwNSp2xDjGFthTNE6DQ=="
       }
+    },
+    {
+      "name": "StellarChangeTrustOp-delete-liquidity-pool-asset",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAABgAAAAMAAAAAAAAAAURFTU8AAAAAXVVkJGaxhbhDFS6eIZFR28WJICfsQBAaUXvtXKAwwuAAAAACVVNEVFRUVAAAAAAAAAAAAPuNvYpHPMehYzcdB/JGKyLVYI9NRgfHb9o0Fmdu+i/hAAAAHgAAAAAAAAAAAAAAAAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 100,
+          "sequence_number": 1000,
+          "timebounds_start": 461535181,
+          "timebounds_end": 1575234180,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarChangeTrustOp",
+            "asset": {
+              "type": "POOL_SHARE",
+              "liquidity_pool": {
+                "type": "LIQUIDITY_POOL_CONSTANT_PRODUCT",
+                "constant_product": {
+                  "asset_a": {
+                    "type": "ALPHANUM4",
+                    "code": "DEMO",
+                    "issuer": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+                  },
+                  "asset_b": {
+                    "type": "ALPHANUM12",
+                    "code": "USDTTTT",
+                    "issuer": "GD5Y3PMKI46MPILDG4OQP4SGFMRNKYEPJVDAPR3P3I2BMZ3O7IX6DB2Y"
+                  },
+                  "fee": 30
+                }
+              }
+            },
+            "limit": 0
+          }
+        ]
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "euI2Pq5WIGd7aBqMfsUCS3h7PZ9HdnZe9GzuFU53l945+qq6jbMFsm2wv3YNu5HiHSHk6UvJ2THdogS1OyF+Dw=="
+      },
+      "skip_models": [
+        "t1"
+      ]
     },
     {
       "name": "StellarCreatePassiveSellOfferOp",
@@ -649,6 +747,73 @@
         "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
         "signature": "HgJas9f4I/o1gneU6+t7fhfdFMttSO57a8P/1wgMQ87ySt3WW/RQvFqqTX+evXmLFb/XZ5A9K3tcw1WLBhSdBQ=="
       }
+    },
+    {
+      "name": "StellarLiquidityPoolDepositOp",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAAFsePhz5Cq8q+EWE/g3Ip5gkK7tj74jbEu9ypqChkfr/PAAAAAlQL5AAAAAAEqBfIAAAAAAMAAAACAAAABQAAAAIAAAAAAAAAAA==",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 100,
+          "sequence_number": 1000,
+          "timebounds_start": 461535181,
+          "timebounds_end": 1575234180,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarLiquidityPoolDepositOp",
+            "liquidity_pool_id": "c78f873e42abcabe11613f837229e6090aeed8fbe236c4bbdca9a828647ebfcf",
+            "max_amount_a": "10000000000",
+            "max_amount_b": "20000000000",
+            "min_price_n": 3,
+            "min_price_d": 2,
+            "max_price_n": 5,
+            "max_price_d": 2
+          }
+        ]
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "q8CPQZUye0g+CepbEEjy9bm8Sj7NZQ6+u88Y+Nx8ufATV4nX86tgKEgb71yb8GWTmgbNgUW5flniXfRzFF/bBw=="
+      },
+      "skip_models": [
+        "t1"
+      ]
+    },
+    {
+      "name": "StellarLiquidityPoolWithdrawOp",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAAF8ePhz5Cq8q+EWE/g3Ip5gkK7tj74jbEu9ypqChkfr/PAAAAAlQL5AAAAAACy0F4AAAAAASoF8gAAAAAAAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 100,
+          "sequence_number": 1000,
+          "timebounds_start": 461535181,
+          "timebounds_end": 1575234180,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarLiquidityPoolWithdrawOp",
+            "liquidity_pool_id": "c78f873e42abcabe11613f837229e6090aeed8fbe236c4bbdca9a828647ebfcf",
+            "amount": "10000000000",
+            "min_amount_a": "12000000000",
+            "min_amount_b": "20000000000"
+          }
+        ]
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "IU3SYHaI2ON0ZKjmjqBUZV5NvrXPxiAiA4/Gqps/8K26UXTWfSdPL6h+YraEvNzoCz4ZjD0xLBRbt2Us3iM5DQ=="
+      },
+      "skip_models": [
+        "t1"
+      ]
     },
     {
       "name": "timebounds-0-0",

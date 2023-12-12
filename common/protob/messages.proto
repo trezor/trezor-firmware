@@ -258,7 +258,15 @@ enum MessageType {
     MessageType_StellarPathPaymentStrictSendOp = 223 [(wire_in) = true];
     reserved 224;  // omitted: StellarCreateClaimableBalanceOp
     MessageType_StellarClaimClaimableBalanceOp = 225 [(wire_in) = true];
+    reserved 226;  // omitted: StellarBeginSponsoringFutureReservesOp
+    reserved 227;  // omitted: StellarEndSponsoringFutureReservesOp
+    reserved 228;  // omitted: StellarRevokeSponsorshipOp
+    reserved 229;  // omitted: StellarClawbackOp
     MessageType_StellarSignedTx = 230 [(wire_out) = true];
+    reserved 231;  // omitted: StellarClawbackClaimableBalanceOp
+    reserved 232;  // omitted: StellarSetTrustLineFlagsOp
+    MessageType_StellarLiquidityPoolDepositOp = 233 [(wire_out) = true];
+    MessageType_StellarLiquidityPoolWithdrawOp = 234 [(wire_out) = true];
 
     // Cardano
     // dropped Sign/VerifyMessage ids 300-302

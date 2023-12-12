@@ -2,13 +2,13 @@ from typing import TYPE_CHECKING
 
 import trezor.ui.layouts as layouts
 from trezor import strings
-from trezor.enums import ButtonRequestType
+from trezor.enums import ButtonRequestType, StellarAssetType
+from trezor.messages import StellarAsset
 
 from . import consts
 
 if TYPE_CHECKING:
     from trezor.enums import StellarMemoType
-    from trezor.messages import StellarAsset
 
 
 async def require_confirm_init(
@@ -93,7 +93,7 @@ async def require_confirm_final(fee: int, num_operations: int) -> None:
         "confirm_final",
         "Final confirm",
         "Sign this transaction made up of " + op_str + " and pay {}\nfor fee?",
-        format_amount(fee),
+        format_amount(fee, StellarAsset(type=StellarAssetType.NATIVE)),
         hold=True,
     )
 
@@ -111,8 +111,8 @@ def format_asset(asset: StellarAsset | None) -> str:
 
 
 def format_amount(amount: int, asset: StellarAsset | None = None) -> str:
-    return (
-        strings.format_amount(amount, consts.AMOUNT_DECIMALS)
-        + " "
-        + format_asset(asset)
-    )
+    amount_str = strings.format_amount(amount, consts.AMOUNT_DECIMALS)
+    if not asset:
+        return amount_str
+    else:
+        return f"{amount_str} {format_asset(asset)}"

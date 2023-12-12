@@ -166,6 +166,8 @@ if TYPE_CHECKING:
         StellarPathPaymentStrictSendOp = 223
         StellarClaimClaimableBalanceOp = 225
         StellarSignedTx = 230
+        StellarLiquidityPoolDepositOp = 233
+        StellarLiquidityPoolWithdrawOp = 234
         CardanoGetPublicKey = 305
         CardanoPublicKey = 306
         CardanoGetAddress = 307
@@ -518,6 +520,10 @@ if TYPE_CHECKING:
         NATIVE = 0
         ALPHANUM4 = 1
         ALPHANUM12 = 2
+        POOL_SHARE = 3
+
+    class StellarLiquidityPoolType(IntEnum):
+        LIQUIDITY_POOL_CONSTANT_PRODUCT = 0
 
     class StellarMemoType(IntEnum):
         NONE = 0
