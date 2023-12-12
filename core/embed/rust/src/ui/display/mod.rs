@@ -1045,13 +1045,13 @@ pub fn marquee(area: Rect, text: &str, offset: i16, font: Font, fg: Color, bg: C
 
     for y in 0..clamped.height() {
         for x in 0..clamped.width() {
-            let pixel = y * constant::WIDTH + x;
+            let pixel = y as usize * constant::WIDTH as usize + x as usize;
             let byte_idx = pixel / 2;
             if byte_idx < buffer.buffer.len() as _ {
                 let data = if pixel % 2 != 0 {
-                    buffer.buffer[byte_idx as usize] >> 4
+                    buffer.buffer[byte_idx] >> 4
                 } else {
-                    buffer.buffer[byte_idx as usize] & 0xF
+                    buffer.buffer[byte_idx] & 0xF
                 };
                 pixeldata(tbl[data as usize]);
             } else {
