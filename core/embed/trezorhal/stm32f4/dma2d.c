@@ -141,6 +141,14 @@ void dma2d_start(uint8_t* in_addr, uint8_t* out_addr, int32_t pixels) {
                   1);
 }
 
+void dma2d_start_multiline(uint8_t* in_addr, uint8_t* out_addr, int32_t width,
+                           int32_t height) {
+  current_width = width;
+  current_height = height;
+  HAL_DMA2D_Start(&dma2d_handle, (uint32_t)in_addr, (uint32_t)out_addr, width,
+                  height);
+}
+
 void dma2d_start_const(uint16_t color, uint8_t* out_addr, int32_t pixels) {
   current_width = pixels;
   current_height = 1;
@@ -170,4 +178,11 @@ void dma2d_wait_for_transfer(void) {
   display_shift_window(current_width * current_height);
   current_width = 0;
   current_height = 0;
+}
+
+void dma2d_set_offsets(uint16_t offset_out, uint16_t offset_fg,
+                       uint16_t offset_bg) {
+  MODIFY_REG(DMA2D->OOR, DMA2D_OOR_LO, offset_out);
+  DMA2D->FGOR = offset_fg;
+  DMA2D->BGOR = offset_bg;
 }

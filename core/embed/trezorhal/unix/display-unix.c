@@ -346,4 +346,16 @@ void display_clear_save(void) {
 
 uint8_t *display_get_wr_addr(void) { return (uint8_t *)DISPLAY_DATA_ADDRESS; }
 
+uint16_t display_get_window_width(void) {
+  return PIXELWINDOW.end.x - PIXELWINDOW.start.x + 1;
+}
+
+uint16_t display_get_window_height(void) {
+  return PIXELWINDOW.end.y - PIXELWINDOW.start.y + 1;
+}
+
+uint16_t display_get_window_offset(void) {
+  return DISPLAY_RESX - display_get_window_width();
+}
+
 void display_finish_actions(void) {}

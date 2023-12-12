@@ -30,8 +30,12 @@ void dma2d_setup_16bpp(void);
 void dma2d_setup_4bpp_over_4bpp(uint16_t fg_color, uint16_t bg_color,
                                 uint16_t overlay_color);
 void dma2d_setup_4bpp_over_16bpp(uint16_t overlay_color);
+void dma2d_set_offsets(uint16_t offset_out, uint16_t offset_fg,
+                       uint16_t offset_bg);
 
 void dma2d_start(uint8_t* in_addr, uint8_t* out_addr, int32_t pixels);
+void dma2d_start_multiline(uint8_t* in_addr, uint8_t* out_addr, int32_t width,
+                           int32_t height);
 void dma2d_start_const(uint16_t color, uint8_t* out_addr, int32_t pixels);
 void dma2d_start_const_multiline(uint16_t color, uint8_t* out_addr,
                                  int32_t width, int32_t height);

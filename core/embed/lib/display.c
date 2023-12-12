@@ -107,16 +107,21 @@ void display_text_render_buffer(const char *text, int textlen, int font,
     const uint8_t adv = g[2];    // advance
     const uint8_t bearX = g[3];  // bearingX
     const uint8_t bearY = g[4];  // bearingY
-    if (w && h) {
+#if TREZOR_FONT_BPP == 4
+    uint8_t wa = w + (w & 1);
+#else
+    uint8_t wa = w;
+#endif
+    if (wa && h) {
       for (int j = 0; j < h; j++) {
-        for (int i = 0; i < w; i++) {
-          const int a = i + j * w;
+        for (int i = 0; i < wa; i++) {
+          const int a = i + j * wa;
 #if TREZOR_FONT_BPP == 1
           const uint8_t c = ((g[5 + a / 8] >> (7 - (a % 8) * 1)) & 0x01) * 15;
 #elif TREZOR_FONT_BPP == 2
           const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
 #elif TREZOR_FONT_BPP == 4
-          const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+          const uint8_t c = (g[5 + a / 2] >> ((a % 2) * 4)) & 0x0F;
 #elif TREZOR_FONT_BPP == 8
 #error Rendering into buffer not supported when using TREZOR_FONT_BPP = 8
           // const uint8_t c = g[5 + a / 1] >> 4;
@@ -291,7 +296,7 @@ void display_printf(const char *fmt, ...) {
 
 #endif  // TREZOR_PRINT_DISABLE
 
-#ifdef FRAMEBUFFER
+#if TREZOR_FONT_BPP == 4 && defined USE_DMA2D
 static void display_text_render(int x, int y, const char *text, int textlen,
                                 int font, uint16_t fgcolor, uint16_t bgcolor) {
   // determine text length if not provided
@@ -299,55 +304,61 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     textlen = strlen(text);
   }
 
-  int total_adv = 0;
-
-  uint32_t *fb = display_get_fb_addr();
-
   uint16_t colortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
 
+  dma2d_setup_4bpp(fgcolor, bgcolor);
+
   // render glyphs
-  for (int c_idx = 0; c_idx < textlen; c_idx++) {
-    const uint8_t *g = font_get_glyph(font, (uint8_t)text[c_idx]);
+  for (int i = 0; i < textlen; i++) {
+    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
     if (!g) continue;
     const uint8_t w = g[0];      // width
     const uint8_t h = g[1];      // height
     const uint8_t adv = g[2];    // advance
     const uint8_t bearX = g[3];  // bearingX
     const uint8_t bearY = g[4];  // bearingY
-    if (w && h) {
-      for (int j = 0; j < h; j++) {
-        for (int i = 0; i < w; i++) {
-          const int a = i + j * w;
-#if TREZOR_FONT_BPP == 1
-          const uint8_t c = ((g[5 + a / 8] >> (7 - (a % 8) * 1)) & 0x01) * 15;
-#elif TREZOR_FONT_BPP == 2
-          const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
-#elif TREZOR_FONT_BPP == 4
-          const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
-#elif TREZOR_FONT_BPP == 8
-#error Rendering into buffer not supported when using TREZOR_FONT_BPP = 8
-          // const uint8_t c = g[5 + a / 1] >> 4;
-#else
-#error Unsupported TREZOR_FONT_BPP value
-#endif
+    uint8_t wa = w + (w & 1);    // adjusted width (odd-wide glyphs are padded)
 
-          int x_pos = x + i + total_adv + bearX;
-          int y_pos = y + j - bearY;
+    if (wa && h) {
+      const int sx = x + bearX;
+      const int sy = y - bearY;
+      int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+      clamp_coords(sx, sy, wa, h, &x0, &y0, &x1, &y1);
 
-          if (y_pos < 0) continue;
+      uint8_t w_cl = (x1 - x0 + 1);  // width after clamping
 
-          if (x_pos >= DISPLAY_FRAMEBUFFER_WIDTH || x_pos < 0 ||
-              y_pos >= DISPLAY_FRAMEBUFFER_HEIGHT || y_pos < 0) {
-            continue;
-          }
+      // nothing to draw
+      if (x0 > x1 || y0 > y1) continue;
 
-          display_pixel((uint8_t *)fb, x_pos, y_pos, colortable[c]);
-        }
+      // adjust starting pixel to even in case odd number
+      // of pixels was cut off from the left
+      if ((x0 - sx) & 1) {
+        w_cl -= 1;
+        x0 += 1;
       }
+
+      // adjust width to even in case its odd after clamping
+      // (cuts one pixel from right)
+      if (w_cl & 1) {
+        w_cl &= ~1;
+        x1 -= 1;
+      }
+
+      uint8_t h_cl = y1 - y0 + 1;
+
+      uint8_t gl_offset = wa - w_cl;
+
+      dma2d_wait_for_transfer();
+      display_set_window(x0, y0, x1, y1);
+      dma2d_set_offsets(display_get_window_offset(), gl_offset, 0);
+      dma2d_start_multiline(
+          (uint8_t *)&g[5 + ((wa * (y0 - sy) + (x0 - sx)) / 2)],
+          (uint8_t *)display_get_wr_addr(), w_cl, h_cl);
     }
-    total_adv += adv;
+    x += adv;
   }
+  dma2d_wait_for_transfer();
   display_pixeldata_dirty();
 }
 

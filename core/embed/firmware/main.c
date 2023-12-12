@@ -123,6 +123,10 @@ int main(void) {
   enable_systemview();
 #endif
 
+#ifdef USE_DMA2D
+  dma2d_init();
+#endif
+
   display_reinit();
 
 #ifdef USE_HASH_PROCESSOR

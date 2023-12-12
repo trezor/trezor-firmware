@@ -60,6 +60,7 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
     (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE |
                                 (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN));
 
+
 #ifdef FRAMEBUFFER
 #ifndef STM32U5
 #error Framebuffer only supported on STM32U5 for now
@@ -91,6 +92,11 @@ static DMA_HandleTypeDef DMA_Handle = {0};
 void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
 
 #else
+
+static uint32_t g_display_window_x0 = 0;
+static uint32_t g_display_window_y0 = 0;
+static uint32_t g_display_window_x1 = DISPLAY_RESX - 1;
+static uint32_t g_display_window_y1 = DISPLAY_RESY - 1;
 #define DATA_TRANSFER(X) PIXELDATA(X)
 #endif
 
@@ -107,7 +113,7 @@ void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
 #define DISPLAY_ID_ILI9341V 0x009341U
 
 static int DISPLAY_ORIENTATION = -1;
-static buffer_offset_t BUFFER_OFFSET = {0};
+static display_padding_t DISPLAY_PADDING = {0};
 
 void display_pixeldata_dirty(void) {}
 
@@ -195,11 +201,17 @@ static void display_unsleep(void) {
   }
 }
 
-void panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
-  x0 += BUFFER_OFFSET.x;
-  x1 += BUFFER_OFFSET.x;
-  y0 += BUFFER_OFFSET.y;
-  y1 += BUFFER_OFFSET.y;
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+  x0 += DISPLAY_PADDING.x;
+  x1 += DISPLAY_PADDING.x;
+  y0 += DISPLAY_PADDING.y;
+  y1 += DISPLAY_PADDING.y;
+
+  g_display_window_x1 = x1;
+  g_display_window_y1 = y1;
+  g_display_window_x0 = x0;
+  g_display_window_y0 = y0;
+
   uint32_t id = display_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
       (id == DISPLAY_ID_ST7789V)) {
@@ -761,7 +773,17 @@ void display_refresh(void) {}
 
 uint8_t *display_get_wr_addr(void) { return (uint8_t *)DISPLAY_DATA_ADDRESS; }
 
-uint16_t display_get_window_offset(void) { return 0; }
+uint16_t display_get_window_width(void) {
+  return g_display_window_x1 - g_display_window_x0 + 1;
+}
+
+uint16_t display_get_window_height(void) {
+  return g_display_window_y1 - g_display_window_y0 + 1;
+}
+
+uint16_t display_get_window_offset(void) {
+  return DISPLAY_RESX - display_get_window_width();
+}
 
 void display_shift_window(uint16_t pixels) {}
 

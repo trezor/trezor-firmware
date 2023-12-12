@@ -38,6 +38,10 @@ static uint16_t clut_fg[16];
 static uint16_t dma2d_color;
 static dma2d_mode_t mode = 0;
 
+static uint16_t output_offset = 0;
+static uint16_t fg_offset = 0;
+static uint16_t bg_offset = 0;
+
 void dma2d_init(void) {
   // do nothing
 }
@@ -76,6 +80,10 @@ void dma2d_setup_4bpp_over_4bpp(uint16_t fg_color, uint16_t bg_color,
 }
 
 void dma2d_start(uint8_t* in_addr, uint8_t* out_addr, int32_t pixels) {
+  if (mode == DMA2D_MODE_4BPP && pixels % 2 != 0) {
+    return;
+  }
+
   (void)out_addr;
   for (int i = 0; i < pixels; i++) {
     if (mode == DMA2D_MODE_4BPP) {
@@ -93,6 +101,32 @@ void dma2d_start(uint8_t* in_addr, uint8_t* out_addr, int32_t pixels) {
   }
 }
 
+void dma2d_start_multiline(uint8_t* in_addr, uint8_t* out_addr, int32_t width,
+                           int32_t height) {
+  if (mode == DMA2D_MODE_4BPP && width % 2 != 0) {
+    return;
+  }
+
+  (void)out_addr;
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x += 2) {
+      if (mode == DMA2D_MODE_4BPP) {
+        uint32_t i = y * (width + fg_offset) + x;
+        uint8_t c = ((uint8_t*)in_addr)[i / 2];
+        uint8_t even_pix = c >> 4;
+        uint8_t odd_pix = c & 0xF;
+        PIXELDATA(clut_fg[odd_pix]);
+        PIXELDATA(clut_fg[even_pix]);
+      }
+      if (mode == DMA2D_MODE_16BPP) {
+        uint32_t i = y * (width + fg_offset) + x;
+        uint16_t c = ((uint16_t*)in_addr)[i];
+        PIXELDATA(c);
+      }
+    }
+  }
+}
+
 void dma2d_start_const(uint16_t color, uint8_t* out_addr, int32_t pixels) {
   (void)out_addr;
   for (int i = 0; i < pixels; i++) {
@@ -100,8 +134,24 @@ void dma2d_start_const(uint16_t color, uint8_t* out_addr, int32_t pixels) {
   }
 }
 
+void dma2d_start_const_multiline(uint16_t color, uint8_t* out_addr,
+                                 int32_t width, int32_t height) {
+  (void)out_addr;
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      PIXELDATA(color);
+    }
+  }
+}
+
 void dma2d_start_blend(uint8_t* overlay_addr, uint8_t* bg_addr,
                        uint8_t* out_addr, int32_t pixels) {
+  if ((mode == DMA2D_MODE_4BPP_OVER_4BPP ||
+       mode == DMA2D_MODE_4BPP_OVER_16BPP) &&
+      pixels % 2 != 0) {
+    return;
+  }
+
   (void)out_addr;
   for (int i = 0; i < pixels; i++) {
     if (mode == DMA2D_MODE_4BPP_OVER_4BPP) {
@@ -141,4 +191,11 @@ void dma2d_start_blend(uint8_t* overlay_addr, uint8_t* bg_addr,
 
 void dma2d_wait_for_transfer(void) {
   // done in place when emulating, so no need for wait here
+}
+
+void dma2d_set_offsets(uint16_t offset_out, uint16_t offset_fg,
+                       uint16_t offset_bg) {
+  output_offset = offset_out;
+  fg_offset = offset_fg;
+  bg_offset = offset_bg;
 }
