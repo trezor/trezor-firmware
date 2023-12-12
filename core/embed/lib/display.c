@@ -107,16 +107,21 @@ void display_text_render_buffer(const char *text, int textlen, int font,
     const uint8_t adv = g[2];    // advance
     const uint8_t bearX = g[3];  // bearingX
     const uint8_t bearY = g[4];  // bearingY
-    if (w && h) {
+#if TREZOR_FONT_BPP == 4
+    uint8_t wa = w + (w & 1);
+#else
+    uint8_t wa = w;
+#endif
+    if (wa && h) {
       for (int j = 0; j < h; j++) {
-        for (int i = 0; i < w; i++) {
-          const int a = i + j * w;
+        for (int i = 0; i < wa; i++) {
+          const int a = i + j * wa;
 #if TREZOR_FONT_BPP == 1
           const uint8_t c = ((g[5 + a / 8] >> (7 - (a % 8) * 1)) & 0x01) * 15;
 #elif TREZOR_FONT_BPP == 2
           const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
 #elif TREZOR_FONT_BPP == 4
-          const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+          const uint8_t c = (g[5 + a / 2] >> ((a % 2) * 4)) & 0x0F;
 #elif TREZOR_FONT_BPP == 8
 #error Rendering into buffer not supported when using TREZOR_FONT_BPP = 8
           // const uint8_t c = g[5 + a / 1] >> 4;
@@ -315,16 +320,23 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     const uint8_t adv = g[2];    // advance
     const uint8_t bearX = g[3];  // bearingX
     const uint8_t bearY = g[4];  // bearingY
+
+#if TREZOR_FONT_BPP == 4
+    uint8_t wa = w + (w & 1);
+#else
+    uint8_t wa = w;
+#endif
+
     if (w && h) {
       for (int j = 0; j < h; j++) {
-        for (int i = 0; i < w; i++) {
-          const int a = i + j * w;
+        for (int i = 0; i < wa; i++) {
+          const int a = i + j * wa;
 #if TREZOR_FONT_BPP == 1
           const uint8_t c = ((g[5 + a / 8] >> (7 - (a % 8) * 1)) & 0x01) * 15;
 #elif TREZOR_FONT_BPP == 2
           const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
 #elif TREZOR_FONT_BPP == 4
-          const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+          const uint8_t c = (g[5 + a / 2] >> ((a % 2) * 4)) & 0x0F;
 #elif TREZOR_FONT_BPP == 8
 #error Rendering into buffer not supported when using TREZOR_FONT_BPP = 8
           // const uint8_t c = g[5 + a / 1] >> 4;
@@ -371,7 +383,13 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     const uint8_t adv = g[2];    // advance
     const uint8_t bearX = g[3];  // bearingX
     const uint8_t bearY = g[4];  // bearingY
-    if (w && h) {
+
+#if TREZOR_FONT_BPP == 4
+    uint8_t wa = w + (w & 1);
+#else
+    uint8_t wa = w;
+#endif
+    if (wa && h) {
       const int sx = x + bearX;
       const int sy = y - bearY;
       int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
@@ -381,13 +399,13 @@ static void display_text_render(int x, int y, const char *text, int textlen,
         for (int i = x0; i <= x1; i++) {
           const int rx = i - sx;
           const int ry = j - sy;
-          const int a = rx + ry * w;
+          const int a = rx + ry * wa;
 #if TREZOR_FONT_BPP == 1
           const uint8_t c = ((g[5 + a / 8] >> (7 - (a % 8) * 1)) & 0x01) * 15;
 #elif TREZOR_FONT_BPP == 2
           const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
 #elif TREZOR_FONT_BPP == 4
-          const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+          const uint8_t c = (g[5 + a / 2] >> ((a % 2) * 4)) & 0x0F;
 #elif TREZOR_FONT_BPP == 8
           const uint8_t c = g[5 + a / 1] >> 4;
 #else
