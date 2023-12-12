@@ -766,8 +766,8 @@
           {
             "_message_type": "StellarLiquidityPoolDepositOp",
             "liquidity_pool_id": "c78f873e42abcabe11613f837229e6090aeed8fbe236c4bbdca9a828647ebfcf",
-            "max_amount_a": "10000000000",
-            "max_amount_b": "20000000000",
+            "max_amount_a": 10000000000,
+            "max_amount_b": 20000000000,
             "min_price_n": 3,
             "min_price_d": 2,
             "max_price_n": 5,
@@ -801,9 +801,9 @@
           {
             "_message_type": "StellarLiquidityPoolWithdrawOp",
             "liquidity_pool_id": "c78f873e42abcabe11613f837229e6090aeed8fbe236c4bbdca9a828647ebfcf",
-            "amount": "10000000000",
-            "min_amount_a": "12000000000",
-            "min_amount_b": "20000000000"
+            "amount": 10000000000,
+            "min_amount_a": 12000000000,
+            "min_amount_b": 20000000000
           }
         ]
       },
