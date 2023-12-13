@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PRODTEST_OPTIGA_PRODTESTS_H
+#ifndef PRODTEST_OPTIGA_PRODTEST_H
 #define PRODTEST_OPTIGA_PRODTEST_H
 
 #include <stdbool.h>
@@ -30,7 +30,7 @@
 #define OID_KEY_DEV OPTIGA_OID_ECC_KEY + 0
 #define OID_KEY_FIDO OPTIGA_OID_ECC_KEY + 2
 #define OID_KEY_PAIRING OPTIGA_OID_PTFBIND_SECRET
-#define OID_TRUST_ANCHOR OPTIGA_OID_CA_CERT + 0
+#define OID_TRUST_ANCHOR (OPTIGA_OID_CA_CERT + 0)
 
 typedef enum {
   OPTIGA_LOCKED_TRUE,

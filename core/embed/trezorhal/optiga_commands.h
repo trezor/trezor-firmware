@@ -141,6 +141,7 @@ extern const optiga_metadata_item OPTIGA_META_ACCESS_ALWAYS;
 extern const optiga_metadata_item OPTIGA_META_ACCESS_NEVER;
 extern const optiga_metadata_item OPTIGA_META_KEY_USE_ENC;
 extern const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE;
+extern const optiga_metadata_item OPTIGA_META_VERSION_DEFAULT;
 
 optiga_result optiga_parse_metadata(const uint8_t *serialized,
                                     size_t serialized_size,
