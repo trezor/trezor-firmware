@@ -47,8 +47,8 @@ const optiga_metadata_item OPTIGA_META_KEY_USE_ENC = {
     (const uint8_t[]){OPTIGA_KEY_USAGE_ENC}, 1};
 const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE = {
     (const uint8_t[]){OPTIGA_KEY_USAGE_KEYAGREE}, 1};
-static const optiga_metadata_item OPTIGA_META_VERSION_DEFAULT = {
-    (const uint8_t *)"\xC1\x02\x00\x00", 4};
+const optiga_metadata_item OPTIGA_META_VERSION_DEFAULT = {
+    (const uint8_t[]){0x00, 0x00}, 2};
 
 static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
   // Check that there is no trailing output data in the response.
@@ -823,7 +823,8 @@ optiga_result optiga_set_trust_anchor(void) {
       0xb0, 0xa5, 0x21, 0x2c, 0x54, 0x3a, 0x6c, 0x04, 0x72,
   };
 
-  return optiga_set_data_object(0xe0e8, false, TA_CERT, sizeof(TA_CERT));
+  return optiga_set_data_object(OPTIGA_OID_CA_CERT, false, TA_CERT,
+                                sizeof(TA_CERT));
 }
 
 /*
@@ -849,7 +850,8 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
     if (metadata.version.len != 2) {
       return OPTIGA_ERR_UNEXPECTED;
     }
-    payload_version = (metadata.version.ptr[0] << 8) + metadata.version.ptr[1];
+    payload_version =
+        ((metadata.version.ptr[0] & 0x7f) << 8) + metadata.version.ptr[1];
   }
   payload_version += 1;
 
