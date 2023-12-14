@@ -612,7 +612,9 @@ async def choose_backup_medium(
         return BackupMedium.Words
 
 
-async def choose_recovery_medium(is_slip39: bool = False, dry_run: bool = False) -> BackupMedium:
+async def choose_recovery_medium(
+    is_slip39: bool = False, dry_run: bool = False
+) -> BackupMedium:
     from storage.sd_seed_backup import BackupMedium
 
     action = ""

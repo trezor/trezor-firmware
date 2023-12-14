@@ -1,5 +1,5 @@
-from trezor.sdcard import SD_CARD_HOT_SWAPPABLE
 from trezor import io, wire
+from trezor.sdcard import SD_CARD_HOT_SWAPPABLE
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 
 

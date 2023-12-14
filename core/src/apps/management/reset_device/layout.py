@@ -160,7 +160,7 @@ async def show_and_confirm_mnemonic(
     share_index: int | None = None,
     shares_total: int | None = None,
     group_index: int | None = None,
-    groups_total: int | None = None, # TODO might be unused
+    groups_total: int | None = None,  # TODO might be unused
 ) -> None:
     words = mnemonic.split()
     while True:

@@ -4,7 +4,7 @@ import storage
 import storage.device as storage_device
 from trezor.crypto import slip39
 from trezor.enums import BackupType
-from trezor.wire import ProcessError, ActionCancelled
+from trezor.wire import ActionCancelled, ProcessError
 
 from . import layout
 
@@ -118,8 +118,8 @@ async def _backup_mnemonic_or_share(
     group_index: int | None = None,
     groups_total: int | None = None,
 ):
-    from trezor import utils
     from storage.sd_seed_backup import BackupMedium
+    from trezor import utils
 
     while True:
         # let the user choose between Words/SDcard backup
@@ -139,14 +139,14 @@ async def _backup_mnemonic_or_share(
                 group_index=group_index,
                 groups_total=groups_total,
             )
-            break
+            return
         else:
             # try to store seed on SD card
             from apps.management.sd_backup import sdcard_backup_seed
 
             try:
                 await sdcard_backup_seed(mnemonic, backup_type)
-                break
+                return
             except ActionCancelled:
                 # there might have been a backup
                 # TODO show guidance: Pick different card/choose words

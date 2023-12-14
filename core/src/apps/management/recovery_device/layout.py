@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from storage.sd_seed_backup import BackupMedium
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action
 from trezor.ui.layouts.recovery import (  # noqa: F401
@@ -115,6 +116,21 @@ async def show_invalid_mnemonic(word_count: int) -> None:
             "warning_invalid_seed",
             "Invalid recovery seed entered.",
             "Please try again",
+        )
+
+
+async def _offer_backup_on_another_medium(previous_medium: BackupMedium) -> None:
+    if previous_medium == BackupMedium.Words:
+        await confirm_action(
+            "backup_redundant_offer_sd_card",
+            "Do a 2nd backup",
+            action="Procced with a backup on SD card.",
+        )
+    else:
+        await confirm_action(
+            "backup_redundant_offer_words",
+            "Do a 2nd backup",
+            action="Procced with a written backup.",
         )
 
 

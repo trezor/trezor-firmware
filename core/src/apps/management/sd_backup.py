@@ -10,6 +10,7 @@ async def choose_recovery_medium(is_slip39: bool, dry_run: bool) -> BackupMedium
 
     return await choose_recovery_medium(is_slip39, dry_run)
 
+
 async def choose_backup_medium(
     share_index: int | None, group_index: int | None, recovery: bool = False
 ) -> BackupMedium:
@@ -18,10 +19,11 @@ async def choose_backup_medium(
     return await choose_backup_medium(share_index, group_index)
 
 
-async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType):
-    from storage.sd_seed_backup import store_seed_on_sdcard, is_backup_present
-    from apps.common.sdcard import ensure_sdcard
+async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType) -> None:
+    from storage.sd_seed_backup import is_backup_present, store_seed_on_sdcard
     from trezor.ui.layouts import confirm_action, show_success
+
+    from apps.common.sdcard import ensure_sdcard
 
     await ensure_sdcard(ensure_filesystem=False)
     if is_backup_present():
@@ -45,6 +47,7 @@ async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType):
 
 async def sdcard_recover_seed() -> tuple[str | None, BackupType | None]:
     from storage.sd_seed_backup import recover_seed_from_sdcard
+
     from apps.common.sdcard import ensure_sdcard
 
     await ensure_sdcard(ensure_filesystem=False)

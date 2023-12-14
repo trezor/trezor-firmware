@@ -21,7 +21,7 @@ if utils.USE_SD_CARD:
     SDBACKUP_BLOCK_OFFSET = 130  # TODO arbitrary for now
     SDBACKUP_N_WRITINGS = 100  # TODO decide between offset/writings
     SDBACKUP_MAGIC = b"TRZM"
-    SDBACKUP_VERSION = b"0"
+    SDBACKUP_VERSION = 0
 
 
 class BackupMedium(IntEnum):
@@ -131,7 +131,7 @@ HASH_LEN = const(32)
 def _encode_backup_block(mnemonic: bytes, backup_type: BackupType) -> bytes:
     ret = utils.empty_bytearray(SDCARD_BLOCK_SIZE_B)
     ret.extend(SDBACKUP_MAGIC)
-    ret.extend(SDBACKUP_VERSION)
+    ret.extend(SDBACKUP_VERSION.to_bytes(VERSION_LEN, "big"))
     ret.extend(backup_type.to_bytes(BACKUPTYPE_LEN, "big"))
     seed_len = len(mnemonic)
     ret.extend(seed_len.to_bytes(SEEDLEN_LEN, "big"))
