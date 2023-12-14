@@ -93,7 +93,7 @@ jobs:
       - run: |
           # log serial console to file; sleep is used because tio needs stdin that is not /dev/null
           nix-shell --arg hardwareTest true --run "sleep 8h | tio --no-autoconnect /dev/ttyTREZOR &> trezor.log" &
-          nix-shell --arg fullDeps true --run "./core/tests/run_tests_device_emu_monero.sh $TESTOPTS"
+          nix-shell --arg fullDeps true --run "./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:"
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
