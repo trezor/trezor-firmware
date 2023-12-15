@@ -45,7 +45,7 @@ optiga_result optiga_soft_reset(void);
 optiga_result optiga_set_data_reg_len(size_t size);
 
 #if !PRODUCTION
-void optiga_set_transport_log_hex(optiga_log_hex_t f);
+void optiga_transport_set_log_hex(optiga_log_hex_t f);
 #endif
 
 #endif
