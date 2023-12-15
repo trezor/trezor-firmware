@@ -15,6 +15,7 @@
 #define USE_DISP_I8080_8BIT_DW 1
 #define USE_HAPTIC 1
 #define USE_BACKLIGHT 1
+#define USE_HASH_PROCESSOR 1
 
 #include "displays/panels/lx154a2422.h"
 #include "displays/st7789v.h"

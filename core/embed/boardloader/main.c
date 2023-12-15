@@ -37,6 +37,9 @@
 #ifdef USE_SDRAM
 #include "sdram.h"
 #endif
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
 
 #include "lowlevel.h"
 #include "model.h"
@@ -263,6 +266,10 @@ int main(void) {
 
 #ifdef USE_SDRAM
   sdram_init();
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
 #endif
 
   display_init();
