@@ -54,6 +54,10 @@
 #ifdef USE_RGB_LED
 #include "rgb_led.h"
 #endif
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
+
 #include "model.h"
 #include "usb.h"
 #include "version.h"
@@ -404,6 +408,7 @@ int bootloader_main(void) {
   random_delays_init();
 
 #ifdef STM32U5
+
   if (sectrue != flash_configure_sec_area_ob()) {
 #ifdef STM32U5
     secret_bhk_regenerate();
@@ -415,6 +420,10 @@ int bootloader_main(void) {
     __disable_irq();
     HAL_NVIC_SystemReset();
   }
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
 #endif
 
 #ifdef USE_DMA2D
