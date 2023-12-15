@@ -207,8 +207,8 @@ optiga_result optiga_derive_key(optiga_key_derivation deriv, uint16_t oid,
 optiga_result optiga_set_trust_anchor(void);
 optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]);
 
-#ifndef NDEBUG
-void optiga_set_command_log_hex(optiga_log_hex_t f);
+#if !PRODUCTION
+void optiga_command_set_log_hex(optiga_log_hex_t f);
 #endif
 
 #endif

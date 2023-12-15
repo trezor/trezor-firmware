@@ -134,7 +134,7 @@ static uint8_t sec_chan_buffer[OPTIGA_MAX_APDU_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
     {0};
 static size_t sec_chan_size = 0;
 
-#ifdef NDEBUG
+#if PRODUCTION
 #define OPTIGA_LOG(prefix, data, data_size)
 #else
 static optiga_log_hex_t log_hex = NULL;

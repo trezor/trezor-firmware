@@ -50,11 +50,11 @@ const optiga_metadata_item OPTIGA_META_KEY_USE_KEYAGREE =
 const optiga_metadata_item OPTIGA_META_VERSION_DEFAULT = {
     (const uint8_t[]){0x00, 0x00}, 2};
 
-#ifdef NDEBUG
+#if PRODUCTION
 #define OPTIGA_LOG(prefix, data, data_size)
 #else
 static optiga_log_hex_t log_hex = NULL;
-void optiga_set_command_log_hex(optiga_log_hex_t f) { log_hex = f; }
+void optiga_command_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
 #define OPTIGA_LOG(prefix, data, data_size) \
   if (log_hex != NULL) {                    \
     log_hex(prefix, data, data_size);       \

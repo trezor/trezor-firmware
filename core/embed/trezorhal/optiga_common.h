@@ -34,7 +34,7 @@ typedef enum _optiga_result {
   OPTIGA_ERR_CMD,         // Command error. See error code data object 0xF1C2.
 } optiga_result;
 
-#ifndef NDEBUG
+#if !PRODUCTION
 typedef void (*optiga_log_hex_t)(const char *prefix, const uint8_t *data,
                                  size_t data_size);
 #endif
