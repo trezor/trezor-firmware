@@ -75,7 +75,7 @@ static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
 
   *out_data = tx_buffer + 4;
   *out_size = tx_size - 4;
-  OPTIGA_LOG("SUCCESS ", *out_data, *out_size)
+  OPTIGA_LOG("SUCCESS", *out_data, *out_size)
   return OPTIGA_SUCCESS;
 }
 
