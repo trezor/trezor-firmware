@@ -173,6 +173,13 @@ void pair_optiga(void) {
   return;
 }
 
+#if PRODUCTION
+#define METADATA_SET_LOCKED(metadata) \
+  { metadata.lcso = OPTIGA_META_LCS_OPERATIONAL; }
+#else
+#define METADATA_SET_LOCKED(metadata)
+#endif
+
 void optiga_lock(void) {
   if (!optiga_paired()) return;
 
@@ -190,7 +197,7 @@ void optiga_lock(void) {
 
   // Set metadata for device certificate.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  METADATA_SET_LOCKED(metadata);
   metadata.change = OPTIGA_META_ACCESS_NEVER;
   metadata.read = OPTIGA_META_ACCESS_ALWAYS;
   metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
@@ -200,7 +207,7 @@ void optiga_lock(void) {
 
   // Set metadata for FIDO attestation certificate.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  METADATA_SET_LOCKED(metadata);
   metadata.change = OPTIGA_META_ACCESS_NEVER;
   metadata.read = OPTIGA_META_ACCESS_ALWAYS;
   metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
@@ -210,7 +217,7 @@ void optiga_lock(void) {
 
   // Set metadata for device private key.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  METADATA_SET_LOCKED(metadata);
   metadata.change = OPTIGA_META_ACCESS_NEVER;
   metadata.read = OPTIGA_META_ACCESS_NEVER;
   metadata.execute = ACCESS_PAIRED;
@@ -221,7 +228,7 @@ void optiga_lock(void) {
 
   // Set metadata for FIDO attestation private key.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  METADATA_SET_LOCKED(metadata);
   metadata.change = OPTIGA_META_ACCESS_NEVER;
   metadata.read = OPTIGA_META_ACCESS_NEVER;
   metadata.execute = ACCESS_PAIRED;
@@ -232,7 +239,7 @@ void optiga_lock(void) {
 
   // Set metadata for pairing key.
   memzero(&metadata, sizeof(metadata));
-  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  METADATA_SET_LOCKED(metadata);
   metadata.change = OPTIGA_META_ACCESS_NEVER;
   metadata.read = OPTIGA_META_ACCESS_NEVER;
   metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
