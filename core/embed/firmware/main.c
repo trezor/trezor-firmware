@@ -92,6 +92,19 @@
 // from util.s
 extern void shutdown_privileged(void);
 
+#ifdef USE_OPTIGA
+#if !PYOPT
+static void optiga_log_hex(const char *prefix, const uint8_t *data,
+                           size_t data_size) {
+  printf("%s: ", prefix);
+  for (size_t i = 0; i < data_size; i++) {
+    printf("%02x", data[i]);
+  }
+  printf("\n");
+}
+#endif
+#endif
+
 int main(void) {
   random_delays_init();
 
@@ -173,6 +186,14 @@ int main(void) {
 #endif
 
 #ifdef USE_OPTIGA
+
+#if !PYOPT
+  // command log is relatively quiet so we enable it in debug builds
+  optiga_command_set_log_hex(optiga_log_hex);
+  // transport log can be spammy, uncomment if you want it:
+  // optiga_transport_set_log_hex(optiga_log_hex);
+#endif
+
   optiga_init();
   optiga_open_application();
   if (sectrue == secret_ok) {
