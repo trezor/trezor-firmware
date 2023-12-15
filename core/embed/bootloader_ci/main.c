@@ -39,6 +39,11 @@
 #include "bootui.h"
 #include "messages.h"
 #include "model.h"
+
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
+
 // #include "mpu.h"
 
 #define USB_IFACE_NUM 0
@@ -205,6 +210,10 @@ int main(void) {
 #ifdef USE_TOUCH
   touch_init();
   touch_power_on();
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
 #endif
 
   mpu_config_bootloader();

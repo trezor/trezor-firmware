@@ -48,6 +48,10 @@
 #include "optiga_transport.h"
 #endif
 
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
+
 #include "memzero.h"
 
 #ifdef STM32U5
@@ -553,6 +557,9 @@ int main(void) {
   display_reinit();
   display_orientation(0);
   random_delays_init();
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
 #ifdef USE_SD_CARD
   sdcard_init();
 #endif

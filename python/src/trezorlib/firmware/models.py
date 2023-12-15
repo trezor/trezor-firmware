@@ -258,8 +258,14 @@ T2T1_HASH_PARAMS = FirmwareHashParameters(
     padding_byte=None,
 )
 
+T3T1_HASH_PARAMS = FirmwareHashParameters(
+    hash_function=hashlib.sha256,
+    chunk_size=1024 * 128,
+    padding_byte=None,
+)
+
 D002_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.blake2s,
+    hash_function=hashlib.sha256,
     chunk_size=1024 * 256,
     padding_byte=None,
 )
@@ -285,7 +291,7 @@ MODEL_MAP_DEV = {
 MODEL_HASH_PARAMS_MAP = {
     Model.T1B1: LEGACY_HASH_PARAMS,
     Model.T2T1: T2T1_HASH_PARAMS,
-    Model.T3T1: T2T1_HASH_PARAMS,
+    Model.T3T1: T3T1_HASH_PARAMS,
     Model.T2B1: T2T1_HASH_PARAMS,
     Model.D001: T2T1_HASH_PARAMS,
     Model.D002: D002_HASH_PARAMS,
