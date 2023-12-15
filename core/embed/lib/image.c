@@ -19,7 +19,6 @@
 
 #include <string.h>
 
-#include "blake2s.h"
 #include "ed25519-donna/ed25519.h"
 
 #include "common.h"
@@ -120,13 +119,13 @@ secbool check_image_model(const image_header *const hdr) {
 }
 
 void get_image_fingerprint(const image_header *const hdr, uint8_t *const out) {
-  BLAKE2S_CTX ctx;
-  blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-  blake2s_Update(&ctx, hdr, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, (uint8_t *)hdr, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
   for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
-    blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
+    IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)"\x00", 1);
   }
-  blake2s_Final(&ctx, out, BLAKE2S_DIGEST_LENGTH);
+  IMAGE_HASH_FINAL(&ctx, out);
 }
 
 secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
@@ -141,7 +140,7 @@ secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
     return secfalse;
 
   return sectrue *
-         (0 == ed25519_sign_open(fingerprint, BLAKE2S_DIGEST_LENGTH, pub,
+         (0 == ed25519_sign_open(fingerprint, IMAGE_HASH_DIGEST_LENGTH, pub,
                                  *(const ed25519_signature *)hdr->sig));
 }
 
@@ -199,21 +198,21 @@ secbool check_vendor_header_sig(const vendor_header *const vhdr, uint8_t key_m,
 
   // check header signature
 
-  uint8_t hash[BLAKE2S_DIGEST_LENGTH];
-  BLAKE2S_CTX ctx;
-  blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-  blake2s_Update(&ctx, vhdr->origin, vhdr->hdrlen - IMAGE_SIG_SIZE);
+  uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, vhdr->origin, vhdr->hdrlen - IMAGE_SIG_SIZE);
   for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
-    blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
+    IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)"\x00", 1);
   }
-  blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+  IMAGE_HASH_FINAL(&ctx, hash);
 
   ed25519_public_key pub;
   if (sectrue != compute_pubkey(key_m, key_n, keys, vhdr->sigmask, pub))
     return secfalse;
 
   return sectrue *
-         (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub,
+         (0 == ed25519_sign_open(hash, IMAGE_HASH_DIGEST_LENGTH, pub,
                                  *(const ed25519_signature *)vhdr->sig));
 }
 
@@ -223,20 +222,22 @@ secbool check_vendor_header_keys(const vendor_header *const vhdr) {
 }
 
 void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash) {
-  BLAKE2S_CTX ctx;
-  blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-  blake2s_Update(&ctx, vhdr->vstr, vhdr->vstr_len);
-  blake2s_Update(&ctx, "Trezor Vendor Header", 20);
-  blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)vhdr->vstr, vhdr->vstr_len);
+  IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)"Trezor Vendor Header", 20);
+  IMAGE_HASH_FINAL(&ctx, hash);
 }
 
 secbool check_single_hash(const uint8_t *const hash, const uint8_t *const data,
                           int len) {
-  uint8_t h[BLAKE2S_DIGEST_LENGTH];
-  blake2s(data, len, h, BLAKE2S_DIGEST_LENGTH);
-  return sectrue * (0 == memcmp(h, hash, BLAKE2S_DIGEST_LENGTH));
+  uint8_t s_c[IMAGE_HASH_DIGEST_LENGTH] = {0};
+
+  IMAGE_HASH_CALC(data, len, s_c);
+
+  return sectrue * (0 == memcmp(s_c, hash, IMAGE_HASH_DIGEST_LENGTH));
 }
-//
+
 secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
                              const flash_area_t *area) {
   if (0 == area) {
@@ -339,10 +340,7 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
   get_image_fingerprint(ihdr, info->fingerprint);
 
   // calculate hash of both vendor and image headers
-  BLAKE2S_CTX ctx;
-  blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-  blake2s_Update(&ctx, header, vhdr.hdrlen + ihdr->hdrlen);
-  blake2s_Final(&ctx, &info->hash, BLAKE2S_DIGEST_LENGTH);
+  IMAGE_HASH_CALC(header, vhdr.hdrlen + ihdr->hdrlen, info->hash);
 
   return sectrue;
 }

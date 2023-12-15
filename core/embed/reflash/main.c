@@ -34,6 +34,10 @@
 #include "secbool.h"
 #include "touch.h"
 
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
+
 static void progress_callback(int pos, int len) { display_printf("."); }
 
 static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
@@ -63,6 +67,10 @@ static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
 int main(void) {
   sdcard_init();
   touch_init();
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
 
   display_orientation(0);
   display_clear();

@@ -599,12 +599,12 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       secbool is_ilu = secfalse;  // interaction-less update
 
       if (bootargs_get_command() == BOOT_COMMAND_INSTALL_UPGRADE) {
-        BLAKE2S_CTX ctx;
-        uint8_t hash[BLAKE2S_DIGEST_LENGTH];
-        blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-        blake2s_Update(&ctx, CHUNK_BUFFER_PTR,
-                       vhdr.hdrlen + received_hdr->hdrlen);
-        blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+        IMAGE_HASH_CTX ctx;
+        uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
+        IMAGE_HASH_INIT(&ctx);
+        IMAGE_HASH_UPDATE(&ctx, CHUNK_BUFFER_PTR,
+                          vhdr.hdrlen + received_hdr->hdrlen);
+        IMAGE_HASH_FINAL(&ctx, hash);
 
         // the firmware must be the same as confirmed by the user
         if (memcmp(bootargs_get_args()->hash, hash, sizeof(hash)) != 0) {
