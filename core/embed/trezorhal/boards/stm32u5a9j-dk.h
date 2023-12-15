@@ -9,6 +9,7 @@
 #define USE_TOUCH 1
 //#define USE_SBU 1
 //#define USE_DISP_I8080_8BIT_DW 1
+#define USE_HASH_PROCESSOR 1
 
 #include "displays/dsi.h"
 

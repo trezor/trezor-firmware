@@ -74,6 +74,10 @@
 #ifdef USE_SD_CARD
 #include "sdcard.h"
 #endif
+#ifdef USE_HASH_PROCESSOR
+#include "hash_processor.h"
+#endif
+
 #ifdef USE_OPTIGA
 #include "optiga_commands.h"
 #include "optiga_transport.h"
@@ -118,6 +122,10 @@ int main(void) {
 
 #ifdef SYSTEM_VIEW
   enable_systemview();
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
 #endif
 
 #ifdef USE_DMA2D

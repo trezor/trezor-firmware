@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include "blake2s.h"
 #include "flash.h"
+#include "image_hash_conf.h"
 #include "model.h"
 #include "secbool.h"
 
@@ -90,9 +91,9 @@ typedef struct {
   uint8_t ver_patch;
   uint8_t ver_build;
   // firmware fingerprint
-  uint8_t fingerprint[BLAKE2S_DIGEST_LENGTH];
+  uint8_t fingerprint[IMAGE_HASH_DIGEST_LENGTH];
   // hash of vendor and image header
-  uint8_t hash[BLAKE2S_DIGEST_LENGTH];
+  uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
 } firmware_header_info_t;
 
 const image_header *read_image_header(const uint8_t *const data,

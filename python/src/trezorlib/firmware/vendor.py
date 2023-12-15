@@ -121,10 +121,11 @@ class VendorHeader(Struct):
     # fmt: on
 
     def digest(self) -> bytes:
+        hash_function = Model.from_hw_model(self.hw_model).hash_params().hash_function
         cpy = copy(self)
         cpy.sigmask = 0
         cpy.signature = b"\x00" * 64
-        return hashlib.blake2s(cpy.build()).digest()
+        return hash_function(cpy.build()).digest()
 
     def vhash(self) -> bytes:
         h = hashlib.blake2s()
