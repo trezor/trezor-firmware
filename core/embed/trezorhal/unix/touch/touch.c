@@ -84,6 +84,7 @@ uint32_t touch_read(void) {
 
 void touch_init(void) {}
 void touch_power_on(void) {}
+void touch_wait_until_ready(void) {}
 
 uint32_t touch_is_detected(void) { return _touch_detected; }
 

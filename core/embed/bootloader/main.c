@@ -407,6 +407,10 @@ int bootloader_main(void) {
 
   random_delays_init();
 
+#if defined TREZOR_MODEL_T
+  set_core_clock(CLOCK_180_MHZ);
+#endif
+
 #ifdef STM32U5
   if (sectrue != flash_configure_sec_area_ob()) {
 #ifdef STM32U5
@@ -423,6 +427,15 @@ int bootloader_main(void) {
 
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
+#endif
+
+#ifdef USE_I2C
+  i2c_init();
+#endif
+
+#ifdef USE_TOUCH
+  touch_power_on();
+  touch_init();
 #endif
 
 #ifdef USE_DMA2D
@@ -489,22 +502,8 @@ int bootloader_main(void) {
     firmware_present_backup = firmware_present;
   }
 
-#if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
-  display_set_little_endian();
-#endif
-
-#ifdef USE_I2C
-  i2c_init();
-#endif
-
 #ifdef USE_OPTIGA
   optiga_hal_init();
-#endif
-
-#ifdef USE_TOUCH
-  touch_power_on();
-  touch_init();
 #endif
 
 #ifdef USE_BUTTON
@@ -549,7 +548,8 @@ int bootloader_main(void) {
   uint32_t touched = 0;
 #ifdef USE_TOUCH
   if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
-    for (int i = 0; i < 100; i++) {
+    touch_wait_until_ready();
+    for (int i = 0; i < 10; i++) {
       touched = touch_is_detected() | touch_read();
       if (touched) {
         break;
@@ -557,7 +557,7 @@ int bootloader_main(void) {
 #ifdef TREZOR_EMULATOR
       hal_delay(25);
 #else
-      hal_delay(1);
+      hal_delay_us(1000);
 #endif
     }
   }
