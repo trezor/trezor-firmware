@@ -45,7 +45,11 @@
 #define EVENT_OLD_TIMEOUT_MS 50
 #define EVENT_MISSING_TIMEOUT_MS 50
 
+static uint32_t touch_init_ticks = 0;
+
 static void touch_default_pin_state(void) {
+  GPIO_PinState state = HAL_GPIO_ReadPin(TOUCH_ON_PORT, TOUCH_ON_PIN);
+
   // set power off and other pins as per section 3.5 of FT6236 datasheet
   HAL_GPIO_WritePin(TOUCH_ON_PORT, TOUCH_ON_PIN,
                     GPIO_PIN_SET);  // CTP_ON (active low) i.e.- CTPM power
@@ -74,7 +78,11 @@ static void touch_default_pin_state(void) {
   // for these changes to take effect. a reset needs to be low for
   // a minimum of 5ms. also wait for power circuitry to stabilize (if it
   // changed).
-  HAL_Delay(100);  // 100ms (being conservative)
+  HAL_Delay(10);
+
+  if (state == GPIO_PIN_SET) {
+    HAL_Delay(90);  // add 90 ms for circuitry to stabilize (being conservative)
+  }
 }
 
 static void touch_active_pin_state(void) {
@@ -93,8 +101,10 @@ static void touch_active_pin_state(void) {
 
   HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN,
                     GPIO_PIN_SET);  // release CTPM reset
-  HAL_Delay(310);  // "Time of starting to report point after resetting" min is
-                   // 300ms, giving an extra 10ms
+
+  touch_init_ticks = hal_ticks_ms();
+
+  HAL_Delay(5);
 }
 
 void touch_set_mode(void) {
@@ -118,8 +128,6 @@ void touch_power_on(void) {
 
   // turn on CTP circuitry
   touch_active_pin_state();
-
-  HAL_Delay(50);
 }
 
 void touch_power_off(void) {
@@ -141,6 +149,13 @@ void touch_init(void) {
 
   touch_set_mode();
   touch_sensitivity(TOUCH_SENSITIVITY);
+}
+
+void touch_wait_until_ready(void) {
+  // wait for the touch controller to be ready
+  while (hal_ticks_ms() - touch_init_ticks < 310) {
+    HAL_Delay(1);
+  }
 }
 
 void touch_sensitivity(uint8_t value) {
