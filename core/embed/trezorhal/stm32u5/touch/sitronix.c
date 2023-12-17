@@ -1212,3 +1212,5 @@ uint32_t touch_read(void) {
 
   return 0;
 }
+
+void touch_wait_until_ready(void) {}
