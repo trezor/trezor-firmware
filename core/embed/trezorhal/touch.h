@@ -10,6 +10,8 @@
 void touch_init(void);
 void touch_power_on(void);
 void touch_power_off(void);
+void touch_wait_until_ready(void);
+
 void touch_sensitivity(uint8_t value);
 uint32_t touch_read(void);
 uint32_t touch_click(void);
