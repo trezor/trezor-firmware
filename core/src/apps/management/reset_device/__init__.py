@@ -148,7 +148,8 @@ async def _backup_mnemonic_or_share(
                 await sdcard_backup_seed(mnemonic, backup_type)
                 return
             except ActionCancelled:
-                # there might have been a backup
+                # 1) Not a Trezor card.
+                # 2) Backup present on the card.
                 # TODO show guidance: Pick different card/choose words
                 pass
             except Exception:

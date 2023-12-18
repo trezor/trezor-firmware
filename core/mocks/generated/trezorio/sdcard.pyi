@@ -49,3 +49,10 @@ def write(block_num: int, buf: bytes) -> None:
     Number of bytes written is length of buf rounded down to multiply of
     SDCARD_BLOCK_SIZE.
     """
+
+
+# extmod/modtrezorio/modtrezorio-sdcard.h
+def get_mid() -> int:
+    """
+    Returns Manufacturer ID from the CID register data.
+    """

@@ -583,7 +583,7 @@ async def choose_backup_medium(
     from storage.sd_seed_backup import BackupMedium
 
     if share_index is None:
-        action = f"Recovery seed"
+        action = "Recovery seed"
         description = "You can backup your wallet using either SD card or word list."
     elif group_index is None:
         action = f"Recovery share #{share_index + 1}"

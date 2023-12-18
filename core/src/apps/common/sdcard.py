@@ -1,5 +1,5 @@
 from trezor import io, wire
-from trezor.sdcard import SD_CARD_HOT_SWAPPABLE
+from trezor.sdcard import SD_CARD_HOT_SWAPPABLE, with_sdcard
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 
 
@@ -108,6 +108,7 @@ async def ensure_sdcard(
 
     if not ensure_filesystem:
         return
+
     fatfs = io.fatfs  # local_cache_attribute
     while True:
         try:
@@ -157,3 +158,20 @@ async def request_sd_salt() -> bytearray | None:
             # In either case, there is no good way to recover. If the user clicks Retry,
             # we will try again.
             await confirm_retry_sd()
+
+
+@with_sdcard
+def is_trz_card() -> bool:
+    iosd = io.sdcard  # local_cache_attribute
+    if not iosd.is_present():
+        return False
+    return iosd.get_mid() == 39 and iosd.capacity() == 122_945_536
+
+
+@with_sdcard
+async def show_sd_card_info() -> None:
+    from trezor.ui.layouts import show_success
+
+    mid = io.sdcard.get_mid()
+    cap = io.sdcard.capacity()
+    await show_success("TDL", f"Manuf ID: {mid}\nCapacity: {cap} [B]")

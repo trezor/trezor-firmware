@@ -130,3 +130,8 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
          num_blocks * SDCARD_BLOCK_SIZE);
   return sectrue;
 }
+
+uint64_t __wur sdcard_get_mid(void) {
+  // TODO mock
+  return 0;
+}

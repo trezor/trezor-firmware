@@ -113,6 +113,16 @@ STATIC mp_obj_t mod_trezorio_sdcard_write(mp_obj_t block_num, mp_obj_t buf) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_write_obj,
                                  mod_trezorio_sdcard_write);
 
+/// def get_mid() -> int:
+///     """
+///     Returns Manufacturer ID from the CID register data.
+///     """
+STATIC mp_obj_t mod_trezorio_sdcard_get_mid() {
+  return mp_obj_new_int_from_ull(sdcard_get_mid());
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_get_mid_obj,
+                                 mod_trezorio_sdcard_get_mid);
+
 STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sdcard)},
 
@@ -125,9 +135,12 @@ STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_capacity),
      MP_ROM_PTR(&mod_trezorio_sdcard_capacity_obj)},
     {MP_ROM_QSTR(MP_QSTR_BLOCK_SIZE), MP_ROM_INT(SDCARD_BLOCK_SIZE)},
-    {MP_ROM_QSTR(MP_QSTR_BACKUP_BLOCK_START), MP_ROM_INT(SDCARD_BACKUP_BLOCK_START)},
+    {MP_ROM_QSTR(MP_QSTR_BACKUP_BLOCK_START),
+     MP_ROM_INT(SDCARD_BACKUP_BLOCK_START)},
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_sdcard_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_sdcard_write_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_mid),
+     MP_ROM_PTR(&mod_trezorio_sdcard_get_mid_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_sdcard_globals,
                             mod_trezorio_sdcard_globals_table);

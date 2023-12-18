@@ -152,7 +152,6 @@ async def _finish_recovery_dry_run(
 
 
 async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
-    from trezor.enums import BackupType
     from trezor.ui.layouts import show_success
 
     if backup_type is None:
@@ -204,6 +203,7 @@ async def _recover_mnemonic_or_share(
                 # ask for the number of words
                 word_count = await layout.request_word_count(dry_run)
                 await _request_share_first_screen(word_count)
+            assert word_count is not None
             words = await layout.request_mnemonic(word_count, backup_type)
             return words, word_count, BackupMedium.Words
         else:
@@ -212,10 +212,11 @@ async def _recover_mnemonic_or_share(
 
             try:
                 mnemonic, _ = await sdcard_recover_seed()  # TODO backup type needed?
-                if mnemonic == None:
+                if mnemonic is None:
                     # TODO warn and repeat
                     pass
-                return mnemonic, len(mnemonic.split()), BackupMedium.SDCard
+                else:
+                    return mnemonic, len(mnemonic.split()), BackupMedium.SDCard
             except wire.ActionCancelled:
                 # there might have been a backup
                 # TODO show guidance: Pick different card/choose words

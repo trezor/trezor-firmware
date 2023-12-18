@@ -28,10 +28,6 @@ if TYPE_CHECKING:
 SD_CARD_HOT_SWAPPABLE = False
 
 
-def is_trz_card() -> bool:
-    return True
-
-
 class FilesystemWrapper:
     _INSTANCE: "FilesystemWrapper" | None = None
 

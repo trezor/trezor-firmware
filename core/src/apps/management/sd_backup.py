@@ -23,12 +23,19 @@ async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType) ->
     from storage.sd_seed_backup import is_backup_present, store_seed_on_sdcard
     from trezor.ui.layouts import confirm_action, show_success
 
-    from apps.common.sdcard import ensure_sdcard
+    from apps.common.sdcard import ensure_sdcard, is_trz_card
 
     await ensure_sdcard(ensure_filesystem=False)
+    if not is_trz_card():
+        await confirm_action(
+            "confirm_not_trezor_card",
+            "Not Trezor card",
+            action="This is not Trezor Card! Still continue?",
+            verb="Continue",
+        )
     if is_backup_present():
         await confirm_action(
-            "warning_sdcard_backup_exists",
+            "confirm_sdcard_backup_exists",
             "Backup present",
             action="There is already a Trezor backup on this card!",
             description="Replace the backup?",
