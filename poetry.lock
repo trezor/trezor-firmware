@@ -1570,10 +1570,10 @@ typing_extensions = ">=3.10"
 [package.extras]
 ethereum = ["rlp (>=1.1.0)", "web3 (>=5)"]
 extra = ["Pillow"]
-full = ["Pillow", "PyQt5", "hidapi (>=0.7.99.post20)", "rlp (>=1.1.0)", "stellar-sdk (>=6)", "web3 (>=5)"]
+full = ["Pillow", "PyQt5", "hidapi (>=0.7.99.post20)", "rlp (>=1.1.0)", "stellar-sdk (>=9)", "web3 (>=5)"]
 hidapi = ["hidapi (>=0.7.99.post20)"]
 qt-widgets = ["PyQt5"]
-stellar = ["stellar-sdk (>=6)"]
+stellar = ["stellar-sdk (>=9)"]
 
 [package.source]
 type = "directory"

@@ -151,6 +151,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.stellar.get_address"
         if msg_type == MessageType.StellarSignTx:
             return "apps.stellar.sign_tx"
+        if msg_type == MessageType.StellarSignSorobanAuthorization:
+            return "apps.stellar.sign_soroban_auth"
 
         # ripple
         if msg_type == MessageType.RippleGetAddress:

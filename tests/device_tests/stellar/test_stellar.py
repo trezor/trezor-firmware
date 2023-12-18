@@ -90,7 +90,12 @@ def parameters_to_proto(parameters):
 def test_sign_tx(client: Client, parameters, result):
     tx, operations = parameters_to_proto(parameters)
     response = stellar.sign_tx(
-        client, tx, operations, tx.address_n, tx.network_passphrase
+        client,
+        tx,
+        operations,
+        messages.StellarTxExt(v=0),
+        tx.address_n,
+        tx.network_passphrase,
     )
     assert response.public_key.hex() == result["public_key"]
     assert b64encode(response.signature).decode() == result["signature"]
@@ -104,10 +109,11 @@ def test_xdr(parameters, result):
     envelope = TransactionEnvelope.from_xdr(
         parameters["xdr"], parameters["network_passphrase"]
     )
-    tx, operations = stellar.from_envelope(envelope)
+    tx, operations, ext = stellar.from_envelope(envelope)
     tx.address_n = parse_path(parameters["address_n"])
     tx_expected, operations_expected = parameters_to_proto(parameters)
     assert tx == tx_expected
+    assert ext == messages.StellarTxExt(v=0)
     for expected, actual in zip(operations_expected, operations):
         assert expected == actual
 

@@ -415,10 +415,20 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.NEMSupplyChangeType
     trezor.enums.StellarAssetType
     import trezor.enums.StellarAssetType
+    trezor.enums.StellarHostFunctionType
+    import trezor.enums.StellarHostFunctionType
     trezor.enums.StellarMemoType
     import trezor.enums.StellarMemoType
+    trezor.enums.StellarSCAddressType
+    import trezor.enums.StellarSCAddressType
+    trezor.enums.StellarSCValType
+    import trezor.enums.StellarSCValType
     trezor.enums.StellarSignerType
     import trezor.enums.StellarSignerType
+    trezor.enums.StellarSorobanAuthorizedFunctionType
+    import trezor.enums.StellarSorobanAuthorizedFunctionType
+    trezor.enums.StellarSorobanCredentialsType
+    import trezor.enums.StellarSorobanCredentialsType
     trezor.enums.TezosBallotType
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
@@ -725,6 +735,8 @@ if not utils.BITCOIN_ONLY:
     import apps.stellar.operations.layout
     apps.stellar.operations.serialize
     import apps.stellar.operations.serialize
+    apps.stellar.sign_soroban_auth
+    import apps.stellar.sign_soroban_auth
     apps.stellar.sign_tx
     import apps.stellar.sign_tx
     apps.stellar.writers
