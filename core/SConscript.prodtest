@@ -188,7 +188,7 @@ obj_program.extend(env.Object(source=SOURCE_HAL))
 MODEL_IDENTIFIER = tools.get_model_identifier(TREZOR_MODEL)
 
 if PRODUCTION:
-    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_prodtest_signed_prod.bin'
+    VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_prodtest_unsigned.bin'
 elif BOOTLOADER_DEVEL:
     VENDORHEADER = f'embed/vendorheader/{MODEL_IDENTIFIER}/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
 else:
