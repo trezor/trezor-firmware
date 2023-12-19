@@ -18,6 +18,7 @@ class RustProgress:
         ui.backlight_fade(ui.style.BACKLIGHT_DIM)
         self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
+        ui.refresh()
         ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
 
     def set_timer(self, token: int, deadline: int) -> None:
