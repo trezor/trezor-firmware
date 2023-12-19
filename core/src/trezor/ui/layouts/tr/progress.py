@@ -17,6 +17,7 @@ class RustProgress:
         self.layout = layout
         self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
+        ui.refresh()
 
     def set_timer(self, token: int, deadline: int) -> None:
         raise RuntimeError  # progress layouts should not set timers
