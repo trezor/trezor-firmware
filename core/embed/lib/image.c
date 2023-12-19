@@ -305,7 +305,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
       offset += single_bytes_to_check;
 
       const uint32_t *data = (const uint32_t *)flash_area_get_address(
-          area, offset, words_to_check);
+          area, offset, bytes_to_check - single_bytes_to_check);
       if (!data) {
         return secfalse;
       }
