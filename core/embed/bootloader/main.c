@@ -216,7 +216,6 @@ static usb_result_t bootloader_usb_loop(const vendor_header *const vhdr,
           hal_delay(1000);
           usb_stop();
           usb_deinit();
-          ui_screen_boot_empty(true);
           return CONTINUE_TO_FIRMWARE;
         }
         break;
@@ -715,6 +714,7 @@ int bootloader_main(void) {
 #ifdef STM32U5
         firmware_jump_fn = jump_to_fw_through_reset;
 #else
+        ui_screen_boot_empty(true);
         firmware_jump_fn = real_jump_to_firmware;
 #endif
         break;
