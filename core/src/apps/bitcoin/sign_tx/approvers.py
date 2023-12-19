@@ -16,6 +16,8 @@ from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo
 
 if TYPE_CHECKING:
+    from typing import Optional
+
     from trezor.crypto import bip32
     from trezor.messages import SignTx, TxAckPaymentRequest, TxInput, TxOutput
 
@@ -23,6 +25,7 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
     from ..authorization import CoinJoinAuthorization
+    from .bitcoin import Bitcoin
     from .payment_request import PaymentRequestVerifier
     from .tx_info import TxInfo
 
@@ -132,7 +135,12 @@ class Approver:
     ) -> None:
         raise NotImplementedError
 
-    async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
+    async def approve_tx(
+        self,
+        tx_info: TxInfo,
+        orig_txs: list[OriginalTxInfo],
+        signer: Optional[Bitcoin],
+    ) -> None:
         self.finish_payment_request()
 
 
@@ -268,13 +276,18 @@ class BasicApprover(Approver):
         else:
             return "Update transaction"
 
-    async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
+    async def approve_tx(
+        self,
+        tx_info: TxInfo,
+        orig_txs: list[OriginalTxInfo],
+        signer: Optional[Bitcoin],
+    ) -> None:
         from trezor.wire import NotEnoughFunds
 
         coin = self.coin  # local_cache_attribute
         amount_unit = self.amount_unit  # local_cache_attribute
 
-        await super().approve_tx(tx_info, orig_txs)
+        await super().approve_tx(tx_info, orig_txs, signer)
 
         if self.has_unverified_external_input:
             await helpers.confirm_unverified_external_input()
@@ -334,6 +347,8 @@ class BasicApprover(Approver):
                     )
 
             if not self.is_payjoin():
+                if signer is not None:
+                    signer.init_signing()
                 title = self._replacement_title(tx_info, orig_txs)
                 # Not a PayJoin: Show the actual fee difference, since any difference in the fee is
                 # coming entirely from the user's own funds and from decreases of external outputs.
@@ -342,6 +357,8 @@ class BasicApprover(Approver):
                     title, fee - orig_fee, fee, fee_rate, coin, amount_unit
                 )
             elif spending > orig_spending:
+                if signer is not None:
+                    signer.init_signing()
                 title = self._replacement_title(tx_info, orig_txs)
                 # PayJoin and user is spending more: Show the increase in the user's contribution
                 # to the fee, ignoring any contribution from external inputs. Decreasing of
@@ -360,6 +377,9 @@ class BasicApprover(Approver):
                 await helpers.confirm_nondefault_locktime(
                     tx_info.tx.lock_time, tx_info.lock_time_disabled()
                 )
+
+            if signer is not None:
+                signer.init_signing()
 
             if not self.external_in:
                 await helpers.confirm_total(
@@ -509,10 +529,15 @@ class CoinJoinApprover(Approver):
             self.h_request.get_digest(),
         )
 
-    async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
+    async def approve_tx(
+        self,
+        tx_info: TxInfo,
+        orig_txs: list[OriginalTxInfo],
+        signer: Optional[Bitcoin],
+    ) -> None:
         from ..authorization import FEE_RATE_DECIMALS
 
-        await super().approve_tx(tx_info, orig_txs)
+        await super().approve_tx(tx_info, orig_txs, signer)
 
         if not self._verify_coinjoin_request(tx_info):
             raise DataError("Invalid signature in coinjoin request.")

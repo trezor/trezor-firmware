@@ -172,7 +172,7 @@ class TestApprover(unittest.TestCase):
             else:
                 await_result(approver.add_external_output(txo, script_pubkey=bytes(22)))
 
-        await_result(approver.approve_tx(TxInfo(signer, tx), []))
+        await_result(approver.approve_tx(TxInfo(signer, tx), [], None))
 
     def test_coinjoin_input_account_depth_mismatch(self):
         txi = TxInput(

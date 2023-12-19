@@ -97,9 +97,6 @@ class Progress:
         if serialize and not coin.decred:
             self.steps += tx.outputs_count
 
-        self.report_init()
-        self.report()
-
     def init_prev_tx(self, inputs: int, outputs: int) -> None:
         self.prev_tx_step = _PREV_TX_MULTIPLIER / (inputs + outputs)
 
