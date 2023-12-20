@@ -11,6 +11,7 @@ from trezor.enums import (
 from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata, confirm_properties
+from trezor.wire import ProcessError
 
 from apps.common.paths import address_n_to_str
 
@@ -21,6 +22,7 @@ from .helpers.utils import (
     format_asset_fingerprint,
     format_optional_int,
     format_stake_pool_id,
+    is_unambiguous_ascii,
 )
 
 if TYPE_CHECKING:
@@ -299,7 +301,7 @@ async def confirm_datum_hash(datum_hash: bytes) -> None:
 
 
 async def confirm_inline_datum(first_chunk: bytes, inline_datum_size: int) -> None:
-    await _confirm_data_chunk(
+    await _confirm_tx_data_chunk(
         "confirm_inline_datum",
         TR.cardano__inline_datum,
         first_chunk,
@@ -310,7 +312,7 @@ async def confirm_inline_datum(first_chunk: bytes, inline_datum_size: int) -> No
 async def confirm_reference_script(
     first_chunk: bytes, reference_script_size: int
 ) -> None:
-    await _confirm_data_chunk(
+    await _confirm_tx_data_chunk(
         "confirm_reference_script",
         TR.cardano__reference_script,
         first_chunk,
@@ -318,9 +320,52 @@ async def confirm_reference_script(
     )
 
 
-async def _confirm_data_chunk(
-    br_name: str, title: str, first_chunk: bytes, data_size: int
+async def confirm_message_payload(
+    payload_first_chunk: bytes,
+    payload_hash: bytes,
+    payload_size: int,
+    is_signing_hash: bool,
+    display_ascii: bool,
 ) -> None:
+    props: list[PropertyType]
+
+    if not payload_first_chunk:
+        assert payload_size == 0
+        props = _get_data_chunk_props(
+            title="Empty message",
+            first_chunk=payload_first_chunk,
+            data_size=payload_size,
+        )
+    elif display_ascii:
+        if not is_unambiguous_ascii(payload_first_chunk):
+            raise ProcessError(
+                "Payload cannot be decoded as ASCII or its decoding leads to a visually ambiguous string"
+            )
+        props = _get_data_chunk_props(
+            title="Message text",
+            first_chunk=payload_first_chunk.decode("ascii"),
+            data_size=payload_size,
+        )
+    else:
+        props = _get_data_chunk_props(
+            title="Message hex",
+            first_chunk=payload_first_chunk,
+            data_size=payload_size,
+        )
+
+    props.append(("Message hash:", payload_hash))
+
+    await confirm_properties(
+        "confirm_message_payload",
+        title="Confirm message hash" if is_signing_hash else "Confirm message",
+        props=props,
+        br_code=BRT_Other,
+    )
+
+
+def _get_data_chunk_props(
+    title: str, first_chunk: bytes | str, data_size: int
+) -> list[PropertyType]:
     MAX_DISPLAYED_SIZE = 56
     displayed_bytes = first_chunk[:MAX_DISPLAYED_SIZE]
     bytes_optional_plural = "byte" if data_size == 1 else "bytes"
@@ -333,10 +378,17 @@ async def _confirm_data_chunk(
     ]
     if data_size > MAX_DISPLAYED_SIZE:
         props.append(("...", None, None))
+
+    return props
+
+
+async def _confirm_tx_data_chunk(
+    br_name: str, title: str, first_chunk: bytes, data_size: int
+) -> None:
     await confirm_properties(
         br_name,
         title=TR.cardano__confirm_transaction,
-        props=props,
+        props=_get_data_chunk_props(title, first_chunk, data_size),
         br_code=BRT_Other,
     )
 

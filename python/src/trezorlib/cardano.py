@@ -105,7 +105,11 @@ AuxiliaryDataSupplement = Dict[str, Union[int, bytes]]
 SignTxResponse = Dict[str, Union[bytes, List[Witness], AuxiliaryDataSupplement]]
 Chunk = TypeVar(
     "Chunk",
-    bound=Union[m.CardanoTxInlineDatumChunk, m.CardanoTxReferenceScriptChunk],
+    bound=Union[
+        m.CardanoTxInlineDatumChunk,
+        m.CardanoTxReferenceScriptChunk,
+        m.CardanoMessagePayloadChunk,
+    ],
 )
 
 
@@ -321,6 +325,22 @@ def _parse_address_parameters(
         address_parameters.get("certificateIndex"),
         script_payment_hash,
         script_staking_hash,
+    )
+
+
+def parse_optional_address_parameters(
+    address_parameters: Optional[dict],
+) -> Optional[messages.CardanoAddressParametersType]:
+    if address_parameters is None:
+        return None
+
+    ADDRESS_PARAMETERS_MISSING_FIELDS_ERROR = (
+        "Address parameters are missing some fields"
+    )
+
+    return _parse_address_parameters(
+        address_parameters,
+        ADDRESS_PARAMETERS_MISSING_FIELDS_ERROR,
     )
 
 
@@ -998,3 +1018,47 @@ def sign_tx(
     response = session.call(m.CardanoTxHostAck(), expect=m.CardanoSignTxFinished)
 
     return sign_tx_response
+
+
+def sign_message(
+    client: "TrezorClient",
+    signing_path: Path,
+    payload: bytes,
+    hash_payload: bool,
+    display_ascii: bool,
+    address_parameters: Optional[messages.CardanoAddressParametersType] = None,
+    derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
+    protocol_magic: Optional[int] = None,
+    network_id: Optional[int] = None,
+) -> messages.CardanoSignMessageFinished:
+    UNEXPECTED_RESPONSE_ERROR = exceptions.TrezorException("Unexpected response")
+
+    size, chunks = _parse_chunkable_data(payload, messages.CardanoMessagePayloadChunk)
+
+    response = client.call(
+        messages.CardanoSignMessageInit(
+            signing_path=signing_path,
+            payload_size=size,
+            hash_payload=hash_payload,
+            address_parameters=address_parameters,
+            display_ascii=display_ascii,
+            protocol_magic=protocol_magic,
+            network_id=network_id,
+            derivation_type=derivation_type,
+        )
+    )
+
+    if not isinstance(response, messages.CardanoMessageItemAck):
+        raise UNEXPECTED_RESPONSE_ERROR
+
+    for chunk in chunks:
+        chunk_response = client.call(chunk)
+        if not isinstance(chunk_response, messages.CardanoMessageItemAck):
+            raise UNEXPECTED_RESPONSE_ERROR
+
+    final_response = client.call(messages.CardanoMessageItemHostAck())
+
+    if not isinstance(final_response, messages.CardanoSignMessageFinished):
+        raise UNEXPECTED_RESPONSE_ERROR
+
+    return final_response

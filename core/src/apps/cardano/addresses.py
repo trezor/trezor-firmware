@@ -46,6 +46,13 @@ ADDRESS_TYPES_PAYMENT_SCRIPT = (
     CardanoAddressType.ENTERPRISE_SCRIPT,
 )
 
+ADDRESS_TYPES_MESSAGE = (
+    CardanoAddressType.BASE,
+    CardanoAddressType.BASE_KEY_SCRIPT,
+    CardanoAddressType.ENTERPRISE,
+    CardanoAddressType.REWARD,
+)
+
 ADDRESS_TYPES_PAYMENT = ADDRESS_TYPES_PAYMENT_KEY + ADDRESS_TYPES_PAYMENT_SCRIPT
 
 _MIN_ADDRESS_BYTES_LENGTH = const(29)
@@ -240,6 +247,13 @@ def validate_cvote_payment_address_parameters(
 ) -> None:
     validate_address_parameters(parameters)
     assert_params_cond(parameters.address_type in ADDRESS_TYPES_SHELLEY)
+
+
+def validate_message_address_parameters(
+    parameters: messages.CardanoAddressParametersType,
+) -> None:
+    validate_address_parameters(parameters)
+    assert_params_cond(parameters.address_type in ADDRESS_TYPES_MESSAGE)
 
 
 def assert_cond(condition: bool) -> None:
