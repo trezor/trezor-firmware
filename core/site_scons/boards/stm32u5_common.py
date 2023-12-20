@@ -22,6 +22,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_dma.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_dma_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_dsi.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_exti.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_flash.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_flash_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_gfxmmu.c",
@@ -87,7 +88,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "-I../../vendor/cmsis_5/CMSIS/Core/Include;"
         "-DSTM32_HAL_H=<stm32u5xx.h>;"
         "-DSTM32U5;"
-        "-DFLASH_BLOCK_WORDS=4"
+        "-DFLASH_BLOCK_WORDS=4;"
     )
 
     env.get("ENV")["SUFFIX"] = "stm32u5"

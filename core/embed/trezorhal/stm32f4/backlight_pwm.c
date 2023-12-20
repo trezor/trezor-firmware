@@ -22,6 +22,8 @@ int backlight_pwm_set(int val) {
   return BACKLIGHT;
 }
 
+int backlight_pwm_get(void) { return BACKLIGHT; }
+
 void backlight_pwm_init(void) {
   // init peripherals
   BACKLIGHT_PWM_PORT_CLK_EN();
