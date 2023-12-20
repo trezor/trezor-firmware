@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.6.3] (2nd November 2023)
+## [2.6.4] (20th December 2023)
+
+### Added
+- Added Solana support.  [#3359]
+
+### Changed
+- Always display Ethereum fees in Gwei.  [#3246]
+
+
+## [2.6.3] (15th November 2023)
 
 ### Added
 - Support interaction-less upgrade.  [#2919]
@@ -808,8 +817,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3218]: https://github.com/trezor/trezor-firmware/pull/3218
 [#3237]: https://github.com/trezor/trezor-firmware/pull/3237
 [#3242]: https://github.com/trezor/trezor-firmware/pull/3242
+[#3246]: https://github.com/trezor/trezor-firmware/pull/3246
 [#3255]: https://github.com/trezor/trezor-firmware/pull/3255
 [#3256]: https://github.com/trezor/trezor-firmware/pull/3256
 [#3296]: https://github.com/trezor/trezor-firmware/pull/3296
 [#3311]: https://github.com/trezor/trezor-firmware/pull/3311
+[#3359]: https://github.com/trezor/trezor-firmware/pull/3359
 [#3377]: https://github.com/trezor/trezor-firmware/pull/3377
+[#3411]: https://github.com/trezor/trezor-firmware/pull/3411
+[#3424]: https://github.com/trezor/trezor-firmware/pull/3424
