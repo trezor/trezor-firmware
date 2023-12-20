@@ -195,6 +195,11 @@ if not utils.BITCOIN_ONLY:
     CardanoTxInlineDatumChunk = 335
     CardanoTxReferenceScriptChunk = 336
     CardanoTxReferenceInput = 337
+    CardanoSignMessageInit = 338
+    CardanoMessagePayloadChunk = 339
+    CardanoMessageItemAck = 340
+    CardanoMessageItemHostAck = 341
+    CardanoSignMessageFinished = 342
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
