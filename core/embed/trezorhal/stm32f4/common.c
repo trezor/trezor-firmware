@@ -221,6 +221,7 @@ void collect_hw_entropy(void) {
 // which might be incompatible with the other layers older versions,
 // where this setting might be unknown
 void ensure_compatible_settings(void) {
+  display_finish_actions();
 #ifdef TREZOR_MODEL_T
   display_set_big_endian();
   display_orientation(0);

@@ -89,7 +89,11 @@ pub fn text_baseline(font: i32) -> i16 {
 }
 
 #[inline(always)]
-#[cfg(all(feature = "disp_i8080_16bit_dw", not(feature = "disp_i8080_8bit_dw")))]
+#[cfg(all(
+    not(feature = "framebuffer"),
+    feature = "disp_i8080_16bit_dw",
+    not(feature = "disp_i8080_8bit_dw")
+))]
 pub fn pixeldata(c: u16) {
     unsafe {
         ffi::DISPLAY_DATA_ADDRESS.write_volatile(c);
@@ -102,7 +106,7 @@ pub fn get_fb_addr() -> FrameBuffer {
 }
 
 #[inline(always)]
-#[cfg(feature = "disp_i8080_8bit_dw")]
+#[cfg(all(not(feature = "framebuffer"), feature = "disp_i8080_8bit_dw"))]
 pub fn pixeldata(c: u16) {
     unsafe {
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c & 0xff) as u8);
@@ -135,7 +139,10 @@ pub fn pixel(fb: FrameBuffer, x: i16, y: i16, c: u32) {
 }
 
 #[inline(always)]
-#[cfg(not(any(feature = "disp_i8080_16bit_dw", feature = "disp_i8080_8bit_dw")))]
+#[cfg(any(
+    feature = "framebuffer",
+    not(any(feature = "disp_i8080_16bit_dw", feature = "disp_i8080_8bit_dw"))
+))]
 pub fn pixeldata(c: u16) {
     unsafe {
         ffi::display_pixeldata(c);

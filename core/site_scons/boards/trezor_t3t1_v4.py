@@ -17,6 +17,8 @@ def configure(
     hw_model = get_hw_model_as_number("T3T1")
     hw_revision = 0
     features_available.append("disp_i8080_8bit_dw")
+    features_available.append("framebuffer")
+    defines += ["FRAMEBUFFER"]
 
     mcu = "STM32U585xx"
     linker_script = "stm32u58"
