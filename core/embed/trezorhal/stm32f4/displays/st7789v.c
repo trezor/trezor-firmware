@@ -19,11 +19,14 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include TREZOR_BOARD
 #include "backlight_pwm.h"
 #include "display_interface.h"
+#include "irq.h"
 #include "memzero.h"
 #include "st7789v.h"
+#include "supervise.h"
 #include STM32_HAL_H
 
 #ifdef TREZOR_MODEL_T
@@ -57,6 +60,40 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
     (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE |
                                 (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN));
 
+#ifdef FRAMEBUFFER
+#ifndef STM32U5
+#error Framebuffer only supported on STM32U5 for now
+#endif
+
+#define DATA_TRANSFER(X) \
+  DATA((X)&0xFF);        \
+  DATA((X) >> 8)
+
+__attribute__((section(".fb1")))
+ALIGN_32BYTES(static uint16_t PhysFrameBuffer0[DISPLAY_RESX * DISPLAY_RESY]);
+__attribute__((section(".fb2")))
+ALIGN_32BYTES(static uint16_t PhysFrameBuffer1[DISPLAY_RESX * DISPLAY_RESY]);
+
+__attribute__((
+    section(".framebuffer_select"))) static uint32_t act_frame_buffer = 0;
+
+static uint16_t window_x0 = 0;
+static uint16_t window_y0 = 0;
+static uint16_t window_x1 = 0;
+static uint16_t window_y1 = 0;
+static uint16_t cursor_x = 0;
+static uint16_t cursor_y = 0;
+
+static volatile uint32_t dma_transfer_remaining = 0;
+static volatile uint32_t dma_data_transferred = 0;
+static DMA_HandleTypeDef DMA_Handle = {0};
+
+void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
+
+#else
+#define DATA_TRANSFER(X) PIXELDATA(X)
+#endif
+
 // section "9.1.3 RDDID (04h): Read Display ID"
 // of ST7789V datasheet
 #define DISPLAY_ID_ST7789V 0x858552U
@@ -71,8 +108,6 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 
 static int DISPLAY_ORIENTATION = -1;
 static display_padding_t DISPLAY_PADDING = {0};
-
-void display_pixeldata(uint16_t c) { PIXELDATA(c); }
 
 void display_pixeldata_dirty(void) {}
 
@@ -160,7 +195,7 @@ static void display_unsleep(void) {
   }
 }
 
-void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+void panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   x0 += DISPLAY_PADDING.x;
   x1 += DISPLAY_PADDING.x;
   y0 += DISPLAY_PADDING.y;
@@ -187,10 +222,14 @@ int display_orientation(int degrees) {
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
       DISPLAY_ORIENTATION = degrees;
 
-      display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
+      panel_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
+#ifdef FRAMEBUFFER
+      memzero(PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+      memzero(PhysFrameBuffer0, sizeof(PhysFrameBuffer0));
+#endif
       for (uint32_t i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY; i++) {
         // 2 bytes per pixel because we're using RGB 5-6-5 format
-        PIXELDATA(0x0000);
+        DATA_TRANSFER(0x0000);
       }
 #ifdef TREZOR_MODEL_T
       uint32_t id = display_identify();
@@ -202,6 +241,7 @@ int display_orientation(int degrees) {
 #else
       DISPLAY_PANEL_ROTATE(degrees, &DISPLAY_PADDING);
 #endif
+      panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     }
   }
   return DISPLAY_ORIENTATION;
@@ -209,7 +249,19 @@ int display_orientation(int degrees) {
 
 int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
 
-int display_backlight(int val) { return backlight_pwm_set(val); }
+int display_backlight(int val) {
+#ifdef FRAMEBUFFER
+  // wait for DMA transfer to finish before changing backlight
+  // so that we know that panel has current data
+  if (backlight_pwm_get() != val && !is_mode_handler()) {
+    while (dma_transfer_remaining > 0) {
+      __WFI();
+    }
+  }
+#endif
+
+  return backlight_pwm_set(val);
+}
 
 void display_init_seq(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
@@ -287,6 +339,54 @@ void display_setup_fmc(void) {
   HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
 }
 
+#ifdef FRAMEBUFFER
+void display_setup_dma(void) {
+  // setup DMA for transferring framebuffer to display
+
+  __HAL_RCC_GPDMA1_CLK_ENABLE();
+
+  /* USER CODE END GPDMA1_Init 1 */
+  DMA_Handle.Instance = GPDMA1_Channel0;
+  DMA_Handle.XferCpltCallback = HAL_DMA_XferCpltCallback;
+  DMA_Handle.Init.Request = GPDMA1_REQUEST_HASH_IN;
+  DMA_Handle.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
+  DMA_Handle.Init.Direction = DMA_MEMORY_TO_MEMORY;
+  DMA_Handle.Init.SrcInc = DMA_SINC_INCREMENTED;
+  DMA_Handle.Init.DestInc = DMA_DINC_FIXED;
+  DMA_Handle.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
+  DMA_Handle.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
+  DMA_Handle.Init.Priority = DMA_LOW_PRIORITY_HIGH_WEIGHT;
+  DMA_Handle.Init.SrcBurstLength = 1;
+  DMA_Handle.Init.DestBurstLength = 1;
+  DMA_Handle.Init.TransferAllocatedPort =
+      DMA_SRC_ALLOCATED_PORT1 | DMA_DEST_ALLOCATED_PORT0;
+  DMA_Handle.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
+  DMA_Handle.Init.Mode = DMA_NORMAL;
+  HAL_DMA_Init(&DMA_Handle);
+  HAL_DMA_ConfigChannelAttributes(&DMA_Handle, DMA_CHANNEL_SEC |
+                                                   DMA_CHANNEL_SRC_SEC |
+                                                   DMA_CHANNEL_DEST_SEC);
+
+  HAL_NVIC_SetPriority(GPDMA1_Channel0_IRQn, IRQ_PRI_DMA, 0);
+  HAL_NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
+}
+
+void display_setup_te_interrupt(void) {
+#ifdef DISPLAY_TE_PIN
+  EXTI_HandleTypeDef EXTI_Handle = {0};
+  EXTI_ConfigTypeDef EXTI_Config = {0};
+  EXTI_Config.GPIOSel = DISPLAY_TE_INTERRUPT_GPIOSEL;
+  EXTI_Config.Line = DISPLAY_TE_INTERRUPT_EXTI_LINE;
+  EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
+  EXTI_Config.Trigger = EXTI_TRIGGER_RISING;
+  HAL_EXTI_SetConfigLine(&EXTI_Handle, &EXTI_Config);
+
+  // setup interrupt for tearing effect pin
+  HAL_NVIC_SetPriority(DISPLAY_TE_INTERRUPT_NUM, IRQ_PRI_DMA, 0);
+#endif
+}
+#endif
+
 void display_init(void) {
   // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -350,6 +450,13 @@ void display_init(void) {
   display_init_seq();
 
   display_set_little_endian();
+
+  panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+
+#ifdef FRAMEBUFFER
+  display_setup_dma();
+  display_setup_te_interrupt();
+#endif
 }
 
 void display_reinit(void) {
@@ -361,6 +468,7 @@ void display_reinit(void) {
   display_set_little_endian();
 
   DISPLAY_ORIENTATION = 0;
+  panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
 
   backlight_pwm_reinit();
 
@@ -373,24 +481,12 @@ void display_reinit(void) {
     lx154a2411_gamma();
   }
 #endif
-}
 
-void display_sync(void) {
-#ifdef DISPLAY_TE_PIN
-  uint32_t id = display_identify();
-  if (id && (id != DISPLAY_ID_GC9307)) {
-    // synchronize with the panel synchronization signal
-    // in order to avoid visual tearing effects
-    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-    }
-    while (GPIO_PIN_RESET ==
-           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-    }
-  }
+#ifdef FRAMEBUFFER
+  display_setup_dma();
+  display_setup_te_interrupt();
 #endif
 }
-
-void display_refresh(void) {}
 
 void display_set_little_endian(void) {
   uint32_t id = display_identify();
@@ -430,8 +526,245 @@ const char *display_save(const char *prefix) { return NULL; }
 
 void display_clear_save(void) {}
 
+#ifdef FRAMEBUFFER
+
+void display_pixeldata(uint16_t c) {
+  uint16_t *address = 0;
+
+  if (act_frame_buffer == 0) {
+    address = PhysFrameBuffer1;
+  } else {
+    address = PhysFrameBuffer0;
+  }
+
+  /* Get the rectangle start address */
+  address += cursor_y * DISPLAY_RESX + cursor_x;
+
+  *address = c;
+
+  cursor_x++;
+  if (cursor_x > window_x1) {
+    cursor_x = window_x0;
+    cursor_y++;
+  }
+  if (cursor_y > window_y1) {
+    cursor_y = window_y0;
+  }
+}
+
+void display_sync(void) {}
+
+void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
+  if (dma_transfer_remaining > 0xFFFF) {
+    dma_transfer_remaining -= 0xFFFF;
+    dma_data_transferred += 0xFFFF;
+  } else {
+    dma_data_transferred += dma_transfer_remaining;
+    dma_transfer_remaining = 0;
+  }
+
+  if (dma_transfer_remaining > 0) {
+    uint32_t data_to_send =
+        dma_transfer_remaining > 0xFFFF ? 0xFFFF : dma_transfer_remaining;
+
+    if (act_frame_buffer == 0) {
+      HAL_DMA_Start_IT(
+          hdma,
+          (uint32_t) & ((uint8_t *)PhysFrameBuffer0)[dma_data_transferred],
+          (uint32_t)DISPLAY_DATA_ADDRESS, data_to_send);
+    } else {
+      HAL_DMA_Start_IT(
+          hdma,
+          (uint32_t) & ((uint8_t *)PhysFrameBuffer1)[dma_data_transferred],
+          (uint32_t)DISPLAY_DATA_ADDRESS, data_to_send);
+    }
+  }
+}
+
+void DISPLAY_TE_INTERRUPT_HANDLER(void) {
+  HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+
+  uint32_t data_to_send = DISPLAY_RESX * DISPLAY_RESY * 2 > 0xFFFF
+                              ? 0xFFFF
+                              : DISPLAY_RESX * DISPLAY_RESY * 2;
+
+  if (act_frame_buffer == 1) {
+    HAL_DMA_Start_IT(&DMA_Handle, (uint32_t)PhysFrameBuffer1,
+                     (uint32_t)DISPLAY_DATA_ADDRESS, data_to_send);
+
+  } else {
+    HAL_DMA_Start_IT(&DMA_Handle, (uint32_t)PhysFrameBuffer0,
+                     (uint32_t)DISPLAY_DATA_ADDRESS, data_to_send);
+  }
+
+  __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+}
+
+void GPDMA1_Channel0_IRQHandler(void) {
+  if ((DMA_Handle.Instance->CSR & DMA_CSR_TCF) == 0) {
+    // error, abort the transfer and allow the next one to start
+    dma_data_transferred = 0;
+    dma_transfer_remaining = 0;
+  }
+
+  HAL_DMA_IRQHandler(&DMA_Handle);
+}
+
+void display_refresh(void) {
+  while (dma_transfer_remaining > 0) {
+    __WFI();
+  }
+
+  if (is_mode_handler()) {
+    // sync with the panel refresh
+    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+    }
+    while (GPIO_PIN_RESET ==
+           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
+    }
+
+    if (act_frame_buffer == 0) {
+      act_frame_buffer = 1;
+      for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
+        // 2 bytes per pixel because we're using RGB 5-6-5 format
+        DATA_TRANSFER(PhysFrameBuffer1[i]);
+      }
+      memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+
+    } else {
+      act_frame_buffer = 0;
+      for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
+        // 2 bytes per pixel because we're using RGB 5-6-5 format
+        DATA_TRANSFER(PhysFrameBuffer0[i]);
+      }
+      memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
+    }
+  } else {
+    dma_transfer_remaining = DISPLAY_RESX * DISPLAY_RESY * 2;
+    dma_data_transferred = 0;
+
+    if (act_frame_buffer == 0) {
+      act_frame_buffer = 1;
+
+      memcpy(PhysFrameBuffer0, PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+
+      __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+      svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    } else {
+      act_frame_buffer = 0;
+      memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
+
+      __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+      svc_enableIRQ(DISPLAY_TE_INTERRUPT_NUM);
+    }
+  }
+}
+
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+  window_x0 = x0;
+  window_y0 = y0;
+  window_x1 = x1;
+  window_y1 = y1;
+  cursor_x = x0;
+  cursor_y = y0;
+}
+
+uint8_t *display_get_wr_addr(void) {
+  uint32_t address = 0;
+
+  if (act_frame_buffer == 0) {
+    address = (uint32_t)PhysFrameBuffer1;
+  } else {
+    address = (uint32_t)PhysFrameBuffer0;
+  }
+
+  /* Get the rectangle start address */
+  address = (address + (2 * (cursor_y * DISPLAY_RESX + cursor_x)));
+
+  return (uint8_t *)address;
+}
+
+uint32_t *display_get_fb_addr(void) {
+  uint32_t address = 0;
+
+  if (act_frame_buffer == 0) {
+    address = (uint32_t)PhysFrameBuffer1;
+  } else {
+    address = (uint32_t)PhysFrameBuffer0;
+  }
+
+  return (uint32_t *)address;
+}
+uint16_t display_get_window_width(void) { return window_x1 - window_x0 + 1; }
+
+uint16_t display_get_window_height(void) { return window_y1 - window_y0 + 1; }
+
+void display_shift_window(uint16_t pixels) {
+  uint16_t w = display_get_window_width();
+  uint16_t h = display_get_window_height();
+
+  uint16_t line_rem = w - (cursor_x - window_x0);
+
+  if (pixels < line_rem) {
+    cursor_x += pixels;
+    return;
+  }
+
+  // start of next line
+  pixels = pixels - line_rem;
+  cursor_x = window_x0;
+  cursor_y++;
+
+  // add the rest of pixels
+  cursor_y = window_y0 + (((cursor_y - window_y0) + (pixels / w)) % h);
+  cursor_x += pixels % w;
+}
+
+uint16_t display_get_window_offset(void) {
+  return DISPLAY_RESX - display_get_window_width();
+}
+
+void display_efficient_clear(void) {
+  memzero(PhysFrameBuffer1, sizeof(PhysFrameBuffer1));
+  memzero(PhysFrameBuffer0, sizeof(PhysFrameBuffer0));
+}
+
+void display_finish_actions(void) {
+  while (dma_transfer_remaining > 0) {
+    __WFI();
+  }
+}
+#else
+//  NOT FRAMEBUFFER
+
+void display_pixeldata(uint16_t c) { PIXELDATA(c); }
+
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+  panel_set_window(x0, y0, x1, y1);
+}
+
+void display_sync(void) {
+#ifdef DISPLAY_TE_PIN
+  uint32_t id = display_identify();
+  if (id && (id != DISPLAY_ID_GC9307)) {
+    // synchronize with the panel synchronization signal
+    // in order to avoid visual tearing effects
+    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
+      ;
+    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
+      ;
+  }
+#endif
+}
+
+void display_refresh(void) {}
+
 uint8_t *display_get_wr_addr(void) { return (uint8_t *)DISPLAY_DATA_ADDRESS; }
 
 uint16_t display_get_window_offset(void) { return 0; }
 
 void display_shift_window(uint16_t pixels) {}
+
+void display_finish_actions(void) {}
+
+#endif

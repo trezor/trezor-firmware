@@ -75,7 +75,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "-DSTM32_HAL_H=<stm32f4xx.h>;"
         "-DSTM32F4;"
         "-DFLASH_BLOCK_WORDS=1;"
-        "-DFLASH_BIT_ACCESS=1"
+        "-DFLASH_BIT_ACCESS=1;"
     )
 
     env.get("ENV")["SUFFIX"] = "stm32f4"

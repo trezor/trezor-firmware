@@ -17,6 +17,8 @@ def configure(
     hw_model = get_hw_model_as_number("T3T1")
     hw_revision = 0
     features_available.append("disp_i8080_8bit_dw")
+    features_available.append("framebuffer")
+    defines += ["FRAMEBUFFER"]
 
     mcu = "STM32U585xx"
     linker_script = "stm32u58"
@@ -105,5 +107,9 @@ def configure(
 
     defs = env.get("CPPDEFINES_IMPLICIT")
     defs += ["__ARM_FEATURE_CMSE=3"]
+
+    rust_defs = env.get("ENV")["RUST_INCLUDES"]
+    rust_defs += "-DFRAMEBUFFER;"
+    env.get("ENV")["RUST_INCLUDES"] = rust_defs
 
     return features_available

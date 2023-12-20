@@ -20,7 +20,7 @@ if TREZOR_MODEL in ('1', ):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga"]
+FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []

@@ -368,3 +368,5 @@ void display_reinit(void) {}
 const char *display_save(const char *prefix) { return NULL; }
 
 void display_clear_save(void) {}
+
+void display_finish_actions(void) {}
