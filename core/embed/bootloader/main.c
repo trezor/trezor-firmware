@@ -412,7 +412,6 @@ int bootloader_main(void) {
 #endif
 
 #ifdef STM32U5
-
   if (sectrue != flash_configure_sec_area_ob()) {
 #ifdef STM32U5
     secret_bhk_regenerate();
