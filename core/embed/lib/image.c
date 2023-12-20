@@ -25,7 +25,6 @@
 #include "flash.h"
 #include "image.h"
 #include "model.h"
-#include TREZOR_BOARD
 
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
