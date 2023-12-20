@@ -11,6 +11,7 @@ from trezor.messages import CardanoTxItemAck, CardanoTxOutput
 from trezor.wire import DataError, ProcessError
 from trezor.wire.context import call as ctx_call
 
+from apps.cardano.helpers.chunks import ChunkIterator
 from apps.common import safety_checks
 
 from .. import addresses, certificates, layout, seed
@@ -70,8 +71,6 @@ _DATUM_OPTION_KEY_HASH = const(0)
 _DATUM_OPTION_KEY_INLINE = const(1)
 
 _POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT = const(10)
-
-_MAX_CHUNK_SIZE = const(1024)
 
 
 class SuiteTxType(IntEnum):
@@ -680,17 +679,11 @@ class Signer:
     ) -> None:
         assert inline_datum_size > 0
 
-        chunks_count = self._get_chunks_count(inline_datum_size)
-        for chunk_number in range(chunks_count):
-            chunk: messages.CardanoTxInlineDatumChunk = await ctx_call(
-                CardanoTxItemAck(), messages.CardanoTxInlineDatumChunk
-            )
-            self._validate_chunk(
-                chunk.data,
-                chunk_number,
-                chunks_count,
-                ProcessError("Invalid inline datum chunk"),
-            )
+        async for chunk_number, chunk in ChunkIterator(
+            total_size=inline_datum_size,
+            ack_msg=CardanoTxItemAck(),
+            chunk_type=messages.CardanoTxInlineDatumChunk,
+        ):
             if chunk_number == 0 and should_show:
                 await self._show_if_showing_details(
                     layout.confirm_inline_datum(chunk.data, inline_datum_size)
@@ -707,17 +700,11 @@ class Signer:
     ) -> None:
         assert reference_script_size > 0
 
-        chunks_count = self._get_chunks_count(reference_script_size)
-        for chunk_number in range(chunks_count):
-            chunk: messages.CardanoTxReferenceScriptChunk = await ctx_call(
-                CardanoTxItemAck(), messages.CardanoTxReferenceScriptChunk
-            )
-            self._validate_chunk(
-                chunk.data,
-                chunk_number,
-                chunks_count,
-                ProcessError("Invalid reference script chunk"),
-            )
+        async for chunk_number, chunk in ChunkIterator(
+            total_size=reference_script_size,
+            ack_msg=CardanoTxItemAck(),
+            chunk_type=messages.CardanoTxReferenceScriptChunk,
+        ):
             if chunk_number == 0 and should_show:
                 await self._show_if_showing_details(
                     layout.confirm_reference_script(chunk.data, reference_script_size)
@@ -1245,22 +1232,6 @@ class Signer:
             self.msg.protocol_magic,
             self.msg.network_id,
         )
-
-    def _get_chunks_count(self, data_size: int) -> int:
-        assert data_size > 0
-        return (data_size - 1) // _MAX_CHUNK_SIZE + 1
-
-    def _validate_chunk(
-        self,
-        chunk_data: bytes,
-        chunk_number: int,
-        chunks_count: int,
-        error: ProcessError,
-    ) -> None:
-        if chunk_number < chunks_count - 1 and len(chunk_data) != _MAX_CHUNK_SIZE:
-            raise error
-        if chunk_number == chunks_count - 1 and len(chunk_data) > _MAX_CHUNK_SIZE:
-            raise error
 
     def _get_byron_witness(
         self, path: list[int], tx_hash: bytes

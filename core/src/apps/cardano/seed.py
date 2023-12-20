@@ -32,6 +32,7 @@ if TYPE_CHECKING:
         | messages.CardanoGetPublicKey
         | messages.CardanoGetNativeScriptHash
         | messages.CardanoSignTxInit
+        | messages.CardanoSignMessageInit
     )
     MsgIn = TypeVar("MsgIn", bound=CardanoMessages)
 
