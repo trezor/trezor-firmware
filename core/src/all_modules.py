@@ -459,6 +459,8 @@ if not utils.BITCOIN_ONLY:
     import apps.cardano.helpers.account_path_check
     apps.cardano.helpers.bech32
     import apps.cardano.helpers.bech32
+    apps.cardano.helpers.chunks
+    import apps.cardano.helpers.chunks
     apps.cardano.helpers.credential
     import apps.cardano.helpers.credential
     apps.cardano.helpers.hash_builder_collection
@@ -477,6 +479,8 @@ if not utils.BITCOIN_ONLY:
     import apps.cardano.native_script
     apps.cardano.seed
     import apps.cardano.seed
+    apps.cardano.sign_message
+    import apps.cardano.sign_message
     apps.cardano.sign_tx
     import apps.cardano.sign_tx
     apps.cardano.sign_tx.multisig_signer
