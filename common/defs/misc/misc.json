@@ -175,5 +175,18 @@
             "Homepage": "https://tether.to"
         },
         "wallet": {}
+    },
+    {
+        "name": "Solana",
+        "shortcut": "SOL",
+        "slip44": 501,
+        "curve": "ed25519",
+        "decimals": 9,
+        "links": {
+            "Homepage": "https://solana.com"
+        },
+        "wallet": {
+            "Trezor Suite": "https://suite.trezor.io"
+        }
     }
 ]
