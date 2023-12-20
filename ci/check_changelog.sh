@@ -4,7 +4,15 @@ set -u
 
 base_branch=main
 fail=0
-subdirs="core core/embed/boardloader core/embed/bootloader core/embed/bootloader_ci legacy/bootloader legacy/firmware legacy/intermediate_fw python"
+subdirs="core
+    core/embed/boardloader
+    core/embed/bootloader
+    core/embed/bootloader_ci
+    core/embed/prodtest
+    legacy/bootloader
+    legacy/firmware
+    legacy/intermediate_fw
+    python"
 
 # $ignored_files is a newline-separated list of patterns for grep
 # therefore there must not be empty lines at start or end
