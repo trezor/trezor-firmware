@@ -275,6 +275,7 @@ int main(void) {
 
   display_init();
   display_clear();
+  display_refresh();
 
 #if defined USE_SD_CARD
   sdcard_init();
