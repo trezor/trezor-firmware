@@ -148,6 +148,11 @@ trezor_message_impl! {
     CardanoTxInlineDatumChunk => MessageType_CardanoTxInlineDatumChunk,
     CardanoTxReferenceScriptChunk => MessageType_CardanoTxReferenceScriptChunk,
     CardanoTxReferenceInput => MessageType_CardanoTxReferenceInput,
+    CardanoSignMessageInit => MessageType_CardanoSignMessageInit,
+    CardanoMessagePayloadChunk => MessageType_CardanoMessagePayloadChunk,
+    CardanoMessageItemAck => MessageType_CardanoMessageItemAck,
+    CardanoMessageItemHostAck => MessageType_CardanoMessageItemHostAck,
+    CardanoSignMessageFinished => MessageType_CardanoSignMessageFinished,
 }
 
 #[cfg(feature = "eos")]

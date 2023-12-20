@@ -188,6 +188,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.cardano.sign_tx"
         if msg_type == MessageType.CardanoGetNativeScriptHash:
             return "apps.cardano.get_native_script_hash"
+        if msg_type == MessageType.CardanoSignMessageInit:
+            return "apps.cardano.sign_message"
 
         # tezos
         if msg_type == MessageType.TezosGetAddress:
