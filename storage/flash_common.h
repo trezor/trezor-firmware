@@ -14,6 +14,14 @@ typedef struct {
   uint8_t num_subareas;
 } flash_area_t;
 
+#define FLASH_BLOCK_SIZE (sizeof(uint32_t) * FLASH_BLOCK_WORDS)
+
+#if FLASH_BLOCK_WORDS == 1
+typedef uint32_t flash_block_t;
+#else
+typedef uint32_t flash_block_t[FLASH_BLOCK_WORDS];
+#endif
+
 void flash_init(void);
 
 secbool __wur flash_unlock_write(void);
@@ -39,7 +47,7 @@ secbool __wur flash_area_write_byte(const flash_area_t *area, uint32_t offset,
 secbool __wur flash_area_write_word(const flash_area_t *area, uint32_t offset,
                                     uint32_t data);
 #endif
-secbool __wur flash_area_write_quadword(const flash_area_t *area,
-                                        uint32_t offset, const uint32_t *data);
+secbool __wur flash_area_write_block(const flash_area_t *area, uint32_t offset,
+                                     const flash_block_t block);
 
 #endif
