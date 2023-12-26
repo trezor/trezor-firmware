@@ -40,6 +40,7 @@ static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
                               uint32_t length) {
   static uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
 
+  _Static_assert(SDCARD_BLOCK_SIZE % FLASH_BLOCK_SIZE == 0);
   ensure(sectrue * (source % SDCARD_BLOCK_SIZE == 0),
          "source not a multiple of block size");
   ensure(sectrue * (length % SDCARD_BLOCK_SIZE == 0),
@@ -51,10 +52,11 @@ static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
     ensure(sdcard_read_blocks(buf, i + source / SDCARD_BLOCK_SIZE, 1),
            "sdcard_read_blocks");
 
-    for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / (sizeof(uint32_t) * 4); j++) {
-      ensure(flash_area_write_quadword(
-                 area, i * SDCARD_BLOCK_SIZE + j * 4 * sizeof(uint32_t),
-                 &buf[j * 4]),
+    for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / FLASH_BLOCK_SIZE)
+      ; j++) {
+      ensure(flash_area_write_block(
+                 area, i * SDCARD_BLOCK_SIZE + j * FLASH_BLOCK_SIZE,
+                 &buf[j * FLASH_BLOCK_WORDS]),
              NULL);
     }
   }
