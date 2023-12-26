@@ -51,7 +51,7 @@ secbool __wur flash_area_erase(const flash_area_t *area,
 secbool __wur flash_area_erase_bulk(const flash_area_t *area, int count,
                                     void (*progress)(int pos, int len));
 
-#if defined FLASH_BYTE_ACCESS
+#if defined FLASH_BIT_ACCESS
 secbool __wur flash_area_write_byte(const flash_area_t *area, uint32_t offset,
                                     uint8_t data);
 secbool __wur flash_area_write_word(const flash_area_t *area, uint32_t offset,
