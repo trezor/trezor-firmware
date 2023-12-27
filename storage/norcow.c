@@ -57,6 +57,7 @@ static uint32_t norcow_active_version = 0;
 // The offset of the first free item in the writing sector.
 static uint32_t norcow_free_offset = 0;
 
+// Tracks how much data was already flashed in update_bytes function
 static uint16_t norcow_write_buffer_flashed = 0;
 
 static const void *norcow_ptr(uint8_t sector, uint32_t offset, uint32_t size);
@@ -105,12 +106,14 @@ static void erase_sector(uint8_t sector, secbool set_magic) {
   if (sectrue == set_magic) {
     ensure(flash_unlock_write(), NULL);
 #if FLASH_BLOCK_WORDS == 1
+    flash_block_t block_magic = {NORCOW_MAGIC};
     ensure(flash_area_write_block(&STORAGE_AREAS[sector], NORCOW_HEADER_LEN,
-                                  NORCOW_MAGIC),
+                                  block_magic),
            NULL);
+    flash_block_t block_version = {~NORCOW_VERSION};
     ensure(flash_area_write_block(&STORAGE_AREAS[sector],
                                   NORCOW_HEADER_LEN + NORCOW_MAGIC_LEN,
-                                  ~NORCOW_VERSION),
+                                  block_version),
            "set version failed");
 #else
     flash_block_t block = {NORCOW_MAGIC, ~NORCOW_VERSION};
@@ -384,22 +387,12 @@ secbool norcow_set_ex(uint16_t key, const void *val, uint16_t len,
 
   // Delete the old item.
   if (sectrue == *found) {
-    uint32_t end = val_offset + len_old;
-    norcow_delete_head(area, len_old, &val_offset);
-
-    // Delete the old item data.
-    ensure(flash_unlock_write(), NULL);
-    flash_block_t block = {0};
-    while (val_offset < end) {
-      ensure(flash_area_write_block(area, val_offset, block), NULL);
-      val_offset += FLASH_BLOCK_SIZE;
-    }
-
-    ensure(flash_lock_write(), NULL);
+    norcow_delete_item(area, len_old, val_offset);
   }
 
   // Check whether there is enough free space and compact if full.
-  if (norcow_free_offset + NORCOW_MAX_PREFIX_LEN + len > NORCOW_SECTOR_SIZE) {
+  if (norcow_free_offset + FLASH_ALIGN(NORCOW_MAX_PREFIX_LEN + len) >
+      NORCOW_SECTOR_SIZE) {
     compact();
   }
 
@@ -434,18 +427,7 @@ secbool norcow_delete(uint16_t key) {
       (const uint8_t *)ptr -
       (const uint8_t *)norcow_ptr(norcow_write_sector, 0, NORCOW_SECTOR_SIZE);
 
-  uint32_t end = val_offset + len;
-  norcow_delete_head(area, len, &val_offset);
-
-  // Delete the item data.
-  ensure(flash_unlock_write(), NULL);
-  flash_block_t block = {0};
-  while (val_offset < end) {
-    ensure(flash_area_write_block(area, val_offset, block), NULL);
-    val_offset += FLASH_BLOCK_SIZE;
-  }
-
-  ensure(flash_lock_write(), NULL);
+  norcow_delete_item(area, len, val_offset);
 
   return sectrue;
 }

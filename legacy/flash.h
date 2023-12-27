@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include "secbool.h"
 
-#define FLASH_BIT_ACCESS 1
 #define FLASH_SECTOR_COUNT 24
 
 #include "flash_common.h"

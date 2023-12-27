@@ -28,6 +28,13 @@ fn model() -> String {
     }
 }
 
+// fn block_words() -> String {
+//     match env::var("FLASH_BLOCK_WORDS") {
+//         Ok(model) => model,
+//         Err(_) => panic!("FLASH_BLOCK_WORDS not set")
+//     }
+// }
+
 fn board() -> String {
     if !is_firmware() {
         return String::from("boards/board-unix.h");
@@ -147,6 +154,8 @@ fn prepare_bindings() -> bindgen::Builder {
             "-I../../build/unix",
             "-I../../vendor/micropython/ports/unix",
             "-DTREZOR_EMULATOR",
+            "-DFLASH_BIT_ACCESS=1",
+            "-DFLASH_BLOCK_WORDS=1",
         ]);
     }
 

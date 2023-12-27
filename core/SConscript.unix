@@ -527,6 +527,8 @@ env.Replace(
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         'TREZOR_BOARD=\\"boards/board-unix.h\\"',
+        ('FLASH_BIT_ACCESS', '1'),
+        ('FLASH_BLOCK_WORDS', '1'),
         'MCU_TYPE='+CPU_MODEL,
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
         UI_LAYOUT,

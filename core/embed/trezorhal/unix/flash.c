@@ -247,6 +247,21 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   return sectrue;
 }
 
+secbool flash_write_block(uint16_t sector, uint32_t offset,
+                          const flash_block_t block) {
+  if (offset % (sizeof(uint32_t) *
+                FLASH_BLOCK_WORDS)) {  // we write only at block boundary
+    return secfalse;
+  }
+
+  for (int i = 0; i < FLASH_BLOCK_WORDS; i++) {
+    if (!flash_write_word(sector, offset + i * sizeof(uint32_t), block[i])) {
+      return secfalse;
+    }
+  }
+  return sectrue;
+}
+
 secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
                        uint8_t datalen) {
   if (offset + datalen > OTP_BLOCK_SIZE) {

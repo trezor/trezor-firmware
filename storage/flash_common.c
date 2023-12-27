@@ -135,16 +135,5 @@ secbool flash_area_write_block(const flash_area_t *area, uint32_t offset,
     return secfalse;
   }
 
-#if FLASH_BLOCK_WORDS == 1
-  return flash_write_word(sector, sector_offset, block);
-#else
-  for (int i = 0; i < FLASH_BLOCK_WORDS; i++) {
-    if (sectrue != flash_write_word(sector,
-                                    sector_offset + i * sizeof(uint32_t),
-                                    block[i])) {
-      return secfalse;
-    }
-  }
-  return sectrue;
-#endif
+  return flash_write_block(sector, sector_offset, block);
 }

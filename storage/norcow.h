@@ -72,7 +72,9 @@ secbool norcow_next_counter(uint16_t key, uint32_t *count);
 /*
  * Update the value of the given key, data are written sequentially from start
  * Data are guaranteed to be stored on flash once the total item len is reached.
- * Note that you can only change bits from 1 to 0.
+ *
+ * It is only allowed to update bytes of pristine items, i.e. items that were
+ * not yet set after allocating them with norcow_set(key, NULL, len).
  */
 secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
                             const uint16_t len);

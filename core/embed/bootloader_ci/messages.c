@@ -615,7 +615,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
   const uint32_t *const src = (const uint32_t *const)chunk_buffer;
 
-  ensure(chunk_size % FLASH_BLOCK_SIZE == 0, NULL);
+  ensure((chunk_size % FLASH_BLOCK_SIZE == 0) * sectrue, NULL);
   for (int i = 0; i < chunk_size / FLASH_BLOCK_SIZE; i++) {
     ensure(flash_area_write_block(
                &FIRMWARE_AREA,

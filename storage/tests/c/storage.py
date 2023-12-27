@@ -1,15 +1,22 @@
 import ctypes as c
 import os
+import sys
+
+sys.path.append(
+    os.path.normpath(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python", "src")
+    )
+)
+import consts
 
 EXTERNAL_SALT_LEN = 32
 sectrue = -1431655766  # 0xAAAAAAAAA
-fname = os.path.join(os.path.dirname(__file__), "libtrezor-storage.so")
-fname_qw = os.path.join(os.path.dirname(__file__), "libtrezor-storage-qw.so")
 
 
 class Storage:
-    def __init__(self, flash_byte_access=True) -> None:
-        self.lib = c.cdll.LoadLibrary(fname if flash_byte_access else fname_qw)
+    def __init__(self, lib_name) -> None:
+        lib_path = os.path.join(os.path.dirname(__file__), lib_name)
+        self.lib = c.cdll.LoadLibrary(lib_path)
         self.flash_size = c.cast(self.lib.FLASH_SIZE, c.POINTER(c.c_uint32))[0]
         self.flash_buffer = c.create_string_buffer(self.flash_size)
         c.cast(self.lib.FLASH_BUFFER, c.POINTER(c.c_void_p))[0] = c.addressof(
@@ -100,3 +107,10 @@ class Storage:
         if len(buf) != self.flash_size:
             raise RuntimeError("Failed to set flash buffer due to length mismatch.")
         self.flash_buffer.value = buf
+
+    def _get_active_sector(self) -> int:
+        if self._dump()[0][:8].hex() == consts.NORCOW_MAGIC_AND_VERSION.hex():
+            return 0
+        elif self._dump()[1][:8].hex() == consts.NORCOW_MAGIC_AND_VERSION.hex():
+            return 1
+        raise RuntimeError("Failed to get active sector.")

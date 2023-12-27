@@ -35,10 +35,10 @@ OUT = libtrezor-storage.so
 OUT_QW = libtrezor-storage-qw.so
 
 $(OUT): $(OBJ)
-	$(CC) $(CFLAGS) $(LIBS) $(OBJ) -shared -o $(OUT)
+	$(CC) $(CFLAGS) -DFLASH_BIT_ACCESS -DFLASH_BLOCK_WORDS=1 $(LIBS) $(OBJ) -shared -o $(OUT)
 
 $(OUT_QW): $(OBJ_QW)
-	$(CC) $(CFLAGS) -DFLASH_QUADWORD $(LIBS) $(OBJ_QW) -shared -o $(OUT_QW)
+	$(CC) $(CFLAGS) -DFLASH_BLOCK_WORDS=4 $(LIBS) $(OBJ_QW) -shared -o $(OUT_QW)
 
 build/crypto/chacha20poly1305/chacha_merged.o: $(BASE)crypto/chacha20poly1305/chacha_merged.c
 	mkdir -p $(@D)
@@ -50,11 +50,11 @@ build_qw/crypto/chacha20poly1305/chacha_merged.o: $(BASE)crypto/chacha20poly1305
 
 build/%.o: $(BASE)%.c $(BASE)%.h
 	mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+	$(CC) $(CFLAGS) -DFLASH_BIT_ACCESS -DFLASH_BLOCK_WORDS=1 $(INC) -c $< -o $@
 
 build_qw/%.o: $(BASE)%.c $(BASE)%.h
 	mkdir -p $(@D)
-	$(CC) $(CFLAGS) -DFLASH_QUADWORD $(INC) -c $< -o $@
+	$(CC) $(CFLAGS) -DFLASH_BLOCK_WORDS=4  $(INC) -c $< -o $@
 
 clean:
-	rm -f $(OUT) $(OBJ)
+	rm -f $(OUT) $(OUT_QW) $(OBJ) $(OBJ_QW)

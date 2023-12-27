@@ -5,13 +5,13 @@ from . import common
 
 
 def test_norcow_set_qw():
-    n = norcow.Norcow(flash_byte_access=False)
+    n = norcow.NorcowBlockwise()
     n.init()
     n.set(0x0001, b"123")
     data = n._dump()[0][:256]
-    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
-    assert data[16:18] == b"\x03\x00"  # length
-    assert data[18:20] == b"\x01\x00"  # app + key
+    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
+    assert data[16:18] == b"\x01\x00"  # app + key
+    assert data[18:20] == b"\x03\x00"  # length
     assert data[20:23] == b"123"  # data
     assert data[23:32] == bytes([0] * 9)  # alignment
     assert common.all_ff_bytes(data[32:])
@@ -19,9 +19,9 @@ def test_norcow_set_qw():
     n.wipe()
     n.set(0x0901, b"hello")
     data = n._dump()[0][:256]
-    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
-    assert data[16:18] == b"\x05\x00"  # length\x00
-    assert data[18:20] == b"\x01\x09"  # app + key
+    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
+    assert data[16:18] == b"\x01\x09"  # app + key
+    assert data[18:20] == b"\x05\x00"  # length
     assert data[20:25] == b"hello"  # data
     assert data[25:32] == bytes([0] * 7)  # alignment
     assert common.all_ff_bytes(data[32:])
@@ -29,32 +29,32 @@ def test_norcow_set_qw():
     offset = 32
     n.set(0x0102, b"world!")
     data = n._dump()[0][:256]
-    assert data[offset : offset + 2] == b"\x06\x00"  # length
-    assert data[offset + 2 : offset + 4] == b"\x02\x01"  # app + key
+    assert data[offset : offset + 2] == b"\x02\x01"  # app + key
+    assert data[offset + 2 : offset + 4] == b"\x06\x00"  # length
     assert data[offset + 4 : offset + 4 + 6] == b"world!"  # data
     assert data[offset + 4 + 6 : offset + 16] == bytes([0] * 6)  # alignment
     assert common.all_ff_bytes(data[offset + 16 :])
 
 
 def test_norcow_update():
-    n = norcow.Norcow(flash_byte_access=False)
+    n = norcow.NorcowBlockwise()
     n.init()
     n.set(0x0001, b"1234567890A")
     data = n._dump()[0][:256]
-    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
-    assert data[16:18] == b"\x0B\x00"  # length
-    assert data[18:20] == b"\x01\x00"  # app + key
+    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
+    assert data[16:18] == b"\x01\x00"  # app + key
+    assert data[18:20] == b"\x0B\x00"  # length
     assert data[20:31] == b"1234567890A"  # data
     assert data[31:32] == bytes([0] * 1)  # alignment
     assert common.all_ff_bytes(data[32:])
 
     n.set(0x0001, b"A0987654321")
     data = n._dump()[0][:256]
-    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
+    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
     assert data[16:32] == bytes([0] * 16)  # empty data
 
-    assert data[32:34] == b"\x0B\x00"  # length
-    assert data[34:36] == b"\x01\x00"  # app + key
+    assert data[32:34] == b"\x01\x00"  # app + key
+    assert data[34:36] == b"\x0B\x00"  # length
     assert data[36:47] == b"A0987654321"  # data
     assert data[47:48] == bytes([0] * 1)  # alignment
     assert common.all_ff_bytes(data[48:])
@@ -62,19 +62,19 @@ def test_norcow_update():
     n.wipe()
     n.set(0x0001, b"1234567890AB")
     data = n._dump()[0][:256]
-    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
-    assert data[16:18] == b"\x0C\x00"  # length
-    assert data[18:20] == b"\x01\x00"  # app + key
+    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
+    assert data[16:18] == b"\x01\x00"  # app + key
+    assert data[18:20] == b"\x0C\x00"  # length
     assert data[20:32] == b"1234567890AB"  # data
     assert common.all_ff_bytes(data[32:])
 
     n.set(0x0001, b"BA0987654321")
     data = n._dump()[0][:256]
-    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
+    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
     assert data[16:32] == bytes([0] * 16)  # empty data
 
-    assert data[32:34] == b"\x0C\x00"  # length
-    assert data[34:36] == b"\x01\x00"  # app + key
+    assert data[32:34] == b"\x01\x00"  # app + key
+    assert data[34:36] == b"\x0C\x00"  # length
     assert data[36:48] == b"BA0987654321"  # data
     assert common.all_ff_bytes(data[48:])
 
@@ -83,60 +83,56 @@ def test_norcow_update():
     offset = 16
     n.set(0x0102, b"world!_world!")
     data = n._dump()[0][:256]
-    assert data[offset : offset + 2] == b"\x0D\x00"  # length
-    assert data[offset + 16 : offset + 18] == b"\x02\x01"  # app + key
-    assert data[offset + 32 : offset + 32 + 13] == b"world!_world!"  # data
-    assert data[offset + 32 + 13 : offset + 48] == b"\x00\x00\x00"  # alignment
-    assert common.all_ff_bytes(data[offset + 48 :])
+    assert data[offset : offset + 2] == b"\x02\x01"  # app + key
+    assert data[offset + 2 : offset + 4] == b"\x0D\x00"  # length
+    assert data[offset + 16 : offset + 16 + 13] == b"world!_world!"  # data
+    assert data[offset + 16 + 13 : offset + 32] == b"\xff\xff\xff"  # alignment
+    assert common.all_ff_bytes(data[offset + 32 :])
 
     n.set(0x0102, b"hello!_hello!")
     data = n._dump()[0][:256]
-    assert data[offset : offset + 2] == b"\x0D\x00"  # length
-    assert data[offset + 16 : offset + 48] == bytes([0] * 32)
+    assert data[offset : offset + 4] == b"\x02\x01\x0D\x00"  # app + key + length
+    assert data[offset + 4 : offset + 32] == bytes([0] * 28)
 
-    offset += 48
+    offset += 32
 
-    assert data[offset + 0 : offset + 2] == b"\x0D\x00"  # length
-    assert data[offset + 16 : offset + 18] == b"\x02\x01"  # app + key
-    assert data[offset + 32 : offset + 32 + 13] == b"hello!_hello!"  # data
-    assert data[offset + 32 + 13 : offset + 48] == b"\x00\x00\x00"  # alignment
+    assert data[offset + 0 : offset + 4] == b"\x02\x01\x0D\x00"  # app + key + length
+    assert data[offset + 4 : offset + 16] == b"\x00" * 12  # alignment
+    assert data[offset + 16 : offset + 16 + 13] == b"hello!_hello!"  # data
+    assert data[offset + 16 + 13 : offset + 32] == b"\xff\xff\xff"  # alignment
 
-    assert common.all_ff_bytes(data[offset + 48 :])
+    assert common.all_ff_bytes(data[offset + 32 :])
 
 
 def test_norcow_set_qw_long():
-    n = norcow.Norcow(flash_byte_access=False)
+    n = norcow.NorcowBlockwise()
     n.init()
     n.set(0x0001, b"1234567890abc")
     data = n._dump()[0][:256]
-    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
-    assert data[16:18] == b"\x0D\x00"  # length
-    assert data[32:34] == b"\x01\x00"  # app + key
-    assert data[48:61] == b"1234567890abc"  # data
-    assert common.all_ff_bytes(data[64:])
+    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
+    assert data[16:20] == b"\x01\x00\x0D\x00"  # app + key + length
+    assert data[32:45] == b"1234567890abc"  # data
+    assert common.all_ff_bytes(data[45:])
 
     n.wipe()
     n.set(0x0901, b"hello_hello__")
     data = n._dump()[0][:256]
-    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
-    assert data[16:18] == b"\x0D\x00"  # length\x00
-    assert data[32:34] == b"\x01\x09"  # app + key
-    assert data[48:61] == b"hello_hello__"  # data
-    assert data[61:64] == b"\x00\x00\x00"  # alignment
-    assert common.all_ff_bytes(data[64:])
+    assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
+    assert data[16:20] == b"\x01\x09\x0D\x00"  # app + key + length
+    assert data[32:45] == b"hello_hello__"  # data
+    assert common.all_ff_bytes(data[45:])
 
-    offset = 64
+    offset = 48
     n.set(0x0102, b"world!_world!")
     data = n._dump()[0][:256]
-    assert data[offset : offset + 2] == b"\x0D\x00"  # length
-    assert data[offset + 16 : offset + 18] == b"\x02\x01"  # app + key
-    assert data[offset + 32 : offset + 32 + 13] == b"world!_world!"  # data
-    assert data[offset + 32 + 13 : offset + 48] == b"\x00\x00\x00"  # alignment
-    assert common.all_ff_bytes(data[offset + 48 :])
+    assert data[offset : offset + 4] == b"\x02\x01\x0D\x00"  # app + key + length
+    assert data[offset + 16 : offset + 16 + 13] == b"world!_world!"  # data
+    assert data[offset + 16 + 13 : offset + 32] == b"\xff\xff\xff"  # alignment
+    assert common.all_ff_bytes(data[offset + 32 :])
 
 
 def test_norcow_read_item_qw():
-    n = norcow.Norcow(flash_byte_access=False)
+    n = norcow.NorcowBlockwise()
     n.init()
     n.set(0x0001, b"123")
     n.set(0x0002, b"456")
@@ -154,7 +150,7 @@ def test_norcow_read_item_qw():
 
 
 def test_norcow_get_item_qw():
-    n = norcow.Norcow(flash_byte_access=False)
+    n = norcow.NorcowBlockwise()
     n.init()
     n.set(0x0001, b"123")
     n.set(0x0002, b"456")
@@ -164,10 +160,10 @@ def test_norcow_get_item_qw():
     assert (
         n._dump()[0][:80].hex()
         == consts.NORCOW_MAGIC_AND_VERSION.hex()
-        + "ffffffffffffffff"
-        + "03000100313233000000000000000000"
-        + "03000200343536000000000000000000"
-        + "03000101373839000000000000000000"
+        + "0000000000000000"
+        + "01000300313233000000000000000000"
+        + "02000300343536000000000000000000"
+        + "01010300373839000000000000000000"
         + "ffffffffffffffffffffffffffffffff"
     )
 
@@ -178,10 +174,10 @@ def test_norcow_get_item_qw():
     assert (
         n._dump()[0][:80].hex()
         == consts.NORCOW_MAGIC_AND_VERSION.hex()
-        + "ffffffffffffffff"
-        + "03000100313233000000000000000000"
-        + "03000200343536000000000000000000"
-        + "03000101373839000000000000000000"
+        + "0000000000000000"
+        + "01000300313233000000000000000000"
+        + "02000300343536000000000000000000"
+        + "01010300373839000000000000000000"
         + "ffffffffffffffffffffffffffffffff"
     )
 
@@ -192,11 +188,11 @@ def test_norcow_get_item_qw():
     assert (
         n._dump()[0][:96].hex()
         == consts.NORCOW_MAGIC_AND_VERSION.hex()
-        + "ffffffffffffffff"
-        + "03000100313233000000000000000000"
-        + "03000200343536000000000000000000"
+        + "0000000000000000"
+        + "01000300313233000000000000000000"
+        + "02000300343536000000000000000000"
         + "00000000000000000000000000000000"
-        + "03000101373838000000000000000000"
+        + "01010300373838000000000000000000"
         + "ffffffffffffffffffffffffffffffff"
     )
 
@@ -207,12 +203,12 @@ def test_norcow_get_item_qw():
     assert (
         n._dump()[0][:112].hex()
         == consts.NORCOW_MAGIC_AND_VERSION.hex()
-        + "ffffffffffffffff"
-        + "03000100313233000000000000000000"
-        + "03000200343536000000000000000000"
+        + "0000000000000000"
+        + "01000300313233000000000000000000"
+        + "02000300343536000000000000000000"
         + "00000000000000000000000000000000"
         + "00000000000000000000000000000000"
-        + "03000101373837000000000000000000"
+        + "01010300373837000000000000000000"
         + "ffffffffffffffffffffffffffffffff"
     )
 
@@ -223,7 +219,7 @@ def test_norcow_get_item_qw():
 
 
 def test_norcow_get_item_qw_long():
-    n = norcow.Norcow(flash_byte_access=False)
+    n = norcow.NorcowBlockwise()
     n.init()
     n.set(0x0001, b"1231231231231")
     n.set(0x0002, b"4564564564564")
@@ -231,18 +227,15 @@ def test_norcow_get_item_qw_long():
     value = n.get(0x0001)
     assert value == b"1231231231231"
     assert (
-        n._dump()[0][:170].hex()
-        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "ffffffffffffffff"
-        "0d000000ffffffffffffffffffffffff"
-        "01000000ffffffffffffffffffffffff"
-        "31323331323331323331323331000000"
-        "0d000000ffffffffffffffffffffffff"
-        "02000000ffffffffffffffffffffffff"
-        "34353634353634353634353634000000"
-        "0d000000ffffffffffffffffffffffff"
-        "01010000ffffffffffffffffffffffff"
-        "37383937383937383937383937000000"
-        "ffffffffffffffffffff"
+        n._dump()[0][:128].hex()
+        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "0000000000000000"
+        "01000d00000000000000000000000000"
+        "31323331323331323331323331ffffff"
+        "02000d00000000000000000000000000"
+        "34353634353634353634353634ffffff"
+        "01010d00000000000000000000000000"
+        "37383937383937383937383937ffffff"
+        "ffffffffffffffffffffffffffffffff"
     )
 
     # replacing item with the same value (update)
@@ -250,18 +243,15 @@ def test_norcow_get_item_qw_long():
     value = n.get(0x0101)
     assert value == b"7897897897897"
     assert (
-        n._dump()[0][:170].hex()
-        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "ffffffffffffffff"
-        "0d000000ffffffffffffffffffffffff"
-        "01000000ffffffffffffffffffffffff"
-        "31323331323331323331323331000000"
-        "0d000000ffffffffffffffffffffffff"
-        "02000000ffffffffffffffffffffffff"
-        "34353634353634353634353634000000"
-        "0d000000ffffffffffffffffffffffff"
-        "01010000ffffffffffffffffffffffff"
-        "37383937383937383937383937000000"
-        "ffffffffffffffffffff"
+        n._dump()[0][:128].hex()
+        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "0000000000000000"
+        "01000d00000000000000000000000000"
+        "31323331323331323331323331ffffff"
+        "02000d00000000000000000000000000"
+        "34353634353634353634353634ffffff"
+        "01010d00000000000000000000000000"
+        "37383937383937383937383937ffffff"
+        "ffffffffffffffffffffffffffffffff"
     )
 
     # replacing item with value with less 1 bits than before (update)
@@ -269,21 +259,17 @@ def test_norcow_get_item_qw_long():
     value = n.get(0x0101)
     assert value == b"7887887887887"
     assert (
-        n._dump()[0][:218].hex()
-        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "ffffffffffffffff"
-        "0d000000ffffffffffffffffffffffff"
-        "01000000ffffffffffffffffffffffff"
-        "31323331323331323331323331000000"
-        "0d000000ffffffffffffffffffffffff"
-        "02000000ffffffffffffffffffffffff"
-        "34353634353634353634353634000000"
-        "0d000000ffffffffffffffffffffffff"
+        n._dump()[0][:160].hex()
+        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "0000000000000000"
+        "01000d00000000000000000000000000"
+        "31323331323331323331323331ffffff"
+        "02000d00000000000000000000000000"
+        "34353634353634353634353634ffffff"
+        "01010d00000000000000000000000000"
         "00000000000000000000000000000000"
-        "00000000000000000000000000000000"
-        "0d000000ffffffffffffffffffffffff"
-        "01010000ffffffffffffffffffffffff"
-        "37383837383837383837383837000000"
-        "ffffffffffffffffffff"
+        "01010d00000000000000000000000000"
+        "37383837383837383837383837ffffff"
+        "ffffffffffffffffffffffffffffffff"
     )
 
     # replacing item with value with more 1 bits than before (wipe and new entry)
@@ -291,24 +277,19 @@ def test_norcow_get_item_qw_long():
     value = n.get(0x0101)
     assert value == b"7877877877877"
     assert (
-        n._dump()[0][:266].hex()
-        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "ffffffffffffffff"
-        "0d000000ffffffffffffffffffffffff"
-        "01000000ffffffffffffffffffffffff"
-        "31323331323331323331323331000000"
-        "0d000000ffffffffffffffffffffffff"
-        "02000000ffffffffffffffffffffffff"
-        "34353634353634353634353634000000"
-        "0d000000ffffffffffffffffffffffff"
+        n._dump()[0][:192].hex()
+        == consts.NORCOW_MAGIC_AND_VERSION.hex() + "0000000000000000"
+        "01000d00000000000000000000000000"
+        "31323331323331323331323331ffffff"
+        "02000d00000000000000000000000000"
+        "34353634353634353634353634ffffff"
+        "01010d00000000000000000000000000"
         "00000000000000000000000000000000"
+        "01010d00000000000000000000000000"
         "00000000000000000000000000000000"
-        "0d000000ffffffffffffffffffffffff"
-        "00000000000000000000000000000000"
-        "00000000000000000000000000000000"
-        "0d000000ffffffffffffffffffffffff"
-        "01010000ffffffffffffffffffffffff"
-        "37383737383737383737383737000000"
-        "ffffffffffffffffffff"
+        "01010d00000000000000000000000000"
+        "37383737383737383737383737ffffff"
+        "ffffffffffffffffffffffffffffffff"
     )
 
     n.set(0x0002, b"world")
@@ -318,7 +299,7 @@ def test_norcow_get_item_qw_long():
 
 
 def test_norcow_replace_item_qw():
-    n = norcow.Norcow(flash_byte_access=False)
+    n = norcow.NorcowBlockwise()
     n.init()
     n.set(0x0001, b"123")
     n.set(0x0002, b"456")
@@ -344,10 +325,10 @@ def test_norcow_replace_item_qw():
 
 
 def test_norcow_compact_qw():
-    n = norcow.Norcow(flash_byte_access=False)
+    n = norcow.NorcowBlockwise()
     n.init()
     n.set(0x0101, b"ahoj_ahoj_ahoj")
-    n.set(0x0101, b"a" * (consts.NORCOW_SECTOR_SIZE - 380))
+    n.set(0x0101, b"a" * (consts.NORCOW_SECTOR_SIZE - 240))
     n.set(0x0101, b"hello_hello__")
 
     n.set(0x0103, b"123456789xxxx")
@@ -355,14 +336,14 @@ def test_norcow_compact_qw():
     n.set(0x0105, b"123456789xxxx")
     n.set(0x0106, b"123456789xxxx")
     mem = n._dump()
-    assert mem[0][:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
+    assert mem[0][:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
     assert mem[0][200:300] == b"\x00" * 100
 
     # compact is triggered
     n.set(0x0107, b"123456789xxxx")
     mem = n._dump()
     # assert the other sector is active
-    assert mem[1][:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\xff" * 8
+    assert mem[1][:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
     # assert the deleted item was not copied
     assert mem[0][200:300] == b"\xff" * 100
 

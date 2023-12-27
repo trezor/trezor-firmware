@@ -16,11 +16,7 @@ typedef struct {
 
 #define FLASH_BLOCK_SIZE (sizeof(uint32_t) * FLASH_BLOCK_WORDS)
 
-#if FLASH_BLOCK_WORDS == 1
-typedef uint32_t flash_block_t;
-#else
 typedef uint32_t flash_block_t[FLASH_BLOCK_WORDS];
-#endif
 
 #if FLASH_BLOCK_WORDS == 1
 #define FLASH_ALIGN(X) (((X) + 3) & ~3)
@@ -59,5 +55,8 @@ secbool __wur flash_area_write_word(const flash_area_t *area, uint32_t offset,
 #endif
 secbool __wur flash_area_write_block(const flash_area_t *area, uint32_t offset,
                                      const flash_block_t block);
+
+secbool flash_write_block(uint16_t sector, uint32_t offset,
+                          const flash_block_t block);
 
 #endif
