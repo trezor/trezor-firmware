@@ -5,7 +5,7 @@ from . import common
 
 
 def test_norcow_set():
-    n = norcow.Norcow()
+    n = norcow.NorcowBitwise()
     n.init()
     n.set(0x0001, b"123")
     data = n._dump()[0][:256]
@@ -36,7 +36,7 @@ def test_norcow_set():
 
 
 def test_norcow_read_item():
-    n = norcow.Norcow()
+    n = norcow.NorcowBitwise()
     n.init()
     n.set(0x0001, b"123")
     n.set(0x0002, b"456")
@@ -54,7 +54,7 @@ def test_norcow_read_item():
 
 
 def test_norcow_get_item():
-    n = norcow.Norcow()
+    n = norcow.NorcowBitwise()
     n.init()
     n.set(0x0001, b"123")
     n.set(0x0002, b"456")
@@ -104,7 +104,7 @@ def test_norcow_get_item():
 
 
 def test_norcow_replace_item():
-    n = norcow.Norcow()
+    n = norcow.NorcowBitwise()
     n.init()
     n.set(0x0001, b"123")
     n.set(0x0002, b"456")
@@ -130,7 +130,7 @@ def test_norcow_replace_item():
 
 
 def test_norcow_compact():
-    n = norcow.Norcow()
+    n = norcow.NorcowBitwise()
     n.init()
     n.set(0x0101, b"ahoj")
     n.set(0x0101, b"a" * (consts.NORCOW_SECTOR_SIZE - 100))

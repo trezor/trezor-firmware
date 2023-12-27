@@ -55,7 +55,7 @@ class StorageUpgrade(RuleBasedStateMachine):
 
     @invariant()
     def check_upgrade(self):
-        sc1 = StorageC()
+        sc1 = StorageC("libtrezor-storage.so")
         sc1._set_flash_buffer(self.sc._get_flash_buffer())
         sc1.init(common.test_uid)
         assert self.sm.get_pin_rem() == sc1.get_pin_rem()

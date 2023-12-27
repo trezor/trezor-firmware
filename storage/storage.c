@@ -209,8 +209,8 @@ static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
 
 static secbool secequal32(const void *ptr1, const void *ptr2, size_t n) {
   assert(n % sizeof(uint32_t) == 0);
-  //  assert((uintptr_t)ptr1 % sizeof(uint32_t) == 0);
-  //  assert((uintptr_t)ptr2 % sizeof(uint32_t) == 0);
+  assert((uintptr_t)ptr1 % sizeof(uint32_t) == 0);
+  assert((uintptr_t)ptr2 % sizeof(uint32_t) == 0);
 
   size_t wn = n / sizeof(uint32_t);
   const uint32_t *p1 = (const uint32_t *)ptr1;
@@ -391,7 +391,7 @@ static secbool set_wipe_code(const uint8_t *wipe_code, size_t wipe_code_len) {
   }
 
   // The format of the WIPE_CODE_DATA_KEY entry is:
-  // wipe code (variable), random salt (16 bytes), authentication tag (16 bytes)
+  // wipe code (variable), random salt (8 bytes), authentication tag (8 bytes)
   // NOTE: We allocate extra space for the HMAC result.
   uint8_t data[(MAX_WIPE_CODE_LEN + WIPE_CODE_SALT_SIZE +
                 SHA256_DIGEST_LENGTH)] = {0};
@@ -856,11 +856,6 @@ static secbool pin_fails_reset(void) {
         edited = sectrue;
         new_logs[(i + GUARD_KEY_WORDS)] = entry_log[i];
       }
-    }
-  }
-  if (edited == sectrue) {
-    if (sectrue != norcow_set(PIN_LOGS_KEY, new_logs, sizeof(new_logs))) {
-      return secfalse;
     }
   }
   return pin_logs_init(0);

@@ -120,7 +120,6 @@ POLY1305_MAC_SIZE = 16
 
 # The length of the ChaCha20 IV (aka nonce) in bytes as per RFC 7539.
 CHACHA_IV_SIZE = 12
-CHACHA_IV_PADDING = 4
 
 # ----- Norcow ----- #
 
@@ -131,7 +130,7 @@ NORCOW_SECTOR_SIZE = 64 * 1024
 NORCOW_MAGIC = b"NRC2"
 
 # Norcow version, set in the storage header, but also as an encrypted item.
-NORCOW_VERSION = b"\x03\x00\x00\x00"
+NORCOW_VERSION = b"\x04\x00\x00\x00"
 
 # Norcow magic combined with the version, which is stored as its negation.
 NORCOW_MAGIC_AND_VERSION = NORCOW_MAGIC + bytes(

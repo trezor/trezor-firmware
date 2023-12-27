@@ -727,7 +727,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   // offset into the FIRMWARE_AREA part of the flash
   uint32_t write_offset = firmware_block * IMAGE_CHUNK_SIZE;
 
-  ensure(chunk_size % FLASH_BLOCK_SIZE == 0, NULL);
+  ensure((chunk_size % FLASH_BLOCK_SIZE == 0) * sectrue, NULL);
 
   while (bytes_remaining > 0) {
     // erase flash before writing

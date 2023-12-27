@@ -146,3 +146,43 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   flash[0] = data;
   return sectrue;
 }
+
+secbool flash_write_block(uint16_t sector, uint32_t offset,
+                          const flash_block_t block) {
+#if defined FLASH_BIT_ACCESS
+  return flash_write_word(sector, offset, block[0]);
+#else
+
+  uint32_t *addr =
+      (uint32_t *)flash_get_address(sector, offset, sizeof(flash_block_t));
+
+  secbool old_all_ff = sectrue;
+  secbool new_all_00 = sectrue;
+  secbool all_equal = sectrue;
+
+  for (int i = 0; i < FLASH_BLOCK_WORDS; i++) {
+    if (addr[i] != 0xFFFFFFFF) {
+      old_all_ff = secfalse;
+    }
+    if (block[i] != 0x00000000) {
+      new_all_00 = secfalse;
+    }
+    if (addr[i] != ((uint32_t *)block)[i]) {
+      all_equal = secfalse;
+    }
+  }
+
+  if (!(old_all_ff == sectrue || new_all_00 == sectrue ||
+        all_equal == sectrue)) {
+    return secfalse;
+  }
+
+  for (int i = 0; i < FLASH_BLOCK_WORDS; i++) {
+    if (sectrue !=
+        flash_write_word(sector, offset + i * sizeof(uint32_t), block[i])) {
+      return secfalse;
+    }
+  }
+  return sectrue;
+#endif
+}

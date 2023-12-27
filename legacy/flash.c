@@ -139,6 +139,11 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   return sectrue;
 }
 
+secbool flash_write_block(uint16_t sector, uint32_t offset,
+                          const flash_block_t block) {
+  return flash_write_word(sector, offset, block[0]);
+}
+
 secbool flash_area_erase_bulk(const flash_area_t *area, int count,
                               void (*progress)(int pos, int len)) {
   ensure(flash_unlock_write(), NULL);

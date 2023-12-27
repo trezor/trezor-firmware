@@ -1,6 +1,8 @@
+import pytest
 from c0.storage import Storage as StorageC0
 from c.storage import Storage as StorageC
 
+from python.src.norcow import NC_CLASSES
 from python.src.storage import Storage as StoragePy
 
 from . import common
@@ -51,27 +53,27 @@ def test_upgrade():
     for _ in range(10):
         assert not sc0.unlock("3")
 
-    sc1 = StorageC()
+    sc1 = StorageC("libtrezor-storage.so")
     sc1._set_flash_buffer(sc0._get_flash_buffer())
     sc1.init(common.test_uid)
     assert sc1.get_pin_rem() == 6
     check_values(sc1)
 
 
-def test_python_set_sectors():
-    for byte_access in (True, False):
-        sp0 = StoragePy(byte_access)
-        sp0.init(common.test_uid)
-        assert sp0.unlock("")
-        set_values(sp0)
-        for _ in range(10):
-            assert not sp0.unlock("3")
-        assert sp0.get_pin_rem() == 6
+@pytest.mark.parametrize("nc_class", NC_CLASSES)
+def test_python_set_sectors(nc_class):
+    sp0 = StoragePy(nc_class)
+    sp0.init(common.test_uid)
+    assert sp0.unlock("")
+    set_values(sp0)
+    for _ in range(10):
+        assert not sp0.unlock("3")
+    assert sp0.get_pin_rem() == 6
 
-        sp1 = StoragePy(byte_access)
-        sp1.nc._set_sectors(sp0._dump())
-        sp1.init(common.test_uid)
-        common.memory_equals(sp0, sp1)
+    sp1 = StoragePy(nc_class)
+    sp1.nc._set_sectors(sp0._dump())
+    sp1.init(common.test_uid)
+    common.memory_equals(sp0, sp1)
 
-        assert sp1.get_pin_rem() == 6
-        check_values(sp1)
+    assert sp1.get_pin_rem() == 6
+    check_values(sp1)

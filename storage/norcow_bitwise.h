@@ -86,12 +86,28 @@ static secbool read_item(uint8_t sector, uint32_t offset, uint16_t *key,
 }
 
 void norcow_delete_head(const flash_area_t *area, uint16_t len,
-                        uint32_t *val_offset) {
+                        uint32_t val_offset) {
   ensure(flash_unlock_write(), NULL);
   // Update the prefix to indicate that the item has been deleted.
   uint32_t prefix = (uint32_t)len << 16;
-  ensure(flash_area_write_word(area, *val_offset - sizeof(prefix), prefix),
+  ensure(flash_area_write_word(area, val_offset - sizeof(prefix), prefix),
          NULL);
+  ensure(flash_lock_write(), NULL);
+}
+
+void norcow_delete_item(const flash_area_t *area, uint16_t len,
+                        uint32_t val_offset) {
+  uint32_t end = val_offset + len;
+  norcow_delete_head(area, len, val_offset);
+
+  // Delete the item data.
+  ensure(flash_unlock_write(), NULL);
+  flash_block_t block = {0};
+  while (val_offset < end) {
+    ensure(flash_area_write_block(area, val_offset, block), NULL);
+    val_offset += FLASH_BLOCK_SIZE;
+  }
+
   ensure(flash_lock_write(), NULL);
 }
 
@@ -180,7 +196,9 @@ secbool norcow_next_counter(uint16_t key, uint32_t *count) {
 }
 
 /*
- * Update the value of the given key starting at the given offset.
+ * Update the value of the given key. The value is updated sequentially,
+ * starting from position 0, caller needs to ensure that all bytes are updated
+ * by calling this function enough times.
  */
 secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
                             const uint16_t len) {

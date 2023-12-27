@@ -2,17 +2,16 @@ import hashlib
 import sys
 
 from . import consts, crypto, helpers, prng
-from .norcow import Norcow
 from .pin_log import PinLog
 
 
 class Storage:
-    def __init__(self, flash_byte_access: bool = True):
+    def __init__(self, norcow_class):
         self.initialized = False
         self.unlocked = False
         self.dek = None
         self.sak = None
-        self.nc = Norcow(flash_byte_access=flash_byte_access)
+        self.nc = norcow_class()
         self.pin_log = PinLog(self.nc)
 
     def init(self, hardware_salt: bytes = b""):
@@ -26,7 +25,7 @@ class Storage:
         self.hw_salt_hash = hashlib.sha256(hardware_salt).digest()
 
         edek_esak_pvc = self.nc.get(consts.EDEK_ESEK_PVC_KEY)
-        if not edek_esak_pvc:
+        if edek_esak_pvc is None:
             self._init_pin()
 
     def _init_pin(self):
@@ -134,7 +133,7 @@ class Storage:
             value = self.nc.get(key)
         else:
             value = self._get_encrypted(key)
-        if value is False:
+        if value is None:
             raise RuntimeError("Failed to find key in storage.")
         return value
 
@@ -164,7 +163,7 @@ class Storage:
         self._check_lock(app)
 
         current = self.nc.get(key)
-        if current is False:
+        if current is None:
             self.set_counter(key, 0)
             return 0
 
@@ -214,7 +213,7 @@ class Storage:
         if not consts.is_app_protected(key):
             raise RuntimeError("Only protected values are encrypted")
         sat = self.nc.get(consts.SAT_KEY)
-        if not sat:
+        if sat is None:
             raise RuntimeError("SAT not found")
         if sat != self._calculate_authentication_tag():
             raise RuntimeError("Storage authentication tag mismatch")
@@ -265,3 +264,6 @@ class Storage:
 
     def _dump(self) -> bytes:
         return self.nc._dump()
+
+    def _get_active_sector(self) -> int:
+        return self.nc.active_sector

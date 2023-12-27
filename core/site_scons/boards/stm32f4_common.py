@@ -4,6 +4,8 @@ from __future__ import annotations
 def stm32f4_common_files(env, defines, sources, paths):
     defines += [
         ("STM32_HAL_H", '"<stm32f4xx.h>"'),
+        ("FLASH_BLOCK_WORDS", "1"),
+        ("FLASH_BIT_ACCESS", "1"),
     ]
 
     paths += [
@@ -66,5 +68,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "-I../trezorhal/stm32f4;"
         "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc;"
         "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include;"
-        "-DSTM32_HAL_H=<stm32f4xx.h>"
+        "-DSTM32_HAL_H=<stm32f4xx.h>;"
+        "-DFLASH_BLOCK_WORDS=1;"
+        "-DFLASH_BIT_ACCESS=1"
     )
