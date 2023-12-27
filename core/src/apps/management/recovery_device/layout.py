@@ -18,6 +18,12 @@ if TYPE_CHECKING:
     from trezor.enums import BackupType
 
 
+async def choose_recovery_medium(is_slip39: bool, dry_run: bool) -> BackupMedium:
+    from trezor.ui.layouts import choose_recovery_medium
+
+    return await choose_recovery_medium(is_slip39, dry_run)
+
+
 async def _confirm_abort(dry_run: bool = False) -> None:
     if dry_run:
         await confirm_action(

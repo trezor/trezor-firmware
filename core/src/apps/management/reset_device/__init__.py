@@ -125,9 +125,7 @@ async def _backup_mnemonic_or_share(
         # let the user choose between Words/SDcard backup
         backup_medium = BackupMedium.Words
         if utils.USE_SD_CARD:
-            from apps.management.sd_backup import choose_backup_medium
-
-            backup_medium = await choose_backup_medium(share_index, group_index)
+            backup_medium = await layout.choose_backup_medium(share_index, group_index)
 
         # proceed with backup
         if backup_medium == BackupMedium.Words:
@@ -142,8 +140,6 @@ async def _backup_mnemonic_or_share(
             return
         else:
             # try to store seed on SD card
-            from apps.management.sd_backup import sdcard_backup_seed
-
             try:
                 await sdcard_backup_seed(mnemonic, backup_type)
                 return
@@ -155,6 +151,39 @@ async def _backup_mnemonic_or_share(
             except Exception:
                 # generic exception, let the user choose again
                 pass
+
+
+async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType) -> None:
+    from storage.sd_seed_backup import is_backup_present, store_seed_on_sdcard
+    from trezor.ui.layouts import confirm_action, show_success
+
+    from apps.common.sdcard import ensure_sdcard, is_trz_card
+
+    await ensure_sdcard(ensure_filesystem=False)
+    if not is_trz_card():
+        await confirm_action(
+            "confirm_not_trezor_card",
+            "Not Trezor card",
+            action="This is not Trezor Card! Still continue?",
+            verb="Continue",
+        )
+    if is_backup_present():
+        await confirm_action(
+            "confirm_sdcard_backup_exists",
+            "Backup present",
+            action="There is already a Trezor backup on this card!",
+            description="Replace the backup?",
+            verb="Replace",
+            verb_cancel="Abort",
+            hold=True,
+            hold_danger=True,
+            reverse=True,
+        )
+    await ensure_sdcard(ensure_filesystem=True, for_sd_backup=True)
+
+    store_seed_on_sdcard(mnemonic_secret, backup_type)
+
+    await show_success("success_sdcard_backup", "Backup on SD card successful!")
 
 
 async def _backup_bip39(mnemonic_secret: bytes):

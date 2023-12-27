@@ -1,5 +1,5 @@
 from micropython import const
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_success
@@ -12,7 +12,18 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_show_checklist,
 )
 
+if TYPE_CHECKING:
+    from storage.sd_seed_backup import BackupMedium
+
 _NUM_OF_CHOICES = const(3)
+
+
+async def choose_backup_medium(
+    share_index: int | None, group_index: int | None
+) -> BackupMedium:
+    from trezor.ui.layouts import choose_backup_medium
+
+    return await choose_backup_medium(share_index, group_index)
 
 
 async def show_internal_entropy(entropy: bytes) -> None:

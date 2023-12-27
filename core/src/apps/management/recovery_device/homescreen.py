@@ -99,7 +99,7 @@ async def _offer_backup_on_another_medium(
         if previous_medium == BackupMedium.Words:
             from trezor.enums import BackupType
 
-            from apps.management.sd_backup import sdcard_backup_seed
+            from apps.management.reset_device import sdcard_backup_seed
 
             await sdcard_backup_seed(secret, BackupType.Bip39)
         else:
@@ -186,9 +186,7 @@ async def _recover_mnemonic_or_share(
     while True:
         backup_medium = BackupMedium.Words
         if utils.USE_SD_CARD:
-            from apps.management.sd_backup import choose_recovery_medium
-
-            backup_medium = await choose_recovery_medium(
+            backup_medium = await layout.choose_recovery_medium(
                 backup_types.is_slip39_backup_type(backup_type), dry_run
             )
 
@@ -208,10 +206,8 @@ async def _recover_mnemonic_or_share(
             return words, word_count, BackupMedium.Words
         else:
             # try to recover from SD card
-            from apps.management.sd_backup import sdcard_recover_seed
-
             try:
-                mnemonic, _ = await sdcard_recover_seed()  # TODO backup type needed?
+                mnemonic, _ = await _sdcard_recover_seed()  # TODO backup type needed?
                 if mnemonic is None:
                     # TODO warn and repeat
                     pass
@@ -224,6 +220,18 @@ async def _recover_mnemonic_or_share(
             except Exception:
                 # generic exception, let the user choose again
                 pass
+
+
+async def _sdcard_recover_seed() -> tuple[str | None, BackupType | None]:
+    from storage.sd_seed_backup import recover_seed_from_sdcard
+
+    from apps.common.sdcard import ensure_sdcard
+
+    await ensure_sdcard(ensure_filesystem=False)
+    mnemonic_bytes, backup_type = recover_seed_from_sdcard()
+    if mnemonic_bytes is None or backup_type is None:
+        return (None, None)
+    return mnemonic_bytes.decode("utf-8"), backup_type
 
 
 async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
