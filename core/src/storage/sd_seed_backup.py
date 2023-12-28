@@ -18,8 +18,7 @@ if utils.USE_SD_CARD:
     sdcard = io.sdcard  # global_import_cache
     SDCARD_BLOCK_SIZE_B = sdcard.BLOCK_SIZE  # global_import_cache
     SDBACKUP_BLOCK_START = sdcard.BACKUP_BLOCK_START  # global_import_cache
-    SDBACKUP_BLOCK_OFFSET = 130  # TODO arbitrary for now
-    SDBACKUP_N_WRITINGS = 100  # TODO decide between offset/writings
+    SDBACKUP_N_WRITINGS = 100  # TODO arbitrary for now
     SDBACKUP_MAGIC = b"TRZM"
     SDBACKUP_VERSION = 0
 
@@ -79,20 +78,7 @@ def _read_seed_unalloc() -> tuple[bytes | None, BackupType | None]:
     return (decoded_mnemonic, decoded_backup_type)
 
 
-def _storage_blocks_gen() -> Generator:
-    return _storage_blocks_gen_by_n()
-
-
-def _storage_blocks_gen_by_offset() -> Generator[int, None, None]:
-    cap = sdcard.capacity()
-    if cap == 0:
-        raise ProcessError("SD card operation failed")
-    BLOCK_END = cap // SDCARD_BLOCK_SIZE_B - 1
-    for i in range(SDBACKUP_BLOCK_START, BLOCK_END, SDBACKUP_BLOCK_OFFSET):
-        yield i
-
-
-def _storage_blocks_gen_by_n() -> Generator[int, None, None]:
+def _storage_blocks_gen() -> Generator[int, None, None]:
     cap = sdcard.capacity()
     if cap == 0:
         raise ProcessError("SD card operation failed")
