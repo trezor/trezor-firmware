@@ -19,7 +19,7 @@
     "change_language_prompt": "Changer de langue en francais?",
     "change_language_title": "CHANGER LA LANGUE",
     "language": "fr",
-    "version": "2.6.4"
+    "version": "2.6.5"
   },
   "translations": {
     "addr_mismatch": {

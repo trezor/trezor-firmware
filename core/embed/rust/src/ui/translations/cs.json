@@ -19,7 +19,7 @@
     "change_language_prompt": "Zmenit jazyk na cestinu?",
     "change_language_title": "ZMENA JAZYKA",
     "language": "cs",
-    "version": "2.6.4"
+    "version": "2.6.5"
   },
   "translations": {
     "addr_mismatch": {

@@ -183,6 +183,7 @@ async def change_language(msg: ChangeLanguage) -> Success:
         raise DataError("Invalid header data length")
     # TODO: how to handle the version updates - numbers have to be bumped in cs.json and others
     # (or have this logic in a separate blob-creating tool)
+    # (have some static check in make gen_check?)
     if header.version_tuple() != (
         utils.VERSION_MAJOR,
         utils.VERSION_MINOR,
