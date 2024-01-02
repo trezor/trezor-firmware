@@ -40,7 +40,7 @@ void hash_processor_init(void) {
 
   DMA_Handle.Parent = &hhash;
 
-  HAL_NVIC_SetPriority(GPDMA1_Channel12_IRQn, IRQ_PRI_DMA 0);
+  HAL_NVIC_SetPriority(GPDMA1_Channel12_IRQn, IRQ_PRI_DMA, 0);
   HAL_NVIC_EnableIRQ(GPDMA1_Channel12_IRQn);
 }
 
