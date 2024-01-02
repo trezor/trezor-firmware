@@ -337,7 +337,7 @@ def _create_header_blob(
 
     # Change language title (20 bytes)
     # Needs to be ASCII because it will be shown with english ASCII-only fonts
-    assert change_language_title.isascii(), "Change language title should be ascii"
+    assert change_language_title.isascii(), "Change language title should be ascii"  # type: ignore [Cannot access member "isascii"]
     assert (
         len(change_language_title.encode()) <= 20
     ), "Change language title is too long"
@@ -345,7 +345,7 @@ def _create_header_blob(
 
     # Change language prompt (40 bytes)
     # Needs to be ASCII because it will be shown with english ASCII-only fonts
-    assert change_language_prompt.isascii(), "Change language prompt should be ascii"
+    assert change_language_prompt.isascii(), "Change language prompt should be ascii"  # type: ignore [Cannot access member "isascii"]
     assert (
         len(change_language_prompt.encode()) <= 40
     ), "Change language prompt is too long"
