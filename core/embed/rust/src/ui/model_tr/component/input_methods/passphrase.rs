@@ -31,7 +31,7 @@ const MAX_PASSPHRASE_LENGTH: usize = 50;
 const DIGITS: &str = "0123456789";
 const LOWERCASE_LETTERS: &str = "abcdefghijklmnopqrstuvwxyz";
 const UPPERCASE_LETTERS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const SPECIAL_SYMBOLS: &str = "_<>.:@/|\\!()+%&-[]?{},\'`\"~$^=*#";
+const SPECIAL_SYMBOLS: &str = "_<>.:@/|\\!()+%&-[]?{},\'`;\"~$^=*#";
 
 const MENU_LENGTH: usize = 8;
 const SHOW_INDEX: usize = 0;
