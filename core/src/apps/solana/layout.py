@@ -141,7 +141,10 @@ async def confirm_instruction(
                 path_str = f" ({address_n_to_str(signer_path)})"
 
             signers.append(
-                (f"{TR.words__signer} {i}{path_str}:", base58.encode(multisig_signer[0]))
+                (
+                    f"{TR.words__signer} {i}{path_str}:",
+                    base58.encode(multisig_signer[0]),
+                )
             )
 
         await confirm_properties(
@@ -177,7 +180,9 @@ async def confirm_unsupported_instruction_details(
         (
             (
                 NORMAL,
-                TR.solana__instruction_accounts_template.format(len(instruction.accounts), len(instruction.instruction_data)),
+                TR.solana__instruction_accounts_template.format(
+                    len(instruction.accounts), len(instruction.instruction_data)
+                ),
             ),
         ),
         TR.buttons__show_details,
@@ -295,7 +300,9 @@ async def confirm_token_transfer(
         br_type="confirm_recipient",
         br_code=ButtonRequestType.ConfirmOutput,
         verb=TR.buttons__continue,
-        info_items=((f"{TR.solana__associated_token_account}:", base58.encode(token_account)),)
+        info_items=(
+            (f"{TR.solana__associated_token_account}:", base58.encode(token_account)),
+        )
         if token_account != destination_account
         else None,
     )

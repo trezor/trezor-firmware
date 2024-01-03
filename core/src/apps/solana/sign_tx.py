@@ -42,14 +42,17 @@ async def sign_tx(
 
     if transaction.blind_signing:
         await show_warning(
-            "warning_blind_signing", TR.solana__transaction_contains_unknown_instructions
+            "warning_blind_signing",
+            TR.solana__transaction_contains_unknown_instructions,
         )
 
     if transaction.required_signers_count > 1:
         await confirm_metadata(
             "multiple_signers",
             TR.solana__multiple_signers,
-            TR.solana__transaction_requires_x_signers_template.format(transaction.required_signers_count),
+            TR.solana__transaction_requires_x_signers_template.format(
+                transaction.required_signers_count
+            ),
             br_code=ButtonRequestType.Other,
         )
 
