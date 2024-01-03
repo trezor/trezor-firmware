@@ -244,6 +244,8 @@ fn are_there_translations() -> bool {
 
 /// Returns the translation at the given index.
 fn get_translation_by_index(index: usize) -> Option<&'static str> {
+    // TODO: do not use unwrap, probably return None in case of Err?
+    // --- not to introduce panic in case of corrupted data in flash
     let header = unwrap!(TranslationsHeader::from_flash());
     let translations_table = header.get_translations_table();
 
@@ -319,6 +321,7 @@ pub struct OffsetLen {
 
 /// Information about specific font - where it starts and how long it is
 fn get_font_offset_from_id(font_id: u16) -> Option<OffsetLen> {
+    // TODO: do not use unwrap?
     let font_table = unwrap!(TranslationsHeader::from_flash()).get_font_table();
     match_first_u16_pair(
         font_id,
@@ -359,6 +362,7 @@ fn match_first_u16_pair(
 
 // Get information about a given glyph with a given font-offset
 fn get_glyph_data(char_code: u16, font_offset: u16, font_len: u16) -> Option<OffsetLen> {
+    // TODO: do not use unwrap?
     let font_data =
         unwrap!(TranslationsHeader::from_flash()).get_font_data_offset(font_offset, font_len);
     let data_size = font_data.len() as u16;
@@ -386,6 +390,7 @@ fn get_glyph_font_data(char_code: u16, font_id: u16) -> Option<OffsetLen> {
 
     if let Some(font_offset) = get_font_offset_from_id(font_id) {
         if let Some(glyph_data) = get_glyph_data(char_code, font_offset.offset, font_offset.len) {
+            // TODO: do not use unwrap?
             let font_start_offset = unwrap!(TranslationsHeader::from_flash()).font_start_offset();
             let final_offset = font_start_offset + font_offset.offset + glyph_data.offset;
             return Some(OffsetLen {

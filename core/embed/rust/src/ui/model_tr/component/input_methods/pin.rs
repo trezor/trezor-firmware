@@ -35,7 +35,7 @@ const CHOICES: [(&str, PinAction, Option<Icon>, bool, bool); CHOICE_LENGTH] = [
         "inputs__delete",
         PinAction::Delete,
         Some(theme::ICON_DELETE),
-        true,
+        true, // without_release
         true,
     ),
     (
