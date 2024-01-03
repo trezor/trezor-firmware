@@ -43,6 +43,8 @@ def extract_strings(file_path: Path) -> list[str]:
                 continue
             if any([substr in line for substr in in_line_continue]):
                 continue
+            if "//" in line:
+                line = line[: line.index("//")]
             new = re.findall(r'"(.*?)"', line)
             strings.extend(new)
         return strings
