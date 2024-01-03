@@ -538,7 +538,6 @@ if TYPE_CHECKING:
     class StellarSCValType(IntEnum):
         SCV_BOOL = 0
         SCV_VOID = 1
-        SCV_ERROR = 2
         SCV_U32 = 3
         SCV_I32 = 4
         SCV_U64 = 5
@@ -555,9 +554,6 @@ if TYPE_CHECKING:
         SCV_VEC = 16
         SCV_MAP = 17
         SCV_ADDRESS = 18
-        SCV_CONTRACT_INSTANCE = 19
-        SCV_LEDGER_KEY_CONTRACT_INSTANCE = 20
-        SCV_LEDGER_KEY_NONCE = 21
 
     class StellarSCAddressType(IntEnum):
         SC_ADDRESS_TYPE_ACCOUNT = 0

@@ -8252,8 +8252,6 @@ pub mod stellar_scval {
         SCV_BOOL = 0,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_VOID)
         SCV_VOID = 1,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_ERROR)
-        SCV_ERROR = 2,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_U32)
         SCV_U32 = 3,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_I32)
@@ -8286,12 +8284,6 @@ pub mod stellar_scval {
         SCV_MAP = 17,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_ADDRESS)
         SCV_ADDRESS = 18,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_CONTRACT_INSTANCE)
-        SCV_CONTRACT_INSTANCE = 19,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_LEDGER_KEY_CONTRACT_INSTANCE)
-        SCV_LEDGER_KEY_CONTRACT_INSTANCE = 20,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_LEDGER_KEY_NONCE)
-        SCV_LEDGER_KEY_NONCE = 21,
     }
 
     impl ::protobuf::Enum for StellarSCValType {
@@ -8305,7 +8297,6 @@ pub mod stellar_scval {
             match value {
                 0 => ::std::option::Option::Some(StellarSCValType::SCV_BOOL),
                 1 => ::std::option::Option::Some(StellarSCValType::SCV_VOID),
-                2 => ::std::option::Option::Some(StellarSCValType::SCV_ERROR),
                 3 => ::std::option::Option::Some(StellarSCValType::SCV_U32),
                 4 => ::std::option::Option::Some(StellarSCValType::SCV_I32),
                 5 => ::std::option::Option::Some(StellarSCValType::SCV_U64),
@@ -8322,9 +8313,6 @@ pub mod stellar_scval {
                 16 => ::std::option::Option::Some(StellarSCValType::SCV_VEC),
                 17 => ::std::option::Option::Some(StellarSCValType::SCV_MAP),
                 18 => ::std::option::Option::Some(StellarSCValType::SCV_ADDRESS),
-                19 => ::std::option::Option::Some(StellarSCValType::SCV_CONTRACT_INSTANCE),
-                20 => ::std::option::Option::Some(StellarSCValType::SCV_LEDGER_KEY_CONTRACT_INSTANCE),
-                21 => ::std::option::Option::Some(StellarSCValType::SCV_LEDGER_KEY_NONCE),
                 _ => ::std::option::Option::None
             }
         }
@@ -8333,7 +8321,6 @@ pub mod stellar_scval {
             match str {
                 "SCV_BOOL" => ::std::option::Option::Some(StellarSCValType::SCV_BOOL),
                 "SCV_VOID" => ::std::option::Option::Some(StellarSCValType::SCV_VOID),
-                "SCV_ERROR" => ::std::option::Option::Some(StellarSCValType::SCV_ERROR),
                 "SCV_U32" => ::std::option::Option::Some(StellarSCValType::SCV_U32),
                 "SCV_I32" => ::std::option::Option::Some(StellarSCValType::SCV_I32),
                 "SCV_U64" => ::std::option::Option::Some(StellarSCValType::SCV_U64),
@@ -8350,9 +8337,6 @@ pub mod stellar_scval {
                 "SCV_VEC" => ::std::option::Option::Some(StellarSCValType::SCV_VEC),
                 "SCV_MAP" => ::std::option::Option::Some(StellarSCValType::SCV_MAP),
                 "SCV_ADDRESS" => ::std::option::Option::Some(StellarSCValType::SCV_ADDRESS),
-                "SCV_CONTRACT_INSTANCE" => ::std::option::Option::Some(StellarSCValType::SCV_CONTRACT_INSTANCE),
-                "SCV_LEDGER_KEY_CONTRACT_INSTANCE" => ::std::option::Option::Some(StellarSCValType::SCV_LEDGER_KEY_CONTRACT_INSTANCE),
-                "SCV_LEDGER_KEY_NONCE" => ::std::option::Option::Some(StellarSCValType::SCV_LEDGER_KEY_NONCE),
                 _ => ::std::option::Option::None
             }
         }
@@ -8360,7 +8344,6 @@ pub mod stellar_scval {
         const VALUES: &'static [StellarSCValType] = &[
             StellarSCValType::SCV_BOOL,
             StellarSCValType::SCV_VOID,
-            StellarSCValType::SCV_ERROR,
             StellarSCValType::SCV_U32,
             StellarSCValType::SCV_I32,
             StellarSCValType::SCV_U64,
@@ -8377,9 +8360,6 @@ pub mod stellar_scval {
             StellarSCValType::SCV_VEC,
             StellarSCValType::SCV_MAP,
             StellarSCValType::SCV_ADDRESS,
-            StellarSCValType::SCV_CONTRACT_INSTANCE,
-            StellarSCValType::SCV_LEDGER_KEY_CONTRACT_INSTANCE,
-            StellarSCValType::SCV_LEDGER_KEY_NONCE,
         ];
     }
 
@@ -8390,7 +8370,26 @@ pub mod stellar_scval {
         }
 
         fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
-            let index = *self as usize;
+            let index = match self {
+                StellarSCValType::SCV_BOOL => 0,
+                StellarSCValType::SCV_VOID => 1,
+                StellarSCValType::SCV_U32 => 2,
+                StellarSCValType::SCV_I32 => 3,
+                StellarSCValType::SCV_U64 => 4,
+                StellarSCValType::SCV_I64 => 5,
+                StellarSCValType::SCV_TIMEPOINT => 6,
+                StellarSCValType::SCV_DURATION => 7,
+                StellarSCValType::SCV_U128 => 8,
+                StellarSCValType::SCV_I128 => 9,
+                StellarSCValType::SCV_U256 => 10,
+                StellarSCValType::SCV_I256 => 11,
+                StellarSCValType::SCV_BYTES => 12,
+                StellarSCValType::SCV_STRING => 13,
+                StellarSCValType::SCV_SYMBOL => 14,
+                StellarSCValType::SCV_VEC => 15,
+                StellarSCValType::SCV_MAP => 16,
+                StellarSCValType::SCV_ADDRESS => 17,
+            };
             Self::enum_descriptor().value_by_index(index)
         }
     }
@@ -10849,7 +10848,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     _account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x1d\n\nbalance_id\x18\
     \x02\x20\x02(\x0cR\tbalanceId\"N\n\x0fStellarSignedTx\x12\x1d\n\npublic_\
     key\x18\x01\x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsignature\x18\x02\x20\
-    \x02(\x0cR\tsignature\"\xb0\x0f\n\x0cStellarSCVal\x12M\n\x04type\x18\x01\
+    \x02(\x0cR\tsignature\"\xde\x0e\n\x0cStellarSCVal\x12M\n\x04type\x18\x01\
     \x20\x02(\x0e29.hw.trezor.messages.stellar.StellarSCVal.StellarSCValType\
     R\x04type\x12\x0c\n\x01b\x18\x02\x20\x01(\x08R\x01b\x12\x10\n\x03u32\x18\
     \x04\x20\x01(\rR\x03u32\x12\x10\n\x03i32\x18\x05\x20\x01(\x11R\x03i32\
@@ -10885,17 +10884,16 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     _CONTRACT\x10\x01\x1a\x92\x01\n\x14StellarSCValMapEntry\x12:\n\x03key\
     \x18\x01\x20\x01(\x0b2(.hw.trezor.messages.stellar.StellarSCValR\x03key\
     \x12>\n\x05value\x18\x02\x20\x01(\x0b2(.hw.trezor.messages.stellar.Stell\
-    arSCValR\x05value\"\x83\x03\n\x10StellarSCValType\x12\x0c\n\x08SCV_BOOL\
-    \x10\0\x12\x0c\n\x08SCV_VOID\x10\x01\x12\r\n\tSCV_ERROR\x10\x02\x12\x0b\
-    \n\x07SCV_U32\x10\x03\x12\x0b\n\x07SCV_I32\x10\x04\x12\x0b\n\x07SCV_U64\
-    \x10\x05\x12\x0b\n\x07SCV_I64\x10\x06\x12\x11\n\rSCV_TIMEPOINT\x10\x07\
-    \x12\x10\n\x0cSCV_DURATION\x10\x08\x12\x0c\n\x08SCV_U128\x10\t\x12\x0c\n\
-    \x08SCV_I128\x10\n\x12\x0c\n\x08SCV_U256\x10\x0b\x12\x0c\n\x08SCV_I256\
-    \x10\x0c\x12\r\n\tSCV_BYTES\x10\r\x12\x0e\n\nSCV_STRING\x10\x0e\x12\x0e\
-    \n\nSCV_SYMBOL\x10\x0f\x12\x0b\n\x07SCV_VEC\x10\x10\x12\x0b\n\x07SCV_MAP\
-    \x10\x11\x12\x0f\n\x0bSCV_ADDRESS\x10\x12\x12\x19\n\x15SCV_CONTRACT_INST\
-    ANCE\x10\x13\x12$\n\x20SCV_LEDGER_KEY_CONTRACT_INSTANCE\x10\x14\x12\x18\
-    \n\x14SCV_LEDGER_KEY_NONCE\x10\x15J\x04\x08\x03\x10\x04J\x04\x08\x14\x10\
+    arSCValR\x05value\"\xb1\x02\n\x10StellarSCValType\x12\x0c\n\x08SCV_BOOL\
+    \x10\0\x12\x0c\n\x08SCV_VOID\x10\x01\x12\x0b\n\x07SCV_U32\x10\x03\x12\
+    \x0b\n\x07SCV_I32\x10\x04\x12\x0b\n\x07SCV_U64\x10\x05\x12\x0b\n\x07SCV_\
+    I64\x10\x06\x12\x11\n\rSCV_TIMEPOINT\x10\x07\x12\x10\n\x0cSCV_DURATION\
+    \x10\x08\x12\x0c\n\x08SCV_U128\x10\t\x12\x0c\n\x08SCV_I128\x10\n\x12\x0c\
+    \n\x08SCV_U256\x10\x0b\x12\x0c\n\x08SCV_I256\x10\x0c\x12\r\n\tSCV_BYTES\
+    \x10\r\x12\x0e\n\nSCV_STRING\x10\x0e\x12\x0e\n\nSCV_SYMBOL\x10\x0f\x12\
+    \x0b\n\x07SCV_VEC\x10\x10\x12\x0b\n\x07SCV_MAP\x10\x11\x12\x0f\n\x0bSCV_\
+    ADDRESS\x10\x12\"\x04\x08\x02\x10\x02\"\x04\x08\x13\x10\x13\"\x04\x08\
+    \x14\x10\x14\"\x04\x08\x15\x10\x15J\x04\x08\x03\x10\x04J\x04\x08\x14\x10\
     \x15J\x04\x08\x15\x10\x16\"\xe4\x01\n\x19StellarInvokeContractArgs\x12d\
     \n\x10contract_address\x18\x01\x20\x02(\x0b29.hw.trezor.messages.stellar\
     .StellarSCVal.StellarSCAddressR\x0fcontractAddress\x12#\n\rfunction_name\
