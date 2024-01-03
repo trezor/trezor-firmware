@@ -66,7 +66,7 @@ async def _require_confirm_properties(definition: NEMMosaicDefinition) -> None:
         append((TR.nem__description, definition.description))
 
     # transferable
-    transferable = TR.nem__yes if definition.transferable else TR.nem__no
+    transferable = TR.words__yes if definition.transferable else TR.words__no
     append((TR.nem__transferable, transferable))
 
     # mutable_supply

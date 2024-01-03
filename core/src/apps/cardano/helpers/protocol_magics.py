@@ -21,4 +21,4 @@ def is_mainnet(protocol_magic: int) -> bool:
 
 
 def to_ui_string(value: int) -> str:
-    return NAMES.get(value, TR.cardano__unknown)
+    return NAMES.get(value, TR.words__unknown)

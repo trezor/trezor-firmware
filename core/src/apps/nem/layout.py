@@ -18,7 +18,7 @@ async def require_confirm_text(action: str) -> None:
 async def require_confirm_fee(action: str, fee: int) -> None:
     await confirm_metadata(
         "confirm_fee",
-        TR.nem__confirm_fee,
+        TR.words__confirm_fee,
         action + "\n{}",
         f"{format_amount(fee, NEM_MAX_DIVISIBILITY)} XEM",
         ButtonRequestType.ConfirmOutput,

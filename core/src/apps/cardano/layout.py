@@ -316,7 +316,7 @@ async def show_credentials(
     payment_credential: Credential,
     stake_credential: Credential,
 ) -> None:
-    intro_text = TR.cardano__intro_text_address
+    intro_text = TR.words__address
     await _show_credential(payment_credential, intro_text, purpose="address")
     await _show_credential(stake_credential, intro_text, purpose="address")
 
@@ -724,7 +724,7 @@ async def confirm_withdrawal(
         )
 
     props.append(
-        (TR.cardano__amount, format_coin_amount(withdrawal.amount, network_id))
+        (f"{TR.words__amount}:", format_coin_amount(withdrawal.amount, network_id))
     )
 
     await confirm_properties(

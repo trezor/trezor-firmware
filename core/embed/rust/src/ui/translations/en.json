@@ -5,7 +5,7 @@
   },
   "translations": {
     "addr_mismatch": {
-      "contact_support": "Please contact Trezor support at",
+      "contact_support_at": "Please contact Trezor support at",
       "key_mismatch": "Key mismatch?",
       "mismatch": "Address mismatch?",
       "support_url": "trezor.io/support",
@@ -15,14 +15,12 @@
       "xpub_mismatch": "XPUB mismatch?"
     },
     "address": {
-      "address": "Address:",
       "public_key": "Public key",
       "title_cosigner": "COSIGNER",
       "title_receive_address": "RECEIVE ADDRESS",
       "title_yours": "YOURS"
     },
     "address_details": {
-      "account": "Account:",
       "derivation_path": "Derivation path:",
       "title_receive_address": "RECEIVE ADDRESS",
       "title_receiving_to": "RECEIVING TO"
@@ -58,8 +56,7 @@
       "quantity": "Quantity:",
       "sell": "Sell",
       "sender_address": "Sender address:",
-      "side": "Side:",
-      "unknown": "Unknown"
+      "side": "Side:"
     },
     "bitcoin": {
       "commitment_data": "Commitment data:",
@@ -137,7 +134,6 @@
       "addr_pointer": "Pointer",
       "addr_reward": "Reward",
       "address_no_staking": "address - no staking rewards.",
-      "amount": "Amount:",
       "amount_burned_decimals_unknown": "Amount burned (decimals unknown):",
       "amount_minted_decimals_unknown": "Amount minted (decimals unknown):",
       "amount_sent_decimals_unknown": "Amount sent (decimals unknown):",
@@ -174,7 +170,6 @@
       "inline_datum": "Inline datum",
       "input_id": "Input ID:",
       "input_index": "Input index:",
-      "intro_text_address": "Address",
       "intro_text_change": "The following address is a change address. Its",
       "intro_text_owned_by_device": "The following address is owned by this device. Its",
       "intro_text_registration_payment": "The vote key registration payment address is owned by this device. Its",
@@ -234,7 +229,6 @@
       "transaction_no_script_data_hash": "The transaction contains no script data hash. Plutus script will not be able to run.",
       "transaction_output_contains_tokens": "The following transaction output contains tokens.",
       "ttl": "TTL:",
-      "unknown": "Unknown",
       "unknown_collateral_amount": "Unknown collateral amount.",
       "unusual_path": "Path is unusual.",
       "valid_since": "Valid since:",
@@ -259,7 +253,6 @@
       "waiting_for_others": "Waiting for others"
     },
     "confirm_total": {
-      "account": "Account:",
       "fee_rate": "Fee rate:",
       "sending_from_account": "Sending from account:",
       "title_fee": "FEE INFORMATION",
@@ -280,9 +273,7 @@
     },
     "eos": {
       "about_to_sign_template": "You are about to sign {}.",
-      "account": "Account:",
       "action_name": "Action Name:",
-      "amount": "Amount:",
       "arbitrary_data": "Arbitrary data",
       "buy_ram": "Buy RAM",
       "bytes": "Bytes:",
@@ -300,7 +291,6 @@
       "name": "Name:",
       "net": "NET:",
       "new_account": "New account",
-      "no": "No",
       "owner": "Owner:",
       "parent": "Parent:",
       "payer": "Payer:",
@@ -321,12 +311,10 @@
       "update_auth": "Update Auth",
       "vote_for_producers": "Vote for producers",
       "vote_for_proxy": "Vote for proxy",
-      "voter": "Voter:",
-      "yes": "Yes"
+      "voter": "Voter:"
     },
     "ethereum": {
       "amount_sent": "Amount sent:",
-      "confirm_fee": "Confirm fee",
       "contract": "Contract:",
       "data_size_template": "Size: {} bytes",
       "gas_limit": "Gas limit:",
@@ -422,7 +410,6 @@
       "title_suite_labeling": "SUITE LABELING"
     },
     "modify_amount": {
-      "address": "Address:",
       "decrease_amount": "Decrease amount by:",
       "increase_amount": "Increase amount by:",
       "new_amount": "New amount:",
@@ -439,7 +426,6 @@
     },
     "monero": {
       "confirm_export": "Confirm export",
-      "confirm_fee": "Confirm fee",
       "confirm_ki_sync": "Confirm ki sync",
       "confirm_refresh": "Confirm refresh",
       "confirm_unlock_time": "Confirm unlock time",
@@ -465,7 +451,6 @@
       "confirm_action": "Confirm action",
       "confirm_address": "Confirm address",
       "confirm_creation_fee": "Confirm creation fee",
-      "confirm_fee": "Confirm fee",
       "confirm_mosaic": "Confirm mosaic",
       "confirm_multisig_fee": "Confirm multisig fee",
       "confirm_namespace": "Confirm namespace",
@@ -498,7 +483,6 @@
       "modify_supply_for": "Modify supply for",
       "modify_the_number_of_cosignatories_by": "Modify the number of cosignatories by ",
       "mutable": "mutable",
-      "no": "No",
       "of": "of",
       "percentile": "percentile",
       "raw_units_template": "{} raw units",
@@ -511,8 +495,7 @@
       "transferable": "Transferable?",
       "under_namespace": "under namespace",
       "unencrypted": "Unencrypted:",
-      "unknown_mosaic": "Unknown mosaic!",
-      "yes": "Yes"
+      "unknown_mosaic": "Unknown mosaic!"
     },
     "passphrase": {
       "access_hidden_wallet": "Access hidden wallet?",
@@ -745,17 +728,14 @@
     },
     "send": {
       "address_path": "address path",
-      "amount": "Amount:",
       "confirm_sending": "SENDING AMOUNT",
       "from_multiple_accounts": "Sending from multiple accounts.",
       "including_fee": "Including fee:",
       "maximum_fee": "Maximum fee:",
       "receiving_to_multisig": "Receiving to a multisig address.",
-      "title_amount": "AMOUNT",
       "title_confirm_sending": "CONFIRM SENDING",
       "title_joint_transaction": "JOINT TRANSACTION",
       "title_receiving_to": "RECEIVING TO",
-      "title_recipient": "RECIPIENT",
       "title_sending": "SENDING",
       "title_sending_amount": "SENDING AMOUNT",
       "title_sending_to": "SENDING TO",
@@ -861,15 +841,12 @@
       "your_account": " your account"
     },
     "tezos": {
-      "address": "Address:",
-      "amount": "Amount:",
       "baker_address": "Baker address:",
       "balance": "Balance:",
       "ballot": "Ballot:",
       "confirm_delegation": "Confirm delegation",
       "confirm_origination": "Confirm origination",
       "delegator": "Delegator:",
-      "fee": "Fee:",
       "proposal": "Proposal",
       "register_delegate": "Register delegate",
       "remove_delegation": "Remove delegation",
@@ -925,11 +902,14 @@
     },
     "words": {
       "account": "Account",
+      "address": "Address",
+      "amount": "Amount",
       "are_you_sure": "Are you sure?",
       "array_of": "Array of",
       "blockhash": "Blockhash",
       "buying": "Buying",
       "confirm": "Confirm",
+      "confirm_fee": "Confirm fee",
       "contains": "Contains",
       "continue_anyway": "Continue anyway?",
       "continue_with": "Continue with",
@@ -939,6 +919,7 @@
       "keep_it_safe": "Keep it safe!",
       "know_what_your_doing": "Continue only if you know what you are doing!",
       "my_trezor": "My Trezor",
+      "no": "No",
       "outputs": "outputs",
       "please_check_again": "Please check again",
       "please_try_again": "Please try again",
@@ -957,7 +938,8 @@
       "title_threshold": "THRESHOLD",
       "unknown": "Unknown",
       "warning": "Warning",
-      "writable": "Writable"
+      "writable": "Writable",
+      "yes": "Yes"
     }
   }
 }

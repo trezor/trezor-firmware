@@ -1075,7 +1075,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer = tr("addr_mismatch__contact_support").into();
+        let description: StrBuffer = tr("addr_mismatch__contact_support_at").into();
         let url: StrBuffer = tr("addr_mismatch__support_url").into();
         let button = tr("buttons__quit");
 

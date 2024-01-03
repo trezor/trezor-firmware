@@ -17,7 +17,7 @@ pub static mp_module_trezortranslate: Module = obj_module! {
 
     /// class TR:
     ///     """Translation object with attributes."""
-    ///     addr_mismatch__contact_support: str
+    ///     addr_mismatch__contact_support_at: str
     ///     addr_mismatch__key_mismatch: str
     ///     addr_mismatch__mismatch: str
     ///     addr_mismatch__support_url: str
@@ -25,12 +25,10 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     addr_mismatch__title_key_mismatch: str
     ///     addr_mismatch__wrong_derication_path: str
     ///     addr_mismatch__xpub_mismatch: str
-    ///     address__address: str
     ///     address__public_key: str
     ///     address__title_cosigner: str
     ///     address__title_receive_address: str
     ///     address__title_yours: str
-    ///     address_details__account: str
     ///     address_details__derivation_path: str
     ///     address_details__title_receive_address: str
     ///     address_details__title_receiving_to: str
@@ -59,7 +57,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     binance__sell: str
     ///     binance__sender_address: str
     ///     binance__side: str
-    ///     binance__unknown: str
     ///     bitcoin__commitment_data: str
     ///     bitcoin__confirm_locktime: str
     ///     bitcoin__create_proof_of_ownership: str
@@ -131,7 +128,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     cardano__addr_pointer: str
     ///     cardano__addr_reward: str
     ///     cardano__address_no_staking: str
-    ///     cardano__amount: str
     ///     cardano__amount_burned_decimals_unknown: str
     ///     cardano__amount_minted_decimals_unknown: str
     ///     cardano__amount_sent_decimals_unknown: str
@@ -168,7 +164,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     cardano__inline_datum: str
     ///     cardano__input_id: str
     ///     cardano__input_index: str
-    ///     cardano__intro_text_address: str
     ///     cardano__intro_text_change: str
     ///     cardano__intro_text_owned_by_device: str
     ///     cardano__intro_text_registration_payment: str
@@ -228,7 +223,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     cardano__transaction_no_script_data_hash: str
     ///     cardano__transaction_output_contains_tokens: str
     ///     cardano__ttl: str
-    ///     cardano__unknown: str
     ///     cardano__unknown_collateral_amount: str
     ///     cardano__unusual_path: str
     ///     cardano__valid_since: str
@@ -249,7 +243,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     coinjoin__title_do_not_disconnect: str
     ///     coinjoin__title_progress: str
     ///     coinjoin__waiting_for_others: str
-    ///     confirm_total__account: str
     ///     confirm_total__fee_rate: str
     ///     confirm_total__sending_from_account: str
     ///     confirm_total__title_fee: str
@@ -262,9 +255,7 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     entropy__title: str
     ///     entropy__title_confirm: str
     ///     eos__about_to_sign_template: str
-    ///     eos__account: str
     ///     eos__action_name: str
-    ///     eos__amount: str
     ///     eos__arbitrary_data: str
     ///     eos__buy_ram: str
     ///     eos__bytes: str
@@ -282,7 +273,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     eos__name: str
     ///     eos__net: str
     ///     eos__new_account: str
-    ///     eos__no: str
     ///     eos__owner: str
     ///     eos__parent: str
     ///     eos__payer: str
@@ -304,9 +294,7 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     eos__vote_for_producers: str
     ///     eos__vote_for_proxy: str
     ///     eos__voter: str
-    ///     eos__yes: str
     ///     ethereum__amount_sent: str
-    ///     ethereum__confirm_fee: str
     ///     ethereum__contract: str
     ///     ethereum__data_size_template: str
     ///     ethereum__gas_limit: str
@@ -384,7 +372,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     misc__decrypt_value: str
     ///     misc__encrypt_value: str
     ///     misc__title_suite_labeling: str
-    ///     modify_amount__address: str
     ///     modify_amount__decrease_amount: str
     ///     modify_amount__increase_amount: str
     ///     modify_amount__new_amount: str
@@ -397,7 +384,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     modify_fee__title: str
     ///     modify_fee__transaction_fee: str
     ///     monero__confirm_export: str
-    ///     monero__confirm_fee: str
     ///     monero__confirm_ki_sync: str
     ///     monero__confirm_refresh: str
     ///     monero__confirm_unlock_time: str
@@ -421,7 +407,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     nem__confirm_action: str
     ///     nem__confirm_address: str
     ///     nem__confirm_creation_fee: str
-    ///     nem__confirm_fee: str
     ///     nem__confirm_mosaic: str
     ///     nem__confirm_multisig_fee: str
     ///     nem__confirm_namespace: str
@@ -454,7 +439,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     nem__modify_supply_for: str
     ///     nem__modify_the_number_of_cosignatories_by: str
     ///     nem__mutable: str
-    ///     nem__no: str
     ///     nem__of: str
     ///     nem__percentile: str
     ///     nem__raw_units_template: str
@@ -468,7 +452,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     nem__under_namespace: str
     ///     nem__unencrypted: str
     ///     nem__unknown_mosaic: str
-    ///     nem__yes: str
     ///     passphrase__access_hidden_wallet: str
     ///     passphrase__always_on_device: str
     ///     passphrase__from_host_not_shown: str
@@ -677,17 +660,14 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     sd_card__wanna_format: str
     ///     sd_card__wrong_sd_card: str
     ///     send__address_path: str
-    ///     send__amount: str
     ///     send__confirm_sending: str
     ///     send__from_multiple_accounts: str
     ///     send__including_fee: str
     ///     send__maximum_fee: str
     ///     send__receiving_to_multisig: str
-    ///     send__title_amount: str
     ///     send__title_confirm_sending: str
     ///     send__title_joint_transaction: str
     ///     send__title_receiving_to: str
-    ///     send__title_recipient: str
     ///     send__title_sending: str
     ///     send__title_sending_amount: str
     ///     send__title_sending_to: str
@@ -783,15 +763,12 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     stellar__value_sha256: str
     ///     stellar__wanna_clean_value_key_template: str
     ///     stellar__your_account: str
-    ///     tezos__address: str
-    ///     tezos__amount: str
     ///     tezos__baker_address: str
     ///     tezos__balance: str
     ///     tezos__ballot: str
     ///     tezos__confirm_delegation: str
     ///     tezos__confirm_origination: str
     ///     tezos__delegator: str
-    ///     tezos__fee: str
     ///     tezos__proposal: str
     ///     tezos__register_delegate: str
     ///     tezos__remove_delegation: str
@@ -835,11 +812,14 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     wipe_code__wipe_code_mismatch: str
     ///     word_count__title: str
     ///     words__account: str
+    ///     words__address: str
+    ///     words__amount: str
     ///     words__are_you_sure: str
     ///     words__array_of: str
     ///     words__blockhash: str
     ///     words__buying: str
     ///     words__confirm: str
+    ///     words__confirm_fee: str
     ///     words__contains: str
     ///     words__continue_anyway: str
     ///     words__continue_with: str
@@ -849,6 +829,7 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     words__keep_it_safe: str
     ///     words__know_what_your_doing: str
     ///     words__my_trezor: str
+    ///     words__no: str
     ///     words__outputs: str
     ///     words__please_check_again: str
     ///     words__please_try_again: str
@@ -868,5 +849,6 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     words__unknown: str
     ///     words__warning: str
     ///     words__writable: str
+    ///     words__yes: str
     Qstr::MP_QSTR_TR => TR_OBJ.as_obj(),
 };

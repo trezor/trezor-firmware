@@ -71,7 +71,7 @@ async def require_confirm_order(msg: BinanceOrderMsg) -> None:
     elif msg.side == BinanceOrderSide.SELL:
         side = TR.binance__sell
     else:
-        side = TR.binance__unknown
+        side = TR.words__unknown
 
     await confirm_properties(
         "confirm_order",

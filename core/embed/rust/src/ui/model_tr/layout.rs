@@ -1178,7 +1178,7 @@ extern "C" fn new_show_mismatch(n_args: usize, args: *const Obj, kwargs: *mut Ma
                 .text_bold(title.clone())
                 .newline()
                 .newline_half()
-                .text_normal(tr("addr_mismatch__contact_support").into())
+                .text_normal(tr("addr_mismatch__contact_support_at").into())
                 .newline()
                 .text_bold(tr("addr_mismatch__support_url").into());
             let formatted = FormattedText::new(ops);

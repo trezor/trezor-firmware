@@ -599,11 +599,11 @@ async def confirm_output(
         # TODO: handle translation
         if title.upper().startswith("CONFIRM "):
             title = title[len("CONFIRM ") :]
-        amount_title = title.upper()
-        recipient_title = title.upper()
+        amount_title = title
+        recipient_title = title
     elif output_index is not None:
-        amount_title = f"{TR.send__title_amount } #{output_index + 1}"
-        recipient_title = f"{TR.send__title_recipient} #{output_index + 1}"
+        amount_title = f"{TR.words__amount} #{output_index + 1}"
+        recipient_title = f"{TR.words__recipient} #{output_index + 1}"
     else:
         amount_title = TR.send__confirm_sending
         recipient_title = TR.send__title_sending_to
@@ -612,7 +612,7 @@ async def confirm_output(
         result = await interact(
             RustLayout(
                 trezorui2.confirm_value(
-                    title=recipient_title,
+                    title=recipient_title.upper(),
                     subtitle=address_label,
                     description=None,
                     value=address,
@@ -631,7 +631,7 @@ async def confirm_output(
         result = await interact(
             RustLayout(
                 trezorui2.confirm_value(
-                    title=amount_title,
+                    title=amount_title.upper(),
                     subtitle=None,
                     description=None,
                     value=amount,
@@ -799,10 +799,11 @@ async def confirm_blob(
 async def confirm_address(
     title: str,
     address: str,
-    description: str | None = TR.address__address,
+    description: str | None = None,
     br_type: str = "confirm_address",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
+    description = description or f"{TR.words__address}:"  # def_arg
     return await confirm_value(
         title,
         address,
@@ -837,7 +838,7 @@ def confirm_amount(
     br_type: str = "confirm_amount",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Awaitable[None]:
-    description = description or TR.send__amount  # def_arg
+    description = description or f"{TR.words__amount}:"  # def_arg
     return confirm_value(
         title,
         amount,
@@ -990,7 +991,7 @@ async def confirm_ethereum_tx(
         trezorui2.confirm_total(
             title=TR.words__title_summary,
             items=[
-                (TR.send__amount, total_amount),
+                (f"{TR.words__amount}:", total_amount),
                 (TR.send__maximum_fee, maximum_fee),
             ],
             info_button=True,
@@ -1008,7 +1009,7 @@ async def confirm_ethereum_tx(
         # Allowing going back and forth between recipient and summary/details
         await confirm_blob(
             br_type,
-            TR.send__title_recipient,
+            TR.words__recipient.upper(),
             recipient,
             verb=TR.buttons__continue,
             chunkify=chunkify,
@@ -1104,7 +1105,7 @@ async def confirm_modify_output(
             data=address,
             verb=TR.buttons__continue,
             verb_cancel=None,
-            description=TR.modify_amount__address,
+            description=f"{TR.words__address}:",
             extra=None,
         )
     )
@@ -1248,7 +1249,7 @@ async def confirm_signverify(
 
     items: list[tuple[str, str]] = []
     if account is not None:
-        items.append((TR.address_details__account, account))
+        items.append((f"{TR.words__account}:", account))
     if path is not None:
         items.append((TR.address_details__derivation_path, path))
     items.append(

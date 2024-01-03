@@ -23,7 +23,7 @@
   },
   "translations": {
     "addr_mismatch": {
-      "contact_support": "Prosím, obraťte se na podporu Trezor na",
+      "contact_support_at": "Prosím, obraťte se na podporu Trezor na",
       "key_mismatch": "Nesouhlasí klíč?",
       "mismatch": "Nesouhlasí adresa?",
       "support_url": "trezor.io/support",
@@ -33,14 +33,12 @@
       "xpub_mismatch": "Nesouhlasí XPUB?"
     },
     "address": {
-      "address": "Adresa:",
       "public_key": "Veřejný klíč",
       "title_cosigner": "SPOLUPODEPSÁNÍ",
       "title_receive_address": "ADRESA PRO PŘIJETÍ",
       "title_yours": "VAŠE"
     },
     "address_details": {
-      "account": "Účet:",
       "derivation_path": "Cesta odvození:",
       "title_receive_address": "PŘIJMOUT ADRESU",
       "title_receiving_to": "PŘIJÍMÁNÍ DO"
@@ -76,8 +74,7 @@
       "quantity": "Množství:",
       "sell": "Prodat",
       "sender_address": "Adresa odesílatele:",
-      "side": "Strana:",
-      "unknown": "Neznámý"
+      "side": "Strana:"
     },
     "bitcoin": {
       "commitment_data": "Data závazku:",
@@ -155,7 +152,6 @@
       "addr_pointer": "Ukazatel",
       "addr_reward": "Odměna",
       "address_no_staking": "adresa - žádné odměny za stávkování.",
-      "amount": "Částka:",
       "amount_burned_decimals_unknown": "Spálená částka:",
       "amount_minted_decimals_unknown": "Vytvořená částka:",
       "amount_sent_decimals_unknown": "Odeslána částka (desetinná čára neznámá):",
@@ -192,7 +188,6 @@
       "inline_datum": "Vložená data",
       "input_id": "ID vstupu:",
       "input_index": "Index vstupu:",
-      "intro_text_address": "Adresa",
       "intro_text_change": "Následující adresa je adresa změny. Její",
       "intro_text_owned_by_device": "Následující adresa patří tomuto zařízení. Její",
       "intro_text_registration_payment": "Adresa platby za registraci hlasovacího klíče patří tomuto zařízení. Její",
@@ -252,7 +247,6 @@
       "transaction_no_script_data_hash": "Transakce neobsahuje hash dat skriptu. Skript Plutus nebude moci běžet.",
       "transaction_output_contains_tokens": "Následující výstup transakce obsahuje tokeny.",
       "ttl": "TTL:",
-      "unknown": "Neznámý",
       "unknown_collateral_amount": "Neznámá částka zajištění.",
       "unusual_path": "Neobvyklá cesta.",
       "valid_since": "Platné od:",
@@ -277,7 +271,6 @@
       "waiting_for_others": "Čekání na ostatní"
     },
     "confirm_total": {
-      "account": "Účet:",
       "fee_rate": "Sazba poplatku:",
       "sending_from_account": "Odesílání z účtu:",
       "title_fee": "INFORMACE O POPLATKU",
@@ -298,9 +291,7 @@
     },
     "eos": {
       "about_to_sign_template": "Chystáte se podepsat {}.",
-      "account": "Účet:",
       "action_name": "Název akce:",
-      "amount": "Částka:",
       "arbitrary_data": "Libovolná data",
       "buy_ram": "Koupit RAM",
       "bytes": "Byty:",
@@ -318,7 +309,6 @@
       "name": "Jméno:",
       "net": "NET:",
       "new_account": "Nový účet",
-      "no": "Ne",
       "owner": "Vlastník:",
       "parent": "Rodič:",
       "payer": "Plátce:",
@@ -339,12 +329,10 @@
       "update_auth": "Aktualizovat ověření",
       "vote_for_producers": "Hlasovat pro producenty",
       "vote_for_proxy": "Hlasovat pro proxy",
-      "voter": "Volitel:",
-      "yes": "Ano"
+      "voter": "Volitel:"
     },
     "ethereum": {
       "amount_sent": "Odeslaná částka:",
-      "confirm_fee": "Potvrdit poplatek",
       "contract": "Smlouva:",
       "data_size_template": "Velikost: {} bajtů",
       "gas_limit": "Limit plynu:",
@@ -440,7 +428,6 @@
       "title_suite_labeling": "OZNAČENÍ SUITE"
     },
     "modify_amount": {
-      "address": "Adresa:",
       "decrease_amount": "Snížit částku o:",
       "increase_amount": "Zvýšit částku o:",
       "new_amount": "Nová částka:",
@@ -457,7 +444,6 @@
     },
     "monero": {
       "confirm_export": "Potvrdit export",
-      "confirm_fee": "Potvrdit poplatek",
       "confirm_ki_sync": "Potvrdit synchronizaci klíčových obrázků",
       "confirm_refresh": "Potvrdit obnovení",
       "confirm_unlock_time": "Potvrdit čas odemknutí",
@@ -483,7 +469,6 @@
       "confirm_action": "Potvrdit akci",
       "confirm_address": "Potvrdit adresu",
       "confirm_creation_fee": "Potvrdit poplatek za vytvoření",
-      "confirm_fee": "Potvrdit poplatek",
       "confirm_mosaic": "Potvrdit mozaiku",
       "confirm_multisig_fee": "Potvrdit vícepodepisový poplatek",
       "confirm_namespace": "Potvrdit jmenný prostor",
@@ -516,7 +501,6 @@
       "modify_supply_for": "Upravit zásobu pro",
       "modify_the_number_of_cosignatories_by": "Upravit počet spolupodepisovatelů o ",
       "mutable": "měnitelný",
-      "no": "Ne",
       "of": "z",
       "percentile": "percentil",
       "raw_units_template": "{} surové jednotky",
@@ -529,8 +513,7 @@
       "transferable": "Přenosné?",
       "under_namespace": "pod jmenným prostorem",
       "unencrypted": "Nezašifrované:",
-      "unknown_mosaic": "Neznámá mozaika!",
-      "yes": "Ano"
+      "unknown_mosaic": "Neznámá mozaika!"
     },
     "passphrase": {
       "access_hidden_wallet": "Přistoupit ke skryté peněžence?",
@@ -763,17 +746,14 @@
     },
     "send": {
       "address_path": "Adresová cesta",
-      "amount": "Částka:",
       "confirm_sending": "Potvrdit_odeslání",
       "from_multiple_accounts": "Odesílání z více účtů.",
       "including_fee": "Včetně poplatku:",
       "maximum_fee": "Maximální poplatek:",
       "receiving_to_multisig": "Přijímání na multisig adresu.",
-      "title_amount": "ČÁSTKA",
       "title_confirm_sending": "POTVRDIT ODESLÁNÍ",
       "title_joint_transaction": "SPOLEČNÁ TRANSAKCE",
       "title_receiving_to": "PŘIJÍMÁNÍ NA",
-      "title_recipient": "PŘÍJEMCE",
       "title_sending": "ODESÍLÁNÍ",
       "title_sending_amount": "ČÁSTKA K ODESLÁNÍ",
       "title_sending_to": "ODESLÁNÍ NA",
@@ -816,8 +796,10 @@
       "all_will_be_sent_to": "Vše XLM bude odesláno na:",
       "allow_trust": "Povolit důvěru",
       "asset": "Aktiva",
+      "balance_id": "ID rovnováhy",
       "bump_sequence": "Zvýšit sekvenci",
       "buying": "Kupování:",
+      "claim_claimable_balance": "Nárokuj balanci.",
       "clear_data": "Vymazat data",
       "clear_flags": "Vymazat příznaky",
       "confirm_issuer": "Potvrdit vydavatele",
@@ -877,15 +859,12 @@
       "your_account": "váš účet"
     },
     "tezos": {
-      "address": "Adresa:",
-      "amount": "Částka:",
       "baker_address": "Adresa pekaře:",
       "balance": "Zůstatek:",
       "ballot": "Hlasovací lístek:",
       "confirm_delegation": "Potvrdit delegaci",
       "confirm_origination": "Potvrdit vznik",
       "delegator": "Delegátor:",
-      "fee": "Poplatek:",
       "proposal": "Návrh",
       "register_delegate": "Registrovat delegáta",
       "remove_delegation": "Odstranit delegaci",
@@ -941,19 +920,24 @@
     },
     "words": {
       "account": "Účet",
+      "address": "Adresa",
+      "amount": "Částka:",
       "are_you_sure": "Jste si jisti?",
       "array_of": "Pole o",
       "blockhash": "Blockhash",
       "buying": "Koupit",
       "confirm": "Potvrdit",
+      "confirm_fee": "Potvrdit poplatek",
       "contains": "Obsahuje",
       "continue_anyway": "Přesto pokračovat?",
       "continue_with": "Pokračovat s",
       "error": "Chyba",
+      "fee": "Poplatek",
       "from": "od",
       "keep_it_safe": "Uchovávejte v bezpečí!",
       "know_what_your_doing": "Pokračujte pouze, pokud víte, co děláte!",
       "my_trezor": "Můj Trezor",
+      "no": "Ne",
       "outputs": "výstupy",
       "please_check_again": "Zkontrolujte to prosím znovu",
       "please_try_again": "Zkuste to prosím znovu",
@@ -972,7 +956,8 @@
       "title_threshold": "PRÁH",
       "unknown": "Neznámý",
       "warning": "Varování",
-      "writable": "Zapisovatelný"
+      "writable": "Zapisovatelný",
+      "yes": "Ano"
     }
   }
 }

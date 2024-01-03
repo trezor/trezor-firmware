@@ -1,5 +1,5 @@
 {
-  "0": "addr_mismatch__contact_support",
+  "0": "addr_mismatch__contact_support_at",
   "1": "addr_mismatch__key_mismatch",
   "2": "addr_mismatch__mismatch",
   "3": "addr_mismatch__support_url",
@@ -853,5 +853,10 @@
   "851": "words__fee",
   "852": "words__recipient",
   "853": "words__signer",
-  "854": "words__writable"
+  "854": "words__writable",
+  "855": "words__amount",
+  "856": "words__address",
+  "857": "words__confirm_fee",
+  "858": "words__no",
+  "859": "words__yes"
 }

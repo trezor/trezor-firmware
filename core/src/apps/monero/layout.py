@@ -183,7 +183,7 @@ async def _require_confirm_payment_id(payment_id: bytes) -> None:
 async def _require_confirm_fee(fee: int) -> None:
     await confirm_metadata(
         "confirm_final",
-        TR.monero__confirm_fee,
+        TR.words__confirm_fee,
         "{}",
         _format_amount(fee),
         hold=True,

@@ -23,7 +23,7 @@
   },
   "translations": {
     "addr_mismatch": {
-      "contact_support": "Veuillez contacter le support Trezor à",
+      "contact_support_at": "Veuillez contacter le support Trezor à",
       "key_mismatch": "Déliachance clé?",
       "mismatch": "ADRESSER L'AFFICATION?",
       "support_url": "trezor.io/support",
@@ -33,7 +33,6 @@
       "xpub_mismatch": "Xpub inadéquat?"
     },
     "address": {
-      "address": "Adresse:",
       "public_key": "Confirmer la clé publique",
       "title_cosigner": "COSIGNATAIRE",
       "title_receive_address": "RECEVOIR L'ADRESSE",
@@ -76,8 +75,7 @@
       "quantity": "Quantité:",
       "sell": "Vendre",
       "sender_address": "Adresse de l'expéditeur:",
-      "side": "Côté:",
-      "unknown": "Inconnu"
+      "side": "Côté:"
     },
     "bitcoin": {
       "commitment_data": "Données d'engagement:",
@@ -155,7 +153,6 @@
       "addr_pointer": "Aiguille",
       "addr_reward": "Récompense",
       "address_no_staking": "Adresse - Pas de récompenses de jalonnement.",
-      "amount": "Montant:",
       "amount_burned_decimals_unknown": "Montant brûlé:",
       "amount_minted_decimals_unknown": "Montant frappé:",
       "amount_sent_decimals_unknown": "Montant envoyé (décimales inconnues):",
@@ -192,7 +189,6 @@
       "inline_datum": "Date en ligne",
       "input_id": "ID d'entrée:",
       "input_index": "Index d'entrée:",
-      "intro_text_address": "Adresse",
       "intro_text_change": "L'adresse suivante est une adresse de changement.C'est",
       "intro_text_owned_by_device": "L'adresse suivante appartient à cet appareil.C'est",
       "intro_text_registration_payment": "L'adresse de paiement de l'enregistrement des clés de vote appartient à cet appareil.C'est",
@@ -252,7 +248,6 @@
       "transaction_no_script_data_hash": "La transaction ne contient aucun hachage de données de script.Le script Plutus ne pourra pas s'exécuter.",
       "transaction_output_contains_tokens": "La sortie de transaction suivante contient des jetons.",
       "ttl": "TTL:",
-      "unknown": "Inconnu",
       "unknown_collateral_amount": "Montant collatéral inconnu.",
       "unusual_path": "Le chemin est inhabituel.",
       "valid_since": "Valable depuis:",
@@ -300,7 +295,6 @@
       "about_to_sign_template": "Vous êtes sur le point de signer {}.",
       "account": "Compte:",
       "action_name": "Nom d'action:",
-      "amount": "Montant:",
       "arbitrary_data": "Données arbitraires",
       "buy_ram": "Acheter Ram",
       "bytes": "Octets:",
@@ -318,7 +312,6 @@
       "name": "Nom:",
       "net": "FILET:",
       "new_account": "Nouveau compte",
-      "no": "Non",
       "owner": "Propriétaire:",
       "parent": "Parent:",
       "payer": "Payeur:",
@@ -339,12 +332,10 @@
       "update_auth": "Mettre à jour l'authe",
       "vote_for_producers": "Voter pour les producteurs",
       "vote_for_proxy": "Votez pour procuration",
-      "voter": "Électeur:",
-      "yes": "Oui"
+      "voter": "Électeur:"
     },
     "ethereum": {
       "amount_sent": "Montant envoyé:",
-      "confirm_fee": "Confirmer les frais",
       "contract": "Contracter:",
       "data_size_template": "Taille: {} octets",
       "gas_limit": "Limite de gaz:",
@@ -440,7 +431,6 @@
       "title_suite_labeling": "ÉTIQUETAGE DE LA SUITE"
     },
     "modify_amount": {
-      "address": "Adresse:",
       "decrease_amount": "Diminue le montant de:",
       "increase_amount": "Augmenter le montant de:",
       "new_amount": "Nouveau montant:",
@@ -457,7 +447,6 @@
     },
     "monero": {
       "confirm_export": "Confirmer l'exportation",
-      "confirm_fee": "Confirmer les frais",
       "confirm_ki_sync": "Confirmer Ki Sync",
       "confirm_refresh": "Confirmer Rafraîchissement",
       "confirm_unlock_time": "Confirmer le temps de déverrouillage",
@@ -483,7 +472,6 @@
       "confirm_action": "Confirmer l'action",
       "confirm_address": "confirmer l'adresse",
       "confirm_creation_fee": "Confirmer les frais de création",
-      "confirm_fee": "Confirmer les frais",
       "confirm_mosaic": "Confirmer la mosaïque",
       "confirm_multisig_fee": "Confirmer les frais multisig",
       "confirm_namespace": "Confirmer l'espace de noms",
@@ -516,7 +504,6 @@
       "modify_supply_for": "Modifier l'offre pour",
       "modify_the_number_of_cosignatories_by": "Modifier le nombre de cosignatoires par",
       "mutable": "mutable",
-      "no": "Non",
       "of": "de",
       "percentile": "centile",
       "raw_units_template": "{} unités brutes",
@@ -529,8 +516,7 @@
       "transferable": "Transférable?",
       "under_namespace": "sous l'espace de noms",
       "unencrypted": "Non crypté:",
-      "unknown_mosaic": "Mosaïque inconnue!",
-      "yes": "Oui"
+      "unknown_mosaic": "Mosaïque inconnue!"
     },
     "passphrase": {
       "access_hidden_wallet": "Accès à un portefeuille caché?",
@@ -763,7 +749,6 @@
     },
     "send": {
       "address_path": "chemin d'adresse",
-      "amount": "Montant:",
       "confirm_sending": "Confirm_sending",
       "from_multiple_accounts": "Envoi à partir de plusieurs comptes.",
       "including_fee": "Y compris les frais:",
@@ -773,7 +758,6 @@
       "title_confirm_sending": "CONFIRMER L'ENVOI",
       "title_joint_transaction": "TRANSACTION CONJOINTE",
       "title_receiving_to": "RECEVOIR",
-      "title_recipient": "DESTINATAIRE",
       "title_sending": "ENVOI EN COURS",
       "title_sending_amount": "MONTANT",
       "title_sending_to": "ENVOI À",
@@ -816,8 +800,10 @@
       "all_will_be_sent_to": "Tous les xlm seront envoyés à:",
       "allow_trust": "Autoriser la confiance",
       "asset": "Actif",
+      "balance_id": "Équilibrez ID",
       "bump_sequence": "Séquence de bosse",
       "buying": "Achat:",
+      "claim_claimable_balance": "Réclamer un solde réclamation",
       "clear_data": "Effacer les données",
       "clear_flags": "Drapeaux clairs",
       "confirm_issuer": "Confirmer l'émetteur",
@@ -877,15 +863,12 @@
       "your_account": "Votre compte"
     },
     "tezos": {
-      "address": "Adresse:",
-      "amount": "Montant:",
       "baker_address": "Adresse boulanger:",
       "balance": "Équilibre:",
       "ballot": "Bulletin de vote:",
       "confirm_delegation": "Confirmer la délégation",
       "confirm_origination": "Confirmer l'origine",
       "delegator": "Délégant:",
-      "fee": "Frais:",
       "proposal": "Proposition",
       "register_delegate": "Enregistrer le délégué",
       "remove_delegation": "Supprimer la délégation",
@@ -941,19 +924,24 @@
     },
     "words": {
       "account": "Compte",
+      "address": "Adresse",
+      "amount": "Montant:",
       "are_you_sure": "Es-tu sûr?",
       "array_of": "Tableau de",
       "blockhash": "Blockhash",
       "buying": "Achat",
       "confirm": "Confirmer",
+      "confirm_fee": "Confirmer les frais",
       "contains": "contient",
       "continue_anyway": "Continuer de toute façon?",
       "continue_with": "Continue avec",
       "error": "Erreur",
+      "fee": "Frais",
       "from": "depuis",
       "keep_it_safe": "Garde-le en sécurité!",
       "know_what_your_doing": "Continuez uniquement si vous savez ce que vous faites!",
       "my_trezor": "Mon Trezor",
+      "no": "Non",
       "outputs": "les sorties",
       "please_check_again": "Veuillez vérifier à nouveau",
       "please_try_again": "Veuillez réessayer",
@@ -972,7 +960,8 @@
       "title_threshold": "SEUIL",
       "unknown": "Inconnu",
       "warning": "Avertissement",
-      "writable": "Scrutin"
+      "writable": "Scrutin",
+      "yes": "Oui"
     }
   }
 }

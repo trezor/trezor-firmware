@@ -670,10 +670,10 @@ async def confirm_output(
     chunkify: bool = False,
 ) -> None:
     title = title or TR.send__confirm_sending  # def_arg
-    address_title = TR.send__title_recipient
+    address_title = TR.words__recipient
     if output_index is not None:
         address_title += f" #{output_index + 1}"
-    amount_title = TR.send__title_amount
+    amount_title = TR.words__amount
     if output_index is not None:
         amount_title += f" #{output_index + 1}"
 
@@ -683,7 +683,7 @@ async def confirm_output(
                 trezorui2.confirm_output_address(
                     address=address,
                     address_label=address_label or "",
-                    address_title=address_title,
+                    address_title=address_title.upper(),
                     chunkify=chunkify,
                 )
             ),
@@ -696,7 +696,7 @@ async def confirm_output(
         result = await interact(
             RustLayout(
                 trezorui2.confirm_output_amount(
-                    amount_title=amount_title,
+                    amount_title=amount_title.upper(),
                     amount=amount,
                 )
             ),
@@ -866,7 +866,7 @@ def confirm_address(
     br_type: str = "confirm_address",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Awaitable[None]:
-    description = description or TR.address__address  # def_arg
+    description = description or f"{TR.words__address}:"  # def_arg
     return confirm_blob(
         br_type,
         title.upper(),
@@ -899,7 +899,7 @@ def confirm_amount(
     br_type: str = "confirm_amount",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> Awaitable[None]:
-    description = description or TR.send__amount  # def_arg
+    description = description or f"{TR.words__amount}:"  # def_arg
     return confirm_blob(
         br_type,
         title.upper(),
@@ -1184,7 +1184,7 @@ async def confirm_modify_output(
             data=address,
             verb=TR.buttons__continue,
             verb_cancel=None,
-            description=TR.address__address,
+            description=f"{TR.words__address}:",
             extra=None,
         )
     )

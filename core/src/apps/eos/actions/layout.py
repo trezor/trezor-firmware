@@ -56,7 +56,7 @@ async def confirm_action_buyram(msg: EosActionBuyRam) -> None:
         (
             (TR.eos__payer, eos_name_to_string(msg.payer)),
             (TR.eos__receiver, eos_name_to_string(msg.receiver)),
-            (TR.eos__amount, eos_asset_to_string(msg.quantity)),
+            (f"{TR.words__amount}:", eos_asset_to_string(msg.quantity)),
         ),
     )
 
@@ -82,10 +82,10 @@ async def confirm_action_delegate(msg: EosActionDelegate) -> None:
     ]
     append = props.append  # local_cache_attribute
     if msg.transfer:
-        append((TR.eos__transfer, TR.eos__yes))
+        append((TR.eos__transfer, TR.words__yes))
         append((TR.eos__receiver, eos_name_to_string(msg.receiver)))
     else:
-        append((TR.eos__transfer, TR.eos__no))
+        append((TR.eos__transfer, TR.words__no))
 
     await _confirm_properties(
         "confirm_delegate",
@@ -164,7 +164,7 @@ async def confirm_action_transfer(msg: EosActionTransfer, account: str) -> None:
     props = [
         (TR.eos__from, eos_name_to_string(msg.sender)),
         (TR.eos__to, eos_name_to_string(msg.receiver)),
-        (TR.eos__amount, eos_asset_to_string(msg.quantity)),
+        (f"{TR.words__amount}:", eos_asset_to_string(msg.quantity)),
         (TR.eos__contract, account),
     ]
     if msg.memo is not None:
@@ -178,7 +178,7 @@ async def confirm_action_transfer(msg: EosActionTransfer, account: str) -> None:
 
 async def confirm_action_updateauth(msg: EosActionUpdateAuth) -> None:
     props: list[PropertyType] = [
-        (TR.eos__account, eos_name_to_string(msg.account)),
+        (f"{TR.words__account}:", eos_name_to_string(msg.account)),
         (TR.eos__permission, eos_name_to_string(msg.permission)),
         (TR.eos__parent, eos_name_to_string(msg.parent)),
     ]
@@ -195,7 +195,7 @@ async def confirm_action_deleteauth(msg: EosActionDeleteAuth) -> None:
         "confirm_deleteauth",
         TR.eos__delete_auth,
         (
-            (TR.eos__account, eos_name_to_string(msg.account)),
+            (f"{TR.words__account}:", eos_name_to_string(msg.account)),
             (TR.eos__permission, eos_name_to_string(msg.permission)),
         ),
     )
@@ -206,7 +206,7 @@ async def confirm_action_linkauth(msg: EosActionLinkAuth) -> None:
         "confirm_linkauth",
         TR.eos__link_auth,
         (
-            (TR.eos__account, eos_name_to_string(msg.account)),
+            (f"{TR.words__account}:", eos_name_to_string(msg.account)),
             (TR.eos__code, eos_name_to_string(msg.code)),
             (TR.eos__type, eos_name_to_string(msg.type)),
             (TR.eos__requirement, eos_name_to_string(msg.requirement)),
@@ -219,7 +219,7 @@ async def confirm_action_unlinkauth(msg: EosActionUnlinkAuth) -> None:
         "confirm_unlinkauth",
         TR.eos__unlink_auth,
         (
-            (TR.eos__account, eos_name_to_string(msg.account)),
+            (f"{TR.words__account}:", eos_name_to_string(msg.account)),
             (TR.eos__code, eos_name_to_string(msg.code)),
             (TR.eos__type, eos_name_to_string(msg.type)),
         ),
