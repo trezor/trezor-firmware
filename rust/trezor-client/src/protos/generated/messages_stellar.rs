@@ -6230,8 +6230,6 @@ pub struct StellarSCVal {
     pub map: ::std::vec::Vec<stellar_scval::StellarSCValMapEntry>,
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.address)
     pub address: ::protobuf::MessageField<stellar_scval::StellarSCAddress>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.nonce_key)
-    pub nonce_key: ::std::option::Option<i64>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSCVal.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -6511,27 +6509,8 @@ impl StellarSCVal {
         self.symbol.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // optional sint64 nonce_key = 20;
-
-    pub fn nonce_key(&self) -> i64 {
-        self.nonce_key.unwrap_or(0)
-    }
-
-    pub fn clear_nonce_key(&mut self) {
-        self.nonce_key = ::std::option::Option::None;
-    }
-
-    pub fn has_nonce_key(&self) -> bool {
-        self.nonce_key.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_nonce_key(&mut self, v: i64) {
-        self.nonce_key = ::std::option::Option::Some(v);
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(19);
+        let mut fields = ::std::vec::Vec::with_capacity(18);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "type",
@@ -6622,11 +6601,6 @@ impl StellarSCVal {
             "address",
             |m: &StellarSCVal| { &m.address },
             |m: &mut StellarSCVal| { &mut m.address },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "nonce_key",
-            |m: &StellarSCVal| { &m.nonce_key },
-            |m: &mut StellarSCVal| { &mut m.nonce_key },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSCVal>(
             "StellarSCVal",
@@ -6738,9 +6712,6 @@ impl ::protobuf::Message for StellarSCVal {
                 154 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.address)?;
                 },
-                160 => {
-                    self.nonce_key = ::std::option::Option::Some(is.read_sint64()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -6814,9 +6785,6 @@ impl ::protobuf::Message for StellarSCVal {
             let len = v.compute_size();
             my_size += 2 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
-        if let Some(v) = self.nonce_key {
-            my_size += ::protobuf::rt::sint64_size(20, v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -6877,9 +6845,6 @@ impl ::protobuf::Message for StellarSCVal {
         if let Some(v) = self.address.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(19, v, os)?;
         }
-        if let Some(v) = self.nonce_key {
-            os.write_sint64(20, v)?;
-        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -6915,7 +6880,6 @@ impl ::protobuf::Message for StellarSCVal {
         self.vec.clear();
         self.map.clear();
         self.address.clear();
-        self.nonce_key = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -6939,7 +6903,6 @@ impl ::protobuf::Message for StellarSCVal {
             vec: ::std::vec::Vec::new(),
             map: ::std::vec::Vec::new(),
             address: ::protobuf::MessageField::none(),
-            nonce_key: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -10886,7 +10849,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     _account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x1d\n\nbalance_id\x18\
     \x02\x20\x02(\x0cR\tbalanceId\"N\n\x0fStellarSignedTx\x12\x1d\n\npublic_\
     key\x18\x01\x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsignature\x18\x02\x20\
-    \x02(\x0cR\tsignature\"\xc7\x0f\n\x0cStellarSCVal\x12M\n\x04type\x18\x01\
+    \x02(\x0cR\tsignature\"\xb0\x0f\n\x0cStellarSCVal\x12M\n\x04type\x18\x01\
     \x20\x02(\x0e29.hw.trezor.messages.stellar.StellarSCVal.StellarSCValType\
     R\x04type\x12\x0c\n\x01b\x18\x02\x20\x01(\x08R\x01b\x12\x10\n\x03u32\x18\
     \x04\x20\x01(\rR\x03u32\x12\x10\n\x03i32\x18\x05\x20\x01(\x11R\x03i32\
@@ -10905,87 +10868,87 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12O\n\x03map\x18\x12\x20\x03(\x0b2=.hw.trezor.messages.stellar.Stellar\
     SCVal.StellarSCValMapEntryR\x03map\x12S\n\x07address\x18\x13\x20\x01(\
     \x0b29.hw.trezor.messages.stellar.StellarSCVal.StellarSCAddressR\x07addr\
-    ess\x12\x1b\n\tnonce_key\x18\x14\x20\x01(\x12R\x08nonceKey\x1a5\n\x13Ste\
-    llarUInt128Parts\x12\x0e\n\x02hi\x18\x01\x20\x02(\x04R\x02hi\x12\x0e\n\
-    \x02lo\x18\x02\x20\x02(\x04R\x02lo\x1a4\n\x12StellarInt128Parts\x12\x0e\
-    \n\x02hi\x18\x01\x20\x02(\x12R\x02hi\x12\x0e\n\x02lo\x18\x02\x20\x02(\
-    \x04R\x02lo\x1ai\n\x13StellarUInt256Parts\x12\x13\n\x05hi_hi\x18\x01\x20\
-    \x02(\x04R\x04hiHi\x12\x13\n\x05hi_lo\x18\x02\x20\x02(\x04R\x04hiLo\x12\
-    \x13\n\x05lo_hi\x18\x03\x20\x02(\x04R\x04loHi\x12\x13\n\x05lo_lo\x18\x04\
-    \x20\x02(\x04R\x04loLo\x1ah\n\x12StellarInt256Parts\x12\x13\n\x05hi_hi\
-    \x18\x01\x20\x02(\x12R\x04hiHi\x12\x13\n\x05hi_lo\x18\x02\x20\x02(\x04R\
+    ess\x1a5\n\x13StellarUInt128Parts\x12\x0e\n\x02hi\x18\x01\x20\x02(\x04R\
+    \x02hi\x12\x0e\n\x02lo\x18\x02\x20\x02(\x04R\x02lo\x1a4\n\x12StellarInt1\
+    28Parts\x12\x0e\n\x02hi\x18\x01\x20\x02(\x12R\x02hi\x12\x0e\n\x02lo\x18\
+    \x02\x20\x02(\x04R\x02lo\x1ai\n\x13StellarUInt256Parts\x12\x13\n\x05hi_h\
+    i\x18\x01\x20\x02(\x04R\x04hiHi\x12\x13\n\x05hi_lo\x18\x02\x20\x02(\x04R\
     \x04hiLo\x12\x13\n\x05lo_hi\x18\x03\x20\x02(\x04R\x04loHi\x12\x13\n\x05l\
-    o_lo\x18\x04\x20\x02(\x04R\x04loLo\x1a\xe3\x01\n\x10StellarSCAddress\x12\
-    b\n\x04type\x18\x01\x20\x02(\x0e2N.hw.trezor.messages.stellar.StellarSCV\
-    al.StellarSCAddress.StellarSCAddressTypeR\x04type\x12\x18\n\x07address\
-    \x18\x02\x20\x02(\tR\x07address\"Q\n\x14StellarSCAddressType\x12\x1b\n\
-    \x17SC_ADDRESS_TYPE_ACCOUNT\x10\0\x12\x1c\n\x18SC_ADDRESS_TYPE_CONTRACT\
-    \x10\x01\x1a\x92\x01\n\x14StellarSCValMapEntry\x12:\n\x03key\x18\x01\x20\
-    \x01(\x0b2(.hw.trezor.messages.stellar.StellarSCValR\x03key\x12>\n\x05va\
-    lue\x18\x02\x20\x01(\x0b2(.hw.trezor.messages.stellar.StellarSCValR\x05v\
-    alue\"\x83\x03\n\x10StellarSCValType\x12\x0c\n\x08SCV_BOOL\x10\0\x12\x0c\
-    \n\x08SCV_VOID\x10\x01\x12\r\n\tSCV_ERROR\x10\x02\x12\x0b\n\x07SCV_U32\
-    \x10\x03\x12\x0b\n\x07SCV_I32\x10\x04\x12\x0b\n\x07SCV_U64\x10\x05\x12\
-    \x0b\n\x07SCV_I64\x10\x06\x12\x11\n\rSCV_TIMEPOINT\x10\x07\x12\x10\n\x0c\
-    SCV_DURATION\x10\x08\x12\x0c\n\x08SCV_U128\x10\t\x12\x0c\n\x08SCV_I128\
-    \x10\n\x12\x0c\n\x08SCV_U256\x10\x0b\x12\x0c\n\x08SCV_I256\x10\x0c\x12\r\
-    \n\tSCV_BYTES\x10\r\x12\x0e\n\nSCV_STRING\x10\x0e\x12\x0e\n\nSCV_SYMBOL\
-    \x10\x0f\x12\x0b\n\x07SCV_VEC\x10\x10\x12\x0b\n\x07SCV_MAP\x10\x11\x12\
-    \x0f\n\x0bSCV_ADDRESS\x10\x12\x12\x19\n\x15SCV_CONTRACT_INSTANCE\x10\x13\
-    \x12$\n\x20SCV_LEDGER_KEY_CONTRACT_INSTANCE\x10\x14\x12\x18\n\x14SCV_LED\
-    GER_KEY_NONCE\x10\x15J\x04\x08\x03\x10\x04J\x04\x08\x15\x10\x16\"\xe4\
-    \x01\n\x19StellarInvokeContractArgs\x12d\n\x10contract_address\x18\x01\
-    \x20\x02(\x0b29.hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress\
-    R\x0fcontractAddress\x12#\n\rfunction_name\x18\x02\x20\x02(\tR\x0cfuncti\
-    onName\x12<\n\x04args\x18\x03\x20\x03(\x0b2(.hw.trezor.messages.stellar.\
-    StellarSCValR\x04args\"\x8a\x03\n\x20StellarSorobanAuthorizedFunction\
-    \x12u\n\x04type\x18\x01\x20\x02(\x0e2a.hw.trezor.messages.stellar.Stella\
-    rSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionTypeR\x04type\
-    \x12V\n\x0bcontract_fn\x18\x02\x20\x01(\x0b25.hw.trezor.messages.stellar\
-    .StellarInvokeContractArgsR\ncontractFn\"\x96\x01\n$StellarSorobanAuthor\
-    izedFunctionType\x120\n,SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN\x10\
-    \0\x12<\n8SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN\x10\
-    \x01\"\xe7\x01\n\"StellarSorobanAuthorizedInvocation\x12X\n\x08function\
-    \x18\x01\x20\x02(\x0b2<.hw.trezor.messages.stellar.StellarSorobanAuthori\
-    zedFunctionR\x08function\x12g\n\x0fsub_invocations\x18\x02\x20\x03(\x0b2\
-    >.hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocationR\x0esubI\
-    nvocations\"\xeb\x02\n\x13StellarHostFunction\x12[\n\x04type\x18\x01\x20\
-    \x02(\x0e2G.hw.trezor.messages.stellar.StellarHostFunction.StellarHostFu\
-    nctionTypeR\x04type\x12^\n\x0finvoke_contract\x18\x02\x20\x01(\x0b25.hw.\
-    trezor.messages.stellar.StellarInvokeContractArgsR\x0einvokeContract\"\
-    \x96\x01\n\x17StellarHostFunctionType\x12&\n\"HOST_FUNCTION_TYPE_INVOKE_\
-    CONTRACT\x10\0\x12&\n\"HOST_FUNCTION_TYPE_CREATE_CONTRACT\x10\x01\x12+\n\
-    'HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM\x10\x02\"\x95\x02\n\x20StellarS\
-    orobanAddressCredentials\x12S\n\x07address\x18\x01\x20\x02(\x0b29.hw.tre\
-    zor.messages.stellar.StellarSCVal.StellarSCAddressR\x07address\x12\x14\n\
-    \x05nonce\x18\x02\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_expiration_\
-    ledger\x18\x03\x20\x02(\rR\x19signatureExpirationLedger\x12F\n\tsignatur\
-    e\x18\x04\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarSCValR\tsigna\
-    ture\"\xc6\x02\n\x19StellarSorobanCredentials\x12g\n\x04type\x18\x01\x20\
-    \x02(\x0e2S.hw.trezor.messages.stellar.StellarSorobanCredentials.Stellar\
-    SorobanCredentialsTypeR\x04type\x12V\n\x07address\x18\x02\x20\x01(\x0b2<\
-    .hw.trezor.messages.stellar.StellarSorobanAddressCredentialsR\x07address\
-    \"h\n\x1dStellarSorobanCredentialsType\x12&\n\"SOROBAN_CREDENTIALS_SOURC\
-    E_ACCOUNT\x10\0\x12\x1f\n\x1bSOROBAN_CREDENTIALS_ADDRESS\x10\x01\"\xe4\
-    \x01\n\x20StellarSorobanAuthorizationEntry\x12W\n\x0bcredentials\x18\x01\
-    \x20\x02(\x0b25.hw.trezor.messages.stellar.StellarSorobanCredentialsR\
-    \x0bcredentials\x12g\n\x0froot_invocation\x18\x02\x20\x02(\x0b2>.hw.trez\
-    or.messages.stellar.StellarSorobanAuthorizedInvocationR\x0erootInvocatio\
-    n\"\xe3\x01\n\x1bStellarInvokeHostFunctionOp\x12%\n\x0esource_account\
-    \x18\x01\x20\x01(\tR\rsourceAccount\x12K\n\x08function\x18\x02\x20\x02(\
-    \x0b2/.hw.trezor.messages.stellar.StellarHostFunctionR\x08function\x12P\
-    \n\x04auth\x18\x03\x20\x03(\x0b2<.hw.trezor.messages.stellar.StellarSoro\
-    banAuthorizationEntryR\x04auth\"\x15\n\x13StellarTxExtRequest\"?\n\x0cSt\
-    ellarTxExt\x12\x0c\n\x01v\x18\x01\x20\x02(\x11R\x01v\x12!\n\x0csoroban_d\
-    ata\x18\x02\x20\x01(\x0cR\x0bsorobanData\"\xa3\x02\n\x1fStellarSignSorob\
-    anAuthorization\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\
-    -\n\x12network_passphrase\x18\x02\x20\x02(\tR\x11networkPassphrase\x12\
-    \x14\n\x05nonce\x18\x03\x20\x02(\x12R\x05nonce\x12>\n\x1bsignature_expir\
-    ation_ledger\x18\x04\x20\x02(\rR\x19signatureExpirationLedger\x12^\n\nin\
-    vocation\x18\x05\x20\x02(\x0b2>.hw.trezor.messages.stellar.StellarSoroba\
-    nAuthorizedInvocationR\ninvocation*=\n\x10StellarAssetType\x12\n\n\x06NA\
-    TIVE\x10\0\x12\r\n\tALPHANUM4\x10\x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#\
-    com.satoshilabs.trezor.lib.protobufB\x14TrezorMessageStellar\
+    o_lo\x18\x04\x20\x02(\x04R\x04loLo\x1ah\n\x12StellarInt256Parts\x12\x13\
+    \n\x05hi_hi\x18\x01\x20\x02(\x12R\x04hiHi\x12\x13\n\x05hi_lo\x18\x02\x20\
+    \x02(\x04R\x04hiLo\x12\x13\n\x05lo_hi\x18\x03\x20\x02(\x04R\x04loHi\x12\
+    \x13\n\x05lo_lo\x18\x04\x20\x02(\x04R\x04loLo\x1a\xe3\x01\n\x10StellarSC\
+    Address\x12b\n\x04type\x18\x01\x20\x02(\x0e2N.hw.trezor.messages.stellar\
+    .StellarSCVal.StellarSCAddress.StellarSCAddressTypeR\x04type\x12\x18\n\
+    \x07address\x18\x02\x20\x02(\tR\x07address\"Q\n\x14StellarSCAddressType\
+    \x12\x1b\n\x17SC_ADDRESS_TYPE_ACCOUNT\x10\0\x12\x1c\n\x18SC_ADDRESS_TYPE\
+    _CONTRACT\x10\x01\x1a\x92\x01\n\x14StellarSCValMapEntry\x12:\n\x03key\
+    \x18\x01\x20\x01(\x0b2(.hw.trezor.messages.stellar.StellarSCValR\x03key\
+    \x12>\n\x05value\x18\x02\x20\x01(\x0b2(.hw.trezor.messages.stellar.Stell\
+    arSCValR\x05value\"\x83\x03\n\x10StellarSCValType\x12\x0c\n\x08SCV_BOOL\
+    \x10\0\x12\x0c\n\x08SCV_VOID\x10\x01\x12\r\n\tSCV_ERROR\x10\x02\x12\x0b\
+    \n\x07SCV_U32\x10\x03\x12\x0b\n\x07SCV_I32\x10\x04\x12\x0b\n\x07SCV_U64\
+    \x10\x05\x12\x0b\n\x07SCV_I64\x10\x06\x12\x11\n\rSCV_TIMEPOINT\x10\x07\
+    \x12\x10\n\x0cSCV_DURATION\x10\x08\x12\x0c\n\x08SCV_U128\x10\t\x12\x0c\n\
+    \x08SCV_I128\x10\n\x12\x0c\n\x08SCV_U256\x10\x0b\x12\x0c\n\x08SCV_I256\
+    \x10\x0c\x12\r\n\tSCV_BYTES\x10\r\x12\x0e\n\nSCV_STRING\x10\x0e\x12\x0e\
+    \n\nSCV_SYMBOL\x10\x0f\x12\x0b\n\x07SCV_VEC\x10\x10\x12\x0b\n\x07SCV_MAP\
+    \x10\x11\x12\x0f\n\x0bSCV_ADDRESS\x10\x12\x12\x19\n\x15SCV_CONTRACT_INST\
+    ANCE\x10\x13\x12$\n\x20SCV_LEDGER_KEY_CONTRACT_INSTANCE\x10\x14\x12\x18\
+    \n\x14SCV_LEDGER_KEY_NONCE\x10\x15J\x04\x08\x03\x10\x04J\x04\x08\x14\x10\
+    \x15J\x04\x08\x15\x10\x16\"\xe4\x01\n\x19StellarInvokeContractArgs\x12d\
+    \n\x10contract_address\x18\x01\x20\x02(\x0b29.hw.trezor.messages.stellar\
+    .StellarSCVal.StellarSCAddressR\x0fcontractAddress\x12#\n\rfunction_name\
+    \x18\x02\x20\x02(\tR\x0cfunctionName\x12<\n\x04args\x18\x03\x20\x03(\x0b\
+    2(.hw.trezor.messages.stellar.StellarSCValR\x04args\"\x8a\x03\n\x20Stell\
+    arSorobanAuthorizedFunction\x12u\n\x04type\x18\x01\x20\x02(\x0e2a.hw.tre\
+    zor.messages.stellar.StellarSorobanAuthorizedFunction.StellarSorobanAuth\
+    orizedFunctionTypeR\x04type\x12V\n\x0bcontract_fn\x18\x02\x20\x01(\x0b25\
+    .hw.trezor.messages.stellar.StellarInvokeContractArgsR\ncontractFn\"\x96\
+    \x01\n$StellarSorobanAuthorizedFunctionType\x120\n,SOROBAN_AUTHORIZED_FU\
+    NCTION_TYPE_CONTRACT_FN\x10\0\x12<\n8SOROBAN_AUTHORIZED_FUNCTION_TYPE_CR\
+    EATE_CONTRACT_HOST_FN\x10\x01\"\xe7\x01\n\"StellarSorobanAuthorizedInvoc\
+    ation\x12X\n\x08function\x18\x01\x20\x02(\x0b2<.hw.trezor.messages.stell\
+    ar.StellarSorobanAuthorizedFunctionR\x08function\x12g\n\x0fsub_invocatio\
+    ns\x18\x02\x20\x03(\x0b2>.hw.trezor.messages.stellar.StellarSorobanAutho\
+    rizedInvocationR\x0esubInvocations\"\xeb\x02\n\x13StellarHostFunction\
+    \x12[\n\x04type\x18\x01\x20\x02(\x0e2G.hw.trezor.messages.stellar.Stella\
+    rHostFunction.StellarHostFunctionTypeR\x04type\x12^\n\x0finvoke_contract\
+    \x18\x02\x20\x01(\x0b25.hw.trezor.messages.stellar.StellarInvokeContract\
+    ArgsR\x0einvokeContract\"\x96\x01\n\x17StellarHostFunctionType\x12&\n\"H\
+    OST_FUNCTION_TYPE_INVOKE_CONTRACT\x10\0\x12&\n\"HOST_FUNCTION_TYPE_CREAT\
+    E_CONTRACT\x10\x01\x12+\n'HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM\x10\
+    \x02\"\x95\x02\n\x20StellarSorobanAddressCredentials\x12S\n\x07address\
+    \x18\x01\x20\x02(\x0b29.hw.trezor.messages.stellar.StellarSCVal.StellarS\
+    CAddressR\x07address\x12\x14\n\x05nonce\x18\x02\x20\x02(\x12R\x05nonce\
+    \x12>\n\x1bsignature_expiration_ledger\x18\x03\x20\x02(\rR\x19signatureE\
+    xpirationLedger\x12F\n\tsignature\x18\x04\x20\x02(\x0b2(.hw.trezor.messa\
+    ges.stellar.StellarSCValR\tsignature\"\xc6\x02\n\x19StellarSorobanCreden\
+    tials\x12g\n\x04type\x18\x01\x20\x02(\x0e2S.hw.trezor.messages.stellar.S\
+    tellarSorobanCredentials.StellarSorobanCredentialsTypeR\x04type\x12V\n\
+    \x07address\x18\x02\x20\x01(\x0b2<.hw.trezor.messages.stellar.StellarSor\
+    obanAddressCredentialsR\x07address\"h\n\x1dStellarSorobanCredentialsType\
+    \x12&\n\"SOROBAN_CREDENTIALS_SOURCE_ACCOUNT\x10\0\x12\x1f\n\x1bSOROBAN_C\
+    REDENTIALS_ADDRESS\x10\x01\"\xe4\x01\n\x20StellarSorobanAuthorizationEnt\
+    ry\x12W\n\x0bcredentials\x18\x01\x20\x02(\x0b25.hw.trezor.messages.stell\
+    ar.StellarSorobanCredentialsR\x0bcredentials\x12g\n\x0froot_invocation\
+    \x18\x02\x20\x02(\x0b2>.hw.trezor.messages.stellar.StellarSorobanAuthori\
+    zedInvocationR\x0erootInvocation\"\xe3\x01\n\x1bStellarInvokeHostFunctio\
+    nOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12K\n\
+    \x08function\x18\x02\x20\x02(\x0b2/.hw.trezor.messages.stellar.StellarHo\
+    stFunctionR\x08function\x12P\n\x04auth\x18\x03\x20\x03(\x0b2<.hw.trezor.\
+    messages.stellar.StellarSorobanAuthorizationEntryR\x04auth\"\x15\n\x13St\
+    ellarTxExtRequest\"?\n\x0cStellarTxExt\x12\x0c\n\x01v\x18\x01\x20\x02(\
+    \x11R\x01v\x12!\n\x0csoroban_data\x18\x02\x20\x01(\x0cR\x0bsorobanData\"\
+    \xa3\x02\n\x1fStellarSignSorobanAuthorization\x12\x1b\n\taddress_n\x18\
+    \x01\x20\x03(\rR\x08addressN\x12-\n\x12network_passphrase\x18\x02\x20\
+    \x02(\tR\x11networkPassphrase\x12\x14\n\x05nonce\x18\x03\x20\x02(\x12R\
+    \x05nonce\x12>\n\x1bsignature_expiration_ledger\x18\x04\x20\x02(\rR\x19s\
+    ignatureExpirationLedger\x12^\n\ninvocation\x18\x05\x20\x02(\x0b2>.hw.tr\
+    ezor.messages.stellar.StellarSorobanAuthorizedInvocationR\ninvocation*=\
+    \n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANUM4\x10\
+    \x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilabs.trezor.lib.protob\
+    ufB\x14TrezorMessageStellar\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

@@ -166,11 +166,8 @@ def write_sc_val(w: Writer, val: StellarSCVal) -> None:
         assert val.address
         write_sc_address(w, val.address)
     # SCV_CONTRACT_INSTANCE NOT SUPPORTED
-    elif val.type == StellarSCValType.SCV_LEDGER_KEY_CONTRACT_INSTANCE:
-        pass  # nothing to write
-    elif val.type == StellarSCValType.SCV_LEDGER_KEY_NONCE:
-        assert val.nonce_key is not None
-        write_int64(w, val.nonce_key)
+    # SCV_LEDGER_KEY_CONTRACT_INSTANCE NOT SUPPORTED
+    # SCV_LEDGER_KEY_NONCE NOT SUPPORTED
     else:
         raise DataError(f"Stellar: Unsupported SCV type: {val.type}")
 

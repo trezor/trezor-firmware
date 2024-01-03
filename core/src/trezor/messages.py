@@ -5763,7 +5763,6 @@ if TYPE_CHECKING:
         vec: "list[StellarSCVal]"
         map: "list[StellarSCValMapEntry]"
         address: "StellarSCAddress | None"
-        nonce_key: "int | None"
 
         def __init__(
             self,
@@ -5786,7 +5785,6 @@ if TYPE_CHECKING:
             string: "str | None" = None,
             symbol: "str | None" = None,
             address: "StellarSCAddress | None" = None,
-            nonce_key: "int | None" = None,
         ) -> None:
             pass
 

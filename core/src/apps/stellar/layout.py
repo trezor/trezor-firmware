@@ -225,11 +225,8 @@ async def confirm_sc_val(
         assert val.address
         await layouts.confirm_address(title, val.address.address, "address", br_type)
     # SCV_CONTRACT_INSTANCE NOT SUPPORTED
-    elif val.type == StellarSCValType.SCV_LEDGER_KEY_CONTRACT_INSTANCE:
-        await confirm_value("[no content]", "ledger key contract instance")
-    elif val.type == StellarSCValType.SCV_LEDGER_KEY_NONCE:
-        assert val.nonce_key is not None
-        await confirm_value(strings.format_amount(val.nonce_key, 0), "ledger key nonce")
+    # SCV_LEDGER_KEY_CONTRACT_INSTANCE NOT SUPPORTED
+    # SCV_LEDGER_KEY_NONCE NOT SUPPORTED
     else:
         raise DataError(f"Stellar: Unsupported SCV type: {val.type}")
 

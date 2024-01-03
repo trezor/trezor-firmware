@@ -511,15 +511,6 @@ def _read_sc_val(val: "xdr.SCVal") -> messages.StellarSCVal:
             type=messages.StellarSCValType.SCV_ADDRESS,
             address=_read_sc_address(val.address),
         )
-    elif val.type == xdr.SCValType.SCV_LEDGER_KEY_CONTRACT_INSTANCE:
-        return messages.StellarSCVal(
-            type=messages.StellarSCValType.SCV_LEDGER_KEY_CONTRACT_INSTANCE
-        )
-    elif val.type == xdr.SCValType.SCV_LEDGER_KEY_NONCE:
-        return messages.StellarSCVal(
-            type=messages.StellarSCValType.SCV_LEDGER_KEY_NONCE,
-            nonce_key=val.nonce_key.nonce.int64,
-        )
     else:
         raise ValueError(f"Unsupported SCVal type: {val.type}")
 

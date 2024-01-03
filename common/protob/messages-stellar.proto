@@ -315,7 +315,7 @@ message StellarSCVal {
     repeated StellarSCVal vec = 17; // SCV_VEC
     repeated StellarSCValMapEntry map = 18; // SCV_MAP
     optional StellarSCAddress address = 19; // SCV_ADDRESS
-    optional sint64 nonce_key = 20; // SCV_LEDGER_KEY_NONCE
+    reserved 20; // SCV_LEDGER_KEY_NONCE, not supported yet
     reserved 21; // SCV_CONTRACT_INSTANCE, not supported yet
 
     message StellarUInt128Parts {

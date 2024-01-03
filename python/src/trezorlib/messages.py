@@ -7345,7 +7345,6 @@ class StellarSCVal(protobuf.MessageType):
         17: protobuf.Field("vec", "StellarSCVal", repeated=True, required=False, default=None),
         18: protobuf.Field("map", "StellarSCValMapEntry", repeated=True, required=False, default=None),
         19: protobuf.Field("address", "StellarSCAddress", repeated=False, required=False, default=None),
-        20: protobuf.Field("nonce_key", "sint64", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -7369,7 +7368,6 @@ class StellarSCVal(protobuf.MessageType):
         string: Optional["str"] = None,
         symbol: Optional["str"] = None,
         address: Optional["StellarSCAddress"] = None,
-        nonce_key: Optional["int"] = None,
     ) -> None:
         self.vec: Sequence["StellarSCVal"] = vec if vec is not None else []
         self.map: Sequence["StellarSCValMapEntry"] = map if map is not None else []
@@ -7389,7 +7387,6 @@ class StellarSCVal(protobuf.MessageType):
         self.string = string
         self.symbol = symbol
         self.address = address
-        self.nonce_key = nonce_key
 
 
 class StellarInvokeContractArgs(protobuf.MessageType):
