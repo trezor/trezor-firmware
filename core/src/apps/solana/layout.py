@@ -9,6 +9,7 @@ from trezor.ui.layouts import (
     confirm_solana_tx,
     confirm_value,
 )
+from trezortranslate import TR
 
 from apps.common.paths import address_n_to_str
 
@@ -34,9 +35,9 @@ def _format_path(path: list[int]) -> str:
 
 def _get_address_reference_props(address: AddressReference, display_name: str):
     return (
-        (f"{display_name} is provided via a lookup table.", ""),
-        ("Lookup table address:", base58.encode(address[0])),
-        ("Account index:", f"{address[1]}"),
+        (TR.solana__is_provided_via_lookup_table_template.format(display_name), ""),
+        (f"{TR.solana__lookup_table_address}:", base58.encode(address[0])),
+        (f"{TR.solana__account_index}:", f"{address[1]}"),
     )
 
 
@@ -100,7 +101,7 @@ async def confirm_instruction(
             if len(account_value) == 2:
                 signer_suffix = ""
                 if account_value[0] == signer_public_key:
-                    signer_suffix = " (Signer)"
+                    signer_suffix = f" ({TR.words__signer})"
 
                 account_data.append(
                     (
@@ -126,8 +127,8 @@ async def confirm_instruction(
     if instruction.multisig_signers:
         await confirm_metadata(
             "confirm_multisig",
-            "Confirm multisig",
-            "The following instruction is a multisig instruction.",
+            TR.solana__confirm_multisig,
+            TR.solana__instruction_is_multisig,
             br_code=ButtonRequestType.Other,
         )
 
@@ -140,7 +141,7 @@ async def confirm_instruction(
                 path_str = f" ({address_n_to_str(signer_path)})"
 
             signers.append(
-                (f"Signer {i}{path_str}:", base58.encode(multisig_signer[0]))
+                (f"{TR.words__signer} {i}{path_str}:", base58.encode(multisig_signer[0]))
             )
 
         await confirm_properties(
@@ -152,13 +153,13 @@ async def confirm_instruction(
 
 def get_address_type(address_type: AddressType) -> str:
     if address_type == AddressType.AddressSig:
-        return "(Writable, Signer)"
+        return f"({TR.words__writable}, {TR.words__signer})"
     if address_type == AddressType.AddressSigReadOnly:
-        return "(Signer)"
+        return f"({TR.words__signer})"
     if address_type == AddressType.AddressReadOnly:
         return ""
     if address_type == AddressType.AddressRw:
-        return "(Writable)"
+        return f"({TR.words__writable})"
     raise ValueError  # Invalid address type
 
 
@@ -176,18 +177,18 @@ async def confirm_unsupported_instruction_details(
         (
             (
                 NORMAL,
-                f"Instruction contains {len(instruction.accounts)} accounts and its data is {len(instruction.instruction_data)} bytes long.",
+                TR.solana__instruction_accounts_template.format(len(instruction.accounts), len(instruction.instruction_data)),
             ),
         ),
-        "Show details",
-        confirm="Continue",
+        TR.buttons__show_details,
+        confirm=TR.buttons__continue,
     )
 
     if should_show_instruction_details:
         await confirm_properties(
             "instruction_data",
             title,
-            (("Instruction data:", bytes(instruction.instruction_data)),),
+            ((f"{TR.solana__instruction_data}:", bytes(instruction.instruction_data)),),
         )
 
         accounts = []
@@ -202,14 +203,14 @@ async def confirm_unsupported_instruction_details(
 
                 accounts.append(
                     (
-                        f"Account {i}{path_str} {address_type}:",
+                        f"{TR.words__account} {i}{path_str} {address_type}:",
                         base58.encode(account_public_key),
                     )
                 )
             elif len(account) == 3:
                 address_type = get_address_type(account[2])
                 accounts += _get_address_reference_props(
-                    account, f"Account {i} {address_type}"
+                    account, f"{TR.words__account} {i} {address_type}"
                 )
             else:
                 raise ValueError  # Invalid account value
@@ -259,12 +260,12 @@ async def confirm_system_transfer(
     blockhash: bytes,
 ) -> None:
     await confirm_value(
-        title="Recipient",
+        title=TR.words__recipient,
         value=base58.encode(transfer_instruction.recipient_account[0]),
         description="",
         br_type="confirm_recipient",
         br_code=ButtonRequestType.ConfirmOutput,
-        verb="CONTINUE",
+        verb=TR.buttons__continue,
     )
 
     await confirm_custom_transaction(
@@ -288,24 +289,24 @@ async def confirm_token_transfer(
     blockhash: bytes,
 ):
     await confirm_value(
-        title="Recipient",
+        title=TR.words__recipient,
         value=base58.encode(destination_account),
         description="",
         br_type="confirm_recipient",
         br_code=ButtonRequestType.ConfirmOutput,
-        verb="CONTINUE",
-        info_items=(("Associated token account:", base58.encode(token_account)),)
+        verb=TR.buttons__continue,
+        info_items=((f"{TR.solana__associated_token_account}:", base58.encode(token_account)),)
         if token_account != destination_account
         else None,
     )
 
     await confirm_value(
-        title="Token address",
+        title=TR.solana__token_address,
         value=base58.encode(token_mint),
         description="",
         br_type="confirm_token_address",
         br_code=ButtonRequestType.ConfirmOutput,
-        verb="CONTINUE",
+        verb=TR.buttons__continue,
     )
 
     await confirm_custom_transaction(
@@ -329,10 +330,10 @@ async def confirm_custom_transaction(
     await confirm_solana_tx(
         amount=f"{format_amount(amount, decimals)} {unit}",
         fee=f"{format_amount(fee, 9)} SOL",
-        fee_title="Expected fee:",
+        fee_title=f"{TR.solana__expected_fee}:",
         items=(
-            ("Account:", _format_path(signer_path)),
-            ("Blockhash:", base58.encode(blockhash)),
+            (f"{TR.words__account}:", _format_path(signer_path)),
+            (f"{TR.words__blockhash}:", base58.encode(blockhash)),
         ),
     )
 
@@ -344,9 +345,9 @@ async def confirm_transaction(
         amount="",
         amount_title="",
         fee=f"{format_amount(fee, 9)} SOL",
-        fee_title="Expected fee:",
+        fee_title=f"{TR.solana__expected_fee}:",
         items=(
-            ("Account:", _format_path(signer_path)),
-            ("Blockhash:", base58.encode(blockhash)),
+            (f"{TR.words__account}:", _format_path(signer_path)),
+            (f"{TR.words__blockhash}:", base58.encode(blockhash)),
         ),
     )

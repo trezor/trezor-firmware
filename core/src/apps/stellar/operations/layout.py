@@ -86,7 +86,7 @@ async def confirm_create_account_op(op: StellarCreateAccountOp) -> None:
         "op_create_account",
         TR.stellar__create_account,
         (
-            (TR.stellar__account, op.new_account),
+            (TR.words__account, op.new_account),
             (TR.stellar__initial_balance, format_amount(op.starting_balance)),
         ),
     )
@@ -281,7 +281,7 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
             title = TR.stellar__remove_signer
         data: str | bytes = ""
         if signer_type == StellarSignerType.ACCOUNT:
-            description = f"{TR.stellar__account}:"
+            description = f"{TR.words__account}:"
             data = helpers.address_from_public_key(signer_key)
         elif signer_type == StellarSignerType.PRE_AUTH:
             description = TR.stellar__preauth_transaction
@@ -306,8 +306,8 @@ async def confirm_claim_claimable_balance_op(
     balance_id = hexlify(op.balance_id).decode()
     await confirm_metadata(
         "op_claim_claimable_balance",
-        "Claim Claimable Balance",
-        "Balance ID: {}",
+        TR.stellar__claim_claimable_balance,
+        TR.stellar__balance_id + ": {}",
         balance_id,
     )
 

@@ -113,6 +113,7 @@
       "access": "PŘÍSTUP",
       "again": "ZNOVU",
       "allow": "DOVOLIT",
+      "back": "ZADNÍ",
       "back_up": "ZÁLOHOVAT",
       "cancel": "ZRUŠIT",
       "change": "ZMĚNIT",
@@ -140,6 +141,7 @@
       "select": "VYBRAT",
       "set": "NASTAVIT",
       "show_all": "UKÁZAT VŠE",
+      "show_details": "UKÁZAT DETAILY",
       "show_words": "UKÁZAT SLOVA",
       "skip": "PŘESKOČIT",
       "try_again": "ZKUSIT ZNOVU",
@@ -791,8 +793,22 @@
       "message_size": "Velikost zprávy:",
       "verify_address": "Ověřte adresu"
     },
+    "solana": {
+      "account_index": "Index účtu",
+      "associated_token_account": "Přidružený účet tokenů",
+      "confirm_multisig": "Potvrďte multisig",
+      "expected_fee": "Očekávaný poplatek",
+      "instruction_accounts_template": "Instrukce obsahuje {} účty a její data jsou {} bajty dlouhé.",
+      "instruction_data": "Instruktážní data",
+      "instruction_is_multisig": "Následující instrukce je instrukce multisig.",
+      "is_provided_via_lookup_table_template": "{} je poskytován prostřednictvím vyhledávací tabulky.",
+      "lookup_table_address": "Adresa tabulky vyhledávání",
+      "multiple_signers": "Více signatářů",
+      "token_address": "Adresa tokenů",
+      "transaction_contains_unknown_instructions": "Transakce obsahuje neznámé pokyny.",
+      "transaction_requires_x_signers_template": "Transakce vyžaduje {} signatáři, který zvyšuje poplatek."
+    },
     "stellar": {
-      "account": "Účet",
       "account_merge": "Sloučení účtů",
       "account_thresholds": "Práhové hodnoty účtu",
       "add_signer": "Přidat podepisovatele",
@@ -924,8 +940,10 @@
       "title": "POČET SLOV"
     },
     "words": {
+      "account": "Účet",
       "are_you_sure": "Jste si jisti?",
       "array_of": "Pole o",
+      "blockhash": "Blockhash",
       "buying": "Koupit",
       "confirm": "Potvrdit",
       "contains": "Obsahuje",
@@ -940,7 +958,9 @@
       "please_check_again": "Zkontrolujte to prosím znovu",
       "please_try_again": "Zkuste to prosím znovu",
       "really_wanna": "Opravdu chcete",
+      "recipient": "Příjemce",
       "sign": "Podepsat",
+      "signer": "Signer",
       "title_check": "KONTROLA",
       "title_group": "SKUPINA",
       "title_information": "INFORMACE",
@@ -951,7 +971,8 @@
       "title_summary": "SHRNUTÍ",
       "title_threshold": "PRÁH",
       "unknown": "Neznámý",
-      "warning": "Varování"
+      "warning": "Varování",
+      "writable": "Zapisovatelný"
     }
   }
 }

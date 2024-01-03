@@ -113,6 +113,7 @@
       "access": "ACCÉDER",
       "again": "ENCORE",
       "allow": "PERMETTRE",
+      "back": "DOS",
       "back_up": "SAUVEGARDE",
       "cancel": "ANNULER",
       "change": "CHANGEMENT",
@@ -140,6 +141,7 @@
       "select": "SÉLECTIONNER",
       "set": "ENSEMBLE",
       "show_all": "AFFICHER TOUT",
+      "show_details": "AFFICHER LES DÉTAILS",
       "show_words": "MONTRER DES MOTS",
       "skip": "SAUTER",
       "try_again": "ESSAYER À NOUVEAU",
@@ -791,8 +793,22 @@
       "message_size": "Taille du message:",
       "verify_address": "Vérifier l'adresse"
     },
+    "solana": {
+      "account_index": "Indice du compte",
+      "associated_token_account": "Compte de jeton associé",
+      "confirm_multisig": "Confirmer Multisig",
+      "expected_fee": "Frais attendus",
+      "instruction_accounts_template": "L'instruction contient des comptes {} et ses données sont {} octets longs.",
+      "instruction_data": "Données d'instructions",
+      "instruction_is_multisig": "L'instruction suivante est une instruction multisig.",
+      "is_provided_via_lookup_table_template": "{} est fourni via une table de recherche.",
+      "lookup_table_address": "Adresse de table de recherche",
+      "multiple_signers": "Signataires multiples",
+      "token_address": "Adresse de jeton",
+      "transaction_contains_unknown_instructions": "La transaction contient des instructions inconnues.",
+      "transaction_requires_x_signers_template": "La transaction nécessite des signataires {} qui augmentent les frais."
+    },
     "stellar": {
-      "account": "Compte",
       "account_merge": "Fusion du compte",
       "account_thresholds": "Seuils de compte",
       "add_signer": "Ajouter le signataire",
@@ -924,8 +940,10 @@
       "title": "NOMBRE DE MOTS"
     },
     "words": {
+      "account": "Compte",
       "are_you_sure": "Es-tu sûr?",
       "array_of": "Tableau de",
+      "blockhash": "Blockhash",
       "buying": "Achat",
       "confirm": "Confirmer",
       "contains": "contient",
@@ -940,7 +958,9 @@
       "please_check_again": "Veuillez vérifier à nouveau",
       "please_try_again": "Veuillez réessayer",
       "really_wanna": "Voulez-vous vraiment",
+      "recipient": "Destinataire",
       "sign": "Signe",
+      "signer": "Signataire",
       "title_check": "VÉRIFIER",
       "title_group": "GROUPE",
       "title_information": "INFORMATION",
@@ -951,7 +971,8 @@
       "title_summary": "RÉSUMÉ",
       "title_threshold": "SEUIL",
       "unknown": "Inconnu",
-      "warning": "Avertissement"
+      "warning": "Avertissement",
+      "writable": "Scrutin"
     }
   }
 }

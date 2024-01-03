@@ -988,8 +988,8 @@ async def confirm_value(
                 trezorui2.confirm_with_info(
                     title=title.upper(),
                     items=((ui.NORMAL, value),),
-                    button="CONFIRM",
-                    info_button="INFO",
+                    button=TR.buttons__confirm,
+                    info_button=TR.buttons__info,
                 )
             )
 
@@ -1013,7 +1013,7 @@ async def confirm_value(
                             title=info_title.upper(),
                             action=info_value,
                             description=description,
-                            verb="BACK",
+                            verb=TR.buttons__back,
                             verb_cancel="<",
                             hold=False,
                             reverse=False,
@@ -1061,11 +1061,13 @@ async def confirm_solana_tx(
     amount: str,
     fee: str,
     items: Iterable[tuple[str, str]],
-    amount_title="Amount:",
-    fee_title="Fee",
+    amount_title: str | None = None,
+    fee_title: str | None = None,
     br_type: str = "confirm_solana_tx",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ):
+    amount_title = amount_title or f"{TR.words__amount}:"  # def_arg
+    fee_title = fee_title or TR.words__fee  # def_arg
     await raise_if_not_confirmed(
         interact(
             RustLayout(
@@ -1095,9 +1097,9 @@ async def confirm_ethereum_tx(
 ) -> None:
     summary_layout = RustLayout(
         trezorui2.altcoin_tx_summary(
-            amount_title="Amount:",
+            amount_title=f"{TR.words__amount}:",
             amount_value=total_amount,
-            fee_title="Maximum fee:",
+            fee_title=TR.send__maximum_fee,
             fee_value=maximum_fee,
             items=items,
         )
@@ -1107,9 +1109,9 @@ async def confirm_ethereum_tx(
         # Allowing going back and forth between recipient and summary/details
         await confirm_blob(
             br_type,
-            "RECIPIENT",
+            TR.words__recipient,
             recipient,
-            verb="CONTINUE",
+            verb=TR.buttons__continue,
             chunkify=chunkify,
         )
 
@@ -1178,11 +1180,11 @@ async def confirm_modify_output(
 ) -> None:
     address_layout = RustLayout(
         trezorui2.confirm_blob(
-            title="MODIFY AMOUNT",
+            title=TR.modify_amount__title,
             data=address,
-            verb="CONTINUE",
+            verb=TR.buttons__continue,
             verb_cancel=None,
-            description="Address:",
+            description=TR.address__address,
             extra=None,
         )
     )

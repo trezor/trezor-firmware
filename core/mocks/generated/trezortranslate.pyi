@@ -83,6 +83,7 @@ class TR:
     buttons__access: str
     buttons__again: str
     buttons__allow: str
+    buttons__back: str
     buttons__back_up: str
     buttons__cancel: str
     buttons__change: str
@@ -110,6 +111,7 @@ class TR:
     buttons__select: str
     buttons__set: str
     buttons__show_all: str
+    buttons__show_details: str
     buttons__show_words: str
     buttons__skip: str
     buttons__try_again: str
@@ -692,7 +694,19 @@ class TR:
     sign_message__confirm_message: str
     sign_message__message_size: str
     sign_message__verify_address: str
-    stellar__account: str
+    solana__account_index: str
+    solana__associated_token_account: str
+    solana__confirm_multisig: str
+    solana__expected_fee: str
+    solana__instruction_accounts_template: str
+    solana__instruction_data: str
+    solana__instruction_is_multisig: str
+    solana__is_provided_via_lookup_table_template: str
+    solana__lookup_table_address: str
+    solana__multiple_signers: str
+    solana__token_address: str
+    solana__transaction_contains_unknown_instructions: str
+    solana__transaction_requires_x_signers_template: str
     stellar__account_merge: str
     stellar__account_thresholds: str
     stellar__add_signer: str
@@ -700,8 +714,10 @@ class TR:
     stellar__all_will_be_sent_to: str
     stellar__allow_trust: str
     stellar__asset: str
+    stellar__balance_id: str
     stellar__bump_sequence: str
     stellar__buying: str
+    stellar__claim_claimable_balance: str
     stellar__clear_data: str
     stellar__clear_flags: str
     stellar__confirm_issuer: str
@@ -810,14 +826,17 @@ class TR:
     wipe_code__turn_on: str
     wipe_code__wipe_code_mismatch: str
     word_count__title: str
+    words__account: str
     words__are_you_sure: str
     words__array_of: str
+    words__blockhash: str
     words__buying: str
     words__confirm: str
     words__contains: str
     words__continue_anyway: str
     words__continue_with: str
     words__error: str
+    words__fee: str
     words__from: str
     words__keep_it_safe: str
     words__know_what_your_doing: str
@@ -826,7 +845,9 @@ class TR:
     words__please_check_again: str
     words__please_try_again: str
     words__really_wanna: str
+    words__recipient: str
     words__sign: str
+    words__signer: str
     words__title_check: str
     words__title_group: str
     words__title_information: str
@@ -838,3 +859,4 @@ class TR:
     words__title_threshold: str
     words__unknown: str
     words__warning: str
+    words__writable: str

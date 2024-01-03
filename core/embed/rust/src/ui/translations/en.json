@@ -95,6 +95,7 @@
       "access": "ACCESS",
       "again": "AGAIN",
       "allow": "ALLOW",
+      "back": "BACK",
       "back_up": "BACK UP",
       "cancel": "CANCEL",
       "change": "CHANGE",
@@ -122,6 +123,7 @@
       "select": "SELECT",
       "set": "SET",
       "show_all": "SHOW ALL",
+      "show_details": "SHOW DETAILS",
       "show_words": "SHOW WORDS",
       "skip": "SKIP",
       "try_again": "TRY AGAIN",
@@ -773,8 +775,22 @@
       "message_size": "Message size:",
       "verify_address": "VERIFY ADDRESS"
     },
+    "solana": {
+      "account_index": "Account index",
+      "associated_token_account": "Associated token account",
+      "confirm_multisig": "Confirm multisig",
+      "expected_fee": "Expected fee",
+      "instruction_accounts_template": "Instruction contains {} accounts and its data is {} bytes long.",
+      "instruction_data": "Instruction data",
+      "instruction_is_multisig": "The following instruction is a multisig instruction.",
+      "is_provided_via_lookup_table_template": "{} is provided via a lookup table.",
+      "lookup_table_address": "Lookup table address",
+      "multiple_signers": "Multiple signers",
+      "token_address": "Token address",
+      "transaction_contains_unknown_instructions": "Transaction contains unknown instructions.",
+      "transaction_requires_x_signers_template": "Transaction requires {} signers which increases the fee."
+    },
     "stellar": {
-      "account": "Account",
       "account_merge": "Account Merge",
       "account_thresholds": "Account Thresholds",
       "add_signer": "Add Signer",
@@ -782,8 +798,10 @@
       "all_will_be_sent_to": "All XLM will be sent to:",
       "allow_trust": "Allow trust",
       "asset": "Asset",
+      "balance_id": "Balance ID",
       "bump_sequence": "Bump Sequence",
       "buying": "Buying:",
+      "claim_claimable_balance": "Claim Claimable Balance",
       "clear_data": "Clear data",
       "clear_flags": "Clear flags",
       "confirm_issuer": "Confirm Issuer",
@@ -906,14 +924,17 @@
       "title": "NUMBER OF WORDS"
     },
     "words": {
+      "account": "Account",
       "are_you_sure": "Are you sure?",
       "array_of": "Array of",
+      "blockhash": "Blockhash",
       "buying": "Buying",
       "confirm": "Confirm",
       "contains": "Contains",
       "continue_anyway": "Continue anyway?",
       "continue_with": "Continue with",
       "error": "Error",
+      "fee": "Fee",
       "from": "from",
       "keep_it_safe": "Keep it safe!",
       "know_what_your_doing": "Continue only if you know what you are doing!",
@@ -922,7 +943,9 @@
       "please_check_again": "Please check again",
       "please_try_again": "Please try again",
       "really_wanna": "Do you really want to",
+      "recipient": "Recipient",
       "sign": "Sign",
+      "signer": "Signer",
       "title_check": "CHECK",
       "title_group": "GROUP",
       "title_information": "INFORMATION",
@@ -933,7 +956,8 @@
       "title_summary": "SUMMARY",
       "title_threshold": "THRESHOLD",
       "unknown": "Unknown",
-      "warning": "Warning"
+      "warning": "Warning",
+      "writable": "Writable"
     }
   }
 }
