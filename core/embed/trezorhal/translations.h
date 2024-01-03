@@ -1,6 +1,4 @@
-
 #include <stdint.h>
-#include "secbool.h"
 
 void translations_write(uint8_t* data, uint32_t offset, uint32_t len);
 

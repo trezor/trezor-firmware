@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <string.h>
 
 #include "py/mphal.h"
@@ -340,7 +339,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_translations_set_obj,
 
 /// def translations_wipe() -> None:
 ///     """
-///     Wipe all the translations data before writing a new one
+///     Wipe all the translations data before writing a new one.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_translations_wipe(void) {
   translations_erase();
@@ -351,7 +350,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_translations_wipe_obj,
 
 /// def translations_max_bytesize() -> int:
 ///     """
-///     How much is the maximum bytesize of translations data
+///     How much is the maximum bytesize of translations data.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_translations_max_bytesize(void) {
   uint32_t count = translations_area_bytesize();

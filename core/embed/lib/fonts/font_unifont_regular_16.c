@@ -104,7 +104,7 @@
 /* { */ static const uint8_t Font_Unifont_Regular_16_glyph_123[] = { 4, 13, 7, 1, 11, 52, 66, 36, 132, 34, 68, 48 };
 /* | */ static const uint8_t Font_Unifont_Regular_16_glyph_124[] = { 1, 14, 7, 3, 12, 255, 252 };
 /* } */ static const uint8_t Font_Unifont_Regular_16_glyph_125[] = { 4, 13, 7, 1, 11, 194, 36, 66, 18, 68, 34, 192 };
-/* ~ */ static const uint8_t Font_Unifont_Regular_16_glyph_126[] = { 7, 3, 7, 0, 11, 99, 38, 48 };
+/* ~ */ static const uint8_t Font_Unifont_Regular_16_glyph_126[] = { 7, 3, 8, 0, 11, 99, 38, 48 };  // < --- advanced changed from 7 to 8
 
 /* ? */ const uint8_t Font_Unifont_Regular_16_glyph_nonprintable[] = { 6, 10, 7, 0, 10, 133, 231, 190, 247, 190, 255, 239, 191 };
 

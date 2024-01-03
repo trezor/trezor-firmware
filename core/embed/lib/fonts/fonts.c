@@ -19,7 +19,7 @@
 
 #include "fonts.h"
 #include <stdbool.h>
-#include <stdio.h>
+#include <stddef.h>
 #ifdef TRANSLATIONS
 #include "librust_fonts.h"
 #endif
@@ -139,8 +139,8 @@ int font_baseline(int font) {
 
 const uint8_t *font_get_glyph(int font, uint8_t c) {
   uint16_t c_2bytes = convert_char_utf8(c);
-  bool is_printable = c_2bytes != 0x7F;
   if (!c_2bytes) return 0;
+  bool is_printable = c_2bytes != 0x7F;
 
 #ifdef TRANSLATIONS
   // found UTF8 character
@@ -148,6 +148,8 @@ const uint8_t *font_get_glyph(int font, uint8_t c) {
   // embedded blob
   if (c_2bytes > 0xFF) {
     PointerData glyph_data = get_utf8_glyph(c_2bytes, font);
+    // TODO: is it better to use (!glyph_data.ptr) or (glyph_data.ptr == NULL)?
+    // first one does not require import
     if (glyph_data.ptr != NULL) {
       return glyph_data.ptr;
     } else {

@@ -181,7 +181,7 @@ message ApplySettings {
 }
 
 /**
- * Request: change the device language via translation data
+ * Request: change the device language via translation data.
  * Does not send the translation data itself, as they are too large for one message.
  * Device will request the translation data in chunks.
  * @start
@@ -189,7 +189,7 @@ message ApplySettings {
  * @next Failure
  */
 message ChangeLanguage {
-    required uint32 data_length = 1;   // byte length of the whole translation blob (set to 0 for default language)
+    required uint32 data_length = 1;   // byte length of the whole translation blob (set to 0 for default language - english)
 }
 
 /**
@@ -198,7 +198,7 @@ message ChangeLanguage {
  * @next TranslationDataAck
  */
  message TranslationDataRequest {
-    required uint32 data_length = 1;    // Number of bytes being requested (<= 1024)
+    required uint32 data_length = 1;    // Number of bytes being requested
     required uint32 data_offset = 2;    // Offset of the first byte being requested
 }
 
@@ -208,7 +208,7 @@ message ChangeLanguage {
  * @next Success
  */
 message TranslationDataAck {
-    required bytes data_chunk = 1;  // Bytes from translation payload (<= 1024 bytes)
+    required bytes data_chunk = 1;  // Bytes from translation payload
 }
 
 /**

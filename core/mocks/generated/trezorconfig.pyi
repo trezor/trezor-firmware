@@ -118,14 +118,14 @@ def translations_set(blob: bytes, offset: int) -> None:
 # extmod/modtrezorconfig/modtrezorconfig.c
 def translations_wipe() -> None:
     """
-    Wipe all the translations data before writing a new one
+    Wipe all the translations data before writing a new one.
     """
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
 def translations_max_bytesize() -> int:
     """
-    How much is the maximum bytesize of translations data
+    How much is the maximum bytesize of translations data.
     """
 
 
