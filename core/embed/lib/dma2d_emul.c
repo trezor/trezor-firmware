@@ -127,6 +127,55 @@ void dma2d_start_multiline(uint8_t* in_addr, uint8_t* out_addr, int32_t width,
   }
 }
 
+void dma2d_start_blend_multiline(uint8_t* overlay_addr, uint8_t* bg_addr,
+                       uint8_t* out_addr, int32_t width, int32_t height) {
+  if ((mode == DMA2D_MODE_4BPP_OVER_4BPP ||
+       mode == DMA2D_MODE_4BPP_OVER_16BPP) &&
+          width % 2 != 0) {
+    return;
+  }
+
+  (void)out_addr;
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x += 2) {
+      if (mode == DMA2D_MODE_4BPP_OVER_4BPP) {
+        uint32_t i = y * (width + fg_offset) + x;
+        uint8_t c = overlay_addr[i / 2];
+        uint8_t b = bg_addr[i / 2];
+
+        uint8_t odd_overlay_pix = c & 0xF;
+        uint8_t odd_bg_pix = b & 0xF;
+        uint16_t c_odd_bg = clut_bg[odd_bg_pix];
+        uint16_t final_odd_color =
+                interpolate_color(dma2d_color, c_odd_bg, odd_overlay_pix);
+        PIXELDATA(final_odd_color);
+
+        uint8_t even_overlay_pix = c >> 4;
+        uint8_t even_bg_pix = b >> 4;
+        uint16_t c_even_bg = clut_bg[even_bg_pix];
+        uint16_t final_even_color =
+                interpolate_color(dma2d_color, c_even_bg, even_overlay_pix);
+        PIXELDATA(final_even_color);
+
+        i++;  // wrote two pixels
+      }
+      if (mode == DMA2D_MODE_4BPP_OVER_16BPP) {
+        uint32_t i = y * (width + fg_offset) + x;
+        uint16_t c = ((uint16_t *) bg_addr)[i];
+        uint8_t o = overlay_addr[i / 2];
+        uint8_t o_pix;
+        if (i % 2 == 0) {
+          o_pix = o & 0xF;
+        } else {
+          o_pix = o >> 4;
+        }
+        uint16_t final_odd_color = interpolate_color(dma2d_color, c, o_pix);
+        PIXELDATA(final_odd_color);
+      }
+    }
+  }
+}
+
 void dma2d_start_const(uint16_t color, uint8_t* out_addr, int32_t pixels) {
   (void)out_addr;
   for (int i = 0; i < pixels; i++) {
