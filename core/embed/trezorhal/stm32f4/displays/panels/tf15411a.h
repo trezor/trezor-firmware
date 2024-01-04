@@ -4,6 +4,6 @@
 // GC9307 IC controller
 
 void tf15411a_init_seq(void);
-void tf15411a_rotate(int degrees, buffer_offset_t* offset);
+void tf15411a_rotate(int degrees, display_padding_t* offset);
 
 #endif

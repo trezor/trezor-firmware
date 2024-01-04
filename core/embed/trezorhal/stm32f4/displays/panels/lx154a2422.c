@@ -83,7 +83,7 @@ void lx154a2422_init_seq(void) {
   lx154a2422_gamma();
 }
 
-void lx154a2422_rotate(int degrees, buffer_offset_t* offset) {
+void lx154a2422_rotate(int degrees, display_padding_t* offset) {
   uint16_t shift = 0;
   char BX = 0, BY = 0;
 

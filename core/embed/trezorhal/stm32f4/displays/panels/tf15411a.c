@@ -93,7 +93,7 @@ void tf15411a_init_seq(void) {
   DATA(0x8F);
 }
 
-void tf15411a_rotate(int degrees, buffer_offset_t* offset) {
+void tf15411a_rotate(int degrees, display_padding_t* offset) {
   uint16_t shift = 0;
   char BX = 0, BY = 0;
 

@@ -61,6 +61,12 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
                                 (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN));
 
 
+
+static uint32_t g_display_window_x0 = 0;
+static uint32_t g_display_window_y0 = 0;
+static uint32_t g_display_window_x1 = DISPLAY_RESX - 1;
+static uint32_t g_display_window_y1 = DISPLAY_RESY - 1;
+
 #ifdef FRAMEBUFFER
 #ifndef STM32U5
 #error Framebuffer only supported on STM32U5 for now
@@ -78,10 +84,6 @@ ALIGN_32BYTES(static uint16_t PhysFrameBuffer1[DISPLAY_RESX * DISPLAY_RESY]);
 __attribute__((
     section(".framebuffer_select"))) static uint32_t act_frame_buffer = 0;
 
-static uint16_t window_x0 = 0;
-static uint16_t window_y0 = 0;
-static uint16_t window_x1 = 0;
-static uint16_t window_y1 = 0;
 static uint16_t cursor_x = 0;
 static uint16_t cursor_y = 0;
 
@@ -93,10 +95,6 @@ void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
 
 #else
 
-static uint32_t g_display_window_x0 = 0;
-static uint32_t g_display_window_y0 = 0;
-static uint32_t g_display_window_x1 = DISPLAY_RESX - 1;
-static uint32_t g_display_window_y1 = DISPLAY_RESY - 1;
 #define DATA_TRANSFER(X) PIXELDATA(X)
 #endif
 
@@ -201,7 +199,7 @@ static void display_unsleep(void) {
   }
 }
 
-void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+void panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   x0 += DISPLAY_PADDING.x;
   x1 += DISPLAY_PADDING.x;
   y0 += DISPLAY_PADDING.y;
@@ -251,7 +249,7 @@ int display_orientation(int degrees) {
         lx154a2422_rotate(degrees, &BUFFER_OFFSET);
       }
 #else
-      DISPLAY_PANEL_ROTATE(degrees, &BUFFER_OFFSET);
+      DISPLAY_PANEL_ROTATE(degrees, &DISPLAY_PADDING);
 #endif
       panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     }
@@ -555,12 +553,12 @@ void display_pixeldata(uint16_t c) {
   *address = c;
 
   cursor_x++;
-  if (cursor_x > window_x1) {
-    cursor_x = window_x0;
+  if (cursor_x > g_display_window_x1) {
+    cursor_x = g_display_window_x0;
     cursor_y++;
   }
-  if (cursor_y > window_y1) {
-    cursor_y = window_y0;
+  if (cursor_y > g_display_window_y1) {
+    cursor_y = g_display_window_y0;
   }
 }
 
@@ -673,10 +671,10 @@ void display_refresh(void) {
 }
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
-  window_x0 = x0;
-  window_y0 = y0;
-  window_x1 = x1;
-  window_y1 = y1;
+  g_display_window_x0 = x0;
+  g_display_window_y0 = y0;
+  g_display_window_x1 = x1;
+  g_display_window_y1 = y1;
   cursor_x = x0;
   cursor_y = y0;
 }
@@ -707,15 +705,15 @@ uint32_t *display_get_fb_addr(void) {
 
   return (uint32_t *)address;
 }
-uint16_t display_get_window_width(void) { return window_x1 - window_x0 + 1; }
+uint16_t display_get_window_width(void) { return g_display_window_x1 - g_display_window_x0 + 1; }
 
-uint16_t display_get_window_height(void) { return window_y1 - window_y0 + 1; }
+uint16_t display_get_window_height(void) { return g_display_window_y1 - g_display_window_y0 + 1; }
 
 void display_shift_window(uint16_t pixels) {
   uint16_t w = display_get_window_width();
   uint16_t h = display_get_window_height();
 
-  uint16_t line_rem = w - (cursor_x - window_x0);
+  uint16_t line_rem = w - (cursor_x - g_display_window_x0);
 
   if (pixels < line_rem) {
     cursor_x += pixels;
@@ -724,11 +722,11 @@ void display_shift_window(uint16_t pixels) {
 
   // start of next line
   pixels = pixels - line_rem;
-  cursor_x = window_x0;
+  cursor_x = g_display_window_x0;
   cursor_y++;
 
   // add the rest of pixels
-  cursor_y = window_y0 + (((cursor_y - window_y0) + (pixels / w)) % h);
+  cursor_y = g_display_window_y0 + (((cursor_y - g_display_window_y0) + (pixels / w)) % h);
   cursor_x += pixels % w;
 }
 

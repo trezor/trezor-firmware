@@ -6,7 +6,7 @@
 typedef struct {
   uint16_t x;
   uint16_t y;
-} buffer_offset_t;
+} display_padding_t;
 
 #include TREZOR_BOARD
 
