@@ -7,6 +7,8 @@
 #define VDD_1V8 1
 #define HSE_16MHZ 1
 
+#define FRAMEBUFFER 1
+
 #define USE_SD_CARD 1
 #define USE_I2C 1
 #define USE_TOUCH 1
