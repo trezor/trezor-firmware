@@ -57,7 +57,7 @@
  * Input         : Register Address, length of buffer
  * Output        : pdata Read
  *******************************************************************************/
-int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uin
+int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
   return i2c_mem_read(TOUCH_I2C_INSTANCE, TS_I2C_ADDRESS, reg, length, pdata,
                       length, 1000);
 }
