@@ -1,17 +1,12 @@
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Label, Pad},
-    constant::screen,
-    display::Icon,
-    geometry::{Alignment, Insets, Point, Rect},
-    model_tt::{
-        component::{Button, ButtonMsg::Clicked},
-        constant::WIDTH,
-        theme::bootloader::{
-            button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
-            CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
-        },
+use crate::ui::{component::{Child, Component, Event, EventCtx, Label, Pad}, constant::screen, display, display::Icon, geometry::{Alignment, Insets, Point, Rect}, model_tt::{
+    component::{Button, ButtonMsg::Clicked},
+    constant::WIDTH,
+    theme::bootloader::{
+        button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
+        CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
     },
-};
+}};
+use crate::ui::model_tt::theme::WHITE;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]
@@ -95,11 +90,62 @@ impl<'a> Component for Intro<'a> {
 
     fn paint(&mut self) {
         self.bg.paint();
-        self.title.paint();
-        self.text.paint();
-        self.warn.paint();
-        self.host.paint();
-        self.menu.paint();
+        display::text_left(
+            Point::new(10, 20),
+            "T. W. LEWIS",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 40),
+            "T. W. LEWIS",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 60),
+            "BRAVO",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 80),
+            "BRAVO",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 100),
+            "B//////O",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 120),
+            "B//////O",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 140),
+            "Tech Talk",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 160),
+            "Tech Talk",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
     }
 
     #[cfg(feature = "ui_bounds")]

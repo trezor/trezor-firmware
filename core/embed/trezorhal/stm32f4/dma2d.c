@@ -149,6 +149,15 @@ void dma2d_start_multiline(uint8_t* in_addr, uint8_t* out_addr, int32_t width,
                   height);
 }
 
+void dma2d_start_multiline_blend(uint8_t* overlay_addr, uint8_t* bg_addr, uint8_t* out_addr, int32_t width,
+                           int32_t height) {
+  current_width = width;
+  current_height = height;
+
+  HAL_DMA2D_BlendingStart(&dma2d_handle, (uint32_t)overlay_addr,
+                          (uint32_t)bg_addr, (uint32_t)out_addr, width, height);
+}
+
 void dma2d_start_const(uint16_t color, uint8_t* out_addr, int32_t pixels) {
   current_width = pixels;
   current_height = 1;

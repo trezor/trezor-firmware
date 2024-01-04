@@ -114,6 +114,7 @@
 #define FONT_MAX_HEIGHT FONT_MAX_HEIGHT_5
 #endif
 
+int8_t font_get_kerning(int font, uint8_t c1, uint8_t c2);
 int font_height(int font);
 int font_max_height(int font);
 int font_baseline(int font);

@@ -92,6 +92,10 @@ def process_face(
     font_ymin = 0
     font_ymax = 0
 
+
+
+    kern_count = 0
+
     with open(OUT_DIR /  f"font_{fontname}.c", "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("// clang-format off\n\n")
@@ -203,6 +207,22 @@ def process_face(
             f.write("    Font_%s_%s_%d_glyph_%d,\n" % (name, style, size, i))
         f.write("};\n")
 
+        for a in range(MIN_GLYPH, MAX_GLYPH + 1):
+            for b in range(MIN_GLYPH, MAX_GLYPH + 1):
+                k = face.get_kerning(a, b, freetype.FT_KERNING_DEFAULT)
+                if k.x // 64 != 0:
+                    f.write(
+                        f"\nconst int8_t kern_pair_{kern_count}[3] = {{{a}, {b}, {k.x // 64}}};"
+                    )
+                    kern_count += 1
+
+        f.write(f"\n\nconst int8_t * kern_pairs[] = {{\n")
+        for j in range(kern_count):
+            f.write(f"    kern_pair_{j},\n")
+        f.write("};\n")
+
+
+
     with open(OUT_DIR / f"font_{fontname}.h", "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
@@ -215,6 +235,7 @@ def process_face(
             % (name, style, size, font_ymax - font_ymin)
         )
         f.write("#define Font_%s_%s_%d_BASELINE %d\n" % (name, style, size, -font_ymin))
+        f.write("#define Font_%s_%s_%d_KERN_PAIRS %d\n" % (name, style, size, kern_count))
         f.write(
             "extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n"
             % (name, style, size, MAX_GLYPH, MIN_GLYPH)
@@ -223,20 +244,27 @@ def process_face(
             "extern const uint8_t Font_%s_%s_%d_glyph_nonprintable[];\n"
             % (name, style, size)
         )
+        f.write(
+            f"extern const int8_t * kern_pairs[{kern_count}];\n"
+        )
 
 
-process_face("Roboto", "Regular", 20)
-process_face("Roboto", "Bold", 20)
+
+
+
+
+# process_face("Roboto", "Regular", 20)
+# process_face("Roboto", "Bold", 20)
 
 process_face("TTHoves", "Regular", 21, ext="otf")
-process_face("TTHoves", "DemiBold", 21, ext="otf")
-process_face("TTHoves", "Bold", 17, ext="otf")
-process_face("RobotoMono", "Medium", 20)
-
-process_face("PixelOperator", "Regular", 8, bpp=1, shaveX=1)
-process_face("PixelOperator", "Bold", 8, bpp=1, shaveX=1)
-process_face("PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1)
-
-# For model R
-process_face("Unifont", "Regular", 16, bpp=1, shaveX=1, ext="otf")
-process_face("Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf")
+# process_face("TTHoves", "DemiBold", 21, ext="otf")
+# process_face("TTHoves", "Bold", 17, ext="otf")
+# process_face("RobotoMono", "Medium", 20)
+#
+# process_face("PixelOperator", "Regular", 8, bpp=1, shaveX=1)
+# process_face("PixelOperator", "Bold", 8, bpp=1, shaveX=1)
+# process_face("PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1)
+#
+# # For model R
+# process_face("Unifont", "Regular", 16, bpp=1, shaveX=1, ext="otf")
+# process_face("Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf")

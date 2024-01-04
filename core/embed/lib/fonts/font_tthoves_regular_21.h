@@ -6,5 +6,7 @@
 #define Font_TTHoves_Regular_21_HEIGHT 21
 #define Font_TTHoves_Regular_21_MAX_HEIGHT 21
 #define Font_TTHoves_Regular_21_BASELINE 4
+#define Font_TTHoves_Regular_21_KERN_PAIRS 173
 extern const uint8_t* const Font_TTHoves_Regular_21[126 + 1 - 32];
 extern const uint8_t Font_TTHoves_Regular_21_glyph_nonprintable[];
+extern const int8_t * kern_pairs[173];

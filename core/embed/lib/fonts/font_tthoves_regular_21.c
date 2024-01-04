@@ -201,3 +201,353 @@ const uint8_t * const Font_TTHoves_Regular_21[126 + 1 - 32] = {
     Font_TTHoves_Regular_21_glyph_125,
     Font_TTHoves_Regular_21_glyph_126,
 };
+
+const int8_t kern_pair_0[3] = {32, 84, -1};
+const int8_t kern_pair_1[3] = {32, 86, -1};
+const int8_t kern_pair_2[3] = {32, 87, -1};
+const int8_t kern_pair_3[3] = {32, 89, -1};
+const int8_t kern_pair_4[3] = {32, 118, -1};
+const int8_t kern_pair_5[3] = {32, 119, -1};
+const int8_t kern_pair_6[3] = {32, 121, -1};
+const int8_t kern_pair_7[3] = {34, 52, -1};
+const int8_t kern_pair_8[3] = {34, 54, -1};
+const int8_t kern_pair_9[3] = {34, 65, -1};
+const int8_t kern_pair_10[3] = {34, 74, -2};
+const int8_t kern_pair_11[3] = {45, 49, -1};
+const int8_t kern_pair_12[3] = {45, 55, -1};
+const int8_t kern_pair_13[3] = {45, 74, -1};
+const int8_t kern_pair_14[3] = {45, 84, -1};
+const int8_t kern_pair_15[3] = {45, 88, -1};
+const int8_t kern_pair_16[3] = {45, 89, -1};
+const int8_t kern_pair_17[3] = {45, 90, -1};
+const int8_t kern_pair_18[3] = {46, 49, -1};
+const int8_t kern_pair_19[3] = {46, 55, -1};
+const int8_t kern_pair_20[3] = {46, 84, -1};
+const int8_t kern_pair_21[3] = {46, 86, -1};
+const int8_t kern_pair_22[3] = {46, 87, -1};
+const int8_t kern_pair_23[3] = {46, 89, -1};
+const int8_t kern_pair_24[3] = {46, 118, -1};
+const int8_t kern_pair_25[3] = {46, 119, -1};
+const int8_t kern_pair_26[3] = {46, 121, -1};
+const int8_t kern_pair_27[3] = {47, 47, -2};
+const int8_t kern_pair_28[3] = {48, 55, -1};
+const int8_t kern_pair_29[3] = {50, 52, -1};
+const int8_t kern_pair_30[3] = {50, 54, -1};
+const int8_t kern_pair_31[3] = {50, 55, -1};
+const int8_t kern_pair_32[3] = {51, 55, -1};
+const int8_t kern_pair_33[3] = {52, 55, -1};
+const int8_t kern_pair_34[3] = {53, 49, -1};
+const int8_t kern_pair_35[3] = {53, 57, -1};
+const int8_t kern_pair_36[3] = {54, 34, -1};
+const int8_t kern_pair_37[3] = {54, 55, -1};
+const int8_t kern_pair_38[3] = {54, 57, -1};
+const int8_t kern_pair_39[3] = {55, 45, -1};
+const int8_t kern_pair_40[3] = {55, 46, -1};
+const int8_t kern_pair_41[3] = {55, 48, -1};
+const int8_t kern_pair_42[3] = {55, 50, -1};
+const int8_t kern_pair_43[3] = {55, 52, -1};
+const int8_t kern_pair_44[3] = {55, 54, -1};
+const int8_t kern_pair_45[3] = {56, 55, -1};
+const int8_t kern_pair_46[3] = {57, 46, -1};
+const int8_t kern_pair_47[3] = {57, 52, -1};
+const int8_t kern_pair_48[3] = {57, 54, -1};
+const int8_t kern_pair_49[3] = {57, 55, -1};
+const int8_t kern_pair_50[3] = {65, 34, -1};
+const int8_t kern_pair_51[3] = {65, 84, -1};
+const int8_t kern_pair_52[3] = {65, 86, -1};
+const int8_t kern_pair_53[3] = {65, 89, -1};
+const int8_t kern_pair_54[3] = {70, 32, -1};
+const int8_t kern_pair_55[3] = {70, 46, -1};
+const int8_t kern_pair_56[3] = {70, 65, -1};
+const int8_t kern_pair_57[3] = {70, 74, -1};
+const int8_t kern_pair_58[3] = {70, 97, -1};
+const int8_t kern_pair_59[3] = {70, 99, -1};
+const int8_t kern_pair_60[3] = {70, 100, -1};
+const int8_t kern_pair_61[3] = {70, 101, -1};
+const int8_t kern_pair_62[3] = {70, 103, -1};
+const int8_t kern_pair_63[3] = {70, 111, -1};
+const int8_t kern_pair_64[3] = {70, 113, -1};
+const int8_t kern_pair_65[3] = {70, 115, -1};
+const int8_t kern_pair_66[3] = {70, 116, -1};
+const int8_t kern_pair_67[3] = {70, 117, -1};
+const int8_t kern_pair_68[3] = {70, 120, -1};
+const int8_t kern_pair_69[3] = {75, 45, -1};
+const int8_t kern_pair_70[3] = {75, 99, -1};
+const int8_t kern_pair_71[3] = {75, 100, -1};
+const int8_t kern_pair_72[3] = {75, 101, -1};
+const int8_t kern_pair_73[3] = {75, 103, -1};
+const int8_t kern_pair_74[3] = {75, 111, -1};
+const int8_t kern_pair_75[3] = {75, 113, -1};
+const int8_t kern_pair_76[3] = {75, 117, -1};
+const int8_t kern_pair_77[3] = {75, 118, -1};
+const int8_t kern_pair_78[3] = {75, 119, -1};
+const int8_t kern_pair_79[3] = {75, 121, -1};
+const int8_t kern_pair_80[3] = {76, 34, -2};
+const int8_t kern_pair_81[3] = {76, 45, -1};
+const int8_t kern_pair_82[3] = {76, 67, -1};
+const int8_t kern_pair_83[3] = {76, 71, -1};
+const int8_t kern_pair_84[3] = {76, 79, -1};
+const int8_t kern_pair_85[3] = {76, 81, -1};
+const int8_t kern_pair_86[3] = {76, 84, -2};
+const int8_t kern_pair_87[3] = {76, 85, -1};
+const int8_t kern_pair_88[3] = {76, 86, -1};
+const int8_t kern_pair_89[3] = {76, 87, -1};
+const int8_t kern_pair_90[3] = {76, 89, -1};
+const int8_t kern_pair_91[3] = {76, 118, -1};
+const int8_t kern_pair_92[3] = {76, 121, -1};
+const int8_t kern_pair_93[3] = {80, 32, -1};
+const int8_t kern_pair_94[3] = {80, 46, -1};
+const int8_t kern_pair_95[3] = {80, 65, -1};
+const int8_t kern_pair_96[3] = {80, 74, -1};
+const int8_t kern_pair_97[3] = {80, 97, -1};
+const int8_t kern_pair_98[3] = {80, 99, -1};
+const int8_t kern_pair_99[3] = {80, 100, -1};
+const int8_t kern_pair_100[3] = {80, 101, -1};
+const int8_t kern_pair_101[3] = {80, 103, -1};
+const int8_t kern_pair_102[3] = {80, 111, -1};
+const int8_t kern_pair_103[3] = {80, 113, -1};
+const int8_t kern_pair_104[3] = {84, 32, -1};
+const int8_t kern_pair_105[3] = {84, 45, -1};
+const int8_t kern_pair_106[3] = {84, 46, -1};
+const int8_t kern_pair_107[3] = {84, 65, -1};
+const int8_t kern_pair_108[3] = {84, 74, -1};
+const int8_t kern_pair_109[3] = {84, 97, -1};
+const int8_t kern_pair_110[3] = {84, 99, -1};
+const int8_t kern_pair_111[3] = {84, 100, -1};
+const int8_t kern_pair_112[3] = {84, 101, -1};
+const int8_t kern_pair_113[3] = {84, 103, -1};
+const int8_t kern_pair_114[3] = {84, 109, -1};
+const int8_t kern_pair_115[3] = {84, 110, -1};
+const int8_t kern_pair_116[3] = {84, 111, -1};
+const int8_t kern_pair_117[3] = {84, 112, -1};
+const int8_t kern_pair_118[3] = {84, 113, -1};
+const int8_t kern_pair_119[3] = {84, 114, -1};
+const int8_t kern_pair_120[3] = {84, 115, -1};
+const int8_t kern_pair_121[3] = {84, 117, -1};
+const int8_t kern_pair_122[3] = {84, 118, -1};
+const int8_t kern_pair_123[3] = {84, 119, -1};
+const int8_t kern_pair_124[3] = {84, 120, -1};
+const int8_t kern_pair_125[3] = {84, 121, -1};
+const int8_t kern_pair_126[3] = {84, 122, -1};
+const int8_t kern_pair_127[3] = {86, 32, -1};
+const int8_t kern_pair_128[3] = {86, 46, -1};
+const int8_t kern_pair_129[3] = {86, 65, -1};
+const int8_t kern_pair_130[3] = {86, 74, -1};
+const int8_t kern_pair_131[3] = {86, 97, -1};
+const int8_t kern_pair_132[3] = {86, 99, -1};
+const int8_t kern_pair_133[3] = {86, 100, -1};
+const int8_t kern_pair_134[3] = {86, 101, -1};
+const int8_t kern_pair_135[3] = {86, 103, -1};
+const int8_t kern_pair_136[3] = {86, 111, -1};
+const int8_t kern_pair_137[3] = {86, 113, -1};
+const int8_t kern_pair_138[3] = {86, 115, -1};
+const int8_t kern_pair_139[3] = {86, 117, -1};
+const int8_t kern_pair_140[3] = {86, 120, -1};
+const int8_t kern_pair_141[3] = {87, 32, -1};
+const int8_t kern_pair_142[3] = {87, 46, -1};
+const int8_t kern_pair_143[3] = {88, 45, -1};
+const int8_t kern_pair_144[3] = {89, 32, -1};
+const int8_t kern_pair_145[3] = {89, 45, -1};
+const int8_t kern_pair_146[3] = {89, 46, -1};
+const int8_t kern_pair_147[3] = {89, 65, -1};
+const int8_t kern_pair_148[3] = {89, 74, -1};
+const int8_t kern_pair_149[3] = {89, 97, -1};
+const int8_t kern_pair_150[3] = {89, 99, -1};
+const int8_t kern_pair_151[3] = {89, 100, -1};
+const int8_t kern_pair_152[3] = {89, 101, -1};
+const int8_t kern_pair_153[3] = {89, 103, -1};
+const int8_t kern_pair_154[3] = {89, 109, -1};
+const int8_t kern_pair_155[3] = {89, 110, -1};
+const int8_t kern_pair_156[3] = {89, 111, -1};
+const int8_t kern_pair_157[3] = {89, 112, -1};
+const int8_t kern_pair_158[3] = {89, 113, -1};
+const int8_t kern_pair_159[3] = {89, 114, -1};
+const int8_t kern_pair_160[3] = {89, 115, -1};
+const int8_t kern_pair_161[3] = {89, 117, -1};
+const int8_t kern_pair_162[3] = {89, 120, -1};
+const int8_t kern_pair_163[3] = {90, 45, -1};
+const int8_t kern_pair_164[3] = {92, 92, -2};
+const int8_t kern_pair_165[3] = {102, 34, 1};
+const int8_t kern_pair_166[3] = {114, 32, -1};
+const int8_t kern_pair_167[3] = {118, 32, -1};
+const int8_t kern_pair_168[3] = {118, 46, -1};
+const int8_t kern_pair_169[3] = {119, 32, -1};
+const int8_t kern_pair_170[3] = {119, 46, -1};
+const int8_t kern_pair_171[3] = {121, 32, -1};
+const int8_t kern_pair_172[3] = {121, 46, -1};
+
+const int8_t * kern_pairs[] = {
+    kern_pair_0,
+    kern_pair_1,
+    kern_pair_2,
+    kern_pair_3,
+    kern_pair_4,
+    kern_pair_5,
+    kern_pair_6,
+    kern_pair_7,
+    kern_pair_8,
+    kern_pair_9,
+    kern_pair_10,
+    kern_pair_11,
+    kern_pair_12,
+    kern_pair_13,
+    kern_pair_14,
+    kern_pair_15,
+    kern_pair_16,
+    kern_pair_17,
+    kern_pair_18,
+    kern_pair_19,
+    kern_pair_20,
+    kern_pair_21,
+    kern_pair_22,
+    kern_pair_23,
+    kern_pair_24,
+    kern_pair_25,
+    kern_pair_26,
+    kern_pair_27,
+    kern_pair_28,
+    kern_pair_29,
+    kern_pair_30,
+    kern_pair_31,
+    kern_pair_32,
+    kern_pair_33,
+    kern_pair_34,
+    kern_pair_35,
+    kern_pair_36,
+    kern_pair_37,
+    kern_pair_38,
+    kern_pair_39,
+    kern_pair_40,
+    kern_pair_41,
+    kern_pair_42,
+    kern_pair_43,
+    kern_pair_44,
+    kern_pair_45,
+    kern_pair_46,
+    kern_pair_47,
+    kern_pair_48,
+    kern_pair_49,
+    kern_pair_50,
+    kern_pair_51,
+    kern_pair_52,
+    kern_pair_53,
+    kern_pair_54,
+    kern_pair_55,
+    kern_pair_56,
+    kern_pair_57,
+    kern_pair_58,
+    kern_pair_59,
+    kern_pair_60,
+    kern_pair_61,
+    kern_pair_62,
+    kern_pair_63,
+    kern_pair_64,
+    kern_pair_65,
+    kern_pair_66,
+    kern_pair_67,
+    kern_pair_68,
+    kern_pair_69,
+    kern_pair_70,
+    kern_pair_71,
+    kern_pair_72,
+    kern_pair_73,
+    kern_pair_74,
+    kern_pair_75,
+    kern_pair_76,
+    kern_pair_77,
+    kern_pair_78,
+    kern_pair_79,
+    kern_pair_80,
+    kern_pair_81,
+    kern_pair_82,
+    kern_pair_83,
+    kern_pair_84,
+    kern_pair_85,
+    kern_pair_86,
+    kern_pair_87,
+    kern_pair_88,
+    kern_pair_89,
+    kern_pair_90,
+    kern_pair_91,
+    kern_pair_92,
+    kern_pair_93,
+    kern_pair_94,
+    kern_pair_95,
+    kern_pair_96,
+    kern_pair_97,
+    kern_pair_98,
+    kern_pair_99,
+    kern_pair_100,
+    kern_pair_101,
+    kern_pair_102,
+    kern_pair_103,
+    kern_pair_104,
+    kern_pair_105,
+    kern_pair_106,
+    kern_pair_107,
+    kern_pair_108,
+    kern_pair_109,
+    kern_pair_110,
+    kern_pair_111,
+    kern_pair_112,
+    kern_pair_113,
+    kern_pair_114,
+    kern_pair_115,
+    kern_pair_116,
+    kern_pair_117,
+    kern_pair_118,
+    kern_pair_119,
+    kern_pair_120,
+    kern_pair_121,
+    kern_pair_122,
+    kern_pair_123,
+    kern_pair_124,
+    kern_pair_125,
+    kern_pair_126,
+    kern_pair_127,
+    kern_pair_128,
+    kern_pair_129,
+    kern_pair_130,
+    kern_pair_131,
+    kern_pair_132,
+    kern_pair_133,
+    kern_pair_134,
+    kern_pair_135,
+    kern_pair_136,
+    kern_pair_137,
+    kern_pair_138,
+    kern_pair_139,
+    kern_pair_140,
+    kern_pair_141,
+    kern_pair_142,
+    kern_pair_143,
+    kern_pair_144,
+    kern_pair_145,
+    kern_pair_146,
+    kern_pair_147,
+    kern_pair_148,
+    kern_pair_149,
+    kern_pair_150,
+    kern_pair_151,
+    kern_pair_152,
+    kern_pair_153,
+    kern_pair_154,
+    kern_pair_155,
+    kern_pair_156,
+    kern_pair_157,
+    kern_pair_158,
+    kern_pair_159,
+    kern_pair_160,
+    kern_pair_161,
+    kern_pair_162,
+    kern_pair_163,
+    kern_pair_164,
+    kern_pair_165,
+    kern_pair_166,
+    kern_pair_167,
+    kern_pair_168,
+    kern_pair_169,
+    kern_pair_170,
+    kern_pair_171,
+    kern_pair_172,
+};

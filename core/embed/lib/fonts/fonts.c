@@ -184,3 +184,22 @@ const uint8_t *font_get_glyph(int font, uint8_t c) {
   }
   return 0;
 }
+
+
+int8_t find_kerning(uint8_t c1, uint8_t c2, const int8_t * const * const pairs, int pairs_cnt) {
+  for (int i = 0; i < pairs_cnt; i++) {
+    if (pairs[i][0] == c1 && pairs[i][1] == c2) {
+      return pairs[i][2];
+    }
+  }
+  return 0;
+}
+
+int8_t font_get_kerning(int font, uint8_t c1, uint8_t c2) {
+  if (c1 < 32 || c1 > 126 || c2 < 32 || c2 > 126) return 0;
+
+  if (font == FONT_NORMAL) {
+    return find_kerning(c1, c2, kern_pairs, 173);
+  }
+  return 0;
+}

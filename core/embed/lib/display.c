@@ -297,6 +297,8 @@ void display_printf(const char *fmt, ...) {
 #endif  // TREZOR_PRINT_DISABLE
 
 #if TREZOR_FONT_BPP == 4 && defined USE_DMA2D
+
+static int kern_sw = 1;
 static void display_text_render(int x, int y, const char *text, int textlen,
                                 int font, uint16_t fgcolor, uint16_t bgcolor) {
   // determine text length if not provided
@@ -307,7 +309,12 @@ static void display_text_render(int x, int y, const char *text, int textlen,
   uint16_t colortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
 
-  dma2d_setup_4bpp(fgcolor, bgcolor);
+  dma2d_setup_4bpp_over_16bpp(fgcolor);
+  if (kern_sw == 0) {
+    kern_sw =1;
+  }else {
+    kern_sw = 0;
+  }
 
   // render glyphs
   for (int i = 0; i < textlen; i++) {
@@ -319,6 +326,19 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     const uint8_t bearX = g[3];  // bearingX
     const uint8_t bearY = g[4];  // bearingY
     uint8_t wa = w + (w & 1);    // adjusted width (odd-wide glyphs are padded)
+
+
+    int8_t kerning = 0;
+
+    if (i > 0) {
+      kerning = font_get_kerning(font, (uint8_t)text[i - 1], (uint8_t)text[i]);
+    }
+
+    if (kern_sw == 0) {
+      kerning = 0;
+    }
+
+    x+=kerning;
 
     if (wa && h) {
       const int sx = x + bearX;
@@ -351,9 +371,10 @@ static void display_text_render(int x, int y, const char *text, int textlen,
 
       dma2d_wait_for_transfer();
       display_set_window(x0, y0, x1, y1);
-      dma2d_set_offsets(display_get_window_offset(), gl_offset, 0);
-      dma2d_start_multiline(
+      dma2d_set_offsets(display_get_window_offset(), gl_offset, display_get_window_offset());
+      dma2d_start_multiline_blend(
           (uint8_t *)&g[5 + ((wa * (y0 - sy) + (x0 - sx)) / 2)],
+          (uint8_t *)display_get_wr_addr(),
           (uint8_t *)display_get_wr_addr(), w_cl, h_cl);
     }
     x += adv;
