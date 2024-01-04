@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 
 # script used to generate /embed/extmod/modtrezorui/font_*_*.c
 
@@ -10,6 +10,7 @@ import freetype
 
 HERE = Path(__file__).parent
 FONTS_DIR = HERE / "fonts"
+OUT_DIR = HERE / ".." / ".." / "embed" / "lib" / "fonts"
 
 MIN_GLYPH = ord(" ")
 MAX_GLYPH = ord("~")
@@ -91,7 +92,7 @@ def process_face(
     font_ymin = 0
     font_ymax = 0
 
-    with open("embed/lib/fonts/font_%s.c" % fontname, "wt") as f:
+    with open(OUT_DIR /  f"font_{fontname}.c", "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("// clang-format off\n\n")
         f.write("// - the first two bytes are width and height of the glyph\n")
@@ -202,7 +203,7 @@ def process_face(
             f.write("    Font_%s_%s_%d_glyph_%d,\n" % (name, style, size, i))
         f.write("};\n")
 
-    with open("embed/lib/fonts/font_%s.h" % fontname, "wt") as f:
+    with open(OUT_DIR / f"font_{fontname}.h", "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
         f.write("#error Wrong TREZOR_FONT_BPP (expected %d)\n" % bpp)
