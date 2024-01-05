@@ -412,7 +412,9 @@ def reload_settings_from_storage() -> None:
         storage_device.get_autolock_delay_ms(), lock_device_if_unlocked
     )
     wire.EXPERIMENTAL_ENABLED = storage_device.get_experimental_features()
-    ui.display.orientation(storage_device.get_rotation())
+    if ui.display.orientation() != storage_device.get_rotation():
+        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.display.orientation(storage_device.get_rotation())
 
 
 def boot() -> None:
