@@ -42,17 +42,30 @@ async def bootscreen() -> None:
     Allowing all of them before returning.
     """
     lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
-    ui.display.orientation(storage.device.get_rotation())
     while True:
         try:
+
             if can_lock_device():
                 enforce_welcome_screen_duration()
+                ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+                ui.display.orientation(storage.device.get_rotation())
                 await lockscreen
-            await verify_user_pin()
-            storage.init_unlocked()
-            enforce_welcome_screen_duration()
-            allow_all_loader_messages()
-            return
+                await verify_user_pin()
+                storage.init_unlocked()
+                allow_all_loader_messages()
+                return
+            else:
+                await verify_user_pin()
+                storage.init_unlocked()
+                enforce_welcome_screen_duration()
+                rotation = storage.device.get_rotation()
+                if rotation != ui.display.orientation():
+                    # there is a slight delay before next screen is shown,
+                    # so we don't fade unless there is a change of orientation
+                    ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+                    ui.display.orientation(rotation)
+                allow_all_loader_messages()
+                return
         except wire.PinCancelled:
             # verify_user_pin will convert a SdCardUnavailable (in case of sd salt)
             # to PinCancelled exception.
