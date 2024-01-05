@@ -1,9 +1,9 @@
 use super::{handle_interaction, Trezor};
 use crate::{
     error::Result,
-    protos::{self, ethereum_sign_tx_eip1559::EthereumAccessList},
+    protos::{self, ethereum_sign_tx_eip1559::EthereumAccessList, EthereumTxRequest},
+    Error,
 };
-use primitive_types::U256;
 
 /// Access list item.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,9 +18,9 @@ pub struct AccessListItem {
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub struct Signature {
     /// R value
-    pub r: U256,
+    pub r: [u8; 32],
     /// S Value
-    pub s: U256,
+    pub s: [u8; 32],
     /// V value in 'Electrum' notation.
     pub v: u64,
 }
@@ -44,13 +44,13 @@ impl Trezor {
             req,
             Box::new(|_, m: protos::EthereumMessageSignature| {
                 let signature = m.signature();
-
-                // why are you in the end
+                if signature.len() != 65 {
+                    return Err(Error::MalformedSignature);
+                }
+                let r = signature[0..32].try_into().unwrap();
+                let s = signature[32..64].try_into().unwrap();
                 let v = signature[64] as u64;
-                let r = U256::from_big_endian(&signature[0..32]);
-                let s = U256::from_big_endian(&signature[32..64]);
-
-                Ok(Signature { r, v, s })
+                Ok(Signature { r, s, v })
             }),
         )?)?;
 
@@ -66,18 +66,20 @@ impl Trezor {
         gas_limit: Vec<u8>,
         to: String,
         value: Vec<u8>,
-        _data: Vec<u8>,
-        chain_id: u64,
+        data: Vec<u8>,
+        chain_id: Option<u64>,
     ) -> Result<Signature> {
         let mut req = protos::EthereumSignTx::new();
-        let mut data = _data;
+        let mut data = data;
 
         req.address_n = path;
         req.set_nonce(nonce);
         req.set_gas_price(gas_price);
         req.set_gas_limit(gas_limit);
         req.set_value(value);
-        req.set_chain_id(chain_id);
+        if let Some(chain_id) = chain_id {
+            req.set_chain_id(chain_id);
+        }
         req.set_to(to);
 
         req.set_data_length(data.len() as u32);
@@ -93,15 +95,7 @@ impl Trezor {
             resp = self.call(ack, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?.ok()?;
         }
 
-        if resp.signature_v() <= 1 {
-            resp.set_signature_v(resp.signature_v() + 2 * (chain_id as u32) + 35);
-        }
-
-        Ok(Signature {
-            r: resp.signature_r().into(),
-            v: resp.signature_v().into(),
-            s: resp.signature_s().into(),
-        })
+        convert_signature(&resp, chain_id)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -112,14 +106,14 @@ impl Trezor {
         gas_limit: Vec<u8>,
         to: String,
         value: Vec<u8>,
-        _data: Vec<u8>,
-        chain_id: u64,
+        data: Vec<u8>,
+        chain_id: Option<u64>,
         max_gas_fee: Vec<u8>,
         max_priority_fee: Vec<u8>,
         access_list: Vec<AccessListItem>,
     ) -> Result<Signature> {
         let mut req = protos::EthereumSignTxEIP1559::new();
-        let mut data = _data;
+        let mut data = data;
 
         req.address_n = path;
         req.set_nonce(nonce);
@@ -127,7 +121,9 @@ impl Trezor {
         req.set_max_priority_fee(max_priority_fee);
         req.set_gas_limit(gas_limit);
         req.set_value(value);
-        req.set_chain_id(chain_id);
+        if let Some(chain_id) = chain_id {
+            req.set_chain_id(chain_id);
+        }
         req.set_to(to);
 
         if !access_list.is_empty() {
@@ -154,14 +150,18 @@ impl Trezor {
             resp = self.call(ack, Box::new(|_, m: protos::EthereumTxRequest| Ok(m)))?.ok()?
         }
 
-        if resp.signature_v() <= 1 {
-            resp.set_signature_v(resp.signature_v() + 2 * (chain_id as u32) + 35);
-        }
-
-        Ok(Signature {
-            r: resp.signature_r().into(),
-            v: resp.signature_v().into(),
-            s: resp.signature_s().into(),
-        })
+        convert_signature(&resp, chain_id)
     }
+}
+
+fn convert_signature(resp: &EthereumTxRequest, chain_id: Option<u64>) -> Result<Signature> {
+    let mut v = resp.signature_v() as u64;
+    if let Some(chain_id) = chain_id {
+        if v <= 1 {
+            v = v + 2 * chain_id + 35;
+        }
+    }
+    let r = resp.signature_r().try_into().map_err(|_| Error::MalformedSignature)?;
+    let s = resp.signature_r().try_into().map_err(|_| Error::MalformedSignature)?;
+    Ok(Signature { r, s, v })
 }
