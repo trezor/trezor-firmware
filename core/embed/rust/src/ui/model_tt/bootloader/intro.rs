@@ -92,14 +92,14 @@ impl<'a> Component for Intro<'a> {
         self.bg.paint();
         display::text_left(
             Point::new(10, 20),
-            "T. W. LEWIS",
+            "T.W. LEWIS",
             TEXT_NORMAL.text_font,
             WHITE,
             BLD_BG,
         );
         display::text_left(
             Point::new(10, 40),
-            "T. W. LEWIS",
+            "T.W. LEWIS",
             TEXT_NORMAL.text_font,
             WHITE,
             BLD_BG,
@@ -142,6 +142,20 @@ impl<'a> Component for Intro<'a> {
         display::text_left(
             Point::new(10, 160),
             "Tech Talk",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 180),
+            "AVAILABLE LTJ",
+            TEXT_NORMAL.text_font,
+            WHITE,
+            BLD_BG,
+        );
+        display::text_left(
+            Point::new(10, 200),
+            "AVAILABLE LTJ",
             TEXT_NORMAL.text_font,
             WHITE,
             BLD_BG,
