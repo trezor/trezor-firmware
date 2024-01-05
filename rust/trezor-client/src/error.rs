@@ -15,6 +15,9 @@ pub enum Error {
     /// More than one device was plugged in.
     #[error("multiple Trezor devices found")]
     DeviceNotUnique,
+    /// The device returned an invalid signature.
+    #[error("device returned invalid signature")]
+    MalformedSignature,
     /// Transport error connecting to device.
     #[error("transport connect: {0}")]
     TransportConnect(#[source] TransportError),
