@@ -70,6 +70,7 @@ if TYPE_CHECKING:
         ChangeLanguage = 990
         TranslationDataRequest = 991
         TranslationDataAck = 992
+        SetBrightness = 993
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81
@@ -459,6 +460,7 @@ if TYPE_CHECKING:
         PassphraseEntry = 17
         Solana = 18
         Translations = 19
+        Brightness = 20
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::trezorhal::storage::{get, get_length, StorageResult};
+use crate::trezorhal::storage::{self, StorageResult};
 
 pub const HOMESCREEN_MAX_SIZE: usize = 16384;
 
@@ -37,14 +37,29 @@ const SAFETY_CHECK_LEVEL: u16 = APP_DEVICE | 0x0014;
 const EXPERIMENTAL_FEATURES: u16 = APP_DEVICE | 0x0015;
 const HIDE_PASSPHRASE_FROM_HOST: u16 = APP_DEVICE | 0x0016;
 const SLIP39_EXTENDABLE: u16 = APP_DEVICE | 0x0017;
+const BRIGHTNESS: u16 = FLAG_PUBLIC | APP_DEVICE | 0x0018;
 
 pub fn get_avatar_len() -> StorageResult<usize> {
-    get_length(HOMESCREEN)
+    storage::get_length(HOMESCREEN)
 }
 
 pub fn load_avatar(dest: &mut [u8]) -> StorageResult<()> {
     let dest_len = dest.len();
-    let result = get(HOMESCREEN, dest)?;
+    let result = storage::get(HOMESCREEN, dest)?;
     ensure!(dest_len == result.len(), "Internal error in load_avatar");
     Ok(())
+}
+
+pub fn get_brightness() -> StorageResult<u8> {
+    let mut dest: [u8; 1] = [0; 1];
+    let res = storage::get(BRIGHTNESS, &mut dest);
+    match res {
+        Ok(_) => Ok(dest[0]),
+        Err(e) => Err(e),
+    }
+}
+
+pub fn set_brightness(value: u8) -> StorageResult<()> {
+    let value = [value];
+    storage::set(BRIGHTNESS, &value)
 }

@@ -18,17 +18,17 @@ pub struct ModelMercuryFeatures;
 impl UIFeaturesCommon for ModelMercuryFeatures {
     fn fadein() {
         #[cfg(feature = "backlight")]
-        crate::ui::display::fade_backlight_duration(theme::BACKLIGHT_NORMAL, 150);
+        crate::ui::display::fade_backlight_duration(theme::backlight::get_backlight_normal(), 150);
     }
 
     fn fadeout() {
         #[cfg(feature = "backlight")]
-        crate::ui::display::fade_backlight_duration(theme::BACKLIGHT_DIM, 150);
+        crate::ui::display::fade_backlight_duration(theme::backlight::get_backlight_dim(), 150);
     }
 
     fn backlight_on() {
         #[cfg(feature = "backlight")]
-        crate::ui::display::set_backlight(theme::BACKLIGHT_NORMAL);
+        crate::ui::display::set_backlight(theme::backlight::get_backlight_normal());
     }
 
     const SCREEN: Rect = constant::SCREEN;

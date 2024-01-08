@@ -1,5 +1,7 @@
 pub mod bootloader;
 
+pub mod backlight;
+
 use crate::{
     time::Duration,
     ui::{
@@ -17,13 +19,6 @@ use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSh
 use num_traits::FromPrimitive;
 
 pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
-
-// Typical backlight values.
-pub const BACKLIGHT_NORMAL: u16 = 150;
-pub const BACKLIGHT_LOW: u16 = 45;
-pub const BACKLIGHT_DIM: u16 = 5;
-pub const BACKLIGHT_NONE: u16 = 2;
-pub const BACKLIGHT_MAX: u16 = 255;
 
 // Color palette.
 pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);

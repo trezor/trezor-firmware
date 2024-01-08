@@ -392,7 +392,7 @@ impl Component for PassphraseKeyboard {
         }
         if self.fade.take() {
             // Note that this is blocking and takes some time.
-            display::fade_backlight(theme::BACKLIGHT_NORMAL);
+            display::fade_backlight(theme::backlight::get_backlight_normal());
         }
     }
 

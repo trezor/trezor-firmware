@@ -348,3 +348,10 @@ def set_busy(client: "TrezorClient", expiry_ms: Optional[int]) -> "MessageType":
 @expect(messages.AuthenticityProof)
 def authenticate(client: "TrezorClient", challenge: bytes):
     return client.call(messages.AuthenticateDevice(challenge=challenge))
+
+
+@expect(messages.Success, field="message", ret_type=str)
+def set_brightness(
+    client: "TrezorClient", value: Optional[int] = None
+) -> "MessageType":
+    return client.call(messages.SetBrightness(value=value))

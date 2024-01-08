@@ -135,6 +135,9 @@ def get_features() -> Features:
                 ]
             )
 
+    if utils.USE_BACKLIGHT:
+        f.capabilities.append(Capability.Brightness)
+
     # Only some models are capable of SD card
     if utils.USE_SD_CARD:
         from trezor import sdcard
@@ -434,7 +437,7 @@ def reload_settings_from_storage() -> None:
     )
     wire.EXPERIMENTAL_ENABLED = storage_device.get_experimental_features()
     if ui.display.orientation() != storage_device.get_rotation():
-        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.backlight_fade(ui.style.get_backlight_dim())
         ui.display.orientation(storage_device.get_rotation())
 
 

@@ -53,6 +53,7 @@ AuthenticityProof = 98
 ChangeLanguage = 990
 TranslationDataRequest = 991
 TranslationDataAck = 992
+SetBrightness = 993
 FirmwareErase = 6
 FirmwareUpload = 7
 FirmwareRequest = 8

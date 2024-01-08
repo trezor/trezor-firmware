@@ -78,6 +78,7 @@ class MessageType(IntEnum):
     ChangeLanguage = 990
     TranslationDataRequest = 991
     TranslationDataAck = 992
+    SetBrightness = 993
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -491,6 +492,7 @@ class Capability(IntEnum):
     PassphraseEntry = 17
     Solana = 18
     Translations = 19
+    Brightness = 20
 
 
 class SdProtectOperationType(IntEnum):
@@ -3948,6 +3950,20 @@ class ShowDeviceTutorial(protobuf.MessageType):
 
 class UnlockBootloader(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 96
+
+
+class SetBrightness(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 993
+    FIELDS = {
+        1: protobuf.Field("value", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        value: Optional["int"] = None,
+    ) -> None:
+        self.value = value
 
 
 class Slip39Group(protobuf.MessageType):
