@@ -36,6 +36,8 @@ INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 _HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
+# unused from python:
+# _BRIGHTNESS                = const(0x18)  # int
 
 if utils.USE_THP:
     _DEVICE_SECRET         = const(0x17)  # bytes

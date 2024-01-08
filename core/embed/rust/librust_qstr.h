@@ -108,6 +108,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_bounds;
   MP_QSTR_br_code;
   MP_QSTR_br_type;
+  MP_QSTR_brightness__title;
   MP_QSTR_button;
   MP_QSTR_button_event;
   MP_QSTR_button_request;
@@ -191,6 +192,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_with_info;
   MP_QSTR_count;
+  MP_QSTR_current;
   MP_QSTR_data;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
@@ -590,6 +592,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
+  MP_QSTR_set_brightness;
   MP_QSTR_share_words;
   MP_QSTR_share_words__words_in_order;
   MP_QSTR_share_words__wrote_down_all;

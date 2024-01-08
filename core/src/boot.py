@@ -49,7 +49,7 @@ async def bootscreen() -> None:
 
             if can_lock_device():
                 enforce_welcome_screen_duration()
-                ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+                ui.backlight_fade(ui.style.get_backlight_dim())
                 ui.display.orientation(storage.device.get_rotation())
                 await lockscreen
                 await verify_user_pin()
@@ -64,7 +64,7 @@ async def bootscreen() -> None:
                 if rotation != ui.display.orientation():
                     # there is a slight delay before next screen is shown,
                     # so we don't fade unless there is a change of orientation
-                    ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+                    ui.backlight_fade(ui.style.get_backlight_dim())
                     ui.display.orientation(rotation)
                 allow_all_loader_messages()
                 return
