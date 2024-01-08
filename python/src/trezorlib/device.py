@@ -47,6 +47,7 @@ def apply_settings(
     safety_checks: Optional[messages.SafetyCheckLevel] = None,
     experimental_features: Optional[bool] = None,
     hide_passphrase_from_host: Optional[bool] = None,
+    brightness: Optional[int] = None,
 ) -> "MessageType":
     if language is not None:
         warnings.warn(
@@ -63,6 +64,7 @@ def apply_settings(
         safety_checks=safety_checks,
         experimental_features=experimental_features,
         hide_passphrase_from_host=hide_passphrase_from_host,
+        brightness=brightness,
     )
 
     out = client.call(settings)

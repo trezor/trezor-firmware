@@ -207,6 +207,13 @@ def label(client: "TrezorClient", label: str) -> str:
 
 
 @cli.command()
+@with_client
+def brightness(client: "TrezorClient") -> str:
+    """Set display brightness."""
+    return device.apply_settings(client, brightness=0)
+
+
+@cli.command()
 @click.argument("path_or_url", required=False)
 @click.option(
     "-r", "--remove", is_flag=True, default=False, help="Switch back to english."

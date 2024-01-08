@@ -4,9 +4,11 @@
 #include STM32_HAL_H
 #include TREZOR_BOARD
 
-#define TIM_FREQ 1000000
+#define TIM_FREQ 10000000
 
-#define LED_PWM_PRESCALER (SystemCoreClock / TIM_FREQ - 1)  // 1 MHz
+#define LED_PWM_PRESCALER (SystemCoreClock / TIM_FREQ - 1)
+
+#define LED_PWM_PRESCALER_SLOW (SystemCoreClock / 1000000 - 1)  // 1 MHz
 
 #define LED_PWM_TIM_PERIOD (TIM_FREQ / BACKLIGHT_PWM_FREQ)
 
@@ -16,6 +18,35 @@ static int pwm_period = 0;
 
 int backlight_pwm_set(int val) {
   if (BACKLIGHT != val && val >= 0 && val <= 255) {
+    // TPS61043: min 1% duty cycle
+    if (val < BACKLIGHT_PWM_TIM->ARR / 100) {
+      val = 0;
+    }
+
+    // TPS61043 goes to shutdown when duty cycle is 0 (after 32ms),
+    // so we need to set GPIO to high for at least 500us
+    // to wake it up.
+    if (BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR == 0) {
+      GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+      HAL_GPIO_WritePin(BACKLIGHT_PWM_PORT, BACKLIGHT_PWM_PIN, GPIO_PIN_SET);
+      // LCD_PWM/PA7 (backlight control)
+      GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+      GPIO_InitStructure.Pull = GPIO_NOPULL;
+      GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+      GPIO_InitStructure.Pin = BACKLIGHT_PWM_PIN;
+      HAL_GPIO_Init(BACKLIGHT_PWM_PORT, &GPIO_InitStructure);
+
+      hal_delay_us(500);
+
+      GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+      GPIO_InitStructure.Pull = GPIO_NOPULL;
+      GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+      GPIO_InitStructure.Alternate = BACKLIGHT_PWM_TIM_AF;
+      GPIO_InitStructure.Pin = BACKLIGHT_PWM_PIN;
+      HAL_GPIO_Init(BACKLIGHT_PWM_PORT, &GPIO_InitStructure);
+    }
+
     BACKLIGHT = val;
     BACKLIGHT_PWM_TIM->CCR1 = (pwm_period * val) / 255;
   }
@@ -157,6 +188,7 @@ void backlight_pwm_reinit(void) {
   BACKLIGHT = prev_val;
 
   pwm_period = LED_PWM_TIM_PERIOD;
+  BACKLIGHT_PWM_TIM->PSC = LED_PWM_PRESCALER;
   BACKLIGHT_PWM_TIM->CR1 |= TIM_CR1_ARPE;
   BACKLIGHT_PWM_TIM->CR2 |= TIM_CR2_CCPC;
   BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = (pwm_period * prev_val) / 255;
@@ -176,6 +208,7 @@ void backlight_pwm_set_slow(void) {
   prev_val = prev_val > 255 ? 255 : prev_val;
 
   pwm_period = LED_PWM_SLOW_TIM_PERIOD;
+  BACKLIGHT_PWM_TIM->PSC = LED_PWM_PRESCALER_SLOW;
   BACKLIGHT_PWM_TIM->CR1 |= TIM_CR1_ARPE;
   BACKLIGHT_PWM_TIM->CR2 |= TIM_CR2_CCPC;
   BACKLIGHT_PWM_TIM->ARR = LED_PWM_SLOW_TIM_PERIOD - 1;

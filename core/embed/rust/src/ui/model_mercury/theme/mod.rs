@@ -1,5 +1,7 @@
 pub mod bootloader;
 
+pub mod backlight;
+
 use crate::ui::{
     component::text::{LineBreaking, PageBreaking, TextStyle},
     display::{Color, Font, Icon},
@@ -7,10 +9,6 @@ use crate::ui::{
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
-
-// Typical backlight values.
-pub const BACKLIGHT_NORMAL: u16 = 150;
-pub const BACKLIGHT_DIM: u16 = 5;
 
 // Color palette.
 pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);

@@ -434,7 +434,7 @@ def reload_settings_from_storage() -> None:
     )
     wire.EXPERIMENTAL_ENABLED = storage_device.get_experimental_features()
     if ui.display.orientation() != storage_device.get_rotation():
-        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.backlight_fade(ui.style.get_backlight_dim())
         ui.display.orientation(storage_device.get_rotation())
 
 

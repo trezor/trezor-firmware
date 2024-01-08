@@ -159,7 +159,7 @@ where
 
         // Swipe has dimmed the screen, so fade back to normal backlight after the next
         // paint.
-        self.fade = Some(theme::BACKLIGHT_NORMAL);
+        self.fade = Some(theme::backlight::get_backlight_normal());
     }
 
     fn is_cancel_visible(&self) -> bool {

@@ -36,6 +36,7 @@ const INITIALIZED: u16 = FLAG_PUBLIC | APP_DEVICE | 0x0013;
 const SAFETY_CHECK_LEVEL: u16 = APP_DEVICE | 0x0014;
 const EXPERIMENTAL_FEATURES: u16 = APP_DEVICE | 0x0015;
 const HIDE_PASSPHRASE_FROM_HOST: u16 = APP_DEVICE | 0x0016;
+const BRIGHTNESS: u16 = FLAG_PUBLIC | APP_DEVICE | 0x0017;
 
 pub fn get_avatar_len() -> StorageResult<usize> {
     get_length(HOMESCREEN)
@@ -46,4 +47,13 @@ pub fn load_avatar(dest: &mut [u8]) -> StorageResult<()> {
     let result = get(HOMESCREEN, dest)?;
     ensure!(dest_len == result.len(), "Internal error in load_avatar");
     Ok(())
+}
+
+pub fn get_brightness() -> StorageResult<u8> {
+    let mut dest: [u8; 1] = [0; 1];
+    let res = get(BRIGHTNESS, &mut dest);
+    match res {
+        Ok(_) => Ok(dest[0]),
+        Err(e) => Err(e),
+    }
 }

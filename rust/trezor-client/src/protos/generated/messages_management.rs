@@ -2993,6 +2993,8 @@ pub struct ApplySettings {
     pub experimental_features: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.hide_passphrase_from_host)
     pub hide_passphrase_from_host: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.brightness)
+    pub brightness: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.ApplySettings.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -3272,8 +3274,27 @@ impl ApplySettings {
         self.hide_passphrase_from_host = ::std::option::Option::Some(v);
     }
 
+    // optional uint32 brightness = 12;
+
+    pub fn brightness(&self) -> u32 {
+        self.brightness.unwrap_or(0)
+    }
+
+    pub fn clear_brightness(&mut self) {
+        self.brightness = ::std::option::Option::None;
+    }
+
+    pub fn has_brightness(&self) -> bool {
+        self.brightness.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_brightness(&mut self, v: u32) {
+        self.brightness = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(11);
+        let mut fields = ::std::vec::Vec::with_capacity(12);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "language",
@@ -3330,6 +3351,11 @@ impl ApplySettings {
             |m: &ApplySettings| { &m.hide_passphrase_from_host },
             |m: &mut ApplySettings| { &mut m.hide_passphrase_from_host },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "brightness",
+            |m: &ApplySettings| { &m.brightness },
+            |m: &mut ApplySettings| { &mut m.brightness },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ApplySettings>(
             "ApplySettings",
             fields,
@@ -3381,6 +3407,9 @@ impl ::protobuf::Message for ApplySettings {
                 88 => {
                     self.hide_passphrase_from_host = ::std::option::Option::Some(is.read_bool()?);
                 },
+                96 => {
+                    self.brightness = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -3426,6 +3455,9 @@ impl ::protobuf::Message for ApplySettings {
         if let Some(v) = self.hide_passphrase_from_host {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.brightness {
+            my_size += ::protobuf::rt::uint32_size(12, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -3465,6 +3497,9 @@ impl ::protobuf::Message for ApplySettings {
         if let Some(v) = self.hide_passphrase_from_host {
             os.write_bool(11, v)?;
         }
+        if let Some(v) = self.brightness {
+            os.write_uint32(12, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -3493,6 +3528,7 @@ impl ::protobuf::Message for ApplySettings {
         self.safety_checks = ::std::option::Option::None;
         self.experimental_features = ::std::option::Option::None;
         self.hide_passphrase_from_host = ::std::option::Option::None;
+        self.brightness = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -3509,6 +3545,7 @@ impl ::protobuf::Message for ApplySettings {
             safety_checks: ::std::option::Option::None,
             experimental_features: ::std::option::Option::None,
             hide_passphrase_from_host: ::std::option::Option::None,
+            brightness: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance

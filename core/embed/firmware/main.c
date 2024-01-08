@@ -148,10 +148,14 @@ int main(void) {
   dma2d_init();
 #endif
 
+#if defined TREZOR_MODEL_T
+  set_core_clock(CLOCK_180_MHZ);
+#endif
+
   display_reinit();
 
 #ifdef STM32U5
-  check_oem_keys();
+  //check_oem_keys();
 #endif
 
   screen_boot_stage_2();

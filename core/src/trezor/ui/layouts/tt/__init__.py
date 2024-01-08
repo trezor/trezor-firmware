@@ -9,7 +9,7 @@ from trezor.wire.context import wait as ctx_wait
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
+    from typing import Any, Awaitable, Callable, Iterable, NoReturn, Sequence, TypeVar
 
     from ..common import ExceptionType, PropertyType
 
@@ -36,13 +36,13 @@ if __debug__:
 
 
 class RustLayout(LayoutParentType[T]):
-    BACKLIGHT_LEVEL = ui.style.BACKLIGHT_NORMAL
 
     # pylint: disable=super-init-not-called
     def __init__(self, layout: trezorui2.LayoutObj[T]):
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
+        self.backlight_level = ui.style.get_backlight_normal()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -168,7 +168,7 @@ class RustLayout(LayoutParentType[T]):
             return self.handle_timers(), self.handle_input_and_rendering()
 
     def _first_paint(self) -> None:
-        ui.backlight_fade(ui.style.BACKLIGHT_NONE)
+        ui.backlight_fade(ui.style.get_backlight_none())
         self._paint()
 
         if __debug__ and self.should_notify_layout_change:
@@ -191,7 +191,7 @@ class RustLayout(LayoutParentType[T]):
             notify_layout_change(self, event_id)
 
         # Turn the brightness on again.
-        ui.backlight_fade(self.BACKLIGHT_LEVEL)
+        ui.backlight_fade(self.backlight_level)
 
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         from trezor import workflow
@@ -228,10 +228,10 @@ def draw_simple(layout: trezorui2.LayoutObj[Any]) -> None:
         raise RuntimeError
 
     layout.attach_timer_fn(dummy_set_timer)
-    ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+    ui.backlight_fade(ui.style.get_backlight_dim())
     layout.paint()
     ui.refresh()
-    ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
+    ui.backlight_fade(ui.style.get_backlight_normal())
 
 
 async def raise_if_not_confirmed(
@@ -1525,3 +1525,40 @@ def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[Non
             BR_TYPE_OTHER,
         )
     )
+
+
+async def request_number_slider(
+    title: str,
+    callback: Callable[[int], None],
+    count: int,
+    min_count: int,
+    max_count: int,
+    br_name: str,
+) -> int:
+    num_input = RustLayout(
+        trezorui2.request_number_slider(
+            title=title.upper(),
+            callback=callback,
+            count=count,
+            min_count=min_count,
+            max_count=max_count,
+        )
+    )
+    while True:
+        result = await interact(
+            num_input,
+            br_name,
+            BR_TYPE_OTHER,
+        )
+        # if __debug__:
+        #     if not isinstance(result, tuple):
+        #         # DebugLink currently can't send number of shares and it doesn't
+        #         # change the counter either so just use the initial value.
+        #         result = (result, count)
+        status, value = result
+
+        if status == CONFIRMED:
+            assert isinstance(value, int)
+            return value
+
+        raise ActionCancelled

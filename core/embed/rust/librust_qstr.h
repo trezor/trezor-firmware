@@ -131,6 +131,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__try_again;
   MP_QSTR_buttons__turn_off;
   MP_QSTR_buttons__turn_on;
+  MP_QSTR_callback;
   MP_QSTR_can_go_back;
   MP_QSTR_cancel_arrow;
   MP_QSTR_cancel_cross;
@@ -382,6 +383,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_bip39;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_request_number;
+  MP_QSTR_request_number_slider;
   MP_QSTR_request_passphrase;
   MP_QSTR_request_pin;
   MP_QSTR_request_slip39;

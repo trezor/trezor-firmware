@@ -16,6 +16,7 @@ mod keyboard;
 mod loader;
 #[cfg(feature = "translations")]
 mod number_input;
+mod number_input_slider;
 #[cfg(feature = "translations")]
 mod page;
 mod progress;
@@ -50,6 +51,7 @@ pub use keyboard::{
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 #[cfg(feature = "translations")]
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
+pub use number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg};
 #[cfg(feature = "translations")]
 pub use page::ButtonPage;
 pub use progress::Progress;

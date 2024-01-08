@@ -35,6 +35,7 @@ INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 _HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
+_BRIGHTNESS                = const(0x17)  # int
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
@@ -344,3 +345,17 @@ def get_hide_passphrase_from_host() -> bool:
     Whether we should hide the passphrase from the host.
     """
     return common.get_bool(_NAMESPACE, _HIDE_PASSPHRASE_FROM_HOST)
+
+
+def set_brightness(brightness: int) -> None:
+    """
+    Set the display brightness setting.
+    """
+    common.set_uint8(_NAMESPACE, _BRIGHTNESS, brightness, True)
+
+
+def get_brightness() -> int | None:
+    """
+    Get the display brightness setting.
+    """
+    return common.get_uint8(_NAMESPACE, _BRIGHTNESS, True)

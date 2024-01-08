@@ -62,12 +62,12 @@ async def _alert(count: int) -> None:
     long_sleep = loop.sleep(80)
     for i in range(count * 2):
         if i % 2 == 0:
-            display.backlight(style.BACKLIGHT_MAX)
+            display.backlight(style.get_backlight_max())
             await short_sleep
         else:
-            display.backlight(style.BACKLIGHT_DIM)
+            display.backlight(style.get_backlight_dim())
             await long_sleep
-    display.backlight(style.BACKLIGHT_NORMAL)
+    display.backlight(style.get_backlight_normal())
     global _alert_in_progress
     _alert_in_progress = False
 
