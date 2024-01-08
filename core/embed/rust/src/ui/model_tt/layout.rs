@@ -44,7 +44,8 @@ use super::{
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SimplePage, Slip39Input,
+        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog, SimplePage,
+        Slip39Input,
     },
     theme,
 };
@@ -216,6 +217,15 @@ where
         match msg {
             NumberInputDialogMsg::Selected => Ok((CONFIRMED.as_obj(), value).try_into()?),
             NumberInputDialogMsg::InfoRequested => Ok((INFO.as_obj(), value).try_into()?),
+        }
+    }
+}
+
+impl ComponentMsgObj for SetBrightnessDialog {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
         }
     }
 }
@@ -1293,6 +1303,19 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_set_brightness(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let current: Option<u16> = kwargs.get(Qstr::MP_QSTR_current)?.try_into_option()?;
+        let obj = LayoutObj::new(Frame::centered(
+            theme::label_title(),
+            TR::brightness__title.into(),
+            SetBrightnessDialog::new(current),
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1989,6 +2012,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[tuple[UiResult, int]]:
     ///     """Number input with + and - buttons, description, and info button."""
     Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
+
+    /// def set_brightness(
+    ///     *,
+    ///     current: int | None = None
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Show the brightness configuration dialog."""
+    Qstr::MP_QSTR_set_brightness => obj_fn_kw!(0, new_set_brightness).as_obj(),
 
     /// def show_checklist(
     ///     *,

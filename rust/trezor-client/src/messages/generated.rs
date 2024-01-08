@@ -48,6 +48,7 @@ trezor_message_impl! {
     ChangeLanguage => MessageType_ChangeLanguage,
     TranslationDataRequest => MessageType_TranslationDataRequest,
     TranslationDataAck => MessageType_TranslationDataAck,
+    SetBrightness => MessageType_SetBrightness,
     SetU2FCounter => MessageType_SetU2FCounter,
     GetNextU2FCounter => MessageType_GetNextU2FCounter,
     NextU2FCounter => MessageType_NextU2FCounter,
