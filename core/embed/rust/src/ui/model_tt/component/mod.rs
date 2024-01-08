@@ -16,11 +16,13 @@ mod keyboard;
 mod loader;
 #[cfg(feature = "translations")]
 mod number_input;
+pub mod number_input_slider;
 #[cfg(feature = "translations")]
 mod page;
 mod progress;
 mod result;
 mod scroll;
+mod set_brightness;
 mod simple_page;
 mod swipe;
 mod welcome_screen;
@@ -50,11 +52,13 @@ pub use keyboard::{
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 #[cfg(feature = "translations")]
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
+pub use number_input_slider::NumberInputSliderDialog;
 #[cfg(feature = "translations")]
 pub use page::ButtonPage;
 pub use progress::Progress;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
+pub use set_brightness::SetBrightnessDialog;
 pub use simple_page::SimplePage;
 pub use swipe::{Swipe, SwipeDirection};
 pub use welcome_screen::WelcomeScreen;

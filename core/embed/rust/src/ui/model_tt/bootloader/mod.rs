@@ -16,6 +16,7 @@ use super::{
         bl_confirm::{Confirm, ConfirmTitle},
         Button, ResultScreen, WelcomeScreen,
     },
+    theme,
     theme::{
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
@@ -23,7 +24,7 @@ use super::{
             FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL,
             TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
         },
-        BACKLIGHT_NORMAL, FG,
+        FG,
     },
     ModelTTFeatures,
 };
@@ -335,7 +336,7 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         if fading {
             Self::fadein();
         } else {
-            display::set_backlight(BACKLIGHT_NORMAL);
+            display::set_backlight(theme::backlight::get_backlight_normal());
         }
     }
 

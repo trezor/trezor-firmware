@@ -1329,6 +1329,7 @@ pub enum TranslatedString {
     words__settings = 929,  // "Settings"
     words__try_again = 930,  // "Try again."
     reset__slip39_checklist_num_groups_x_template = 931,  // "Number of groups: {0}"
+    brightness__title = 932,  // "Set brightness"
 }
 
 impl TranslatedString {
@@ -2653,6 +2654,7 @@ impl TranslatedString {
             Self::words__settings => "Settings",
             Self::words__try_again => "Try again.",
             Self::reset__slip39_checklist_num_groups_x_template => "Number of groups: {0}",
+            Self::brightness__title => "Set brightness",
         }
     }
 
@@ -3978,6 +3980,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_words__settings => Some(Self::words__settings),
             Qstr::MP_QSTR_words__try_again => Some(Self::words__try_again),
             Qstr::MP_QSTR_reset__slip39_checklist_num_groups_x_template => Some(Self::reset__slip39_checklist_num_groups_x_template),
+            Qstr::MP_QSTR_brightness__title => Some(Self::brightness__title),
             _ => None,
         }
     }

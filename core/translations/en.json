@@ -81,6 +81,7 @@
     "bitcoin__unverified_external_inputs": "The transaction contains unverified external inputs.",
     "bitcoin__valid_signature": "The signature is valid.",
     "bitcoin__voting_rights": "Voting rights to:",
+    "brightness__title": "Set brightness",
     "buttons__abort": "Abort",
     "buttons__access": "Access",
     "buttons__again": "Again",

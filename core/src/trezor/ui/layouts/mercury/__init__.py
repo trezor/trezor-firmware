@@ -30,7 +30,6 @@ if __debug__:
 
 
 class RustLayout(ui.Layout):
-    BACKLIGHT_LEVEL = ui.style.BACKLIGHT_NORMAL
 
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
@@ -39,6 +38,7 @@ class RustLayout(ui.Layout):
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
         self._send_button_request()
+        self.backlight_level = ui.style.get_backlight_normal()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -187,7 +187,7 @@ class RustLayout(ui.Layout):
                 )
 
     def _first_paint(self) -> None:
-        ui.backlight_fade(ui.style.BACKLIGHT_NONE)
+        ui.backlight_fade(ui.style.get_backlight_none())
         self._paint()
 
         if __debug__ and self.should_notify_layout_change:
@@ -210,7 +210,7 @@ class RustLayout(ui.Layout):
             notify_layout_change(self, event_id)
 
         # Turn the brightness on again.
-        ui.backlight_fade(self.BACKLIGHT_LEVEL)
+        ui.backlight_fade(self.backlight_level)
 
     def handle_input_and_rendering(self) -> loop.Task:
         from trezor import workflow
@@ -263,10 +263,10 @@ def draw_simple(layout: Any) -> None:
         raise RuntimeError
 
     layout.attach_timer_fn(dummy_set_timer)
-    ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+    ui.backlight_fade(ui.style.get_backlight_dim())
     layout.paint()
     ui.refresh()
-    ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
+    ui.backlight_fade(ui.style.get_backlight_normal())
 
 
 async def raise_if_not_confirmed(
@@ -1458,4 +1458,12 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
             "firmware_update",
             BR_TYPE_OTHER,
         )
+    )
+
+
+async def set_brightness(current: int | None = None) -> None:
+    await interact(
+        RustLayout(trezorui2.set_brightness(current=current)),
+        "set_brightness",
+        BR_TYPE_OTHER,
     )

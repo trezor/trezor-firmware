@@ -58,6 +58,9 @@ def _find_message_handler_module(msg_type: int) -> str:
     if utils.INTERNAL_MODEL in ("T2B1",) and msg_type == MessageType.ShowDeviceTutorial:
         return "apps.management.show_tutorial"
 
+    if utils.USE_BACKLIGHT and msg_type == MessageType.SetBrightness:
+        return "apps.management.set_brightness"
+
     if utils.USE_SD_CARD and msg_type == MessageType.SdProtect:
         return "apps.management.sd_protect"
 

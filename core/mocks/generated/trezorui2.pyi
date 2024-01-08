@@ -422,6 +422,14 @@ def flow_request_number(
 
 
 # rust/src/ui/model_mercury/layout.rs
+def set_brightness(
+    *,
+    current: int | None = None
+) -> LayoutObj[UiResult]:
+    """Show the brightness configuration dialog."""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def show_checklist(
     *,
     title: str,
@@ -1040,6 +1048,16 @@ def confirm_firmware_update(
 # rust/src/ui/model_tr/layout.rs
 def show_wait_text(message: str, /) -> None:
     """Show single-line text in the middle of the screen."""
+
+
+# rust/src/ui/model_tr/layout.rs
+class BacklightLevels:
+    """Backlight levels. Values dynamically update based on user settings."""
+    MAX: ClassVar[int]
+    NORMAL: ClassVar[int]
+    LOW: ClassVar[int]
+    DIM: ClassVar[int]
+    NONE: ClassVar[int]
 from trezor import utils
 T = TypeVar("T")
 
@@ -1451,6 +1469,14 @@ def request_number(
     description: Callable[[int], str] | None = None,
 ) -> LayoutObj[tuple[UiResult, int]]:
     """Number input with + and - buttons, description, and info button."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def set_brightness(
+    *,
+    current: int | None = None
+) -> LayoutObj[UiResult]:
+    """Show the brightness configuration dialog."""
 
 
 # rust/src/ui/model_tt/layout.rs
