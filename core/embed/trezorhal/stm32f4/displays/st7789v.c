@@ -65,6 +65,8 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 #error Framebuffer only supported on STM32U5 for now
 #endif
 
+#include "bg_copy.h"
+
 #define DATA_TRANSFER(X) \
   DATA((X)&0xFF);        \
   DATA((X) >> 8)
@@ -83,12 +85,6 @@ static uint16_t window_x1 = 0;
 static uint16_t window_y1 = 0;
 static uint16_t cursor_x = 0;
 static uint16_t cursor_y = 0;
-
-static volatile uint32_t dma_transfer_remaining = 0;
-static volatile uint32_t dma_data_transferred = 0;
-static DMA_HandleTypeDef DMA_Handle = {0};
-
-void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
 
 #else
 #define DATA_TRANSFER(X) PIXELDATA(X)
@@ -254,9 +250,7 @@ int display_backlight(int val) {
   // wait for DMA transfer to finish before changing backlight
   // so that we know that panel has current data
   if (backlight_pwm_get() != val && !is_mode_handler()) {
-    while (dma_transfer_remaining > 0) {
-      __WFI();
-    }
+    bg_copy_wait();
   }
 #endif
 
@@ -340,37 +334,6 @@ void display_setup_fmc(void) {
 }
 
 #ifdef FRAMEBUFFER
-void display_setup_dma(void) {
-  // setup DMA for transferring framebuffer to display
-
-  __HAL_RCC_GPDMA1_CLK_ENABLE();
-
-  /* USER CODE END GPDMA1_Init 1 */
-  DMA_Handle.Instance = GPDMA1_Channel0;
-  DMA_Handle.XferCpltCallback = HAL_DMA_XferCpltCallback;
-  DMA_Handle.Init.Request = GPDMA1_REQUEST_HASH_IN;
-  DMA_Handle.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
-  DMA_Handle.Init.Direction = DMA_MEMORY_TO_MEMORY;
-  DMA_Handle.Init.SrcInc = DMA_SINC_INCREMENTED;
-  DMA_Handle.Init.DestInc = DMA_DINC_FIXED;
-  DMA_Handle.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
-  DMA_Handle.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
-  DMA_Handle.Init.Priority = DMA_LOW_PRIORITY_HIGH_WEIGHT;
-  DMA_Handle.Init.SrcBurstLength = 1;
-  DMA_Handle.Init.DestBurstLength = 1;
-  DMA_Handle.Init.TransferAllocatedPort =
-      DMA_SRC_ALLOCATED_PORT1 | DMA_DEST_ALLOCATED_PORT0;
-  DMA_Handle.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
-  DMA_Handle.Init.Mode = DMA_NORMAL;
-  HAL_DMA_Init(&DMA_Handle);
-  HAL_DMA_ConfigChannelAttributes(&DMA_Handle, DMA_CHANNEL_SEC |
-                                                   DMA_CHANNEL_SRC_SEC |
-                                                   DMA_CHANNEL_DEST_SEC);
-
-  HAL_NVIC_SetPriority(GPDMA1_Channel0_IRQn, IRQ_PRI_DMA, 0);
-  HAL_NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
-}
-
 void display_setup_te_interrupt(void) {
 #ifdef DISPLAY_TE_PIN
   EXTI_HandleTypeDef EXTI_Handle = {0};
@@ -454,7 +417,6 @@ void display_init(void) {
   panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
 
 #ifdef FRAMEBUFFER
-  display_setup_dma();
   display_setup_te_interrupt();
 #endif
 }
@@ -483,7 +445,6 @@ void display_reinit(void) {
 #endif
 
 #ifdef FRAMEBUFFER
-  display_setup_dma();
   display_setup_te_interrupt();
 #endif
 }
@@ -554,66 +515,25 @@ void display_pixeldata(uint16_t c) {
 
 void display_sync(void) {}
 
-void HAL_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
-  if (dma_transfer_remaining > 0xFFFF) {
-    dma_transfer_remaining -= 0xFFFF;
-    dma_data_transferred += 0xFFFF;
-  } else {
-    dma_data_transferred += dma_transfer_remaining;
-    dma_transfer_remaining = 0;
-  }
-
-  if (dma_transfer_remaining > 0) {
-    uint32_t data_to_send =
-        dma_transfer_remaining > 0xFFFF ? 0xFFFF : dma_transfer_remaining;
-
-    if (act_frame_buffer == 0) {
-      HAL_DMA_Start_IT(
-          hdma,
-          (uint32_t) & ((uint8_t *)PhysFrameBuffer0)[dma_data_transferred],
-          (uint32_t)DISPLAY_DATA_ADDRESS, data_to_send);
-    } else {
-      HAL_DMA_Start_IT(
-          hdma,
-          (uint32_t) & ((uint8_t *)PhysFrameBuffer1)[dma_data_transferred],
-          (uint32_t)DISPLAY_DATA_ADDRESS, data_to_send);
-    }
-  }
-}
-
 void DISPLAY_TE_INTERRUPT_HANDLER(void) {
   HAL_NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 
-  uint32_t data_to_send = DISPLAY_RESX * DISPLAY_RESY * 2 > 0xFFFF
-                              ? 0xFFFF
-                              : DISPLAY_RESX * DISPLAY_RESY * 2;
-
   if (act_frame_buffer == 1) {
-    HAL_DMA_Start_IT(&DMA_Handle, (uint32_t)PhysFrameBuffer1,
-                     (uint32_t)DISPLAY_DATA_ADDRESS, data_to_send);
+    bg_copy_start_const_out_8((uint8_t *)PhysFrameBuffer1,
+                              (uint8_t *)DISPLAY_DATA_ADDRESS,
+                              DISPLAY_RESX * DISPLAY_RESY * 2);
 
   } else {
-    HAL_DMA_Start_IT(&DMA_Handle, (uint32_t)PhysFrameBuffer0,
-                     (uint32_t)DISPLAY_DATA_ADDRESS, data_to_send);
+    bg_copy_start_const_out_8((uint8_t *)PhysFrameBuffer0,
+                              (uint8_t *)DISPLAY_DATA_ADDRESS,
+                              DISPLAY_RESX * DISPLAY_RESY * 2);
   }
 
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
 }
 
-void GPDMA1_Channel0_IRQHandler(void) {
-  if ((DMA_Handle.Instance->CSR & DMA_CSR_TCF) == 0) {
-    // error, abort the transfer and allow the next one to start
-    dma_data_transferred = 0;
-    dma_transfer_remaining = 0;
-  }
-
-  HAL_DMA_IRQHandler(&DMA_Handle);
-}
-
 void display_refresh(void) {
-  while (dma_transfer_remaining > 0) {
-    __WFI();
-  }
+  bg_copy_wait();
 
   if (is_mode_handler()) {
     // sync with the panel refresh
@@ -640,9 +560,6 @@ void display_refresh(void) {
       memcpy(PhysFrameBuffer1, PhysFrameBuffer0, sizeof(PhysFrameBuffer1));
     }
   } else {
-    dma_transfer_remaining = DISPLAY_RESX * DISPLAY_RESY * 2;
-    dma_data_transferred = 0;
-
     if (act_frame_buffer == 0) {
       act_frame_buffer = 1;
 
@@ -729,11 +646,7 @@ void display_efficient_clear(void) {
   memzero(PhysFrameBuffer0, sizeof(PhysFrameBuffer0));
 }
 
-void display_finish_actions(void) {
-  while (dma_transfer_remaining > 0) {
-    __WFI();
-  }
-}
+void display_finish_actions(void) { bg_copy_wait(); }
 #else
 //  NOT FRAMEBUFFER
 

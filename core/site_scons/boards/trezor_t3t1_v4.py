@@ -41,6 +41,7 @@ def configure(
         "embed/models/model_T3T1_layout.c",
     ]
     sources += [f"embed/trezorhal/stm32u5/displays/{display}"]
+    sources += [f"embed/trezorhal/stm32u5/bg_copy.c"]
     sources += ["embed/trezorhal/stm32u5/backlight_pwm.c"]
     sources += [
         "embed/trezorhal/stm32u5/displays/panels/lx154a2422.c",
