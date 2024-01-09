@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
+from trezor import utils
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action
+from trezor.ui import display, style
+from trezor.ui.layouts import confirm_action, request_number_slider
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
@@ -48,6 +50,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
     msg_safety_checks = msg.safety_checks  # local_cache_attribute
     experimental_features = msg.experimental_features  # local_cache_attribute
     hide_passphrase_from_host = msg.hide_passphrase_from_host  # local_cache_attribute
+    brightness = msg.brightness
 
     if (
         homescreen is None
@@ -59,6 +62,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
         and msg_safety_checks is None
         and experimental_features is None
         and hide_passphrase_from_host is None
+        and (brightness is None or not utils.USE_BACKLIGHT)
     ):
         raise ProcessError("No setting provided")
 
@@ -111,6 +115,10 @@ async def apply_settings(msg: ApplySettings) -> Success:
             raise ProcessError("Safety checks are strict")
         await _require_confirm_hide_passphrase_from_host(hide_passphrase_from_host)
         storage_device.set_hide_passphrase_from_host(hide_passphrase_from_host)
+
+    if brightness is not None and utils.USE_BACKLIGHT:
+        new_brightness = await _require_set_brightness()
+        storage_device.set_brightness(new_brightness)
 
     reload_settings_from_storage()
 
@@ -249,4 +257,20 @@ async def _require_confirm_hide_passphrase_from_host(enable: bool) -> None:
             "Hide passphrase",
             description="Hide passphrase coming from host?",
             br_code=BRT_PROTECT_CALL,
+        )
+
+
+if utils.USE_BACKLIGHT:
+
+    async def _require_set_brightness() -> int:
+        def callback(val: int) -> None:
+            display.backlight(val)
+
+        return await request_number_slider(
+            "Set brightness",
+            callback,
+            min_count=style.BACKLIGHT_MIN,
+            max_count=style.BACKLIGHT_MAX,
+            count=style.get_backlight_normal(),
+            br_name="set_brightness",
         )

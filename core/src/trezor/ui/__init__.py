@@ -56,7 +56,7 @@ async def _alert(count: int) -> None:
         else:
             display.backlight(style.BACKLIGHT_DIM)
             await long_sleep
-    display.backlight(style.BACKLIGHT_NORMAL)
+    display.backlight(style.get_backlight_normal())
     global _alert_in_progress
     _alert_in_progress = False
 

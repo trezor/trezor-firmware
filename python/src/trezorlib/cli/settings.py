@@ -204,6 +204,13 @@ def label(client: "TrezorClient", label: str) -> str:
 
 
 @cli.command()
+@with_client
+def brightness(client: "TrezorClient") -> str:
+    """Set display brightness."""
+    return device.apply_settings(client, brightness=0)
+
+
+@cli.command()
 @click.argument("rotation", type=ChoiceType(ROTATION))
 @with_client
 def display_rotation(client: "TrezorClient", rotation: int) -> str:

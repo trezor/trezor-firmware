@@ -49,8 +49,9 @@ use super::{
         CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress, Dialog, DialogMsg, FidoConfirm,
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
-        PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SimplePage, Slip39Input, WelcomeScreen,
+        NumberInputSliderDialog, NumberInputSliderDialogMsg, PassphraseKeyboard,
+        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress, SelectWordCount,
+        SelectWordCountMsg, SelectWordMsg, SimplePage, Slip39Input, WelcomeScreen,
     },
     constant, theme,
 };
@@ -257,6 +258,19 @@ where
         match msg {
             NumberInputDialogMsg::Selected => Ok((CONFIRMED.as_obj(), value).try_into()?),
             NumberInputDialogMsg::InfoRequested => Ok((CANCELLED.as_obj(), value).try_into()?),
+        }
+    }
+}
+
+impl<F> ComponentMsgObj for NumberInputSliderDialog<F>
+where
+    F: Fn(u32),
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        let value = self.value().try_into()?;
+        match msg {
+            NumberInputSliderDialogMsg::Confirmed => Ok((CONFIRMED.as_obj(), value).try_into()?),
+            NumberInputSliderDialogMsg::Cancelled => Ok((CANCELLED.as_obj(), value).try_into()?),
         }
     }
 }
@@ -1341,6 +1355,31 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_request_number_slider(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let min_count: u32 = kwargs.get(Qstr::MP_QSTR_min_count)?.try_into()?;
+        let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
+        let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
+        let value_callback: Obj = kwargs.get(Qstr::MP_QSTR_callback)?;
+        assert!(value_callback != Obj::const_none());
+
+        let callback = move |i: u32| {
+            value_callback
+                .call_with_n_args(&[i.try_into().unwrap()])
+                .unwrap();
+        };
+
+        let obj = LayoutObj::new(Frame::centered(
+            theme::label_title(),
+            title,
+            NumberInputSliderDialog::new(min_count, max_count, count, callback),
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1944,6 +1983,18 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Number input with + and - buttons, description, and info button."""
     Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
+
+
+    /// def request_number_slider(
+    ///     *,
+    ///     title: str,
+    ///     count: int,
+    ///     min_count: int,
+    ///     max_count: int,
+    ///     callback: Callable[[int], None] | None = None,
+    /// ) -> object:
+    ///     """Number input with slider."""
+    Qstr::MP_QSTR_request_number_slider => obj_fn_kw!(0, new_request_number_slider).as_obj(),
 
     /// def show_checklist(
     ///     *,

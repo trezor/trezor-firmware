@@ -110,6 +110,10 @@ int main(void) {
   enable_systemview();
 #endif
 
+#if defined TREZOR_MODEL_T
+  set_core_clock(CLOCK_180_MHZ);
+#endif
+
   display_reinit();
 
   screen_boot_full();
@@ -142,10 +146,6 @@ int main(void) {
 #if !PRODUCTION
   // enable BUS fault and USAGE fault handlers
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
-#endif
-
-#if defined TREZOR_MODEL_T
-  set_core_clock(CLOCK_180_MHZ);
 #endif
 
 #ifdef USE_BUTTON

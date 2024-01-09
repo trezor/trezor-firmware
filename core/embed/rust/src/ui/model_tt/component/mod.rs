@@ -13,6 +13,7 @@ mod homescreen;
 mod keyboard;
 mod loader;
 mod number_input;
+mod number_input_slider;
 mod page;
 mod progress;
 mod result;
@@ -43,6 +44,7 @@ pub use keyboard::{
 };
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
+pub use number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg};
 pub use page::ButtonPage;
 pub use progress::Progress;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};

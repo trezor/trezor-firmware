@@ -178,6 +178,7 @@ message ApplySettings {
     optional SafetyCheckLevel safety_checks = 9;  // Safety check level, set to Prompt to limit path namespace enforcement
     optional bool experimental_features = 10;  // enable experimental message types
     optional bool hide_passphrase_from_host = 11;  // do not show passphrase coming from host
+    optional uint32 brightness = 12;  // display brightness, 0 = select on device
 }
 
 /**

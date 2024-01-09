@@ -796,6 +796,18 @@ def request_number(
 
 
 # rust/src/ui/model_tt/layout.rs
+def request_number_slider(
+    *,
+    title: str,
+    count: int,
+    min_count: int,
+    max_count: int,
+    callback: Callable[[int], None] | None = None,
+) -> object:
+    """Number input with slider."""
+
+
+# rust/src/ui/model_tt/layout.rs
 def show_checklist(
     *,
     title: str,

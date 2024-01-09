@@ -3348,6 +3348,7 @@ class ApplySettings(protobuf.MessageType):
         9: protobuf.Field("safety_checks", "SafetyCheckLevel", repeated=False, required=False, default=None),
         10: protobuf.Field("experimental_features", "bool", repeated=False, required=False, default=None),
         11: protobuf.Field("hide_passphrase_from_host", "bool", repeated=False, required=False, default=None),
+        12: protobuf.Field("brightness", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3364,6 +3365,7 @@ class ApplySettings(protobuf.MessageType):
         safety_checks: Optional["SafetyCheckLevel"] = None,
         experimental_features: Optional["bool"] = None,
         hide_passphrase_from_host: Optional["bool"] = None,
+        brightness: Optional["int"] = None,
     ) -> None:
         self.language = language
         self.label = label
@@ -3376,6 +3378,7 @@ class ApplySettings(protobuf.MessageType):
         self.safety_checks = safety_checks
         self.experimental_features = experimental_features
         self.hide_passphrase_from_host = hide_passphrase_from_host
+        self.brightness = brightness
 
 
 class ApplyFlags(protobuf.MessageType):
