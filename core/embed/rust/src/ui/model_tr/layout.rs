@@ -47,8 +47,8 @@ use super::{
         AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelConfirmMsg,
         CancelInfoConfirmMsg, CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame,
         Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress,
-        ScrollableContent, ScrollableFrame, ShareWords, ShowMore, SimpleChoice, WelcomeScreen,
-        WordlistEntry, WordlistType,
+        ScrollableContent, ScrollableFrame, ShareWords, ShowMore, SimpleChoice, WordlistEntry,
+        WordlistType,
     },
     constant, theme,
 };
