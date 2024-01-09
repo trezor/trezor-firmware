@@ -8,8 +8,7 @@ pub use ffi::{DISPLAY_RESX, DISPLAY_RESY};
 
 #[cfg(feature = "framebuffer")]
 pub use ffi::{
-    DISPLAY_FRAMEBUFFER_HEIGHT, DISPLAY_FRAMEBUFFER_OFFSET_X, DISPLAY_FRAMEBUFFER_OFFSET_Y,
-    DISPLAY_FRAMEBUFFER_WIDTH,
+    DISPLAY_FRAMEBUFFER_OFFSET_X, DISPLAY_FRAMEBUFFER_OFFSET_Y, DISPLAY_FRAMEBUFFER_WIDTH,
 };
 
 #[cfg(all(feature = "framebuffer", not(feature = "framebuffer32bit")))]

@@ -32,7 +32,7 @@ use crate::{
             },
             Border, Component, Empty, FormattedText, Label, Never, Qr, Timeout,
         },
-        display::{self, tjpgd::jpeg_info},
+        display::tjpgd::jpeg_info,
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
@@ -50,9 +50,9 @@ use super::{
         FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
         MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
         PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SimplePage, Slip39Input, WelcomeScreen,
+        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SimplePage, Slip39Input,
     },
-    constant, theme,
+    theme,
 };
 
 impl TryFrom<CancelConfirmMsg> for Obj {

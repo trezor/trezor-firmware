@@ -11,7 +11,6 @@ use crate::{
         geometry::{Alignment2D, Offset, Point, Rect},
     },
 };
-use core::cmp::max;
 
 #[cfg(feature = "dma2d")]
 use crate::{
@@ -27,6 +26,8 @@ use crate::ui::display::{get_color_table, pixeldata};
 
 #[cfg(feature = "framebuffer")]
 use crate::trezorhal::{buffers::BufferLine4bpp, dma2d::dma2d_setup_4bpp};
+#[cfg(feature = "framebuffer")]
+use core::cmp::max;
 
 use super::Color;
 

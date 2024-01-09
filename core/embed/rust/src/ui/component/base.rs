@@ -235,7 +235,7 @@ where
             self.marked_for_clear = true;
             let mut dummy_ctx = EventCtx::new();
             let paint_msg = self.inner.event(&mut dummy_ctx, Event::RequestPaint);
-            assert!(matches!(paint_msg, None));
+            assert!(paint_msg.is_none());
             assert!(dummy_ctx.timers.is_empty());
         }
         msg

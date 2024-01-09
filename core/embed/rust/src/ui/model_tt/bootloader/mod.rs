@@ -142,7 +142,7 @@ extern "C" fn screen_install_confirm(
 
     let mut fingerprint_buffer: [u8; 64] = [0; 64];
     let fingerprint_str = unsafe {
-        let fingerprint_slice = core::slice::from_raw_parts(fingerprint as *const u8, 32);
+        let fingerprint_slice = core::slice::from_raw_parts(fingerprint, 32);
         hexlify(fingerprint_slice, &mut fingerprint_buffer);
         core::str::from_utf8_unchecked(fingerprint_buffer.as_ref())
     };
