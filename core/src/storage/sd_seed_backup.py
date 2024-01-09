@@ -92,15 +92,15 @@ def _storage_blocks_gen() -> Generator[int, None, None]:
 
 # Backup Memory Block Layout:
 # +----------------------+------------------------+--------------------+-------------------------------+
-# | SDBACKUP_MAGIC (4B)  | SDBACKUP_VERSION (1B)  | BACKUP_TYPE (1B)   | SEED_LENGTH (4B)              |
+# | SDBACKUP_MAGIC (4B)  | SDBACKUP_VERSION (2B)  | BACKUP_TYPE (1B)   | SEED_LENGTH (2B)              |
 # +----------------------+------------------------+--------------------+-------------------------------+
 # | MNEMONIC (variable length)                    | HASH (32B)         | Padding (variable)            |
 # +-----------------------------------------------+--------------------+-------------------------------+
 #
 # - SDBACKUP_MAGIC: 4 bytes magic number identifying the backup block
-# - SDBACKUP_VERSION: 1 bytes representing the version of the backup format (for future compatibility)
+# - SDBACKUP_VERSION: 2 bytes representing the version of the backup format (for future compatibility)
 # - BACKUP_TYPE: 1 bytes representing the version of the backup format
-# - SEED_LENGTH: 4 bytes (big-endian) indicating the length of the mnemonic
+# - SEED_LENGTH: 2 bytes (big-endian) indicating the length of the mnemonic
 # - MNEMONIC: Variable length field containing the mnemonic
 # - HASH: 32 bytes sha256 hash of all previous fields
 # - Padding: Remaining bytes of the block (if any) are padding
@@ -108,9 +108,9 @@ def _storage_blocks_gen() -> Generator[int, None, None]:
 # The total size of the block is defined by SDCARD_BLOCK_SIZE_B.
 
 MAGIC_LEN = const(4)
-VERSION_LEN = const(1)
+VERSION_LEN = const(2)
 BACKUPTYPE_LEN = const(1)
-SEEDLEN_LEN = const(4)
+SEEDLEN_LEN = const(2)
 HASH_LEN = const(32)
 
 
