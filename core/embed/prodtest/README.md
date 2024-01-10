@@ -160,6 +160,21 @@ SBU 1 0
 OK
 ```
 
+
+### HAPTIC
+The `HAPTIC` command allows you to test the functionality of the device's haptic driver.
+It takes one input parameter, representing the duration of the vibration in milliseconds.
+The device only vibrates if there is motor connected to the haptic driver, otherwise the effect needs to be
+measured by an oscilloscope.
+
+Example:
+```
+// runs the driver for 3000 ms
+
+HAPTIC 3000
+OK
+```
+
 ### OTP READ
 The `OTP READ` command is utilized to retrieve a string parameter from the device's OTP memory.
 This string typically contains information identifying the model and production batch of the device.
