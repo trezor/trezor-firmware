@@ -27,7 +27,7 @@
 /// def insert(
 ///     card_sn: int,
 ///     capacity_bytes: int | None = 122_945_536,
-///     manuf_id: int | None = 27,
+///     manuf_id: int | None = 39,
 /// ) -> None:
 ///     """
 ///     Inserts SD card to the emulator.
@@ -40,7 +40,7 @@ STATIC mp_obj_t mod_trezorio_sdcard_switcher_insert(size_t n_args,
       {MP_QSTR_capacity_bytes,
        MP_ARG_OBJ,
        {.u_rom_obj = MP_ROM_INT(122945536)}},
-      {MP_QSTR_manuf_id, MP_ARG_OBJ, {.u_rom_obj = MP_ROM_INT(27)}},
+      {MP_QSTR_manuf_id, MP_ARG_OBJ, {.u_rom_obj = MP_ROM_INT(39)}},
   };
 
   mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)] = {0};
@@ -60,7 +60,7 @@ STATIC mp_obj_t mod_trezorio_sdcard_switcher_insert(size_t n_args,
   mp_int_t manuf_id;
   if (vals[2].u_obj == mp_const_none) {
     /* manuf_id = mp_obj_get_int(vals[2].u_rom_obj); */
-    manuf_id = 27;
+    manuf_id = 39;
   } else {
     manuf_id = mp_obj_get_int(vals[2].u_obj);
   }
