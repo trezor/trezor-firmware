@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use super::ffi;
 
 pub use super::ffi::{BTN_EVT_DOWN, BTN_EVT_UP, BTN_LEFT, BTN_RIGHT};

@@ -17,6 +17,8 @@ use crate::ui::{
 };
 
 #[cfg(all(feature = "sd_card", not(feature = "sd_card_hotswap")))]
+use crate::ui::model::component::CancelConfirmMsg;
+#[cfg(all(feature = "sd_card", not(feature = "sd_card_hotswap")))]
 use crate::ui::model_tt::component::IconDialog;
 
 #[cfg(all(feature = "sd_card", feature = "sd_card_hotswap"))]
@@ -59,7 +61,7 @@ pub fn insert_sd_card() -> bool {
             icon,
             StrBuffer::from("SD CARD REQUIRED"),
             theme::button_bar(
-                Button::with_text(StrBuffer::from("OK"))
+                Button::with_text(StrBuffer::from("TRY AGAIN"))
                     .styled(theme::button_default())
                     .map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
@@ -81,7 +83,7 @@ pub fn retry_wrong_card() -> bool {
     let title_str = StrBuffer::from("WRONG SD CARD");
     let title = Label::left_aligned(title_str, theme::TEXT_BOLD).vertically_centered();
     let msg = Label::left_aligned(
-        StrBuffer::from("Please insert your SD card."),
+        StrBuffer::from("Please insert the correct SD card for this device."),
         theme::TEXT_NORMAL,
     );
 
@@ -116,7 +118,7 @@ pub fn retry_wrong_card() -> bool {
             icon,
             StrBuffer::from("WRONG SD CARD"),
             theme::button_bar(
-                Button::with_text(StrBuffer::from("OK"))
+                Button::with_text(StrBuffer::from("TRY AGAIN"))
                     .styled(theme::button_default())
                     .map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
@@ -135,14 +137,14 @@ pub fn retry_wrong_card() -> bool {
 
 #[cfg(feature = "sd_card")]
 pub fn retry_sd_card() -> bool {
-    let title_str = StrBuffer::from("SD CARD FAILURE");
+    let title_str = StrBuffer::from("SD CARD PROBLEM");
     let title = Label::left_aligned(title_str, theme::TEXT_BOLD).vertically_centered();
     let msg = Label::left_aligned(
-        StrBuffer::from("Please insert your SD card."),
+        StrBuffer::from("There was a problem accessing the SD card."),
         theme::TEXT_NORMAL,
     );
 
-    let left = Button::with_text("CANCEL").styled(theme::button_default());
+    let left = Button::with_text("ABORT").styled(theme::button_default());
     let right = Button::with_text("RETRY").styled(theme::button_confirm());
 
     let mut layout = RustLayout::new(Confirm::new(
