@@ -1,6 +1,8 @@
 #include "drv2625_lib.h"
 #include "haptic.h"
 
+#include <stdbool.h>
+
 #include STM32_HAL_H
 
 #include "i2c.h"
@@ -76,10 +78,12 @@
 #define PRESS_EFFECT_AMPLITUDE 25
 #define PRESS_EFFECT_DURATION 10
 
-static void set_reg(uint8_t addr, uint8_t value) {
+#define PRODTEST_EFFECT_AMPLITUDE 127
+
+static bool set_reg(uint8_t addr, uint8_t value) {
   uint8_t data[] = {addr, value};
-  i2c_transmit(DRV2625_I2C_INSTANCE, DRV2625_I2C_ADDRESS, data, sizeof(data),
-               1);
+  return i2c_transmit(DRV2625_I2C_INSTANCE, DRV2625_I2C_ADDRESS, data,
+                      sizeof(data), 1) == HAL_OK;
 }
 
 void haptic_calibrate(void) {
@@ -136,19 +140,29 @@ void haptic_init(void) {
   TIM16->BDTR |= TIM_BDTR_MOE;
 }
 
-static void haptic_play_RTP(int8_t amplitude, uint16_t duration_ms) {
-  set_reg(DRV2625_REG_MODE,
-          DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE);
-  set_reg(DRV2625_REG_RTP, (uint8_t)amplitude);
+static bool haptic_play_RTP(int8_t amplitude, uint16_t duration_ms) {
+  if (!set_reg(DRV2625_REG_MODE,
+               DRV2625_REG_MODE_RTP | DRV2625_REG_MODE_TRGFUNC_ENABLE)) {
+    return false;
+  }
+
+  if (!set_reg(DRV2625_REG_RTP, (uint8_t)amplitude)) {
+    return false;
+  }
 
   if (duration_ms > 6500) {
     duration_ms = 6500;
+  }
+  if (duration_ms == 0) {
+    return true;
   }
 
   TIM16->CNT = 1;
   TIM16->CCR1 = 1;
   TIM16->ARR = duration_ms * 10;
   TIM16->CR1 |= TIM_CR1_CEN;
+
+  return true;
 }
 
 static void haptic_play_lib(drv2625_lib_effect_t effect) {
@@ -172,4 +186,8 @@ void haptic_play(haptic_effect_t effect) {
     default:
       break;
   }
+}
+
+bool haptic_test(uint16_t duration_ms) {
+  return haptic_play_RTP(PRODTEST_EFFECT_AMPLITUDE, duration_ms);
 }
