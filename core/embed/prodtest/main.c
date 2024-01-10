@@ -48,6 +48,10 @@
 #include "optiga_transport.h"
 #endif
 
+#ifdef USE_HAPTIC
+#include "haptic.h"
+#endif
+
 #ifdef USE_HASH_PROCESSOR
 #include "hash_processor.h"
 #endif
@@ -460,6 +464,24 @@ static void test_sbu(const char *args) {
 }
 #endif
 
+#ifdef USE_HAPTIC
+static void test_haptic(const char *args) {
+  int duration_ms = atoi(args);
+
+  if (duration_ms <= 0) {
+    vcp_println("ERROR HAPTIC DURATION");
+    return;
+  }
+
+  if (haptic_test(duration_ms)) {
+    vcp_println("OK");
+
+  } else {
+    vcp_println("ERROR HAPTIC");
+  }
+}
+#endif
+
 static void test_otp_read(void) {
   uint8_t data[32];
   memzero(data, sizeof(data));
@@ -575,6 +597,9 @@ int main(void) {
 #ifdef USE_SBU
   sbu_init();
 #endif
+#ifdef USE_HAPTIC
+  haptic_init();
+#endif
   usb_init_all();
 
   mpu_config_prodtest_initial();
@@ -641,6 +666,10 @@ int main(void) {
 #ifdef USE_SBU
     } else if (startswith(line, "SBU ")) {
       test_sbu(line + 4);
+#endif
+#ifdef USE_HAPTIC
+    } else if (startswith(line, "HAPTIC ")) {
+      test_haptic(line + 7);
 #endif
 #ifdef USE_OPTIGA
     } else if (startswith(line, "OPTIGAID READ")) {
