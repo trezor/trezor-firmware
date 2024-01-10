@@ -33,7 +33,7 @@ PROFILE_BASE = Path.home() / ".trezoremu"
 
 TREZOR_STORAGE_FILES = (
     "trezor.flash",
-    "trezor.sdcard",
+    *["trezor.sdcard{:02d}".format(i) for i in range(1, 17)],
 )
 
 

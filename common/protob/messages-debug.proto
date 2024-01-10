@@ -173,7 +173,6 @@ message DebugLinkFlashErase {
     optional uint32 sector = 1;
 }
 
-
 /**
  * Request: Erase the SD card
  * @start
@@ -185,6 +184,16 @@ message DebugLinkEraseSdCard {
                                // if false, it will be all 0xFF bytes.
 }
 
+/**
+ * Request: Insert SD card into device (emulator).
+ * If serial_number is not supplied, the message is interpreted as a request for ejecting a card.
+ * @next Success
+ */
+message DebugLinkInsertSdCard {
+    optional uint32 serial_number = 1;  // mocked serial number of the card (e.g.: 1, 2, 3,...)
+    optional uint32 capacity_bytes = 2; // capacity of the card in bytes
+    optional uint32 manuf_ID = 3;       // mocked manufacturer ID 
+}
 
 /**
  * Request: Start or stop tracking layout changes

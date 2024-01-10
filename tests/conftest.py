@@ -198,14 +198,6 @@ def client(
     ):
         pytest.skip("Test excluded on Trezor R")
 
-    sd_marker = request.node.get_closest_marker("sd_card")
-    if sd_marker and not _raw_client.features.sd_card_present:
-        raise RuntimeError(
-            "This test requires SD card.\n"
-            "To skip all such tests, run:\n"
-            "  pytest -m 'not sd_card' <test path>"
-        )
-
     test_ui = request.config.getoption("ui")
 
     _raw_client.reset_debug_features()
@@ -223,7 +215,9 @@ def client(
         # we need to reseed before the wipe
         _raw_client.debug.reseed(0)
 
+    sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker:
+        _raw_client.debug.insert_sd_card(1)
         should_format = sd_marker.kwargs.get("formatted", True)
         _raw_client.debug.erase_sd_card(format=should_format)
 

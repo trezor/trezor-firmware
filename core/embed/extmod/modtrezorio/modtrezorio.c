@@ -54,10 +54,11 @@ bool usb_connected_previously = true;
 #ifdef USE_SD_CARD
 #include "modtrezorio-fatfs.h"
 #include "modtrezorio-sdcard.h"
+#include "modtrezorio-sdcard_switcher.h"
 #endif
 
 /// package: trezorio.__init__
-/// from . import fatfs, sdcard
+/// from . import fatfs, sdcard, sdcard_switcher
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -87,6 +88,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #ifdef USE_SD_CARD
     {MP_ROM_QSTR(MP_QSTR_fatfs), MP_ROM_PTR(&mod_trezorio_fatfs_module)},
     {MP_ROM_QSTR(MP_QSTR_sdcard), MP_ROM_PTR(&mod_trezorio_sdcard_module)},
+    {MP_ROM_QSTR(MP_QSTR_sdcard_switcher), MP_ROM_PTR(&mod_trezorio_sdcard_switcher_module)},
 #endif
 
 #ifdef USE_TOUCH

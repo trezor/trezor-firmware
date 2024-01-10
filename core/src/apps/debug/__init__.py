@@ -22,6 +22,7 @@ if __debug__:
             DebugLinkDecision,
             DebugLinkEraseSdCard,
             DebugLinkGetState,
+            DebugLinkInsertSdCard,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
             DebugLinkResetDebugEvents,
@@ -255,6 +256,21 @@ if __debug__:
             sdcard.power_off()
         return Success()
 
+    async def dispatch_DebugLinkInsertSdCard(msg: DebugLinkInsertSdCard) -> Success:
+        from trezor import io
+
+        sdcard_switcher = io.sdcard_switcher  # local_cache_attribute
+        if msg.serial_number is None:
+            sdcard_switcher.eject()
+        else:
+            sdcard_switcher.insert(
+                msg.serial_number,
+                capacity_bytes=msg.capacity_bytes,
+                manuf_id=msg.manuf_ID,
+            )
+
+        return Success()
+
     def boot() -> None:
         register = workflow_handlers.register  # local_cache_attribute
 
@@ -263,6 +279,7 @@ if __debug__:
         register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
         register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)
         register(MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard)
+        register(MessageType.DebugLinkInsertSdCard, dispatch_DebugLinkInsertSdCard)
         register(MessageType.DebugLinkWatchLayout, dispatch_DebugLinkWatchLayout)
         register(
             MessageType.DebugLinkResetDebugEvents, dispatch_DebugLinkResetDebugEvents

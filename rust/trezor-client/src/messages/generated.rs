@@ -77,6 +77,7 @@ trezor_message_impl! {
     DebugLinkReseedRandom => MessageType_DebugLinkReseedRandom,
     DebugLinkRecordScreen => MessageType_DebugLinkRecordScreen,
     DebugLinkEraseSdCard => MessageType_DebugLinkEraseSdCard,
+    DebugLinkInsertSdCard => MessageType_DebugLinkInsertSdCard,
     DebugLinkWatchLayout => MessageType_DebugLinkWatchLayout,
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
 }

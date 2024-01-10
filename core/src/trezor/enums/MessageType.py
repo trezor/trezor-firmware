@@ -92,8 +92,9 @@ DebugLinkLayout = 9001
 DebugLinkReseedRandom = 9002
 DebugLinkRecordScreen = 9003
 DebugLinkEraseSdCard = 9005
-DebugLinkWatchLayout = 9006
-DebugLinkResetDebugEvents = 9007
+DebugLinkInsertSdCard = 9006
+DebugLinkWatchLayout = 9007
+DebugLinkResetDebugEvents = 9008
 if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80

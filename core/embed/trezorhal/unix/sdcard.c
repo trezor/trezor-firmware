@@ -18,6 +18,7 @@
  */
 
 #include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -26,27 +27,24 @@
 #include <unistd.h>
 
 #include "common.h"
-#include "profile.h"
 #include "sdcard.h"
+#include "sdcard_emu_mock.h"
 
-#ifndef SDCARD_FILE
-#define SDCARD_FILE profile_sdcard_path()
-#endif
-
-#define SDCARD_SIZE (64 * 1024 * 1024)
+#define SDCARD_FILE sdcard_mock.filename
+#define SDCARD_BUFFER sdcard_mock.buffer
+#define SDCARD_SIZE sdcard_mock.capacity_bytes
 #define SDCARD_BLOCKS (SDCARD_SIZE / SDCARD_BLOCK_SIZE)
 
-static uint8_t *sdcard_buffer = NULL;
 static secbool sdcard_powered = secfalse;
 
 static void sdcard_exit(void) {
-  int r = munmap(sdcard_buffer, SDCARD_SIZE);
+  int r = munmap(SDCARD_BUFFER, SDCARD_SIZE);
   ensure(sectrue * (r == 0), "munmap failed");
-  sdcard_buffer = NULL;
+  SDCARD_BUFFER = NULL;
 }
 
 void sdcard_init(void) {
-  if (sdcard_buffer != NULL) {
+  if (SDCARD_BUFFER != NULL) {
     return;
   }
 
@@ -74,10 +72,10 @@ void sdcard_init(void) {
   void *map = mmap(0, SDCARD_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   ensure(sectrue * (map != MAP_FAILED), "mmap failed");
 
-  sdcard_buffer = (uint8_t *)map;
+  SDCARD_BUFFER = (uint8_t *)map;
 
   if (should_clear) {
-    for (int i = 0; i < SDCARD_SIZE; ++i) sdcard_buffer[i] = 0xFF;
+    for (int i = 0; i < SDCARD_SIZE; ++i) SDCARD_BUFFER[i] = 0xFF;
   }
 
   sdcard_powered = secfalse;
@@ -85,9 +83,12 @@ void sdcard_init(void) {
   atexit(sdcard_exit);
 }
 
-secbool sdcard_is_present(void) { return sectrue; }
+secbool sdcard_is_present(void) { return sdcard_mock.inserted; }
 
 secbool sdcard_power_on(void) {
+  if (sdcard_mock.inserted == secfalse) {
+    return secfalse;
+  }
   sdcard_init();
   sdcard_powered = sectrue;
   return sectrue;
@@ -110,7 +111,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   if (num_blocks > SDCARD_BLOCKS - block_num) {
     return secfalse;
   }
-  memcpy(dest, sdcard_buffer + block_num * SDCARD_BLOCK_SIZE,
+  memcpy(dest, SDCARD_BUFFER + block_num * SDCARD_BLOCK_SIZE,
          num_blocks * SDCARD_BLOCK_SIZE);
   return sectrue;
 }
@@ -126,12 +127,9 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   if (num_blocks > SDCARD_BLOCKS - block_num) {
     return secfalse;
   }
-  memcpy(sdcard_buffer + block_num * SDCARD_BLOCK_SIZE, src,
+  memcpy(SDCARD_BUFFER + block_num * SDCARD_BLOCK_SIZE, src,
          num_blocks * SDCARD_BLOCK_SIZE);
   return sectrue;
 }
 
-uint64_t __wur sdcard_get_mid(void) {
-  // TODO mock
-  return 0;
-}
+uint64_t __wur sdcard_get_mid(void) { return (uint64_t)sdcard_mock.manuf_ID; }

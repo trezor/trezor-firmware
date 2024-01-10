@@ -123,8 +123,9 @@ class MessageType(IntEnum):
     DebugLinkReseedRandom = 9002
     DebugLinkRecordScreen = 9003
     DebugLinkEraseSdCard = 9005
-    DebugLinkWatchLayout = 9006
-    DebugLinkResetDebugEvents = 9007
+    DebugLinkInsertSdCard = 9006
+    DebugLinkWatchLayout = 9007
+    DebugLinkResetDebugEvents = 9008
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4084,8 +4085,28 @@ class DebugLinkEraseSdCard(protobuf.MessageType):
         self.format = format
 
 
-class DebugLinkWatchLayout(protobuf.MessageType):
+class DebugLinkInsertSdCard(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9006
+    FIELDS = {
+        1: protobuf.Field("serial_number", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("capacity_bytes", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("manuf_ID", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        serial_number: Optional["int"] = None,
+        capacity_bytes: Optional["int"] = None,
+        manuf_ID: Optional["int"] = None,
+    ) -> None:
+        self.serial_number = serial_number
+        self.capacity_bytes = capacity_bytes
+        self.manuf_ID = manuf_ID
+
+
+class DebugLinkWatchLayout(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9007
     FIELDS = {
         1: protobuf.Field("watch", "bool", repeated=False, required=False, default=None),
     }
@@ -4099,7 +4120,7 @@ class DebugLinkWatchLayout(protobuf.MessageType):
 
 
 class DebugLinkResetDebugEvents(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 9007
+    MESSAGE_WIRE_TYPE = 9008
 
 
 class EosGetPublicKey(protobuf.MessageType):

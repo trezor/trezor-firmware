@@ -370,6 +370,7 @@ class DebugLink:
         # To be set by TrezorClientDebugLink (is not known during creation time)
         self.model: Optional[str] = None
         self.version: Tuple[int, int, int] = (0, 0, 0)
+        self.is_emulator: bool = False
 
         # Where screenshots are being saved
         self.screenshot_recording_dir: Optional[str] = None
@@ -739,6 +740,33 @@ class DebugLink:
     def erase_sd_card(self, format: bool = True) -> messages.Success:
         return self._call(messages.DebugLinkEraseSdCard(format=format))
 
+    @expect(messages.Success)
+    def insert_sd_card(
+        self,
+        serial_number: int = 1,
+        capacity_bytes: Optional[int] = None,
+        manuf_ID: Optional[int] = None,
+    ) -> messages.Success:
+        if not self.model == "T":
+            raise RuntimeError("SD card not supported by this device.")
+        if not self.is_emulator:
+            raise RuntimeError("SD card mocking is only supported on emulator.")
+        return self._call(
+            messages.DebugLinkInsertSdCard(
+                serial_number=serial_number,
+                capacity_bytes=capacity_bytes,
+                manuf_ID=manuf_ID,
+            )
+        )
+
+    @expect(messages.Success)
+    def eject_sd_card(self) -> messages.Success:
+        if not self.model == "T":
+            raise RuntimeError("SD card not supported by this device.")
+        if not self.is_emulator:
+            raise RuntimeError("SD card mocking is only supported on emulator.")
+        return self._call(messages.DebugLinkInsertSdCard(serial_number=None))
+
     def take_t1_screenshot_if_relevant(self) -> None:
         """Conditionally take screenshots on T1.
 
@@ -976,6 +1004,7 @@ class TrezorClientDebugLink(TrezorClient):
         # and know the supported debug capabilities
         self.debug.model = self.features.model
         self.debug.version = self.version
+        self.debug.is_emulator = self.is_emulator()
 
     def reset_debug_features(self) -> None:
         """Prepare the debugging client for a new testcase.
@@ -1233,6 +1262,10 @@ class TrezorClientDebugLink(TrezorClient):
 
         raise RuntimeError("Unexpected call")
 
+    def is_emulator(self) -> bool:
+        """Check if we are connected to emulator, in contrast to hardware device."""
+        return self.features.fw_vendor == "EMULATOR"
+
 
 @expect(messages.Success, field="message", ret_type=str)
 def load_device(
@@ -1310,7 +1343,7 @@ def record_screen(
         session_dir.mkdir(parents=True, exist_ok=True)
         return session_dir
 
-    if not _is_emulator(debug_client):
+    if not debug_client.is_emulator():
         raise RuntimeError("Recording is only supported on emulator.")
 
     if directory is None:
@@ -1329,8 +1362,3 @@ def record_screen(
         debug_client.debug.start_recording(str(current_session_dir))
         if report_func is not None:
             report_func(f"Recording started into {current_session_dir}.")
-
-
-def _is_emulator(debug_client: "TrezorClientDebugLink") -> bool:
-    """Check if we are connected to emulator, in contrast to hardware device."""
-    return debug_client.features.fw_vendor == "EMULATOR"

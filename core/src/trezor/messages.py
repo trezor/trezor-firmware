@@ -2923,6 +2923,24 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkEraseSdCard"]:
             return isinstance(msg, cls)
 
+    class DebugLinkInsertSdCard(protobuf.MessageType):
+        serial_number: "int | None"
+        capacity_bytes: "int | None"
+        manuf_ID: "int | None"
+
+        def __init__(
+            self,
+            *,
+            serial_number: "int | None" = None,
+            capacity_bytes: "int | None" = None,
+            manuf_ID: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkInsertSdCard"]:
+            return isinstance(msg, cls)
+
     class DebugLinkWatchLayout(protobuf.MessageType):
         watch: "bool | None"
 

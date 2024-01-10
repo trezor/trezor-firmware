@@ -241,9 +241,10 @@ class CoreEmulator(Emulator):
         if workdir is not None:
             self.workdir = Path(workdir).resolve()
 
-        self.sdcard = self.profile_dir / "trezor.sdcard"
-        if sdcard is not None:
-            self.sdcard.write_bytes(sdcard)
+        # FIXME does not work with switchable SD cards
+        # self.sdcard = self.profile_dir / "trezor.sdcard"
+        # if sdcard is not None:
+        #     self.sdcard.write_bytes(sdcard)
 
         if port:
             self.port = port
@@ -273,6 +274,11 @@ class CoreEmulator(Emulator):
             + self.main_args
             + self.extra_args
         )
+
+    def stop(self) -> None:
+        super().stop()
+        for i in range(1, 17):
+            _rm_f(self.profile_dir / "trezor.sdcard{:02d}".format(i))
 
 
 class LegacyEmulator(Emulator):
