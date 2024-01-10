@@ -3,14 +3,14 @@ name: Legacy
 on: [pull_request]
 
 permissions:
-  id-token: write      # for fetching the OIDC token
-  contents: read       # for actions/checkout
-  pull-requests: write # For dflook comments on PR
+  id-token: write       # for fetching the OIDC token
+  contents: read        # for actions/checkout
+  pull-requests: write  # For dflook comments on PR
 
 env:
   PULL_COMMENT: |
-    |legacy UI changes|[master diff](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/)|[device test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/)|
-    |-----------------|------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+    |legacy UI changes|[device test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T1B1-legacy_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html))|
+    |-----------------|-----|
 
 jobs:
   legacy_firmware:
@@ -143,8 +143,8 @@ jobs:
       # see python_test for explanation of _PYTHON_SYSCONFIGDATA_NAME
       - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
 
-  legacy_ui_master:
-    name: UI diff from master
+  legacy_ui_main:
+    name: UI diff from main branch
     runs-on: ubuntu-latest
     needs:
       - legacy_device_test
@@ -162,7 +162,7 @@ jobs:
       - run: "for F in screens_*.tar; do tar xvf $F; done"
       - run: nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff T1"
       - run: mv tests/ui_tests/reports/master_diff .
-      - name: Upload master diff
+      - name: Upload main branch diff
         run: |
           aws s3 sync master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
 
@@ -176,8 +176,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - run: |
           git fetch origin main
-          git diff --quiet origin/main...HEAD -- tests/ui_tests/fixtures.json
-          echo "FIXTURES_CHANGED=$?" >> $GITHUB_OUTPUT
+          git diff --quiet origin/main...HEAD -- tests/ui_tests/fixtures.json || echo "FIXTURES_CHANGED=$?" >> $GITHUB_OUTPUT
         id: check-fixtures-changed
       - uses: ./.github/actions/ui-comment
         if: ${{ steps.check-fixtures-changed.outputs.FIXTURES_CHANGED == '1' }}
