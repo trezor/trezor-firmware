@@ -594,7 +594,7 @@ int main(void) {
   draw_welcome_screen();
 
   char dom[32];
-  // format: TREZOR2-YYMMDD
+  // format: {MODEL_IDENTIFIER}-YYMMDD
   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
       sectrue == startswith(dom, MODEL_IDENTIFIER) && dom[31] == 0) {
     display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, 4);

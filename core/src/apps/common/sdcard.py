@@ -1,6 +1,6 @@
-from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
 from trezor import io, wire
 from trezor.ui.layouts import confirm_action, show_error_and_raise
+from trezor.utils import sd_hotswap_enabled
 
 
 class SdCardUnavailable(wire.ProcessError):
@@ -8,7 +8,7 @@ class SdCardUnavailable(wire.ProcessError):
 
 
 async def _confirm_retry_wrong_card() -> None:
-    if SD_CARD_HOT_SWAPPABLE:
+    if sd_hotswap_enabled():
         await confirm_action(
             "warning_wrong_sd",
             "SD card protection",
@@ -28,7 +28,7 @@ async def _confirm_retry_wrong_card() -> None:
 
 
 async def _confirm_retry_insert_card() -> None:
-    if SD_CARD_HOT_SWAPPABLE:
+    if sd_hotswap_enabled():
         await confirm_action(
             "warning_no_sd",
             "SD card protection",
