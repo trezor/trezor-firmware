@@ -20,6 +20,7 @@ from trezorutils import (  # noqa: F401
     halt,
     memcpy,
     reboot_to_bootloader,
+    sd_hotswap_enabled,
     unit_btconly,
     unit_color,
 )
