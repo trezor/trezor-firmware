@@ -33,7 +33,7 @@
 
 | block    | range                   | size | function
 |----------|-------------------------|------|--------------------------------
-| block  0 | 0x1FFF7800 - 0x1FFF781F | 32 B | device batch (week of manufacture)
+| block  0 | 0x1FFF7800 - 0x1FFF781F | 32 B | device batch: {MODEL_IDENTIFIER}-YYMMDD
 | block  1 | 0x1FFF7820 - 0x1FFF783F | 32 B | bootloader downgrade protection
 | block  2 | 0x1FFF7840 - 0x1FFF785F | 32 B | vendor keys lock
 | block  3 | 0x1FFF7860 - 0x1FFF787F | 32 B | entropy/randomness

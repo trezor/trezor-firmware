@@ -75,6 +75,13 @@ def unit_btconly() -> bool | None:
 
 
 # extmod/modtrezorutils/modtrezorutils.c
+def sd_hotswap_enabled() -> bool:
+    """
+    Returns True if SD card hot swapping is enabled
+    """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
 def reboot_to_bootloader(
     boot_command : int = 0,
     boot_args : bytes | None = None,
