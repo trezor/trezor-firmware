@@ -139,7 +139,8 @@ mod tests {
     use serial_test::serial;
     use std::str::FromStr;
 
-    use bitcoin::bip32::DerivationPath;
+    use crate::{client::handle_interaction, protos::IdentityType};
+    use bitcoin::{bip32::DerivationPath, hex::FromHex};
 
     use super::*;
 
@@ -186,5 +187,40 @@ mod tests {
             .get_address(&path, InputScriptType::SPENDADDRESS, bitcoin::Network::Testnet, false)
             .expect("Failed to get address");
         assert_eq!(address.ok().unwrap().to_string(), "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q");
+    }
+
+    #[ignore]
+    #[test]
+    #[serial]
+    fn test_ecdh_shared_secret() {
+        tracing_subscriber::fmt().with_max_level(tracing::Level::TRACE).init();
+
+        let mut emulator = init_emulator();
+        assert_eq!(emulator.features().expect("Failed to get features").label(), "SLIP-0014");
+
+        let mut ident = IdentityType::new();
+        ident.set_proto("gpg".to_owned());
+        ident.set_user("".to_owned());
+        ident.set_host("Satoshi Nakamoto <satoshi@bitcoin.org>".to_owned());
+        ident.set_port("".to_owned());
+        ident.set_path("".to_owned());
+        ident.set_index(0);
+
+        let peer_public_key = Vec::from_hex("0407f2c6e5becf3213c1d07df0cfbe8e39f70a8c643df7575e5c56859ec52c45ca950499c019719dae0fda04248d851e52cf9d66eeb211d89a77be40de22b6c89d").unwrap();
+        let curve_name = "secp256k1".to_owned();
+        let response = handle_interaction(
+            emulator
+                .get_ecdh_session_key(ident, peer_public_key, curve_name)
+                .expect("Failed to get ECDH shared secret"),
+        )
+        .unwrap();
+
+        let expected_session_key = Vec::from_hex("048125883b086746244b0d2c548860ecc723346e14c87e51dc7ba32791bc780d132dbd814fbee77134f318afac6ad6db3c5334efe6a8798628a1038195b96e82e2").unwrap();
+        assert_eq!(response.session_key(), &expected_session_key);
+
+        let expected_public_key =
+            Vec::from_hex("032726ba71aa066b47fc0f90b389f8c3e02fe20b94c858395d71f260e9944e3c65")
+                .unwrap();
+        assert_eq!(response.public_key(), &expected_public_key);
     }
 }
