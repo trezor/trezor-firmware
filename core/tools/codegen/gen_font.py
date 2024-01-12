@@ -4,9 +4,10 @@
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TextIO, Any
+from typing import TextIO
 import json
 
 # pip install freetype-py
@@ -14,11 +15,50 @@ import freetype
 
 from foreign_chars import all_languages
 
+
+def _normalize(s: str) -> str:
+    return unicodedata.normalize("NFKC", s)
+
+
 HERE = Path(__file__).parent
+CORE_ROOT = HERE.parent.parent
 FONTS_DIR = HERE / "fonts"
+C_FONTS_DEST = CORE_ROOT / "embed" / "lib" / "fonts"
+JSON_FONTS_DEST = CORE_ROOT / "embed" / "rust" / "src" / "ui" / "translations" / "fonts"
 
 MIN_GLYPH = ord(" ")
 MAX_GLYPH = ord("~")
+
+# characters for which bearingX is negative, but we choose to make it zero and modify
+# advance instead
+MODIFY_BEARING_X = [
+    _normalize(c)
+    for c in (
+        "À",
+        "Â",
+        "Æ",
+        "Î",
+        "Ï",
+        "î",
+        "ï",
+        "ÿ",
+        "Ý",
+        "Ÿ",
+        "Á",
+        "ý",
+        "A",
+        "X",
+        "Y",
+        "j",
+        "x",
+        "y",
+        "}",
+        ")",
+        ",",
+        "/",
+        "_",
+    )
+]
 
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
@@ -88,6 +128,7 @@ class Glyph:
     def from_face(
         cls, face: freetype.Face, c: str, shaveX: int, inverse_colors: bool = False
     ) -> Glyph:
+        assert len(c) == 1
         bitmap = face.glyph.bitmap
         metrics = face.glyph.metrics
         assert metrics.width // 64 == bitmap.width
@@ -111,10 +152,10 @@ class Glyph:
             advance -= diff
             bearingX -= diff
             remove_left -= diff
-        # the following code is here just for some letters (listed below)
+        # the following code is here just for some letters (listed at start)
         # not using negative bearingX makes life so much easier; add it to advance instead
         if bearingX < 0:
-            if c in "ÀÂÆÎÏîïÿÝŸÁýAXYjxy}),/_":
+            if c in MODIFY_BEARING_X:
                 advance += -bearingX
                 bearingX = 0
             else:
@@ -175,39 +216,16 @@ class Glyph:
     def get_definition_line(
         self, name_style_size: str, bpp: int, i: int | str, static: bool = True
     ) -> str:
-        line = (
-            "/* %c */ static const uint8_t Font_%s_glyph_%s[] = { %d, %d, %d, %d, %d"
-            % (
-                self.char,
-                name_style_size,
-                i,
-                self.width,
-                self.rows,
-                self.advance,
-                self.bearingX,
-                self.bearingY,
-            )
-        )
+        numbers = ", ".join(str(n) for n in self.to_bytes(bpp))
+        comment = f"/* {self.char} */"
+        const_name = f"Font_{name_style_size}_glyph_{i}"
+        if static:
+            modifier = "static const"
+        else:
+            modifier = "const"
+        return f"{comment} {modifier} uint8_t {const_name}[] = {{ {numbers} }};\n"
 
-        if len(self.buf) > 0:
-            line = line + (
-                ", "
-                + ", ".join(
-                    [
-                        "%d" % self.process_byte(x)
-                        for x in process_bitmap_buffer(self.buf, bpp)
-                    ]
-                )
-            )
-
-        line = line + " };\n"
-
-        if not static:
-            line = line.replace("static const", "const")
-
-        return line
-
-    def get_json_list(self, bpp: int) -> list[int]:
+    def to_bytes(self, bpp: int) -> bytes:
         infos = [
             self.width,
             self.rows,
@@ -215,9 +233,11 @@ class Glyph:
             self.bearingX,
             self.bearingY,
         ]
-        data = [self.process_byte(x) for x in process_bitmap_buffer(self.buf, bpp)]
-
-        return infos + data
+        if self.buf:
+            data = [self.process_byte(x) for x in process_bitmap_buffer(self.buf, bpp)]
+            return bytes(infos + data)
+        else:
+            return bytes(infos)
 
 
 class FaceProcessor:
@@ -248,12 +268,12 @@ class FaceProcessor:
         return f"{self.name}_{self.style}_{self.size}"
 
     @property
-    def _c_file_name(self) -> str:
-        return f"font_{self.fontname}.c"
+    def _c_file_name(self) -> Path:
+        return C_FONTS_DEST / f"font_{self.fontname}.c"
 
     @property
-    def _h_file_name(self) -> str:
-        return f"font_{self.fontname}.h"
+    def _h_file_name(self) -> Path:
+        return C_FONTS_DEST / f"font_{self.fontname}.h"
 
     def write_files(self) -> None:
         self.write_c_files()
@@ -264,28 +284,18 @@ class FaceProcessor:
         self._write_h_file()
 
     def write_foreign_json(self) -> None:
-        def int_list_to_hex(int_list: list[int]) -> str:
-            return "".join(f"{x:02x}" for x in int_list)
-
-        for language in all_languages:
-            all_objects: list[dict[str, Any]] = []
-            for item in language["data"]:
-                c = item[0]
+        for lang, language_chars in all_languages.items():
+            fontdata = {}
+            for item in language_chars:
+                c = _normalize(item)
+                assert len(c) == 1
                 self._load_char(c)
                 glyph = Glyph.from_face(self.face, c, self.shaveX)
                 glyph.print_metrics()
-                json_list = glyph.get_json_list(self.bpp)
-                obj = {
-                    "char": c,
-                    "utf8": item[1],
-                    "data": int_list_to_hex(json_list),
-                }
-                print("obj", obj)
-                all_objects.append(obj)
-            filename = f"font_{self.fontname}_{language['name']}.json"
-            with open(filename, "w", encoding="utf-8") as f:
-                json_content = json.dumps(all_objects, indent=2, ensure_ascii=False)
-                f.write(json_content + "\n")
+                fontdata[c] = glyph.to_bytes(self.bpp).hex()
+            file = JSON_FONTS_DEST / f"font_{self.fontname}_{lang}.json"
+            json_content = json.dumps(fontdata, indent=2, ensure_ascii=False)
+            file.write_text(json_content + "\n")
 
     def _write_c_file(self) -> None:
         with open(self._c_file_name, "wt") as f:
