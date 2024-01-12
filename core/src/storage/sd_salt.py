@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 if utils.USE_SD_CARD:
     fatfs = io.fatfs  # global_import_cache
 
-SD_CARD_HOT_SWAPPABLE = False
 SD_SALT_LEN_BYTES = const(32)
 _SD_SALT_AUTH_TAG_LEN_BYTES = const(16)
 
