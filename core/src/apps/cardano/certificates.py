@@ -23,7 +23,7 @@ _POOL_METADATA_HASH_SIZE = const(32)
 _IPV4_ADDRESS_SIZE = const(4)
 _IPV6_ADDRESS_SIZE = const(16)
 
-_MAX_URL_LENGTH = const(64)
+_MAX_URL_LENGTH = const(128)
 _MAX_PORT_NUMBER = const(65535)
 
 
