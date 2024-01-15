@@ -4,7 +4,9 @@ mod generated;
 mod micropython;
 mod translated_string;
 
-pub use translated_string::TranslatedString;
+pub use translated_string::TranslatedString as TR;
+#[cfg(feature = "micropython")]
+pub use micropython::tr;
 
 use crate::{error::Error, io::InputStream};
 use core::{ptr::null, str};

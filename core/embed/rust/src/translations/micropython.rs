@@ -1,7 +1,7 @@
 use crate::{
     error::Error,
     micropython::{
-        buffer::get_buffer,
+        buffer::{get_buffer, StrBuffer},
         ffi,
         gc::Gc,
         map::Map,
@@ -13,7 +13,13 @@ use crate::{
     },
 };
 
-use super::TranslatedString;
+use super::translated_string::TranslatedString;
+
+pub fn tr(item: TranslatedString) -> StrBuffer {
+    // SAFETY: 
+    let stored_translations = item.translate(unsafe { super::flash::get() });
+    StrBuffer::alloc(stored_translations)
+}
 
 #[repr(C)]
 pub struct TrObj {
