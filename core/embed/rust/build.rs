@@ -291,6 +291,9 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("storage_set_counter")
         .allowlist_function("storage_next_counter")
         .allowlist_function("translations_read")
+        .allowlist_function("translations_write")
+        .allowlist_function("translations_erase")
+        .allowlist_function("translations_area_bytesize")
         // display
         .allowlist_function("display_clear")
         .allowlist_function("display_offset")

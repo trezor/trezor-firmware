@@ -5,9 +5,11 @@
 #include "flash.h"
 #include "model.h"
 
-void translations_write(uint8_t* data, uint32_t offset, uint32_t len) {
+void translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
+  // TODO maybe return errors from here?
   ensure(flash_unlock_write(), "translations_write unlock");
   for (int i = 0; i < len; i++) {
+    // TODO optimize by writing by (quad)words
     ensure(flash_area_write_byte(&TRANSLATIONS_AREA, offset + i, data[i]),
            "translations_write write");
   }
