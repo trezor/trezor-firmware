@@ -219,6 +219,7 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_new_exception_args")
         .allowlist_function("trezor_obj_call_protected")
         .allowlist_var("mp_type_AttributeError")
+        .allowlist_var("mp_type_EOFError")
         .allowlist_var("mp_type_IndexError")
         .allowlist_var("mp_type_KeyError")
         .allowlist_var("mp_type_MemoryError")

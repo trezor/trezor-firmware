@@ -14,6 +14,7 @@ pub enum Error {
     OutOfRange,
     MissingKwargs,
     AllocationFailed,
+    EOFError,
     IndexError,
     #[cfg(feature = "micropython")]
     CaughtException(Obj),
@@ -71,6 +72,7 @@ impl Error {
                 Error::AttributeError(attr) => {
                     ffi::mp_obj_new_exception_args(&ffi::mp_type_AttributeError, 1, &attr.into())
                 }
+                Error::EOFError => ffi::mp_obj_new_exception(&ffi::mp_type_EOFError),
             }
         }
     }
