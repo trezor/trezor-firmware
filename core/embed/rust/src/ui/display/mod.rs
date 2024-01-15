@@ -400,8 +400,8 @@ impl<T: AsRef<str>> TextOverlay<T> {
         for g in self
             .text
             .as_ref()
-            .bytes()
-            .filter_map(|c| self.font.get_glyph(c))
+            .chars()
+            .map(|c| self.font.get_glyph(c))
         {
             let top = self.max_height - self.baseline - g.bearing_y;
             let char_area = Rect::new(

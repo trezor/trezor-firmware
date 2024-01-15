@@ -145,21 +145,9 @@ impl Font {
     }
 
     /// Supports UTF8 characters
-    fn get_glyph_from_char(self, c: char) -> Option<Glyph> {
-        let mut buffer = [0; 4];
-        let bytes = c.encode_utf8(&mut buffer);
-        for byte in bytes.bytes() {
-            if let Some(glyph) = self.get_glyph(byte) {
-                return Some(glyph);
-            }
-        }
-        None
-    }
-
-    /// Supports UTF8 characters
     fn get_first_glyph_from_text(self, text: &str) -> Option<Glyph> {
         if let Some(c) = text.chars().next() {
-            self.get_glyph_from_char(c)
+            Some(self.get_glyph(c))
         } else {
             None
         }
@@ -168,7 +156,7 @@ impl Font {
     /// Supports UTF8 characters
     fn get_last_glyph_from_text(self, text: &str) -> Option<Glyph> {
         if let Some(c) = text.chars().next_back() {
-            self.get_glyph_from_char(c)
+            Some(self.get_glyph(c))
         } else {
             None
         }
@@ -236,25 +224,21 @@ impl Font {
         constant::LINE_SPACE + self.text_height()
     }
 
-    pub fn get_glyph(self, char_byte: u8) -> Option<Glyph> {
-        let gl_data = display::get_char_glyph(char_byte, self.into());
+    pub fn get_glyph(self, ch: char) -> Glyph {
+        let gl_data = display::get_char_glyph(ch as u16, self.into());
 
-        if gl_data.is_null() {
-            return None;
-        }
+        ensure!(!gl_data.is_null(), "Failed to load glyph");
         // SAFETY: Glyph::load is valid for data returned by get_char_glyph
-        unsafe { Some(Glyph::load(gl_data)) }
+        unsafe { Glyph::load(gl_data) }
     }
 
     pub fn display_text(self, text: &str, baseline: Point, fg_color: Color, bg_color: Color) {
         let colortable = get_color_table(fg_color, bg_color);
         let mut adv_total = 0;
-        for c in text.bytes() {
-            let g = self.get_glyph(c);
-            if let Some(gly) = g {
-                let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
-                adv_total += adv;
-            }
+        for c in text.chars() {
+            let gly = self.get_glyph(c);
+            let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
+            adv_total += adv;
         }
     }
 
