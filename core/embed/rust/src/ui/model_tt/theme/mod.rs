@@ -75,6 +75,7 @@ include_icon!(ICON_LIST_CHECK, "model_tt/res/check16.toif");
 include_icon!(ICON_WARN, "model_tt/res/warning16.toif");
 include_icon!(ICON_WARNING40, "model_tt/res/warning40.toif");
 include_icon!(ICON_LOCK, "model_tt/res/lock16.toif");
+include_icon!(ICON_LOCK_BIG, "model_tt/res/lock24.toif");
 include_icon!(ICON_COINJOIN, "model_tt/res/coinjoin16.toif");
 include_icon!(ICON_MAGIC, "model_tt/res/magic.toif");
 
@@ -569,6 +570,21 @@ pub const fn loader_default() -> LoaderStyleSheet {
         },
         active: &LoaderStyle {
             icon: None,
+            loader_color: GREEN,
+            background_color: BG,
+        },
+    }
+}
+
+pub const fn loader_lock_icon() -> LoaderStyleSheet {
+    LoaderStyleSheet {
+        normal: &LoaderStyle {
+            icon: Some((ICON_LOCK_BIG, FG)),
+            loader_color: FG,
+            background_color: BG,
+        },
+        active: &LoaderStyle {
+            icon: Some((ICON_LOCK_BIG, FG)),
             loader_color: GREEN,
             background_color: BG,
         },

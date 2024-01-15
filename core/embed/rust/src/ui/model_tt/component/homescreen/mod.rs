@@ -38,7 +38,7 @@ const TOP_CENTER: Point = AREA.top_center();
 const LABEL_Y: i16 = HEIGHT - 18;
 const LOCKED_Y: i16 = HEIGHT / 2 - 13;
 const TAP_Y: i16 = HEIGHT / 2 + 14;
-const HOLD_Y: i16 = 35;
+const HOLD_Y: i16 = 200;
 const COINJOIN_Y: i16 = 30;
 const LOADER_OFFSET: Offset = Offset::y(-10);
 const LOADER_DELAY: Duration = Duration::from_millis(500);
@@ -67,7 +67,7 @@ where
             label,
             notification,
             hold_to_lock,
-            loader: Loader::new().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
+            loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             pad: Pad::with_background(theme::BG),
             paint_notification_only: false,
             delay: None,
@@ -106,8 +106,8 @@ where
     fn paint_loader(&mut self) {
         display::text_center(
             TOP_CENTER + Offset::y(HOLD_Y),
-            "HOLD TO LOCK",
-            Font::BOLD,
+            "Locking the device...",
+            Font::NORMAL,
             theme::FG,
             theme::BG,
         );
