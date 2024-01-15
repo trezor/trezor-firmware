@@ -5,6 +5,7 @@ use core::{
 
 use crate::{
     error::Error,
+    io::InputStream,
     micropython::{buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr, util},
 };
 
@@ -248,58 +249,5 @@ impl Decoder {
                 self.message_from_stream(sub_stream, &msg_type)
             }
         }
-    }
-}
-
-pub struct InputStream<'a> {
-    buf: &'a [u8],
-    pos: usize,
-}
-
-impl<'a> InputStream<'a> {
-    pub fn new(buf: &'a [u8]) -> Self {
-        Self { buf, pos: 0 }
-    }
-
-    pub fn read_stream(&mut self, len: usize) -> Result<Self, Error> {
-        let buf = self
-            .buf
-            .get(self.pos..self.pos + len)
-            .ok_or_else(error::end_of_buffer)?;
-        self.pos += len;
-        Ok(Self::new(buf))
-    }
-
-    pub fn read(&mut self, len: usize) -> Result<&[u8], Error> {
-        let buf = self
-            .buf
-            .get(self.pos..self.pos + len)
-            .ok_or_else(error::end_of_buffer)?;
-        self.pos += len;
-        Ok(buf)
-    }
-
-    pub fn read_byte(&mut self) -> Result<u8, Error> {
-        let val = self
-            .buf
-            .get(self.pos)
-            .copied()
-            .ok_or_else(error::end_of_buffer)?;
-        self.pos += 1;
-        Ok(val)
-    }
-
-    pub fn read_uvarint(&mut self) -> Result<u64, Error> {
-        let mut uint = 0;
-        let mut shift = 0;
-        loop {
-            let byte = self.read_byte()?;
-            uint += (byte as u64 & 0x7F) << shift;
-            shift += 7;
-            if byte & 0x80 == 0 {
-                break;
-            }
-        }
-        Ok(uint)
     }
 }
