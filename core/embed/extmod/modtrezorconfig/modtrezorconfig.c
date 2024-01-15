@@ -26,12 +26,10 @@
 #if MICROPY_PY_TREZORCONFIG
 
 #include "embed/extmod/trezorobj.h"
-#include "embed/trezorhal/translations.h"
 
 #include "common.h"
 #include "memzero.h"
 #include "storage.h"
-#include "translations.h"
 
 static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
                                         const char *message) {
@@ -313,52 +311,6 @@ STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
                                            mod_trezorconfig_set);
 
-/// def translations_set(blob: bytes, offset: int) -> None:
-///     """
-///     Save translations data at the certain offset.
-///     """
-STATIC mp_obj_t mod_trezorconfig_translations_set(mp_obj_t blob,
-                                                  mp_obj_t offset) {
-  mp_buffer_info_t blob_b = {0};
-  blob_b.buf = NULL;
-  if (blob != mp_const_none) {
-    mp_get_buffer_raise(blob, &blob_b, MP_BUFFER_READ);
-  }
-  if (blob_b.len > translations_area_bytesize()) {
-    mp_raise_msg(&mp_type_RuntimeError, "Translations data blob too big");
-  }
-  uint32_t off = trezor_obj_get_uint(offset);
-  if (off + blob_b.len > translations_area_bytesize()) {
-    mp_raise_msg(&mp_type_RuntimeError, "Translations data cannot fit flash");
-  }
-  translations_write(blob_b.buf, off, blob_b.len);
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_translations_set_obj,
-                                 mod_trezorconfig_translations_set);
-
-/// def translations_wipe() -> None:
-///     """
-///     Wipe all the translations data before writing a new one.
-///     """
-STATIC mp_obj_t mod_trezorconfig_translations_wipe(void) {
-  translations_erase();
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_translations_wipe_obj,
-                                 mod_trezorconfig_translations_wipe);
-
-/// def translations_max_bytesize() -> int:
-///     """
-///     How much is the maximum bytesize of translations data.
-///     """
-STATIC mp_obj_t mod_trezorconfig_translations_max_bytesize(void) {
-  uint32_t count = translations_area_bytesize();
-  return mp_obj_new_int_from_uint(count);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_translations_max_bytesize_obj,
-                                 mod_trezorconfig_translations_max_bytesize);
-
 /// def delete(
 ///     app: int, key: int, public: bool = False, writable_locked: bool = False
 /// ) -> bool:
@@ -479,12 +431,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
      MP_ROM_PTR(&mod_trezorconfig_change_wipe_code_obj)},
     {MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&mod_trezorconfig_get_obj)},
     {MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&mod_trezorconfig_set_obj)},
-    {MP_ROM_QSTR(MP_QSTR_translations_set),
-     MP_ROM_PTR(&mod_trezorconfig_translations_set_obj)},
-    {MP_ROM_QSTR(MP_QSTR_translations_wipe),
-     MP_ROM_PTR(&mod_trezorconfig_translations_wipe_obj)},
-    {MP_ROM_QSTR(MP_QSTR_translations_max_bytesize),
-     MP_ROM_PTR(&mod_trezorconfig_translations_max_bytesize_obj)},
     {MP_ROM_QSTR(MP_QSTR_delete), MP_ROM_PTR(&mod_trezorconfig_delete_obj)},
     {MP_ROM_QSTR(MP_QSTR_set_counter),
      MP_ROM_PTR(&mod_trezorconfig_set_counter_obj)},
