@@ -3,14 +3,15 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         animation::Animation,
-        component::{Component, Event, EventCtx},
-        display::{self, Color, Font},
+        component::{Child, Component, Event, EventCtx},
+        constant,
+        display::{self, Color, Font, LOADER_MAX},
         geometry::{Offset, Rect},
         util::animation_disabled,
     },
 };
 
-use super::theme;
+use super::{theme, Progress};
 
 pub const DEFAULT_DURATION_MS: u32 = 1000;
 pub const SHRINKING_DURATION_MS: u32 = 500;
@@ -186,10 +187,9 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let now = Instant::now();
-
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
             if self.is_animating() {
+                let now = Instant::now();
                 if self.is_completely_grown(now) {
                     self.state = State::Grown;
                     ctx.request_paint();
@@ -253,6 +253,93 @@ impl LoaderStyleSheet {
                 bg_color: theme::BG,
             },
         }
+    }
+}
+
+pub struct ProgressLoader<T>
+where
+    T: StringType,
+{
+    loader: Child<Progress<T>>,
+    duration_ms: u32,
+    start_time: Option<Instant>,
+}
+
+impl<T> ProgressLoader<T>
+where
+    T: StringType + Clone,
+{
+    const LOADER_FRAMES_DEFAULT: u32 = 20;
+
+    pub fn new(loader_description: T, duration_ms: u32) -> Self {
+        Self {
+            loader: Child::new(
+                Progress::new(false, loader_description).with_icon(theme::ICON_LOCK_SMALL),
+            ),
+            duration_ms,
+            start_time: None,
+        }
+    }
+
+    pub fn start(&mut self, ctx: &mut EventCtx) {
+        self.start_time = Some(Instant::now());
+        self.loader.event(ctx, Event::Progress(0, ""));
+        self.loader.mutate(ctx, |ctx, loader| {
+            loader.request_paint(ctx);
+        });
+        ctx.request_anim_frame();
+    }
+
+    pub fn stop(&mut self, _ctx: &mut EventCtx) {
+        self.start_time = None;
+    }
+
+    fn is_animating(&self) -> bool {
+        self.start_time.is_some()
+    }
+
+    fn percentage(&self, now: Instant) -> u32 {
+        if let Some(start_time) = self.start_time {
+            let elapsed = now.saturating_duration_since(start_time);
+            let elapsed_ms = elapsed.to_millis();
+            (elapsed_ms * 100) / self.duration_ms
+        } else {
+            0
+        }
+    }
+}
+
+impl<T> Component for ProgressLoader<T>
+where
+    T: StringType + Clone,
+{
+    type Msg = LoaderMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.loader.place(constant::screen());
+        bounds
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+            if self.is_animating() {
+                let now = Instant::now();
+                let percentage = self.percentage(now);
+                let new_loader_value = (percentage * LOADER_MAX as u32) / 100;
+                self.loader
+                    .event(ctx, Event::Progress(new_loader_value as u16, ""));
+                // Returning only after the loader was fully painted
+                if percentage >= 100 {
+                    return Some(LoaderMsg::GrownCompletely);
+                }
+                ctx.request_anim_frame();
+            }
+        }
+        None
+    }
+
+    fn paint(&mut self) {
+        self.loader.paint();
     }
 }
 

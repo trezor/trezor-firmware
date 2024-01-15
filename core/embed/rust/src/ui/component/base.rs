@@ -47,6 +47,10 @@ pub trait Component {
     /// Component can also optionally return a message as a result of the
     /// interaction.
     ///
+    /// For all components to work properly (e.g. react to `ctx.request_paint`),
+    /// it is required to call `event` function to them, even if they never
+    /// return a message.
+    ///
     /// No painting should be done in this phase.
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg>;
 

@@ -1523,12 +1523,11 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
         // Description updates are received as &str and we need to provide a way to
         // convert them to StrBuffer.
-        let obj = LayoutObj::new(Progress::new(
-            title,
-            indeterminate,
-            description,
-            StrBuffer::alloc,
-        ))?;
+        let obj = LayoutObj::new(
+            Progress::new(indeterminate, description)
+                .with_title(title)
+                .with_update_description(StrBuffer::alloc),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1567,9 +1566,11 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
+        let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
 
         let notification = notification.map(|w| (w, notification_level));
-        let obj = LayoutObj::new(Homescreen::new(label, notification))?;
+        let loader_description = hold.then_some("Locking the device...".into());
+        let obj = LayoutObj::new(Homescreen::new(label, notification, loader_description))?;
         if skip_first_paint {
             obj.skip_first_paint();
         }

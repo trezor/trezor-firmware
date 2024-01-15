@@ -5,6 +5,7 @@ use crate::{
         component::{Component, Event, EventCtx, Never},
         constant,
         display::{self, Color, Font, Icon},
+        event::PhysicalButton,
         geometry::{Alignment2D, Offset, Point, Rect},
     },
 };
@@ -18,6 +19,15 @@ pub enum ButtonPos {
     Left,
     Middle,
     Right,
+}
+
+impl From<PhysicalButton> for ButtonPos {
+    fn from(btn: PhysicalButton) -> Self {
+        match btn {
+            PhysicalButton::Left => ButtonPos::Left,
+            PhysicalButton::Right => ButtonPos::Right,
+        }
+    }
 }
 
 pub struct Button<T>

@@ -22,7 +22,7 @@ pub use input_methods::{
     choice::{Choice, ChoiceFactory, ChoicePage},
     choice_item::ChoiceItem,
 };
-pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
+pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet, ProgressLoader};
 pub use result::ResultScreen;
 pub use welcome_screen::WelcomeScreen;
 

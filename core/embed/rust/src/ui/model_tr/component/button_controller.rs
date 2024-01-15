@@ -46,6 +46,9 @@ pub enum ButtonControllerMsg {
     Triggered(ButtonPos, bool),
     /// Button was pressed and held for longer time (not released yet).
     LongPressed(ButtonPos),
+    /// Hold-to-confirm button was released prematurely - without triggering
+    /// LongPressed.
+    ReleasedWithoutLongPress(ButtonPos),
 }
 
 /// Defines what kind of button should be currently used.
@@ -186,10 +189,11 @@ where
                 self.long_pressed_timer = None;
                 Some(ButtonControllerMsg::Triggered(self.pos, long_press))
             }
-            _ => {
+            ButtonType::HoldToConfirm(_) => {
                 self.hold_ended(ctx);
-                None
+                Some(ButtonControllerMsg::ReleasedWithoutLongPress(self.pos))
             }
+            _ => None,
         }
     }
 
@@ -269,6 +273,8 @@ where
     button_area: Rect,
     /// Handling optional ignoring of buttons after pressing the other button.
     ignore_btn_delay: Option<IgnoreButtonDelay>,
+    /// Whether to count with middle button
+    handle_middle_button: bool,
 }
 
 impl<T> ButtonController<T>
@@ -276,6 +282,7 @@ where
     T: StringType,
 {
     pub fn new(btn_layout: ButtonLayout<T>) -> Self {
+        let handle_middle_button = btn_layout.btn_middle.is_some();
         Self {
             pad: Pad::with_background(theme::BG).with_clear(),
             left_btn: ButtonContainer::new(ButtonPos::Left, btn_layout.btn_left),
@@ -284,6 +291,7 @@ where
             state: ButtonState::Nothing,
             button_area: Rect::zero(),
             ignore_btn_delay: None,
+            handle_middle_button,
         }
     }
 
@@ -296,6 +304,7 @@ where
 
     /// Updating all the three buttons to the wanted states.
     pub fn set(&mut self, btn_layout: ButtonLayout<T>) {
+        self.handle_middle_button = btn_layout.btn_middle.is_some();
         self.pad.clear();
         self.left_btn.set(btn_layout.btn_left, self.button_area);
         self.middle_btn.set(btn_layout.btn_middle, self.button_area);
@@ -471,13 +480,21 @@ where
                                     return None;
                                 }
                             }
-                            self.got_pressed(ctx, ButtonPos::Middle);
-                            self.middle_hold_started(ctx);
-                            (
-                                // ↓ ↓
-                                ButtonState::BothDown,
-                                Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)),
-                            )
+                            // ↓ ↓
+                            if self.handle_middle_button {
+                                self.got_pressed(ctx, ButtonPos::Middle);
+                                self.middle_hold_started(ctx);
+                                (
+                                    ButtonState::BothDown,
+                                    Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)),
+                                )
+                            } else {
+                                self.got_pressed(ctx, b.into());
+                                (
+                                    ButtonState::BothDown,
+                                    Some(ButtonControllerMsg::Pressed(b.into())),
+                                )
+                            }
                         }
                         _ => (self.state, None),
                     },
@@ -487,7 +504,14 @@ where
                         ButtonEvent::ButtonReleased(b) => {
                             self.middle_btn.hold_ended(ctx);
                             // _ ↓ | ↓ _
-                            (ButtonState::OneReleased(b), None)
+                            if self.handle_middle_button {
+                                (ButtonState::OneReleased(b), None)
+                            } else {
+                                (
+                                    ButtonState::OneReleased(b),
+                                    Some(ButtonControllerMsg::Triggered(b.into(), false)),
+                                )
+                            }
                         }
                         _ => (self.state, None),
                     },
@@ -507,7 +531,14 @@ where
                                 ignore_btn_delay.make_button_clickable(ButtonPos::Left);
                                 ignore_btn_delay.make_button_clickable(ButtonPos::Right);
                             }
-                            (ButtonState::Nothing, self.middle_btn.maybe_trigger(ctx))
+                            if self.handle_middle_button {
+                                (ButtonState::Nothing, self.middle_btn.maybe_trigger(ctx))
+                            } else {
+                                (
+                                    ButtonState::Nothing,
+                                    Some(ButtonControllerMsg::Triggered(b.into(), false)),
+                                )
+                            }
                         }
                         _ => (self.state, None),
                     },
