@@ -109,27 +109,6 @@ def set(app: int, key: int, value: bytes, public: bool = False) -> None:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def translations_set(blob: bytes, offset: int) -> None:
-    """
-    Save translations data at the certain offset.
-    """
-
-
-# extmod/modtrezorconfig/modtrezorconfig.c
-def translations_wipe() -> None:
-    """
-    Wipe all the translations data before writing a new one.
-    """
-
-
-# extmod/modtrezorconfig/modtrezorconfig.c
-def translations_max_bytesize() -> int:
-    """
-    How much is the maximum bytesize of translations data.
-    """
-
-
-# extmod/modtrezorconfig/modtrezorconfig.c
 def delete(
     app: int, key: int, public: bool = False, writable_locked: bool = False
 ) -> bool:
