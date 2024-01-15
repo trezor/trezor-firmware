@@ -39,6 +39,15 @@ impl Loader {
 
     pub fn new() -> Self {
         let styles = theme::loader_default();
+        Self::with_styles(styles)
+    }
+
+    pub fn with_lock_icon() -> Self {
+        let styles = theme::loader_lock_icon();
+        Self::with_styles(styles)
+    }
+
+    pub fn with_styles(styles: LoaderStyleSheet) -> Self {
         Self {
             pad: Pad::with_background(styles.normal.background_color),
             state: State::Initial,
