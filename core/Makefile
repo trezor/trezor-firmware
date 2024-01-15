@@ -311,6 +311,9 @@ flash_bootloader_ci_jlink: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
 	cp -f $<.p1 $<.p1.bin
 	cp -f $<.p2 $<.p2.bin
+	## pad 2nd part so that FW integrity works after flash
+	## read&compare in flashing will avoid erasing unmodified sectors
+	truncate -s $(FIRMWARE_P2_MAXSIZE) $<.p2.bin
 	JLinkExe -nogui 1 -commanderscript embed/firmware/firmware_flash.jlink
 
 flash_firmware_t1_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash T1 core port via JLink
