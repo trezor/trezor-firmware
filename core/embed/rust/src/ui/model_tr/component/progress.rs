@@ -10,7 +10,7 @@ use crate::{
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
         constant,
-        display::{self, Font},
+        display::{self, Font, Icon, LOADER_MAX},
         geometry::Rect,
         util::animation_disabled,
     },
@@ -22,17 +22,21 @@ const BOTTOM_DESCRIPTION_MARGIN: i16 = 10;
 const LOADER_Y_OFFSET_TITLE: i16 = -10;
 const LOADER_Y_OFFSET_NO_TITLE: i16 = -20;
 
+// Clippy was complaining about `very complex type used`
+type UpdateDescriptionFn<T, Error> = fn(&str) -> Result<T, Error>;
+
 pub struct Progress<T>
 where
     T: StringType,
 {
-    title: Child<Label<T>>,
+    title: Option<Child<Label<T>>>,
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
     description: Child<Paragraphs<Paragraph<T>>>,
     description_pad: Pad,
-    update_description: fn(&str) -> Result<T, Error>,
+    update_description: Option<UpdateDescriptionFn<T, Error>>,
+    icon: Icon,
 }
 
 impl<T> Progress<T>
@@ -41,14 +45,9 @@ where
 {
     const AREA: Rect = constant::screen();
 
-    pub fn new(
-        title: T,
-        indeterminate: bool,
-        description: T,
-        update_description: fn(&str) -> Result<T, Error>,
-    ) -> Self {
+    pub fn new(indeterminate: bool, description: T) -> Self {
         Self {
-            title: Child::new(Label::centered(title, theme::TEXT_BOLD)),
+            title: None,
             value: 0,
             loader_y_offset: 0,
             indeterminate,
@@ -56,8 +55,41 @@ where
                 Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
             )),
             description_pad: Pad::with_background(theme::BG),
-            update_description,
+            update_description: None,
+            icon: theme::ICON_TICK_FAT,
         }
+    }
+
+    pub fn with_title(mut self, title: T) -> Self {
+        self.title = Some(Child::new(Label::centered(title, theme::TEXT_BOLD)));
+        self
+    }
+
+    pub fn with_update_description(
+        mut self,
+        update_description: UpdateDescriptionFn<T, Error>,
+    ) -> Self {
+        self.update_description = Some(update_description);
+        self
+    }
+
+    pub fn with_icon(mut self, icon: Icon) -> Self {
+        self.icon = icon;
+        self
+    }
+
+    pub fn request_paint(&self, ctx: &mut EventCtx) {
+        if !animation_disabled() {
+            ctx.request_paint();
+        }
+    }
+
+    pub fn value(&self) -> u16 {
+        self.value
+    }
+
+    pub fn reached_max_value(&self) -> bool {
+        self.value >= LOADER_MAX
     }
 }
 
@@ -78,11 +110,16 @@ where
             .filter(|c| *c == '\n')
             .count() as i16;
 
-        let (title, rest, loader_y_offset) = if self.title.inner().text().as_ref().is_empty() {
-            (Rect::zero(), Self::AREA, LOADER_Y_OFFSET_NO_TITLE)
+        let no_title_case = (Rect::zero(), Self::AREA, LOADER_Y_OFFSET_NO_TITLE);
+        let (title, rest, loader_y_offset) = if let Some(self_title) = &self.title {
+            if !self_title.inner().text().as_ref().is_empty() {
+                let (title, rest) = Self::AREA.split_top(self_title.inner().max_size().y);
+                (title, rest, LOADER_Y_OFFSET_TITLE)
+            } else {
+                no_title_case
+            }
         } else {
-            let (title, rest) = Self::AREA.split_top(self.title.inner().max_size().y);
-            (title, rest, LOADER_Y_OFFSET_TITLE)
+            no_title_case
         };
 
         let (_loader, description) = rest.split_bottom(
@@ -96,18 +133,21 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.title.event(ctx, event);
+        self.description.event(ctx, event);
+
         if let Event::Progress(new_value, new_description) = event {
             if mem::replace(&mut self.value, new_value) != new_value {
-                if !animation_disabled() {
-                    ctx.request_paint();
-                }
+                self.request_paint(ctx);
+            }
+            if let Some(update_description) = self.update_description {
                 self.description.mutate(ctx, |ctx, para| {
                     // NOTE: not doing any change for empty new descriptions
                     // (currently, there is no use-case for deleting the description)
                     if !new_description.is_empty()
                         && para.inner_mut().content().as_ref() != new_description
                     {
-                        let new_description = unwrap!((self.update_description)(new_description));
+                        let new_description = unwrap!((update_description)(new_description));
                         para.inner_mut().update(new_description);
                         para.change_page(0); // Recompute bounding box.
                         ctx.request_paint();
@@ -135,7 +175,7 @@ where
                 self.loader_y_offset,
                 theme::FG,
                 theme::BG,
-                Some((theme::ICON_TICK_FAT, theme::FG)),
+                Some((self.icon, theme::FG)),
             );
         }
         self.description_pad.paint();

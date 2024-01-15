@@ -5,7 +5,7 @@ use crate::{
         component::{Child, Component, Event, EventCtx, Label},
         constant::{HEIGHT, WIDTH},
         display::{
-            rect_fill,
+            self, rect_fill,
             toif::{Toif, ToifFormat},
             Font, Icon,
         },
@@ -17,7 +17,7 @@ use crate::{
 
 use super::{
     super::constant, common::display_center, theme, ButtonController, ButtonControllerMsg,
-    ButtonLayout, ButtonPos, CancelConfirmMsg,
+    ButtonLayout, ButtonPos, CancelConfirmMsg, LoaderMsg, ProgressLoader,
 };
 
 const AREA: Rect = constant::screen();
@@ -34,6 +34,8 @@ const NOTIFICATION_FONT: Font = Font::NORMAL;
 const NOTIFICATION_ICON: Icon = theme::ICON_WARNING;
 const COINJOIN_CORNER: Point = AREA.top_right().ofs(Offset::new(-2, 2));
 
+const HOLD_TO_LOCK_MS: u32 = 1000;
+
 fn paint_default_image() {
     theme::ICON_LOGO.draw(
         TOP_CENTER + Offset::y(LOGO_ICON_TOP_MARGIN),
@@ -41,6 +43,12 @@ fn paint_default_image() {
         theme::FG,
         theme::BG,
     );
+}
+
+enum CurrentScreen {
+    EmptyAtStart,
+    Homescreen,
+    Loader,
 }
 
 pub struct Homescreen<T>
@@ -53,18 +61,31 @@ where
     notification: Option<(T, u8)>,
     /// Used for HTC functionality to lock device from homescreen
     invisible_buttons: Child<ButtonController<T>>,
+    /// Holds the loader component
+    loader: Option<Child<ProgressLoader<T>>>,
+    /// Whether to show the loader or not
+    show_loader: bool,
+    /// Which screen is currently shown
+    current_screen: CurrentScreen,
 }
 
 impl<T> Homescreen<T>
 where
     T: StringType + Clone,
 {
-    pub fn new(label: T, notification: Option<(T, u8)>) -> Self {
-        let invisible_btn_layout = ButtonLayout::htc_none_htc("".into(), "".into());
+    pub fn new(label: T, notification: Option<(T, u8)>, loader_description: Option<T>) -> Self {
+        // Buttons will not be visible, we only need both left and right to be existing
+        // so we can get the events from them.
+        let invisible_btn_layout = ButtonLayout::text_none_text("".into(), "".into());
+        let loader =
+            loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
         Self {
             label: Label::centered(label, theme::TEXT_BIG),
             notification,
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
+            loader,
+            show_loader: false,
+            current_screen: CurrentScreen::EmptyAtStart,
         }
     }
 
@@ -152,24 +173,64 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.label.place(LABEL_AREA);
+        self.loader.place(AREA);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
-        // HTC press of any button will lock the device
-        if let Some(ButtonControllerMsg::Triggered(..)) = self.invisible_buttons.event(ctx, event) {
-            return Some(());
+
+        // Only care about button and loader events when there is a possibility of
+        // locking the device
+        if let Some(self_loader) = &mut self.loader {
+            // When loader has completely grown, we can lock the device
+            if let Some(LoaderMsg::GrownCompletely) = self_loader.event(ctx, event) {
+                return Some(());
+            }
+
+            // Longer hold of any button will lock the device.
+            // Normal/quick presses and releases will show/hide the loader.
+            let button_event = self.invisible_buttons.event(ctx, event);
+            if let Some(ButtonControllerMsg::Pressed(..)) = button_event {
+                if !self.show_loader {
+                    self.show_loader = true;
+                    self_loader.mutate(ctx, |ctx, loader| {
+                        loader.start(ctx);
+                        ctx.request_paint();
+                    });
+                }
+            }
+            if let Some(ButtonControllerMsg::Triggered(..)) = button_event {
+                self.show_loader = false;
+                self_loader.mutate(ctx, |ctx, loader| {
+                    loader.stop(ctx);
+                    ctx.request_paint();
+                });
+            }
         }
+
         None
     }
 
     fn paint(&mut self) {
-        // Painting the homescreen image first, as the notification and label
-        // should be "on top of it"
-        self.paint_homescreen_image();
-        self.paint_notification();
-        self.paint_label();
+        // Redraw the whole screen when the screen changes (loader vs homescreen)
+        if self.show_loader {
+            if !matches!(self.current_screen, CurrentScreen::Loader) {
+                display::clear();
+                self.current_screen = CurrentScreen::Loader;
+            }
+            self.loader.paint();
+        } else {
+            if !matches!(self.current_screen, CurrentScreen::Homescreen) {
+                display::clear();
+                self.current_screen = CurrentScreen::Homescreen;
+            }
+            // Painting the homescreen image first, as the notification and label
+            // should be "on top of it"
+            self.paint_homescreen_image();
+            self.paint_notification();
+            self.paint_label();
+        }
     }
 }
 
