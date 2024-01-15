@@ -99,9 +99,9 @@ void display_text_render_buffer(const char *text, int textlen, int font,
   int baseline = font_baseline(font);
 
   // render glyphs
-  for (int c_idx = 0; c_idx < textlen; c_idx++) {
-    const uint8_t *g = font_get_glyph(font, (uint8_t)text[c_idx]);
-    if (!g) continue;
+  font_glyph_iter_t iter = font_glyph_iter_init(font, (uint8_t *)text, textlen);
+  const uint8_t *g = NULL;
+  while (font_next_glyph(&iter, &g)) {
     const uint8_t w = g[0];      // width
     const uint8_t h = g[1];      // height
     const uint8_t adv = g[2];    // advance
@@ -307,9 +307,9 @@ static void display_text_render(int x, int y, const char *text, int textlen,
   set_color_table(colortable, fgcolor, bgcolor);
 
   // render glyphs
-  for (int c_idx = 0; c_idx < textlen; c_idx++) {
-    const uint8_t *g = font_get_glyph(font, (uint8_t)text[c_idx]);
-    if (!g) continue;
+  font_glyph_iter_t iter = font_glyph_iter_init(font, (uint8_t *)text, textlen);
+  const uint8_t *g = NULL;
+  while (font_next_glyph(&iter, &g)) {
     const uint8_t w = g[0];      // width
     const uint8_t h = g[1];      // height
     const uint8_t adv = g[2];    // advance
@@ -363,9 +363,9 @@ static void display_text_render(int x, int y, const char *text, int textlen,
   set_color_table(colortable, fgcolor, bgcolor);
 
   // render glyphs
-  for (int i = 0; i < textlen; i++) {
-    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
-    if (!g) continue;
+  font_glyph_iter_t iter = font_glyph_iter_init(font, (uint8_t *)text, textlen);
+  const uint8_t *g = NULL;
+  while (font_next_glyph(&iter, &g)) {
     const uint8_t w = g[0];      // width
     const uint8_t h = g[1];      // height
     const uint8_t adv = g[2];    // advance
@@ -433,9 +433,9 @@ int display_text_width(const char *text, int textlen, int font) {
   if (textlen < 0) {
     textlen = strlen(text);
   }
-  for (int i = 0; i < textlen; i++) {
-    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
-    if (!g) continue;
+  font_glyph_iter_t iter = font_glyph_iter_init(font, (uint8_t *)text, textlen);
+  const uint8_t *g = NULL;
+  while (font_next_glyph(&iter, &g)) {
     const uint8_t adv = g[2];  // advance
     width += adv;
     /*
@@ -450,35 +450,6 @@ int display_text_width(const char *text, int textlen, int font) {
     */
   }
   return width;
-}
-
-// Returns how many characters of the string can be used before exceeding
-// the requested width. Tries to avoid breaking words if possible.
-int display_text_split(const char *text, int textlen, int font,
-                       int requested_width) {
-  int width = 0;
-  int lastspace = 0;
-  // determine text length if not provided
-  if (textlen < 0) {
-    textlen = strlen(text);
-  }
-  for (int i = 0; i < textlen; i++) {
-    if (text[i] == ' ') {
-      lastspace = i;
-    }
-    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
-    if (!g) continue;
-    const uint8_t adv = g[2];  // advance
-    width += adv;
-    if (width > requested_width) {
-      if (lastspace > 0) {
-        return lastspace;
-      } else {
-        return i;
-      }
-    }
-  }
-  return textlen;
 }
 
 #ifdef TREZOR_PRODTEST

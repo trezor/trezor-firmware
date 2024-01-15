@@ -20,6 +20,8 @@
 #ifndef _FONTS_H
 #define _FONTS_H
 
+#include <stdbool.h>
+
 #include "fonts/font_bitmap.h"
 #include TREZOR_BOARD
 
@@ -117,6 +119,17 @@
 int font_height(int font);
 int font_max_height(int font);
 int font_baseline(int font);
-const uint8_t *font_get_glyph(int font, uint8_t c);
+const uint8_t *font_get_glyph(int font, uint16_t c);
+const uint8_t *font_nonprintable_glyph(int font);
+
+typedef struct {
+  const int font;
+  const uint8_t *text;
+  int remaining;
+} font_glyph_iter_t;
+
+font_glyph_iter_t font_glyph_iter_init(const int font, const uint8_t *text,
+                                       const int len);
+bool font_next_glyph(font_glyph_iter_t *iter, const uint8_t **out);
 
 #endif  //_FONTS_H
