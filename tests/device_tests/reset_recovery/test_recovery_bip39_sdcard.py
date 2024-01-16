@@ -2,7 +2,6 @@ import pytest
 
 from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.messages import BackupType
 
 from ...common import MNEMONIC12
 from ...input_flows import InputFlowBip39RecoverySdCard

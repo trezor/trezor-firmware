@@ -19,6 +19,8 @@ if utils.USE_SD_CARD:
     SDCARD_BLOCK_SIZE_B = sdcard.BLOCK_SIZE  # global_import_cache
     SDBACKUP_BLOCK_START = sdcard.BACKUP_BLOCK_START  # global_import_cache
     SDBACKUP_N_WRITINGS = 100  # TODO arbitrary for now
+    SDBACKUP_N_VERIFY = 10
+    assert SDBACKUP_N_WRITINGS > SDBACKUP_N_VERIFY
     SDBACKUP_MAGIC = b"TRZM"
     SDBACKUP_VERSION = 0
 
@@ -29,7 +31,7 @@ class BackupMedium(IntEnum):
 
 
 @with_filesystem
-def store_seed_on_sdcard(mnemonic_secret: bytes, backup_type: BackupType):
+def store_seed_on_sdcard(mnemonic_secret: bytes, backup_type: BackupType) -> None:
     _write_seed_unalloc(mnemonic_secret, backup_type)
     if _verify_backup(mnemonic_secret, backup_type):
         _write_readme()
@@ -49,10 +51,19 @@ def is_backup_present() -> bool:
 
 
 def _verify_backup(mnemonic_secret: bytes, backup_type: BackupType) -> bool:
-    decoded_mnemonic, decoded_backup_type = _read_seed_unalloc()
-    if decoded_mnemonic is None or decoded_backup_type is None:
-        return False
-    return decoded_mnemonic == mnemonic_secret and decoded_backup_type == backup_type
+    from trezor.crypto import random
+
+    block_buffer = bytearray(SDCARD_BLOCK_SIZE_B)
+    all_backup_blocks = list(_storage_blocks_gen())
+    for _ in range(SDBACKUP_N_VERIFY):
+        block_idx = random.uniform(len(all_backup_blocks))
+        sdcard.read(all_backup_blocks[block_idx], block_buffer)
+        decoded_mnemonic, decoded_backup_type = _decode_backup_block(block_buffer)
+        if decoded_mnemonic is None or decoded_backup_type is None:
+            return False
+        if decoded_mnemonic != mnemonic_secret or decoded_backup_type != backup_type:
+            return False
+    return True
 
 
 def _write_seed_unalloc(mnemonic_secret: bytes, backup_type: BackupType) -> None:
@@ -63,18 +74,15 @@ def _write_seed_unalloc(mnemonic_secret: bytes, backup_type: BackupType) -> None
 
 def _read_seed_unalloc() -> tuple[bytes | None, BackupType | None]:
     block_buffer = bytearray(SDCARD_BLOCK_SIZE_B)
-    restored_block = None
+    (decoded_mnemonic, decoded_backup_type) = (None, None)
     for block_idx in _storage_blocks_gen():
         try:
             sdcard.read(block_idx, block_buffer)
-            restored_block = _decode_backup_block(block_buffer)
-            if restored_block is not None:
+            decoded_mnemonic, decoded_backup_type = _decode_backup_block(block_buffer)
+            if (decoded_mnemonic, decoded_backup_type) != (None, None):
                 break
         except Exception:
             return (None, None)
-    if restored_block is None:
-        return (None, None)
-    decoded_mnemonic, decoded_backup_type = restored_block
     return (decoded_mnemonic, decoded_backup_type)
 
 
@@ -130,14 +138,14 @@ def _encode_backup_block(mnemonic: bytes, backup_type: BackupType) -> bytes:
     return bytes(ret)
 
 
-def _decode_backup_block(block: bytes) -> tuple[bytes, BackupType] | None:
+def _decode_backup_block(block: bytes) -> tuple[bytes | None, BackupType | None]:
     from trezor.enums import BackupType
 
     assert len(block) == SDCARD_BLOCK_SIZE_B
     try:
         r = utils.BufferReader(block)
         if r.read_memoryview(MAGIC_LEN) != SDBACKUP_MAGIC:
-            return None
+            return (None, None)
         r.read_memoryview(VERSION_LEN)  # skip the version for now
         backup_type = int.from_bytes(r.read_memoryview(BACKUPTYPE_LEN), "big")
         seed_len = int.from_bytes(r.read_memoryview(SEEDLEN_LEN), "big")
@@ -156,7 +164,7 @@ def _decode_backup_block(block: bytes) -> tuple[bytes, BackupType] | None:
         ):
             return (mnemonic, backup_type)
         else:
-            return None
+            return (None, None)
 
     except (ValueError, EOFError):
         raise DataError("Trying to decode invalid SD card block.")

@@ -49,7 +49,6 @@ def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> Non
     assert client.features.passphrase_protection is False
 
 
-
 def recover(client: Client):
     with client:
         IF = InputFlowBip39RecoverySdCard(client)

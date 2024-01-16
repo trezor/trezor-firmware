@@ -1578,7 +1578,9 @@ class InputFlowSlip39BasicRecovery(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoverySdCard(InputFlowBase):
-    def __init__(self, client: Client, sdcard_numbers: list[int], pin: str | None = None):
+    def __init__(
+        self, client: Client, sdcard_numbers: list[int], pin: str | None = None
+    ):
         super().__init__(client)
         self.sdcard_numbers = sdcard_numbers
         self.pin = pin
