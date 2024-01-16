@@ -190,9 +190,14 @@ message DebugLinkEraseSdCard {
  * @next Success
  */
 message DebugLinkInsertSdCard {
-    optional uint32 serial_number = 1;  // mocked serial number of the card (e.g.: 1, 2, 3,...)
-    optional uint32 capacity_bytes = 2; // capacity of the card in bytes
+    optional uint32 serial_number = 1;  // mocked serial number of the card (range 1-16)
+    optional uint32 capacity_bytes = 2; // capacity of the mocked card in bytes
     optional uint32 manuf_ID = 3;       // mocked manufacturer ID 
+    repeated DebugLinkSdCardDataBlock data_blocks = 4; // data written directly to individual memory blocks
+    message DebugLinkSdCardDataBlock {
+        required uint32 number = 1;
+        required bytes data = 2;
+    }
 }
 
 /**
@@ -204,7 +209,6 @@ message DebugLinkWatchLayout {
     optional bool watch = 1;  // if true, start watching layout.
                               // if false, stop.
 }
-
 
 /**
  * Request: Remove all the previous debug event state

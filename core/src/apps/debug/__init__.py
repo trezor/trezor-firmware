@@ -241,15 +241,14 @@ if __debug__:
 
         try:
             sdcard.power_on()
+            # trash the whole card
+            assert sdcard.capacity() >= sdcard.BLOCK_SIZE
+            empty_block = bytes([0xFF] * sdcard.BLOCK_SIZE)
+            for i in range(sdcard.capacity() // sdcard.BLOCK_SIZE):
+                sdcard.write(i, empty_block)
+            # make filesystem
             if msg.format:
                 io.fatfs.mkfs()
-            else:
-                # trash first 1 MB of data to destroy the FAT filesystem
-                assert sdcard.capacity() >= 1024 * 1024
-                empty_block = bytes([0xFF] * sdcard.BLOCK_SIZE)
-                for i in range(1024 * 1024 // sdcard.BLOCK_SIZE):
-                    sdcard.write(i, empty_block)
-
         except OSError:
             raise wire.ProcessError("SD card operation failed")
         finally:
@@ -268,6 +267,12 @@ if __debug__:
                 capacity_bytes=msg.capacity_bytes,
                 manuf_id=msg.manuf_ID,
             )
+            if msg.data_blocks is not None:
+                sdcard = io.sdcard
+                sdcard.power_on()
+                for block in msg.data_blocks:
+                    sdcard.write(block.number, block.data)
+                sdcard.power_off()
 
         return Success()
 

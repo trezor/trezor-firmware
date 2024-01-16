@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     P = ParamSpec("P")
     R = TypeVar("R")
 
-SD_CARD_HOT_SWAPPABLE = False
+SD_CARD_HOT_SWAPPABLE = True
 
 
 class FilesystemWrapper:

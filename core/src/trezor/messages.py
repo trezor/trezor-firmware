@@ -2927,10 +2927,12 @@ if TYPE_CHECKING:
         serial_number: "int | None"
         capacity_bytes: "int | None"
         manuf_ID: "int | None"
+        data_blocks: "list[DebugLinkSdCardDataBlock]"
 
         def __init__(
             self,
             *,
+            data_blocks: "list[DebugLinkSdCardDataBlock] | None" = None,
             serial_number: "int | None" = None,
             capacity_bytes: "int | None" = None,
             manuf_ID: "int | None" = None,
@@ -2959,6 +2961,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkResetDebugEvents"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkSdCardDataBlock(protobuf.MessageType):
+        number: "int"
+        data: "bytes"
+
+        def __init__(
+            self,
+            *,
+            number: "int",
+            data: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSdCardDataBlock"]:
             return isinstance(msg, cls)
 
     class EosGetPublicKey(protobuf.MessageType):

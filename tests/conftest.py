@@ -215,6 +215,7 @@ def client(
         # we need to reseed before the wipe
         _raw_client.debug.reseed(0)
 
+    # Insert SD card if needed
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker:
         _raw_client.debug.insert_sd_card(1)

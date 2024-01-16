@@ -4091,15 +4091,18 @@ class DebugLinkInsertSdCard(protobuf.MessageType):
         1: protobuf.Field("serial_number", "uint32", repeated=False, required=False, default=None),
         2: protobuf.Field("capacity_bytes", "uint32", repeated=False, required=False, default=None),
         3: protobuf.Field("manuf_ID", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("data_blocks", "DebugLinkSdCardDataBlock", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
+        data_blocks: Optional[Sequence["DebugLinkSdCardDataBlock"]] = None,
         serial_number: Optional["int"] = None,
         capacity_bytes: Optional["int"] = None,
         manuf_ID: Optional["int"] = None,
     ) -> None:
+        self.data_blocks: Sequence["DebugLinkSdCardDataBlock"] = data_blocks if data_blocks is not None else []
         self.serial_number = serial_number
         self.capacity_bytes = capacity_bytes
         self.manuf_ID = manuf_ID
@@ -4121,6 +4124,23 @@ class DebugLinkWatchLayout(protobuf.MessageType):
 
 class DebugLinkResetDebugEvents(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9008
+
+
+class DebugLinkSdCardDataBlock(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("number", "uint32", repeated=False, required=True),
+        2: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        number: "int",
+        data: "bytes",
+    ) -> None:
+        self.number = number
+        self.data = data
 
 
 class EosGetPublicKey(protobuf.MessageType):

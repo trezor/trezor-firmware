@@ -746,6 +746,7 @@ class DebugLink:
         serial_number: int = 1,
         capacity_bytes: Optional[int] = None,
         manuf_ID: Optional[int] = None,
+        data_blocks: Optional[List[messages.DebugLinkSdCardDataBlock]] = None,
     ) -> messages.Success:
         if not self.model == "T":
             raise RuntimeError("SD card not supported by this device.")
@@ -756,6 +757,7 @@ class DebugLink:
                 serial_number=serial_number,
                 capacity_bytes=capacity_bytes,
                 manuf_ID=manuf_ID,
+                data_blocks=data_blocks,
             )
         )
 

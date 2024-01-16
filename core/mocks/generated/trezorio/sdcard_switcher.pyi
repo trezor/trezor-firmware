@@ -5,7 +5,7 @@ from typing import *
 def insert(
     card_sn: int,
     capacity_bytes: int | None = 122_945_536,
-    manuf_id: int | None = 27,
+    manuf_id: int | None = 39,
 ) -> None:
     """
     Inserts SD card to the emulator.

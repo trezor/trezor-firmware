@@ -3220,6 +3220,8 @@ pub struct DebugLinkInsertSdCard {
     pub capacity_bytes: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkInsertSdCard.manuf_ID)
     pub manuf_ID: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkInsertSdCard.data_blocks)
+    pub data_blocks: ::std::vec::Vec<debug_link_insert_sd_card::DebugLinkSdCardDataBlock>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkInsertSdCard.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -3294,7 +3296,7 @@ impl DebugLinkInsertSdCard {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "serial_number",
@@ -3311,6 +3313,11 @@ impl DebugLinkInsertSdCard {
             |m: &DebugLinkInsertSdCard| { &m.manuf_ID },
             |m: &mut DebugLinkInsertSdCard| { &mut m.manuf_ID },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "data_blocks",
+            |m: &DebugLinkInsertSdCard| { &m.data_blocks },
+            |m: &mut DebugLinkInsertSdCard| { &mut m.data_blocks },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkInsertSdCard>(
             "DebugLinkInsertSdCard",
             fields,
@@ -3323,6 +3330,11 @@ impl ::protobuf::Message for DebugLinkInsertSdCard {
     const NAME: &'static str = "DebugLinkInsertSdCard";
 
     fn is_initialized(&self) -> bool {
+        for v in &self.data_blocks {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -3337,6 +3349,9 @@ impl ::protobuf::Message for DebugLinkInsertSdCard {
                 },
                 24 => {
                     self.manuf_ID = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                34 => {
+                    self.data_blocks.push(is.read_message()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -3359,6 +3374,10 @@ impl ::protobuf::Message for DebugLinkInsertSdCard {
         if let Some(v) = self.manuf_ID {
             my_size += ::protobuf::rt::uint32_size(3, v);
         }
+        for value in &self.data_blocks {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -3374,6 +3393,9 @@ impl ::protobuf::Message for DebugLinkInsertSdCard {
         if let Some(v) = self.manuf_ID {
             os.write_uint32(3, v)?;
         }
+        for v in &self.data_blocks {
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
+        };
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -3394,6 +3416,7 @@ impl ::protobuf::Message for DebugLinkInsertSdCard {
         self.serial_number = ::std::option::Option::None;
         self.capacity_bytes = ::std::option::Option::None;
         self.manuf_ID = ::std::option::Option::None;
+        self.data_blocks.clear();
         self.special_fields.clear();
     }
 
@@ -3402,6 +3425,7 @@ impl ::protobuf::Message for DebugLinkInsertSdCard {
             serial_number: ::std::option::Option::None,
             capacity_bytes: ::std::option::Option::None,
             manuf_ID: ::std::option::Option::None,
+            data_blocks: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3423,6 +3447,210 @@ impl ::std::fmt::Display for DebugLinkInsertSdCard {
 
 impl ::protobuf::reflect::ProtobufValue for DebugLinkInsertSdCard {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `DebugLinkInsertSdCard`
+pub mod debug_link_insert_sd_card {
+    // @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkInsertSdCard.DebugLinkSdCardDataBlock)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct DebugLinkSdCardDataBlock {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkInsertSdCard.DebugLinkSdCardDataBlock.number)
+        pub number: ::std::option::Option<u32>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkInsertSdCard.DebugLinkSdCardDataBlock.data)
+        pub data: ::std::option::Option<::std::vec::Vec<u8>>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkInsertSdCard.DebugLinkSdCardDataBlock.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a DebugLinkSdCardDataBlock {
+        fn default() -> &'a DebugLinkSdCardDataBlock {
+            <DebugLinkSdCardDataBlock as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl DebugLinkSdCardDataBlock {
+        pub fn new() -> DebugLinkSdCardDataBlock {
+            ::std::default::Default::default()
+        }
+
+        // required uint32 number = 1;
+
+        pub fn number(&self) -> u32 {
+            self.number.unwrap_or(0)
+        }
+
+        pub fn clear_number(&mut self) {
+            self.number = ::std::option::Option::None;
+        }
+
+        pub fn has_number(&self) -> bool {
+            self.number.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_number(&mut self, v: u32) {
+            self.number = ::std::option::Option::Some(v);
+        }
+
+        // required bytes data = 2;
+
+        pub fn data(&self) -> &[u8] {
+            match self.data.as_ref() {
+                Some(v) => v,
+                None => &[],
+            }
+        }
+
+        pub fn clear_data(&mut self) {
+            self.data = ::std::option::Option::None;
+        }
+
+        pub fn has_data(&self) -> bool {
+            self.data.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_data(&mut self, v: ::std::vec::Vec<u8>) {
+            self.data = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_data(&mut self) -> &mut ::std::vec::Vec<u8> {
+            if self.data.is_none() {
+                self.data = ::std::option::Option::Some(::std::vec::Vec::new());
+            }
+            self.data.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_data(&mut self) -> ::std::vec::Vec<u8> {
+            self.data.take().unwrap_or_else(|| ::std::vec::Vec::new())
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "number",
+                |m: &DebugLinkSdCardDataBlock| { &m.number },
+                |m: &mut DebugLinkSdCardDataBlock| { &mut m.number },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "data",
+                |m: &DebugLinkSdCardDataBlock| { &m.data },
+                |m: &mut DebugLinkSdCardDataBlock| { &mut m.data },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkSdCardDataBlock>(
+                "DebugLinkInsertSdCard.DebugLinkSdCardDataBlock",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for DebugLinkSdCardDataBlock {
+        const NAME: &'static str = "DebugLinkSdCardDataBlock";
+
+        fn is_initialized(&self) -> bool {
+            if self.number.is_none() {
+                return false;
+            }
+            if self.data.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    8 => {
+                        self.number = ::std::option::Option::Some(is.read_uint32()?);
+                    },
+                    18 => {
+                        self.data = ::std::option::Option::Some(is.read_bytes()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.number {
+                my_size += ::protobuf::rt::uint32_size(1, v);
+            }
+            if let Some(v) = self.data.as_ref() {
+                my_size += ::protobuf::rt::bytes_size(2, &v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.number {
+                os.write_uint32(1, v)?;
+            }
+            if let Some(v) = self.data.as_ref() {
+                os.write_bytes(2, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> DebugLinkSdCardDataBlock {
+            DebugLinkSdCardDataBlock::new()
+        }
+
+        fn clear(&mut self) {
+            self.number = ::std::option::Option::None;
+            self.data = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static DebugLinkSdCardDataBlock {
+            static instance: DebugLinkSdCardDataBlock = DebugLinkSdCardDataBlock {
+                number: ::std::option::Option::None,
+                data: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for DebugLinkSdCardDataBlock {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("DebugLinkInsertSdCard.DebugLinkSdCardDataBlock").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for DebugLinkSdCardDataBlock {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for DebugLinkSdCardDataBlock {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
 }
 
 // @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkWatchLayout)
@@ -3714,13 +3942,17 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0cR\x06memory\
     \x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13DebugLinkFlas\
     hErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\x14DebugLi\
-    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\"~\n\
-    \x15DebugLinkInsertSdCard\x12#\n\rserial_number\x18\x01\x20\x01(\rR\x0cs\
-    erialNumber\x12%\n\x0ecapacity_bytes\x18\x02\x20\x01(\rR\rcapacityBytes\
-    \x12\x19\n\x08manuf_ID\x18\x03\x20\x01(\rR\x07manufID\",\n\x14DebugLinkW\
-    atchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05watch\"\x1b\n\x19\
-    DebugLinkResetDebugEventsB=\n#com.satoshilabs.trezor.lib.protobufB\x12Tr\
-    ezorMessageDebug\x80\xa6\x1d\x01\
+    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\"\xb1\
+    \x02\n\x15DebugLinkInsertSdCard\x12#\n\rserial_number\x18\x01\x20\x01(\r\
+    R\x0cserialNumber\x12%\n\x0ecapacity_bytes\x18\x02\x20\x01(\rR\rcapacity\
+    Bytes\x12\x19\n\x08manuf_ID\x18\x03\x20\x01(\rR\x07manufID\x12i\n\x0bdat\
+    a_blocks\x18\x04\x20\x03(\x0b2H.hw.trezor.messages.debug.DebugLinkInsert\
+    SdCard.DebugLinkSdCardDataBlockR\ndataBlocks\x1aF\n\x18DebugLinkSdCardDa\
+    taBlock\x12\x16\n\x06number\x18\x01\x20\x02(\rR\x06number\x12\x12\n\x04d\
+    ata\x18\x02\x20\x02(\x0cR\x04data\",\n\x14DebugLinkWatchLayout\x12\x14\n\
+    \x05watch\x18\x01\x20\x01(\x08R\x05watch\"\x1b\n\x19DebugLinkResetDebugE\
+    ventsB=\n#com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\
+    \xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3741,7 +3973,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(super::messages::file_descriptor().clone());
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(16);
+            let mut messages = ::std::vec::Vec::with_capacity(17);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());
             messages.push(DebugLinkReseedRandom::generated_message_descriptor_data());
@@ -3758,6 +3990,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkInsertSdCard::generated_message_descriptor_data());
             messages.push(DebugLinkWatchLayout::generated_message_descriptor_data());
             messages.push(DebugLinkResetDebugEvents::generated_message_descriptor_data());
+            messages.push(debug_link_insert_sd_card::DebugLinkSdCardDataBlock::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(3);
             enums.push(debug_link_decision::DebugSwipeDirection::generated_enum_descriptor_data());
             enums.push(debug_link_decision::DebugButton::generated_enum_descriptor_data());
