@@ -131,7 +131,7 @@ impl TryFrom<Obj> for Gc<List> {
     type Error = Error;
 
     fn try_from(value: Obj) -> Result<Self, Self::Error> {
-        if ffi::mp_type_list.is_type_of(value) {
+        if unsafe { ffi::mp_type_list.is_type_of(value) } {
             // SAFETY: We assume that if `value` is an object pointer with the correct type,
             // it is managed by MicroPython GC (see `Gc::from_raw` for details).
             let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
