@@ -1,13 +1,15 @@
 use core::slice;
 
-use crate::{
-    error::Error,
-    micropython::{
-        map::{Map, MapElem},
-        obj::Obj,
-        runtime::raise_exception,
-    },
+use heapless::Vec;
+
+use super::{
+    ffi,
+    iter::IterBuf,
+    map::{Map, MapElem},
+    obj::Obj,
+    runtime::{catch_exception, raise_exception},
 };
+use crate::error::Error;
 
 /// Perform a call and convert errors into a raised MicroPython exception.
 /// Should only called when returning from Rust to C. See `raise_exception` for
@@ -81,4 +83,35 @@ pub unsafe fn try_with_args_and_kwargs_inline(
         func(args_slice, &kw_map)
     };
     unsafe { try_or_raise(block) }
+}
+
+pub fn new_tuple(args: &[Obj]) -> Result<Obj, Error> {
+    // SAFETY: Safe.
+    // EXCEPTION: Raises if allocation fails, does not return NULL.
+    let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(args.len(), args.as_ptr()) })?;
+    Ok(obj)
+}
+
+pub fn iter_into_array<T, E, const N: usize>(iterable: Obj) -> Result<[T; N], Error>
+where
+    T: TryFrom<Obj, Error = E>,
+    Error: From<E>,
+{
+    let vec: Vec<T, N> = iter_into_vec(iterable)?;
+    // Returns error if array.len() != N
+    vec.into_array()
+        .map_err(|_| value_error!("Invalid iterable length"))
+}
+
+pub fn iter_into_vec<T, E, const N: usize>(iterable: Obj) -> Result<Vec<T, N>, Error>
+where
+    T: TryFrom<Obj, Error = E>,
+    Error: From<E>,
+{
+    let mut vec = Vec::<T, N>::new();
+    for item in IterBuf::new().try_iterate(iterable)? {
+        vec.push(item.try_into()?)
+            .map_err(|_| value_error!("Invalid iterable length"))?;
+    }
+    Ok(vec)
 }
