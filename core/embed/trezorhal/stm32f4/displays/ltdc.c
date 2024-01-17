@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include TREZOR_BOARD
-#include "display_interface.h"
+#include "display.h"
 #include "memzero.h"
 #include STM32_HAL_H
 

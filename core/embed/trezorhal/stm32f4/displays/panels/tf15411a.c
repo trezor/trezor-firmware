@@ -1,4 +1,4 @@
-#include "display_interface.h"
+#include "display.h"
 #include "displays/st7789v.h"
 
 void tf15411a_init_seq(void) {
