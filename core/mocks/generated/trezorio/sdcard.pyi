@@ -52,7 +52,14 @@ def write(block_num: int, buf: bytes) -> None:
 
 
 # extmod/modtrezorio/modtrezorio-sdcard.h
-def get_mid() -> int:
+def get_manuf_id() -> int:
     """
     Returns Manufacturer ID from the CID register data.
+    """
+
+
+# extmod/modtrezorio/modtrezorio-sdcard.h
+def get_serial_num() -> int:
+    """
+    Returns serial number from the CID register data.
     """

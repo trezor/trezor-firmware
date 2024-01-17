@@ -132,4 +132,9 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   return sectrue;
 }
 
-uint64_t __wur sdcard_get_mid(void) { return (uint64_t)sdcard_mock.manuf_ID; }
+uint64_t __wur sdcard_get_manuf_id(void) {
+  return (uint64_t)sdcard_mock.manuf_ID;
+}
+uint64_t __wur sdcard_get_serial_num(void) {
+  return (uint64_t)sdcard_mock.serial_number;
+}

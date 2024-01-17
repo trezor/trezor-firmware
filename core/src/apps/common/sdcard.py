@@ -165,13 +165,13 @@ def is_trz_card() -> bool:
     iosd = io.sdcard  # local_cache_attribute
     if not iosd.is_present():
         return False
-    return iosd.get_mid() == 39 and iosd.capacity() == 122_945_536
+    return iosd.get_manuf_id() == 39 and iosd.capacity() == 122_945_536
 
 
 @with_sdcard
 async def show_sd_card_info() -> None:
     from trezor.ui.layouts import show_success
 
-    mid = io.sdcard.get_mid()
+    mid = io.sdcard.get_manuf_id()
     cap = io.sdcard.capacity()
     await show_success("TDL", f"Manuf ID: {mid}\nCapacity: {cap} [B]")

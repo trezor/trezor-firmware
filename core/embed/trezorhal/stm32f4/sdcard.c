@@ -403,11 +403,20 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   return sectrue * (err == HAL_OK);
 }
 
-uint64_t __wur sdcard_get_mid(void) {
+uint64_t __wur sdcard_get_manuf_id(void) {
   if (sd_handle.Instance == NULL) {
     return 0;
   }
   HAL_SD_CardCIDTypeDef res = {0};
   HAL_SD_GetCardCID(&sd_handle, &res);
   return (uint64_t)res.ManufacturerID;
+}
+
+uint64_t __wur sdcard_get_serial_num(void) {
+  if (sd_handle.Instance == NULL) {
+    return 0;
+  }
+  HAL_SD_CardCIDTypeDef res = {0};
+  HAL_SD_GetCardCID(&sd_handle, &res);
+  return (uint64_t)res.ProdSN;
 }
