@@ -19,14 +19,6 @@ pub struct FrameBuffer(*mut u16);
 #[derive(Copy, Clone)]
 pub struct FrameBuffer(*mut u32);
 
-#[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
-pub enum ToifFormat {
-    FullColorBE = ffi::toif_format_t_TOIF_FULL_COLOR_BE as _,
-    GrayScaleOH = ffi::toif_format_t_TOIF_GRAYSCALE_OH as _,
-    FullColorLE = ffi::toif_format_t_TOIF_FULL_COLOR_LE as _,
-    GrayScaleEH = ffi::toif_format_t_TOIF_GRAYSCALE_EH as _,
-}
-
 pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_backlight(val) }
 }

@@ -14,12 +14,12 @@ use crate::{
 };
 
 use crate::{
-    trezorhal::{buffers::BufferJpegWork, display::ToifFormat, uzlib::UZLIB_WINDOW_SIZE},
+    trezorhal::{buffers::BufferJpegWork, uzlib::UZLIB_WINDOW_SIZE},
     ui::{
         constant::HEIGHT,
         display::{
             tjpgd::{jpeg_test, BufferInput},
-            toif::Toif,
+            toif::{Toif, ToifFormat},
         },
         model_tt::component::homescreen::render::{
             HomescreenJpeg, HomescreenToif, HOMESCREEN_TOIF_SIZE,
