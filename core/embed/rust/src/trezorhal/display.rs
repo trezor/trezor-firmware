@@ -59,7 +59,7 @@ pub fn text_into_buffer(text: &str, font: i32, buffer: &mut BufferText, x_offset
 
 pub fn text_width(text: &str, font: i32) -> i16 {
     unsafe {
-        ffi::display_text_width(text.as_ptr() as _, text.len() as _, font)
+        ffi::font_text_width(font, text.as_ptr() as _, text.len() as _)
             .try_into()
             .unwrap_or(i16::MAX)
     }
