@@ -31,7 +31,7 @@
 
 #include "common.h"
 #include "display-unix.h"
-#include "display_interface.h"
+#include "display.h"
 #include "profile.h"
 
 #define EMULATOR_BORDER 16

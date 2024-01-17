@@ -19,7 +19,7 @@
 
 #define _GNU_SOURCE
 
-#include "display.h"
+#include "display_draw.h"
 #include "buffers.h"
 #include "common.h"
 
@@ -34,7 +34,7 @@
 
 #include "memzero.h"
 
-#include "display_interface.h"
+#include "display.h"
 
 static struct { int x, y; } DISPLAY_OFFSET;
 
