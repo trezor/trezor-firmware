@@ -3,10 +3,9 @@ use crate::{
     micropython::{
         buffer::{hexlify_bytes, StrBuffer},
         gc::Gc,
-        iter::IterBuf,
         list::List,
         obj::Obj,
-        util::try_or_raise,
+        util::{iter_into_array, try_or_raise},
     },
     storage::{get_avatar_len, load_avatar},
     strutil::SkipPrefix,
@@ -18,31 +17,6 @@ use crate::{
         util::set_animation_disabled,
     },
 };
-use heapless::Vec;
-
-pub fn iter_into_array<T, E, const N: usize>(iterable: Obj) -> Result<[T; N], Error>
-where
-    T: TryFrom<Obj, Error = E>,
-    Error: From<E>,
-{
-    let vec: Vec<T, N> = iter_into_vec(iterable)?;
-    // Returns error if array.len() != N
-    vec.into_array()
-        .map_err(|_| value_error!("Invalid iterable length"))
-}
-
-pub fn iter_into_vec<T, E, const N: usize>(iterable: Obj) -> Result<Vec<T, N>, Error>
-where
-    T: TryFrom<Obj, Error = E>,
-    Error: From<E>,
-{
-    let mut vec = Vec::<T, N>::new();
-    for item in IterBuf::new().try_iterate(iterable)? {
-        vec.push(item.try_into()?)
-            .map_err(|_| value_error!("Invalid iterable length"))?;
-    }
-    Ok(vec)
-}
 
 /// Maximum number of characters that can be displayed on screen at once. Used
 /// for on-the-fly conversion of binary data to hexadecimal representation.
