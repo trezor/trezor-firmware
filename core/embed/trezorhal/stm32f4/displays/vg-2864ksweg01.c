@@ -20,7 +20,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include TREZOR_BOARD
-#include "display_interface.h"
+#include "display.h"
 #include STM32_HAL_H
 
 #ifdef USE_CONSUMPTION_MASK

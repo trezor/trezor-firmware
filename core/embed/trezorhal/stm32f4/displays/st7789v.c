@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include TREZOR_BOARD
 #include "backlight_pwm.h"
-#include "display_interface.h"
+#include "display.h"
 #include "memzero.h"
 #include "st7789v.h"
 #include STM32_HAL_H
