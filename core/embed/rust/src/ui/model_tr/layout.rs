@@ -36,7 +36,7 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{iter_into_array, iter_into_vec, upy_disable_animation, ConfirmBlob},
+            util::{upy_disable_animation, ConfirmBlob},
         },
         model_tr::component::check_homescreen_format,
         translations::tr,
@@ -395,7 +395,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
         let mut paragraphs = ParagraphVecLong::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [key, value, is_data]: [Obj; 3] = iter_into_array(para)?;
+            let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
             let key = key.try_into_option::<StrBuffer>()?;
             let value = value.try_into_option::<StrBuffer>()?;
             let is_data: bool = is_data.try_into()?;
@@ -516,7 +516,7 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
         let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
+            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
 
@@ -791,7 +791,7 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
                     let mut ops = OpTextLayout::new(theme::TEXT_MONO);
 
                     for item in unwrap!(IterBuf::new().try_iterate(items)) {
-                        let [key, value]: [Obj; 2] = unwrap!(iter_into_array(item));
+                        let [key, value]: [Obj; 2] = unwrap!(util::iter_into_array(item));
                         if !ops.is_empty() {
                             // Each key-value pair is on its own page
                             ops = ops.next_page();
@@ -1205,7 +1205,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [font, text]: [Obj; 2] = iter_into_array(para)?;
+            let [font, text]: [Obj; 2] = util::iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
@@ -1236,7 +1236,7 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
         let mut paragraphs = ParagraphVecLong::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [font, text]: [Obj; 2] = iter_into_array(para)?;
+            let [font, text]: [Obj; 2] = util::iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
@@ -1498,7 +1498,7 @@ extern "C" fn new_show_group_share_success(
 ) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let lines_iterable: Obj = kwargs.get(Qstr::MP_QSTR_lines)?;
-        let lines: [StrBuffer; 4] = iter_into_array(lines_iterable)?;
+        let lines: [StrBuffer; 4] = util::iter_into_array(lines_iterable)?;
 
         let [l0, l1, l2, l3] = lines;
 

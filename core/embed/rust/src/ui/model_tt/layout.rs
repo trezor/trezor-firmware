@@ -37,7 +37,7 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{iter_into_array, upy_disable_animation, ConfirmBlob, PropsList},
+            util::{upy_disable_animation, ConfirmBlob, PropsList},
         },
         model_tt::component::check_homescreen_format,
         translations::tr,
@@ -435,7 +435,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
             if item.is_str() {
                 ops = ops.text_normal(item.try_into()?)
             } else {
-                let [emphasis, text]: [Obj; 2] = iter_into_array(item)?;
+                let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
                 let text: StrBuffer = text.try_into()?;
                 if emphasis.try_into()? {
                     ops = ops.text_demibold(text);
@@ -732,7 +732,7 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
         )?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [StrBuffer; 2] = iter_into_array(i)?;
+            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
 
@@ -752,7 +752,7 @@ extern "C" fn new_show_info_with_cancel(n_args: usize, args: *const Obj, kwargs:
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [key, value]: [Obj; 2] = iter_into_array(para)?;
+            let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
             let key: StrBuffer = key.try_into()?;
             let value: StrBuffer = value.try_into()?;
             paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, key).no_break());
@@ -817,7 +817,7 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let mut paragraphs = ParagraphVecShort::new();
 
         for pair in IterBuf::new().try_iterate(items)? {
-            let [label, value]: [StrBuffer; 2] = iter_into_array(pair)?;
+            let [label, value]: [StrBuffer; 2] = util::iter_into_array(pair)?;
             paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label).no_break());
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
         }
@@ -1170,7 +1170,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [font, text]: [Obj; 2] = iter_into_array(para)?;
+            let [font, text]: [Obj; 2] = util::iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
@@ -1200,7 +1200,7 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
         let mut paragraphs = ParagraphVecLong::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [font, text]: [Obj; 2] = iter_into_array(para)?;
+            let [font, text]: [Obj; 2] = util::iter_into_array(para)?;
             let style: &TextStyle = theme::textstyle_number(font.try_into()?);
             let text: StrBuffer = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
@@ -1291,7 +1291,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
-        let words: [StrBuffer; 3] = iter_into_array(words_iterable)?;
+        let words: [StrBuffer; 3] = util::iter_into_array(words_iterable)?;
 
         let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_DEMIBOLD, description)]);
         let obj = LayoutObj::new(Frame::left_aligned(
@@ -1470,7 +1470,7 @@ extern "C" fn new_show_group_share_success(
 ) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let lines_iterable: Obj = kwargs.get(Qstr::MP_QSTR_lines)?;
-        let lines: [StrBuffer; 4] = iter_into_array(lines_iterable)?;
+        let lines: [StrBuffer; 4] = util::iter_into_array(lines_iterable)?;
 
         let obj = LayoutObj::new(IconDialog::new_shares(
             lines,
@@ -1489,7 +1489,7 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
 
         let mut paragraphs = ParagraphVecLong::new();
         for page in IterBuf::new().try_iterate(pages_iterable)? {
-            let [title, description]: [StrBuffer; 2] = iter_into_array(page)?;
+            let [title, description]: [StrBuffer; 2] = util::iter_into_array(page)?;
             paragraphs
                 .add(Paragraph::new(&theme::TEXT_DEMIBOLD, title))
                 .add(Paragraph::new(&theme::TEXT_NORMAL, description).break_after());
