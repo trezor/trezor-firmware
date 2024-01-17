@@ -11,6 +11,7 @@
 #include "rgb_led.h"
 #include "secbool.h"
 #include "storage.h"
+#include "toif.h"
 #include "touch.h"
 #include "usb.h"
 

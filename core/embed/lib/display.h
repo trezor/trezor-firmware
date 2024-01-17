@@ -30,20 +30,11 @@
 #include "display_interface.h"
 #include "fonts/fonts.h"
 
-typedef enum {
-  TOIF_FULL_COLOR_BE = 0,  // big endian
-  TOIF_GRAYSCALE_OH = 1,   // odd hi
-  TOIF_FULL_COLOR_LE = 2,  // little endian
-  TOIF_GRAYSCALE_EH = 3,   // even hi
-} toif_format_t;
-
 // provided by common
 
 void display_clear(void);
 
 void display_bar(int x, int y, int w, int h, uint16_t c);
-bool display_toif_info(const uint8_t *buf, uint32_t len, uint16_t *out_w,
-                       uint16_t *out_h, toif_format_t *out_format);
 
 void display_text(int x, int y, const char *text, int textlen, int font,
                   uint16_t fgcolor, uint16_t bgcolor);

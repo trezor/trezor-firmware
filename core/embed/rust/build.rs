@@ -309,7 +309,6 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("DISPLAY_FRAMEBUFFER_OFFSET_Y")
         .allowlist_var("DISPLAY_RESX")
         .allowlist_var("DISPLAY_RESY")
-        .allowlist_type("toif_format_t")
         // fonts
         .allowlist_function("font_height")
         .allowlist_function("font_max_height")
@@ -335,6 +334,8 @@ fn generate_trezorhal_bindings() {
         // time
         .allowlist_function("hal_delay")
         .allowlist_function("hal_ticks_ms")
+        // toif
+        .allowlist_type("toif_format_t")
         // dma2d
         .allowlist_function("dma2d_setup_const")
         .allowlist_function("dma2d_setup_4bpp")
