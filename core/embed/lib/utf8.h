@@ -25,6 +25,6 @@
 
 // helper for locating a substring in buffer with utf-8 string
 void utf8_substr(const char *buf_start, size_t buf_len, int char_off,
-                         int char_len, const char **out_start, int *out_len);
+                 int char_len, const char **out_start, int *out_len);
 
 #endif  // LIB_UTF8_H

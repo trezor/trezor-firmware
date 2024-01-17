@@ -18,6 +18,7 @@
  */
 
 #include "fonts.h"
+#include <string.h>
 
 static uint8_t convert_char(const uint8_t c) {
   static char last_was_utf8 = 0;
@@ -183,4 +184,59 @@ const uint8_t *font_get_glyph(int font, uint8_t c) {
 #endif
   }
   return 0;
+}
+
+// compute the width of the text (in pixels)
+int font_text_width(int font, const char *text, int textlen) {
+  int width = 0;
+  // determine text length if not provided
+  if (textlen < 0) {
+    textlen = strlen(text);
+  }
+  for (int i = 0; i < textlen; i++) {
+    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
+    if (!g) continue;
+    const uint8_t adv = g[2];  // advance
+    width += adv;
+    /*
+    if (i != textlen - 1) {
+        const uint8_t adv = g[2]; // advance
+        width += adv;
+    } else { // last character
+        const uint8_t w = g[0]; // width
+        const uint8_t bearX = g[3]; // bearingX
+        width += (bearX + w);
+    }
+    */
+  }
+  return width;
+}
+
+// Returns how many characters of the string can be used before exceeding
+// the requested width. Tries to avoid breaking words if possible.
+int font_text_split(int font, const char *text, int textlen,
+                    int requested_width) {
+  int width = 0;
+  int lastspace = 0;
+  // determine text length if not provided
+  if (textlen < 0) {
+    textlen = strlen(text);
+  }
+  for (int i = 0; i < textlen; i++) {
+    if (text[i] == ' ') {
+      lastspace = i;
+    }
+    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
+    if (!g) continue;
+    const uint8_t adv = g[2];  // advance
+    width += adv;
+    if (width > requested_width) {
+      if (lastspace > 0) {
+        return lastspace;
+      } else {
+        return i;
+      }
+    }
+  }
+  return textlen;
 }

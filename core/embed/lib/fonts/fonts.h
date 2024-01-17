@@ -118,5 +118,8 @@ int font_height(int font);
 int font_max_height(int font);
 int font_baseline(int font);
 const uint8_t *font_get_glyph(int font, uint8_t c);
+int font_text_width(int font, const char *text, int textlen);
+int font_text_split(int font, const char *text, int textlen,
+                    int requested_width);
 
 #endif  //_FONTS_H

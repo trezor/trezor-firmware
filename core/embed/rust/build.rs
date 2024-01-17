@@ -296,7 +296,6 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_backlight")
         .allowlist_function("display_text")
         .allowlist_function("display_text_render_buffer")
-        .allowlist_function("display_text_width")
         .allowlist_function("display_pixeldata")
         .allowlist_function("display_pixeldata_dirty")
         .allowlist_function("display_set_window")
@@ -316,6 +315,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("font_max_height")
         .allowlist_function("font_baseline")
         .allowlist_function("font_get_glyph")
+        .allowlist_function("font_text_width")
         // uzlib
         .allowlist_function("uzlib_uncompress_init")
         .allowlist_function("uzlib_uncompress")

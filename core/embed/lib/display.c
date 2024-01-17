@@ -432,7 +432,7 @@ void display_text_center(int x, int y, const char *text, int textlen, int font,
                          uint16_t fgcolor, uint16_t bgcolor) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int w = display_text_width(text, textlen, font);
+  int w = font_text_width(font, text, textlen);
   display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
 }
 
@@ -440,63 +440,8 @@ void display_text_right(int x, int y, const char *text, int textlen, int font,
                         uint16_t fgcolor, uint16_t bgcolor) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int w = display_text_width(text, textlen, font);
+  int w = font_text_width(font, text, textlen);
   display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
-}
-
-// compute the width of the text (in pixels)
-int display_text_width(const char *text, int textlen, int font) {
-  int width = 0;
-  // determine text length if not provided
-  if (textlen < 0) {
-    textlen = strlen(text);
-  }
-  for (int i = 0; i < textlen; i++) {
-    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
-    if (!g) continue;
-    const uint8_t adv = g[2];  // advance
-    width += adv;
-    /*
-    if (i != textlen - 1) {
-        const uint8_t adv = g[2]; // advance
-        width += adv;
-    } else { // last character
-        const uint8_t w = g[0]; // width
-        const uint8_t bearX = g[3]; // bearingX
-        width += (bearX + w);
-    }
-    */
-  }
-  return width;
-}
-
-// Returns how many characters of the string can be used before exceeding
-// the requested width. Tries to avoid breaking words if possible.
-int display_text_split(const char *text, int textlen, int font,
-                       int requested_width) {
-  int width = 0;
-  int lastspace = 0;
-  // determine text length if not provided
-  if (textlen < 0) {
-    textlen = strlen(text);
-  }
-  for (int i = 0; i < textlen; i++) {
-    if (text[i] == ' ') {
-      lastspace = i;
-    }
-    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
-    if (!g) continue;
-    const uint8_t adv = g[2];  // advance
-    width += adv;
-    if (width > requested_width) {
-      if (lastspace > 0) {
-        return lastspace;
-      } else {
-        return i;
-      }
-    }
-  }
-  return textlen;
 }
 
 #ifdef TREZOR_PRODTEST
@@ -561,39 +506,4 @@ void display_fade(int start, int end, int delay) {
   }
   display_backlight(end);
 #endif
-}
-
-#define UTF8_IS_CONT(ch) (((ch)&0xC0) == 0x80)
-
-void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
-                         int char_len, const char **out_start, int *out_len) {
-  size_t i = 0;
-
-  for (; i < buf_len; i++) {
-    if (char_off == 0) {
-      break;
-    }
-    if (!UTF8_IS_CONT(buf_start[i])) {
-      char_off--;
-    }
-  }
-  size_t i_start = i;
-
-  for (; i < buf_len; i++) {
-    if (char_len == 0) {
-      break;
-    }
-    if (!UTF8_IS_CONT(buf_start[i])) {
-      char_len--;
-    }
-  }
-
-  for (; i < buf_len; i++) {
-    if (!UTF8_IS_CONT(buf_start[i])) {
-      break;
-    }
-  }
-
-  *out_start = buf_start + i_start;
-  *out_len = i - i_start;
 }
