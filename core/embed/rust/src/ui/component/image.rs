@@ -1,14 +1,11 @@
-use crate::{
-    trezorhal::display::ToifFormat,
-    ui::{
-        component::{Component, Event, EventCtx, Never},
-        display,
-        display::{
-            toif::{image, Toif},
-            Color, Icon,
-        },
-        geometry::{Alignment2D, Offset, Point, Rect},
+use crate::ui::{
+    component::{Component, Event, EventCtx, Never},
+    display,
+    display::{
+        toif::{image, Toif, ToifFormat},
+        Color, Icon,
     },
+    geometry::{Alignment2D, Offset, Point, Rect},
 };
 
 #[derive(PartialEq, Eq, Clone, Copy)]

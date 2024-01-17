@@ -1,10 +1,14 @@
 use crate::{
     strutil::StringType,
-    trezorhal::{display::ToifFormat, usb::usb_configured},
+    trezorhal::usb::usb_configured,
     ui::{
         component::{Child, Component, Event, EventCtx, Label},
         constant::{HEIGHT, WIDTH},
-        display::{rect_fill, toif::Toif, Font, Icon},
+        display::{
+            rect_fill,
+            toif::{Toif, ToifFormat},
+            Font, Icon,
+        },
         event::USBEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
