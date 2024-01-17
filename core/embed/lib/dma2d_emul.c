@@ -18,7 +18,7 @@
  */
 
 #include "colors.h"
-#include "display_interface.h"
+#include "display.h"
 
 typedef enum {
   DMA2D_LAYER_FG = 1,
