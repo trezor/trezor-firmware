@@ -155,41 +155,6 @@ void display_text_render_buffer(const char *text, int textlen, int font,
   }
 }
 
-// see docs/misc/toif.md for definition of the TOIF format
-bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
-                       uint16_t *out_h, toif_format_t *out_format) {
-  if (len < 12 || memcmp(data, "TOI", 3) != 0) {
-    return false;
-  }
-  toif_format_t format = false;
-  if (data[3] == 'f') {
-    format = TOIF_FULL_COLOR_BE;
-  } else if (data[3] == 'g') {
-    format = TOIF_GRAYSCALE_OH;
-  } else if (data[3] == 'F') {
-    format = TOIF_FULL_COLOR_LE;
-  } else if (data[3] == 'G') {
-    format = TOIF_GRAYSCALE_EH;
-  } else {
-    return false;
-  }
-
-  uint16_t w = *(uint16_t *)(data + 4);
-  uint16_t h = *(uint16_t *)(data + 6);
-
-  uint32_t datalen = *(uint32_t *)(data + 8);
-  if (datalen != len - 12) {
-    return false;
-  }
-
-  if (out_w != NULL && out_h != NULL && out_format != NULL) {
-    *out_w = w;
-    *out_h = h;
-    *out_format = format;
-  }
-  return true;
-}
-
 #ifdef FRAMEBUFFER
 static void display_text_render(int x, int y, const char *text, int textlen,
                                 int font, uint16_t fgcolor, uint16_t bgcolor) {
