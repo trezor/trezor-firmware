@@ -17,11 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DISPLAY_INTERFACE_H
-#define _DISPLAY_INTERFACE_H
+#ifndef TREZORHAL_DISPLAY_H
+#define TREZORHAL_DISPLAY_H
 
 #include <stdint.h>
 #include "common.h"
+#include "display_draw.h"
 #include TREZOR_BOARD
 
 #ifndef DISPLAY_FRAMEBUFFER_OFFSET_Y
@@ -68,4 +69,4 @@ uint8_t *display_get_wr_addr(void);
 void display_shift_window(uint16_t pixels);
 uint16_t display_get_window_offset(void);
 
-#endif  //_DISPLAY_INTERFACE_H
+#endif  // TREZORHAL_DISPLAY_H

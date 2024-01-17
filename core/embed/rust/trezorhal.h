@@ -3,7 +3,6 @@
 #include "button.h"
 #include "common.h"
 #include "display.h"
-#include "display_interface.h"
 #include "dma2d.h"
 #include "flash.h"
 #include "fonts/fonts.h"

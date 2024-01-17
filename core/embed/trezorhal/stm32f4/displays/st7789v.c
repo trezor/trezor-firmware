@@ -22,7 +22,7 @@
 #include <string.h>
 #include TREZOR_BOARD
 #include "backlight_pwm.h"
-#include "display_interface.h"
+#include "display.h"
 #include "irq.h"
 #include "memzero.h"
 #include "st7789v.h"
