@@ -28,6 +28,7 @@
 #include "image.h"
 #include "model.h"
 #include "rng.h"
+#include "terminal.h"
 #ifdef USE_SD_CARD
 #include "sdcard.h"
 #endif
@@ -116,43 +117,43 @@ static uint32_t check_sdcard(void) {
   return 0;
 }
 
-static void progress_callback(int pos, int len) { display_printf("."); }
+static void progress_callback(int pos, int len) { term_printf("."); }
 
 static secbool copy_sdcard(void) {
   display_backlight(255);
 
-  display_printf("Trezor Boardloader\n");
-  display_printf("==================\n\n");
+  term_printf("Trezor Boardloader\n");
+  term_printf("==================\n\n");
 
-  display_printf("bootloader found on the SD card\n\n");
-  display_printf("applying bootloader in 10 seconds\n\n");
-  display_printf("unplug now if you want to abort\n\n");
+  term_printf("bootloader found on the SD card\n\n");
+  term_printf("applying bootloader in 10 seconds\n\n");
+  term_printf("unplug now if you want to abort\n\n");
 
   uint32_t codelen;
 
   for (int i = 10; i >= 0; i--) {
-    display_printf("%d ", i);
+    term_printf("%d ", i);
     hal_delay(1000);
     codelen = check_sdcard();
     if (0 == codelen) {
-      display_printf("\n\nno SD card, aborting\n");
+      term_printf("\n\nno SD card, aborting\n");
       return secfalse;
     }
   }
 
-  display_printf("\n\nerasing flash:\n\n");
+  term_printf("\n\nerasing flash:\n\n");
 
   // erase all flash (except boardloader)
   if (sectrue != flash_area_erase(&ALL_WIPE_AREA, progress_callback)) {
-    display_printf(" failed\n");
+    term_printf(" failed\n");
     return secfalse;
   }
-  display_printf(" done\n\n");
+  term_printf(" done\n\n");
 
   ensure(flash_unlock_write(), NULL);
 
   // copy bootloader from SD card to Flash
-  display_printf("copying new bootloader from SD card\n\n");
+  term_printf("copying new bootloader from SD card\n\n");
 
   ensure(sdcard_power_on(), NULL);
 
@@ -171,8 +172,8 @@ static secbool copy_sdcard(void) {
   sdcard_power_off();
   ensure(flash_lock_write(), NULL);
 
-  display_printf("\ndone\n\n");
-  display_printf("Unplug the device and remove the SD card\n");
+  term_printf("\ndone\n\n");
+  term_printf("Unplug the device and remove the SD card\n");
 
   return sectrue;
 }

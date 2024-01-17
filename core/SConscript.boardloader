@@ -63,7 +63,9 @@ SOURCE_MOD += [
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/image.c',
     'embed/lib/mini_printf.c',
+    'embed/lib/terminal.c',
     'vendor/trezor-storage/flash_common.c',
+
 ]
 
 SOURCE_BOARDLOADER = [

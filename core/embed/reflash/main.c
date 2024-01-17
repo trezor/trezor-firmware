@@ -34,7 +34,7 @@
 #include "secbool.h"
 #include "touch.h"
 
-static void progress_callback(int pos, int len) { display_printf("."); }
+static void progress_callback(int pos, int len) { term_printf("."); }
 
 static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
                               uint32_t length) {
@@ -46,7 +46,7 @@ static void flash_from_sdcard(const flash_area_t* area, uint32_t source,
          "length not a multiple of block size");
 
   for (uint32_t i = 0; i < length / SDCARD_BLOCK_SIZE; i++) {
-    display_printf("read %d\n", (unsigned int)(i + source / SDCARD_BLOCK_SIZE));
+    term_printf("read %d\n", (unsigned int)(i + source / SDCARD_BLOCK_SIZE));
 
     ensure(sdcard_read_blocks(buf, i + source / SDCARD_BLOCK_SIZE, 1),
            "sdcard_read_blocks");
@@ -70,15 +70,15 @@ int main(void) {
 
   ensure(sdcard_is_present(), "sdcard_is_present");
 
-  display_printf("updating boardloader + bootloader\n");
+  term_printf("updating boardloader + bootloader\n");
 
-  display_printf("erasing sectors");
+  term_printf("erasing sectors");
   ensure(flash_area_erase(&BOARDLOADER_AREA, progress_callback),
          "flash_erase_sectors");
   ensure(flash_area_erase(&BOOTLOADER_AREA, progress_callback),
          "flash_erase_sectors");
-  display_printf("\n");
-  display_printf("erased\n");
+  term_printf("\n");
+  term_printf("erased\n");
 
   ensure(flash_unlock_write(), NULL);
 
@@ -92,7 +92,7 @@ int main(void) {
   flash_from_sdcard(&BOOTLOADER_AREA, BOARDLOADER_TOTAL_SIZE,
                     BOOTLOADER_TOTAL_SIZE);
 
-  display_printf("done\n");
+  term_printf("done\n");
   sdcard_power_off();
   ensure(flash_lock_write(), NULL);
 

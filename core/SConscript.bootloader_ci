@@ -75,6 +75,7 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/lib/display.c',
+    'embed/lib/terminal.c',
     'embed/lib/colors.c',
     'embed/lib/fonts/fonts.c',
     'embed/lib/fonts/font_bitmap.c',

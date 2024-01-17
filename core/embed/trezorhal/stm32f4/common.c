@@ -24,6 +24,7 @@
 #include "common.h"
 #include "display.h"
 #include "model.h"
+#include "terminal.h"
 
 #ifdef FANCY_FATAL_ERROR
 #include "rust_ui.h"
@@ -72,15 +73,15 @@ error_uni(const char *label, const char *msg, const char *footer) {
   screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
   display_refresh();
 #else
-  display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   if (label) {
-    display_printf("%s\n", label);
+    term_printf("%s\n", label);
   }
   if (msg) {
-    display_printf("%s\n", msg);
+    term_printf("%s\n", msg);
   }
   if (footer) {
-    display_printf("\n%s\n", footer);
+    term_printf("\n%s\n", footer);
   }
 #endif
   display_backlight(255);
@@ -101,26 +102,26 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
                           "PLEASE VISIT\nTREZOR.IO/RSOD");
   display_refresh();
 #else
-  display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  display_printf("\nINTERNAL ERROR:\n");
+  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+  term_printf("\nINTERNAL ERROR:\n");
   if (expr) {
-    display_printf("expr: %s\n", expr);
+    term_printf("expr: %s\n", expr);
   }
   if (msg) {
-    display_printf("msg : %s\n", msg);
+    term_printf("msg : %s\n", msg);
   }
   if (file) {
-    display_printf("file: %s:%d\n", file, line);
+    term_printf("file: %s:%d\n", file, line);
   }
   if (func) {
-    display_printf("func: %s\n", func);
+    term_printf("func: %s\n", func);
   }
 #ifdef SCM_REVISION
   const uint8_t *rev = (const uint8_t *)SCM_REVISION;
-  display_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
-                 rev[4]);
+  term_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
+              rev[4]);
 #endif
-  display_printf("\nPlease contact Trezor support.\n");
+  term_printf("\nPlease contact Trezor support.\n");
 #endif
   trezor_shutdown();
 }
@@ -134,14 +135,14 @@ error_shutdown(const char *label, const char *msg) {
   screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
   display_refresh();
 #else
-  display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   if (label) {
-    display_printf("%s\n", label);
+    term_printf("%s\n", label);
   }
   if (msg) {
-    display_printf("%s\n", msg);
+    term_printf("%s\n", msg);
   }
-  display_printf("\nPLEASE VISIT TREZOR.IO/RSOD\n");
+  term_printf("\nPLEASE VISIT TREZOR.IO/RSOD\n");
 #endif
   display_backlight(255);
   trezor_shutdown();
