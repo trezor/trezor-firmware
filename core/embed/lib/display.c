@@ -356,13 +356,3 @@ void display_offset(int set_xy[2], int *get_x, int *get_y) {
   *get_x = DISPLAY_OFFSET.x;
   *get_y = DISPLAY_OFFSET.y;
 }
-
-void display_fade(int start, int end, int delay) {
-#ifdef USE_BACKLIGHT
-  for (int i = 0; i < 100; i++) {
-    display_backlight(start + i * (end - start) / 100);
-    hal_delay(delay / 100);
-  }
-  display_backlight(end);
-#endif
-}

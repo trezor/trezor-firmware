@@ -21,6 +21,7 @@
 
 #include "bootui.h"
 #include "display.h"
+#include "display_utils.h"
 #include "icon_done.h"
 #include "icon_fail.h"
 #include "icon_install.h"

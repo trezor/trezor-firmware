@@ -26,6 +26,7 @@
 #include "button.h"
 #include "common.h"
 #include "display.h"
+#include "display_utils.h"
 #include "flash.h"
 #include "i2c.h"
 #include "model.h"

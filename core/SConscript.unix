@@ -191,6 +191,7 @@ SOURCE_MOD += [
     'embed/lib/buffers.c',
     'embed/lib/colors.c',
     'embed/lib/display.c',
+    'embed/lib/display_utils.c',
     'embed/lib/fonts/fonts.c',
     'embed/lib/fonts/font_bitmap.c',
     'embed/lib/image.c',

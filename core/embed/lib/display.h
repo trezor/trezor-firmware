@@ -48,6 +48,5 @@ void display_text_render_buffer(const char *text, int textlen, int font,
 void display_qrcode(int x, int y, const char *data, uint8_t scale);
 
 void display_offset(int set_xy[2], int *get_x, int *get_y);
-void display_fade(int start, int end, int delay);
 
 #endif
