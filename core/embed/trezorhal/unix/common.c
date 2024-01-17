@@ -56,15 +56,15 @@ error_uni(const char *label, const char *msg, const char *footer) {
   screen_fatal_error_rust(label, msg, "PLEASE VISIT\nTREZOR.IO/RSOD");
   display_refresh();
 #else
-  display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   if (label) {
-    display_printf("%s\n", label);
+    term_printf("%s\n", label);
   }
   if (msg) {
-    display_printf("%s\n", msg);
+    term_printf("%s\n", msg);
   }
   if (footer) {
-    display_printf("\n%s\n", footer);
+    term_printf("\n%s\n", footer);
   }
 #endif
   display_backlight(255);
@@ -93,33 +93,33 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 
   display_refresh();
 #else
-  display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  display_printf("\nINTERNAL ERROR:\n");
+  term_set_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+  term_printf("\nINTERNAL ERROR:\n");
   printf("\nINTERNAL ERROR:\n");
   if (expr) {
-    display_printf("expr: %s\n", expr);
+    term_printf("expr: %s\n", expr);
     printf("expr: %s\n", expr);
   }
   if (msg) {
-    display_printf("msg : %s\n", msg);
+    term_printf("msg : %s\n", msg);
     printf("msg : %s\n", msg);
   }
   if (file) {
-    display_printf("file: %s:%d\n", file, line);
+    term_printf("file: %s:%d\n", file, line);
     printf("file: %s:%d\n", file, line);
   }
   if (func) {
-    display_printf("func: %s\n", func);
+    term_printf("func: %s\n", func);
     printf("func: %s\n", func);
   }
 #ifdef SCM_REVISION
   const uint8_t *rev = (const uint8_t *)SCM_REVISION;
-  display_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
-                 rev[4]);
+  term_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
+              rev[4]);
   printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
          rev[4]);
 #endif
-  display_printf("\n\n\nHint:\nIsn't the emulator already running?\n");
+  term_printf("\n\n\nHint:\nIsn't the emulator already running?\n");
   printf("Hint:\nIsn't the emulator already running?\n");
 #endif
   hal_delay(3000);
