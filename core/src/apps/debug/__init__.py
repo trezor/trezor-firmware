@@ -259,6 +259,7 @@ if __debug__:
         from trezor import io
 
         sdcard_switcher = io.sdcard_switcher  # local_cache_attribute
+        sdcard = io.sdcard  # local_cache_attribute
         if msg.serial_number is None:
             sdcard_switcher.eject()
         else:
@@ -267,11 +268,18 @@ if __debug__:
                 capacity_bytes=msg.capacity_bytes,
                 manuf_id=msg.manuf_ID,
             )
-            if msg.data_blocks is not None:
-                sdcard = io.sdcard
+            try:
                 sdcard.power_on()
                 for block in msg.data_blocks:
-                    sdcard.write(block.number, block.data)
+                    assert len(block.data) <= sdcard.BLOCK_SIZE
+                    block_buffer = utils.empty_bytearray(sdcard.BLOCK_SIZE)
+                    block_buffer.extend(block.data)
+                    padding_len = sdcard.BLOCK_SIZE - len(block_buffer)
+                    block_buffer.extend(b"\x00" * padding_len)
+                    sdcard.write(block.number, block_buffer)
+            except OSError:
+                raise wire.ProcessError("SD card operation failed")
+            finally:
                 sdcard.power_off()
 
         return Success()
