@@ -4,9 +4,9 @@ mod generated;
 mod micropython;
 mod translated_string;
 
-pub use translated_string::TranslatedString as TR;
 #[cfg(feature = "micropython")]
 pub use micropython::tr;
+pub use translated_string::TranslatedString as TR;
 
 use crate::{error::Error, io::InputStream};
 use core::{ptr::null, str};
@@ -50,7 +50,7 @@ impl<'a> Table<'a> {
         })
     }
 
-    pub fn get(self: &'a Self, id: u16) -> Option<&'a [u8]> {
+    pub fn get(&self, id: u16) -> Option<&'a [u8]> {
         self.offsets
             .iter()
             .position(|it| it.id == id)
@@ -106,7 +106,7 @@ impl<'a> Translations<'a> {
     }
 
     /// Returns the translation at the given index.
-    pub fn translation(self, index: usize) -> Option<&'a str> {
+    pub fn translation(&self, index: usize) -> Option<&str> {
         if index >= self.translation_offsets.len() + 1 {
             // The index is out of bounds.
             // May happen when new firmware is using older translations and the string
@@ -119,7 +119,7 @@ impl<'a> Translations<'a> {
         let end_offset = self.translation_offsets[index + 1] as usize;
 
         // Construct the relevant slice
-        let mut string = &self.translations[start_offset..end_offset];
+        let string = &self.translations[start_offset..end_offset];
 
         if string.is_empty() {
             // The string is not defined in the blob.
@@ -132,7 +132,7 @@ impl<'a> Translations<'a> {
         str::from_utf8(string).ok()
     }
 
-    pub fn font(self, index: u16) -> Option<Table<'a>> {
+    pub fn font(&'a self, index: u16) -> Option<Table<'a>> {
         self.fonts.get(index).and_then(|data| Table::new(data).ok())
     }
 }
@@ -140,10 +140,12 @@ impl<'a> Translations<'a> {
 struct TranslationsHeader<'a> {
     /// Human readable language identifier (e.g. "cs" of "fr")
     pub language: &'a str,
-    /// Version in format {major}.{minor}.{patch}
-    pub version: &'a str,
+    /// 4 bytes of version (major, minor, patch, build)
+    pub version: [u8; 4],
     /// Overall length of the data blob (excluding the header)
     pub data_length: u16,
+    /// Length of the header
+    pub header_length: u16,
     /// Length of the translation data
     pub translations_length: u16,
     /// Number of translation items
@@ -165,7 +167,7 @@ impl<'a> TranslationsHeader<'a> {
     const CHANGE_LANG_PROMPT_LEN: usize = 40;
     const SIGNATURE_LEN: usize = 65;
 
-    fn read_fixedsize_str(reader: &'a InputStream<'a>, len: usize) -> Result<&'a str, Error> {
+    fn read_fixedsize_str<'b, 'c: 'b>(reader: &'b mut InputStream<'c>, len: usize) -> Result<&'c str, Error> {
         let bytes = reader.read(len)?;
         let string = core::str::from_utf8(bytes)
             .map_err(|_| value_error!("Invalid string"))?
@@ -185,7 +187,8 @@ impl<'a> TranslationsHeader<'a> {
             return Err(value_error!("Invalid header magic"));
         }
 
-        let version = Self::read_fixedsize_str(&mut reader, Self::VERSION_LEN)?;
+        let version_bytes = reader.read(4)?;
+        let version = unwrap!(version_bytes.try_into());
         let language = Self::read_fixedsize_str(&mut reader, Self::LANG_LEN)?;
         let data_length = reader.read_u16_le()?;
         let translations_length = reader.read_u16_le()?;
@@ -211,6 +214,7 @@ impl<'a> TranslationsHeader<'a> {
             language,
             version,
             data_length,
+            header_length: 0,
             translations_length,
             translations_count,
             data_hash,
@@ -226,8 +230,8 @@ pub unsafe extern "C" fn get_utf8_glyph(codepoint: cty::uint16_t, font: cty::c_i
     let font_abs = font.unsigned_abs() as u16;
 
     // SAFETY:
-    // We rely on the fact that the caller (`display_text_render` and friends) uses and
-    // discards this data immediately.
+    // We rely on the fact that the caller (`display_text_render` and friends) uses
+    // and discards this data immediately.
     let Some(tr) = (unsafe { flash::get() }) else {
         return null();
     };
