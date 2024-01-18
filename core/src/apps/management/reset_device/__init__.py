@@ -157,7 +157,7 @@ async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType) ->
     from storage.sd_seed_backup import is_backup_present, store_seed_on_sdcard
     from trezor.ui.layouts import confirm_action, show_success
 
-    from apps.common.sdcard import ensure_sdcard, is_trz_card
+    from apps.common.sdcard import ensure_sdcard, is_trz_card, make_user_eject_sdcard
 
     await ensure_sdcard(ensure_filesystem=False)
     if not is_trz_card():
@@ -184,6 +184,7 @@ async def sdcard_backup_seed(mnemonic_secret: bytes, backup_type: BackupType) ->
     store_seed_on_sdcard(mnemonic_secret, backup_type)
 
     await show_success("success_sdcard_backup", "Backup on SD card successful!")
+    await make_user_eject_sdcard()
 
 
 async def _backup_bip39(mnemonic_secret: bytes):

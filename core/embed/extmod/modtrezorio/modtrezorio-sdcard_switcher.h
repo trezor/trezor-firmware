@@ -69,8 +69,6 @@ STATIC mp_obj_t mod_trezorio_sdcard_switcher_insert(size_t n_args,
   CHECK_PARAM_RANGE(capacity_bytes, ONE_MEBIBYTE,
                     1024 * ONE_MEBIBYTE)  // capacity between 1 MiB and 1 GiB
 
-  printf("mod_trezorio_sdcard_switcher_insert, arg: %ld, %ld, %ld\n", card_sn,
-         capacity_bytes, manuf_id);
   sdcard_mock.inserted = sectrue;
   set_sdcard_mock_filename(&sdcard_mock, (int)card_sn);
   sdcard_mock.buffer = NULL;

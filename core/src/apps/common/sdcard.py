@@ -1,4 +1,4 @@
-from trezor import io, wire
+from trezor import io, wire, loop, ui
 from trezor.sdcard import SD_CARD_HOT_SWAPPABLE, with_sdcard
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 
@@ -84,6 +84,35 @@ async def confirm_retry_sd(
         verb_cancel="Abort",
         exc=exc,
     )
+
+
+async def _eject_sdcard_layout() -> None:
+    import trezorui2
+    from trezor.ui.layouts import (
+        RustLayout,
+        interact,
+    )
+
+    await interact(
+        RustLayout(trezorui2.show_info(title="Eject SD card pls", button="")), "br_type"
+    )
+
+
+async def _active_wait_until_sdcard_ejected() -> None:
+    while io.sdcard.is_present():
+        await loop.sleep(100)
+
+
+async def make_user_eject_sdcard() -> None:
+    animation_task = _eject_sdcard_layout()
+    waiting_task = _active_wait_until_sdcard_ejected()
+    racer = loop.race(waiting_task, animation_task)
+    result = await racer
+    if not waiting_task in racer.finished:
+        # TODO: should not happen, how to handle it
+        print(f"make_user_eject_sdcard, animation task in finisher")
+        raise ProcessError
+    print(f"make_user_eject_sdcard, waiting task in finisher")
 
 
 async def ensure_sdcard(
