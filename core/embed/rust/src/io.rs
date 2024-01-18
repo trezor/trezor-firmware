@@ -19,7 +19,7 @@ impl<'a> InputStream<'a> {
         Ok(Self::new(buf))
     }
 
-    pub fn read(&mut self, len: usize) -> Result<&[u8], Error> {
+    pub fn read(&mut self, len: usize) -> Result<&'a [u8], Error> {
         let buf = self
             .buf
             .get(self.pos..self.pos + len)
@@ -37,11 +37,7 @@ impl<'a> InputStream<'a> {
     }
 
     pub fn read_byte(&mut self) -> Result<u8, Error> {
-        let val = self
-            .buf
-            .get(self.pos)
-            .copied()
-            .ok_or(Error::EOFError)?;
+        let val = self.buf.get(self.pos).copied().ok_or(Error::EOFError)?;
         self.pos += 1;
         Ok(val)
     }
