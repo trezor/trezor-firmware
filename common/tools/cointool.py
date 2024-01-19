@@ -11,6 +11,7 @@ import re
 import sys
 from collections import defaultdict
 from hashlib import sha256
+from pathlib import Path
 from typing import Any, Callable, Iterator, TextIO, cast
 
 import click
@@ -24,6 +25,9 @@ DEFINITIONS_TIMESTAMP_PATH = (
 DEFINITIONS_LATEST_URL = (
     "https://raw.githubusercontent.com/trezor/definitions/main/definitions-latest.json"
 )
+
+HERE = Path(__file__).parent.resolve()
+ROOT = HERE.parent.parent
 
 try:
     import termcolor
@@ -148,10 +152,13 @@ def render_file(
     eth_defs_date = datetime.datetime.fromisoformat(
         DEFINITIONS_TIMESTAMP_PATH.read_text().strip()
     )
+    this_file = Path(src)
     result = template.render(
         support_info=support_info,
         supported_on=make_support_filter(support_info),
         ethereum_defs_timestamp=int(eth_defs_date.timestamp()),
+        THIS_FILE=this_file,
+        ROOT=ROOT,
         **coins,
         **MAKO_FILTERS,
     )

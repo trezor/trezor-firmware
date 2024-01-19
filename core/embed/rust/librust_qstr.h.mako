@@ -1,4 +1,4 @@
-// generated from librust_qstr.h.mako
+// generated from ${THIS_FILE.name}
 // (by running `make templates` in `core`)
 // do not edit manually!
 #pragma GCC diagnostic ignored "-Wunused-value"
@@ -11,9 +11,7 @@ import sys
 from pathlib import Path
 from typing import Union, Set
 
-THIS = Path(local.filename).resolve()
-HERE = THIS.parent
-RUST_SRC = HERE / "src"
+RUST_SRC = THIS_FILE.parent / "src"
 
 def find_unique_patterns_in_dir(directory: Union[str, Path], pattern: str) -> Set[str]:
     command = f"grep -ro '{pattern}' {directory}"
