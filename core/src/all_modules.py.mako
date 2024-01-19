@@ -1,15 +1,13 @@
-# generated from all_modules.py.mako
+# generated from ${THIS_FILE.name}
 # (by running `make templates` in `core`)
 # do not edit manually!
 # flake8: noqa
 # fmt: off
 # isort:skip_file
 <%
-from pathlib import Path
 from itertools import chain
 
-THIS = Path(local.filename).resolve()
-SRCDIR = THIS.parent
+SRCDIR = THIS_FILE.parent
 
 PATTERNS = (
     "*.py",
