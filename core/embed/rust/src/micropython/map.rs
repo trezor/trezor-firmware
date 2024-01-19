@@ -69,6 +69,10 @@ impl Map {
         self.used()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn elems(&self) -> &[MapElem] {
         // SAFETY: `self.table` should always point to an array of `MapElem` of
         // `self.len()` items valid at least for the lifetime of `self`.
