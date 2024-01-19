@@ -541,23 +541,23 @@ pub mod trace {
 
     impl LayoutSink for TraceSink<'_> {
         fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
-            self.0.string(text);
+            self.0.string(&text.into());
         }
 
         fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("-");
+            self.0.string(&"-".into());
         }
 
         fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string(ELLIPSIS);
+            self.0.string(&ELLIPSIS.into());
         }
 
         fn prev_page_ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string(ELLIPSIS);
+            self.0.string(&ELLIPSIS.into());
         }
 
         fn line_break(&mut self, _cursor: Point) {
-            self.0.string("\n");
+            self.0.string(&"\n".into());
         }
     }
 }

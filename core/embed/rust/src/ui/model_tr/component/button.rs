@@ -1,5 +1,5 @@
 use crate::{
-    strutil::StringType,
+    strutil::{StringType, TString},
     time::Duration,
     ui::{
         component::{Component, Event, EventCtx, Never},
@@ -20,22 +20,16 @@ pub enum ButtonPos {
     Right,
 }
 
-pub struct Button<T>
-where
-    T: StringType,
-{
+pub struct Button {
     bounds: Rect,
     pos: ButtonPos,
-    content: ButtonContent<T>,
+    content: ButtonContent,
     styles: ButtonStyleSheet,
     state: State,
 }
 
-impl<T> Button<T>
-where
-    T: StringType,
-{
-    pub fn new(pos: ButtonPos, content: ButtonContent<T>, styles: ButtonStyleSheet) -> Self {
+impl Button {
+    pub fn new(pos: ButtonPos, content: ButtonContent, styles: ButtonStyleSheet) -> Self {
         Self {
             pos,
             content,
@@ -45,7 +39,7 @@ where
         }
     }
 
-    pub fn from_button_details(pos: ButtonPos, btn_details: ButtonDetails<T>) -> Self {
+    pub fn from_button_details(pos: ButtonPos, btn_details: ButtonDetails) -> Self {
         // Deciding between text and icon
         let style = btn_details.style();
         match btn_details.content {
@@ -54,7 +48,7 @@ where
         }
     }
 
-    pub fn with_text(pos: ButtonPos, text: T, styles: ButtonStyleSheet) -> Self {
+    pub fn with_text(pos: ButtonPos, text: TString<'static>, styles: ButtonStyleSheet) -> Self {
         Self::new(pos, ButtonContent::Text(text), styles)
     }
 
@@ -62,7 +56,7 @@ where
         Self::new(pos, ButtonContent::Icon(image), styles)
     }
 
-    pub fn content(&self) -> &ButtonContent<T> {
+    pub fn content(&self) -> &ButtonContent {
         &self.content
     }
 
@@ -79,7 +73,7 @@ where
     }
 
     /// Changing the text content of the button.
-    pub fn set_text(&mut self, text: T) {
+    pub fn set_text(&mut self, text: TString<'static>) {
         self.content = ButtonContent::Text(text);
     }
 
@@ -117,7 +111,7 @@ where
         } else {
             match &self.content {
                 ButtonContent::Text(text) => {
-                    let text_width = style.font.visible_text_width(text.as_ref());
+                    let text_width = text.map(|t| style.font.visible_text_width(t));
                     if style.with_outline {
                         text_width + 2 * theme::BUTTON_OUTLINE
                     } else if style.with_arms {
@@ -166,7 +160,7 @@ where
         // Centering the text in case of fixed width.
         if let ButtonContent::Text(text) = &self.content {
             if let Some(fixed_width) = style.fixed_width {
-                let diff = fixed_width - style.font.visible_text_width(text.as_ref());
+                let diff = fixed_width - text.map(|t| style.font.visible_text_width(t));
                 offset_x = diff / 2;
             }
         }
@@ -175,10 +169,7 @@ where
     }
 }
 
-impl<T> Component for Button<T>
-where
-    T: StringType,
-{
+impl Component for Button {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -227,16 +218,15 @@ where
 
         // Painting the content
         match &self.content {
-            ButtonContent::Text(text) => {
+            ButtonContent::Text(text) => text.map(|t| {
                 display::text_left(
-                    self.get_text_baseline(style)
-                        - Offset::x(style.font.start_x_bearing(text.as_ref())),
-                    text.as_ref(),
+                    self.get_text_baseline(style) - Offset::x(style.font.start_x_bearing(t)),
+                    t,
                     style.font,
                     fg_color,
                     bg_color,
                 );
-            }
+            }),
             ButtonContent::Icon(icon) => {
                 // Allowing for possible offset of the area from current style
                 let icon_area = area.translate(style.offset);
@@ -274,8 +264,8 @@ enum State {
 }
 
 #[derive(Clone)]
-pub enum ButtonContent<T> {
-    Text(T),
+pub enum ButtonContent {
+    Text(TString<'static>),
     Icon(Icon),
 }
 
@@ -342,8 +332,8 @@ impl ButtonStyleSheet {
 
 /// Describing the button on the screen - only visuals.
 #[derive(Clone)]
-pub struct ButtonDetails<T> {
-    pub content: ButtonContent<T>,
+pub struct ButtonDetails {
+    pub content: ButtonContent,
     pub duration: Option<Duration>,
     with_outline: bool,
     with_arms: bool,
@@ -352,12 +342,9 @@ pub struct ButtonDetails<T> {
     pub send_long_press: bool,
 }
 
-impl<T> ButtonDetails<T>
-where
-    T: StringType,
-{
+impl ButtonDetails {
     /// Text button.
-    pub fn text(text: T) -> Self {
+    pub fn text(text: TString<'static>) -> Self {
         Self {
             content: ButtonContent::Text(text),
             duration: None,
@@ -383,17 +370,17 @@ where
     }
 
     /// Resolves text and finds possible icon names.
-    pub fn from_text_possible_icon(text: T) -> Self {
-        match text.as_ref() {
-            "" => Self::cancel_icon(),
-            "<" => Self::left_arrow_icon(),
-            "^" => Self::up_arrow_icon(),
+    pub fn from_text_possible_icon(text: TString<'static>) -> Self {
+        match text {
+            TString::Str("") => Self::cancel_icon(),
+            TString::Str("<") => Self::left_arrow_icon(),
+            TString::Str("^") => Self::up_arrow_icon(),
             _ => Self::text(text),
         }
     }
 
     /// Text with arms signalling double press.
-    pub fn armed_text(text: T) -> Self {
+    pub fn armed_text(text: TString<'static>) -> Self {
         Self::text(text).with_arms()
     }
 
@@ -485,20 +472,17 @@ where
 
 /// Holding the button details for all three possible buttons.
 #[derive(Clone)]
-pub struct ButtonLayout<T> {
-    pub btn_left: Option<ButtonDetails<T>>,
-    pub btn_middle: Option<ButtonDetails<T>>,
-    pub btn_right: Option<ButtonDetails<T>>,
+pub struct ButtonLayout {
+    pub btn_left: Option<ButtonDetails>,
+    pub btn_middle: Option<ButtonDetails>,
+    pub btn_right: Option<ButtonDetails>,
 }
 
-impl<T> ButtonLayout<T>
-where
-    T: StringType,
-{
+impl ButtonLayout {
     pub fn new(
-        btn_left: Option<ButtonDetails<T>>,
-        btn_middle: Option<ButtonDetails<T>>,
-        btn_right: Option<ButtonDetails<T>>,
+        btn_left: Option<ButtonDetails>,
+        btn_middle: Option<ButtonDetails>,
+        btn_right: Option<ButtonDetails>,
     ) -> Self {
         Self {
             btn_left,
@@ -514,7 +498,7 @@ where
     }
 
     /// Arrows at sides, armed text in the middle.
-    pub fn arrow_armed_arrow(text: T) -> Self {
+    pub fn arrow_armed_arrow(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             Some(ButtonDetails::armed_text(text)),
@@ -523,7 +507,7 @@ where
     }
 
     /// Left cancel, armed text and next right arrow.
-    pub fn cancel_armed_arrow(text: T) -> Self {
+    pub fn cancel_armed_arrow(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(text)),
@@ -532,7 +516,7 @@ where
     }
 
     /// Middle armed text and next right arrow.
-    pub fn none_armed_arrow(text: T) -> Self {
+    pub fn none_armed_arrow(text: TString<'static>) -> Self {
         Self::new(
             None,
             Some(ButtonDetails::armed_text(text)),
@@ -541,7 +525,7 @@ where
     }
 
     /// Left text, armed text and right info icon/text.
-    pub fn text_armed_info(left: T, middle: T) -> Self {
+    pub fn text_armed_info(left: TString<'static>, middle: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::from_text_possible_icon(left)),
             Some(ButtonDetails::armed_text(middle)),
@@ -550,7 +534,7 @@ where
     }
 
     /// Left cancel, armed text and right info icon/text.
-    pub fn cancel_armed_info(middle: T) -> Self {
+    pub fn cancel_armed_info(middle: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(middle)),
@@ -559,7 +543,7 @@ where
     }
 
     /// Left cancel, armed text and blank on right.
-    pub fn cancel_armed_none(middle: T) -> Self {
+    pub fn cancel_armed_none(middle: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(middle)),
@@ -568,7 +552,7 @@ where
     }
 
     /// Left back arrow and middle armed text.
-    pub fn arrow_armed_none(text: T) -> Self {
+    pub fn arrow_armed_none(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             Some(ButtonDetails::armed_text(text)),
@@ -577,7 +561,7 @@ where
     }
 
     /// Left and right texts.
-    pub fn text_none_text(left: T, right: T) -> Self {
+    pub fn text_none_text(left: TString<'static>, right: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::from_text_possible_icon(left)),
             None,
@@ -586,7 +570,7 @@ where
     }
 
     /// Left text and right arrow.
-    pub fn text_none_arrow(text: T) -> Self {
+    pub fn text_none_arrow(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::from_text_possible_icon(text)),
             None,
@@ -595,7 +579,7 @@ where
     }
 
     /// Left text and WIDE right arrow.
-    pub fn text_none_arrow_wide(text: T) -> Self {
+    pub fn text_none_arrow_wide(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::from_text_possible_icon(text)),
             None,
@@ -604,7 +588,7 @@ where
     }
 
     /// Only right text.
-    pub fn none_none_text(text: T) -> Self {
+    pub fn none_none_text(text: TString<'static>) -> Self {
         Self::new(
             None,
             None,
@@ -622,7 +606,7 @@ where
     }
 
     /// Left arrow and right text.
-    pub fn arrow_none_text(text: T) -> Self {
+    pub fn arrow_none_text(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
@@ -631,7 +615,7 @@ where
     }
 
     /// Up arrow left and right text.
-    pub fn up_arrow_none_text(text: T) -> Self {
+    pub fn up_arrow_none_text(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::up_arrow_icon()),
             None,
@@ -667,7 +651,7 @@ where
     }
 
     /// Up arrow on left, middle text and info on the right.
-    pub fn up_arrow_armed_info(text: T) -> Self {
+    pub fn up_arrow_armed_info(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::up_arrow_icon()),
             Some(ButtonDetails::armed_text(text)),
@@ -685,7 +669,7 @@ where
     }
 
     /// Cancel cross on left and text on the right.
-    pub fn cancel_none_text(text: T) -> Self {
+    pub fn cancel_none_text(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
@@ -694,7 +678,7 @@ where
     }
 
     /// Cancel cross on left and hold-to-confirm text on the right.
-    pub fn cancel_none_htc(text: T) -> Self {
+    pub fn cancel_none_htc(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
@@ -703,7 +687,7 @@ where
     }
 
     /// Arrow back on left and hold-to-confirm text on the right.
-    pub fn arrow_none_htc(text: T) -> Self {
+    pub fn arrow_none_htc(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
@@ -712,12 +696,12 @@ where
     }
 
     /// Only armed text in the middle.
-    pub fn none_armed_none(text: T) -> Self {
+    pub fn none_armed_none(text: TString<'static>) -> Self {
         Self::new(None, Some(ButtonDetails::armed_text(text)), None)
     }
 
     /// HTC on both sides.
-    pub fn htc_none_htc(left: T, right: T) -> Self {
+    pub fn htc_none_htc(left: TString<'static>, right: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::text(left).with_default_duration()),
             None,
@@ -930,30 +914,30 @@ impl ButtonActions {
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T: StringType> crate::trace::Trace for Button<T> {
+impl crate::trace::Trace for Button {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Button");
-        match &self.content {
-            ButtonContent::Text(text) => t.string("text", text.as_ref()),
+        match self.content {
+            ButtonContent::Text(text) => t.string("text", text),
             ButtonContent::Icon(icon) => {
                 t.null("text");
-                t.string("icon", icon.name);
+                t.string("icon", icon.name.into());
             }
         }
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T: StringType> crate::trace::Trace for ButtonDetails<T> {
+impl crate::trace::Trace for ButtonDetails {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ButtonDetails");
-        match &self.content {
+        match self.content {
             ButtonContent::Text(text) => {
-                t.string("text", text.as_ref());
+                t.string("text", text);
             }
             ButtonContent::Icon(icon) => {
                 t.null("text");
-                t.string("icon", icon.name);
+                t.string("icon", icon.name.into());
             }
         }
         if let Some(duration) = &self.duration {

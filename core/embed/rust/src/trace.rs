@@ -1,9 +1,9 @@
-use crate::strutil::format_i64;
+use crate::strutil::{format_i64, TString};
 
 pub trait Tracer {
     fn child(&mut self, key: &str, value: &dyn Trace);
     fn int(&mut self, key: &str, i: i64);
-    fn string(&mut self, key: &str, s: &str);
+    fn string(&mut self, key: &str, s: TString<'_>);
     fn bool(&mut self, key: &str, b: bool);
     fn null(&mut self, key: &str);
 
@@ -11,14 +11,14 @@ pub trait Tracer {
     fn in_list(&mut self, key: &str, block: &dyn Fn(&mut dyn ListTracer));
 
     fn component(&mut self, name: &str) {
-        self.string("component", name);
+        self.string("component", name.into());
     }
 }
 
 pub trait ListTracer {
     fn child(&mut self, value: &dyn Trace);
     fn int(&mut self, i: i64);
-    fn string(&mut self, s: &str);
+    fn string(&mut self, s: &TString<'_>);
     fn bool(&mut self, b: bool);
 
     fn in_child(&mut self, block: &dyn Fn(&mut dyn Tracer));
@@ -121,9 +121,9 @@ impl<F: FnMut(&str)> ListTracer for JsonTracer<F> {
         self.write_int(i);
     }
 
-    fn string(&mut self, s: &str) {
+    fn string(&mut self, s: &TString<'_>) {
         self.maybe_comma();
-        self.write_str_quoted(s);
+        s.map(|s| self.write_str_quoted(s));
     }
 
     fn bool(&mut self, b: bool) {
@@ -160,9 +160,9 @@ impl<F: FnMut(&str)> Tracer for JsonTracer<F> {
         self.write_int(i);
     }
 
-    fn string(&mut self, key: &str, s: &str) {
+    fn string(&mut self, key: &str, s: TString<'_>) {
         self.key(key);
-        self.write_str_quoted(s);
+        s.map(|s| self.write_str_quoted(s));
     }
 
     fn bool(&mut self, key: &str, b: bool) {

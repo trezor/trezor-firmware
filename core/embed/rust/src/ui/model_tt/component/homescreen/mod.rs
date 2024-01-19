@@ -1,7 +1,9 @@
 mod render;
 
 use crate::{
+    strutil::TString,
     time::{Duration, Instant},
+    translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Event, EventCtx, Pad, TimerToken},
@@ -10,7 +12,6 @@ use crate::{
         geometry::{Offset, Point, Rect},
         layout::util::get_user_custom_image,
         model_tt::{constant, theme::IMAGE_HOMESCREEN},
-        translations::tr,
     },
 };
 
@@ -45,9 +46,9 @@ const LOADER_OFFSET: Offset = Offset::y(-10);
 const LOADER_DELAY: Duration = Duration::from_millis(500);
 const LOADER_DURATION: Duration = Duration::from_millis(2000);
 
-pub struct Homescreen<T> {
-    label: T,
-    notification: Option<(T, u8)>,
+pub struct Homescreen {
+    label: TString<'static>,
+    notification: Option<(TString<'static>, u8)>,
     hold_to_lock: bool,
     loader: Loader,
     pad: Pad,
@@ -59,11 +60,12 @@ pub enum HomescreenMsg {
     Dismissed,
 }
 
-impl<T> Homescreen<T>
-where
-    T: AsRef<str>,
-{
-    pub fn new(label: T, notification: Option<(T, u8)>, hold_to_lock: bool) -> Self {
+impl Homescreen {
+    pub fn new(
+        label: TString<'static>,
+        notification: Option<(TString<'static>, u8)>,
+        hold_to_lock: bool,
+    ) -> Self {
         Self {
             label,
             notification,
@@ -88,14 +90,14 @@ where
         if !usb_configured() {
             let (color, icon) = Self::level_to_style(0);
             Some(HomescreenNotification {
-                text: tr("homescreen__title_no_usb_connection"),
+                text: TR::homescreen__title_no_usb_connection.into(),
                 icon,
                 color,
             })
-        } else if let Some((notification, level)) = &self.notification {
-            let (color, icon) = Self::level_to_style(*level);
+        } else if let Some((notification, level)) = self.notification {
+            let (color, icon) = Self::level_to_style(level);
             Some(HomescreenNotification {
-                text: notification.as_ref(),
+                text: notification,
                 icon,
                 color,
             })
@@ -105,13 +107,15 @@ where
     }
 
     fn paint_loader(&mut self) {
-        display::text_center(
-            TOP_CENTER + Offset::y(HOLD_Y),
-            tr("homescreen__title_hold_to_lock"),
-            Font::BOLD,
-            theme::FG,
-            theme::BG,
-        );
+        TR::homescreen__title_hold_to_lock.map_translated(|t| {
+            display::text_center(
+                TOP_CENTER + Offset::y(HOLD_Y),
+                t,
+                Font::BOLD,
+                theme::FG,
+                theme::BG,
+            )
+        });
         self.loader.paint()
     }
 
@@ -171,10 +175,7 @@ where
     }
 }
 
-impl<T> Component for Homescreen<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Homescreen {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -201,7 +202,7 @@ where
             label_style.text_color = theme::FG;
 
             let text = HomescreenText {
-                text: self.label.as_ref(),
+                text: self.label,
                 style: label_style,
                 offset: Offset::y(LABEL_Y),
                 icon: None,
@@ -261,21 +262,21 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T: AsRef<str>> crate::trace::Trace for Homescreen<T> {
+impl crate::trace::Trace for Homescreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Homescreen");
-        t.string("label", self.label.as_ref());
+        t.string("label", self.label);
     }
 }
 
-pub struct Lockscreen<T> {
-    label: T,
+pub struct Lockscreen {
+    label: TString<'static>,
     bootscreen: bool,
     coinjoin_authorized: bool,
 }
 
-impl<T> Lockscreen<T> {
-    pub fn new(label: T, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+impl Lockscreen {
+    pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
         Lockscreen {
             label,
             bootscreen,
@@ -284,10 +285,7 @@ impl<T> Lockscreen<T> {
     }
 }
 
-impl<T> Component for Lockscreen<T>
-where
-    T: AsRef<str>,
-{
+impl Component for Lockscreen {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -304,14 +302,11 @@ where
     fn paint(&mut self) {
         let (locked, tap) = if self.bootscreen {
             (
-                tr("lockscreen__title_not_connected"),
-                tr("lockscreen__tap_to_connect"),
+                TR::lockscreen__title_not_connected,
+                TR::lockscreen__tap_to_connect,
             )
         } else {
-            (
-                tr("lockscreen__title_locked"),
-                tr("lockscreen__tap_to_unlock"),
-            )
+            (TR::lockscreen__title_locked, TR::lockscreen__tap_to_unlock)
         };
 
         let mut label_style = theme::TEXT_DEMIBOLD;
@@ -319,25 +314,25 @@ where
 
         let mut texts: &[HomescreenText] = &[
             HomescreenText {
-                text: "",
+                text: "".into(),
                 style: theme::TEXT_NORMAL,
                 offset: Offset::new(2, COINJOIN_Y),
                 icon: Some(theme::ICON_COINJOIN),
             },
             HomescreenText {
-                text: locked,
+                text: locked.into(),
                 style: theme::TEXT_BOLD,
                 offset: Offset::y(LOCKED_Y),
                 icon: Some(theme::ICON_LOCK),
             },
             HomescreenText {
-                text: tap,
+                text: tap.into(),
                 style: theme::TEXT_NORMAL,
                 offset: Offset::y(TAP_Y),
                 icon: None,
             },
             HomescreenText {
-                text: self.label.as_ref(),
+                text: self.label,
                 style: label_style,
                 offset: Offset::y(LABEL_Y),
                 icon: None,
@@ -406,7 +401,7 @@ fn is_image_toif(buffer: &[u8]) -> bool {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Lockscreen<T> {
+impl crate::trace::Trace for Lockscreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Lockscreen");
     }

@@ -475,8 +475,8 @@ where
                 unwrap!(digits_order.push_str(text));
             }
         }
-        t.string("digits_order", &digits_order);
-        t.string("pin", self.textbox.inner().pin());
+        t.string("digits_order", digits_order.as_str().into());
+        t.string("pin", self.textbox.inner().pin().into());
         t.bool("display_digits", self.textbox.inner().display_digits);
     }
 }

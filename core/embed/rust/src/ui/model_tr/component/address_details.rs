@@ -2,14 +2,14 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
-    strutil::StringType,
+    micropython::buffer::StrBuffer,
+    translations::TR,
     ui::{
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             Child, Component, Event, EventCtx, Pad, Paginate, Qr,
         },
         geometry::Rect,
-        translations::tr,
     },
 };
 
@@ -20,30 +20,24 @@ use super::{
 const MAX_XPUBS: usize = 16;
 const QR_BORDER: i16 = 3;
 
-pub struct AddressDetails<T>
-where
-    T: StringType,
-{
+pub struct AddressDetails {
     qr_code: Qr,
-    details_view: Paragraphs<ParagraphVecShort<T>>,
-    xpub_view: Frame<Paragraphs<Paragraph<T>>, T>,
-    xpubs: Vec<(T, T), MAX_XPUBS>,
+    details_view: Paragraphs<ParagraphVecShort<StrBuffer>>,
+    xpub_view: Frame<Paragraphs<Paragraph<StrBuffer>>, StrBuffer>,
+    xpubs: Vec<(StrBuffer, StrBuffer), MAX_XPUBS>,
     current_page: usize,
     current_subpage: usize,
     area: Rect,
     pad: Pad,
-    buttons: Child<ButtonController<T>>,
+    buttons: Child<ButtonController>,
 }
 
-impl<T> AddressDetails<T>
-where
-    T: StringType + Clone,
-{
+impl AddressDetails {
     pub fn new(
-        qr_address: T,
+        qr_address: StrBuffer,
         case_sensitive: bool,
-        account: Option<T>,
-        path: Option<T>,
+        account: Option<StrBuffer>,
+        path: Option<StrBuffer>,
     ) -> Result<Self, Error> {
         let qr_code = Qr::new(qr_address, case_sensitive)?.with_border(QR_BORDER);
         let details_view = {
@@ -51,14 +45,14 @@ where
             if let Some(account) = account {
                 para.add(Paragraph::new(
                     &theme::TEXT_BOLD,
-                    tr("address_details__account").into(),
+                    TR::address_details__account.try_into()?,
                 ));
-                para.add(Paragraph::new(&theme::TEXT_MONO, account));
+                para.add(Paragraph::new(&theme::TEXT_MONO, account.into()));
             }
             if let Some(path) = path {
                 para.add(Paragraph::new(
                     &theme::TEXT_BOLD,
-                    tr("address_details__derivation_path").into(),
+                    TR::address_details__derivation_path.try_into()?,
                 ));
                 para.add(Paragraph::new(&theme::TEXT_MONO, path));
             }
@@ -83,7 +77,7 @@ where
         Ok(result)
     }
 
-    pub fn add_xpub(&mut self, title: T, xpub: T) -> Result<(), Error> {
+    pub fn add_xpub(&mut self, title: StrBuffer, xpub: StrBuffer) -> Result<(), Error> {
         self.xpubs
             .push((title, xpub))
             .map_err(|_| Error::OutOfRange)
@@ -118,7 +112,7 @@ where
     /// last page. On xpub pages there is SHOW ALL middle button when it
     /// cannot fit one page. On xpub subpages there are wide arrows to
     /// scroll.
-    fn get_button_layout(&mut self) -> ButtonLayout<T> {
+    fn get_button_layout(&mut self) -> ButtonLayout {
         let (left, middle, right) = if self.is_in_subpage() {
             let left = Some(ButtonDetails::up_arrow_icon_wide());
             let right = if self.is_last_subpage() {
@@ -130,7 +124,7 @@ where
         } else {
             let left = Some(ButtonDetails::left_arrow_icon());
             let middle = if self.is_xpub_page() && self.subpages_in_current_page() > 1 {
-                Some(ButtonDetails::armed_text(tr("buttons__show_all").into()))
+                Some(ButtonDetails::armed_text(TR::buttons__show_all.into()))
             } else {
                 None
             };
@@ -182,10 +176,7 @@ where
     }
 }
 
-impl<T> Component for AddressDetails<T>
-where
-    T: StringType + Clone,
-{
+impl Component for AddressDetails {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -272,10 +263,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for AddressDetails<T>
-where
-    T: StringType + Clone,
-{
+impl crate::trace::Trace for AddressDetails {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("AddressDetails");
         match self.current_page {

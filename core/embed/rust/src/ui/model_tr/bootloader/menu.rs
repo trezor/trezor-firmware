@@ -51,7 +51,7 @@ impl MenuChoice {
     }
 }
 
-impl Choice<&'static str> for MenuChoice {
+impl Choice for MenuChoice {
     fn paint_center(&self, _area: Rect, _inverse: bool) {
         // Icon on top and two lines of text below
         self.icon.draw(
@@ -71,8 +71,8 @@ impl Choice<&'static str> for MenuChoice {
         );
     }
 
-    fn btn_layout(&self) -> ButtonLayout<&'static str> {
-        ButtonLayout::arrow_armed_arrow("SELECT")
+    fn btn_layout(&self) -> ButtonLayout {
+        ButtonLayout::arrow_armed_arrow("SELECT".into())
     }
 }
 
@@ -99,7 +99,7 @@ impl MenuChoiceFactory {
     }
 }
 
-impl ChoiceFactory<&'static str> for MenuChoiceFactory {
+impl ChoiceFactory for MenuChoiceFactory {
     type Action = MenuMsg;
     type Item = MenuChoice;
 
@@ -129,7 +129,7 @@ impl ChoiceFactory<&'static str> for MenuChoiceFactory {
 
 pub struct Menu {
     pad: Pad,
-    choice_page: Child<ChoicePage<MenuChoiceFactory, &'static str, MenuMsg>>,
+    choice_page: Child<ChoicePage<MenuChoiceFactory, MenuMsg>>,
 }
 
 impl Menu {

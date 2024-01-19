@@ -2,6 +2,7 @@ use core::mem;
 
 use crate::{
     strutil::StringType,
+    translations::TR,
     ui::{
         component::{
             base::Never,
@@ -10,7 +11,6 @@ use crate::{
         },
         display::{self, Font},
         geometry::{Alignment, Insets, Rect},
-        translations::tr,
         util::animation_disabled,
     },
 };
@@ -88,7 +88,7 @@ where
         if self.indeterminate {
             text_multiline(
                 self.area,
-                tr("coinjoin__title_progress"),
+                TR::coinjoin__title_progress.into(),
                 Font::BOLD,
                 theme::FG,
                 theme::BG,
@@ -113,7 +113,7 @@ where
         // BOTTOM
         let top_rest = text_multiline_bottom(
             self.area,
-            tr("coinjoin__do_not_disconnect"),
+            TR::coinjoin__do_not_disconnect.into(),
             Font::BOLD,
             theme::FG,
             theme::BG,
@@ -122,7 +122,7 @@ where
         if let Some(rest) = top_rest {
             text_multiline_bottom(
                 rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
-                self.text.as_ref(),
+                self.text.as_ref().into(),
                 Font::NORMAL,
                 theme::FG,
                 theme::BG,
@@ -139,8 +139,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("CoinJoinProgress");
-        t.string("header", tr("coinjoin__title_progress"));
-        t.string("text", self.text.as_ref());
-        t.string("footer", tr("coinjoin__do_not_disconnect"));
+        t.string("header", TR::coinjoin__title_progress.into());
+        t.string("text", self.text.as_ref().into());
+        t.string("footer", TR::coinjoin__do_not_disconnect.into());
     }
 }

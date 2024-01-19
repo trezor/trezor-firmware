@@ -79,7 +79,7 @@ where
     T: StringType + Clone,
 {
     formatted: FormattedText<T>,
-    btn_layout: ButtonLayout<T>,
+    btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
     current_page: usize,
     page_count: usize,
@@ -93,7 +93,7 @@ where
     T: StringType + Clone,
 {
     pub fn new(
-        btn_layout: ButtonLayout<T>,
+        btn_layout: ButtonLayout,
         btn_actions: ButtonActions,
         formatted: FormattedText<T>,
     ) -> Self {
@@ -137,7 +137,7 @@ where
         bounds
     }
 
-    pub fn btn_layout(&self) -> ButtonLayout<T> {
+    pub fn btn_layout(&self) -> ButtonLayout {
         // When we are in pagination inside this flow,
         // show the up and down arrows on appropriate sides.
         let current = self.btn_layout.clone();
@@ -235,7 +235,7 @@ where
         t.component("Page");
         if let Some(title) = &self.title {
             // Not calling it "title" as that is already traced by FlowPage
-            t.string("page_title", title.as_ref());
+            t.string("page_title", title.as_ref().into());
         }
         t.int("active_page", self.current_page as i64);
         t.int("page_count", self.page_count as i64);

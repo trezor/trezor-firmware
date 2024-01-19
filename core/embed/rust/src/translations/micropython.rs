@@ -15,11 +15,17 @@ use crate::{
 
 use super::translated_string::TranslatedString;
 
-pub fn tr(item: TranslatedString) -> StrBuffer {
-    // SAFETY: The translated string is copied into a new memory. Reference to flash
-    // data is discarded at the end of this function.
-    let translated = item.translate(unsafe { super::flash::get() });
-    StrBuffer::alloc(translated).unwrap_or_else(|_| item.untranslated().into())
+impl TryFrom<TranslatedString> for StrBuffer {
+    type Error = Error;
+
+    fn try_from(value: TranslatedString) -> Result<Self, Self::Error> {
+        // SAFETY: The translated string is copied into a new memory. Reference to flash
+        // data is discarded at the end of this function.
+        let translated = value.translate(unsafe { super::flash::get() });
+        StrBuffer::alloc(translated)
+        // TODO fall back to English (which is static and can be converted infallibly)
+        // if the allocation fails?
+    }
 }
 
 #[repr(C)]

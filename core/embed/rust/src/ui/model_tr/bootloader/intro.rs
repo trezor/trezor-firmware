@@ -32,7 +32,7 @@ impl ReturnToC for IntroMsg {
 pub struct Intro<'a> {
     bg: Pad,
     title: Child<Label<&'a str>>,
-    buttons: Child<ButtonController<&'static str>>,
+    buttons: Child<ButtonController>,
     text: Child<Label<&'a str>>,
     warn: Option<Child<Label<&'a str>>>,
 }
@@ -43,8 +43,8 @@ impl<'a> Intro<'a> {
             bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(Label::centered(title, TEXT_NORMAL).vertically_centered()),
             buttons: Child::new(ButtonController::new(ButtonLayout::text_none_text(
-                LEFT_BUTTON_TEXT,
-                RIGHT_BUTTON_TEXT,
+                LEFT_BUTTON_TEXT.into(),
+                RIGHT_BUTTON_TEXT.into(),
             ))),
             text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
             warn: (!fw_ok).then_some(Child::new(

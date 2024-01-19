@@ -1,13 +1,11 @@
 use crate::{
-    time::Instant,
-    ui::{
+    error::Error, micropython::buffer::StrBuffer, time::Instant, translations::TR, ui::{
         component::{paginated::PageMsg, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
         constant,
         display::{self, Color},
         geometry::{Insets, Rect},
-        translations::tr,
         util::animation_disabled,
-    },
+    }
 };
 
 use super::{
@@ -39,6 +37,19 @@ pub struct ButtonPage<T, U> {
     swipe_right: bool,
     /// Fade to given backlight level on next paint().
     fade: Option<u16>,
+}
+
+impl<T> ButtonPage<T, StrBuffer>
+where
+    T: Paginate,
+    T: Component,
+{
+    pub fn with_hold(mut self) -> Result<Self, Error> {
+        self.button_confirm = Button::with_text(TR::buttons__hold_to_confirm.try_into()?)
+            .styled(theme::button_confirm());
+        self.loader = Some(Loader::new());
+        Ok(self)
+    }
 }
 
 impl<T, U> ButtonPage<T, U>
@@ -85,13 +96,6 @@ where
         };
         self.button_cancel = Some(cancel);
         self.button_confirm = confirm;
-        self
-    }
-
-    pub fn with_hold(mut self) -> Self {
-        self.button_confirm = Button::with_text(tr("buttons__hold_to_confirm").into())
-            .styled(theme::button_confirm());
-        self.loader = Some(Loader::new());
         self
     }
 

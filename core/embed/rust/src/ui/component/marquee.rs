@@ -234,6 +234,6 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Marquee");
-        t.string("text", self.text.as_ref());
+        t.string("text", self.text.as_ref().into());
     }
 }

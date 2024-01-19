@@ -49,20 +49,14 @@ pub enum ButtonControllerMsg {
 }
 
 /// Defines what kind of button should be currently used.
-pub enum ButtonType<T>
-where
-    T: StringType,
-{
-    Button(Button<T>),
-    HoldToConfirm(HoldToConfirm<T>),
+pub enum ButtonType {
+    Button(Button),
+    HoldToConfirm(HoldToConfirm),
     Nothing,
 }
 
-impl<T> ButtonType<T>
-where
-    T: StringType,
-{
-    pub fn from_button_details(pos: ButtonPos, btn_details: Option<ButtonDetails<T>>) -> Self {
+impl ButtonType {
+    pub fn from_button_details(pos: ButtonPos, btn_details: Option<ButtonDetails>) -> Self {
         if let Some(btn_details) = btn_details {
             if btn_details.duration.is_some() {
                 Self::HoldToConfirm(HoldToConfirm::from_button_details(pos, btn_details))
@@ -104,12 +98,9 @@ where
 ///
 /// Users have a choice of a normal button or Hold-to-confirm button.
 /// `button_type` specified what from those two is used, if anything.
-pub struct ButtonContainer<T>
-where
-    T: StringType,
-{
+pub struct ButtonContainer {
     pos: ButtonPos,
-    button_type: ButtonType<T>,
+    button_type: ButtonType,
     /// Holds the timestamp of when the button was pressed.
     pressed_since: Option<Instant>,
     /// How long the button should be pressed to send `long_press=true` in
@@ -122,13 +113,10 @@ where
     send_long_press: bool,
 }
 
-impl<T> ButtonContainer<T>
-where
-    T: StringType,
-{
+impl ButtonContainer {
     /// Supplying `None` as `btn_details`  marks the button inactive
     /// (it can be later activated in `set()`).
-    pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails<T>>) -> Self {
+    pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails>) -> Self {
         const DEFAULT_LONG_PRESS_MS: u32 = 1000;
         let send_long_press = btn_details
             .as_ref()
@@ -146,7 +134,7 @@ where
     /// Changing the state of the button.
     ///
     /// Passing `None` as `btn_details` will mark the button as inactive.
-    pub fn set(&mut self, btn_details: Option<ButtonDetails<T>>, button_area: Rect) {
+    pub fn set(&mut self, btn_details: Option<ButtonDetails>, button_area: Rect) {
         self.send_long_press = btn_details
             .as_ref()
             .map_or(false, |btn| btn.send_long_press);
@@ -254,14 +242,11 @@ where
 ///
 /// There is optional complexity with IgnoreButtonDelay, which gets executed
 /// only in cases where clients request it.
-pub struct ButtonController<T>
-where
-    T: StringType,
-{
+pub struct ButtonController {
     pad: Pad,
-    left_btn: ButtonContainer<T>,
-    middle_btn: ButtonContainer<T>,
-    right_btn: ButtonContainer<T>,
+    left_btn: ButtonContainer,
+    middle_btn: ButtonContainer,
+    right_btn: ButtonContainer,
     state: ButtonState,
     /// Button area is needed so the buttons
     /// can be "re-placed" after their text is changed
@@ -271,11 +256,8 @@ where
     ignore_btn_delay: Option<IgnoreButtonDelay>,
 }
 
-impl<T> ButtonController<T>
-where
-    T: StringType,
-{
-    pub fn new(btn_layout: ButtonLayout<T>) -> Self {
+impl ButtonController {
+    pub fn new(btn_layout: ButtonLayout) -> Self {
         Self {
             pad: Pad::with_background(theme::BG).with_clear(),
             left_btn: ButtonContainer::new(ButtonPos::Left, btn_layout.btn_left),
@@ -295,7 +277,7 @@ where
     }
 
     /// Updating all the three buttons to the wanted states.
-    pub fn set(&mut self, btn_layout: ButtonLayout<T>) {
+    pub fn set(&mut self, btn_layout: ButtonLayout) {
         self.pad.clear();
         self.left_btn.set(btn_layout.btn_left, self.button_area);
         self.middle_btn.set(btn_layout.btn_middle, self.button_area);
@@ -397,10 +379,7 @@ where
     }
 }
 
-impl<T> Component for ButtonController<T>
-where
-    T: StringType,
-{
+impl Component for ButtonController {
     type Msg = ButtonControllerMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -763,7 +742,7 @@ impl Component for AutomaticMover {
 // DEBUG-ONLY SECTION BELOW
 
 #[cfg(feature = "ui_debug")]
-impl<T: StringType> crate::trace::Trace for ButtonContainer<T> {
+impl crate::trace::Trace for ButtonContainer {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         if let ButtonType::Button(btn) = &self.button_type {
             btn.trace(t);
@@ -774,7 +753,7 @@ impl<T: StringType> crate::trace::Trace for ButtonContainer<T> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T: StringType> crate::trace::Trace for ButtonController<T> {
+impl crate::trace::Trace for ButtonController {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ButtonController");
         t.child("left_btn", &self.left_btn);

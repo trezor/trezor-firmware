@@ -50,8 +50,8 @@ pub struct Confirm<T> {
     title: ConfirmTitle<T>,
     message: Child<Label<T>>,
     alert: Option<Child<Label<T>>>,
-    left_button: Child<Button<&'static str>>,
-    right_button: Child<Button<&'static str>>,
+    left_button: Child<Button<T>>,
+    right_button: Child<Button<T>>,
     info: Option<ConfirmInfo<T>>,
     show_info: bool,
 }
@@ -62,8 +62,8 @@ where
 {
     pub fn new(
         bg_color: Color,
-        left_button: Button<&'static str>,
-        right_button: Button<&'static str>,
+        left_button: Button<T>,
+        right_button: Button<T>,
         title: ConfirmTitle<T>,
         message: Label<T>,
     ) -> Self {
