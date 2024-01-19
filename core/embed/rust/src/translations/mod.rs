@@ -4,8 +4,6 @@ mod generated;
 mod micropython;
 mod translated_string;
 
-#[cfg(feature = "micropython")]
-pub use micropython::tr;
 pub use translated_string::TranslatedString as TR;
 
 use crate::{error::Error, io::InputStream};
@@ -159,7 +157,7 @@ struct TranslationsHeader<'a> {
 }
 
 impl<'a> TranslationsHeader<'a> {
-    const MAGIC: [u8; 4] = [84, 82, 84, 82]; // b"TRTR"
+    const MAGIC: &'static [u8] = b"TRTR00";
     const VERSION_LEN: usize = 16;
     const LANG_LEN: usize = 32;
     const DATA_HASH_LEN: usize = 32;
@@ -182,7 +180,7 @@ impl<'a> TranslationsHeader<'a> {
 
         let mut reader = crate::io::InputStream::new(data);
 
-        let magic = reader.read(4)?;
+        let magic = reader.read(Self::MAGIC.len())?;
         if magic != Self::MAGIC {
             return Err(value_error!("Invalid header magic"));
         }

@@ -1,20 +1,17 @@
-//! generated from enum.out.mako
+//! generated from ${THIS_FILE.name}
 //! (by running `make templates` in `core`)
 //! do not edit manually!
-
 <%
 import json
-from pathlib import Path
 
-THIS = Path(local.filename).resolve()
-SRCDIR = THIS.parent.parent
+TR_DIR = ROOT / "core" / "translations"
 
-order_file = SRCDIR / "order.json"
+order_file = TR_DIR / "order.json"
 order_index_name = json.loads(order_file.read_text())
 order = {int(k): v for k, v in order_index_name.items()}
 
 
-en_file = SRCDIR / "en.json"
+en_file = TR_DIR / "en.json"
 en_data = json.loads(en_file.read_text())["translations"]
 
 def get_en_strings(data: dict) -> dict[str, str]:

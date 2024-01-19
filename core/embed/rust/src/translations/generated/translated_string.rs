@@ -1,7 +1,6 @@
-//! generated from enum.out.mako
+//! generated from translated_string.rs.mako
 //! (by running `make templates` in `core`)
 //! do not edit manually!
-
 #[cfg(feature = "micropython")]
 use crate::micropython::qstr::Qstr;
 

@@ -1,13 +1,13 @@
 {
   "font": {
-    "Safe 3": {
+    "T2B1": {
       "1_FONT_NORMAL": "font_pixeloperator_regular_8_cs.json",
       "2_FONT_BOLD": "font_pixeloperator_bold_8_cs.json",
       "3_FONT_MONO": "font_pixeloperatormono_regular_8_cs.json",
       "4_FONT_BIG": "font_unifont_regular_16_cs.json",
       "5_FONT_DEMIBOLD": "font_unifont_bold_16_cs.json"
     },
-    "T": {
+    "T2T1": {
       "1_FONT_NORMAL": "font_tthoves_regular_21_cs.json",
       "2_FONT_BOLD": "font_tthoves_bold_17_cs.json",
       "3_FONT_MONO": "font_robotomono_medium_20_cs.json",
@@ -18,7 +18,7 @@
   "header": {
     "change_language_prompt": "Zmenit jazyk na cestinu?",
     "change_language_title": "ZMENA JAZYKA",
-    "language": "cs",
+    "language": "csCZ",
     "version": "2.6.5"
   },
   "translations": {
