@@ -232,25 +232,21 @@ class CoreEmulator(Emulator):
         port: Optional[int] = None,
         main_args: Sequence[str] = ("-m", "main"),
         workdir: Optional[Path] = None,
-        sdcard: Optional[bytes] = None,
         disable_animation: bool = True,
         heap_size: str = "20M",
+        sdcard_present: bool = False,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         if workdir is not None:
             self.workdir = Path(workdir).resolve()
 
-        # FIXME does not work with switchable SD cards
-        # self.sdcard = self.profile_dir / "trezor.sdcard"
-        # if sdcard is not None:
-        #     self.sdcard.write_bytes(sdcard)
-
         if port:
             self.port = port
         self.disable_animation = disable_animation
         self.main_args = list(main_args)
         self.heap_size = heap_size
+        self.sdcard_present = sdcard_present
 
     def make_env(self) -> Dict[str, str]:
         env = super().make_env()
@@ -274,6 +270,11 @@ class CoreEmulator(Emulator):
             + self.main_args
             + self.extra_args
         )
+
+    def start(self) -> None:
+        super().start()
+        if self.sdcard_present:
+            self.client.debug.insert_sd_card()
 
     def stop(self) -> None:
         super().stop()

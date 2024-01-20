@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+#include <sys/mman.h>
+#include "common.h"
 #include "embed/extmod/trezorobj.h"
 #include "py/mpconfig.h"
 #include "sdcard.h"
@@ -70,7 +73,7 @@ STATIC mp_obj_t mod_trezorio_sdcard_switcher_insert(size_t n_args,
                     1024 * ONE_MEBIBYTE)  // capacity between 1 MiB and 1 GiB
 
   sdcard_mock.inserted = sectrue;
-  set_sdcard_mock_filename(&sdcard_mock, (int)card_sn);
+  set_sdcard_mock_filename((int)card_sn);
   sdcard_mock.buffer = NULL;
   sdcard_mock.serial_number = card_sn;
   sdcard_mock.capacity_bytes = capacity_bytes;
@@ -87,7 +90,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorio_sdcard_switcher_insert_obj, 1,
 ///     """
 STATIC mp_obj_t mod_trezorio_sdcard_switcher_eject() {
   sdcard_mock.inserted = secfalse;
-  sdcard_mock.buffer = NULL;
+
+  if (sdcard_mock.buffer != NULL) {
+    // TODO repetion with unix/sdcard.c code
+    int r = munmap(sdcard_mock.buffer, sdcard_mock.capacity_bytes);
+    ensure(sectrue * (r == 0), "munmap failed");
+    sdcard_mock.buffer = NULL;
+  }
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_switcher_eject_obj,

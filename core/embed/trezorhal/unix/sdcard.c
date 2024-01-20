@@ -35,9 +35,10 @@
 #define SDCARD_SIZE sdcard_mock.capacity_bytes
 #define SDCARD_BLOCKS (SDCARD_SIZE / SDCARD_BLOCK_SIZE)
 
-static secbool sdcard_powered = secfalse;
-
 static void sdcard_exit(void) {
+  if (SDCARD_BUFFER == NULL) {
+    return;
+  }
   int r = munmap(SDCARD_BUFFER, SDCARD_SIZE);
   ensure(sectrue * (r == 0), "munmap failed");
   SDCARD_BUFFER = NULL;
@@ -78,7 +79,7 @@ void sdcard_init(void) {
     for (int i = 0; i < SDCARD_SIZE; ++i) SDCARD_BUFFER[i] = 0xFF;
   }
 
-  sdcard_powered = secfalse;
+  sdcard_mock.powered = secfalse;
 
   atexit(sdcard_exit);
 }
@@ -90,19 +91,19 @@ secbool sdcard_power_on(void) {
     return secfalse;
   }
   sdcard_init();
-  sdcard_powered = sectrue;
+  sdcard_mock.powered = sectrue;
   return sectrue;
 }
 
-void sdcard_power_off(void) { sdcard_powered = secfalse; }
+void sdcard_power_off(void) { sdcard_mock.powered = secfalse; }
 
 uint64_t sdcard_get_capacity_in_bytes(void) {
-  return sdcard_powered == sectrue ? SDCARD_SIZE : 0;
+  return sdcard_mock.powered == sectrue ? SDCARD_SIZE : 0;
 }
 
 secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
                            uint32_t num_blocks) {
-  if (sectrue != sdcard_powered) {
+  if (sectrue != sdcard_mock.powered) {
     return secfalse;
   }
   if (block_num >= SDCARD_BLOCKS) {
@@ -118,7 +119,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
 
 secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
                             uint32_t num_blocks) {
-  if (sectrue != sdcard_powered) {
+  if (sectrue != sdcard_mock.powered) {
     return secfalse;
   }
   if (block_num >= SDCARD_BLOCKS) {

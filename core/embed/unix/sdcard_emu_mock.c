@@ -1,38 +1,26 @@
 #include "sdcard_emu_mock.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "profile.h"
 #include "sdcard.h"
 
-// default SD Card filename serves for unit testing logic which requires SD card
-// tests with emulator should call debuglink.insert_sdcard(...)
-#define SDCARD_FILENAME_DEFAULT PROFILE_DIR_DEFAULT "/trezor.sdcard_def"
-
-// default SD card data
+// By default, Emulator starts without mocked SD card, i.e. initially
+// sdcard.is_present() == False
 SDCardMock sdcard_mock = {
-    .inserted = sectrue,
-    .filename = SDCARD_FILENAME_DEFAULT,
+    .inserted = secfalse,
+    .powered = secfalse,
+    .filename = NULL,
     .buffer = NULL,
-    .serial_number = 1,
-    .capacity_bytes = 64 * ONE_MEBIBYTE,
-    .blocks = (64 * ONE_MEBIBYTE) / SDCARD_BLOCK_SIZE,
-    .manuf_ID = 1,
+    .serial_number = 0,
+    .capacity_bytes = 0,
+    .blocks = 0 / SDCARD_BLOCK_SIZE,
+    .manuf_ID = 0,
 };
 
-// "not inserted" SD card data
-/* SDCardMock sdcard_mock = { */
-/*     .inserted = secfalse, */
-/*     .filename = NULL, */
-/*     .buffer = NULL, */
-/*     .serial_number = 0, */
-/*     .capacity_bytes = 0, */
-/*     .blocks = 0 / SDCARD_BLOCK_SIZE, */
-/*     .manuf_ID = 0, */
-/* }; */
-
-void set_sdcard_mock_filename(SDCardMock *card, int serial_number) {
-  if (card == NULL) {
+void set_sdcard_mock_filename(int serial_number) {
+  if (sdcard_mock.serial_number == serial_number) {
+    // serial_number determines the filename, so assuming the PROFILE_DIR
+    // doesn't change during a lifetime of the emulator, we can skip the rename
     return;
   }
 
@@ -58,11 +46,10 @@ void set_sdcard_mock_filename(SDCardMock *card, int serial_number) {
            serial_number);
 
   // free the old filename
-  if (card->filename != NULL &&
-      strcmp(card->filename, SDCARD_FILENAME_DEFAULT) != 0) {
-    free(card->filename);
-    card->filename = NULL;
+  if (sdcard_mock.filename != NULL) {
+    free(sdcard_mock.filename);
+    sdcard_mock.filename = NULL;
   }
 
-  card->filename = new_filename;
+  sdcard_mock.filename = new_filename;
 }

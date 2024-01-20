@@ -10,6 +10,7 @@
 
 typedef struct {
   secbool inserted;
+  secbool powered;
   char *filename;
   uint8_t *buffer;
   uint32_t serial_number;
@@ -20,6 +21,6 @@ typedef struct {
 
 extern SDCardMock sdcard_mock;
 
-void set_sdcard_mock_filename(SDCardMock *card, int serial_number);
+void set_sdcard_mock_filename(int serial_number);
 
 #endif  // __TREZOR_SDCARD_EMULATOR_MOCK_H__

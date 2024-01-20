@@ -118,11 +118,12 @@ def _from_env(name: str) -> bool:
 @click.option("-r", "--record-dir", help="Directory where to record screen changes")
 @click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
 @click.option("-S", "--script-gdb-file", type=click.Path(exists=True, dir_okay=False), help="Run gdb with an init file")
+@click.option("--sdcard", "sdcard_present", is_flag=True, default=False, help="Run emulator with SD card inserted")
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
 @click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
-# fmt: on
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
+# fmt: on
 def cli(
     disable_animation: bool,
     run_command: bool,
@@ -144,6 +145,7 @@ def cli(
     record_dir: Optional[str],
     slip0014: bool,
     script_gdb_file: str | Path | None,
+    sdcard_present: bool,
     temporary_profile: bool,
     watch: bool,
     extra_args: list[str],
@@ -240,6 +242,7 @@ def cli(
         extra_args=extra_args,
         main_args=main_args,
         heap_size=heap_size,
+        sdcard_present=sdcard_present,
         disable_animation=disable_animation,
         workdir=SRC_DIR,
     )
