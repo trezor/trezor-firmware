@@ -155,6 +155,8 @@ trezor.ui.layouts
 import trezor.ui.layouts
 trezor.ui.layouts.common
 import trezor.ui.layouts.common
+trezor.ui.layouts.ejectcard
+import trezor.ui.layouts.ejectcard
 trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
 trezor.ui.layouts.homescreen
@@ -179,6 +181,8 @@ trezor.ui.layouts.tr.reset
 import trezor.ui.layouts.tr.reset
 trezor.ui.layouts.tt
 import trezor.ui.layouts.tt
+trezor.ui.layouts.tt.ejectcard
+import trezor.ui.layouts.tt.ejectcard
 trezor.ui.layouts.tt.fido
 import trezor.ui.layouts.tt.fido
 trezor.ui.layouts.tt.homescreen

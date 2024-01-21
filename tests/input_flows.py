@@ -960,11 +960,18 @@ class InputFlowBip39ResetBackupSdCard(InputFlowBase):
         # 3. Go through format screens
         yield from click_through(self.debug, screens=2, code=B.Other)
 
-        br = yield  # confirm recovery seed check
+        # 4. Confirm backup done
+        br = yield
         assert br.code == B.Success
         self.debug.press_yes()
 
-        br = yield  # confirm success
+        # 5. Eject SD card
+        yield
+        self.debug.eject_sd_card()
+        self.debug.wait_layout()
+
+        # 6. Confirm success
+        br = yield
         assert br.code == B.Success
         self.debug.press_yes()
 
@@ -1205,7 +1212,7 @@ class InputFlowSlip39BasicResetRecoverySdCard(InputFlowBase):
         # 8. Confirm show seeds
         yield from click_through(self.debug, screens=8, code=B.ResetDevice)
 
-        # Mnemonic phrases
+        # Save 5 shares to 5 different SD cards
         yield from load_5_shares_to_sdcards(self.debug, self.sdcard_numbers)
 
         br = yield  # safety warning
@@ -1232,7 +1239,9 @@ def load_5_shares_to_sdcards(debug: DebugLink, sdcard_numbers: list[int]) -> Non
         debug.press_yes()
 
         # Eject the card
+        yield
         debug.eject_sd_card()
+        debug.wait_layout()
 
 
 class InputFlowSlip39AdvancedBackup(InputFlowBase):
@@ -1423,6 +1432,7 @@ class InputFlowBip39RecoverySdCard(InputFlowBase):
         self.pin = pin
 
     def input_flow_common(self) -> BRGeneratorType:
+        self.debug.insert_sd_card(1)
         yield from self.REC.confirm_recovery()
         if self.pin is not None:
             yield from self.PIN.setup_new_pin(self.pin)
