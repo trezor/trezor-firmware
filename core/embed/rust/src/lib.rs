@@ -18,6 +18,8 @@ mod error;
 #[macro_use]
 mod trezorhal;
 
+#[cfg(feature = "crypto")]
+mod crypto;
 mod io;
 mod maybe_trace;
 #[cfg(feature = "micropython")]
