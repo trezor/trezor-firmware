@@ -86,14 +86,16 @@ pub trait HomescreenDecompressor {
 
 pub struct HomescreenJpeg<'i> {
     pub output: BufferOutput,
-    pub jdec: Option<JDEC<'i, 'i>>,
+    pub input: BufferInput<'i>,
+    pub jdec: Option<JDEC<'i>>,
 }
 
 impl<'i> HomescreenJpeg<'i> {
-    pub fn new(input: &'i mut BufferInput<'i>, pool: &'i mut [u8]) -> Self {
+    pub fn new(mut input: BufferInput<'i>, pool: &'i mut [u8]) -> Self {
         Self {
             output: BufferOutput::new(WIDTH, 16),
-            jdec: JDEC::new(input, pool).ok(),
+            jdec: JDEC::new(&mut input, pool).ok(),
+            input,
         }
     }
 }
@@ -107,7 +109,9 @@ impl<'i> HomescreenDecompressor for HomescreenJpeg<'i> {
     }
 
     fn decompress(&mut self) {
-        self.jdec.as_mut().map(|dec| dec.decomp(&mut self.output));
+        self.jdec
+            .as_mut()
+            .map(|dec| dec.decomp(&mut self.input, &mut self.output));
     }
 
     fn get_data(&mut self) -> &mut BufferJpeg {
