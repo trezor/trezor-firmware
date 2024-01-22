@@ -1,8 +1,6 @@
 #ifndef _TREZOR_R_V6_H
 #define _TREZOR_R_V6_H
 
-#define HSE_8MHZ
-
 #define USE_BUTTON 1
 #define USE_SBU 1
 
