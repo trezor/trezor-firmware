@@ -85,7 +85,7 @@ pub enum Error {
     UnsupportedJpeg,
 }
 
-pub struct JDEC<'i, 'p> {
+pub struct JDEC<'p> {
     dctr: usize,
     dptr: usize,
     inbuf: &'p mut [u8],
@@ -113,8 +113,9 @@ pub struct JDEC<'i, 'p> {
     hufflut_dc: [&'p mut [u8]; 2],
     workbuf: &'p mut [i32],
     mcubuf: &'p mut [i16],
+    mcu_x: u16,
+    mcu_y: u16,
     pool: &'p mut [u8],
-    input_func: &'i mut dyn JpegInput,
 }
 
 /// Zigzag-order to raster-order conversion table
@@ -146,7 +147,7 @@ const IPSF: [u16; 64] = [
     f!(0.27590), f!(0.38268), f!(0.36048),       f!(0.32442), f!(0.27590), f!(0.21678), f!(0.14932),       f!(0.07612),
 ];
 
-impl<'i, 'p> JDEC<'i, 'p> {
+impl<'p> JDEC<'p> {
     /// Allocate a memory block from memory pool
     /// `self`: decompressor object reference
     /// `ndata` number of `T` items to allocate
@@ -175,12 +176,12 @@ impl<'i, 'p> JDEC<'i, 'p> {
         }
     }
 
-    fn jpeg_in(&mut self, inbuf_offset: Option<usize>, n_data: usize) -> usize {
+    fn jpeg_in(&mut self, inbuf_offset: Option<usize>, n_data: usize, input_func: &mut dyn JpegInput) -> usize {
         if let Some(offset) = inbuf_offset {
             let inbuf = &mut self.inbuf[offset..offset + n_data];
-            self.input_func.read(Some(inbuf), n_data)
+            input_func.read(Some(inbuf), n_data)
         } else {
-            self.input_func.read(None, n_data)
+            input_func.read(None, n_data)
         }
     }
 
@@ -355,7 +356,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
     /// `self`: decompressor object reference
     /// `id`: table ID (0:Y, 1:C)
     /// `cls`: table class (0:DC, 1:AC)
-    fn huffext(&mut self, id: usize, cls: usize) -> Result<i32, Error> {
+    fn huffext(&mut self, id: usize, cls: usize, input_func: &mut dyn JpegInput) -> Result<i32, Error> {
         let mut dc: usize = self.dctr;
         let mut dp: usize = self.dptr;
         let mut d: u32;
@@ -373,7 +374,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                 if dc == 0 {
                     // Buffer empty, re-fill input buffer
                     dp = 0; // Top of input buffer
-                    dc = self.jpeg_in(Some(0), JD_SZBUF);
+                    dc = self.jpeg_in(Some(0), JD_SZBUF, input_func);
                     if dc == 0 {
                         // Err: read error or wrong stream termination
                         return Err(Error::Input);
@@ -479,7 +480,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
     /// Extract N bits from input stream
     /// `self`: decompressor object reference
     /// `nbit`: number of bits to extract (1 to 16)
-    fn bitext(&mut self, nbit: u32) -> Result<i32, Error> {
+    fn bitext(&mut self, nbit: u32, input_func: &mut dyn JpegInput) -> Result<i32, Error> {
         let mut dc: usize = self.dctr;
         let mut dp: usize = self.dptr;
         let mut d: u32;
@@ -494,7 +495,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                 if dc == 0 {
                     // Buffer empty, re-fill input buffer
                     dp = 0; // Top of input buffer
-                    dc = self.jpeg_in(Some(0), JD_SZBUF);
+                    dc = self.jpeg_in(Some(0), JD_SZBUF, input_func);
                     if dc == 0 {
                         // Err: read error or wrong stream termination
                         return Err(Error::Input);
@@ -531,7 +532,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
     /// Process restart interval
     /// `self`: decompressor object reference
     /// `rstn`: expected restart sequence number
-    fn restart(&mut self, rstn: u16) -> Result<(), Error> {
+    fn restart(&mut self, rstn: u16, input_func: &mut dyn JpegInput) -> Result<(), Error> {
         let mut dp = self.dptr;
         let mut dc: usize = self.dctr;
         let mut marker: u16;
@@ -546,7 +547,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                 if dc == 0 {
                     // No input data is available, re-fill input buffer
                     dp = 0;
-                    dc = self.jpeg_in(Some(0), JD_SZBUF);
+                    dc = self.jpeg_in(Some(0), JD_SZBUF, input_func);
                     if dc == 0 {
                         return Err(Error::Input);
                     }
@@ -696,7 +697,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
 
     /// Load all blocks in an MCU into working buffer
     /// `self`: decompressor object reference
-    fn mcu_load(&mut self) -> Result<(), Error> {
+    fn mcu_load(&mut self, input_func: &mut dyn JpegInput) -> Result<(), Error> {
         let mut d: i32;
         let mut e: i32;
         let mut blk: u32;
@@ -720,12 +721,12 @@ impl<'i, 'p> JDEC<'i, 'p> {
                 id = if cmp != 0 { 1 } else { 0 }; // Huffman table ID of this component
 
                 // Extract a DC element from input stream
-                d = self.huffext(id as usize, 0)?; // Extract a huffman coded data (bit length)
+                d = self.huffext(id as usize, 0, input_func)?; // Extract a huffman coded data (bit length)
                 bc = d as u32;
                 d = self.dcv[cmp as usize] as i32; // DC value of previous block
                 if bc != 0 {
                     // If there is any difference from previous block
-                    e = self.bitext(bc)?; // Extract data bits
+                    e = self.bitext(bc, input_func)?; // Extract data bits
                     bc = 1 << (bc - 1); // MSB position
                     if e as u32 & bc == 0 {
                         e -= ((bc << 1) - 1) as i32; // Restore negative value
@@ -751,7 +752,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                 z = 1; // Top of the AC elements (in zigzag-order)
                 loop {
                     // Extract a huffman coded value (zero runs and bit length)
-                    d = self.huffext(id as usize, 1)?;
+                    d = self.huffext(id as usize, 1, input_func)?;
                     if d == 0 {
                         // EOB?
                         break;
@@ -765,7 +766,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                     bc &= 0xf;
                     if bc != 0 {
                         // Bit length?
-                        d = self.bitext(bc)?; // Extract data bits
+                        d = self.bitext(bc, input_func)?; // Extract data bits
                         bc = 1 << (bc - 1); // MSB position
                         if d as u32 & bc == 0 {
                             // Restore negative value if needed
@@ -1112,7 +1113,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
     }
 
     /// Analyze the JPEG image and Initialize decompressor object
-    pub fn new(input_func: &'i mut dyn JpegInput, pool: &'p mut [u8]) -> Result<Self, Error> {
+    pub fn new(input_func: &mut dyn JpegInput, pool: &'p mut [u8]) -> Result<Self, Error> {
         let mut jd = JDEC {
             dctr: 0,
             dptr: 0,
@@ -1142,7 +1143,8 @@ impl<'i, 'p> JDEC<'i, 'p> {
             ncomp: 0,
             nrst: 0,
             mcubuf: &mut [],
-            input_func,
+            mcu_x: 0,
+            mcu_y: 0,
         };
 
         let mut marker: u16;
@@ -1156,7 +1158,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
         marker = 0;
         ofs = marker as u32;
         loop {
-            if jd.jpeg_in(Some(0), 1) != 1 {
+            if jd.jpeg_in(Some(0), 1, input_func) != 1 {
                 // Err: SOI was not detected
                 return Err(Error::Input);
             }
@@ -1169,7 +1171,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
         loop {
             // Parse JPEG segments
             // Get a JPEG marker
-            if jd.jpeg_in(Some(0), 4) != 4 {
+            if jd.jpeg_in(Some(0), 4, input_func) != 4 {
                 return Err(Error::Input);
             }
             // Marker
@@ -1189,7 +1191,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                         return Err(Error::MemoryInput);
                     }
                     // Load segment data
-                    if jd.jpeg_in(Some(0), len) != len {
+                    if jd.jpeg_in(Some(0), len, input_func) != len {
                         return Err(Error::Input);
                     }
                     // Image width in unit of pixel
@@ -1235,7 +1237,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                         return Err(Error::MemoryInput);
                     }
                     // Load segment data
-                    if jd.jpeg_in(Some(0), len) != len {
+                    if jd.jpeg_in(Some(0), len, input_func) != len {
                         return Err(Error::Input);
                     }
                     // Get restart interval (MCUs)
@@ -1247,7 +1249,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                         return Err(Error::MemoryInput);
                     }
                     // Load segment data
-                    if jd.jpeg_in(Some(0), len) != len {
+                    if jd.jpeg_in(Some(0), len, input_func) != len {
                         return Err(Error::Input);
                     }
                     // Create huffman tables
@@ -1259,7 +1261,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                         return Err(Error::MemoryInput);
                     }
                     // Load segment data
-                    if jd.jpeg_in(Some(0), len) != len {
+                    if jd.jpeg_in(Some(0), len, input_func) != len {
                         return Err(Error::Input);
                     }
                     // Create de-quantizer tables
@@ -1271,7 +1273,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                         return Err(Error::MemoryInput);
                     }
                     // Load segment data
-                    if jd.jpeg_in(Some(0), len) != len {
+                    if jd.jpeg_in(Some(0), len, input_func) != len {
                         return Err(Error::Input);
                     }
                     if jd.width == 0 || jd.height == 0 {
@@ -1323,7 +1325,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                     // Align stream read offset to JD_SZBUF
                     ofs %= JD_SZBUF as u32;
                     if ofs != 0 {
-                        jd.dctr = jd.jpeg_in(Some(ofs as usize), (JD_SZBUF as u32 - ofs) as usize);
+                        jd.dctr = jd.jpeg_in(Some(ofs as usize), (JD_SZBUF as u32 - ofs) as usize, input_func);
                     }
                     jd.dptr = (ofs - (if JD_FASTDECODE != 0 { 0 } else { 1 })) as usize;
                     return Ok(jd); // Initialization succeeded. Ready to
@@ -1338,7 +1340,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
                 _ => {
                     // Unknown segment (comment, exif or etc..)
                     // Skip segment data (null pointer specifies to remove data from the stream)
-                    if jd.jpeg_in(None, len) != len {
+                    if jd.jpeg_in(None, len, input_func) != len {
                         return Err(Error::Input);
                     }
                 }
@@ -1348,7 +1350,7 @@ impl<'i, 'p> JDEC<'i, 'p> {
 
     /// Start to decompress the JPEG picture
     /// `scale`: output de-scaling factor (0 to 3)
-    pub fn decomp(&mut self, output_func: &mut dyn JpegOutput) -> Result<(), Error> {
+    pub fn decomp(&mut self, input_func: &mut dyn JpegInput, output_func: &mut dyn JpegOutput) -> Result<(), Error> {
         let mx = (self.msx as i32 * 8) as u32; // Size of the MCU (pixel)
         let my = (self.msy as i32 * 8) as u32; // Size of the MCU (pixel)
         let mut y = 0;
@@ -1365,11 +1367,11 @@ impl<'i, 'p> JDEC<'i, 'p> {
                 } {
                     let val = self.rsc;
                     self.rsc += 1;
-                    self.restart(val)?;
+                    self.restart(val, input_func)?;
                     self.rst = 1;
                 }
                 // Load an MCU (decompress huffman coded stream, dequantize and apply IDCT)
-                self.mcu_load()?;
+                self.mcu_load(input_func)?;
                 // Output the MCU (YCbCr to RGB, scaling and output)
                 self.mcu_output(x, y, output_func)?;
                 x += mx;
@@ -1378,6 +1380,47 @@ impl<'i, 'p> JDEC<'i, 'p> {
         }
         Ok(())
     }
+
+    /// Start to decompress the JPEG picture
+    /// `scale`: output de-scaling factor (0 to 3)
+    pub fn decomp2(&mut self, input_func: &mut dyn JpegInput, output_func: &mut dyn JpegOutput) -> Result<(), Error> {
+        let mx = self.msx as u16 * 8; // Size of the MCU (pixel)
+        let my = self.msy as u16 * 8; // Size of the MCU (pixel)
+        while self.mcu_y < self.height {
+            if self.nrst != 0 && {
+                // Process restart interval if enabled
+                let val = self.rst;
+                self.rst += 1;
+                val == self.nrst
+            } {
+                let val = self.rsc;
+                self.rsc += 1;
+                self.restart(val, input_func)?;
+                self.rst = 1;
+            }
+
+            // Load an MCU (decompress huffman coded stream, dequantize and apply IDCT)
+            self.mcu_load(input_func)?;
+
+            let x = self.mcu_x as u32;
+            let y = self.mcu_y as u32;
+
+            self.mcu_x += mx;
+            if self.mcu_x >= self.width {
+                self.mcu_x = 0;
+                self.mcu_y += my;
+            }
+
+            // Output the MCU (YCbCr to RGB, scaling and output)
+            self.mcu_output(x, y, output_func)?;
+        }
+        Ok(())
+    }
+
+    pub fn next_mcu(&self) -> (u16, u16) {
+        (self.mcu_x, self.mcu_y)
+    }
+
 }
 
 pub trait JpegInput {

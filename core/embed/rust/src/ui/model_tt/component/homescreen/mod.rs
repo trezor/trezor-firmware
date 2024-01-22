@@ -215,9 +215,9 @@ impl Component for Homescreen {
 
             if let Ok(data) = res {
                 if is_image_jpeg(data.as_ref()) {
-                    let mut input = BufferInput(data.as_ref());
+                    let input = BufferInput(data.as_ref());
                     let mut pool = BufferJpegWork::get_cleared();
-                    let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
+                    let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
                     homescreen(
                         &mut hs_img,
                         &[text],
@@ -241,9 +241,9 @@ impl Component for Homescreen {
             }
 
             if show_default {
-                let mut input = BufferInput(IMAGE_HOMESCREEN);
+                let input = BufferInput(IMAGE_HOMESCREEN);
                 let mut pool = BufferJpegWork::get_cleared();
-                let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
+                let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
                 homescreen(
                     &mut hs_img,
                     &[text],
@@ -348,9 +348,9 @@ impl Component for Lockscreen {
 
         if let Ok(data) = res {
             if is_image_jpeg(data.as_ref()) {
-                let mut input = BufferInput(data.as_ref());
+                let input = BufferInput(data.as_ref());
                 let mut pool = BufferJpegWork::get_cleared();
-                let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
+                let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
                 homescreen_blurred(&mut hs_img, texts);
                 show_default = false;
             } else if is_image_toif(data.as_ref()) {
@@ -364,9 +364,9 @@ impl Component for Lockscreen {
         }
 
         if show_default {
-            let mut input = BufferInput(IMAGE_HOMESCREEN);
+            let input = BufferInput(IMAGE_HOMESCREEN);
             let mut pool = BufferJpegWork::get_cleared();
-            let mut hs_img = HomescreenJpeg::new(&mut input, pool.buffer.as_mut_slice());
+            let mut hs_img = HomescreenJpeg::new(input, pool.buffer.as_mut_slice());
             homescreen_blurred(&mut hs_img, texts);
         }
     }
