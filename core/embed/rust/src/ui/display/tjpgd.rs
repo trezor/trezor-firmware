@@ -20,7 +20,7 @@ pub fn jpeg(data: &[u8], pos: Point, scale: u8) {
     let mut inp = BufferInput(data);
     if let Ok(mut jd) = JDEC::new(&mut inp, pool) {
         let _ = jd.set_scale(scale);
-        let _ = jd.decomp(&mut out);
+        let _ = jd.decomp(&mut inp, &mut out);
     }
 }
 
@@ -50,9 +50,9 @@ pub fn jpeg_test(data: &[u8]) -> bool {
         }
 
         let mut out = BlackHoleOutput;
-        let mut res = jd.decomp(&mut out);
+        let mut res = jd.decomp(&mut inp, &mut out);
         while res == Err(Error::Interrupted) {
-            res = jd.decomp(&mut out);
+            res = jd.decomp(&mut inp, &mut out);
         }
         res.is_ok()
     } else {
