@@ -8,6 +8,8 @@ fn main() {
     #[cfg(feature = "micropython")]
     generate_micropython_bindings();
     generate_trezorhal_bindings();
+    #[cfg(feature = "crypto")]
+    generate_crypto_bindings();
     #[cfg(feature = "test")]
     link_core_objects();
 }
@@ -388,6 +390,37 @@ fn generate_trezorhal_bindings() {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(PathBuf::from(out_path).join("trezorhal.rs"))
+        .unwrap();
+}
+
+fn generate_crypto_bindings() {
+    let out_path = env::var("OUT_DIR").unwrap();
+
+    // Tell cargo to invalidate the built crate whenever the header changes.
+    println!("cargo:rerun-if-changed=crypto.h");
+
+    let bindings = prepare_bindings()
+        .header("crypto.h")
+        // ed25519
+        .allowlist_type("ed25519_signature")
+        .allowlist_type("ed25519_public_key")
+        .allowlist_function("ed25519_cosi_combine_publickeys")
+        // incorrect signature from bindgen, see crypto::ed25519:ffi_override
+        //.allowlist_function("ed25519_sign_open")
+        // sha256
+        .allowlist_var("SHA256_DIGEST_LENGTH")
+        .allowlist_type("SHA256_CTX")
+        .no_copy("SHA256_CTX")
+        .allowlist_function("sha256_Init")
+        .allowlist_function("sha256_Update")
+        .allowlist_function("sha256_Final");
+
+    // Write the bindings to a file in the OUR_DIR.
+    bindings
+        .clang_arg("-fgnuc-version=0") // avoid weirdness with ed25519.h CONST definition
+        .generate()
+        .expect("Unable to generate bindings")
+        .write_to_file(PathBuf::from(out_path).join("crypto.rs"))
         .unwrap();
 }
 

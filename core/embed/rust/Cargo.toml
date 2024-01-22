@@ -8,6 +8,7 @@ build = "build.rs"
 [features]
 default = ["model_tt"]
 bitcoin_only = []
+crypto = ["zeroize"]
 model_tt = ["jpeg"]
 model_tr = []
 micropython = []
@@ -32,10 +33,11 @@ rgb_led = []
 backlight = []
 usb = []
 optiga = []
-translations = []
+translations = ["crypto"]
 test = [
     "button",
     "cc",
+    "crypto",
     "debug",
     "glob",
     "micropython",
@@ -74,6 +76,7 @@ debug = 2
 [dependencies]
 qrcodegen = { version = "1.8.0", path = "../../vendor/QR-Code-generator/rust-no-heap" }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
+zeroize = { version = "1.7.0", default-features = false, optional = true }
 
 # Runtime dependencies
 
