@@ -155,8 +155,6 @@ trezor.ui.layouts
 import trezor.ui.layouts
 trezor.ui.layouts.common
 import trezor.ui.layouts.common
-trezor.ui.layouts.ejectcard
-import trezor.ui.layouts.ejectcard
 trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
 trezor.ui.layouts.homescreen
@@ -167,6 +165,8 @@ trezor.ui.layouts.recovery
 import trezor.ui.layouts.recovery
 trezor.ui.layouts.reset
 import trezor.ui.layouts.reset
+trezor.ui.layouts.sdcard_eject
+import trezor.ui.layouts.sdcard_eject
 trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
 trezor.ui.layouts.tr.fido
@@ -181,8 +181,6 @@ trezor.ui.layouts.tr.reset
 import trezor.ui.layouts.tr.reset
 trezor.ui.layouts.tt
 import trezor.ui.layouts.tt
-trezor.ui.layouts.tt.ejectcard
-import trezor.ui.layouts.tt.ejectcard
 trezor.ui.layouts.tt.fido
 import trezor.ui.layouts.tt.fido
 trezor.ui.layouts.tt.homescreen
@@ -193,6 +191,8 @@ trezor.ui.layouts.tt.recovery
 import trezor.ui.layouts.tt.recovery
 trezor.ui.layouts.tt.reset
 import trezor.ui.layouts.tt.reset
+trezor.ui.layouts.tt.sdcard_eject
+import trezor.ui.layouts.tt.sdcard_eject
 trezor.ui.style
 import trezor.ui.style
 trezor.utils

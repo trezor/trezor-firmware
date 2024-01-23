@@ -258,12 +258,12 @@ if __debug__:
     async def dispatch_DebugLinkInsertSdCard(msg: DebugLinkInsertSdCard) -> Success:
         from trezor import io
 
-        sdcard_switcher = io.sdcard_switcher  # local_cache_attribute
+        sdcard_inserter = io.sdcard_inserter  # local_cache_attribute
         sdcard = io.sdcard  # local_cache_attribute
         if msg.serial_number is None:
-            sdcard_switcher.eject()
+            sdcard_inserter.eject()
         else:
-            sdcard_switcher.insert(
+            sdcard_inserter.insert(
                 msg.serial_number,
                 capacity_bytes=msg.capacity_bytes,
                 manuf_id=msg.manuf_ID,

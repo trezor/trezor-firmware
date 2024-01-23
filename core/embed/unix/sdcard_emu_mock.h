@@ -19,8 +19,8 @@ typedef struct {
   uint8_t manuf_ID;
 } SDCardMock;
 
-extern SDCardMock sdcard_mock;
+extern SDCardMock sd_mock;
 
-void set_sdcard_mock_filename(int serial_number);
+void set_sd_mock_filename(int serial_number);
 
 #endif  // __TREZOR_SDCARD_EMULATOR_MOCK_H__

@@ -9,13 +9,13 @@ class TestStorageSdSeedBackup(unittest.TestCase):
     # TODO add more tests, also for repairing the backup card
 
     def setUp(self):
-        io.sdcard_switcher.insert(1)
+        io.sdcard_inserter.insert(1)
         self.mnemonic = (
             b"crane mesh that gain predict open dice defy lottery toddler coin upgrade"
         )
 
     def tearDown(self):
-        io.sdcard_switcher.eject()
+        io.sdcard_inserter.eject()
 
     def test_backup_and_restore(self):
         io.sdcard.power_on()

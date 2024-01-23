@@ -185,8 +185,9 @@ message DebugLinkEraseSdCard {
 }
 
 /**
- * Request: Insert SD card into device (emulator).
- * If serial_number is not supplied, the message is interpreted as a request for ejecting a card.
+ * Request: Insert SD card into device (emulator only)
+ * If serial_number is not supplied, the message is interpreted as a request for ejecting the card.
+ * @start
  * @next Success
  */
 message DebugLinkInsertSdCard {

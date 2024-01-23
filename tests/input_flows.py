@@ -1600,10 +1600,6 @@ class InputFlowSlip39BasicRecoverySdCard(InputFlowBase):
         if self.pin is not None:
             yield from self.PIN.setup_new_pin(self.pin)
 
-        # "Words" counterpart:
-        # yield from self.REC.setup_slip39_recovery(self.word_count)
-        # yield from self.REC.input_all_slip39_shares(self.shares)
-
         # choose SD card
         for n in self.sdcard_numbers:
             self.debug.eject_sd_card()

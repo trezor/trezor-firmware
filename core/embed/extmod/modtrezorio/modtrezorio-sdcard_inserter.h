@@ -25,7 +25,7 @@
 #include "sdcard.h"
 #include "sdcard_emu_mock.h"
 
-/// package: trezorio.sdcard_switcher
+/// package: trezorio.sdcard_inserter
 
 /// def insert(
 ///     card_sn: int,
@@ -35,7 +35,7 @@
 ///     """
 ///     Inserts SD card to the emulator.
 ///     """
-STATIC mp_obj_t mod_trezorio_sdcard_switcher_insert(size_t n_args,
+STATIC mp_obj_t mod_trezorio_sdcard_inserter_insert(size_t n_args,
                                                     const mp_obj_t *args,
                                                     mp_map_t *kw_args) {
   STATIC const mp_arg_t allowed_args[] = {
@@ -72,47 +72,47 @@ STATIC mp_obj_t mod_trezorio_sdcard_switcher_insert(size_t n_args,
   CHECK_PARAM_RANGE(capacity_bytes, ONE_MEBIBYTE,
                     1024 * ONE_MEBIBYTE)  // capacity between 1 MiB and 1 GiB
 
-  sdcard_mock.inserted = sectrue;
-  set_sdcard_mock_filename((int)card_sn);
-  sdcard_mock.buffer = NULL;
-  sdcard_mock.serial_number = card_sn;
-  sdcard_mock.capacity_bytes = capacity_bytes;
-  sdcard_mock.blocks = capacity_bytes / SDCARD_BLOCK_SIZE;
-  sdcard_mock.manuf_ID = manuf_id;
+  sd_mock.inserted = sectrue;
+  set_sd_mock_filename((int)card_sn);
+  sd_mock.buffer = NULL;
+  sd_mock.serial_number = card_sn;
+  sd_mock.capacity_bytes = capacity_bytes;
+  sd_mock.blocks = capacity_bytes / SDCARD_BLOCK_SIZE;
+  sd_mock.manuf_ID = manuf_id;
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorio_sdcard_switcher_insert_obj, 1,
-                                  mod_trezorio_sdcard_switcher_insert);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorio_sdcard_inserter_insert_obj, 1,
+                                  mod_trezorio_sdcard_inserter_insert);
 
 /// def eject() -> None:
 ///     """
 ///     Ejects SD card from the emulator.
 ///     """
-STATIC mp_obj_t mod_trezorio_sdcard_switcher_eject() {
-  sdcard_mock.inserted = secfalse;
+STATIC mp_obj_t mod_trezorio_sdcard_inserter_eject() {
+  sd_mock.inserted = secfalse;
 
-  if (sdcard_mock.buffer != NULL) {
+  if (sd_mock.buffer != NULL) {
     // TODO repetion with unix/sdcard.c code
-    int r = munmap(sdcard_mock.buffer, sdcard_mock.capacity_bytes);
+    int r = munmap(sd_mock.buffer, sd_mock.capacity_bytes);
     ensure(sectrue * (r == 0), "munmap failed");
-    sdcard_mock.buffer = NULL;
+    sd_mock.buffer = NULL;
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_switcher_eject_obj,
-                                 mod_trezorio_sdcard_switcher_eject);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_inserter_eject_obj,
+                                 mod_trezorio_sdcard_inserter_eject);
 
-STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_switcher_globals_table[] = {
-    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sdcard_switcher)},
+STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_inserter_globals_table[] = {
+    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sdcard_inserter)},
     {MP_ROM_QSTR(MP_QSTR_insert),
-     MP_ROM_PTR(&mod_trezorio_sdcard_switcher_insert_obj)},
+     MP_ROM_PTR(&mod_trezorio_sdcard_inserter_insert_obj)},
     {MP_ROM_QSTR(MP_QSTR_eject),
-     MP_ROM_PTR(&mod_trezorio_sdcard_switcher_eject_obj)},
+     MP_ROM_PTR(&mod_trezorio_sdcard_inserter_eject_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_sdcard_switcher_globals,
-                            mod_trezorio_sdcard_switcher_globals_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezorio_sdcard_inserter_globals,
+                            mod_trezorio_sdcard_inserter_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorio_sdcard_switcher_module = {
+STATIC const mp_obj_module_t mod_trezorio_sdcard_inserter_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorio_sdcard_switcher_globals,
+    .globals = (mp_obj_dict_t *)&mod_trezorio_sdcard_inserter_globals,
 };

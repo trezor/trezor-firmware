@@ -6,7 +6,7 @@
 
 // By default, Emulator starts without mocked SD card, i.e. initially
 // sdcard.is_present() == False
-SDCardMock sdcard_mock = {
+SDCardMock sd_mock = {
     .inserted = secfalse,
     .powered = secfalse,
     .filename = NULL,
@@ -17,8 +17,8 @@ SDCardMock sdcard_mock = {
     .manuf_ID = 0,
 };
 
-void set_sdcard_mock_filename(int serial_number) {
-  if (sdcard_mock.serial_number == serial_number) {
+void set_sd_mock_filename(int serial_number) {
+  if (sd_mock.serial_number == serial_number) {
     // serial_number determines the filename, so assuming the PROFILE_DIR
     // doesn't change during a lifetime of the emulator, we can skip the rename
     return;
@@ -46,10 +46,10 @@ void set_sdcard_mock_filename(int serial_number) {
            serial_number);
 
   // free the old filename
-  if (sdcard_mock.filename != NULL) {
-    free(sdcard_mock.filename);
-    sdcard_mock.filename = NULL;
+  if (sd_mock.filename != NULL) {
+    free(sd_mock.filename);
+    sd_mock.filename = NULL;
   }
 
-  sdcard_mock.filename = new_filename;
+  sd_mock.filename = new_filename;
 }

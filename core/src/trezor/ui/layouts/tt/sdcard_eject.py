@@ -1,11 +1,10 @@
-from typing import TYPE_CHECKING
-from trezor import loop, ui
-from trezor.ui.layouts import interact
-import trezorui2
-from . import RustLayout
+from typing import Any
 
-if TYPE_CHECKING:
-    from typing import Any, Tuple
+import trezorui2
+from trezor import loop, ui
+
+from ..common import interact
+from . import RustLayout
 
 
 class EjectSDCardScreen(RustLayout):

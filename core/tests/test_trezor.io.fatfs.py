@@ -1,10 +1,11 @@
 from common import *
 
-from trezorio import sdcard, fatfs
+from trezorio import sdcard, fatfs, sdcard_inserter
 
 
 class TestTrezorIoFatfs(unittest.TestCase):
     def setUp(self):
+        sdcard_inserter.insert(1)
         sdcard.power_on()
         fatfs.mkfs()
         fatfs.mount()
@@ -12,6 +13,7 @@ class TestTrezorIoFatfs(unittest.TestCase):
     def tearDown(self):
         fatfs.unmount()
         sdcard.power_off()
+        sdcard_inserter.eject()
 
     def _filename(self, suffix=""):
         return f"FILE{suffix}.TXT"
@@ -140,10 +142,12 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
     ]
 
     def setUp(self):
+        sdcard_inserter.insert(1)
         sdcard.power_on()
 
     def tearDown(self):
         sdcard.power_off()
+        sdcard_inserter.eject()
 
     def test_mount_unmount(self):
         fatfs.mkfs()
@@ -210,6 +214,7 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
 
 class TestTrezorIoFatfsAndSdcard(unittest.TestCase):
     def test_sd_power(self):
+        sdcard_inserter.insert(1)
         sdcard.power_off()
         self.assertFalse(fatfs.is_mounted())
         self.assertRaises(fatfs.FatFSError, fatfs.mount)
@@ -222,6 +227,7 @@ class TestTrezorIoFatfsAndSdcard(unittest.TestCase):
 
         sdcard.power_off()
         self.assertFalse(fatfs.is_mounted())
+        sdcard_inserter.eject()
 
 
 if __name__ == "__main__":

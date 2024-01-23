@@ -5,10 +5,10 @@ from trezor import io
 
 class TestTrezorIoSdcard(unittest.TestCase):
     def setUp(self):
-        io.sdcard_switcher.insert(1)
+        io.sdcard_inserter.insert(1)
 
     def tearDown(self):
-        io.sdcard_switcher.eject()
+        io.sdcard_inserter.eject()
 
     def test_start(self):
         self.assertTrue(io.sdcard.is_present())
