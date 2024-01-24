@@ -39,6 +39,7 @@ def generate(env):
         is_t2b1 = env["TREZOR_MODEL"] == "R"
         backlight = env["backlight"]
         optiga = env["optiga"]
+        ble = env["ble"]
         layout_tt = env["ui_layout"] == "UI_LAYOUT_TT"
         layout_tr = env["ui_layout"] == "UI_LAYOUT_TR"
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
@@ -48,6 +49,7 @@ def generate(env):
                 rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
                 rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
                 rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
+                rf"-e 's/utils\.USE_BLE/{ble}/g'",
                 rf"-e 's/utils\.UI_LAYOUT == \"TT\"/{layout_tt}/g'",
                 rf"-e 's/utils\.UI_LAYOUT == \"TR\"/{layout_tr}/g'",
                 r"-e 's/if TYPE_CHECKING/if False/'",
