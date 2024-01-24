@@ -1193,6 +1193,94 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPrevExtraDataWrapper"]:
             return isinstance(msg, cls)
 
+    class BLEUploadFirmwareInit(protobuf.MessageType):
+        init_data: "bytes"
+        binsize: "int"
+
+        def __init__(
+            self,
+            *,
+            init_data: "bytes",
+            binsize: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLEUploadFirmwareInit"]:
+            return isinstance(msg, cls)
+
+    class BLEUploadFirmwareNextChunk(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLEUploadFirmwareNextChunk"]:
+            return isinstance(msg, cls)
+
+    class BLEUploadFirmwareChunk(protobuf.MessageType):
+        data: "bytes"
+
+        def __init__(
+            self,
+            *,
+            data: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLEUploadFirmwareChunk"]:
+            return isinstance(msg, cls)
+
+    class BLEEraseBonds(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLEEraseBonds"]:
+            return isinstance(msg, cls)
+
+    class BLEDisconnect(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLEDisconnect"]:
+            return isinstance(msg, cls)
+
+    class BLEPairingRequest(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLEPairingRequest"]:
+            return isinstance(msg, cls)
+
+    class BLEAuthKey(protobuf.MessageType):
+        key: "bytes"
+
+        def __init__(
+            self,
+            *,
+            key: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLEAuthKey"]:
+            return isinstance(msg, cls)
+
+    class BLERepairRequest(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLERepairRequest"]:
+            return isinstance(msg, cls)
+
+    class BLEComparisonRequest(protobuf.MessageType):
+        key: "bytes"
+
+        def __init__(
+            self,
+            *,
+            key: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BLEComparisonRequest"]:
+            return isinstance(msg, cls)
+
     class CardanoBlockchainPointerType(protobuf.MessageType):
         block_index: "int"
         tx_index: "int"

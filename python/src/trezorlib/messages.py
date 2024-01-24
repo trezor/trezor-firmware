@@ -84,6 +84,15 @@ class MessageType(IntEnum):
     FirmwareUpload = 7
     FirmwareRequest = 8
     SelfTest = 32
+    BLEUploadFirmwareInit = 8000
+    BLEUploadFirmwareNextChunk = 8001
+    BLEUploadFirmwareChunk = 8002
+    BLEPairingRequest = 8003
+    BLEAuthKey = 8004
+    BLERepairRequest = 8005
+    BLEEraseBonds = 8006
+    BLEDisconnect = 8007
+    BLEComparisonRequest = 8008
     GetPublicKey = 11
     PublicKey = 12
     SignTx = 15
@@ -2084,6 +2093,85 @@ class TxAckPrevExtraDataWrapper(protobuf.MessageType):
         extra_data_chunk: "bytes",
     ) -> None:
         self.extra_data_chunk = extra_data_chunk
+
+
+class BLEUploadFirmwareInit(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8000
+    FIELDS = {
+        1: protobuf.Field("init_data", "bytes", repeated=False, required=True),
+        2: protobuf.Field("binsize", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        init_data: "bytes",
+        binsize: "int",
+    ) -> None:
+        self.init_data = init_data
+        self.binsize = binsize
+
+
+class BLEUploadFirmwareNextChunk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8001
+
+
+class BLEUploadFirmwareChunk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8002
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
+
+
+class BLEEraseBonds(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8006
+
+
+class BLEDisconnect(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8007
+
+
+class BLEPairingRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8003
+
+
+class BLEAuthKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8004
+    FIELDS = {
+        1: protobuf.Field("key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: "bytes",
+    ) -> None:
+        self.key = key
+
+
+class BLERepairRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8005
+
+
+class BLEComparisonRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8008
+    FIELDS = {
+        1: protobuf.Field("key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: "bytes",
+    ) -> None:
+        self.key = key
 
 
 class FirmwareErase(protobuf.MessageType):

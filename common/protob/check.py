@@ -17,8 +17,8 @@ for fn in sorted(glob(os.path.join(MYDIR, "messages-*.proto"))):
         prefix = EXPECTED_PREFIX_RE.search(fn).group(1).capitalize()
         if prefix in ("Bitcoin", "Bootloader", "Common", "Crypto", "Management"):
             continue
-        if prefix == "Nem":
-            prefix = "NEM"
+        if prefix in ("Nem", "Ble"):
+            prefix = prefix.upper()
         elif prefix == "Webauthn":
             prefix = "WebAuthn"
         for line in f:
