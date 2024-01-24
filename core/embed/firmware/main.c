@@ -219,6 +219,9 @@ int main(void) {
   printf("CORE: Main script finished, cleaning up\n");
   mp_deinit();
 
+  // Python code shouldn't ever exit, avoid black screen if it does
+  error_shutdown("INTERNAL ERROR", "(PE)");
+
   return 0;
 }
 
