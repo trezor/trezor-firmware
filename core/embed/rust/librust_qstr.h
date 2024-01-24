@@ -10,6 +10,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_CONFIRMED;
   MP_QSTR_INFO;
   MP_QSTR_Layout;
+  MP_QSTR_MAX_HEADER_LEN;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_WIRE_TYPE;
   MP_QSTR_Msg;
@@ -51,6 +52,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_amount_title;
   MP_QSTR_amount_value;
   MP_QSTR_app_name;
+  MP_QSTR_area_bytesize;
   MP_QSTR_attach_timer_fn;
   MP_QSTR_authenticate__confirm_template;
   MP_QSTR_authenticate__header;
@@ -307,7 +309,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_with_info;
   MP_QSTR_count;
   MP_QSTR_data;
-  MP_QSTR_data_length;
+  MP_QSTR_data_len;
   MP_QSTR_debug__loading_seed;
   MP_QSTR_debug__loading_seed_not_recommended;
   MP_QSTR_decode;
@@ -424,7 +426,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
-  MP_QSTR_header_length;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
   MP_QSTR_homescreen__click_to_connect;

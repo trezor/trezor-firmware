@@ -1,12 +1,13 @@
 //! generated from translated_string.rs.mako
 //! (by running `make templates` in `core`)
 //! do not edit manually!
+
+#![cfg_attr(rustfmt, rustfmt_skip)]
 #[cfg(feature = "micropython")]
 use crate::micropython::qstr::Qstr;
 
 #[derive(Debug, Copy, Clone, FromPrimitive)]
 #[repr(u16)]
-#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 pub enum TranslatedString {
     addr_mismatch__contact_support_at = 0,

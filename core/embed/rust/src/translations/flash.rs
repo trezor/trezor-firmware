@@ -1,6 +1,6 @@
 use crate::{error::Error, trezorhal::translations};
 
-use super::Translations;
+use super::blob::Translations;
 
 static mut TRANSLATIONS_ON_FLASH: Option<Translations> = None;
 
@@ -33,10 +33,9 @@ pub fn init() -> Result<(), Error> {
         return Ok(());
     }
     let flash_data = unsafe { translations::get_blob() };
-    todo!();
-    let blob = Translations::new(flash_data);
+    let blob = Translations::new(flash_data)?;
     // SAFETY: TODO
-    unsafe { TRANSLATIONS_ON_FLASH = blob.ok() };
+    unsafe { TRANSLATIONS_ON_FLASH = Some(blob) };
     Ok(())
 }
 

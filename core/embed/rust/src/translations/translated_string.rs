@@ -1,7 +1,7 @@
 use crate::strutil::TString;
 
+use super::blob::Translations;
 pub use super::generated::translated_string::TranslatedString;
-use super::Translations;
 
 impl TranslatedString {
     pub(super) fn translate<'a>(self, source: Option<&'a Translations>) -> &'a str {

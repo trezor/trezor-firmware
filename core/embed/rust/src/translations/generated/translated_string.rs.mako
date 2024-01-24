@@ -1,6 +1,8 @@
 //! generated from ${THIS_FILE.name}
 //! (by running `make templates` in `core`)
 //! do not edit manually!
+
+#![cfg_attr(rustfmt, rustfmt_skip)]
 <%
 import json
 
@@ -30,7 +32,6 @@ use crate::micropython::qstr::Qstr;
 
 #[derive(Debug, Copy, Clone, FromPrimitive)]
 #[repr(u16)]
-#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 pub enum TranslatedString {
 % for idx, name in order.items():

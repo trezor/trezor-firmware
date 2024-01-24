@@ -10,13 +10,16 @@ impl<'a> InputStream<'a> {
         Self { buf, pos: 0 }
     }
 
+    pub fn remaining(&self) -> usize {
+        self.buf.len().saturating_sub(self.pos)
+    }
+
+    pub fn tell(&self) -> usize {
+        self.pos
+    }
+
     pub fn read_stream(&mut self, len: usize) -> Result<Self, Error> {
-        let buf = self
-            .buf
-            .get(self.pos..self.pos + len)
-            .ok_or(Error::EOFError)?;
-        self.pos += len;
-        Ok(Self::new(buf))
+        self.read(len).map(Self::new)
     }
 
     pub fn read(&mut self, len: usize) -> Result<&'a [u8], Error> {
@@ -37,9 +40,9 @@ impl<'a> InputStream<'a> {
     }
 
     pub fn read_byte(&mut self) -> Result<u8, Error> {
-        let val = self.buf.get(self.pos).copied().ok_or(Error::EOFError)?;
+        let val = self.buf.get(self.pos).ok_or(Error::EOFError)?;
         self.pos += 1;
-        Ok(val)
+        Ok(*val)
     }
 
     pub fn read_u16_le(&mut self) -> Result<u16, Error> {
