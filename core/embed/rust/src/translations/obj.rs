@@ -101,6 +101,8 @@ pub struct TranslationsHeader {
     change_language_title: Obj,
     change_language_prompt: Obj,
     data_len: Obj,
+    data_hash: Obj,
+    total_len: Obj,
 }
 
 // SAFETY: We are in a single-threaded environment.
@@ -119,16 +121,20 @@ impl TranslationsHeader {
             change_language_title: header.change_language_title.try_into()?,
             change_language_prompt: header.change_language_prompt.try_into()?,
             data_len: header.data_len.try_into()?,
+            data_hash: header.data_hash.as_ref().try_into()?,
+            total_len: header.total_len.try_into()?,
         })
     }
 
     pub fn getattr(&self, attr: Qstr) -> Result<Obj, Error> {
         let obj = match attr {
-            Qstr::MP_QSTR_language_name => self.language,
+            Qstr::MP_QSTR_language => self.language,
             Qstr::MP_QSTR_version => self.version,
             Qstr::MP_QSTR_change_language_title => self.change_language_title,
             Qstr::MP_QSTR_change_language_prompt => self.change_language_prompt,
             Qstr::MP_QSTR_data_len => self.data_len,
+            Qstr::MP_QSTR_data_hash => self.data_hash,
+            Qstr::MP_QSTR_total_len => self.total_len,
             Qstr::MP_QSTR_load_from_flash => LOAD_FROM_FLASH_FN.as_obj(),
             _ => return Err(Error::AttributeError(attr)),
         };
@@ -229,31 +235,63 @@ extern "C" fn area_bytesize() -> Obj {
     unsafe { util::try_or_raise(|| bytesize.try_into()) }
 }
 
+extern "C" fn get_language() -> Obj {
+    let block = || {
+        // SAFETY: reference is discarded at the end of the block
+        let lang_name = unsafe { super::flash::get() }.map(|t| t.header.language);
+        lang_name.unwrap_or(super::DEFAULT_LANGUAGE).try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn init() -> Obj {
+    let block = || {
+        super::flash::init();
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn deinit() -> Obj {
+    // SAFETY: Safe by itself. Any unsafety stems from some other piece of code
+    // not upholding the safety parameters.
+    unsafe { super::flash::deinit() };
+    Obj::const_none()
+}
+
+extern "C" fn erase() -> Obj {
+    let block = || {
+        super::flash::erase()?;
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn write(data: Obj, offset: Obj) -> Obj {
+    let block = || {
+        // SAFETY: reference is discarded at the end of the block
+        let data = unsafe { get_buffer(data)? };
+        let offset: usize = offset.try_into()?;
+        super::flash::write(data, offset)?;
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn verify(data: Obj) -> Obj {
+    let block = || {
+        // SAFETY: reference is discarded at the end of the block
+        let data = unsafe { get_buffer(data)? };
+        super::blob::Translations::new(data)?;
+        Ok(Obj::const_none())
+    };
+
+    unsafe { util::try_or_raise(block) }
+}
+
 #[no_mangle]
 #[rustfmt::skip]
 pub static mp_module_trezortranslate: Module = obj_module! {
-    // TODO: add function to get all the translations keys in order
-    // - so that client can validate it is sending correct keys in correct order
-
-    /// class TranslationsHeader:
-    ///     """Metadata about the translations blob."""
-    /// 
-    ///     language_name: str
-    ///     version: tuple[int, int, int, int]
-    ///     change_language_title: str
-    ///     change_language_prompt: str
-    ///     data_len: int
-    /// 
-    ///     def __init__(self, header_bytes: bytes) -> None:
-    ///         """Parse header from bytes.
-    ///         The header has variable length.
-    ///         """
-    ///
-    ///     @staticmethod
-    ///     def load_from_flash() -> TranslationsHeader | None:
-    ///         """Load translations from flash."""
-    Qstr::MP_QSTR_TranslationsHeader => TRANSLATIONS_HEADER_TYPE.as_obj(),
-
     /// from trezortranslate_keys import TR  # noqa: F401
     /// """Translation object with attributes."""
     Qstr::MP_QSTR_TR => TR_OBJ.as_obj(),
@@ -265,4 +303,56 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     /// def area_bytesize() -> int:
     ///     """Maximum size of the translation blob that can be stored."""
     Qstr::MP_QSTR_area_bytesize => obj_fn_0!(area_bytesize).as_obj(),
+
+    /// def get_language() -> str:
+    ///     """Get the current language."""
+    Qstr::MP_QSTR_get_language => obj_fn_0!(get_language).as_obj(),
+
+    /// def init() -> None:
+    ///     """Initialize the translations system.
+    ///
+    ///     Loads and verifies translation data from flash. If the verification passes,
+    ///     Trezor UI is translated from that point forward.
+    ///     """
+    Qstr::MP_QSTR_init => obj_fn_0!(init).as_obj(),
+
+    /// def deinit() -> None:
+    ///     """Deinitialize the translations system.
+    ///
+    ///     Translations must be deinitialized before erasing or writing to flash.
+    ///     """
+    Qstr::MP_QSTR_deinit => obj_fn_0!(deinit).as_obj(),
+
+    /// def erase() -> None:
+    ///     """Erase the translations blob from flash."""
+    Qstr::MP_QSTR_erase => obj_fn_0!(erase).as_obj(),
+
+    /// def write(data: bytes, offset: int) -> None:
+    ///     """Write data to the translations blob in flash."""
+    Qstr::MP_QSTR_write => obj_fn_2!(write).as_obj(),
+
+    /// def verify(data: bytes) -> None:
+    ///     """Verify the translations blob."""
+    Qstr::MP_QSTR_verify => obj_fn_1!(verify).as_obj(),
+
+    /// class TranslationsHeader:
+    ///     """Metadata about the translations blob."""
+    /// 
+    ///     language: str
+    ///     version: tuple[int, int, int, int]
+    ///     change_language_title: str
+    ///     change_language_prompt: str
+    ///     data_len: int
+    ///     data_hash: bytes
+    ///     total_len: int
+    /// 
+    ///     def __init__(self, header_bytes: bytes) -> None:
+    ///         """Parse header from bytes.
+    ///         The header has variable length.
+    ///         """
+    ///
+    ///     @staticmethod
+    ///     def load_from_flash() -> TranslationsHeader | None:
+    ///         """Load translations from flash."""
+    Qstr::MP_QSTR_TranslationsHeader => TRANSLATIONS_HEADER_TYPE.as_obj(),
 };

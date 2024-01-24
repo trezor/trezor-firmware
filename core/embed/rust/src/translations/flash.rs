@@ -22,21 +22,46 @@ pub fn write(data: &[u8], offset: usize) -> Result<(), Error> {
     }
 
     // SAFETY: The blob is not set, so there are no references to it.
-    unsafe { translations::write(data, offset) };
-    Ok(())
+    let result = unsafe { translations::write(data, offset) };
+    if result {
+        Ok(())
+    } else {
+        Err(value_error!("Failed to write translations blob"))
+    }
 }
 
 /// Load translations from flash, validate, and cache references to lookup
 /// tables.
-pub fn init() -> Result<(), Error> {
-    if unsafe { TRANSLATIONS_ON_FLASH.is_some() } {
-        return Ok(());
-    }
+unsafe fn try_init<'a>() -> Result<Option<Translations<'a>>, Error> {
+    // load from flash
     let flash_data = unsafe { translations::get_blob() };
-    let blob = Translations::new(flash_data)?;
-    // SAFETY: TODO
-    unsafe { TRANSLATIONS_ON_FLASH = Some(blob) };
-    Ok(())
+    // check if flash is empty
+    // TODO perhaps we should check the full area?
+    if &flash_data[0..16] == &[super::blob::EMPTY_BYTE; 16] {
+        return Ok(None);
+    }
+    // try to parse the data
+    Translations::new(flash_data).map(|t| Some(t))
+}
+
+pub fn init() {
+    // unsafe block because every individual operation here is unsafe
+    unsafe {
+        // SAFETY: it is OK to look
+        if TRANSLATIONS_ON_FLASH.is_some() {
+            return;
+        }
+        // SAFETY: try_init unconditionally loads the translations from flash.
+        // No other reference exists (TRANSLATIONS_ON_FLASH is None) so this is safe.
+        match try_init() {
+            // SAFETY: We are in a single-threaded environment so setting is OK.
+            // (note that from this point on a reference to flash data is held)
+            Ok(Some(t)) => TRANSLATIONS_ON_FLASH = Some(t),
+            Ok(None) => {}
+            // SAFETY: No reference to flash data exists so it is OK to erase it.
+            Err(_) => translations::erase(),
+        }
+    }
 }
 
 // SAFETY: Invalidates all references coming from the flash-based blob.

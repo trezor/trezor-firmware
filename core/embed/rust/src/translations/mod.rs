@@ -8,6 +8,7 @@ mod translated_string;
 
 pub use blob::MAX_HEADER_LEN;
 pub use translated_string::TranslatedString as TR;
+pub const DEFAULT_LANGUAGE: &str = "enUS";
 
 #[no_mangle]
 pub unsafe extern "C" fn get_utf8_glyph(codepoint: cty::uint16_t, font: cty::c_int) -> *const u8 {

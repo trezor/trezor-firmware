@@ -26,6 +26,6 @@ pub fn area_bytesize() -> usize {
 
 // SAFETY: This call may invalidate the reference to the blob returned by
 // `get_blob()`.
-pub unsafe fn write(data: &[u8], offset: usize) {
-    unsafe { ffi::translations_write(data.as_ptr(), offset as u32, data.len() as u32) };
+pub unsafe fn write(data: &[u8], offset: usize) -> bool {
+    unsafe { ffi::translations_write(data.as_ptr(), offset as u32, data.len() as u32) }
 }

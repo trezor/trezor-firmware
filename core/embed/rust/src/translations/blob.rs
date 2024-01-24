@@ -9,7 +9,7 @@ use crate::{
 use super::public_keys;
 
 pub const MAX_HEADER_LEN: u16 = 1024;
-const EMPTY_BYTE: u8 = 0xFF;
+pub const EMPTY_BYTE: u8 = 0xFF;
 const SENTINEL_ID: u16 = 0xFFFF;
 
 const SIGNATURE_THRESHOLD: u8 = 2;
@@ -19,13 +19,7 @@ const SIGNATURE_THRESHOLD: u8 = 2;
 // should be max 1.
 const MAX_TABLE_PADDING: usize = 3;
 
-const INVALID_TRANSLATION_BLOB: Error = value_error!("Invalid translation blob");
-
-// TODO: somehow make it a singleton object, so it is loaded just once
-// TODO: split it into header.rs, translations.rs and font.rs?
-// TODO: --- put the {en,cs,fr}.* files to `languages` dir?
-// TODO: not generate fr/cs.rs files not to confuse, rather do .txt?
-// TODO: add some tests?
+const INVALID_TRANSLATIONS_BLOB: Error = value_error!("Invalid translations blob");
 
 #[repr(packed)]
 struct OffsetEntry {
@@ -43,11 +37,11 @@ fn validate_offset_table(
     mut iter: impl Iterator<Item = u16>,
 ) -> Result<(), Error> {
     // every offset table must have at least the sentinel
-    let mut prev = iter.next().ok_or(INVALID_TRANSLATION_BLOB)?;
+    let mut prev = iter.next().ok_or(value_error!("offset table too short"))?;
     for next in iter {
         // offsets must be in ascending order
         if prev > next {
-            return Err(INVALID_TRANSLATION_BLOB);
+            return Err(value_error!("offsets not in ascending order"));
         }
         prev = next;
     }
@@ -55,7 +49,7 @@ fn validate_offset_table(
     // data_len
     let sentinel = prev as usize;
     if sentinel < data_len - MAX_TABLE_PADDING || sentinel > data_len {
-        return Err(INVALID_TRANSLATION_BLOB);
+        return Err(value_error!("invalid sentinel offset"));
     }
     Ok(())
 }
@@ -69,7 +63,7 @@ impl<'a> Table<'a> {
         // a valid OffsetEntry value.
         let (_prefix, offsets, _suffix) = unsafe { offsets_data.align_to::<OffsetEntry>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
-            return Err(INVALID_TRANSLATION_BLOB);
+            return Err(value_error!("misaligned offsets table"));
         }
 
         Ok(Self {
@@ -84,7 +78,7 @@ impl<'a> Table<'a> {
             self.offsets.iter().last().map(|it| it.id),
             Some(SENTINEL_ID)
         ) {
-            return Err(INVALID_TRANSLATION_BLOB);
+            return Err(value_error!("invalid sentinel id"));
         }
         Ok(())
     }
@@ -142,7 +136,7 @@ impl<'a> Translations<'a> {
 
         let payload_digest = sha256::digest(payload_bytes);
         if payload_digest != header.data_hash {
-            return Err(INVALID_TRANSLATION_BLOB);
+            return Err(value_error!("hash mismatch"));
         }
 
         let mut payload_reader = InputStream::new(payload_bytes);
@@ -238,11 +232,13 @@ pub(super) struct TranslationsHeader<'a> {
     pub merkle_proof: &'a [sha256::Digest],
     /// CoSi signature
     pub signature: cosi::Signature,
+    /// Expected total length of the blob
+    pub total_len: usize,
 }
 
 fn read_fixedsize_str<'a>(reader: &mut InputStream<'a>, len: usize) -> Result<&'a str, Error> {
     let bytes = reader.read(len)?;
-    core::str::from_utf8(bytes).map_err(|_| INVALID_TRANSLATION_BLOB)
+    core::str::from_utf8(bytes).map_err(|_| value_error!("invalid fixedsize string"))
 }
 
 fn read_pascal_str<'a>(reader: &mut InputStream<'a>) -> Result<&'a str, Error> {
@@ -272,7 +268,7 @@ impl<'a> TranslationsHeader<'a> {
         //
         let magic = reader.read(Self::BLOB_MAGIC.len())?;
         if magic != Self::BLOB_MAGIC {
-            return Err(INVALID_TRANSLATION_BLOB);
+            return Err(value_error!("invalid header magic"));
         }
 
         // read length of contained data
@@ -290,7 +286,7 @@ impl<'a> TranslationsHeader<'a> {
 
         let magic = header_reader.read(Self::HEADER_MAGIC.len())?;
         if magic != Self::HEADER_MAGIC {
-            return Err(INVALID_TRANSLATION_BLOB);
+            return Err(value_error!("bad header magic"));
         }
 
         let language = read_fixedsize_str(&mut header_reader, 4)?;
@@ -326,7 +322,7 @@ impl<'a> TranslationsHeader<'a> {
         // SAFETY: sha256::Digest is a plain array of u8, so any bytes are valid
         let (_prefix, merkle_proof, _suffix) = unsafe { proof_bytes.align_to::<sha256::Digest>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
-            return Err(INVALID_TRANSLATION_BLOB);
+            return Err(value_error!("misaligned proof table"));
         }
         let signature = cosi::Signature::new(
             proof_reader.read_byte()?,
@@ -335,12 +331,15 @@ impl<'a> TranslationsHeader<'a> {
 
         // check that there is no trailing data in the proof section
         if proof_reader.remaining() > 0 {
-            return Err(INVALID_TRANSLATION_BLOB);
+            return Err(value_error!("trailing data in proof"));
         }
 
         // check that the declared data section length matches the container size
         if container_length - reader.tell() != data_len {
-            return Err(INVALID_TRANSLATION_BLOB);
+            println!("container length: ", heapless::String::<10>::from(container_length as u32).as_str());
+            println!("reader pos: ", heapless::String::<10>::from(reader.tell() as u32).as_str());
+            println!("data_len: ", heapless::String::<10>::from(data_len as u32).as_str());
+            return Err(value_error!("data length mismatch"));
         }
 
         let new = Self {
@@ -353,6 +352,7 @@ impl<'a> TranslationsHeader<'a> {
             change_language_prompt,
             merkle_proof,
             signature,
+            total_len: container_length + Self::BLOB_MAGIC.len() + mem::size_of::<u16>(),
         };
         new.verify()?;
         Ok((new, reader))
