@@ -97,10 +97,23 @@ impl Obj {
         // SAFETY:
         //  - `val` is in `0..=3` range.
         //  - MicroPython compiled with `MICROPY_OBJ_REPR == MICROPY_OBJ_REPR_A`.
-        //  - MicroPython compiled with `MICROPY_OBJ_IMMEDIATE_OBJS`.
-        //    micropython/py/obj.h #define MP_OBJ_NEW_IMMEDIATE_OBJ(val)
-        //    ((mp_obj_t)(((val) << 3) | 6))
+        //  - MicroPython compiled with `MICROPY_OBJ_IMMEDIATE_OBJS.
+
+        // micropython/py/obj.h
+        // #define MP_OBJ_NEW_IMMEDIATE_OBJ(val) ((mp_obj_t)(((val) << 3) | 6))
         unsafe { Self::from_bits((val << 3) | 6) }
+    }
+
+    pub const fn small_int(val: u16) -> Self {
+        // SAFETY:
+        //  - MicroPython compiled with `MICROPY_OBJ_REPR == MICROPY_OBJ_REPR_A`.
+        //  - val fits in 31 bits
+        // (TODO if we ever add static asserts, we can extend this function to u32)
+
+        // micropython/py/obj.h
+        // #define MP_OBJ_NEW_SMALL_INT(small_int) \
+        //     ((mp_obj_t)((((mp_uint_t)(small_int)) << 1) | 1))
+        unsafe { Self::from_bits(((val << 1) | 1) as usize) }
     }
 }
 
@@ -327,14 +340,14 @@ impl TryFrom<(Obj, Obj, Obj)> for Obj {
 impl From<u8> for Obj {
     fn from(val: u8) -> Self {
         // `u8` will fit into smallint so no error should happen here.
-        unwrap!(u32::from(val).try_into())
+        Obj::small_int(val as u16)
     }
 }
 
 impl From<u16> for Obj {
     fn from(val: u16) -> Self {
         // `u16` will fit into smallint so no error should happen here.
-        unwrap!(u32::from(val).try_into())
+        Obj::small_int(val)
     }
 }
 
