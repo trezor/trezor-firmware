@@ -18,11 +18,11 @@ async def get_ownership_proof(
     coin: CoinInfo,
     authorization: CoinJoinAuthorization | None = None,
 ) -> OwnershipProof:
+    from trezor import TR
     from trezor.enums import InputScriptType
     from trezor.messages import OwnershipProof
     from trezor.ui.layouts import confirm_action, confirm_blob
     from trezor.wire import DataError, ProcessError
-    from trezortranslate import TR
 
     from apps.common.paths import validate_path
 

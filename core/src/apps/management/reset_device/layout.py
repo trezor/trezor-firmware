@@ -1,6 +1,7 @@
 from micropython import const
 from typing import Sequence
 
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_success
 from trezor.ui.layouts.reset import (  # noqa: F401
@@ -11,7 +12,6 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_prompt_threshold,
     slip39_show_checklist,
 )
-from trezortranslate import TR
 
 _NUM_OF_CHOICES = const(3)
 

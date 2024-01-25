@@ -5,11 +5,10 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
-from trezor import config, io, log, loop, utils, wire, workflow
+from trezor import TR, config, io, log, loop, utils, wire, workflow
 from trezor.crypto import hashlib
 from trezor.crypto.curve import nist256p1
 from trezor.ui.layouts import show_error_popup
-from trezortranslate import TR
 
 from apps.base import set_homescreen
 from apps.common import cbor

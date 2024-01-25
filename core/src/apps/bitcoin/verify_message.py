@@ -51,13 +51,12 @@ def _address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
 
 
 async def verify_message(msg: VerifyMessage) -> Success:
-    from trezor import utils
+    from trezor import TR, utils
     from trezor.crypto.curve import secp256k1
     from trezor.enums import InputScriptType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_signverify, show_success
     from trezor.wire import ProcessError
-    from trezortranslate import TR
 
     from apps.common import coins
     from apps.common.signverify import decode_message, message_digest

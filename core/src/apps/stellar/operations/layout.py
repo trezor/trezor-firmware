@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
+from trezor import TR
 from trezor.ui.layouts import (
     confirm_address,
     confirm_amount,
@@ -9,7 +10,6 @@ from trezor.ui.layouts import (
     confirm_properties,
 )
 from trezor.wire import DataError, ProcessError
-from trezortranslate import TR
 
 from ..layout import format_amount
 

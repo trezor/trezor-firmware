@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.crypto import nem
-from trezortranslate import TR
 
 if TYPE_CHECKING:
     from trezor.messages import (

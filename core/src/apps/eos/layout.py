@@ -7,10 +7,10 @@ async def require_get_public_key(
 
 
 async def require_sign_tx(num_actions: int) -> None:
+    from trezor import TR
     from trezor.enums import ButtonRequestType
     from trezor.strings import format_plural
     from trezor.ui.layouts import confirm_action
-    from trezortranslate import TR
 
     await confirm_action(
         "confirm_tx",

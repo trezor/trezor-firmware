@@ -19,10 +19,9 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     import storage
     import storage.device as storage_device
     import storage.recovery as storage_recovery
-    from trezor import config, wire, workflow
+    from trezor import TR, config, wire, workflow
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_action, confirm_reset_device
-    from trezortranslate import TR
 
     from apps.common.request_pin import (
         error_pin_invalid,

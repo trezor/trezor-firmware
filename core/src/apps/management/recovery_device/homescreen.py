@@ -3,9 +3,8 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
-from trezor import wire
+from trezor import TR, wire
 from trezor.messages import Success
-from trezortranslate import TR
 
 from .. import backup_types
 from . import layout, recover

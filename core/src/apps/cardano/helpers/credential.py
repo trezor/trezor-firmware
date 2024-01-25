@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.enums import CardanoAddressType
-from trezortranslate import TR
 
 from .paths import SCHEMA_PAYMENT
 

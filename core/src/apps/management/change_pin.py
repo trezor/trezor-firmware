@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import config, wire
-from trezortranslate import TR
+from trezor import TR, config, wire
 
 if TYPE_CHECKING:
     from typing import Awaitable

@@ -8,11 +8,11 @@ if TYPE_CHECKING:
 
 
 async def cipher_key_value(msg: CipherKeyValue) -> CipheredKeyValue:
+    from trezor import TR
     from trezor.crypto import aes, hmac
     from trezor.messages import CipheredKeyValue
     from trezor.ui.layouts import confirm_action
     from trezor.wire import DataError
-    from trezortranslate import TR
 
     from apps.common.keychain import get_keychain
     from apps.common.paths import AlwaysMatchingSchema

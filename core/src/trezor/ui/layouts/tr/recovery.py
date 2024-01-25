@@ -1,8 +1,8 @@
 from typing import Callable, Iterable
 
 import trezorui2
+from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezortranslate import TR
 
 from ..common import interact
 from . import RustLayout, raise_if_not_confirmed, show_warning

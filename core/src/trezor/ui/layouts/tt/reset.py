@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 from trezor.wire.context import wait as ctx_wait
-from trezortranslate import TR
 
 from ..common import interact
 from . import RustLayout, raise_if_not_confirmed

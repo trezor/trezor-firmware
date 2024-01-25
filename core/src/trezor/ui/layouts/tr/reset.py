@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
-from trezortranslate import TR
 
 from ..common import interact
 from . import RustLayout, confirm_action, show_warning

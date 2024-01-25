@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_properties
-from trezortranslate import TR
 
 from ..helpers import eos_asset_to_string, eos_name_to_string
 

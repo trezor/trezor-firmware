@@ -107,7 +107,7 @@ class Busyscreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.BUSYSCREEN_ON
 
     def __init__(self, delay_ms: int) -> None:
-        from trezortranslate import TR
+        from trezor import TR
 
         skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(

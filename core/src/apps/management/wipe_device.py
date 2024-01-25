@@ -6,10 +6,10 @@ if TYPE_CHECKING:
 
 async def wipe_device(msg: WipeDevice) -> Success:
     import storage
+    from trezor import TR
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
-    from trezortranslate import TR
 
     from apps.base import reload_settings_from_storage
 

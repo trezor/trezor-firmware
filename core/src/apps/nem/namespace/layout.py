@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 async def ask_provision_namespace(
     common: NEMTransactionCommon, namespace: NEMProvisionNamespace
 ) -> None:
-    from trezortranslate import TR
+    from trezor import TR
 
     from ..layout import (
         require_confirm_content,

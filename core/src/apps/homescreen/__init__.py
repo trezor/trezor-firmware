@@ -16,7 +16,7 @@ async def busyscreen() -> None:
 
 
 async def homescreen() -> None:
-    from trezortranslate import TR
+    from trezor import TR
 
     if storage.device.is_initialized():
         label = storage.device.get_label()

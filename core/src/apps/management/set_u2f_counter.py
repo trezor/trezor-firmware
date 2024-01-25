@@ -6,11 +6,10 @@ if TYPE_CHECKING:
 
 async def set_u2f_counter(msg: SetU2FCounter) -> Success:
     import storage.device as storage_device
-    from trezor import wire
+    from trezor import TR, wire
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
-    from trezortranslate import TR
 
     if not storage_device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")

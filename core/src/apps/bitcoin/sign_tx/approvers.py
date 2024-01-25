@@ -257,7 +257,7 @@ class BasicApprover(Approver):
     def _replacement_title(
         self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
     ) -> str:
-        from trezortranslate import TR
+        from trezor import TR
 
         if self.is_payjoin():
             return TR.bitcoin__title_payjoin

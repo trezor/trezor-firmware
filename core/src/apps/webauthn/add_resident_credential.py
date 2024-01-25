@@ -6,11 +6,10 @@ if TYPE_CHECKING:
 
 async def add_resident_credential(msg: WebAuthnAddResidentCredential) -> Success:
     import storage.device as storage_device
-    from trezor import wire
+    from trezor import TR, wire
     from trezor.messages import Success
     from trezor.ui.layouts import show_error_and_raise
     from trezor.ui.layouts.fido import confirm_fido
-    from trezortranslate import TR
 
     from .credential import Fido2Credential
     from .resident_credentials import store_resident_credential

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.crypto import base58
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
@@ -9,7 +10,6 @@ from trezor.ui.layouts import (
     confirm_solana_tx,
     confirm_value,
 )
-from trezortranslate import TR
 
 from apps.common.paths import address_n_to_str
 

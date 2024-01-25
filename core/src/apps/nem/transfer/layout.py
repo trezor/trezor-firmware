@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
-from trezortranslate import TR
 
 from ..helpers import NEM_MOSAIC_AMOUNT_DIVISOR
 from ..layout import require_confirm_final

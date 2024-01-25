@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-from trezortranslate import TR
+from trezor import TR
 
 from . import seed
 

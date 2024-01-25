@@ -67,7 +67,7 @@ async def _generate_typed_data_hash(
 
     metamask_v4_compat - a flag that enables compatibility with MetaMask's signTypedData_v4 method
     """
-    from trezortranslate import TR
+    from trezor import TR
 
     from .layout import (
         confirm_empty_typed_message,

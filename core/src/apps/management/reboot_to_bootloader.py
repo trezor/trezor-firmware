@@ -9,12 +9,11 @@ if TYPE_CHECKING:
 async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     from ubinascii import hexlify
 
-    from trezor import io, loop, utils, wire
+    from trezor import TR, io, loop, utils, wire
     from trezor.enums import BootCommand
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action, confirm_firmware_update
     from trezor.wire.context import get_context
-    from trezortranslate import TR
 
     # Bootloader will only allow the INSTALL_UPGRADE flow for official images.
     # This is to prevent a problematic custom signed firmware from self-updating

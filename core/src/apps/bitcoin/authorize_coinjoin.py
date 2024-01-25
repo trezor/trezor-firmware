@@ -19,11 +19,11 @@ _MAX_COORDINATOR_FEE_RATE = 5 * pow(10, FEE_RATE_DECIMALS)  # 5 %
 async def authorize_coinjoin(
     msg: AuthorizeCoinJoin, keychain: Keychain, coin: CoinInfo
 ) -> Success:
+    from trezor import TR
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_coinjoin, confirm_metadata
     from trezor.wire import DataError
-    from trezortranslate import TR
 
     from apps.common import authorization, safety_checks
     from apps.common.keychain import FORBIDDEN_KEY_PATH

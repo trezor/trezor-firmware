@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action
 from trezor.ui.layouts.recovery import (  # noqa: F401
@@ -8,7 +9,6 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
     show_recovery_warning,
     show_remaining_shares,
 )
-from trezortranslate import TR
 
 from .. import backup_types
 

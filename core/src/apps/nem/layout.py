@@ -1,7 +1,7 @@
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_metadata
-from trezortranslate import TR
 
 from .helpers import NEM_MAX_DIVISIBILITY
 

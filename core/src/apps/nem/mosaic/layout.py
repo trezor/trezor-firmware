@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezortranslate import TR
+from trezor import TR
 
 from ..layout import require_confirm_content, require_confirm_final
 

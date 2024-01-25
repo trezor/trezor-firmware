@@ -2,12 +2,11 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import storage.sd_salt as storage_sd_salt
-from trezor import config
+from trezor import TR, config
 from trezor.enums import SdProtectOperationType
 from trezor.messages import Success
 from trezor.ui.layouts import show_success
 from trezor.wire import ProcessError
-from trezortranslate import TR
 
 from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
 from apps.common.sdcard import ensure_sdcard

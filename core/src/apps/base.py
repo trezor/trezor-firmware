@@ -2,11 +2,10 @@ from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
 import storage.device as storage_device
-from trezor import config, utils, wire, workflow
+from trezor import TR, config, utils, wire, workflow
 from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
-from trezortranslate import TR
 
 from . import workflow_handlers
 
@@ -46,9 +45,9 @@ def busy_expiry_ms() -> int:
 
 def get_features() -> Features:
     import storage.recovery as storage_recovery
+    from trezor import translations
     from trezor.enums import Capability
     from trezor.messages import Features
-    from trezor.translations import get_language
     from trezor.ui import HEIGHT, WIDTH
 
     from apps.common import mnemonic, safety_checks
@@ -56,7 +55,7 @@ def get_features() -> Features:
     f = Features(
         vendor="trezor.io",
         fw_vendor=utils.firmware_vendor(),
-        language=get_language(),
+        language=translations.get_language(),
         major_version=utils.VERSION_MAJOR,
         minor_version=utils.VERSION_MINOR,
         patch_version=utils.VERSION_PATCH,

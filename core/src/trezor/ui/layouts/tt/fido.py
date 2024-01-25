@@ -76,7 +76,7 @@ async def confirm_fido(
 
 
 async def confirm_fido_reset() -> bool:
-    from trezortranslate import TR
+    from trezor import TR
 
     confirm = RustLayout(
         trezorui2.confirm_action(

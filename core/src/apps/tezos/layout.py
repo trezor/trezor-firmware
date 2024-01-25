@@ -1,6 +1,6 @@
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_address, confirm_metadata, confirm_properties
-from trezortranslate import TR
 
 BR_SIGN_TX = ButtonRequestType.SignTx  # global_import_cache
 

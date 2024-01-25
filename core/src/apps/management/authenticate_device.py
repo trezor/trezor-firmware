@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 
 async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
-    from trezor import utils, wire
+    from trezor import TR, utils, wire
     from trezor.crypto import optiga
     from trezor.crypto.der import read_length
     from trezor.crypto.hashlib import sha256
@@ -14,7 +14,6 @@ async def authenticate_device(msg: AuthenticateDevice) -> AuthenticityProof:
     from trezor.ui.layouts import confirm_action
     from trezor.ui.layouts.progress import progress
     from trezor.utils import BufferReader, bootloader_locked
-    from trezortranslate import TR
 
     from apps.common.writers import write_compact_size
 

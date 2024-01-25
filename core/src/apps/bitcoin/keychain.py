@@ -464,7 +464,7 @@ def address_n_to_name_or_unknown(
     account_level: bool = False,
     show_account_str: bool = False,
 ) -> str:
-    from trezortranslate import TR
+    from trezor import TR
 
     account_name = address_n_to_name(coin, address_n, script_type)
     if account_name is None:

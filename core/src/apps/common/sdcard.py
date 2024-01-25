@@ -1,7 +1,6 @@
 from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
-from trezor import io, wire
+from trezor import TR, io, wire
 from trezor.ui.layouts import confirm_action, show_error_and_raise
-from trezortranslate import TR
 
 
 class SdCardUnavailable(wire.ProcessError):

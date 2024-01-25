@@ -1,11 +1,11 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata
-from trezortranslate import TR
 
 from apps.common.paths import address_n_to_str
 

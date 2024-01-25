@@ -30,10 +30,10 @@ async def get() -> str:
 
 
 async def _request_on_host() -> str:
+    from trezor import TR
     from trezor.messages import PassphraseAck, PassphraseRequest
     from trezor.ui.layouts import request_passphrase_on_host
     from trezor.wire.context import call
-    from trezortranslate import TR
 
     request_passphrase_on_host()
 
